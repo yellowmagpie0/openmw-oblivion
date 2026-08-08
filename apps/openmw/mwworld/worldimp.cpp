@@ -108,6 +108,7 @@
 #include "datetimemanager.hpp"
 #include "inventorystore.hpp"
 #include "manualref.hpp"
+#include "oblivionprofileservices.hpp"
 #include "player.hpp"
 #include "projectilemanager.hpp"
 #include "weather.hpp"
@@ -231,7 +232,7 @@ namespace MWWorld
         MWBase::Environment::get().getLuaManager()->contentFilesLoaded();
 
         if (mGameProfile == ESM::GameProfile::Oblivion)
-            ensureOblivionBootstrapRecords();
+            installOblivionProfileServices();
 
         fillGlobalVariables();
 
@@ -548,145 +549,9 @@ namespace MWWorld
         }
     }
 
-    void World::ensureOblivionBootstrapRecords()
+    void World::installOblivionProfileServices()
     {
-        // Morrowind-facing engine systems are incrementally being generalized.
-        // Until the native TES4 player/stat backends land, give those shared
-        // systems explicit neutral records instead of depending on Morrowind.esm.
-        ensureNeededRecords();
-
-        // The neutral ESM3 player adapter must use an asset supplied by the
-        // Oblivion archives. Native TES4 actor assembly will replace this
-        // compatibility skeleton in the actor-rendering milestone.
-        const VFS::Path::Normalized skeleton("meshes/characters/_male/skeleton.nif");
-        const VFS::Path::Normalized idle("meshes/characters/_male/idle.kf");
-        Settings::models().mXbaseanim.set(skeleton);
-        Settings::models().mBaseanim.set(skeleton);
-        Settings::models().mXbaseanim1st.set(skeleton);
-        Settings::models().mBaseanimkna.set(skeleton);
-        Settings::models().mBaseanimkna1st.set(skeleton);
-        Settings::models().mXbaseanimfemale.set(skeleton);
-        Settings::models().mBaseanimfemale.set(skeleton);
-        Settings::models().mBaseanimfemale1st.set(skeleton);
-        Settings::models().mXbaseanimkf.set(idle);
-        Settings::models().mXbaseanim1stkf.set(idle);
-        Settings::models().mXbaseanimfemalekf.set(idle);
-
-        auto addGlobal = [this](std::string_view name, ESM::Variant value) {
-            const ESM::RefId id = ESM::RefId::stringRefId(name);
-            if (mStore.get<ESM::Global>().search(id) == nullptr)
-            {
-                ESM::Global record;
-                record.mId = id;
-                record.mValue = std::move(value);
-                record.mRecordFlags = 0;
-                mStore.insertStatic(record);
-            }
-        };
-        addGlobal(Globals::sMonth.getValue(), ESM::Variant(0));
-        addGlobal(Globals::sCharGenState.getValue(), ESM::Variant(-1));
-
-        auto addGameSetting = [this](std::string_view name, ESM::Variant value) {
-            if (mStore.get<ESM::GameSetting>().search(name) != nullptr)
-                return;
-            ESM::GameSetting setting;
-            setting.blank();
-            setting.mId = ESM::RefId::stringRefId(name);
-            setting.mValue = std::move(value);
-            mStore.insertStatic(setting);
-        };
-        addGameSetting("fSwimHeightScale", ESM::Variant(0.75f));
-        // WeatherManager still consumes this misspelled TES3 setting while
-        // TES4 weather records are being connected to the renderer.
-        addGameSetting("fStromWindSpeed", ESM::Variant(0.f));
-        // Shared OpenMW Lua/UI bootstrap reads these modern string GMSTs before
-        // the native Oblivion UI resource layer exists.
-        addGameSetting("FontColor_color_header", ESM::Variant(std::string("223,201,159")));
-        addGameSetting("FontColor_color_normal", ESM::Variant(std::string("255,255,255")));
-        addGameSetting("fontcolor_color_normal_over", ESM::Variant(std::string("255,255,255")));
-        addGameSetting("fontcolor_color_normal_pressed", ESM::Variant(std::string("204,204,204")));
-        mStore.getWritable<ESM::GameSetting>().setAllowNeutralFallbacks(true);
-
-        if (mStore.get<ESM::MagicEffect>().search(ESM::MagicEffect::Paralyze) == nullptr)
-        {
-            ESM::MagicEffect paralyze;
-            paralyze.blank();
-            paralyze.mId = ESM::MagicEffect::Paralyze;
-            paralyze.mName = "Paralyze";
-            mStore.insertStatic(paralyze);
-        }
-
-        for (int i = 0; i < ESM::Skill::Length; ++i)
-        {
-            const ESM::RefId id = ESM::Skill::indexToRefId(i);
-            if (mStore.get<ESM::Skill>().search(id) == nullptr)
-            {
-                ESM::Skill skill;
-                skill.blank();
-                skill.mId = *id.getIf<ESM::SkillId>();
-                skill.mData.mAttribute = ESM::Attribute::indexToRefId(i % ESM::Attribute::Length);
-                skill.mData.mSpecialization = i % 3;
-                mStore.insertStatic(skill);
-            }
-        }
-
-        const ESM::RefId raceId = ESM::RefId::stringRefId("OblivionCompatibilityRace");
-        if (mStore.get<ESM::Race>().search(raceId) == nullptr)
-        {
-            ESM::Race race;
-            race.blank();
-            race.mId = raceId;
-            race.mName = "Oblivion Prisoner";
-            race.mData.mFlags = ESM::Race::Playable;
-            for (int i = 0; i < ESM::Attribute::Length; ++i)
-            {
-                race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, 40);
-                race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, 40);
-            }
-            mStore.insertStatic(race);
-        }
-
-        const ESM::RefId classId = ESM::RefId::stringRefId("OblivionCompatibilityClass");
-        if (mStore.get<ESM::Class>().search(classId) == nullptr)
-        {
-            ESM::Class characterClass;
-            characterClass.blank();
-            characterClass.mId = classId;
-            characterClass.mName = "Adventurer";
-            characterClass.mData.mAttribute = { ESM::Attribute::Strength, ESM::Attribute::Endurance };
-            characterClass.mData.mSpecialization = ESM::Class::Combat;
-            characterClass.mData.mIsPlayable = 1;
-            for (std::size_t i = 0; i < characterClass.mData.mSkills.size(); ++i)
-            {
-                characterClass.mData.mSkills[i][0] = ESM::Skill::indexToRefId(i);
-                characterClass.mData.mSkills[i][1]
-                    = ESM::Skill::indexToRefId(i + characterClass.mData.mSkills.size());
-            }
-            mStore.insertStatic(characterClass);
-        }
-
-        const ESM::RefId playerId = ESM::RefId::stringRefId("Player");
-        if (mStore.get<ESM::NPC>().search(playerId) == nullptr)
-        {
-            ESM::NPC player;
-            player.blank();
-            player.mId = playerId;
-            player.mName = "Prisoner";
-            player.mRace = raceId;
-            player.mClass = classId;
-            player.mFlags = ESM::NPC::Base;
-            player.mNpdt.mLevel = 1;
-            player.mNpdt.mHealth = 50;
-            player.mNpdt.mMana = 50;
-            player.mNpdt.mFatigue = 50;
-            for (int i = 0; i < ESM::Attribute::Length; ++i)
-                player.mNpdt.mAttributes[ESM::Attribute::indexToRefId(i)] = 40;
-            for (int i = 0; i < ESM::Skill::Length; ++i)
-                player.mNpdt.mSkills[ESM::Skill::indexToRefId(i)] = 5;
-            mStore.insertStatic(player);
-        }
-
-        Log(Debug::Info) << "Installed neutral Oblivion compatibility globals, settings, skills, and player bootstrap";
+        OblivionProfileServices::install(mStore);
     }
 
     World::~World()

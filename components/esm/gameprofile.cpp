@@ -1,6 +1,7 @@
 #include "gameprofile.hpp"
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 
 namespace ESM
@@ -45,6 +46,21 @@ namespace ESM
                 return GameProfile::Oblivion;
         }
         throw std::logic_error("Unsupported content format");
+    }
+
+    std::span<const std::string_view> getDefaultArchives(GameProfile profile)
+    {
+        static constexpr std::array<std::string_view, 0> noArchives{};
+        static constexpr std::array<std::string_view, 6> oblivionArchives{
+            "Oblivion - Meshes.bsa",
+            "Oblivion - Textures - Compressed.bsa",
+            "Oblivion - Misc.bsa",
+            "Oblivion - Sounds.bsa",
+            "Oblivion - Voices1.bsa",
+            "Oblivion - Voices2.bsa",
+        };
+        return profile == GameProfile::Oblivion ? std::span<const std::string_view>(oblivionArchives)
+                                                : std::span<const std::string_view>(noArchives);
     }
 
     GameProfile GameProfileSelector::observe(Format format, std::string_view contentFile)

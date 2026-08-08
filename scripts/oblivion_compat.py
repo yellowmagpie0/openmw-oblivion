@@ -646,6 +646,158 @@ def run_morrowind_regression(openmw: Path, source: Path, build: Path, data: Path
     return result
 
 
+def _run_logged_gate(command: list[str], source: Path, output: Path, name: str) -> dict[str, Any]:
+    result = run_command(command, cwd=source, timeout=300)
+    output.mkdir(parents=True, exist_ok=True)
+    log_path = output / f"{name}.log"
+    log_path.write_text(result.pop("output"), encoding="utf-8")
+    result["log"] = str(log_path)
+    result["passed"] = result["exit_code"] == 0 and not result["timed_out"]
+    return result
+
+
+def m3_acceptance_passed(
+    tests: dict[str, dict[str, Any]],
+    scenarios: dict[str, dict[str, Any]],
+    morrowind_regression: dict[str, Any],
+) -> bool:
+    return (
+        bool(tests)
+        and bool(scenarios)
+        and all(result.get("passed", False) for result in tests.values())
+        and all(result.get("passed", False) for result in scenarios.values())
+        and morrowind_regression.get("passed_gate", False)
+    )
+
+
+def render_m3_acceptance_html(report: dict[str, Any]) -> str:
+    rows = []
+    for category in ("tests", "scenarios"):
+        for name, result in report[category].items():
+            rows.append(
+                "<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                    html.escape(category),
+                    html.escape(name),
+                    "PASS" if result.get("passed") else "FAIL",
+                )
+            )
+    regression = report["morrowind_regression"]
+    rows.append(
+        "<tr><td>regression</td><td>Morrowind integration</td><td>{}</td></tr>".format(
+            "PASS" if regression.get("passed_gate") else "FAIL"
+        )
+    )
+    status = "PASS" if report["passed"] else "FAIL"
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>OpenMW Oblivion M3 acceptance</title>
+<style>body{{font-family:sans-serif;max-width:1000px;margin:2rem auto}}table{{border-collapse:collapse}}
+td,th{{border:1px solid #aaa;padding:.3rem .6rem;text-align:left}}code{{white-space:pre-wrap}}</style></head>
+<body><h1>OpenMW Oblivion M3 acceptance: {status}</h1>
+<p>Generated {html.escape(report['generated_at'])} from revision
+<code>{html.escape(report['repository']['revision'])}</code>.</p>
+<table><tr><th>Gate</th><th>Check</th><th>Result</th></tr>{''.join(rows)}</table>
+<h2>Content fingerprints</h2><pre>{html.escape(json.dumps(report['content'], indent=2, sort_keys=True))}</pre>
+</body></html>"""
+
+
+def run_m3_acceptance(args: argparse.Namespace) -> dict[str, Any]:
+    source = args.source.resolve()
+    build = args.build.resolve()
+    oblivion_data = args.oblivion_data.resolve()
+    morrowind_data = args.morrowind_data.resolve()
+    output = args.output.resolve()
+    if output.exists() and any(output.iterdir()):
+        raise RuntimeError(f"M3 acceptance output directory must be empty: {output}")
+
+    openmw = build / "openmw"
+    openmw_tests = build / "openmw-tests"
+    components_tests = build / "components-tests"
+    resources = build / "resources"
+    oblivion_master = oblivion_data / "Oblivion.esm"
+    morrowind_master = morrowind_data / "Morrowind.esm"
+    for required in (
+        source,
+        build,
+        openmw,
+        openmw_tests,
+        components_tests,
+        resources,
+        oblivion_master,
+        morrowind_master,
+    ):
+        if not required.exists():
+            raise FileNotFoundError(required)
+
+    started = time.monotonic()
+    tests = {
+        "game_profile": _run_logged_gate(
+            [str(components_tests), "--gtest_filter=GameProfileTest.*"], source, output / "tests", "game-profile"
+        ),
+        "oblivion_profile_services": _run_logged_gate(
+            [str(openmw_tests), "--gtest_filter=OblivionProfileServicesTest.*"],
+            source,
+            output / "tests",
+            "oblivion-profile-services",
+        ),
+        "compatibility_harness": _run_logged_gate(
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                "scripts/tests",
+                "-p",
+                "test_oblivion_compat.py",
+            ],
+            source,
+            output / "tests",
+            "compatibility-harness",
+        ),
+    }
+    variables = {
+        "source": str(source),
+        "openmw": str(openmw),
+        "resources": str(resources),
+        "oblivion_data": str(oblivion_data),
+        "morrowind_data": str(morrowind_data),
+    }
+    manifest_dir = source / "scripts" / "data" / "oblivion_compat"
+    scenario_manifests = {
+        "oblivion_interior": "oblivion_cell_smoke.json",
+        "oblivion_exterior": "oblivion_exterior_smoke.json",
+        "wrong_profile": "oblivion_wrong_profile.json",
+        "morrowind_visual_save_load": "morrowind_boot_campaign.json",
+    }
+    scenarios = {
+        name: run_scenario(manifest_dir / manifest, output / "scenarios" / name, variables)
+        for name, manifest in scenario_manifests.items()
+    }
+    morrowind_regression = run_morrowind_regression(
+        openmw, source, build, morrowind_data, output / "morrowind-integration"
+    )
+    revision = run_command(["git", "rev-parse", "HEAD"], cwd=source, timeout=10)["output"].strip()
+    status = run_command(["git", "status", "--short"], cwd=source, timeout=10)["output"].splitlines()
+    report = {
+        "schema_version": SCHEMA_VERSION,
+        "milestone": "M3",
+        "generated_at": utc_now(),
+        "duration_seconds": round(time.monotonic() - started, 6),
+        "repository": {"source": str(source), "revision": revision, "status": status},
+        "content": {
+            "oblivion": file_fingerprint(oblivion_master),
+            "morrowind": file_fingerprint(morrowind_master),
+        },
+        "tests": tests,
+        "scenarios": scenarios,
+        "morrowind_regression": morrowind_regression,
+    }
+    report["passed"] = m3_acceptance_passed(tests, scenarios, morrowind_regression)
+    write_json(output / "acceptance.json", report)
+    (output / "acceptance.html").write_text(render_m3_acceptance_html(report), encoding="utf-8")
+    return report
+
+
 def audit_plugin(esmtool: Path, plugin: Path, source: Path, include_census: bool) -> dict[str, Any]:
     result = file_fingerprint(plugin)
     parsed = run_command([str(esmtool), "-q", "dump", str(plugin)], cwd=source, timeout=120)
@@ -1125,6 +1277,13 @@ def make_parser() -> argparse.ArgumentParser:
     graph.add_argument("--output", type=Path, required=True)
     graph.add_argument("--allowlist", type=Path)
     graph.add_argument("--timeout", type=float, default=900)
+
+    m3 = subparsers.add_parser("m3-acceptance", help="run the complete M3 standalone-boot acceptance gate")
+    m3.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m3.add_argument("--build", type=Path, required=True)
+    m3.add_argument("--oblivion-data", type=Path, required=True)
+    m3.add_argument("--morrowind-data", type=Path, required=True)
+    m3.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -1163,6 +1322,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_scenario(args.manifest.resolve(), args.output.resolve(), variables)
         elif args.command == "form-graph":
             result = run_form_graph(args)
+        elif args.command == "m3-acceptance":
+            result = run_m3_acceptance(args)
         else:
             raise AssertionError(args.command)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:

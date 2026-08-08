@@ -179,7 +179,7 @@ namespace MWWorld
             const MWPhysics::Object& object, const DetourNavigator::UpdateGuard* navigatorUpdateGuard = nullptr);
 
         void ensureNeededRecords();
-        void ensureOblivionBootstrapRecords();
+        void installOblivionProfileServices();
 
         void fillGlobalVariables();
 

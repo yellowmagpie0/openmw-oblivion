@@ -198,6 +198,7 @@ namespace OMW
 
         /// Prepare engine for game play
         void prepareEngine();
+        ESM::GameProfile resolveResourceProfile() const;
 
         void createWindow();
         void setWindowIcon();

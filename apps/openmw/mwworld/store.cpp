@@ -1035,82 +1035,14 @@ namespace MWWorld
     // Game Settings
     //=========================================================================
 
-    void Store<ESM::GameSetting>::setAllowNeutralFallbacks(bool value)
-    {
-        std::lock_guard lock(mNeutralFallbackMutex);
-        mAllowNeutralFallbacks = value;
-        if (!value)
-            mNeutralFallbacks.clear();
-    }
-
-    std::size_t Store<ESM::GameSetting>::getNeutralFallbackCount() const
-    {
-        std::lock_guard lock(mNeutralFallbackMutex);
-        return mNeutralFallbacks.size();
-    }
-
-    const ESM::GameSetting* Store<ESM::GameSetting>::search(const ESM::RefId& id) const
-    {
-        if (const ESM::GameSetting* setting = TypedDynamicStore::search(id))
-            return setting;
-
-        std::lock_guard lock(mNeutralFallbackMutex);
-        const auto fallback = mNeutralFallbacks.find(id);
-        return fallback == mNeutralFallbacks.end() ? nullptr : &fallback->second;
-    }
-
     const ESM::GameSetting* Store<ESM::GameSetting>::find(std::string_view id) const
     {
-        const ESM::RefId refId = ESM::RefId::stringRefId(id);
-        if (const ESM::GameSetting* setting = TypedDynamicStore::search(refId))
-            return setting;
-
-        std::lock_guard lock(mNeutralFallbackMutex);
-        if (!mAllowNeutralFallbacks)
-            return TypedDynamicStore::find(refId);
-
-        auto [it, inserted] = mNeutralFallbacks.try_emplace(refId);
-        if (inserted)
-        {
-            ESM::GameSetting& setting = it->second;
-            setting.blank();
-            setting.mId = refId;
-            if (!id.empty() && id.front() == 's')
-                setting.mValue = ESM::Variant(std::string(id));
-            else if (!id.empty() && id.front() == 'f')
-                setting.mValue = ESM::Variant(1.f);
-            else
-                setting.mValue = ESM::Variant(1);
-            Log(Debug::Warning) << "Using neutral Oblivion compatibility value for TES3 GameSetting '" << id << "'";
-        }
-        return &it->second;
+        return TypedDynamicStore::find(ESM::RefId::stringRefId(id));
     }
 
     const ESM::GameSetting* Store<ESM::GameSetting>::search(std::string_view id) const
     {
-        const ESM::RefId refId = ESM::RefId::stringRefId(id);
-        if (const ESM::GameSetting* setting = TypedDynamicStore::search(refId))
-            return setting;
-
-        std::lock_guard lock(mNeutralFallbackMutex);
-        if (!mAllowNeutralFallbacks)
-            return nullptr;
-
-        auto [it, inserted] = mNeutralFallbacks.try_emplace(refId);
-        if (inserted)
-        {
-            ESM::GameSetting& setting = it->second;
-            setting.blank();
-            setting.mId = refId;
-            if (!id.empty() && id.front() == 's')
-                setting.mValue = ESM::Variant(std::string(id));
-            else if (!id.empty() && id.front() == 'f')
-                setting.mValue = ESM::Variant(1.f);
-            else
-                setting.mValue = ESM::Variant(1);
-            Log(Debug::Warning) << "Using neutral Oblivion compatibility value for TES3 GameSetting '" << id << "'";
-        }
-        return &it->second;
+        return TypedDynamicStore::search(ESM::RefId::stringRefId(id));
     }
 
     // Attribute
@@ -1442,12 +1374,15 @@ template class MWWorld::TypedDynamicStore<ESM4::Armor>;
 template class MWWorld::TypedDynamicStore<ESM4::ArmorAddon>;
 template class MWWorld::TypedDynamicStore<ESM4::Book>;
 template class MWWorld::TypedDynamicStore<ESM4::Cell>;
+template class MWWorld::TypedDynamicStore<ESM4::Class>;
 template class MWWorld::TypedDynamicStore<ESM4::Clothing>;
 template class MWWorld::TypedDynamicStore<ESM4::Container>;
 template class MWWorld::TypedDynamicStore<ESM4::Creature>;
 template class MWWorld::TypedDynamicStore<ESM4::Door>;
 template class MWWorld::TypedDynamicStore<ESM4::Flora>;
 template class MWWorld::TypedDynamicStore<ESM4::Furniture>;
+template class MWWorld::TypedDynamicStore<ESM4::GameSetting>;
+template class MWWorld::TypedDynamicStore<ESM4::GlobalVariable>;
 template class MWWorld::TypedDynamicStore<ESM4::Hair>;
 template class MWWorld::TypedDynamicStore<ESM4::HeadPart>;
 template class MWWorld::TypedDynamicStore<ESM4::Ingredient>;

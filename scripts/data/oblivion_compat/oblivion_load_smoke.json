@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs\"\ndata=\"{oblivion_data}\"\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nfallback-archive=Oblivion - Sounds.bsa\nfallback-archive=Oblivion - Voices1.bsa\nfallback-archive=Oblivion - Voices2.bsa\ncontent=Oblivion.esm\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
     },
     {
       "path": "config/settings.cfg",
@@ -38,9 +38,12 @@
   ],
   "forbidden_log": [
     "Adding data directory .*vfs-mw",
+    "neutral Oblivion compatibility",
+    "GameSetting '.*' not found",
     "Failed to load saved game",
     "Saved game profile .*cannot be loaded",
     "TES4 runtime state requires missing content",
+    "Error in frame",
     "onFrame failed",
     "Can't start .*scripts/omw",
     "Segmentation fault",

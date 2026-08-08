@@ -15,7 +15,10 @@
 #include <components/debug/debuglog.hpp>
 #include <components/debug/gldebug.hpp>
 
+#include <components/esm/format.hpp>
+#include <components/files/openfile.hpp>
 #include <components/misc/rng.hpp>
+#include <components/misc/strings/lower.hpp>
 #include <components/misc/strings/format.hpp>
 
 #include <components/vfs/manager.hpp>
@@ -738,6 +741,26 @@ void OMW::Engine::prepareEngine()
 
     mVFS = std::make_unique<VFS::Manager>();
 
+    const ESM::GameProfile resourceProfile = resolveResourceProfile();
+    if (mArchives.empty())
+    {
+        std::size_t registered = 0;
+        for (std::string_view archive : ESM::getDefaultArchives(resourceProfile))
+        {
+            if (mFileCollections.doesExist(archive))
+            {
+                mArchives.emplace_back(archive);
+                ++registered;
+            }
+            else
+                Log(Debug::Warning) << "Default " << ESM::toString(resourceProfile) << " archive is unavailable: "
+                                    << archive;
+        }
+        if (registered != 0)
+            Log(Debug::Info) << "Registered " << registered << " default " << ESM::toString(resourceProfile)
+                             << " archives from the configured data directories";
+    }
+
     VFS::registerArchives(mVFS.get(), mFileCollections, mArchives, true, &mEncoder.get()->getStatelessEncoder());
 
     mResourceSystem = std::make_unique<Resource::ResourceSystem>(
@@ -929,6 +952,27 @@ void OMW::Engine::prepareEngine()
 
     // starts a separate lua thread if "lua num threads" > 0
     mLuaWorker = std::make_unique<MWLua::Worker>(*mLuaManager);
+}
+
+ESM::GameProfile OMW::Engine::resolveResourceProfile() const
+{
+    if (mGameProfile != ESM::GameProfile::Auto)
+        return mGameProfile;
+
+    ESM::GameProfileSelector selector;
+    for (const std::string& contentFile : mContentFiles)
+    {
+        const std::string extension
+            = Misc::StringUtils::lowerCase(std::filesystem::path(contentFile).extension().string());
+        if (extension != ".esm" && extension != ".esp" && extension != ".omwgame" && extension != ".omwaddon"
+            && extension != ".project")
+            continue;
+        if (!mFileCollections.doesExist(contentFile))
+            continue;
+        auto stream = Files::openBinaryInputFileStream(mFileCollections.getPath(contentFile));
+        selector.observe(ESM::readFormat(*stream), contentFile);
+    }
+    return selector.selected();
 }
 
 // Initialise and enter main loop.

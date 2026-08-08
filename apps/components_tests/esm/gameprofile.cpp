@@ -42,4 +42,14 @@ namespace
         selector.observe(ESM::Format::Tes3, "Morrowind.esm");
         EXPECT_THROW(selector.observe(ESM::Format::Tes4, "Oblivion.esm"), std::runtime_error);
     }
+
+    TEST(GameProfileTest, suppliesOnlyOblivionNativeArchiveDefaults)
+    {
+        EXPECT_TRUE(ESM::getDefaultArchives(ESM::GameProfile::Auto).empty());
+        EXPECT_TRUE(ESM::getDefaultArchives(ESM::GameProfile::Morrowind).empty());
+        const auto archives = ESM::getDefaultArchives(ESM::GameProfile::Oblivion);
+        ASSERT_EQ(archives.size(), 6);
+        EXPECT_EQ(archives.front(), "Oblivion - Meshes.bsa");
+        EXPECT_EQ(archives.back(), "Oblivion - Voices2.bsa");
+    }
 }

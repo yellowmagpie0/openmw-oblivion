@@ -1,6 +1,7 @@
 #ifndef OPENMW_COMPONENTS_ESM_GAMEPROFILE_H
 #define OPENMW_COMPONENTS_ESM_GAMEPROFILE_H
 
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -18,6 +19,7 @@ namespace ESM
     GameProfile parseGameProfile(std::string_view value);
     std::string_view toString(GameProfile value);
     GameProfile gameProfileForFormat(Format format);
+    std::span<const std::string_view> getDefaultArchives(GameProfile profile);
 
     class GameProfileSelector
     {

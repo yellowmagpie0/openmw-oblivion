@@ -45,6 +45,14 @@ class OblivionCompatTests(unittest.TestCase):
         self.assertEqual(result["passed"], 1)
         self.assertEqual(result["incomplete_tests"], ["2\tincomplete"])
 
+    def test_m3_gate_requires_every_check(self):
+        tests = {"unit": {"passed": True}}
+        scenarios = {"interior": {"passed": True}, "exterior": {"passed": True}}
+        regression = {"passed_gate": True}
+        self.assertTrue(MODULE.m3_acceptance_passed(tests, scenarios, regression))
+        scenarios["exterior"]["passed"] = False
+        self.assertFalse(MODULE.m3_acceptance_passed(tests, scenarios, regression))
+
     def test_scenario_runner_and_atomic_report(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "result"

@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs\"\ndata=\"{oblivion_data}\"\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nfallback-archive=Oblivion - Sounds.bsa\nfallback-archive=Oblivion - Voices1.bsa\nfallback-archive=Oblivion - Voices2.bsa\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
     },
     {
       "path": "config/settings.cfg",
@@ -36,14 +36,19 @@
   "expected_exit": 0,
   "expected_log": [
     "Loading content file Oblivion.esm",
+    "Registered 6 default oblivion archives",
     "Selected game profile: oblivion",
-    "Installed neutral Oblivion compatibility",
+    "Installed Oblivion profile services:",
     "Starting a new game",
     "Loading cell ImperialDungeon01"
   ],
   "forbidden_log": [
     "Adding data directory .*vfs-mw",
+    "neutral Oblivion compatibility",
+    "GameSetting '.*' not found",
+    "Failed to add global script",
     "Failed to start new game",
+    "Error in frame",
     "onFrame failed",
     "Can't start .*scripts/omw",
     "Segmentation fault",

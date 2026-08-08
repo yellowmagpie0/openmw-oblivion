@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs\"\ndata=\"{oblivion_data}\"\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\ncontent=Oblivion.esm\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
     },
     {
       "path": "config/settings.cfg",

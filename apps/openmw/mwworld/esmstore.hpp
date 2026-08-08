@@ -82,12 +82,15 @@ namespace ESM4
     struct ArmorAddon;
     struct Book;
     struct Cell;
+    struct Class;
     struct Clothing;
     struct Container;
     struct Creature;
     struct Door;
     struct Flora;
     struct Furniture;
+    struct GameSetting;
+    struct GlobalVariable;
     struct Hair;
     struct HeadPart;
     struct Ingredient;
@@ -144,8 +147,9 @@ namespace MWWorld
 
             Store<ESM4::Activator>, Store<ESM4::ActorCharacter>, Store<ESM4::ActorCreature>, Store<ESM4::Ammunition>,
             Store<ESM4::Armor>, Store<ESM4::ArmorAddon>, Store<ESM4::Book>, Store<ESM4::Cell>, Store<ESM4::Clothing>,
-            Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Door>, Store<ESM4::Furniture>,
-            Store<ESM4::Flora>, Store<ESM4::Hair>, Store<ESM4::HeadPart>, Store<ESM4::Ingredient>, Store<ESM4::ItemMod>,
+            Store<ESM4::Class>, Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Door>,
+            Store<ESM4::Furniture>, Store<ESM4::Flora>, Store<ESM4::GameSetting>, Store<ESM4::GlobalVariable>,
+            Store<ESM4::Hair>, Store<ESM4::HeadPart>, Store<ESM4::Ingredient>, Store<ESM4::ItemMod>,
             Store<ESM4::Land>, Store<ESM4::LandTexture>, Store<ESM4::LevelledCreature>, Store<ESM4::LevelledItem>,
             Store<ESM4::LevelledNpc>, Store<ESM4::Light>, Store<ESM4::MiscItem>, Store<ESM4::MovableStatic>,
             Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>, Store<ESM4::Reference>,
