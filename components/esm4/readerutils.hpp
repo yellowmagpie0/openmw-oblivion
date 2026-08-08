@@ -69,7 +69,9 @@ namespace ESM4
         template <typename RecordInvocable, typename GroupInvocable>
         static bool readItem(ESM4::Reader& reader, RecordInvocable&& recordInvocable, GroupInvocable&& groupInvocable)
         {
-            if (!reader.getRecordHeader() || !reader.hasMoreRecs())
+            // getRecordHeader() pre-accounts the current record payload in fileRead.
+            // Therefore hasMoreRecs() may already be false for a valid final record.
+            if (!reader.getRecordHeader())
                 return false;
 
             const ESM4::RecordHeader& header = reader.hdr();

@@ -3,6 +3,7 @@
 
 #include <map>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <span>
 #include <string>
@@ -10,6 +11,7 @@
 #include <vector>
 
 #include <components/esm/attr.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/esm/path.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm/util.hpp>
@@ -197,6 +199,10 @@ namespace MWWorld
         std::vector<T*> mShared;
         typedef std::unordered_map<Id, T> Dynamic;
         Dynamic mDynamic;
+        std::map<ESM::FormKey, Id> mStaticFormKeys;
+        std::map<ESM::FormKey, Id> mDynamicFormKeys;
+        std::unordered_map<Id, ESM::FormKey> mStaticIdsToFormKeys;
+        std::unordered_map<Id, ESM::FormKey> mDynamicIdsToFormKeys;
 
         friend class ESMStore;
 
@@ -212,6 +218,9 @@ namespace MWWorld
 
         const T* search(const Id& id) const;
         const T* searchStatic(const Id& id) const;
+        const T* search(const ESM::FormKey& key) const;
+        const T* searchStatic(const ESM::FormKey& key) const;
+        std::optional<ESM::FormKey> findFormKey(const Id& id) const;
 
         /**
          * Does the record with this ID come from the dynamic store?
@@ -235,9 +244,12 @@ namespace MWWorld
         void listIdentifier(std::vector<Id>& list) const override;
 
         T* insert(const T& item, bool overrideOnly = false);
+        T* insert(const T& item, const ESM::FormKey& key, bool overrideOnly = false);
         T* insertStatic(const T& item);
+        T* insertStatic(const T& item, const ESM::FormKey& key);
 
         bool eraseStatic(const Id& id) override;
+        bool eraseStatic(const ESM::FormKey& key);
         bool erase(const Id& id);
         bool erase(const T& item);
 
@@ -300,7 +312,12 @@ namespace MWWorld
         const ESM4::Cell* searchCellName(std::string_view) const;
         const ESM4::Cell* searchExterior(ESM::ExteriorCellLocation cellIndex) const;
         ESM4::Cell* insert(const ESM4::Cell& item, bool overrideOnly = false);
+        ESM4::Cell* insert(
+            const ESM4::Cell& item, const ESM::FormKey& key, bool overrideOnly = false);
         ESM4::Cell* insertStatic(const ESM4::Cell& item);
+        ESM4::Cell* insertStatic(const ESM4::Cell& item, const ESM::FormKey& key);
+        bool eraseStatic(const ESM::RefId& id) override;
+        bool eraseStatic(const ESM::FormKey& key);
         void insertCell(ESM4::Cell* cell);
         void clearDynamic() override;
     };

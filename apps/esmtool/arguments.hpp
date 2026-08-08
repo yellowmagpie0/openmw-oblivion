@@ -20,6 +20,7 @@ namespace EsmTool
         std::string encoding;
         std::filesystem::path filename;
         std::filesystem::path outname;
+        std::vector<std::filesystem::path> filenames;
 
         std::vector<std::string> types;
         std::string name;

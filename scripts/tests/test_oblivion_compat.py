@@ -101,6 +101,62 @@ class OblivionCompatTests(unittest.TestCase):
                     output=output,
                 )
 
+    def test_form_graph_validator_accepts_only_reviewed_stable_edges(self):
+        report = {
+            "key_count": 3,
+            "revision_count": 4,
+            "reference_count": 2,
+            "fingerprint": "fnv1a64:test",
+            "restart_stable": True,
+            "runtime_reorder_stable": True,
+            "enable_parent_cycles": [],
+            "unresolved": [
+                {
+                    "source": "content:oblivion.esm:000100",
+                    "target": "content:oblivion.esm:000014",
+                    "plugin": "oblivion.esm",
+                    "record": "SCPT",
+                    "subrecord": "SCRO",
+                    "reason": "missing",
+                }
+            ],
+        }
+        allowlist = {
+            "allowed": [
+                {
+                    "target": "content:oblivion.esm:000014",
+                    "reason": "missing",
+                    "expected_count": 1,
+                    "description": "PlayerRef is engine-reserved",
+                }
+            ]
+        }
+        result = MODULE.validate_form_graph_report(report, allowlist)
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["reviewed_exception_count"], 1)
+
+    def test_form_graph_validator_rejects_new_edges_and_changed_counts(self):
+        report = {
+            "restart_stable": True,
+            "runtime_reorder_stable": True,
+            "enable_parent_cycles": [],
+            "unresolved": [{"target": "content:test.esp:000001", "reason": "missing"}],
+        }
+        result = MODULE.validate_form_graph_report(
+            report,
+            {
+                "allowed": [
+                    {
+                        "target": "content:oblivion.esm:000014",
+                        "expected_count": 2,
+                    }
+                ]
+            },
+        )
+        self.assertFalse(result["passed"])
+        self.assertEqual(len(result["unreviewed"]), 1)
+        self.assertEqual(len(result["stale_or_changed_rules"]), 1)
+
     @unittest.skipUnless(shutil.which("compare") and shutil.which("magick"), "ImageMagick is unavailable")
     def test_identical_image_passes(self):
         with tempfile.TemporaryDirectory() as temporary:

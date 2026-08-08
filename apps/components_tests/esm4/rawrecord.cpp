@@ -1,6 +1,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadrawrecord.hpp>
 #include <components/esm4/reader.hpp>
+#include <components/esm4/readerutils.hpp>
 #include <components/files/istreamptr.hpp>
 #include <components/toutf8/toutf8.hpp>
 
@@ -9,6 +10,7 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -96,6 +98,24 @@ namespace
         return result;
     }
 
+    std::vector<char> makeGroupedPlugin()
+    {
+        std::vector<char> result = makePlugin(false, false);
+        constexpr std::size_t headerSize = 20;
+        constexpr std::size_t headerRecordSize = 20 + 18;
+        std::vector<char> record(result.begin() + headerRecordSize, result.end());
+        result.erase(result.begin() + headerRecordSize, result.end());
+
+        append(result, ESM4::REC_GRUP);
+        append(result, static_cast<std::uint32_t>(headerSize + record.size()));
+        append(result, std::uint32_t{ 0x123 });
+        append(result, static_cast<std::int32_t>(ESM4::Grp_CellTemporaryChild));
+        append(result, std::uint16_t{ 0 });
+        append(result, std::uint16_t{ 0 });
+        result.insert(result.end(), record.begin(), record.end());
+        return result;
+    }
+
     ESM4::RawRecord readRawRecord(const std::vector<char>& data)
     {
         auto stream = std::make_unique<std::stringstream>(
@@ -141,6 +161,45 @@ namespace
         const ESM4::RawRecord value = readRawRecord(true, false);
         ASSERT_EQ(value.mSubRecords.size(), 2);
         EXPECT_EQ(value.mSubRecords[1].mData, (std::vector<std::uint8_t>{ 1, 2, 3, 4 }));
+    }
+
+    TEST(ESM4RawRecord, stableGroupParentsAndCurrentKeysSurviveContextRestore)
+    {
+        const std::vector<char> data = makeGroupedPlugin();
+        auto stream = std::make_unique<std::stringstream>(
+            std::string(data.begin(), data.end()), std::ios::in | std::ios::binary);
+        const ToUTF8::StatelessUtf8Encoder encoder(ToUTF8::WINDOWS_1252);
+        ESM4::Reader reader(std::move(stream), "memory.esm", nullptr, &encoder, true);
+        ESM4::ReaderContext saved;
+        ESM::FormRecordMetadata metadata;
+        std::optional<std::int32_t> groupType;
+        auto recordVisitor = [&](ESM4::Reader& value) {
+            EXPECT_EQ(value.stackSize(), 1u);
+            if (value.stackSize() == 1u)
+            {
+                EXPECT_EQ(value.grp().type, ESM4::Grp_CellTemporaryChild);
+                EXPECT_EQ(value.grpFormKey(), ESM::FormKey::content("memory.esm", 0x123));
+            }
+            value.setCurrCellFormKey(ESM::FormKey::content("memory.esm", 0x200));
+            value.setCurrWorldFormKey(ESM::FormKey::content("memory.esm", 0x300));
+            saved = value.getContext();
+            value.getRecordData();
+            ESM4::RawRecord raw;
+            raw.load(value);
+            metadata = value.takeFormRecordMetadata();
+            return true;
+        };
+        ESM4::ReaderUtils::readAll(reader, recordVisitor,
+            [&](ESM4::Reader& value) { groupType = value.hdr().group.type; });
+
+        ASSERT_TRUE(groupType.has_value());
+        EXPECT_EQ(*groupType, ESM4::Grp_CellTemporaryChild);
+        EXPECT_EQ(metadata.mParent, ESM::FormKey::content("memory.esm", 0x123));
+        EXPECT_EQ(metadata.mChildKind, ESM::FormChildKind::Temporary);
+        ASSERT_TRUE(reader.restoreContext(saved));
+        EXPECT_EQ(reader.grpFormKey(), ESM::FormKey::content("memory.esm", 0x123));
+        EXPECT_EQ(reader.currCellFormKey(), ESM::FormKey::content("memory.esm", 0x200));
+        EXPECT_EQ(reader.currWorldFormKey(), ESM::FormKey::content("memory.esm", 0x300));
     }
 
     TEST(ESM4RawRecord, rejectsPayloadThatExtendsPastRecord)

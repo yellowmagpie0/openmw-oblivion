@@ -3,11 +3,16 @@
 #include "labels.hpp"
 
 #include <array>
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <map>
+#include <sstream>
 
 #include <components/debug/writeflags.hpp>
 #include <components/esm/esmcommon.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/esm/path.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm/typetraits.hpp>
@@ -15,6 +20,9 @@
 #include <components/esm4/readerutils.hpp>
 #include <components/esm4/records.hpp>
 #include <components/esm4/typetraits.hpp>
+#include <components/files/conversion.hpp>
+#include <components/files/openfile.hpp>
+#include <components/misc/strings/lower.hpp>
 #include <components/toutf8/toutf8.hpp>
 
 namespace EsmTool
@@ -24,9 +32,16 @@ namespace EsmTool
         struct Params
         {
             const bool mQuite;
+            ESM::FormKeyIndex* mGraph = nullptr;
 
             explicit Params(const Arguments& info)
                 : mQuite(info.quiet_given || info.mode == "clone")
+            {
+            }
+
+            explicit Params(ESM::FormKeyIndex& graph)
+                : mQuite(true)
+                , mGraph(&graph)
             {
             }
         };
@@ -141,6 +156,19 @@ namespace EsmTool
 
             T value;
             value.load(reader);
+
+            if (params.mGraph != nullptr && !reader.getFormKeyFromHeader().isNull())
+            {
+                bool enableParentInverted = false;
+                if constexpr (requires { value.mEsp.flags; })
+                    enableParentInverted = (value.mEsp.flags & 1) != 0;
+                ESM::FormRecordMetadata metadata = reader.takeFormRecordMetadata(enableParentInverted);
+                const ESM::FormKey sourceCandidate = ESM::FormKey::content(
+                    Files::pathToUnicodeString(reader.getFileName().filename()), reader.hdr().record.getFormId().mIndex);
+                metadata.mKey
+                    = params.mGraph->resolveRecordHeader(metadata.mKey, sourceCandidate, metadata.mRecordType);
+                params.mGraph->apply(std::move(metadata));
+            }
 
             if (params.mQuite)
                 return;
@@ -568,7 +596,77 @@ namespace EsmTool
 
             if (!params.mQuite)
                 std::cout << "\n  Unsupported record: " << ESM::NAME(reader.hdr().record.typeId).toStringView() << '\n';
+            if (params.mGraph != nullptr && !reader.getFormKeyFromHeader().isNull())
+                throw std::runtime_error("TES4 graph audit encountered unsupported record "
+                    + ESM::printName(reader.hdr().record.typeId));
             return false;
+        }
+
+        std::string jsonEscape(std::string_view value)
+        {
+            std::ostringstream stream;
+            for (const unsigned char c : value)
+            {
+                if (c == '\\' || c == '"')
+                    stream << '\\' << static_cast<char>(c);
+                else if (c == '\n')
+                    stream << "\\n";
+                else if (c == '\r')
+                    stream << "\\r";
+                else if (c == '\t')
+                    stream << "\\t";
+                else if (c < 0x20)
+                    stream << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<unsigned>(c)
+                           << std::dec;
+                else
+                    stream << static_cast<char>(c);
+            }
+            return stream.str();
+        }
+
+        std::string fingerprint(std::span<const std::uint8_t> data)
+        {
+            std::uint64_t hash = 14695981039346656037ull;
+            for (const std::uint8_t value : data)
+            {
+                hash ^= value;
+                hash *= 1099511628211ull;
+            }
+            std::ostringstream stream;
+            stream << "fnv1a64:" << std::hex << std::setw(16) << std::setfill('0') << hash;
+            return stream.str();
+        }
+
+        ESM::FormKeyIndex scanGraph(
+            const std::vector<std::filesystem::path>& files, const std::vector<std::uint32_t>& runtimeIndices)
+        {
+            if (files.size() != runtimeIndices.size())
+                throw std::logic_error("TES4 graph runtime-index matrix is inconsistent");
+
+            std::map<std::string, int> fileToModIndex;
+            for (std::size_t i = 0; i < files.size(); ++i)
+            {
+                const std::string name = Misc::StringUtils::lowerCase(Files::pathToUnicodeString(files[i].filename()));
+                if (!fileToModIndex.emplace(name, runtimeIndices[i]).second)
+                    throw std::runtime_error("Duplicate TES4 graph plugin name: " + name);
+            }
+
+            const ToUTF8::StatelessUtf8Encoder encoder(ToUTF8::WINDOWS_1252);
+            ESM::FormKeyIndex graph;
+            const Params params(graph);
+            for (std::size_t i = 0; i < files.size(); ++i)
+            {
+                auto stream = Files::openBinaryInputFileStream(files[i]);
+                if (!stream->is_open())
+                    throw std::runtime_error("Unable to open TES4 graph plugin: " + Files::pathToUnicodeString(files[i]));
+                ESM4::Reader reader(std::move(stream), files[i], nullptr, &encoder, true);
+                reader.setModIndex(runtimeIndices[i]);
+                reader.updateModIndices(fileToModIndex);
+                auto visitorRec = [&params](ESM4::Reader& value) { return readRecord(params, value); };
+                auto visitorGroup = [](ESM4::Reader&) {};
+                ESM4::ReaderUtils::readAll(reader, visitorRec, visitorGroup);
+            }
+            return graph;
         }
 
     }
@@ -624,5 +722,96 @@ namespace EsmTool
         }
 
         return 0;
+    }
+
+    int graphTes4(const Arguments& info)
+    {
+        try
+        {
+            std::vector<std::uint32_t> canonicalIndices(info.filenames.size());
+            std::vector<std::uint32_t> reorderedIndices(info.filenames.size());
+            for (std::size_t i = 0; i < info.filenames.size(); ++i)
+            {
+                canonicalIndices[i] = static_cast<std::uint32_t>(i);
+                reorderedIndices[i] = static_cast<std::uint32_t>(info.filenames.size() - i - 1);
+            }
+
+            const ESM::FormKeyIndex graph = scanGraph(info.filenames, canonicalIndices);
+            const std::vector<std::uint8_t> state = graph.serialize();
+            const ESM::FormKeyIndex restored = ESM::FormKeyIndex::deserialize(state);
+            const bool restartStable = restored.serialize() == state;
+            const bool runtimeReorderStable = scanGraph(info.filenames, reorderedIndices).serialize() == state;
+            const std::vector<ESM::UnresolvedFormReference> unresolved = graph.unresolvedReferences();
+            const std::vector<std::vector<ESM::FormKey>> cycles = graph.enableParentCycles();
+
+            std::filesystem::create_directories(info.outname.parent_path().empty()
+                    ? std::filesystem::current_path()
+                    : info.outname.parent_path());
+            std::filesystem::path statePath = info.outname;
+            statePath += ".formkeys.bin";
+            std::ofstream stateStream(statePath, std::ios::binary);
+            stateStream.write(reinterpret_cast<const char*>(state.data()), static_cast<std::streamsize>(state.size()));
+            if (!stateStream)
+                throw std::runtime_error("Unable to write TES4 FormKey graph state");
+
+            std::ofstream report(info.outname);
+            if (!report)
+                throw std::runtime_error("Unable to write TES4 FormKey graph report");
+            report << "{\n  \"schema_version\": 1,\n  \"plugins\": [";
+            for (std::size_t i = 0; i < info.filenames.size(); ++i)
+            {
+                if (i != 0)
+                    report << ',';
+                report << "\n    \"" << jsonEscape(Files::pathToUnicodeString(info.filenames[i])) << '"';
+            }
+            report << "\n  ],\n  \"key_count\": " << graph.keyCount() << ",\n  \"revision_count\": "
+                   << graph.revisionCount() << ",\n  \"reference_count\": " << graph.referenceCount()
+                   << ",\n  \"serialized_bytes\": " << state.size() << ",\n  \"fingerprint\": \""
+                   << fingerprint(state) << "\",\n  \"restart_stable\": " << (restartStable ? "true" : "false")
+                   << ",\n  \"runtime_reorder_stable\": " << (runtimeReorderStable ? "true" : "false")
+                   << ",\n  \"unresolved\": [";
+            for (std::size_t i = 0; i < unresolved.size(); ++i)
+            {
+                const auto& edge = unresolved[i];
+                if (i != 0)
+                    report << ',';
+                report << "\n    {\"source\": \"" << edge.mSource.serialize() << "\", \"target\": \""
+                       << edge.mTarget.serialize() << "\", \"plugin\": \"" << jsonEscape(edge.mWinningPlugin)
+                       << "\", \"record\": \"" << ESM::printName(edge.mRecordType) << "\", \"subrecord\": \""
+                       << ESM::printName(edge.mSubRecordType) << "\", \"occurrence\": " << edge.mOccurrence
+                       << ", \"reason\": \""
+                       << (edge.mReason == ESM::UnresolvedFormReferenceReason::Missing ? "missing" : "deleted")
+                       << "\"}";
+            }
+            report << "\n  ],\n  \"enable_parent_cycles\": [";
+            for (std::size_t i = 0; i < cycles.size(); ++i)
+            {
+                if (i != 0)
+                    report << ',';
+                report << "\n    [";
+                for (std::size_t j = 0; j < cycles[i].size(); ++j)
+                {
+                    if (j != 0)
+                        report << ", ";
+                    report << '"' << cycles[i][j].serialize() << '"';
+                }
+                report << ']';
+            }
+            report << "\n  ]\n}\n";
+            if (!report)
+                throw std::runtime_error("Unable to finish TES4 FormKey graph report");
+
+            std::cout << "TES4 FormKey graph: keys=" << graph.keyCount() << " revisions=" << graph.revisionCount()
+                      << " references=" << graph.referenceCount() << " unresolved=" << unresolved.size()
+                      << " fingerprint=" << fingerprint(state) << '\n';
+            if (!restartStable || !runtimeReorderStable)
+                return 2;
+            return 0;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "TES4 FormKey graph audit failed: " << e.what() << '\n';
+            return -1;
+        }
     }
 }

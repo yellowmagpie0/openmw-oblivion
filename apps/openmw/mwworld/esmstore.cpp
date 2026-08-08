@@ -13,6 +13,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
+#include <components/files/conversion.hpp>
 #include <components/esmloader/load.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/lua/configuration.hpp>
@@ -263,7 +264,7 @@ namespace MWWorld
         }
 
         template <typename T>
-        static bool typedReadRecordESM4(ESM4::Reader& reader, Store<T>& store)
+        static bool typedReadRecordESM4(ESM4::Reader& reader, Store<T>& store, ESMStore& stores)
         {
             auto recordType = static_cast<ESM4::RecordTypes>(reader.hdr().record.typeId);
 
@@ -277,7 +278,29 @@ namespace MWWorld
                         reader.getRecordData();
                         T value;
                         value.load(reader);
-                        store.insertStatic(value);
+                        bool enableParentInverted = false;
+                        if constexpr (requires { value.mEsp.flags; })
+                            enableParentInverted = (value.mEsp.flags & ESM4::EnableParent::Flag_Inversed) != 0;
+
+                        ESM::FormRecordMetadata metadata
+                            = reader.takeFormRecordMetadata(enableParentInverted);
+                        const ESM::FormKey sourceCandidate = ESM::FormKey::content(
+                            Files::pathToUnicodeString(reader.getFileName().filename()),
+                            reader.hdr().record.getFormId().mIndex);
+                        metadata.mKey = stores.mFormKeyIndex.resolveRecordHeader(
+                            metadata.mKey, sourceCandidate, metadata.mRecordType);
+                        const ESM::FormKey key = metadata.mKey;
+                        if (key == sourceCandidate)
+                        {
+                            if constexpr (requires { value.mId = ESM::FormId{}; })
+                                value.mId = ESM::FormId{ key.localId(),
+                                    static_cast<std::int32_t>(reader.getModIndex()) };
+                        }
+                        stores.mFormKeyIndex.apply(std::move(metadata));
+                        if ((reader.hdr().record.flags & ESM4::Rec_Deleted) != 0)
+                            store.eraseStatic(key);
+                        else
+                            store.insertStatic(value, key);
                         return true;
                     }
                 }
@@ -288,7 +311,8 @@ namespace MWWorld
         static bool readRecord(ESM4::Reader& reader, ESMStore& store)
         {
             return std::apply(
-                [&reader](auto&... x) { return (typedReadRecordESM4(reader, x) || ...); }, store.mStoreImp->mStores);
+                [&reader, &store](auto&... x) { return (typedReadRecordESM4(reader, x, store) || ...); },
+                store.mStoreImp->mStores);
         }
     };
 

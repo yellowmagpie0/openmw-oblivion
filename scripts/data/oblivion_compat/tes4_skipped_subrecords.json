@@ -34,7 +34,7 @@
     { "record": "CONT", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "CREA", "subrecord": "CSDT", "reason": "Creature sound descriptors are deferred to actor audio." },
     { "record": "CREA", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
-    { "record": "CREA", "subrecord": "RNAM", "reason": "Creature race linkage is deferred to actor gameplay." },
+    { "record": "CREA", "subrecord": "RNAM", "reason": "Creature attack-reach semantics are deferred to actor gameplay." },
     { "record": "DOOR", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "FLOR", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "FURN", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },

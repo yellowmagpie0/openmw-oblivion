@@ -34,6 +34,7 @@
 void ESM4::ActorCharacter::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
     mParent = reader.currCell();
 

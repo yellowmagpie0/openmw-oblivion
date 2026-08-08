@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -99,6 +100,39 @@ namespace ESM
         FormChildKind mChildKind = FormChildKind::None;
         std::optional<FormKey> mEnableParent;
         bool mEnableParentInverted = false;
+        std::optional<FormKey> mParent;
+
+        struct Reference
+        {
+            FormKey mTarget;
+            std::uint32_t mSubRecordType = 0;
+            std::uint32_t mOccurrence = 0;
+
+            friend bool operator==(const Reference&, const Reference&) = default;
+        };
+
+        std::vector<Reference> mReferences;
+
+        friend bool operator==(const FormRecordMetadata&, const FormRecordMetadata&) = default;
+    };
+
+    enum class UnresolvedFormReferenceReason : std::uint8_t
+    {
+        Missing,
+        Deleted,
+    };
+
+    struct UnresolvedFormReference
+    {
+        FormKey mSource;
+        FormKey mTarget;
+        std::string mWinningPlugin;
+        std::uint32_t mRecordType = 0;
+        std::uint32_t mSubRecordType = 0;
+        std::uint32_t mOccurrence = 0;
+        UnresolvedFormReferenceReason mReason = UnresolvedFormReferenceReason::Missing;
+
+        friend bool operator==(const UnresolvedFormReference&, const UnresolvedFormReference&) = default;
     };
 
     // Ordered override graph. Applying records in load order makes the final
@@ -110,7 +144,20 @@ namespace ESM
         const FormRecordMetadata* winner(const FormKey& key) const;
         const FormRecordMetadata* resolve(const FormKey& key) const;
         const std::vector<FormRecordMetadata>* history(const FormKey& key) const;
+        FormKey resolveRecordHeader(
+            const FormKey& preferred, const FormKey& sourceCandidate, std::uint32_t recordType) const;
         std::vector<FormKey> unresolvedEnableParents() const;
+        std::vector<UnresolvedFormReference> unresolvedReferences() const;
+        std::vector<std::vector<FormKey>> enableParentCycles() const;
+
+        std::size_t keyCount() const { return mRecords.size(); }
+        std::size_t revisionCount() const;
+        std::size_t referenceCount() const;
+        const std::map<FormKey, std::vector<FormRecordMetadata>>& records() const { return mRecords; }
+
+        std::vector<std::uint8_t> serialize() const;
+        static FormKeyIndex deserialize(std::span<const std::uint8_t> data);
+        std::string canonicalJson() const;
 
     private:
         std::map<FormKey, std::vector<FormRecordMetadata>> mRecords;

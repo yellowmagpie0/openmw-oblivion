@@ -28,6 +28,9 @@
 #include <istream>
 #include <map>
 #include <memory>
+#include <span>
+#include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 
 #include "cellgrid.hpp"
@@ -112,6 +115,15 @@ namespace ESM4
         std::uint64_t bytes = 0;
     };
 
+    struct FormIdRead
+    {
+        ESM::FormKey mTarget;
+        std::uint32_t mSubRecordType = 0;
+        std::uint32_t mOccurrence = 0;
+
+        friend bool operator==(const FormIdRead&, const FormIdRead&) = default;
+    };
+
     //                                                   bytes read from group, updated by
     //                                                   getRecordHeader() in advance
     //                                                     |
@@ -139,12 +151,15 @@ namespace ESM4
         std::size_t fileRead; // number of bytes read, incl. the current record
 
         GroupStack groupStack; // keep track of bytes left to find when a group is done
+        std::vector<ESM::FormKey> groupFormKeys; // stable labels parallel to groupStack
         RecordHeader recordHeader; // header of the current record or group being processed
         SubRecordHeader subRecordHeader; // header of the current sub record being processed
         std::uint32_t recordRead; // bytes read from the sub records, incl. the current one
 
         ESM::FormId currWorld; // formId of current world - for grouping CELL records
         ESM::FormId currCell; // formId of current cell
+        ESM::FormKey currWorldFormKey; // stable counterpart retained across context save/restore
+        ESM::FormKey currCellFormKey; // stable counterpart retained across context save/restore
         // FIXME: try to get rid of these two members, seem like massive hacks
         CellGrid currCellGrid; // TODO: should keep a map of cell formids
         bool cellGridValid;
@@ -184,6 +199,9 @@ namespace ESM4
         bool mIgnoreMissingLocalizedStrings = false;
 
         std::map<std::pair<std::uint32_t, std::uint32_t>, SkippedSubRecordStats> mSkippedSubRecords;
+        std::vector<FormIdRead> mFormIdReads;
+        std::map<std::uint32_t, std::uint32_t> mFormIdOccurrences;
+        ESM::FormKey mPendingGroupFormKey;
 
         void buildLStringIndex(LocalizedStringType stringType, std::string_view prefix);
 
@@ -284,10 +302,12 @@ namespace ESM4
         inline const RecordHeader& hdr() const { return mCtx.recordHeader; }
 
         const GroupTypeHeader& grp(std::size_t pos = 0) const;
+        const ESM::FormKey& grpFormKey(std::size_t pos = 0) const;
 
         // The object setting up this reader needs to supply the file's load order index
         // so that the formId's in this file can be adjusted with the file (i.e. mod) index.
         void setModIndex(std::uint32_t index) { mCtx.modIndex = index; }
+        std::uint32_t getModIndex() const { return mCtx.modIndex; }
         void updateModIndices(const std::map<std::string, int>& fileToModIndex);
 
         // Maybe should throw an exception if called when not valid?
@@ -314,10 +334,16 @@ namespace ESM4
 
         inline ESM::FormId currCell() const { return mCtx.currCell; }
 
+        inline void setCurrCellFormKey(ESM::FormKey key) { mCtx.currCellFormKey = std::move(key); }
+        inline const ESM::FormKey& currCellFormKey() const { return mCtx.currCellFormKey; }
+
         // Should be set at the beginning of a WRLD load
         inline void setCurrWorld(ESM::FormId formId) { mCtx.currWorld = formId; }
 
         inline ESM::FormId currWorld() const { return mCtx.currWorld; }
+
+        inline void setCurrWorldFormKey(ESM::FormKey key) { mCtx.currWorldFormKey = std::move(key); }
+        inline const ESM::FormKey& currWorldFormKey() const { return mCtx.currWorldFormKey; }
 
         // Get the data part of a record
         // Note: assumes the header was read correctly and nothing else was read
@@ -376,13 +402,27 @@ namespace ESM4
         void adjustFormId(ESM::FormId& id) const;
 
         // Temporary. Doesn't support mod index > 255
-        void adjustFormId(ESM::FormId32& id) const;
+        void adjustFormId(ESM::FormId32& id);
 
         bool getFormId(ESM::FormId& id);
         ESM::FormId getFormIdFromHeader() const;
 
         bool getFormKey(ESM::FormKey& key);
         ESM::FormKey getFormKeyFromHeader() const;
+        ESM::FormKey resolveRawFormId(ESM::FormId value) const;
+        void recordRawFormId(ESM::FormId value);
+        void recordCurrentSubRecordFormIds(std::span<const std::uint8_t> data);
+        template <class T>
+            requires std::is_trivially_copyable_v<T>
+        void recordCurrentSubRecordFormIds(const T& value, std::size_t size = sizeof(T))
+        {
+            if (size > sizeof(T))
+                throw std::logic_error("Requested FormID scan exceeds object bounds");
+            recordCurrentSubRecordFormIds(
+                { reinterpret_cast<const std::uint8_t*>(std::addressof(value)), size });
+        }
+        std::vector<FormIdRead> takeFormIdReads();
+        ESM::FormRecordMetadata takeFormRecordMetadata(bool enableParentInverted = false);
 
         void adjustGRUPFormId();
 

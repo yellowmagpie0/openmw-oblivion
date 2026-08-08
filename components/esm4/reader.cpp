@@ -22,6 +22,8 @@
 */
 #include "reader.hpp"
 
+#include "formidfields.hpp"
+
 #undef DEBUG_GROUPSTACK
 
 #include <algorithm>
@@ -31,6 +33,7 @@
 #include <span>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include <zlib.h>
 
@@ -263,8 +266,23 @@ namespace ESM4
             mStream = std::move(mSavedStream);
         }
 
-        mCtx.groupStack.clear(); // probably not necessary since it will be overwritten
         mCtx = ctx;
+
+        // getContext() is taken immediately after reading a header. Rewind the
+        // accounting performed by getRecordHeader() before replaying that same
+        // header, otherwise the containing group and file are counted twice.
+        const bool isGroup = mCtx.recordHeader.record.typeId == REC_GRUP;
+        const std::uint32_t accountedSize = static_cast<std::uint32_t>(mCtx.recHeaderSize)
+            + (isGroup ? 0u : mCtx.recordHeader.record.dataSize);
+        if (mCtx.fileRead < accountedSize)
+            throw std::runtime_error("TES4 reader context has invalid file accounting");
+        mCtx.fileRead -= accountedSize;
+        if (!isGroup && !mCtx.groupStack.empty())
+        {
+            if (mCtx.groupStack.back().second < accountedSize)
+                throw std::runtime_error("TES4 reader context has invalid group accounting");
+            mCtx.groupStack.back().second -= accountedSize;
+        }
         mStream->seekg(ctx.filePos); // update file position
 
         return getRecordHeader();
@@ -547,6 +565,8 @@ namespace ESM4
 
     void Reader::getRecordData(bool dump)
     {
+        mFormIdReads.clear();
+        mFormIdOccurrences.clear();
         std::uint32_t uncompressedSize = 0;
 
         if ((mCtx.recordHeader.record.flags & Rec_Compressed) != 0)
@@ -698,7 +718,15 @@ namespace ESM4
         auto& stats = mSkippedSubRecords[{ mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId }];
         ++stats.calls;
         stats.bytes += mCtx.subRecordHeader.dataSize;
-        mStream->ignore(mCtx.subRecordHeader.dataSize);
+        if (!mayContainFormIds(mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId))
+        {
+            mStream->ignore(mCtx.subRecordHeader.dataSize);
+            return;
+        }
+        std::vector<std::uint8_t> data(mCtx.subRecordHeader.dataSize);
+        if (!data.empty() && !get(data.data(), data.size()))
+            fail("Failed to read skipped FormID-bearing subrecord");
+        recordCurrentSubRecordFormIds(std::span<const std::uint8_t>(data));
     }
 
     void Reader::skipSubRecordData(std::uint32_t size)
@@ -706,7 +734,16 @@ namespace ESM4
         auto& stats = mSkippedSubRecords[{ mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId }];
         ++stats.calls;
         stats.bytes += size;
-        mStream->ignore(size);
+        if (size != mCtx.subRecordHeader.dataSize
+            || !mayContainFormIds(mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId))
+        {
+            mStream->ignore(size);
+            return;
+        }
+        std::vector<std::uint8_t> data(size);
+        if (!data.empty() && !get(data.data(), data.size()))
+            fail("Failed to read skipped FormID-bearing subrecord");
+        recordCurrentSubRecordFormIds(std::span<const std::uint8_t>(data));
     }
 
     void Reader::enterGroup()
@@ -732,11 +769,13 @@ namespace ESM4
                 exitGroupCheck();
             }
 
+            mPendingGroupFormKey = {};
             return; // don't push an empty group, just return
         }
 
         // push group
         mCtx.groupStack.push_back(std::make_pair(mCtx.recordHeader.group, (std::uint32_t)mCtx.recHeaderSize));
+        mCtx.groupFormKeys.push_back(std::exchange(mPendingGroupFormKey, {}));
     }
 
     void Reader::exitGroupCheck()
@@ -761,6 +800,9 @@ namespace ESM4
             }
 
             mCtx.groupStack.pop_back();
+            if (mCtx.groupFormKeys.size() != mCtx.groupStack.size() + 1)
+                throw std::runtime_error("TES4 stable group-key stack is inconsistent");
+            mCtx.groupFormKeys.pop_back();
 #ifdef DEBUG_GROUPSTACK
             std::string padding; // FIXME: debugging only
             padding.insert(0, mCtx.groupStack.size() * 2, ' ');
@@ -794,6 +836,15 @@ namespace ESM4
             throw std::runtime_error("ESM4::Reader::grp - exceeded stack depth");
 
         return (*(mCtx.groupStack.end() - pos - 1)).first;
+    }
+
+    const ESM::FormKey& Reader::grpFormKey(std::size_t pos) const
+    {
+        if (mCtx.groupFormKeys.size() != mCtx.groupStack.size())
+            throw std::runtime_error("TES4 stable group-key stack is inconsistent");
+        if (pos >= mCtx.groupFormKeys.size())
+            throw std::runtime_error("ESM4::Reader::grpFormKey - exceeded stack depth");
+        return *(mCtx.groupFormKeys.end() - pos - 1);
     }
 
     void Reader::skipGroupData()
@@ -873,9 +924,10 @@ namespace ESM4
             id.mContentFile = mCtx.modIndex;
     }
 
-    void Reader::adjustFormId(FormId32& id) const
+    void Reader::adjustFormId(FormId32& id)
     {
         FormId formId = FormId::fromUint32(id);
+        recordRawFormId(formId);
         adjustFormId(formId);
         id = formId.toUint32();
     }
@@ -887,6 +939,7 @@ namespace ESM4
             return false;
         id = FormId::fromUint32(v);
 
+        recordRawFormId(id);
         adjustFormId(id);
         return true;
     }
@@ -904,27 +957,95 @@ namespace ESM4
         if (!getExact(value))
             return false;
         const FormId raw = FormId::fromUint32(value);
-        std::vector<std::string> masters;
-        masters.reserve(mHeader.mMaster.size());
-        for (const ESM::MasterData& master : mHeader.mMaster)
-            masters.push_back(master.name);
-        key = ESM::FormKeyResolver::resolveRaw(
-            raw, Files::pathToUnicodeString(mCtx.filename.filename()), masters);
+        key = resolveRawFormId(raw);
+        recordRawFormId(raw);
         return true;
     }
 
     ESM::FormKey Reader::getFormKeyFromHeader() const
     {
+        return resolveRawFormId(mCtx.recordHeader.record.getFormId());
+    }
+
+    ESM::FormKey Reader::resolveRawFormId(ESM::FormId value) const
+    {
         std::vector<std::string> masters;
         masters.reserve(mHeader.mMaster.size());
         for (const ESM::MasterData& master : mHeader.mMaster)
             masters.push_back(master.name);
-        return ESM::FormKeyResolver::resolveRaw(mCtx.recordHeader.record.getFormId(),
+        return ESM::FormKeyResolver::resolveRaw(value,
             Files::pathToUnicodeString(mCtx.filename.filename()), masters);
+    }
+
+    void Reader::recordRawFormId(ESM::FormId value)
+    {
+        if (value.isZeroOrUnset())
+            return;
+        const std::uint32_t subRecordType = mCtx.subRecordHeader.typeId;
+        const ESM::FormKey target = resolveRawFormId(value);
+        if (target.isNull())
+            return;
+        mFormIdReads.push_back({ target, subRecordType, mFormIdOccurrences[subRecordType]++ });
+    }
+
+    void Reader::recordCurrentSubRecordFormIds(std::span<const std::uint8_t> data)
+    {
+        for (const std::size_t offset
+            : findFormIdOffsets(mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId, data))
+        {
+            const std::uint32_t value = static_cast<std::uint32_t>(data[offset])
+                | static_cast<std::uint32_t>(data[offset + 1]) << 8
+                | static_cast<std::uint32_t>(data[offset + 2]) << 16
+                | static_cast<std::uint32_t>(data[offset + 3]) << 24;
+            if (value != 0)
+                recordRawFormId(ESM::FormId::fromUint32(value));
+        }
+    }
+
+    std::vector<FormIdRead> Reader::takeFormIdReads()
+    {
+        mFormIdOccurrences.clear();
+        return std::exchange(mFormIdReads, {});
+    }
+
+    ESM::FormRecordMetadata Reader::takeFormRecordMetadata(bool enableParentInverted)
+    {
+        ESM::FormRecordMetadata metadata;
+        metadata.mKey = getFormKeyFromHeader();
+        metadata.mWinningPlugin = Files::pathToUnicodeString(getFileName().filename());
+        metadata.mRecordType = hdr().record.typeId;
+        metadata.mDeleted = (hdr().record.flags & Rec_Deleted) != 0;
+        metadata.mEnableParentInverted = enableParentInverted;
+
+        for (std::size_t depth = 0; depth < stackSize(); ++depth)
+        {
+            const GroupType groupType = static_cast<GroupType>(grp(depth).type);
+            if (metadata.mChildKind == ESM::FormChildKind::None)
+            {
+                if (groupType == Grp_CellPersistentChild)
+                    metadata.mChildKind = ESM::FormChildKind::Persistent;
+                else if (groupType == Grp_CellTemporaryChild)
+                    metadata.mChildKind = ESM::FormChildKind::Temporary;
+                else if (groupType == Grp_CellVisibleDistChild)
+                    metadata.mChildKind = ESM::FormChildKind::VisibleDistant;
+            }
+            if (!metadata.mParent && !grpFormKey(depth).isNull())
+                metadata.mParent = grpFormKey(depth);
+        }
+
+        for (const FormIdRead& reference : takeFormIdReads())
+        {
+            metadata.mReferences.push_back(
+                { reference.mTarget, reference.mSubRecordType, reference.mOccurrence });
+            if (reference.mSubRecordType == ESM::fourCC("XESP") && !metadata.mEnableParent)
+                metadata.mEnableParent = reference.mTarget;
+        }
+        return metadata;
     }
 
     void Reader::adjustGRUPFormId()
     {
+        mPendingGroupFormKey = resolveRawFormId(FormId::fromUint32(mCtx.recordHeader.group.label.value));
         adjustFormId(mCtx.recordHeader.group.label.value);
     }
 

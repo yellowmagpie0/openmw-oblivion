@@ -17,6 +17,8 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/typetraits.hpp>
 #include <components/esm4/common.hpp>
+#include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadstat.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
 #include <components/files/configurationmanager.hpp>
@@ -28,6 +30,56 @@
 #include "apps/openmw/mwworld/esmstore.hpp"
 
 static Loading::Listener dummyListener;
+
+TEST(MWWorldStoreTest, tes4TypedStoreMaintainsStableAndRuntimeIdentityTogether)
+{
+    MWWorld::Store<ESM4::Static> store;
+    ESM4::Static base;
+    base.mId = ESM::FormId{ 0x123, 2 };
+    base.mEditorId = "Base";
+    const ESM::FormKey key = ESM::FormKey::content("Oblivion.esm", 0x123);
+
+    ASSERT_NE(store.insertStatic(base, key), nullptr);
+    ASSERT_NE(store.search(key), nullptr);
+    EXPECT_EQ(store.search(key)->mEditorId, "Base");
+    EXPECT_EQ(store.findFormKey(ESM::RefId(base.mId)), key);
+    const MWWorld::Store<ESM4::Static> copy(store);
+    ASSERT_NE(copy.search(key), nullptr);
+    EXPECT_EQ(copy.search(key)->mEditorId, "Base");
+
+    ESM4::Static runtime = base;
+    runtime.mEditorId = "Runtime override";
+    ASSERT_NE(store.insert(runtime, key), nullptr);
+    EXPECT_EQ(store.search(key)->mEditorId, "Runtime override");
+    const MWWorld::Store<ESM4::Static> copyWithDynamic(store);
+    ASSERT_NE(copyWithDynamic.search(key), nullptr);
+    EXPECT_EQ(copyWithDynamic.search(key)->mEditorId, "Base");
+    store.clearDynamic();
+    ASSERT_NE(store.search(key), nullptr);
+    EXPECT_EQ(store.search(key)->mEditorId, "Base");
+
+    EXPECT_THROW(store.insertStatic(base, ESM::FormKey::content("Knights.esp", 0x123)), std::logic_error);
+    EXPECT_TRUE(store.eraseStatic(key));
+    EXPECT_EQ(store.search(key), nullptr);
+    EXPECT_EQ(store.findFormKey(ESM::RefId(base.mId)), std::nullopt);
+}
+
+TEST(MWWorldStoreTest, tes4CellStableInsertionAndDeletionMaintainSecondaryIndexes)
+{
+    MWWorld::Store<ESM4::Cell> store;
+    ESM4::Cell cell;
+    cell.mId = ESM::RefId::formIdRefId({ 0x456, 1 });
+    cell.mParent = ESM::RefId::formIdRefId({ 0x100, 0 });
+    cell.mEditorId = "StableCell";
+    cell.mCellFlags = ESM4::CELL_Interior;
+    const ESM::FormKey key = ESM::FormKey::content("Knights.esp", 0x456);
+
+    ASSERT_NE(store.insertStatic(cell, key), nullptr);
+    EXPECT_EQ(store.search(key), store.searchCellName("stablecell"));
+    EXPECT_TRUE(store.eraseStatic(key));
+    EXPECT_EQ(store.search(key), nullptr);
+    EXPECT_EQ(store.searchCellName("StableCell"), nullptr);
+}
 
 /// Base class for tests of ESMStore that rely on external content files to produce the test results
 struct ContentFileTest : public ::testing::Test

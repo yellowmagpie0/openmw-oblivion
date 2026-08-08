@@ -29,6 +29,10 @@ namespace MWWorld
         // Note: Currently unused for items in containers
         ESM::RefNum getRefNum() const noexcept;
 
+        // Stable TES4 identity. TES3 references return a null key because their
+        // persistent identity remains ESM::RefNum/RefId.
+        ESM::FormKey getFormKey() const;
+
         // Returns RefNum.
         // If RefNum is not set, assigns a generated one and changes the "lastAssignedRefNum" counter.
         ESM::RefNum getOrAssignRefNum(ESM::RefNum& lastAssignedRefNum);

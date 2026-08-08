@@ -40,6 +40,16 @@ namespace MWWorld
             mCellRef.mVariant);
     }
 
+    ESM::FormKey CellRef::getFormKey() const
+    {
+        return std::visit(ESM::VisitOverload{
+                              [](const ESM4::Reference& ref) { return ref.mFormKey; },
+                              [](const ESM4::ActorCharacter& ref) { return ref.mFormKey; },
+                              [](const ESM::CellRef&) { return ESM::FormKey{}; },
+                          },
+            mCellRef.mVariant);
+    }
+
     ESM::RefNum CellRef::getOrAssignRefNum(ESM::RefNum& lastAssignedRefNum)
     {
         ESM::RefNum& refNum = std::visit(ESM::VisitOverload{

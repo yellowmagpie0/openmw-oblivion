@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "description": "Reviewed unresolved FormKeys in the English Steam GOTY Deluxe official plugin set. Exact counts make newly introduced, removed, or reclassified edges fail M2 acceptance.",
+  "provenance": "Audited with esmtool graph against Oblivion.esm and all ten official DLC plugins on 2026-08-08. PlayerRef and low reserved IDs are engine forms not serialized as ordinary records; the remaining entries are dangling references shipped by Bethesda.",
+  "allowed": [
+    {
+      "target": "content:oblivion.esm:000014",
+      "reason": "missing",
+      "expected_count": 4315,
+      "description": "PlayerRef [00000014] is an engine-created reference and has no ordinary winning record."
+    },
+    {
+      "target": "content:oblivion.esm:078856",
+      "reason": "missing",
+      "expected_count": 24,
+      "description": "Twenty-four released base-game CELL XCLR entries retain the same absent region form."
+    },
+    {
+      "target": "content:oblivion.esm:00000d",
+      "reason": "missing",
+      "expected_count": 7,
+      "description": "Low engine-reserved reference used by released AI package targets."
+    },
+    {
+      "target": "content:oblivion.esm:00001c",
+      "reason": "missing",
+      "expected_count": 6,
+      "description": "Low engine-reserved reference used by released AI package targets."
+    },
+    {
+      "target": "content:oblivion.esm:00001d",
+      "reason": "missing",
+      "expected_count": 3,
+      "description": "Low engine-reserved reference used by released AI package targets."
+    },
+    {
+      "target": "content:oblivion.esm:000008",
+      "reason": "missing",
+      "expected_count": 3,
+      "description": "Low engine-reserved reference used by released AI package targets."
+    },
+    {
+      "target": "content:oblivion.esm:010b5f",
+      "reason": "missing",
+      "expected_count": 2,
+      "description": "Knights weather records reference the same absent base-game sound."
+    },
+    {
+      "target": "content:oblivion.esm:00001b",
+      "reason": "missing",
+      "expected_count": 2,
+      "description": "Low engine-reserved reference used by released AI package targets."
+    },
+    {
+      "target": "content:knights.esp:020ae2",
+      "reason": "missing",
+      "expected_count": 1,
+      "description": "Released Knights spell effect retains one dangling script reference."
+    },
+    {
+      "target": "content:knights.esp:020ae4",
+      "reason": "missing",
+      "expected_count": 1,
+      "description": "Released Knights spell effect retains one dangling script reference."
+    }
+  ]
+}

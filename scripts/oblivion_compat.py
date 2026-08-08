@@ -29,6 +29,19 @@ from typing import Any, Iterable
 
 
 SCHEMA_VERSION = 1
+OFFICIAL_PLUGIN_ORDER = (
+    "Oblivion.esm",
+    "DLCShiveringIsles.esp",
+    "DLCBattlehornCastle.esp",
+    "DLCFrostcrag.esp",
+    "DLCHorseArmor.esp",
+    "DLCMehrunesRazor.esp",
+    "DLCOrrery.esp",
+    "DLCSpellTomes.esp",
+    "DLCThievesDen.esp",
+    "DLCVileLair.esp",
+    "Knights.esp",
+)
 DEFAULT_ERROR_PATTERNS = (
     r"\bFatal\b",
     r"\bError:\s",
@@ -913,6 +926,144 @@ def parse_variables(values: list[str]) -> dict[str, str]:
     return result
 
 
+def validate_form_graph_report(report: dict[str, Any], allowlist: dict[str, Any]) -> dict[str, Any]:
+    unresolved = report.get("unresolved", [])
+    rules = allowlist.get("allowed", [])
+    if not isinstance(unresolved, list) or not isinstance(rules, list):
+        raise ValueError("Form graph report and allowlist must contain arrays")
+
+    match_fields = ("source", "target", "plugin", "record", "subrecord", "reason")
+    matched_counts = [0] * len(rules)
+    unreviewed: list[dict[str, Any]] = []
+    for edge in unresolved:
+        matches = [
+            index
+            for index, rule in enumerate(rules)
+            if all(field not in rule or rule[field] == edge.get(field) for field in match_fields)
+        ]
+        if not matches:
+            unreviewed.append(edge)
+            continue
+        # Rules are ordered from narrow to broad and each edge is charged to
+        # the first matching rule, making expected counts deterministic.
+        matched_counts[matches[0]] += 1
+
+    stale_or_changed = []
+    for index, rule in enumerate(rules):
+        expected = rule.get("expected_count")
+        if expected is not None and expected != matched_counts[index]:
+            stale_or_changed.append(
+                {
+                    "rule": index,
+                    "description": rule.get("description", ""),
+                    "expected_count": expected,
+                    "actual_count": matched_counts[index],
+                }
+            )
+
+    cycles = report.get("enable_parent_cycles", [])
+    passed = (
+        report.get("restart_stable") is True
+        and report.get("runtime_reorder_stable") is True
+        and not cycles
+        and not unreviewed
+        and not stale_or_changed
+    )
+    return {
+        "passed": passed,
+        "key_count": report.get("key_count"),
+        "revision_count": report.get("revision_count"),
+        "reference_count": report.get("reference_count"),
+        "fingerprint": report.get("fingerprint"),
+        "restart_stable": report.get("restart_stable"),
+        "runtime_reorder_stable": report.get("runtime_reorder_stable"),
+        "unresolved_count": len(unresolved),
+        "reviewed_exception_count": sum(matched_counts),
+        "unreviewed": unreviewed,
+        "exception_rule_counts": matched_counts,
+        "stale_or_changed_rules": stale_or_changed,
+        "enable_parent_cycles": cycles,
+    }
+
+
+def render_form_graph_html(result: dict[str, Any], allowlist: dict[str, Any]) -> str:
+    rows = []
+    counts = result.get("exception_rule_counts", [])
+    for index, rule in enumerate(allowlist.get("allowed", [])):
+        rows.append(
+            "<tr>"
+            f"<td>{index + 1}</td>"
+            f"<td><code>{html.escape(str(rule.get('target', '')))}</code></td>"
+            f"<td>{counts[index] if index < len(counts) else 0}</td>"
+            f"<td>{html.escape(str(rule.get('description', '')))}</td>"
+            "</tr>"
+        )
+    status = "PASS" if result.get("passed") else "FAIL"
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>M2 FormKey graph {status}</title>
+<style>body{{font:16px sans-serif;max-width:1200px;margin:2rem auto;padding:0 1rem}}code{{font-family:monospace}}
+table{{border-collapse:collapse;width:100%}}th,td{{border:1px solid #aaa;padding:.45rem;text-align:left}}
+.pass{{color:#176b27}}.fail{{color:#a31313}}</style></head><body>
+<h1 class="{'pass' if result.get('passed') else 'fail'}">M2 FormKey graph: {status}</h1>
+<p><b>Keys:</b> {result.get('key_count')} &nbsp; <b>Revisions:</b> {result.get('revision_count')}
+&nbsp; <b>References:</b> {result.get('reference_count')}</p>
+<p><b>Fingerprint:</b> <code>{html.escape(str(result.get('fingerprint')))}</code><br>
+<b>Restart stable:</b> {result.get('restart_stable')} &nbsp;
+<b>Runtime-index reorder stable:</b> {result.get('runtime_reorder_stable')} &nbsp;
+<b>Unreviewed:</b> {len(result.get('unreviewed', []))} &nbsp;
+<b>Enable-parent cycles:</b> {len(result.get('enable_parent_cycles', []))}</p>
+<h2>Reviewed official-content exceptions</h2>
+<table><thead><tr><th>#</th><th>Target</th><th>Edges</th><th>Review</th></tr></thead>
+<tbody>{''.join(rows)}</tbody></table></body></html>"""
+
+
+def run_form_graph(args: argparse.Namespace) -> dict[str, Any]:
+    source = args.source.resolve()
+    data = args.oblivion_data.resolve()
+    output = args.output.resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    esmtool = args.esmtool.resolve()
+    if not esmtool.is_file():
+        raise ValueError(f"esmtool does not exist: {esmtool}")
+    plugins = [data / name for name in OFFICIAL_PLUGIN_ORDER]
+    missing = [str(path) for path in plugins if not path.is_file()]
+    if missing:
+        raise ValueError(f"Official Oblivion plugins are missing: {', '.join(missing)}")
+
+    report_path = output / "form-graph.json"
+    command_result = run_command(
+        [str(esmtool), "graph", str(report_path), *(str(path) for path in plugins)],
+        cwd=source,
+        timeout=args.timeout,
+    )
+    (output / "form-graph.log").write_text(command_result["output"], encoding="utf-8")
+    if command_result["exit_code"] != 0 or command_result["timed_out"]:
+        raise RuntimeError(
+            f"TES4 graph audit failed (exit={command_result['exit_code']}, timed_out={command_result['timed_out']})"
+        )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    allowlist_path = (
+        args.allowlist.resolve()
+        if args.allowlist
+        else source / "scripts" / "data" / "oblivion_compat" / "tes4_form_graph_exceptions.json"
+    )
+    allowlist = json.loads(allowlist_path.read_text(encoding="utf-8"))
+    result = validate_form_graph_report(report, allowlist)
+    result.update(
+        {
+            "schema_version": SCHEMA_VERSION,
+            "report": str(report_path),
+            "state": str(report_path) + ".formkeys.bin",
+            "allowlist": str(allowlist_path),
+            "plugins": [path.name for path in plugins],
+            "command_duration_seconds": command_result["duration_seconds"],
+        }
+    )
+    write_json(output / "acceptance.json", result)
+    (output / "acceptance.html").write_text(render_form_graph_html(result, allowlist), encoding="utf-8")
+    return result
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -966,6 +1117,14 @@ def make_parser() -> argparse.ArgumentParser:
     scenario.add_argument("manifest", type=Path)
     scenario.add_argument("--output", type=Path, required=True)
     scenario.add_argument("--variable", action="append", default=[])
+
+    graph = subparsers.add_parser("form-graph", help="audit stable FormKeys across all official Oblivion plugins")
+    graph.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    graph.add_argument("--esmtool", type=Path, required=True)
+    graph.add_argument("--oblivion-data", type=Path, required=True)
+    graph.add_argument("--output", type=Path, required=True)
+    graph.add_argument("--allowlist", type=Path)
+    graph.add_argument("--timeout", type=float, default=900)
     return parser
 
 
@@ -1002,6 +1161,8 @@ def main(argv: list[str] | None = None) -> int:
             variables = parse_variables(args.variable)
             variables.setdefault("source", str(Path(__file__).resolve().parents[1]))
             result = run_scenario(args.manifest.resolve(), args.output.resolve(), variables)
+        elif args.command == "form-graph":
+            result = run_form_graph(args)
         else:
             raise AssertionError(args.command)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:

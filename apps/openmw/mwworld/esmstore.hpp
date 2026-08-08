@@ -167,6 +167,8 @@ namespace MWWorld
         std::vector<StoreBase*> mStores;
         std::vector<DynamicStore*> mDynamicStores;
 
+        ESM::FormKeyIndex mFormKeyIndex;
+
         uint64_t mDynamicCount;
 
         mutable std::unordered_map<ESM::RefId, std::weak_ptr<MWMechanics::SpellList>> mSpellListCache;
@@ -217,6 +219,14 @@ namespace MWWorld
 
         void load(ESM::ESMReader& esm, Loading::Listener* listener, ESM::Dialogue*& dialogue);
         void loadESM4(ESM4::Reader& esm, Loading::Listener* listener);
+
+        const ESM::FormKeyIndex& getFormKeyIndex() const { return mFormKeyIndex; }
+
+        template <class T>
+        const T* search(const ESM::FormKey& key) const
+        {
+            return get<T>().search(key);
+        }
 
         template <class T>
         const Store<T>& get() const

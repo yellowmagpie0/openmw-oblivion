@@ -10,6 +10,7 @@ namespace EsmTool
     struct Arguments;
 
     int loadTes4(const Arguments& info, std::unique_ptr<std::ifstream>&& stream);
+    int graphTes4(const Arguments& info);
 }
 
 #endif

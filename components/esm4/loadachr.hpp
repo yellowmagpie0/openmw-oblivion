@@ -35,6 +35,8 @@
 
 #include "reference.hpp" // Placement, EnableParent
 
+#include <components/esm/formkey.hpp>
+
 namespace ESM4
 {
     class Reader;
@@ -43,6 +45,7 @@ namespace ESM4
     struct ActorCharacter
     {
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey; // stable identity, independent of load-order indices
         ESM::RefId mParent; // cell FormId , from the loading sequence
                             // NOTE: for exterior cells it will be the dummy cell FormId
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details

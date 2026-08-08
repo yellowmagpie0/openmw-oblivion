@@ -44,6 +44,7 @@ void ESM4::World::load(ESM4::Reader& reader)
     // apparently the label field is not reliable so the parent world formid may have been
     // corrupted by the use of ignore flag (TODO: should check to verify).
     reader.setCurrWorld(mId); // save for CELL later
+    reader.setCurrWorldFormKey(reader.getFormKeyFromHeader());
 
     std::uint32_t esmVer = reader.esmVersion();
     // bool isTES4 = (esmVer == ESM::VER_080 || esmVer == ESM::VER_100);

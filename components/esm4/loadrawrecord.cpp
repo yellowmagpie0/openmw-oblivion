@@ -35,6 +35,8 @@ namespace ESM4
             if (!subRecord.mData.empty() && !reader.get(subRecord.mData.data(), subRecord.mData.size()))
                 throw std::runtime_error("Failed to read raw ESM4 subrecord payload");
 
+            reader.recordCurrentSubRecordFormIds(std::span<const std::uint8_t>(subRecord.mData));
+
             if (subRecord.mType == ESM::fourCC("EDID"))
                 mEditorId = readZeroTerminatedString(subRecord.mData);
             else if (subRecord.mType == ESM::fourCC("FULL"))

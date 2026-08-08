@@ -75,6 +75,7 @@ void ESM4::Quest::load(ESM4::Reader& reader)
                 {
                     TargetCondition cond;
                     reader.get(&cond, 24);
+                    reader.recordCurrentSubRecordFormIds(cond, 24);
                     cond.reference = 0; // unused in TES4 but keep it clean
                     mTargetConditions.push_back(cond);
                 }
@@ -82,6 +83,7 @@ void ESM4::Quest::load(ESM4::Reader& reader)
                 {
                     TargetCondition cond;
                     reader.get(cond); // FO3/FONV
+                    reader.recordCurrentSubRecordFormIds(cond);
                     if (cond.reference)
                         reader.adjustFormId(cond.reference);
                     mTargetConditions.push_back(cond);

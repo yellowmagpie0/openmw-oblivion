@@ -117,7 +117,19 @@ namespace MWWorld
     template <class T, class Id>
     TypedDynamicStore<T, Id>::TypedDynamicStore(const TypedDynamicStore<T, Id>& orig)
         : mStatic(orig.mStatic)
+        , mStaticFormKeys(orig.mStaticFormKeys)
+        , mStaticIdsToFormKeys(orig.mStaticIdsToFormKeys)
     {
+        mShared.reserve(mStatic.size());
+        assert(orig.mShared.size() >= orig.mStatic.size());
+        for (std::size_t i = 0; i < orig.mStatic.size(); ++i)
+        {
+            const T* value = orig.mShared[i];
+            const auto found = mStatic.find(value->mId);
+            if (found != mStatic.end())
+                mShared.push_back(&found->second);
+        }
+        assert(mShared.size() == mStatic.size());
     }
 
     template <class T, class Id>
@@ -127,6 +139,8 @@ namespace MWWorld
         assert(mShared.size() >= mStatic.size());
         mShared.erase(mShared.begin() + mStatic.size(), mShared.end());
         mDynamic.clear();
+        mDynamicFormKeys.clear();
+        mDynamicIdsToFormKeys.clear();
     }
 
     template <class T, class Id>
@@ -150,6 +164,33 @@ namespace MWWorld
             return &(it->second);
 
         return nullptr;
+    }
+
+    template <class T, class Id>
+    const T* TypedDynamicStore<T, Id>::search(const ESM::FormKey& key) const
+    {
+        if (const auto dynamic = mDynamicFormKeys.find(key); dynamic != mDynamicFormKeys.end())
+            return search(dynamic->second);
+        if (const auto value = mStaticFormKeys.find(key); value != mStaticFormKeys.end())
+            return searchStatic(value->second);
+        return nullptr;
+    }
+
+    template <class T, class Id>
+    const T* TypedDynamicStore<T, Id>::searchStatic(const ESM::FormKey& key) const
+    {
+        const auto value = mStaticFormKeys.find(key);
+        return value == mStaticFormKeys.end() ? nullptr : searchStatic(value->second);
+    }
+
+    template <class T, class Id>
+    std::optional<ESM::FormKey> TypedDynamicStore<T, Id>::findFormKey(const Id& id) const
+    {
+        if (const auto dynamic = mDynamicIdsToFormKeys.find(id); dynamic != mDynamicIdsToFormKeys.end())
+            return dynamic->second;
+        if (const auto value = mStaticIdsToFormKeys.find(id); value != mStaticIdsToFormKeys.end())
+            return value->second;
+        return std::nullopt;
     }
 
     template <class T, class Id>
@@ -283,6 +324,26 @@ namespace MWWorld
             mShared.push_back(ptr);
         return ptr;
     }
+
+    template <class T, class Id>
+    T* TypedDynamicStore<T, Id>::insert(const T& item, const ESM::FormKey& key, bool overrideOnly)
+    {
+        if (key.isNull())
+            throw std::invalid_argument("Cannot index a TES4 runtime record with a null FormKey");
+        const Id id = item.mId;
+        if (const auto existing = mDynamicFormKeys.find(key);
+            existing != mDynamicFormKeys.end() && existing->second != id)
+            throw std::logic_error("Stable TES4 runtime FormKey changed runtime identity");
+        if (const auto existing = mDynamicIdsToFormKeys.find(id);
+            existing != mDynamicIdsToFormKeys.end() && existing->second != key)
+            throw std::logic_error("TES4 runtime FormId collides with a different dynamic FormKey");
+        T* result = insert(item, overrideOnly);
+        if (result == nullptr)
+            return nullptr;
+        mDynamicFormKeys.insert_or_assign(key, id);
+        mDynamicIdsToFormKeys.insert_or_assign(id, key);
+        return result;
+    }
     template <class T, class Id>
     T* TypedDynamicStore<T, Id>::insertStatic(const T& item)
     {
@@ -292,9 +353,33 @@ namespace MWWorld
             mShared.push_back(ptr);
         return ptr;
     }
+
+    template <class T, class Id>
+    T* TypedDynamicStore<T, Id>::insertStatic(const T& item, const ESM::FormKey& key)
+    {
+        if (key.isNull())
+            throw std::invalid_argument("Cannot index a TES4 record with a null FormKey");
+        const Id id = item.mId;
+        if (const auto existing = mStaticFormKeys.find(key);
+            existing != mStaticFormKeys.end() && existing->second != id)
+            throw std::logic_error("Stable TES4 FormKey changed runtime identity within one load order");
+        if (const auto existing = mStaticIdsToFormKeys.find(id);
+            existing != mStaticIdsToFormKeys.end() && existing->second != key)
+            throw std::logic_error("TES4 runtime FormId collides with a different stable FormKey");
+
+        T* result = insertStatic(item);
+        mStaticFormKeys.insert_or_assign(key, id);
+        mStaticIdsToFormKeys.insert_or_assign(id, key);
+        return result;
+    }
     template <class T, class Id>
     bool TypedDynamicStore<T, Id>::eraseStatic(const Id& id)
     {
+        if (const auto stable = mStaticIdsToFormKeys.find(id); stable != mStaticIdsToFormKeys.end())
+        {
+            mStaticFormKeys.erase(stable->second);
+            mStaticIdsToFormKeys.erase(stable);
+        }
         typename Static::iterator it = mStatic.find(id);
 
         if (it != mStatic.end())
@@ -319,8 +404,22 @@ namespace MWWorld
     }
 
     template <class T, class Id>
+    bool TypedDynamicStore<T, Id>::eraseStatic(const ESM::FormKey& key)
+    {
+        const auto value = mStaticFormKeys.find(key);
+        if (value == mStaticFormKeys.end())
+            return false;
+        return eraseStatic(value->second);
+    }
+
+    template <class T, class Id>
     bool TypedDynamicStore<T, Id>::erase(const Id& id)
     {
+        if (const auto stable = mDynamicIdsToFormKeys.find(id); stable != mDynamicIdsToFormKeys.end())
+        {
+            mDynamicFormKeys.erase(stable->second);
+            mDynamicIdsToFormKeys.erase(stable);
+        }
         if (!eraseFromMap(mDynamic, id))
             return false;
 
@@ -1193,11 +1292,45 @@ namespace MWWorld
         return cellPtr;
     }
 
+    ESM4::Cell* Store<ESM4::Cell>::insert(
+        const ESM4::Cell& item, const ESM::FormKey& key, bool overrideOnly)
+    {
+        auto cellPtr = TypedDynamicStore<ESM4::Cell>::insert(item, key, overrideOnly);
+        if (cellPtr != nullptr)
+            insertCell(cellPtr);
+        return cellPtr;
+    }
+
     ESM4::Cell* Store<ESM4::Cell>::insertStatic(const ESM4::Cell& item)
     {
         auto cellPtr = TypedDynamicStore<ESM4::Cell>::insertStatic(item);
         insertCell(cellPtr);
         return cellPtr;
+    }
+
+    ESM4::Cell* Store<ESM4::Cell>::insertStatic(const ESM4::Cell& item, const ESM::FormKey& key)
+    {
+        auto cellPtr = TypedDynamicStore<ESM4::Cell>::insertStatic(item, key);
+        insertCell(cellPtr);
+        return cellPtr;
+    }
+
+    bool Store<ESM4::Cell>::eraseStatic(const ESM::RefId& id)
+    {
+        if (const ESM4::Cell* cell = searchStatic(id))
+        {
+            if (cell->isExterior())
+                mExteriors.erase({ cell->mX, cell->mY, cell->mParent });
+            if (!cell->mEditorId.empty())
+                mCellNameIndex.erase(cell->mEditorId);
+        }
+        return TypedDynamicStore<ESM4::Cell>::eraseStatic(id);
+    }
+
+    bool Store<ESM4::Cell>::eraseStatic(const ESM::FormKey& key)
+    {
+        const auto id = mStaticFormKeys.find(key);
+        return id != mStaticFormKeys.end() && eraseStatic(id->second);
     }
 
     void Store<ESM4::Cell>::insertCell(ESM4::Cell* cellPtr)

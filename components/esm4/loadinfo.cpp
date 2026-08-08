@@ -81,12 +81,19 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
             case ESM::fourCC("CTDA"): // FIXME: how to detect if 1st/2nd param is a formid?
             {
                 if (subHdr.dataSize == 24) // TES4
+                {
                     reader.get(&mTargetCondition, 24);
+                    reader.recordCurrentSubRecordFormIds(mTargetCondition, 24);
+                }
                 else if (subHdr.dataSize == 20) // FO3
+                {
                     reader.get(&mTargetCondition, 20);
+                    reader.recordCurrentSubRecordFormIds(mTargetCondition, 20);
+                }
                 else if (subHdr.dataSize == 28)
                 {
                     reader.get(mTargetCondition); // FO3/FONV
+                    reader.recordCurrentSubRecordFormIds(mTargetCondition);
                     if (mTargetCondition.reference)
                         reader.adjustFormId(mTargetCondition.reference);
                 }
@@ -97,6 +104,7 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                         reader.getFormId(mParam3);
                     reader.get(mTargetCondition.runOn);
                     reader.get(mTargetCondition.reference);
+                    reader.recordCurrentSubRecordFormIds(mTargetCondition);
                     if (mTargetCondition.reference)
                         reader.adjustFormId(mTargetCondition.reference);
                     reader.skipSubRecordData(4); // unknown

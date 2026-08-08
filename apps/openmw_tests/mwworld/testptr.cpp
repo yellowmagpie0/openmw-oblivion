@@ -1,5 +1,6 @@
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwworld/cellref.hpp"
 #include "apps/openmw/mwworld/livecellref.hpp"
 #include "apps/openmw/mwworld/ptr.hpp"
 #include "apps/openmw/mwworld/worldmodel.hpp"
@@ -15,6 +16,21 @@ namespace MWWorld
     namespace
     {
         using namespace testing;
+
+        TEST(MWWorldPtrTest, cellRefPreservesStableTes4InstanceIdentity)
+        {
+            ESM4::Reference reference;
+            reference.mFormKey = ESM::FormKey::content("Oblivion.esm", 0x123);
+            EXPECT_EQ(CellRef(reference).getFormKey(), reference.mFormKey);
+
+            ESM4::ActorCharacter actor;
+            actor.mFormKey = ESM::FormKey::content("Knights.esp", 0x456);
+            EXPECT_EQ(CellRef(actor).getFormKey(), actor.mFormKey);
+
+            ESM::CellRef legacy;
+            legacy.blank();
+            EXPECT_TRUE(CellRef(legacy).getFormKey().isNull());
+        }
 
         TEST(MWWorldPtrTest, toStringShouldReturnHumanReadableTextRepresentationOfPtrWithNullRef)
         {

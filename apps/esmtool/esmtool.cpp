@@ -54,6 +54,7 @@ Allowed modes:
   dump   Dumps all readable data from the input file.
   clone  Clones the input file to the output file.
   comp   Compares the given files.
+  graph  Audits a TES4 FormKey graph: graph report.json plugin [plugin...].
 
 Allowed options)");
         auto addOption = desc.add_options();
@@ -94,7 +95,7 @@ Allowed options)");
         addHiddenOption("input-file,i", bpo::value<Files::MaybeQuotedPathContainer>(), "input file");
 
         bpo::positional_options_description p;
-        p.add("mode", 1).add("input-file", 2);
+        p.add("mode", 1).add("input-file", -1);
 
         // there might be a better way to do this
         bpo::options_description all;
@@ -137,7 +138,7 @@ Allowed options)");
             info.name = variables["name"].as<std::string>();
 
         info.mode = variables["mode"].as<std::string>();
-        if (!(info.mode == "dump" || info.mode == "clone" || info.mode == "comp"))
+        if (!(info.mode == "dump" || info.mode == "clone" || info.mode == "comp" || info.mode == "graph"))
         {
             std::cout << "\nERROR: invalid mode \"" << info.mode << "\"\n\n" << desc << finalText << std::endl;
             return false;
@@ -159,11 +160,30 @@ Allowed options)");
               }*/
 
         const auto& inputFiles = variables["input-file"].as<Files::MaybeQuotedPathContainer>();
-        info.filename = inputFiles[0].u8string(); // This call to u8string is redundant, but required to build on
-                                                  // MSVC 14.26 due to implementation bugs.
-        if (inputFiles.size() > 1)
-            info.outname = inputFiles[1].u8string(); // This call to u8string is redundant, but required to build on
-                                                     // MSVC 14.26 due to implementation bugs.
+        if (info.mode == "graph")
+        {
+            if (inputFiles.size() < 2)
+            {
+                std::cout << "\nERROR: graph mode requires a report path and at least one TES4 plugin\n\n";
+                return false;
+            }
+            info.outname = inputFiles.front();
+            info.filenames.assign(inputFiles.begin() + 1, inputFiles.end());
+        }
+        else
+        {
+            if (inputFiles.size() > 2)
+            {
+                std::cout << "\nERROR: mode \"" << info.mode << "\" accepts at most two input files\n\n";
+                return false;
+            }
+            info.filename = inputFiles[0].u8string(); // This call to u8string is redundant, but required to build on
+                                                      // MSVC 14.26 due to implementation bugs.
+            if (inputFiles.size() > 1)
+                info.outname
+                    = inputFiles[1].u8string(); // This call to u8string is redundant, but required to build on
+                                               // MSVC 14.26 due to implementation bugs.
+        }
 
         if (const auto it = variables.find("raw"); it != variables.end())
             info.mRawFormat = ESM::parseFormat(it->second.as<std::string>());
@@ -206,6 +226,8 @@ int main(int argc, char** argv)
             return clone(info);
         else if (info.mode == "comp")
             return comp(info);
+        else if (info.mode == "graph")
+            return graphTes4(info);
         else
         {
             std::cout << "Invalid or no mode specified, dying horribly. Have a nice day." << std::endl;

@@ -205,6 +205,7 @@ add_component_dir (esm4
     common
     dialogue
     effect
+    formidfields
     grid
     grouptype
     inventory

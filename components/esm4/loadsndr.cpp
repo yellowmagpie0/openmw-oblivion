@@ -48,6 +48,7 @@ void ESM4::SoundReference::load(ESM4::Reader& reader)
                 reader.get(&mTargetCondition, 20);
                 reader.get(mTargetCondition.runOn);
                 reader.get(mTargetCondition.reference);
+                reader.recordCurrentSubRecordFormIds(mTargetCondition);
                 if (mTargetCondition.reference)
                     reader.adjustFormId(mTargetCondition.reference);
                 reader.skipSubRecordData(4); // unknown

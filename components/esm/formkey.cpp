@@ -1,12 +1,18 @@
 #include "formkey.hpp"
 
 #include <algorithm>
+#include <array>
+#include <bit>
 #include <charconv>
+#include <cstring>
 #include <filesystem>
 #include <iomanip>
 #include <limits>
+#include <set>
 #include <sstream>
 #include <stdexcept>
+
+#include "fourcc.hpp"
 
 namespace ESM
 {
@@ -25,6 +31,156 @@ namespace ESM
         {
             if (value.empty() || value.find(':') != std::string_view::npos)
                 throw std::invalid_argument("FormKey namespace must be non-empty and may not contain ':'");
+        }
+
+        constexpr std::array<std::uint8_t, 8> sFormKeyIndexMagic{ 'O', 'M', 'W', '4', 'F', 'K', 'I', 'X' };
+        constexpr std::uint32_t sFormKeyIndexVersion = 1;
+        constexpr std::size_t sMaxSerializedGraphSize = 512 * 1024 * 1024;
+        constexpr std::uint32_t sMaxSerializedStringSize = 16 * 1024 * 1024;
+        constexpr std::uint32_t sMaxSerializedCollectionSize = 8 * 1024 * 1024;
+
+        class BinaryWriter
+        {
+        public:
+            void uint8(std::uint8_t value) { mData.push_back(value); }
+
+            void uint32(std::uint32_t value)
+            {
+                for (unsigned i = 0; i < 4; ++i)
+                    mData.push_back(static_cast<std::uint8_t>(value >> (i * 8)));
+            }
+
+            void string(std::string_view value)
+            {
+                if (value.size() > sMaxSerializedStringSize)
+                    throw std::length_error("FormKey graph string exceeds the codec limit");
+                uint32(static_cast<std::uint32_t>(value.size()));
+                mData.insert(mData.end(), value.begin(), value.end());
+            }
+
+            std::vector<std::uint8_t> take()
+            {
+                if (mData.size() > sMaxSerializedGraphSize)
+                    throw std::length_error("FormKey graph exceeds the codec limit");
+                return std::move(mData);
+            }
+
+        private:
+            std::vector<std::uint8_t> mData;
+        };
+
+        class BinaryReader
+        {
+        public:
+            explicit BinaryReader(std::span<const std::uint8_t> data)
+                : mData(data)
+            {
+                if (data.size() > sMaxSerializedGraphSize)
+                    throw std::length_error("Serialized FormKey graph exceeds the codec limit");
+            }
+
+            std::uint8_t uint8()
+            {
+                require(1);
+                return mData[mPosition++];
+            }
+
+            std::uint32_t uint32()
+            {
+                require(4);
+                std::uint32_t value = 0;
+                for (unsigned i = 0; i < 4; ++i)
+                    value |= static_cast<std::uint32_t>(mData[mPosition++]) << (i * 8);
+                return value;
+            }
+
+            std::string string()
+            {
+                const std::uint32_t size = uint32();
+                if (size > sMaxSerializedStringSize)
+                    throw std::length_error("Serialized FormKey graph string exceeds the codec limit");
+                require(size);
+                std::string result(reinterpret_cast<const char*>(mData.data() + mPosition), size);
+                mPosition += size;
+                return result;
+            }
+
+            std::uint32_t collectionSize()
+            {
+                const std::uint32_t size = uint32();
+                if (size > sMaxSerializedCollectionSize)
+                    throw std::length_error("Serialized FormKey graph collection exceeds the codec limit");
+                return size;
+            }
+
+            bool empty() const { return mPosition == mData.size(); }
+
+        private:
+            void require(std::size_t size)
+            {
+                if (size > mData.size() - mPosition)
+                    throw std::runtime_error("Truncated FormKey graph state");
+            }
+
+            std::span<const std::uint8_t> mData;
+            std::size_t mPosition = 0;
+        };
+
+        void writeKey(BinaryWriter& writer, const FormKey& value)
+        {
+            writer.string(value.serialize());
+        }
+
+        FormKey readKey(BinaryReader& reader)
+        {
+            return FormKey::deserialize(reader.string());
+        }
+
+        std::string jsonEscape(std::string_view value)
+        {
+            std::ostringstream stream;
+            for (const unsigned char c : value)
+            {
+                switch (c)
+                {
+                    case '\"':
+                        stream << "\\\"";
+                        break;
+                    case '\\':
+                        stream << "\\\\";
+                        break;
+                    case '\b':
+                        stream << "\\b";
+                        break;
+                    case '\f':
+                        stream << "\\f";
+                        break;
+                    case '\n':
+                        stream << "\\n";
+                        break;
+                    case '\r':
+                        stream << "\\r";
+                        break;
+                    case '\t':
+                        stream << "\\t";
+                        break;
+                    default:
+                        if (c < 0x20)
+                            stream << "\\u" << std::hex << std::setw(4) << std::setfill('0')
+                                   << static_cast<unsigned>(c) << std::dec;
+                        else
+                            stream << static_cast<char>(c);
+                }
+            }
+            return stream.str();
+        }
+
+        void rotateCycleToCanonicalStart(std::vector<FormKey>& cycle)
+        {
+            if (cycle.empty())
+                return;
+            const auto first = std::min_element(cycle.begin(), cycle.end());
+            std::rotate(cycle.begin(), first, cycle.end());
         }
     }
 
@@ -181,6 +337,13 @@ namespace ESM
         if (value.mKey.isNull())
             throw std::invalid_argument("Cannot index a null FormKey");
         value.mWinningPlugin = normalizePluginName(value.mWinningPlugin);
+        if (value.mParent && value.mParent->isNull())
+            throw std::invalid_argument("FormKey graph parent may not be null");
+        if (value.mEnableParent && value.mEnableParent->isNull())
+            throw std::invalid_argument("FormKey graph enable parent may not be null");
+        for (const FormRecordMetadata::Reference& reference : value.mReferences)
+            if (reference.mTarget.isNull())
+                throw std::invalid_argument("FormKey graph reference target may not be null");
         mRecords[value.mKey].push_back(std::move(value));
     }
 
@@ -202,6 +365,21 @@ namespace ESM
         return it == mRecords.end() ? nullptr : &it->second;
     }
 
+    FormKey FormKeyIndex::resolveRecordHeader(
+        const FormKey& preferred, const FormKey& sourceCandidate, std::uint32_t recordType) const
+    {
+        if (preferred.isNull() || sourceCandidate.isNull())
+            throw std::invalid_argument("Record-header FormKeys may not be null");
+        // TES4 permits index zero in an ESP to mean either its first master or
+        // the ESP itself. Masters have already been indexed, so an existing
+        // preferred key is an override; otherwise this is a new local form.
+        const FormRecordMetadata* existing = winner(preferred);
+        return preferred != sourceCandidate
+                && (existing == nullptr || (recordType != 0 && existing->mRecordType != recordType))
+            ? sourceCandidate
+            : preferred;
+    }
+
     std::vector<FormKey> FormKeyIndex::unresolvedEnableParents() const
     {
         std::vector<FormKey> result;
@@ -212,5 +390,245 @@ namespace ESM
                 result.push_back(key);
         }
         return result;
+    }
+
+    std::vector<UnresolvedFormReference> FormKeyIndex::unresolvedReferences() const
+    {
+        std::vector<UnresolvedFormReference> result;
+        const auto add = [&](const FormRecordMetadata& record, const FormKey& target, std::uint32_t subRecordType,
+                             std::uint32_t occurrence) {
+            const FormRecordMetadata* targetWinner = winner(target);
+            if (targetWinner != nullptr && !targetWinner->mDeleted)
+                return;
+            result.push_back({ record.mKey, target, record.mWinningPlugin, record.mRecordType, subRecordType,
+                occurrence, targetWinner == nullptr ? UnresolvedFormReferenceReason::Missing
+                                                    : UnresolvedFormReferenceReason::Deleted });
+        };
+
+        for (const auto& [key, history] : mRecords)
+        {
+            const FormRecordMetadata& record = history.back();
+            if (record.mDeleted)
+                continue;
+            for (const FormRecordMetadata::Reference& reference : record.mReferences)
+                add(record, reference.mTarget, reference.mSubRecordType, reference.mOccurrence);
+            if (record.mParent)
+                add(record, *record.mParent, fourCC("GRUP"), 0);
+            if (record.mEnableParent
+                && std::none_of(record.mReferences.begin(), record.mReferences.end(), [&](const auto& reference) {
+                       return reference.mTarget == *record.mEnableParent && reference.mSubRecordType == fourCC("XESP");
+                   }))
+                add(record, *record.mEnableParent, fourCC("XESP"), 0);
+        }
+        return result;
+    }
+
+    std::vector<std::vector<FormKey>> FormKeyIndex::enableParentCycles() const
+    {
+        enum class Visit : std::uint8_t
+        {
+            Unseen,
+            Active,
+            Done,
+        };
+        std::map<FormKey, Visit> visits;
+        std::vector<FormKey> stack;
+        std::vector<std::vector<FormKey>> result;
+
+        const auto visit = [&](const auto& self, const FormKey& key) -> void {
+            const FormRecordMetadata* record = resolve(key);
+            if (record == nullptr)
+                return;
+            Visit& state = visits[key];
+            if (state == Visit::Done)
+                return;
+            if (state == Visit::Active)
+            {
+                const auto start = std::find(stack.begin(), stack.end(), key);
+                if (start != stack.end())
+                {
+                    std::vector<FormKey> cycle(start, stack.end());
+                    rotateCycleToCanonicalStart(cycle);
+                    result.push_back(std::move(cycle));
+                }
+                return;
+            }
+
+            state = Visit::Active;
+            stack.push_back(key);
+            if (record->mEnableParent && resolve(*record->mEnableParent) != nullptr)
+                self(self, *record->mEnableParent);
+            stack.pop_back();
+            state = Visit::Done;
+        };
+
+        for (const auto& [key, history] : mRecords)
+            visit(visit, key);
+        std::sort(result.begin(), result.end());
+        result.erase(std::unique(result.begin(), result.end()), result.end());
+        return result;
+    }
+
+    std::size_t FormKeyIndex::revisionCount() const
+    {
+        std::size_t result = 0;
+        for (const auto& [key, history] : mRecords)
+            result += history.size();
+        return result;
+    }
+
+    std::size_t FormKeyIndex::referenceCount() const
+    {
+        std::size_t result = 0;
+        for (const auto& [key, history] : mRecords)
+            for (const FormRecordMetadata& record : history)
+                result += record.mReferences.size() + static_cast<std::size_t>(record.mParent.has_value());
+        return result;
+    }
+
+    std::vector<std::uint8_t> FormKeyIndex::serialize() const
+    {
+        if (mRecords.size() > sMaxSerializedCollectionSize)
+            throw std::length_error("FormKey graph has too many keys to serialize");
+
+        BinaryWriter writer;
+        for (const std::uint8_t value : sFormKeyIndexMagic)
+            writer.uint8(value);
+        writer.uint32(sFormKeyIndexVersion);
+        writer.uint32(static_cast<std::uint32_t>(mRecords.size()));
+        for (const auto& [key, history] : mRecords)
+        {
+            if (history.size() > sMaxSerializedCollectionSize)
+                throw std::length_error("FormKey graph has too many override revisions");
+            writeKey(writer, key);
+            writer.uint32(static_cast<std::uint32_t>(history.size()));
+            for (const FormRecordMetadata& record : history)
+            {
+                writer.string(record.mWinningPlugin);
+                writer.uint32(record.mRecordType);
+                writer.uint8(record.mDeleted ? 1 : 0);
+                writer.uint8(static_cast<std::uint8_t>(record.mChildKind));
+                writer.uint8(record.mEnableParent.has_value() ? 1 : 0);
+                if (record.mEnableParent)
+                    writeKey(writer, *record.mEnableParent);
+                writer.uint8(record.mEnableParentInverted ? 1 : 0);
+                writer.uint8(record.mParent.has_value() ? 1 : 0);
+                if (record.mParent)
+                    writeKey(writer, *record.mParent);
+                if (record.mReferences.size() > sMaxSerializedCollectionSize)
+                    throw std::length_error("FormKey graph revision has too many references");
+                writer.uint32(static_cast<std::uint32_t>(record.mReferences.size()));
+                for (const FormRecordMetadata::Reference& reference : record.mReferences)
+                {
+                    writeKey(writer, reference.mTarget);
+                    writer.uint32(reference.mSubRecordType);
+                    writer.uint32(reference.mOccurrence);
+                }
+            }
+        }
+        return writer.take();
+    }
+
+    FormKeyIndex FormKeyIndex::deserialize(std::span<const std::uint8_t> data)
+    {
+        BinaryReader reader(data);
+        for (const std::uint8_t expected : sFormKeyIndexMagic)
+            if (reader.uint8() != expected)
+                throw std::runtime_error("Invalid FormKey graph state magic");
+        if (reader.uint32() != sFormKeyIndexVersion)
+            throw std::runtime_error("Unsupported FormKey graph state version");
+
+        FormKeyIndex result;
+        std::set<FormKey> keys;
+        const std::uint32_t keyCount = reader.collectionSize();
+        for (std::uint32_t i = 0; i < keyCount; ++i)
+        {
+            const FormKey key = readKey(reader);
+            if (key.isNull() || !keys.insert(key).second)
+                throw std::runtime_error("Invalid or duplicate key in FormKey graph state");
+            const std::uint32_t historySize = reader.collectionSize();
+            if (historySize == 0)
+                throw std::runtime_error("FormKey graph state contains an empty override history");
+            for (std::uint32_t j = 0; j < historySize; ++j)
+            {
+                FormRecordMetadata record;
+                record.mKey = key;
+                record.mWinningPlugin = reader.string();
+                record.mRecordType = reader.uint32();
+                record.mDeleted = reader.uint8() != 0;
+                const std::uint8_t childKind = reader.uint8();
+                if (childKind > static_cast<std::uint8_t>(FormChildKind::VisibleDistant))
+                    throw std::runtime_error("Invalid child kind in FormKey graph state");
+                record.mChildKind = static_cast<FormChildKind>(childKind);
+                if (reader.uint8() != 0)
+                    record.mEnableParent = readKey(reader);
+                record.mEnableParentInverted = reader.uint8() != 0;
+                if (reader.uint8() != 0)
+                    record.mParent = readKey(reader);
+                const std::uint32_t referenceCount = reader.collectionSize();
+                record.mReferences.reserve(referenceCount);
+                for (std::uint32_t k = 0; k < referenceCount; ++k)
+                {
+                    FormRecordMetadata::Reference reference;
+                    reference.mTarget = readKey(reader);
+                    reference.mSubRecordType = reader.uint32();
+                    reference.mOccurrence = reader.uint32();
+                    record.mReferences.push_back(std::move(reference));
+                }
+                result.apply(std::move(record));
+            }
+        }
+        if (!reader.empty())
+            throw std::runtime_error("Trailing data in FormKey graph state");
+        return result;
+    }
+
+    std::string FormKeyIndex::canonicalJson() const
+    {
+        std::ostringstream stream;
+        stream << "{\"schema_version\":1,\"records\":[";
+        bool firstKey = true;
+        for (const auto& [key, history] : mRecords)
+        {
+            if (!firstKey)
+                stream << ',';
+            firstKey = false;
+            stream << "{\"key\":\"" << jsonEscape(key.serialize()) << "\",\"history\":[";
+            bool firstRevision = true;
+            for (const FormRecordMetadata& record : history)
+            {
+                if (!firstRevision)
+                    stream << ',';
+                firstRevision = false;
+                stream << "{\"plugin\":\"" << jsonEscape(record.mWinningPlugin) << "\",\"type\":"
+                       << record.mRecordType << ",\"deleted\":" << (record.mDeleted ? "true" : "false")
+                       << ",\"child_kind\":" << static_cast<unsigned>(record.mChildKind)
+                       << ",\"enable_parent\":";
+                if (record.mEnableParent)
+                    stream << '\"' << jsonEscape(record.mEnableParent->serialize()) << '\"';
+                else
+                    stream << "null";
+                stream << ",\"enable_parent_inverted\":"
+                       << (record.mEnableParentInverted ? "true" : "false") << ",\"parent\":";
+                if (record.mParent)
+                    stream << '\"' << jsonEscape(record.mParent->serialize()) << '\"';
+                else
+                    stream << "null";
+                stream << ",\"references\":[";
+                bool firstReference = true;
+                for (const FormRecordMetadata::Reference& reference : record.mReferences)
+                {
+                    if (!firstReference)
+                        stream << ',';
+                    firstReference = false;
+                    stream << "{\"target\":\"" << jsonEscape(reference.mTarget.serialize()) << "\",\"subrecord\":"
+                           << reference.mSubRecordType << ",\"occurrence\":" << reference.mOccurrence << '}';
+                }
+                stream << "]}";
+            }
+            stream << "]}";
+        }
+        stream << "]}";
+        return stream.str();
     }
 }

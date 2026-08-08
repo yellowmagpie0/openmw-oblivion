@@ -32,6 +32,7 @@
 #include "reference.hpp" // EnableParent
 
 #include <components/esm/defs.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/esm/position.hpp>
 #include <components/esm/refid.hpp>
 
@@ -77,6 +78,7 @@ namespace ESM4
     struct Reference
     {
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey; // stable identity, independent of load-order indices
 
         ESM::RefId mParent; // cell FormId, from the loading sequence
                             // NOTE: for exterior cells it will be the dummy cell FormId

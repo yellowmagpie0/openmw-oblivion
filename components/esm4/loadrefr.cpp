@@ -35,6 +35,7 @@ void ESM4::Reference::load(ESM4::Reader& reader)
 {
     mId = reader.hdr().record.getFormId();
     reader.adjustFormId(mId);
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
     mParent = reader.currCell();
 
