@@ -14,7 +14,7 @@ This ledger is the resume point. Detailed evidence and open gates live in
 | --- | --- | --- |
 | M0 | Accepted | `docs/oblivion/M0-BASELINE.md` |
 | M1 | Accepted, with sanitizer toolchain unavailable on this host | `docs/oblivion/M1-TES4-PARSING.md` |
-| M2 | In progress: stable identity substrate delivered; full-content graph gate remains | `docs/oblivion/M2-FORM-IDENTITY.md` |
+| M2 | Accepted: full official FormKey/reference graph and runtime identity gates passed | `docs/oblivion/M2-FORM-IDENTITY.md` |
 | M3 | In progress: profile and standalone interior vertical slice delivered; final gates tracked | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | In progress: versioned native save substrate and live shadow record delivered | `docs/oblivion/M4-RUNTIME-STATE.md` |
 
@@ -613,10 +613,10 @@ handling.
 | Milestone | State | Evidence |
 | --- | --- | --- |
 | M0 | Complete | `docs/oblivion/M0-BASELINE.md` |
-| M1 | In progress | Strict TES4 census and parser coverage underway |
-| M2 | Pending | Stable form identity pending |
-| M3 | Pending | Standalone game profile pending |
-| M4 | Pending | TES4 native persistence pending |
+| M1 | Complete, with documented sanitizer-host exception | `docs/oblivion/M1-TES4-PARSING.md` |
+| M2 | Complete | `docs/oblivion/M2-FORM-IDENTITY.md` |
+| M3 | In progress | `docs/oblivion/M3-STANDALONE-BOOT.md` |
+| M4 | In progress | `docs/oblivion/M4-RUNTIME-STATE.md` |
 
 Update this table only after the milestone's deliver, verification, and success
 criteria have all passed. Detailed command output and visual review records

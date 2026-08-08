@@ -18,18 +18,23 @@
       ]
     },
     "M2": {
-      "status": "in_progress",
+      "status": "accepted",
       "report": "docs/oblivion/M2-FORM-IDENTITY.md",
+      "revision": "31360040f9732ff1ae324ff186fcc0724f585b15",
+      "evidence": [
+        "build/oblivion-compat/m2-acceptance/acceptance.json",
+        "build/oblivion-compat/m2-acceptance/acceptance.html",
+        "build/oblivion-compat/m2-acceptance/form-graph.json",
+        "build/oblivion-compat/m2-morrowind-regression/baseline.json"
+      ],
       "delivered": [
         "Stable content and dynamic FormKey identities",
         "Master and load-order conversion",
-        "Override, deletion, child, and enable-parent foundation"
+        "Authoritative override, deletion, child, enable-parent, and reference graph",
+        "Stable typed TES4 stores and instantiated references",
+        "Deterministic binary graph restart and official-content acceptance gate"
       ],
-      "open_gates": [
-        "Integrate FormKey into every typed store and live reference",
-        "Audit the full official winning-record and reference graph",
-        "Prove full graph stability across reorder and save reload"
-      ]
+      "open_gates": []
     },
     "M3": {
       "status": "in_progress",
@@ -59,5 +64,5 @@
       ]
     }
   },
-  "next_bounded_delivery": "M2 official-content winning-record and reference graph audit"
+  "next_bounded_delivery": "M3 native Oblivion settings, resources, calendar, and player services"
 }

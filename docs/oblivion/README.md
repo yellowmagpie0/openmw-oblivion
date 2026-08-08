@@ -19,6 +19,20 @@ python3 scripts/oblivion_compat.py baseline \
 Use `--hash-archives` for release evidence. The default hashes every ESM/ESP
 but records only size and modification time for large BSA archives.
 
+Run the accepted M2 stable identity/reference graph gate with:
+
+```sh
+python3 scripts/oblivion_compat.py form-graph \
+  --esmtool build/esmtool \
+  --oblivion-data "/path/to/Oblivion/Data" \
+  --output build/oblivion-compat/m2-acceptance
+```
+
+This scans the canonical eleven-plugin official set, compares the complete
+graph after binary restart and runtime-index reordering, validates every
+unresolved edge against the count-locked reviewed exception file, and writes
+`acceptance.json` plus a directly inspectable `acceptance.html`.
+
 Scenario manifests use
 [`scenario.schema.json`](../../scripts/data/oblivion_compat/scenario.schema.json).
 For example, the hermetic runner check is:
@@ -52,7 +66,8 @@ Current implementation reports:
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.
-Do not infer milestone completion merely from a green focused unit suite.
+M2 is accepted by its full official-content graph and runtime regressions, not
+merely by a focused unit suite.
 
 The checked-in `oblivion_standalone_baseline.json` manifest creates its config
 inside the output directory, launches only `Oblivion.esm` and the base-game
