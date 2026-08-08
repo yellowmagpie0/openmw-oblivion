@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-wrong-profile-diagnostic",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs\"\ndata=\"{oblivion_data}\"\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\ncontent=Oblivion.esm\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 800\nresolution y = 600\nfullscreen = false\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=morrowind",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "environment": {
+    "OPENMW_SUPPRESS_ERROR_DIALOG": "1"
+  },
+  "xvfb": true,
+  "width": 800,
+  "height": 600,
+  "actions": [],
+  "terminate_after_actions": false,
+  "timeout_seconds": 10,
+  "expected_exit": 1,
+  "expected_log": [
+    "Game-profile selection failed: Game profile 'morrowind' rejects content file 'Oblivion.esm' because it uses the 'oblivion' format"
+  ],
+  "forbidden_log": [
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

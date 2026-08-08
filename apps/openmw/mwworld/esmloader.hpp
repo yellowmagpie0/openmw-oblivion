@@ -5,6 +5,8 @@
 #include <optional>
 #include <vector>
 
+#include <components/esm/gameprofile.hpp>
+
 #include "contentloader.hpp"
 
 namespace ToUTF8
@@ -26,9 +28,10 @@ namespace MWWorld
     struct EsmLoader : public ContentLoader
     {
         explicit EsmLoader(MWWorld::ESMStore& store, ESM::ReadersCache& readers, ToUTF8::Utf8Encoder* encoder,
-            std::vector<int>& esmVersions);
+            std::vector<int>& esmVersions, ESM::GameProfile requestedProfile);
 
         std::optional<int> getMasterFileFormat() const { return mMasterFileFormat; }
+        ESM::GameProfile getGameProfile() const { return mGameProfileSelector.selected(); }
 
         void load(const std::filesystem::path& filepath, int& index, Loading::Listener* listener) override;
 
@@ -40,6 +43,7 @@ namespace MWWorld
         std::optional<int> mMasterFileFormat;
         std::vector<int>& mESMVersions;
         std::map<std::string, int> mNameToIndex;
+        ESM::GameProfileSelector mGameProfileSelector;
     };
 
 } /* namespace MWWorld */

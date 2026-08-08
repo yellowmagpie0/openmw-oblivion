@@ -2,6 +2,7 @@
 #define OPENMW_MWWORLD_STORE_H
 
 #include <map>
+#include <mutex>
 #include <set>
 #include <span>
 #include <string>
@@ -274,7 +275,14 @@ namespace MWWorld
     template <>
     class Store<ESM::GameSetting> : public TypedDynamicStore<ESM::GameSetting>
     {
+        bool mAllowNeutralFallbacks = false;
+        mutable std::mutex mNeutralFallbackMutex;
+        mutable std::unordered_map<ESM::RefId, ESM::GameSetting> mNeutralFallbacks;
+
     public:
+        void setAllowNeutralFallbacks(bool value);
+        std::size_t getNeutralFallbackCount() const;
+
         const ESM::GameSetting* search(const ESM::RefId& id) const;
 
         const ESM::GameSetting* find(const std::string_view id) const;

@@ -11,6 +11,7 @@
 
 #include <components/misc/rng.hpp>
 #include <components/vfs/pathutil.hpp>
+#include <components/esm/gameprofile.hpp>
 
 #include "../mwworld/doorstate.hpp"
 #include "../mwworld/globalvariablename.hpp"
@@ -124,6 +125,7 @@ namespace MWBase
         virtual ~World() = default;
 
         virtual void setRandomSeed(uint32_t seed) = 0;
+        virtual ESM::GameProfile getGameProfile() const = 0;
         ///< \param seed The seed used when starting a new game.
 
         virtual void startNewGame(bool bypass) = 0;

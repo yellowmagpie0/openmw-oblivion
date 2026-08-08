@@ -6,6 +6,8 @@ file(GLOB UNITTEST_SRC_FILES
 
     esm/testfixedstring.cpp
     esm/testrefid.cpp
+    esm/formkey.cpp
+    esm/gameprofile.cpp
     esm/variant.cpp
 
     lua/testasync.cpp
@@ -69,11 +71,14 @@ file(GLOB UNITTEST_SRC_FILES
     toutf8/toutf8.cpp
 
     esm4/includes.cpp
+    esm4/rawrecord.cpp
+    esm4/runtimestate.cpp
 
     fx/lexer.cpp
     fx/technique.cpp
 
     esm3/readerscache.cpp
+    esm3/savedgameprofile.cpp
     esm3/testsaveload.cpp
     esm3/testesmwriter.cpp
     esm3/testinfoorder.cpp

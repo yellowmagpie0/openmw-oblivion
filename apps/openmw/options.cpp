@@ -74,6 +74,9 @@ namespace OpenMW
         addOption("new-game", bpo::value<bool>()->implicit_value(true)->default_value(false),
             "run new game sequence (ignored if skip-menu=0)");
 
+        addOption("game-profile", bpo::value<std::string>()->default_value("auto"),
+            "game compatibility profile: auto, morrowind, or oblivion");
+
         addOption("encoding", bpo::value<std::string>()->default_value("win1252"),
             "Character encoding used in OpenMW game messages:\n"
             "\n\twin1250 - Central and Eastern European such as Polish, Czech, Slovak, Hungarian, Slovene, Bosnian, "

@@ -6,6 +6,7 @@
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/readerscache.hpp>
+#include <components/esm/gameprofile.hpp>
 #include <components/misc/rng.hpp>
 #include <components/settings/settings.hpp>
 #include <components/vfs/pathutil.hpp>
@@ -48,6 +49,11 @@ namespace ESM
 {
     struct Position;
     class RefId;
+}
+
+namespace ESM4
+{
+    struct RuntimeState;
 }
 
 namespace Files
@@ -95,6 +101,9 @@ namespace MWWorld
         Misc::Rng::Generator mPrng;
         WorldModel mWorldModel;
         std::vector<int> mESMVersions; // the versions of esm files
+        ESM::GameProfile mRequestedGameProfile;
+        ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
+        std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
 
         std::string mCurrentWorldSpace;
 
@@ -170,6 +179,7 @@ namespace MWWorld
             const MWPhysics::Object& object, const DetourNavigator::UpdateGuard* navigatorUpdateGuard = nullptr);
 
         void ensureNeededRecords();
+        void ensureOblivionBootstrapRecords();
 
         void fillGlobalVariables();
 
@@ -194,7 +204,9 @@ namespace MWWorld
         void removeContainerScripts(const Ptr& reference) override;
 
         World(Resource::ResourceSystem* resourceSystem, int activationDistanceOverride, const std::string& startCell,
-            const std::filesystem::path& userDataPath);
+            const std::filesystem::path& userDataPath, ESM::GameProfile requestedGameProfile);
+
+        ESM::GameProfile getGameProfile() const override { return mGameProfile; }
 
         void loadData(const Files::Collections& fileCollections, const std::vector<std::string>& contentFiles,
             const std::vector<std::string>& groundcoverFiles, ToUTF8::Utf8Encoder* encoder,

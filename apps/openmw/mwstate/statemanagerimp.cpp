@@ -11,6 +11,7 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <components/esm3/loadclas.hpp>
+#include <components/esm4/runtimestate.hpp>
 
 #include <components/l10n/manager.hpp>
 
@@ -255,6 +256,9 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
         profile.mCurrentDay = world.getTimeManager()->getTimeStamp().getDay();
         profile.mCurrentHealth = stats.getHealth().getCurrent();
         profile.mMaximumHealth = stats.getHealth().getModified();
+        profile.mGameProfile = world.getGameProfile();
+        if (profile.mGameProfile == ESM::GameProfile::Oblivion)
+            profile.mRuntimeStateVersion = ESM4::CurrentRuntimeStateVersion;
 
         Log(Debug::Info) << "Making a screenshot for saved game '" << description << "'";
         writeScreenshot(profile.mScreenshot);
@@ -495,6 +499,12 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 {
                     ESM::SavedGame profile;
                     profile.load(reader);
+                    const ESM::GameProfile activeProfile
+                        = MWBase::Environment::get().getWorld()->getGameProfile();
+                    if (profile.mGameProfile != activeProfile)
+                        throw std::runtime_error("Saved game profile '" + std::string(ESM::toString(profile.mGameProfile))
+                            + "' cannot be loaded by active profile '" + std::string(ESM::toString(activeProfile))
+                            + "'");
                     const auto& selectedContentFiles = MWBase::Environment::get().getWorld()->getContentFiles();
                     auto missingFiles = profile.getMissingContentFiles(selectedContentFiles);
                     if (!missingFiles.empty() && !confirmLoading(missingFiles))
@@ -550,6 +560,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 case ESM::REC_DOOR:
                 case ESM::REC_PROB:
                 case ESM::REC_INGR:
+                case ESM::REC_T4ST:
                     MWBase::Environment::get().getWorld()->readRecord(reader, n.toInt());
                     break;
 

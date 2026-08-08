@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-standalone-baseline",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nfallback-archive=Oblivion - Sounds.bsa\nfallback-archive=Oblivion - Voices1.bsa\nfallback-archive=Oblivion - Voices2.bsa\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=1\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=oblivion",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "environment": {
+    "OPENMW_OSG_STATS_FILE": "{output}/osg-stats.log",
+    "OPENMW_OSG_STATS_LIST": "times"
+  },
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 15},
+    {"type": "screenshot", "name": "standalone.png"}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 10,
+  "expected_exit": -15,
+  "expected_log": ["Loading content file Oblivion.esm", "Selected game profile: oblivion"],
+  "forbidden_log": ["Segmentation fault", "Assertion.*failed", "Aborted"]
+}

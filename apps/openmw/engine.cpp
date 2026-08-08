@@ -377,6 +377,7 @@ OMW::Engine::Engine(Files::ConfigurationManager& configurationManager)
     , mExportFonts(false)
     , mRandomSeed(0)
     , mNewGame(false)
+    , mGameProfile(ESM::GameProfile::Auto)
     , mCfgMgr(configurationManager)
     , mGlMaxTextureImageUnits(0)
 {
@@ -836,7 +837,7 @@ void OMW::Engine::prepareEngine()
 
     // Create the world
     mWorld = std::make_unique<MWWorld::World>(
-        mResourceSystem.get(), mActivationDistanceOverride, mCellName, mCfgMgr.getUserDataPath());
+        mResourceSystem.get(), mActivationDistanceOverride, mCellName, mCfgMgr.getUserDataPath(), mGameProfile);
     mEnvironment.setWorld(*mWorld);
     mEnvironment.setWorldModel(mWorld->getWorldModel());
     mEnvironment.setESMStore(mWorld->getStore());

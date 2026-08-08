@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "original-oblivion-visual-baseline",
+  "cwd": "{output}",
+  "directories": ["compatdata"],
+  "command": ["{proton}", "run", "{oblivion_exe}"],
+  "environment": {
+    "STEAM_COMPAT_DATA_PATH": "{output}/compatdata",
+    "STEAM_COMPAT_CLIENT_INSTALL_PATH": "{steam_root}",
+    "STEAM_COMPAT_INSTALL_PATH": "{oblivion_install}",
+    "STEAM_COMPAT_APP_ID": "22330",
+    "SteamAppId": "22330",
+    "SteamGameId": "22330",
+    "PROTON_LOG_DIR": "{output}"
+  },
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 30},
+    {"type": "screenshot", "name": "original.png", "minimum_entropy": 0.005}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": -15,
+  "forbidden_log": ["Unhandled page fault", "Assertion.*failed"]
+}

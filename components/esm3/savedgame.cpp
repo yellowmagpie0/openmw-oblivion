@@ -41,6 +41,16 @@ namespace ESM
         esm.getHNOT(mCurrentDay, "CDAY");
         esm.getHNOT(mCurrentHealth, "CHLT");
         esm.getHNOT(mMaximumHealth, "MHLT");
+
+        mGameProfile = ESM::GameProfile::Morrowind;
+        mRuntimeStateVersion = 0;
+        if (esm.isNextSub("GPRO"))
+            mGameProfile = ESM::parseGameProfile(esm.getHString());
+        esm.getHNOT(mRuntimeStateVersion, "T4VR");
+        if (mGameProfile == ESM::GameProfile::Auto)
+            throw std::runtime_error("Saved game contains an invalid automatic game profile");
+        if (mGameProfile == ESM::GameProfile::Oblivion && mRuntimeStateVersion == 0)
+            throw std::runtime_error("Oblivion saved game does not declare a TES4 runtime-state version");
     }
 
     void SavedGame::save(ESMWriter& esm) const
@@ -68,6 +78,16 @@ namespace ESM
         esm.writeHNT("CDAY", mCurrentDay);
         esm.writeHNT("CHLT", mCurrentHealth);
         esm.writeHNT("MHLT", mMaximumHealth);
+
+        if (mGameProfile == ESM::GameProfile::Auto)
+            throw std::runtime_error("Cannot save an automatic game profile");
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            if (mRuntimeStateVersion == 0)
+                throw std::runtime_error("Cannot save Oblivion without a TES4 runtime-state version");
+            esm.writeHNString("GPRO", ESM::toString(mGameProfile));
+            esm.writeHNT("T4VR", mRuntimeStateVersion);
+        }
     }
 
     std::vector<std::string_view> SavedGame::getMissingContentFiles(

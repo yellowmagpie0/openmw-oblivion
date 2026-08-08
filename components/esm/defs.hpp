@@ -131,6 +131,7 @@ namespace ESM
         REC_CAM_ = esm3Recname("CAM_"),
         REC_STLN = esm3Recname("STLN"),
         REC_INPU = esm3Recname("INPU"),
+        REC_T4ST = esm3Recname("T4ST"), // Native TES4 runtime state in OpenMW saves
 
         // format 1
         REC_FILT = esm3Recname("FILT"),

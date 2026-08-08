@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <components/esm/format.hpp>
+#include <components/debug/debuglog.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <components/esm4/reader.hpp>
@@ -18,13 +19,14 @@ namespace MWWorld
 {
 
     EsmLoader::EsmLoader(MWWorld::ESMStore& store, ESM::ReadersCache& readers, ToUTF8::Utf8Encoder* encoder,
-        std::vector<int>& esmVersions)
+        std::vector<int>& esmVersions, ESM::GameProfile requestedProfile)
         : mReaders(readers)
         , mStore(store)
         , mEncoder(encoder)
         , mDialogue(nullptr) // A content file containing INFO records without a DIAL record appends them to the
                              // previous file's dialogue
         , mESMVersions(esmVersions)
+        , mGameProfileSelector(requestedProfile)
     {
     }
 
@@ -34,6 +36,15 @@ namespace MWWorld
         auto stream = Files::openBinaryInputFileStream(filepath);
         const ESM::Format format = ESM::readFormat(*stream);
         stream->seekg(0);
+        try
+        {
+            mGameProfileSelector.observe(format, Files::pathToUnicodeString(filepath.filename()));
+        }
+        catch (const std::exception& error)
+        {
+            Log(Debug::Error) << "Game-profile selection failed: " << error.what();
+            throw;
+        }
 
         switch (format)
         {

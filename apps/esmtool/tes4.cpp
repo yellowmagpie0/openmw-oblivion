@@ -235,6 +235,9 @@ namespace EsmTool
                 case ESM4::REC_BOOK:
                     readTypedRecord<ESM4::Book>(params, reader);
                     return true;
+                case ESM4::REC_BSGN:
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_BPTD:
                     readTypedRecord<ESM4::BodyPartData>(params, reader);
                     return true;
@@ -252,7 +255,8 @@ namespace EsmTool
                     readTypedRecord<ESM4::Colour>(params, reader);
                     return true;
                 case ESM4::REC_CLMT:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_CLOT:
                     readTypedRecord<ESM4::Clothing>(params, reader);
                     return true;
@@ -271,7 +275,8 @@ namespace EsmTool
                     readTypedRecord<ESM4::Creature>(params, reader);
                     return true;
                 case ESM4::REC_CSTY:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_DEBR:
                     break;
                 case ESM4::REC_DIAL:
@@ -292,9 +297,11 @@ namespace EsmTool
                 case ESM4::REC_ECZN:
                     break;
                 case ESM4::REC_EFSH:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_ENCH:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_EQUP:
                     break;
                 case ESM4::REC_EXPL:
@@ -303,7 +310,8 @@ namespace EsmTool
                     readTypedRecord<ESM4::Eyes>(params, reader);
                     return true;
                 case ESM4::REC_FACT:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_FLOR:
                     readTypedRecord<ESM4::Flora>(params, reader);
                     return true;
@@ -379,7 +387,8 @@ namespace EsmTool
                     readTypedRecord<ESM4::Light>(params, reader);
                     return true;
                 case ESM4::REC_LSCR:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_LTEX:
                     readTypedRecord<ESM4::LandTexture>(params, reader);
                     return true;
@@ -393,7 +402,8 @@ namespace EsmTool
                     readTypedRecord<ESM4::LevelledNpc>(params, reader);
                     return true;
                 case ESM4::REC_LVSP:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_MATO:
                     readTypedRecord<ESM4::Material>(params, reader);
                     return true;
@@ -402,7 +412,8 @@ namespace EsmTool
                 case ESM4::REC_MESG:
                     break;
                 case ESM4::REC_MGEF:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_MISC:
                     readTypedRecord<ESM4::MiscItem>(params, reader);
                     return true;
@@ -511,8 +522,12 @@ namespace EsmTool
                 case ESM4::REC_SOUN:
                     readTypedRecord<ESM4::Sound>(params, reader);
                     return true;
+                case ESM4::REC_SKIL:
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_SPEL:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_SPGD:
                     break;
                 case ESM4::REC_STAT:
@@ -536,7 +551,8 @@ namespace EsmTool
                 case ESM4::REC_VTYP:
                     break;
                 case ESM4::REC_WATR:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
                 case ESM4::REC_WEAP:
                     readTypedRecord<ESM4::Weapon>(params, reader);
                     return true;
@@ -546,7 +562,8 @@ namespace EsmTool
                     readTypedRecord<ESM4::World>(params, reader);
                     return true;
                 case ESM4::REC_WTHR:
-                    break;
+                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    return true;
             }
 
             if (!params.mQuite)
@@ -589,6 +606,16 @@ namespace EsmTool
                           << '\n';
             };
             ESM4::ReaderUtils::readAll(reader, visitorRec, visitorGroup);
+
+            if (!params.mQuite)
+            {
+                for (const auto& [types, stats] : reader.getSkippedSubRecords())
+                {
+                    std::cout << "\n  Skipped subrecord: " << ESM::NAME(types.first).toStringView() << '/'
+                              << ESM::NAME(types.second).toStringView() << " calls=" << stats.calls
+                              << " bytes=" << stats.bytes << '\n';
+                }
+            }
         }
         catch (const std::exception& e)
         {

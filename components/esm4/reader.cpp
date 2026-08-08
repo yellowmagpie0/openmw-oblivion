@@ -80,6 +80,7 @@ namespace ESM4
         std::optional<std::string> tryDecompressAll(std::span<char> compressed, std::span<char> decompressed)
         {
             z_stream stream{};
+            const std::size_t expectedInputSize = compressed.size();
 
             stream.next_in = reinterpret_cast<Bytef*>(compressed.data());
             stream.next_out = reinterpret_cast<Bytef*>(decompressed.data());
@@ -93,6 +94,12 @@ namespace ESM4
 
             if (const int ec = inflate(&stream, Z_NO_FLUSH); ec != Z_STREAM_END)
                 return getError("inflate error", ec, stream.msg);
+            if (stream.total_out != decompressed.size())
+                return "inflate produced " + std::to_string(stream.total_out) + " bytes, expected "
+                    + std::to_string(decompressed.size());
+            if (stream.total_in != expectedInputSize)
+                return "inflate consumed " + std::to_string(stream.total_in) + " bytes, expected "
+                    + std::to_string(expectedInputSize);
 
             return std::nullopt;
         }
@@ -101,6 +108,9 @@ namespace ESM4
             std::span<char> compressed, std::span<char> decompressed, std::size_t blockSize)
         {
             z_stream stream{};
+            const std::size_t expectedInputSize = compressed.size();
+            const std::size_t expectedSize = decompressed.size();
+            bool reachedEnd = false;
 
             if (const int ec = inflateInit(&stream); ec != Z_OK)
                 return getError("inflateInit error", ec, stream.msg);
@@ -117,13 +127,25 @@ namespace ESM4
                 stream.avail_out = static_cast<uInt>(std::min(blockSize, decompressed.size()));
                 const int ec = inflate(&stream, Z_NO_FLUSH);
                 if (ec == Z_STREAM_END)
+                {
+                    reachedEnd = true;
                     break;
+                }
                 if (ec != Z_OK)
                     return getError(
                         "inflate error after reading " + std::to_string(stream.total_in) + " bytes", ec, stream.msg);
                 compressed = compressed.subspan(stream.total_in - prevTotalIn);
                 decompressed = decompressed.subspan(stream.total_out - prevTotalOut);
             }
+
+            if (!reachedEnd)
+                return "inflate input ended before Z_STREAM_END";
+            if (stream.total_out != expectedSize)
+                return "inflate produced " + std::to_string(stream.total_out) + " bytes, expected "
+                    + std::to_string(expectedSize);
+            if (stream.total_in != expectedInputSize)
+                return "inflate consumed " + std::to_string(stream.total_in) + " bytes, expected "
+                    + std::to_string(expectedInputSize);
 
             return std::nullopt;
         }
@@ -529,16 +551,27 @@ namespace ESM4
 
         if ((mCtx.recordHeader.record.flags & Rec_Compressed) != 0)
         {
+            if (mCtx.recordHeader.record.dataSize < sizeof(std::uint32_t))
+                fail("Compressed record is smaller than its uncompressed-size prefix");
             mStream->read(reinterpret_cast<char*>(&uncompressedSize), sizeof(std::uint32_t));
+            if (mStream->gcount() != sizeof(std::uint32_t))
+                fail("Truncated compressed-record size prefix");
+            constexpr std::uint32_t maximumUncompressedRecordSize = 512 * 1024 * 1024;
+            if (uncompressedSize == 0 || uncompressedSize > maximumUncompressedRecordSize)
+                fail("Compressed record declares an invalid uncompressed size");
 
             const std::streamoff position = mStream->tellg();
 
             const std::uint32_t recordSize = mCtx.recordHeader.record.dataSize - sizeof(std::uint32_t);
             std::vector<char> compressed(recordSize);
             mStream->read(compressed.data(), recordSize);
+            if (static_cast<std::uint32_t>(mStream->gcount()) != recordSize)
+                fail("Truncated compressed-record payload");
             mSavedStream = std::move(mStream);
 
-            mCtx.recordHeader.record.dataSize = uncompressedSize - sizeof(uncompressedSize);
+            // The leading uint32 belongs to the compressed on-disk wrapper.
+            // uncompressedSize is the exact size of the inflated record payload.
+            mCtx.recordHeader.record.dataSize = uncompressedSize;
 
             auto memoryStreamPtr = decompress(position, compressed, uncompressedSize);
 
@@ -616,13 +649,63 @@ namespace ESM4
         return result;
     }
 
+    bool Reader::getRawSubRecordHeader(RawSubRecordHeader& header)
+    {
+        header = {};
+        if (mCtx.recordRead > mCtx.recordHeader.record.dataSize)
+            fail("Raw subrecord starts after the end of its record");
+        const std::uint32_t remaining = mCtx.recordHeader.record.dataSize - mCtx.recordRead;
+        if (remaining == 0)
+            return false;
+        if (remaining < sizeof(SubRecordHeader))
+            fail("Trailing bytes cannot form a raw subrecord header");
+
+        SubRecordHeader subHeader{};
+        if (!getExact(subHeader))
+            fail("Failed to read raw subrecord header");
+        mCtx.recordRead += sizeof(SubRecordHeader);
+
+        if (subHeader.typeId == ESM::fourCC("XXXX"))
+        {
+            if (subHeader.dataSize != sizeof(std::uint32_t))
+                fail("XXXX subrecord has an invalid payload size");
+            std::uint32_t extendedSize = 0;
+            if (!getExact(extendedSize))
+                fail("Failed to read XXXX extended payload size");
+            mCtx.recordRead += sizeof(extendedSize);
+            if (mCtx.recordHeader.record.dataSize - mCtx.recordRead < sizeof(SubRecordHeader))
+                fail("XXXX subrecord is not followed by a subrecord header");
+            if (!getExact(subHeader))
+                fail("Failed to read XXXX target subrecord header");
+            mCtx.recordRead += sizeof(SubRecordHeader);
+            header.extended = true;
+            header.dataSize = extendedSize;
+        }
+        else
+            header.dataSize = subHeader.dataSize;
+
+        if (header.dataSize > mCtx.recordHeader.record.dataSize - mCtx.recordRead)
+            fail("Raw subrecord payload extends beyond the end of its record");
+
+        header.typeId = subHeader.typeId;
+        mCtx.subRecordHeader = subHeader;
+        mCtx.recordRead += header.dataSize;
+        return true;
+    }
+
     void Reader::skipSubRecordData()
     {
+        auto& stats = mSkippedSubRecords[{ mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId }];
+        ++stats.calls;
+        stats.bytes += mCtx.subRecordHeader.dataSize;
         mStream->ignore(mCtx.subRecordHeader.dataSize);
     }
 
     void Reader::skipSubRecordData(std::uint32_t size)
     {
+        auto& stats = mSkippedSubRecords[{ mCtx.recordHeader.record.typeId, mCtx.subRecordHeader.typeId }];
+        ++stats.calls;
+        stats.bytes += size;
         mStream->ignore(size);
     }
 
@@ -813,6 +896,31 @@ namespace ESM4
         FormId formId = hdr().record.getFormId();
         adjustFormId(formId);
         return formId;
+    }
+
+    bool Reader::getFormKey(ESM::FormKey& key)
+    {
+        FormId32 value = 0;
+        if (!getExact(value))
+            return false;
+        const FormId raw = FormId::fromUint32(value);
+        std::vector<std::string> masters;
+        masters.reserve(mHeader.mMaster.size());
+        for (const ESM::MasterData& master : mHeader.mMaster)
+            masters.push_back(master.name);
+        key = ESM::FormKeyResolver::resolveRaw(
+            raw, Files::pathToUnicodeString(mCtx.filename.filename()), masters);
+        return true;
+    }
+
+    ESM::FormKey Reader::getFormKeyFromHeader() const
+    {
+        std::vector<std::string> masters;
+        masters.reserve(mHeader.mMaster.size());
+        for (const ESM::MasterData& master : mHeader.mMaster)
+            masters.push_back(master.name);
+        return ESM::FormKeyResolver::resolveRaw(mCtx.recordHeader.record.getFormId(),
+            Files::pathToUnicodeString(mCtx.filename.filename()), masters);
     }
 
     void Reader::adjustGRUPFormId()

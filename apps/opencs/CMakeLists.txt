@@ -184,6 +184,15 @@ if(BUILD_OPENCS)
 
     target_link_libraries(openmw-cs openmw-cs-lib)
 
+    openmw_add_executable(openmw-cs-mcp
+        mcpserver.cpp
+    )
+
+    target_link_libraries(openmw-cs-mcp
+        components
+        Qt::Core
+    )
+
     set_property(TARGET openmw-cs PROPERTY AUTOMOC ON)
     set_property(TARGET openmw-cs PROPERTY AUTOUIC_SEARCH_PATHS ui)
     set_property(TARGET openmw-cs PROPERTY AUTOUIC ON)
@@ -251,6 +260,7 @@ endif()
 
 if (WIN32 AND BUILD_OPENCS)
     INSTALL(TARGETS openmw-cs RUNTIME DESTINATION ".")
+    INSTALL(TARGETS openmw-cs-mcp RUNTIME DESTINATION ".")
 
     get_generator_is_multi_config(multi_config)
     if (multi_config)

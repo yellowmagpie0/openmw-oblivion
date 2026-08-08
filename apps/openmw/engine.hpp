@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include <components/compiler/extensions.hpp>
+#include <components/esm/gameprofile.hpp>
 #include <components/debug/debuglog.hpp>
 #include <components/esm/refid.hpp>
 #include <components/files/collections.hpp>
@@ -182,6 +183,7 @@ namespace OMW
         Files::Collections mFileCollections;
         Translation::Storage mTranslationDataStorage;
         bool mNewGame;
+        ESM::GameProfile mGameProfile;
 
         Files::ConfigurationManager& mCfgMgr;
         int mGlMaxTextureImageUnits;
@@ -231,6 +233,7 @@ namespace OMW
         /// \param newGame Start a new game instead off dumping the player into the game
         /// (ignored if !skipMenu).
         void setSkipMenu(bool skipMenu, bool newGame);
+        void setGameProfile(ESM::GameProfile profile) { mGameProfile = profile; }
 
         void setGrabMouse(bool grab) { mGrab = grab; }
 

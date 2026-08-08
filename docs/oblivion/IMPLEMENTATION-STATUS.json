@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "updated": "2026-08-08",
+  "base_revision": "f38591bc738bdebf55ebf365565392a8e4f65d0a",
+  "milestones": {
+    "M0": {
+      "status": "accepted",
+      "report": "docs/oblivion/M0-BASELINE.md",
+      "evidence": "build/oblivion-compat/m0/baseline.json",
+      "open_gates": []
+    },
+    "M1": {
+      "status": "accepted_with_environment_exception",
+      "report": "docs/oblivion/M1-TES4-PARSING.md",
+      "evidence": "build/oblivion-compat/m1-acceptance/baseline.json",
+      "open_gates": [
+        "Rerun ASan and UBSan when a complete sanitizer toolchain is installed"
+      ]
+    },
+    "M2": {
+      "status": "in_progress",
+      "report": "docs/oblivion/M2-FORM-IDENTITY.md",
+      "delivered": [
+        "Stable content and dynamic FormKey identities",
+        "Master and load-order conversion",
+        "Override, deletion, child, and enable-parent foundation"
+      ],
+      "open_gates": [
+        "Integrate FormKey into every typed store and live reference",
+        "Audit the full official winning-record and reference graph",
+        "Prove full graph stability across reorder and save reload"
+      ]
+    },
+    "M3": {
+      "status": "in_progress",
+      "report": "docs/oblivion/M3-STANDALONE-BOOT.md",
+      "evidence": [
+        "build/oblivion-compat/m3-cell-accepted/scenario.json",
+        "build/oblivion-compat/m3-exterior-acceptance/scenario.json",
+        "build/oblivion-compat/m3-wrong-profile-accepted/scenario.json"
+      ],
+      "open_gates": [
+        "Add native Oblivion resource, settings, calendar, and player services",
+        "Replace compatibility bootstrap and explicit archive manifest defaults",
+        "Add the complete deterministic Morrowind visual boot campaign"
+      ]
+    },
+    "M4": {
+      "status": "in_progress",
+      "report": "docs/oblivion/M4-RUNTIME-STATE.md",
+      "evidence": [
+        "build/oblivion-compat/m4-save-acceptance/scenario.json",
+        "build/oblivion-compat/m4-load-acceptance/scenario.json"
+      ],
+      "open_gates": [
+        "Capture and apply every live mutable TES4 state family",
+        "Use actual content fingerprints",
+        "Compare canonical state across interior and exterior process restarts"
+      ]
+    }
+  },
+  "next_bounded_delivery": "M2 official-content winning-record and reference graph audit"
+}

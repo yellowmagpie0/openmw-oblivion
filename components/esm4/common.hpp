@@ -50,6 +50,7 @@ namespace ESM4
         REC_ASTP = fourCC("ASTP"), // Association Type
         REC_AVIF = fourCC("AVIF"), // Actor Values/Perk Tree Graphics
         REC_BOOK = fourCC("BOOK"), // Book
+        REC_BSGN = fourCC("BSGN"), // Birthsign (TES4 only)
         REC_BPTD = fourCC("BPTD"), // Body Part Data
         REC_CAMS = fourCC("CAMS"), // Camera Shot
         REC_CELL = fourCC("CELL"), // Cell
@@ -150,6 +151,7 @@ namespace ESM4
         REC_SNDR = fourCC("SNDR"), // Sound Reference
         REC_SOPM = fourCC("SOPM"), // Sound Output Model
         REC_SOUN = fourCC("SOUN"), // Sound
+        REC_SKIL = fourCC("SKIL"), // Skill (TES4 only)
         REC_SPEL = fourCC("SPEL"), // Spell
         REC_SPGD = fourCC("SPGD"), // Shader Particle Geometry
         REC_STAT = fourCC("STAT"), // Static

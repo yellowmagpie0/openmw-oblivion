@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmw.org/schemas/oblivion-compat-scenario-1.json",
+  "title": "OpenMW compatibility scenario",
+  "type": "object",
+  "required": ["schema_version", "name", "command"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "name": {"type": "string", "minLength": 1},
+    "cwd": {"type": "string"},
+    "command": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "environment": {"type": "object", "additionalProperties": {"type": "string"}},
+    "directories": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "content": {"type": "string"}
+        }
+      }
+    },
+    "xvfb": {"type": "boolean"},
+    "width": {"type": "integer", "minimum": 320},
+    "height": {"type": "integer", "minimum": 200},
+    "timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "terminate_after_actions": {"type": "boolean"},
+    "expected_exit": {"oneOf": [{"type": "integer"}, {"const": "timeout"}]},
+    "expected_log": {"type": "array", "items": {"type": "string"}},
+    "forbidden_log": {"type": "array", "items": {"type": "string"}},
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"enum": ["sleep", "screenshot", "key", "type", "command", "assert_file"]},
+          "seconds": {"type": "number", "minimum": 0},
+          "name": {"type": "string"},
+          "window": {"type": "string"},
+          "inspect": {"type": "boolean"},
+          "minimum_entropy": {"type": "number", "minimum": 0, "maximum": 1},
+          "minimum_mean": {"type": "number", "minimum": 0, "maximum": 1},
+          "maximum_mean": {"type": "number", "minimum": 0, "maximum": 1},
+          "value": {"type": "string"},
+          "delay_ms": {"type": "integer", "minimum": 0},
+          "command": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
+          "expected_exit": {"type": "integer"},
+          "path_glob": {"type": "string", "minLength": 1},
+          "expected_count": {"type": "integer", "minimum": 0},
+          "minimum_size": {"type": "integer", "minimum": 0},
+          "contains_ascii": {"type": "array", "items": {"type": "string"}},
+          "forbidden_ascii": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

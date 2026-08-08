@@ -140,6 +140,7 @@ bool parseOptions(int argc, char** argv, OMW::Engine& engine, Files::Configurati
     // startup-settings
     engine.setCell(variables["start"].as<std::string>());
     engine.setSkipMenu(variables["skip-menu"].as<bool>(), variables["new-game"].as<bool>());
+    engine.setGameProfile(ESM::parseGameProfile(variables["game-profile"].as<std::string>()));
     if (!variables["skip-menu"].as<bool>() && variables["new-game"].as<bool>())
         Log(Debug::Warning) << "Warning: new-game used without skip-menu -> ignoring it";
 

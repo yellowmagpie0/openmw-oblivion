@@ -35,6 +35,7 @@
 #include "loadtes4.hpp"
 
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/esm/path.hpp>
 #include <components/files/istreamptr.hpp>
 
@@ -95,7 +96,21 @@ namespace ESM4
         std::uint32_t typeId;
         std::uint16_t dataSize;
     };
+
+    struct RawSubRecordHeader
+    {
+        std::uint32_t typeId = 0;
+        std::uint32_t dataSize = 0;
+        bool extended = false;
+    };
+
 #pragma pack(pop)
+
+    struct SkippedSubRecordStats
+    {
+        std::uint64_t calls = 0;
+        std::uint64_t bytes = 0;
+    };
 
     //                                                   bytes read from group, updated by
     //                                                   getRecordHeader() in advance
@@ -167,6 +182,8 @@ namespace ESM4
         std::vector<Reader*>* mGlobalReaderList = nullptr;
 
         bool mIgnoreMissingLocalizedStrings = false;
+
+        std::map<std::pair<std::uint32_t, std::uint32_t>, SkippedSubRecordStats> mSkippedSubRecords;
 
         void buildLStringIndex(LocalizedStringType stringType, std::string_view prefix);
 
@@ -322,10 +339,20 @@ namespace ESM4
         // Read 6 bytes of header. The caller can then decide whether to process or skip the data.
         bool getSubRecordHeader();
 
+        // Read a subrecord header without discarding XXXX-extended payloads.
+        // This is intended for strict inspection and lossless fallback records;
+        // typed loaders should continue to use getSubRecordHeader().
+        bool getRawSubRecordHeader(RawSubRecordHeader& header);
+
         // Manally update (i.e. increase) the bytes read after SUB_XXXX
         inline void updateRecordRead(std::uint32_t subSize) { mCtx.recordRead += subSize; }
 
         inline const SubRecordHeader& subRecordHeader() const { return mCtx.subRecordHeader; }
+
+        const std::map<std::pair<std::uint32_t, std::uint32_t>, SkippedSubRecordStats>& getSkippedSubRecords() const
+        {
+            return mSkippedSubRecords;
+        }
 
         // Skip the data part of a subrecord
         // Note: assumes the header was read correctly and nothing else was read
@@ -353,6 +380,9 @@ namespace ESM4
 
         bool getFormId(ESM::FormId& id);
         ESM::FormId getFormIdFromHeader() const;
+
+        bool getFormKey(ESM::FormKey& key);
+        ESM::FormKey getFormKeyFromHeader() const;
 
         void adjustGRUPFormId();
 

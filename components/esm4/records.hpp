@@ -61,6 +61,7 @@
 #include <components/esm4/loadpwat.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadrace.hpp>
+#include <components/esm4/loadrawrecord.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadregn.hpp>
 #include <components/esm4/loadroad.hpp>

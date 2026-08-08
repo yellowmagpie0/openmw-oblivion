@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "name": "scenario-runner-self-test",
+  "cwd": "{source}",
+  "command": [
+    "{python}",
+    "-c",
+    "print('SCENARIO_READY'); print('SCENARIO_OK')"
+  ],
+  "timeout_seconds": 10,
+  "expected_exit": 0,
+  "expected_log": ["SCENARIO_READY", "SCENARIO_OK"],
+  "forbidden_log": ["Traceback", "SCENARIO_FAILED"]
+}

@@ -163,6 +163,8 @@ add_component_dir (toutf8
 
 add_component_dir(esm attr common defs esmcommon records util luascripts format refid esmbridge esmterrain
     formid
+    formkey
+    gameprofile
     fourcc
     stringrefid
     generatedrefid
@@ -267,6 +269,7 @@ add_component_dir (esm4
     loadpwat
     loadqust
     loadrace
+    loadrawrecord
     loadrefr
     loadregn
     loadroad
@@ -290,6 +293,7 @@ add_component_dir (esm4
     reader
     readerutils
     reference
+    runtimestate
     script
     typetraits
     vertex

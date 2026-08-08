@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "components/esm/defs.hpp"
+#include "components/esm/gameprofile.hpp"
 #include "components/esm/refid.hpp"
 
 namespace ESM
@@ -37,6 +38,11 @@ namespace ESM
         int32_t mCurrentDay = 0;
         float mCurrentHealth = 0;
         float mMaximumHealth = 0;
+
+        // Absent in historical saves and therefore defaults to Morrowind.
+        // Oblivion saves always carry both fields and a native T4ST record.
+        ESM::GameProfile mGameProfile = ESM::GameProfile::Morrowind;
+        std::uint32_t mRuntimeStateVersion = 0;
 
         void load(ESMReader& esm);
         void save(ESMWriter& esm) const;
