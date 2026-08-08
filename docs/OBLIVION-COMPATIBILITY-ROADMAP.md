@@ -13,7 +13,7 @@ This ledger is the resume point. Detailed evidence and open gates live in
 | Milestone | State on 2026-08-08 | Durable report |
 | --- | --- | --- |
 | M0 | Accepted | `docs/oblivion/M0-BASELINE.md` |
-| M1 | Accepted, with sanitizer toolchain unavailable on this host | `docs/oblivion/M1-TES4-PARSING.md` |
+| M1 | Accepted: strict parser, mutation corpus, and official-content sanitizer gates passed | `docs/oblivion/M1-TES4-PARSING.md` |
 | M2 | Accepted: full official FormKey/reference graph and runtime identity gates passed | `docs/oblivion/M2-FORM-IDENTITY.md` |
 | M3 | Accepted: native profile services and standalone interior/exterior gates passed | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | Accepted: exact native state restarts, reorder, diagnostics, visuals, and Morrowind gates passed | `docs/oblivion/M4-RUNTIME-STATE.md` |
@@ -613,7 +613,7 @@ handling.
 | Milestone | State | Evidence |
 | --- | --- | --- |
 | M0 | Complete | `docs/oblivion/M0-BASELINE.md` |
-| M1 | Complete, with documented sanitizer-host exception | `docs/oblivion/M1-TES4-PARSING.md` |
+| M1 | Complete | `docs/oblivion/M1-TES4-PARSING.md` |
 | M2 | Complete | `docs/oblivion/M2-FORM-IDENTITY.md` |
 | M3 | Complete | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | Complete | `docs/oblivion/M4-RUNTIME-STATE.md` |

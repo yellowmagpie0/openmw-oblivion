@@ -1,7 +1,7 @@
 # M1 strict TES4 parsing and record census
 
-Status: implementation and functional acceptance complete on 2026-08-08.
-ASan/UBSan execution is an environmental exception, not a silent pass.
+Status: implementation, functional acceptance, and sanitizer acceptance complete
+on 2026-08-08.
 
 ## Delivered source
 
@@ -47,14 +47,43 @@ Recorded again after the final strict-boundary changes in
 - The complete component suite passed at the M1 checkpoint, in addition to the
   focused malformed-input corpus.
 
-## Sanitizer exception
+## Sanitizer verification
 
-The sanitizer build was attempted. This Fedora installation exposes GCC
-linker-script references to absent `libasan.so.8.0.0` and
-`libubsan.so.1.0.0`; compiler-rt libraries exist but no usable Clang compiler
-binary is installed. Consequently ASan/UBSan could not link. This remains an
-acceptance-infrastructure item to rerun when the host toolchain is repaired.
-It does not weaken the normal-build mutation and official-content gates.
+The Fedora host toolchain was repaired by installing the GCC 16.1.1
+`libasan` and `libubsan` runtime packages. The combined ASan/UBSan build and M1
+checks were then run with immediate failure and leak detection enabled:
+
+```sh
+cmake -S . -B build-oblivion-sanitized \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DBUILD_COMPONENTS_TESTS=ON \
+  -DOPENMW_USE_SYSTEM_BULLET=OFF \
+  -DCMAKE_CXX_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \
+  -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined' \
+  -DCMAKE_SHARED_LINKER_FLAGS='-fsanitize=address,undefined'
+cmake --build build-oblivion-sanitized \
+  --target components-tests esmtool bsatool -j2
+ASAN_OPTIONS='detect_leaks=1:halt_on_error=1:abort_on_error=1' \
+UBSAN_OPTIONS='print_stacktrace=1:halt_on_error=1' \
+  ./build-oblivion-sanitized/components-tests \
+  --gtest_filter='ESM4RawRecord.*'
+ASAN_OPTIONS='detect_leaks=1:halt_on_error=1:abort_on_error=1' \
+UBSAN_OPTIONS='print_stacktrace=1:halt_on_error=1' \
+  python3 scripts/oblivion_compat.py baseline \
+  --build build-oblivion-sanitized \
+  --oblivion-data "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data" \
+  --census-all --require-lossless-tes4 \
+  --output build/oblivion-compat/m1-sanitized
+```
+
+All 10 focused raw-record, malformed-input, compressed-stream, and bounded
+mutation-corpus tests passed without an ASan, UBSan, or leak finding. The
+sanitized official-content run also passed: 11/11 plugins parsed and censused,
+17/17 archives listed, all 88 observed skipped-subrecord pairs matched the
+allowlist, and no unsupported record was found. The durable local report is
+`build/oblivion-compat/m1-sanitized/baseline.json` and `.html`; focused test
+results are in `build/oblivion-compat/m1-sanitized/components-tests.xml`.
 
 ## Success assessment
 

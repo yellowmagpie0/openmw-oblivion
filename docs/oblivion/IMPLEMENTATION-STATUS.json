@@ -10,12 +10,14 @@
       "open_gates": []
     },
     "M1": {
-      "status": "accepted_with_environment_exception",
+      "status": "accepted",
       "report": "docs/oblivion/M1-TES4-PARSING.md",
-      "evidence": "build/oblivion-compat/m1-acceptance/baseline.json",
-      "open_gates": [
-        "Rerun ASan and UBSan when a complete sanitizer toolchain is installed"
-      ]
+      "evidence": [
+        "build/oblivion-compat/m1-acceptance/baseline.json",
+        "build/oblivion-compat/m1-sanitized/baseline.json",
+        "build/oblivion-compat/m1-sanitized/components-tests.xml"
+      ],
+      "open_gates": []
     },
     "M2": {
       "status": "accepted",
