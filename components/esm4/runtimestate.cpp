@@ -571,6 +571,27 @@ namespace ESM4
         return result;
     }
 
+    void RuntimeState::validateContent(const std::vector<RuntimeContentIdentity>& currentContent) const
+    {
+        std::map<std::string, std::string, std::less<>> current;
+        for (const RuntimeContentIdentity& content : currentContent)
+        {
+            const std::string plugin = ESM::normalizePluginName(content.mPlugin);
+            if (!current.emplace(plugin, content.mFingerprint).second)
+                throw std::runtime_error("Duplicate current TES4 content identity: " + plugin);
+        }
+        for (const RuntimeContentIdentity& saved : mContent)
+        {
+            const std::string plugin = ESM::normalizePluginName(saved.mPlugin);
+            const auto found = current.find(plugin);
+            if (found == current.end())
+                throw std::runtime_error("TES4 runtime state requires missing content file " + plugin);
+            if (found->second != saved.mFingerprint)
+                throw std::runtime_error("TES4 runtime state content fingerprint mismatch for " + plugin
+                    + ": saved " + saved.mFingerprint + ", current " + found->second);
+        }
+    }
+
     std::string RuntimeState::canonicalJson() const
     {
         validate();

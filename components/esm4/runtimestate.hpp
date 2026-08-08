@@ -104,6 +104,7 @@ namespace ESM4
         void load(ESM::ESMReader& reader);
 
         std::vector<std::string> getMissingContentFiles(const std::vector<std::string>& currentContent) const;
+        void validateContent(const std::vector<RuntimeContentIdentity>& currentContent) const;
         std::string canonicalJson() const;
 
         friend bool operator==(const RuntimeState&, const RuntimeState&) = default;

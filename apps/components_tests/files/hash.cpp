@@ -39,6 +39,22 @@ namespace
             ElementsAre(9607679276477937801ull, 16624257681780017498ull));
     }
 
+    TEST(FilesGetHash, sha256MatchesPublishedVectorsAndRestoresTheStream)
+    {
+        std::istringstream empty("");
+        EXPECT_EQ(getSha256("empty", empty), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+
+        std::istringstream abc("abc");
+        abc.seekg(1);
+        EXPECT_EQ(getSha256("abc-tail", abc), "1e0bbd6c686ba050b8eb03ffeedc64fdc9d80947fce821abbe5d6dc8d252c5ac");
+        EXPECT_EQ(abc.tellg(), 1);
+        EXPECT_EQ(abc.get(), 'b');
+
+        std::istringstream longInput(std::string(1'000'000, 'a'));
+        EXPECT_EQ(getSha256("million-a", longInput),
+            "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0");
+    }
+
     TEST_P(FilesGetHash, shouldReturnHashForStringStream)
     {
         const auto fileName = outputFilePath("fileName");

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-native-save-failure-diagnostic",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{game_data}\"\ncontent={content}\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 800\nresolution y = 600\nfullscreen = false\n[Models]\nload unsupported nif files = true\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--load-savegame={savegame}",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "xvfb": true,
+  "width": 800,
+  "height": 600,
+  "actions": [
+    {"type": "sleep", "seconds": 10},
+    {"type": "screenshot", "name": "load-failure-diagnostic.png", "minimum_entropy": 0.001}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 10,
+  "expected_exit": 0,
+  "expected_log": [
+    "Failed to load saved game: {diagnostic}"
+  ],
+  "forbidden_log": [
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

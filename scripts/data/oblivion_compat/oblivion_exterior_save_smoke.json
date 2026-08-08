@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-exterior-native-save-smoke",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=OldBridgeExterior\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 45},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 10},
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/*.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": ["GPRO", "T4VR", "T4ST", "OMW4STATE"]
+    },
+    {"type": "screenshot", "name": "oblivion-exterior-after-save.png"}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 10,
+  "expected_exit": 0,
+  "expected_log": [
+    "Selected game profile: oblivion",
+    "Loading cell OldBridgeExterior",
+    "Writing saved game 'Quicksave'",
+    "'Quicksave' is saved"
+  ],
+  "forbidden_log": [
+    "Adding data directory .*vfs-mw",
+    "neutral Oblivion compatibility",
+    "GameSetting '.*' not found",
+    "Failed to save game",
+    "Error in frame",
+    "onFrame failed",
+    "Can't start .*scripts/omw",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

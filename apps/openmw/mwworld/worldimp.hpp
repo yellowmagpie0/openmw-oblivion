@@ -104,6 +104,8 @@ namespace MWWorld
         ESM::GameProfile mRequestedGameProfile;
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
+        std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
+        std::uint64_t mNextOblivionDynamicSerial = 1;
 
         std::string mCurrentWorldSpace;
 
@@ -180,6 +182,8 @@ namespace MWWorld
 
         void ensureNeededRecords();
         void installOblivionProfileServices();
+        ESM4::RuntimeState captureOblivionRuntimeState() const;
+        void applyOblivionRuntimeState();
 
         void fillGlobalVariables();
 

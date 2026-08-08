@@ -380,6 +380,9 @@ namespace MWWorld
         addFloat("fMaxFlySpeed", 200.f);
         addFloat("fSneakSpeedMultiplier", 0.75f);
         addFloat("fEncumbranceStrMult", 5.f);
+        addFloat("fJumpMoveBase", 0.5f);
+        addFloat("fJumpMoveMult", 0.5f);
+        addFloat("fSuffocationDamage", 3.f);
         addFloat("fMessageTimePerChar", 0.02f);
         addFloat("fVanityDelay", 30.f);
         addFloat("fMajorSkillBonus", 0.75f);

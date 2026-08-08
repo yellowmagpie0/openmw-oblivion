@@ -1,6 +1,8 @@
 #include "worldimp.hpp"
 
 #include <charconv>
+#include <fstream>
+#include <limits>
 #include <vector>
 
 #include <osg/ComputeBoundsVisitor>
@@ -26,7 +28,11 @@
 #include <components/esm3/loadregn.hpp>
 #include <components/esm3/loadstat.hpp>
 #include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadcont.hpp>
+#include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loaddoor.hpp>
+#include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadstat.hpp>
 #include <components/esm4/loadwrld.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -39,6 +45,8 @@
 #include <components/misc/rng.hpp>
 
 #include <components/files/collections.hpp>
+#include <components/files/hash.hpp>
+#include <components/files/openfile.hpp>
 
 #include <components/resource/bulletshape.hpp>
 #include <components/resource/resourcesystem.hpp>
@@ -228,6 +236,21 @@ namespace MWWorld
         mESMVersions.resize(mContentFiles.size(), -1);
 
         loadContentFiles(fileCollections, contentFiles, encoder, listener);
+        mOblivionContentIdentities.clear();
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            for (const std::string& contentFile : contentFiles)
+            {
+                if (Misc::StringUtils::ciEqual(contentFile, "builtin.omwscripts"))
+                    continue;
+                const std::filesystem::path path = fileCollections.getPath(contentFile);
+                const std::string pathName = Files::pathToUnicodeString(path);
+                const auto stream = Files::openBinaryInputFileStream(path);
+                mOblivionContentIdentities.emplace_back(
+                    ESM::normalizePluginName(contentFile), "sha256:" + Files::getSha256(pathName, *stream));
+            }
+            std::sort(mOblivionContentIdentities.begin(), mOblivionContentIdentities.end());
+        }
         loadGroundcoverFiles(fileCollections, groundcoverFiles, encoder, listener);
         MWBase::Environment::get().getLuaManager()->contentFilesLoaded();
 
@@ -392,6 +415,7 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        mNextOblivionDynamicSerial = 1;
 
         fillGlobalVariables();
     }
@@ -413,35 +437,391 @@ namespace MWWorld
         return mWorldModel.countSavedGameRecords();
     }
 
+    ESM4::RuntimeState World::captureOblivionRuntimeState() const
+    {
+        ESM4::RuntimeState state;
+        state.mNextDynamicSerial = mNextOblivionDynamicSerial;
+        for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
+            state.mContent.push_back({ plugin, fingerprint });
+
+        const ESM::EpochTimeStamp epoch = mTimeManager->getEpochTimeStamp();
+        state.mClock = { epoch.mYear, epoch.mMonth, epoch.mDay, epoch.mGameHour,
+            mGlobalVariables[Globals::sTimeScale].getFloat() };
+
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        // Class stat access still uses the historical mutable Ptr API even for read-only save serialization.
+        const MWWorld::Ptr player = const_cast<World*>(this)->getPlayerPtr();
+        state.mPlayer.mPosition = player.getRefData().getPosition();
+        if (player.isInCell())
+        {
+            const ESM::RefId cellId = player.getCell()->getCell()->getId();
+            if (const ESM::FormId* formId = cellId.getIf<ESM::FormId>())
+                state.mPlayer.mCell = resolver.toFormKey(*formId);
+        }
+        const MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+        const auto addDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& value) {
+            const std::string prefix(name);
+            state.mPlayer.mActorValues.emplace(prefix + ".base", value.getBase());
+            state.mPlayer.mActorValues.emplace(prefix + ".modifier", value.getModifier());
+            state.mPlayer.mActorValues.emplace(prefix + ".current", value.getCurrent());
+        };
+        addDynamicStat("health", stats.getHealth());
+        addDynamicStat("magicka", stats.getMagicka());
+        addDynamicStat("fatigue", stats.getFatigue());
+        state.mPlayer.mActorValues.emplace("level", stats.getLevel());
+
+        // Player inventory is currently projected through the TES3 actor facade. Preserve a previously loaded native
+        // inventory overlay, or seed it from the native Player NPC until ESM4 item classes gain ContainerStore support.
+        if (mOblivionRuntimeState)
+            state.mPlayer.mInventory = mOblivionRuntimeState->mPlayer.mInventory;
+        else
+        {
+            for (const ESM4::Npc& npc : mStore.get<ESM4::Npc>())
+            {
+                if (!Misc::StringUtils::ciEqual(npc.mEditorId, "Player"))
+                    continue;
+                for (const ESM4::InventoryItem& item : npc.mInventory)
+                {
+                    const ESM::FormKey key = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
+                    const std::int32_t count = static_cast<std::int32_t>(
+                        std::min<std::uint32_t>(item.count, std::numeric_limits<std::int32_t>::max()));
+                    if (!key.isNull() && count != 0)
+                        state.mPlayer.mInventory.push_back({ key, count });
+                }
+                break;
+            }
+        }
+
+        const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
+            if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
+                return Globals::sDaysPassed.getValue();
+            if (Misc::StringUtils::ciEqual(nativeName, "GameDay"))
+                return Globals::sDay.getValue();
+            if (Misc::StringUtils::ciEqual(nativeName, "GameMonth"))
+                return Globals::sMonth.getValue();
+            if (Misc::StringUtils::ciEqual(nativeName, "GameYear"))
+                return Globals::sYear.getValue();
+            return nativeName;
+        };
+        for (const ESM4::GlobalVariable& global : mStore.get<ESM4::GlobalVariable>())
+        {
+            if (global.mEditorId.empty())
+                continue;
+            const ESM::Variant& value = mGlobalVariables[GlobalVariableName(runtimeGlobalName(global.mEditorId))];
+            ESM4::RuntimeValue runtimeValue;
+            if (value.getType() == ESM::VT_Float)
+                runtimeValue = static_cast<double>(value.getFloat());
+            else if (value.getType() == ESM::VT_String)
+                runtimeValue = value.getString();
+            else
+                runtimeValue = static_cast<std::int64_t>(value.getInteger());
+            state.mGlobals.emplace(resolver.toFormKey(global.mId), std::move(runtimeValue));
+        }
+
+        std::map<ESM::FormKey, const ESM4::RuntimeReferenceState*> previousReferences;
+        if (mOblivionRuntimeState)
+            for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
+                previousReferences.emplace(reference.mKey, &reference);
+
+        auto& worldModel = const_cast<WorldModel&>(mWorldModel);
+        worldModel.forEachLoadedCellStore([&](CellStore& cell) {
+            cell.forEachConst(
+                [&](const ConstPtr& ptr) {
+                    const ESM::FormKey key = ptr.getCellRef().getFormKey();
+                    if (key.isNull())
+                        return true;
+                    const ESM::RefId baseRefId = ptr.getCellRef().getRefId();
+                    const ESM::FormId* baseId = baseRefId.getIf<ESM::FormId>();
+                    const ESM::FormId* cellId = ptr.getCell()->getCell()->getId().getIf<ESM::FormId>();
+                    if (baseId == nullptr || cellId == nullptr)
+                        throw std::runtime_error("Native TES4 reference has no FormId base or cell identity");
+
+                    ESM4::RuntimeReferenceState reference;
+                    reference.mKey = key;
+                    reference.mBase = resolver.toFormKey(*baseId);
+                    reference.mCell = resolver.toFormKey(*cellId);
+                    reference.mEnabled = ptr.getRefData().isEnabled();
+                    reference.mDeleted = ptr.mRef->isDeleted();
+                    reference.mPosition = ptr.getRefData().getPosition();
+                    const ESM::RefId ownerId = ptr.getCellRef().getOwner();
+                    if (const ESM::FormId* owner = ownerId.getIf<ESM::FormId>())
+                        reference.mOwner = resolver.toFormKey(*owner);
+                    try
+                    {
+                        reference.mLockLevel = ptr.getCellRef().getLockLevel();
+                    }
+                    catch (const std::logic_error&)
+                    {
+                        reference.mLockLevel = 0;
+                    }
+
+                    if (const auto previous = previousReferences.find(key); previous != previousReferences.end())
+                    {
+                        reference.mInventory = previous->second->mInventory;
+                        reference.mCustomState = previous->second->mCustomState;
+                    }
+                    else
+                    {
+                        const auto addInventory = [&](const std::vector<ESM4::InventoryItem>& inventory) {
+                            for (const ESM4::InventoryItem& item : inventory)
+                            {
+                                const ESM::FormKey itemKey
+                                    = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
+                                const std::int32_t count = static_cast<std::int32_t>(std::min<std::uint32_t>(
+                                    item.count, std::numeric_limits<std::int32_t>::max()));
+                                if (!itemKey.isNull() && count != 0)
+                                    reference.mInventory.push_back({ itemKey, count });
+                            }
+                        };
+                        switch (ptr.getClass().getType())
+                        {
+                            case ESM::REC_CONT4:
+                                addInventory(ptr.get<ESM4::Container>()->mBase->mInventory);
+                                break;
+                            case ESM::REC_CREA4:
+                                addInventory(ptr.get<ESM4::Creature>()->mBase->mInventory);
+                                break;
+                            case ESM::REC_NPC_4:
+                                addInventory(ptr.get<ESM4::Npc>()->mBase->mInventory);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    reference.mCustomState["count"]
+                        = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
+                    reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
+                    reference.mCustomState["record_type"]
+                        = static_cast<std::int64_t>(ptr.getClass().getType());
+                    try
+                    {
+                        reference.mCustomState["locked"] = ptr.getCellRef().isLocked();
+                    }
+                    catch (const std::logic_error&)
+                    {
+                        // Actor references do not have lock state.
+                    }
+                    state.mReferences.push_back(std::move(reference));
+                    return true;
+                },
+                true);
+        });
+        // Runtime-created forms may not have a projected MWClass yet. Keep their native state alive so later profile
+        // slices can instantiate them without losing identity or allocation order in intervening saves.
+        if (mOblivionRuntimeState)
+        {
+            std::set<ESM::FormKey> captured;
+            for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
+                captured.insert(reference.mKey);
+            for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
+                if (reference.mKey.isDynamic() && !captured.contains(reference.mKey))
+                    state.mReferences.push_back(reference);
+        }
+        std::sort(state.mReferences.begin(), state.mReferences.end(), [](const auto& left, const auto& right) {
+            return left.mKey < right.mKey;
+        });
+        state.validate();
+        return state;
+    }
+
+    void World::applyOblivionRuntimeState()
+    {
+        if (!mOblivionRuntimeState)
+            return;
+        const ESM4::RuntimeState& state = *mOblivionRuntimeState;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        mNextOblivionDynamicSerial = state.mNextDynamicSerial;
+
+        const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
+            if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
+                return Globals::sDaysPassed.getValue();
+            if (Misc::StringUtils::ciEqual(nativeName, "GameDay"))
+                return Globals::sDay.getValue();
+            if (Misc::StringUtils::ciEqual(nativeName, "GameMonth"))
+                return Globals::sMonth.getValue();
+            if (Misc::StringUtils::ciEqual(nativeName, "GameYear"))
+                return Globals::sYear.getValue();
+            return nativeName;
+        };
+        const auto setVariant = [](ESM::Variant& target, const ESM4::RuntimeValue& value) {
+            if (target.getType() == ESM::VT_String)
+            {
+                if (const auto* text = std::get_if<std::string>(&value))
+                    target.setString(*text);
+                else
+                    throw std::runtime_error("TES4 runtime-state string global has a numeric value");
+            }
+            else if (target.getType() == ESM::VT_Float)
+            {
+                const double number = std::visit(
+                    [](const auto& item) -> double {
+                        using T = std::decay_t<decltype(item)>;
+                        if constexpr (std::is_same_v<T, std::string>)
+                            throw std::runtime_error("TES4 runtime-state numeric global has a string value");
+                        else
+                            return static_cast<double>(item);
+                    },
+                    value);
+                target.setFloat(static_cast<float>(number));
+            }
+            else
+            {
+                const std::int64_t number = std::visit(
+                    [](const auto& item) -> std::int64_t {
+                        using T = std::decay_t<decltype(item)>;
+                        if constexpr (std::is_same_v<T, std::string>)
+                            throw std::runtime_error("TES4 runtime-state numeric global has a string value");
+                        else
+                            return static_cast<std::int64_t>(item);
+                    },
+                    value);
+                target.setInteger(static_cast<std::int32_t>(std::clamp<std::int64_t>(number,
+                    std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max())));
+            }
+        };
+        for (const auto& [key, value] : state.mGlobals)
+        {
+            const std::optional<ESM::FormId> formId = resolver.toFormId(key);
+            if (!formId || !formId->hasContentFile())
+                throw std::runtime_error("TES4 runtime-state global cannot be resolved: " + key.serialize());
+            const ESM4::GlobalVariable* global
+                = mStore.get<ESM4::GlobalVariable>().search(ESM::RefId(*formId));
+            if (global == nullptr || global->mEditorId.empty())
+                throw std::runtime_error("TES4 runtime-state global is not present: " + key.serialize());
+            setVariant(mGlobalVariables[GlobalVariableName(runtimeGlobalName(global->mEditorId))], value);
+        }
+        mGlobalVariables[Globals::sYear].setInteger(state.mClock.mYear);
+        mGlobalVariables[Globals::sMonth].setInteger(state.mClock.mMonth);
+        mGlobalVariables[Globals::sDay].setInteger(state.mClock.mDay);
+        mGlobalVariables[Globals::sGameHour].setFloat(static_cast<float>(state.mClock.mHour));
+        mGlobalVariables[Globals::sTimeScale].setFloat(static_cast<float>(state.mClock.mTimeScale));
+        mTimeManager->setup(mGlobalVariables);
+
+        const std::optional<ESM::FormId> playerCellId = resolver.toFormId(state.mPlayer.mCell);
+        if (!playerCellId || !playerCellId->hasContentFile())
+            throw std::runtime_error("TES4 runtime-state player cell cannot be resolved");
+        CellStore& playerCell = mWorldModel.getCell(ESM::RefId(*playerCellId));
+        mPlayer->setCell(&playerCell);
+        const Ptr player = getPlayerPtr();
+        player.getRefData().setPosition(state.mPlayer.mPosition);
+        MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+        const auto applyDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& current) {
+            const std::string prefix(name);
+            const auto value = [&](std::string_view suffix, double fallback) {
+                const auto found = state.mPlayer.mActorValues.find(prefix + std::string(suffix));
+                return static_cast<float>(found != state.mPlayer.mActorValues.end() ? found->second : fallback);
+            };
+            const float base = value(".base", current.getBase());
+            float modifier = value(".modifier", current.getModifier());
+            if (!state.mPlayer.mActorValues.contains(prefix + ".modifier"))
+            {
+                const auto oldModified = state.mPlayer.mActorValues.find(prefix + ".modified");
+                if (oldModified != state.mPlayer.mActorValues.end())
+                    modifier = static_cast<float>(oldModified->second) - base;
+            }
+            const float currentValue = value(".current", current.getCurrent());
+            return MWMechanics::DynamicStat<float>(base, modifier, currentValue);
+        };
+        stats.setHealth(applyDynamicStat("health", stats.getHealth()));
+        stats.setMagicka(applyDynamicStat("magicka", stats.getMagicka()));
+        stats.setFatigue(applyDynamicStat("fatigue", stats.getFatigue()));
+        if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
+            stats.setLevel(static_cast<int>(level->second));
+
+        // Load every target cell first, then build a stable-key index. This also makes moved-reference restoration
+        // independent of plugin order and of the order in which cell records appeared in the save.
+        for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
+        {
+            const std::optional<ESM::FormId> cellId = resolver.toFormId(reference.mCell);
+            if (!cellId || !cellId->hasContentFile())
+                throw std::runtime_error("TES4 runtime-state reference cell cannot be resolved: "
+                    + reference.mCell.serialize());
+            mWorldModel.getCell(ESM::RefId(*cellId));
+        }
+        std::map<ESM::FormKey, Ptr> references;
+        mWorldModel.forEachLoadedCellStore([&](CellStore& cell) {
+            cell.forEach(
+                [&](const Ptr& ptr) {
+                    const ESM::FormKey key = ptr.getCellRef().getFormKey();
+                    if (!key.isNull())
+                        references.emplace(key, ptr);
+                    return true;
+                },
+                true);
+        });
+        for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
+        {
+            const auto found = references.find(reference.mKey);
+            if (found == references.end())
+            {
+                if (reference.mKey.isDynamic())
+                    continue; // Native state remains authoritative until this dynamic form has a projected MWClass.
+                throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
+            }
+            Ptr ptr = found->second;
+            const std::optional<ESM::FormId> baseId = resolver.toFormId(reference.mBase);
+            const ESM::RefId actualBaseId = ptr.getCellRef().getRefId();
+            const ESM::FormId* actualBase = actualBaseId.getIf<ESM::FormId>();
+            if (!baseId || actualBase == nullptr || *baseId != *actualBase)
+                throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
+            const std::optional<ESM::FormId> cellId = resolver.toFormId(reference.mCell);
+            CellStore& targetCell = mWorldModel.getCell(ESM::RefId(*cellId));
+            if (ptr.getCell() != &targetCell)
+                ptr = ptr.getCell()->moveTo(ptr, &targetCell);
+            ptr.getRefData().setPosition(reference.mPosition);
+            reference.mEnabled ? ptr.getRefData().enable() : ptr.getRefData().disable();
+            if (reference.mOwner)
+            {
+                const std::optional<ESM::FormId> owner = resolver.toFormId(*reference.mOwner);
+                if (!owner || !owner->hasContentFile())
+                    throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
+                        + reference.mOwner->serialize());
+                ptr.getCellRef().setOwner(ESM::RefId(*owner));
+            }
+            else
+                ptr.getCellRef().setOwner(ESM::RefId());
+            try
+            {
+                ptr.getCellRef().setLockLevel(reference.mLockLevel);
+            }
+            catch (const std::logic_error&)
+            {
+                if (reference.mLockLevel != 0)
+                    throw;
+            }
+            if (const auto locked = reference.mCustomState.find("locked");
+                locked != reference.mCustomState.end())
+            {
+                const auto* value = std::get_if<bool>(&locked->second);
+                if (value == nullptr)
+                    throw std::runtime_error(
+                        "TES4 runtime-state locked value is not boolean: " + reference.mKey.serialize());
+                ptr.getCellRef().setLocked(*value);
+            }
+            int count = reference.mDeleted ? 0 : 1;
+            if (const auto savedCount = reference.mCustomState.find("count");
+                savedCount != reference.mCustomState.end())
+            {
+                if (const auto* number = std::get_if<std::int64_t>(&savedCount->second))
+                    count = static_cast<int>(std::clamp<std::int64_t>(*number,
+                        std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
+            }
+            ptr.getCellRef().setCount(reference.mDeleted ? 0 : count);
+            if (const auto scale = reference.mCustomState.find("scale"); scale != reference.mCustomState.end())
+                if (const auto* number = std::get_if<double>(&scale->second))
+                    ptr.getCellRef().setScale(static_cast<float>(*number));
+        }
+        Log(Debug::Info) << "Applied TES4 runtime state: " << state.mGlobals.size() << " globals, "
+                         << state.mReferences.size() << " references, next dynamic serial "
+                         << state.mNextDynamicSerial;
+    }
+
     void World::write(ESM::ESMWriter& writer, Loading::Listener& progress) const
     {
         if (mGameProfile == ESM::GameProfile::Oblivion)
         {
-            ESM4::RuntimeState state;
-            for (const std::string& contentFile : mContentFiles)
-            {
-                if (Misc::StringUtils::ciEqual(contentFile, "builtin.omwscripts"))
-                    continue;
-                state.mContent.push_back({ ESM::normalizePluginName(contentFile), "content-list:v1" });
-            }
-            const ESM::EpochTimeStamp epoch = mTimeManager->getEpochTimeStamp();
-            state.mClock = { epoch.mYear, epoch.mMonth, epoch.mDay, epoch.mGameHour,
-                mGlobalVariables[Globals::sTimeScale].getFloat() };
-            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
-            // Class stat access still uses the historical mutable Ptr API even for read-only save serialization.
-            const MWWorld::Ptr player = const_cast<World*>(this)->getPlayerPtr();
-            state.mPlayer.mPosition = player.getRefData().getPosition();
-            if (player.isInCell())
-            {
-                const ESM::RefId cellId = player.getCell()->getCell()->getId();
-                if (const ESM::FormId* formId = cellId.getIf<ESM::FormId>())
-                    state.mPlayer.mCell = ESM::FormKeyResolver(mContentFiles).toFormKey(*formId);
-            }
-            const MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
-            state.mPlayer.mActorValues = { { "health.current", stats.getHealth().getCurrent() },
-                { "health.modified", stats.getHealth().getModified() },
-                { "magicka.current", stats.getMagicka().getCurrent() },
-                { "fatigue.current", stats.getFatigue().getCurrent() } };
+            const ESM4::RuntimeState state = captureOblivionRuntimeState();
             writer.startRecord(ESM4::RuntimeState::sRecordId);
             state.save(writer);
             writer.endRecord(ESM4::RuntimeState::sRecordId);
@@ -498,9 +878,11 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
                 auto state = std::make_unique<ESM4::RuntimeState>();
                 state->load(reader);
-                const std::vector<std::string> missing = state->getMissingContentFiles(mContentFiles);
-                if (!missing.empty())
-                    throw std::runtime_error("TES4 runtime state requires missing content file " + missing.front());
+                std::vector<ESM4::RuntimeContentIdentity> content;
+                content.reserve(mOblivionContentIdentities.size());
+                for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
+                    content.push_back({ plugin, fingerprint });
+                state->validateContent(content);
                 mOblivionRuntimeState = std::move(state);
             }
             break;
@@ -2295,6 +2677,8 @@ namespace MWWorld
         mStore.validateDynamic();
         mTimeManager->setup(mGlobalVariables);
         mProjectileManager->saveLoaded(reader);
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            applyOblivionRuntimeState();
     }
 
     void World::setupPlayer()

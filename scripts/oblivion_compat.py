@@ -27,6 +27,9 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import tes4_runtime_state as tes4_state  # noqa: E402
+
 
 SCHEMA_VERSION = 1
 OFFICIAL_PLUGIN_ORDER = (
@@ -798,6 +801,239 @@ def run_m3_acceptance(args: argparse.Namespace) -> dict[str, Any]:
     return report
 
 
+def _single_save(directory: Path) -> Path:
+    matches = sorted(directory.glob("userdata/saves/*/*.omwsave"))
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected exactly one OpenMW save below {directory}, found {len(matches)}")
+    return matches[0]
+
+
+def _state_comparison(expected: dict[str, Any], save: Path, report_path: Path) -> dict[str, Any]:
+    actual = tes4_state.load_save(save)
+    comparison = tes4_state.compare(expected, actual)
+    write_json(report_path, comparison)
+    return {
+        "passed": comparison["passed"],
+        "report": str(report_path),
+        "expected_sha256": comparison["expected_sha256"],
+        "actual_sha256": comparison["actual_sha256"],
+        "globals": len(actual["globals"]),
+        "references": len(actual["references"]),
+        "dynamic_references": sum(item["key"].startswith("dynamic:") for item in actual["references"]),
+        "reference_inventories": sum(bool(item["inventory"]) for item in actual["references"]),
+    }
+
+
+def run_m4_acceptance(args: argparse.Namespace) -> dict[str, Any]:
+    source = args.source.resolve()
+    build = args.build.resolve()
+    oblivion_data = args.oblivion_data.resolve()
+    morrowind_data = args.morrowind_data.resolve()
+    output = args.output.resolve()
+    if output.exists() and any(output.iterdir()):
+        raise RuntimeError(f"M4 acceptance output directory must be empty: {output}")
+    output.mkdir(parents=True, exist_ok=True)
+
+    openmw = build / "openmw"
+    openmw_tests = build / "openmw-tests"
+    components_tests = build / "components-tests"
+    resources = build / "resources"
+    for required in (
+        openmw,
+        openmw_tests,
+        components_tests,
+        resources,
+        oblivion_data / "Oblivion.esm",
+        morrowind_data / "Morrowind.esm",
+    ):
+        if not required.exists():
+            raise FileNotFoundError(required)
+
+    started = time.monotonic()
+    tests = {
+        "runtime_state": _run_logged_gate(
+            [
+                str(components_tests),
+                "--gtest_filter=FilesGetHash.sha256*:SavedGameProfile.*:ESM4RuntimeState.*",
+            ],
+            source,
+            output / "tests",
+            "runtime-state",
+        ),
+        "profile_services": _run_logged_gate(
+            [str(openmw_tests), "--gtest_filter=OblivionProfileServicesTest.*"],
+            source,
+            output / "tests",
+            "profile-services",
+        ),
+        "compatibility_harness": _run_logged_gate(
+            [sys.executable, "-m", "unittest", "scripts.tests.test_oblivion_compat"],
+            source,
+            output / "tests",
+            "compatibility-harness",
+        ),
+    }
+    variables = {
+        "source": str(source),
+        "openmw": str(openmw),
+        "resources": str(resources),
+        "oblivion_data": str(oblivion_data),
+        "morrowind_data": str(morrowind_data),
+    }
+    manifests = source / "scripts" / "data" / "oblivion_compat"
+    scenarios: dict[str, dict[str, Any]] = {}
+    comparisons: dict[str, dict[str, Any]] = {}
+
+    for label, manifest_name in (
+        ("interior", "oblivion_save_smoke.json"),
+        ("exterior", "oblivion_exterior_save_smoke.json"),
+    ):
+        save_dir = output / "scenarios" / f"{label}_save"
+        scenarios[f"{label}_save"] = run_scenario(manifests / manifest_name, save_dir, variables)
+        original = _single_save(save_dir)
+        reload_dir = output / "scenarios" / f"{label}_reload"
+        mutated_save = reload_dir / "userdata" / "saves" / original.parent.name / original.name
+        expected = tes4_state.mutate_for_acceptance(tes4_state.load_save(original), label)
+        tes4_state.write_save(original, mutated_save, expected)
+        write_json(reload_dir / "expected-state.json", expected)
+        reload_variables = dict(variables, savegame=str(mutated_save))
+        scenarios[f"{label}_reload"] = run_scenario(
+            manifests / "oblivion_reload_resave.json", reload_dir, reload_variables
+        )
+        comparisons[label] = _state_comparison(
+            expected, _single_save(reload_dir), reload_dir / "state-comparison.json"
+        )
+
+    reorder_save_dir = output / "scenarios" / "plugin_reorder_save"
+    scenarios["plugin_reorder_save"] = run_scenario(
+        manifests / "oblivion_reorder_save.json", reorder_save_dir, variables
+    )
+    reorder_original = _single_save(reorder_save_dir)
+    reorder_reload_dir = output / "scenarios" / "plugin_reorder_reload"
+    reorder_mutated = (
+        reorder_reload_dir / "userdata" / "saves" / reorder_original.parent.name / reorder_original.name
+    )
+    reorder_expected = tes4_state.mutate_for_acceptance(tes4_state.load_save(reorder_original), "plugin-reorder")
+    tes4_state.write_save(reorder_original, reorder_mutated, reorder_expected)
+    write_json(reorder_reload_dir / "expected-state.json", reorder_expected)
+    scenarios["plugin_reorder_reload"] = run_scenario(
+        manifests / "oblivion_reorder_reload_resave.json",
+        reorder_reload_dir,
+        dict(variables, savegame=str(reorder_mutated)),
+    )
+    comparisons["plugin_reorder"] = _state_comparison(
+        reorder_expected, _single_save(reorder_reload_dir), reorder_reload_dir / "state-comparison.json"
+    )
+
+    diagnostic_source = _single_save(output / "scenarios" / "interior_save")
+    diagnostics_dir = output / "diagnostics"
+    diagnostics_dir.mkdir(parents=True, exist_ok=True)
+    source_state = tes4_state.load_save(diagnostic_source)
+    missing_state = json.loads(json.dumps(source_state))
+    missing_state["content"].append(
+        {"plugin": "openmw-m4-missing.esp", "fingerprint": "sha256:" + "0" * 64}
+    )
+    missing_save = diagnostics_dir / "missing-content.omwsave"
+    tes4_state.write_save(diagnostic_source, missing_save, missing_state)
+    bad_state = json.loads(json.dumps(source_state))
+    bad_state["content"][0]["fingerprint"] = "sha256:" + "f" * 64
+    bad_save = diagnostics_dir / "bad-fingerprint.omwsave"
+    tes4_state.write_save(diagnostic_source, bad_save, bad_state)
+    corrupt_save = diagnostics_dir / "corrupt.omwsave"
+    corrupt_data = bytearray(diagnostic_source.read_bytes())
+    magic_offset = corrupt_data.find(tes4_state.MAGIC)
+    if magic_offset < 0:
+        raise RuntimeError("Saved game has no TES4 runtime-state magic")
+    corrupt_data[magic_offset] ^= 0xFF
+    corrupt_save.write_bytes(corrupt_data)
+
+    failure_cases = {
+        "missing_content": (missing_save, "TES4 runtime state requires missing content file openmw-m4-missing.esp"),
+        "bad_fingerprint": (bad_save, "TES4 runtime state content fingerprint mismatch for oblivion.esm"),
+        "corrupt_state": (corrupt_save, "Invalid TES4 runtime-state magic"),
+    }
+    for label, (save, diagnostic) in failure_cases.items():
+        scenarios[label] = run_scenario(
+            manifests / "oblivion_load_failure.json",
+            output / "scenarios" / label,
+            dict(
+                variables,
+                game_data=str(oblivion_data),
+                content="Oblivion.esm",
+                savegame=str(save),
+                diagnostic=diagnostic,
+            ),
+        )
+    scenarios["cross_profile"] = run_scenario(
+        manifests / "oblivion_load_failure.json",
+        output / "scenarios" / "cross_profile",
+        dict(
+            variables,
+            game_data=str(morrowind_data),
+            content="Morrowind.esm",
+            savegame=str(diagnostic_source),
+            diagnostic="Saved game profile 'oblivion' cannot be loaded by active profile 'morrowind'",
+        ),
+    )
+    scenarios["morrowind_visual_save_load"] = run_scenario(
+        manifests / "morrowind_boot_campaign.json",
+        output / "scenarios" / "morrowind_visual_save_load",
+        variables,
+    )
+    morrowind_regression = run_morrowind_regression(
+        openmw, source, build, morrowind_data, output / "morrowind-integration"
+    )
+
+    revision = run_command(["git", "rev-parse", "HEAD"], cwd=source, timeout=10)["output"].strip()
+    status = run_command(["git", "status", "--short"], cwd=source, timeout=10)["output"].splitlines()
+    report = {
+        "schema_version": SCHEMA_VERSION,
+        "milestone": "M4",
+        "generated_at": utc_now(),
+        "duration_seconds": round(time.monotonic() - started, 6),
+        "repository": {"source": str(source), "revision": revision, "status": status},
+        "content": {
+            "oblivion": file_fingerprint(oblivion_data / "Oblivion.esm"),
+            "morrowind": file_fingerprint(morrowind_data / "Morrowind.esm"),
+        },
+        "tests": tests,
+        "scenarios": scenarios,
+        "state_comparisons": comparisons,
+        "morrowind_regression": morrowind_regression,
+    }
+    report["passed"] = (
+        all(item.get("passed", False) for item in tests.values())
+        and all(item.get("passed", False) for item in scenarios.values())
+        and all(item.get("passed", False) for item in comparisons.values())
+        and morrowind_regression.get("passed_gate", False)
+    )
+    write_json(output / "acceptance.json", report)
+    rows = []
+    for category in ("tests", "scenarios", "state_comparisons"):
+        for name, result in report[category].items():
+            rows.append(
+                f"<tr><td>{html.escape(category)}</td><td>{html.escape(name)}</td>"
+                f"<td>{'PASS' if result.get('passed') else 'FAIL'}</td></tr>"
+            )
+    rows.append(
+        "<tr><td>regression</td><td>Morrowind integration</td><td>{}</td></tr>".format(
+            "PASS" if morrowind_regression.get("passed_gate") else "FAIL"
+        )
+    )
+    status_text = "PASS" if report["passed"] else "FAIL"
+    (output / "acceptance.html").write_text(
+        "<!doctype html><html lang='en'><head><meta charset='utf-8'><title>M4 acceptance</title>"
+        "<style>body{font-family:sans-serif;max-width:1100px;margin:2rem auto}table{border-collapse:collapse}"
+        "td,th{border:1px solid #aaa;padding:.3rem .6rem}</style></head><body>"
+        f"<h1>OpenMW Oblivion M4 acceptance: {status_text}</h1><p>Generated {report['generated_at']}.</p>"
+        f"<table><tr><th>Gate</th><th>Check</th><th>Result</th></tr>{''.join(rows)}</table>"
+        f"<h2>Content fingerprints</h2><pre>{html.escape(json.dumps(report['content'], indent=2, sort_keys=True))}</pre>"
+        "</body></html>",
+        encoding="utf-8",
+    )
+    return report
+
+
 def audit_plugin(esmtool: Path, plugin: Path, source: Path, include_census: bool) -> dict[str, Any]:
     result = file_fingerprint(plugin)
     parsed = run_command([str(esmtool), "-q", "dump", str(plugin)], cwd=source, timeout=120)
@@ -1284,7 +1520,78 @@ def make_parser() -> argparse.ArgumentParser:
     m3.add_argument("--oblivion-data", type=Path, required=True)
     m3.add_argument("--morrowind-data", type=Path, required=True)
     m3.add_argument("--output", type=Path, required=True)
+
+    m4 = subparsers.add_parser("m4-acceptance", help="run the complete M4 native-runtime-state acceptance gate")
+    m4.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m4.add_argument("--build", type=Path, required=True)
+    m4.add_argument("--oblivion-data", type=Path, required=True)
+    m4.add_argument("--morrowind-data", type=Path, required=True)
+    m4.add_argument("--output", type=Path, required=True)
+
+    runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
+    runtime.add_argument(
+        "operation", choices=("inspect", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
+    )
+    runtime.add_argument("save", type=Path)
+    runtime.add_argument("--output", type=Path)
+    runtime.add_argument("--expected", type=Path)
+    runtime.add_argument("--report", type=Path)
+    runtime.add_argument("--label", default="m4-acceptance")
     return parser
+
+
+def run_runtime_state(args: argparse.Namespace) -> dict[str, Any]:
+    state = tes4_state.load_save(args.save)
+    if args.operation == "inspect":
+        result = {"passed": True, "save": str(args.save), "state": state}
+    elif args.operation == "compare":
+        if args.expected is None:
+            raise ValueError("runtime-state compare requires --expected")
+        expected = json.loads(args.expected.read_text(encoding="utf-8"))
+        result = tes4_state.compare(expected, state)
+        result.update({"save": str(args.save), "expected_path": str(args.expected)})
+    else:
+        if args.output is None:
+            raise ValueError(f"runtime-state {args.operation} requires --output")
+        if args.operation == "mutate":
+            rewritten = tes4_state.mutate_for_acceptance(state, args.label)
+            tes4_state.write_save(args.save, args.output, rewritten)
+            if args.expected:
+                write_json(args.expected, rewritten)
+        elif args.operation == "missing-content":
+            rewritten = json.loads(json.dumps(state))
+            rewritten["content"].append(
+                {"plugin": "openmw-m4-missing.esp", "fingerprint": "sha256:" + "0" * 64}
+            )
+            tes4_state.write_save(args.save, args.output, rewritten)
+        elif args.operation == "bad-fingerprint":
+            rewritten = json.loads(json.dumps(state))
+            if not rewritten["content"]:
+                raise RuntimeError("TES4 runtime state has no content identity to corrupt")
+            rewritten["content"][0]["fingerprint"] = "sha256:" + "f" * 64
+            tes4_state.write_save(args.save, args.output, rewritten)
+        elif args.operation == "corrupt":
+            data = args.save.read_bytes()
+            marker = data.find(tes4_state.MAGIC)
+            if marker < 0:
+                raise RuntimeError("OpenMW save has no TES4 runtime-state magic")
+            corrupted = bytearray(data)
+            corrupted[marker] ^= 0xFF
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_bytes(corrupted)
+        else:
+            raise AssertionError(args.operation)
+        result = {
+            "passed": True,
+            "operation": args.operation,
+            "source": str(args.save),
+            "output": str(args.output),
+            "source_sha256": sha256(args.save),
+            "output_sha256": sha256(args.output),
+        }
+    if args.report:
+        write_json(args.report, result)
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1324,6 +1631,10 @@ def main(argv: list[str] | None = None) -> int:
             result = run_form_graph(args)
         elif args.command == "m3-acceptance":
             result = run_m3_acceptance(args)
+        elif args.command == "m4-acceptance":
+            result = run_m4_acceptance(args)
+        elif args.command == "runtime-state":
+            result = run_runtime_state(args)
         else:
             raise AssertionError(args.command)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:

@@ -275,9 +275,18 @@ namespace MWWorld
     {
         if (owner != getOwner())
         {
+            ESM::FormId esm4Owner{};
+            if (!owner.empty())
+            {
+                const ESM::FormId* formId = owner.getIf<ESM::FormId>();
+                if (formId == nullptr)
+                    throw std::logic_error("TES4 reference owner must be a FormId");
+                esm4Owner = *formId;
+            }
+            mChanged = true;
             std::visit(ESM::VisitOverload{
-                           [&](ESM4::Reference& /*ref*/) {},
-                           [&](ESM4::ActorCharacter&) {},
+                           [&](ESM4::Reference& ref) { ref.mOwner = esm4Owner; },
+                           [&](ESM4::ActorCharacter& ref) { ref.mOwner = esm4Owner; },
                            [&](ESM::CellRef& ref) { ref.mOwner = owner; },
                        },
                 mCellRef.mVariant);

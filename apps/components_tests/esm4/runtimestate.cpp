@@ -1,3 +1,4 @@
+#include <components/esm4/loadrefr.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include <components/esm3/esmreader.hpp>
@@ -12,6 +13,13 @@
 
 namespace
 {
+    TEST(ESM4RuntimeState, nativeReferenceDefaultsToUnlocked)
+    {
+        ESM4::Reference reference;
+        EXPECT_FALSE(reference.mIsLocked);
+        EXPECT_EQ(reference.mLockLevel, 0);
+    }
+
     ESM4::RuntimeState makeState()
     {
         ESM4::RuntimeState state;
@@ -86,6 +94,19 @@ namespace
         ASSERT_EQ(newOrder.toFormId(stable), (ESM::FormId{ 0x100, 1 }));
         EXPECT_TRUE(state.getMissingContentFiles({ "KNIGHTS.ESP", "OBLIVION.ESM" }).empty());
         EXPECT_EQ(state.getMissingContentFiles({ "Oblivion.esm" }), (std::vector<std::string>{ "knights.esp" }));
+        EXPECT_NO_THROW(state.validateContent(
+            { { "KNIGHTS.ESP", "sha256:knights" }, { "OBLIVION.ESM", "sha256:base" } }));
+        EXPECT_THROW(state.validateContent({ { "Oblivion.esm", "sha256:base" } }), std::runtime_error);
+        try
+        {
+            state.validateContent(
+                { { "Oblivion.esm", "sha256:different" }, { "Knights.esp", "sha256:knights" } });
+            FAIL() << "Fingerprint mismatch was accepted";
+        }
+        catch (const std::runtime_error& error)
+        {
+            EXPECT_NE(std::string(error.what()).find("fingerprint mismatch for oblivion.esm"), std::string::npos);
+        }
     }
 
     TEST(ESM4RuntimeState, rejectsTruncationCorruptionAndTrailingData)

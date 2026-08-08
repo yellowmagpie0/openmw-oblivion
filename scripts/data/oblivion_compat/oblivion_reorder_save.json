@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-plugin-reorder-save",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\ncontent=Knights.esp\ncontent=DLCMehrunesRazor.esp\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 800\nresolution y = 600\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 800,
+  "height": 600,
+  "actions": [
+    {"type": "sleep", "seconds": 40},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 10},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 10,
+  "expected_exit": 0,
+  "expected_log": ["Loading content file Knights.esp", "Loading content file DLCMehrunesRazor.esp", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Failed to save game", "Error in frame", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

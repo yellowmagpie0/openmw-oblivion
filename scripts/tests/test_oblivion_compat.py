@@ -109,6 +109,68 @@ class OblivionCompatTests(unittest.TestCase):
                     output=output,
                 )
 
+    def test_tes4_runtime_state_codec_mutates_every_family_and_preserves_other_save_bytes(self):
+        state = {
+            "schema_version": 1,
+            "profile": "oblivion",
+            "next_dynamic_serial": 2,
+            "content": [{"plugin": "oblivion.esm", "fingerprint": "sha256:test"}],
+            "clock": {"year": 433, "month": 0, "day": 1, "hour": 3.5, "time_scale": 30.0},
+            "player": {
+                "reference": "dynamic:player:0000000000000001",
+                "cell": "content:oblivion.esm:000001",
+                "position": [0.0] * 6,
+                "actor_values": {
+                    "health.base": 50.0,
+                    "health.modifier": 0.0,
+                    "health.current": 50.0,
+                    "magicka.current": 40.0,
+                    "fatigue.current": 30.0,
+                },
+                "inventory": [],
+            },
+            "globals": {"content:oblivion.esm:000010": 1},
+            "references": [
+                {
+                    "key": f"content:oblivion.esm:{index:06x}",
+                    "base": f"content:oblivion.esm:{index + 16:06x}",
+                    "cell": "content:oblivion.esm:000001",
+                    "enabled": True,
+                    "deleted": False,
+                    "position": [0.0] * 6,
+                    "owner": None,
+                    "lock_level": 0,
+                    "inventory": [],
+                    "custom_state": {
+                        "count": 1,
+                        "scale": 1.0,
+                        "record_type": 1,
+                        "locked": index == 0x102,
+                    },
+                }
+                for index in (0x100, 0x101, 0x102)
+            ],
+        }
+        payload = MODULE.tes4_state.encode_payload(state)
+        self.assertEqual(MODULE.tes4_state.decode_payload(payload), state)
+        body = b"VERS" + (4).to_bytes(4, "little") + (1).to_bytes(4, "little")
+        body += b"DATA" + len(payload).to_bytes(4, "little") + payload
+        record = b"T4ST" + len(body).to_bytes(4, "little") + b"\0" * 8 + body
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.omwsave"
+            rewritten = Path(temporary) / "rewritten.omwsave"
+            source.write_bytes(record + b"TAIL" + (0).to_bytes(4, "little") + b"\0" * 8)
+            loaded = MODULE.tes4_state.load_save(source)
+            mutated = MODULE.tes4_state.mutate_for_acceptance(loaded, "unit")
+            MODULE.tes4_state.write_save(source, rewritten, mutated)
+            self.assertEqual(MODULE.tes4_state.load_save(rewritten), mutated)
+            self.assertTrue(rewritten.read_bytes().endswith(b"TAIL" + (0).to_bytes(4, "little") + b"\0" * 8))
+            self.assertEqual(mutated["clock"]["time_scale"], 0.0)
+            self.assertTrue(mutated["references"][1]["deleted"])
+            self.assertEqual(mutated["references"][0]["custom_state"]["m4_probe"], "unit")
+            self.assertTrue(mutated["references"][0]["custom_state"]["locked"])
+            self.assertFalse(mutated["references"][2]["custom_state"]["locked"])
+
     def test_form_graph_validator_accepts_only_reviewed_stable_edges(self):
         report = {
             "key_count": 3,
