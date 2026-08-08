@@ -55,18 +55,23 @@
       "open_gates": []
     },
     "M4": {
-      "status": "in_progress",
+      "status": "accepted",
       "report": "docs/oblivion/M4-RUNTIME-STATE.md",
+      "revision": "55e353e2fe9e8cd6a8dbe318f9191a191f665110",
       "evidence": [
-        "build/oblivion-compat/m4-save-acceptance/scenario.json",
-        "build/oblivion-compat/m4-load-acceptance/scenario.json"
+        "build/oblivion-compat/m4-acceptance-final-verified/acceptance.json",
+        "build/oblivion-compat/m4-acceptance-final-verified/acceptance.html",
+        "build/oblivion-compat/m4-m2-graph-regression/form-graph.json"
       ],
-      "open_gates": [
-        "Capture and apply every live mutable TES4 state family",
-        "Use actual content fingerprints",
-        "Compare canonical state across interior and exterior process restarts"
-      ]
+      "delivered": [
+        "Versioned load-order-independent native TES4 runtime state",
+        "Actual SHA-256 content identity and precise compatibility diagnostics",
+        "Live capture and application for time, player, globals, references, ownership, locks, inventories, and dynamic state",
+        "Exact interior, exterior, and plugin-reorder process-restart acceptance",
+        "Morrowind historical save, visual save/load, and integration regression gates"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "M4 complete TES4 mutable-state process-restart round trips"
+  "next_bounded_delivery": "M5 first interactive Oblivion prison interior slice"
 }
