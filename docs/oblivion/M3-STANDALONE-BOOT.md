@@ -1,100 +1,119 @@
 # M3 Oblivion game profile and standalone boot
 
-Status: implementation started on 2026-08-08; a visible direct-cell vertical
-slice is running, with final acceptance gates listed below.
+Status: accepted on 2026-08-08 at implementation revision
+`ab9c38569018fde2658cfb27daa5007146754577`.
 
 ## Delivered source
 
-- `components/esm/gameprofile.*` provides
-  `auto|morrowind|oblivion`, format-driven selection, alias parsing, mixed-game
-  rejection and explicit wrong-profile diagnostics.
-- `--game-profile` is wired through CLI, engine, content loader and world.
-  Auto selection occurs from loaded ESM format and the chosen profile is
-  logged.
-- Oblivion-only bootstrap records supply neutral globals, settings, 27 TES3
-  adapter skills, race/class/player records, the minimal effect and UI values
-  consumed by shared startup, and Oblivion skeleton/idle assets. Morrowind's
-  strict lookup path is unchanged.
-- The GameSetting adapter makes every remaining temporary TES3 compatibility
-  fallback observable once by name and count instead of depending on
-  `Morrowind.esm`.
-- `oblivion_cell_smoke.json` and `oblivion_exterior_smoke.json` launch with
-  only shared `resources/vfs`, the original Oblivion data, base archives and
-  `Oblivion.esm`; neither loads `resources/vfs-mw` or a Morrowind master.
+- Startup preflights the configured ESM/ESP formats when the profile is
+  `auto`, selects Oblivion resources before VFS construction, and reports a
+  precise error if an explicit profile rejects the content.
+- Oblivion's six base archives are profile-owned defaults. They are discovered
+  from the configured data directories when no explicit `fallback-archive`
+  list is supplied. Auto and Morrowind profiles receive no Oblivion defaults.
+- Native TES4 `GMST`, `GLOB`, and `CLAS` records now have typed runtime stores
+  alongside the existing TES4 player and race records.
+- `OblivionProfileServices` imports native GMST values, native globals, and
+  the actual `Player`, race, and class records. It projects those sources into
+  the narrow shared runtime contracts still consumed by OpenMW's player,
+  mechanics, calendar, animation, and UI bootstrap systems.
+- Calendar aliases map Oblivion's `GameDay`, `GameMonth`, `GameYear`,
+  `GameHour`, `GameDaysPassed`, and `TimeScale` values to the shared clock
+  names. Native values win over defaults.
+- The old demand-created neutral GameSetting fallback was removed. The
+  remaining shared boot settings are a fixed, reviewed allowlist; an unknown
+  lookup fails normally and must be deliberately added after inspection.
+  Positive skill-progression factors are explicit, preventing a formerly
+  repeated per-frame mechanics error.
+- The runtime player projection takes the native player name, skeleton,
+  level, health, fatigue, attributes, 21 Oblivion skills, race attributes,
+  and class/race names from `Oblivion.esm`. It no longer uses the former
+  constant neutral prisoner record.
+- A Morrowind-only global `main` script starts only when that script exists.
+  Oblivion therefore has no synthetic script and no missing-global-script
+  startup error; Morrowind behavior is unchanged.
+- Interior and exterior manifests now contain only the shared resource tree,
+  the original Oblivion data directory, and `Oblivion.esm`. They do not name
+  a Morrowind master, `vfs-mw`, or any BSA.
+- `m3-acceptance` packages all focused tests, both Oblivion visual boots,
+  wrong-profile diagnostics, the Morrowind visual save/load campaign, content
+  fingerprints, and the 14-test Morrowind integration suite into one JSON and
+  HTML result.
 
-## Verification
+## Reproducible acceptance
+
+The complete gate is:
 
 ```sh
-./build/components-tests --gtest_filter='GameProfileTest.*'
-
-python3 scripts/oblivion_compat.py scenario \
-  scripts/data/oblivion_compat/oblivion_cell_smoke.json \
-  --output build/oblivion-compat/m3-cell \
-  --variable "openmw=$PWD/build/openmw" \
-  --variable "resources=$PWD/build/resources" \
-  --variable "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data"
-
-python3 scripts/oblivion_compat.py scenario \
-  scripts/data/oblivion_compat/oblivion_exterior_smoke.json \
-  --output build/oblivion-compat/m3-exterior \
-  --variable "openmw=$PWD/build/openmw" \
-  --variable "resources=$PWD/build/resources" \
-  --variable "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data"
-
-python3 scripts/oblivion_compat.py scenario \
-  scripts/data/oblivion_compat/oblivion_wrong_profile.json \
-  --output build/oblivion-compat/m3-wrong-profile \
-  --variable "openmw=$PWD/build/openmw" \
-  --variable "resources=$PWD/build/resources" \
-  --variable "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data"
+python3 scripts/oblivion_compat.py m3-acceptance \
+  --build build \
+  --oblivion-data "/path/to/Oblivion/Data" \
+  --morrowind-data "/path/to/Morrowind/Data Files" \
+  --output build/oblivion-compat/m3-acceptance
 ```
 
-The accepted interior checkpoint at
-`build/oblivion-compat/m3-cell-accepted` logged profile auto-selection,
-new-game startup and entry into `ImperialDungeon01`; its automated 1280x720
-inspection passed with entropy 0.722350 and mean luminance 0.111388. The
-accepted exterior checkpoint at
-`build/oblivion-compat/m3-exterior-acceptance` likewise entered
-`OldBridgeExterior` and passed with entropy 0.714026 and mean luminance
-0.118849. Both reject the former black-frame baseline.
+The accepted local evidence is
+`build/oblivion-compat/m3-acceptance-final/acceptance.json` and
+`acceptance.html`. It passed in 118.69 seconds with these original masters:
 
-`build/oblivion-compat/m3-wrong-profile-accepted` also passed: the executable
-returned 1 and emitted the complete Morrowind-versus-Oblivion mismatch in
-0.64 seconds. The manifest sets `OPENMW_SUPPRESS_ERROR_DIALOG=1`, a test-only
-switch added to keep expected fatal diagnostics non-modal; ordinary launches
-retain the existing error dialog.
-The focused `GameProfileTest` suite passes 4/4 cases, and the final official
-content/Morrowind audit passes 11/11 plugins, 17/17 archives and 14/14
-Morrowind integration tests.
+| Content | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `Oblivion.esm` | 277,504,985 | `a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70` |
+| `Morrowind.esm` | 79,837,557 | `5c3c8c2cbd20e25901b59b3ece33d36b7ef0e3d60ad8d11828bcc61a5ead1647` |
 
-## Direct visual inspection
+The gate results were:
 
-The latest save-smoke interior capture was opened at original 1280x720
-resolution. It visibly contains coherent Oblivion prison arches, columns,
-walls, floor, gate, lighting and textures from a plausible player-height view;
-it is neither black nor outside the scene. The HUD still resolves to magenta
-missing-texture regions because the Oblivion UI resource layer does not yet
-exist. That is a real failure assigned to M5/UI work; this checkpoint
-establishes cell loading and rendering, not a visually accepted playable
-prison.
+| Check | Result | Acceptance detail |
+| --- | --- | --- |
+| Profile unit suite | Pass, 5/5 | aliases, auto-detection, mismatch, mixed formats, archive ownership |
+| Native service unit suite | Pass, 1/1 | source values, clock alias, player/race/class, no catch-all |
+| Harness unit suite | Pass, 13/13 | scenario, image, file, graph, and M3 aggregation checks |
+| Oblivion interior | Pass | `ImperialDungeon01`, auto profile, six automatic archives, no forbidden diagnostics |
+| Oblivion exterior | Pass | `OldBridgeExterior`, auto profile, no forbidden diagnostics |
+| Wrong profile | Pass | exit 1 with the complete Morrowind-versus-Oblivion diagnostic in 0.54 s |
+| Morrowind visual save/load | Pass | auto profile, normal F5/F9 input, historical save format, two valid frames |
+| Morrowind integration | Pass, 14/14 | no failed or incomplete tests |
 
-The exterior capture was also opened at 1280x720. It contains textured,
-continuous ground plus a large stone fort and scattered ruins at player
-height. The sky is uniformly black and the HUD is magenta, so sky/weather and
-UI remain visibly incomplete even though exterior cell, terrain and static
-geometry loading are established.
+Both Oblivion runtime logs report the native services and contain no neutral
+fallback, missing GameSetting, missing global script, `Error in frame`, Lua
+`onFrame` failure, assertion, abort, or crash diagnostic. The interior run
+loaded 382 native GMSTs, 94 native globals, and the native player, Imperial
+race, and chargen class records from `Oblivion.esm`.
 
-## Open acceptance gates
+The final build/regression pass also completed every build target, including
+OpenCS, and passed all 1,481 component tests and all 495 OpenMW tests. CMake
+registered no separate CTest entries in this build. The M2 official-content
+regression at `build/oblivion-compat/m3-m2-graph-regression-final` passed all
+11 plugins: 1,188,447 keys and 2,949,394 references were stable across binary
+restart and load-index reorder, with zero cycles, stale rules, or unreviewed
+edges.
 
-- Retain fresh green interior and named exterior artifacts after bootstrap
-  changes, including absence of repeated Lua startup errors.
-- Expand the existing green 14-test Morrowind auto-detect regression into the
-  deterministic visual new-game/save-load campaign specified by the universal
-  contract.
-- Replace the compatibility adapter with native Oblivion settings/player
-  services as the actor/UI milestones land. Neutral values must never leak
-  into Morrowind.
+## Visual inspection
 
-M3 is accepted only when both direct-cell scenarios, auto-detection,
-wrong-profile diagnostics, visual non-black checks and the Morrowind boot gate
-are all green.
+The exact acceptance captures were inspected directly at 1280x720 in addition
+to the automated dimension, entropy, and luminance checks:
+
+| Capture | Entropy | Mean | Direct review |
+| --- | ---: | ---: | --- |
+| Oblivion prison | 0.641115 | 0.152763 | Lit, textured prison arches, walls, floor, and distant corridor are present at player height. |
+| Oblivion exterior | 0.751084 | 0.117628 | Textured terrain and a large, coherent stone ruin are visible at player height. |
+| Morrowind boot | 0.845387 | 0.351888 | Textured exterior, sky, crosshair, status bars, weapon, and minimap are present. |
+| Morrowind reload | 0.835363 | 0.320827 | The same world/UI view remains intact after F9 reload. |
+
+The Morrowind campaign created one 176,622-byte quicksave through normal input
+and then loaded it. The file contained none of the Oblivion-only `GPRO`,
+`T4VR`, `T4ST`, or `OMW4STATE` markers.
+
+Oblivion's magenta HUD placeholders and black exterior sky are intentionally
+visible in these captures. They are known missing UI and weather presentation
+assigned to later milestones; M3 establishes standalone profile ownership,
+boot, cell entry, and non-empty rendering, not a claim of M5/UI completion.
+
+## Acceptance decision
+
+M3's bounded success criteria are all satisfied: the executable enters the
+named TES4 interior and exterior using only original Oblivion content and
+shared resources; archives, settings, globals, calendar, and the player are
+owned by the Oblivion profile; auto-detection and mismatch diagnostics work;
+the logs are healthy; and Morrowind still auto-detects, boots, saves, reloads,
+renders, and passes its integration suite. M3 has no open gates.

@@ -37,18 +37,22 @@
       "open_gates": []
     },
     "M3": {
-      "status": "in_progress",
+      "status": "accepted",
       "report": "docs/oblivion/M3-STANDALONE-BOOT.md",
+      "revision": "ab9c38569018fde2658cfb27daa5007146754577",
       "evidence": [
-        "build/oblivion-compat/m3-cell-accepted/scenario.json",
-        "build/oblivion-compat/m3-exterior-acceptance/scenario.json",
-        "build/oblivion-compat/m3-wrong-profile-accepted/scenario.json"
+        "build/oblivion-compat/m3-acceptance-final/acceptance.json",
+        "build/oblivion-compat/m3-acceptance-final/acceptance.html",
+        "build/oblivion-compat/m3-m2-graph-regression-final/acceptance.json"
       ],
-      "open_gates": [
-        "Add native Oblivion resource, settings, calendar, and player services",
-        "Replace compatibility bootstrap and explicit archive manifest defaults",
-        "Add the complete deterministic Morrowind visual boot campaign"
-      ]
+      "delivered": [
+        "Profile-owned Oblivion archive defaults and pre-VFS auto-detection",
+        "Native TES4 settings, globals, calendar, race, class, and player bootstrap services",
+        "Strict reviewed shared-runtime contracts without demand-created neutral fallbacks",
+        "Standalone Oblivion interior and exterior visual boots",
+        "Deterministic Morrowind visual boot, historical save, reload, and integration campaign"
+      ],
+      "open_gates": []
     },
     "M4": {
       "status": "in_progress",
@@ -64,5 +68,5 @@
       ]
     }
   },
-  "next_bounded_delivery": "M3 native Oblivion settings, resources, calendar, and player services"
+  "next_bounded_delivery": "M4 complete TES4 mutable-state process-restart round trips"
 }

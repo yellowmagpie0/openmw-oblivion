@@ -33,6 +33,20 @@ graph after binary restart and runtime-index reordering, validates every
 unresolved edge against the count-locked reviewed exception file, and writes
 `acceptance.json` plus a directly inspectable `acceptance.html`.
 
+Run the accepted M3 standalone boot gate with:
+
+```sh
+python3 scripts/oblivion_compat.py m3-acceptance \
+  --build build \
+  --oblivion-data "/path/to/Oblivion/Data" \
+  --morrowind-data "/path/to/Morrowind/Data Files" \
+  --output build/oblivion-compat/m3-acceptance
+```
+
+This performs the Oblivion interior/exterior visual boots, explicit profile
+failure, Morrowind visual save/load, focused service tests, content
+fingerprints, and the complete Morrowind integration suite.
+
 Scenario manifests use
 [`scenario.schema.json`](../../scripts/data/oblivion_compat/scenario.schema.json).
 For example, the hermetic runner check is:
@@ -70,10 +84,10 @@ M2 is accepted by its full official-content graph and runtime regressions, not
 merely by a focused unit suite.
 
 The checked-in `oblivion_standalone_baseline.json` manifest creates its config
-inside the output directory, launches only `Oblivion.esm` and the base-game
-archives under Xvfb, records engine statistics, and captures a deterministic
-1280x720 baseline. It intentionally documents the current pre-M3 behavior; it
-does not assert that standalone gameplay already works.
+inside the output directory, launches only `Oblivion.esm` under Xvfb, relies
+on profile-owned archive defaults, records engine statistics, and captures a
+deterministic 1280x720 baseline. The stricter M3 interior and exterior
+manifests additionally assert native-service logs and reject runtime errors.
 
 `oblivion_original_baseline.json` runs the installed original executable under
 an isolated Proton compatibility prefix below the scenario output directory.
