@@ -140,6 +140,16 @@ class OblivionCompatTests(unittest.TestCase):
             key = MODULE._run_action(
                 {"type": "key_held", "value": "grave"}, environment={}, output=Path(temporary)
             )
+            no_op = MODULE._run_action(
+                {"type": "key_hold", "value": "KP_6", "seconds": 0},
+                environment={},
+                output=Path(temporary),
+            )
+            held = MODULE._run_action(
+                {"type": "key_hold", "value": "w", "seconds": 1.5},
+                environment={},
+                output=Path(temporary),
+            )
             typed = MODULE._run_action(
                 {"type": "type_held", "value": "a .-_", "hold_seconds": 0.01, "pause_seconds": 0},
                 environment={},
@@ -149,6 +159,11 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertEqual(
                 key["commands"],
                 [["/bin/true", "keydown", "grave"], ["/bin/true", "keyup", "grave"]],
+            )
+            self.assertEqual(no_op["commands"], [])
+            self.assertEqual(
+                held["commands"],
+                [["/bin/true", "keydown", "w"], ["/bin/true", "keyup", "w"]],
             )
             self.assertTrue(typed["passed"])
             self.assertEqual(

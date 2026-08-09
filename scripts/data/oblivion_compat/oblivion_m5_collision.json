@@ -26,7 +26,7 @@
     {"type": "key_up", "value": "w"},
     {"type": "screenshot", "name": "blocked.png"},
     {"type": "focus_window", "name": "OpenMW"},
-    {"type": "key", "value": "F5"},
+    {"type": "key_held", "value": "F5"},
     {"type": "sleep", "seconds": 6},
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST"]}
   ],

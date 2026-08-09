@@ -448,6 +448,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         "key_down",
         "key_up",
         "key_held",
+        "key_hold",
         "type",
         "type_held",
         "mouse_move",
@@ -462,18 +463,31 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             raise RuntimeError("xdotool is required for input actions")
         if action_type == "key":
             command = [executable, "key", str(action["value"])]
-        elif action_type in ("key_held", "type_held"):
-            if action_type == "key_held":
+        elif action_type in ("key_held", "key_hold", "type_held"):
+            if action_type in ("key_held", "key_hold"):
                 keysyms = [str(action["value"])]
             else:
                 aliases = {" ": "space", ".": "period", "-": "minus", "_": "underscore"}
                 keysyms = [aliases.get(character, character) for character in str(action["value"])]
                 if any(not (keysym.isalnum() or keysym in aliases.values()) for keysym in keysyms):
                     raise ValueError("type_held supports letters, digits, spaces, periods, hyphens, and underscores")
-            hold_seconds = float(action.get("hold_seconds", 0.08))
+            hold_seconds = float(
+                action.get("seconds", 0) if action_type == "key_hold" else action.get("hold_seconds", 0.08)
+            )
             pause_seconds = float(action.get("pause_seconds", 0.04))
-            if hold_seconds <= 0 or pause_seconds < 0:
-                raise ValueError("held input timing must use a positive hold and non-negative pause")
+            if hold_seconds < 0 or pause_seconds < 0:
+                raise ValueError("held input timing must use non-negative durations")
+            if action_type != "key_hold" and hold_seconds == 0:
+                raise ValueError("held input timing must use a positive hold")
+            if action_type == "key_hold" and hold_seconds == 0:
+                return {
+                    "type": action_type,
+                    "commands": [],
+                    "exit_code": 0,
+                    "output": "",
+                    "duration_seconds": round(time.monotonic() - started, 6),
+                    "passed": True,
+                }
             outputs = []
             return_code = 0
             commands = []
