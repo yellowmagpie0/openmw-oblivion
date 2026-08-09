@@ -1,112 +1,142 @@
-OpenMW
-======
+# OpenMW Oblivion
 
-OpenMW is an open-source open-world RPG game engine that supports playing Morrowind by Bethesda Softworks. You need to own the game for OpenMW to play Morrowind.
+OpenMW Oblivion is a clean-room compatibility fork of [OpenMW](https://www.openmw.org/)
+that adds support for running the original Bethesda Oblivion (TES4) data files
+while preserving OpenMW's existing Morrowind engine and save behavior.
 
-OpenMW also comes with OpenMW-CS, a replacement for Bethesda's Construction Set.
+This repository contains engine and tooling work only. It does not include
+Oblivion, Morrowind, DLC, or any other proprietary game data. You must own the
+game(s) and provide their data directories locally.
 
-* Version: 0.52.0
-* License: GPLv3 (see [LICENSE](https://gitlab.com/OpenMW/openmw/-/raw/master/LICENSE) for more information)
-* Website: https://www.openmw.org
-* IRC: #openmw on irc.libera.chat
-* Discord: https://discord.gg/bWuqq2e
+## Current status
 
+The latest compatibility ledger (2026-08-08) records milestones M0 through M5
+as accepted. The next bounded delivery is the M6 ObScript frontend. This is
+not a complete Oblivion replacement yet; it is an incrementally verified
+vertical implementation.
 
-Font Licenses:
-* DejaVuLGCSansMono.ttf: custom (see [files/data/fonts/DejaVuFontLicense.txt](https://gitlab.com/OpenMW/openmw/-/raw/master/files/data/fonts/DejaVuFontLicense.txt) for more information)
-* DemonicLetters.ttf: SIL Open Font License (see [files/data/fonts/DemonicLettersFontLicense.txt](https://gitlab.com/OpenMW/openmw/-/raw/master/files/data/fonts/DemonicLettersFontLicense.txt) for more information)
-* MysticCards.ttf: SIL Open Font License (see [files/data/fonts/MysticCardsFontLicense.txt](https://gitlab.com/OpenMW/openmw/-/raw/master/files/data/fonts/MysticCardsFontLicense.txt) for more information)
+The accepted work currently includes:
 
-Current Status
---------------
+- Separate TES3/Morrowind and TES4/Oblivion game profiles with automatic format
+  detection and explicit `--game-profile` selection.
+- Strict TES4 parsing, lossless preservation of deferred subrecords, and a
+  complete audit of the installed official ESM/ESP and BSA files.
+- Load-order-independent `FormKey` identity, typed TES4 stores, override and
+  reference graphs, and deterministic restart/reorder checks.
+- Versioned, content-fingerprinted TES4 runtime state in native saves,
+  including player, globals, inventories, references, and mutable world state.
+- The first interactive Oblivion slice: a traversable Imperial prison interior
+  with collision, focus, activation, take/loot/read/harvest interactions,
+  ownership and locks, animated and keyed doors, teleport traversal, and saved
+  state mutations.
+- A deterministic compatibility harness with JSON/HTML evidence, scenario
+  manifests, visual captures, Morrowind regression tests, and ASan/UBSan
+  parser coverage.
 
-The main quests in Morrowind, Tribunal and Bloodmoon are all completable. Some issues with side quests are to be expected (but rare). Check the [bug tracker](https://gitlab.com/OpenMW/openmw/-/issues/?milestone_title=openmw-1.0) for a list of issues we need to resolve before the "1.0" release. Even before the "1.0" release, however, OpenMW boasts some new [features](https://wiki.openmw.org/index.php?title=Features), such as improved graphics and user interfaces.
+Morrowind remains a supported regression target. The project is primarily
+validated against the original English Oblivion 1.2.0416 GOTY/DLC content set,
+with proprietary-data fingerprints and generated evidence kept below `build/`.
 
-Pre-existing modifications created for the original Morrowind engine can be hit-and-miss. The OpenMW script compiler performs more thorough error-checking than Morrowind does, meaning that a mod created for Morrowind may not necessarily run in OpenMW. Some mods also rely on quirky behaviour or engine bugs in order to work. We are considering such compatibility issues on a case-by-case basis - in some cases adding a workaround to OpenMW may be feasible, in other cases fixing the mod will be the only option. If you know of any mods that work or don't work, feel free to add them to the [Mod status](https://wiki.openmw.org/index.php?title=Mod_status) wiki page.
+## Known limitations
 
-Getting Started
----------------
+Oblivion support is deliberately bounded at the current milestone. NPC AI,
+combat, the full Oblivion UI, native menus, complete rendering/material
+parity, and ObScript execution are still future work. Placeholder UI/materials
+are expected in the current prison slice.
 
-* [Official forums](https://forum.openmw.org/)
-* [Installation instructions](https://openmw.readthedocs.io/en/latest/manuals/installation/index.html)
-* [Build from source](https://wiki.openmw.org/index.php?title=Development_Environment_Setup)
-* [Testing the game](https://wiki.openmw.org/index.php?title=Testing)
-* [How to contribute](https://wiki.openmw.org/index.php?title=Contribution_Wanted)
-* [Report a bug](https://gitlab.com/OpenMW/openmw/issues) - read the [guidelines](https://wiki.openmw.org/index.php?title=Bug_Reporting_Guidelines) before submitting your first bug!
-* [Known issues](https://gitlab.com/OpenMW/openmw/issues?label_name%5B%5D=Bug)
+The committed tree can also expose the following known startup compatibility
+diagnostic after the prison cell loads:
 
-The data path
--------------
+```text
+Failed to start new game: MagicEffect '"Shield"' not found
+```
 
-The data path tells OpenMW where to find your Morrowind files. If you run the launcher, OpenMW should be able to pick up the location of these files on its own, if both Morrowind and OpenMW are installed properly (installing Morrowind under WINE is considered a proper install).
+That indicates a missing shared-bootstrap compatibility record, not missing
+Oblivion data. The cell may still render, but a clean interactive startup is
+not yet a claim of full gameplay compatibility.
 
-Command line options
---------------------
+## Try the interactive slice
 
-    Syntax: openmw <options>
-    Allowed options:
-      --config arg                          additional config directories
-      --replace arg                         settings where the values from the
-                                            current source should replace those
-                                            from lower-priority sources instead of
-                                            being appended
-      --user-data arg                       set user data directory (used for
-                                            saves, screenshots, etc)
-      --resources arg (=resources)          set resources directory
-      --help                                print help message
-      --version                             print version information and quit
-      --data arg (=data)                    set data directories (later directories
-                                            have higher priority)
-      --data-local arg                      set local data directory (highest
-                                            priority)
-      --fallback-archive arg (=fallback-archive)
-                                            set fallback BSA archives (later
-                                            archives have higher priority)
-      --start arg                           set initial cell
-      --content arg                         content file(s): esm/esp, or
-                                            omwgame/omwaddon/omwscripts
-      --groundcover arg                     groundcover content file(s): esm/esp,
-                                            or omwgame/omwaddon
-      --no-sound [=arg(=1)] (=0)            disable all sounds
-      --script-all [=arg(=1)] (=0)          compile all scripts (excluding dialogue
-                                            scripts) at startup
-      --script-all-dialogue [=arg(=1)] (=0) compile all dialogue scripts at startup
-      --script-console [=arg(=1)] (=0)      enable console-only script
-                                            functionality
-      --script-run arg                      select a file containing a list of
-                                            console commands that is executed on
-                                            startup
-      --script-warn [=arg(=1)] (=1)         handling of warnings when compiling
-                                            scripts
-                                            0 - ignore warnings
-                                            1 - show warnings but consider script as
-                                            correctly compiled anyway
-                                            2 - treat warnings as errors
-      --load-savegame arg                   load a save game file on game startup
-                                            (specify an absolute filename or a
-                                            filename relative to the current
-                                            working directory)
-      --skip-menu [=arg(=1)] (=0)           skip main menu on game startup
-      --new-game [=arg(=1)] (=0)            run new game sequence (ignored if
-                                            skip-menu=0)
-      --encoding arg (=win1252)             Character encoding used in OpenMW game
-                                            messages:
+From the repository root, build the game binary and run the launcher:
 
-                                            win1250 - Central and Eastern European
-                                            such as Polish, Czech, Slovak,
-                                            Hungarian, Slovene, Bosnian, Croatian,
-                                            Serbian (Latin script), Romanian and
-                                            Albanian languages
+```sh
+cmake --build build --target openmw -j2
+./scripts/run-oblivion.sh "/path/to/Oblivion/Data"
+```
 
-                                            win1251 - Cyrillic alphabet such as
-                                            Russian, Bulgarian, Serbian Cyrillic
-                                            and other languages
+With the standard Steam installation, the data argument can be omitted:
 
-                                            win1252 - Western European (Latin)
-                                            alphabet, used by default
-      --fallback arg                        fallback values
-      --no-grab [=arg(=1)] (=0)             Don't grab mouse cursor
-      --export-fonts [=arg(=1)] (=0)        Export Morrowind .fnt fonts to PNG
-                                            image and XML file in current directory
-      --activate-dist arg (=-1)             activation distance override
-      --random-seed arg (=<impl defined>)   seed value for random number generator
+```sh
+./scripts/run-oblivion.sh
+```
+
+The launcher creates an isolated configuration, starts the Oblivion profile in
+the prison interior, and keeps saves/screenshots under
+`build/oblivion-userdata`. You can instead set `OBLIVION_DATA`,
+`OPENMW_BIN`, `OPENMW_RESOURCES`, or `OPENMW_OBLIVION_USER_DATA`.
+
+Use the mouse to look, `W/A/S/D` to move, `Space` to activate, `F5` to
+quicksave, and `Esc` to quit.
+
+The launcher is a development entry point, not a packaged end-user build. For
+the deterministic visual smoke test and the complete M5 acceptance campaign,
+see [`docs/oblivion/M5-INTERACTIVE-INTERIOR.md`](docs/oblivion/M5-INTERACTIVE-INTERIOR.md).
+
+## Build and test
+
+The normal OpenMW CMake workflow remains the foundation. A typical focused
+build is:
+
+```sh
+cmake -S . -B build \
+  -DBUILD_COMPONENTS_TESTS=ON \
+  -DBUILD_OPENMW_TESTS=ON
+cmake --build build --target openmw components-tests openmw-tests esmtool bsatool -j2
+```
+
+Run the focused Oblivion profile test with:
+
+```sh
+./build/openmw-tests --gtest_filter='OblivionProfileServicesTest.*'
+```
+
+Run a full installed-data census with:
+
+```sh
+python3 scripts/oblivion_compat.py baseline \
+  --build build \
+  --oblivion-data "/path/to/Oblivion/Data" \
+  --census-all --require-lossless-tes4 \
+  --output build/oblivion-compat/baseline
+```
+
+The machine-readable status ledger, milestone reports, exact acceptance
+commands, and generated-evidence conventions are documented in
+[`docs/oblivion/README.md`](docs/oblivion/README.md) and
+[`docs/OBLIVION-COMPATIBILITY-ROADMAP.md`](docs/OBLIVION-COMPATIBILITY-ROADMAP.md).
+
+## Architecture in brief
+
+TES3 and TES4 readers remain separate. Native Oblivion records are not
+pretended to be Morrowind records; format-specific data is adapted only at
+reviewed runtime boundaries. Stable `FormKey` identities avoid persisting
+load-order indices, and TES4 runtime state uses content fingerprints so saves
+fail clearly when their required content is absent or changed.
+
+The scenario harness treats proprietary data as an external input and writes
+reports, logs, screenshots, and temporary runtime state below `build/`.
+Unknown official subrecords are preserved or explicitly allowlisted rather
+than silently discarded.
+
+## Upstream, license, and attribution
+
+This project is based on OpenMW. OpenMW and this fork are licensed under the
+GPLv3; see [`LICENSE`](LICENSE). OpenMW's upstream project, documentation, and
+community resources are available at <https://www.openmw.org/> and
+<https://openmw.readthedocs.io/>.
+
+Font licenses shipped with the inherited OpenMW resources remain in:
+
+- `files/data/fonts/DejaVuFontLicense.txt`
+- `files/data/fonts/DemonicLettersFontLicense.txt`
+- `files/data/fonts/MysticCardsFontLicense.txt`
