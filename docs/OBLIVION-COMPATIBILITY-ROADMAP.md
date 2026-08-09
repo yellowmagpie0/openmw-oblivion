@@ -17,6 +17,7 @@ This ledger is the resume point. Detailed evidence and open gates live in
 | M2 | Accepted: full official FormKey/reference graph and runtime identity gates passed | `docs/oblivion/M2-FORM-IDENTITY.md` |
 | M3 | Accepted: native profile services and standalone interior/exterior gates passed | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | Accepted: exact native state restarts, reorder, diagnostics, visuals, and Morrowind gates passed | `docs/oblivion/M4-RUNTIME-STATE.md` |
+| M5 | Accepted: interactive prison traversal, activation/state, paired visuals, and Morrowind gates passed | `docs/oblivion/M5-INTERACTIVE-INTERIOR.md` |
 
 ## 1. Goal and delivery model
 
@@ -617,6 +618,7 @@ handling.
 | M2 | Complete | `docs/oblivion/M2-FORM-IDENTITY.md` |
 | M3 | Complete | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | Complete | `docs/oblivion/M4-RUNTIME-STATE.md` |
+| M5 | Complete | `docs/oblivion/M5-INTERACTIVE-INTERIOR.md` |
 
 Update this table only after the milestone's deliver, verification, and success
 criteria have all passed. Detailed command output and visual review records

@@ -47,6 +47,24 @@ This performs the Oblivion interior/exterior visual boots, explicit profile
 failure, Morrowind visual save/load, focused service tests, content
 fingerprints, and the complete Morrowind integration suite.
 
+Run the accepted M5 interactive-prison gate with the full original-game visual
+oracle using the command in
+[`M5-INTERACTIVE-INTERIOR.md`](M5-INTERACTIVE-INTERIOR.md). It covers normal
+input, collision, take/loot/read/harvest, locks, ownership, animated and
+teleport doors, native save state, fixed original/OpenMW captures, the stable
+official FormKey graph, and Morrowind regressions.
+
+To try the first interactive slice directly:
+
+```sh
+cmake --build build --target openmw -j2
+./scripts/run-oblivion.sh "/path/to/Oblivion/Data"
+```
+
+Use the mouse to look, `W/A/S/D` to move, `Space` to activate, `F5` to
+quicksave, and `Esc` to quit. User data stays below
+`build/oblivion-userdata` by default.
+
 Scenario manifests use
 [`scenario.schema.json`](../../scripts/data/oblivion_compat/scenario.schema.json).
 For example, the hermetic runner check is:
@@ -77,6 +95,7 @@ Current implementation reports:
 - [`M2-FORM-IDENTITY.md`](M2-FORM-IDENTITY.md)
 - [`M3-STANDALONE-BOOT.md`](M3-STANDALONE-BOOT.md)
 - [`M4-RUNTIME-STATE.md`](M4-RUNTIME-STATE.md)
+- [`M5-INTERACTIVE-INTERIOR.md`](M5-INTERACTIVE-INTERIOR.md)
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.

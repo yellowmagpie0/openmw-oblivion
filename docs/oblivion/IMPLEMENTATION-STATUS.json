@@ -73,7 +73,26 @@
         "Morrowind historical save, visual save/load, and integration regression gates"
       ],
       "open_gates": []
+    },
+    "M5": {
+      "status": "accepted",
+      "report": "docs/oblivion/M5-INTERACTIVE-INTERIOR.md",
+      "revision": "153a60668bd924cd844b6f024e969fbf43c43ea1",
+      "evidence": [
+        "build/oblivion-compat/m5-acceptance-certified-3/acceptance.json",
+        "build/oblivion-compat/m5-acceptance-certified-3/acceptance.html",
+        "build/oblivion-compat/m5-acceptance-certified-3/visual-review-montage.png",
+        "build/oblivion-compat/m5-acceptance-certified-3/image-metrics.txt"
+      ],
+      "delivered": [
+        "Native TES4 activation for takeables, containers, books, flora, activators, placeholder creature loot, and doors",
+        "Collision-bounded prison traversal with animated, locked, keyed, and teleport doors",
+        "Ownership, locks, action sounds, exact native inventory/reference mutations, and save persistence",
+        "Deterministic normal-input scenarios and valid fixed original/OpenMW prison captures",
+        "Direct first-slice launcher plus full FormKey and Morrowind regression gates"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "M5 first interactive Oblivion prison interior slice"
+  "next_bounded_delivery": "M6 ObScript frontend"
 }
