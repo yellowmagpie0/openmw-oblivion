@@ -256,6 +256,19 @@ class OblivionCompatTests(unittest.TestCase):
         self.assertFalse(result["passed"])
         self.assertIn("loose item", result["failures"][0])
 
+        state["references"] = [
+            {
+                "key": "content:oblivion.esm:0564e9",
+                "deleted": False,
+                "position": [0.0] * 6,
+                "inventory": [],
+                "custom_state": {"ownership_checked": True},
+            }
+        ]
+        self.assertTrue(MODULE.validate_m5_runtime_state("owned", state)["passed"])
+        state["references"][0]["deleted"] = True
+        self.assertFalse(MODULE.validate_m5_runtime_state("owned", state)["passed"])
+
     def test_form_graph_validator_accepts_only_reviewed_stable_edges(self):
         report = {
             "key_count": 3,

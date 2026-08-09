@@ -958,7 +958,7 @@ def validate_m5_runtime_state(label: str, state: dict[str, Any]) -> dict[str, An
         if reference(0x38870)["custom_state"].get("harvested") is not True:
             failures.append("flora harvest state was not recorded")
     elif label == "owned":
-        owned = reference(0x564EE)
+        owned = reference(0x564E9)
         if owned.get("deleted") or owned["custom_state"].get("ownership_checked") is not True:
             failures.append("owned item was removed or ownership was not enforced")
     elif label == "locked":
@@ -1328,14 +1328,19 @@ def run_m5_acceptance(args: argparse.Namespace) -> dict[str, Any]:
             "expected_interaction": "M5 interaction: kind=harvest result=harvested",
         },
         "owned": {
-            "start": "AnvilTheCountsArmsPrivateRooms::ref=0x564ee",
+            # The named reference is the east-side camera anchor.  From that
+            # approach the center ray selects the adjacent owned silverware
+            # reference 0x564e9 without the unowned 0x564e0 occluding it.
+            "start": "AnvilTheCountsArmsPrivateRooms::ref=0x564ee::side=east",
             "look_lr_key": "KP_6",
             "look_lr_seconds": "0",
             "look_ud_key": "KP_2",
             "look_ud_seconds": "2.55",
             "approach_seconds": "0",
             "after_seconds": "0",
-            "expected_interaction": "M5 interaction: kind=take result=owned",
+            "expected_interaction": (
+                "M5 interaction: kind=take result=owned ref=content:oblivion.esm:0564e9"
+            ),
         },
         "locked": {
             "start": "ImperialDungeon01::ref=0x159857",
