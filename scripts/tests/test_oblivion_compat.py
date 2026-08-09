@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from pathlib import Path
 
@@ -109,6 +110,27 @@ class OblivionCompatTests(unittest.TestCase):
                     output=output,
                 )
 
+    def test_normal_input_actions_have_deterministic_xdotool_commands(self):
+        cases = [
+            ({"type": "key_down", "value": "w"}, ["/bin/true", "keydown", "w"]),
+            ({"type": "key_up", "value": "w"}, ["/bin/true", "keyup", "w"]),
+            ({"type": "mouse_move", "x": -4, "y": 12}, ["/bin/true", "mousemove_relative", "--", "-4", "12"]),
+            ({"type": "mouse_move_absolute", "x": 330, "y": 568}, ["/bin/true", "mousemove", "330", "568"]),
+            ({"type": "mouse_click", "button": 2}, ["/bin/true", "click", "2"]),
+            (
+                {"type": "focus_window", "name": "Oblivion"},
+                ["/bin/true", "search", "--onlyvisible", "--name", "Oblivion", "windowfocus", "--sync", "%@"],
+            ),
+        ]
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(
+            MODULE.shutil, "which", return_value="/bin/true"
+        ):
+            for action, expected in cases:
+                with self.subTest(action=action):
+                    result = MODULE._run_action(action, environment={}, output=Path(temporary))
+                    self.assertTrue(result["passed"])
+                    self.assertEqual(result["command"], expected)
+
     def test_tes4_runtime_state_codec_mutates_every_family_and_preserves_other_save_bytes(self):
         state = {
             "schema_version": 1,
@@ -170,6 +192,29 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertEqual(mutated["references"][0]["custom_state"]["m4_probe"], "unit")
             self.assertTrue(mutated["references"][0]["custom_state"]["locked"])
             self.assertFalse(mutated["references"][2]["custom_state"]["locked"])
+
+    def test_m5_state_validator_checks_native_interaction_effects(self):
+        state = {
+            "player": {
+                "cell": "content:oblivion.esm:01fbb9",
+                "position": [0.0] * 6,
+                "inventory": [{"base": "content:oblivion.esm:023f6e", "count": 1}],
+            },
+            "references": [
+                {
+                    "key": "content:oblivion.esm:01fc0f",
+                    "deleted": True,
+                    "position": [0.0] * 6,
+                    "inventory": [],
+                    "custom_state": {"taken": True},
+                }
+            ],
+        }
+        self.assertTrue(MODULE.validate_m5_runtime_state("take", state)["passed"])
+        state["references"][0]["deleted"] = False
+        result = MODULE.validate_m5_runtime_state("take", state)
+        self.assertFalse(result["passed"])
+        self.assertIn("loose item", result["failures"][0])
 
     def test_form_graph_validator_accepts_only_reviewed_stable_edges(self):
         report = {

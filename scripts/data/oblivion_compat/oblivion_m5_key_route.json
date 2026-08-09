@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m5-keyed-prison-transition",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x15985a\nskip-menu=1\nnew-game=0\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Input]\ncamera sensitivity = 0.1\n[Models]\nload unsupported nif files = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--no-grab=1", "--replace=config", "--config", "{output}/config"],
+  "environment": {"ALSOFT_DRIVERS": "null"},
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 20},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_down", "value": "KP_2"},
+    {"type": "sleep", "seconds": 3.2},
+    {"type": "key_up", "value": "KP_2"},
+    {"type": "screenshot", "name": "goblin-before.png"},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key", "value": "space"},
+    {"type": "sleep", "seconds": 3},
+    {"type": "screenshot", "name": "goblin-looted.png"},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_down", "value": "KP_8"},
+    {"type": "sleep", "seconds": 3.2},
+    {"type": "key_up", "value": "KP_8"},
+    {"type": "key_down", "value": "d"},
+    {"type": "sleep", "seconds": 0.82},
+    {"type": "key_up", "value": "d"},
+    {"type": "key_down", "value": "w"},
+    {"type": "sleep", "seconds": "{walk_seconds}"},
+    {"type": "key_up", "value": "w"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "key_down", "value": "KP_2"},
+    {"type": "sleep", "seconds": 2.4},
+    {"type": "key_up", "value": "KP_2"},
+    {"type": "screenshot", "name": "exit-door.png"},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key", "value": "space"},
+    {"type": "sleep", "seconds": 8},
+    {"type": "screenshot", "name": "destination.png"},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/*.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": ["T4ST", "OMW4STATE"]
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 10,
+  "expected_exit": 0,
+  "expected_log": [
+    "M5 interaction: kind=loot result=looted ref=content:oblivion.esm:15985a",
+    "M5 door activation: result=teleport ref=content:oblivion.esm:0248b2",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "M5 door activation: result=locked ref=content:oblivion.esm:0248b2",
+    "Failed to load.*[Ss]ound",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

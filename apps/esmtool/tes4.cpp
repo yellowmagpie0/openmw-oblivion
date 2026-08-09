@@ -180,6 +180,8 @@ namespace EsmTool
                 std::cout << "\n  Record flags: " << recordFlags(value.mFlags);
             if constexpr (ESM4::HasParent<T>)
                 std::cout << "\n  Parent: " << value.mParent;
+            if constexpr (requires { value.mBaseObj; })
+                std::cout << "\n  BaseObj: " << value.mBaseObj;
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
             if constexpr (ESM4::HasFullName<T>)
@@ -210,6 +212,30 @@ namespace EsmTool
                 std::cout << "\n  Value: " << value.mValue;
             if constexpr (ESM4::HasData<T>)
                 std::cout << "\n  Data: " << WriteData(value.mData);
+            if constexpr (requires { value.mPos; })
+            {
+                std::cout << "\n  Position: " << value.mPos.pos[0] << ' ' << value.mPos.pos[1] << ' '
+                          << value.mPos.pos[2];
+                std::cout << "\n  Rotation: " << value.mPos.rot[0] << ' ' << value.mPos.rot[1] << ' '
+                          << value.mPos.rot[2];
+            }
+            if constexpr (requires { value.mOwner; })
+                if (!value.mOwner.isZeroOrUnset())
+                    std::cout << "\n  Owner: " << value.mOwner;
+            if constexpr (requires { value.mIsLocked; value.mLockLevel; value.mKey; })
+            {
+                std::cout << "\n  Lock: " << (value.mIsLocked ? "locked" : "unlocked") << ' '
+                          << static_cast<int>(value.mLockLevel);
+                if (!value.mKey.isZeroOrUnset())
+                    std::cout << " key=" << value.mKey;
+            }
+            if constexpr (requires { value.mDoor.destDoor; value.mDoor.destPos; })
+                if (!value.mDoor.destDoor.isZeroOrUnset())
+                {
+                    std::cout << "\n  TeleportDoor: " << value.mDoor.destDoor;
+                    std::cout << "\n  TeleportPosition: " << value.mDoor.destPos.pos[0] << ' '
+                              << value.mDoor.destPos.pos[1] << ' ' << value.mDoor.destPos.pos[2];
+                }
             std::cout << '\n';
         }
 

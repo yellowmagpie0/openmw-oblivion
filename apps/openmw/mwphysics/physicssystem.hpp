@@ -162,7 +162,7 @@ namespace MWPhysics
         void disableWater();
 
         void addObject(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation,
-            int collisionType = CollisionType_World);
+            int collisionType = CollisionType_World, bool respectVisualCollisionType = true);
         void addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh);
 
         int addProjectile(

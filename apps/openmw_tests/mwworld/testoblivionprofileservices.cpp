@@ -73,6 +73,12 @@ namespace
         ASSERT_NE(settings.search("fFatigueBase"), nullptr);
         EXPECT_FLOAT_EQ(settings.find("fFatigueBase")->mValue.getFloat(), 42.f);
         EXPECT_FLOAT_EQ(settings.find("fSwimHeightScale")->mValue.getFloat(), 0.75f);
+        EXPECT_FLOAT_EQ(settings.find("fFatigueSneakBase")->mValue.getFloat(), 1.5f);
+        EXPECT_FLOAT_EQ(settings.find("fFatigueSneakMult")->mValue.getFloat(), 1.5f);
+        EXPECT_FLOAT_EQ(settings.find("fFatigueSwimRunBase")->mValue.getFloat(), 7.f);
+        EXPECT_FLOAT_EQ(settings.find("fFatigueSwimRunMult")->mValue.getFloat(), 0.f);
+        EXPECT_FLOAT_EQ(settings.find("fFatigueSwimWalkBase")->mValue.getFloat(), 2.5f);
+        EXPECT_FLOAT_EQ(settings.find("fFatigueSwimWalkMult")->mValue.getFloat(), 0.f);
         EXPECT_GT(settings.find("fMajorSkillBonus")->mValue.getFloat(), 0.f);
         EXPECT_GT(settings.find("fMinorSkillBonus")->mValue.getFloat(), 0.f);
         EXPECT_GT(settings.find("fMiscSkillBonus")->mValue.getFloat(), 0.f);

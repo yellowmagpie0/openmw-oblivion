@@ -86,14 +86,28 @@ namespace MWRender
 
     osg::Vec3d Camera::calculateTrackedPosition() const
     {
-        if (!mTrackingNode)
-            return osg::Vec3d();
-        osg::NodePathList nodepaths = mTrackingNode->getParentalNodePaths();
+        osg::NodePathList nodepaths;
+        if (mTrackingNode)
+            nodepaths = mTrackingNode->getParentalNodePaths();
+
+        // Unsupported or incomplete actor skeletons can expose a Camera/Head
+        // node without attaching it to the rendered hierarchy. Keep the
+        // first-person camera usable by tracking the actor root at eye height.
+        // Valid Morrowind skeletons continue to use their authored node.
+        bool actorRootFallback = false;
+        if (nodepaths.empty() && !mTrackingPtr.isEmpty())
+        {
+            if (const osg::Node* root = mTrackingPtr.getRefData().getBaseNode())
+            {
+                nodepaths = root->getParentalNodePaths();
+                actorRootFallback = true;
+            }
+        }
         if (nodepaths.empty())
             return osg::Vec3d();
         osg::Matrix worldMat = osg::computeLocalToWorld(nodepaths[0]);
         osg::Vec3d res = worldMat.getTrans();
-        if (mMode != Mode::FirstPerson)
+        if (actorRootFallback || mMode != Mode::FirstPerson)
             res.z() += mHeight * mHeightScale;
         return res;
     }

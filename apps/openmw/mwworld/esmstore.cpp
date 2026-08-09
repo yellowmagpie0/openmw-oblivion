@@ -11,6 +11,7 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <components/esm4/common.hpp>
+#include <components/esm4/loadkeym.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
 #include <components/files/conversion.hpp>
@@ -392,6 +393,7 @@ namespace MWWorld
             case ESM::REC_FURN4:
             case ESM::REC_IMOD4:
             case ESM::REC_INGR4:
+            case ESM::REC_KEYM4:
             case ESM::REC_LIGH4:
             case ESM::REC_LVLI4:
             case ESM::REC_LVLC4:

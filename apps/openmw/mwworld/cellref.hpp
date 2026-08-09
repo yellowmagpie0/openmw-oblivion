@@ -57,6 +57,19 @@ namespace MWWorld
             return std::visit(Visitor(), mCellRef.mVariant);
         }
 
+        // Construction Set identifier carried by native TES4 placed references.
+        // TES3 references do not have a separate placed-reference editor ID.
+        std::string_view getEditorId() const
+        {
+            struct Visitor
+            {
+                std::string_view operator()(const ESM::CellRef&) { return {}; }
+                std::string_view operator()(const ESM4::Reference& ref) { return ref.mEditorId; }
+                std::string_view operator()(const ESM4::ActorCharacter& ref) { return ref.mEditorId; }
+            };
+            return std::visit(Visitor(), mCellRef.mVariant);
+        }
+
         // For doors - true if this door teleports to somewhere else, false
         // if it should open through animation.
         bool getTeleport() const

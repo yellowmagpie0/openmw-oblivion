@@ -405,7 +405,8 @@ namespace MWPhysics
     }
 
     void PhysicsSystem::addObject(
-        const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation, int collisionType)
+        const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation, int collisionType,
+        bool respectVisualCollisionType)
     {
         if (ptr.mRef->mData.mPhysicsPostponed)
             return;
@@ -420,7 +421,8 @@ namespace MWPhysics
         assert(!getObject(ptr));
 
         // Override collision type based on shape content.
-        switch (shapeInstance->mVisualCollisionType)
+        switch (respectVisualCollisionType ? shapeInstance->mVisualCollisionType
+                                          : Resource::VisualCollisionType::None)
         {
             case Resource::VisualCollisionType::None:
                 break;

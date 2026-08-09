@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m5-closed-wall-collision",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 20},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "start.png"},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_down", "value": "w"},
+    {"type": "sleep", "seconds": 3},
+    {"type": "key_up", "value": "w"},
+    {"type": "screenshot", "name": "blocked.png"},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 10,
+  "expected_exit": 0,
+  "expected_log": ["Loading cell ImperialDungeon01", "M5 collision wall: physics=present ref=content:oblivion.esm:01fc41", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

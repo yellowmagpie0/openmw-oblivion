@@ -32,6 +32,12 @@ namespace
         std::string_view("fEncumbranceStrMult"),
         std::string_view("fFatigueBase"),
         std::string_view("fFatigueMult"),
+        std::string_view("fFatigueSneakBase"),
+        std::string_view("fFatigueSneakMult"),
+        std::string_view("fFatigueSwimRunBase"),
+        std::string_view("fFatigueSwimRunMult"),
+        std::string_view("fFatigueSwimWalkBase"),
+        std::string_view("fFatigueSwimWalkMult"),
         std::string_view("fHoldBreathTime"),
         std::string_view("fJumpAcrobaticsBase"),
         std::string_view("fJumpAcroMultiplier"),
@@ -389,6 +395,12 @@ namespace MWWorld
         addFloat("fMinorSkillBonus", 1.f);
         addFloat("fMiscSkillBonus", 1.25f);
         addFloat("fSpecialSkillBonus", 0.8f);
+        addFloat("fFatigueSneakBase", 1.5f);
+        addFloat("fFatigueSneakMult", 1.5f);
+        addFloat("fFatigueSwimRunBase", 7.f);
+        addFloat("fFatigueSwimRunMult", 0.f);
+        addFloat("fFatigueSwimWalkBase", 2.5f);
+        addFloat("fFatigueSwimWalkMult", 0.f);
         addInt("iMaxActivateDist", 192);
         addInt("iMonthsToRespawn", 1);
         addString("sDefaultCellname", "Wilderness");

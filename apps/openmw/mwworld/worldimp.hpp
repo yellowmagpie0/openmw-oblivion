@@ -81,6 +81,7 @@ namespace MWPhysics
 
 namespace MWWorld
 {
+    enum class OblivionInteractionKind;
     class DateTimeManager;
     class WeatherManager;
     class Player;
@@ -211,6 +212,10 @@ namespace MWWorld
             const std::filesystem::path& userDataPath, ESM::GameProfile requestedGameProfile);
 
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
+
+        // Bounded native interaction surface for the M5 prison slice.
+        void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind);
+        bool oblivionPlayerHasItem(const ESM::RefId& id);
 
         void loadData(const Files::Collections& fileCollections, const std::vector<std::string>& contentFiles,
             const std::vector<std::string>& groundcoverFiles, ToUTF8::Utf8Encoder* encoder,

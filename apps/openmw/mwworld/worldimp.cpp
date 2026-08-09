@@ -332,8 +332,43 @@ namespace MWWorld
 
         if (bypass && !mStartCell.empty())
         {
+            std::string_view startCell = mStartCell;
+            std::optional<std::uint32_t> startReference;
+            osg::Vec2f startReferenceOffset(-40.f, 0.f);
+            float startReferenceYaw = osg::PIf * 0.5f;
+            if (mGameProfile == ESM::GameProfile::Oblivion)
+            {
+                constexpr std::string_view separator = "::ref=";
+                if (const std::size_t offset = startCell.find(separator); offset != std::string_view::npos)
+                {
+                    std::string_view referenceText = startCell.substr(offset + separator.size());
+                    startCell = startCell.substr(0, offset);
+                    const auto selectSide = [&](std::string_view suffix, const osg::Vec2f& sideOffset, float yaw) {
+                        if (!referenceText.ends_with(suffix))
+                            return false;
+                        referenceText.remove_suffix(suffix.size());
+                        startReferenceOffset = sideOffset;
+                        startReferenceYaw = yaw;
+                        return true;
+                    };
+                    if (!selectSide("::side=east", osg::Vec2f(40.f, 0.f), -osg::PIf * 0.5f)
+                        && !selectSide("::side=north", osg::Vec2f(0.f, 40.f), osg::PIf))
+                    {
+                        selectSide("::side=south", osg::Vec2f(0.f, -40.f), 0.f);
+                    }
+                    std::uint32_t value = 0;
+                    const char* begin = referenceText.data();
+                    if (referenceText.starts_with("0x"))
+                        begin += 2;
+                    const std::from_chars_result parsed
+                        = std::from_chars(begin, referenceText.data() + referenceText.size(), value, 16);
+                    if (parsed.ec != std::errc{} || parsed.ptr != referenceText.data() + referenceText.size())
+                        throw std::runtime_error("Invalid TES4 start reference: " + std::string(referenceText));
+                    startReference = value;
+                }
+            }
             ESM::Position pos;
-            ESM::RefId cellId = findExteriorPosition(mStartCell, pos);
+            ESM::RefId cellId = findExteriorPosition(startCell, pos);
             if (!cellId.empty())
             {
                 changeToCell(cellId, pos, true);
@@ -341,8 +376,47 @@ namespace MWWorld
             }
             else
             {
-                findInteriorPosition(mStartCell, pos);
-                changeToInteriorCell(mStartCell, pos, true);
+                findInteriorPosition(startCell, pos);
+                if (startReference)
+                {
+                    const CellStore* cell = mWorldModel.findInterior(startCell);
+                    std::optional<ESM::Position> target;
+                    if (cell)
+                        cell->forEachConst(
+                            [&](const ConstPtr& ptr) {
+                                if (ptr.getCellRef().getRefNum().mIndex == *startReference)
+                                {
+                                    target = ptr.getCellRef().getPosition();
+                                    return false;
+                                }
+                                return true;
+                            },
+                            true);
+                    if (!target)
+                        throw std::runtime_error("TES4 start reference is not present in cell: 0x"
+                            + std::to_string(*startReference));
+                    pos = *target;
+                    // Keep deterministic interaction probes close enough that an unrelated
+                    // piece of cell architecture cannot occlude the selected reference.
+                    // Forty units is outside the player capsule for the small prison props
+                    // used by M5 while still exercising the normal activation ray.
+                    pos.pos[0] += startReferenceOffset.x();
+                    pos.pos[1] += startReferenceOffset.y();
+                    pos.pos[2] += 16.f;
+                    pos.rot[0] = pos.rot[1] = 0.f;
+                    pos.rot[2] = startReferenceYaw;
+                    Log(Debug::Info) << "M5 start target: cell=" << startCell << " ref=0x" << std::hex
+                                     << *startReference << std::dec << " position=" << pos.pos[0] << ','
+                                     << pos.pos[1] << ',' << pos.pos[2];
+                }
+                changeToInteriorCell(startCell, pos, true);
+                if (startReference)
+                {
+                    const Ptr player = getPlayerPtr();
+                    const ESM::Position& actual = player.getRefData().getPosition();
+                    Log(Debug::Info) << "M5 start target applied: player=" << actual.pos[0] << ',' << actual.pos[1]
+                                     << ',' << actual.pos[2];
+                }
             }
         }
         else
@@ -1912,16 +1986,20 @@ namespace MWWorld
         // Cancel door closing sound if collision with actor is detected
         if (collisionWithActor)
         {
-            const ESM::Door* ref = door.get<ESM::Door>()->mBase;
+            // TES4 door sounds are selected by ESM4Door::activate. Avoid the
+            // TES3-only record cast when collision reverses a native door.
+            const ESM::Door* ref = door.getClass().getType() == ESM::REC_DOOR
+                ? door.get<ESM::Door>()->mBase
+                : nullptr;
 
-            if (state == MWWorld::DoorState::Opening)
+            if (ref && state == MWWorld::DoorState::Opening)
             {
                 const ESM::RefId& openSound = ref->mOpenSound;
                 if (!openSound.empty()
                     && MWBase::Environment::get().getSoundManager()->getSoundPlaying(door, openSound))
                     MWBase::Environment::get().getSoundManager()->stopSound3D(door, openSound);
             }
-            else if (state == MWWorld::DoorState::Closing)
+            else if (ref && state == MWWorld::DoorState::Closing)
             {
                 const ESM::RefId& closeSound = ref->mCloseSound;
                 if (!closeSound.empty()
@@ -2174,9 +2252,41 @@ namespace MWWorld
         focusObject = rayToObject.mHitObject;
         if (focusObject.isEmpty() && rayToObject.mHitRefnum.isSet())
             focusObject = MWBase::Environment::get().getWorldModel()->getPtr(rayToObject.mHitRefnum);
-        if (rayToObject.mHit)
+        bool usedOblivionFocusFallback = false;
+        if (mGameProfile == ESM::GameProfile::Oblivion
+            && (focusObject.isEmpty() || !focusObject.getClass().hasToolTip(focusObject)))
+        {
+            const osg::Vec3f cameraPosition = mRendering->getCamera()->getPosition();
+            const osg::Vec3f cameraForward
+                = mRendering->getCamera()->getOrient() * osg::Vec3f(0.f, 1.f, 0.f);
+            float bestScore = 0.9f;
+            for (CellStore* cell : mWorldScene->getActiveCells())
+            {
+                cell->forEach(
+                    [&](const Ptr& candidate) {
+                        if (!candidate.getRefData().isEnabled() || !candidate.getClass().hasToolTip(candidate))
+                            return true;
+                        const osg::Vec3f delta
+                            = candidate.getRefData().getPosition().asVec3() - cameraPosition;
+                        const float distance = delta.length();
+                        if (distance <= 0.f || distance > maxDistance)
+                            return true;
+                        const float score = (delta / distance) * cameraForward;
+                        if (score > bestScore)
+                        {
+                            bestScore = score;
+                            mDistanceToFocusObject = distance - camDist;
+                            focusObject = candidate;
+                            usedOblivionFocusFallback = true;
+                        }
+                        return true;
+                    },
+                    false);
+            }
+        }
+        if (rayToObject.mHit && !usedOblivionFocusFallback)
             mDistanceToFocusObject = (rayToObject.mRatio * maxDistance) - camDist;
-        else
+        else if (!usedOblivionFocusFallback)
             mDistanceToFocusObject = -1;
         return focusObject;
     }
@@ -3034,6 +3144,23 @@ namespace MWWorld
         return std::nullopt;
     }
 
+    static std::optional<ESM::Position> searchPlacedReferencePosition(
+        const CellStore& cellStore, std::string_view editorId)
+    {
+        std::optional<ESM::Position> result;
+        cellStore.forEachConst(
+            [&](const ConstPtr& ptr) {
+                if (Misc::StringUtils::ciEqual(ptr.getCellRef().getEditorId(), editorId))
+                {
+                    result = ptr.getCellRef().getPosition();
+                    return false;
+                }
+                return true;
+            },
+            true);
+        return result;
+    }
+
     static std::optional<ESM::Position> searchDoorDestInCell(const CellStore& cellStore)
     {
         ESM::RefId cellId = cellStore.getCell()->getId();
@@ -3096,6 +3223,20 @@ namespace MWWorld
         if (!cellStore)
             return ESM::RefId();
         ESM::RefId cellId = cellStore->getCell()->getId();
+
+        // The Oblivion tutorial cell has many generic XMarkerHeading records. The
+        // authored player marker is the only deterministic, grounded entry point
+        // for the first interactive slice; choosing the first generic marker can
+        // place the compatibility player in another cell or below geometry.
+        if (mGameProfile == ESM::GameProfile::Oblivion && Misc::StringUtils::ciEqual(name, "ImperialDungeon01"))
+        {
+            if (std::optional<ESM::Position> destPos
+                = searchPlacedReferencePosition(*cellStore, "CGPlayerStartMarker"))
+            {
+                pos = *destPos;
+                return cellId;
+            }
+        }
 
         if (std::optional<ESM::Position> destPos = searchMarkerPosition(*cellStore, "cocmarkerheading"))
         {

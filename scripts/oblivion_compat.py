@@ -14,6 +14,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import math
 import os
 import platform
 import re
@@ -442,12 +443,42 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         destination = output / str(action["name"])
         destination.parent.mkdir(parents=True, exist_ok=True)
         command = [executable, "-window", str(action.get("window", "root")), str(destination)]
-    elif action_type in ("key", "type"):
+    elif action_type in (
+        "key",
+        "key_down",
+        "key_up",
+        "type",
+        "mouse_move",
+        "mouse_move_absolute",
+        "mouse_click",
+        "focus_window",
+    ):
         executable = shutil.which("xdotool")
         if not executable:
             raise RuntimeError("xdotool is required for input actions")
         if action_type == "key":
             command = [executable, "key", str(action["value"])]
+        elif action_type == "key_down":
+            command = [executable, "keydown", str(action["value"])]
+        elif action_type == "key_up":
+            command = [executable, "keyup", str(action["value"])]
+        elif action_type == "mouse_move":
+            command = [executable, "mousemove_relative", "--", str(action["x"]), str(action["y"])]
+        elif action_type == "mouse_move_absolute":
+            command = [executable, "mousemove", str(action["x"]), str(action["y"])]
+        elif action_type == "mouse_click":
+            command = [executable, "click", str(action.get("button", 1))]
+        elif action_type == "focus_window":
+            command = [
+                executable,
+                "search",
+                "--onlyvisible",
+                "--name",
+                str(action["name"]),
+                "windowfocus",
+                "--sync",
+                "%@",
+            ]
         else:
             command = [executable, "type", "--delay", str(action.get("delay_ms", 20)), str(action["value"])]
     elif action_type == "command":
@@ -824,6 +855,82 @@ def _state_comparison(expected: dict[str, Any], save: Path, report_path: Path) -
     }
 
 
+def validate_m5_runtime_state(label: str, state: dict[str, Any]) -> dict[str, Any]:
+    references = {item["key"]: item for item in state["references"]}
+    player_inventory = {item["base"]: item["count"] for item in state["player"]["inventory"]}
+    failures: list[str] = []
+
+    def reference(local_id: int) -> dict[str, Any]:
+        key = f"content:oblivion.esm:{local_id:06x}"
+        if key not in references:
+            failures.append(f"missing reference {key}")
+            return {"custom_state": {}, "inventory": [], "position": [0.0] * 6}
+        return references[key]
+
+    if label == "closed_wall":
+        x, y, z = state["player"]["position"][:3]
+        if not (630.0 < x < 715.0 and -40.0 <= y < 240.0 and z > -220.0):
+            failures.append(f"closed wall did not bound player: position={x},{y},{z}")
+    elif label == "wall_open":
+        wall = reference(0x1FC41)
+        if wall.get("enabled", True) or wall["custom_state"].get("opened") is not True:
+            failures.append("secret wall was not opened and disabled")
+        x, y = state["player"]["position"][:2]
+        if math.hypot(x - 672.0, y + 40.0) <= 50.0:
+            failures.append(f"player did not move after opening wall: position={x},{y}")
+    elif label == "take":
+        item = reference(0x1FC0F)
+        if not item.get("deleted") or item["custom_state"].get("taken") is not True:
+            failures.append("loose item was not taken from the cell")
+        if player_inventory.get("content:oblivion.esm:023f6e", 0) < 1:
+            failures.append("taken skull is absent from native player inventory")
+    elif label == "container":
+        container = reference(0x521E6)
+        if container["inventory"] or container["custom_state"].get("opened") is not True:
+            failures.append("container inventory was not transferred")
+    elif label == "book":
+        if reference(0x5E300)["custom_state"].get("read") is not True:
+            failures.append("book read state was not recorded")
+    elif label == "flora":
+        if reference(0x38870)["custom_state"].get("harvested") is not True:
+            failures.append("flora harvest state was not recorded")
+    elif label == "owned":
+        owned = reference(0x564EE)
+        if owned.get("deleted") or owned["custom_state"].get("ownership_checked") is not True:
+            failures.append("owned item was removed or ownership was not enforced")
+    elif label == "locked":
+        locked = reference(0x159857)
+        if locked["custom_state"].get("lock_checked") is not True or not locked["inventory"]:
+            failures.append("locked container changed activation state")
+    elif label == "animated_door":
+        rotation = reference(0x4D4A5)["position"][5]
+        if abs(rotation) < 1.0:
+            failures.append(f"animated door did not reach its open angle: rotation={rotation}")
+    elif label == "teleport":
+        if state["player"]["cell"] != "content:oblivion.esm:01fbb9":
+            failures.append(f"teleport did not reach ImperialDungeon01: {state['player']['cell']}")
+    elif label == "key_route":
+        carrier = reference(0x15985A)
+        if carrier["inventory"] or carrier["custom_state"].get("opened") is not True:
+            failures.append("tutorial key carrier was not looted")
+        if player_inventory.get("content:oblivion.esm:159826", 0) < 1:
+            failures.append("tutorial Iron Key is absent from native player inventory")
+        if state["player"]["cell"] != "content:oblivion.esm:022ff6":
+            failures.append(f"keyed transition did not reach ImperialDungeon04: {state['player']['cell']}")
+    else:
+        failures.append(f"unknown M5 state check {label}")
+
+    return {
+        "passed": not failures,
+        "label": label,
+        "failures": failures,
+        "player_cell": state["player"]["cell"],
+        "player_position": state["player"]["position"],
+        "player_inventory_items": len(state["player"]["inventory"]),
+        "references": len(state["references"]),
+    }
+
+
 def run_m4_acceptance(args: argparse.Namespace) -> dict[str, Any]:
     source = args.source.resolve()
     build = args.build.resolve()
@@ -1028,6 +1135,307 @@ def run_m4_acceptance(args: argparse.Namespace) -> dict[str, Any]:
         f"<h1>OpenMW Oblivion M4 acceptance: {status_text}</h1><p>Generated {report['generated_at']}.</p>"
         f"<table><tr><th>Gate</th><th>Check</th><th>Result</th></tr>{''.join(rows)}</table>"
         f"<h2>Content fingerprints</h2><pre>{html.escape(json.dumps(report['content'], indent=2, sort_keys=True))}</pre>"
+        "</body></html>",
+        encoding="utf-8",
+    )
+    return report
+
+
+def run_m5_acceptance(args: argparse.Namespace) -> dict[str, Any]:
+    source = args.source.resolve()
+    build = args.build.resolve()
+    oblivion_data = args.oblivion_data.resolve()
+    morrowind_data = args.morrowind_data.resolve()
+    output = args.output.resolve()
+    if output.exists() and any(output.iterdir()):
+        raise RuntimeError(f"M5 acceptance output directory must be empty: {output}")
+    output.mkdir(parents=True, exist_ok=True)
+
+    openmw = build / "openmw"
+    openmw_tests = build / "openmw-tests"
+    components_tests = build / "components-tests"
+    esmtool = build / "esmtool"
+    resources = build / "resources"
+    required = (
+        openmw,
+        openmw_tests,
+        components_tests,
+        esmtool,
+        resources,
+        oblivion_data / "Oblivion.esm",
+        morrowind_data / "Morrowind.esm",
+        args.proton.resolve(),
+        args.oblivion_install.resolve() / "Oblivion.exe",
+        args.original_prefix.resolve(),
+    )
+    for path in required:
+        if not path.exists():
+            raise FileNotFoundError(path)
+
+    started = time.monotonic()
+    tests = {
+        "runtime_state": _run_logged_gate(
+            [str(components_tests), "--gtest_filter=ESM4RuntimeState.*:SavedGameProfile.*"],
+            source,
+            output / "tests",
+            "runtime-state",
+        ),
+        "profile_services": _run_logged_gate(
+            [str(openmw_tests), "--gtest_filter=OblivionProfileServicesTest.*"],
+            source,
+            output / "tests",
+            "profile-services",
+        ),
+        "compatibility_harness": _run_logged_gate(
+            [sys.executable, "-m", "unittest", "scripts.tests.test_oblivion_compat"],
+            source,
+            output / "tests",
+            "compatibility-harness",
+        ),
+    }
+
+    base_variables = {
+        "source": str(source),
+        "openmw": str(openmw),
+        "resources": str(resources),
+        "oblivion_data": str(oblivion_data),
+        "morrowind_data": str(morrowind_data),
+    }
+    manifests = source / "scripts" / "data" / "oblivion_compat"
+    scenarios: dict[str, dict[str, Any]] = {}
+    state_checks: dict[str, dict[str, Any]] = {}
+
+    collision_dir = output / "scenarios" / "closed_wall"
+    scenarios["closed_wall"] = run_scenario(
+        manifests / "oblivion_m5_collision.json", collision_dir, base_variables
+    )
+    state_checks["closed_wall"] = validate_m5_runtime_state(
+        "closed_wall", tes4_state.load_save(_single_save(collision_dir))
+    )
+
+    scenario_specs = {
+        "wall_open": {
+            "start": "ImperialDungeon01::ref=0x1fc41::side=south",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "0",
+            "approach_seconds": "0",
+            "after_seconds": "3",
+            "expected_interaction": "M5 interaction: kind=activate result=opened",
+        },
+        "take": {
+            "start": "ImperialDungeon01::ref=0x1fc0f",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "3.2",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 interaction: kind=take result=taken",
+        },
+        "container": {
+            "start": "ImperialDungeon01::ref=0x521e6",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "3.2",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 interaction: kind=loot result=looted",
+        },
+        "book": {
+            "start": "GoblinJimsCave::ref=0x5e300",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0.7",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "2.2",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 interaction: kind=read result=read",
+        },
+        "flora": {
+            "start": "ImperialDungeon04::ref=0x38870",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "3.2",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 interaction: kind=harvest result=harvested",
+        },
+        "owned": {
+            "start": "AnvilTheCountsArmsPrivateRooms::ref=0x564ee",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "2.55",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 interaction: kind=take result=owned",
+        },
+        "locked": {
+            "start": "ImperialDungeon01::ref=0x159857",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "3.2",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 interaction: kind=loot result=locked",
+        },
+        "animated_door": {
+            "start": "BrumaMagesGuildBasement::ref=0x4d4a5",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "1.5",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "0",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 door activation: result=animated",
+        },
+        "teleport": {
+            "start": "ImperialDungeon04::ref=0x25041",
+            "look_lr_key": "KP_6",
+            "look_lr_seconds": "0",
+            "look_ud_key": "KP_2",
+            "look_ud_seconds": "0",
+            "approach_seconds": "0",
+            "after_seconds": "0",
+            "expected_interaction": "M5 door activation: result=teleport",
+        },
+    }
+    for label, values in scenario_specs.items():
+        scenario_dir = output / "scenarios" / label
+        variables = dict(base_variables, label=label, **values)
+        scenarios[label] = run_scenario(
+            manifests / "oblivion_m5_interaction.json", scenario_dir, variables
+        )
+        state_checks[label] = validate_m5_runtime_state(
+            label, tes4_state.load_save(_single_save(scenario_dir))
+        )
+
+    key_route_dir = output / "scenarios" / "key_route"
+    scenarios["key_route"] = run_scenario(
+        manifests / "oblivion_m5_key_route.json",
+        key_route_dir,
+        dict(base_variables, walk_seconds="1.55"),
+    )
+    state_checks["key_route"] = validate_m5_runtime_state(
+        "key_route", tes4_state.load_save(_single_save(key_route_dir))
+    )
+
+    scenarios["morrowind_visual_save_load"] = run_scenario(
+        manifests / "morrowind_boot_campaign.json",
+        output / "scenarios" / "morrowind_visual_save_load",
+        base_variables,
+    )
+
+    copied_prefix = output / "original-prefix"
+    shutil.copytree(args.original_prefix.resolve(), copied_prefix, symlinks=True)
+    original_variables = {
+        "proton": str(args.proton.resolve()),
+        "oblivion_exe": str(args.oblivion_install.resolve() / "Oblivion.exe"),
+        "oblivion_install": str(args.oblivion_install.resolve()),
+        "steam_root": str(args.steam_root.resolve()),
+        "original_prefix": str(copied_prefix),
+    }
+    scenarios["original_prison_viewpoint"] = run_scenario(
+        manifests / "oblivion_m5_original_prison.json",
+        output / "scenarios" / "original_prison_viewpoint",
+        original_variables,
+    )
+
+    original_capture = output / "scenarios" / "original_prison_viewpoint" / "original-prison-start.png"
+    original_menu = output / "scenarios" / "original_prison_viewpoint" / "original-main-menu.png"
+    openmw_capture = output / "scenarios" / "wall_open" / "before.png"
+    original_transition = (
+        compare_images(original_menu, original_capture)
+        if original_menu.is_file() and original_capture.is_file()
+        else {"passed": False, "reason": "missing original-game capture"}
+    )
+    original_scene_changed = bool(
+        original_transition.get("ssim", 1.0) < 0.9
+        and original_transition.get("changed_ratio", 0.0) > 0.2
+    )
+    paired_capture = {
+        "passed": original_capture.is_file() and openmw_capture.is_file() and original_scene_changed,
+        "original": inspect_image(original_capture) if original_capture.is_file() else {"passed": False},
+        "openmw": inspect_image(openmw_capture) if openmw_capture.is_file() else {"passed": False},
+        "original_menu_to_scene": original_transition,
+        "original_scene_changed": original_scene_changed,
+    }
+    paired_capture["passed"] = bool(
+        paired_capture["passed"]
+        and paired_capture["original"].get("passed")
+        and paired_capture["openmw"].get("passed")
+    )
+
+    form_graph = run_form_graph(
+        argparse.Namespace(
+            source=source,
+            esmtool=esmtool,
+            oblivion_data=oblivion_data,
+            output=output / "form-graph",
+            allowlist=None,
+            timeout=900,
+        )
+    )
+    morrowind_regression = run_morrowind_regression(
+        openmw, source, build, morrowind_data, output / "morrowind-integration"
+    )
+
+    revision = run_command(["git", "rev-parse", "HEAD"], cwd=source, timeout=10)["output"].strip()
+    status = run_command(["git", "status", "--short"], cwd=source, timeout=10)["output"].splitlines()
+    report = {
+        "schema_version": SCHEMA_VERSION,
+        "milestone": "M5",
+        "generated_at": utc_now(),
+        "duration_seconds": round(time.monotonic() - started, 6),
+        "repository": {"source": str(source), "revision": revision, "status": status},
+        "content": {
+            "oblivion": file_fingerprint(oblivion_data / "Oblivion.esm"),
+            "morrowind": file_fingerprint(morrowind_data / "Morrowind.esm"),
+        },
+        "tests": tests,
+        "scenarios": scenarios,
+        "state_checks": state_checks,
+        "paired_capture": paired_capture,
+        "form_graph": form_graph,
+        "morrowind_regression": morrowind_regression,
+    }
+    report["passed"] = (
+        all(item.get("passed", False) for item in tests.values())
+        and all(item.get("passed", False) for item in scenarios.values())
+        and all(item.get("passed", False) for item in state_checks.values())
+        and paired_capture["passed"]
+        and form_graph.get("passed", False)
+        and morrowind_regression.get("passed_gate", False)
+    )
+    write_json(output / "acceptance.json", report)
+    rows = []
+    for category in ("tests", "scenarios", "state_checks"):
+        for name, result in report[category].items():
+            rows.append(
+                f"<tr><td>{html.escape(category)}</td><td>{html.escape(name)}</td>"
+                f"<td>{'PASS' if result.get('passed') else 'FAIL'}</td></tr>"
+            )
+    for name, result in (
+        ("paired original/OpenMW capture", paired_capture),
+        ("M2 FormKey graph", form_graph),
+        ("Morrowind integration", {"passed": morrowind_regression.get("passed_gate")}),
+    ):
+        rows.append(
+            f"<tr><td>regression</td><td>{html.escape(name)}</td>"
+            f"<td>{'PASS' if result.get('passed') else 'FAIL'}</td></tr>"
+        )
+    status_text = "PASS" if report["passed"] else "FAIL"
+    (output / "acceptance.html").write_text(
+        "<!doctype html><html lang='en'><head><meta charset='utf-8'><title>M5 acceptance</title>"
+        "<style>body{font-family:sans-serif;max-width:1100px;margin:2rem auto}table{border-collapse:collapse}"
+        "td,th{border:1px solid #aaa;padding:.3rem .6rem}</style></head><body>"
+        f"<h1>OpenMW Oblivion M5 acceptance: {status_text}</h1><p>Generated {report['generated_at']}.</p>"
+        f"<table><tr><th>Gate</th><th>Check</th><th>Result</th></tr>{''.join(rows)}</table>"
         "</body></html>",
         encoding="utf-8",
     )
@@ -1528,6 +1936,17 @@ def make_parser() -> argparse.ArgumentParser:
     m4.add_argument("--morrowind-data", type=Path, required=True)
     m4.add_argument("--output", type=Path, required=True)
 
+    m5 = subparsers.add_parser("m5-acceptance", help="run the complete M5 interactive-prison acceptance gate")
+    m5.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m5.add_argument("--build", type=Path, required=True)
+    m5.add_argument("--oblivion-data", type=Path, required=True)
+    m5.add_argument("--morrowind-data", type=Path, required=True)
+    m5.add_argument("--output", type=Path, required=True)
+    m5.add_argument("--proton", type=Path, required=True)
+    m5.add_argument("--oblivion-install", type=Path, required=True)
+    m5.add_argument("--original-prefix", type=Path, required=True)
+    m5.add_argument("--steam-root", type=Path, required=True)
+
     runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
     runtime.add_argument(
         "operation", choices=("inspect", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
@@ -1633,6 +2052,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_m3_acceptance(args)
         elif args.command == "m4-acceptance":
             result = run_m4_acceptance(args)
+        elif args.command == "m5-acceptance":
+            result = run_m5_acceptance(args)
         elif args.command == "runtime-state":
             result = run_runtime_state(args)
         else:

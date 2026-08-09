@@ -197,6 +197,30 @@ namespace MWWorld
 
         MWWorld::Ptr toActivate = MWBase::Environment::get().getWorld()->getFocusObject();
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const ESM::Position& playerPosition = player.getRefData().getPosition();
+            const osg::Vec3d cameraPosition
+                = MWBase::Environment::get().getWorld()->getRenderingManager()->getCamera()->getPosition();
+            if (toActivate.isEmpty())
+                Log(Debug::Info) << "M5 activation focus: result=empty player=" << playerPosition.pos[0] << ','
+                                 << playerPosition.pos[1] << ',' << playerPosition.pos[2] << " camera="
+                                 << cameraPosition.x() << ',' << cameraPosition.y() << ',' << cameraPosition.z();
+            else
+            {
+                const ESM::Position& focusPosition = toActivate.getRefData().getPosition();
+                Log(Debug::Info) << "M5 activation focus: result=object ref="
+                                 << toActivate.getCellRef().getFormKey().serialize() << " type="
+                                 << toActivate.getClass().getType() << " tooltip="
+                                 << (toActivate.getClass().hasToolTip(toActivate) ? "true" : "false") << " player="
+                                 << playerPosition.pos[0] << ',' << playerPosition.pos[1] << ','
+                                 << playerPosition.pos[2] << " object=" << focusPosition.pos[0] << ','
+                                 << focusPosition.pos[1] << ',' << focusPosition.pos[2] << " base="
+                                 << toActivate.getCellRef().getRefId() << " camera=" << cameraPosition.x() << ','
+                                 << cameraPosition.y() << ',' << cameraPosition.z();
+            }
+        }
+
         if (toActivate.isEmpty())
             return;
 

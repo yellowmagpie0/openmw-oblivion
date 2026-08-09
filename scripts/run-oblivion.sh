@@ -48,15 +48,16 @@ EOF
 cat >"$CONFIG_DIR/settings.cfg" <<'EOF'
 [Video]
 fullscreen = false
+[Models]
+load unsupported nif files = true
 [General]
 screenshot format = png
 EOF
 
 printf 'Launching Oblivion from %s\n' "$DATA_DIR"
 printf 'Saves and screenshots will be kept in %s\n' "$USER_DATA_DIR"
+printf 'Controls: mouse to look, W/A/S/D to move, Space to activate, F5 to quicksave, Esc to quit.\n'
 exec "$OPENMW_BIN" \
     --replace=config \
     --config "$CONFIG_DIR" \
-    --game-profile=oblivion \
-    --no-sound=1 \
-    --no-grab
+    --game-profile=oblivion
