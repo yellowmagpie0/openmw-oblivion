@@ -447,10 +447,14 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         "key",
         "key_down",
         "key_up",
+        "key_held",
         "type",
+        "type_held",
         "mouse_move",
         "mouse_move_absolute",
         "mouse_click",
+        "mouse_down",
+        "mouse_up",
         "focus_window",
     ):
         executable = shutil.which("xdotool")
@@ -458,6 +462,47 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             raise RuntimeError("xdotool is required for input actions")
         if action_type == "key":
             command = [executable, "key", str(action["value"])]
+        elif action_type in ("key_held", "type_held"):
+            if action_type == "key_held":
+                keysyms = [str(action["value"])]
+            else:
+                aliases = {" ": "space", ".": "period", "-": "minus", "_": "underscore"}
+                keysyms = [aliases.get(character, character) for character in str(action["value"])]
+                if any(not (keysym.isalnum() or keysym in aliases.values()) for keysym in keysyms):
+                    raise ValueError("type_held supports letters, digits, spaces, periods, hyphens, and underscores")
+            hold_seconds = float(action.get("hold_seconds", 0.08))
+            pause_seconds = float(action.get("pause_seconds", 0.04))
+            if hold_seconds <= 0 or pause_seconds < 0:
+                raise ValueError("held input timing must use a positive hold and non-negative pause")
+            outputs = []
+            return_code = 0
+            commands = []
+            for keysym in keysyms:
+                for verb in ("keydown", "keyup"):
+                    held_command = [executable, verb, keysym]
+                    commands.append(held_command)
+                    completed = subprocess.run(
+                        held_command,
+                        cwd=output,
+                        env=environment,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        encoding="utf-8",
+                        errors="replace",
+                        timeout=float(action.get("timeout_seconds", 30)),
+                        check=False,
+                    )
+                    outputs.append(completed.stdout)
+                    return_code = return_code or completed.returncode
+                    time.sleep(hold_seconds if verb == "keydown" else pause_seconds)
+            return {
+                "type": action_type,
+                "commands": commands,
+                "exit_code": return_code,
+                "output": "".join(outputs),
+                "duration_seconds": round(time.monotonic() - started, 6),
+                "passed": return_code == int(action.get("expected_exit", 0)),
+            }
         elif action_type == "key_down":
             command = [executable, "keydown", str(action["value"])]
         elif action_type == "key_up":
@@ -468,6 +513,10 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             command = [executable, "mousemove", str(action["x"]), str(action["y"])]
         elif action_type == "mouse_click":
             command = [executable, "click", str(action.get("button", 1))]
+        elif action_type == "mouse_down":
+            command = [executable, "mousedown", str(action.get("button", 1))]
+        elif action_type == "mouse_up":
+            command = [executable, "mouseup", str(action.get("button", 1))]
         elif action_type == "focus_window":
             command = [
                 executable,
@@ -1348,6 +1397,10 @@ def run_m5_acceptance(args: argparse.Namespace) -> dict[str, Any]:
 
     original_capture = output / "scenarios" / "original_prison_viewpoint" / "original-prison-start.png"
     original_menu = output / "scenarios" / "original_prison_viewpoint" / "original-main-menu.png"
+    original_loaded = output / "scenarios" / "original_prison_viewpoint" / "original-loaded-save.png"
+    original_cell_loaded = (
+        output / "scenarios" / "original_prison_viewpoint" / "original-prison-cell-loaded.png"
+    )
     openmw_capture = output / "scenarios" / "wall_open" / "before.png"
     original_transition = (
         compare_images(original_menu, original_capture)
@@ -1358,12 +1411,48 @@ def run_m5_acceptance(args: argparse.Namespace) -> dict[str, Any]:
         original_transition.get("ssim", 1.0) < 0.9
         and original_transition.get("changed_ratio", 0.0) > 0.2
     )
+    original_cell_transition = (
+        compare_images(original_loaded, original_cell_loaded)
+        if original_loaded.is_file() and original_cell_loaded.is_file()
+        else {"passed": False, "reason": "missing loaded-save or prison-cell capture"}
+    )
+    original_cell_changed = bool(
+        original_cell_transition.get("ssim", 1.0) < 0.9
+        and original_cell_transition.get("changed_ratio", 0.0) > 0.5
+    )
+    original_viewpoint_stability = (
+        compare_images(original_cell_loaded, original_capture)
+        if original_cell_loaded.is_file() and original_capture.is_file()
+        else {"passed": False, "reason": "missing prison viewpoint captures"}
+    )
+    original_viewpoint_stable = bool(
+        original_viewpoint_stability.get("ssim", 0.0) > 0.97
+        and original_viewpoint_stability.get("phash", 64) <= 2
+    )
     paired_capture = {
-        "passed": original_capture.is_file() and openmw_capture.is_file() and original_scene_changed,
-        "original": inspect_image(original_capture) if original_capture.is_file() else {"passed": False},
+        "passed": (
+            original_capture.is_file()
+            and openmw_capture.is_file()
+            and original_scene_changed
+            and original_cell_changed
+            and original_viewpoint_stable
+        ),
+        # ImperialDungeon01 is a deliberately dark fixed viewpoint.  In
+        # addition to proving that pixels changed, reject the bright animated
+        # main menu: its movement otherwise looks like a scene transition to
+        # ordinary image-difference metrics.
+        "original": (
+            inspect_image(original_capture, maximum_mean=0.35)
+            if original_capture.is_file()
+            else {"passed": False}
+        ),
         "openmw": inspect_image(openmw_capture) if openmw_capture.is_file() else {"passed": False},
         "original_menu_to_scene": original_transition,
         "original_scene_changed": original_scene_changed,
+        "original_loaded_save_to_prison": original_cell_transition,
+        "original_prison_cell_changed": original_cell_changed,
+        "original_prison_viewpoint_stability": original_viewpoint_stability,
+        "original_prison_viewpoint_stable": original_viewpoint_stable,
     }
     paired_capture["passed"] = bool(
         paired_capture["passed"]

@@ -117,6 +117,8 @@ class OblivionCompatTests(unittest.TestCase):
             ({"type": "mouse_move", "x": -4, "y": 12}, ["/bin/true", "mousemove_relative", "--", "-4", "12"]),
             ({"type": "mouse_move_absolute", "x": 330, "y": 568}, ["/bin/true", "mousemove", "330", "568"]),
             ({"type": "mouse_click", "button": 2}, ["/bin/true", "click", "2"]),
+            ({"type": "mouse_down", "button": 2}, ["/bin/true", "mousedown", "2"]),
+            ({"type": "mouse_up", "button": 2}, ["/bin/true", "mouseup", "2"]),
             (
                 {"type": "focus_window", "name": "Oblivion"},
                 ["/bin/true", "search", "--onlyvisible", "--name", "Oblivion", "windowfocus", "--sync", "%@"],
@@ -130,6 +132,29 @@ class OblivionCompatTests(unittest.TestCase):
                     result = MODULE._run_action(action, environment={}, output=Path(temporary))
                     self.assertTrue(result["passed"])
                     self.assertEqual(result["command"], expected)
+
+    def test_held_input_actions_preserve_pollable_key_states(self):
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(
+            MODULE.shutil, "which", return_value="/bin/true"
+        ), mock.patch.object(MODULE.time, "sleep"):
+            key = MODULE._run_action(
+                {"type": "key_held", "value": "grave"}, environment={}, output=Path(temporary)
+            )
+            typed = MODULE._run_action(
+                {"type": "type_held", "value": "a .-_", "hold_seconds": 0.01, "pause_seconds": 0},
+                environment={},
+                output=Path(temporary),
+            )
+            self.assertTrue(key["passed"])
+            self.assertEqual(
+                key["commands"],
+                [["/bin/true", "keydown", "grave"], ["/bin/true", "keyup", "grave"]],
+            )
+            self.assertTrue(typed["passed"])
+            self.assertEqual(
+                [command[-1] for command in typed["commands"][::2]],
+                ["a", "space", "period", "minus", "underscore"],
+            )
 
     def test_tes4_runtime_state_codec_mutates_every_family_and_preserves_other_save_bytes(self):
         state = {
