@@ -251,11 +251,16 @@ bool OMW::Engine::frame(unsigned frameNumber, float frametime)
                 {
                     if (mWorld->getScriptsEnabled())
                     {
-                        // local scripts
-                        executeLocalScripts();
+                        if (mWorld->getGameProfile() == ESM::GameProfile::Oblivion)
+                            mWorld->runOblivionScripts(frametime);
+                        else
+                        {
+                            // local scripts
+                            executeLocalScripts();
 
-                        // global scripts
-                        mScriptManager->getGlobalScripts().run();
+                            // global scripts
+                            mScriptManager->getGlobalScripts().run();
+                        }
                     }
 
                     mWorld->getWorldScene().markCellAsUnchanged();

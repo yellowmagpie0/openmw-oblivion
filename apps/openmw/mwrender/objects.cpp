@@ -3,11 +3,14 @@
 #include <osg/Group>
 #include <osg/UserDataContainer>
 
+#include <components/esm/gameprofile.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
 
+#include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
 
@@ -81,7 +84,8 @@ namespace MWRender
         {
             animationMesh = Misc::ResourceHelpers::correctActorModelPath(
                 VFS::Path::toNormalized(mesh), mResourceSystem->getVFS());
-            if (animationMesh == mesh && Misc::StringUtils::ciEndsWith(animationMesh, ".nif"))
+            if (animationMesh == mesh && Misc::StringUtils::ciEndsWith(animationMesh, ".nif")
+                && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
                 animated = false;
         }
 

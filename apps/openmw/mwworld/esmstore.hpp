@@ -2,14 +2,20 @@
 #define OPENMW_MWWORLD_ESMSTORE_H
 
 #include <filesystem>
+#include <map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
+#include <string_view>
 #include <tuple>
 #include <unordered_map>
 
 #include <components/esm/luascripts.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm3/loadgmst.hpp>
+#include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loadqust.hpp>
+#include <components/esm4/loadscpt.hpp>
 #include <components/misc/tuplemeta.hpp>
 
 #include "store.hpp"
@@ -155,7 +161,8 @@ namespace MWWorld
             Store<ESM4::LevelledItem>,
             Store<ESM4::LevelledNpc>, Store<ESM4::Light>, Store<ESM4::MiscItem>, Store<ESM4::MovableStatic>,
             Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>, Store<ESM4::Reference>,
-            Store<ESM4::Sound>, Store<ESM4::SoundReference>, Store<ESM4::Static>, Store<ESM4::StaticCollection>,
+            Store<ESM4::Script>, Store<ESM4::Quest>, Store<ESM4::DialogInfo>, Store<ESM4::Sound>,
+            Store<ESM4::SoundReference>, Store<ESM4::Static>, Store<ESM4::StaticCollection>,
             Store<ESM4::Terminal>, Store<ESM4::TextureSet>, Store<ESM4::Tree>, Store<ESM4::Weapon>, Store<ESM4::World>>;
 
     private:
@@ -174,6 +181,7 @@ namespace MWWorld
         std::vector<DynamicStore*> mDynamicStores;
 
         ESM::FormKeyIndex mFormKeyIndex;
+        std::map<std::string, ESM::FormKey, std::less<>> mEsm4EditorIds;
 
         uint64_t mDynamicCount;
 
@@ -227,6 +235,7 @@ namespace MWWorld
         void loadESM4(ESM4::Reader& esm, Loading::Listener* listener);
 
         const ESM::FormKeyIndex& getFormKeyIndex() const { return mFormKeyIndex; }
+        std::optional<ESM::FormKey> findEsm4FormKey(std::string_view editorId) const;
 
         template <class T>
         const T* search(const ESM::FormKey& key) const

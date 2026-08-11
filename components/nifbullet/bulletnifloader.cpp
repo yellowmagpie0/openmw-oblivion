@@ -10,6 +10,8 @@
 #include <components/files/conversion.hpp>
 #include <components/misc/convert.hpp>
 #include <components/misc/strings/algorithm.hpp>
+#include <components/misc/strings/lower.hpp>
+#include <components/nif/controller.hpp>
 #include <components/nif/extra.hpp>
 #include <components/nif/nifstream.hpp>
 #include <components/nif/node.hpp>
@@ -36,6 +38,21 @@ namespace NifBullet
 
         mCompoundShape.reset();
         mAvoidCompoundShape.reset();
+        mEmbeddedAnimationNodes.clear();
+
+        for (std::size_t i = 0; i < nif.numRecords(); ++i)
+        {
+            const Nif::Record* record = nif.getRecord(i);
+            if (record == nullptr || record->mRecordType != Nif::RC_NiControllerSequence)
+                continue;
+            const auto* sequence = static_cast<const Nif::NiControllerSequence*>(record);
+            for (const Nif::ControlledBlock& block : sequence->mControlledBlocks)
+            {
+                const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
+                if (!node.empty())
+                    mEmbeddedAnimationNodes.insert(Misc::StringUtils::lowerCase(node));
+            }
+        }
 
         mShape->mFileHash = nif.getHash();
 
@@ -183,6 +200,9 @@ namespace NifBullet
 
     void BulletNifLoader::handleNode(const Nif::NiAVObject& node, const Nif::Parent* parent, HandleNodeArgs args)
     {
+        if (mEmbeddedAnimationNodes.contains(Misc::StringUtils::lowerCase(node.mName)))
+            args.mAnimated = true;
+
         // TODO: allow on-the fly collision switching via toggling this flag
         if (node.mRecordType == Nif::RC_NiCollisionSwitch && !node.collisionActive())
             return;

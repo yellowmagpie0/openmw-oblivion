@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "description": "M6 lossless ObScript corpus lock for the canonical English official Oblivion plus DLC plugin set.",
+  "aggregate": {
+    "unit_count": 11098,
+    "source_count": 11098,
+    "compiled_count": 10720,
+    "source_only_count": 378,
+    "compiled_only_count": 0,
+    "source_payload_bytes": 3236024,
+    "compiled_payload_bytes": 1306043,
+    "reference_count": 29484,
+    "corpus_fingerprint": "fnv1a64:0a9bd43a8a6fc49a",
+    "coverage_entries": 287,
+    "contexts": {
+      "dialogue-result": 5977,
+      "effect": 116,
+      "object": 2645,
+      "quest": 285,
+      "quest-result": 2075
+    },
+    "scda": {
+      "decoded": 10720,
+      "header_size_matches": 10720,
+      "structure_matches": 10665,
+      "instruction_count": 94260
+    }
+  },
+  "plugins": [
+    {
+      "name": "Oblivion.esm",
+      "size": 277504985,
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "units": 9992,
+      "source": 9992,
+      "compiled": 9646,
+      "contexts": { "dialogue-result": 5718, "effect": 97, "object": 2031, "quest": 265, "quest-result": 1881 }
+    },
+    {
+      "name": "DLCShiveringIsles.esp",
+      "size": 85,
+      "sha256": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+      "units": 0,
+      "source": 0,
+      "compiled": 0,
+      "contexts": {}
+    },
+    {
+      "name": "DLCBattlehornCastle.esp",
+      "size": 676894,
+      "sha256": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+      "units": 118,
+      "source": 118,
+      "compiled": 113,
+      "contexts": { "dialogue-result": 62, "effect": 1, "object": 33, "quest": 1, "quest-result": 21 }
+    },
+    {
+      "name": "DLCFrostcrag.esp",
+      "size": 191358,
+      "sha256": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+      "units": 24,
+      "source": 24,
+      "compiled": 24,
+      "contexts": { "object": 19, "quest": 1, "quest-result": 4 }
+    },
+    {
+      "name": "DLCHorseArmor.esp",
+      "size": 97179,
+      "sha256": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+      "units": 34,
+      "source": 34,
+      "compiled": 34,
+      "contexts": { "dialogue-result": 10, "object": 19, "quest": 2, "quest-result": 3 }
+    },
+    {
+      "name": "DLCMehrunesRazor.esp",
+      "size": 728780,
+      "sha256": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+      "units": 37,
+      "source": 37,
+      "compiled": 37,
+      "contexts": { "effect": 5, "object": 31, "quest": 1 }
+    },
+    {
+      "name": "DLCOrrery.esp",
+      "size": 47424,
+      "sha256": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+      "units": 14,
+      "source": 14,
+      "compiled": 14,
+      "contexts": { "dialogue-result": 2, "object": 6, "quest": 1, "quest-result": 5 }
+    },
+    {
+      "name": "DLCSpellTomes.esp",
+      "size": 625246,
+      "sha256": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+      "units": 317,
+      "source": 317,
+      "compiled": 317,
+      "contexts": { "effect": 2, "object": 315 }
+    },
+    {
+      "name": "DLCThievesDen.esp",
+      "size": 233735,
+      "sha256": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+      "units": 54,
+      "source": 54,
+      "compiled": 54,
+      "contexts": { "dialogue-result": 29, "effect": 1, "object": 12, "quest": 1, "quest-result": 11 }
+    },
+    {
+      "name": "DLCVileLair.esp",
+      "size": 257153,
+      "sha256": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+      "units": 13,
+      "source": 13,
+      "compiled": 13,
+      "contexts": { "dialogue-result": 1, "effect": 1, "object": 6, "quest": 1, "quest-result": 4 }
+    },
+    {
+      "name": "Knights.esp",
+      "size": 2211935,
+      "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+      "units": 495,
+      "source": 495,
+      "compiled": 468,
+      "contexts": { "dialogue-result": 155, "effect": 9, "object": 173, "quest": 12, "quest-result": 146 }
+    }
+  ]
+}

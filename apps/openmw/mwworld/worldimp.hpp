@@ -86,11 +86,13 @@ namespace MWWorld
     class WeatherManager;
     class Player;
     class ProjectileManager;
+    class OblivionScriptManager;
 
     /// \brief The game world and its visual representation
 
     class World final : public MWBase::World
     {
+        friend class OblivionScriptManager;
     private:
         Resource::ResourceSystem* mResourceSystem;
 
@@ -107,6 +109,9 @@ namespace MWWorld
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
         std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
         std::uint64_t mNextOblivionDynamicSerial = 1;
+        std::unique_ptr<OblivionScriptManager> mOblivionScriptManager;
+        double mLastOblivionScriptSeconds = 0;
+        bool mOblivionDefaultActivation = false;
 
         std::string mCurrentWorldSpace;
 
@@ -214,7 +219,11 @@ namespace MWWorld
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
 
         // Bounded native interaction surface for the M5 prison slice.
-        void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind);
+        void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});
+        void activateOblivionReferenceDefault(const Ptr& ptr, const Ptr& actor);
+        bool isOblivionDefaultActivation() const { return mOblivionDefaultActivation; }
+        bool dispatchOblivionActivation(const Ptr& ptr, const Ptr& actor);
+        void runOblivionScripts(double secondsPassed);
         bool oblivionPlayerHasItem(const ESM::RefId& id);
 
         void loadData(const Files::Collections& fileCollections, const std::vector<std::string>& contentFiles,

@@ -1,3 +1,5 @@
+#include <components/esm4/records.hpp>
+
 #include "esmstore.hpp"
 
 #include <algorithm>
@@ -19,6 +21,7 @@
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/lua/configuration.hpp>
 #include <components/misc/algorithm.hpp>
+#include <components/misc/strings/lower.hpp>
 
 #include "../mwmechanics/spelllist.hpp"
 
@@ -291,6 +294,8 @@ namespace MWWorld
                         metadata.mKey = stores.mFormKeyIndex.resolveRecordHeader(
                             metadata.mKey, sourceCandidate, metadata.mRecordType);
                         const ESM::FormKey key = metadata.mKey;
+                        if constexpr (requires { value.mFormKey = key; })
+                            value.mFormKey = key;
                         if (key == sourceCandidate)
                         {
                             if constexpr (requires { value.mId = ESM::FormId{}; })
@@ -298,6 +303,12 @@ namespace MWWorld
                                     static_cast<std::int32_t>(reader.getModIndex()) };
                         }
                         stores.mFormKeyIndex.apply(std::move(metadata));
+                        if constexpr (requires { std::string_view(value.mEditorId); })
+                        {
+                            if (!std::string_view(value.mEditorId).empty())
+                                stores.mEsm4EditorIds.insert_or_assign(
+                                    Misc::StringUtils::lowerCase(std::string_view(value.mEditorId)), key);
+                        }
                         if ((reader.hdr().record.flags & ESM4::Rec_Deleted) != 0)
                             store.eraseStatic(key);
                         else
@@ -346,6 +357,17 @@ namespace MWWorld
     }
 
     ESMStore::~ESMStore() = default;
+
+    std::optional<ESM::FormKey> ESMStore::findEsm4FormKey(std::string_view editorId) const
+    {
+        const auto found = mEsm4EditorIds.find(Misc::StringUtils::lowerCase(editorId));
+        if (found == mEsm4EditorIds.end())
+            return std::nullopt;
+        const ESM::FormRecordMetadata* winner = mFormKeyIndex.resolve(found->second);
+        if (winner == nullptr || winner->mDeleted)
+            return std::nullopt;
+        return found->second;
+    }
 
     void ESMStore::clearDynamic()
     {

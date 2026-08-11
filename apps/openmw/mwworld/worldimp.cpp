@@ -117,6 +117,7 @@
 #include "inventorystore.hpp"
 #include "manualref.hpp"
 #include "oblivionprofileservices.hpp"
+#include "oblivionscriptmanager.hpp"
 #include "player.hpp"
 #include "projectilemanager.hpp"
 #include "weather.hpp"
@@ -263,6 +264,9 @@ namespace MWWorld
         mStore.validateRecords(mReaders);
         mStore.movePlayerRecord();
 
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            mOblivionScriptManager = std::make_unique<OblivionScriptManager>(*this, mStore, mContentFiles);
+
         mSwimHeightScale = mStore.get<ESM::GameSetting>().find("fSwimHeightScale")->mValue.getFloat();
     }
 
@@ -301,6 +305,8 @@ namespace MWWorld
 
     void World::startNewGame(bool bypass)
     {
+        if (mOblivionScriptManager)
+            mOblivionScriptManager->clear();
         mGoToJail = false;
         mLevitationEnabled = true;
         mTeleportEnabled = true;
@@ -490,6 +496,9 @@ namespace MWWorld
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
         mNextOblivionDynamicSerial = 1;
+        mLastOblivionScriptSeconds = 0;
+        if (mOblivionScriptManager)
+            mOblivionScriptManager->clear();
 
         fillGlobalVariables();
     }
@@ -634,6 +643,47 @@ namespace MWWorld
                     {
                         reference.mInventory = previous->second->mInventory;
                         reference.mCustomState = previous->second->mCustomState;
+
+                        // Scripted non-looping animations retain their final
+                        // visual pose after playback, but the renderer's live
+                        // controller is rebuilt when a TES4 save is loaded.
+                        // Mirror its persisted queue position into the native
+                        // FormKey-keyed state so that embedded-NIF animations
+                        // restore through the ordinary object path as well.
+                        const auto group = reference.mCustomState.find("obscript.animation_group");
+                        if (group != reference.mCustomState.end())
+                        {
+                            if (const auto* name = std::get_if<std::string>(&group->second))
+                            {
+                                const ESM::AnimationState& animationState
+                                    = ptr.getRefData().getAnimationState();
+                                const auto animation = std::find_if(animationState.mScriptedAnims.begin(),
+                                    animationState.mScriptedAnims.end(), [&](const auto& value) {
+                                        return Misc::StringUtils::ciEqual(value.mGroup, *name);
+                                    });
+                                if (animation != animationState.mScriptedAnims.end())
+                                {
+                                    reference.mCustomState["obscript.animation_progress"]
+                                        = static_cast<double>(animation->mTime);
+                                    reference.mCustomState["obscript.animation_loop_count"]
+                                        = static_cast<std::int64_t>(std::min<std::uint64_t>(animation->mLoopCount,
+                                            std::numeric_limits<std::int64_t>::max()));
+                                    reference.mCustomState["obscript.animation_absolute"] = animation->mAbsolute;
+                                }
+                                else if (const auto playing
+                                    = reference.mCustomState.find("obscript.animation_playing");
+                                    playing != reference.mCustomState.end()
+                                    && std::get_if<bool>(&playing->second) != nullptr
+                                    && *std::get_if<bool>(&playing->second))
+                                {
+                                    // A completed scripted non-looping group
+                                    // stays posed at its stop key even though
+                                    // there is no longer a live playback clock.
+                                    reference.mCustomState["obscript.animation_progress"] = 1.0;
+                                    reference.mCustomState["obscript.animation_playing"] = false;
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -695,6 +745,8 @@ namespace MWWorld
         std::sort(state.mReferences.begin(), state.mReferences.end(), [](const auto& left, const auto& right) {
             return left.mKey < right.mKey;
         });
+        if (mOblivionScriptManager)
+            mOblivionScriptManager->capture(state);
         state.validate();
         return state;
     }
@@ -885,10 +937,84 @@ namespace MWWorld
             if (const auto scale = reference.mCustomState.find("scale"); scale != reference.mCustomState.end())
                 if (const auto* number = std::get_if<double>(&scale->second))
                     ptr.getCellRef().setScale(static_cast<float>(*number));
+
+            const auto animationGroup = reference.mCustomState.find("obscript.animation_group");
+            const auto animationProgress = reference.mCustomState.find("obscript.animation_progress");
+            std::optional<double> progress;
+            if (animationProgress != reference.mCustomState.end())
+            {
+                if (const auto* value = std::get_if<double>(&animationProgress->second))
+                    progress = *value;
+                else
+                    throw std::runtime_error(
+                        "TES4 runtime-state animation value has the wrong type: " + reference.mKey.serialize());
+            }
+            else if (const auto playing = reference.mCustomState.find("obscript.animation_playing");
+                playing != reference.mCustomState.end())
+            {
+                // Migration for M7 development saves that recorded the group
+                // before animation progress became part of native state.
+                if (const auto* value = std::get_if<bool>(&playing->second); value != nullptr && *value)
+                    progress = 1.0;
+            }
+            if (animationGroup != reference.mCustomState.end() && progress)
+            {
+                const auto* group = std::get_if<std::string>(&animationGroup->second);
+                if (group == nullptr || group->empty())
+                    throw std::runtime_error(
+                        "TES4 runtime-state animation group has the wrong type: " + reference.mKey.serialize());
+                ESM::AnimationState::ScriptedAnimation animation;
+                animation.mGroup = *group;
+                animation.mTime = static_cast<float>(std::clamp(*progress, 0.0, 1.0));
+                if (const auto loopCount
+                    = reference.mCustomState.find("obscript.animation_loop_count");
+                    loopCount != reference.mCustomState.end())
+                    if (const auto* value = std::get_if<std::int64_t>(&loopCount->second))
+                        animation.mLoopCount = static_cast<std::uint64_t>(std::max<std::int64_t>(0, *value));
+                if (const auto absolute = reference.mCustomState.find("obscript.animation_absolute");
+                    absolute != reference.mCustomState.end())
+                    if (const auto* value = std::get_if<bool>(&absolute->second))
+                        animation.mAbsolute = *value;
+                ESM::AnimationState& animationState = ptr.getRefData().getAnimationState();
+                animationState.mScriptedAnims.clear();
+                animationState.mScriptedAnims.push_back(std::move(animation));
+            }
         }
         Log(Debug::Info) << "Applied TES4 runtime state: " << state.mGlobals.size() << " globals, "
                          << state.mReferences.size() << " references, next dynamic serial "
                          << state.mNextDynamicSerial;
+        if (mOblivionScriptManager)
+            mOblivionScriptManager->restore(state);
+    }
+
+    void World::runOblivionScripts(double secondsPassed)
+    {
+        if (mGameProfile == ESM::GameProfile::Oblivion && mOblivionScriptManager)
+            mOblivionScriptManager->update(secondsPassed);
+    }
+
+    bool World::dispatchOblivionActivation(const Ptr& ptr, const Ptr& actor)
+    {
+        return mGameProfile == ESM::GameProfile::Oblivion && mOblivionScriptManager
+            && mOblivionScriptManager->dispatchActivation(ptr, actor);
+    }
+
+    void World::activateOblivionReferenceDefault(const Ptr& ptr, const Ptr& actor)
+    {
+        const bool previous = mOblivionDefaultActivation;
+        mOblivionDefaultActivation = true;
+        try
+        {
+            std::unique_ptr<Action> action = ptr.getClass().activate(ptr, actor);
+            mOblivionDefaultActivation = previous;
+            if (action)
+                action->execute(actor, true);
+        }
+        catch (...)
+        {
+            mOblivionDefaultActivation = previous;
+            throw;
+        }
     }
 
     void World::write(ESM::ESMWriter& writer, Loading::Listener& progress) const

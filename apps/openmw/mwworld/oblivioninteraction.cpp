@@ -102,6 +102,8 @@ namespace MWWorld
                     return "read";
                 case OblivionInteractionKind::Container:
                     return "loot";
+                case OblivionInteractionKind::Door:
+                    return "door";
                 case OblivionInteractionKind::Flora:
                     return "harvest";
                 case OblivionInteractionKind::Take:
@@ -126,7 +128,7 @@ namespace MWWorld
         // Keeping the profile API off MWBase::World avoids exposing a temporary
         // M5 interaction vocabulary to unrelated tools and test doubles.
         static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
-            ->interactWithOblivionReference(getTarget(), mKind);
+            ->interactWithOblivionReference(getTarget(), mKind, actor);
     }
 
     bool World::oblivionPlayerHasItem(const ESM::RefId& id)
@@ -144,10 +146,19 @@ namespace MWWorld
             [&](const ESM4::RuntimeInventoryItem& item) { return item.mBase == key && item.mCount > 0; });
     }
 
-    void World::interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind)
+    void World::interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || ptr.isEmpty())
             return;
+
+        if (dispatchOblivionActivation(ptr, actor))
+            return;
+
+        if (kind == OblivionInteractionKind::Door)
+        {
+            activateOblivionReferenceDefault(ptr, actor);
+            return;
+        }
 
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
@@ -232,6 +243,8 @@ namespace MWWorld
                 report("looted");
                 break;
             }
+            case OblivionInteractionKind::Door:
+                break;
             case OblivionInteractionKind::Book:
             {
                 const ESM4::Book* book = ptr.get<ESM4::Book>()->mBase;
@@ -273,42 +286,8 @@ namespace MWWorld
                     if (const auto* value = std::get_if<std::int64_t>(&existing->second))
                         count = *value;
                 state.mCustomState["activation_count"] = count + 1;
-                const std::string editorId(ptr.getCellRef().getEditorId());
-                if (editorId == "CGPrisonSecretWallRef")
-                {
-                    state.mCustomState["opened"] = true;
-                    disable(ptr);
-                    message("The loose prison wall opens");
-                    report("opened");
-                }
-                else if (editorId == "CGPrisonWallSwitchRef")
-                {
-                    bool opened = false;
-                    ptr.getCell()->forEach(
-                        [&](const Ptr& candidate) {
-                            if (candidate.getCellRef().getEditorId() == "CGPrisonSecretWallRef")
-                            {
-                                const ESM::FormKey wallKey = candidate.getCellRef().getFormKey();
-                                const auto wallState = std::find_if(mOblivionRuntimeState->mReferences.begin(),
-                                    mOblivionRuntimeState->mReferences.end(),
-                                    [&](const ESM4::RuntimeReferenceState& value) { return value.mKey == wallKey; });
-                                if (wallState != mOblivionRuntimeState->mReferences.end())
-                                    wallState->mCustomState["opened"] = true;
-                                disable(candidate);
-                                opened = true;
-                                return false;
-                            }
-                            return true;
-                        },
-                        true);
-                    message(opened ? "The prison wall opens" : "The switch clicks");
-                    report(opened ? "opened" : "activated");
-                }
-                else
-                {
-                    message("Activated: " + std::string(ptr.getClass().getName(ptr)));
-                    report("activated");
-                }
+                message("Activated: " + std::string(ptr.getClass().getName(ptr)));
+                report("activated");
                 break;
             }
         }

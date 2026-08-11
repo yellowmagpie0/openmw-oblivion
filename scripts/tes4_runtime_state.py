@@ -19,7 +19,8 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 1
+CURRENT_VERSION = 2
+SUPPORTED_VERSIONS = {1, CURRENT_VERSION}
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
 MAX_PAYLOAD = 256 * 1024 * 1024
@@ -139,6 +140,47 @@ def _write_value(writer: _Writer, value: bool | int | float | str) -> None:
         raise RuntimeStateError(f"Unsupported TES4 runtime-state value {value!r}")
 
 
+def _script_value(reader: _Reader) -> dict[str, Any] | None:
+    kind = reader.unpack("<B")
+    if kind == 0:
+        return None
+    if kind == 1:
+        return {"type": "number", "value": reader.unpack("<q")}
+    if kind == 2:
+        value = reader.unpack("<d")
+        if not math.isfinite(value):
+            raise RuntimeStateError("TES4 runtime-state script value is not finite")
+        return {"type": "number", "value": value}
+    if kind == 3:
+        return {"type": "string", "value": reader.string()}
+    if kind == 4:
+        return {"type": "reference", "value": reader.string()}
+    raise RuntimeStateError(f"Unknown TES4 runtime-state script value type {kind}")
+
+
+def _write_script_value(writer: _Writer, value: dict[str, Any] | None) -> None:
+    if value is None:
+        writer.pack("<B", 0)
+        return
+    kind, item = value.get("type"), value.get("value")
+    if kind == "number" and isinstance(item, int):
+        writer.pack("<B", 1)
+        writer.pack("<q", item)
+    elif kind == "number" and isinstance(item, float):
+        if not math.isfinite(item):
+            raise RuntimeStateError("TES4 runtime-state script value is not finite")
+        writer.pack("<B", 2)
+        writer.pack("<d", item)
+    elif kind == "string":
+        writer.pack("<B", 3)
+        writer.string(str(item))
+    elif kind == "reference":
+        writer.pack("<B", 4)
+        writer.string(str(item))
+    else:
+        raise RuntimeStateError(f"Unsupported TES4 runtime-state script value {value!r}")
+
+
 def _inventory(reader: _Reader) -> list[dict[str, Any]]:
     return [{"base": reader.string(), "count": reader.unpack("<i")} for _ in range(reader.count())]
 
@@ -156,7 +198,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         raise RuntimeStateError("Invalid TES4 runtime-state magic")
     version = reader.unpack("<I")
     profile = reader.unpack("<B")
-    if version != CURRENT_VERSION:
+    if version not in SUPPORTED_VERSIONS:
         raise RuntimeStateError(f"Unsupported TES4 runtime-state version {version}")
     if profile != 2:
         raise RuntimeStateError("TES4 runtime state requires the Oblivion game profile")
@@ -227,17 +269,54 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         reference["custom_state"] = custom
         references.append(reference)
     result["references"] = references
+    if version >= 2:
+        result["script_event_sequence"] = reader.unpack("<Q")
+        result["script_instances"] = []
+        result["quests"] = []
+        seen_scripts: set[tuple[str, str]] = set()
+        for _ in range(reader.count()):
+            unit, context = reader.string(), reader.string()
+            identity = (unit, context)
+            if identity in seen_scripts:
+                raise RuntimeStateError(f"Duplicate TES4 script instance {unit} at {context}")
+            seen_scripts.add(identity)
+            on_load = reader.unpack("<B")
+            if on_load > 1:
+                raise RuntimeStateError("Invalid TES4 runtime-state OnLoad flag")
+            result["script_instances"].append({
+                "unit": unit,
+                "context": context,
+                "on_load_fired": bool(on_load),
+                "locals": [_script_value(reader) for _ in range(reader.count())],
+            })
+        seen_quests: set[str] = set()
+        for _ in range(reader.count()):
+            quest = reader.string()
+            if quest in seen_quests:
+                raise RuntimeStateError(f"Duplicate TES4 quest {quest}")
+            seen_quests.add(quest)
+            stage = reader.unpack("<i")
+            running = reader.unpack("<B")
+            if running > 1:
+                raise RuntimeStateError("Invalid TES4 runtime-state quest running flag")
+            completed = [reader.unpack("<i") for _ in range(reader.count())]
+            if completed != sorted(set(completed)):
+                raise RuntimeStateError("TES4 completed quest stages are not sorted and unique")
+            result["quests"].append({
+                "quest": quest, "stage": stage, "running": bool(running), "completed_stages": completed,
+            })
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
     return result
 
 
 def encode_payload(state: dict[str, Any]) -> bytes:
-    if state.get("schema_version") != CURRENT_VERSION or state.get("profile") != "oblivion":
+    version = state.get("schema_version")
+    if version not in SUPPORTED_VERSIONS or state.get("profile") != "oblivion":
         raise RuntimeStateError("Unsupported TES4 runtime-state schema or profile")
     writer = _Writer()
     writer.add(MAGIC)
-    writer.pack("<I", CURRENT_VERSION)
+    writer.pack("<I", version)
     writer.pack("<B", 2)
     writer.pack("<Q", int(state["next_dynamic_serial"]))
     writer.pack("<I", len(state["content"]))
@@ -284,6 +363,27 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for name in sorted(custom):
             writer.string(name)
             _write_value(writer, custom[name])
+    if version >= 2:
+        writer.pack("<Q", int(state.get("script_event_sequence", 0)))
+        scripts = sorted(state.get("script_instances", []), key=lambda item: (item["unit"], item["context"]))
+        writer.pack("<I", len(scripts))
+        for script in scripts:
+            writer.string(str(script["unit"]))
+            writer.string(str(script["context"]))
+            writer.pack("<B", int(bool(script.get("on_load_fired", False))))
+            writer.pack("<I", len(script["locals"]))
+            for value in script["locals"]:
+                _write_script_value(writer, value)
+        quests = sorted(state.get("quests", []), key=lambda item: item["quest"])
+        writer.pack("<I", len(quests))
+        for quest in quests:
+            writer.string(str(quest["quest"]))
+            writer.pack("<i", int(quest["stage"]))
+            writer.pack("<B", int(bool(quest["running"])))
+            completed = sorted(set(int(value) for value in quest["completed_stages"]))
+            writer.pack("<I", len(completed))
+            for stage in completed:
+                writer.pack("<i", stage)
     return writer.finish()
 
 
@@ -319,7 +419,7 @@ def _find_runtime_record(data: bytes) -> tuple[int, int, int, bytes]:
                 else:
                     raise RuntimeStateError(f"Unknown T4ST subrecord {sub_name!r}")
                 sub = sub_end
-            if version != CURRENT_VERSION:
+            if version not in SUPPORTED_VERSIONS:
                 raise RuntimeStateError(f"Unsupported T4ST record version {version}")
             return offset, end, size, bytes(payload)
         offset = end
@@ -333,6 +433,11 @@ def load_save(path: Path) -> dict[str, Any]:
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
+    state = copy.deepcopy(state)
+    state["schema_version"] = CURRENT_VERSION
+    state.setdefault("script_event_sequence", 0)
+    state.setdefault("script_instances", [])
+    state.setdefault("quests", [])
     payload = encode_payload(state)
     record_body = struct.pack("<4sI", b"VERS", 4) + struct.pack("<I", CURRENT_VERSION)
     for offset in range(0, len(payload), CHUNK_SIZE):
@@ -347,6 +452,10 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     """Apply deterministic changes spanning every M4 state family."""
 
     result = copy.deepcopy(state)
+    result["schema_version"] = CURRENT_VERSION
+    result.setdefault("script_event_sequence", 0)
+    result.setdefault("script_instances", [])
+    result.setdefault("quests", [])
     result["next_dynamic_serial"] += 41
     # Oblivion.esm declares GameHour as an integer GLOB even though OpenMW's time facade accepts a float, so use an
     # exactly representable value until the profile owns a fractional-hour adapter.

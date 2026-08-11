@@ -1,0 +1,13 @@
+# Real, shipped scripts spanning all M7 execution contexts. Times leave a
+# visual before/after window around the tutorial wall before remote cells are
+# loaded for the wider state matrix.
+at 8 activate CGPrisonWallSwitchRef RenoteRef
+at 11 setstage DLCBattlehornCastle 30
+at 12 setstage DLCBattlehornCastle 40
+at 13 dialogue content:dlcbattlehorncastle.esp:00b621 0 Player
+at 14 effect ND06AltarSpellScript ScriptEffectStart Player Player
+at 15 effect SE32DamageMagickaScript ScriptEffectStart Player Player
+at 16 effect DL9HeartConsumptionSCRIPT ScriptEffectStart Player Player
+at 17 activate BattlehornSecretDoorLever01REF Player
+at 18 event BattlehornSecretDoorLever01REF GameMode Player
+at 19 setstage DLCBattlehornCastle 60

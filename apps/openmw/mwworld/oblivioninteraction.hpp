@@ -10,6 +10,7 @@ namespace MWWorld
         Activator,
         Book,
         Container,
+        Door,
         Flora,
         Take,
     };

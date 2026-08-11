@@ -22,7 +22,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 1;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 2;
 
     struct RuntimeContentIdentity
     {
@@ -80,6 +80,30 @@ namespace ESM4
         friend bool operator==(const RuntimePlayerState&, const RuntimePlayerState&) = default;
     };
 
+    // Script locals use a distinct value type so reference variables remain
+    // distinguishable from strings across a save/reload boundary.
+    using RuntimeScriptValue = std::variant<std::monostate, std::int64_t, double, std::string, ESM::FormKey>;
+
+    struct RuntimeScriptInstance
+    {
+        std::string mUnit;
+        ESM::FormKey mContext;
+        std::vector<RuntimeScriptValue> mLocals;
+        bool mOnLoadFired = false;
+
+        friend bool operator==(const RuntimeScriptInstance&, const RuntimeScriptInstance&) = default;
+    };
+
+    struct RuntimeQuestState
+    {
+        ESM::FormKey mQuest;
+        std::int32_t mStage = 0;
+        bool mRunning = false;
+        std::vector<std::int32_t> mCompletedStages;
+
+        friend bool operator==(const RuntimeQuestState&, const RuntimeQuestState&) = default;
+    };
+
     // Versioned, load-order-independent state owned by the Oblivion profile.
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
@@ -95,6 +119,9 @@ namespace ESM4
         RuntimePlayerState mPlayer;
         std::map<ESM::FormKey, RuntimeValue> mGlobals;
         std::vector<RuntimeReferenceState> mReferences;
+        std::uint64_t mScriptEventSequence = 0;
+        std::vector<RuntimeScriptInstance> mScriptInstances;
+        std::vector<RuntimeQuestState> mQuests;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

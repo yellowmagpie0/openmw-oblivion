@@ -33,6 +33,7 @@
 #include "script.hpp"
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 
 namespace ESM4
 {
@@ -42,6 +43,7 @@ namespace ESM4
     struct Script
     {
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey;
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;

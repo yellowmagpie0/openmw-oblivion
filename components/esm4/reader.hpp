@@ -430,6 +430,12 @@ namespace ESM4
         bool getZString(std::string& str) { return getStringImpl(str, mCtx.subRecordHeader.dataSize, *mStream, true); }
         bool getString(std::string& str) { return getStringImpl(str, mCtx.subRecordHeader.dataSize, *mStream); }
 
+        // Reads a string subrecord twice conceptually but only consumes it once: rawData
+        // retains the exact on-disk payload while decoded receives the configured UTF-8
+        // representation. Script sources need both views because SCTX is compatibility
+        // content as well as compiler input.
+        bool getRawString(std::vector<std::uint8_t>& rawData, std::string& decoded);
+
         bool getZString(ESM::Path& path)
         {
             std::string value;

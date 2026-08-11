@@ -23,6 +23,7 @@
 
 #include "arguments.hpp"
 #include "labels.hpp"
+#include "obscript.hpp"
 #include "record.hpp"
 #include "tes4.hpp"
 
@@ -55,6 +56,7 @@ Allowed modes:
   clone  Clones the input file to the output file.
   comp   Compares the given files.
   graph  Audits a TES4 FormKey graph: graph report.json plugin [plugin...].
+  obscript  Audits the TES4 ObScript corpus: obscript report.json plugin [plugin...].
 
 Allowed options)");
         auto addOption = desc.add_options();
@@ -138,7 +140,8 @@ Allowed options)");
             info.name = variables["name"].as<std::string>();
 
         info.mode = variables["mode"].as<std::string>();
-        if (!(info.mode == "dump" || info.mode == "clone" || info.mode == "comp" || info.mode == "graph"))
+        if (!(info.mode == "dump" || info.mode == "clone" || info.mode == "comp" || info.mode == "graph"
+                || info.mode == "obscript"))
         {
             std::cout << "\nERROR: invalid mode \"" << info.mode << "\"\n\n" << desc << finalText << std::endl;
             return false;
@@ -160,11 +163,12 @@ Allowed options)");
               }*/
 
         const auto& inputFiles = variables["input-file"].as<Files::MaybeQuotedPathContainer>();
-        if (info.mode == "graph")
+        if (info.mode == "graph" || info.mode == "obscript")
         {
             if (inputFiles.size() < 2)
             {
-                std::cout << "\nERROR: graph mode requires a report path and at least one TES4 plugin\n\n";
+                std::cout << "\nERROR: " << info.mode
+                          << " mode requires a report path and at least one TES4 plugin\n\n";
                 return false;
             }
             info.outname = inputFiles.front();
@@ -228,6 +232,8 @@ int main(int argc, char** argv)
             return comp(info);
         else if (info.mode == "graph")
             return graphTes4(info);
+        else if (info.mode == "obscript")
+            return obscriptTes4(info);
         else
         {
             std::cout << "Invalid or no mode specified, dying horribly. Have a nice day." << std::endl;

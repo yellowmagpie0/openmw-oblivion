@@ -198,6 +198,56 @@ namespace ESM4
             }
         }
 
+        void writeScriptValue(BinaryWriter& writer, const RuntimeScriptValue& value)
+        {
+            std::visit(
+                [&writer](const auto& item) {
+                    using T = std::decay_t<decltype(item)>;
+                    if constexpr (std::is_same_v<T, std::monostate>)
+                        writer.integer<std::uint8_t>(0);
+                    else if constexpr (std::is_same_v<T, std::int64_t>)
+                    {
+                        writer.integer<std::uint8_t>(1);
+                        writer.integer(item);
+                    }
+                    else if constexpr (std::is_same_v<T, double>)
+                    {
+                        writer.integer<std::uint8_t>(2);
+                        writer.floating(item);
+                    }
+                    else if constexpr (std::is_same_v<T, std::string>)
+                    {
+                        writer.integer<std::uint8_t>(3);
+                        writer.string(item);
+                    }
+                    else
+                    {
+                        writer.integer<std::uint8_t>(4);
+                        writeKey(writer, item);
+                    }
+                },
+                value);
+        }
+
+        RuntimeScriptValue readScriptValue(BinaryReader& reader)
+        {
+            switch (reader.integer<std::uint8_t>())
+            {
+                case 0:
+                    return std::monostate{};
+                case 1:
+                    return reader.integer<std::int64_t>();
+                case 2:
+                    return reader.float64();
+                case 3:
+                    return reader.string();
+                case 4:
+                    return readKey(reader);
+                default:
+                    throw std::runtime_error("Unknown TES4 runtime-state script value type");
+            }
+        }
+
         void writeInventory(BinaryWriter& writer, const std::vector<RuntimeInventoryItem>& inventory)
         {
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(inventory.size()));
@@ -232,6 +282,14 @@ namespace ESM4
         {
             if (const double* number = std::get_if<double>(&value); number != nullptr && !std::isfinite(*number))
                 throw std::runtime_error("TES4 runtime-state value is not finite");
+        }
+
+        void validateScriptValue(const RuntimeScriptValue& value)
+        {
+            if (const double* number = std::get_if<double>(&value); number != nullptr && !std::isfinite(*number))
+                throw std::runtime_error("TES4 runtime-state script value is not finite");
+            if (const ESM::FormKey* key = std::get_if<ESM::FormKey>(&value); key != nullptr && key->isNull())
+                throw std::runtime_error("TES4 runtime-state script reference value is null");
         }
 
         std::string escapeJson(std::string_view value)
@@ -281,6 +339,24 @@ namespace ESM4
                 value);
         }
 
+        void writeJsonScriptValue(std::ostream& stream, const RuntimeScriptValue& value)
+        {
+            std::visit(
+                [&stream](const auto& item) {
+                    using T = std::decay_t<decltype(item)>;
+                    if constexpr (std::is_same_v<T, std::monostate>)
+                        stream << "null";
+                    else if constexpr (std::is_same_v<T, std::string>)
+                        stream << "{\"type\":\"string\",\"value\":\"" << escapeJson(item) << "\"}";
+                    else if constexpr (std::is_same_v<T, ESM::FormKey>)
+                        stream << "{\"type\":\"reference\",\"value\":\"" << escapeJson(item.serialize())
+                               << "\"}";
+                    else
+                        stream << "{\"type\":\"number\",\"value\":" << std::setprecision(17) << item << '}';
+                },
+                value);
+        }
+
         void writeJsonPosition(std::ostream& stream, const ESM::Position& position)
         {
             stream << '[';
@@ -294,7 +370,7 @@ namespace ESM4
 
     void RuntimeState::validate() const
     {
-        if (mVersion != CurrentRuntimeStateVersion)
+        if (mVersion < 1 || mVersion > CurrentRuntimeStateVersion)
             throw std::runtime_error("Unsupported TES4 runtime-state version " + std::to_string(mVersion));
         if (mProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state requires the Oblivion game profile");
@@ -311,6 +387,10 @@ namespace ESM4
         checkSize(mPlayer.mInventory.size(), "player inventory");
         checkSize(mGlobals.size(), "global list");
         checkSize(mReferences.size(), "reference list");
+        checkSize(mScriptInstances.size(), "script instance list");
+        checkSize(mQuests.size(), "quest list");
+        if (mVersion < 2 && (mScriptEventSequence != 0 || !mScriptInstances.empty() || !mQuests.empty()))
+            throw std::runtime_error("TES4 runtime-state version 1 cannot contain ObScript state");
 
         if (mPlayer.mReference.isNull() || mPlayer.mCell.isNull())
             throw std::runtime_error("TES4 runtime-state player has a null required FormKey");
@@ -363,6 +443,30 @@ namespace ESM4
                     throw std::runtime_error("TES4 runtime-state custom-state key is empty");
                 validateValue(value);
             }
+        }
+
+        std::set<std::pair<std::string, ESM::FormKey>> scriptKeys;
+        for (const RuntimeScriptInstance& script : mScriptInstances)
+        {
+            if (script.mUnit.empty() || script.mContext.isNull())
+                throw std::runtime_error("TES4 runtime-state script instance has a null identity");
+            if (!scriptKeys.emplace(script.mUnit, script.mContext).second)
+                throw std::runtime_error("Duplicate TES4 runtime-state script instance: " + script.mUnit);
+            checkSize(script.mLocals.size(), "script local list");
+            for (const RuntimeScriptValue& value : script.mLocals)
+                validateScriptValue(value);
+        }
+
+        std::set<ESM::FormKey> questKeys;
+        for (const RuntimeQuestState& quest : mQuests)
+        {
+            if (quest.mQuest.isNull() || !questKeys.insert(quest.mQuest).second)
+                throw std::runtime_error("Invalid or duplicate TES4 runtime-state quest");
+            checkSize(quest.mCompletedStages.size(), "completed quest stage list");
+            if (!std::is_sorted(quest.mCompletedStages.begin(), quest.mCompletedStages.end())
+                || std::adjacent_find(quest.mCompletedStages.begin(), quest.mCompletedStages.end())
+                    != quest.mCompletedStages.end())
+                throw std::runtime_error("TES4 runtime-state completed quest stages are not sorted and unique");
         }
     }
 
@@ -425,6 +529,31 @@ namespace ESM4
             {
                 writer.string(name);
                 writeValue(writer, value);
+            }
+        }
+
+        if (mVersion >= 2)
+        {
+            writer.integer(mScriptEventSequence);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mScriptInstances.size()));
+            for (const RuntimeScriptInstance& script : mScriptInstances)
+            {
+                writer.string(script.mUnit);
+                writeKey(writer, script.mContext);
+                writer.integer<std::uint8_t>(script.mOnLoadFired ? 1 : 0);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(script.mLocals.size()));
+                for (const RuntimeScriptValue& value : script.mLocals)
+                    writeScriptValue(writer, value);
+            }
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mQuests.size()));
+            for (const RuntimeQuestState& quest : mQuests)
+            {
+                writeKey(writer, quest.mQuest);
+                writer.integer(quest.mStage);
+                writer.integer<std::uint8_t>(quest.mRunning ? 1 : 0);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(quest.mCompletedStages.size()));
+                for (const std::int32_t stage : quest.mCompletedStages)
+                    writer.integer(stage);
             }
         }
 
@@ -513,6 +642,45 @@ namespace ESM4
                     throw std::runtime_error("Duplicate TES4 runtime-state custom-state key");
             }
             result.mReferences.push_back(std::move(reference));
+        }
+
+        if (result.mVersion >= 2)
+        {
+            result.mScriptEventSequence = reader.integer<std::uint64_t>();
+            const std::uint32_t scriptCount = reader.count();
+            result.mScriptInstances.reserve(scriptCount);
+            for (std::uint32_t i = 0; i < scriptCount; ++i)
+            {
+                RuntimeScriptInstance script;
+                script.mUnit = reader.string();
+                script.mContext = readKey(reader);
+                const std::uint8_t onLoad = reader.integer<std::uint8_t>();
+                if (onLoad > 1)
+                    throw std::runtime_error("Invalid TES4 runtime-state OnLoad flag");
+                script.mOnLoadFired = onLoad != 0;
+                const std::uint32_t localCount = reader.count();
+                script.mLocals.reserve(localCount);
+                for (std::uint32_t j = 0; j < localCount; ++j)
+                    script.mLocals.push_back(readScriptValue(reader));
+                result.mScriptInstances.push_back(std::move(script));
+            }
+            const std::uint32_t questCount = reader.count();
+            result.mQuests.reserve(questCount);
+            for (std::uint32_t i = 0; i < questCount; ++i)
+            {
+                RuntimeQuestState quest;
+                quest.mQuest = readKey(reader);
+                quest.mStage = reader.integer<std::int32_t>();
+                const std::uint8_t running = reader.integer<std::uint8_t>();
+                if (running > 1)
+                    throw std::runtime_error("Invalid TES4 runtime-state quest running flag");
+                quest.mRunning = running != 0;
+                const std::uint32_t completedCount = reader.count();
+                quest.mCompletedStages.reserve(completedCount);
+                for (std::uint32_t j = 0; j < completedCount; ++j)
+                    quest.mCompletedStages.push_back(reader.integer<std::int32_t>());
+                result.mQuests.push_back(std::move(quest));
+            }
         }
 
         if (!reader.eof())
@@ -663,6 +831,36 @@ namespace ESM4
                 writeJsonValue(stream, value);
             }
             stream << "}}";
+        }
+        stream << "],\"script_event_sequence\":" << mScriptEventSequence << ",\"script_instances\":[";
+        for (std::size_t i = 0; i < mScriptInstances.size(); ++i)
+        {
+            const RuntimeScriptInstance& script = mScriptInstances[i];
+            if (i)
+                stream << ',';
+            stream << "{\"unit\":\"" << escapeJson(script.mUnit) << "\",\"context\":\""
+                   << escapeJson(script.mContext.serialize()) << "\",\"on_load_fired\":"
+                   << (script.mOnLoadFired ? "true" : "false") << ",\"locals\":[";
+            for (std::size_t j = 0; j < script.mLocals.size(); ++j)
+            {
+                if (j)
+                    stream << ',';
+                writeJsonScriptValue(stream, script.mLocals[j]);
+            }
+            stream << "]}";
+        }
+        stream << "],\"quests\":[";
+        for (std::size_t i = 0; i < mQuests.size(); ++i)
+        {
+            const RuntimeQuestState& quest = mQuests[i];
+            if (i)
+                stream << ',';
+            stream << "{\"quest\":\"" << escapeJson(quest.mQuest.serialize()) << "\",\"stage\":"
+                   << quest.mStage << ",\"running\":" << (quest.mRunning ? "true" : "false")
+                   << ",\"completed_stages\":[";
+            for (std::size_t j = 0; j < quest.mCompletedStages.size(); ++j)
+                stream << (j ? "," : "") << quest.mCompletedStages[j];
+            stream << "]}";
         }
         stream << "]}";
         return stream.str();

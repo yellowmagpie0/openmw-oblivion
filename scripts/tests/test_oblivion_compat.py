@@ -18,9 +18,81 @@ SPEC = importlib.util.spec_from_file_location("oblivion_compat", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 SPEC.loader.exec_module(MODULE)
+REFERENCE_SCRIPT = SOURCE / "scripts" / "obscript_reference.py"
+REFERENCE_SPEC = importlib.util.spec_from_file_location("obscript_reference", REFERENCE_SCRIPT)
+REFERENCE = importlib.util.module_from_spec(REFERENCE_SPEC)
+assert REFERENCE_SPEC.loader is not None
+sys.modules[REFERENCE_SPEC.name] = REFERENCE
+REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_independent_obscript_frontend_is_whitespace_stable(self):
+        compact = (
+            "scn Test\nshort count\nbegin GameMode\nset count to 1 + 2 * 3\n"
+            "if GetDisabled == 0\nEnable\nendif\nend\n"
+        )
+        spaced = (
+            "\r\nscn Test ; comment\r\n short count\r\nbegin GameMode\r\n"
+            "set count to (1 + (2 * 3))\r\nif GetDisabled==0\r\n Enable\r\nendif\r\nend\r\n"
+        )
+        first = REFERENCE.Parser(REFERENCE.tokenize(compact)).parse()
+        second = REFERENCE.Parser(REFERENCE.tokenize(spaced)).parse()
+        self.assertEqual(REFERENCE.canonical_script(first), REFERENCE.canonical_script(second))
+        self.assertEqual(REFERENCE.fingerprint(REFERENCE.canonical_script(first)), "fnv1a64:19eaf376f5f36ea7")
+        unit_id = "content:memory.esm:000001@memory.esm/object/unit=0"
+        first_ir = REFERENCE.canonical_program(REFERENCE.Emitter(unit_id, first).emit())
+        second_ir = REFERENCE.canonical_program(REFERENCE.Emitter(unit_id, second).emit())
+        self.assertEqual(first_ir, second_ir)
+        self.assertEqual(REFERENCE.fingerprint(first_ir), "fnv1a64:94e1c309fb0c1d26")
+
+    def test_m6_validator_rejects_duplicate_unit_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            data = Path(temporary)
+            plugins = []
+            for name in MODULE.OFFICIAL_PLUGIN_ORDER:
+                path = data / name
+                path.write_bytes(name.encode("ascii"))
+                plugins.append(
+                    {
+                        "name": name,
+                        "size": path.stat().st_size,
+                        "sha256": MODULE.sha256(path),
+                        "units": 0,
+                        "source": 0,
+                        "compiled": 0,
+                        "contexts": {},
+                    }
+                )
+            aggregate = {
+                "unit_count": 0,
+                "source_count": 0,
+                "compiled_count": 0,
+                "source_only_count": 0,
+                "compiled_only_count": 0,
+                "source_payload_bytes": 0,
+                "compiled_payload_bytes": 0,
+                "reference_count": 0,
+                "corpus_fingerprint": "fnv1a64:test",
+                "coverage_entries": 0,
+                "contexts": {},
+                "scda": {"decoded": 0, "header_size_matches": 0, "structure_matches": 0,
+                         "instruction_count": 0},
+            }
+            report = dict(aggregate)
+            report.update({"frontend_failures": 0, "cache_entries": 0, "coverage": [], "units": [],
+                           "scda": aggregate["scda"]})
+            lock = {"aggregate": aggregate, "plugins": plugins}
+            self.assertTrue(MODULE.validate_m6_report(report, lock, data)["passed"])
+            duplicate = {
+                "id": "duplicate", "plugin": "Oblivion.esm", "context": "object",
+                "source": "", "source_payload_fingerprint": "x", "source_fingerprint": "x",
+                "compiled_payload_fingerprint": None, "ast_fingerprint": "a", "program_fingerprint": "p",
+                "reference_fingerprint": "r", "cache_stable": True, "diagnostics": [],
+            }
+            report["units"] = [duplicate, dict(duplicate)]
+            self.assertFalse(MODULE.validate_m6_report(report, lock, data)["passed"])
+
     def test_log_checker_reports_unallowed_errors(self):
         result = MODULE.check_log_text("ok\nError: missing thing\nstill running\n")
         self.assertFalse(result["passed"])

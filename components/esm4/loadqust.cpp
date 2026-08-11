@@ -27,6 +27,7 @@
 #include "loadqust.hpp"
 
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 
 #include "reader.hpp"
@@ -35,7 +36,28 @@
 void ESM4::Quest::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
+
+    ScriptDefinition currentScript;
+    bool scriptStarted = false;
+    std::optional<std::uint16_t> currentStage;
+    std::optional<std::uint32_t> currentEntry;
+    std::uint32_t nextEntry = 0;
+    const auto finishScript = [&]() {
+        if (scriptStarted)
+            mResultScripts.push_back(std::move(currentScript));
+        currentScript = {};
+        scriptStarted = false;
+    };
+    const auto startScript = [&]() {
+        if (!scriptStarted)
+        {
+            currentScript.stage = currentStage;
+            currentScript.stageEntry = currentEntry;
+            scriptStarted = true;
+        }
+    };
 
     while (reader.getSubRecordHeader())
     {
@@ -98,27 +120,100 @@ void ESM4::Quest::load(ESM4::Reader& reader)
                 break;
             }
             case ESM::fourCC("SCHR"):
-                reader.get(mScript.scriptHeader);
+                if (scriptStarted)
+                    finishScript();
+                startScript();
+                reader.get(currentScript.scriptHeader);
+                currentScript.hasHeader = true;
                 break;
             case ESM::fourCC("SCDA"):
-                reader.skipSubRecordData();
-                break; // compiled script data
+            {
+                if (currentScript.compiledData.has_value())
+                    finishScript();
+                startScript();
+                std::vector<std::uint8_t> data(subHdr.dataSize);
+                if (!data.empty() && !reader.get(data.data(), data.size()))
+                    throw std::runtime_error("ESM4::QUST::load - Truncated SCDA payload");
+                currentScript.compiledData = std::move(data);
+                break;
+            }
             case ESM::fourCC("SCTX"):
-                reader.getString(mScript.scriptSource);
+            {
+                if (currentScript.sourceData.has_value())
+                    finishScript();
+                startScript();
+                std::vector<std::uint8_t> raw;
+                if (!reader.getRawString(raw, currentScript.scriptSource))
+                    throw std::runtime_error("ESM4::QUST::load - Truncated SCTX payload");
+                currentScript.sourceData = std::move(raw);
                 break;
+            }
             case ESM::fourCC("SCRO"):
-                reader.getFormId(mScript.globReference);
+            {
+                startScript();
+                ESM::FormKey key;
+                reader.getFormKey(key);
+                currentScript.globalReferences.push_back(std::move(key));
                 break;
+            }
             case ESM::fourCC("INDX"):
+            {
+                finishScript();
+                std::uint32_t value = 0;
+                if (subHdr.dataSize == sizeof(std::uint16_t))
+                {
+                    std::uint16_t shortValue = 0;
+                    reader.get(shortValue);
+                    value = shortValue;
+                }
+                else if (subHdr.dataSize == sizeof(std::uint32_t))
+                    reader.get(value);
+                else
+                    throw std::runtime_error("ESM4::QUST::load - Invalid INDX payload size");
+                if (value > std::numeric_limits<std::uint16_t>::max())
+                    throw std::runtime_error("ESM4::QUST::load - Stage index exceeds TES4 range");
+                currentStage = static_cast<std::uint16_t>(value);
+                currentEntry.reset();
+                nextEntry = 0;
+                break;
+            }
             case ESM::fourCC("QSDT"):
+                finishScript();
+                currentEntry = nextEntry++;
+                reader.skipSubRecordData();
+                break;
+            case ESM::fourCC("SLSD"):
+            {
+                startScript();
+                ScriptLocalVariableData localVar{};
+                reader.get(localVar.index);
+                reader.get(localVar.unknown1);
+                reader.get(localVar.unknown2);
+                reader.get(localVar.unknown3);
+                reader.get(localVar.type);
+                reader.get(localVar.unknown4);
+                currentScript.localVarData.push_back(std::move(localVar));
+                break;
+            }
+            case ESM::fourCC("SCVR"):
+                if (!currentScript.localVarData.empty())
+                    reader.getZString(currentScript.localVarData.back().variableName);
+                else
+                    reader.skipSubRecordData();
+                break;
+            case ESM::fourCC("SCRV"):
+            {
+                startScript();
+                std::uint32_t index = 0;
+                reader.get(index);
+                currentScript.localRefVarIndex.push_back(index);
+                break;
+            }
             case ESM::fourCC("CNAM"):
             case ESM::fourCC("QSTA"):
             case ESM::fourCC("NNAM"): // FO3
             case ESM::fourCC("QOBJ"): // FO3
             case ESM::fourCC("NAM0"): // FO3
-            case ESM::fourCC("SLSD"): // FO3
-            case ESM::fourCC("SCVR"): // FO3
-            case ESM::fourCC("SCRV"): // FO3
             case ESM::fourCC("ANAM"): // TES5
             case ESM::fourCC("DNAM"): // TES5
             case ESM::fourCC("ENAM"): // TES5
@@ -180,6 +275,7 @@ void ESM4::Quest::load(ESM4::Reader& reader)
                 throw std::runtime_error("ESM4::QUST::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
     }
+    finishScript();
     // if (mEditorId == "DAConversations")
     // std::cout << mEditorId << std::endl;
 }

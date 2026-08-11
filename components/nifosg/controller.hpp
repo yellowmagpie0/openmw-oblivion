@@ -240,6 +240,7 @@ namespace NifOsg
         KeyframeController();
         KeyframeController(const KeyframeController& copy, const osg::CopyOp& copyop);
         KeyframeController(const Nif::NiKeyframeController* keyctrl);
+        KeyframeController(const Nif::NiTransformInterpolator* interpolator);
 
         META_Object(NifOsg, KeyframeController)
 

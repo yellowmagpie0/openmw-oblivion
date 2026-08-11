@@ -33,6 +33,7 @@
 #include "script.hpp" // TargetCondition
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 
 namespace ESM4
 {
@@ -56,6 +57,7 @@ namespace ESM4
     struct DialogInfo
     {
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey;
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId; // FIXME: no such record for INFO, but keep here to avoid extra work for now
@@ -75,7 +77,7 @@ namespace ESM4
         TargetCondition mTargetCondition;
         ESM::FormId mParam3; // TES5 only
 
-        ScriptDefinition mScript; // FIXME: ignoring the second one after the NEXT sub-record
+        std::vector<ScriptDefinition> mResultScripts;
 
         void load(ESM4::Reader& reader);
         // void save(ESM4::Writer& writer) const;

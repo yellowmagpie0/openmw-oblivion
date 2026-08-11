@@ -76,16 +76,34 @@ Every milestone will:
 
 ### ObScript
 
-- Transpile Oblivion's ObScript into the existing OpenMW Lua runtime through a
-  data-driven command registry.
-- Incorporate or independently reproduce the current upstream lexer/parser
-  work, but validate it against all locally installed Oblivion and DLC scripts:
-  <https://gitlab.com/OpenMW/openmw/-/merge_requests/5444>.
-- Give object, global, quest, magic-effect, and dialogue-result scripts explicit
-  execution contexts and persistent local-variable storage.
+- Treat every source (`SCTX`) and compiled (`SCDA`) script payload as lossless
+  content. The corpus must include standalone `SCPT` records plus every
+  embedded `INFO` dialogue result, `QUST` stage/result, and effect-script unit;
+  no repeated script payload may be overwritten, flattened, or conflated.
+- Compile ObScript source through a dedicated lexer, parser, semantic model,
+  and deterministic native `ObScript::Program` IR. Execute that IR in a
+  synchronous main-thread ObScript VM with a typed command and condition
+  registry. Compatibility execution must not use the standard OpenMW Lua
+  scheduler or its deferred action queue.
+- Reuse the proven architecture of the Morrowind path—compiled-program cache,
+  explicit execution context, per-instance locals, and direct engine
+  operations—without reusing its TES3 parser, opcodes, or context unchanged.
+  ObScript needs `FormKey` reference values, native TES4 variable types,
+  event-block entry points, and distinct object, global, quest, effect, and
+  dialogue-result contexts.
+- Preserve and progressively decode Bethesda's `SCDA` bytecode as an
+  independent validation oracle. Source remains the portable compiler input;
+  the decoder verifies that the native IR preserves compiled control flow,
+  literals, locals, and references where the bytecode format is understood.
+- Incorporate or independently reproduce the lexer research, accepted syntax
+  quirks, corpus tooling, and independent-parser tests from upstream
+  <https://gitlab.com/OpenMW/openmw/-/merge_requests/5444>, but do not adopt
+  its generated-Lua runtime as the compatibility substrate. Lua remains
+  available for development tooling and isolated test oracles.
 - Unsupported commands and conditions must emit structured failures containing
-  script, line, command, context, and owning form. Final acceptance permits no
-  reachable unsupported commands in official content.
+  script, line, command, context, and owning form. They may never silently
+  evaluate to a compatibility value; final acceptance permits no reachable
+  unsupported command or condition in official content.
 
 ### Persistence and developer interfaces
 
@@ -259,33 +277,45 @@ collision probes; paired original/OpenMW captures from fixed prison viewpoints.
 console intervention, falling through geometry, missing required objects, or
 incorrect activation state.
 
-#### M6 - ObScript frontend
+#### M6 - ObScript corpus, frontend, and native IR
 
-**Deliver:** Implement deterministic lexing, parsing, semantic analysis,
-transpilation, diagnostics, and compilation caching. Keep execution disabled
-except for synthetic tests.
+**Deliver:** Build a lossless, stable-identity corpus for standalone,
+dialogue-result, quest-result, and effect scripts; retain each `SCTX`/`SCDA`
+pair and its owning form, stage, and execution context. Implement deterministic
+lexing, parsing, semantic analysis, diagnostics, command/condition coverage,
+and compilation caching that emits native `ObScript::Program` IR. Keep runtime
+execution disabled except for synthetic VM tests.
 
-**Verify:** Compare AST and emitted Lua against an independent test parser for
-every base-game and DLC script; property-test whitespace, labels, expressions,
-references, and control flow.
+**Verify:** Count-lock every script unit in the base game and installed DLC;
+compare AST and deterministic native IR against an independent parser/emitter;
+and progressively compare decoded `SCDA` structure with the source-derived IR.
+Property-test whitespace, labels, expressions, numeric coercion, references,
+variable declarations, and control flow. Prove that repeated `INFO` and `QUST`
+payloads remain separate, addressable units.
 
-**Success:** Zero parse/transpile failures across installed official scripts;
-identical output across repeated runs; every command and condition appears in
-the coverage registry.
+**Success:** Every official script unit is represented exactly once in the
+corpus and has zero parse or native-IR compilation failures. Repeated runs
+produce identical diagnostics and IR; no source or compiled payload is lost;
+and every command and condition appears in the coverage registry.
 
-#### M7 - ObScript execution and event model
+#### M7 - Native ObScript execution and event model
 
-**Deliver:** Add object/global/quest/effect/dialogue contexts, persistent locals,
-event dispatch, reference lookup, control flow, timing, and initial
-world-manipulation commands. Implement the complete command subset reached by
-the tutorial cells.
+**Deliver:** Run `ObScript::Program` synchronously on the engine main thread.
+Add object, global, quest, effect, and dialogue-result contexts; persistent
+typed locals; `FormKey` reference lookup; event-block dispatch; control flow;
+and immediate world-manipulation commands. Replace the provisional M5 tutorial
+wall behavior with its original script path and implement the command subset
+reached by the prison/tutorial cells.
 
-**Verify:** Synthetic event-order tests, save/reload of locals, re-entrancy
-tests, and tutorial interaction traces compared with the original executable.
+**Verify:** Synthetic event-order, numeric-semantics, same-frame visibility,
+save/reload, and re-entrancy tests; verify that immediate mutations are visible
+to later commands in the same dispatch; and compare tutorial interaction traces
+with the original executable.
 
 **Success:** No unsupported command or event occurs on the prison/tutorial
-path; scripts enable, disable, move, activate, and transition objects in the
-correct order.
+path. Scripts enable, disable, move, activate, and transition objects in the
+correct order and frame; the native M5 tutorial-wall workaround is absent; and
+locals and world mutations survive save/reload exactly.
 
 #### M8 - Static rendering, animation, and collision
 

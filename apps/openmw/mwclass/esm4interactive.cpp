@@ -14,6 +14,7 @@
 #include "../mwworld/actiondoor.hpp"
 #include "../mwworld/actionteleport.hpp"
 #include "../mwworld/failedaction.hpp"
+#include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/worldimp.hpp"
 
 namespace MWClass
@@ -50,24 +51,18 @@ namespace MWClass
             return activator->mFullName;
         if (!activator->mActivationPrompt.empty())
             return activator->mActivationPrompt;
-        if (ptr.getCellRef().getEditorId() == "CGPrisonSecretWallRef")
-            return "Loose prison wall";
-        if (ptr.getCellRef().getEditorId() == "CGPrisonWallSwitchRef")
-            return "Prison wall switch";
         return {};
     }
 
     void ESM4Activator::insertObjectPhysics(const MWWorld::Ptr& ptr, const std::string& model,
         const osg::Quat& rotation, MWPhysics::PhysicsSystem& physics) const
     {
-        // Oblivion drives the tutorial wall's collision through its script. Its NIF is marked as visual-only,
-        // which is correct after the scripted wall opens but must not make the closed wall permeable.
-        const bool isTutorialWall = ptr.getCellRef().getEditorId() == "CGPrisonSecretWallRef";
+        // Scripted activators can transition collision nodes at runtime. Keep their
+        // collision representation available even when the visual NIF marks the
+        // corresponding geometry as camera-only or non-colliding.
+        const bool scripted = !ptr.get<ESM4::Activator>()->mBase->mScriptId.isZeroOrUnset();
         physics.addObject(ptr, VFS::Path::toNormalized(model), rotation, MWPhysics::CollisionType_World,
-            !isTutorialWall);
-        if (isTutorialWall)
-            Log(Debug::Info) << "M5 collision wall: physics=" << (physics.getObject(ptr) ? "present" : "missing")
-                             << " ref=" << ptr.getCellRef().getFormKey().serialize();
+            !scripted);
     }
 
     std::unique_ptr<MWWorld::Action> ESM4Activator::activate(
@@ -148,11 +143,14 @@ namespace MWClass
         const MWWorld::Ptr& ptr, const MWWorld::Ptr& actor) const
     {
         const ESM4::Door* door = ptr.get<ESM4::Door>()->mBase;
+        auto* world = static_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        if (!world->isOblivionDefaultActivation())
+            return std::make_unique<MWWorld::OblivionInteractionAction>(
+                ptr, MWWorld::OblivionInteractionKind::Door);
         if (ptr.getCellRef().isLocked())
         {
             const ESM::RefId key = ptr.getCellRef().getKey();
-            auto* world = static_cast<MWWorld::World*>(
-                static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
             if (!key.empty() && world->oblivionPlayerHasItem(key))
             {
                 ptr.getCellRef().unlock();

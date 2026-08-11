@@ -10,6 +10,7 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm4/loadkeym.hpp>
+#include <components/esm4/records.hpp>
 
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/misc/rng.hpp>
@@ -1401,6 +1402,9 @@ template class MWWorld::TypedDynamicStore<ESM4::Npc>;
 template class MWWorld::TypedDynamicStore<ESM4::Outfit>;
 template class MWWorld::TypedDynamicStore<ESM4::Potion>;
 template class MWWorld::TypedDynamicStore<ESM4::Race>;
+template class MWWorld::TypedDynamicStore<ESM4::Script>;
+template class MWWorld::TypedDynamicStore<ESM4::Quest>;
+template class MWWorld::TypedDynamicStore<ESM4::DialogInfo>;
 template class MWWorld::TypedDynamicStore<ESM4::Sound>;
 template class MWWorld::TypedDynamicStore<ESM4::SoundReference>;
 template class MWWorld::TypedDynamicStore<ESM4::Static>;

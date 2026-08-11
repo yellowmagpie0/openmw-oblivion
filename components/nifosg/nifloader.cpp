@@ -324,6 +324,7 @@ namespace NifOsg
         bool mHasNightDayLabel = false;
         bool mHasHerbalismLabel = false;
         bool mHasStencilProperty = false;
+        std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
 
         const Nif::NiSortAdjustNode* mPushedSorter = nullptr;
         const Nif::NiSortAdjustNode* mLastAppliedNoInheritSorter = nullptr;
@@ -350,7 +351,53 @@ namespace NifOsg
 
             if (!seq)
             {
-                Log(Debug::Warning) << "NIFFile Warning: Found no NiSequenceStreamHelper root record. File: "
+                const Nif::NiControllerSequence* embedded = nullptr;
+                for (std::size_t i = 0; i < nif.numRecords(); ++i)
+                {
+                    const Nif::Record* record = nif.getRecord(i);
+                    if (record != nullptr && record->mRecordType == Nif::RC_NiControllerSequence)
+                    {
+                        embedded = static_cast<const Nif::NiControllerSequence*>(record);
+                        break;
+                    }
+                }
+                if (embedded == nullptr)
+                {
+                    Log(Debug::Verbose) << "NIFFile: Found no embedded animation sequence. File: "
+                                        << nif.getFilename();
+                    return;
+                }
+
+                std::string group = Misc::StringUtils::lowerCase(embedded->mName);
+                target.mTextKeys.emplace(embedded->mStartTime, group + ": start");
+                target.mTextKeys.emplace(embedded->mStopTime, group + ": stop");
+                if (!embedded->mTextKeys.empty()
+                    && embedded->mTextKeys->mRecordType == Nif::RC_NiTextKeyExtraData)
+                    extractTextKeys(
+                        static_cast<const Nif::NiTextKeyExtraData*>(embedded->mTextKeys.getPtr()), target.mTextKeys);
+
+                for (const Nif::ControlledBlock& block : embedded->mControlledBlocks)
+                {
+                    if (block.mInterpolator.empty()
+                        || block.mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator)
+                        continue;
+                    const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
+                    if (node.empty())
+                        continue;
+                    const auto* interpolator
+                        = static_cast<const Nif::NiTransformInterpolator*>(block.mInterpolator.getPtr());
+                    osg::ref_ptr<NifOsg::KeyframeController> callback
+                        = new NifOsg::KeyframeController(interpolator);
+                    Nif::NiKeyframeController timing;
+                    timing.mFrequency = 1.f;
+                    timing.mPhase = 0.f;
+                    timing.mTimeStart = embedded->mStartTime;
+                    timing.mTimeStop = embedded->mStopTime;
+                    setupController(&timing, callback, /*animflags*/ 0);
+                    target.mKeyframeControllers.emplace(node, callback);
+                }
+                Log(Debug::Verbose) << "Loaded embedded animation group " << group << " with "
+                                    << target.mKeyframeControllers.size() << " transform tracks from "
                                     << nif.getFilename();
                 return;
             }
@@ -428,6 +475,20 @@ namespace NifOsg
 
         osg::ref_ptr<osg::Node> load(Nif::FileView nif)
         {
+            mEmbeddedAnimationNodes.clear();
+            for (std::size_t i = 0; i < nif.numRecords(); ++i)
+            {
+                const Nif::Record* record = nif.getRecord(i);
+                if (record == nullptr || record->mRecordType != Nif::RC_NiControllerSequence)
+                    continue;
+                const auto* sequence = static_cast<const Nif::NiControllerSequence*>(record);
+                for (const Nif::ControlledBlock& block : sequence->mControlledBlocks)
+                {
+                    const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
+                    if (!node.empty())
+                        mEmbeddedAnimationNodes.insert(Misc::StringUtils::lowerCase(node));
+                }
+            }
             const size_t numRoots = nif.numRoots();
             std::vector<const Nif::NiAVObject*> roots;
             for (size_t i = 0; i < numRoots; ++i)
@@ -661,7 +722,7 @@ namespace NifOsg
         }
 
         // Get a default dataVariance for this node to be used as a hint by optimization (post)routines
-        static osg::ref_ptr<osg::Group> createNode(const Nif::NiAVObject* nifNode)
+        osg::ref_ptr<osg::Group> createNode(const Nif::NiAVObject* nifNode) const
         {
             osg::ref_ptr<osg::Group> node;
 
@@ -692,7 +753,8 @@ namespace NifOsg
                 // The Root node can be created as a Group if no transformation is required.
                 // This takes advantage of the fact root nodes can't have additional controllers
                 // loaded from an external .kf file (original engine just throws "can't find node" errors if you try).
-                if (nifNode->mParents.empty() && nifNode->mController.empty() && nifNode->mTransform.isIdentity())
+                if (nifNode->mParents.empty() && nifNode->mController.empty() && nifNode->mTransform.isIdentity()
+                    && !mEmbeddedAnimationNodes.contains(Misc::StringUtils::lowerCase(nifNode->mName)))
                     node = new osg::Group;
                 else
                     node = new NifOsg::MatrixTransform(nifNode->mTransform);
@@ -891,7 +953,8 @@ namespace NifOsg
                         cb); // have to remain as UpdateCallback so AssignControllerSourcesVisitor can find it.
             }
 
-            bool isAnimated = false;
+            bool isAnimated
+                = mEmbeddedAnimationNodes.contains(Misc::StringUtils::lowerCase(nifNode->mName));
             handleNodeControllers(nifNode, node, args.mAnimFlags, isAnimated);
             args.mHasAnimatedParents |= isAnimated;
             // Make sure empty nodes and animated shapes are not optimized away so the physics system can find them.

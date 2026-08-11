@@ -216,7 +216,8 @@ namespace Resource
 
         osg::ref_ptr<SceneUtil::KeyframeHolder> loaded(new SceneUtil::KeyframeHolder);
         constexpr VFS::Path::ExtensionView kf("kf");
-        if (name.extension() == kf)
+        constexpr VFS::Path::ExtensionView nif("nif");
+        if (name.extension() == kf || name.extension() == nif)
         {
             auto file = std::make_shared<Nif::NIFFile>(name);
             Nif::Reader reader(*file, mEncoder);

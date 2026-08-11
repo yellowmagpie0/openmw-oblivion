@@ -47,6 +47,15 @@ namespace
         reference.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
         reference.mCustomState = { { "harvested", true }, { "label", std::string("opened") } };
         state.mReferences.push_back(std::move(reference));
+        state.mScriptEventSequence = 91;
+        ESM4::RuntimeScriptInstance script;
+        script.mUnit = "content:oblivion.esm:04e90e";
+        script.mContext = ESM::FormKey::content("Oblivion.esm", 0x1fc41);
+        script.mOnLoadFired = true;
+        script.mLocals = { std::int64_t(7), 2.5, std::string("named"),
+            ESM::FormKey::content("Oblivion.esm", 0x2466e), std::monostate{} };
+        state.mScriptInstances.push_back(std::move(script));
+        state.mQuests.push_back({ ESM::FormKey::content("Oblivion.esm", 0x32a15), 19, true, { 10, 19 } });
         return state;
     }
 
@@ -164,11 +173,27 @@ namespace
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":1"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":2"), std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":2}]"),
             std::string::npos);
+        EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
+        EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
         EXPECT_EQ(json, makeState().canonicalJson());
+    }
+
+    TEST(ESM4RuntimeState, versionOnePayloadMigratesWithEmptyScriptState)
+    {
+        auto state = makeState();
+        state.mVersion = 1;
+        state.mScriptEventSequence = 0;
+        state.mScriptInstances.clear();
+        state.mQuests.clear();
+        const auto bytes = state.serializeBinary();
+        const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.mVersion, 1u);
+        EXPECT_TRUE(loaded.mScriptInstances.empty());
+        EXPECT_TRUE(loaded.mQuests.empty());
     }
 }

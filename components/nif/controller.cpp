@@ -1,5 +1,7 @@
 #include "controller.hpp"
 
+#include <limits>
+
 #include "data.hpp"
 #include "exception.hpp"
 #include "node.hpp"
@@ -80,7 +82,20 @@ namespace Nif
         mController.post(nif);
         mBlendInterpolator.post(nif);
         mStringPalette.post(nif);
-        // TODO: probably should fill the strings with string palette contents here
+        if (!mStringPalette.empty())
+        {
+            const std::string& palette = mStringPalette->mPalette;
+            const auto stringAt = [&](std::uint32_t offset) {
+                if (offset == std::numeric_limits<std::uint32_t>::max() || offset >= palette.size())
+                    return std::string{};
+                return palette.substr(offset, palette.find('\0', offset) - offset);
+            };
+            mNodeName = stringAt(mNodeNameOffset);
+            mPropertyType = stringAt(mPropertyTypeOffset);
+            mControllerType = stringAt(mControllerTypeOffset);
+            mControllerId = stringAt(mControllerIdOffset);
+            mInterpolatorId = stringAt(mInterpolatorIdOffset);
+        }
     }
 
     void NiSequence::read(NIFStream* nif)

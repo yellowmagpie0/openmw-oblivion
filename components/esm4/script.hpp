@@ -30,11 +30,13 @@
 #define ESM4_SCRIPT_H
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 
 namespace ESM4
 {
@@ -369,12 +371,23 @@ namespace ESM4
 
     struct ScriptDefinition
     {
-        ScriptHeader scriptHeader;
-        // SDCA compiled source
+        ScriptHeader scriptHeader{};
+        bool hasHeader = false;
+        // Exact SCTX and SCDA payloads are retained independently. scriptSource
+        // is the decoded compiler view and never substitutes for sourceData.
+        std::optional<std::vector<std::uint8_t>> sourceData;
+        std::optional<std::vector<std::uint8_t>> compiledData;
         std::string scriptSource;
         std::vector<ScriptLocalVariableData> localVarData;
         std::vector<std::uint32_t> localRefVarIndex;
-        ESM::FormId globReference;
+        std::vector<ESM::FormKey> globalReferences;
+
+        // Embedded quest result provenance. These remain unset for SCPT and
+        // INFO units.
+        std::optional<std::uint16_t> stage;
+        std::optional<std::uint32_t> stageEntry;
+
+        bool hasPayload() const { return sourceData.has_value() || compiledData.has_value(); }
     };
 }
 

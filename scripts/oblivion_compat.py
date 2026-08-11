@@ -1968,6 +1968,281 @@ def run_form_graph(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
+def validate_m6_report(
+    report: dict[str, Any], count_lock: dict[str, Any], oblivion_data: Path
+) -> dict[str, Any]:
+    """Validate identity, payload, coverage, and official-content count locks."""
+    failures: list[str] = []
+    expected = count_lock["aggregate"]
+    for name in (
+        "unit_count",
+        "source_count",
+        "compiled_count",
+        "source_only_count",
+        "compiled_only_count",
+        "source_payload_bytes",
+        "compiled_payload_bytes",
+        "reference_count",
+        "corpus_fingerprint",
+    ):
+        if report.get(name) != expected[name]:
+            failures.append(f"aggregate {name}: expected {expected[name]!r}, got {report.get(name)!r}")
+    if report.get("contexts") != expected["contexts"]:
+        failures.append(f"context counts differ: expected {expected['contexts']}, got {report.get('contexts')}")
+    for name, value in expected["scda"].items():
+        if report.get("scda", {}).get(name) != value:
+            failures.append(
+                f"SCDA {name}: expected {value!r}, got {report.get('scda', {}).get(name)!r}"
+            )
+    if report.get("frontend_failures") != 0:
+        failures.append(f"frontend reported {report.get('frontend_failures')} failures")
+    if report.get("cache_entries") != report.get("unit_count"):
+        failures.append("compilation cache does not contain exactly one entry per unit")
+
+    expected_plugins = count_lock["plugins"]
+    expected_names = [item["name"] for item in expected_plugins]
+    if expected_names != list(OFFICIAL_PLUGIN_ORDER):
+        failures.append("count-lock plugin order is not the canonical official order")
+    content: list[dict[str, Any]] = []
+    for item in expected_plugins:
+        path = oblivion_data / item["name"]
+        if not path.is_file():
+            failures.append(f"missing official plugin: {path}")
+            continue
+        actual = {"name": path.name, "size": path.stat().st_size, "sha256": sha256(path)}
+        content.append(actual)
+        if actual["size"] != item["size"] or actual["sha256"] != item["sha256"]:
+            failures.append(f"content fingerprint differs for {item['name']}")
+
+    units = report.get("units", [])
+    ids = [unit.get("id") for unit in units]
+    if len(ids) != len(set(ids)):
+        failures.append("corpus contains duplicate stable unit identities")
+    plugin_counts: dict[str, dict[str, Any]] = {
+        name: {"units": 0, "source": 0, "compiled": 0, "contexts": collections.Counter()}
+        for name in expected_names
+    }
+    for unit in units:
+        plugin = unit.get("plugin")
+        if plugin not in plugin_counts:
+            failures.append(f"unit {unit.get('id')} names unexpected plugin {plugin!r}")
+            continue
+        counts = plugin_counts[plugin]
+        counts["units"] += 1
+        counts["source"] += unit.get("source") is not None
+        counts["compiled"] += unit.get("compiled_payload_fingerprint") is not None
+        counts["contexts"][unit.get("context")] += 1
+        if unit.get("source") is None:
+            failures.append(f"unit has no portable source: {unit.get('id')}")
+        if unit.get("source_payload_fingerprint") != unit.get("source_fingerprint"):
+            failures.append(f"source payload fingerprint changed during compilation: {unit.get('id')}")
+        if not unit.get("ast_fingerprint") or not unit.get("program_fingerprint"):
+            failures.append(f"unit has no AST/native IR: {unit.get('id')}")
+        if not unit.get("reference_fingerprint"):
+            failures.append(f"unit has no reference-table fingerprint: {unit.get('id')}")
+        if not unit.get("cache_stable"):
+            failures.append(f"unit cache result is unstable: {unit.get('id')}")
+        if unit.get("diagnostics"):
+            failures.append(f"unit has frontend diagnostics: {unit.get('id')}")
+        if unit.get("compiled_payload_fingerprint") is not None:
+            if not unit.get("scda_decoded") or not unit.get("scda_header_size_matches"):
+                failures.append(f"unit SCDA failed lossless decode or header-size check: {unit.get('id')}")
+
+    for item in expected_plugins:
+        actual = plugin_counts[item["name"]]
+        for field in ("units", "source", "compiled"):
+            if actual[field] != item[field]:
+                failures.append(
+                    f"{item['name']} {field}: expected {item[field]}, got {actual[field]}"
+                )
+        contexts = dict(sorted(actual["contexts"].items()))
+        if contexts != item["contexts"]:
+            failures.append(
+                f"{item['name']} contexts: expected {item['contexts']}, got {contexts}"
+            )
+
+    coverage = report.get("coverage", [])
+    coverage_names = [item.get("name") for item in coverage]
+    if len(coverage) != expected["coverage_entries"]:
+        failures.append(
+            f"coverage registry: expected {expected['coverage_entries']} entries, got {len(coverage)}"
+        )
+    if coverage_names != sorted(set(coverage_names)):
+        failures.append("coverage registry names are not unique and deterministically sorted")
+    for item in coverage:
+        if item.get("command_uses", 0) + item.get("condition_uses", 0) <= 0:
+            failures.append(f"unused coverage registry entry: {item.get('name')}")
+        if not item.get("contexts"):
+            failures.append(f"coverage registry entry has no execution context: {item.get('name')}")
+
+    return {
+        "passed": not failures,
+        "failures": failures,
+        "content": content,
+        "plugin_counts": {
+            name: {
+                "units": value["units"],
+                "source": value["source"],
+                "compiled": value["compiled"],
+                "contexts": dict(sorted(value["contexts"].items())),
+            }
+            for name, value in plugin_counts.items()
+        },
+    }
+
+
+def render_m6_acceptance_html(report: dict[str, Any]) -> str:
+    rows = []
+    for name, result in report["tests"].items():
+        rows.append(
+            f"<tr><td>{html.escape(name)}</td><td>{'PASS' if result.get('passed') else 'FAIL'}</td></tr>"
+        )
+    rows.extend(
+        (
+            f"<tr><td>official count lock</td><td>{'PASS' if report['count_lock']['passed'] else 'FAIL'}</td></tr>",
+            f"<tr><td>independent AST/native IR</td><td>{'PASS' if report['independent_reference']['passed'] else 'FAIL'}</td></tr>",
+            f"<tr><td>repeat determinism</td><td>{'PASS' if report['determinism']['passed'] else 'FAIL'}</td></tr>",
+        )
+    )
+    corpus = report["corpus"]
+    status = "PASS" if report["passed"] else "FAIL"
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>M6 {status}</title>
+<style>body{{font:16px sans-serif;max-width:1100px;margin:2rem auto}}table{{border-collapse:collapse}}
+td,th{{border:1px solid #aaa;padding:.4rem .7rem}}</style></head><body>
+<h1>OpenMW Oblivion M6 acceptance: {status}</h1>
+<p>Units: {corpus['unit_count']}; source: {corpus['source_count']}; compiled: {corpus['compiled_count']};
+coverage entries: {len(corpus['coverage'])}; fingerprint: <code>{html.escape(corpus['corpus_fingerprint'])}</code>.</p>
+<table><tr><th>Offline gate</th><th>Result</th></tr>{''.join(rows)}</table>
+<p>SCDA decoded: {corpus['scda']['decoded']}; exact control structure: {corpus['scda']['structure_matches']}.
+The remaining differences are retained per unit for progressive bytecode comparison.</p></body></html>"""
+
+
+def run_m6_acceptance(args: argparse.Namespace) -> dict[str, Any]:
+    """Run the M6 gate without starting OpenMW or either game executable."""
+    source = args.source.resolve()
+    build = args.build.resolve()
+    oblivion_data = args.oblivion_data.resolve()
+    output = args.output.resolve()
+    if output.exists() and any(output.iterdir()):
+        raise RuntimeError(f"M6 acceptance output directory must be empty: {output}")
+    output.mkdir(parents=True, exist_ok=True)
+    esmtool = build / "esmtool"
+    components_tests = build / "components-tests"
+    openmw_tests = build / "openmw-tests"
+    for required in (esmtool, components_tests, openmw_tests):
+        if not required.is_file():
+            raise FileNotFoundError(required)
+    plugins = [oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER]
+    missing = [str(path) for path in plugins if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(", ".join(missing))
+    count_lock_path = (
+        args.count_lock.resolve()
+        if args.count_lock
+        else source / "scripts" / "data" / "oblivion_compat" / "m6_obscript_count_lock.json"
+    )
+    count_lock = json.loads(count_lock_path.read_text(encoding="utf-8"))
+    started = time.monotonic()
+
+    corpus_paths = (output / "corpus-1.json", output / "corpus-2.json")
+    corpus_runs = []
+    for index, path in enumerate(corpus_paths, 1):
+        result = run_command(
+            [str(esmtool), "-q", "obscript", str(path), *(str(plugin) for plugin in plugins)],
+            cwd=source,
+            timeout=args.timeout,
+        )
+        (output / f"corpus-{index}.log").write_text(result.pop("output"), encoding="utf-8")
+        result["passed"] = result["exit_code"] == 0 and not result["timed_out"] and path.is_file()
+        corpus_runs.append(result)
+    if not all(result["passed"] for result in corpus_runs):
+        raise RuntimeError("one or more native ObScript corpus audits failed")
+    corpus = json.loads(corpus_paths[0].read_text(encoding="utf-8"))
+    count_lock_result = validate_m6_report(corpus, count_lock, oblivion_data)
+    determinism = {
+        "first_sha256": sha256(corpus_paths[0]),
+        "second_sha256": sha256(corpus_paths[1]),
+    }
+    determinism["passed"] = determinism["first_sha256"] == determinism["second_sha256"]
+
+    reference_path = output / "independent-reference.json"
+    reference_command = run_command(
+        [sys.executable, str(source / "scripts" / "obscript_reference.py"),
+         str(corpus_paths[0]), "--output", str(reference_path)],
+        cwd=source,
+        timeout=args.timeout,
+    )
+    (output / "independent-reference.log").write_text(reference_command.pop("output"), encoding="utf-8")
+    reference = (
+        json.loads(reference_path.read_text(encoding="utf-8"))
+        if reference_path.is_file()
+        else {"checked_units": 0, "failure_count": 1, "failures": [{"kind": "missing-output"}]}
+    )
+    reference["passed"] = (
+        reference_command["exit_code"] == 0
+        and not reference_command["timed_out"]
+        and reference.get("checked_units") == corpus.get("unit_count")
+        and reference.get("failure_count") == 0
+    )
+    reference["command"] = reference_command
+
+    tests = {
+        "focused_frontend": _run_logged_gate(
+            [str(components_tests), "--gtest_filter=ObScript*", "--gtest_color=no"],
+            source, output / "tests", "focused-frontend",
+        ),
+        "all_components": _run_logged_gate(
+            [str(components_tests), "--gtest_color=no"], source, output / "tests", "all-components"
+        ),
+        "all_openmw_units": _run_logged_gate(
+            [str(openmw_tests), "--gtest_color=no"], source, output / "tests", "all-openmw-units"
+        ),
+        "compatibility_harness": _run_logged_gate(
+            [sys.executable, "-m", "unittest", "scripts.tests.test_oblivion_compat"],
+            source, output / "tests", "compatibility-harness",
+        ),
+    }
+    if args.sanitized_build:
+        sanitized_tests = args.sanitized_build.resolve() / "components-tests"
+        if not sanitized_tests.is_file():
+            raise FileNotFoundError(sanitized_tests)
+        tests["asan_ubsan_frontend"] = _run_logged_gate(
+            [
+                "cmake", "-E", "env",
+                "ASAN_OPTIONS=detect_leaks=1:halt_on_error=1",
+                "UBSAN_OPTIONS=halt_on_error=1",
+                str(sanitized_tests), "--gtest_filter=ObScript*", "--gtest_color=no",
+            ],
+            source, output / "tests", "asan-ubsan-frontend",
+        )
+    revision = run_command(["git", "rev-parse", "HEAD"], cwd=source, timeout=10)["output"].strip()
+    status = run_command(["git", "status", "--short"], cwd=source, timeout=10)["output"].splitlines()
+    acceptance = {
+        "schema_version": SCHEMA_VERSION,
+        "milestone": "M6",
+        "offline_only": True,
+        "generated_at": utc_now(),
+        "duration_seconds": round(time.monotonic() - started, 6),
+        "repository": {"source": str(source), "revision": revision, "status": status},
+        "count_lock_path": str(count_lock_path),
+        "count_lock": count_lock_result,
+        "corpus_runs": corpus_runs,
+        "corpus": corpus,
+        "determinism": determinism,
+        "independent_reference": reference,
+        "tests": tests,
+    }
+    acceptance["passed"] = (
+        count_lock_result["passed"]
+        and determinism["passed"]
+        and reference["passed"]
+        and all(result["passed"] for result in tests.values())
+    )
+    write_json(output / "acceptance.json", acceptance)
+    (output / "acceptance.html").write_text(render_m6_acceptance_html(acceptance), encoding="utf-8")
+    return acceptance
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -2054,6 +2329,15 @@ def make_parser() -> argparse.ArgumentParser:
     m5.add_argument("--oblivion-install", type=Path, required=True)
     m5.add_argument("--original-prefix", type=Path, required=True)
     m5.add_argument("--steam-root", type=Path, required=True)
+
+    m6 = subparsers.add_parser("m6-acceptance", help="run the complete offline M6 ObScript frontend gate")
+    m6.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m6.add_argument("--build", type=Path, required=True)
+    m6.add_argument("--oblivion-data", type=Path, required=True)
+    m6.add_argument("--output", type=Path, required=True)
+    m6.add_argument("--sanitized-build", type=Path)
+    m6.add_argument("--count-lock", type=Path)
+    m6.add_argument("--timeout", type=float, default=900)
 
     runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
     runtime.add_argument(
@@ -2162,6 +2446,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_m4_acceptance(args)
         elif args.command == "m5-acceptance":
             result = run_m5_acceptance(args)
+        elif args.command == "m6-acceptance":
+            result = run_m6_acceptance(args)
         elif args.command == "runtime-state":
             result = run_runtime_state(args)
         else:
@@ -2169,7 +2455,18 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
         print(f"oblivion-compat: {error}", file=sys.stderr)
         return 2
-    print(json.dumps(result, indent=2, sort_keys=True))
+    printable = result
+    if args.command == "m6-acceptance":
+        printable = {
+            "passed": result.get("passed", False),
+            "milestone": "M6",
+            "offline_only": True,
+            "unit_count": result.get("corpus", {}).get("unit_count"),
+            "compiled_count": result.get("corpus", {}).get("compiled_count"),
+            "corpus_fingerprint": result.get("corpus", {}).get("corpus_fingerprint"),
+            "evidence": str(args.output.resolve() / "acceptance.json"),
+        }
+    print(json.dumps(printable, indent=2, sort_keys=True))
     return 0 if result.get("passed", False) else 1
 
 

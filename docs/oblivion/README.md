@@ -54,6 +54,46 @@ input, collision, take/loot/read/harvest, locks, ownership, animated and
 teleport doors, native save state, fixed original/OpenMW captures, the stable
 official FormKey graph, and Morrowind regressions.
 
+Run the accepted, deliberately offline M6 ObScript gate with:
+
+```sh
+python3 scripts/oblivion_compat.py m6-acceptance \
+  --build build \
+  --sanitized-build build-oblivion-sanitized \
+  --oblivion-data "/path/to/Oblivion/Data" \
+  --output build/oblivion-compat/m6-acceptance
+```
+
+This count-locks all 11,098 official script units, independently compares every
+AST and native Program, decodes all retained SCDA, proves repeat determinism,
+and runs the focused sanitizer plus complete offline unit regressions. It does
+not launch OpenMW or either original game.
+
+Run the accepted M7 native-script runtime and process-restart reload gates
+with:
+
+```sh
+OPENMW_OBSCRIPT_EVENTS="$PWD/scripts/data/oblivion_compat/m7_runtime_events.txt" \
+OPENMW_OBSCRIPT_REPORT="$PWD/build/oblivion-compat/m7-runtime-acceptance/obscript-report.json" \
+python3 scripts/oblivion_compat.py scenario \
+  scripts/data/oblivion_compat/oblivion_m7_script_runtime.json \
+  --output build/oblivion-compat/m7-runtime-acceptance \
+  --variable "source=$PWD" \
+  --variable "openmw=$PWD/build/openmw" \
+  --variable "resources=$PWD/build/resources" \
+  --variable "oblivion_data=/path/to/Oblivion/Data"
+```
+
+Then pass its generated quicksave as `savegame` to
+`oblivion_m7_script_reload.json`. The gates run the original prison switch and
+wall script plus real object, quest/result, dialogue-result, and effect scripts
+from the base game and DLC. They assert ordered nested dispatch, immediate
+world/inventory mutations, zero runtime diagnostics, visual wall movement,
+typed script/quest save state, and the same open wall after a process restart.
+See [`M7-OBScript-RUNTIME.md`](M7-OBScript-RUNTIME.md) for the exact evidence
+and scope boundary with later AI, magic, rendering, dialogue, audio, and
+weather milestones.
+
 To try the first interactive slice directly:
 
 ```sh
@@ -96,6 +136,8 @@ Current implementation reports:
 - [`M3-STANDALONE-BOOT.md`](M3-STANDALONE-BOOT.md)
 - [`M4-RUNTIME-STATE.md`](M4-RUNTIME-STATE.md)
 - [`M5-INTERACTIVE-INTERIOR.md`](M5-INTERACTIVE-INTERIOR.md)
+- [`M6-OBScript-FRONTEND.md`](M6-OBScript-FRONTEND.md)
+- [`M7-OBScript-RUNTIME.md`](M7-OBScript-RUNTIME.md)
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.

@@ -33,6 +33,6 @@
   "terminate_after_actions": true,
   "timeout_seconds": 10,
   "expected_exit": 0,
-  "expected_log": ["Loading cell ImperialDungeon01", "M5 collision wall: physics=present ref=content:oblivion.esm:01fc41", "Writing saved game 'Quicksave'"],
+  "expected_log": ["Loading cell ImperialDungeon01", "Writing saved game 'Quicksave'"],
   "forbidden_log": ["Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
 }

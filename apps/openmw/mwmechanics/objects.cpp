@@ -60,7 +60,11 @@ namespace MWMechanics
         if (!paused)
         {
             for (CharacterController& object : mObjects)
+            {
                 object.update(duration);
+                if (object.isScriptedAnimPlaying())
+                    MWBase::Environment::get().getWorld()->updateAnimatedCollisionShape(object.getPtr());
+            }
         }
         else
         {

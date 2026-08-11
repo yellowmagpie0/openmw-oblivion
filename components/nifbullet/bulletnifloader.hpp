@@ -68,6 +68,7 @@ namespace NifBullet
         std::unique_ptr<btCompoundShape, Resource::DeleteCollisionShape> mAvoidCompoundShape;
 
         osg::ref_ptr<Resource::BulletShape> mShape;
+        std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
     };
 
 }

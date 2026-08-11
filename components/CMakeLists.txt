@@ -300,6 +300,17 @@ add_component_dir (esm4
     vertex
 )
 
+add_component_dir (obscript
+    ast
+    lexer
+    parser
+    corpus
+    program
+    compiler
+    scda
+    vm
+)
+
 add_component_dir (misc
     barrier budgetmeasurement color compression constants convert coordinateconverter display endianness float16 frameratelimiter
     guarded math mathutil messageformatparser notnullptr objectpool osgpluginchecker osguservalues progressreporter resourcehelpers

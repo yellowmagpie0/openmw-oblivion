@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-08",
-  "base_revision": "f38591bc738bdebf55ebf365565392a8e4f65d0a",
+  "updated": "2026-08-11",
+  "base_revision": "cdd9860bd098cea9beaec94a853fe2ce398e5fce",
   "milestones": {
     "M0": {
       "status": "accepted",
@@ -92,7 +92,49 @@
         "Direct first-slice launcher plus full FormKey and Morrowind regression gates"
       ],
       "open_gates": []
+    },
+    "M6": {
+      "status": "accepted",
+      "report": "docs/oblivion/M6-OBScript-FRONTEND.md",
+      "revision": "working-tree based on cdd9860bd098cea9beaec94a853fe2ce398e5fce",
+      "evidence": [
+        "build/oblivion-compat/m6-acceptance/acceptance.json",
+        "build/oblivion-compat/m6-acceptance/acceptance.html",
+        "build/oblivion-compat/m6-acceptance/corpus-1.json",
+        "build/oblivion-compat/m6-acceptance/independent-reference.json"
+      ],
+      "delivered": [
+        "Lossless stable-identity standalone, dialogue-result, quest-result, and effect script corpus",
+        "Deterministic ObScript lexer, parser, semantic lowering, diagnostics, and native Program IR",
+        "Stable FormKey reference tables, typed locals, command/condition coverage, and compilation cache",
+        "Complete SCDA framing decoder and progressive source/compiled structural oracle",
+        "Official count lock, independent Python parser/emitter, mutation corpus, and offline acceptance gate"
+      ],
+      "open_gates": []
+    },
+    "M7": {
+      "status": "accepted",
+      "report": "docs/oblivion/M7-OBScript-RUNTIME.md",
+      "revision": "working-tree based on cdd9860bd098cea9beaec94a853fe2ce398e5fce",
+      "evidence": [
+        "build/oblivion-compat/m7-runtime-acceptance-final/obscript-report.json",
+        "build/oblivion-compat/m7-runtime-acceptance-final/tutorial-wall-before.png",
+        "build/oblivion-compat/m7-runtime-acceptance-final/tutorial-wall-after.png",
+        "build/oblivion-compat/m7-reload-acceptance-final/obscript-report.json",
+        "build/oblivion-compat/m7-reload-acceptance-final/tutorial-wall-after-reload.png",
+        "build/oblivion-compat/m7-m6-acceptance-final/acceptance.json",
+        "build/oblivion-compat/m7-morrowind-regression-final/scenario.json"
+      ],
+      "delivered": [
+        "Synchronous typed native ObScript VM with structured runtime diagnostics",
+        "Object, quest, quest-result, dialogue-result, and effect contexts with deterministic event dispatch",
+        "Persistent typed locals, quest state, event sequence, and stable FormKey resolution",
+        "Immediate M7 world, inventory, quest, reference, and animation commands with nested event visibility",
+        "Original tutorial switch and embedded wall animation path with the provisional M5 workaround removed",
+        "Broad official-script, visual, save/reload, sanitizer, M6, and Morrowind regression evidence"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "M6 ObScript frontend"
+  "next_bounded_delivery": "M8 static rendering, animation, and collision"
 }

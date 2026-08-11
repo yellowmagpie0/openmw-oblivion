@@ -655,12 +655,16 @@ namespace MWRender
         constexpr VFS::Path::ExtensionView kf("kf");
         constexpr VFS::Path::ExtensionView nif("nif");
 
-        VFS::Path::Normalized kfname(model);
+        const VFS::Path::Normalized sourceName(model);
+        VFS::Path::Normalized kfname(sourceName);
 
         if (kfname.extension() == nif)
             kfname.changeExtension(kf);
 
-        addSingleAnimSource(kfname, baseModel);
+        if (mResourceSystem->getVFS()->exists(kfname))
+            addSingleAnimSource(kfname, baseModel);
+        else if (sourceName.extension() == nif)
+            addSingleAnimSource(sourceName, baseModel);
 
         if (Settings::game().mUseAdditionalAnimSources)
             loadAdditionalAnimations(kfname, baseModel);

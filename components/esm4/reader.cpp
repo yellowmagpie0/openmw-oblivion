@@ -1115,6 +1115,30 @@ namespace ESM4
         return false; // FIXME: throw instead?
     }
 
+    bool Reader::getRawString(std::vector<std::uint8_t>& rawData, std::string& decoded)
+    {
+        rawData.resize(mCtx.subRecordHeader.dataSize);
+        if (rawData.empty())
+        {
+            decoded.clear();
+            return true;
+        }
+        if (!rawData.empty() && !get(rawData.data(), rawData.size()))
+            return false;
+
+        const std::string_view input(reinterpret_cast<const char*>(rawData.data()), rawData.size());
+        if (mEncoder == nullptr)
+            decoded.assign(input);
+        else
+        {
+            std::string buffer;
+            const std::string_view value
+                = mEncoder->getUtf8(input, ToUTF8::BufferAllocationPolicy::FitToRequiredSize, buffer);
+            decoded.assign(value);
+        }
+        return true;
+    }
+
     bool Reader::getZeroTerminatedStringArray(std::vector<std::string>& values)
     {
         const std::size_t size = mCtx.subRecordHeader.dataSize;

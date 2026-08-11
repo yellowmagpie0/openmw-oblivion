@@ -7,6 +7,8 @@ set(ESMTOOL
     arguments.hpp
     tes4.hpp
     tes4.cpp
+    obscript.hpp
+    obscript.cpp
 )
 source_group(apps\\esmtool FILES ${ESMTOOL})
 

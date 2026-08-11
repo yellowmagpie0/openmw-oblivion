@@ -34,6 +34,7 @@
 void ESM4::Script::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
 
     while (reader.getSubRecordHeader())
@@ -68,14 +69,20 @@ void ESM4::Script::load(ESM4::Reader& reader)
                 std::cout << ss.str() << std::endl;
 #else
                 reader.get(mScript.scriptHeader);
+                mScript.hasHeader = true;
 #endif
                 break;
             }
             case ESM::fourCC("SCTX"):
-                reader.getString(mScript.scriptSource);
+            {
+                std::vector<std::uint8_t> raw;
+                if (!reader.getRawString(raw, mScript.scriptSource))
+                    throw std::runtime_error("ESM4::SCPT::load - Truncated SCTX payload");
+                mScript.sourceData = std::move(raw);
                 // if (mEditorId == "CTrapLogs01SCRIPT")
                 // std::cout << mScript.scriptSource << std::endl;
                 break;
+            }
             case ESM::fourCC("SCDA"): // compiled script data
             {
                 // For debugging only
@@ -106,13 +113,20 @@ void ESM4::Script::load(ESM4::Reader& reader)
                 }
                 std::cout << ss.str() << std::endl;
 #else
-                reader.skipSubRecordData();
+                std::vector<std::uint8_t> data(subHdr.dataSize);
+                if (!data.empty() && !reader.get(data.data(), data.size()))
+                    throw std::runtime_error("ESM4::SCPT::load - Truncated SCDA payload");
+                mScript.compiledData = std::move(data);
 #endif
                 break;
             }
             case ESM::fourCC("SCRO"):
-                reader.getFormId(mScript.globReference);
+            {
+                ESM::FormKey key;
+                reader.getFormKey(key);
+                mScript.globalReferences.push_back(std::move(key));
                 break;
+            }
             case ESM::fourCC("SLSD"):
             {
                 ScriptLocalVariableData localVar;

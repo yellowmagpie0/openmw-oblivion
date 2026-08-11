@@ -37,11 +37,20 @@
 void ESM4::DialogInfo::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
 
     mEditorId = ESM::RefId(mId).serializeText(); // FIXME: quick workaround to use existing code
 
-    bool ignore = false;
+    ScriptDefinition currentScript;
+    bool scriptStarted = false;
+    const auto finishScript = [&]() {
+        if (scriptStarted)
+            mResultScripts.push_back(std::move(currentScript));
+        currentScript = {};
+        scriptStarted = false;
+    };
+    const auto startScript = [&]() { scriptStarted = true; };
 
     while (reader.getSubRecordHeader())
     {
@@ -114,40 +123,63 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("SCHR"):
             {
-                if (!ignore)
-                    reader.get(mScript.scriptHeader);
-                else
-                    reader.skipSubRecordData(); // TODO: does the second one ever used?
+                if (scriptStarted)
+                    finishScript();
+                startScript();
+                reader.get(currentScript.scriptHeader);
+                currentScript.hasHeader = true;
 
                 break;
             }
             case ESM::fourCC("SCDA"):
-                reader.skipSubRecordData();
-                break; // compiled script data
+            {
+                if (currentScript.compiledData.has_value())
+                    finishScript();
+                startScript();
+                std::vector<std::uint8_t> data(subHdr.dataSize);
+                if (!data.empty() && !reader.get(data.data(), data.size()))
+                    throw std::runtime_error("ESM4::INFO::load - Truncated SCDA payload");
+                currentScript.compiledData = std::move(data);
+                break;
+            }
             case ESM::fourCC("SCTX"):
-                reader.getString(mScript.scriptSource);
+            {
+                if (currentScript.sourceData.has_value())
+                    finishScript();
+                startScript();
+                std::vector<std::uint8_t> raw;
+                if (!reader.getRawString(raw, currentScript.scriptSource))
+                    throw std::runtime_error("ESM4::INFO::load - Truncated SCTX payload");
+                currentScript.sourceData = std::move(raw);
                 break;
+            }
             case ESM::fourCC("SCRO"):
-                reader.getFormId(mScript.globReference);
+            {
+                startScript();
+                ESM::FormKey key;
+                reader.getFormKey(key);
+                currentScript.globalReferences.push_back(std::move(key));
                 break;
+            }
             case ESM::fourCC("SLSD"):
             {
-                ScriptLocalVariableData localVar;
+                startScript();
+                ScriptLocalVariableData localVar{};
                 reader.get(localVar.index);
                 reader.get(localVar.unknown1);
                 reader.get(localVar.unknown2);
                 reader.get(localVar.unknown3);
                 reader.get(localVar.type);
                 reader.get(localVar.unknown4);
-                mScript.localVarData.push_back(std::move(localVar));
+                currentScript.localVarData.push_back(std::move(localVar));
                 // WARN: assumes SCVR will follow immediately
 
                 break;
             }
             case ESM::fourCC("SCVR"): // assumed always pair with SLSD
             {
-                if (!mScript.localVarData.empty())
-                    reader.getZString(mScript.localVarData.back().variableName);
+                if (!currentScript.localVarData.empty())
+                    reader.getZString(currentScript.localVarData.back().variableName);
                 else
                     reader.skipSubRecordData();
 
@@ -155,16 +187,17 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("SCRV"):
             {
-                std::uint32_t index;
+                std::uint32_t index = 0;
                 reader.get(index);
 
-                mScript.localRefVarIndex.push_back(index);
+                startScript();
+                currentScript.localRefVarIndex.push_back(index);
 
                 break;
             }
             case ESM::fourCC("NEXT"): // FO3/FONV marker for next script header
             {
-                ignore = true;
+                finishScript();
 
                 break;
             }
@@ -228,6 +261,7 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 throw std::runtime_error("ESM4::INFO::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
     }
+    finishScript();
 }
 
 // void ESM4::DialogInfo::save(ESM4::Writer& writer) const

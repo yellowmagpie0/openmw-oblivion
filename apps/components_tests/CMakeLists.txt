@@ -75,6 +75,8 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/rawrecord.cpp
     esm4/runtimestate.cpp
 
+    obscript/frontend.cpp
+
     fx/lexer.cpp
     fx/technique.cpp
 
