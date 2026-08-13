@@ -158,7 +158,27 @@
         "Real-cell visual, depth, collision, full unit, and regression evidence"
       ],
       "open_gates": []
+    },
+    "M9": {
+      "status": "accepted",
+      "report": "docs/oblivion/M9-EXTERIOR-WORLD.md",
+      "revision": "fc5c57567662686119f3216007392eeed5e6e701",
+      "evidence": [
+        "build/oblivion-compat/m9-runtime-acceptance/scenario.json",
+        "build/oblivion-compat/m9-runtime-acceptance/oldbridge-initial.png",
+        "build/oblivion-compat/m9-runtime-acceptance/oldbridge-paged.png",
+        "build/oblivion-compat/m9-global-map-acceptance-final/scenario.json",
+        "build/oblivion-compat/m9-global-map-acceptance-final/global-map.png"
+      ],
+      "delivered": [
+        "Cycle-safe per-feature native worldspace inheritance for LAND, LOD, water, map, climate, and sky",
+        "Continuous Oblivion LAND blending, water placement, distant-reference paging, and billboard preservation",
+        "Deterministic LTEX-driven native GRAS placement with density, slope, water, scale, and terrain-fitting rules",
+        "Native terrain-derived global map and visible official map markers",
+        "Real-data multi-biome visual, paging, save, full unit, and regression evidence"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "M9 exterior worldspaces, terrain, LOD, and vegetation"
+  "next_bounded_delivery": "M10 environment, weather, audio, and video"
 }
