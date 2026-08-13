@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-11",
+  "updated": "2026-08-13",
   "base_revision": "cdd9860bd098cea9beaec94a853fe2ce398e5fce",
   "milestones": {
     "M0": {
@@ -134,7 +134,31 @@
         "Broad official-script, visual, save/reload, sanitizer, M6, and Morrowind regression evidence"
       ],
       "open_gates": []
+    },
+    "M8": {
+      "status": "accepted",
+      "report": "docs/oblivion/M8-STATIC-RENDERING.md",
+      "revision": "f965de60d5c53af83057ff1372c8e4141868a3aa",
+      "evidence": [
+        "build/oblivion-compat/m8-audit/official-existing-static-item-current.stdout",
+        "build/oblivion-compat/m8-final-tests/components-tests.log",
+        "build/oblivion-compat/m8-final-tests/openmw-tests.log",
+        "build/oblivion-compat/m8-runtime-prison-final/prison.png",
+        "build/oblivion-compat/m8-runtime-ruin-final/ayleid-ruin.png",
+        "build/oblivion-compat/m8-runtime-cave-final/cave.png",
+        "build/oblivion-compat/m8-runtime-trap-final/tutorial-cave-and-traps.png",
+        "build/oblivion-compat/m8-collision-final/scenario.json"
+      ],
+      "delivered": [
+        "Complete Bethesda static/item material, texture-transform, billboard, light, alpha, refraction, and embedded-animation path",
+        "Modern Oblivion particle emitters, shooters, modifiers, collision, controller inputs, and world-space behavior",
+        "Bethesda Havok rigid-body and complete official static collision-shape interpretation",
+        "Strict combined-VFS render/collision auditing and official TES4 record-specific model inventories",
+        "Official texture-reference repairs that preserve replacement-archive priority",
+        "Real-cell visual, depth, collision, full unit, and regression evidence"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "M8 static rendering, animation, and collision"
+  "next_bounded_delivery": "M9 exterior worldspaces, terrain, LOD, and vegetation"
 }
