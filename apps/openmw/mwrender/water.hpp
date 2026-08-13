@@ -6,9 +6,11 @@
 
 #include <osg/Vec3d>
 #include <osg/Vec3f>
+#include <osg/Vec4f>
 #include <osg/ref_ptr>
 
 #include <components/settings/settings.hpp>
+#include <components/esm/refid.hpp>
 #include <components/vfs/pathutil.hpp>
 
 namespace osg
@@ -59,6 +61,7 @@ namespace MWRender
         osg::ref_ptr<osg::Group> mSceneRoot;
         osg::ref_ptr<osg::PositionAttitudeTransform> mWaterNode;
         osg::ref_ptr<osg::Geometry> mWaterGeom;
+        osg::ref_ptr<osg::Geometry> mSimpleWaterGeom;
         Resource::ResourceSystem* mResourceSystem;
         osg::ref_ptr<osgUtil::IncrementalCompileOperation> mIncrementalCompileOperation;
 
@@ -73,11 +76,21 @@ namespace MWRender
         float mTop;
         bool mInterior;
         bool mShowWorld;
+        osg::Vec4f mWaterColor;
+        osg::Vec4f mWaterDeepColor;
+        VFS::Path::Normalized mNativeTexture;
+        ESM::RefId mWaterType;
+        osg::Vec2f mWindDirection;
+        float mWindVelocity;
+        float mWaveAmplitude;
+        float mWaveFrequency;
+        float mReflectivity;
+        float mFresnelAmount;
 
         osg::Callback* mCullCallback;
         osg::ref_ptr<osg::Callback> mShaderWaterStateSetUpdater;
 
-        osg::Vec3f getSceneNodeCoordinates(int gridX, int gridY);
+        osg::Vec3f getSceneNodeCoordinates(int gridX, int gridY, ESM::RefId worldspace);
         void updateVisible();
 
         void createSimpleWaterStateSet(osg::Node* node, float alpha);
@@ -118,6 +131,14 @@ namespace MWRender
         void update(float dt, bool paused);
 
         osg::Vec3d getPosition() const;
+        const osg::Vec4f& getWaterColor() const { return mWaterColor; }
+        const osg::Vec4f& getWaterDeepColor() const { return mWaterDeepColor; }
+        const osg::Vec2f& getWindDirection() const { return mWindDirection; }
+        float getWindVelocity() const { return mWindVelocity; }
+        float getWaveAmplitude() const { return mWaveAmplitude; }
+        float getWaveFrequency() const { return mWaveFrequency; }
+        float getReflectivity() const { return mReflectivity; }
+        float getFresnelAmount() const { return mFresnelAmount; }
 
         void processChangedSettings(const Settings::CategorySettingVector& settings);
 

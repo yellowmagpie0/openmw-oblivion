@@ -575,6 +575,15 @@ namespace MWWorld
         Settings::models().mXbaseanim1stkf.set(idle);
         Settings::models().mXbaseanimfemalekf.set(idle);
 
+        // Oblivion ships a complete native sky set under meshes/sky. Select it before the
+        // renderer creates any sky nodes so no Morrowind fallback mesh is ever requested.
+        Settings::models().mSkyatmosphere.set(VFS::Path::Normalized("meshes/sky/atmosphere.nif"));
+        Settings::models().mSkyclouds.set(VFS::Path::Normalized("meshes/sky/clouds.nif"));
+        Settings::models().mSkynight01.set(VFS::Path::Normalized("meshes/sky/stars.nif"));
+        Settings::models().mSkynight02.set(VFS::Path::Normalized("meshes/sky/stars_oblivion.nif"));
+        Settings::models().mWeathersnow.set(VFS::Path::Normalized("meshes/sky/snow.nif"));
+        Settings::water().mShader.set(true);
+
         Log(Debug::Info) << "Installed Oblivion profile services: " << report.mNativeGameSettings
                          << " native GMSTs, " << report.mRuntimeContractSettings << " reviewed runtime settings, "
                          << report.mNativeGlobals << " native globals, player " << report.mPlayerSource << ", race "

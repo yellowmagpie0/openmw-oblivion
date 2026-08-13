@@ -13,6 +13,7 @@
 #include <components/esm/refid.hpp>
 #include <components/sceneutil/nodecallback.hpp>
 #include <components/sceneutil/statesetupdater.hpp>
+#include <components/vfs/pathutil.hpp>
 
 namespace Resource
 {
@@ -46,6 +47,9 @@ namespace MWRender
         osg::Vec4f mSunDiscColor;
 
         float mFogDepth;
+        float mFogNear = 0.f;
+        float mFogFar = 0.f;
+        bool mUseExactFog = false;
 
         float mDLFogFactor;
         float mDLFogOffset;
@@ -248,7 +252,7 @@ namespace MWRender
     public:
         CelestialBody(osg::Group* parentNode, float scaleFactor, int numUvSets, unsigned int visibleMask = ~0u);
 
-        virtual ~CelestialBody() = default;
+        virtual ~CelestialBody();
 
         virtual void adjustTransparency(const float ratio) = 0;
 
@@ -257,6 +261,7 @@ namespace MWRender
     protected:
         unsigned int mVisibleMask;
         static const float mDistance;
+        osg::Group* mParentNode;
         osg::ref_ptr<osg::PositionAttitudeTransform> mTransform;
         osg::ref_ptr<osg::Geometry> mGeom;
     };
@@ -264,7 +269,8 @@ namespace MWRender
     class Sun : public CelestialBody
     {
     public:
-        Sun(osg::Group* parentNode, Resource::SceneManager& sceneManager);
+        Sun(osg::Group* parentNode, Resource::SceneManager& sceneManager,
+            VFS::Path::NormalizedView sunTexture = {}, VFS::Path::NormalizedView glareTexture = {});
 
         ~Sun();
 
@@ -280,7 +286,7 @@ namespace MWRender
         /// pixels.
         osg::ref_ptr<osg::OcclusionQueryNode> createOcclusionQueryNode(osg::Group* parent, bool queryVisible);
 
-        void createSunFlash(Resource::ImageManager& imageManager);
+        void createSunFlash(Resource::ImageManager& imageManager, VFS::Path::NormalizedView glareTexture);
         void destroySunFlash();
 
         void createSunGlare();
@@ -304,7 +310,8 @@ namespace MWRender
             Type_Secunda
         };
 
-        Moon(osg::Group* parentNode, Resource::SceneManager& sceneManager, float scaleFactor, Type type);
+        Moon(osg::Group* parentNode, Resource::SceneManager& sceneManager, float scaleFactor, Type type,
+            bool nativeAssets = false);
 
         ~Moon();
 
@@ -317,6 +324,7 @@ namespace MWRender
 
     private:
         Type mType;
+        bool mNativeAssets;
         MoonState::Phase mPhase;
         osg::ref_ptr<MoonUpdater> mUpdater;
 

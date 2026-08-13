@@ -178,7 +178,10 @@ namespace MWSound
         try
         {
             DecoderPtr decoder = getDecoder();
-            decoder->open(Misc::ResourceHelpers::correctSoundPath(voicefile, *decoder->mResourceMgr));
+            const VFS::Path::Normalized path
+                = Misc::ResourceHelpers::correctSoundPath(voicefile, *decoder->mResourceMgr);
+            decoder->open(path);
+            Log(Debug::Info) << "M10 voice playback: " << path;
             return decoder;
         }
         catch (std::exception& e)
@@ -360,6 +363,23 @@ namespace MWSound
             return;
 
         mActiveSaySounds.emplace(nullptr, SaySound{ nullptr, std::move(sound) });
+    }
+
+    double SoundManager::getSoundFileDuration(VFS::Path::NormalizedView filename)
+    {
+        try
+        {
+            DecoderPtr decoder = getDecoder();
+            const VFS::Path::Normalized path
+                = Misc::ResourceHelpers::correctSoundPath(filename, *decoder->mResourceMgr);
+            decoder->open(path);
+            return decoder->getDuration();
+        }
+        catch (const std::exception& e)
+        {
+            Log(Debug::Warning) << "Failed to inspect audio duration for " << filename << ": " << e.what();
+            return 0.0;
+        }
     }
 
     bool SoundManager::sayDone(const MWWorld::ConstPtr& ptr) const
@@ -828,7 +848,7 @@ namespace MWSound
         if (mCurrentRegionSound && mOutput->isSoundPlaying(mCurrentRegionSound))
             return;
 
-        ESM::RefId next = mRegionSoundSelector.getNextRandom(duration, cell->getRegion());
+        ESM::RefId next = mRegionSoundSelector.getNextRandom(duration, *cell);
         if (!next.empty())
             mCurrentRegionSound = playSound(next, 1.0f, 1.0f);
     }
@@ -1084,6 +1104,42 @@ namespace MWSound
         }
     }
 
+    void SoundManager::updateNativeMusic()
+    {
+        if (!mVFS->exists(oblivionTitleMusic) || mMusicType == MusicType::MWScript)
+            return;
+
+        const MWWorld::ConstPtr player = MWBase::Environment::get().getWorld()->getPlayerPtr();
+        if (!player.isInCell())
+            return;
+        const MWWorld::Cell& cell = *player.getCell()->getCell();
+        std::string playlist;
+        if (MWMechanics::isPlayerInCombat())
+            playlist = "music/battle";
+        else if (!cell.isExterior() && cell.isEsm4() && cell.getEsm4().mMusicType == 2)
+            playlist = "music/dungeon";
+        else if (!cell.isExterior() && cell.isEsm4() && cell.getEsm4().mMusicType == 1)
+            playlist = "music/public";
+        else
+            playlist = cell.isExterior() ? "music/explore" : "music/dungeon";
+
+        if (isMusicPlaying() && playlist == mNativePlaylist)
+            return;
+        std::vector<VFS::Path::Normalized> tracks;
+        for (const VFS::Path::Normalized& path : mVFS->getRecursiveDirectoryIterator(playlist))
+        {
+            const auto ext = path.extension();
+            if (ext == "mp3" || ext == "ogg" || ext == "flac")
+                tracks.push_back(path);
+        }
+        if (tracks.empty())
+            return;
+        mNativePlaylist = playlist;
+        const std::size_t selection = static_cast<std::size_t>(Misc::Rng::rollDice(static_cast<int>(tracks.size())));
+        Log(Debug::Info) << "M10 native music state " << playlist << ": " << tracks[selection];
+        streamMusic(tracks[selection], MusicType::Normal);
+    }
+
     void SoundManager::update(float duration)
     {
         if (!mOutput->isInitialized() || mPlaybackPaused)
@@ -1095,13 +1151,16 @@ namespace MWSound
 
         if (isMainMenu && !isMusicPlaying())
         {
-            if (mVFS->exists(MWSound::titleMusic))
+            if (mVFS->exists(MWSound::oblivionTitleMusic))
+                streamMusic(MWSound::oblivionTitleMusic, MWSound::MusicType::Normal);
+            else if (mVFS->exists(MWSound::titleMusic))
                 streamMusic(MWSound::titleMusic, MWSound::MusicType::Normal);
         }
 
         updateSounds(duration);
         if (state != MWBase::StateManager::State_NoGame)
         {
+            updateNativeMusic();
             updateRegionSound(duration);
             updateWaterSound();
         }
@@ -1268,6 +1327,7 @@ namespace MWSound
     {
         stopMusic();
         mMusicType = MusicType::Normal;
+        mNativePlaylist.clear();
 
         for (SoundMap::value_type& snd : mActiveSounds)
         {

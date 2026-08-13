@@ -635,6 +635,7 @@ namespace MWRender
 
     CelestialBody::CelestialBody(osg::Group* parentNode, float scaleFactor, int numUvSets, unsigned int visibleMask)
         : mVisibleMask(visibleMask)
+        , mParentNode(parentNode)
     {
         mGeom = createTexturedQuad(numUvSets);
         mGeom->getOrCreateStateSet();
@@ -646,12 +647,19 @@ namespace MWRender
         parentNode->addChild(mTransform);
     }
 
+    CelestialBody::~CelestialBody()
+    {
+        if (mParentNode != nullptr)
+            mParentNode->removeChild(mTransform);
+    }
+
     void CelestialBody::setVisible(bool visible)
     {
         mTransform->setNodeMask(visible ? mVisibleMask : 0);
     }
 
-    Sun::Sun(osg::Group* parentNode, Resource::SceneManager& sceneManager)
+    Sun::Sun(osg::Group* parentNode, Resource::SceneManager& sceneManager, VFS::Path::NormalizedView sunTexture,
+        VFS::Path::NormalizedView glareTexture)
         : CelestialBody(parentNode, 1.0f, 1, Mask_Sun)
         , mUpdater(new SunUpdater)
     {
@@ -659,7 +667,8 @@ namespace MWRender
 
         Resource::ImageManager& imageManager = *sceneManager.getImageManager();
 
-        constexpr VFS::Path::NormalizedView image("textures/tx_sun_05.dds");
+        const VFS::Path::Normalized image = sunTexture.empty() ? VFS::Path::Normalized("textures/tx_sun_05.dds")
+                                                               : VFS::Path::Normalized(sunTexture);
 
         osg::ref_ptr<osg::Texture2D> sunTex = new osg::Texture2D(imageManager.getImage(image));
         sunTex->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
@@ -689,7 +698,7 @@ namespace MWRender
         mOcclusionQueryVisiblePixels = createOcclusionQueryNode(queryNode, true);
         mOcclusionQueryTotalPixels = createOcclusionQueryNode(queryNode, false);
 
-        createSunFlash(imageManager);
+        createSunFlash(imageManager, glareTexture);
         createSunGlare();
     }
 
@@ -791,9 +800,11 @@ namespace MWRender
         return oqn;
     }
 
-    void Sun::createSunFlash(Resource::ImageManager& imageManager)
+    void Sun::createSunFlash(Resource::ImageManager& imageManager, VFS::Path::NormalizedView glareTexture)
     {
-        constexpr VFS::Path::NormalizedView image("textures/tx_sun_flash_grey_05.dds");
+        const VFS::Path::Normalized image
+            = glareTexture.empty() ? VFS::Path::Normalized("textures/tx_sun_flash_grey_05.dds")
+                                   : VFS::Path::Normalized(glareTexture);
         osg::ref_ptr<osg::Texture2D> tex = new osg::Texture2D(imageManager.getImage(image));
         tex->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
         tex->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
@@ -877,9 +888,11 @@ namespace MWRender
         }
     }
 
-    Moon::Moon(osg::Group* parentNode, Resource::SceneManager& sceneManager, float scaleFactor, Type type)
+    Moon::Moon(osg::Group* parentNode, Resource::SceneManager& sceneManager, float scaleFactor, Type type,
+        bool nativeAssets)
         : CelestialBody(parentNode, scaleFactor, 2)
         , mType(type)
+        , mNativeAssets(nativeAssets)
         , mPhase(MoonState::Phase::Unspecified)
         , mUpdater(new MoonUpdater(*sceneManager.getImageManager()))
     {
@@ -942,7 +955,7 @@ namespace MWRender
 
         mPhase = phase;
 
-        std::string textureName = "textures/tx_";
+        std::string textureName = mNativeAssets ? "textures/sky/" : "textures/tx_";
 
         if (mType == Moon::Type_Secunda)
             textureName += "secunda_";
@@ -983,7 +996,12 @@ namespace MWRender
 
         const VFS::Path::Normalized texturePath(std::move(textureName));
 
-        if (mType == Moon::Type_Secunda)
+        if (mNativeAssets)
+        {
+            constexpr VFS::Path::NormalizedView shadow("textures/sky/moonshadow.dds");
+            mUpdater->setTextures(texturePath, shadow);
+        }
+        else if (mType == Moon::Type_Secunda)
         {
             constexpr VFS::Path::NormalizedView secunda("textures/tx_mooncircle_full_s.dds");
             mUpdater->setTextures(texturePath, secunda);

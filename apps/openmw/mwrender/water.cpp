@@ -23,6 +23,8 @@
 #include <components/sceneutil/rtt.hpp>
 #include <components/sceneutil/shadow.hpp>
 #include <components/sceneutil/waterutil.hpp>
+#include <components/sceneutil/util.hpp>
+#include <components/debug/debuglog.hpp>
 
 #include <components/misc/constants.hpp>
 #include <components/stereo/stereomanager.hpp>
@@ -32,12 +34,18 @@
 #include <components/shader/shadermanager.hpp>
 
 #include <components/esm3/loadcell.hpp>
+#include <components/esm4/loadwatr.hpp>
+#include <components/esm/util.hpp>
 
 #include <components/fallback/fallback.hpp>
 
 #include <components/settings/values.hpp>
+#include <components/misc/resourcehelpers.hpp>
+#include <components/vfs/manager.hpp>
 
 #include "../mwworld/cellstore.hpp"
+#include "../mwworld/esmstore.hpp"
+#include "../mwbase/environment.hpp"
 
 #include "renderbin.hpp"
 #include "ripples.hpp"
@@ -439,6 +447,14 @@ namespace MWRender
         , mTop(0)
         , mInterior(false)
         , mShowWorld(true)
+        , mWaterColor(0.090195f, 0.115685f, 0.12745f, 1.f)
+        , mWaterDeepColor(mWaterColor)
+        , mWindDirection(0.5f, -0.8f)
+        , mWindVelocity(0.2f)
+        , mWaveAmplitude(1.f)
+        , mWaveFrequency(1.f)
+        , mReflectivity(1.f)
+        , mFresnelAmount(0.f)
         , mCullCallback(nullptr)
         , mShaderWaterStateSetUpdater(nullptr)
     {
@@ -456,11 +472,11 @@ namespace MWRender
         mWaterNode->addCullCallback(new FudgeCallback);
 
         // simple water fallback for the local map
-        osg::ref_ptr<osg::Geometry> geom2(osg::clone(mWaterGeom.get(), osg::CopyOp::DEEP_COPY_NODES));
-        createSimpleWaterStateSet(geom2, Fallback::Map::getFloat("Water_Map_Alpha"));
-        geom2->setNodeMask(Mask_SimpleWater);
-        geom2->setName("Simple Water Geometry");
-        mWaterNode->addChild(geom2);
+        mSimpleWaterGeom = osg::clone(mWaterGeom.get(), osg::CopyOp::DEEP_COPY_NODES);
+        createSimpleWaterStateSet(mSimpleWaterGeom, Fallback::Map::getFloat("Water_Map_Alpha"));
+        mSimpleWaterGeom->setNodeMask(Mask_SimpleWater);
+        mSimpleWaterGeom->setName("Simple Water Geometry");
+        mWaterNode->addChild(mSimpleWaterGeom);
 
         mSceneRoot->addChild(mWaterNode);
 
@@ -573,11 +589,29 @@ namespace MWRender
         node->setUpdateCallback(nullptr);
         mRainSettingsUpdater = nullptr;
 
-        // Add animated textures
+        // Oblivion WATR records select one surface texture instead of Morrowind's numbered animation sequence.
         std::vector<osg::ref_ptr<osg::Texture2D>> textures;
+        if (!mNativeTexture.empty())
+        {
+            osg::ref_ptr<osg::Texture2D> texture(
+                new osg::Texture2D(mResourceSystem->getImageManager()->getImage(mNativeTexture)));
+            texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+            texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+            textures.push_back(texture);
+        }
+        else if (mResourceSystem->getVFS()->exists(
+                     VFS::Path::NormalizedView("textures/water/dungeonwater01.dds")))
+        {
+            const VFS::Path::Normalized path("textures/water/dungeonwater01.dds");
+            osg::ref_ptr<osg::Texture2D> texture(
+                new osg::Texture2D(mResourceSystem->getImageManager()->getImage(path)));
+            texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+            texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+            textures.push_back(texture);
+        }
         const int frameCount = std::clamp(Fallback::Map::getInt("Water_SurfaceFrameCount"), 0, 320);
         std::string_view texture = Fallback::Map::getString("Water_SurfaceTexture");
-        for (int i = 0; i < frameCount; ++i)
+        for (int i = 0; textures.empty() && i < frameCount; ++i)
         {
             std::ostringstream texname;
             texname << "textures/water/" << texture << std::setw(2) << std::setfill('0') << i << ".dds";
@@ -592,11 +626,13 @@ namespace MWRender
         if (textures.empty())
             return;
 
-        float fps = Fallback::Map::getFloat("Water_SurfaceFPS");
-
-        osg::ref_ptr<NifOsg::FlipController> controller(new NifOsg::FlipController(0, 1.f / fps, textures));
-        controller->setSource(std::make_shared<SceneUtil::FrameTimeSource>());
-        node->setUpdateCallback(controller);
+        if (textures.size() > 1)
+        {
+            float fps = Fallback::Map::getFloat("Water_SurfaceFPS");
+            osg::ref_ptr<NifOsg::FlipController> controller(new NifOsg::FlipController(0, 1.f / fps, textures));
+            controller->setSource(std::make_shared<SceneUtil::FrameTimeSource>());
+            node->setUpdateCallback(controller);
+        }
 
         stateset->setTextureAttribute(0, textures[0], osg::StateAttribute::ON);
 
@@ -647,6 +683,17 @@ namespace MWRender
                 stateset->addUniform(new osg::Uniform("rippleMap", 4));
             }
             stateset->addUniform(new osg::Uniform("nodePosition", osg::Vec3f(mWater->getPosition())));
+            const osg::Vec4f& color = mWater->getWaterColor();
+            stateset->addUniform(new osg::Uniform("waterColor", osg::Vec3f(color.r(), color.g(), color.b())));
+            const osg::Vec4f& deep = mWater->getWaterDeepColor();
+            stateset->addUniform(new osg::Uniform("waterDeepColor", osg::Vec3f(deep.r(), deep.g(), deep.b())));
+            stateset->addUniform(new osg::Uniform("waterOpacity", color.a()));
+            stateset->addUniform(new osg::Uniform("nativeWindDirection", mWater->getWindDirection()));
+            stateset->addUniform(new osg::Uniform("nativeWindSpeed", mWater->getWindVelocity()));
+            stateset->addUniform(new osg::Uniform("nativeWaveAmplitude", mWater->getWaveAmplitude()));
+            stateset->addUniform(new osg::Uniform("nativeWaveFrequency", mWater->getWaveFrequency()));
+            stateset->addUniform(new osg::Uniform("nativeReflectivity", mWater->getReflectivity()));
+            stateset->addUniform(new osg::Uniform("nativeFresnelAmount", mWater->getFresnelAmount()));
         }
 
         void apply(osg::StateSet* stateset, osg::NodeVisitor* nv) override
@@ -664,6 +711,17 @@ namespace MWRender
                 stateset->setTextureAttribute(4, mRipples->getColorTexture(), osg::StateAttribute::ON);
             }
             stateset->getUniform("nodePosition")->set(osg::Vec3f(mWater->getPosition()));
+            const osg::Vec4f& color = mWater->getWaterColor();
+            stateset->getUniform("waterColor")->set(osg::Vec3f(color.r(), color.g(), color.b()));
+            const osg::Vec4f& deep = mWater->getWaterDeepColor();
+            stateset->getUniform("waterDeepColor")->set(osg::Vec3f(deep.r(), deep.g(), deep.b()));
+            stateset->getUniform("waterOpacity")->set(color.a());
+            stateset->getUniform("nativeWindDirection")->set(mWater->getWindDirection());
+            stateset->getUniform("nativeWindSpeed")->set(mWater->getWindVelocity());
+            stateset->getUniform("nativeWaveAmplitude")->set(mWater->getWaveAmplitude());
+            stateset->getUniform("nativeWaveFrequency")->set(mWater->getWaveFrequency());
+            stateset->getUniform("nativeReflectivity")->set(mWater->getReflectivity());
+            stateset->getUniform("nativeFresnelAmount")->set(mWater->getFresnelAmount());
         }
 
     private:
@@ -692,7 +750,9 @@ namespace MWRender
         Shader::ShaderManager& shaderMgr = mResourceSystem->getSceneManager()->getShaderManager();
         osg::ref_ptr<osg::Program> program = shaderMgr.getProgram("water", defineMap);
 
-        constexpr VFS::Path::NormalizedView waterImage("textures/omw/water_nm.png");
+        const VFS::Path::Normalized waterImage = mNativeTexture.empty()
+            ? VFS::Path::Normalized("textures/omw/water_nm.png")
+            : mNativeTexture;
         osg::ref_ptr<osg::Texture2D> normalMap(
             new osg::Texture2D(mResourceSystem->getImageManager()->getImage(waterImage)));
         normalMap->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
@@ -736,6 +796,11 @@ namespace MWRender
 
     void Water::listAssetsToPreload(std::vector<VFS::Path::Normalized>& textures)
     {
+        if (mResourceSystem->getVFS()->exists(VFS::Path::NormalizedView("textures/water/dungeonwater01.dds")))
+        {
+            textures.emplace_back("textures/water/dungeonwater01.dds");
+            return;
+        }
         const int frameCount = std::clamp(Fallback::Map::getInt("Water_SurfaceFrameCount"), 0, 320);
         std::string_view texture = Fallback::Map::getString("Water_SurfaceTexture");
         for (int i = 0; i < frameCount; ++i)
@@ -754,12 +819,45 @@ namespace MWRender
 
     void Water::changeCell(const MWWorld::CellStore* store)
     {
+        const ESM::RefId waterId = store->getCell()->getWaterType();
+        if (!waterId.empty())
+        {
+            if (const ESM4::Water* water
+                = MWBase::Environment::get().getESMStore()->get<ESM4::Water>().search(waterId))
+            {
+                const osg::Vec4f shallow = SceneUtil::colourFromRGBA(water->mData.mShallowColor);
+                mWaterColor = osg::Vec4f(shallow.r(), shallow.g(), shallow.b(), water->mOpacity / 255.f);
+                const osg::Vec4f deep = SceneUtil::colourFromRGBA(water->mData.mDeepColor);
+                mWaterDeepColor = osg::Vec4f(deep.r(), deep.g(), deep.b(), 1.f);
+                mNativeTexture = water->mTexture.empty()
+                    ? VFS::Path::Normalized("textures/water/dungeonwater01.dds")
+                    : Misc::ResourceHelpers::correctTexturePath(
+                          VFS::Path::toNormalized(water->mTexture), *mResourceSystem->getVFS());
+                const float direction = osg::DegreesToRadians(water->mData.mWindDirection);
+                mWindDirection = osg::Vec2f(std::cos(direction), std::sin(direction));
+                mWindVelocity = water->mData.mWindVelocity;
+                mWaveAmplitude = std::max(0.f, water->mData.mWaveAmplitude);
+                mWaveFrequency = std::max(0.01f, water->mData.mWaveFrequency);
+                mReflectivity = std::max(0.f, water->mData.mReflectivity);
+                mFresnelAmount = std::max(0.f, water->mData.mFresnelAmount);
+                createSimpleWaterStateSet(mSimpleWaterGeom, Fallback::Map::getFloat("Water_Map_Alpha"));
+                if (Settings::water().mShader && waterId != mWaterType)
+                    updateWaterMaterial();
+                else if (!Settings::water().mShader)
+                    createSimpleWaterStateSet(mWaterGeom, Fallback::Map::getFloat("Water_World_Alpha"));
+                mWaterType = waterId;
+                Log(Debug::Info) << "M10 water " << water->mEditorId << ": texture=" << mNativeTexture
+                                 << " opacity=" << static_cast<int>(water->mOpacity) << " fog="
+                                 << water->mData.mFogNear << '-' << water->mData.mFogFar;
+            }
+        }
         bool isInterior = !store->getCell()->isExterior();
         bool wasInterior = mInterior;
         if (!isInterior)
         {
             mWaterNode->setPosition(
-                getSceneNodeCoordinates(store->getCell()->getGridX(), store->getCell()->getGridY()));
+                getSceneNodeCoordinates(store->getCell()->getGridX(), store->getCell()->getGridY(),
+                    store->getCell()->getWorldSpace()));
             mInterior = false;
         }
         else
@@ -830,10 +928,11 @@ namespace MWRender
         return pos.z() < mTop && mToggled && mEnabled;
     }
 
-    osg::Vec3f Water::getSceneNodeCoordinates(int gridX, int gridY)
+    osg::Vec3f Water::getSceneNodeCoordinates(int gridX, int gridY, ESM::RefId worldspace)
     {
-        return osg::Vec3f(static_cast<float>(gridX * Constants::CellSizeInUnits + (Constants::CellSizeInUnits / 2)),
-            static_cast<float>(gridY * Constants::CellSizeInUnits + (Constants::CellSizeInUnits / 2)), mTop);
+        const int cellSize = ESM::getCellSize(worldspace);
+        return osg::Vec3f(static_cast<float>(gridX * cellSize + (cellSize / 2)),
+            static_cast<float>(gridY * cellSize + (cellSize / 2)), mTop);
     }
 
     void Water::addEmitter(const MWWorld::Ptr& ptr, float scale, float force)

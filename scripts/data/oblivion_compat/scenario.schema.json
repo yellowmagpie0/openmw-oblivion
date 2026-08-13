@@ -45,6 +45,9 @@
               "key",
               "key_down",
               "key_up",
+              "key_held",
+              "key_hold",
+              "type_held",
               "type",
               "mouse_move",
               "mouse_move_absolute",
@@ -55,6 +58,8 @@
             ]
           },
           "seconds": {"type": "number", "minimum": 0},
+          "hold_seconds": {"type": "number", "minimum": 0},
+          "pause_seconds": {"type": "number", "minimum": 0},
           "name": {"type": "string"},
           "window": {"type": "string"},
           "inspect": {"type": "boolean"},

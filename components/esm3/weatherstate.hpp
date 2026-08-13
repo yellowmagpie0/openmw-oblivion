@@ -27,6 +27,7 @@ namespace ESM
         int32_t mCurrentWeather;
         int32_t mNextWeather;
         int32_t mQueuedWeather;
+        bool mWeatherOverride = false;
         std::map<ESM::RefId, RegionWeatherState> mRegions;
 
         void load(ESMReader& esm);

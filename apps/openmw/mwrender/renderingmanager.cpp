@@ -462,7 +462,8 @@ namespace MWRender
         workItem->mKeyframes.push_back(Settings::models().mXbaseanimfemalekf);
         workItem->mKeyframes.push_back(Settings::models().mXargonianswimknakf);
 
-        workItem->mTextures.emplace_back("textures/_land_default.dds");
+        if (mResourceSystem->getVFS()->exists(VFS::Path::NormalizedView("textures/_land_default.dds")))
+            workItem->mTextures.emplace_back("textures/_land_default.dds");
 
         mWorkQueue->addWorkItem(std::move(workItem));
     }
@@ -695,6 +696,16 @@ namespace MWRender
         float fogDepth, float underwaterFog, float dlFactor, float dlOffset, const osg::Vec4f& color)
     {
         mFog->configure(mViewDistance, fogDepth, underwaterFog, dlFactor, dlOffset, color);
+    }
+
+    void RenderingManager::configureFogExact(float fogNear, float fogFar, const osg::Vec4f& color)
+    {
+        mFog->configureExact(mViewDistance, fogNear, fogFar, color);
+    }
+
+    void RenderingManager::configureUnderwaterFog(float fogNear, float fogFar, const osg::Vec4f& color)
+    {
+        mFog->setUnderwaterFog(fogNear, fogFar, color);
     }
 
     SkyManager* RenderingManager::getSkyManager()

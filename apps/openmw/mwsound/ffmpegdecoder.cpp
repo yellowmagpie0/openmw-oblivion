@@ -459,6 +459,18 @@ namespace MWSound
         }
     }
 
+    double FFmpegDecoder::getDuration() const
+    {
+        if (!mFormatCtx)
+            return 0.0;
+        if (mFormatCtx->duration > 0 && mFormatCtx->duration != AV_NOPTS_VALUE)
+            return static_cast<double>(mFormatCtx->duration) / AV_TIME_BASE;
+        if (mStream != nullptr && *mStream != nullptr && (*mStream)->duration > 0
+            && (*mStream)->duration != AV_NOPTS_VALUE)
+            return static_cast<double>((*mStream)->duration) * av_q2d((*mStream)->time_base);
+        return 0.0;
+    }
+
     size_t FFmpegDecoder::read(char* buffer, size_t bytes)
     {
         if (!mStream)

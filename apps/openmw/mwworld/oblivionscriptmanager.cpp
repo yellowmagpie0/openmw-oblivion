@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -28,21 +29,30 @@
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadrace.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadscpt.hpp>
+#include <components/esm4/loadsndr.hpp>
+#include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
+#include <components/resource/resourcesystem.hpp>
+#include <components/vfs/manager.hpp>
+#include <components/vfs/recursivedirectoryiterator.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwsound/sound.hpp"
 #include "action.hpp"
 #include "class.hpp"
 #include "esmstore.hpp"
 #include "globalvariablename.hpp"
 #include "worldimp.hpp"
+#include "weather.hpp"
 
 namespace MWWorld
 {
@@ -210,6 +220,7 @@ namespace MWWorld
         , mCache(&mCoverage)
     {
         compileCorpus();
+        indexNativeVoices();
         loadScheduledEvents();
     }
 
@@ -234,7 +245,12 @@ namespace MWWorld
             mQuests.emplace(state.mQuest, std::move(state));
         }
         for (const ESM4::DialogInfo& info : mStore.get<ESM4::DialogInfo>())
+        {
             corpus.add(info, revision(info.mFormKey));
+            const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(info.mFormKey);
+            if (metadata != nullptr && metadata->mParent)
+                mTopicInfos[*metadata->mParent].push_back(info.mFormKey);
+        }
         corpus.finalize();
 
         for (const ObScript::ScriptUnit& unit : corpus.units())
@@ -305,6 +321,74 @@ namespace MWWorld
                          << " failed=" << mCompilationFailures << " scripts=" << mScripts.size()
                          << " quest-results=" << mQuestResults.size()
                          << " dialogue-results=" << mDialogueResults.size();
+    }
+
+    void OblivionScriptManager::indexNativeVoices()
+    {
+        const VFS::Manager* vfs = MWBase::Environment::get().getResourceSystem()->getVFS();
+        if (vfs == nullptr)
+            return;
+        for (const VFS::Path::Normalized& path
+            : vfs->getRecursiveDirectoryIterator(VFS::Path::NormalizedView("sound/voice/")))
+        {
+            const std::string_view value = path.value();
+            if (!value.ends_with(".mp3"))
+                continue;
+            constexpr std::string_view prefix = "sound/voice/";
+            const std::size_t pluginEnd = value.find('/', prefix.size());
+            if (pluginEnd == std::string_view::npos)
+                continue;
+            const std::size_t response = value.rfind('_', value.size() - 5);
+            const std::size_t form = response == std::string_view::npos ? response : value.rfind('_', response - 1);
+            if (form == std::string_view::npos || response - form != 9)
+                continue;
+            std::uint32_t localId = 0;
+            const std::string_view token = value.substr(form + 1, 8);
+            const auto parsed = std::from_chars(token.data(), token.data() + token.size(), localId, 16);
+            if (parsed.ec == std::errc{} && parsed.ptr == token.data() + token.size())
+                mNativeVoiceFiles[ESM::FormKey::content(value.substr(prefix.size(), pluginEnd - prefix.size()), localId)]
+                    .push_back(path.value());
+        }
+        for (auto& [_, paths] : mNativeVoiceFiles)
+            std::sort(paths.begin(), paths.end());
+        Log(Debug::Info) << "M10 native voice index: infos=" << mNativeVoiceFiles.size();
+    }
+
+    std::optional<std::string> OblivionScriptManager::findNativeVoice(
+        const ESM::FormKey& topic, const Ptr& actor, const ESM::FormKey& voiceType) const
+    {
+        std::string race;
+        std::string sex;
+        const ESM4::Npc* npc = nullptr;
+        if (!voiceType.isNull())
+            npc = mStore.search<ESM4::Npc>(voiceType);
+        if (npc == nullptr && !actor.isEmpty() && actor.getClass().getType() == ESM::REC_NPC_4)
+            npc = actor.get<ESM4::Npc>()->mBase;
+        if (npc != nullptr)
+        {
+            if (const ESM4::Race* raceRecord = mStore.get<ESM4::Race>().search(ESM::RefId(npc->mRace)))
+                race = lower(raceRecord->mFullName);
+            sex = (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0 ? "f" : "m";
+        }
+
+        const auto topicInfos = mTopicInfos.find(topic);
+        if (topicInfos == mTopicInfos.end())
+            return std::nullopt;
+        std::optional<std::string> fallback;
+        for (const ESM::FormKey& info : topicInfos->second)
+        {
+            const auto files = mNativeVoiceFiles.find(info);
+            if (files == mNativeVoiceFiles.end())
+                continue;
+            for (const std::string& path : files->second)
+            {
+                if (!fallback)
+                    fallback = path;
+                if (!race.empty() && path.find("/" + race + "/" + sex + "/") != std::string::npos)
+                    return path;
+            }
+        }
+        return fallback;
     }
 
     void OblivionScriptManager::loadScheduledEvents()
@@ -1293,15 +1377,105 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "forceweather" || name == "fw")
+        {
+            const auto weather = keyFromValue(argument(0));
+            const auto id = weather ? mResolver.toFormId(*weather) : std::nullopt;
+            const bool persistent = arguments.size() >= 2 && ObScript::asInteger(argument(1)) != 0;
+            const bool changed = id && mWorld.mWeatherManager->forceWeatherOverride(ESM::RefId(*id), persistent);
+            trace("forceweather weather=" + (weather ? weather->serialize() : std::string("null"))
+                + " override=" + (persistent ? "true" : "false")
+                + " applied=" + (changed ? "true" : "false"));
+            return std::int64_t(changed);
+        }
+        if (name == "releaseweatheroverride")
+        {
+            mWorld.mWeatherManager->releaseWeatherOverride();
+            trace("releaseweatheroverride");
+            return std::int64_t(0);
+        }
+
+        if (name == "playsound" || name == "playsound3d")
+        {
+            const auto sound = keyFromValue(argument(0));
+            const auto id = sound ? mResolver.toFormId(*sound) : std::nullopt;
+            bool loop = false;
+            if (id)
+            {
+                if (const ESM4::Sound* record = mStore.get<ESM4::Sound>().search(ESM::RefId(*id)))
+                    loop = (record->mData.flags & ESM4::Sound::Flag_Loop) != 0;
+                else if (const ESM4::SoundReference* soundReference
+                    = mStore.get<ESM4::SoundReference>().search(ESM::RefId(*id)))
+                    loop = (soundReference->mLoopInfo.flags & 0x1) != 0;
+            }
+            const MWSound::PlayMode mode = loop
+                ? (name == "playsound3d" ? MWSound::PlayMode::LoopRemoveAtDistance
+                                          : MWSound::PlayMode::LoopNoEnv)
+                : MWSound::PlayMode::Normal;
+            MWBase::Sound* played = nullptr;
+            if (id)
+            {
+                MWBase::SoundManager* manager = MWBase::Environment::get().getSoundManager();
+                const Ptr ptr = objectPtr();
+                if (name == "playsound3d" && !ptr.isEmpty())
+                    played = manager->playSound3D(ptr, ESM::RefId(*id), 1.f, 1.f, MWSound::Type::Sfx,
+                        mode);
+                else
+                    played = manager->playSound(
+                        ESM::RefId(*id), 1.f, 1.f, MWSound::Type::Sfx, mode);
+            }
+            trace(name + " sound=" + (sound ? sound->serialize() : std::string("null"))
+                + " ref=" + objectKey().serialize() + " played=" + (played ? "true" : "false"));
+            return std::int64_t(played != nullptr);
+        }
+
+        if (name == "say" || name == "sayto")
+        {
+            const Ptr speaker = objectPtr();
+            const std::size_t topicArg = name == "sayto" ? 1 : 0;
+            const std::size_t voiceArg = name == "sayto" ? 3 : 2;
+            const auto topic = keyFromValue(argument(topicArg));
+            const auto voiceType = keyFromValue(argument(voiceArg));
+            const std::optional<std::string> voice
+                = topic ? findNativeVoice(*topic, speaker, voiceType.value_or(ESM::FormKey{})) : std::nullopt;
+            if (!voice)
+            {
+                trace(name + " topic=" + (topic ? topic->serialize() : std::string("null"))
+                    + " voice=missing");
+                return double(0);
+            }
+            MWBase::SoundManager* manager = MWBase::Environment::get().getSoundManager();
+            const VFS::Path::Normalized path(*voice);
+            const double duration = manager->getSoundFileDuration(path);
+            if (!speaker.isEmpty()
+                && (speaker.getClass().getType() == ESM::REC_NPC_4
+                    || speaker.getClass().getType() == ESM::REC_CREA4))
+                manager->say(speaker, path);
+            else
+                manager->say(path);
+            trace(name + " topic=" + topic->serialize() + " voice=" + *voice
+                + " duration=" + std::to_string(duration));
+            return duration;
+        }
+
+        if (name == "playbink")
+        {
+            const std::string video = ObScript::valueString(argument(0));
+            const bool allowSkipping = arguments.size() < 2 || ObScript::asInteger(argument(1)) != 0;
+            MWBase::Environment::get().getWindowManager()->playVideo(video, allowSkipping);
+            trace("playbink video=" + video + " skipping=" + (allowSkipping ? "true" : "false"));
+            return std::int64_t(0);
+        }
+
         // These commands acknowledge state owned by later AI/UI/audio/magic
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
-            "evaluatepackage", "evp", "addtopic", "showmap", "say", "sayto", "playsound", "playsound3d",
+            "evaluatepackage", "evp", "addtopic", "showmap",
             "cast", "addspell", "removespell", "moddisposition", "setessential",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
             "pathpointenable", "pathpointdisable", "stopcombat", "startcombat", "equipitem", "unequipitem",
-            "forceflee", "forceweather", "releaseweatheroverride", "setrestrained", "setunconscious" };
+            "forceflee", "setrestrained", "setunconscious" };
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());

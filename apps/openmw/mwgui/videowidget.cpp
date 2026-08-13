@@ -31,6 +31,7 @@ namespace MWGui
 
     void VideoWidget::playVideo(const std::string& video)
     {
+        Log(Debug::Info) << "M10 video playback: " << video;
         mPlayer->setAudioFactory(new MWSound::MovieAudioFactory());
 
         Files::IStreamPtr videoStream;

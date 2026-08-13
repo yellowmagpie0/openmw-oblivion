@@ -72,6 +72,18 @@ namespace MWGui
                 mSplashScreens.push_back(name);
         }
         if (mSplashScreens.empty())
+        {
+            constexpr VFS::Path::NormalizedView oblivionLoading("textures/menus/loading/");
+            for (const auto& name
+                : mResourceSystem->getVFS()->getRecursiveDirectoryIterator(oblivionLoading))
+            {
+                if (isSupportedExtension(Misc::getFileExtension(name)))
+                    mSplashScreens.push_back(name);
+            }
+            if (!mSplashScreens.empty())
+                Log(Debug::Info) << "M10 native loading media: images=" << mSplashScreens.size();
+        }
+        if (mSplashScreens.empty())
             Log(Debug::Warning) << "Warning: no splash screens found!";
     }
 

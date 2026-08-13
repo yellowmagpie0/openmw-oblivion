@@ -1,10 +1,12 @@
 #include "weatherbindings.hpp"
 
+#include <stdexcept>
 #include <type_traits>
 
 #include <osg/Vec4f>
 
 #include <components/esm3/loadregn.hpp>
+#include <components/esm/gameprofile.hpp>
 #include <components/lua/util.hpp>
 #include <components/misc/color.hpp>
 #include <components/misc/finitevalues.hpp>
@@ -14,6 +16,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwworld/cellstore.hpp"
+#include "../mwworld/cell.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/scene.hpp"
 #include "../mwworld/weather.hpp"
@@ -239,8 +242,17 @@ namespace MWLua
 
         api["changeWeather"] = [](std::string_view regionId, const MWWorld::Weather& weather) {
             ESM::RefId region = ESM::RefId::deserializeText(regionId);
-            MWBase::Environment::get().getESMStore()->get<ESM::Region>().find(region);
-            MWBase::Environment::get().getWorld()->changeWeather(region, weather.mId);
+            MWBase::World* world = MWBase::Environment::get().getWorld();
+            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                const MWWorld::Ptr player = world->getPlayerPtr();
+                if (!player.isInCell())
+                    throw std::runtime_error("Cannot change weather before the player enters a cell");
+                region = player.getCell()->getCell()->getClimate();
+            }
+            else
+                MWBase::Environment::get().getESMStore()->get<ESM::Region>().find(region);
+            world->changeWeather(region, weather.mId);
         };
 
         sol::usertype<WeatherStore> storeT = lua.new_usertype<WeatherStore>("WeatherWorldStore");

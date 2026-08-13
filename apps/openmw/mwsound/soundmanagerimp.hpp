@@ -100,6 +100,7 @@ namespace MWSound
         Sound* mNearWaterSound;
 
         VFS::Path::Normalized mNextMusic;
+        std::string mNativePlaylist;
         bool mPlaybackPaused;
 
         RegionSoundSelector mRegionSoundSelector;
@@ -136,6 +137,7 @@ namespace MWSound
         void updateRegionSound(float duration);
         void updateWaterSound();
         void updateMusic(float duration);
+        void updateNativeMusic();
 
         enum class WaterSoundAction
         {
@@ -186,6 +188,7 @@ namespace MWSound
         /// \param filename name of a sound file in the VFS
 
         void say(VFS::Path::NormalizedView filename) override;
+        double getSoundFileDuration(VFS::Path::NormalizedView filename) override;
         ///< Say some text, without an actor ref
         /// \param filename name of a sound file in the VFS
 

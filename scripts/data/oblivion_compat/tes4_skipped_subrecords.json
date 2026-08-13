@@ -73,7 +73,6 @@
     { "record": "REGN", "subrecord": "RDGS", "reason": "Regional grass selection is deferred to exterior rendering." },
     { "record": "REGN", "subrecord": "RDMD", "reason": "Regional map metadata is deferred to world-map UI." },
     { "record": "REGN", "subrecord": "RDOT", "reason": "Regional object placement is deferred to exterior rendering." },
-    { "record": "REGN", "subrecord": "RDWT", "reason": "Regional weather selection is deferred to environment gameplay." },
     { "record": "SGST", "subrecord": "EFID", "reason": "Effect semantics are deferred to the magic-system milestone." },
     { "record": "SGST", "subrecord": "EFIT", "reason": "Effect semantics are deferred to the magic-system milestone." },
     { "record": "SGST", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },

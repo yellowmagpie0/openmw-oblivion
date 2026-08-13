@@ -198,6 +198,10 @@ namespace MWWorld
     {
         if (mSky && (isCellExterior() || isCellQuasiExterior()))
         {
+            // Select the cell's native climate before the sky lazily creates its sun, moons, and
+            // night model. Waiting for the next weather tick would briefly instantiate fallback assets.
+            if (mGameProfile == ESM::GameProfile::Oblivion && mWeatherManager && getPlayerPtr().isInCell())
+                mWeatherManager->playerTeleported(getPlayerPtr().getCell()->getCell()->getRegion(), true);
             mRendering->setSkyEnabled(true);
         }
         else
@@ -448,7 +452,9 @@ namespace MWWorld
 
         if (!bypass)
         {
-            std::string_view video = Fallback::Map::getString("Movies_New_Game");
+            const std::string_view video = mGameProfile == ESM::GameProfile::Oblivion
+                ? std::string_view("OblivionIntro.bik")
+                : Fallback::Map::getString("Movies_New_Game");
             if (!video.empty())
             {
                 // Make sure that we do not continue to play a Title music after a new game video.

@@ -30,6 +30,15 @@ namespace MWRender
         osg::Vec4f color = SceneUtil::colourFromRGB(cell.getMood().mFogColor);
 
         const float fogDensity = cell.getMood().mFogDensity;
+        if (cell.isEsm4() && cell.getMood().mFogFar > cell.getMood().mFogNear)
+        {
+            mLandFogStart = std::min(viewDistance, cell.getMood().mFogNear);
+            mLandFogEnd = std::min(viewDistance, cell.getMood().mFogFar);
+            mUnderwaterFogStart = Settings::fog().mDistantUnderwaterFogStart;
+            mUnderwaterFogEnd = Settings::fog().mDistantUnderwaterFogEnd;
+            mFogColor = color;
+            return;
+        }
         if (Settings::fog().mUseDistantFog)
         {
             float density = std::max(0.2f, fogDensity);
@@ -71,6 +80,21 @@ namespace MWRender
             mUnderwaterFogEnd = std::min(viewDistance, 7168.f);
         }
         mFogColor = color;
+    }
+
+    void FogManager::configureExact(float viewDistance, float fogNear, float fogFar, const osg::Vec4f& color)
+    {
+        mLandFogStart = std::clamp(fogNear, 0.f, viewDistance);
+        mLandFogEnd = std::clamp(fogFar, mLandFogStart, viewDistance);
+        mFogColor = color;
+    }
+
+    void FogManager::setUnderwaterFog(float fogNear, float fogFar, const osg::Vec4f& color)
+    {
+        mUnderwaterFogStart = std::max(0.f, fogNear);
+        mUnderwaterFogEnd = std::max(mUnderwaterFogStart, fogFar);
+        mUnderwaterColor = color;
+        mUnderwaterWeight = 1.f;
     }
 
     float FogManager::getFogStart(bool isUnderwater) const

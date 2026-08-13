@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m10-environment-{scene}",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart={start}\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Terrain]\ndistant terrain = true\nobject paging = true\nobject paging active grid = true\nlod factor = 0.5\n[Groundcover]\nenabled = false\n[Camera]\nviewing distance = 65536\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 35},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "{scene}-initial.png", "minimum_entropy": 0.06},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type_held", "value": "lua global"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "type", "value": "world.setGameTimeScale(7200); print('M10_STATE cycle_start '..core.getGameTime())", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 3},
+    {"type": "screenshot", "name": "{scene}-cycle-06h.png", "minimum_entropy": 0.06},
+    {"type": "sleep", "seconds": 3},
+    {"type": "screenshot", "name": "{scene}-cycle-12h.png", "minimum_entropy": 0.06},
+    {"type": "sleep", "seconds": 3},
+    {"type": "screenshot", "name": "{scene}-cycle-18h.png", "minimum_entropy": 0.06},
+    {"type": "sleep", "seconds": 3},
+    {"type": "screenshot", "name": "{scene}-cycle-24h.png", "minimum_entropy": 0.06},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type", "value": "print('M10_STATE cycle_end '..core.getGameTime()); world.setGameTimeScale(30); exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["WTHR", "CWTH"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": 0,
+  "expected_log": ["Loading cell", "M10 native environment:", "M10 climate", "M10 weather active:", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Failed to open (image|video|audio): Resource '.*(sky|weather|water|menus/loading)", "Resource '.*(sky|weather|water|menus/loading).*' not found", "shader.*failed", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

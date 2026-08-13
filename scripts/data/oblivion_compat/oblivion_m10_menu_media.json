@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m10-intro-menu-loading-media",
+  "cwd": "{source}",
+  "environment": {"ALSOFT_DRIVERS": "null"},
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=0\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 4},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "official-intro-video.png", "minimum_entropy": 0.01},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "screenshot", "name": "official-menu-video.png", "minimum_entropy": 0.01}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": 0,
+  "expected_log": ["M10 video playback: video/bethesda softworks hd720p.bik", "M10 video playback: video/2k games.bik", "M10 video playback: video/game studios.bik", "M10 video playback: video/oblivion legal.bik", "M10 video playback: video/oblivion iv logo.bik", "M10 video playback: video/map loop.bik", "M10 native loading media: images="],
+  "forbidden_log": ["Failed to open video", "Could not open video", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

@@ -1,0 +1,9 @@
+# Real shipped quest-result scripts exercising the M10 commands that M7 had
+# deliberately deferred. The player begins in ImperialDungeon01 so tutorial
+# speakers are live; remote quest references exercise the global fallback path.
+at 8 setstage CharacterGen 15
+at 12 setstage MQ09 56
+at 16 setstage MQ14 10
+at 20 setstage NDPilgrim 30
+at 27 setstage NDPilgrim 50
+at 30 setstage MQ16 14

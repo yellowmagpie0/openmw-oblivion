@@ -2,6 +2,9 @@
 
 #include <cmath>
 
+#include <components/esm4/loadclmt.hpp>
+#include <components/esm4/loadwthr.hpp>
+
 #include "apps/openmw/mwworld/timestamp.hpp"
 #include "apps/openmw/mwworld/weather.hpp"
 
@@ -21,6 +24,53 @@ namespace MWWorld
             EXPECT_EQ(MWRender::MoonState::phaseToInt(Phase::WaxingGibbous), 3);
             EXPECT_EQ(MWRender::MoonState::phaseToInt(Phase::WaningGibbous), 3);
             EXPECT_EQ(MWRender::MoonState::phaseToInt(Phase::Full), 4);
+        }
+
+        TEST(MWWorldWeatherTest, oblivionClimateTimingAndMoonFlagsAreDecodedExactly)
+        {
+            ESM4::Climate climate;
+            climate.mTiming.mSunriseBegin = 36;
+            climate.mTiming.mSunsetEnd = 114;
+            climate.mTiming.mMoonsPhase = ESM4::Climate::Moon_Masser | ESM4::Climate::Moon_Secunda | 5;
+
+            EXPECT_FLOAT_EQ(ESM4::Climate::decodeTime(climate.mTiming.mSunriseBegin), 6.f);
+            EXPECT_FLOAT_EQ(ESM4::Climate::decodeTime(climate.mTiming.mSunsetEnd), 19.f);
+            EXPECT_TRUE(climate.hasMasser());
+            EXPECT_TRUE(climate.hasSecunda());
+            EXPECT_EQ(climate.phaseLength(), 5u);
+        }
+
+        TEST(MWWorldWeatherTest, oblivionWeatherMapsExactFogPrecipitationAndCloudData)
+        {
+            ESM4::Weather native;
+            native.mId = ESM::FormId::fromUint32(0x1234);
+            native.mEditorId = "TestRain";
+            native.mLowerCloudTexture = "Sky\\CloudsLower.dds";
+            native.mFog = { 100.f, 2000.f, 300.f, 1200.f };
+            native.mData.mWindSpeed = 128;
+            native.mData.mTransitionDelta = 51;
+            native.mData.mSunGlare = 153;
+            native.mData.mClassification = ESM4::Weather::Classification_Rainy;
+
+            const Weather weather(native, 7);
+            EXPECT_EQ(weather.mId, ESM::RefId(native.mId));
+            EXPECT_EQ(weather.mScriptId, 7);
+            EXPECT_EQ(weather.mName, "TestRain");
+            EXPECT_EQ(weather.mCloudTexture, "textures/Sky\\CloudsLower.dds");
+            EXPECT_TRUE(weather.mUseExactFog);
+            EXPECT_FLOAT_EQ(weather.mFogNear.getDayValue(), 100.f);
+            EXPECT_FLOAT_EQ(weather.mFogFar.getDayValue(), 2000.f);
+            EXPECT_FLOAT_EQ(weather.mFogNear.getNightValue(), 300.f);
+            EXPECT_FLOAT_EQ(weather.mFogFar.getNightValue(), 1200.f);
+            EXPECT_FLOAT_EQ(weather.transitionDelta(), 51.f / 255.f);
+            EXPECT_FLOAT_EQ(weather.mGlareView, 153.f / 255.f);
+            EXPECT_FALSE(weather.mRainEffect.empty());
+            EXPECT_TRUE(weather.mParticleEffect.empty());
+
+            native.mData.mClassification = ESM4::Weather::Classification_Snow;
+            const Weather snow(native, 8);
+            EXPECT_TRUE(snow.mRainEffect.empty());
+            EXPECT_FALSE(snow.mParticleEffect.empty());
         }
 
         // MASSER PHASES

@@ -166,6 +166,9 @@ namespace MWWorld
 
         // Fog depth/density
         TimeOfDayInterpolator<float> mLandFogDepth;
+        TimeOfDayInterpolator<float> mFogNear;
+        TimeOfDayInterpolator<float> mFogFar;
+        bool mUseExactFog = false;
 
         // Color modulation for the sun itself during sunset
         osg::Vec4f mSunDiscSunsetColor;
@@ -230,6 +233,8 @@ namespace MWWorld
 
         float mCloudsMaximumPercent;
 
+        std::uint8_t mNativeClassification = 0;
+
         // Note: For Weather Blight, there is a "Disease Chance" (=0.1) setting. But according to MWSFD this feature
         // is broken in the vanilla game and was disabled.
 
@@ -289,6 +294,7 @@ namespace MWWorld
             float moonShadowEarlyFadeAngle);
 
         MWRender::MoonState calculateState(const TimeStamp& gameTime) const;
+        void setPhaseLength(unsigned days);
 
     private:
         float mFadeInStart;
@@ -301,6 +307,7 @@ namespace MWWorld
         float mFadeStartAngle;
         float mFadeEndAngle;
         float mMoonShadowEarlyFadeAngle;
+        unsigned mPhaseLength = 3;
 
         float angle(int gameDay, float gameHour) const;
         float moonPhaseHour(int gameDay) const;
@@ -328,6 +335,9 @@ namespace MWWorld
          */
         void changeWeather(const ESM::RefId& regionID, const unsigned int weatherID);
         void changeWeather(const ESM::RefId& regionID, const ESM::RefId& weatherID);
+        bool forceWeatherOverride(const ESM::RefId& weatherID, bool overrideRegionalWeather);
+        void releaseWeatherOverride();
+        bool hasWeatherOverride() const { return mWeatherOverride; }
         void modRegion(const ESM::RefId& regionID, std::span<const uint8_t> chances);
         std::span<const uint8_t> getRegionChances(const ESM::RefId& regionID) const;
         void playerTeleported(const ESM::RefId& playerRegion, bool isExterior);
@@ -428,6 +438,7 @@ namespace MWWorld
         int mQueuedWeather;
         std::map<ESM::RefId, RegionWeather> mRegions;
         bool mNativeWeather = false;
+        bool mWeatherOverride = false;
         MWRender::WeatherResult mResult;
 
         MWBase::Sound* mAmbientSound{ nullptr };

@@ -15,6 +15,7 @@ namespace ESM
         constexpr NAME currentWeatherRecord = "CWTH";
         constexpr NAME nextWeatherRecord = "NWTH";
         constexpr NAME queuedWeatherRecord = "QWTH";
+        constexpr NAME weatherOverrideRecord = "OWTH";
         constexpr NAME regionNameRecord = "RGNN";
         constexpr NAME regionWeatherRecord = "RGNW";
         constexpr NAME regionChanceRecord = "RGNC";
@@ -33,6 +34,7 @@ namespace ESM
         esm.getHNT(mCurrentWeather, currentWeatherRecord);
         esm.getHNT(mNextWeather, nextWeatherRecord);
         esm.getHNT(mQueuedWeather, queuedWeatherRecord);
+        esm.getHNOT(mWeatherOverride, weatherOverrideRecord);
 
         while (esm.isNextSub(regionNameRecord))
         {
@@ -60,6 +62,8 @@ namespace ESM
         esm.writeHNT(currentWeatherRecord, mCurrentWeather);
         esm.writeHNT(nextWeatherRecord, mNextWeather);
         esm.writeHNT(queuedWeatherRecord, mQueuedWeather);
+        if (mWeatherOverride)
+            esm.writeHNT(weatherOverrideRecord, mWeatherOverride);
 
         auto it = mRegions.begin();
         for (; it != mRegions.end(); ++it)

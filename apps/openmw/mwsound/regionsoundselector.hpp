@@ -3,12 +3,17 @@
 
 #include <components/esm/refid.hpp>
 
+namespace MWWorld
+{
+    class Cell;
+}
+
 namespace MWSound
 {
     class RegionSoundSelector
     {
     public:
-        ESM::RefId getNextRandom(float duration, const ESM::RefId& regionName);
+        ESM::RefId getNextRandom(float duration, const MWWorld::Cell& cell);
 
         RegionSoundSelector();
 

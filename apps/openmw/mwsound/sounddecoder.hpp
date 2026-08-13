@@ -43,6 +43,7 @@ namespace MWSound
 
         virtual std::string getName() = 0;
         virtual void getInfo(int* samplerate, ChannelConfig* chans, SampleType* type) = 0;
+        virtual double getDuration() const { return 0.0; }
 
         virtual size_t read(char* buffer, size_t bytes) = 0;
         virtual void readAll(std::vector<char>& output);

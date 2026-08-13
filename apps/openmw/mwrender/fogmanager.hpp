@@ -18,6 +18,9 @@ namespace MWRender
         void configure(float viewDistance, const MWWorld::Cell& cell);
         void configure(float viewDistance, float fogDepth, float underwaterFog, float dlFactor, float dlOffset,
             const osg::Vec4f& color);
+        void configureExact(float viewDistance, float fogNear, float fogFar, const osg::Vec4f& color);
+
+        void setUnderwaterFog(float fogNear, float fogFar, const osg::Vec4f& color);
 
         osg::Vec4f getFogColor(bool isUnderwater) const;
         float getFogStart(bool isUnderwater) const;

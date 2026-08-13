@@ -306,25 +306,19 @@ namespace MWRender
         mAtmosphereNightNode->setNodeMask(0);
         mEarlyRenderBinRoot->addChild(mAtmosphereNightNode);
 
-        osg::ref_ptr<osg::Node> atmosphereNight;
-        if (mSceneManager->getVFS()->exists(Settings::models().mSkynight02.get()))
-            atmosphereNight = mSceneManager->getInstance(Settings::models().mSkynight02.get(), mAtmosphereNightNode);
-        else
-            atmosphereNight = mSceneManager->getInstance(Settings::models().mSkynight01.get(), mAtmosphereNightNode);
-        atmosphereNight->getOrCreateStateSet()->setAttributeAndModes(
-            createAlphaTrackingUnlitMaterial(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        createNightSky();
 
-        ModVertexAlphaVisitor modStars(ModVertexAlphaVisitor::Stars);
-        atmosphereNight->accept(modStars);
-        mAtmosphereNightUpdater = new AtmosphereNightUpdater(mSceneManager->getImageManager());
-        atmosphereNight->addUpdateCallback(mAtmosphereNightUpdater);
-
-        mSun = std::make_unique<Sun>(mEarlyRenderBinRoot, *mSceneManager);
+        constexpr VFS::Path::NormalizedView nativeMoon("textures/sky/masser_full.dds");
+        const bool nativeAssets = mSceneManager->getVFS()->exists(nativeMoon);
+        mSun = std::make_unique<Sun>(mEarlyRenderBinRoot, *mSceneManager, mNativeSunTexture, mNativeGlareTexture);
         mSun->setSunglare(mSunglareEnabled);
         mMasser = std::make_unique<Moon>(
-            mEarlyRenderBinRoot, *mSceneManager, Fallback::Map::getFloat("Moons_Masser_Size") / 125, Moon::Type_Masser);
+            mEarlyRenderBinRoot, *mSceneManager, Fallback::Map::getFloat("Moons_Masser_Size") / 125,
+            Moon::Type_Masser, nativeAssets);
         mSecunda = std::make_unique<Moon>(mEarlyRenderBinRoot, *mSceneManager,
-            Fallback::Map::getFloat("Moons_Secunda_Size") / 125, Moon::Type_Secunda);
+            Fallback::Map::getFloat("Moons_Secunda_Size") / 125, Moon::Type_Secunda, nativeAssets);
+        mMasser->setVisible(mNativeMasser);
+        mSecunda->setVisible(mNativeSecunda);
 
         mCloudNode = new osg::Group;
         mEarlyRenderBinRoot->addChild(mCloudNode);
@@ -371,6 +365,25 @@ namespace MWRender
         mCreated = true;
     }
 
+    void SkyManager::createNightSky()
+    {
+        osg::ref_ptr<osg::Node> atmosphereNight;
+        if (!mNativeStarsModel.empty())
+            atmosphereNight = mSceneManager->getInstance(mNativeStarsModel, mAtmosphereNightNode);
+        else if (mSceneManager->getVFS()->exists(Settings::models().mSkynight02.get()))
+            atmosphereNight = mSceneManager->getInstance(Settings::models().mSkynight02.get(), mAtmosphereNightNode);
+        else
+            atmosphereNight = mSceneManager->getInstance(Settings::models().mSkynight01.get(), mAtmosphereNightNode);
+        atmosphereNight->getOrCreateStateSet()->setAttributeAndModes(
+            createAlphaTrackingUnlitMaterial(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
+        ModVertexAlphaVisitor modStars(ModVertexAlphaVisitor::Stars);
+        atmosphereNight->accept(modStars);
+        mAtmosphereNightUpdater = new AtmosphereNightUpdater(mSceneManager->getImageManager());
+        mAtmosphereNightUpdater->setFade(mStarsOpacity);
+        atmosphereNight->addUpdateCallback(mAtmosphereNightUpdater);
+    }
+
     void SkyManager::createRain()
     {
         if (mRainNode)
@@ -388,7 +401,10 @@ namespace MWRender
 
         osg::ref_ptr<osg::StateSet> stateset = mRainParticleSystem->getOrCreateStateSet();
 
-        constexpr VFS::Path::NormalizedView raindropImage("textures/tx_raindrop_01.dds");
+        constexpr VFS::Path::NormalizedView nativeRaindrop("textures/sky/raindrop.dds");
+        const VFS::Path::Normalized raindropImage(mSceneManager->getVFS()->exists(nativeRaindrop)
+                ? "textures/sky/raindrop.dds"
+                : "textures/tx_raindrop_01.dds");
         osg::ref_ptr<osg::Texture2D> raindropTex
             = new osg::Texture2D(mSceneManager->getImageManager()->getImage(raindropImage));
         raindropTex->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
@@ -842,6 +858,37 @@ namespace MWRender
         mPrecipitationAlpha = weather.mPrecipitationAlpha;
     }
 
+    void SkyManager::setNativeClimate(VFS::Path::Normalized sunTexture, VFS::Path::Normalized glareTexture,
+        VFS::Path::Normalized starsModel, bool masser, bool secunda)
+    {
+        if (sunTexture == mNativeSunTexture && glareTexture == mNativeGlareTexture && starsModel == mNativeStarsModel
+            && masser == mNativeMasser && secunda == mNativeSecunda)
+            return;
+        mNativeSunTexture = std::move(sunTexture);
+        mNativeGlareTexture = std::move(glareTexture);
+        mNativeStarsModel = std::move(starsModel);
+        mNativeMasser = masser;
+        mNativeSecunda = secunda;
+
+        if (!mCreated)
+            return;
+
+        mAtmosphereNightNode->removeChildren(0, mAtmosphereNightNode->getNumChildren());
+        createNightSky();
+
+        constexpr VFS::Path::NormalizedView nativeMoon("textures/sky/masser_full.dds");
+        const bool nativeAssets = mSceneManager->getVFS()->exists(nativeMoon);
+        mSun = std::make_unique<Sun>(mEarlyRenderBinRoot, *mSceneManager, mNativeSunTexture, mNativeGlareTexture);
+        mSun->setSunglare(mSunglareEnabled);
+        mMasser = std::make_unique<Moon>(
+            mEarlyRenderBinRoot, *mSceneManager, Fallback::Map::getFloat("Moons_Masser_Size") / 125,
+            Moon::Type_Masser, nativeAssets);
+        mSecunda = std::make_unique<Moon>(mEarlyRenderBinRoot, *mSceneManager,
+            Fallback::Map::getFloat("Moons_Secunda_Size") / 125, Moon::Type_Secunda, nativeAssets);
+        mMasser->setVisible(mNativeMasser);
+        mSecunda->setVisible(mNativeSecunda);
+    }
+
     float SkyManager::getBaseWindSpeed() const
     {
         if (!mCreated)
@@ -926,6 +973,20 @@ namespace MWRender
         models.push_back(Settings::models().mWeatherblightcloud);
         models.push_back(Settings::models().mWeathersnow);
         models.push_back(Settings::models().mWeatherblizzard);
+
+        constexpr VFS::Path::NormalizedView nativeMoon("textures/sky/masser_full.dds");
+        if (mSceneManager->getVFS()->exists(nativeMoon))
+        {
+            for (const char* moon : { "masser", "secunda" })
+                for (const char* phase : { "new", "one_wax", "half_wax", "three_wax", "one_wan", "half_wan",
+                         "three_wan", "full" })
+                    textures.emplace_back("textures/sky/" + std::string(moon) + '_' + phase + ".dds");
+            textures.emplace_back("textures/sky/moonshadow.dds");
+            textures.emplace_back("textures/sky/sun.dds");
+            textures.emplace_back("textures/sky/sunglare.dds");
+            textures.emplace_back("textures/sky/raindrop.dds");
+            return;
+        }
 
         textures.emplace_back("textures/tx_mooncircle_full_s.dds");
         textures.emplace_back("textures/tx_mooncircle_full_m.dds");

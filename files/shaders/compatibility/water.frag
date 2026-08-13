@@ -42,10 +42,15 @@ const float SPEC_BRIGHTNESS = 1.5;                 // boosts the brightness of t
 const float BUMP_SUPPRESS_DEPTH = 300.0;           // at what water depth bumpmap will be suppressed for reflections and refractions (prevents artifacts at shores)
 const float REFR_FOG_DISTORT_DISTANCE = 3000.0;    // at what distance refraction fog will be calculated using real water depth instead of distorted depth (prevents splotchy shores)
 
-const vec2 WIND_DIR = vec2(0.5f, -0.8f);
-const float WIND_SPEED = 0.2f;
-
-const vec3 WATER_COLOR = vec3(0.090195, 0.115685, 0.12745);
+uniform vec3 waterColor;
+uniform vec3 waterDeepColor;
+uniform float waterOpacity;
+uniform vec2 nativeWindDirection;
+uniform float nativeWindSpeed;
+uniform float nativeWaveAmplitude;
+uniform float nativeWaveFrequency;
+uniform float nativeReflectivity;
+uniform float nativeFresnelAmount;
 
 #if @wobblyShores
 const float WOBBLY_SHORE_FADE_DISTANCE = 6200.0;   // fade out wobbly shores to mask precision errors, the effect is almost impossible to see at a distance
@@ -55,7 +60,7 @@ const float WOBBLY_SHORE_FADE_DISTANCE = 6200.0;   // fade out wobbly shores to 
 
 vec2 normalCoords(vec2 uv, float scale, float speed, float time, float timer1, float timer2, vec3 previousNormal)
 {
-  return uv * (WAVE_SCALE * scale) + WIND_DIR * time * (WIND_SPEED * speed) -(previousNormal.xy/previousNormal.zz) * WAVE_CHOPPYNESS + vec2(time * timer1,time * timer2);
+  return uv * (WAVE_SCALE * nativeWaveFrequency * scale) + nativeWindDirection * time * (nativeWindSpeed * speed) -(previousNormal.xy/previousNormal.zz) * WAVE_CHOPPYNESS + vec2(time * timer1,time * timer2);
 }
 
 uniform sampler2D rippleMap;
@@ -130,7 +135,7 @@ void main(void)
 
     vec3 normal = (normal0 * bigWaves.x + normal1 * bigWaves.y + normal2 * midWaves.x +
                    normal3 * midWaves.y + normal4 * smallWaves.x + normal5 * smallWaves.y + rippleAdd);
-    normal = normalize(vec3(-normal.x * bump, -normal.y * bump, normal.z));
+    normal = normalize(vec3(-normal.x * bump * nativeWaveAmplitude, -normal.y * bump * nativeWaveAmplitude, normal.z));
 
     vec3 sunWorldDir = normalize((gl_ModelViewMatrixInverse * sun.position).xyz);
     vec3 cameraPos = (gl_ModelViewMatrixInverse * vec4(0,0,0,1)).xyz;
@@ -140,7 +145,7 @@ void main(void)
 
     // fresnel
     float ior = (cameraPos.z>0.0)?(1.333/1.0):(1.0/1.333); // air to water; water to air
-    float fresnel = clamp(fresnel_dielectric(viewDir, normal, ior), 0.0, 1.0);
+    float fresnel = clamp(nativeFresnelAmount + fresnel_dielectric(viewDir, normal, ior) * nativeReflectivity, 0.0, 1.0);
 
     vec2 screenCoordsOffset = normal.xy * REFL_BUMP;
 #if @waterRefraction
@@ -154,7 +159,7 @@ void main(void)
     // reflection
     vec3 reflection = sampleReflectionMap(screenCoords + screenCoordsOffset).rgb;
 
-    vec3 waterColor = WATER_COLOR * sunFade;
+    vec3 surfaceColor = waterColor * sunFade;
 
     vec4 sunSpec = sun.specular;
     // alpha component is sun visibility; we want to start fading lighting effects when visibility is low
@@ -196,7 +201,9 @@ void main(void)
     {
         float depthCorrection = sqrt(1.0 + 4.0 * DEPTH_FADE * DEPTH_FADE);
         float factor = DEPTH_FADE * DEPTH_FADE / (-0.5 * depthCorrection + 0.5 - waterDepthDistorted / VISIBILITY) + 0.5 * depthCorrection + 0.5;
-        refraction = mix(refraction, waterColor, clamp(factor, 0.0, 1.0));
+        vec3 depthColor = mix(surfaceColor, waterDeepColor * sunFade,
+                              clamp(waterDepthDistorted / VISIBILITY_DEPTH, 0.0, 1.0));
+        refraction = mix(refraction, depthColor, clamp(factor, 0.0, 1.0));
     }
 
 #if @sunlightScattering
@@ -216,8 +223,8 @@ void main(void)
     // no alpha here, so make sure raindrop ripple specularity gets properly subdued
     rainSpecular *= waterTransparency;
 #else
-    gl_FragData[0].rgb = mix(waterColor, reflection, (1.0 + fresnel) * 0.5);
-    gl_FragData[0].a = waterTransparency;
+    gl_FragData[0].rgb = mix(surfaceColor, reflection, (1.0 + fresnel) * 0.5);
+    gl_FragData[0].a = max(waterTransparency, waterOpacity);
 #endif
 
     vec3 pointSpecular = doSpecularLighting(gl_FragCoord.xy, (gl_ModelViewMatrix * vec4(position.xyz, 1.0)).xyz, normalize(gl_NormalMatrix * specNormal));

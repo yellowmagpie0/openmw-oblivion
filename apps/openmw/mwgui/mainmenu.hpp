@@ -5,6 +5,8 @@
 #include <optional>
 #include <thread>
 
+#include <components/vfs/pathutil.hpp>
+
 #include "savegamedialog.hpp"
 #include "windowbase.hpp"
 
@@ -27,13 +29,14 @@ namespace MWGui
     {
         MyGUI::ImageBox* mVideoBackground;
         VideoWidget* mVideo;
+        VFS::Path::Normalized mVideoPath;
         std::thread mThread;
         bool mRunning;
 
         void run();
 
     public:
-        MenuVideo(const VFS::Manager* vfs);
+        MenuVideo(const VFS::Manager* vfs, VFS::Path::Normalized video);
         void resize(int w, int h);
         void commitFrame();
         ~MenuVideo();

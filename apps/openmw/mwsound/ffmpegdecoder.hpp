@@ -109,6 +109,7 @@ namespace MWSound
 
         std::string getName() override;
         void getInfo(int* samplerate, ChannelConfig* chans, SampleType* type) override;
+        double getDuration() const override;
 
         size_t read(char* buffer, size_t bytes) override;
         void readAll(std::vector<char>& output) override;

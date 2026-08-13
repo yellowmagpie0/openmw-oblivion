@@ -134,6 +134,9 @@ namespace MWBase
         ///< Say some text, without an actor ref
         /// \param filename name of a sound file in the VFS
 
+        virtual double getSoundFileDuration(VFS::Path::NormalizedView) { return 0.0; }
+        ///< Return the decoded duration of an archived or loose audio file.
+
         virtual bool sayActive(const MWWorld::ConstPtr& reference = MWWorld::ConstPtr()) const = 0;
         ///< Is actor not speaking?
 

@@ -18,6 +18,7 @@
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/depth.hpp>
+#include <components/vfs/manager.hpp>
 
 #include "vismask.hpp"
 
@@ -30,6 +31,22 @@ namespace
 {
     void createWaterRippleStateSet(Resource::ResourceSystem* resourceSystem, osg::Node* node)
     {
+        constexpr VFS::Path::NormalizedView nativeRipple("textures/clutter/fightersguild/waterripple01.dds");
+        if (resourceSystem->getVFS()->exists(nativeRipple))
+        {
+            const VFS::Path::Normalized path("textures/clutter/fightersguild/waterripple01.dds");
+            osg::ref_ptr<osg::Texture2D> texture(
+                new osg::Texture2D(resourceSystem->getImageManager()->getImage(path)));
+            texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+            texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+            osg::ref_ptr<osg::StateSet> stateset(new osg::StateSet);
+            stateset->setTextureAttribute(0, texture, osg::StateAttribute::ON);
+            stateset->setMode(GL_BLEND, osg::StateAttribute::ON);
+            stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+            node->setStateSet(stateset);
+            return;
+        }
+
         int rippleFrameCount = Fallback::Map::getInt("Water_RippleFrameCount");
         if (rippleFrameCount <= 0)
             return;

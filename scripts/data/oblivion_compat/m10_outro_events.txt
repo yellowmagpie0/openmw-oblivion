@@ -1,0 +1,3 @@
+# MQ16 stage 65 is the official main-quest result that plays OblivionOutro,
+# releases the crisis override, and persistently forces Clear weather.
+at 8 setstage MQ16 65

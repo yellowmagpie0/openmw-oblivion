@@ -201,9 +201,20 @@ namespace MWSound
 
     SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM4::Sound& sound)
     {
+        static const AudioParams audioParams
+            = makeAudioParams(MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>());
         VFS::Path::Normalized path = Misc::ResourceHelpers::correctResourcePath({ { soundDir } },
             VFS::Path::toNormalized(sound.mSoundFile), *MWBase::Environment::get().getResourceSystem()->getVFS(), mp3);
-        float volume = 1, min = 1, max = 255; // TODO: needs research
+        const float volume = std::pow(10.f, -static_cast<float>(sound.mData.staticAttenuation) / 2000.f);
+        float min = sound.mData.minAttenuation;
+        float max = sound.mData.maxAttenuation;
+        if (min == 0 && max == 0)
+        {
+            min = audioParams.mAudioDefaultMinDistance;
+            max = audioParams.mAudioDefaultMaxDistance;
+        }
+        min = std::max(1.f, min * audioParams.mAudioMinDistanceMult);
+        max = std::max(min, max * audioParams.mAudioMaxDistanceMult);
         SoundBuffer& sfx = mSoundBuffers.emplace_back(std::move(path), volume, min, max);
         mBufferNameMap.emplace(soundId, &sfx);
         return &sfx;
@@ -213,7 +224,9 @@ namespace MWSound
     {
         VFS::Path::Normalized path = Misc::ResourceHelpers::correctResourcePath({ { soundDir } },
             VFS::Path::toNormalized(sound.mSoundFile), *MWBase::Environment::get().getResourceSystem()->getVFS(), mp3);
-        float volume = 1, min = 1, max = 255; // TODO: needs research
+        const float volume = std::pow(10.f, -static_cast<float>(sound.mData.staticAttenuation) / 2000.f);
+        const float min = 1.f;
+        const float max = 255.f;
         // TODO: sound.mSoundId can link to another SoundReference, probably we will need to add additional lookups to
         // ESMStore.
         SoundBuffer& sfx = mSoundBuffers.emplace_back(std::move(path), volume, min, max);

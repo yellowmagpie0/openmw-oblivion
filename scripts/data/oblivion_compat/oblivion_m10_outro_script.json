@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m10-real-mq16-outro",
+  "cwd": "{source}",
+  "environment": {
+    "ALSOFT_DRIVERS": "null",
+    "OPENMW_OBSCRIPT_EVENTS": "{source}/scripts/data/oblivion_compat/m10_outro_events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/obscript-report.json"
+  },
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=OldBridgeExterior\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 11},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "official-outro.png", "minimum_entropy": 0.01},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 5},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "assert_file", "path_glob": "obscript-report.json", "expected_count": 1, "minimum_size": 1000},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["WTHR", "OWTH"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": 0,
+  "expected_log": ["M10 video playback: video/oblivionoutro.bik", "M7 ObScript: playbink video=OblivionOutro.bik", "M7 ObScript: releaseweatheroverride", "M7 ObScript: forceweather weather=content:oblivion.esm:00038eef override=true applied=true", "M10 weather forced: Clear override=true", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["M7 ObScript: deferred command=(playbink|forceweather|releaseweatheroverride)", "Failed to open video", "Could not open video", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

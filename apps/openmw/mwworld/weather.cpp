@@ -4,12 +4,14 @@
 #include <components/settings/values.hpp>
 
 #include <components/misc/rng.hpp>
+#include <components/misc/resourcehelpers.hpp>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadregn.hpp>
 #include <components/esm3/weatherstate.hpp>
 #include <components/esm4/loadclmt.hpp>
+#include <components/esm4/loadwatr.hpp>
 #include <components/esm4/loadwthr.hpp>
 #include <components/debug/debuglog.hpp>
 #include <components/sceneutil/util.hpp>
@@ -173,6 +175,8 @@ namespace MWWorld
               Fallback::Map::getFloat("Weather_" + name + "_Land_Fog_Day_Depth"),
               Fallback::Map::getFloat("Weather_" + name + "_Land_Fog_Day_Depth"),
               Fallback::Map::getFloat("Weather_" + name + "_Land_Fog_Night_Depth"))
+        , mFogNear(0.f, 0.f, 0.f, 0.f)
+        , mFogFar(0.f, 0.f, 0.f, 0.f)
         , mSunDiscSunsetColor(Fallback::Map::getColour("Weather_" + name + "_Sun_Disc_Sunset_Color"))
         , mWindSpeed(Fallback::Map::getFloat("Weather_" + name + "_Wind_Speed"))
         , mCloudSpeed(Fallback::Map::getFloat("Weather_" + name + "_Cloud_Speed"))
@@ -256,6 +260,9 @@ namespace MWWorld
               weather.mFog.mNightFar > 0.f
                   ? std::clamp(1.f - weather.mFog.mNightNear / weather.mFog.mNightFar, 0.f, 1.f)
                   : 0.f)
+        , mFogNear(weather.mFog.mDayNear, weather.mFog.mDayNear, weather.mFog.mNightNear, weather.mFog.mNightNear)
+        , mFogFar(weather.mFog.mDayFar, weather.mFog.mDayFar, weather.mFog.mNightFar, weather.mFog.mNightFar)
+        , mUseExactFog(true)
         , mSunDiscSunsetColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sun][2]))
         , mWindSpeed(static_cast<float>(weather.mData.mWindSpeed) / 255.f)
         , mCloudSpeed(static_cast<float>(weather.mData.mLowerCloudSpeed) / 255.f)
@@ -280,6 +287,7 @@ namespace MWWorld
         , mFlashDecrement(4.f)
         , mFlashBrightness(0.f)
     {
+        mNativeClassification = weather.mData.mClassification;
         if (mCloudTexture.empty())
             mCloudTexture = weather.mUpperCloudTexture;
         if (!mCloudTexture.empty() && !VFS::Path::toNormalized(mCloudTexture).view().starts_with("textures/"))
@@ -516,6 +524,11 @@ namespace MWWorld
         return state;
     }
 
+    void MoonModel::setPhaseLength(unsigned days)
+    {
+        mPhaseLength = std::max(1u, days);
+    }
+
     inline float MoonModel::angle(int gameDay, float gameHour) const
     {
         // Morrowind's moons start travel on one side of the horizon (let's call it H-rise) and travel 180 degrees to
@@ -620,9 +633,9 @@ namespace MWWorld
 
         // If the moon didn't rise yet today, use yesterday's moon phase.
         if (gameTime.getHour() < moonPhaseHour(gameTime.getDay()))
-            return static_cast<MWRender::MoonState::Phase>((gameTime.getDay() / 3) % 8);
+            return static_cast<MWRender::MoonState::Phase>((gameTime.getDay() / mPhaseLength) % 8);
         else
-            return static_cast<MWRender::MoonState::Phase>(((gameTime.getDay() + 1) / 3) % 8);
+            return static_cast<MWRender::MoonState::Phase>(((gameTime.getDay() + 1) / mPhaseLength) % 8);
     }
 
     inline bool MoonModel::isVisible(int gameDay, float gameHour) const
@@ -772,11 +785,14 @@ namespace MWWorld
             for (const ESM4::Weather& weather : store.get<ESM4::Weather>())
                 mWeatherSettings.emplace_back(weather, static_cast<int>(mWeatherSettings.size()));
             importRegions();
-            configureClimate(store.get<ESM4::Climate>().begin()->mId);
+            // A climate is selected once the player enters a cell. Record iteration order is not a
+            // meaningful default (the base master happens to begin with a Shivering Isles test climate).
             Log(Debug::Info) << "M10 native environment: climates=" << store.get<ESM4::Climate>().getSize()
                              << " weather=" << mWeatherSettings.size() << " regions="
                              << store.get<ESM4::Region>().getSize() << " water=" << store.get<ESM4::Water>().getSize();
-            forceWeather(mRegions.begin()->second.getWeather());
+            const auto clear = std::find_if(mWeatherSettings.begin(), mWeatherSettings.end(),
+                [](const Weather& weather) { return Misc::StringUtils::ciEqual(weather.mName, "clear"); });
+            forceWeather(clear == mWeatherSettings.end() ? 0 : clear->mScriptId);
             return;
         }
 
@@ -838,6 +854,8 @@ namespace MWWorld
             {
                 rIt->second.setWeather(wIt->mScriptId);
                 regionalWeatherChanged(rIt->first, rIt->second);
+                if (mNativeWeather)
+                    Log(Debug::Info) << "M10 weather requested: " << wIt->mName << " environment=" << regionID;
             }
         }
     }
@@ -862,6 +880,32 @@ namespace MWWorld
                 regionalWeatherChanged(it->first, it->second);
             }
         }
+    }
+
+    bool WeatherManager::forceWeatherOverride(
+        const ESM::RefId& weatherID, const bool overrideRegionalWeather)
+    {
+        const auto found = std::find_if(mWeatherSettings.begin(), mWeatherSettings.end(),
+            [&](const Weather& weather) { return weather.mId == weatherID; });
+        if (found == mWeatherSettings.end())
+            return false;
+
+        forceWeather(found->mScriptId);
+        mWeatherOverride = overrideRegionalWeather;
+        Log(Debug::Info) << "M10 weather forced: " << found->mName
+                         << " override=" << (mWeatherOverride ? "true" : "false");
+        return true;
+    }
+
+    void WeatherManager::releaseWeatherOverride()
+    {
+        if (!mWeatherOverride)
+            return;
+        mWeatherOverride = false;
+        const auto found = mRegions.find(mCurrentRegion);
+        if (found != mRegions.end())
+            addWeatherTransition(found->second.getWeather());
+        Log(Debug::Info) << "M10 weather override released: environment=" << mCurrentRegion;
     }
 
     void WeatherManager::modRegion(const ESM::RefId& regionID, std::span<const uint8_t> chances)
@@ -902,7 +946,8 @@ namespace MWWorld
                 mCurrentRegion = environment;
                 if (mNativeWeather)
                     configureClimate(environment);
-                forceWeather(it->second.getWeather());
+                if (!mWeatherOverride)
+                    forceWeather(it->second.getWeather());
             }
         }
     }
@@ -934,7 +979,7 @@ namespace MWWorld
             if (updateWeatherTime() || updateWeatherRegion(environment))
             {
                 auto it = mRegions.find(mCurrentRegion);
-                if (it != mRegions.end())
+                if (it != mRegions.end() && !mWeatherOverride)
                 {
                     addWeatherTransition(it->second.getWeather());
                 }
@@ -1035,8 +1080,16 @@ namespace MWWorld
         mRendering.getSkyManager()->setMasserState(mMasser.calculateState(time));
         mRendering.getSkyManager()->setSecundaState(mSecunda.calculateState(time));
 
-        mRendering.configureFog(
-            mResult.mFogDepth, underwaterFog, mResult.mDLFogFactor, mResult.mDLFogOffset / 100.0f, mResult.mFogColor);
+        if (mResult.mUseExactFog)
+            mRendering.configureFogExact(mResult.mFogNear, mResult.mFogFar, mResult.mFogColor);
+        else
+            mRendering.configureFog(
+                mResult.mFogDepth, underwaterFog, mResult.mDLFogFactor, mResult.mDLFogOffset / 100.0f, mResult.mFogColor);
+
+        const ESM::RefId waterId = player.getCell()->getCell()->getWaterType();
+        if (const ESM4::Water* water = mStore.get<ESM4::Water>().search(waterId))
+            mRendering.configureUnderwaterFog(water->mData.mFogNear, water->mData.mFogFar,
+                SceneUtil::colourFromRGBA(water->mData.mDeepColor));
         mRendering.setAmbientColour(mResult.mAmbientColor);
         mRendering.setSunColour(mResult.mSunColor, mResult.mSunColor, mResult.mGlareView * glareFade);
 
@@ -1169,6 +1222,7 @@ namespace MWWorld
         state.mCurrentWeather = mCurrentWeather;
         state.mNextWeather = mNextWeather;
         state.mQueuedWeather = mQueuedWeather;
+        state.mWeatherOverride = mWeatherOverride;
 
         auto it = mRegions.begin();
         for (; it != mRegions.end(); ++it)
@@ -1196,6 +1250,7 @@ namespace MWWorld
             mCurrentWeather = state.mCurrentWeather;
             mNextWeather = state.mNextWeather;
             mQueuedWeather = state.mQueuedWeather;
+            mWeatherOverride = state.mWeatherOverride;
 
             mRegions.clear();
             importRegions();
@@ -1222,6 +1277,7 @@ namespace MWWorld
         mCurrentRegion = ESM::RefId();
         mTimePassed = 0.0f;
         mWeatherUpdateTime = 0.0f;
+        mWeatherOverride = false;
         forceWeather(0);
         mRegions.clear();
         importRegions();
@@ -1293,9 +1349,29 @@ namespace MWWorld
         const WeatherSetting exact{ 0.f, 0.f, 0.f, 0.f };
         for (const char* key : { "Sky", "Ambient", "Fog", "Sun" })
             mTimeSettings.mSunriseTransitions[key] = exact;
+
+        auto correctTexture = [](std::string_view value) {
+            if (value.empty())
+                return VFS::Path::Normalized();
+            std::string path(value);
+            if (!VFS::Path::toNormalized(path).view().starts_with("textures/"))
+                path = "textures/" + path;
+            return VFS::Path::Normalized(std::move(path));
+        };
+        const VFS::Path::Normalized sun = correctTexture(climate->mSunTexture);
+        const VFS::Path::Normalized glare = correctTexture(climate->mSunGlareTexture);
+        const VFS::Path::Normalized stars = climate->mModel.empty()
+            ? VFS::Path::Normalized("meshes/sky/stars.nif")
+            : Misc::ResourceHelpers::correctMeshPath(climate->mModel.getNormalized());
+        mRendering.getSkyManager()->setNativeClimate(sun, glare, stars, climate->hasMasser(), climate->hasSecunda());
+        mMasser.setPhaseLength(climate->phaseLength());
+        mSecunda.setPhaseLength(climate->phaseLength());
+
         Log(Debug::Info) << "M10 climate " << climate->mEditorId << ": sunrise=" << mSunriseTime << '-'
                          << mTimeSettings.mDayStart << " sunset=" << mSunsetTime << '-'
-                         << mTimeSettings.mNightStart << " phase-days=" << climate->phaseLength();
+                         << mTimeSettings.mNightStart << " phase-days=" << climate->phaseLength() << " sun=" << sun
+                         << " glare=" << glare << " stars=" << stars << " moons=" << climate->hasMasser() << '/'
+                         << climate->hasSecunda();
     }
 
     ESM::RefId WeatherManager::getPlayerEnvironment() const
@@ -1303,7 +1379,18 @@ namespace MWWorld
         const MWWorld::ConstPtr player = MWMechanics::getPlayer();
         if (!player.isInCell())
             return {};
-        const ESM::RefId climate = player.getCell()->getCell()->getClimate();
+        ESM::RefId climate = player.getCell()->getCell()->getClimate();
+        if (climate.empty())
+        {
+            const auto& climates = mStore.get<ESM4::Climate>();
+            const auto found = std::find_if(climates.begin(), climates.end(), [](const ESM4::Climate& value) {
+                return Misc::StringUtils::ciEqual(value.mEditorId, "DefaultClimate");
+            });
+            if (found != climates.end())
+                climate = ESM::RefId(found->mId);
+        }
+        if (!climate.empty() && !mRegions.contains(climate))
+            Log(Debug::Warning) << "M10 climate " << climate << " is not present in the imported climate map";
         return mRegions.contains(climate) ? climate : ESM::RefId();
     }
 
@@ -1313,7 +1400,7 @@ namespace MWWorld
         MWWorld::ConstPtr player = MWMechanics::getPlayer();
         if (player.isInCell())
         {
-            if (regionID == mCurrentRegion)
+            if (regionID == mCurrentRegion && !mWeatherOverride)
             {
                 addWeatherTransition(region.getWeather());
             }
@@ -1367,6 +1454,8 @@ namespace MWWorld
             if (mTransitionFactor <= 0.0f)
             {
                 mCurrentWeather = mNextWeather;
+                if (mNativeWeather)
+                    Log(Debug::Info) << "M10 weather active: " << mWeatherSettings[mCurrentWeather].mName;
                 mNextWeather = mQueuedWeather;
                 mQueuedWeather = invalidWeatherID;
 
@@ -1407,6 +1496,8 @@ namespace MWWorld
         mCurrentWeather = weatherID;
         mNextWeather = invalidWeatherID;
         mQueuedWeather = invalidWeatherID;
+        if (mNativeWeather && weatherID >= 0 && static_cast<std::size_t>(weatherID) < mWeatherSettings.size())
+            Log(Debug::Info) << "M10 weather active: " << mWeatherSettings[weatherID].mName;
     }
 
     inline bool WeatherManager::inTransition() const
@@ -1491,6 +1582,9 @@ namespace MWWorld
                 > mTimeSettings.mNightStart + mTimeSettings.mStarsPostSunsetStart - mTimeSettings.mStarsFadingDuration);
 
         mResult.mFogDepth = current.mLandFogDepth.getValue(gameHour, mTimeSettings, "Fog");
+        mResult.mFogNear = current.mFogNear.getValue(gameHour, mTimeSettings, "Fog");
+        mResult.mFogFar = current.mFogFar.getValue(gameHour, mTimeSettings, "Fog");
+        mResult.mUseExactFog = current.mUseExactFog;
         mResult.mFogColor = current.mFogColor.getValue(gameHour, mTimeSettings, "Fog");
         mResult.mAmbientColor = current.mAmbientColor.getValue(gameHour, mTimeSettings, "Ambient");
         mResult.mSunColor = current.mSunColor.getValue(gameHour, mTimeSettings, "Sun");
@@ -1562,6 +1656,9 @@ namespace MWWorld
         mResult.mAmbientColor = lerp(current.mAmbientColor, other.mAmbientColor, factor);
         mResult.mSunDiscColor = lerp(current.mSunDiscColor, other.mSunDiscColor, factor);
         mResult.mFogDepth = lerp(current.mFogDepth, other.mFogDepth, factor);
+        mResult.mFogNear = lerp(current.mFogNear, other.mFogNear, factor);
+        mResult.mFogFar = lerp(current.mFogFar, other.mFogFar, factor);
+        mResult.mUseExactFog = current.mUseExactFog && other.mUseExactFog;
         mResult.mDLFogFactor = lerp(current.mDLFogFactor, other.mDLFogFactor, factor);
         mResult.mDLFogOffset = lerp(current.mDLFogOffset, other.mDLFogOffset, factor);
 

@@ -235,7 +235,12 @@ namespace MWGui
         }
 
         // Play LevelUp Music
-        MWBase::Environment::get().getSoundManager()->streamMusic(MWSound::triumphMusic, MWSound::MusicType::Normal);
+        MWBase::SoundManager* sound = MWBase::Environment::get().getSoundManager();
+        const VFS::Path::NormalizedView track = MWBase::Environment::get().getWorld()->getGameProfile()
+                == ESM::GameProfile::Oblivion
+            ? MWSound::oblivionTriumphMusic
+            : MWSound::triumphMusic;
+        sound->streamMusic(track, MWSound::MusicType::Normal);
     }
 
     void LevelupDialog::onOkButtonClicked(MyGUI::Widget* /*sender*/)

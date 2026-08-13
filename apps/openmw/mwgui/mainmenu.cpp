@@ -43,7 +43,7 @@ namespace MWGui
                 }
                 // If finished playing, start again
                 if (!mVideo->update())
-                    mVideo->playVideo("video\\menu_background.bik");
+                    mVideo->playVideo(mVideoPath.value());
             }
             else if (!paused)
             {
@@ -54,8 +54,9 @@ namespace MWGui
         }
     }
 
-    MenuVideo::MenuVideo(const VFS::Manager* vfs)
-        : mRunning(true)
+    MenuVideo::MenuVideo(const VFS::Manager* vfs, VFS::Path::Normalized video)
+        : mVideoPath(std::move(video))
+        , mRunning(true)
     {
         // Use black background to correct aspect ratio
         mVideoBackground = MyGUI::Gui::getInstance().createWidgetReal<MyGUI::ImageBox>(
@@ -66,7 +67,7 @@ namespace MWGui
             "ImageBox", 0, 0, 1, 1, MyGUI::Align::Stretch, "MainMenuBackground");
         mVideo->setVFS(vfs);
 
-        mVideo->playVideo("video\\menu_background.bik");
+        mVideo->playVideo(mVideoPath.value());
         mThread = std::thread([this] { run(); });
     }
 
@@ -110,8 +111,9 @@ namespace MWGui
         mVersionText->setCaption(versionDescription);
 
         constexpr VFS::Path::NormalizedView menuBackgroundVideo("video/menu_background.bik");
+        constexpr VFS::Path::NormalizedView oblivionMenuVideo("video/map loop.bik");
 
-        mHasAnimatedMenu = mVFS->exists(menuBackgroundVideo);
+        mHasAnimatedMenu = mVFS->exists(menuBackgroundVideo) || mVFS->exists(oblivionMenuVideo);
         mDisableGamepadCursor = Settings::gui().mControllerMenus;
 
         updateMenu();
@@ -173,7 +175,10 @@ namespace MWGui
         if (name == "return")
             winMgr->removeGuiMode(GM_MainMenu);
         else if (name == "credits")
-            winMgr->playVideo("mw_credits.bik", true);
+            winMgr->playVideo(mVFS->exists(VFS::Path::NormalizedView("video/creditsmenu.bik"))
+                    ? "CreditsMenu.bik"
+                    : "mw_credits.bik",
+                true);
         else if (name == "exitgame")
         {
             if (MWBase::Environment::get().getStateManager()->getState() == MWBase::StateManager::State_NoGame)
@@ -260,7 +265,12 @@ namespace MWGui
         if (mHasAnimatedMenu)
         {
             if (!mVideo)
-                mVideo.emplace(mVFS);
+            {
+                constexpr VFS::Path::NormalizedView menuBackgroundVideo("video/menu_background.bik");
+                constexpr VFS::Path::NormalizedView oblivionMenuVideo("video/map loop.bik");
+                mVideo.emplace(mVFS, VFS::Path::Normalized(
+                                         mVFS->exists(menuBackgroundVideo) ? menuBackgroundVideo : oblivionMenuVideo));
+            }
 
             const auto& viewSize = MyGUI::RenderManager::getInstance().getViewSize();
             int screenWidth = viewSize.width;

@@ -67,6 +67,9 @@ namespace MWRender
 
         void setWeather(const WeatherResult& weather);
 
+        void setNativeClimate(VFS::Path::Normalized sunTexture, VFS::Path::Normalized glareTexture,
+            VFS::Path::Normalized starsModel, bool masser, bool secunda);
+
         void sunEnable();
 
         void sunDisable();
@@ -111,6 +114,7 @@ namespace MWRender
 
         void createRain();
         void destroyRain();
+        void createNightSky();
         void switchUnderwaterRain();
         void updateRainParameters();
 
@@ -144,6 +148,12 @@ namespace MWRender
         std::unique_ptr<Sun> mSun;
         std::unique_ptr<Moon> mMasser;
         std::unique_ptr<Moon> mSecunda;
+
+        VFS::Path::Normalized mNativeSunTexture;
+        VFS::Path::Normalized mNativeGlareTexture;
+        VFS::Path::Normalized mNativeStarsModel;
+        bool mNativeMasser = true;
+        bool mNativeSecunda = true;
 
         osg::ref_ptr<osg::Group> mRainNode;
         osg::ref_ptr<osgParticle::ParticleSystem> mRainParticleSystem;

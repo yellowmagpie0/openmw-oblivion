@@ -918,9 +918,25 @@ void OMW::Engine::prepareEngine()
 
     if (!mSkipMenu)
     {
-        std::string_view logo = Fallback::Map::getString("Movies_Company_Logo");
-        if (!logo.empty())
-            mWindowManager->playVideo(logo, true);
+        if (resolveResourceProfile() == ESM::GameProfile::Oblivion)
+        {
+            // The native intro sequence is ordered data in Oblivion_default.ini. Keep the complete
+            // official sequence here until general INI import exposes that list to the engine.
+            for (const VFS::Path::NormalizedView video : { VFS::Path::NormalizedView("video/bethesda softworks hd720p.bik"),
+                     VFS::Path::NormalizedView("video/2k games.bik"),
+                     VFS::Path::NormalizedView("video/game studios.bik"),
+                     VFS::Path::NormalizedView("video/oblivion legal.bik") })
+            {
+                if (mVFS->exists(video))
+                    mWindowManager->playVideo(video.filename().value(), true);
+            }
+        }
+        else
+        {
+            std::string_view logo = Fallback::Map::getString("Movies_Company_Logo");
+            if (!logo.empty())
+                mWindowManager->playVideo(logo, true);
+        }
     }
 
     listener->loadingOn();
@@ -1056,14 +1072,25 @@ void OMW::Engine::go()
         // start in main menu
         mWindowManager->pushGuiMode(MWGui::GM_MainMenu);
 
-        if (mVFS->exists(MWSound::titleMusic))
+        if (mWorld->getGameProfile() == ESM::GameProfile::Oblivion && mVFS->exists(MWSound::oblivionTitleMusic))
+            mSoundManager->streamMusic(MWSound::oblivionTitleMusic, MWSound::MusicType::Normal);
+        else if (mVFS->exists(MWSound::titleMusic))
             mSoundManager->streamMusic(MWSound::titleMusic, MWSound::MusicType::Normal);
         else
             Log(Debug::Warning) << "Title music not found";
 
-        std::string_view logo = Fallback::Map::getString("Movies_Morrowind_Logo");
-        if (!logo.empty())
-            mWindowManager->playVideo(logo, /*allowSkipping*/ true, /*overrideSounds*/ false);
+        if (mWorld->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            constexpr VFS::Path::NormalizedView logo("video/oblivion iv logo.bik");
+            if (mVFS->exists(logo))
+                mWindowManager->playVideo("Oblivion iv logo.bik", true, false);
+        }
+        else
+        {
+            std::string_view logo = Fallback::Map::getString("Movies_Morrowind_Logo");
+            if (!logo.empty())
+                mWindowManager->playVideo(logo, true, false);
+        }
     }
     else
     {

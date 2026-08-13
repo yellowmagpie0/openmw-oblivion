@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include "ptr.hpp"
@@ -89,6 +90,8 @@ namespace MWWorld
         std::map<ESM::FormKey, std::shared_ptr<const ObScript::Program>> mBaseScripts;
         std::map<ESM::FormKey, ESM::FormKey> mReferenceBases;
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mDialogueResults;
+        std::map<ESM::FormKey, std::vector<ESM::FormKey>> mTopicInfos;
+        std::map<ESM::FormKey, std::vector<std::string>> mNativeVoiceFiles;
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mQuestResults;
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
         std::map<InstanceKey, Instance> mInstances;
@@ -106,6 +109,9 @@ namespace MWWorld
         std::set<ESM::FormKey> mSuppressedActivations;
 
         void compileCorpus();
+        void indexNativeVoices();
+        std::optional<std::string> findNativeVoice(
+            const ESM::FormKey& topic, const Ptr& actor, const ESM::FormKey& voiceType) const;
         void loadScheduledEvents();
         void runScheduledEvents();
         void executeScheduledEvent(const ScheduledEvent& event);
