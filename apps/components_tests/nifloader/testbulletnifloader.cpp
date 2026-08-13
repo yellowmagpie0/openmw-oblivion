@@ -5,6 +5,7 @@
 #include <components/nif/data.hpp>
 #include <components/nif/extra.hpp>
 #include <components/nif/node.hpp>
+#include <components/nif/physics.hpp>
 #include <components/nifbullet/bulletnifloader.hpp>
 
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
@@ -1198,6 +1199,120 @@ namespace
         Resource::BulletShape expected;
 
         EXPECT_EQ(*result, expected);
+    }
+
+    TEST_F(TestBulletNifLoader, oblivion_bhk_collision_uses_havok_geometry_instead_of_visible_geometry)
+    {
+        Nif::bhkCollisionObject collision;
+        Nif::bhkRigidBody body;
+        Nif::bhkBoxShape box;
+
+        collision.mRecordType = Nif::RC_bhkCollisionObject;
+        collision.mBody = Nif::bhkWorldObjectPtr(&body);
+        body.mRecordType = Nif::RC_bhkRigidBody;
+        body.mShape = Nif::bhkShapePtr(&box);
+        box.mRecordType = Nif::RC_bhkBoxShape;
+        box.mExtents = osg::Vec3f(1.f, 2.f, 3.f);
+
+        mNiIntegerExtraData.mData = 2;
+        mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+        mNiNode.mExtraList.push_back(Nif::ExtraPtr(&mNiIntegerExtraData));
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(&collision);
+
+        Nif::NIFFile file(testNif);
+        file.mRoots.push_back(&mNiNode);
+        file.mHash = mHash;
+        file.mVersion = Nif::NIFFile::VER_OB;
+        file.mBethVersion = 11;
+
+        const auto result = mLoader.load(file);
+
+        ASSERT_NE(result->mCollisionShape, nullptr);
+        const auto& compound = static_cast<const btCompoundShape&>(*result->mCollisionShape);
+        ASSERT_EQ(compound.getNumChildShapes(), 1);
+        ASSERT_EQ(compound.getChildShape(0)->getShapeType(), BOX_SHAPE_PROXYTYPE);
+        const auto& bulletBox = static_cast<const btBoxShape&>(*compound.getChildShape(0));
+        constexpr float havok660Scale = 10.f / 1.42875f;
+        const btVector3 expectedExtents = btVector3(1.f, 2.f, 3.f) * havok660Scale;
+        const btVector3 actualExtents = bulletBox.getHalfExtentsWithMargin();
+        EXPECT_NEAR(actualExtents.x(), expectedExtents.x(), 1e-5f);
+        EXPECT_NEAR(actualExtents.y(), expectedExtents.y(), 1e-5f);
+        EXPECT_NEAR(actualExtents.z(), expectedExtents.z(), 1e-5f);
+        EXPECT_EQ(mLoader.getBethesdaCollisionStats().mObjects, 1);
+        EXPECT_EQ(mLoader.getBethesdaCollisionStats().mUnsupportedObjects, 0);
+        EXPECT_EQ(mLoader.getBethesdaCollisionStats().mUnsupportedShapes, 0);
+    }
+
+    TEST_F(TestBulletNifLoader, oblivion_loose_havok_triangle_strips_remain_in_model_units)
+    {
+        Nif::bhkCollisionObject collision;
+        Nif::bhkRigidBody body;
+        Nif::bhkMoppBvTreeShape mopp;
+        Nif::bhkNiTriStripsShape strips;
+
+        collision.mRecordType = Nif::RC_bhkCollisionObject;
+        collision.mBody = Nif::bhkWorldObjectPtr(&body);
+        body.mRecordType = Nif::RC_bhkRigidBody;
+        body.mShape = Nif::bhkShapePtr(&mopp);
+        mopp.mRecordType = Nif::RC_bhkMoppBvTreeShape;
+        mopp.mShape = Nif::bhkShapePtr(&strips);
+        strips.mRecordType = Nif::RC_bhkNiTriStripsShape;
+        strips.mData = Nif::NiTriStripsDataList{ Nif::RecordPtrT<Nif::NiTriStripsData>(&mNiTriStripsData) };
+
+        mNiIntegerExtraData.mData = 2;
+        mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+        mNiNode.mExtraList.push_back(Nif::ExtraPtr(&mNiIntegerExtraData));
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(&collision);
+
+        Nif::NIFFile file(testNif);
+        file.mRoots.push_back(&mNiNode);
+        file.mVersion = Nif::NIFFile::VER_OB;
+        file.mBethVersion = 11;
+
+        const auto result = mLoader.load(file);
+
+        ASSERT_NE(result->mCollisionShape, nullptr);
+        const auto& compound = static_cast<const btCompoundShape&>(*result->mCollisionShape);
+        ASSERT_EQ(compound.getNumChildShapes(), 1);
+        ASSERT_EQ(compound.getChildShape(0)->getShapeType(), TRIANGLE_MESH_SHAPE_PROXYTYPE);
+        const auto& mesh = static_cast<const btBvhTriangleMeshShape&>(*compound.getChildShape(0));
+        const auto triangles = getTriangles(mesh);
+        ASSERT_EQ(triangles.size(), 6);
+        EXPECT_TRUE(isNear(triangles[0], btVector3(0.f, 0.f, 0.f)));
+        EXPECT_TRUE(isNear(triangles[1], btVector3(1.f, 0.f, 0.f)));
+        EXPECT_TRUE(isNear(triangles[2], btVector3(1.f, 1.f, 0.f)));
+    }
+
+    TEST_F(TestBulletNifLoader, unknown_bethesda_shape_is_reported_and_does_not_fall_back_to_visible_geometry)
+    {
+        struct UnknownShape : Nif::bhkShape
+        {
+            void read(Nif::NIFStream*) override {}
+        };
+        Nif::bhkCollisionObject collision;
+        Nif::bhkRigidBody body;
+        UnknownShape unknown;
+
+        collision.mRecordType = Nif::RC_bhkCollisionObject;
+        collision.mBody = Nif::bhkWorldObjectPtr(&body);
+        body.mRecordType = Nif::RC_bhkRigidBody;
+        body.mShape = Nif::bhkShapePtr(&unknown);
+
+        mNiIntegerExtraData.mData = 2;
+        mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+        mNiNode.mExtraList.push_back(Nif::ExtraPtr(&mNiIntegerExtraData));
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(&collision);
+
+        Nif::NIFFile file(testNif);
+        file.mRoots.push_back(&mNiNode);
+        file.mVersion = Nif::NIFFile::VER_OB;
+        file.mBethVersion = 11;
+
+        const auto result = mLoader.load(file);
+
+        EXPECT_EQ(result->mCollisionShape, nullptr);
+        EXPECT_EQ(mLoader.getBethesdaCollisionStats().mObjects, 1);
+        EXPECT_EQ(mLoader.getBethesdaCollisionStats().mUnsupportedShapes, 1);
     }
 
     TEST_F(TestBulletNifLoader, mrk_editor_marker_flag_disables_collision_for_markers)

@@ -7,6 +7,7 @@
 #include <string>
 
 #include <osg/BoundingBox>
+#include <osg/Matrixf>
 #include <osg/Referenced>
 #include <osg/ref_ptr>
 
@@ -22,6 +23,8 @@ class btCollisionShape;
 
 namespace Nif
 {
+    struct bhkShape;
+    struct bhkWorldObject;
     struct NiAVObject;
     struct NiNode;
     struct NiGeometry;
@@ -37,6 +40,13 @@ namespace NifBullet
     class BulletNifLoader
     {
     public:
+        struct BethesdaCollisionStats
+        {
+            std::size_t mObjects{ 0 };
+            std::size_t mUnsupportedObjects{ 0 };
+            std::size_t mUnsupportedShapes{ 0 };
+        };
+
         void warn(const std::string& msg) { Log(Debug::Warning) << "NIFLoader: Warn: " << msg; }
 
         [[noreturn]] void fail(const std::string& msg)
@@ -46,6 +56,7 @@ namespace NifBullet
         }
 
         osg::ref_ptr<Resource::BulletShape> load(Nif::FileView file);
+        const BethesdaCollisionStats& getBethesdaCollisionStats() const { return mBethesdaCollisionStats; }
 
     private:
         bool findBoundingBox(const Nif::NiAVObject& node);
@@ -63,12 +74,18 @@ namespace NifBullet
         void handleRoot(Nif::FileView nif, const Nif::NiAVObject& node, HandleNodeArgs args);
         void handleNode(const Nif::NiAVObject& node, const Nif::Parent* parent, HandleNodeArgs args);
         void handleGeometry(const Nif::NiGeometry& nifNode, const Nif::Parent* parent, HandleNodeArgs args);
+        void handleBethesdaCollision(const Nif::NiAVObject& node, const Nif::Parent* parent, HandleNodeArgs args);
+        std::unique_ptr<btCollisionShape> makeBethesdaShape(const Nif::bhkShape& shape);
+        void addCollisionShape(std::unique_ptr<btCollisionShape> shape, const osg::Matrixf& transform,
+            int animatedRecordIndex = -1);
 
         std::unique_ptr<btCompoundShape, Resource::DeleteCollisionShape> mCompoundShape;
         std::unique_ptr<btCompoundShape, Resource::DeleteCollisionShape> mAvoidCompoundShape;
 
         osg::ref_ptr<Resource::BulletShape> mShape;
         std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
+        float mHavokScale{ 1.f };
+        BethesdaCollisionStats mBethesdaCollisionStats;
     };
 
 }

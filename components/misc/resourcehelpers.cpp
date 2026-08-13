@@ -1,5 +1,6 @@
 #include "resourcehelpers.hpp"
 
+#include <array>
 #include <sstream>
 #include <string_view>
 
@@ -137,7 +138,55 @@ VFS::Path::Normalized Misc::ResourceHelpers::correctResourcePath(
 VFS::Path::Normalized Misc::ResourceHelpers::correctTexturePath(
     VFS::Path::NormalizedView resPath, const VFS::Manager& vfs)
 {
-    return correctResourcePath({ { textures, bookart } }, resPath, vfs, dds);
+    VFS::Path::Normalized corrected = correctResourcePath({ { textures, bookart } }, resPath, vfs, dds);
+    if (vfs.exists(corrected))
+        return corrected;
+
+    // A few released Oblivion NIFs contain pre-release or misspelled texture names.  Keep the
+    // workaround here, after normal path correction, so it is harmless for replacement archives
+    // that provide the originally referenced file.  Every destination below exists in the official
+    // Oblivion/SI archives and was selected from the matching asset family.
+    static constexpr std::array aliases{
+        std::pair{ "textures/architecture/anvil/lorgenburn.dds", "textures/architecture/anvil/lorgenhand.dds" },
+        std::pair{ "textures/architecture/cheydinhal/cheydinhalstonewall.dds",
+            "textures/architecture/cheydinhal/cheydinhalstonewall01.dds" },
+        std::pair{ "textures/clutter/fightersguild/f_guildshieldbacking.dds",
+            "textures/clutter/fightersguild/fguildshieldbacking.dds" },
+        std::pair{ "textures/architecture/city/mania/maniwood01_dem.dds",
+            "textures/architecture/city/mania/maniwood01.dds" },
+        std::pair{ "textures/architecture/imperialcity/icinterior/ictowerrosette01.dds",
+            "textures/architecture/imperialcity/icinterior/ictowerrosetter01.dds" },
+        std::pair{ "textures/architecture/statue/clavicusvile.dds",
+            "textures/architecture/daedricstatues/clavicusvile01.dds" },
+        std::pair{ "textures/clutter/sefurniture/setapestry02.dds",
+            "textures/clutter/sefurniture/sedungeon_tapestrym02.dds" },
+        std::pair{ "textures/dungeons/chargen/idrubble01.dds", "textures/dungeons/misc/burntrubblepile01.dds" },
+        std::pair{ "textures/dungeons/fortruins/ivy.dds", "textures/landscape/ivy.dds" },
+        std::pair{ "textures/dungeons/fortruins/ivy_lite.dds", "textures/landscape/ivylite.dds" },
+        std::pair{ "textures/dungeons/sewers/sewerfloor02.dds", "textures/dungeons/sewers/sewerfloor01.dds" },
+        std::pair{ "textures/plants/vineyard/vine.dds", "textures/plants/grapevine01.dds" },
+        std::pair{ "textures/oblivion/citadel interior/scampknocker01.dds",
+            "textures/oblivion/citadel interior/obsidian01.dds" },
+        std::pair{ "textures/architecture/castle/kvatch/kvatchdunfloor03.dds",
+            "textures/architecture/castle/kvatch/kvatchdunfloor01.dds" },
+    };
+
+    for (const auto& [source, destination] : aliases)
+    {
+        if (corrected == source && vfs.exists(VFS::Path::NormalizedView(destination)))
+            return VFS::Path::Normalized(destination);
+    }
+
+    // Kvatch's released meshes include several "..dds" references.
+    std::string deduplicated(corrected.value());
+    for (std::size_t pos = deduplicated.find("..dds"); pos != std::string::npos;
+         pos = deduplicated.find("..dds", pos))
+        deduplicated.erase(pos, 1);
+    VFS::Path::Normalized candidate(std::move(deduplicated));
+    if (vfs.exists(candidate))
+        return candidate;
+
+    return corrected;
 }
 
 VFS::Path::Normalized Misc::ResourceHelpers::correctIconPath(VFS::Path::NormalizedView resPath, const VFS::Manager& vfs)

@@ -4,9 +4,12 @@
 #include <string>
 
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.h>
+#include <BulletCollision/CollisionShapes/btSphereShape.h>
 
 namespace Resource
 {
@@ -50,6 +53,36 @@ namespace Resource
             {
                 const btBoxShape* boxshape = static_cast<const btBoxShape*>(shape);
                 return CollisionShapePtr(new btBoxShape(*boxshape));
+            }
+
+            if (shape->getShapeType() == SPHERE_SHAPE_PROXYTYPE)
+                return CollisionShapePtr(new btSphereShape(static_cast<const btSphereShape&>(*shape)));
+
+            if (shape->getShapeType() == CONVEX_HULL_SHAPE_PROXYTYPE)
+            {
+                const auto& source = static_cast<const btConvexHullShape&>(*shape);
+                auto result = CollisionShapePtr(new btConvexHullShape(reinterpret_cast<const btScalar*>(
+                    source.getUnscaledPoints()), source.getNumPoints(), sizeof(btVector3)));
+                result->setLocalScaling(source.getLocalScaling());
+                result->setMargin(source.getMargin());
+                return result;
+            }
+
+            if (shape->getShapeType() == MULTI_SPHERE_SHAPE_PROXYTYPE)
+            {
+                const auto& source = static_cast<const btMultiSphereShape&>(*shape);
+                std::vector<btVector3> positions;
+                std::vector<btScalar> radii;
+                positions.reserve(source.getSphereCount());
+                radii.reserve(source.getSphereCount());
+                for (int i = 0; i < source.getSphereCount(); ++i)
+                {
+                    positions.push_back(source.getSpherePosition(i));
+                    radii.push_back(source.getSphereRadius(i));
+                }
+                auto result = CollisionShapePtr(new btMultiSphereShape(positions.data(), radii.data(), positions.size()));
+                result->setLocalScaling(source.getLocalScaling());
+                return result;
             }
 
             if (shape->getShapeType() == TERRAIN_SHAPE_PROXYTYPE)

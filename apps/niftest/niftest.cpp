@@ -14,6 +14,10 @@
 #include <components/files/conversion.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/nif/niffile.hpp>
+#include <components/nifbullet/bulletnifloader.hpp>
+#include <components/nifosg/nifloader.hpp>
+#include <components/resource/bgsmfilemanager.hpp>
+#include <components/resource/imagemanager.hpp>
 #include <components/vfs/archive.hpp>
 #include <components/vfs/bsaarchive.hpp>
 #include <components/vfs/filesystemarchive.hpp>
@@ -24,6 +28,17 @@
 
 // Create local aliases for brevity
 namespace bpo = boost::program_options;
+
+struct ReadStats
+{
+    std::size_t mFiles{ 0 };
+    std::size_t mNifFiles{ 0 };
+    std::size_t mCollisionObjects{ 0 };
+    std::size_t mSceneGraphs{ 0 };
+    std::size_t mFailedFiles{ 0 };
+    std::size_t mUnsupportedCollisionObjects{ 0 };
+    std::size_t mUnsupportedCollisionShapes{ 0 };
+};
 
 enum class FileType
 {
@@ -120,7 +135,9 @@ std::unique_ptr<VFS::Archive> makeArchive(const std::filesystem::path& path)
 }
 
 bool readFile(
-    const std::filesystem::path& source, const std::filesystem::path& path, const VFS::Manager* vfs, bool quiet)
+    const std::filesystem::path& source, const std::filesystem::path& path, const VFS::Manager* vfs, bool quiet,
+    bool loadCollision, bool loadSceneGraph, Resource::ImageManager* imageManager,
+    Resource::BgsmFileManager* materialManager, ReadStats& stats)
 {
     const auto [fileType, fileClass] = classifyFile(path);
     if (fileClass != FileClass::NIF && fileClass != FileClass::Material)
@@ -137,6 +154,7 @@ bool readFile(
     const std::filesystem::path fullPath = !source.empty() ? source / path : path;
     try
     {
+        ++stats.mFiles;
         switch (fileClass)
         {
             case FileClass::NIF:
@@ -147,6 +165,21 @@ bool readFile(
                     reader.parse(vfs->get(VFS::Path::Normalized(pathStr)));
                 else
                     reader.parse(Files::openConstrainedFileStream(fullPath));
+                ++stats.mNifFiles;
+                if (fileType == FileType::NIF && loadCollision)
+                {
+                    NifBullet::BulletNifLoader loader;
+                    loader.load(file);
+                    const auto& collisionStats = loader.getBethesdaCollisionStats();
+                    stats.mCollisionObjects += collisionStats.mObjects;
+                    stats.mUnsupportedCollisionObjects += collisionStats.mUnsupportedObjects;
+                    stats.mUnsupportedCollisionShapes += collisionStats.mUnsupportedShapes;
+                }
+                if (fileType == FileType::NIF && loadSceneGraph)
+                {
+                    NifOsg::Loader::load(file, imageManager, materialManager);
+                    ++stats.mSceneGraphs;
+                }
                 break;
             }
             case FileClass::Material:
@@ -163,6 +196,7 @@ bool readFile(
     }
     catch (std::exception& e)
     {
+        ++stats.mFailedFiles;
         std::cerr << "Failed to read '" << pathStr << "':" << std::endl << e.what() << std::endl;
     }
     return true;
@@ -170,7 +204,8 @@ bool readFile(
 
 /// Check all the nif files in a given VFS::Archive
 /// \note Can not read a bsa file inside of a bsa file.
-void readVFS(std::unique_ptr<VFS::Archive>&& archive, const std::filesystem::path& archivePath, bool quiet)
+void readVFS(std::unique_ptr<VFS::Archive>&& archive, const std::filesystem::path& archivePath, bool quiet,
+    bool loadCollision, bool loadSceneGraph, ReadStats& stats)
 {
     if (archive == nullptr)
         return;
@@ -181,10 +216,13 @@ void readVFS(std::unique_ptr<VFS::Archive>&& archive, const std::filesystem::pat
     VFS::Manager vfs;
     vfs.addArchive(std::move(archive));
     vfs.buildIndex();
+    Resource::ImageManager imageManager(&vfs, 0);
+    Resource::BgsmFileManager materialManager(&vfs, 0);
 
     for (const auto& name : vfs.getRecursiveDirectoryIterator())
     {
-        readFile(archivePath, name.value(), &vfs, quiet);
+        readFile(archivePath, name.value(), &vfs, quiet, loadCollision, loadSceneGraph, &imageManager,
+            &materialManager, stats);
     }
 
     if (!archivePath.empty() && !isBSA(archivePath))
@@ -198,7 +236,8 @@ void readVFS(std::unique_ptr<VFS::Archive>&& archive, const std::filesystem::pat
             {
                 try
                 {
-                    readVFS(VFS::makeBsaArchive(file.second, nullptr), file.second, quiet);
+                    readVFS(VFS::makeBsaArchive(file.second, nullptr), file.second, quiet, loadCollision,
+                        loadSceneGraph, stats);
                 }
                 catch (const std::exception& e)
                 {
@@ -211,7 +250,7 @@ void readVFS(std::unique_ptr<VFS::Archive>&& archive, const std::filesystem::pat
 }
 
 bool parseOptions(int argc, char** argv, Files::PathContainer& files, Files::PathContainer& archives,
-    bool& writeDebugLog, bool& quiet)
+    bool& writeDebugLog, bool& quiet, bool& loadCollision, bool& loadSceneGraph, bool& scanVfs, bool& strict)
 {
     bpo::options_description desc(
         R"(Ensure that OpenMW can use the provided NIF, KF, BTO/BTR, RDT, PSA, BGEM/BGSM and BSA/BA2 files
@@ -225,6 +264,10 @@ Allowed options)");
     addOption("help,h", "print help message.");
     addOption("write-debug-log,v", "write debug log for unsupported nif files");
     addOption("quiet,q", "do not log read archives/files");
+    addOption("collision,c", "build Bullet collision shapes and report unsupported Bethesda collision");
+    addOption("scene-graph,g", "build the OSG scene graph for each NIF (requires all referenced archives)");
+    addOption("scan-vfs", "scan every supported file in the combined --archives virtual filesystem");
+    addOption("strict,s", "return a failure status when a file or requested collision shape cannot be loaded");
     addOption("archives", bpo::value<Files::MaybeQuotedPathContainer>(), "path to archive files to provide files");
     addOption("input-file", bpo::value<Files::MaybeQuotedPathContainer>(), "input file");
 
@@ -245,9 +288,14 @@ Allowed options)");
         }
         writeDebugLog = variables.count("write-debug-log") > 0;
         quiet = variables.count("quiet") > 0;
-        if (variables.count("input-file"))
+        loadCollision = variables.count("collision") > 0;
+        loadSceneGraph = variables.count("scene-graph") > 0;
+        scanVfs = variables.count("scan-vfs") > 0;
+        strict = variables.count("strict") > 0;
+        if (variables.count("input-file") || scanVfs)
         {
-            files = asPathContainer(variables["input-file"].as<Files::MaybeQuotedPathContainer>());
+            if (variables.count("input-file"))
+                files = asPathContainer(variables["input-file"].as<Files::MaybeQuotedPathContainer>());
             if (const auto it = variables.find("archives"); it != variables.end())
                 archives = asPathContainer(it->second.as<Files::MaybeQuotedPathContainer>());
             return true;
@@ -269,12 +317,21 @@ int main(int argc, char** argv)
     Files::PathContainer files, sources;
     bool writeDebugLog = false;
     bool quiet = false;
-    if (!parseOptions(argc, argv, files, sources, writeDebugLog, quiet))
+    bool loadCollision = false;
+    bool loadSceneGraph = false;
+    bool scanVfs = false;
+    bool strict = false;
+    if (!parseOptions(
+            argc, argv, files, sources, writeDebugLog, quiet, loadCollision, loadSceneGraph, scanVfs, strict))
         return 1;
+
+    ReadStats stats;
 
     Nif::Reader::setWriteNifDebugLog(writeDebugLog);
 
     std::unique_ptr<VFS::Manager> vfs;
+    std::unique_ptr<Resource::ImageManager> imageManager;
+    std::unique_ptr<Resource::BgsmFileManager> materialManager;
     if (!sources.empty())
     {
         vfs = std::make_unique<VFS::Manager>();
@@ -298,6 +355,20 @@ int main(int argc, char** argv)
         }
 
         vfs->buildIndex();
+        imageManager = std::make_unique<Resource::ImageManager>(vfs.get(), 0);
+        materialManager = std::make_unique<Resource::BgsmFileManager>(vfs.get(), 0);
+    }
+
+    if (scanVfs)
+    {
+        if (!vfs)
+        {
+            std::cerr << "Error: --scan-vfs requires at least one --archives source" << std::endl;
+            return 1;
+        }
+        for (const auto& name : vfs->getRecursiveDirectoryIterator())
+            readFile({}, name.value(), vfs.get(), quiet, loadCollision, loadSceneGraph, imageManager.get(),
+                materialManager.get(), stats);
     }
 
     for (const auto& path : files)
@@ -305,12 +376,13 @@ int main(int argc, char** argv)
         const std::string pathStr = Files::pathToUnicodeString(path);
         try
         {
-            const bool isFile = readFile({}, path, vfs.get(), quiet);
+            const bool isFile = readFile({}, path, vfs.get(), quiet, loadCollision, loadSceneGraph,
+                imageManager.get(), materialManager.get(), stats);
             if (!isFile)
             {
                 if (auto archive = makeArchive(path))
                 {
-                    readVFS(std::move(archive), path, quiet);
+                    readVFS(std::move(archive), path, quiet, loadCollision, loadSceneGraph, stats);
                 }
                 else
                 {
@@ -321,8 +393,21 @@ int main(int argc, char** argv)
         }
         catch (std::exception& e)
         {
+            ++stats.mFailedFiles;
             std::cerr << "Failed to read '" << pathStr << "':  " << e.what() << std::endl;
         }
     }
+    std::cout << "Scanned " << stats.mFiles << " supported files (" << stats.mNifFiles << " NIF-family files)";
+    if (loadCollision)
+        std::cout << ", built " << stats.mCollisionObjects << " Bethesda collision objects, "
+                  << stats.mUnsupportedCollisionObjects << " unsupported objects, "
+                  << stats.mUnsupportedCollisionShapes << " unsupported shapes";
+    if (loadSceneGraph)
+        std::cout << ", built " << stats.mSceneGraphs << " OSG scene graphs";
+    std::cout << ", " << stats.mFailedFiles << " failed files" << std::endl;
+
+    if (strict && (stats.mFailedFiles != 0 || stats.mUnsupportedCollisionObjects != 0
+                      || stats.mUnsupportedCollisionShapes != 0))
+        return 2;
     return 0;
 }

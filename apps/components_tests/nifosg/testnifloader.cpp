@@ -3,6 +3,9 @@
 #include <components/nif/node.hpp>
 #include <components/nif/property.hpp>
 #include <components/nifosg/nifloader.hpp>
+#include <components/nifosg/autotransform.hpp>
+#include <components/nifosg/controller.hpp>
+#include <components/nifosg/particle.hpp>
 #include <components/resource/bgsmfilemanager.hpp>
 #include <components/resource/imagemanager.hpp>
 #include <components/sceneutil/serialize.hpp>
@@ -12,6 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <osgDB/Registry>
+
+#include <osgParticle/ModularProgram>
 
 #include <array>
 #include <limits>
@@ -110,6 +115,155 @@ osg::Group {
   }
 }
 )");
+    }
+
+    TEST(NifOsgControllerTest, multiplexesOverlappingSequenceTracksOnTheSyntheticTimeline)
+    {
+        auto forward = std::make_shared<Nif::FloatKeyMap>();
+        forward->mInterpolationType = Nif::InterpolationType_Linear;
+        forward->mKeys = { { 0.f, { 0.f, 0.f, 0.f } }, { 1.f, { 10.f, 0.f, 0.f } } };
+        auto backward = std::make_shared<Nif::FloatKeyMap>();
+        backward->mInterpolationType = Nif::InterpolationType_Linear;
+        backward->mKeys = { { 0.f, { 10.f, 0.f, 0.f } }, { 1.f, { 0.f, 0.f, 0.f } } };
+
+        NifOsg::FloatInterpolator value({
+            { 0.f, 1.f, 0.f, 1.f, forward, 0.f },
+            { 2.f, 3.f, 0.f, 1.f, backward, 0.f },
+        });
+
+        EXPECT_FLOAT_EQ(value.interpKey(0.25f), 2.5f);
+        EXPECT_FLOAT_EQ(value.interpKey(2.25f), 7.5f);
+        EXPECT_FLOAT_EQ(value.interpKey(3.f), 0.f);
+    }
+
+    TEST(NifOsgControllerTest, centerFacingBillboardUsesEyeToObjectDirection)
+    {
+        Nif::NiTransform transform = Nif::NiTransform::getIdentity();
+        transform.mTranslation = osg::Vec3f(10.f, 0.f, 0.f);
+        NifOsg::AutoTransform billboard(transform, NifOsg::AutoTransform::Mode::RigidFaceCenter);
+
+        const osg::Matrixd left = billboard.computeMatrixForFrame(
+            osg::Vec3d(0.f, 0.f, 0.f), osg::Vec3d(0.f, 1.f, 0.f), osg::Vec3d(0.f, 0.f, 1.f));
+        const osg::Matrixd right = billboard.computeMatrixForFrame(
+            osg::Vec3d(20.f, 0.f, 0.f), osg::Vec3d(0.f, 1.f, 0.f), osg::Vec3d(0.f, 0.f, 1.f));
+
+        EXPECT_GT((left.getRotate() * osg::Vec3d(0.f, 0.f, 1.f)).x(), 0.f);
+        EXPECT_LT((right.getRotate() * osg::Vec3d(0.f, 0.f, 1.f)).x(), 0.f);
+        EXPECT_EQ(left.getTrans(), osg::Vec3d(10.f, 0.f, 0.f));
+    }
+
+    TEST(NifOsgParticleTest, shooterAppliesModernRadiusAndRotation)
+    {
+        Nif::NiPSysRotationModifier rotation;
+        rotation.mRotationSpeed = 2.f;
+        rotation.mRotationSpeedVariation = 0.f;
+        rotation.mRotationAngle = 1.f;
+        rotation.mRotationAngleVariation = 0.f;
+        rotation.mRandomRotSpeedSign = false;
+        rotation.mRandomAxis = false;
+        rotation.mAxis.set(0.f, 0.f, 1.f);
+
+        NifOsg::ParticleShooter shooter(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 2.f, 0.f);
+        shooter.setRadius(3.f, 0.f);
+        shooter.setRotation(&rotation);
+        osgParticle::Particle particle;
+        shooter.shoot(&particle);
+
+        EXPECT_FLOAT_EQ(particle.getLifeTime(), 2.f);
+        EXPECT_FLOAT_EQ(particle.getRadius(), 3.f);
+        EXPECT_FLOAT_EQ(particle.getSizeRange().minimum, 3.f);
+        EXPECT_EQ(particle.getAngle(), osg::Vec3f(0.f, 0.f, 1.f));
+        EXPECT_EQ(particle.getAngularVelocity(), osg::Vec3f(0.f, 0.f, 2.f));
+    }
+
+    TEST(NifOsgParticleTest, modernDragAttenuatesVelocityInsideItsCylinder)
+    {
+        Nif::NiPSysDragModifier drag;
+        drag.mDragObject = nullptr;
+        drag.mDragAxis.set(0.f, 0.f, 1.f);
+        drag.mPercentage = .75f;
+        drag.mRange = 10.f;
+        drag.mRangeFalloff = 0.f;
+        NifOsg::ParticleDrag affector(&drag);
+        osg::ref_ptr<osgParticle::ModularProgram> program = new osgParticle::ModularProgram;
+        program->setReferenceFrame(osgParticle::ParticleProcessor::RELATIVE_RF);
+        affector.beginOperate(program);
+        osgParticle::Particle particle;
+        particle.setPosition(osg::Vec3f(1.f, 0.f, 0.f));
+        particle.setVelocity(osg::Vec3f(4.f, 0.f, 0.f));
+
+        affector.operate(&particle, 1.0);
+
+        EXPECT_NEAR(particle.getVelocity().x(), 1.f, 1e-6f);
+    }
+
+    TEST(NifOsgParticleTest, modernSpawnCreatesConfiguredDeathGeneration)
+    {
+        Nif::NiPSysSpawnModifier spawn;
+        spawn.mNumSpawnGenerations = 1;
+        spawn.mPercentageSpawned = 1.f;
+        spawn.mMinNumToSpawn = 2;
+        spawn.mMaxNumToSpawn = 2;
+        spawn.mSpawnSpeedVariation = 0.f;
+        spawn.mSpawnDirVariation = 0.f;
+        spawn.mLifespan = 5.f;
+        spawn.mLifespanVariation = 0.f;
+        NifOsg::ParticleSpawn affector(&spawn);
+        NifOsg::ParticleSystem system;
+        system.setQuota(10);
+        osgParticle::Particle initial;
+        initial.setLifeTime(.5f);
+        initial.setVelocity(osg::Vec3f(1.f, 0.f, 0.f));
+        ASSERT_NE(system.createParticle(&initial), nullptr);
+
+        affector.operateParticles(&system, 1.0);
+
+        EXPECT_EQ(system.numParticles(), 3);
+        EXPECT_FLOAT_EQ(system.getParticle(1)->getLifeTime(), 5.f);
+        EXPECT_EQ(system.getParticle(1)->getVelocity(), osg::Vec3f(1.f, 0.f, 0.f));
+    }
+
+    TEST(NifOsgParticleTest, modernPlanarColliderReflectsCrossingParticle)
+    {
+        Nif::NiPSysPlanarCollider collider;
+        collider.mBounce = 1.f;
+        collider.mColliderObject = nullptr;
+        collider.mWidth = 10.f;
+        collider.mHeight = 10.f;
+        collider.mXAxis.set(1.f, 0.f, 0.f);
+        collider.mYAxis.set(0.f, 1.f, 0.f);
+        NifOsg::PlanarCollider affector(&collider);
+        osg::ref_ptr<osgParticle::ModularProgram> program = new osgParticle::ModularProgram;
+        program->setReferenceFrame(osgParticle::ParticleProcessor::RELATIVE_RF);
+        affector.beginOperate(program);
+        osgParticle::Particle particle;
+        particle.setPosition(osg::Vec3f(0.f, 0.f, 1.f));
+        particle.setVelocity(osg::Vec3f(0.f, 0.f, -1.f));
+
+        affector.operate(&particle, 2.0);
+
+        EXPECT_NEAR(particle.getVelocity().z(), 1.f, 1e-6f);
+    }
+
+    TEST(NifOsgParticleTest, modernBombAppliesSphericalImpulse)
+    {
+        Nif::NiPSysBombModifier bomb;
+        bomb.mBombObject = nullptr;
+        bomb.mBombAxis.set(0.f, 0.f, 1.f);
+        bomb.mRange = 10.f;
+        bomb.mStrength = 2.f;
+        bomb.mDecayType = Nif::DecayType::None;
+        bomb.mSymmetryType = Nif::SymmetryType::Spherical;
+        NifOsg::ParticleBomb affector(&bomb);
+        osg::ref_ptr<osgParticle::ModularProgram> program = new osgParticle::ModularProgram;
+        program->setReferenceFrame(osgParticle::ParticleProcessor::RELATIVE_RF);
+        affector.beginOperate(program);
+        osgParticle::Particle particle;
+        particle.setPosition(osg::Vec3f(1.f, 0.f, 0.f));
+
+        affector.operate(&particle, 1.0);
+
+        EXPECT_NEAR(particle.getVelocity().x(), 2.f, 1e-6f);
     }
 
     std::string formatOsgNodeForBSShaderProperty(std::string_view shaderPrefix)

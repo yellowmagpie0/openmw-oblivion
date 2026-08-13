@@ -149,6 +149,33 @@ namespace Misc::ResourceHelpers
             EXPECT_EQ(path, "texture/bar.dds");
         }
 
+        TEST(MiscResourceHelpersCorrectTexturePath, shouldRepairReleasedOblivionTextureAliases)
+        {
+            constexpr VFS::Path::NormalizedView original(
+                "textures/architecture/imperialcity/icinterior/ictowerrosette01.tga");
+            constexpr VFS::Path::NormalizedView replacement(
+                "textures/architecture/imperialcity/icinterior/ictowerrosetter01.dds");
+            const std::unique_ptr<const VFS::Manager> vfs = TestingOpenMW::createTestVFS({ { replacement, nullptr } });
+            EXPECT_EQ(correctTexturePath(original, *vfs), replacement);
+        }
+
+        TEST(MiscResourceHelpersCorrectTexturePath, shouldPreferReplacementArchiveForOriginalAlias)
+        {
+            constexpr VFS::Path::NormalizedView original("textures/dungeons/sewers/sewerfloor02.dds");
+            constexpr VFS::Path::NormalizedView replacement("textures/dungeons/sewers/sewerfloor01.dds");
+            const std::unique_ptr<const VFS::Manager> vfs
+                = TestingOpenMW::createTestVFS({ { original, nullptr }, { replacement, nullptr } });
+            EXPECT_EQ(correctTexturePath(original, *vfs), original);
+        }
+
+        TEST(MiscResourceHelpersCorrectTexturePath, shouldRepairReleasedOblivionDoubleExtensionSeparator)
+        {
+            constexpr VFS::Path::NormalizedView original("textures/architecture/kvatch/kvatchwood01..dds");
+            constexpr VFS::Path::NormalizedView replacement("textures/architecture/kvatch/kvatchwood01.dds");
+            const std::unique_ptr<const VFS::Manager> vfs = TestingOpenMW::createTestVFS({ { replacement, nullptr } });
+            EXPECT_EQ(correctTexturePath(original, *vfs), replacement);
+        }
+
         TEST(MiscResourceHelpersChangeExtensionToDds, does_not_change_when_no_extension)
         {
             std::string path = "texture/bar";

@@ -13,6 +13,10 @@
 uniform float near;
 uniform vec2 screenRes;
 uniform vec3 gridSize;
+uniform vec4 nifEmbeddedLightAmbient;
+uniform vec4 nifEmbeddedLightDiffuse;
+uniform vec4 nifEmbeddedLightSpecular;
+uniform vec4 nifEmbeddedLightDirection;
 
 void directionalLighting(vec3 viewDir, vec3 viewNormal, float shininess, out vec3 diffuseLight, out vec3 ambientLight, out vec3 specularLight)
 {
@@ -21,6 +25,12 @@ void directionalLighting(vec3 viewDir, vec3 viewNormal, float shininess, out vec
     specularLight = vec3(0.0);
 
     calcDirectionalLighting(sun, viewDir, viewNormal, shininess, diffuseLight, ambientLight, specularLight);
+    ambientLight += nifEmbeddedLightAmbient.xyz;
+    if (dot(nifEmbeddedLightDirection.xyz, nifEmbeddedLightDirection.xyz) > 0.0) {
+        vec3 direction = normalize(gl_NormalMatrix * nifEmbeddedLightDirection.xyz);
+        diffuseLight += nifEmbeddedLightDiffuse.xyz * lambert(viewNormal, direction, viewDir);
+        specularLight += nifEmbeddedLightSpecular.xyz * specularIntensity(viewNormal, viewDir, shininess, direction);
+    }
 }
 
 void pointLighting(vec2 screenCoord, vec3 viewDir, vec3 viewPos, vec3 viewNormal, float shininess, out vec3 diffuseLight, out vec3 ambientLight, out vec3 specularLight)

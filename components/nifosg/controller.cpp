@@ -154,6 +154,49 @@ namespace NifOsg
         }
     }
 
+    KeyframeController::KeyframeController(const std::vector<SequenceTrack>& tracks)
+    {
+        std::vector<QuaternionInterpolator::SequenceSegment> rotations;
+        std::vector<FloatInterpolator::SequenceSegment> xRotations;
+        std::vector<FloatInterpolator::SequenceSegment> yRotations;
+        std::vector<FloatInterpolator::SequenceSegment> zRotations;
+        std::vector<Vec3Interpolator::SequenceSegment> translations;
+        std::vector<FloatInterpolator::SequenceSegment> scales;
+        for (const SequenceTrack& track : tracks)
+        {
+            if (track.mInterpolator == nullptr)
+                continue;
+            const Nif::NiTransformInterpolator& interpolator = *track.mInterpolator;
+            const Nif::NiQuatTransform& value = interpolator.mDefaultValue;
+            const auto makeSegment = [&](const auto& keys, const auto& defaultValue) {
+                using Segment = typename std::remove_reference_t<decltype(keys)>::element_type;
+                return typename ValueInterpolator<Segment>::SequenceSegment{ track.mTimelineStart, track.mTimelineStop,
+                    track.mSourceStart, track.mSourceStop, keys, defaultValue };
+            };
+            if (interpolator.mData.empty())
+            {
+                rotations.push_back(makeSegment(Nif::QuaternionKeyMapPtr(), value.mRotation));
+                translations.push_back(makeSegment(Nif::Vector3KeyMapPtr(), value.mTranslation));
+                scales.push_back(makeSegment(Nif::FloatKeyMapPtr(), value.mScale));
+                continue;
+            }
+            const Nif::NiKeyframeData& data = *interpolator.mData.getPtr();
+            rotations.push_back(makeSegment(data.mRotations, value.mRotation));
+            xRotations.push_back(makeSegment(data.mXRotations, 0.f));
+            yRotations.push_back(makeSegment(data.mYRotations, 0.f));
+            zRotations.push_back(makeSegment(data.mZRotations, 0.f));
+            translations.push_back(makeSegment(data.mTranslations, value.mTranslation));
+            scales.push_back(makeSegment(data.mScales, value.mScale));
+            mAxisOrder = data.mAxisOrder;
+        }
+        mRotations = QuaternionInterpolator(std::move(rotations));
+        mXRotations = FloatInterpolator(std::move(xRotations));
+        mYRotations = FloatInterpolator(std::move(yRotations));
+        mZRotations = FloatInterpolator(std::move(zRotations));
+        mTranslations = Vec3Interpolator(std::move(translations));
+        mScales = FloatInterpolator(std::move(scales));
+    }
+
     osg::Quat KeyframeController::getXYZRotation(float time) const
     {
         float xrot = 0, yrot = 0, zrot = 0;
@@ -362,6 +405,65 @@ namespace NifOsg
         }
     }
 
+    TextureTransformController::TextureTransformController(
+        unsigned int textureUnit, unsigned int transformMember, FloatInterpolator data)
+        : mTextureUnit(textureUnit)
+        , mTransformMember(transformMember)
+        , mData(std::move(data))
+    {
+    }
+
+    TextureTransformController::TextureTransformController(
+        const TextureTransformController& copy, const osg::CopyOp& copyop)
+        : StateSetUpdater(copy, copyop)
+        , Controller(copy)
+        , mTextureUnit(copy.mTextureUnit)
+        , mTransformMember(copy.mTransformMember)
+        , mData(copy.mData)
+    {
+    }
+
+    void TextureTransformController::setDefaults(osg::StateSet* stateset)
+    {
+        if (stateset->getTextureAttribute(mTextureUnit, osg::StateAttribute::TEXMAT) == nullptr)
+            stateset->setTextureAttribute(mTextureUnit, new osg::TexMat, osg::StateAttribute::ON);
+    }
+
+    void TextureTransformController::apply(osg::StateSet* stateset, osg::NodeVisitor* nv)
+    {
+        if (!hasInput() || mData.empty())
+            return;
+        const float value = mData.interpKey(getInputValue(nv));
+        osg::TexMat* texMat = static_cast<osg::TexMat*>(
+            stateset->getTextureAttribute(mTextureUnit, osg::StateAttribute::TEXMAT));
+        osg::Matrixf matrix = texMat->getMatrix();
+        switch (mTransformMember)
+        {
+            case 0: // U translation is flipped in the render convention.
+                matrix(3, 0) = -value;
+                break;
+            case 1:
+                matrix(3, 1) = value;
+                break;
+            case 2:
+            {
+                const osg::Vec3f translation = matrix.getTrans();
+                matrix = osg::Matrixf::rotate(value, osg::Z_AXIS);
+                matrix.setTrans(translation);
+                break;
+            }
+            case 3:
+                matrix(0, 0) = value;
+                break;
+            case 4:
+                matrix(1, 1) = value;
+                break;
+            default:
+                return;
+        }
+        texMat->setMatrix(matrix);
+    }
+
     VisController::VisController(const Nif::NiVisController* ctrl, unsigned int mask)
         : mMask(mask)
     {
@@ -377,6 +479,12 @@ namespace NifOsg
     }
 
     VisController::VisController() {}
+
+    VisController::VisController(std::vector<BoolInterpolator::SequenceSegment> segments, unsigned int mask)
+        : mInterpolator(std::move(segments))
+        , mMask(mask)
+    {
+    }
 
     VisController::VisController(const VisController& copy, const osg::CopyOp& copyop)
         : SceneUtil::NodeCallback<VisController>(copy, copyop)
@@ -469,6 +577,13 @@ namespace NifOsg
             mData = FloatInterpolator(ctrl->mData->mKeyList, 1.f);
     }
 
+    AlphaController::AlphaController(
+        std::vector<FloatInterpolator::SequenceSegment> segments, const osg::Material* baseMaterial)
+        : mData(std::move(segments))
+        , mBaseMaterial(baseMaterial)
+    {
+    }
+
     AlphaController::AlphaController(const AlphaController& copy, const osg::CopyOp& copyop)
         : StateSetUpdater(copy, copyop)
         , Controller(copy)
@@ -509,6 +624,14 @@ namespace NifOsg
         }
         else if (!ctrl->mData.empty())
             mData = Vec3Interpolator(ctrl->mData->mKeyList, osg::Vec3f(1, 1, 1));
+    }
+
+    MaterialColorController::MaterialColorController(std::vector<Vec3Interpolator::SequenceSegment> segments,
+        Nif::NiMaterialColorController::TargetColor targetColor, const osg::Material* baseMaterial)
+        : mData(std::move(segments))
+        , mTargetColor(targetColor)
+        , mBaseMaterial(baseMaterial)
+    {
     }
 
     MaterialColorController::MaterialColorController(const MaterialColorController& copy, const osg::CopyOp& copyop)
@@ -575,6 +698,16 @@ namespace NifOsg
     {
         if (!ctrl->mInterpolator.empty() && ctrl->mInterpolator->mRecordType == Nif::RC_NiFloatInterpolator)
             mData = static_cast<const Nif::NiFloatInterpolator*>(ctrl->mInterpolator.getPtr());
+    }
+
+    FlipController::FlipController(const Nif::NiFlipController* ctrl,
+        std::vector<FloatInterpolator::SequenceSegment> segments,
+        const std::vector<osg::ref_ptr<osg::Texture2D>>& textures)
+        : mTexSlot(0)
+        , mDelta(ctrl->mDelta)
+        , mTextures(textures)
+        , mData(std::move(segments))
+    {
     }
 
     FlipController::FlipController(int texSlot, float delta, const std::vector<osg::ref_ptr<osg::Texture2D>>& textures)

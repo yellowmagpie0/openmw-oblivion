@@ -1,11 +1,14 @@
 #include "particle.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <limits>
 #include <optional>
 
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
 #include <osg/ValueObject>
+#include <osgParticle/ConstantRateCounter>
 
 #include <components/debug/debuglog.hpp>
 #include <components/misc/rng.hpp>
@@ -99,6 +102,48 @@ namespace
 
 namespace NifOsg
 {
+
+    VolumePlacer::VolumePlacer(Shape shape, const osg::Vec3f& extents)
+        : mShape(shape)
+        , mExtents(extents)
+    {
+    }
+
+    VolumePlacer::VolumePlacer(const VolumePlacer& copy, const osg::CopyOp& copyop)
+        : osgParticle::Placer(copy, copyop)
+        , mShape(copy.mShape)
+        , mExtents(copy.mExtents)
+    {
+    }
+
+    void VolumePlacer::place(osgParticle::Particle* particle) const
+    {
+        osg::Vec3f position;
+        if (mShape == Shape::Box)
+        {
+            position.set((Misc::Rng::rollClosedProbability() * 2.f - 1.f) * mExtents.x(),
+                (Misc::Rng::rollClosedProbability() * 2.f - 1.f) * mExtents.y(),
+                (Misc::Rng::rollClosedProbability() * 2.f - 1.f) * mExtents.z());
+        }
+        else
+        {
+            const float angle = Misc::Rng::rollClosedProbability() * osg::PI * 2.f;
+            const float radius = std::sqrt(Misc::Rng::rollClosedProbability()) * mExtents.x();
+            position.set(std::cos(angle) * radius, std::sin(angle) * radius,
+                (Misc::Rng::rollClosedProbability() * 2.f - 1.f) * mExtents.z());
+            if (mShape == Shape::Sphere)
+            {
+                do
+                {
+                    position.set(Misc::Rng::rollClosedProbability() * 2.f - 1.f,
+                        Misc::Rng::rollClosedProbability() * 2.f - 1.f,
+                        Misc::Rng::rollClosedProbability() * 2.f - 1.f);
+                } while (position.length2() > 1.f);
+                position *= mExtents.x();
+            }
+        }
+        particle->setPosition(position);
+    }
 
     ParticleSystem::ParticleSystem()
         : osgParticle::ParticleSystem()
@@ -198,6 +243,15 @@ namespace NifOsg
         mVerticalAngle = copy.mVerticalAngle;
         mLifetime = copy.mLifetime;
         mLifetimeRandom = copy.mLifetimeRandom;
+        mRadius = copy.mRadius;
+        mRadiusVariation = copy.mRadiusVariation;
+        mRotationSpeed = copy.mRotationSpeed;
+        mRotationSpeedVariation = copy.mRotationSpeedVariation;
+        mRotationAngle = copy.mRotationAngle;
+        mRotationAngleVariation = copy.mRotationAngleVariation;
+        mRandomRotationSpeedSign = copy.mRandomRotationSpeedSign;
+        mRandomRotationAxis = copy.mRandomRotationAxis;
+        mRotationAxis = copy.mRotationAxis;
     }
 
     void ParticleShooter::shoot(osgParticle::Particle* particle) const
@@ -211,9 +265,74 @@ namespace NifOsg
         float vel = mMinSpeed + (mMaxSpeed - mMinSpeed) * Misc::Rng::rollClosedProbability();
         particle->setVelocity(dir * vel);
 
+        const float radius
+            = std::max(0.f, mRadius + mRadiusVariation * (2.f * Misc::Rng::rollClosedProbability() - 1.f));
+        particle->setSizeRange(osgParticle::rangef(radius, radius));
+        particle->setRadius(radius);
+
+        osg::Vec3f rotationAxis = mRotationAxis;
+        if (mRandomRotationAxis)
+        {
+            do
+            {
+                rotationAxis.set(Misc::Rng::rollClosedProbability() * 2.f - 1.f,
+                    Misc::Rng::rollClosedProbability() * 2.f - 1.f,
+                    Misc::Rng::rollClosedProbability() * 2.f - 1.f);
+            } while (rotationAxis.length2() < 1e-6f || rotationAxis.length2() > 1.f);
+        }
+        rotationAxis.normalize();
+        const float rotationAngle
+            = mRotationAngle + mRotationAngleVariation * (2.f * Misc::Rng::rollClosedProbability() - 1.f);
+        float rotationSpeed
+            = mRotationSpeed + mRotationSpeedVariation * (2.f * Misc::Rng::rollClosedProbability() - 1.f);
+        if (mRandomRotationSpeedSign && Misc::Rng::rollClosedProbability() < .5f)
+            rotationSpeed = -rotationSpeed;
+        particle->setAngle(rotationAxis * rotationAngle);
+        particle->setAngularVelocity(rotationAxis * rotationSpeed);
+
         // Not supposed to set this here, but there doesn't seem to be a better way of doing it
         particle->setLifeTime(std::max(
             std::numeric_limits<float>::epsilon(), mLifetime + mLifetimeRandom * Misc::Rng::rollClosedProbability()));
+    }
+
+    void ParticleShooter::setSpeed(float speed, float variation)
+    {
+        mMinSpeed = speed - variation * 0.5f;
+        mMaxSpeed = speed + variation * 0.5f;
+    }
+
+    void ParticleShooter::setAngles(
+        float declination, float declinationVariation, float planarAngle, float planarAngleVariation)
+    {
+        mVerticalDir = declination;
+        mVerticalAngle = declinationVariation;
+        mHorizontalDir = planarAngle;
+        mHorizontalAngle = planarAngleVariation;
+    }
+
+    void ParticleShooter::setLifetime(float lifetime, float variation)
+    {
+        mLifetime = lifetime;
+        mLifetimeRandom = variation;
+    }
+
+    void ParticleShooter::setRadius(float radius, float variation)
+    {
+        mRadius = radius;
+        mRadiusVariation = variation;
+    }
+
+    void ParticleShooter::setRotation(const Nif::NiPSysRotationModifier* rotation)
+    {
+        if (rotation == nullptr)
+            return;
+        mRotationSpeed = rotation->mRotationSpeed;
+        mRotationSpeedVariation = rotation->mRotationSpeedVariation;
+        mRotationAngle = rotation->mRotationAngle;
+        mRotationAngleVariation = rotation->mRotationAngleVariation;
+        mRandomRotationSpeedSign = rotation->mRandomRotSpeedSign;
+        mRandomRotationAxis = rotation->mRandomAxis;
+        mRotationAxis = rotation->mAxis;
     }
 
     GrowFadeAffector::GrowFadeAffector(float growTime, float fadeTime)
@@ -356,6 +475,18 @@ namespace NifOsg
     {
     }
 
+    ParticleBomb::ParticleBomb(const Nif::NiPSysBombModifier* bomb)
+        : mRange(bomb->mRange)
+        , mStrength(bomb->mStrength)
+        , mDecayType(bomb->mDecayType)
+        , mSymmetryType(bomb->mSymmetryType)
+        , mDirection(bomb->mBombAxis)
+        , mBombObjectRecordIndex(bomb->mBombObject.empty() ? -1 : bomb->mBombObject->mRecordIndex)
+    {
+        if (!bomb->mBombObject.empty())
+            mPosition = bomb->mBombObject->mTransform.mTranslation;
+    }
+
     ParticleBomb::ParticleBomb(const ParticleBomb& copy, const osg::CopyOp& copyop)
         : osgParticle::Operator(copy, copyop)
     {
@@ -365,6 +496,7 @@ namespace NifOsg
         mSymmetryType = copy.mSymmetryType;
         mCachedWorldPosition = copy.mCachedWorldPosition;
         mCachedWorldDirection = copy.mCachedWorldDirection;
+        mBombObjectRecordIndex = copy.mBombObjectRecordIndex;
     }
 
     void ParticleBomb::beginOperate(osgParticle::Program* program)
@@ -378,6 +510,25 @@ namespace NifOsg
         {
             mCachedWorldDirection = absolute ? program->rotateLocalToWorld(mDirection) : mDirection;
             mCachedWorldDirection.normalize();
+        }
+        if (mBombObjectRecordIndex >= 0 && program->getNumParents() != 0)
+        {
+            FindGroupByRecordIndex visitor(static_cast<unsigned int>(mBombObjectRecordIndex));
+            program->getParent(0)->accept(visitor);
+            if (visitor.mFound)
+            {
+                const osg::Matrix objectToWorld = osg::computeLocalToWorld(visitor.mFoundPath);
+                const osg::Vec3f worldPosition = objectToWorld.getTrans();
+                mCachedWorldPosition
+                    = absolute ? worldPosition : program->transformWorldToLocal(worldPosition);
+                if (mSymmetryType != Nif::SymmetryType::Spherical)
+                {
+                    const osg::Vec3f worldDirection = osg::Matrixf::transform3x3(mDirection, objectToWorld);
+                    mCachedWorldDirection
+                        = absolute ? worldDirection : program->rotateWorldToLocal(worldDirection);
+                    mCachedWorldDirection.normalize();
+                }
+            }
         }
     }
 
@@ -422,6 +573,174 @@ namespace NifOsg
         }
 
         particle->addVelocity(explosionDir * mStrength * decay * static_cast<float>(dt));
+    }
+
+    ParticleDrag::ParticleDrag(const Nif::NiPSysDragModifier* drag)
+        : mPercentage(std::clamp(drag->mPercentage, 0.f, 1.f))
+        , mRange(std::max(0.f, drag->mRange))
+        , mRangeFalloff(std::max(0.f, drag->mRangeFalloff))
+        , mAxis(drag->mDragAxis)
+        , mDragObjectRecordIndex(drag->mDragObject.empty() ? -1 : drag->mDragObject->mRecordIndex)
+    {
+        if (!drag->mDragObject.empty())
+            mPosition = drag->mDragObject->mTransform.mTranslation;
+        if (mAxis.normalize() == 0.f)
+            mAxis.set(0.f, 0.f, 1.f);
+    }
+
+    ParticleDrag::ParticleDrag(const ParticleDrag& copy, const osg::CopyOp& copyop)
+        : osgParticle::Operator(copy, copyop)
+        , mPercentage(copy.mPercentage)
+        , mRange(copy.mRange)
+        , mRangeFalloff(copy.mRangeFalloff)
+        , mPosition(copy.mPosition)
+        , mAxis(copy.mAxis)
+        , mCachedPosition(copy.mCachedPosition)
+        , mCachedAxis(copy.mCachedAxis)
+        , mDragObjectRecordIndex(copy.mDragObjectRecordIndex)
+    {
+    }
+
+    void ParticleDrag::beginOperate(osgParticle::Program* program)
+    {
+        const bool absolute = program->getReferenceFrame() == osgParticle::ParticleProcessor::ABSOLUTE_RF;
+        mCachedPosition = absolute ? program->transformLocalToWorld(mPosition) : mPosition;
+        mCachedAxis = absolute ? program->rotateLocalToWorld(mAxis) : mAxis;
+        if (mCachedAxis.normalize() == 0.f)
+            mCachedAxis.set(0.f, 0.f, 1.f);
+        if (mDragObjectRecordIndex >= 0 && program->getNumParents() != 0)
+        {
+            FindGroupByRecordIndex visitor(static_cast<unsigned int>(mDragObjectRecordIndex));
+            program->getParent(0)->accept(visitor);
+            if (visitor.mFound)
+            {
+                const osg::Matrix objectToWorld = osg::computeLocalToWorld(visitor.mFoundPath);
+                const osg::Vec3f worldPosition = objectToWorld.getTrans();
+                mCachedPosition
+                    = absolute ? worldPosition : program->transformWorldToLocal(worldPosition);
+                const osg::Vec3f worldAxis = osg::Matrixf::transform3x3(mAxis, objectToWorld);
+                mCachedAxis = absolute ? worldAxis : program->rotateWorldToLocal(worldAxis);
+                mCachedAxis.normalize();
+            }
+        }
+    }
+
+    void ParticleDrag::operate(osgParticle::Particle* particle, double dt)
+    {
+        const osg::Vec3f delta = particle->getPosition() - mCachedPosition;
+        const float distance = (delta - mCachedAxis * (delta * mCachedAxis)).length();
+        float influence = 1.f;
+        if (distance > mRange)
+        {
+            if (mRangeFalloff <= 0.f || distance >= mRange + mRangeFalloff)
+                return;
+            influence = 1.f - (distance - mRange) / mRangeFalloff;
+        }
+        const float retention = std::pow(std::max(0.f, 1.f - mPercentage * influence), static_cast<float>(dt));
+        particle->setVelocity(particle->getVelocity() * retention);
+    }
+
+    ParticleSpawn::ParticleSpawn(const Nif::NiPSysSpawnModifier* spawn)
+        : mNumGenerations(spawn->mNumSpawnGenerations)
+        , mPercentageSpawned(std::clamp(spawn->mPercentageSpawned, 0.f, 1.f))
+        , mMinToSpawn(spawn->mMinNumToSpawn)
+        , mMaxToSpawn(std::max(spawn->mMinNumToSpawn, spawn->mMaxNumToSpawn))
+        , mSpeedVariation(spawn->mSpawnSpeedVariation)
+        , mDirectionVariation(spawn->mSpawnDirVariation)
+        , mLifespan(spawn->mLifespan)
+        , mLifespanVariation(spawn->mLifespanVariation)
+    {
+    }
+
+    ParticleSpawn::ParticleSpawn(const ParticleSpawn& copy, const osg::CopyOp& copyop)
+        : osgParticle::Operator(copy, copyop)
+        , mNumGenerations(copy.mNumGenerations)
+        , mPercentageSpawned(copy.mPercentageSpawned)
+        , mMinToSpawn(copy.mMinToSpawn)
+        , mMaxToSpawn(copy.mMaxToSpawn)
+        , mSpeedVariation(copy.mSpeedVariation)
+        , mDirectionVariation(copy.mDirectionVariation)
+        , mLifespan(copy.mLifespan)
+        , mLifespanVariation(copy.mLifespanVariation)
+        , mGenerations(copy.mGenerations)
+        , mLastAges(copy.mLastAges)
+        , mSpawned(copy.mSpawned)
+    {
+    }
+
+    void ParticleSpawn::operateParticles(osgParticle::ParticleSystem* particleSystem, double dt)
+    {
+        const int count = particleSystem->numParticles();
+        mGenerations.resize(count);
+        mLastAges.resize(count);
+        mSpawned.resize(count);
+        for (int i = 0; i < count; ++i)
+        {
+            osgParticle::Particle* parent = particleSystem->getParticle(i);
+            if (!parent->isAlive())
+                continue;
+            if (parent->getAge() < mLastAges[i])
+            {
+                mGenerations[i] = 0;
+                mSpawned[i] = false;
+            }
+            mLastAges[i] = parent->getAge();
+            if (mSpawned[i] || mGenerations[i] >= mNumGenerations || parent->getLifeTime() <= 0.0
+                || parent->getAge() + dt < parent->getLifeTime())
+                continue;
+            mSpawned[i] = true;
+            if (Misc::Rng::rollClosedProbability() > mPercentageSpawned)
+                continue;
+
+            const unsigned int amount = mMinToSpawn == mMaxToSpawn
+                ? mMinToSpawn
+                : mMinToSpawn + Misc::Rng::rollDice(static_cast<unsigned int>(mMaxToSpawn - mMinToSpawn + 1));
+            for (unsigned int childIndex = 0; childIndex < amount; ++childIndex)
+            {
+                ParticleAgeSetter childTemplate(0.f);
+                childTemplate.setShape(parent->getShape());
+                childTemplate.setPosition(parent->getPosition());
+                osg::Vec3f velocity = parent->getVelocity();
+                const float speedScale
+                    = std::max(0.f, 1.f + mSpeedVariation * (2.f * Misc::Rng::rollClosedProbability() - 1.f));
+                velocity *= speedScale;
+                if (mDirectionVariation != 0.f)
+                {
+                    osg::Vec3f axis(Misc::Rng::rollClosedProbability() * 2.f - 1.f,
+                        Misc::Rng::rollClosedProbability() * 2.f - 1.f,
+                        Misc::Rng::rollClosedProbability() * 2.f - 1.f);
+                    if (axis.normalize() != 0.f)
+                        velocity = osg::Quat(mDirectionVariation
+                                                * (2.f * Misc::Rng::rollClosedProbability() - 1.f),
+                                       axis)
+                            * velocity;
+                }
+                childTemplate.setVelocity(velocity);
+                childTemplate.setSizeRange(parent->getSizeRange());
+                childTemplate.setColorRange(parent->getColorRange());
+                childTemplate.setAlphaRange(parent->getAlphaRange());
+                childTemplate.setRadius(parent->getRadius());
+                childTemplate.setAngle(parent->getAngle());
+                childTemplate.setAngularVelocity(parent->getAngularVelocity());
+                childTemplate.setLifeTime(std::max(std::numeric_limits<float>::epsilon(),
+                    mLifespan + mLifespanVariation * Misc::Rng::rollClosedProbability()));
+                if (osgParticle::Particle* child = particleSystem->createParticle(&childTemplate))
+                {
+                    const int newCount = particleSystem->numParticles();
+                    mGenerations.resize(newCount);
+                    mLastAges.resize(newCount);
+                    mSpawned.resize(newCount);
+                    for (int candidate = 0; candidate < newCount; ++candidate)
+                        if (particleSystem->getParticle(candidate) == child)
+                        {
+                            mGenerations[candidate] = static_cast<unsigned short>(mGenerations[i] + 1);
+                            mLastAges[candidate] = 0.0;
+                            mSpawned[candidate] = false;
+                            break;
+                        }
+                }
+            }
+        }
     }
 
     Emitter::Emitter()
@@ -478,7 +797,7 @@ namespace NifOsg
         {
             int recordIndex;
 
-            if (useGeometryEmitter)
+            if (useGeometryEmitter && mTargets.empty())
             {
                 if (!mGeometryEmitterTarget.has_value())
                     return;
@@ -565,6 +884,77 @@ namespace NifOsg
         }
     }
 
+    ModernParticleController::ModernParticleController(Inputs inputs, ParticleShooter* shooter,
+        GravityAffector* gravity, float speedVariation, float declination, float declinationVariation,
+        float planarAngle, float planarAngleVariation, float radiusVariation, float lifetimeVariation)
+        : mInputs(std::move(inputs))
+        , mShooter(shooter)
+        , mGravity(gravity)
+        , mSpeedVariation(speedVariation)
+        , mDeclination(declination)
+        , mDeclinationVariation(declinationVariation)
+        , mPlanarAngle(planarAngle)
+        , mPlanarAngleVariation(planarAngleVariation)
+        , mRadiusVariation(radiusVariation)
+        , mLifetimeVariation(lifetimeVariation)
+    {
+    }
+
+    ModernParticleController::ModernParticleController(
+        const ModernParticleController& copy, const osg::CopyOp& copyop)
+        : SceneUtil::NodeCallback<ModernParticleController, osgParticle::Emitter*>(copy, copyop)
+        , SceneUtil::Controller(copy)
+        , mInputs(copy.mInputs)
+        , mShooter(copy.mShooter)
+        , mGravity(copy.mGravity)
+        , mSpeedVariation(copy.mSpeedVariation)
+        , mDeclination(copy.mDeclination)
+        , mDeclinationVariation(copy.mDeclinationVariation)
+        , mPlanarAngle(copy.mPlanarAngle)
+        , mPlanarAngleVariation(copy.mPlanarAngleVariation)
+        , mRadiusVariation(copy.mRadiusVariation)
+        , mLifetimeVariation(copy.mLifetimeVariation)
+    {
+    }
+
+    void ModernParticleController::operator()(osgParticle::Emitter* emitter, osg::NodeVisitor* nv)
+    {
+        if (hasInput())
+        {
+            const float time = getInputValue(nv);
+            bool active = mInputs.mActive.empty() || mInputs.mActive.interpKey(time);
+            emitter->setEnabled(active);
+            auto* nifEmitter = dynamic_cast<Emitter*>(emitter);
+            if (auto* counter = dynamic_cast<osgParticle::ConstantRateCounter*>(
+                    nifEmitter != nullptr ? nifEmitter->getCounter() : nullptr))
+                if (!mInputs.mBirthRate.empty())
+                    counter->setNumberOfParticlesPerSecondToCreate(std::max(0.f, mInputs.mBirthRate.interpKey(time)));
+            if (mShooter)
+            {
+                if (!mInputs.mSpeed.empty())
+                    mShooter->setSpeed(mInputs.mSpeed.interpKey(time), mSpeedVariation);
+                const float declination
+                    = mInputs.mDeclination.empty() ? mDeclination : mInputs.mDeclination.interpKey(time);
+                const float variation = mInputs.mDeclinationVariation.empty()
+                    ? mDeclinationVariation
+                    : mInputs.mDeclinationVariation.interpKey(time);
+                mShooter->setAngles(declination, variation, mPlanarAngle, mPlanarAngleVariation);
+                if (!mInputs.mLifetime.empty())
+                    mShooter->setLifetime(mInputs.mLifetime.interpKey(time), mLifetimeVariation);
+            }
+            if (mGravity && !mInputs.mGravityStrength.empty())
+                mGravity->setForce(mInputs.mGravityStrength.interpKey(time));
+            if (!mInputs.mInitialRadius.empty())
+            {
+                const float radius = std::max(0.f, mInputs.mInitialRadius.interpKey(time));
+                mShooter->setRadius(radius, mRadiusVariation);
+                emitter->getParticleSystem()->getDefaultParticleTemplate().setSizeRange(
+                    osgParticle::rangef(radius, radius));
+            }
+        }
+        traverse(emitter, nv);
+    }
+
     FindGroupByRecordIndex::FindGroupByRecordIndex(unsigned int recordIndex)
         : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
         , mFound(nullptr)
@@ -613,6 +1003,25 @@ namespace NifOsg
     {
     }
 
+    PlanarCollider::PlanarCollider(const Nif::NiPSysPlanarCollider* collider)
+        : mBounceFactor(collider->mBounce)
+        // The legacy implementation stores the two extents in the opposite
+        // order to its basis vectors.
+        , mExtents(collider->mHeight, collider->mWidth)
+        , mXVector(collider->mXAxis)
+        , mYVector(collider->mYAxis)
+        , mColliderObjectRecordIndex(
+              collider->mColliderObject.empty() ? -1 : collider->mColliderObject->mRecordIndex)
+    {
+        if (!collider->mColliderObject.empty())
+            mPosition = collider->mColliderObject->mTransform.mTranslation;
+        mXVector.normalize();
+        mYVector.normalize();
+        osg::Vec3f normal = mXVector ^ mYVector;
+        normal.normalize();
+        mPlane.set(normal, mPosition);
+    }
+
     PlanarCollider::PlanarCollider(const PlanarCollider& copy, const osg::CopyOp& copyop)
         : osgParticle::Operator(copy, copyop)
         , mBounceFactor(copy.mBounceFactor)
@@ -625,6 +1034,7 @@ namespace NifOsg
         , mYVectorInParticleSpace(copy.mYVectorInParticleSpace)
         , mPlane(copy.mPlane)
         , mPlaneInParticleSpace(copy.mPlaneInParticleSpace)
+        , mColliderObjectRecordIndex(copy.mColliderObjectRecordIndex)
     {
     }
 
@@ -640,6 +1050,27 @@ namespace NifOsg
             mPlaneInParticleSpace.transform(program->getLocalToWorldMatrix());
             mXVectorInParticleSpace = program->rotateLocalToWorld(mXVector);
             mYVectorInParticleSpace = program->rotateLocalToWorld(mYVector);
+        }
+        if (mColliderObjectRecordIndex >= 0 && program->getNumParents() != 0)
+        {
+            FindGroupByRecordIndex visitor(static_cast<unsigned int>(mColliderObjectRecordIndex));
+            program->getParent(0)->accept(visitor);
+            if (visitor.mFound)
+            {
+                const osg::Matrix objectToWorld = osg::computeLocalToWorld(visitor.mFoundPath);
+                const bool absolute
+                    = program->getReferenceFrame() == osgParticle::ParticleProcessor::ABSOLUTE_RF;
+                const osg::Vec3f worldPosition = objectToWorld.getTrans();
+                mPositionInParticleSpace
+                    = absolute ? worldPosition : program->transformWorldToLocal(worldPosition);
+                const osg::Vec3f worldX = osg::Matrixf::transform3x3(mXVector, objectToWorld);
+                const osg::Vec3f worldY = osg::Matrixf::transform3x3(mYVector, objectToWorld);
+                mXVectorInParticleSpace = absolute ? worldX : program->rotateWorldToLocal(worldX);
+                mYVectorInParticleSpace = absolute ? worldY : program->rotateWorldToLocal(worldY);
+                osg::Vec3f normal = mXVectorInParticleSpace ^ mYVectorInParticleSpace;
+                normal.normalize();
+                mPlaneInParticleSpace.set(normal, mPositionInParticleSpace);
+            }
         }
     }
 
@@ -680,6 +1111,15 @@ namespace NifOsg
     {
     }
 
+    SphericalCollider::SphericalCollider(const Nif::NiPSysSphericalCollider* collider)
+        : mBounceFactor(collider->mBounce)
+        , mSphere(collider->mColliderObject.empty() ? osg::Vec3f() : collider->mColliderObject->mTransform.mTranslation,
+              collider->mRadius)
+        , mColliderObjectRecordIndex(
+              collider->mColliderObject.empty() ? -1 : collider->mColliderObject->mRecordIndex)
+    {
+    }
+
     SphericalCollider::SphericalCollider()
         : mBounceFactor(1.0f)
     {
@@ -690,6 +1130,7 @@ namespace NifOsg
         , mBounceFactor(copy.mBounceFactor)
         , mSphere(copy.mSphere)
         , mSphereInParticleSpace(copy.mSphereInParticleSpace)
+        , mColliderObjectRecordIndex(copy.mColliderObjectRecordIndex)
     {
     }
 
@@ -698,10 +1139,25 @@ namespace NifOsg
         mSphereInParticleSpace = mSphere;
         if (program->getReferenceFrame() == osgParticle::ParticleProcessor::ABSOLUTE_RF)
             mSphereInParticleSpace.center() = program->transformLocalToWorld(mSphereInParticleSpace.center());
+        if (mColliderObjectRecordIndex >= 0 && program->getNumParents() != 0)
+        {
+            FindGroupByRecordIndex visitor(static_cast<unsigned int>(mColliderObjectRecordIndex));
+            program->getParent(0)->accept(visitor);
+            if (visitor.mFound)
+            {
+                const osg::Vec3f worldPosition = osg::computeLocalToWorld(visitor.mFoundPath).getTrans();
+                mSphereInParticleSpace.center()
+                    = program->getReferenceFrame() == osgParticle::ParticleProcessor::ABSOLUTE_RF
+                    ? worldPosition
+                    : program->transformWorldToLocal(worldPosition);
+            }
+        }
     }
 
     void SphericalCollider::operate(osgParticle::Particle* particle, double dt)
     {
+        if (particle->getVelocity().length2() <= std::numeric_limits<float>::epsilon())
+            return;
         osg::Vec3f cent
             = (particle->getPosition() - mSphereInParticleSpace.center()); // vector from sphere center to particle
 

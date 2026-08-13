@@ -1,6 +1,8 @@
 #include "bulletnifloader.hpp"
 
 #include <cassert>
+#include <cmath>
+#include <limits>
 #include <sstream>
 #include <tuple>
 #include <variant>
@@ -12,13 +14,61 @@
 #include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/nif/controller.hpp>
+#include <components/nif/data.hpp>
 #include <components/nif/extra.hpp>
 #include <components/nif/nifstream.hpp>
 #include <components/nif/node.hpp>
 #include <components/nif/parent.hpp>
+#include <components/nif/physics.hpp>
+
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
+#include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletCollision/CollisionShapes/btTriangleMesh.h>
 
 namespace
 {
+
+    // NetImmerse units per Havok unit. Oblivion uses Havok 6.6.0, while
+    // Fallout 3 and later Bethesda streams use the 2010 scale.
+    constexpr float sHavok660Scale = 10.f / 1.42875f;
+    constexpr float sHavok2010Scale = 100.f / 1.42875f;
+
+    void addTriangle(btTriangleMesh& mesh, const std::vector<osg::Vec3f>& vertices, unsigned short a,
+        unsigned short b, unsigned short c, float scale)
+    {
+        if (a >= vertices.size() || b >= vertices.size() || c >= vertices.size() || a == b || b == c || a == c)
+            return;
+        mesh.addTriangle(Misc::Convert::toBullet(vertices[a]) * scale, Misc::Convert::toBullet(vertices[b]) * scale,
+            Misc::Convert::toBullet(vertices[c]) * scale);
+    }
+
+    void addStrips(btTriangleMesh& mesh, const Nif::NiTriStripsData& data, float scale)
+    {
+        for (const auto& strip : data.mStrips)
+        {
+            for (std::size_t i = 2; i < strip.size(); ++i)
+            {
+                if ((i & 1) == 0)
+                    addTriangle(mesh, data.mVertices, strip[i - 2], strip[i - 1], strip[i], scale);
+                else
+                    addTriangle(mesh, data.mVertices, strip[i - 2], strip[i], strip[i - 1], scale);
+            }
+        }
+    }
+
+    btTransform matrixToBullet(osg::Matrixf matrix, float translationScale = 1.f)
+    {
+        const osg::Vec3f translation = matrix.getTrans() * translationScale;
+        matrix.orthoNormalize(matrix);
+        btTransform result;
+        result.setOrigin(Misc::Convert::toBullet(translation));
+        for (int i = 0; i < 3; ++i)
+            for (int j = 0; j < 3; ++j)
+                result.getBasis()[i][j] = matrix(j, i);
+        return result;
+    }
 
     bool pathFileNameStartsWithX(const std::string& path)
     {
@@ -39,6 +89,8 @@ namespace NifBullet
         mCompoundShape.reset();
         mAvoidCompoundShape.reset();
         mEmbeddedAnimationNodes.clear();
+        mBethesdaCollisionStats = {};
+        mHavokScale = nif.getBethVersion() < Nif::NIFFile::BETHVER_FO3 ? sHavok660Scale : sHavok2010Scale;
 
         for (std::size_t i = 0; i < nif.numRecords(); ++i)
         {
@@ -147,8 +199,8 @@ namespace NifBullet
             if (bsxFlags->mData & 32)
                 args.mHasMarkers = true;
 
-            // FIXME: hack, using rendered geometry instead of Bethesda Havok data
-            args.mGenerateCollision = true;
+            // Bethesda meshes carry collision independently from rendered
+            // geometry. handleNode follows the NiAVObject collision links.
         }
         // Pre-Gamebryo meshes
         else
@@ -262,6 +314,9 @@ namespace NifBullet
                 handleGeometry(*geometry, parent, args);
         }
 
+        if (!node.mCollision.empty())
+            handleBethesdaCollision(node, parent, args);
+
         // For NiNodes, loop through children
         if (const Nif::NiNode* ninode = dynamic_cast<const Nif::NiNode*>(&node))
         {
@@ -325,23 +380,203 @@ namespace NifBullet
             for (int j = 0; j < 3; ++j)
                 trans.getBasis()[i][j] = transform(j, i);
 
-        if (!args.mAvoid)
-        {
-            if (!mCompoundShape)
-                mCompoundShape.reset(new btCompoundShape);
-
-            if (args.mAnimated)
-                mShape->mAnimatedShapes.emplace(niGeometry.mRecordIndex, mCompoundShape->getNumChildShapes());
-            mCompoundShape->addChildShape(trans, childShape.get());
-        }
-        else
+        if (args.mAvoid)
         {
             if (!mAvoidCompoundShape)
                 mAvoidCompoundShape.reset(new btCompoundShape);
-            mAvoidCompoundShape->addChildShape(trans, childShape.get());
+            mAvoidCompoundShape->addChildShape(trans, childShape.release());
+            return;
         }
 
-        std::ignore = childShape.release();
+        if (!mCompoundShape)
+            mCompoundShape.reset(new btCompoundShape);
+        if (args.mAnimated)
+            mShape->mAnimatedShapes.emplace(niGeometry.mRecordIndex, mCompoundShape->getNumChildShapes());
+        mCompoundShape->addChildShape(trans, childShape.release());
+    }
+
+    void BulletNifLoader::addCollisionShape(
+        std::unique_ptr<btCollisionShape> shape, const osg::Matrixf& transform, int animatedRecordIndex)
+    {
+        if (!shape)
+            return;
+
+        shape->setLocalScaling(shape->getLocalScaling() * Misc::Convert::toBullet(transform.getScale()));
+        if (!mCompoundShape)
+            mCompoundShape.reset(new btCompoundShape);
+        if (animatedRecordIndex >= 0)
+            mShape->mAnimatedShapes.emplace(animatedRecordIndex, mCompoundShape->getNumChildShapes());
+        mCompoundShape->addChildShape(matrixToBullet(transform), shape.release());
+    }
+
+    void BulletNifLoader::handleBethesdaCollision(
+        const Nif::NiAVObject& node, const Nif::Parent* parent, HandleNodeArgs args)
+    {
+        ++mBethesdaCollisionStats.mObjects;
+        const auto* collision = dynamic_cast<const Nif::bhkCollisionObject*>(node.mCollision.getPtr());
+        if (!collision || collision->mBody.empty() || collision->mBody->mShape.empty())
+        {
+            ++mBethesdaCollisionStats.mUnsupportedObjects;
+            warn("Unsupported Bethesda collision object on node " + node.mName + " in " + mShape->mFileName.value());
+            return;
+        }
+
+        std::unique_ptr<btCollisionShape> shape = makeBethesdaShape(collision->mBody->mShape.get());
+        if (!shape)
+        {
+            ++mBethesdaCollisionStats.mUnsupportedShapes;
+            warn("Unsupported Bethesda collision shape on node " + node.mName + " in " + mShape->mFileName.value());
+            return;
+        }
+
+        osg::Matrixf transform = node.mTransform.toMatrix();
+        for (const Nif::Parent* current = parent; current != nullptr; current = current->mParent)
+            transform *= current->mNiNode.mTransform.toMatrix();
+
+        if (collision->mBody->mRecordType == Nif::RC_bhkRigidBodyT)
+        {
+            const auto& rigidBody = static_cast<const Nif::bhkRigidBody&>(collision->mBody.get());
+            osg::Matrixf bodyTransform;
+            bodyTransform.makeRotate(rigidBody.mInfo.mRotation);
+            bodyTransform.setTrans(osg::Vec3f(rigidBody.mInfo.mTranslation.x(), rigidBody.mInfo.mTranslation.y(),
+                                       rigidBody.mInfo.mTranslation.z())
+                * mHavokScale);
+            transform = bodyTransform * transform;
+        }
+        else if (const auto* phantom = dynamic_cast<const Nif::bhkSimpleShapePhantom*>(&collision->mBody.get()))
+        {
+            osg::Matrixf phantomTransform = phantom->mTransform;
+            phantomTransform.setTrans(phantomTransform.getTrans() * mHavokScale);
+            transform = phantomTransform * transform;
+        }
+
+        addCollisionShape(std::move(shape), transform, args.mAnimated ? node.mRecordIndex : -1);
+    }
+
+    std::unique_ptr<btCollisionShape> BulletNifLoader::makeBethesdaShape(const Nif::bhkShape& shape)
+    {
+        if (const auto* tree = dynamic_cast<const Nif::bhkBvTreeShape*>(&shape))
+            return tree->mShape.empty() ? nullptr : makeBethesdaShape(tree->mShape.get());
+
+        if (const auto* strips = dynamic_cast<const Nif::bhkNiTriStripsShape*>(&shape))
+        {
+            auto mesh = std::make_unique<btTriangleMesh>();
+            for (const auto& data : strips->mData)
+                if (!data.empty())
+                    addStrips(*mesh, data.get(), 1.f);
+            if (mesh->getNumTriangles() == 0)
+                return nullptr;
+            return std::make_unique<Resource::TriangleMeshShape>(mesh.release(), true);
+        }
+
+        if (const auto* packed = dynamic_cast<const Nif::bhkPackedNiTriStripsShape*>(&shape))
+        {
+            if (packed->mData.empty())
+                return nullptr;
+            const auto& data = packed->mData.get();
+            auto mesh = std::make_unique<btTriangleMesh>();
+            for (const auto& triangle : data.mTriangles)
+                addTriangle(*mesh, data.mVertices, triangle.mTriangle[0], triangle.mTriangle[1],
+                    triangle.mTriangle[2], mHavokScale);
+            if (mesh->getNumTriangles() == 0)
+                return nullptr;
+            return std::make_unique<Resource::TriangleMeshShape>(mesh.release(), true);
+        }
+
+        if (const auto* meshShape = dynamic_cast<const Nif::bhkMeshShape*>(&shape))
+        {
+            auto mesh = std::make_unique<btTriangleMesh>();
+            for (const auto& data : meshShape->mDataList)
+                if (!data.empty())
+                    addStrips(*mesh, data.get(), 1.f);
+            if (mesh->getNumTriangles() == 0)
+                return nullptr;
+            return std::make_unique<Resource::TriangleMeshShape>(mesh.release(), true);
+        }
+
+        if (const auto* vertices = dynamic_cast<const Nif::bhkConvexVerticesShape*>(&shape))
+        {
+            auto result = std::make_unique<btConvexHullShape>();
+            for (const osg::Vec4f& vertex : vertices->mVertices)
+                result->addPoint(btVector3(vertex.x(), vertex.y(), vertex.z()) * mHavokScale, false);
+            if (result->getNumPoints() == 0)
+                return nullptr;
+            result->recalcLocalAabb();
+            return result;
+        }
+
+        if (const auto* box = dynamic_cast<const Nif::bhkBoxShape*>(&shape))
+            return std::make_unique<btBoxShape>(Misc::Convert::toBullet(box->mExtents) * mHavokScale);
+
+        if (const auto* capsule = dynamic_cast<const Nif::bhkCapsuleShape*>(&shape))
+        {
+            const btVector3 positions[]{ Misc::Convert::toBullet(capsule->mPoint1) * mHavokScale,
+                Misc::Convert::toBullet(capsule->mPoint2) * mHavokScale };
+            const btScalar radii[]{ capsule->mRadius1 * mHavokScale, capsule->mRadius2 * mHavokScale };
+            return std::make_unique<btMultiSphereShape>(positions, radii, 2);
+        }
+
+        if (const auto* multiSphere = dynamic_cast<const Nif::bhkMultiSphereShape*>(&shape))
+        {
+            std::vector<btVector3> positions;
+            std::vector<btScalar> radii;
+            positions.reserve(multiSphere->mSpheres.size());
+            radii.reserve(multiSphere->mSpheres.size());
+            for (const osg::BoundingSpheref& sphere : multiSphere->mSpheres)
+            {
+                positions.push_back(Misc::Convert::toBullet(sphere.center()) * mHavokScale);
+                radii.push_back(sphere.radius() * mHavokScale);
+            }
+            return positions.empty()
+                ? nullptr
+                : std::make_unique<btMultiSphereShape>(positions.data(), radii.data(), positions.size());
+        }
+
+        if (shape.mRecordType == Nif::RC_bhkSphereShape)
+        {
+            const auto& sphere = static_cast<const Nif::bhkConvexShape&>(shape);
+            return std::make_unique<btSphereShape>(sphere.mRadius * mHavokScale);
+        }
+
+        if (const auto* list = dynamic_cast<const Nif::bhkListShape*>(&shape))
+        {
+            auto result = std::make_unique<btCompoundShape>();
+            for (const auto& child : list->mSubshapes)
+                if (!child.empty())
+                    if (auto childShape = makeBethesdaShape(child.get()))
+                        result->addChildShape(btTransform::getIdentity(), childShape.release());
+            return result->getNumChildShapes() == 0 ? nullptr : std::move(result);
+        }
+
+        if (const auto* list = dynamic_cast<const Nif::bhkConvexListShape*>(&shape))
+        {
+            auto result = std::make_unique<btCompoundShape>();
+            for (const auto& child : list->mSubShapes)
+                if (!child.empty())
+                    if (auto childShape = makeBethesdaShape(child.get()))
+                        result->addChildShape(btTransform::getIdentity(), childShape.release());
+            return result->getNumChildShapes() == 0 ? nullptr : std::move(result);
+        }
+
+        if (const auto* transformed = dynamic_cast<const Nif::bhkConvexTransformShape*>(&shape))
+        {
+            if (transformed->mShape.empty())
+                return nullptr;
+            auto child = makeBethesdaShape(transformed->mShape.get());
+            if (!child)
+                return nullptr;
+            osg::Matrixf transform = transformed->mTransform;
+            transform.setTrans(transform.getTrans() * mHavokScale);
+            child->setLocalScaling(child->getLocalScaling() * Misc::Convert::toBullet(transform.getScale()));
+            auto result = std::make_unique<btCompoundShape>();
+            result->addChildShape(matrixToBullet(transform), child.release());
+            return result;
+        }
+
+        if (const auto* sweep = dynamic_cast<const Nif::bhkConvexSweepShape*>(&shape))
+            return sweep->mShape.empty() ? nullptr : makeBethesdaShape(sweep->mShape.get());
+
+        return nullptr;
     }
 
 } // namespace NifBullet

@@ -94,9 +94,13 @@ namespace NifOsg
 
         const osg::Quat invBaseRotation = mBaseRotation.inverse();
 
-        if (mMode == Mode::AlwaysFaceCamera || mMode == Mode::RigidFaceCamera)
+        if (mMode == Mode::AlwaysFaceCamera || mMode == Mode::AlwaysFaceCenter || mMode == Mode::RigidFaceCamera
+            || mMode == Mode::RigidFaceCenter)
         {
-            osg::Vec3d relForward = invBaseRotation * look;
+            osg::Vec3d relForward = invBaseRotation
+                * ((mMode == Mode::AlwaysFaceCenter || mMode == Mode::RigidFaceCenter)
+                        ? (_matrix.getTrans() - eye)
+                        : look);
             osg::Vec3d relUp = invBaseRotation * up;
             relForward.normalize();
             osg::Vec3d relRight = relUp ^ relForward;
@@ -104,7 +108,7 @@ namespace NifOsg
             relUp = relForward ^ relRight;
             relUp.normalize();
 
-            if (mMode == Mode::AlwaysFaceCamera)
+            if (mMode == Mode::AlwaysFaceCamera || mMode == Mode::AlwaysFaceCenter)
             {
                 const double norm = std::sqrt(relUp.y() * relUp.y() + relRight.y() * relRight.y());
                 if (norm > 1e-6)

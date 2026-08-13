@@ -2,6 +2,7 @@
 #include "arguments.hpp"
 #include "labels.hpp"
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -32,10 +33,12 @@ namespace EsmTool
         struct Params
         {
             const bool mQuite;
+            const std::vector<std::string>* mTypes = nullptr;
             ESM::FormKeyIndex* mGraph = nullptr;
 
             explicit Params(const Arguments& info)
                 : mQuite(info.quiet_given || info.mode == "clone")
+                , mTypes(&info.types)
             {
             }
 
@@ -170,10 +173,13 @@ namespace EsmTool
                 params.mGraph->apply(std::move(metadata));
             }
 
-            if (params.mQuite)
+            const std::string_view recordType = ESM::NAME(reader.hdr().record.typeId).toStringView();
+            if (params.mQuite
+                || (params.mTypes != nullptr && !params.mTypes->empty()
+                    && std::find(params.mTypes->begin(), params.mTypes->end(), recordType) == params.mTypes->end()))
                 return;
 
-            std::cout << "\n  Record: " << ESM::NAME(reader.hdr().record.typeId).toStringView();
+            std::cout << "\n  Record: " << recordType;
             if constexpr (ESM::HasId<T>)
                 std::cout << "\n  Id: " << value.mId;
             if constexpr (ESM4::HasFlags<T>)
@@ -723,7 +729,7 @@ namespace EsmTool
 
             auto visitorRec = [&params](ESM4::Reader& r) { return readRecord(params, r); };
             auto visitorGroup = [&params](ESM4::Reader& r) {
-                if (params.mQuite)
+                if (params.mQuite || (params.mTypes != nullptr && !params.mTypes->empty()))
                     return;
                 auto groupType = static_cast<ESM4::GroupType>(r.hdr().group.type);
                 std::cout << "\nGroup: " << toString(groupType) << " " << ESM::NAME(r.hdr().group.typeId).toStringView()

@@ -11,8 +11,10 @@ namespace NifOsg
         enum class Mode
         {
             AlwaysFaceCamera,
+            AlwaysFaceCenter,
             RotateAboutUp,
-            RigidFaceCamera
+            RigidFaceCamera,
+            RigidFaceCenter,
         };
 
         AutoTransform(Mode mode = Mode::RigidFaceCamera);

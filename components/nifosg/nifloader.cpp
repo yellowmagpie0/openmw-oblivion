@@ -225,6 +225,28 @@ namespace
         }
     }
 
+    void extractSequenceTextKeys(const Nif::NiTextKeyExtraData* tk, SceneUtil::TextKeyMap& textkeys,
+        float sourceStart, float sourceStop, float timelineStart, float timelineStop)
+    {
+        const float sourceSpan = sourceStop - sourceStart;
+        const float timelineSpan = timelineStop - timelineStart;
+        for (const Nif::NiTextKeyExtraData::TextKey& key : tk->mList)
+        {
+            float time = timelineStart;
+            if (sourceSpan > 0.f)
+                time += std::clamp((key.mTime - sourceStart) / sourceSpan, 0.f, 1.f) * timelineSpan;
+            std::vector<std::string> results;
+            Misc::StringUtils::split(key.mText, results, "\r\n");
+            for (std::string& result : results)
+            {
+                Misc::StringUtils::trim(result);
+                Misc::StringUtils::lowerCaseInPlace(result);
+                if (!result.empty())
+                    textkeys.emplace(time, std::move(result));
+            }
+        }
+    }
+
     void handleExtraData(const std::string& data, osg::Group* node)
     {
         YAML::Node root = YAML::Load(data);
@@ -326,6 +348,25 @@ namespace NifOsg
         bool mHasStencilProperty = false;
         std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
 
+        struct EmbeddedSequence
+        {
+            const Nif::NiControllerSequence* mSequence{ nullptr };
+            float mTimelineStart{ 0.f };
+            float mTimelineStop{ 0.f };
+        };
+
+        struct EmbeddedTrack
+        {
+            float mTimelineStart{ 0.f };
+            float mTimelineStop{ 0.f };
+            float mSourceStart{ 0.f };
+            float mSourceStop{ 0.f };
+            const Nif::NiInterpolator* mInterpolator{ nullptr };
+        };
+
+        std::vector<EmbeddedSequence> mEmbeddedSequences;
+        std::map<unsigned int, std::vector<EmbeddedTrack>> mEmbeddedControllerTracks;
+
         const Nif::NiSortAdjustNode* mPushedSorter = nullptr;
         const Nif::NiSortAdjustNode* mLastAppliedNoInheritSorter = nullptr;
 
@@ -334,6 +375,90 @@ namespace NifOsg
 
         // This is used to queue look-at controllers whose target nodes may not have been created yet.
         mutable std::vector<std::pair<unsigned int, osg::ref_ptr<LookAtController>>> mLookAtQueue;
+
+        std::vector<FloatInterpolator::SequenceSegment> getEmbeddedFloatTracks(unsigned int controller) const
+        {
+            std::vector<FloatInterpolator::SequenceSegment> result;
+            const auto found = mEmbeddedControllerTracks.find(controller);
+            if (found == mEmbeddedControllerTracks.end())
+                return result;
+            for (const EmbeddedTrack& track : found->second)
+            {
+                if (track.mInterpolator->mRecordType != Nif::RC_NiFloatInterpolator)
+                    continue;
+                const auto* value = static_cast<const Nif::NiFloatInterpolator*>(track.mInterpolator);
+                result.push_back({ track.mTimelineStart, track.mTimelineStop, track.mSourceStart, track.mSourceStop,
+                    value->mData.empty() ? Nif::FloatKeyMapPtr() : value->mData->mKeyList, value->mDefaultValue });
+            }
+            return result;
+        }
+
+        std::vector<BoolInterpolator::SequenceSegment> getEmbeddedBoolTracks(unsigned int controller) const
+        {
+            std::vector<BoolInterpolator::SequenceSegment> result;
+            const auto found = mEmbeddedControllerTracks.find(controller);
+            if (found == mEmbeddedControllerTracks.end())
+                return result;
+            for (const EmbeddedTrack& track : found->second)
+            {
+                if (track.mInterpolator->mRecordType != Nif::RC_NiBoolInterpolator)
+                    continue;
+                const auto* value = static_cast<const Nif::NiBoolInterpolator*>(track.mInterpolator);
+                result.push_back({ track.mTimelineStart, track.mTimelineStop, track.mSourceStart, track.mSourceStop,
+                    value->mData.empty() ? Nif::BoolKeyMapPtr() : value->mData->mKeyList, value->mDefaultValue });
+            }
+            return result;
+        }
+
+        std::vector<Vec3Interpolator::SequenceSegment> getEmbeddedPoint3Tracks(unsigned int controller) const
+        {
+            std::vector<Vec3Interpolator::SequenceSegment> result;
+            const auto found = mEmbeddedControllerTracks.find(controller);
+            if (found == mEmbeddedControllerTracks.end())
+                return result;
+            for (const EmbeddedTrack& track : found->second)
+            {
+                if (track.mInterpolator->mRecordType != Nif::RC_NiPoint3Interpolator)
+                    continue;
+                const auto* value = static_cast<const Nif::NiPoint3Interpolator*>(track.mInterpolator);
+                result.push_back({ track.mTimelineStart, track.mTimelineStop, track.mSourceStart, track.mSourceStop,
+                    value->mData.empty() ? Nif::Vector3KeyMapPtr() : value->mData->mKeyList,
+                    value->mDefaultValue });
+            }
+            return result;
+        }
+
+        void collectEmbeddedSequences(Nif::FileView nif)
+        {
+            mEmbeddedSequences.clear();
+            mEmbeddedControllerTracks.clear();
+            mEmbeddedAnimationNodes.clear();
+            float cursor = 0.f;
+            for (std::size_t i = 0; i < nif.numRecords(); ++i)
+            {
+                const Nif::Record* record = nif.getRecord(i);
+                if (record == nullptr || record->mRecordType != Nif::RC_NiControllerSequence)
+                    continue;
+                const auto* sequence = static_cast<const Nif::NiControllerSequence*>(record);
+                const float duration = std::max(sequence->mStopTime - sequence->mStartTime, 1.f / 30.f);
+                const EmbeddedSequence timeline{ sequence, cursor, cursor + duration };
+                mEmbeddedSequences.push_back(timeline);
+                cursor = timeline.mTimelineStop + 1.f;
+
+                for (const Nif::ControlledBlock& block : sequence->mControlledBlocks)
+                {
+                    const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
+                    if (!node.empty())
+                        mEmbeddedAnimationNodes.insert(Misc::StringUtils::lowerCase(node));
+                    if (!block.mController.empty() && !block.mInterpolator.empty())
+                    {
+                        mEmbeddedControllerTracks[block.mController->mRecordIndex].push_back({ timeline.mTimelineStart,
+                            timeline.mTimelineStop, sequence->mStartTime, sequence->mStopTime,
+                            block.mInterpolator.getPtr() });
+                    }
+                }
+            }
+        }
 
         void loadKf(Nif::FileView nif, SceneUtil::KeyframeHolder& target) const
         {
@@ -351,54 +476,51 @@ namespace NifOsg
 
             if (!seq)
             {
-                const Nif::NiControllerSequence* embedded = nullptr;
-                for (std::size_t i = 0; i < nif.numRecords(); ++i)
-                {
-                    const Nif::Record* record = nif.getRecord(i);
-                    if (record != nullptr && record->mRecordType == Nif::RC_NiControllerSequence)
-                    {
-                        embedded = static_cast<const Nif::NiControllerSequence*>(record);
-                        break;
-                    }
-                }
-                if (embedded == nullptr)
+                LoaderImpl mutableLoader = *this;
+                mutableLoader.collectEmbeddedSequences(nif);
+                if (mutableLoader.mEmbeddedSequences.empty())
                 {
                     Log(Debug::Verbose) << "NIFFile: Found no embedded animation sequence. File: "
                                         << nif.getFilename();
                     return;
                 }
 
-                std::string group = Misc::StringUtils::lowerCase(embedded->mName);
-                target.mTextKeys.emplace(embedded->mStartTime, group + ": start");
-                target.mTextKeys.emplace(embedded->mStopTime, group + ": stop");
-                if (!embedded->mTextKeys.empty()
-                    && embedded->mTextKeys->mRecordType == Nif::RC_NiTextKeyExtraData)
-                    extractTextKeys(
-                        static_cast<const Nif::NiTextKeyExtraData*>(embedded->mTextKeys.getPtr()), target.mTextKeys);
-
-                for (const Nif::ControlledBlock& block : embedded->mControlledBlocks)
+                std::map<std::string, std::vector<NifOsg::KeyframeController::SequenceTrack>, std::less<>> tracks;
+                for (const EmbeddedSequence& timeline : mutableLoader.mEmbeddedSequences)
                 {
-                    if (block.mInterpolator.empty()
-                        || block.mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator)
-                        continue;
-                    const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
-                    if (node.empty())
-                        continue;
-                    const auto* interpolator
-                        = static_cast<const Nif::NiTransformInterpolator*>(block.mInterpolator.getPtr());
+                    const Nif::NiControllerSequence& embedded = *timeline.mSequence;
+                    std::string group = Misc::StringUtils::lowerCase(embedded.mName);
+                    target.mTextKeys.emplace(timeline.mTimelineStart, group + ": start");
+                    target.mTextKeys.emplace(timeline.mTimelineStop, group + ": stop");
+                    if (!embedded.mTextKeys.empty()
+                        && embedded.mTextKeys->mRecordType == Nif::RC_NiTextKeyExtraData)
+                        extractSequenceTextKeys(static_cast<const Nif::NiTextKeyExtraData*>(embedded.mTextKeys.getPtr()),
+                            target.mTextKeys, embedded.mStartTime, embedded.mStopTime, timeline.mTimelineStart,
+                            timeline.mTimelineStop);
+
+                    for (const Nif::ControlledBlock& block : embedded.mControlledBlocks)
+                    {
+                        if (block.mInterpolator.empty()
+                            || block.mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator)
+                            continue;
+                        const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
+                        if (node.empty())
+                            continue;
+                        tracks[node].push_back({ timeline.mTimelineStart, timeline.mTimelineStop, embedded.mStartTime,
+                            embedded.mStopTime,
+                            static_cast<const Nif::NiTransformInterpolator*>(block.mInterpolator.getPtr()) });
+                    }
+                }
+
+                for (auto& [node, nodeTracks] : tracks)
+                {
                     osg::ref_ptr<NifOsg::KeyframeController> callback
-                        = new NifOsg::KeyframeController(interpolator);
-                    Nif::NiKeyframeController timing;
-                    timing.mFrequency = 1.f;
-                    timing.mPhase = 0.f;
-                    timing.mTimeStart = embedded->mStartTime;
-                    timing.mTimeStop = embedded->mStopTime;
-                    setupController(&timing, callback, /*animflags*/ 0);
+                        = new NifOsg::KeyframeController(nodeTracks);
                     target.mKeyframeControllers.emplace(node, callback);
                 }
-                Log(Debug::Verbose) << "Loaded embedded animation group " << group << " with "
-                                    << target.mKeyframeControllers.size() << " transform tracks from "
-                                    << nif.getFilename();
+                Log(Debug::Verbose) << "Loaded " << mutableLoader.mEmbeddedSequences.size()
+                                    << " embedded animation groups with " << target.mKeyframeControllers.size()
+                                    << " multiplexed transform tracks from " << nif.getFilename();
                 return;
             }
 
@@ -475,20 +597,7 @@ namespace NifOsg
 
         osg::ref_ptr<osg::Node> load(Nif::FileView nif)
         {
-            mEmbeddedAnimationNodes.clear();
-            for (std::size_t i = 0; i < nif.numRecords(); ++i)
-            {
-                const Nif::Record* record = nif.getRecord(i);
-                if (record == nullptr || record->mRecordType != Nif::RC_NiControllerSequence)
-                    continue;
-                const auto* sequence = static_cast<const Nif::NiControllerSequence*>(record);
-                for (const Nif::ControlledBlock& block : sequence->mControlledBlocks)
-                {
-                    const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
-                    if (!node.empty())
-                        mEmbeddedAnimationNodes.insert(Misc::StringUtils::lowerCase(node));
-                }
-            }
+            collectEmbeddedSequences(nif);
             const size_t numRoots = nif.numRoots();
             std::vector<const Nif::NiAVObject*> roots;
             for (size_t i = 0; i < numRoots; ++i)
@@ -678,6 +787,38 @@ namespace NifOsg
 
         bool handleEffect(const Nif::NiAVObject* nifNode, osg::StateSet* stateset) const
         {
+            if (nifNode->mRecordType == Nif::RC_NiLight)
+            {
+                const auto* light = static_cast<const Nif::NiLight*>(nifNode);
+                if (!light->mSwitchState)
+                    return false;
+                const auto addColor = [&](const char* name, const osg::Vec3f& color) {
+                    osg::Vec4f value(color * light->mDimmer, 1.f);
+                    if (osg::Uniform* existing = stateset->getUniform(name))
+                    {
+                        osg::Vec4f accumulated;
+                        existing->get(accumulated);
+                        value += accumulated;
+                        value.a() = 1.f;
+                        existing->set(value);
+                    }
+                    else
+                        stateset->addUniform(new osg::Uniform(name, value));
+                };
+                addColor("nifEmbeddedLightAmbient", light->mAmbient);
+                addColor("nifEmbeddedLightDiffuse", light->mDiffuse);
+                addColor("nifEmbeddedLightSpecular", light->mSpecular);
+
+                osg::Vec3f direction;
+                if (nifNode->mRecordName == std::string_view("NiDirectionalLight"))
+                {
+                    direction = osg::Matrixf::transform3x3(
+                        osg::Vec3f(0.f, 0.f, -1.f), light->mTransform.mRotation.toOsgMatrix());
+                    direction.normalize();
+                }
+                stateset->addUniform(new osg::Uniform("nifEmbeddedLightDirection", osg::Vec4f(direction, 0.f)));
+                return true;
+            }
             if (nifNode->mRecordType != Nif::RC_NiTextureEffect)
             {
                 Log(Debug::Info) << "Unhandled effect " << nifNode->mRecordName << " in " << mFilename;
@@ -739,6 +880,10 @@ namespace NifOsg
                     node = new NifOsg::AutoTransform(billboard->mTransform, AutoTransform::Mode::RotateAboutUp);
                 else if (billboard->mMode == Mode::RigidFaceCamera)
                     node = new NifOsg::AutoTransform(billboard->mTransform, AutoTransform::Mode::RigidFaceCamera);
+                else if (billboard->mMode == Mode::AlwaysFaceCenter)
+                    node = new NifOsg::AutoTransform(billboard->mTransform, AutoTransform::Mode::AlwaysFaceCenter);
+                else if (billboard->mMode == Mode::RigidFaceCenter)
+                    node = new NifOsg::AutoTransform(billboard->mTransform, AutoTransform::Mode::RigidFaceCenter);
                 else
                 {
                     Log(Debug::Warning) << "Unhandled billboard mode " << static_cast<int>(billboard->mMode)
@@ -905,6 +1050,9 @@ namespace NifOsg
 
             if (nifNode->mRecordType == Nif::RC_NiParticles)
                 handleParticleSystem(nifNode, parent, node, composite, args.mAnimFlags);
+            else if (nifNode->mRecordType == Nif::RC_NiParticleSystem)
+                handleModernParticleSystem(
+                    static_cast<const Nif::NiParticleSystem*>(nifNode), parent, node, composite, args.mAnimFlags);
 
             const bool isNiGeometry = isTypeNiGeometry(nifNode->mRecordType);
             const bool isBSGeometry = isTypeBSGeometry(nifNode->mRecordType);
@@ -1003,14 +1151,14 @@ namespace NifOsg
                 // Propagate effects to the the direct subgraph instead of the node itself
                 // This simulates their "affected node list" which Morrowind appears to replace with the subgraph (?)
                 // Note that the serialized affected node list is actually unused
+                osg::ref_ptr<osg::StateSet> effectStateSet = new osg::StateSet;
+                bool hasEffectState = false;
                 for (const auto& effect : ninode->mEffects)
                     if (!effect.empty())
-                    {
-                        osg::ref_ptr<osg::StateSet> effectStateSet = new osg::StateSet;
-                        if (handleEffect(effect.getPtr(), effectStateSet))
-                            for (unsigned int i = 0; i < currentNode->getNumChildren(); ++i)
-                                currentNode->getChild(i)->getOrCreateStateSet()->merge(*effectStateSet);
-                    }
+                        hasEffectState |= handleEffect(effect.getPtr(), effectStateSet);
+                if (hasEffectState)
+                    for (unsigned int i = 0; i < currentNode->getNumChildren(); ++i)
+                        currentNode->getChild(i)->getOrCreateStateSet()->merge(*effectStateSet);
             }
 
             if (nifNode->mRecordType == Nif::RC_NiFltAnimationNode)
@@ -1057,6 +1205,13 @@ namespace NifOsg
                 if (ctrl->mRecordType == Nif::RC_NiKeyframeController)
                 {
                     const Nif::NiKeyframeController* key = static_cast<const Nif::NiKeyframeController*>(ctrl.getPtr());
+                    if (mEmbeddedControllerTracks.contains(key->mRecordIndex))
+                    {
+                        // NiControllerSequence tracks are attached by Animation::addAnimSource so that each named
+                        // sequence can select its own interpolator instead of the manager's blend placeholder.
+                        isAnimated = true;
+                        continue;
+                    }
                     if (key->mData.empty() && key->mInterpolator.empty())
                         continue;
                     if (!key->mInterpolator.empty()
@@ -1085,6 +1240,14 @@ namespace NifOsg
                 else if (ctrl->mRecordType == Nif::RC_NiVisController)
                 {
                     const Nif::NiVisController* visctrl = static_cast<const Nif::NiVisController*>(ctrl.getPtr());
+                    auto embeddedTracks = getEmbeddedBoolTracks(visctrl->mRecordIndex);
+                    if (!embeddedTracks.empty())
+                    {
+                        osg::ref_ptr<VisController> callback
+                            = new VisController(std::move(embeddedTracks), Loader::getHiddenNodeMask());
+                        node->addUpdateCallback(callback);
+                        continue;
+                    }
                     if (visctrl->mData.empty() && visctrl->mInterpolator.empty())
                         continue;
                     if (!visctrl->mInterpolator.empty()
@@ -1132,7 +1295,21 @@ namespace NifOsg
                 }
                 else if (ctrl->mRecordType == Nif::RC_NiGeomMorpherController
                     || ctrl->mRecordType == Nif::RC_NiParticleSystemController
-                    || ctrl->mRecordType == Nif::RC_NiBSPArrayController || ctrl->mRecordType == Nif::RC_NiUVController)
+                    || ctrl->mRecordType == Nif::RC_NiBSPArrayController || ctrl->mRecordType == Nif::RC_NiUVController
+                    || ctrl->mRecordType == Nif::RC_NiControllerManager
+                    || ctrl->mRecordType == Nif::RC_NiMultiTargetTransformController
+                    || ctrl->mRecordType == Nif::RC_bhkBlendController
+                    || ctrl->mRecordType == Nif::RC_NiBoneLODController
+                    || ctrl->mRecordType == Nif::RC_NiPSysEmitterCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysEmitterSpeedCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysEmitterDeclinationCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysEmitterDeclinationVarCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysEmitterInitialRadiusCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysEmitterLifeSpanCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysGravityStrengthCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysModifierActiveCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysUpdateCtlr
+                    || ctrl->mRecordType == Nif::RC_NiPSysResetOnLoopCtlr)
                 {
                     // These controllers are handled elsewhere
                 }
@@ -1152,6 +1329,12 @@ namespace NifOsg
                 if (ctrl->mRecordType == Nif::RC_NiAlphaController)
                 {
                     const Nif::NiAlphaController* alphactrl = static_cast<const Nif::NiAlphaController*>(ctrl.getPtr());
+                    auto embeddedTracks = getEmbeddedFloatTracks(alphactrl->mRecordIndex);
+                    if (!embeddedTracks.empty())
+                    {
+                        composite->addController(new AlphaController(std::move(embeddedTracks), baseMaterial));
+                        continue;
+                    }
                     if (alphactrl->mData.empty() && alphactrl->mInterpolator.empty())
                         continue;
                     if (!alphactrl->mInterpolator.empty()
@@ -1170,6 +1353,13 @@ namespace NifOsg
                 {
                     const Nif::NiMaterialColorController* matctrl
                         = static_cast<const Nif::NiMaterialColorController*>(ctrl.getPtr());
+                    auto embeddedTracks = getEmbeddedPoint3Tracks(matctrl->mRecordIndex);
+                    if (!embeddedTracks.empty())
+                    {
+                        composite->addController(new MaterialColorController(
+                            std::move(embeddedTracks), matctrl->mTargetColor, baseMaterial));
+                        continue;
+                    }
                     Nif::NiInterpolatorPtr interp = matctrl->mInterpolator;
                     if (matctrl->mData.empty() && interp.empty())
                         continue;
@@ -1253,8 +1443,10 @@ namespace NifOsg
                 if (ctrl->mRecordType == Nif::RC_NiFlipController)
                 {
                     const Nif::NiFlipController* flipctrl = static_cast<const Nif::NiFlipController*>(ctrl.getPtr());
+                    auto embeddedTracks = getEmbeddedFloatTracks(flipctrl->mRecordIndex);
                     if (!flipctrl->mInterpolator.empty()
-                        && flipctrl->mInterpolator->mRecordType != Nif::RC_NiFloatInterpolator)
+                        && flipctrl->mInterpolator->mRecordType != Nif::RC_NiFloatInterpolator
+                        && embeddedTracks.empty())
                     {
                         Log(Debug::Error)
                             << "Unsupported interpolator type for NiFlipController " << flipctrl->mRecordIndex << " in "
@@ -1286,8 +1478,44 @@ namespace NifOsg
                             = attachNiSourceTexture({}, source.getPtr(), wrapS, wrapT, uvSet, nullptr, boundTextures);
                         textures.push_back(texture);
                     }
-                    osg::ref_ptr<FlipController> callback(new FlipController(flipctrl, textures));
-                    setupController(ctrl.getPtr(), callback, animflags);
+                    osg::ref_ptr<FlipController> callback = embeddedTracks.empty()
+                        ? new FlipController(flipctrl, textures)
+                        : new FlipController(flipctrl, std::move(embeddedTracks), textures);
+                    if (!mEmbeddedControllerTracks.contains(flipctrl->mRecordIndex))
+                        setupController(ctrl.getPtr(), callback, animflags);
+                    composite->addController(callback);
+                }
+                else if (ctrl->mRecordType == Nif::RC_NiTextureTransformController)
+                {
+                    const auto* transform = static_cast<const Nif::NiTextureTransformController*>(ctrl.getPtr());
+                    auto embeddedTracks = getEmbeddedFloatTracks(transform->mRecordIndex);
+                    const bool isEmbedded = !embeddedTracks.empty();
+                    FloatInterpolator data;
+                    if (isEmbedded)
+                        data = FloatInterpolator(std::move(embeddedTracks));
+                    else if (!transform->mInterpolator.empty()
+                        && transform->mInterpolator->mRecordType == Nif::RC_NiFloatInterpolator)
+                        data = FloatInterpolator(
+                            static_cast<const Nif::NiFloatInterpolator*>(transform->mInterpolator.getPtr()));
+                    else if (!transform->mData.empty())
+                        data = FloatInterpolator(transform->mData->mKeyList);
+                    else
+                        continue;
+
+                    unsigned int textureUnit = 0;
+                    if (transform->mShaderMap)
+                    {
+                        Log(Debug::Info) << "Unsupported shader-map texture transform on property "
+                                         << texProperty->mRecordIndex << " in " << mFilename;
+                        continue;
+                    }
+                    textureUnit = static_cast<unsigned int>(transform->mTexSlot);
+                    if (textureUnit >= stateset->getTextureAttributeList().size())
+                        continue;
+                    osg::ref_ptr<TextureTransformController> callback
+                        = new TextureTransformController(textureUnit, transform->mTransformMember, std::move(data));
+                    if (!isEmbedded)
+                        setupController(transform, callback, animflags);
                     composite->addController(callback);
                 }
                 else
@@ -1464,10 +1692,338 @@ namespace NifOsg
             return emitter;
         }
 
+        static FloatInterpolator makeFloatInterpolator(const Nif::NiPSysModifierFloatCtlr* controller)
+        {
+            if (!controller->mInterpolator.empty()
+                && controller->mInterpolator->mRecordType == Nif::RC_NiFloatInterpolator)
+                return FloatInterpolator(
+                    static_cast<const Nif::NiFloatInterpolator*>(controller->mInterpolator.getPtr()));
+            if (!controller->mData.empty())
+                return FloatInterpolator(controller->mData->mKeyList);
+            return {};
+        }
+
+        static BoolInterpolator makeBoolInterpolator(const Nif::NiPSysModifierBoolCtlr* controller)
+        {
+            if (!controller->mInterpolator.empty()
+                && controller->mInterpolator->mRecordType == Nif::RC_NiBoolInterpolator)
+                return BoolInterpolator(
+                    static_cast<const Nif::NiBoolInterpolator*>(controller->mInterpolator.getPtr()));
+            if (!controller->mData.empty())
+            {
+                auto keys = std::make_shared<Nif::BoolKeyMap>();
+                keys->mInterpolationType = Nif::InterpolationType_Constant;
+                if (controller->mData->mKeys)
+                    for (const auto& [time, value] : *controller->mData->mKeys)
+                        keys->mKeys.emplace_back(time, Nif::KeyT<bool>{ value, false, false });
+                return BoolInterpolator(std::move(keys));
+            }
+            return {};
+        }
+
+        void handleModernParticleSystem(const Nif::NiParticleSystem* nifNode, const Nif::Parent* parent,
+            osg::Group* parentNode, SceneUtil::CompositeStateSetUpdater* composite, int animflags)
+        {
+            if (nifNode->mData.empty())
+                return;
+            const auto* data = dynamic_cast<const Nif::NiPSysData*>(nifNode->mData.getPtr());
+            if (data == nullptr)
+                return;
+            const Nif::NiPSysEmitter* emitterRecord = nullptr;
+            const Nif::NiPSysEmitterCtlr* emitterController = nullptr;
+            const Nif::NiPSysRotationModifier* rotationModifier = nullptr;
+            const Nif::NiPSysSpawnModifier* spawnModifier = nullptr;
+            ModernParticleController::Inputs controllerInputs;
+            NifOsg::GravityAffector* controlledGravity = nullptr;
+
+            osg::ref_ptr<ParticleSystem> partsys = new ParticleSystem;
+            partsys->setSortMode(osgParticle::ParticleSystem::SORT_BACK_TO_FRONT);
+            partsys->setQuota(data->mNumParticles);
+            partsys->setParticleScaleReferenceFrame(osgParticle::ParticleSystem::LOCAL_COORDINATES);
+
+            for (const Nif::NiPSysModifierPtr& modifier : nifNode->mModifiers)
+            {
+                if (modifier.empty() || !modifier->mActive)
+                    continue;
+                switch (modifier->mRecordType)
+                {
+                    case Nif::RC_NiPSysBoxEmitter:
+                    case Nif::RC_NiPSysCylinderEmitter:
+                    case Nif::RC_NiPSysMeshEmitter:
+                    case Nif::RC_NiPSysSphereEmitter:
+                        emitterRecord = static_cast<const Nif::NiPSysEmitter*>(modifier.getPtr());
+                        break;
+                    case Nif::RC_NiPSysRotationModifier:
+                        rotationModifier = static_cast<const Nif::NiPSysRotationModifier*>(modifier.getPtr());
+                        break;
+                    case Nif::RC_NiPSysAgeDeathModifier:
+                    {
+                        const auto* ageDeath = static_cast<const Nif::NiPSysAgeDeathModifier*>(modifier.getPtr());
+                        if (ageDeath->mSpawnOnDeath && !ageDeath->mSpawnModifier.empty())
+                            spawnModifier = ageDeath->mSpawnModifier.getPtr();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+
+            for (Nif::NiTimeControllerPtr ctrl = nifNode->mController; !ctrl.empty(); ctrl = ctrl->mNext)
+            {
+                if (ctrl->mRecordType == Nif::RC_NiPSysEmitterCtlr)
+                    emitterController = static_cast<const Nif::NiPSysEmitterCtlr*>(ctrl.getPtr());
+                else if (ctrl->mRecordType == Nif::RC_NiPSysEmitterSpeedCtlr)
+                    controllerInputs.mSpeed
+                        = makeFloatInterpolator(static_cast<const Nif::NiPSysModifierFloatCtlr*>(ctrl.getPtr()));
+                else if (ctrl->mRecordType == Nif::RC_NiPSysEmitterDeclinationCtlr)
+                    controllerInputs.mDeclination
+                        = makeFloatInterpolator(static_cast<const Nif::NiPSysModifierFloatCtlr*>(ctrl.getPtr()));
+                else if (ctrl->mRecordType == Nif::RC_NiPSysEmitterDeclinationVarCtlr)
+                    controllerInputs.mDeclinationVariation
+                        = makeFloatInterpolator(static_cast<const Nif::NiPSysModifierFloatCtlr*>(ctrl.getPtr()));
+                else if (ctrl->mRecordType == Nif::RC_NiPSysEmitterInitialRadiusCtlr)
+                    controllerInputs.mInitialRadius
+                        = makeFloatInterpolator(static_cast<const Nif::NiPSysModifierFloatCtlr*>(ctrl.getPtr()));
+                else if (ctrl->mRecordType == Nif::RC_NiPSysEmitterLifeSpanCtlr)
+                    controllerInputs.mLifetime
+                        = makeFloatInterpolator(static_cast<const Nif::NiPSysModifierFloatCtlr*>(ctrl.getPtr()));
+                else if (ctrl->mRecordType == Nif::RC_NiPSysGravityStrengthCtlr)
+                    controllerInputs.mGravityStrength
+                        = makeFloatInterpolator(static_cast<const Nif::NiPSysModifierFloatCtlr*>(ctrl.getPtr()));
+                else if (ctrl->mRecordType == Nif::RC_NiPSysModifierActiveCtlr)
+                    controllerInputs.mActive
+                        = makeBoolInterpolator(static_cast<const Nif::NiPSysModifierBoolCtlr*>(ctrl.getPtr()));
+            }
+
+            if (emitterRecord == nullptr)
+                return;
+
+            osg::ref_ptr<Emitter> emitter;
+            if (emitterRecord->mRecordType == Nif::RC_NiPSysMeshEmitter)
+            {
+                const auto* mesh = static_cast<const Nif::NiPSysMeshEmitter*>(emitterRecord);
+                std::vector<int> targets;
+                for (const Nif::NiAVObjectPtr& target : mesh->mEmitterMeshes)
+                    if (!target.empty())
+                        targets.push_back(target->mRecordIndex);
+                emitter = new Emitter(targets);
+                emitter->setFlags(Nif::NiParticleSystemController::BSPArrayController_AtVertex);
+            }
+            else
+                emitter = new Emitter;
+            osgParticle::ConstantRateCounter* counter = new osgParticle::ConstantRateCounter;
+            float birthRate = data->mNumParticles;
+            if (emitterController != nullptr)
+            {
+                if (!emitterController->mInterpolator.empty()
+                    && emitterController->mInterpolator->mRecordType == Nif::RC_NiFloatInterpolator)
+                    controllerInputs.mBirthRate = FloatInterpolator(
+                        static_cast<const Nif::NiFloatInterpolator*>(emitterController->mInterpolator.getPtr()));
+                else if (!emitterController->mData.empty())
+                    controllerInputs.mBirthRate
+                        = FloatInterpolator(emitterController->mData->mFloatKeyList, birthRate);
+                if (!emitterController->mVisInterpolator.empty()
+                    && emitterController->mVisInterpolator->mRecordType == Nif::RC_NiBoolInterpolator)
+                    controllerInputs.mActive = BoolInterpolator(
+                        static_cast<const Nif::NiBoolInterpolator*>(emitterController->mVisInterpolator.getPtr()));
+            }
+            if (emitterRecord->mLifespan > 0.f)
+                birthRate = data->mNumParticles / emitterRecord->mLifespan;
+            counter->setNumberOfParticlesPerSecondToCreate(birthRate);
+            emitter->setCounter(counter);
+
+            ParticleShooter* shooter = new ParticleShooter(emitterRecord->mSpeed - emitterRecord->mSpeedVariation * .5f,
+                emitterRecord->mSpeed + emitterRecord->mSpeedVariation * .5f, emitterRecord->mPlanarAngle,
+                emitterRecord->mPlanarAngleVariation, emitterRecord->mDeclination,
+                emitterRecord->mDeclinationVariation, emitterRecord->mLifespan, emitterRecord->mLifespanVariation);
+            shooter->setRadius(emitterRecord->mInitialRadius, emitterRecord->mRadiusVariation);
+            shooter->setRotation(rotationModifier);
+            emitter->setShooter(shooter);
+
+            bool queueEmitterAtRoot = false;
+            std::optional<unsigned int> emitterObject;
+
+            if (emitterRecord->mRecordType == Nif::RC_NiPSysBoxEmitter)
+            {
+                const auto* box = static_cast<const Nif::NiPSysBoxEmitter*>(emitterRecord);
+                emitter->setPlacer(new VolumePlacer(
+                    VolumePlacer::Shape::Box, osg::Vec3f(box->mWidth, box->mDepth, box->mHeight) * .5f));
+                if (!box->mEmitterObject.empty())
+                    emitterObject = box->mEmitterObject->mRecordIndex;
+            }
+            else if (emitterRecord->mRecordType == Nif::RC_NiPSysCylinderEmitter)
+            {
+                const auto* cylinder = static_cast<const Nif::NiPSysCylinderEmitter*>(emitterRecord);
+                emitter->setPlacer(new VolumePlacer(
+                    VolumePlacer::Shape::Cylinder, osg::Vec3f(cylinder->mRadius, cylinder->mRadius, cylinder->mHeight * .5f)));
+                if (!cylinder->mEmitterObject.empty())
+                    emitterObject = cylinder->mEmitterObject->mRecordIndex;
+            }
+            else if (emitterRecord->mRecordType == Nif::RC_NiPSysSphereEmitter)
+            {
+                const auto* sphere = static_cast<const Nif::NiPSysSphereEmitter*>(emitterRecord);
+                emitter->setPlacer(new VolumePlacer(
+                    VolumePlacer::Shape::Sphere, osg::Vec3f(sphere->mRadius, sphere->mRadius, sphere->mRadius)));
+                if (!sphere->mEmitterObject.empty())
+                    emitterObject = sphere->mEmitterObject->mRecordIndex;
+            }
+            else if (emitterRecord->mRecordType == Nif::RC_NiPSysMeshEmitter)
+                queueEmitterAtRoot = true;
+            emitter->setParticleSystem(partsys);
+            emitter->setReferenceFrame(osgParticle::ParticleProcessor::RELATIVE_RF);
+
+            osgParticle::ModularProgram* program = new osgParticle::ModularProgram;
+            program->setParticleSystem(partsys);
+            program->setReferenceFrame(
+                nifNode->mWorldSpace ? osgParticle::ParticleProcessor::ABSOLUTE_RF : osgParticle::ParticleProcessor::RELATIVE_RF);
+            for (const Nif::NiPSysModifierPtr& modifier : nifNode->mModifiers)
+            {
+                if (modifier.empty() || !modifier->mActive)
+                    continue;
+                if (modifier->mRecordType == Nif::RC_NiPSysGrowFadeModifier)
+                {
+                    const auto* value = static_cast<const Nif::NiPSysGrowFadeModifier*>(modifier.getPtr());
+                    program->addOperator(new GrowFadeAffector(value->mGrowTime, value->mFadeTime));
+                }
+                else if (modifier->mRecordType == Nif::RC_NiPSysColorModifier)
+                {
+                    const auto* value = static_cast<const Nif::NiPSysColorModifier*>(modifier.getPtr());
+                    if (!value->mData.empty())
+                        program->addOperator(new ParticleColorAffector(value->mData.getPtr()));
+                }
+                else if (modifier->mRecordType == Nif::RC_NiPSysGravityModifier)
+                {
+                    const auto* value = static_cast<const Nif::NiPSysGravityModifier*>(modifier.getPtr());
+                    Nif::NiGravity legacy;
+                    legacy.mForce = value->mStrength;
+                    legacy.mType = value->mForceType;
+                    legacy.mPosition = osg::Vec3f();
+                    legacy.mDirection = value->mGravityAxis;
+                    legacy.mDecay = value->mDecay;
+                    controlledGravity = new GravityAffector(&legacy);
+                    program->addOperator(controlledGravity);
+                }
+                else if (modifier->mRecordType == Nif::RC_NiPSysDragModifier)
+                    program->addOperator(new ParticleDrag(
+                        static_cast<const Nif::NiPSysDragModifier*>(modifier.getPtr())));
+                else if (modifier->mRecordType == Nif::RC_NiPSysBombModifier)
+                    program->addOperator(new ParticleBomb(
+                        static_cast<const Nif::NiPSysBombModifier*>(modifier.getPtr())));
+                else if (modifier->mRecordType == Nif::RC_NiPSysColliderManager)
+                {
+                    for (Nif::NiPSysColliderPtr collider
+                         = static_cast<const Nif::NiPSysColliderManager*>(modifier.getPtr())->mCollider;
+                         !collider.empty(); collider = collider->mNextCollider)
+                    {
+                        if (collider->mRecordType == Nif::RC_NiPSysPlanarCollider)
+                            program->addOperator(new PlanarCollider(
+                                static_cast<const Nif::NiPSysPlanarCollider*>(collider.getPtr())));
+                        else if (collider->mRecordType == Nif::RC_NiPSysSphericalCollider)
+                            program->addOperator(new SphericalCollider(
+                                static_cast<const Nif::NiPSysSphericalCollider*>(collider.getPtr())));
+                    }
+                }
+            }
+            if (spawnModifier != nullptr)
+                program->addOperator(new ParticleSpawn(spawnModifier));
+
+            partsys->getDefaultParticleTemplate().setSizeRange(
+                osgParticle::rangef(emitterRecord->mInitialRadius, emitterRecord->mInitialRadius));
+            partsys->getDefaultParticleTemplate().setColorRange(
+                osgParticle::rangev4(emitterRecord->mInitialColor, emitterRecord->mInitialColor));
+            partsys->getDefaultParticleTemplate().setAlphaRange(osgParticle::rangef(1.f, 1.f));
+
+            osg::BoundingBox initialBound;
+            const std::size_t initialCount = std::min<std::size_t>(data->mActiveCount, data->mParticles.size());
+            for (std::size_t i = 0; i < initialCount; ++i)
+            {
+                const Nif::NiParticleInfo& source = data->mParticles[i];
+                if (source.mLifespan <= 0.f)
+                    continue;
+                const std::size_t vertex = source.mCode < data->mVertices.size() ? source.mCode : i;
+                if (vertex >= data->mVertices.size())
+                    continue;
+                ParticleAgeSetter initial(std::max(0.f, source.mAge));
+                osgParticle::Particle* particle = partsys->createParticle(&initial);
+                if (particle == nullptr)
+                    break;
+                particle->setLifeTime(source.mLifespan);
+                particle->setPosition(data->mVertices[vertex]);
+                particle->setVelocity(source.mVelocity);
+                float radius = emitterRecord->mInitialRadius;
+                if (vertex < data->mSizes.size())
+                    radius *= data->mSizes[vertex];
+                particle->setSizeRange(osgParticle::rangef(radius, radius));
+                particle->setRadius(radius);
+                const osg::Vec4f color
+                    = vertex < data->mColors.size() ? data->mColors[vertex] : emitterRecord->mInitialColor;
+                particle->setColorRange(osgParticle::rangev4(color, color));
+                particle->setAlphaRange(osgParticle::rangef(color.a(), color.a()));
+                if (vertex < data->mRotationAngles.size())
+                {
+                    const osg::Vec3f axis = vertex < data->mRotationAxes.size()
+                        ? data->mRotationAxes[vertex]
+                        : source.mRotationAxis;
+                    particle->setAngle(axis * data->mRotationAngles[vertex]);
+                }
+                if (vertex < data->mRotationSpeeds.size())
+                    particle->setAngularVelocity(source.mRotationAxis * data->mRotationSpeeds[vertex]);
+                initialBound.expandBy(osg::BoundingSpheref(data->mVertices[vertex], radius));
+            }
+            initialBound.expandBy(data->mBoundingSphere);
+            partsys->setInitialBound(initialBound);
+
+            if (!controllerInputs.mBirthRate.empty() || !controllerInputs.mSpeed.empty()
+                || !controllerInputs.mDeclination.empty() || !controllerInputs.mDeclinationVariation.empty()
+                || !controllerInputs.mInitialRadius.empty() || !controllerInputs.mLifetime.empty()
+                || !controllerInputs.mGravityStrength.empty() || !controllerInputs.mActive.empty())
+            {
+                osg::ref_ptr<ModernParticleController> callback = new ModernParticleController(std::move(controllerInputs),
+                    shooter, controlledGravity, emitterRecord->mSpeedVariation, emitterRecord->mDeclination,
+                    emitterRecord->mDeclinationVariation, emitterRecord->mPlanarAngle,
+                    emitterRecord->mPlanarAngleVariation, emitterRecord->mRadiusVariation,
+                    emitterRecord->mLifespanVariation);
+                setupController(emitterController != nullptr ? static_cast<const Nif::NiTimeController*>(emitterController)
+                                                             : nifNode->mController.getPtr(),
+                    callback, animflags | Nif::NiNode::AnimFlag_AutoPlay);
+                emitter->setUpdateCallback(callback);
+            }
+
+            if (emitterObject.has_value())
+                mEmitterQueue.emplace_back(*emitterObject, emitter);
+            else if (queueEmitterAtRoot)
+                mEmitterQueue.emplace_back(~0u, emitter);
+            else
+                parentNode->addChild(emitter);
+            parentNode->addChild(program);
+            osg::ref_ptr<osgParticle::ParticleSystemUpdater> updater = new osgParticle::ParticleSystemUpdater;
+            updater->addParticleSystem(partsys);
+            parentNode->addChild(updater);
+            if (!nifNode->mWorldSpace)
+                parentNode->addChild(partsys);
+            else
+            {
+                partsys->getOrCreateUserDataContainer()->addDescription("worldspace");
+                osg::ref_ptr<osg::MatrixTransform> transform = new osg::MatrixTransform;
+                transform->setUpdateCallback(new InverseWorldMatrix);
+                transform->addChild(partsys);
+                parentNode->addChild(transform);
+            }
+
+            std::vector<const Nif::NiProperty*> drawableProps;
+            collectDrawableProperties(nifNode, parent, drawableProps);
+            applyDrawableProperties(parentNode, drawableProps, composite, true, animflags);
+        }
+
         void handleQueuedParticleEmitters(osg::Group* rootNode, Nif::FileView nif)
         {
             for (const auto& [recordIndex, emitter] : mEmitterQueue)
             {
+                if (recordIndex == ~0u)
+                {
+                    rootNode->addChild(emitter);
+                    continue;
+                }
                 FindGroupByRecordIndex findEmitterNode(recordIndex);
                 rootNode->accept(findEmitterNode);
                 osg::Group* emitterNode = findEmitterNode.mFound;
@@ -1475,7 +2031,8 @@ namespace NifOsg
                 {
                     Log(Debug::Warning)
                         << "NIFFile Warning: Failed to find particle emitter emitter node (node record index "
-                        << recordIndex << "). File: " << nif.getFilename();
+                        << recordIndex << "); attaching it to the model root instead. File: " << nif.getFilename();
+                    rootNode->addChild(emitter);
                     continue;
                 }
 

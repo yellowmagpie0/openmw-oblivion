@@ -1,8 +1,10 @@
 #ifndef COMPONENTS_NIFOSG_CONTROLLER_H
 #define COMPONENTS_NIFOSG_CONTROLLER_H
 
+#include <algorithm>
 #include <set>
 #include <type_traits>
+#include <vector>
 
 #include <osg/Texture2D>
 #include <osg/observer_ptr>
@@ -40,6 +42,20 @@ namespace NifOsg
     template <typename MapT>
     class ValueInterpolator
     {
+    public:
+        using ValueT = typename MapT::ValueType;
+
+        struct SequenceSegment
+        {
+            float mTimelineStart{ 0.f };
+            float mTimelineStop{ 0.f };
+            float mSourceStart{ 0.f };
+            float mSourceStop{ 0.f };
+            std::shared_ptr<const MapT> mKeys;
+            ValueT mDefaultValue{};
+        };
+
+    private:
         typename MapT::MapType::const_iterator retrieveKey(float time) const
         {
             // retrieve the current position in the map, optimized for the most common case
@@ -61,8 +77,6 @@ namespace NifOsg
         }
 
     public:
-        using ValueT = typename MapT::ValueType;
-
         ValueInterpolator() = default;
 
         template <class T,
@@ -95,8 +109,37 @@ namespace NifOsg
             }
         }
 
+        explicit ValueInterpolator(std::vector<SequenceSegment> segments)
+            : mSegments(std::move(segments))
+        {
+        }
+
         ValueT interpKey(float time) const
         {
+            if (!mSegments.empty())
+            {
+                const SequenceSegment* selected = &mSegments.front();
+                for (const SequenceSegment& segment : mSegments)
+                {
+                    if (time >= segment.mTimelineStart && time <= segment.mTimelineStop)
+                    {
+                        selected = &segment;
+                        break;
+                    }
+                    if (time >= segment.mTimelineStart)
+                        selected = &segment;
+                }
+
+                float sourceTime = selected->mSourceStart;
+                const float timelineSpan = selected->mTimelineStop - selected->mTimelineStart;
+                if (timelineSpan > 0.f)
+                {
+                    const float amount = std::clamp((time - selected->mTimelineStart) / timelineSpan, 0.f, 1.f);
+                    sourceTime += amount * (selected->mSourceStop - selected->mSourceStart);
+                }
+                return interpolateMap(selected->mKeys, selected->mDefaultValue, sourceTime);
+            }
+
             if (empty())
                 return mDefaultVal;
 
@@ -127,9 +170,28 @@ namespace NifOsg
             return keys.back().second.mValue;
         }
 
-        bool empty() const { return !mKeys || mKeys->mKeys.empty(); }
+        bool empty() const { return mSegments.empty() && (!mKeys || mKeys->mKeys.empty()); }
 
     private:
+        ValueT interpolateMap(const std::shared_ptr<const MapT>& keyMap, const ValueT& defaultValue, float time) const
+        {
+            if (!keyMap || keyMap->mKeys.empty())
+                return defaultValue;
+
+            const typename MapT::MapType& keys = keyMap->mKeys;
+            if (time <= keys.front().first)
+                return keys.front().second.mValue;
+            const auto high = std::lower_bound(keys.begin(), keys.end(), time,
+                [](const typename MapT::MapType::value_type& key, float value) { return key.first < value; });
+            if (high == keys.end())
+                return keys.back().second.mValue;
+            const auto low = std::prev(high);
+            const float span = high->first - low->first;
+            if (span == 0.f)
+                return low->second.mValue;
+            return interpolate(low->second, high->second, (time - low->first) / span, keyMap->mInterpolationType);
+        }
+
         template <typename ValueType>
         ValueType interpolate(
             const Nif::KeyT<ValueType>& a, const Nif::KeyT<ValueType>& b, float fraction, unsigned int type) const
@@ -181,6 +243,7 @@ namespace NifOsg
         mutable typename MapT::MapType::const_iterator mLastHighKey;
 
         std::shared_ptr<const MapT> mKeys;
+        std::vector<SequenceSegment> mSegments;
 
         ValueT mDefaultVal = ValueT();
     };
@@ -237,10 +300,20 @@ namespace NifOsg
                                public SceneUtil::NodeCallback<KeyframeController, NifOsg::MatrixTransform*>
     {
     public:
+        struct SequenceTrack
+        {
+            float mTimelineStart{ 0.f };
+            float mTimelineStop{ 0.f };
+            float mSourceStart{ 0.f };
+            float mSourceStop{ 0.f };
+            const Nif::NiTransformInterpolator* mInterpolator{ nullptr };
+        };
+
         KeyframeController();
         KeyframeController(const KeyframeController& copy, const osg::CopyOp& copyop);
         KeyframeController(const Nif::NiKeyframeController* keyctrl);
         KeyframeController(const Nif::NiTransformInterpolator* interpolator);
+        explicit KeyframeController(const std::vector<SequenceTrack>& tracks);
 
         META_Object(NifOsg, KeyframeController)
 
@@ -289,6 +362,24 @@ namespace NifOsg
         std::set<unsigned int> mTextureUnits;
     };
 
+    class TextureTransformController : public SceneUtil::StateSetUpdater, public SceneUtil::Controller
+    {
+    public:
+        TextureTransformController() = default;
+        TextureTransformController(unsigned int textureUnit, unsigned int transformMember, FloatInterpolator data);
+        TextureTransformController(const TextureTransformController&, const osg::CopyOp&);
+
+        META_Object(NifOsg, TextureTransformController)
+
+        void setDefaults(osg::StateSet* stateset) override;
+        void apply(osg::StateSet* stateset, osg::NodeVisitor* nv) override;
+
+    private:
+        unsigned int mTextureUnit{ 0 };
+        unsigned int mTransformMember{ 0 };
+        FloatInterpolator mData;
+    };
+
     class VisController : public SceneUtil::NodeCallback<VisController>, public SceneUtil::Controller
     {
     private:
@@ -300,6 +391,7 @@ namespace NifOsg
 
     public:
         VisController(const Nif::NiVisController* ctrl, unsigned int mask);
+        VisController(std::vector<BoolInterpolator::SequenceSegment> segments, unsigned int mask);
         VisController();
         VisController(const VisController& copy, const osg::CopyOp& copyop);
 
@@ -333,6 +425,7 @@ namespace NifOsg
 
     public:
         AlphaController(const Nif::NiAlphaController* ctrl, const osg::Material* baseMaterial);
+        AlphaController(std::vector<FloatInterpolator::SequenceSegment> segments, const osg::Material* baseMaterial);
         AlphaController();
         AlphaController(const AlphaController& copy, const osg::CopyOp& copyop);
 
@@ -347,6 +440,8 @@ namespace NifOsg
     {
     public:
         MaterialColorController(const Nif::NiMaterialColorController* ctrl, const osg::Material* baseMaterial);
+        MaterialColorController(std::vector<Vec3Interpolator::SequenceSegment> segments,
+            Nif::NiMaterialColorController::TargetColor targetColor, const osg::Material* baseMaterial);
         MaterialColorController();
         MaterialColorController(const MaterialColorController& copy, const osg::CopyOp& copyop);
 
@@ -374,6 +469,8 @@ namespace NifOsg
 
     public:
         FlipController(const Nif::NiFlipController* ctrl, const std::vector<osg::ref_ptr<osg::Texture2D>>& textures);
+        FlipController(const Nif::NiFlipController* ctrl, std::vector<FloatInterpolator::SequenceSegment> segments,
+            const std::vector<osg::ref_ptr<osg::Texture2D>>& textures);
         FlipController(int texSlot, float delta, const std::vector<osg::ref_ptr<osg::Texture2D>>& textures);
         FlipController() = default;
         FlipController(const FlipController& copy, const osg::CopyOp& copyop);
