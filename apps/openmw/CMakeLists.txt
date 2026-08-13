@@ -83,7 +83,7 @@ add_openmw_dir (mwworld
     store esmstore fallback actionrepair actionsoulgem livecellref actiondoor
     contentloader esmloader actiontrap cellreflist cellref weather projectilemanager
     cellpreloader datetimemanager groundcoverstore magiceffects cell ptrregistry
-    positioncellgrid oblivionprofileservices oblivioninteraction oblivionscriptmanager
+    positioncellgrid oblivionprofileservices oblivioninteraction oblivionscriptmanager worldspaceutils
     )
 
 add_openmw_dir (mwphysics

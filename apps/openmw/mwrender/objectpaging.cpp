@@ -28,6 +28,7 @@
 #include <components/esm4/loadfurn.hpp>
 #include <components/esm4/loadstat.hpp>
 #include <components/esm4/loadtree.hpp>
+#include <components/esm4/loadwrld.hpp>
 #include <components/misc/pathhelpers.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/rng.hpp>
@@ -47,6 +48,7 @@
 #include "apps/openmw/mwbase/world.hpp"
 #include "apps/openmw/mwclass/esm4base.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwworld/worldspaceutils.hpp"
 
 #include "vismask.hpp"
 
@@ -249,14 +251,18 @@ namespace MWRender
                 {
                     if (const auto* autoTransform = dynamic_cast<const NifOsg::AutoTransform*>(node))
                     {
-                        osg::MatrixTransform* n = new osg::MatrixTransform();
-                        n->setMatrix(autoTransform->computeMatrix(nullptr));
+                        auto* n = new NifOsg::AutoTransform(*autoTransform, *this);
+                        n->removeChildren(0, n->getNumChildren());
 
                         for (unsigned int i = 0; i < autoTransform->getNumChildren(); ++i)
                             if (osg::Node* clonedChild = operator()(autoTransform->getChild(i)))
                                 n->addChild(clonedChild);
 
-                        n->setDataVariance(osg::Object::STATIC);
+                        // A billboard is camera-dependent even in a distant page. Marking it static lets the
+                        // page optimizer bake one arbitrary orientation into the vertex buffer (issue #6388).
+                        // Dynamic transforms remain camera-facing while the surrounding trunk/branch geometry
+                        // is still flattened and merged normally.
+                        n->setDataVariance(osg::Object::DYNAMIC);
 
                         handleCallbacks(node, n);
 
@@ -633,7 +639,14 @@ namespace MWRender
         }
         else
         {
-            refs = collectESM4References(size, startCell, mWorldspace);
+            ESM::RefId referenceWorldspace = mWorldspace;
+            if (!activeGrid)
+            {
+                const auto& worlds = store.get<ESM4::World>();
+                referenceWorldspace = MWWorld::resolveWorldspaceInheritance(
+                    worlds, referenceWorldspace, ESM4::World::UseFlag_LOD);
+            }
+            refs = collectESM4References(size, startCell, referenceWorldspace);
         }
 
         if (activeGrid && !refs.empty())

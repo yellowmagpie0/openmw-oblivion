@@ -7,6 +7,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldspaceutils.hpp"
 
 namespace MWRender
 {
@@ -22,9 +23,12 @@ namespace MWRender
         const MWBase::World& world = *MWBase::Environment::get().getWorld();
         if (ESM::isEsm4Ext(cellIndex.mWorldspace))
         {
-            const ESM4::World* worldspace = world.getStore().get<ESM4::World>().find(cellIndex.mWorldspace);
-            if (!worldspace->mParent.isZeroOrUnset() && worldspace->mParentUseFlags & ESM4::World::UseFlag_Land)
-                cellIndex.mWorldspace = worldspace->mParent;
+            const auto& worlds = world.getStore().get<ESM4::World>();
+            const ESM4::World* worldspace = worlds.find(cellIndex.mWorldspace);
+            if (worldspace->mWorldFlags & ESM4::World::WLD_NoLandscpe)
+                return nullptr;
+            cellIndex.mWorldspace
+                = MWWorld::resolveWorldspaceInheritance(worlds, cellIndex.mWorldspace, ESM4::World::UseFlag_Land);
         }
 
         if (const std::optional<osg::ref_ptr<osg::Object>> obj = mCache->getRefFromObjectCacheOrNone(cellIndex))

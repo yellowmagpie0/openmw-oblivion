@@ -1,6 +1,8 @@
 #ifndef OPENMW_MWRENDER_GROUNDCOVER_H
 #define OPENMW_MWRENDER_GROUNDCOVER_H
 
+#include <atomic>
+
 #include <components/esm3/loadcell.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/terrain/quadtreeworld.hpp>
@@ -18,13 +20,16 @@ namespace osg
 
 namespace MWRender
 {
+    class TerrainStorage;
+
     typedef std::tuple<osg::Vec2f, float> GroundcoverChunkId; // Center, Size
     class Groundcover : public Resource::GenericResourceManager<GroundcoverChunkId>,
                         public Terrain::QuadTreeWorld::ChunkManager
     {
     public:
         Groundcover(Resource::SceneManager* sceneManager, float density, float viewDistance,
-            const MWWorld::GroundcoverStore& store);
+            const MWWorld::GroundcoverStore& store, TerrainStorage* terrainStorage = nullptr,
+            ESM::RefId worldspace = ESM::RefId());
         ~Groundcover();
 
         osg::ref_ptr<osg::Node> getChunk(float size, const osg::Vec2f& center, unsigned char lod, unsigned int lodFlags,
@@ -44,6 +49,12 @@ namespace MWRender
                 , mScale(ref.mScale)
             {
             }
+
+            GroundcoverEntry(const ESM::Position& pos, float scale)
+                : mPos(pos)
+                , mScale(scale)
+            {
+            }
         };
 
     private:
@@ -54,9 +65,13 @@ namespace MWRender
         osg::ref_ptr<osg::StateSet> mStateset;
         osg::ref_ptr<osg::Program> mProgramTemplate;
         const MWWorld::GroundcoverStore& mGroundcoverStore;
+        TerrainStorage* mTerrainStorage;
+        ESM::RefId mWorldspace;
+        std::atomic_bool mLoggedNativeInstances{ false };
 
         osg::ref_ptr<osg::Node> createChunk(InstanceMap& instances, const osg::Vec2f& center);
         void collectInstances(InstanceMap& instances, float size, const osg::Vec2f& center);
+        void collectEsm4Instances(InstanceMap& instances, float size, const osg::Vec2f& center);
     };
 }
 

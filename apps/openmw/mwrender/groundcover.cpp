@@ -1,6 +1,8 @@
 #include "groundcover.hpp"
 
 #include <span>
+#include <numbers>
+#include <unordered_map>
 
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
@@ -13,7 +15,13 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/loadland.hpp>
 #include <components/esm3/readerscache.hpp>
+#include <components/esm4/loadgras.hpp>
+#include <components/esm4/loadland.hpp>
+#include <components/esm4/loadltex.hpp>
+#include <components/esm4/loadwrld.hpp>
+#include <components/debug/debuglog.hpp>
 #include <components/misc/convert.hpp>
+#include <components/misc/resourcehelpers.hpp>
 #include <components/sceneutil/lightmanager.hpp>
 #include <components/sceneutil/nodecallback.hpp>
 #include <components/settings/values.hpp>
@@ -21,7 +29,12 @@
 #include <components/terrain/quadtreenode.hpp>
 
 #include "../mwworld/groundcoverstore.hpp"
+#include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
+#include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldspaceutils.hpp"
 
+#include "terrainstorage.hpp"
 #include "vismask.hpp"
 
 namespace MWRender
@@ -322,6 +335,101 @@ namespace MWRender
 
             return true;
         }
+
+        std::uint32_t mix(std::uint32_t value)
+        {
+            value ^= value >> 16;
+            value *= 0x7feb352du;
+            value ^= value >> 15;
+            value *= 0x846ca68bu;
+            value ^= value >> 16;
+            return value;
+        }
+
+        float randomUnit(std::uint32_t seed)
+        {
+            return static_cast<float>(mix(seed) & 0x00ffffffu) / static_cast<float>(0x01000000u);
+        }
+
+        float opacityAt(const ESM4::Land::TxtLayer& layer, int x, int y)
+        {
+            constexpr int side = ESM4::Land::sVertsPerSide / 2 + 1;
+            const std::uint16_t position = static_cast<std::uint16_t>(y * side + x);
+            const auto found = std::find_if(
+                layer.data.begin(), layer.data.end(), [&](const ESM4::Land::VTXT& value) {
+                    return value.position == position;
+                });
+            return found == layer.data.end() ? 0.f : std::clamp(found->opacity, 0.f, 1.f);
+        }
+
+        float sampleOpacity(const ESM4::Land::TxtLayer& layer, float x, float y)
+        {
+            constexpr int maxIndex = ESM4::Land::sVertsPerSide / 2;
+            const float sx = std::clamp(x, 0.f, 1.f) * maxIndex;
+            const float sy = std::clamp(y, 0.f, 1.f) * maxIndex;
+            const int x0 = static_cast<int>(std::floor(sx));
+            const int y0 = static_cast<int>(std::floor(sy));
+            const int x1 = std::min(x0 + 1, maxIndex);
+            const int y1 = std::min(y0 + 1, maxIndex);
+            const float tx = sx - x0;
+            const float ty = sy - y0;
+            const float bottom = opacityAt(layer, x0, y0) * (1.f - tx) + opacityAt(layer, x1, y0) * tx;
+            const float top = opacityAt(layer, x0, y1) * (1.f - tx) + opacityAt(layer, x1, y1) * tx;
+            return bottom * (1.f - ty) + top * ty;
+        }
+
+        ESM::FormId sampleLandTexture(const ESM4::Land& land, float cellX, float cellY, float selection)
+        {
+            const bool right = cellX >= 0.5f;
+            const bool top = cellY >= 0.5f;
+            const unsigned int quadrant = (top ? 2u : 0u) + (right ? 1u : 0u);
+            const float qx = cellX * 2.f - (right ? 1.f : 0.f);
+            const float qy = cellY * 2.f - (top ? 1.f : 0.f);
+            const ESM4::Land::Texture& texture = land.mTextures[quadrant];
+
+            std::vector<std::pair<ESM::FormId32, float>> weights;
+            weights.reserve(texture.layers.size() + 1);
+            float baseWeight = 1.f;
+            for (const ESM4::Land::TxtLayer& layer : texture.layers)
+            {
+                const float weight = sampleOpacity(layer, qx, qy);
+                baseWeight -= std::min(baseWeight, weight);
+                if (weight > 0.f)
+                    weights.emplace_back(layer.texture.formId, weight);
+            }
+            weights.emplace_back(texture.base.formId, std::max(0.f, baseWeight));
+
+            float total = 0.f;
+            for (const auto& [id, weight] : weights)
+                total += weight;
+            float selected = selection * total;
+            for (const auto& [id, weight] : weights)
+            {
+                if (selected <= weight)
+                    return ESM::FormId::fromUint32(id);
+                selected -= weight;
+            }
+            return ESM::FormId::fromUint32(texture.base.formId);
+        }
+
+        bool acceptsWaterDistance(const ESM4::Grass& grass, float height, float waterHeight)
+        {
+            const float delta = height - waterHeight;
+            const float distance = static_cast<float>(grass.mData.distanceFromWater);
+            switch (grass.mData.waterDistApplication)
+            {
+                case 0: return true;
+                case 1: return delta >= distance;
+                case 2: return delta >= 0.f && delta <= distance;
+                case 3: return delta <= -distance;
+                case 4: return delta <= 0.f && delta >= -distance;
+                case 5: return std::abs(delta) >= distance;
+                case 6: return std::abs(delta) <= distance;
+                case 7: return delta <= 0.f || delta <= distance;
+                case 8: return delta >= 0.f || -delta <= distance;
+                default: return true;
+            }
+        }
     }
 
     osg::ref_ptr<osg::Node> Groundcover::getChunk(float size, const osg::Vec2f& center, unsigned char lod,
@@ -337,6 +445,17 @@ namespace MWRender
         {
             InstanceMap instances;
             collectInstances(instances, size, center);
+            if (ESM::isEsm4Ext(mWorldspace) && !mLoggedNativeInstances.load(std::memory_order_relaxed))
+            {
+                std::size_t instanceCount = 0;
+                for (const auto& [_, entries] : instances)
+                    instanceCount += entries.size();
+                if (instanceCount != 0 && !mLoggedNativeInstances.exchange(true))
+                {
+                    Log(Debug::Info) << "M9 native groundcover populated a terrain chunk with " << instanceCount
+                                     << " instances from " << instances.size() << " GRAS models";
+                }
+            }
             osg::ref_ptr<osg::Node> node = createChunk(instances, center);
             mCache->addEntryToObjectCache(id, node.get());
             return node;
@@ -344,12 +463,15 @@ namespace MWRender
     }
 
     Groundcover::Groundcover(
-        Resource::SceneManager* sceneManager, float density, float viewDistance, const MWWorld::GroundcoverStore& store)
+        Resource::SceneManager* sceneManager, float density, float viewDistance, const MWWorld::GroundcoverStore& store,
+        TerrainStorage* terrainStorage, ESM::RefId worldspace)
         : GenericResourceManager<GroundcoverChunkId>(nullptr, Settings::cells().mCacheExpiryDelay)
         , mSceneManager(sceneManager)
         , mDensity(density)
         , mStateset(new osg::StateSet)
         , mGroundcoverStore(store)
+        , mTerrainStorage(terrainStorage)
+        , mWorldspace(worldspace)
     {
         setViewDistance(viewDistance);
         // MGE uses default alpha settings for groundcover, so we can not rely on alpha properties
@@ -366,6 +488,13 @@ namespace MWRender
             : osg::ref_ptr<osg::Program>(new osg::Program);
         mProgramTemplate->addBindAttribLocation("aOffset", 6);
         mProgramTemplate->addBindAttribLocation("aRotation", 7);
+
+        if (ESM::isEsm4Ext(mWorldspace))
+        {
+            const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
+            Log(Debug::Info) << "M9 native groundcover enabled for " << mWorldspace.toDebugString() << " with "
+                             << esmStore.get<ESM4::Grass>().getSize() << " GRAS records at density " << mDensity;
+        }
     }
 
     Groundcover::~Groundcover() = default;
@@ -374,6 +503,12 @@ namespace MWRender
     {
         if (mDensity <= 0.f)
             return;
+
+        if (ESM::isEsm4Ext(mWorldspace))
+        {
+            collectEsm4Instances(instances, size, center);
+            return;
+        }
 
         osg::Vec2f minBound = (center - osg::Vec2f(size / 2.f, size / 2.f));
         osg::Vec2f maxBound = (center + osg::Vec2f(size / 2.f, size / 2.f));
@@ -429,10 +564,123 @@ namespace MWRender
         }
     }
 
+    void Groundcover::collectEsm4Instances(InstanceMap& instances, float size, const osg::Vec2f& center)
+    {
+        if (mTerrainStorage == nullptr)
+            return;
+
+        constexpr int samplesPerSide = 16;
+        constexpr float cellSize = static_cast<float>(ESM4::Land::sRealSize);
+        const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
+        const auto& worlds = store.get<ESM4::World>();
+        const ESM4::World* currentWorld = worlds.search(mWorldspace);
+        if (currentWorld == nullptr || currentWorld->mWorldFlags & ESM4::World::WLD_NoGrass)
+            return;
+
+        const ESM::RefId landWorldspace
+            = MWWorld::resolveWorldspaceInheritance(worlds, mWorldspace, ESM4::World::UseFlag_Land);
+        const ESM4::World* waterWorld = MWWorld::getWorldspaceFeature(worlds, mWorldspace, ESM4::World::UseFlag_Water);
+        const float waterHeight = waterWorld == nullptr ? std::numeric_limits<float>::lowest() : waterWorld->mWaterLevel;
+
+        const osg::Vec2f minBound = center - osg::Vec2f(size / 2.f, size / 2.f);
+        const osg::Vec2f maxBound = center + osg::Vec2f(size / 2.f, size / 2.f);
+        const int minCellX = static_cast<int>(std::floor(minBound.x()));
+        const int minCellY = static_cast<int>(std::floor(minBound.y()));
+        const int maxCellX = static_cast<int>(std::ceil(maxBound.x()));
+        const int maxCellY = static_cast<int>(std::ceil(maxBound.y()));
+
+        for (int cellX = minCellX; cellX < maxCellX; ++cellX)
+        {
+            for (int cellY = minCellY; cellY < maxCellY; ++cellY)
+            {
+                const ESM4::Land* land
+                    = store.get<ESM4::Land>().search(ESM::ExteriorCellLocation(cellX, cellY, landWorldspace));
+                if (land == nullptr)
+                    continue;
+
+                for (int y = 0; y < samplesPerSide; ++y)
+                {
+                    for (int x = 0; x < samplesPerSide; ++x)
+                    {
+                        const std::uint32_t seed = mix(static_cast<std::uint32_t>(cellX) * 0x8da6b343u
+                            ^ static_cast<std::uint32_t>(cellY) * 0xd8163841u
+                            ^ static_cast<std::uint32_t>(y * samplesPerSide + x));
+                        const float localX = (x + randomUnit(seed + 1)) / samplesPerSide;
+                        const float localY = (y + randomUnit(seed + 2)) / samplesPerSide;
+                        const float cellCoordX = cellX + localX;
+                        const float cellCoordY = cellY + localY;
+                        if (cellCoordX < minBound.x() || cellCoordX >= maxBound.x() || cellCoordY < minBound.y()
+                            || cellCoordY >= maxBound.y())
+                            continue;
+
+                        const ESM::FormId textureId = sampleLandTexture(*land, localX, localY, randomUnit(seed + 3));
+                        const ESM4::LandTexture* landTexture = store.get<ESM4::LandTexture>().search(textureId);
+                        if (landTexture == nullptr || landTexture->mGrass.empty())
+                            continue;
+
+                        const ESM::FormId grassId
+                            = landTexture->mGrass[mix(seed + 4) % landTexture->mGrass.size()];
+                        const ESM4::Grass* grass = store.get<ESM4::Grass>().search(grassId);
+                        if (grass == nullptr || grass->mModel.empty())
+                            continue;
+
+                        const float recordDensity = std::clamp(static_cast<float>(grass->mData.density) / 100.f, 0.f, 1.f);
+                        if (randomUnit(seed + 5) > recordDensity * mDensity)
+                            continue;
+
+                        const float jitterRange = std::min(grass->mData.positionRange, cellSize / samplesPerSide);
+                        const float worldX = cellCoordX * cellSize + (randomUnit(seed + 6) * 2.f - 1.f) * jitterRange;
+                        const float worldY = cellCoordY * cellSize + (randomUnit(seed + 7) * 2.f - 1.f) * jitterRange;
+                        const float height = mTerrainStorage->getHeightAt(osg::Vec3f(worldX, worldY, 0.f), mWorldspace);
+                        if (height == std::numeric_limits<float>::lowest()
+                            || !acceptsWaterDistance(*grass, height, waterHeight))
+                            continue;
+
+                        constexpr float normalSampleDistance = 8.f;
+                        const auto sampleHeight = [&](float sampleX, float sampleY) {
+                            const float value
+                                = mTerrainStorage->getHeightAt(osg::Vec3f(sampleX, sampleY, 0.f), mWorldspace);
+                            return value == std::numeric_limits<float>::lowest() ? height : value;
+                        };
+                        const float dx = sampleHeight(worldX + normalSampleDistance, worldY)
+                            - sampleHeight(worldX - normalSampleDistance, worldY);
+                        const float dy = sampleHeight(worldX, worldY + normalSampleDistance)
+                            - sampleHeight(worldX, worldY - normalSampleDistance);
+                        osg::Vec3f normal(-dx, -dy, normalSampleDistance * 2.f);
+                        normal.normalize();
+                        const float slope = osg::RadiansToDegrees(std::acos(std::clamp(normal.z(), -1.f, 1.f)));
+                        if (slope < grass->mData.minSlope || slope > grass->mData.maxSlope)
+                            continue;
+
+                        ESM::Position position;
+                        position.pos[0] = worldX;
+                        position.pos[1] = worldY;
+                        position.pos[2] = height;
+                        if (grass->mData.flags & 0x04)
+                        {
+                            position.rot[0] = std::atan2(normal.y(), normal.z());
+                            position.rot[1] = -std::atan2(normal.x(), normal.z());
+                        }
+                        position.rot[2] = randomUnit(seed + 8) * 2.f * std::numbers::pi_v<float>;
+                        const float scaleRange = std::clamp(grass->mData.heightRange / 100.f, 0.f, 0.9f);
+                        const float scale = 1.f + (randomUnit(seed + 9) * 2.f - 1.f) * scaleRange;
+
+                        VFS::Path::Normalized model
+                            = Misc::ResourceHelpers::correctMeshPath(grass->mModel.getNormalized());
+                        instances[std::move(model)].emplace_back(position, scale);
+                    }
+                }
+            }
+        }
+    }
+
     osg::ref_ptr<osg::Node> Groundcover::createChunk(InstanceMap& instances, const osg::Vec2f& center)
     {
         osg::ref_ptr<osg::Group> group = new osg::Group;
-        osg::Vec3f worldCenter = osg::Vec3f(center.x(), center.y(), 0) * ESM::Land::REAL_SIZE;
+        const float cellWorldSize = ESM::isEsm4Ext(mWorldspace) && mTerrainStorage != nullptr
+            ? mTerrainStorage->getCellWorldSize(mWorldspace)
+            : ESM::Land::REAL_SIZE;
+        osg::Vec3f worldCenter = osg::Vec3f(center.x(), center.y(), 0) * cellWorldSize;
         for (const auto& [model, entries] : instances)
         {
             const osg::Node* temp = mSceneManager->getTemplate(model);

@@ -21,12 +21,19 @@
 
 #include <components/vfs/pathutil.hpp>
 
+#include <components/misc/strings/algorithm.hpp>
+
 #include <components/esm3/globalmap.hpp>
 #include <components/esm3/loadland.hpp>
+#include <components/esm4/loadland.hpp>
+#include <components/esm4/loadwrld.hpp>
+#include <components/esm/esmterrain.hpp>
+#include <components/esm/util.hpp>
 
 #include "../mwbase/environment.hpp"
 
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldspaceutils.hpp"
 
 #include "vismask.hpp"
 
@@ -126,7 +133,8 @@ namespace MWRender
     {
     public:
         CreateMapWorkItem(int width, int height, int minX, int minY, int maxX, int maxY, int cellSize,
-            const MWWorld::Store<ESM::Land>& landStore, osg::ref_ptr<osg::Image> colorLut)
+            const MWWorld::Store<ESM::Land>& landStore, const MWWorld::Store<ESM4::Land>& esm4LandStore,
+            ESM::RefId worldspace, osg::ref_ptr<osg::Image> colorLut)
             : mWidth(width)
             , mHeight(height)
             , mMinX(minX)
@@ -135,6 +143,8 @@ namespace MWRender
             , mMaxY(maxY)
             , mCellSize(cellSize)
             , mLandStore(landStore)
+            , mEsm4LandStore(esm4LandStore)
+            , mWorldspace(worldspace)
             , mColorLut(colorLut)
         {
         }
@@ -151,7 +161,14 @@ namespace MWRender
             {
                 for (int y = mMinY; y <= mMaxY; ++y)
                 {
-                    const ESM::Land* land = mLandStore.search(x, y);
+                    const bool esm4 = ESM::isEsm4Ext(mWorldspace);
+                    const ESM::Land* land = esm4 ? nullptr : mLandStore.search(x, y);
+                    const ESM4::Land* land4 = esm4
+                        ? mEsm4LandStore.search(ESM::ExteriorCellLocation(x, y, mWorldspace))
+                        : nullptr;
+                    std::optional<ESM::LandData> land4Data;
+                    if (land4 != nullptr)
+                        land4Data.emplace(*land4, ESM::Land::DATA_VHGT);
 
                     for (int cellY = 0; cellY < mCellSize; ++cellY)
                     {
@@ -167,6 +184,14 @@ namespace MWRender
                             // Converting [-128; 127] WNAM range to [0; 255] index
                             if (land != nullptr && (land->mDataTypes & ESM::Land::DATA_WNAM))
                                 lutIndex = static_cast<int>(land->mWnam[vertexY * 9 + vertexX]) + 128;
+                            else if (land4Data)
+                            {
+                                const int landSize = land4Data->getLandSize();
+                                const int heightX = (cellX * (landSize - 1)) / mCellSize;
+                                const int heightY = (cellY * (landSize - 1)) / mCellSize;
+                                const float height = land4Data->getHeights()[heightY * landSize + heightX];
+                                lutIndex = std::clamp(static_cast<int>(height / 32.f) + 128, 0, 255);
+                            }
 
                             // Use getColor to handle all pixel format conversions automatically
                             osg::Vec4 color = mColorLut->getColor(lutIndex, 0);
@@ -218,6 +243,8 @@ namespace MWRender
         int mMinX, mMinY, mMaxX, mMaxY;
         int mCellSize;
         const MWWorld::Store<ESM::Land>& mLandStore;
+        const MWWorld::Store<ESM4::Land>& mEsm4LandStore;
+        ESM::RefId mWorldspace;
         osg::ref_ptr<osg::Image> mColorLut;
 
         osg::ref_ptr<osg::Texture2D> mBaseTexture;
@@ -249,6 +276,8 @@ namespace MWRender
         , mMaxX(0)
         , mMinY(0)
         , mMaxY(0)
+        , mWorldspace(ESM::Cell::sDefaultWorldspaceId)
+        , mCellWorldSize(Constants::CellSizeInUnits)
     {
     }
 
@@ -267,9 +296,45 @@ namespace MWRender
     {
         const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
 
+        mMinX = mMinY = 0;
+        mMaxX = mMaxY = 0;
+        mWorldspace = ESM::Cell::sDefaultWorldspaceId;
+
+        if (!esmStore.get<ESM4::Land>().getLands().empty())
+        {
+            std::map<ESM::RefId, std::size_t> counts;
+            for (const auto& [location, _] : esmStore.get<ESM4::Land>().getLands())
+                ++counts[location.mWorldspace];
+            mWorldspace = std::max_element(counts.begin(), counts.end(), [](const auto& left, const auto& right) {
+                return left.second < right.second;
+            })->first;
+
+            for (const ESM4::World& world : esmStore.get<ESM4::World>())
+            {
+                if (Misc::StringUtils::ciEqual(world.mEditorId, "Tamriel"))
+                {
+                    mWorldspace = MWWorld::resolveWorldspaceInheritance(
+                        esmStore.get<ESM4::World>(), ESM::RefId(world.mId), ESM4::World::UseFlag_Land);
+                    break;
+                }
+            }
+            mCellWorldSize = ESM::getCellSize(mWorldspace);
+            for (const auto& [location, _] : esmStore.get<ESM4::Land>().getLands())
+            {
+                if (location.mWorldspace != mWorldspace)
+                    continue;
+                mMinX = std::min(mMinX, location.mX);
+                mMaxX = std::max(mMaxX, location.mX);
+                mMinY = std::min(mMinY, location.mY);
+                mMaxY = std::max(mMaxY, location.mY);
+            }
+        }
+        else
+            mCellWorldSize = Constants::CellSizeInUnits;
+
         // get the size of the world
         MWWorld::Store<ESM::Cell>::iterator it = esmStore.get<ESM::Cell>().extBegin();
-        for (; it != esmStore.get<ESM::Cell>().extEnd(); ++it)
+        for (; mWorldspace == ESM::Cell::sDefaultWorldspaceId && it != esmStore.get<ESM::Cell>().extEnd(); ++it)
         {
             if (it->getGridX() < mMinX)
                 mMinX = it->getGridX();
@@ -286,6 +351,12 @@ namespace MWRender
         mWidth = cellSize * (mMaxX - mMinX + 1);
         mHeight = cellSize * (mMaxY - mMinY + 1);
 
+        if (ESM::isEsm4Ext(mWorldspace))
+        {
+            Log(Debug::Info) << "M9 native global map for " << mWorldspace.toDebugString() << ": cells [" << mMinX
+                             << ", " << mMinY << "] to [" << mMaxX << ", " << mMaxY << "]";
+        }
+
         // Load color LUT texture
         constexpr VFS::Path::NormalizedView colorLutPath("textures/omw_map_color_palette.dds");
         auto resourceSystem = MWBase::Environment::get().getResourceSystem();
@@ -298,16 +369,16 @@ namespace MWRender
                 + std::to_string(colorLut ? colorLut->s() : 0) + "x" + std::to_string(colorLut ? colorLut->t() : 0));
         }
 
-        mWorkItem = new CreateMapWorkItem(
-            mWidth, mHeight, mMinX, mMinY, mMaxX, mMaxY, cellSize, esmStore.get<ESM::Land>(), colorLut);
+        mWorkItem = new CreateMapWorkItem(mWidth, mHeight, mMinX, mMinY, mMaxX, mMaxY, cellSize,
+            esmStore.get<ESM::Land>(), esmStore.get<ESM4::Land>(), mWorldspace, colorLut);
         mWorkQueue->addWorkItem(mWorkItem);
     }
 
     void GlobalMap::worldPosToImageSpace(float x, float z, float& imageX, float& imageY)
     {
-        imageX = (float(x / float(Constants::CellSizeInUnits) - mMinX) / (mMaxX - mMinX + 1)) * getWidth();
+        imageX = (float(x / float(mCellWorldSize) - mMinX) / (mMaxX - mMinX + 1)) * getWidth();
 
-        imageY = (1.f - float(z / float(Constants::CellSizeInUnits) - mMinY) / (mMaxY - mMinY + 1)) * getHeight();
+        imageY = (1.f - float(z / float(mCellWorldSize) - mMinY) / (mMaxY - mMinY + 1)) * getHeight();
     }
 
     void GlobalMap::requestOverlayTextureUpdate(int x, int y, int width, int height,

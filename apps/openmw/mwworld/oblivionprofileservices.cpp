@@ -402,6 +402,10 @@ namespace MWWorld
         addFloat("fFatigueSwimWalkBase", 2.5f);
         addFloat("fFatigueSwimWalkMult", 0.f);
         addInt("iMaxActivateDist", 192);
+        // Legacy UI and focus services still consume these two common runtime contracts.
+        // Oblivion does not ship the identically named Morrowind settings.
+        addInt("iMaxInfoDist", 192);
+        addInt("iLevelUpTotal", 10);
         addInt("iMonthsToRespawn", 1);
         addString("sDefaultCellname", "Wilderness");
         addString("FontColor_color_header", "223,201,159");

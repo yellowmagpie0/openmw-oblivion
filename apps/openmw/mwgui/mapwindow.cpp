@@ -16,6 +16,11 @@
 
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/globalmap.hpp>
+#include <components/esm4/common.hpp>
+#include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadrefr.hpp>
+#include <components/esm4/loadwrld.hpp>
+#include <components/debug/debuglog.hpp>
 #include <components/myguiplatform/myguitexture.hpp>
 #include <components/settings/values.hpp>
 
@@ -27,6 +32,7 @@
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/player.hpp"
 #include "../mwworld/worldmodel.hpp"
+#include "../mwworld/worldspaceutils.hpp"
 
 #include "../mwrender/globalmap.hpp"
 #include "../mwrender/localmap.hpp"
@@ -1035,6 +1041,9 @@ namespace MWGui
                 createMarkerCoords(marker.position.x(), marker.position.y(), static_cast<float>(col.size())));
             marker.widget->setVisible(marker.widget->getHeight() >= 6);
         }
+
+        for (auto& marker : mNativeGlobalMapMarkers)
+            marker.widget->setCoord(createNativeMarkerCoords(marker.position.x(), marker.position.y()));
     }
 
     void MapWindow::onChangeScrollWindowCoord(MyGUI::Widget* sender)
@@ -1076,6 +1085,7 @@ namespace MWGui
     {
         mGlobalMapRender->render();
         resizeGlobalMap();
+        createNativeMapMarkers();
     }
 
     MapWindow::~MapWindow() = default;
@@ -1117,6 +1127,63 @@ namespace MWGui
         markerWidget->eventMouseButtonPressed += MyGUI::newDelegate(this, &MapWindow::onDragStart);
 
         return markerWidget;
+    }
+
+    MyGUI::IntCoord MapWindow::createNativeMarkerCoords(float worldX, float worldY) const
+    {
+        worldPosToGlobalMapImageSpace(worldX, worldY, worldX, worldY);
+        constexpr float baseSize = 12.f;
+        const float markerSize = baseSize * mGlobalMapZoom;
+        const float halfMarkerSize = markerSize / 2.f;
+        return MyGUI::IntCoord(static_cast<int>(worldX - halfMarkerSize), static_cast<int>(worldY - halfMarkerSize),
+            static_cast<int>(markerSize), static_cast<int>(markerSize));
+    }
+
+    void MapWindow::createNativeMapMarkers()
+    {
+        for (const MapMarkerType& marker : mNativeGlobalMapMarkers)
+            MyGUI::Gui::getInstance().destroyWidget(marker.widget);
+        mNativeGlobalMapMarkers.clear();
+
+        const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
+        const ESM::RefId mapWorldspace = mGlobalMapRender->getWorldspace();
+        if (!ESM::isEsm4Ext(mapWorldspace))
+            return;
+
+        for (const ESM4::Reference& ref : store.get<ESM4::Reference>())
+        {
+            constexpr std::uint8_t visibleOnMap = 0x01;
+            if (!ref.mIsMapMarker || !(ref.mMapMarkerFlags & visibleOnMap)
+                || (ref.mFlags & (ESM4::Rec_Deleted | ESM4::Rec_Disabled)) || ref.mFullName.empty())
+                continue;
+
+            const ESM4::Cell* cell = store.get<ESM4::Cell>().search(ref.mParent);
+            if (cell == nullptr || !cell->isExterior())
+                continue;
+            const ESM::RefId markerWorldspace = MWWorld::resolveWorldspaceInheritance(
+                store.get<ESM4::World>(), cell->mParent, ESM4::World::UseFlag_Map);
+            if (markerWorldspace != mapWorldspace)
+                continue;
+
+            const osg::Vec2f position(ref.mPos.pos[0], ref.mPos.pos[1]);
+            MyGUI::Widget* widget = mGlobalMap->createWidget<MyGUI::Widget>(
+                "MarkerButton", createNativeMarkerCoords(position.x(), position.y()), MyGUI::Align::Default);
+            widget->setUserString("Caption_TextOneLine", ref.mFullName);
+            widget->setUserString("ToolTipLayout", "TextToolTipOneLine");
+            widget->setUserString("ToolTipType", "Layout");
+            widget->setNeedMouseFocus(true);
+            widget->setColour(
+                MyGUI::Colour::parse(MyGUI::LanguageManager::getInstance().replaceTags("#{fontcolour=normal}")));
+            widget->setDepth(Global_MarkerLayer);
+            widget->eventMouseDrag += MyGUI::newDelegate(this, &MapWindow::onMouseDrag);
+            if (Settings::map().mAllowZooming)
+                widget->eventMouseWheel += MyGUI::newDelegate(this, &MapWindow::onMapZoomed);
+            widget->eventMouseButtonPressed += MyGUI::newDelegate(this, &MapWindow::onDragStart);
+            mNativeGlobalMapMarkers.push_back({ position, widget });
+        }
+
+        Log(Debug::Info) << "M9 native global map created " << mNativeGlobalMapMarkers.size()
+                         << " initially visible map markers";
     }
 
     void MapWindow::addVisitedLocation(const std::string& name, int x, int y)
@@ -1364,6 +1431,9 @@ namespace MWGui
             MyGUI::Gui::getInstance().destroyWidget(widgetPair.first.widget);
         mGlobalMapMarkers.clear();
         mGlobalMapMarkersByName.clear();
+        for (const MapMarkerType& marker : mNativeGlobalMapMarkers)
+            MyGUI::Gui::getInstance().destroyWidget(marker.widget);
+        mNativeGlobalMapMarkers.clear();
     }
 
     void MapWindow::write(ESM::ESMWriter& writer, Loading::Listener& progress)

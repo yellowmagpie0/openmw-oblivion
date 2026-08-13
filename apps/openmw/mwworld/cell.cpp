@@ -1,6 +1,7 @@
 #include "cell.hpp"
 
 #include "esmstore.hpp"
+#include "worldspaceutils.hpp"
 
 #include "../mwbase/environment.hpp"
 
@@ -69,7 +70,10 @@ namespace MWWorld
             if (world == nullptr)
                 throw std::runtime_error(
                     "Cell " + cell.mId.toDebugString() + " parent world " + mParent.toDebugString() + " is not found");
-            mWaterHeight = world->mWaterLevel;
+            const auto& worlds = MWBase::Environment::get().getESMStore()->get<ESM4::World>();
+            if (const ESM4::World* waterWorld
+                = getWorldspaceFeature(worlds, mParent, ESM4::World::UseFlag_Water))
+                mWaterHeight = waterWorld->mWaterLevel;
         }
         mDescription = getCellDescription(cell, world);
     }

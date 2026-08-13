@@ -294,6 +294,8 @@ namespace MWGui
         void worldPosToGlobalMapImageSpace(float x, float z, float& imageX, float& imageY) const;
         MyGUI::IntCoord createMarkerCoords(float x, float y, float agregatedWeight) const;
         MyGUI::Widget* createMarker(const std::string& name, float x, float y, float agregatedWeight);
+        MyGUI::IntCoord createNativeMarkerCoords(float worldX, float worldY) const;
+        void createNativeMapMarkers();
 
         MyGUI::ScrollView* mGlobalMap;
         std::unique_ptr<MyGUI::ITexture> mGlobalMapTexture;
@@ -327,6 +329,7 @@ namespace MWGui
 
         std::map<std::string, MapMarkerType> mGlobalMapMarkersByName;
         std::map<MapMarkerType, std::vector<MapMarkerType>> mGlobalMapMarkers;
+        std::vector<MapMarkerType> mNativeGlobalMapMarkers;
 
         EditNoteDialog mEditNoteDialog;
         ESM::CustomMarker mEditingMarker;

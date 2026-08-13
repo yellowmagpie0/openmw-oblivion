@@ -96,7 +96,8 @@ namespace ESM4
         std::int32_t mFactionRank = -1;
 
         bool mIsMapMarker = false;
-        std::uint16_t mMapMarker;
+        std::uint8_t mMapMarkerFlags = 0;
+        std::uint16_t mMapMarker = Map_None;
 
         EnableParent mEsp;
 

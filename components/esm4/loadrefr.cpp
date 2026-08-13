@@ -215,9 +215,14 @@ void ESM4::Reference::load(ESM4::Reader& reader)
                 break; // all have mBaseObj 0x00000010 "MapMarker"
             case ESM::fourCC("FNAM"):
             {
-                // std::cout << "REFR " << ESM::printName(subHdr.typeId) << " skipping..."
-                // << subHdr.dataSize << std::endl;
-                reader.skipSubRecordData();
+                // For map-marker references FNAM is a one-byte flag field. Bit 0
+                // makes the marker initially visible and bit 1 permits fast
+                // travel. Other REFR variants also use FNAM, so retain their
+                // existing tolerant behaviour.
+                if (subHdr.dataSize == sizeof(mMapMarkerFlags))
+                    reader.get(mMapMarkerFlags);
+                else
+                    reader.skipSubRecordData();
                 break;
             }
             case ESM::fourCC("XTRG"): // formId

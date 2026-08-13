@@ -7,6 +7,8 @@
 
 #include <osg/ref_ptr>
 
+#include <components/esm/refid.hpp>
+
 namespace osg
 {
     class Texture2D;
@@ -40,6 +42,7 @@ namespace MWRender
 
         int getWidth() const { return mWidth; }
         int getHeight() const { return mHeight; }
+        ESM::RefId getWorldspace() const { return mWorldspace; }
 
         void worldPosToImageSpace(float x, float z, float& imageX, float& imageY);
 
@@ -129,6 +132,8 @@ namespace MWRender
         int mHeight;
 
         int mMinX, mMaxX, mMinY, mMaxY;
+        ESM::RefId mWorldspace;
+        int mCellWorldSize;
     };
 
 }

@@ -46,7 +46,9 @@
 #include <components/terrain/terraingrid.hpp>
 
 #include <components/esm3/loadcell.hpp>
+#include <components/esm/util.hpp>
 #include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadwrld.hpp>
 
 #include <components/debug/debugdraw.hpp>
 #include <components/detournavigator/navigator.hpp>
@@ -55,6 +57,7 @@
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/groundcoverstore.hpp"
+#include "../mwworld/esmstore.hpp"
 #include "../mwworld/scene.hpp"
 
 #include "../mwgui/postprocessorhud.hpp"
@@ -1276,7 +1279,15 @@ namespace MWRender
         RenderingManager::WorldspaceChunkMgr newChunkMgr;
 
         const float lodFactor = Settings::terrain().mLodFactor;
-        const bool groundcover = Settings::groundcover().mEnabled && worldspace == ESM::Cell::sDefaultWorldspaceId;
+        bool nativeGroundcover = false;
+        if (ESM::isEsm4Ext(worldspace))
+        {
+            if (const ESM4::World* world = MWBase::Environment::get().getESMStore()->get<ESM4::World>().search(worldspace))
+                nativeGroundcover = !(world->mWorldFlags
+                    & (ESM4::World::WLD_NoGrass | ESM4::World::WLD_NoLandscpe));
+        }
+        const bool groundcover = nativeGroundcover
+            || (Settings::groundcover().mEnabled && worldspace == ESM::Cell::sDefaultWorldspaceId);
         const bool distantTerrain = Settings::terrain().mDistantTerrain;
         const double expiryDelay = Settings::cells().mCacheExpiryDelay;
         if (distantTerrain || groundcover)
@@ -1303,7 +1314,8 @@ namespace MWRender
                 const float density = Settings::groundcover().mDensity;
 
                 newChunkMgr.mGroundcover = std::make_unique<Groundcover>(
-                    mResourceSystem->getSceneManager(), density, groundcoverDistance, mGroundCoverStore);
+                    mResourceSystem->getSceneManager(), density, groundcoverDistance, mGroundCoverStore,
+                    nativeGroundcover ? mTerrainStorage.get() : nullptr, worldspace);
                 quadTreeWorld->addChunkManager(newChunkMgr.mGroundcover.get());
                 mResourceSystem->addResourceManager(newChunkMgr.mGroundcover.get());
             }

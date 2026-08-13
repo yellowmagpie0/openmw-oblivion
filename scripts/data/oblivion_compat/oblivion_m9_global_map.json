@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m9-global-map",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ICPrisonSewerExit01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Terrain]\ndistant terrain = true\nobject paging = true\n[Map]\nglobal = true\nallow zooming = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 35},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type_held", "value": "lua player"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "type", "value": "I.UI.setMode(I.UI.MODE.Interface,{{windows={{'Map'}}}})", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "screenshot", "name": "global-map.png", "minimum_entropy": 0.08},
+    {"type": "mouse_move", "x": 400, "y": 260},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "global-map-markers.png", "minimum_entropy": 0.08}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 12,
+  "expected_exit": 0,
+  "expected_log": ["Loading cell", "M9 native global map", "M9 native global map created"],
+  "forbidden_log": ["Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}
