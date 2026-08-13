@@ -64,26 +64,34 @@ namespace ESM4
 
         struct RegionSound
         {
-            ESM::FormId32 sound;
+            ESM::FormId sound;
             std::uint32_t flags; // 0 pleasant, 1 cloudy, 2 rainy, 3 snowy
             std::uint32_t chance;
         };
 #pragma pack(pop)
 
+        struct WeatherChance
+        {
+            ESM::FormId weather;
+            std::uint32_t chance = 0;
+        };
+
         ESM::FormId mId; // from the header
-        std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
+        std::uint32_t mFlags = 0; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
-        std::uint32_t mColour; // RGBA
+        std::uint32_t mColour = 0; // RGBA
         ESM::FormId mWorldId; // worldspace formid
 
         std::string mShader; //?? ICON
         std::string mMapName;
 
-        std::uint32_t mEdgeFalloff;
+        std::uint32_t mEdgeFalloff = 0;
         std::vector<std::uint32_t> mRPLD; // unknown, point data?
 
-        RegionData mData;
+        RegionData mData{};
+        std::uint32_t mMusicType = 0; // 0 default, 1 public, 2 dungeon
+        std::vector<WeatherChance> mWeather;
         std::vector<RegionSound> mSounds;
 
         void load(ESM4::Reader& reader);

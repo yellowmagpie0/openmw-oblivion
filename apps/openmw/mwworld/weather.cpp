@@ -9,6 +9,11 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadregn.hpp>
 #include <components/esm3/weatherstate.hpp>
+#include <components/esm4/loadclmt.hpp>
+#include <components/esm4/loadwthr.hpp>
+#include <components/debug/debuglog.hpp>
+#include <components/sceneutil/util.hpp>
+#include <components/settings/values.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/soundmanager.hpp"
@@ -218,6 +223,93 @@ namespace MWWorld
             mAmbientLoopSoundID = ESM::RefId();
     }
 
+    Weather::Weather(const ESM4::Weather& weather, int scriptId)
+        : mId(weather.mId)
+        , mScriptId(scriptId)
+        , mName(weather.mEditorId.empty() ? weather.mId.toString() : weather.mEditorId)
+        , mCloudTexture(weather.mLowerCloudTexture)
+        , mSkyColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][0]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][1]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][2]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][3]))
+        , mFogColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][0]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][1]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][2]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][3]))
+        , mAmbientColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][0]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][1]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][2]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][3]))
+        , mSunColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][0]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][1]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][2]),
+              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][3]))
+        , mLandFogDepth(weather.mFog.mDayFar > 0.f
+                  ? std::clamp(1.f - weather.mFog.mDayNear / weather.mFog.mDayFar, 0.f, 1.f)
+                  : 0.f,
+              weather.mFog.mDayFar > 0.f
+                  ? std::clamp(1.f - weather.mFog.mDayNear / weather.mFog.mDayFar, 0.f, 1.f)
+                  : 0.f,
+              weather.mFog.mNightFar > 0.f
+                  ? std::clamp(1.f - weather.mFog.mNightNear / weather.mFog.mNightFar, 0.f, 1.f)
+                  : 0.f,
+              weather.mFog.mNightFar > 0.f
+                  ? std::clamp(1.f - weather.mFog.mNightNear / weather.mFog.mNightFar, 0.f, 1.f)
+                  : 0.f)
+        , mSunDiscSunsetColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sun][2]))
+        , mWindSpeed(static_cast<float>(weather.mData.mWindSpeed) / 255.f)
+        , mCloudSpeed(static_cast<float>(weather.mData.mLowerCloudSpeed) / 255.f)
+        , mGlareView(static_cast<float>(weather.mData.mSunGlare) / 255.f)
+        , mIsStorm(weather.mData.mWindSpeed >= 128)
+        , mRainSpeed(1000.f)
+        , mRainEntranceSpeed(0.1f)
+        , mRainMaxRaindrops(750)
+        , mRainDiameter(1200.f)
+        , mRainThreshold(static_cast<float>(weather.mData.mPrecipitationBeginFadeIn) / 255.f)
+        , mRainMinHeight(200.f)
+        , mRainMaxHeight(700.f)
+        , mParticleEffect((weather.mData.mClassification & ESM4::Weather::Classification_Snow) != 0
+                  ? (weather.mModel.empty() ? Settings::models().mWeathersnow.get().value() : weather.mModel.getOriginal())
+                  : "")
+        , mRainEffect((weather.mData.mClassification & ESM4::Weather::Classification_Rainy) != 0 ? "native" : "")
+        , mStormDirection(Weather::defaultDirection())
+        , mCloudsMaximumPercent(1.f)
+        , mTransitionDelta(std::max(0.005f, static_cast<float>(weather.mData.mTransitionDelta) / 255.f))
+        , mThunderFrequency(static_cast<float>(weather.mData.mLightningFrequency) / 255.f)
+        , mThunderThreshold(static_cast<float>(weather.mData.mLightningBeginFadeIn) / 255.f)
+        , mFlashDecrement(4.f)
+        , mFlashBrightness(0.f)
+    {
+        if (mCloudTexture.empty())
+            mCloudTexture = weather.mUpperCloudTexture;
+        if (!mCloudTexture.empty() && !VFS::Path::toNormalized(mCloudTexture).view().starts_with("textures/"))
+            mCloudTexture = "textures/" + mCloudTexture;
+
+        const float defaultEnd = std::max(1.f, Settings::fog().mDistantLandFogEnd.get());
+        const float defaultStart = Settings::fog().mDistantLandFogStart.get();
+        const float start = weather.mFog.mDayNear;
+        const float end = weather.mFog.mDayFar;
+        const float denominator = std::max(0.01f, 1.f - defaultStart / defaultEnd);
+        mDL.FogFactor = std::max(0.01f, ((end - start) / defaultEnd) / denominator);
+        mDL.FogOffset = 100.f * (1.f - end / (mDL.FogFactor * defaultEnd));
+
+        for (const ESM4::Weather::Sound& sound : weather.mSounds)
+        {
+            const ESM::RefId id(sound.mSound);
+            if (sound.mType == 1)
+                mRainLoopSoundID = id;
+            else if (sound.mType == 3)
+            {
+                auto slot = std::find_if(mThunderSoundID.begin(), mThunderSoundID.end(),
+                    [](const ESM::RefId& value) { return value.empty(); });
+                if (slot != mThunderSoundID.end())
+                    *slot = id;
+            }
+            else
+                mAmbientLoopSoundID = id;
+        }
+    }
+
     float Weather::transitionDelta() const
     {
         // Transition Delta describes how quickly transitioning to the weather in question will take, in Hz. Note that
@@ -296,6 +388,12 @@ namespace MWWorld
     RegionWeather::RegionWeather(const ESM::RegionWeatherState& state)
         : mWeather(state.mWeather)
         , mChances(state.mChances)
+    {
+    }
+
+    RegionWeather::RegionWeather(std::vector<uint8_t> chances)
+        : mWeather(invalidWeatherID)
+        , mChances(std::move(chances))
     {
     }
 
@@ -667,7 +765,21 @@ namespace MWWorld
 
         mTimeSettings.mSunriseTransitions["Stars"] = starSetting;
 
-        mWeatherSettings.reserve(10);
+        mNativeWeather = store.get<ESM4::Weather>().getSize() != 0 && store.get<ESM4::Climate>().getSize() != 0;
+        mWeatherSettings.reserve(mNativeWeather ? store.get<ESM4::Weather>().getSize() : 10);
+        if (mNativeWeather)
+        {
+            for (const ESM4::Weather& weather : store.get<ESM4::Weather>())
+                mWeatherSettings.emplace_back(weather, static_cast<int>(mWeatherSettings.size()));
+            importRegions();
+            configureClimate(store.get<ESM4::Climate>().begin()->mId);
+            Log(Debug::Info) << "M10 native environment: climates=" << store.get<ESM4::Climate>().getSize()
+                             << " weather=" << mWeatherSettings.size() << " regions="
+                             << store.get<ESM4::Region>().getSize() << " water=" << store.get<ESM4::Water>().getSize();
+            forceWeather(mRegions.begin()->second.getWeather());
+            return;
+        }
+
         // These distant land fog factor and offset values are the defaults MGE XE provides. Should be
         // provided by settings somewhere?
         addWeather("Clear", 1.0f, 0.0f); // 0
@@ -783,10 +895,13 @@ namespace MWWorld
         // If the player teleports to an outdoors cell in a new region (for instance, by travelling), the weather needs
         // to be changed immediately, and any transitions for the previous region discarded.
         {
-            auto it = mRegions.find(playerRegion);
-            if (it != mRegions.end() && playerRegion != mCurrentRegion)
+            const ESM::RefId environment = mNativeWeather && isExterior ? getPlayerEnvironment() : playerRegion;
+            auto it = mRegions.find(environment);
+            if (it != mRegions.end() && environment != mCurrentRegion)
             {
-                mCurrentRegion = playerRegion;
+                mCurrentRegion = environment;
+                if (mNativeWeather)
+                    configureClimate(environment);
                 forceWeather(it->second.getWeather());
             }
         }
@@ -815,7 +930,8 @@ namespace MWWorld
         if (!paused || mFastForward)
         {
             // Add new transitions when either the player's current external region changes.
-            if (updateWeatherTime() || updateWeatherRegion(player.getCell()->getCell()->getRegion()))
+            const ESM::RefId environment = mNativeWeather ? getPlayerEnvironment() : player.getCell()->getCell()->getRegion();
+            if (updateWeatherTime() || updateWeatherRegion(environment))
             {
                 auto it = mRegions.find(mCurrentRegion);
                 if (it != mRegions.end())
@@ -1124,10 +1240,71 @@ namespace MWWorld
 
     inline void WeatherManager::importRegions()
     {
+        if (mNativeWeather)
+        {
+            std::map<ESM::RefId, std::size_t> weatherIndices;
+            for (std::size_t i = 0; i < mWeatherSettings.size(); ++i)
+                weatherIndices[mWeatherSettings[i].mId] = i;
+            for (const ESM4::Climate& climate : mStore.get<ESM4::Climate>())
+            {
+                std::vector<std::uint8_t> chances(mWeatherSettings.size(), 0);
+                int total = 0;
+                for (const auto& value : climate.mWeather)
+                    total += std::max(0, value.mChance);
+                int assigned = 0;
+                std::size_t last = 0;
+                for (const auto& value : climate.mWeather)
+                {
+                    const auto found = weatherIndices.find(ESM::RefId(value.mWeather));
+                    if (found == weatherIndices.end() || total <= 0)
+                        continue;
+                    last = found->second;
+                    const int chance = std::clamp(value.mChance * 100 / total, 0, 100 - assigned);
+                    chances[last] = static_cast<std::uint8_t>(chance);
+                    assigned += chance;
+                }
+                if (assigned < 100 && !chances.empty())
+                    chances[last] = static_cast<std::uint8_t>(chances[last] + 100 - assigned);
+                mRegions.emplace(ESM::RefId(climate.mId), RegionWeather(std::move(chances)));
+            }
+            return;
+        }
         for (const ESM::Region& region : mStore.get<ESM::Region>())
         {
             mRegions.insert(std::make_pair(region.mId, RegionWeather(region)));
         }
+    }
+
+    void WeatherManager::configureClimate(const ESM::RefId& climateId)
+    {
+        const ESM4::Climate* climate = mStore.get<ESM4::Climate>().search(climateId);
+        if (climate == nullptr)
+            return;
+        mSunriseTime = ESM4::Climate::decodeTime(climate->mTiming.mSunriseBegin);
+        mSunsetTime = ESM4::Climate::decodeTime(climate->mTiming.mSunsetBegin);
+        mSunriseDuration = ESM4::Climate::decodeTime(climate->mTiming.mSunriseEnd)
+            - ESM4::Climate::decodeTime(climate->mTiming.mSunriseBegin);
+        mSunsetDuration = ESM4::Climate::decodeTime(climate->mTiming.mSunsetEnd)
+            - ESM4::Climate::decodeTime(climate->mTiming.mSunsetBegin);
+        mTimeSettings.mNightEnd = mSunriseTime;
+        mTimeSettings.mDayStart = mSunriseTime + mSunriseDuration;
+        mTimeSettings.mDayEnd = mSunsetTime;
+        mTimeSettings.mNightStart = mSunsetTime + mSunsetDuration;
+        const WeatherSetting exact{ 0.f, 0.f, 0.f, 0.f };
+        for (const char* key : { "Sky", "Ambient", "Fog", "Sun" })
+            mTimeSettings.mSunriseTransitions[key] = exact;
+        Log(Debug::Info) << "M10 climate " << climate->mEditorId << ": sunrise=" << mSunriseTime << '-'
+                         << mTimeSettings.mDayStart << " sunset=" << mSunsetTime << '-'
+                         << mTimeSettings.mNightStart << " phase-days=" << climate->phaseLength();
+    }
+
+    ESM::RefId WeatherManager::getPlayerEnvironment() const
+    {
+        const MWWorld::ConstPtr player = MWMechanics::getPlayer();
+        if (!player.isInCell())
+            return {};
+        const ESM::RefId climate = player.getCell()->getCell()->getClimate();
+        return mRegions.contains(climate) ? climate : ESM::RefId();
     }
 
     inline void WeatherManager::regionalWeatherChanged(const ESM::RefId& regionID, RegionWeather& region)
@@ -1169,6 +1346,9 @@ namespace MWWorld
         if (!playerRegion.empty() && playerRegion != mCurrentRegion)
         {
             mCurrentRegion = playerRegion;
+
+            if (mNativeWeather)
+                configureClimate(playerRegion);
 
             return true;
         }

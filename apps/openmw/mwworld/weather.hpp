@@ -25,6 +25,12 @@ namespace ESM
     class ESMReader;
 }
 
+namespace ESM4
+{
+    struct Climate;
+    struct Weather;
+}
+
 namespace MWRender
 {
     class RenderingManager;
@@ -142,6 +148,7 @@ namespace MWWorld
 
         Weather(const ESM::RefId id, const int scriptId, const std::string& name, float stormWindSpeed, float rainSpeed,
             float dlFactor, float dlOffset, const std::string& particleEffect);
+        Weather(const ESM4::Weather& weather, int scriptId);
 
         ESM::RefId mId;
         int mScriptId;
@@ -254,6 +261,7 @@ namespace MWWorld
     public:
         explicit RegionWeather(const ESM::Region& region);
         explicit RegionWeather(const ESM::RegionWeatherState& state);
+        explicit RegionWeather(std::vector<uint8_t> chances);
 
         operator ESM::RegionWeatherState() const;
 
@@ -419,6 +427,7 @@ namespace MWWorld
         int mNextWeather;
         int mQueuedWeather;
         std::map<ESM::RefId, RegionWeather> mRegions;
+        bool mNativeWeather = false;
         MWRender::WeatherResult mResult;
 
         MWBase::Sound* mAmbientSound{ nullptr };
@@ -430,6 +439,8 @@ namespace MWWorld
             const std::string& name, float dlFactor, float dlOffset, const std::string& particleEffect = "");
 
         void importRegions();
+        void configureClimate(const ESM::RefId& climateId);
+        ESM::RefId getPlayerEnvironment() const;
 
         void regionalWeatherChanged(const ESM::RefId& regionID, RegionWeather& region);
         bool updateWeatherTime();

@@ -14,10 +14,15 @@
 #include <components/esm/refid.hpp>
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loadclmt.hpp>
 #include <components/esm4/loadgras.hpp>
+#include <components/esm4/loadmusc.hpp>
 #include <components/esm4/loadqust.hpp>
+#include <components/esm4/loadregn.hpp>
 #include <components/esm4/loadroad.hpp>
 #include <components/esm4/loadscpt.hpp>
+#include <components/esm4/loadwatr.hpp>
+#include <components/esm4/loadwthr.hpp>
 #include <components/misc/tuplemeta.hpp>
 
 #include "store.hpp"
@@ -46,6 +51,7 @@ namespace ESM
     struct Cell;
     struct Class;
     struct Clothing;
+    struct Climate;
     struct Container;
     struct Creature;
     struct CreatureLevList;
@@ -112,11 +118,13 @@ namespace ESM4
     struct LevelledNpc;
     struct Light;
     struct MiscItem;
+    struct Music;
     struct MovableStatic;
     struct Npc;
     struct Outfit;
     struct Potion;
     struct Race;
+    struct Region;
     struct Road;
     struct Reference;
     struct Sound;
@@ -127,6 +135,8 @@ namespace ESM4
     struct TextureSet;
     struct Tree;
     struct Weapon;
+    struct Water;
+    struct Weather;
     struct World;
 }
 
@@ -158,18 +168,20 @@ namespace MWWorld
 
             Store<ESM4::Activator>, Store<ESM4::ActorCharacter>, Store<ESM4::ActorCreature>, Store<ESM4::Ammunition>,
             Store<ESM4::Armor>, Store<ESM4::ArmorAddon>, Store<ESM4::Book>, Store<ESM4::Cell>, Store<ESM4::Clothing>,
-            Store<ESM4::Class>, Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Door>,
+            Store<ESM4::Class>, Store<ESM4::Climate>, Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Door>,
             Store<ESM4::Furniture>, Store<ESM4::Flora>, Store<ESM4::GameSetting>, Store<ESM4::GlobalVariable>,
             Store<ESM4::Grass>,
             Store<ESM4::Hair>, Store<ESM4::HeadPart>, Store<ESM4::Ingredient>, Store<ESM4::ItemMod>,
             Store<ESM4::Key>, Store<ESM4::Land>, Store<ESM4::LandTexture>, Store<ESM4::LevelledCreature>,
             Store<ESM4::LevelledItem>,
             Store<ESM4::LevelledNpc>, Store<ESM4::Light>, Store<ESM4::MiscItem>, Store<ESM4::MovableStatic>,
-            Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>, Store<ESM4::Road>,
+            Store<ESM4::Music>, Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>,
+            Store<ESM4::Region>, Store<ESM4::Road>,
             Store<ESM4::Reference>,
             Store<ESM4::Script>, Store<ESM4::Quest>, Store<ESM4::DialogInfo>, Store<ESM4::Sound>,
             Store<ESM4::SoundReference>, Store<ESM4::Static>, Store<ESM4::StaticCollection>,
-            Store<ESM4::Terminal>, Store<ESM4::TextureSet>, Store<ESM4::Tree>, Store<ESM4::Weapon>, Store<ESM4::World>>;
+            Store<ESM4::Terminal>, Store<ESM4::TextureSet>, Store<ESM4::Tree>, Store<ESM4::Water>,
+            Store<ESM4::Weapon>, Store<ESM4::Weather>, Store<ESM4::World>>;
 
     private:
         template <typename T>

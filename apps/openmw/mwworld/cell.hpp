@@ -29,6 +29,8 @@ namespace MWWorld
             uint32_t mDirectionalColor;
             uint32_t mFogColor;
             float mFogDensity;
+            float mFogNear;
+            float mFogFar;
         };
 
     public:
@@ -49,6 +51,8 @@ namespace MWWorld
         float getWaterHeight() const { return mWaterHeight; }
         const ESM::RefId& getId() const { return mId; }
         ESM::RefId getWorldSpace() const { return mIsExterior ? mParent : mId; }
+        ESM::RefId getClimate() const;
+        ESM::RefId getWaterType() const;
 
         ESM::ExteriorCellLocation getExteriorCellLocation() const
         {

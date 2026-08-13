@@ -85,13 +85,9 @@ void ESM4::Region::load(ESM4::Reader& reader)
             // FONV none
             case ESM::fourCC("RDMD"): // music type; 0 default, 1 public, 2 dungeon
             {
-#if 0
-                int dummy;
-                reader.get(dummy);
-                std::cout << "REGN " << mEditorId << " " << dummy << std::endl;
-#else
-                reader.skipSubRecordData();
-#endif
+                if (subHdr.dataSize != sizeof(mMusicType))
+                    throw std::runtime_error("ESM4::REGN RDMD has an invalid size");
+                reader.get(mMusicType);
                 break;
             }
             case ESM::fourCC("RDMO"): // not seen in FO3/FONV?
@@ -107,16 +103,35 @@ void ESM4::Region::load(ESM4::Reader& reader)
                     throw std::runtime_error(
                         "ESM4::REGN::load - unexpected data type " + ESM::printName(subHdr.typeId));
 
-                std::size_t numSounds = subHdr.dataSize / sizeof(RegionSound);
+                constexpr std::size_t encodedSize = 12;
+                if (subHdr.dataSize % encodedSize != 0)
+                    throw std::runtime_error("ESM4::REGN RDSD has an invalid size");
+                std::size_t numSounds = subHdr.dataSize / encodedSize;
                 mSounds.resize(numSounds);
                 for (std::size_t i = 0; i < numSounds; ++i)
-                    reader.get(mSounds.at(i));
+                {
+                    reader.getFormId(mSounds[i].sound);
+                    reader.get(mSounds[i].flags);
+                    reader.get(mSounds[i].chance);
+                }
 
+                break;
+            }
+            case ESM::fourCC("RDWT"):
+            {
+                if (mData.type != RDAT_Weather || subHdr.dataSize % 8 != 0)
+                    throw std::runtime_error("ESM4::REGN RDWT has an invalid data type or size");
+                for (std::uint32_t read = 0; read < subHdr.dataSize; read += 8)
+                {
+                    WeatherChance weather;
+                    reader.getFormId(weather.weather);
+                    reader.get(weather.chance);
+                    mWeather.push_back(weather);
+                }
                 break;
             }
             case ESM::fourCC("RDGS"): // Only in Oblivion? (ToddTestRegion1) // formId
             case ESM::fourCC("RDSA"):
-            case ESM::fourCC("RDWT"): // formId
             case ESM::fourCC("RDOT"): // formId
             case ESM::fourCC("RDID"): // FONV
             case ESM::fourCC("RDSB"): // FONV

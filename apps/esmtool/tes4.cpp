@@ -315,7 +315,7 @@ namespace EsmTool
                     readTypedRecord<ESM4::Colour>(params, reader);
                     return true;
                 case ESM4::REC_CLMT:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    readTypedRecord<ESM4::Climate>(params, reader);
                     return true;
                 case ESM4::REC_CLOT:
                     readTypedRecord<ESM4::Clothing>(params, reader);
@@ -611,7 +611,7 @@ namespace EsmTool
                 case ESM4::REC_VTYP:
                     break;
                 case ESM4::REC_WATR:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    readTypedRecord<ESM4::Water>(params, reader);
                     return true;
                 case ESM4::REC_WEAP:
                     readTypedRecord<ESM4::Weapon>(params, reader);
@@ -622,7 +622,7 @@ namespace EsmTool
                     readTypedRecord<ESM4::World>(params, reader);
                     return true;
                 case ESM4::REC_WTHR:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    readTypedRecord<ESM4::Weather>(params, reader);
                     return true;
             }
 

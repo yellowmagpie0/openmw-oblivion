@@ -52,7 +52,7 @@ namespace MWWorld
         , mGridPos(cell.mX, cell.mY)
         , mDisplayname(cell.mFullName)
         , mNameID(cell.mEditorId)
-        , mRegion(ESM::RefId()) // Unimplemented for now
+        , mRegion(cell.mRegions.empty() ? ESM::RefId() : ESM::RefId(cell.mRegions.front()))
         , mId(cell.mId)
         , mParent(cell.mParent)
         , mWaterHeight(cell.mWaterHeight)
@@ -60,8 +60,11 @@ namespace MWWorld
             .mAmbiantColor = cell.mLighting.ambient,
             .mDirectionalColor = cell.mLighting.directional,
             .mFogColor = cell.mLighting.fogColor,
-            // TODO: use ESM4::Lighting fog parameters
-            .mFogDensity = 1.f,
+            .mFogDensity = cell.mLighting.fogFar > 0.f
+                ? std::clamp(1.f - cell.mLighting.fogNear / cell.mLighting.fogFar, 0.f, 1.f)
+                : 1.f,
+            .mFogNear = cell.mLighting.fogNear,
+            .mFogFar = cell.mLighting.fogFar,
         }
     {
         const ESM4::World* world = MWBase::Environment::get().getESMStore()->get<ESM4::World>().search(mParent);
@@ -97,6 +100,8 @@ namespace MWWorld
             .mDirectionalColor = cell.mAmbi.mSunlight,
             .mFogColor = cell.mAmbi.mFog,
             .mFogDensity = cell.mAmbi.mFogDensity,
+            .mFogNear = 0.f,
+            .mFogFar = 0.f,
         }
     {
         if (isExterior())
@@ -106,5 +111,33 @@ namespace MWWorld
         }
         else
             mGridPos = {};
+    }
+
+    ESM::RefId Cell::getClimate() const
+    {
+        if (!isEsm4())
+            return {};
+        const ESM4::Cell& cell = getEsm4();
+        if (!cell.mClimate.isZeroOrUnset())
+            return ESM::RefId(cell.mClimate);
+        if (!isExterior())
+            return {};
+        const auto& worlds = MWBase::Environment::get().getESMStore()->get<ESM4::World>();
+        const ESM4::World* world = getWorldspaceFeature(worlds, mParent, ESM4::World::UseFlag_Climate);
+        return world == nullptr || world->mClimate.isZeroOrUnset() ? ESM::RefId() : ESM::RefId(world->mClimate);
+    }
+
+    ESM::RefId Cell::getWaterType() const
+    {
+        if (!isEsm4())
+            return {};
+        const ESM4::Cell& cell = getEsm4();
+        if (!cell.mWater.isZeroOrUnset())
+            return ESM::RefId(cell.mWater);
+        if (!isExterior())
+            return {};
+        const auto& worlds = MWBase::Environment::get().getESMStore()->get<ESM4::World>();
+        const ESM4::World* world = getWorldspaceFeature(worlds, mParent, ESM4::World::UseFlag_Water);
+        return world == nullptr || world->mWater.isZeroOrUnset() ? ESM::RefId() : ESM::RefId(world->mWater);
     }
 }
