@@ -94,6 +94,11 @@ See [`M7-OBScript-RUNTIME.md`](M7-OBScript-RUNTIME.md) for the exact evidence
 and scope boundary with later AI, magic, rendering, dialogue, audio, and
 weather milestones.
 
+M10 currently has a committed, passing exterior environment slice but is not
+accepted. See [`M10-ENVIRONMENT-MEDIA-PICKUP.md`](M10-ENVIRONMENT-MEDIA-PICKUP.md)
+for the exact implementation boundary, retained evidence, and ordered weather,
+interior, audio, video, asset-audit, and regression work still required.
+
 To try the first interactive slice directly:
 
 ```sh
