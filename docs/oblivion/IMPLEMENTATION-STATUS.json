@@ -180,33 +180,36 @@
       "open_gates": []
     },
     "M10": {
-      "status": "in_progress",
-      "report": "docs/oblivion/M10-ENVIRONMENT-MEDIA-PICKUP.md",
+      "status": "accepted",
+      "report": "docs/oblivion/M10-ENVIRONMENT-MEDIA.md",
       "revisions": [
         "a2367f5a241e3ef53bf322c90c8d37475afb4cd2",
-        "6d2b64d001cd4431f92854cab808b5e5ae235e7e"
+        "6d2b64d001cd4431f92854cab808b5e5ae235e7e",
+        "831d5025a90ee71031033e70d3fd50342f8ef015"
       ],
       "evidence": [
-        "build/oblivion-compat/m10-environment-acceptance/scenario.json",
-        "build/oblivion-compat/m10-environment-acceptance/process.log",
-        "build/oblivion-compat/m10-environment-acceptance/oldbridge-initial.png",
-        "build/oblivion-compat/m10-environment-acceptance/oldbridge-cycle-24h.png"
+        "build/oblivion-compat/m10-assets-acceptance/m10-assets.json",
+        "build/oblivion-compat/m10-weather-matrix.png",
+        "build/oblivion-compat/m10-interior-environment-probe/scenario.json",
+        "build/oblivion-compat/m10-quasi-final2/scenario.json",
+        "build/oblivion-compat/m10-audio-final/scenario.json",
+        "build/oblivion-compat/m10-audio-final/m10-runtime-waveform.png",
+        "build/oblivion-compat/m10-interactive-media-final4/scenario.json",
+        "build/oblivion-compat/m10-interactive-media-final4/interactive-menu.png",
+        "build/oblivion-compat/m10-interactive-media-final4/official-credits.png",
+        "build/oblivion-compat/m10-interactive-media-final4/official-new-game-intro.png",
+        "build/oblivion-compat/m10-outro-final2/scenario.json",
+        "build/oblivion-compat/m10-morrowind-runtime-final2/scenario.json"
       ],
       "delivered": [
-        "Native climate, weather, regional ambience, and water runtime paths",
-        "Native sky, sun, moon, fog, precipitation, and weather save state",
-        "Native music, sound, voice, and media selection plus ObScript commands",
-        "Passing accelerated exterior day/night cycle with native save evidence"
+        "Native climate, sky, sun/moons, weather transitions, precipitation, fog, cell lighting, visibility, and water appearance",
+        "Native regional ambience, all music-state selection, positional attenuation, sound-directory variants, and voice playback",
+        "Official startup, menu, loading, intro, credits, outro, title, and profile media selection without placeholder menu buttons",
+        "Count-locked combined-VFS audit of every official climate, weather, water, sound, voice, loading, sky, and video asset family",
+        "Accelerated exterior/interior/quasi-exterior cycles, seven-weather matrix, real audio/video, save-state, full unit, and Morrowind regression evidence"
       ],
-      "open_gates": [
-        "Weather transition visual and state matrix",
-        "Representative interior lighting and visibility cycles",
-        "Real audio playback and waveform verification",
-        "Intro, menu, loading, credits, and scripted video verification",
-        "Count-locked official media resolution audit",
-        "Complete unit and Morrowind regression suites"
-      ]
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "Complete the M10 verification matrix in docs/oblivion/M10-ENVIRONMENT-MEDIA-PICKUP.md"
+  "next_bounded_delivery": "Begin M11 actor appearance, skeleton, animation, FaceGen, and lip-animation compatibility"
 }
