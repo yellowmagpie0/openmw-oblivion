@@ -27,6 +27,73 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_m10_asset_paths_match_runtime_prefix_extension_and_directory_rules(self):
+        self.assertEqual(
+            MODULE.m10_resource_candidates(r"Sky\sun.tga", "textures", ".dds"),
+            ["textures/sky/sun.dds", "textures/sky/sun.tga", "textures/sun.dds", "textures/sun.tga"],
+        )
+        self.assertEqual(
+            MODULE.m10_resource_candidates(r"sound\fx\door.wav", "sound", ".mp3"),
+            ["sound/fx/door.mp3", "sound/fx/door.wav", "sound/door.mp3", "sound/door.wav"],
+        )
+        records = MODULE.parse_m10_record_assets(
+            "\n".join(
+                (
+                    "  Record: SOUN",
+                    "  Id: 0x10",
+                    "  EditorId: Wind",
+                    "  SoundFile: fx\\ambient\\wind\\",
+                    "  Record: WTHR",
+                    "  Id: 0x11",
+                    r"  LowerCloudTexture: sky\clouds.tga",
+                )
+            ),
+            "Oblivion.esm",
+        )
+        resolved = MODULE.resolve_m10_record_assets(
+            records,
+            {"sound/fx/ambient/wind/wind_01.wav", "sound/fx/ambient/wind/wind_02.wav", "textures/sky/clouds.dds"},
+        )
+        self.assertEqual(resolved[0]["resolved"], [
+            "sound/fx/ambient/wind/wind_01.wav", "sound/fx/ambient/wind/wind_02.wav"
+        ])
+        self.assertEqual(resolved[1]["resolved"], ["textures/sky/clouds.dds"])
+        self.assertTrue(all(item["passed"] for item in resolved))
+
+    def test_m10_asset_count_lock_rejects_inventory_drift(self):
+        report = {
+            "official_content": [{"name": "Oblivion.esm", "size": 1, "sha256": "x"}],
+            "summary": {
+                "archive_count": 1,
+                "vfs_entry_count": 2,
+                "record_counts": {"WTHR": 1},
+                "reference_count": 1,
+                "directory_reference_count": 0,
+                "resolved_file_count": 1,
+                "reviewed_missing_count": 0,
+                "missing_reference_fingerprint": "sha256:missing",
+                "inventory_counts": {"videos": 1},
+                "inventory_fingerprint": "sha256:inventory",
+                "reference_fingerprint": "sha256:references",
+            },
+        }
+        count_lock = MODULE.m10_count_lock_from_report(report)
+        self.assertTrue(MODULE.validate_m10_asset_count_lock(report, count_lock)["passed"])
+        count_lock["expected"]["vfs_entry_count"] += 1
+        self.assertFalse(MODULE.validate_m10_asset_count_lock(report, count_lock)["passed"])
+
+    def test_m10_asset_exceptions_are_exact_and_count_locked(self):
+        missing = [{"plugin": "Oblivion.esm", "record": "SOUN", "editor_id": "WPNHitBladeX", "field": "SoundFile"}]
+        rules = {
+            "allowed": [{
+                "plugin": "Oblivion.esm", "record": "SOUN", "editor_id_pattern": "WPNHit.*X",
+                "field": "SoundFile", "expected_count": 1,
+            }]
+        }
+        self.assertTrue(MODULE.validate_m10_asset_exceptions(missing, rules)["passed"])
+        rules["allowed"][0]["expected_count"] = 2
+        self.assertFalse(MODULE.validate_m10_asset_exceptions(missing, rules)["passed"])
+
     def test_independent_obscript_frontend_is_whitespace_stable(self):
         compact = (
             "scn Test\nshort count\nbegin GameMode\nset count to 1 + 2 * 3\n"

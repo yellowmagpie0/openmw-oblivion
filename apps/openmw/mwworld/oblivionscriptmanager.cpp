@@ -1472,10 +1472,10 @@ namespace MWWorld
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
             "evaluatepackage", "evp", "addtopic", "showmap",
-            "cast", "addspell", "removespell", "moddisposition", "setessential",
+            "cast", "addspell", "removespell", "moddisposition", "setessential", "addscriptpackage",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
             "pathpointenable", "pathpointdisable", "stopcombat", "startcombat", "equipitem", "unequipitem",
-            "forceflee", "setrestrained", "setunconscious" };
+            "forceflee", "setrestrained", "setunconscious", "enableplayercontrols", "disableplayercontrols" };
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());

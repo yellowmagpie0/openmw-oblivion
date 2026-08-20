@@ -194,12 +194,37 @@ namespace EsmTool
                 std::cout << "\n  FullName: " << value.mFullName;
             if constexpr (ESM4::HasCellFlags<T>)
                 std::cout << "\n  CellFlags: " << WriteCellFlags{ value.mCellFlags };
+            if constexpr (requires { value.mMusicType; })
+                std::cout << "\n  MusicType: " << static_cast<unsigned>(value.mMusicType);
+            if constexpr (requires { value.mRegions; })
+                std::cout << "\n  Regions:" << WriteArray("\n  - ", value.mRegions);
+            if constexpr (requires { value.mSounds.front().sound; value.mSounds.front().flags; })
+            {
+                std::cout << "\n  RegionSounds:";
+                for (const auto& sound : value.mSounds)
+                    std::cout << "\n  - " << sound.sound << " flags=" << sound.flags << " chance=" << sound.chance;
+            }
             if constexpr (ESM4::HasX<T>)
                 std::cout << "\n  X: " << value.mX;
             if constexpr (ESM4::HasY<T>)
                 std::cout << "\n  Y: " << value.mY;
             if constexpr (ESM::HasModel<T>)
                 std::cout << "\n  Model: " << value.mModel.getOriginal();
+            if constexpr (requires { value.mSunTexture; })
+                std::cout << "\n  SunTexture: " << value.mSunTexture;
+            if constexpr (requires { value.mSunGlareTexture; })
+                std::cout << "\n  SunGlareTexture: " << value.mSunGlareTexture;
+            if constexpr (requires { value.mLowerCloudTexture; })
+                std::cout << "\n  LowerCloudTexture: " << value.mLowerCloudTexture;
+            if constexpr (requires { value.mUpperCloudTexture; })
+                std::cout << "\n  UpperCloudTexture: " << value.mUpperCloudTexture;
+            if constexpr (requires { value.mTexture; })
+                std::cout << "\n  Texture: " << value.mTexture;
+            if constexpr (requires { value.mSoundFile; })
+                std::cout << "\n  SoundFile: " << value.mSoundFile;
+            if constexpr (requires { value.mSoundId; })
+                if (!value.mSoundId.isZeroOrUnset())
+                    std::cout << "\n  SoundId: " << value.mSoundId;
             if constexpr (ESM4::HasModelMale<T>)
                 std::cout << "\n  ModelMale: " << value.mModelMale.getOriginal();
             if constexpr (ESM4::HasModelMaleWorld<T>)

@@ -1830,6 +1830,362 @@ def parse_variables(values: list[str]) -> dict[str, str]:
     return result
 
 
+M10_RECORD_FIELDS = {
+    "CLMT": {
+        "Model": ("meshes", None),
+        "SunTexture": ("textures", ".dds"),
+        "SunGlareTexture": ("textures", ".dds"),
+    },
+    "WTHR": {
+        "Model": ("meshes", None),
+        "LowerCloudTexture": ("textures", ".dds"),
+        "UpperCloudTexture": ("textures", ".dds"),
+    },
+    "WATR": {"Texture": ("textures", ".dds")},
+    "SOUN": {"SoundFile": ("sound", ".mp3")},
+    "SNDR": {"SoundFile": ("sound", ".mp3")},
+}
+M10_MEDIA_EXTENSIONS = {".bik", ".dds", ".flac", ".lip", ".mp3", ".nif", ".ogg", ".wav"}
+
+
+def normalize_vfs_path(value: str) -> str:
+    """Return the case-insensitive path spelling used by the OpenMW VFS."""
+    return re.sub(r"/+", "/", value.replace("\\", "/").strip().lstrip("/")).casefold()
+
+
+def m10_resource_candidates(raw: str, prefix: str, replacement_extension: str | None) -> list[str]:
+    """Mirror the native ResourceHelpers prefix/extension/fallback search order."""
+    raw_path = normalize_vfs_path(raw)
+    prefix = normalize_vfs_path(prefix).rstrip("/")
+    marker = f"{prefix}/"
+    position = raw_path.find(marker)
+    original = raw_path[position:] if position >= 0 else f"{prefix}/{raw_path}"
+    original = original.rstrip("/") if not raw.rstrip().endswith(("/", "\\")) else original.rstrip("/") + "/"
+    changed = original
+    if replacement_extension and not original.endswith("/"):
+        suffix = Path(original).suffix
+        changed = original[: -len(suffix)] + replacement_extension if suffix else original + replacement_extension
+    candidates = [changed]
+    if original != changed:
+        candidates.append(original)
+    if not original.endswith("/"):
+        basename = original.rsplit("/", 1)[-1]
+        fallback_original = f"{prefix}/{basename}"
+        fallback_changed = fallback_original
+        if replacement_extension:
+            suffix = Path(fallback_original).suffix
+            fallback_changed = (
+                fallback_original[: -len(suffix)] + replacement_extension
+                if suffix
+                else fallback_original + replacement_extension
+            )
+        candidates.append(fallback_changed)
+        if fallback_original != fallback_changed:
+            candidates.append(fallback_original)
+    return list(dict.fromkeys(candidates))
+
+
+def parse_m10_record_assets(output: str, plugin: str) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for line in output.splitlines():
+        match = re.fullmatch(r"  Record: ([A-Z0-9_]{4})", line)
+        if match:
+            record_type = match.group(1)
+            current = {"plugin": plugin, "record": record_type, "id": "", "editor_id": ""}
+            if record_type in M10_RECORD_FIELDS:
+                records.append(current)
+            else:
+                current = None
+            continue
+        if current is None:
+            continue
+        match = re.fullmatch(r"  ([A-Za-z]+): ?(.*)", line)
+        if not match:
+            continue
+        name, value = match.groups()
+        if name == "Id":
+            current["id"] = value
+        elif name == "EditorId":
+            current["editor_id"] = value
+        elif name in M10_RECORD_FIELDS[current["record"]] and value:
+            current.setdefault("assets", []).append({"field": name, "raw": value})
+    return records
+
+
+def resolve_m10_record_assets(records: list[dict[str, Any]], vfs_entries: set[str]) -> list[dict[str, Any]]:
+    references: list[dict[str, Any]] = []
+    for record in records:
+        fields = M10_RECORD_FIELDS[record["record"]]
+        for asset in record.get("assets", []):
+            prefix, extension = fields[asset["field"]]
+            candidates = m10_resource_candidates(asset["raw"], prefix, extension)
+            if candidates[0].endswith("/"):
+                matches = sorted(
+                    entry
+                    for entry in vfs_entries
+                    if entry.startswith(candidates[0]) and Path(entry).suffix in M10_MEDIA_EXTENSIONS
+                )
+            else:
+                matches = [candidate for candidate in candidates if candidate in vfs_entries][:1]
+            references.append(
+                {
+                    "plugin": record["plugin"],
+                    "record": record["record"],
+                    "id": record["id"],
+                    "editor_id": record["editor_id"],
+                    "field": asset["field"],
+                    "raw": asset["raw"],
+                    "candidates": candidates,
+                    "resolved": matches,
+                    "passed": bool(matches),
+                }
+            )
+    return references
+
+
+def validate_m10_asset_exceptions(
+    missing_references: list[dict[str, Any]], exceptions: dict[str, Any]
+) -> dict[str, Any]:
+    rules = exceptions.get("allowed", [])
+    matched_counts = [0 for _ in rules]
+    unreviewed: list[dict[str, Any]] = []
+    for reference in missing_references:
+        matching_rules: list[int] = []
+        for index, rule in enumerate(rules):
+            matches = True
+            for field in ("plugin", "record", "id", "editor_id", "field", "raw"):
+                if field in rule and reference.get(field) != rule[field]:
+                    matches = False
+                pattern = rule.get(field + "_pattern")
+                if pattern is not None and re.fullmatch(pattern, str(reference.get(field, ""))) is None:
+                    matches = False
+            if matches:
+                matching_rules.append(index)
+        if len(matching_rules) == 1:
+            matched_counts[matching_rules[0]] += 1
+        else:
+            unreviewed.append(reference)
+    stale_or_changed = []
+    for index, rule in enumerate(rules):
+        if matched_counts[index] != rule.get("expected_count"):
+            stale_or_changed.append(
+                {
+                    "rule": index,
+                    "description": rule.get("description", ""),
+                    "expected_count": rule.get("expected_count"),
+                    "actual_count": matched_counts[index],
+                }
+            )
+    return {
+        "passed": not unreviewed and not stale_or_changed,
+        "reviewed_count": sum(matched_counts),
+        "unreviewed": unreviewed,
+        "stale_or_changed_rules": stale_or_changed,
+    }
+
+
+def _m10_inventory_categories(entries: set[str]) -> dict[str, list[str]]:
+    audio_extensions = {".flac", ".mp3", ".ogg", ".wav"}
+    return {
+        "loading_images": sorted(
+            path for path in entries if path.startswith("textures/menus/loading/") and Path(path).suffix == ".dds"
+        ),
+        "music": sorted(path for path in entries if path.startswith("music/") and Path(path).suffix in audio_extensions),
+        "sky_meshes": sorted(path for path in entries if path.startswith("meshes/sky/") and Path(path).suffix == ".nif"),
+        "sky_textures": sorted(
+            path for path in entries if path.startswith("textures/sky/") and Path(path).suffix == ".dds"
+        ),
+        "sound_effects": sorted(
+            path
+            for path in entries
+            if path.startswith("sound/")
+            and not path.startswith("sound/voice/")
+            and Path(path).suffix in audio_extensions
+        ),
+        "videos": sorted(path for path in entries if path.startswith("video/") and Path(path).suffix == ".bik"),
+        "voice_audio": sorted(
+            path for path in entries if path.startswith("sound/voice/") and Path(path).suffix in audio_extensions
+        ),
+        "voice_lip": sorted(path for path in entries if path.startswith("sound/voice/") and Path(path).suffix == ".lip"),
+        "water_textures": sorted(
+            path for path in entries if path.startswith("textures/water/") and Path(path).suffix == ".dds"
+        ),
+    }
+
+
+def m10_count_lock_from_report(report: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "official_content": report["official_content"],
+        "expected": {
+            "archive_count": report["summary"]["archive_count"],
+            "vfs_entry_count": report["summary"]["vfs_entry_count"],
+            "record_counts": report["summary"]["record_counts"],
+            "reference_count": report["summary"]["reference_count"],
+            "directory_reference_count": report["summary"]["directory_reference_count"],
+            "resolved_file_count": report["summary"]["resolved_file_count"],
+            "reviewed_missing_count": report["summary"]["reviewed_missing_count"],
+            "missing_reference_fingerprint": report["summary"]["missing_reference_fingerprint"],
+            "inventory_counts": report["summary"]["inventory_counts"],
+            "inventory_fingerprint": report["summary"]["inventory_fingerprint"],
+            "reference_fingerprint": report["summary"]["reference_fingerprint"],
+        },
+    }
+
+
+def validate_m10_asset_count_lock(report: dict[str, Any], count_lock: dict[str, Any]) -> dict[str, Any]:
+    actual = m10_count_lock_from_report(report)
+    failures: list[str] = []
+    if count_lock.get("schema_version") != SCHEMA_VERSION:
+        failures.append("count-lock schema version differs")
+    if count_lock.get("official_content") != actual["official_content"]:
+        failures.append("official plugin identity differs from the M10 count lock")
+    expected = count_lock.get("expected", {})
+    for name, value in actual["expected"].items():
+        if expected.get(name) != value:
+            failures.append(f"{name}: expected {expected.get(name)!r}, got {value!r}")
+    return {"passed": not failures, "failures": failures}
+
+
+def run_m10_asset_audit(args: argparse.Namespace) -> dict[str, Any]:
+    source = args.source.resolve()
+    build = args.build.resolve()
+    data = args.oblivion_data.resolve()
+    output = args.output.resolve()
+    esmtool = build / "esmtool"
+    bsatool = build / "bsatool"
+    for required in (source, build, data, esmtool, bsatool):
+        if not required.exists():
+            raise FileNotFoundError(required)
+
+    plugins = [data / name for name in OFFICIAL_PLUGIN_ORDER]
+    missing_plugins = [str(path) for path in plugins if not path.is_file()]
+    if missing_plugins:
+        raise RuntimeError("missing official plugins: " + ", ".join(missing_plugins))
+
+    vfs_entries: set[str] = set()
+    archive_reports: list[dict[str, Any]] = []
+    for archive in discover_files(data, {".bsa"}):
+        result = run_command([str(bsatool), "list", str(archive)], cwd=source, timeout=args.timeout)
+        entries = {
+            normalize_vfs_path(line)
+            for line in result["output"].splitlines()
+            if line.strip() and not line.startswith("BSA archive")
+        }
+        entries.discard("")
+        vfs_entries.update(entries)
+        archive_reports.append(
+            {
+                "name": archive.name,
+                "exit_code": result["exit_code"],
+                "entry_count": len(entries),
+                "duration_seconds": result["duration_seconds"],
+            }
+        )
+    for path in data.rglob("*"):
+        if path.is_file() and path.suffix.casefold() not in {".bsa", ".esm", ".esp"}:
+            vfs_entries.add(normalize_vfs_path(path.relative_to(data).as_posix()))
+
+    records: list[dict[str, Any]] = []
+    plugin_reports: list[dict[str, Any]] = []
+    record_types = list(M10_RECORD_FIELDS)
+    for plugin in plugins:
+        command = [str(esmtool), "dump"]
+        for record_type in record_types:
+            command.extend(["-t", record_type])
+        command.append(str(plugin))
+        result = run_command(command, cwd=source, timeout=args.timeout)
+        parsed = parse_m10_record_assets(result["output"], plugin.name)
+        records.extend(parsed)
+        plugin_reports.append(
+            {
+                **file_fingerprint(plugin),
+                "exit_code": result["exit_code"],
+                "record_count": len(parsed),
+                "duration_seconds": result["duration_seconds"],
+            }
+        )
+
+    references = resolve_m10_record_assets(records, vfs_entries)
+    missing_references = [reference for reference in references if not reference["passed"]]
+    exceptions_path = args.exceptions.resolve()
+    exceptions = json.loads(exceptions_path.read_text(encoding="utf-8"))
+    exception_review = validate_m10_asset_exceptions(missing_references, exceptions)
+    inventory = _m10_inventory_categories(vfs_entries)
+    inventory_paths = sorted({path for paths in inventory.values() for path in paths})
+    reference_lines = sorted(
+        "\t".join(
+            (
+                reference["plugin"],
+                reference["record"],
+                reference["id"],
+                reference["field"],
+                normalize_vfs_path(reference["raw"]),
+                *reference["resolved"],
+            )
+        )
+        for reference in references
+    )
+    record_counts = dict(sorted(collections.Counter(record["record"] for record in records).items()))
+    missing_lines = sorted(
+        "\t".join(
+            (
+                reference["plugin"],
+                reference["record"],
+                reference["id"],
+                reference["editor_id"],
+                reference["field"],
+                normalize_vfs_path(reference["raw"]),
+            )
+        )
+        for reference in missing_references
+    )
+    summary = {
+        "archive_count": len(archive_reports),
+        "vfs_entry_count": len(vfs_entries),
+        "record_counts": record_counts,
+        "reference_count": len(references),
+        "missing_reference_count": len(missing_references),
+        "reviewed_missing_count": exception_review["reviewed_count"],
+        "missing_reference_fingerprint": "sha256:"
+        + hashlib.sha256("\n".join(missing_lines).encode()).hexdigest(),
+        "directory_reference_count": sum(reference["candidates"][0].endswith("/") for reference in references),
+        "resolved_file_count": sum(len(reference["resolved"]) for reference in references),
+        "inventory_counts": {name: len(paths) for name, paths in inventory.items()},
+        "inventory_fingerprint": "sha256:" + hashlib.sha256("\n".join(inventory_paths).encode()).hexdigest(),
+        "reference_fingerprint": "sha256:" + hashlib.sha256("\n".join(reference_lines).encode()).hexdigest(),
+    }
+    report: dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": utc_now(),
+        "official_content": [
+            {name: plugin[name] for name in ("name", "size", "sha256")} for plugin in plugin_reports
+        ],
+        "archives": archive_reports,
+        "plugins": plugin_reports,
+        "references": references,
+        "missing_references": missing_references,
+        "exception_review": exception_review,
+        "exceptions": str(exceptions_path),
+        "inventory": inventory,
+        "summary": summary,
+    }
+    count_lock_path = args.count_lock.resolve()
+    if count_lock_path.is_file():
+        count_lock = json.loads(count_lock_path.read_text(encoding="utf-8"))
+        report["count_lock"] = validate_m10_asset_count_lock(report, count_lock)
+    else:
+        report["count_lock"] = {"passed": False, "failures": [f"missing count lock: {count_lock_path}"]}
+    archive_passed = all(item["exit_code"] == 0 for item in archive_reports)
+    plugin_passed = all(item["exit_code"] == 0 for item in plugin_reports)
+    report["passed"] = (
+        archive_passed and plugin_passed and exception_review["passed"] and report["count_lock"]["passed"]
+    )
+    write_json(output / "m10-assets.json", report)
+    return report
+
+
 def validate_form_graph_report(report: dict[str, Any], allowlist: dict[str, Any]) -> dict[str, Any]:
     unresolved = report.get("unresolved", [])
     rules = allowlist.get("allowed", [])
@@ -2339,6 +2695,25 @@ def make_parser() -> argparse.ArgumentParser:
     m6.add_argument("--count-lock", type=Path)
     m6.add_argument("--timeout", type=float, default=900)
 
+    m10_assets = subparsers.add_parser(
+        "m10-assets", help="resolve and count-lock official M10 environment and media assets"
+    )
+    m10_assets.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m10_assets.add_argument("--build", type=Path, required=True)
+    m10_assets.add_argument("--oblivion-data", type=Path, required=True)
+    m10_assets.add_argument("--output", type=Path, required=True)
+    m10_assets.add_argument(
+        "--count-lock",
+        type=Path,
+        default=Path(__file__).resolve().parent / "data" / "oblivion_compat" / "oblivion_m10_asset_counts.json",
+    )
+    m10_assets.add_argument(
+        "--exceptions",
+        type=Path,
+        default=Path(__file__).resolve().parent / "data" / "oblivion_compat" / "oblivion_m10_asset_exceptions.json",
+    )
+    m10_assets.add_argument("--timeout", type=float, default=120)
+
     runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
     runtime.add_argument(
         "operation", choices=("inspect", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
@@ -2448,6 +2823,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_m5_acceptance(args)
         elif args.command == "m6-acceptance":
             result = run_m6_acceptance(args)
+        elif args.command == "m10-assets":
+            result = run_m10_asset_audit(args)
         elif args.command == "runtime-state":
             result = run_runtime_state(args)
         else:
@@ -2465,6 +2842,15 @@ def main(argv: list[str] | None = None) -> int:
             "compiled_count": result.get("corpus", {}).get("compiled_count"),
             "corpus_fingerprint": result.get("corpus", {}).get("corpus_fingerprint"),
             "evidence": str(args.output.resolve() / "acceptance.json"),
+        }
+    elif args.command == "m10-assets":
+        printable = {
+            "passed": result.get("passed", False),
+            "milestone": "M10",
+            "summary": result.get("summary", {}),
+            "exception_review": result.get("exception_review", {}),
+            "count_lock": result.get("count_lock", {}),
+            "evidence": str(args.output.resolve() / "m10-assets.json"),
         }
     print(json.dumps(printable, indent=2, sort_keys=True))
     return 0 if result.get("passed", False) else 1

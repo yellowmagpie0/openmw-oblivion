@@ -65,8 +65,8 @@ namespace ESM4
         struct RegionSound
         {
             ESM::FormId sound;
-            std::uint32_t flags; // 0 pleasant, 1 cloudy, 2 rainy, 3 snowy
-            std::uint32_t chance;
+            std::uint32_t flags; // Weather bit mask: pleasant 1, cloudy 2, rainy 4, snowy 8.
+            std::uint32_t chance; // Percent encoded in units of 1/100000.
         };
 #pragma pack(pop)
 

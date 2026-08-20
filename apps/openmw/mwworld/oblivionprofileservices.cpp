@@ -401,6 +401,16 @@ namespace MWWorld
         addFloat("fFatigueSwimRunMult", 0.f);
         addFloat("fFatigueSwimWalkBase", 2.5f);
         addFloat("fFatigueSwimWalkMult", 0.f);
+        // Shared OpenMW audio code expresses record attenuation in the same
+        // distance scale as TES3. Oblivion keeps these constants in the game
+        // executable instead of GMST records, so install the canonical values
+        // explicitly for native SOUN/SNDR and voice playback.
+        addFloat("fAudioDefaultMinDistance", 5.f);
+        addFloat("fAudioDefaultMaxDistance", 40.f);
+        addFloat("fAudioVoiceDefaultMinDistance", 10.f);
+        addFloat("fAudioVoiceDefaultMaxDistance", 60.f);
+        addFloat("fAudioMinDistanceMult", 20.f);
+        addFloat("fAudioMaxDistanceMult", 50.f);
         addInt("iMaxActivateDist", 192);
         // Legacy UI and focus services still consume these two common runtime contracts.
         // Oblivion does not ship the identically named Morrowind settings.

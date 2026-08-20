@@ -276,7 +276,10 @@ namespace MWWorld
         , mRainMinHeight(200.f)
         , mRainMaxHeight(700.f)
         , mParticleEffect((weather.mData.mClassification & ESM4::Weather::Classification_Snow) != 0
-                  ? (weather.mModel.empty() ? Settings::models().mWeathersnow.get().value() : weather.mModel.getOriginal())
+                  ? Misc::ResourceHelpers::correctMeshPath(weather.mModel.empty()
+                            ? VFS::Path::Normalized(Settings::models().mWeathersnow.get().value())
+                            : weather.mModel.getNormalized())
+                        .value()
                   : "")
         , mRainEffect((weather.mData.mClassification & ESM4::Weather::Classification_Rainy) != 0 ? "native" : "")
         , mStormDirection(Weather::defaultDirection())
@@ -849,13 +852,16 @@ namespace MWWorld
 
         if (wIt != mWeatherSettings.end())
         {
-            auto rIt = mRegions.find(regionID);
+            ESM::RefId environment = regionID;
+            if (mNativeWeather && environment.empty())
+                environment = getPlayerEnvironment();
+            auto rIt = mRegions.find(environment);
             if (rIt != mRegions.end())
             {
                 rIt->second.setWeather(wIt->mScriptId);
                 regionalWeatherChanged(rIt->first, rIt->second);
                 if (mNativeWeather)
-                    Log(Debug::Info) << "M10 weather requested: " << wIt->mName << " environment=" << regionID;
+                    Log(Debug::Info) << "M10 weather requested: " << wIt->mName << " environment=" << environment;
             }
         }
     }
@@ -873,7 +879,10 @@ namespace MWWorld
 
         if (weatherID < mWeatherSettings.size())
         {
-            auto it = mRegions.find(regionID);
+            ESM::RefId environment = regionID;
+            if (mNativeWeather && environment.empty())
+                environment = getPlayerEnvironment();
+            auto it = mRegions.find(environment);
             if (it != mRegions.end())
             {
                 it->second.setWeather(weatherID);
@@ -1475,6 +1484,7 @@ namespace MWWorld
         }
         else
         {
+            const int previousWeather = mCurrentWeather;
             if (mQueuedWeather != invalidWeatherID)
             {
                 mCurrentWeather = mQueuedWeather;
@@ -1487,6 +1497,8 @@ namespace MWWorld
             mNextWeather = invalidWeatherID;
             mQueuedWeather = invalidWeatherID;
             mFastForward = false;
+            if (mNativeWeather && mCurrentWeather != previousWeather)
+                Log(Debug::Info) << "M10 weather active: " << mWeatherSettings[mCurrentWeather].mName;
         }
     }
 

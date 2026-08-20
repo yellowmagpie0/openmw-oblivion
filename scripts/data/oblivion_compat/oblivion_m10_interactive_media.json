@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "name": "oblivion-m10-intro-menu-loading-media",
+  "name": "oblivion-m10-interactive-credits-and-new-game-intro",
   "cwd": "{source}",
   "environment": {"ALSOFT_DRIVERS": "null"},
   "files": [
@@ -20,7 +20,6 @@
   "actions": [
     {"type": "sleep", "seconds": 4},
     {"type": "focus_window", "name": "OpenMW"},
-    {"type": "screenshot", "name": "official-intro-video.png", "minimum_entropy": 0.01},
     {"type": "key", "value": "Escape"},
     {"type": "sleep", "seconds": 2},
     {"type": "key", "value": "Escape"},
@@ -30,12 +29,22 @@
     {"type": "key", "value": "Escape"},
     {"type": "sleep", "seconds": 2},
     {"type": "key", "value": "Escape"},
-    {"type": "sleep", "seconds": 6},
-    {"type": "screenshot", "name": "official-menu-video.png", "minimum_entropy": 0.01}
+    {"type": "sleep", "seconds": 5},
+    {"type": "screenshot", "name": "interactive-menu.png", "minimum_entropy": 0.04},
+    {"type": "mouse_move_absolute", "x": 640, "y": 648},
+    {"type": "mouse_click", "button": 1},
+    {"type": "sleep", "seconds": 4},
+    {"type": "screenshot", "name": "official-credits.png", "minimum_entropy": 0.01},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 3},
+    {"type": "mouse_move_absolute", "x": 640, "y": 576},
+    {"type": "mouse_click", "button": 1},
+    {"type": "sleep", "seconds": 5},
+    {"type": "screenshot", "name": "official-new-game-intro.png", "minimum_entropy": 0.01}
   ],
   "terminate_after_actions": true,
   "timeout_seconds": 15,
   "expected_exit": 0,
-  "expected_log": ["M10 video playback: video[\\\\/]bethesda softworks hd720p.bik", "M10 video playback: video[\\\\/]2k games.bik", "M10 video playback: video[\\\\/]game studios.bik", "M10 video playback: video[\\\\/]oblivion legal.bik", "M10 video playback: video[\\\\/]Oblivion iv logo.bik", "M10 video playback: video[\\\\/]map loop.bik", "M10 native loading media: images="],
-  "forbidden_log": ["Failed to open video", "Could not open video", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+  "expected_log": ["M10 video playback: video[\\\\/]CreditsMenu.bik", "Starting a new game", "M10 native new-game start: ImperialDungeon01", "M10 video playback: video[\\\\/]OblivionIntro.bik"],
+  "forbidden_log": ["ImageButton: can't find image textures[\\\\/]menu_", "Failed to open video", "Could not open video", "Failed to open image: Resource 'textures[\\\\/](?:sky|water|weather|loading)[\\\\/]", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
 }

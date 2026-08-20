@@ -833,6 +833,12 @@ namespace MWRender
                     ? VFS::Path::Normalized("textures/water/dungeonwater01.dds")
                     : Misc::ResourceHelpers::correctTexturePath(
                           VFS::Path::toNormalized(water->mTexture), *mResourceSystem->getVFS());
+                if (!mResourceSystem->getVFS()->exists(mNativeTexture))
+                {
+                    Log(Debug::Info) << "M10 native water texture uses engine fallback: requested=" << mNativeTexture
+                                     << " fallback=textures/water/dungeonwater01.dds";
+                    mNativeTexture = VFS::Path::Normalized("textures/water/dungeonwater01.dds");
+                }
                 const float direction = osg::DegreesToRadians(water->mData.mWindDirection);
                 mWindDirection = osg::Vec2f(std::cos(direction), std::sin(direction));
                 mWindVelocity = water->mData.mWindVelocity;

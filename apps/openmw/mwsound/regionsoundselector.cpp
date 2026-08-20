@@ -1,4 +1,5 @@
 #include "regionsoundselector.hpp"
+#include "nativeaudioutils.hpp"
 
 #include <components/esm3/loadregn.hpp>
 #include <components/esm4/loadregn.hpp>
@@ -38,16 +39,11 @@ namespace MWSound
             if (region == nullptr)
                 return {};
             const std::uint8_t classification = MWBase::Environment::get().getWorld()->getCurrentWeather().mNativeClassification;
-            std::uint32_t weatherFlag = 0;
-            if ((classification & ESM4::Weather::Classification_Snow) != 0)
-                weatherFlag = 3;
-            else if ((classification & ESM4::Weather::Classification_Rainy) != 0)
-                weatherFlag = 2;
-            else if ((classification & ESM4::Weather::Classification_Cloudy) != 0)
-                weatherFlag = 1;
+            const std::uint32_t weatherFlag = nativeRegionWeatherMask(classification);
             for (const ESM4::Region::RegionSound& sound : region->mSounds)
             {
-                if (sound.flags == weatherFlag && static_cast<std::uint32_t>(Misc::Rng::roll0to99()) < sound.chance)
+                if (nativeRegionSoundMatches(sound.flags, sound.chance, weatherFlag,
+                        static_cast<std::uint32_t>(Misc::Rng::roll0to99())))
                     return ESM::RefId(sound.sound);
             }
             return {};

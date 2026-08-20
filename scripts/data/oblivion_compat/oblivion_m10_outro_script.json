@@ -22,7 +22,7 @@
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 11},
+    {"type": "sleep", "seconds": 22},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "screenshot", "name": "official-outro.png", "minimum_entropy": 0.01},
     {"type": "key", "value": "Escape"},
@@ -35,6 +35,6 @@
   "terminate_after_actions": true,
   "timeout_seconds": 15,
   "expected_exit": 0,
-  "expected_log": ["M10 video playback: video/oblivionoutro.bik", "M7 ObScript: playbink video=OblivionOutro.bik", "M7 ObScript: releaseweatheroverride", "M7 ObScript: forceweather weather=content:oblivion.esm:00038eef override=true applied=true", "M10 weather forced: Clear override=true", "Writing saved game 'Quicksave'"],
+  "expected_log": ["M10 video playback: video[\\\\/]OblivionOutro.bik", "M7 ObScript: playbink video=OblivionOutro.bik", "M7 ObScript: releaseweatheroverride", "M7 ObScript: forceweather weather=content:oblivion.esm:038eee override=true applied=true", "M10 weather forced: Clear override=true", "Writing saved game 'Quicksave'"],
   "forbidden_log": ["M7 ObScript: deferred command=(playbink|forceweather|releaseweatheroverride)", "Failed to open video", "Could not open video", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
 }

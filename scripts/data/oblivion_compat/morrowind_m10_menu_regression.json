@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "name": "morrowind-m10-menu-regression",
+  "cwd": "{source}",
+  "environment": {"ALSOFT_DRIVERS": "null"},
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs-mw\"\ndata=\"{morrowind_data}\"\nfallback-archive=Morrowind.bsa\ncontent=Morrowind.esm\nskip-menu=0\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 4},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "screenshot", "name": "morrowind-menu.png", "minimum_entropy": 0.04}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": 0,
+  "expected_log": ["Loading content file Morrowind.esm", "Selected game profile: morrowind", "Playing \"music/special/morrowind title.mp3\""],
+  "forbidden_log": ["Selected game profile: oblivion", "Installed Oblivion profile services", "ImageButton: can't find image textures[\\\\/]menu_", "M10 native", "M10 weather", "M10 regional ambient", "M10 video playback: video[\\\\/](?:map loop|CreditsMenu|OblivionIntro)\\.bik", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

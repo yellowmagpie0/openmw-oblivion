@@ -79,6 +79,12 @@ namespace
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimRunMult")->mValue.getFloat(), 0.f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimWalkBase")->mValue.getFloat(), 2.5f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimWalkMult")->mValue.getFloat(), 0.f);
+        EXPECT_FLOAT_EQ(settings.find("fAudioDefaultMinDistance")->mValue.getFloat(), 5.f);
+        EXPECT_FLOAT_EQ(settings.find("fAudioDefaultMaxDistance")->mValue.getFloat(), 40.f);
+        EXPECT_FLOAT_EQ(settings.find("fAudioVoiceDefaultMinDistance")->mValue.getFloat(), 10.f);
+        EXPECT_FLOAT_EQ(settings.find("fAudioVoiceDefaultMaxDistance")->mValue.getFloat(), 60.f);
+        EXPECT_FLOAT_EQ(settings.find("fAudioMinDistanceMult")->mValue.getFloat(), 20.f);
+        EXPECT_FLOAT_EQ(settings.find("fAudioMaxDistanceMult")->mValue.getFloat(), 50.f);
         EXPECT_GT(settings.find("fMajorSkillBonus")->mValue.getFloat(), 0.f);
         EXPECT_GT(settings.find("fMinorSkillBonus")->mValue.getFloat(), 0.f);
         EXPECT_GT(settings.find("fMiscSkillBonus")->mValue.getFloat(), 0.f);

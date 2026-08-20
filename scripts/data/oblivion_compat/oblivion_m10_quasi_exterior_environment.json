@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m10-quasi-exterior-environment",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=OblivionMqKvatchSmallTower03\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 28},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "quasi-initial.png", "minimum_entropy": 0.04},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type_held", "value": "lua global"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "type", "value": "world.advanceTime(6); exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "quasi-06h.png", "minimum_entropy": 0.04},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type_held", "value": "lua global"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "type", "value": "world.advanceTime(6); exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "quasi-12h.png", "minimum_entropy": 0.04},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type_held", "value": "lua global"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "type", "value": "world.advanceTime(12); exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "quasi-24h.png", "minimum_entropy": 0.04},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["WTHR", "CWTH"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": 0,
+  "expected_log": ["Loading cell OblivionMqKvatchSmallTower03", "M10 native quasi-exterior environment: cell=OblivionMqKvatchSmallTower03", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Failed to open (image|video): Resource '.*(sky|weather|water)", "shader.*failed", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "allowed": [
+    {
+      "plugin": "Oblivion.esm",
+      "record": "SOUN",
+      "editor_id_pattern": "^(WPNSwish|WPNBlock|WPNHit).*X$",
+      "field": "SoundFile",
+      "expected_count": 18,
+      "description": "Xbox 360 low-fidelity weapon descriptors are present in the shared master but intentionally absent from the shipped PC archives."
+    },
+    {
+      "plugin": "Oblivion.esm",
+      "record": "SOUN",
+      "editor_id_pattern": "^(NPCMehrunesDagonFoot|NPCSpiderDaedraIdle|AMBWindTreeGust)$",
+      "field": "SoundFile",
+      "expected_count": 3,
+      "description": "Intentional silent random-directory descriptors whose directories contain no PC media."
+    },
+    {
+      "plugin": "Oblivion.esm",
+      "record": "SOUN",
+      "editor_id_pattern": "^(DRSGateShiveringIslesOtherLP|TRPPodReform|AMBDoorPoundThreeTimes|AMBCricketsLP0[15]|E3DremoraDeathSound|WPNBowShoot|AMBWindRumbleLP3D|AMBWindGaleLP|AMBWindRumbleLP|BlockLight|BlockHeavy)$",
+      "field": "SoundFile",
+      "expected_count": 12,
+      "description": "Unused editor, E3, and superseded sound descriptors retained by the PC master without corresponding shipped files."
+    },
+    {
+      "plugin": "Oblivion.esm",
+      "record": "WATR",
+      "editor_id_pattern": "^(MS31Water|OblivionOil01)$",
+      "field": "Texture",
+      "expected_count": 2,
+      "description": "Procedural water identifiers without standalone DDS files; OpenMW uses the explicit native water fallback."
+    },
+    {
+      "plugin": "DLCFrostcrag.esp",
+      "record": "SOUN",
+      "editor_id": "DRSTowerWallClose",
+      "field": "SoundFile",
+      "expected_count": 1,
+      "description": "Unused Frostcrag editor descriptor absent from the official DLC archive."
+    }
+  ]
+}

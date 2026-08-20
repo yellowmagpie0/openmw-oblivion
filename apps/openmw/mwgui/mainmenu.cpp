@@ -2,6 +2,7 @@
 
 #include <MyGUI_Gui.h>
 #include <MyGUI_InputManager.h>
+#include <MyGUI_Button.h>
 #include <MyGUI_RenderManager.h>
 #include <MyGUI_TextBox.h>
 
@@ -344,16 +345,44 @@ namespace MWGui
         buttons.emplace_back("exitgame");
 
         // Create new buttons if needed
+        const bool nativeOblivionMenu = mVFS->exists(VFS::Path::NormalizedView("video/map loop.bik"));
         for (std::string_view id : { "return", "newgame", "savegame", "loadgame", "options", "credits", "exitgame" })
         {
             if (mButtons.find(id) == mButtons.end())
             {
-                Gui::ImageButton* button = mButtonBox->createWidget<Gui::ImageButton>(
-                    "ImageBox", MyGUI::IntCoord(0, curH, 0, 0), MyGUI::Align::Default);
+                MyGUI::Widget* button = nullptr;
+                if (nativeOblivionMenu)
+                {
+                    auto* textButton = mButtonBox->createWidget<MyGUI::Button>(
+                        "SandTextButton", MyGUI::IntCoord(0, curH, 240, 34), MyGUI::Align::Default);
+                    textButton->setProperty("TextAlign", "Center");
+                    textButton->setProperty("TextShadow", "true");
+                    textButton->setProperty("TextShadowColour", "0 0 0");
+                    static const std::map<std::string_view, std::pair<std::string_view, std::string_view>, std::less<>>
+                        captions{ { "return", { "sReturnToGame", "Return" } },
+                            { "newgame", { "sNewGame", "New Game" } },
+                            { "savegame", { "sSaveGame", "Save Game" } },
+                            { "loadgame", { "sLoadGame", "Load Game" } },
+                            { "options", { "sOptions", "Options" } },
+                            { "credits", { "sCredits", "Credits" } },
+                            { "exitgame", { "sExitGame", "Exit" } } };
+                    const auto& caption = captions.find(id)->second;
+                    const std::string_view captionText
+                        = MWBase::Environment::get().getWindowManager()->getGameSettingString(
+                            caption.first, caption.second);
+                    textButton->setCaption(MyGUI::UString(std::string(captionText)));
+                    button = textButton;
+                }
+                else
+                {
+                    auto* imageButton = mButtonBox->createWidget<Gui::ImageButton>(
+                        "ImageBox", MyGUI::IntCoord(0, curH, 0, 0), MyGUI::Align::Default);
+                    imageButton->setProperty("ImageHighlighted", "textures\\menu_" + std::string(id) + "_over.dds");
+                    imageButton->setProperty("ImageNormal", "textures\\menu_" + std::string(id) + ".dds");
+                    imageButton->setProperty("ImagePushed", "textures\\menu_" + std::string(id) + "_pressed.dds");
+                    button = imageButton;
+                }
                 const std::string& buttonId = mButtons.emplace(id, button).first->first;
-                button->setProperty("ImageHighlighted", "textures\\menu_" + buttonId + "_over.dds");
-                button->setProperty("ImageNormal", "textures\\menu_" + buttonId + ".dds");
-                button->setProperty("ImagePushed", "textures\\menu_" + buttonId + "_pressed.dds");
                 button->eventMouseButtonClick += MyGUI::newDelegate(this, &MainMenu::onButtonClicked);
                 button->setUserData(buttonId);
             }
@@ -364,7 +393,9 @@ namespace MWGui
         for (const auto& buttonPair : mButtons)
         {
             buttonPair.second->setVisible(false);
-            MyGUI::IntSize requested = buttonPair.second->getRequestedSize();
+            MyGUI::IntSize requested = nativeOblivionMenu
+                ? MyGUI::IntSize(240, 34)
+                : static_cast<Gui::ImageButton*>(buttonPair.second)->getRequestedSize();
             if (requested.width > maxwidth)
                 maxwidth = requested.width;
         }
@@ -374,19 +405,27 @@ namespace MWGui
         {
             auto it = mButtons.find(buttonId);
             assert(it != mButtons.end());
-            Gui::ImageButton* button = it->second;
+            MyGUI::Widget* button = it->second;
             button->setVisible(true);
+
+            if (nativeOblivionMenu)
+            {
+                button->setCoord(0, curH, maxwidth, 34);
+                curH += 36;
+                continue;
+            }
 
             // By default, assume that all menu buttons textures should have 64 height.
             // If they have a different resolution, scale them.
-            MyGUI::IntSize requested = button->getRequestedSize();
+            auto* imageButton = static_cast<Gui::ImageButton*>(button);
+            MyGUI::IntSize requested = imageButton->getRequestedSize();
             float scale = requested.height / 64.f;
 
-            button->setImageCoord(MyGUI::IntCoord(0, 0, requested.width, requested.height));
+            imageButton->setImageCoord(MyGUI::IntCoord(0, 0, requested.width, requested.height));
             // Trim off some of the excessive padding
             // TODO: perhaps do this within ImageButton?
             int height = requested.height;
-            button->setImageTile(MyGUI::IntSize(requested.width, static_cast<int>(requested.height - 16 * scale)));
+            imageButton->setImageTile(MyGUI::IntSize(requested.width, static_cast<int>(requested.height - 16 * scale)));
             button->setCoord(static_cast<int>((maxwidth - requested.width / scale) / 2), curH,
                 static_cast<int>(requested.width / scale), static_cast<int>(height / scale - 16));
             curH += static_cast<int>(height / scale - 16);

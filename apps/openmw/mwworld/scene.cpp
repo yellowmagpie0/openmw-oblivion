@@ -977,6 +977,17 @@ namespace MWWorld
 
         // adjust fog
         mRendering.configureFog(*mCurrentCell->getCell());
+        if (mCurrentCell->getCell()->isEsm4() && mCurrentCell->getCell()->isQuasiExterior())
+            Log(Debug::Info) << "M10 native quasi-exterior environment: cell="
+                             << mCurrentCell->getCell()->getDescription();
+        else if (mCurrentCell->getCell()->isEsm4())
+        {
+            const auto& mood = mCurrentCell->getCell()->getMood();
+            Log(Debug::Info) << "M10 native interior environment: cell="
+                             << mCurrentCell->getCell()->getDescription() << " ambient=" << mood.mAmbiantColor
+                             << " directional=" << mood.mDirectionalColor << " fog=" << mood.mFogColor << ' '
+                             << mood.mFogNear << '-' << mood.mFogFar << " density=" << mood.mFogDensity;
+        }
 
         // Sky system
         mWorld.adjustSky();

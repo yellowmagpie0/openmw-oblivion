@@ -1,4 +1,5 @@
 #include "soundmanagerimp.hpp"
+#include "nativeaudioutils.hpp"
 
 #include <algorithm>
 #include <map>
@@ -850,7 +851,13 @@ namespace MWSound
 
         ESM::RefId next = mRegionSoundSelector.getNextRandom(duration, *cell);
         if (!next.empty())
+        {
+            if (cell->isEsm4())
+                Log(Debug::Info) << "M10 native ambient region sound: " << next;
+            else
+                Log(Debug::Info) << "Ambient region sound: " << next;
             mCurrentRegionSound = playSound(next, 1.0f, 1.0f);
+        }
     }
 
     void SoundManager::updateWaterSound()
@@ -1113,15 +1120,9 @@ namespace MWSound
         if (!player.isInCell())
             return;
         const MWWorld::Cell& cell = *player.getCell()->getCell();
-        std::string playlist;
-        if (MWMechanics::isPlayerInCombat())
-            playlist = "music/battle";
-        else if (!cell.isExterior() && cell.isEsm4() && cell.getEsm4().mMusicType == 2)
-            playlist = "music/dungeon";
-        else if (!cell.isExterior() && cell.isEsm4() && cell.getEsm4().mMusicType == 1)
-            playlist = "music/public";
-        else
-            playlist = cell.isExterior() ? "music/explore" : "music/dungeon";
+        const bool exterior = cell.isExterior() || cell.isQuasiExterior();
+        const std::uint8_t musicType = cell.isEsm4() ? cell.getEsm4().mMusicType : 0;
+        const std::string playlist(nativeMusicPlaylist(MWMechanics::isPlayerInCombat(), exterior, musicType));
 
         if (isMusicPlaying() && playlist == mNativePlaylist)
             return;

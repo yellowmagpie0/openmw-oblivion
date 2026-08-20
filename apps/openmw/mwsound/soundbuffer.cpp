@@ -1,4 +1,5 @@
 #include "soundbuffer.hpp"
+#include "nativeaudioutils.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -8,9 +9,12 @@
 #include <components/esm4/loadsndr.hpp>
 #include <components/esm4/loadsoun.hpp>
 #include <components/misc/resourcehelpers.hpp>
+#include <components/misc/rng.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/settings/values.hpp>
+#include <components/vfs/manager.hpp>
 #include <components/vfs/pathutil.hpp>
+#include <components/vfs/recursivedirectoryiterator.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -38,6 +42,32 @@ namespace MWSound
             params.mAudioMinDistanceMult = settings.find("fAudioMinDistanceMult")->mValue.getFloat();
             params.mAudioMaxDistanceMult = settings.find("fAudioMaxDistanceMult")->mValue.getFloat();
             return params;
+        }
+
+        VFS::Path::Normalized resolveNativeSoundPath(std::string_view value)
+        {
+            const auto* vfs = MWBase::Environment::get().getResourceSystem()->getVFS();
+            if (!value.ends_with('\\') && !value.ends_with('/'))
+                return Misc::ResourceHelpers::correctResourcePath(
+                    { { soundDir } }, VFS::Path::toNormalized(value), *vfs, mp3);
+
+            const VFS::Path::Normalized directory
+                = soundDir / VFS::Path::toNormalized(value.substr(0, value.size() - 1));
+            std::vector<VFS::Path::Normalized> candidates;
+            for (const VFS::Path::Normalized& path
+                : vfs->getRecursiveDirectoryIterator(VFS::Path::NormalizedView(directory)))
+            {
+                const auto extension = path.extension();
+                if (extension == "mp3" || extension == "wav" || extension == "ogg" || extension == "flac")
+                    candidates.push_back(path);
+            }
+            if (candidates.empty())
+                return directory;
+            std::sort(candidates.begin(), candidates.end());
+            const std::size_t selected
+                = static_cast<std::size_t>(Misc::Rng::rollDice(static_cast<int>(candidates.size())));
+            Log(Debug::Verbose) << "M10 native sound directory: " << directory << " -> " << candidates[selected];
+            return candidates[selected];
         }
     }
 
@@ -203,27 +233,20 @@ namespace MWSound
     {
         static const AudioParams audioParams
             = makeAudioParams(MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>());
-        VFS::Path::Normalized path = Misc::ResourceHelpers::correctResourcePath({ { soundDir } },
-            VFS::Path::toNormalized(sound.mSoundFile), *MWBase::Environment::get().getResourceSystem()->getVFS(), mp3);
-        const float volume = std::pow(10.f, -static_cast<float>(sound.mData.staticAttenuation) / 2000.f);
-        float min = sound.mData.minAttenuation;
-        float max = sound.mData.maxAttenuation;
-        if (min == 0 && max == 0)
-        {
-            min = audioParams.mAudioDefaultMinDistance;
-            max = audioParams.mAudioDefaultMaxDistance;
-        }
-        min = std::max(1.f, min * audioParams.mAudioMinDistanceMult);
-        max = std::max(min, max * audioParams.mAudioMaxDistanceMult);
-        SoundBuffer& sfx = mSoundBuffers.emplace_back(std::move(path), volume, min, max);
+        VFS::Path::Normalized path = resolveNativeSoundPath(sound.mSoundFile);
+        const NativeSoundParams params = makeNativeSoundParams(sound.mData.staticAttenuation,
+            sound.mData.minAttenuation, sound.mData.maxAttenuation, audioParams.mAudioDefaultMinDistance,
+            audioParams.mAudioDefaultMaxDistance, audioParams.mAudioMinDistanceMult,
+            audioParams.mAudioMaxDistanceMult);
+        SoundBuffer& sfx
+            = mSoundBuffers.emplace_back(std::move(path), params.mVolume, params.mMinDistance, params.mMaxDistance);
         mBufferNameMap.emplace(soundId, &sfx);
         return &sfx;
     }
 
     SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM4::SoundReference& sound)
     {
-        VFS::Path::Normalized path = Misc::ResourceHelpers::correctResourcePath({ { soundDir } },
-            VFS::Path::toNormalized(sound.mSoundFile), *MWBase::Environment::get().getResourceSystem()->getVFS(), mp3);
+        VFS::Path::Normalized path = resolveNativeSoundPath(sound.mSoundFile);
         const float volume = std::pow(10.f, -static_cast<float>(sound.mData.staticAttenuation) / 2000.f);
         const float min = 1.f;
         const float max = 255.f;

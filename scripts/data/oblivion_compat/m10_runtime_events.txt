@@ -1,9 +1,9 @@
 # Real shipped quest-result scripts exercising the M10 commands that M7 had
-# deliberately deferred. The player begins in ImperialDungeon01 so tutorial
-# speakers are live; remote quest references exercise the global fallback path.
-at 8 setstage CharacterGen 15
-at 12 setstage MQ09 56
-at 16 setstage MQ14 10
-at 20 setstage NDPilgrim 30
-at 27 setstage NDPilgrim 50
-at 30 setstage MQ16 14
+# deliberately deferred. These stages put each target command before any
+# unrelated command that remains outside M10, so the test measures M10 itself.
+at 4 setstage CharacterGen 23
+at 7 setstage MS48 70
+at 10 setstage MQ09 56
+at 13 setstage MQ14 10
+at 16 setstage ND10 50
+at 24 setstage Dark08Whodunit 30

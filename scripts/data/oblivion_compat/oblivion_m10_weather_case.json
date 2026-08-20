@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m10-weather-{weather_slug}",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=OldBridgeExterior\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Terrain]\ndistant terrain = true\nobject paging = true\n[Groundcover]\nenabled = false\n[Camera]\nviewing distance = 65536\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 35},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "type_held", "value": "lua player"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "type", "value": "for _,w in ipairs(core.weather.records) do if w.name=='{weather}' then core.weather.changeWeather('',w); print('M10_STATE request '..w.name) end end; exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "screenshot", "name": "{weather_slug}-transition.png", "minimum_entropy": 0.04},
+    {"type": "key_held", "value": "grave"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "type_held", "value": "lua global"},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "type", "value": "world.advanceTime(1); print('M10_STATE fast_forward {weather}'); exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "key", "value": "Escape"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "screenshot", "name": "{weather_slug}-active.png", "minimum_entropy": 0.04},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["WTHR", "CWTH"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 15,
+  "expected_exit": 0,
+  "expected_log": ["M10 weather requested: {weather}", "M10 weather active: {weather}", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Failed to open (image|video|audio): Resource '.*(sky|weather|water)", "Resource '.*(sky|weather|water).*' not found", "shader.*failed", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

@@ -436,17 +436,28 @@ namespace MWWorld
             if (!getPlayerPtr().isInCell())
             {
                 ESM::Position pos;
-                const int cellSize = Constants::CellSizeInUnits;
-                pos.pos[0] = cellSize / 2;
-                pos.pos[1] = cellSize / 2;
-                pos.pos[2] = 0;
-                pos.rot[0] = 0;
-                pos.rot[1] = 0;
-                pos.rot[2] = 0;
+                if (mGameProfile == ESM::GameProfile::Oblivion)
+                {
+                    constexpr std::string_view nativeStartCell = "ImperialDungeon01";
+                    findInteriorPosition(nativeStartCell, pos);
+                    changeToInteriorCell(nativeStartCell, pos, true);
+                    Log(Debug::Info) << "M10 native new-game start: " << nativeStartCell;
+                }
+                else
+                {
+                    const int cellSize = Constants::CellSizeInUnits;
+                    pos.pos[0] = cellSize / 2;
+                    pos.pos[1] = cellSize / 2;
+                    pos.pos[2] = 0;
+                    pos.rot[0] = 0;
+                    pos.rot[1] = 0;
+                    pos.rot[2] = 0;
 
-                ESM::ExteriorCellLocation exteriorCellPos = ESM::positionToExteriorCellLocation(pos.pos[0], pos.pos[1]);
-                ESM::RefId cellId = ESM::RefId::esm3ExteriorCell(exteriorCellPos.mX, exteriorCellPos.mY);
-                mWorldScene->changeToExteriorCell(cellId, pos, true);
+                    ESM::ExteriorCellLocation exteriorCellPos
+                        = ESM::positionToExteriorCellLocation(pos.pos[0], pos.pos[1]);
+                    ESM::RefId cellId = ESM::RefId::esm3ExteriorCell(exteriorCellPos.mX, exteriorCellPos.mY);
+                    mWorldScene->changeToExteriorCell(cellId, pos, true);
+                }
             }
         }
 
