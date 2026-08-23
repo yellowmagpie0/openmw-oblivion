@@ -1,9 +1,10 @@
 # M11 actor appearance, skeletons, and animation
 
-Status: accepted on 2026-08-22. Implementation revision
-`d5966e5192cda3a9cee90d9b7fa45c4885c40dba`; head-part correction revisions
-`9c1796ffe638e81b3b15287c3bb693c918d7a06a` and
-`1498179f8825bb8ee64ccf0921d1367a52576ba0`.
+Status: accepted through 2026-08-23. Implementation revision
+`d5966e5192cda3a9cee90d9b7fa45c4885c40dba`; head and face correction
+revisions `9c1796ffe638e81b3b15287c3bb693c918d7a06a`,
+`1498179f8825bb8ee64ccf0921d1367a52576ba0`, and
+`ba4d75b67fa96e215bc3b96100c05d87393b3294`.
 
 M11 completes the native Oblivion visual actor path. Player and placed NPCs
 are assembled from race, sex, head, eyes, hair, skin, and initial equipment
@@ -16,8 +17,9 @@ XRGD poses execute through the normal OpenMW scene and animation runtime.
 - `RACE` and `NPC_` shape/texture coefficients now drive the official EGM and
   EGT FaceGen assets. TRI expression targets are retained as deformable scene
   geometry, with exact phoneme-channel matching and independent blinking.
-  Race height/weight and sex-specific tables are applied without TES3 body
-  records.
+  EGT's top-to-bottom rows are mapped against each base image's actual OSG
+  origin, keeping complexion features on the intended UV region. Race
+  height/weight and sex-specific tables are applied without TES3 body records.
 - Native eyes, hair, head/ear/mouth parts, naked-body slot meshes, and
   sex-specific armor/clothing models attach to the authoritative destination
   skeleton. Biped coverage suppresses hidden body, head, and hair pieces, and
@@ -112,8 +114,8 @@ The completed revision passed:
 | M11 runtime manifests | 4 / 4 |
 | Morrowind runtime regression | 1 / 1 |
 
-The head-part correction follow-ups additionally passed 7 / 7 focused FaceGen
-regressions, 510 / 510 engine tests, and 1,524 / 1,524 component tests. Their
+The head and face correction follow-ups additionally passed 8 / 8 focused
+FaceGen regressions, 511 / 511 engine tests, and 1,524 / 1,524 component tests. Their
 dedicated Arena holding-cell runtime loads 26 released NPCs across all ten
 playable races, requires assembled FaceGen meshes and active idle controllers
 for every race, and rejects every FaceGen, attachment, transform, frame,
@@ -153,6 +155,10 @@ The runtime evidence uses real released records and assets:
   seated inside the lips while the corrected eyes and hair remain aligned.
   `m11-oral-parts-all-races-20260823/` and
   `m11-oral-parts-player-20260823/` cover the ten-race and player paths.
+- `build/oblivion-compat/m11-egt-origin-clesa-20260823/` captures the corrected
+  EGT complexion at idle and during speech without the displaced cheek arc.
+  `m11-egt-origin-all-races-20260823/` and
+  `m11-egt-origin-player-20260823/` cover the ten-race and player paths.
 
 The player, actor, creature, corpse, and post-reload captures were inspected
 directly. They show coherent multipart bodies with heads, eyes, hair/equipment,
