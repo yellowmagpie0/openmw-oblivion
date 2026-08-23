@@ -27,7 +27,8 @@ namespace MWRender
 
     private:
         osg::ref_ptr<osg::Node> insertPart(
-            std::string_view model, std::string_view attachBone = {}, std::string_view texture = {});
+            std::string_view model, std::string_view attachBone = {}, std::string_view texture = {},
+            bool correctHeadPartOrientation = true);
         std::size_t applyRagdollPose();
 
         // Works for FO3/FONV/TES5

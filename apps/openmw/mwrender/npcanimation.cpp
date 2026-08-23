@@ -623,7 +623,8 @@ namespace MWRender
         std::uint32_t covered = 0;
         std::set<std::string, std::less<>> attachedModels;
         const auto attachPart = [&](std::string_view model, std::string_view bone, std::string_view texture = {},
-                                    bool faceGen = false, bool bodyTexture = false) -> osg::ref_ptr<osg::Node> {
+                                    bool faceGen = false, bool bodyTexture = false,
+                                    bool correctHeadPartOrientation = true) -> osg::ref_ptr<osg::Node> {
             if (model.empty())
                 return {};
             const VFS::Path::Normalized path
@@ -634,7 +635,7 @@ namespace MWRender
             {
                 osg::Quat headPartCorrection;
                 const osg::Quat* attitude = nullptr;
-                if (Misc::StringUtils::ciEqual(bone, "Bip01 Head"))
+                if (correctHeadPartOrientation && Misc::StringUtils::ciEqual(bone, "Bip01 Head"))
                 {
                     const NodeMap& nodes = getNodeMap();
                     const auto found = nodes.find(Misc::StringUtils::lowerCase(bone));
@@ -729,14 +730,15 @@ namespace MWRender
                 if ((i == ESM4::Race::EyeLeft || i == ESM4::Race::EyeRight) && !player->mEyes.isZeroOrUnset())
                     if (const ESM4::Eyes* eyes = store.get<ESM4::Eyes>().search(player->mEyes))
                         texture = eyes->mIcon;
-                attachPart(head[i].mesh, "Bip01 Head", texture, true);
+                attachPart(head[i].mesh, "Bip01 Head", texture, true, false,
+                    shouldCorrectTes4HeadPartOrientation(i));
             }
             const ESM::FormId hairId
                 = player->mHair.isZeroOrUnset() ? race->mDefaultHair[female ? 1 : 0] : player->mHair;
             if ((covered & ESM4::Armor::TES4_Hair) == 0 && !hairId.isZeroOrUnset())
                 if (const ESM4::Hair* hair = store.get<ESM4::Hair>().search(hairId))
                     if (const osg::ref_ptr<osg::Node> node
-                        = attachPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true))
+                        = attachPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true, false, true))
                     {
                         osg::ref_ptr<osg::Material> material = new osg::Material;
                         const osg::Vec4f color(player->mHairColour.red / 255.f, player->mHairColour.green / 255.f,

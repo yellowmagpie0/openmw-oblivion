@@ -85,7 +85,8 @@ namespace MWRender
     }
 
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
-        std::string_view model, std::string_view attachBone, std::string_view texture)
+        std::string_view model, std::string_view attachBone, std::string_view texture,
+        bool correctHeadPartOrientation)
     {
         if (model.empty())
             return {};
@@ -110,7 +111,7 @@ namespace MWRender
                     return {};
                 }
                 attachment = found->second->asGroup();
-                if (Misc::StringUtils::ciEqual(attachBone, "Bip01 Head"))
+                if (correctHeadPartOrientation && Misc::StringUtils::ciEqual(attachBone, "Bip01 Head"))
                 {
                     const osg::MatrixList matrices = attachment->getWorldMatrices(mObjectRoot);
                     if (!matrices.empty())
@@ -271,6 +272,14 @@ namespace MWRender
         // Cancel only the bind orientation; keeping the bone translation and
         // all later relative animation makes the parts follow the head.
         return headBindMatrix.getRotate().inverse();
+    }
+
+    bool shouldCorrectTes4HeadPartOrientation(std::size_t partIndex)
+    {
+        // The head, ears, and eyeballs use actor-aligned FaceGen coordinates,
+        // like hair. The inner-mouth pieces are instead authored in Bip01
+        // Head's bone-aligned coordinates and must retain that orientation.
+        return partIndex < ESM4::Race::Mouth || partIndex > ESM4::Race::Tongue;
     }
 
     bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
@@ -733,7 +742,8 @@ namespace MWRender
                     if (const ESM4::Eyes* eyes = store->get<ESM4::Eyes>().search(traits.mEyes))
                         texture = eyes->mIcon;
                 }
-                if (osg::ref_ptr<osg::Node> node = insertPart(part.mesh, "Bip01 Head", texture))
+                if (osg::ref_ptr<osg::Node> node = insertPart(part.mesh, "Bip01 Head", texture,
+                        shouldCorrectTes4HeadPartOrientation(i)))
                     applyTes4FaceGen(
                         part.mesh, *node, traits, *race, isFemale, texture, false, mResourceSystem, mFaceMorphs);
             }
@@ -747,7 +757,7 @@ namespace MWRender
             if (const ESM4::Hair* hair = store->get<ESM4::Hair>().search(hairId))
             {
                 if (osg::ref_ptr<osg::Node> node
-                    = insertPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon))
+                    = insertPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true))
                 {
                     applyTes4FaceGen(hair->mModel.getOriginal(), *node, traits, *race, isFemale, {}, false,
                         mResourceSystem, mFaceMorphs);

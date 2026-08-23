@@ -36,6 +36,7 @@ namespace MWRender
     // texture overrides and FaceGen, so their descendant geometry must first
     // be made actor-private.
     std::size_t isolateTes4ActorGeometry(osg::Node& node);
+    bool shouldCorrectTes4HeadPartOrientation(std::size_t partIndex);
     osg::Quat getTes4HeadPartCorrection(const osg::Matrixf& headBindMatrix);
     bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
         const std::vector<float>& symmetric, const std::vector<float>& asymmetric);

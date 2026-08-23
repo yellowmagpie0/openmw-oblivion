@@ -6,6 +6,7 @@
 #include <osg/StateSet>
 
 #include <components/esm4/facegen.hpp>
+#include <components/esm4/loadrace.hpp>
 
 namespace MWRender
 {
@@ -73,6 +74,19 @@ namespace MWRender
         EXPECT_NEAR(horizontal.x(), 6.f, 1e-5f);
         EXPECT_NEAR(horizontal.y(), 5.f, 1e-5f);
         EXPECT_NEAR(horizontal.z(), 6.f, 1e-5f);
+    }
+
+    TEST(Tes4FaceGen, KeepsInnerMouthInBipedHeadCoordinates)
+    {
+        EXPECT_TRUE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::Head));
+        EXPECT_TRUE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::EarMale));
+        EXPECT_TRUE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::EarFemale));
+        EXPECT_FALSE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::Mouth));
+        EXPECT_FALSE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::TeethLower));
+        EXPECT_FALSE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::TeethUpper));
+        EXPECT_FALSE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::Tongue));
+        EXPECT_TRUE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::EyeLeft));
+        EXPECT_TRUE(shouldCorrectTes4HeadPartOrientation(ESM4::Race::EyeRight));
     }
 
     TEST(Tes4FaceGen, RejectsEgmShorterThanGeometry)
