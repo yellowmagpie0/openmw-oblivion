@@ -1,7 +1,8 @@
 # M11 actor appearance, skeletons, and animation
 
 Status: accepted on 2026-08-22. Implementation revision
-`d5966e5192cda3a9cee90d9b7fa45c4885c40dba`.
+`d5966e5192cda3a9cee90d9b7fa45c4885c40dba`; head-part correction revision
+`9c1796ffe638e81b3b15287c3bb693c918d7a06a`.
 
 M11 completes the native Oblivion visual actor path. Player and placed NPCs
 are assembled from race, sex, head, eyes, hair, skin, and initial equipment
@@ -21,6 +22,11 @@ XRGD poses execute through the normal OpenMW scene and animation runtime.
   skeleton. Biped coverage suppresses hidden body, head, and hair pieces, and
   rigged attachments resolve skin influences against that skeleton instead of
   copying a competing source rig.
+- FaceGen head parts cancel the Biped head bone's bind-axis rotation while
+  retaining its translation and later animation. Per-actor geometry is made
+  private before texture or morph work, preventing cached meshes from
+  accumulating another NPC's deformation. Eye EGM data accepts the official
+  base-vertex prefix followed by its four statistical eye-look targets.
 - The projected player uses the official `_1stperson` skeleton and KF directory
   in first person, and the normal or beast skeleton family in third person.
   Both paths assemble native Oblivion visual records rather than retaining the
@@ -102,6 +108,13 @@ The completed revision passed:
 | M11 runtime manifests | 4 / 4 |
 | Morrowind runtime regression | 1 / 1 |
 
+The head-part correction follow-up additionally passed 6 / 6 focused FaceGen
+regressions, 509 / 509 engine tests, and 1,524 / 1,524 component tests. Its
+dedicated Arena holding-cell runtime loads 26 released NPCs across all ten
+playable races, requires assembled FaceGen meshes and active idle controllers
+for every race, and rejects every FaceGen, attachment, transform, frame,
+assertion, and crash diagnostic.
+
 `niftest` reported zero failed files in both the parse and scene-graph passes.
 The scene pass intentionally has no loose texture VFS and can report texture
 lookups, but no mesh, skeleton, skin, controller, or graph construction failed.
@@ -126,6 +139,10 @@ The runtime evidence uses real released records and assets:
 - `build/oblivion-compat/m11-morrowind-regression-20260822/` exercises a normal
   Morrowind exterior, animation/render path, weather, audio waveform, and save
   after the shared rig-attachment change.
+- `build/oblivion-compat/m11-head-parts-final-accepted-20260822/` renders the
+  26-NPC, ten-race Arena gallery in consecutive animated frames after the bind
+  and cache-isolation correction. The corrected voiced Clesa close-up is in
+  `build/oblivion-compat/m11-head-parts-voice-final-20260822/`.
 
 The player, actor, creature, corpse, and post-reload captures were inspected
 directly. They show coherent multipart bodies with heads, eyes, hair/equipment,
@@ -151,7 +168,14 @@ actor, creature, or ragdoll evidence above to inspect those real records. The
 actor manifest can also be recreated from
 `scripts/data/oblivion_compat/oblivion_m11_actor_voice_gallery.json`; unlike the
 sound-disabled visual cases, keep audio enabled to hear and inspect the voice
-path.
+path. To inspect many head variants at once, run the checked-in
+`oblivion_m11_head_part_gallery.json` scenario and open its generated config:
+
+```sh
+build/openmw --replace=config \
+  --config build/oblivion-compat/m11-head-parts-final-accepted-20260822/config \
+  --no-sound=1
+```
 
 ## Scope boundary
 
