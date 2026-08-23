@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m11-real-actor-head-part-gallery",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ArenaCombatantsHolding::ref=0x18ae57::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 16},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "head-parts.png", "minimum_entropy": 0.03},
+    {"type": "sleep", "seconds": 1},
+    {"type": "screenshot", "name": "head-parts-later.png", "minimum_entropy": 0.03}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 20,
+  "expected_exit": 0,
+  "expected_log": [
+    "M11 actor assembled:.*parts=[1-9].*face_morph_meshes=[1-9].*animation_groups=[1-9]",
+    "M11 actor assembled:.*race=Argonian.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=Breton.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=DarkElf.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=HighElf.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=Imperial.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=Khajiit.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=Nord.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=Orc.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=Redguard.*face_morph_meshes=[1-9]",
+    "M11 actor assembled:.*race=WoodElf.*face_morph_meshes=[1-9]",
+    "M11 animation loaded:.*group=idle.*characters/_male/idle.kf.*controllers=[1-9]",
+    "M11 animation playing:.*group=idle.*bound_controllers=[1-9]"
+  ],
+  "forbidden_log": [
+    "Unable to apply FaceGen",
+    "Unable to attach ESM4 actor part",
+    "Unable to load registered actor animation group",
+    "can't find bone",
+    "invalid transform",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

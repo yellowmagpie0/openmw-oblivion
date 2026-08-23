@@ -58,7 +58,8 @@ namespace MWRender
             VFS::Path::NormalizedView model, std::string_view bonename, const osg::Vec4f* glowColor = nullptr);
 
         osg::ref_ptr<osg::Node> attach(
-            VFS::Path::NormalizedView model, std::string_view bonename, std::string_view bonefilter, bool isLight);
+            VFS::Path::NormalizedView model, std::string_view bonename, std::string_view bonefilter, bool isLight,
+            const osg::Quat* attitude = nullptr);
 
         PartHolderPtr mScabbard;
         PartHolderPtr mHolsteredShield;

@@ -632,7 +632,24 @@ namespace MWRender
                 return {};
             try
             {
-                osg::ref_ptr<osg::Node> node = attach(path, bone, {}, false);
+                osg::Quat headPartCorrection;
+                const osg::Quat* attitude = nullptr;
+                if (Misc::StringUtils::ciEqual(bone, "Bip01 Head"))
+                {
+                    const NodeMap& nodes = getNodeMap();
+                    const auto found = nodes.find(Misc::StringUtils::lowerCase(bone));
+                    if (found != nodes.end() && found->second != nullptr)
+                    {
+                        const osg::MatrixList matrices = found->second->getWorldMatrices(mObjectRoot);
+                        if (!matrices.empty())
+                        {
+                            headPartCorrection = getTes4HeadPartCorrection(matrices.front());
+                            attitude = &headPartCorrection;
+                        }
+                    }
+                }
+                osg::ref_ptr<osg::Node> node = attach(path, bone, {}, false, attitude);
+                isolateTes4ActorGeometry(*node);
                 if (!texture.empty())
                     overrideAllTextures(VFS::Path::Normalized(texture), mResourceSystem, *node);
                 if (faceGen)

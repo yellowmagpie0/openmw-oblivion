@@ -87,7 +87,8 @@ namespace MWRender
     }
 
     osg::ref_ptr<osg::Node> ActorAnimation::attach(
-        VFS::Path::NormalizedView model, std::string_view bonename, std::string_view bonefilter, bool isLight)
+        VFS::Path::NormalizedView model, std::string_view bonename, std::string_view bonefilter, bool isLight,
+        const osg::Quat* attitude)
     {
         osg::ref_ptr<const osg::Node> templateNode = mResourceSystem->getSceneManager()->getTemplate(model);
 
@@ -102,7 +103,8 @@ namespace MWRender
                 templateNode, mObjectRoot, bonefilter, found->second, mResourceSystem->getSceneManager(), &rotation);
         }
         return SceneUtil::attach(
-            std::move(templateNode), mObjectRoot, bonefilter, found->second, mResourceSystem->getSceneManager());
+            std::move(templateNode), mObjectRoot, bonefilter, found->second, mResourceSystem->getSceneManager(),
+            attitude);
     }
 
     VFS::Path::Normalized ActorAnimation::getShieldMesh(const MWWorld::ConstPtr& shield, bool female) const

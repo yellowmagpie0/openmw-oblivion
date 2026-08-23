@@ -6,8 +6,9 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <osg/Material>
+#include <osg/Group>
 #include <osg/Image>
+#include <osg/Material>
 #include <osg/StateSet>
 #include <components/esm4/loadarma.hpp>
 #include <components/esm4/loadarmo.hpp>
@@ -96,6 +97,8 @@ namespace MWRender
         {
             osg::ref_ptr<const osg::Node> node = sceneManager->getTemplate(path);
             osg::Group* attachment = mObjectRoot.get();
+            osg::Quat attachmentAttitude;
+            const osg::Quat* attitude = nullptr;
             if (dynamic_cast<const SceneUtil::Skeleton*>(node.get()) == nullptr && !attachBone.empty())
             {
                 const NodeMap& nodes = getNodeMap();
@@ -107,10 +110,20 @@ namespace MWRender
                     return {};
                 }
                 attachment = found->second->asGroup();
+                if (Misc::StringUtils::ciEqual(attachBone, "Bip01 Head"))
+                {
+                    const osg::MatrixList matrices = attachment->getWorldMatrices(mObjectRoot);
+                    if (!matrices.empty())
+                    {
+                        attachmentAttitude = getTes4HeadPartCorrection(matrices.front());
+                        attitude = &attachmentAttitude;
+                    }
+                }
             }
 
             osg::ref_ptr<osg::Node> attached
-                = SceneUtil::attach(std::move(node), mObjectRoot, {}, attachment, sceneManager);
+                = SceneUtil::attach(std::move(node), mObjectRoot, {}, attachment, sceneManager, attitude);
+            isolateTes4ActorGeometry(*attached);
             if (!texture.empty())
             {
                 const std::size_t overridden
@@ -164,34 +177,6 @@ namespace MWRender
             return static_cast<osg::Vec3Array*>(source->clone(osg::CopyOp::DEEP_COPY_ALL));
         }
 
-        void applyEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
-            const std::vector<float>& symmetric, const std::vector<float>& asymmetric)
-        {
-            osg::ref_ptr<osg::Vec3Array> vertices = cloneVertices(geometry);
-            if (vertices == nullptr || vertices->size() != egm.mVertexCount)
-                return;
-            const auto apply = [&](const std::vector<ESM4::FaceGenMorph>& morphs, const std::vector<float>& values) {
-                for (std::size_t mode = 0; mode < morphs.size() && mode < values.size(); ++mode)
-                {
-                    const ESM4::FaceGenMorph& morph = morphs[mode];
-                    const float weight = values[mode] * morph.mScale;
-                    if (weight == 0.f)
-                        continue;
-                    for (std::size_t vertex = 0; vertex < vertices->size(); ++vertex)
-                    {
-                        const ESM4::FaceGenDelta& delta = morph.mVertices[vertex];
-                        (*vertices)[vertex] += osg::Vec3f(delta.x, delta.y, delta.z) * weight;
-                    }
-                }
-            };
-            apply(egm.mSymmetricMorphs, symmetric);
-            apply(egm.mAsymmetricMorphs, asymmetric);
-            vertices->dirty();
-            geometry.setVertexArray(vertices);
-            geometry.dirtyBound();
-            geometry.dirtyGLObjects();
-        }
-
         struct GeometryVisitor : osg::NodeVisitor
         {
             GeometryVisitor()
@@ -227,6 +212,100 @@ namespace MWRender
             cache.emplace(path.value(), result);
             return result;
         }
+    }
+
+    std::size_t isolateTes4ActorGeometry(osg::Node& node)
+    {
+        struct IsolationVisitor : osg::NodeVisitor
+        {
+            IsolationVisitor()
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+            {
+            }
+
+            void apply(osg::Drawable& drawable) override
+            {
+                auto* geometry = dynamic_cast<osg::Geometry*>(&drawable);
+                if (geometry != nullptr)
+                {
+                    const osg::NodePath& path = getNodePath();
+                    if (path.size() > 1)
+                    {
+                        if (osg::Group* parent = path[path.size() - 2]->asGroup())
+                            mGeometry.emplace_back(parent, geometry);
+                    }
+                }
+                traverse(drawable);
+            }
+
+            std::vector<std::pair<osg::observer_ptr<osg::Group>, osg::observer_ptr<osg::Geometry>>> mGeometry;
+        };
+
+        IsolationVisitor visitor;
+        node.accept(visitor);
+        std::unordered_map<osg::Geometry*, osg::ref_ptr<osg::Geometry>> clones;
+        std::size_t isolated = 0;
+        for (const auto& [observedParent, observedGeometry] : visitor.mGeometry)
+        {
+            osg::Group* parent = observedParent.get();
+            osg::Geometry* geometry = observedGeometry.get();
+            if (parent == nullptr || geometry == nullptr)
+                continue;
+            osg::ref_ptr<osg::Geometry>& clone = clones[geometry];
+            if (clone == nullptr)
+            {
+                const osg::CopyOp copyOp(osg::CopyOp::DEEP_COPY_ARRAYS | osg::CopyOp::DEEP_COPY_PRIMITIVES
+                    | osg::CopyOp::DEEP_COPY_STATESETS | osg::CopyOp::DEEP_COPY_USERDATA);
+                clone = dynamic_cast<osg::Geometry*>(geometry->clone(copyOp));
+            }
+            if (clone != nullptr && parent->replaceChild(geometry, clone))
+                ++isolated;
+        }
+        return isolated;
+    }
+
+    osg::Quat getTes4HeadPartCorrection(const osg::Matrixf& headBindMatrix)
+    {
+        // TES4 FaceGen head parts use head-origin coordinates whose axes are
+        // aligned with the actor. Bip01 Head uses Biped's bone-aligned axes.
+        // Cancel only the bind orientation; keeping the bone translation and
+        // all later relative animation makes the parts follow the head.
+        return headBindMatrix.getRotate().inverse();
+    }
+
+    bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
+        const std::vector<float>& symmetric, const std::vector<float>& asymmetric)
+    {
+        osg::ref_ptr<osg::Vec3Array> vertices = cloneVertices(geometry);
+        // EGM contains the TRI base vertices followed by auxiliary vertices
+        // for statistical morphs such as the four eye-look targets. The NIF
+        // contains the base mesh only, so its vertex array is a valid prefix.
+        if (vertices == nullptr || vertices->size() > egm.mVertexCount)
+            return false;
+        const auto apply = [&](const std::vector<ESM4::FaceGenMorph>& morphs, const std::vector<float>& values) {
+            for (std::size_t mode = 0; mode < morphs.size() && mode < values.size(); ++mode)
+            {
+                const ESM4::FaceGenMorph& morph = morphs[mode];
+                if (morph.mVertices.size() < vertices->size())
+                    return false;
+                const float weight = values[mode] * morph.mScale;
+                if (weight == 0.f)
+                    continue;
+                for (std::size_t vertex = 0; vertex < vertices->size(); ++vertex)
+                {
+                    const ESM4::FaceGenDelta& delta = morph.mVertices[vertex];
+                    (*vertices)[vertex] += osg::Vec3f(delta.x, delta.y, delta.z) * weight;
+                }
+            }
+            return true;
+        };
+        if (!apply(egm.mSymmetricMorphs, symmetric) || !apply(egm.mAsymmetricMorphs, asymmetric))
+            return false;
+        vertices->dirty();
+        geometry.setVertexArray(vertices);
+        geometry.dirtyBound();
+        geometry.dirtyGLObjects();
+        return true;
     }
 
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,
@@ -343,18 +422,27 @@ namespace MWRender
                 = loadCachedFaceGen<ESM4::FaceGenEgm, ESM4::loadFaceGenEgm>(*resourceSystem->getVFS(), egmPath);
             if (egm != nullptr)
             {
+                std::size_t incompatible = 0;
                 for (const osg::observer_ptr<SceneUtil::RigGeometry>& rig : visitor.mRigs)
                 {
                     if (rig == nullptr || rig->getSourceGeometry() == nullptr)
                         continue;
                     osg::ref_ptr<osg::Geometry> geometry
                         = new osg::Geometry(*rig->getSourceGeometry(), osg::CopyOp::SHALLOW_COPY);
-                    applyEgm(*geometry, *egm, symmetric, asymmetric);
-                    rig->setSourceGeometry(std::move(geometry));
+                    if (applyTes4FaceGenEgm(*geometry, *egm, symmetric, asymmetric))
+                        rig->setSourceGeometry(std::move(geometry));
+                    else
+                        ++incompatible;
                 }
                 for (const osg::observer_ptr<osg::Geometry>& geometry : visitor.mGeometry)
                     if (geometry != nullptr)
-                        applyEgm(*geometry, *egm, symmetric, asymmetric);
+                    {
+                        if (!applyTes4FaceGenEgm(*geometry, *egm, symmetric, asymmetric))
+                            ++incompatible;
+                    }
+                if (incompatible != 0)
+                    Log(Debug::Warning) << "Unable to apply FaceGen EGM " << egmPath << " to " << incompatible
+                                        << " geometry object(s) with incompatible vertex layouts";
             }
         }
         catch (const std::exception& e)

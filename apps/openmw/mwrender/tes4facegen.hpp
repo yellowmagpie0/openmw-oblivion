@@ -6,9 +6,12 @@
 #include <vector>
 
 #include <osg/Geometry>
+#include <osg/Matrixf>
+#include <osg/Quat>
 
 namespace ESM4
 {
+    struct FaceGenEgm;
     struct Npc;
     struct Race;
 }
@@ -28,6 +31,14 @@ namespace MWRender
         std::vector<std::string> mNames;
     };
 
+    // SceneManager instances intentionally share ordinary osg::Geometry
+    // drawables. TES4 actor parts are subsequently changed per actor by
+    // texture overrides and FaceGen, so their descendant geometry must first
+    // be made actor-private.
+    std::size_t isolateTes4ActorGeometry(osg::Node& node);
+    osg::Quat getTes4HeadPartCorrection(const osg::Matrixf& headBindMatrix);
+    bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
+        const std::vector<float>& symmetric, const std::vector<float>& asymmetric);
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,
         const ESM4::Race& race, bool isFemale, std::string_view texture, bool bodyTexture,
         Resource::ResourceSystem* resourceSystem, std::vector<Tes4FaceMorph>& morphs);
