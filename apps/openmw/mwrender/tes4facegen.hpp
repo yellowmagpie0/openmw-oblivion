@@ -6,12 +6,14 @@
 #include <vector>
 
 #include <osg/Geometry>
+#include <osg/Image>
 #include <osg/Matrixf>
 #include <osg/Quat>
 
 namespace ESM4
 {
     struct FaceGenEgm;
+    struct FaceGenEgt;
     struct Npc;
     struct Race;
 }
@@ -38,6 +40,8 @@ namespace MWRender
     std::size_t isolateTes4ActorGeometry(osg::Node& node);
     bool shouldCorrectTes4HeadPartOrientation(std::size_t partIndex);
     osg::Quat getTes4HeadPartCorrection(const osg::Matrixf& headBindMatrix);
+    osg::ref_ptr<osg::Image> applyTes4FaceGenEgt(const osg::Image& base, const ESM4::FaceGenEgt& egt,
+        const std::vector<float>& raceCoefficients, const std::vector<float>& npcCoefficients);
     bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
         const std::vector<float>& symmetric, const std::vector<float>& asymmetric);
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,

@@ -282,6 +282,56 @@ namespace MWRender
         return partIndex < ESM4::Race::Mouth || partIndex > ESM4::Race::Tongue;
     }
 
+    osg::ref_ptr<osg::Image> applyTes4FaceGenEgt(const osg::Image& base, const ESM4::FaceGenEgt& egt,
+        const std::vector<float>& raceCoefficients, const std::vector<float>& npcCoefficients)
+    {
+        if (base.s() <= 0 || base.t() <= 0 || egt.mWidth == 0 || egt.mHeight == 0)
+            return {};
+
+        const std::size_t pixelCount = static_cast<std::size_t>(egt.mWidth) * egt.mHeight;
+        std::vector<osg::Vec3f> deltas(pixelCount, osg::Vec3f());
+        for (std::size_t mode = 0; mode < egt.mSymmetricTextures.size(); ++mode)
+        {
+            const ESM4::FaceGenTextureMode& textureMode = egt.mSymmetricTextures[mode];
+            if (textureMode.mRed.size() < pixelCount || textureMode.mGreen.size() < pixelCount
+                || textureMode.mBlue.size() < pixelCount)
+                return {};
+            // EGT RGB modes are stored in byte colour space. Convert the
+            // scaled mode back to the normalized colour space used by OSG.
+            const float weight
+                = faceCoefficient(raceCoefficients, npcCoefficients, mode) * textureMode.mScale / 255.f;
+            if (weight == 0.f)
+                continue;
+            for (std::size_t pixel = 0; pixel < pixelCount; ++pixel)
+            {
+                deltas[pixel].x() += textureMode.mRed[pixel] * weight;
+                deltas[pixel].y() += textureMode.mGreen[pixel] * weight;
+                deltas[pixel].z() += textureMode.mBlue[pixel] * weight;
+            }
+        }
+
+        osg::ref_ptr<osg::Image> image = new osg::Image;
+        image->allocateImage(base.s(), base.t(), 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        image->setOrigin(base.getOrigin());
+        const bool flipRows = base.getOrigin() == osg::Image::BOTTOM_LEFT;
+        for (std::uint32_t y = 0; y < static_cast<std::uint32_t>(base.t()); ++y)
+        {
+            for (std::uint32_t x = 0; x < static_cast<std::uint32_t>(base.s()); ++x)
+            {
+                const std::uint32_t egtX = x * egt.mWidth / static_cast<std::uint32_t>(base.s());
+                const std::uint32_t unflippedY = y * egt.mHeight / static_cast<std::uint32_t>(base.t());
+                const std::uint32_t egtY = flipRows ? egt.mHeight - 1 - unflippedY : unflippedY;
+                const std::size_t pixel = static_cast<std::size_t>(egtY) * egt.mWidth + egtX;
+                osg::Vec4f color = base.getColor(x, y);
+                color.r() = std::clamp(color.r() + deltas[pixel].x(), 0.f, 1.f);
+                color.g() = std::clamp(color.g() + deltas[pixel].y(), 0.f, 1.f);
+                color.b() = std::clamp(color.b() + deltas[pixel].z(), 0.f, 1.f);
+                image->setColor(color, x, y);
+            }
+        }
+        return image;
+    }
+
     bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
         const std::vector<float>& symmetric, const std::vector<float>& asymmetric)
     {
@@ -372,48 +422,12 @@ namespace MWRender
                     const VFS::Path::Normalized corrected = Misc::ResourceHelpers::correctTexturePath(
                         VFS::Path::Normalized(texture), *resourceSystem->getVFS());
                     const osg::ref_ptr<osg::Image> base = resourceSystem->getImageManager()->getImage(corrected);
-                    if (base != nullptr && base->s() > 0 && base->t() > 0 && egt.mWidth > 0 && egt.mHeight > 0)
+                    if (base != nullptr)
                     {
-                        std::vector<osg::Vec3f> deltas(
-                            static_cast<std::size_t>(egt.mWidth) * egt.mHeight, osg::Vec3f());
-                        for (std::size_t mode = 0; mode < egt.mSymmetricTextures.size(); ++mode)
-                        {
-                            const ESM4::FaceGenTextureMode& textureMode = egt.mSymmetricTextures[mode];
-                            // EGT RGB modes are stored in byte colour space. Convert the
-                            // scaled mode back to the normalized colour space used by OSG.
-                            const float weight = faceCoefficient(
-                                raceTexture, traits.mSymTextureModeCoefficients, mode)
-                                * textureMode.mScale / 255.f;
-                            if (weight == 0.f)
-                                continue;
-                            for (std::size_t pixel = 0; pixel < deltas.size(); ++pixel)
-                            {
-                                deltas[pixel].x() += textureMode.mRed[pixel] * weight;
-                                deltas[pixel].y() += textureMode.mGreen[pixel] * weight;
-                                deltas[pixel].z() += textureMode.mBlue[pixel] * weight;
-                            }
-                        }
-                        osg::ref_ptr<osg::Image> image = new osg::Image;
-                        image->allocateImage(base->s(), base->t(), 1, GL_RGBA, GL_UNSIGNED_BYTE);
-                        image->setOrigin(base->getOrigin());
-                        for (std::uint32_t y = 0; y < static_cast<std::uint32_t>(base->t()); ++y)
-                        {
-                            for (std::uint32_t x = 0; x < static_cast<std::uint32_t>(base->s()); ++x)
-                            {
-                                const std::uint32_t egtX = x * egt.mWidth / static_cast<std::uint32_t>(base->s());
-                                const std::uint32_t egtY = y * egt.mHeight / static_cast<std::uint32_t>(base->t());
-                                const std::size_t pixel = static_cast<std::size_t>(egtY) * egt.mWidth + egtX;
-                                osg::Vec4f color = base->getColor(x, y);
-                                color.r() += deltas[pixel].x();
-                                color.g() += deltas[pixel].y();
-                                color.b() += deltas[pixel].z();
-                                color.r() = std::clamp(color.r(), 0.f, 1.f);
-                                color.g() = std::clamp(color.g(), 0.f, 1.f);
-                                color.b() = std::clamp(color.b(), 0.f, 1.f);
-                                image->setColor(color, x, y);
-                            }
-                        }
-                        overrideAllTextures(std::move(image), resourceSystem, node);
+                        osg::ref_ptr<osg::Image> image = applyTes4FaceGenEgt(
+                            *base, egt, raceTexture, traits.mSymTextureModeCoefficients);
+                        if (image != nullptr)
+                            overrideAllTextures(std::move(image), resourceSystem, node);
                     }
                 }
             }

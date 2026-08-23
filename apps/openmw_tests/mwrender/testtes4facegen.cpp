@@ -62,6 +62,38 @@ namespace MWRender
         EXPECT_EQ((*result)[1], osg::Vec3f(2.f, 1.f, 0.f));
     }
 
+    TEST(Tes4FaceGen, MapsEgtTopToBottomRowsToImageOrigin)
+    {
+        osg::ref_ptr<osg::Image> base = new osg::Image;
+        base->allocateImage(1, 2, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        base->setColor(osg::Vec4f(0.f, 0.f, 0.f, 1.f), 0, 0);
+        base->setColor(osg::Vec4f(0.f, 0.f, 0.f, 1.f), 0, 1);
+
+        ESM4::FaceGenTextureMode mode;
+        mode.mScale = 1.f;
+        mode.mRed = { 10, 20 };
+        mode.mGreen = { 0, 0 };
+        mode.mBlue = { 0, 0 };
+        ESM4::FaceGenEgt egt;
+        egt.mWidth = 1;
+        egt.mHeight = 2;
+        egt.mSymmetricTextures.push_back(mode);
+
+        base->setOrigin(osg::Image::BOTTOM_LEFT);
+        osg::ref_ptr<osg::Image> bottomLeft = applyTes4FaceGenEgt(*base, egt, {}, { 1.f });
+        ASSERT_NE(bottomLeft, nullptr);
+        EXPECT_EQ(bottomLeft->getOrigin(), osg::Image::BOTTOM_LEFT);
+        EXPECT_NEAR(bottomLeft->getColor(0, 0).r(), 20.f / 255.f, 1.f / 255.f);
+        EXPECT_NEAR(bottomLeft->getColor(0, 1).r(), 10.f / 255.f, 1.f / 255.f);
+
+        base->setOrigin(osg::Image::TOP_LEFT);
+        osg::ref_ptr<osg::Image> topLeft = applyTes4FaceGenEgt(*base, egt, {}, { 1.f });
+        ASSERT_NE(topLeft, nullptr);
+        EXPECT_EQ(topLeft->getOrigin(), osg::Image::TOP_LEFT);
+        EXPECT_NEAR(topLeft->getColor(0, 0).r(), 10.f / 255.f, 1.f / 255.f);
+        EXPECT_NEAR(topLeft->getColor(0, 1).r(), 20.f / 255.f, 1.f / 255.f);
+    }
+
     TEST(Tes4FaceGen, CancelsBipedHeadBindOrientation)
     {
         const osg::Quat bindRotation(osg::DegreesToRadians(90.f), osg::Vec3f(0.f, 1.f, 0.f));
