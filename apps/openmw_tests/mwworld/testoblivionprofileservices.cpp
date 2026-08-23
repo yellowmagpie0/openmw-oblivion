@@ -99,7 +99,9 @@ namespace
         const ESM::NPC* adaptedPlayer = store.get<ESM::NPC>().search(ESM::RefId::stringRefId("Player"));
         ASSERT_NE(adaptedPlayer, nullptr);
         EXPECT_EQ(adaptedPlayer->mName, "Native Prisoner");
-        EXPECT_EQ(adaptedPlayer->mModel.getNormalized().value(), "meshes/characters/_male/skeleton.nif");
+        // ESM3 NPC model fields are meshes-root-relative; NpcAnimation adds
+        // the VFS prefix when selecting the Oblivion skeleton.
+        EXPECT_EQ(adaptedPlayer->mModel.getNormalized().value(), "characters/_male/skeleton.nif");
         EXPECT_EQ(adaptedPlayer->mNpdt.mLevel, 3);
         EXPECT_EQ(adaptedPlayer->mNpdt.mHealth, 88);
         EXPECT_EQ(adaptedPlayer->mNpdt.mFatigue, 77);

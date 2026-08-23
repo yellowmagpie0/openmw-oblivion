@@ -331,10 +331,24 @@ namespace MWSound
 
         stopSay(ptr);
         StreamPtr sound = playVoice(std::move(decoder), pos, (ptr == MWMechanics::getPlayer()));
+        if (!sound && ptr != MWMechanics::getPlayer())
+        {
+            // Some headless/OpenAL backends reject spatialized streaming
+            // sources. Preserve the actor association (and therefore lip
+            // animation) while falling back to a local voice stream.
+            decoder = loadVoice(filename);
+            if (decoder)
+            {
+                sound = playVoice(std::move(decoder), pos, true);
+                if (sound)
+                    Log(Debug::Warning) << "M11 voice spatial fallback: ref=" << ptr.getCellRef().getRefId()
+                                        << " voice=" << filename;
+            }
+        }
         if (!sound)
             return;
 
-        mSaySoundsQueue.emplace(ptr.mRef, SaySound{ ptr.mCell, std::move(sound) });
+        mSaySoundsQueue.emplace(ptr.mRef, SaySound{ ptr.mCell, std::move(sound), VFS::Path::Normalized(filename) });
     }
 
     float SoundManager::getSaySoundLoudness(const MWWorld::ConstPtr& ptr) const
@@ -347,6 +361,23 @@ namespace MWSound
         }
 
         return 0.0f;
+    }
+
+    VFS::Path::Normalized SoundManager::getSaySoundFile(const MWWorld::ConstPtr& ptr) const
+    {
+        const auto active = mActiveSaySounds.find(ptr.mRef);
+        if (active != mActiveSaySounds.end())
+            return active->second.mFile;
+        const auto queued = mSaySoundsQueue.find(ptr.mRef);
+        return queued == mSaySoundsQueue.end() ? VFS::Path::Normalized{} : queued->second.mFile;
+    }
+
+    float SoundManager::getSaySoundOffset(const MWWorld::ConstPtr& ptr) const
+    {
+        const auto active = mActiveSaySounds.find(ptr.mRef);
+        if (active == mActiveSaySounds.end())
+            return 0.f;
+        return mOutput->getStreamOffset(active->second.mStream.get());
     }
 
     void SoundManager::say(VFS::Path::NormalizedView filename)
@@ -363,7 +394,8 @@ namespace MWSound
         if (!sound)
             return;
 
-        mActiveSaySounds.emplace(nullptr, SaySound{ nullptr, std::move(sound) });
+        mActiveSaySounds.emplace(
+            nullptr, SaySound{ nullptr, std::move(sound), VFS::Path::Normalized(filename) });
     }
 
     double SoundManager::getSoundFileDuration(VFS::Path::NormalizedView filename)

@@ -60,10 +60,10 @@ namespace MWClass
     class ESM4NpcCustomData : public MWWorld::TypedCustomData<ESM4NpcCustomData>
     {
     public:
-        const ESM4::Npc* mTraits;
-        const ESM4::Npc* mBaseData;
-        const ESM4::Race* mRace;
-        bool mIsFemale;
+        const ESM4::Npc* mTraits = nullptr;
+        const ESM4::Npc* mBaseData = nullptr;
+        const ESM4::Race* mRace = nullptr;
+        bool mIsFemale = false;
 
         // TODO: Use InventoryStore instead (currently doesn't support ESM4 objects)
         std::vector<const ESM4::Armor*> mEquippedArmor;
@@ -191,5 +191,19 @@ namespace MWClass
         if (baseData == nullptr)
             return {};
         return baseData->mFullName;
+    }
+
+    void ESM4Npc::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const
+    {
+        if (!rendering)
+            return;
+        const ESM4NpcCustomData& data = getCustomData(ptr);
+        if (data.mRace == nullptr)
+            return;
+        const float height = data.mIsFemale ? data.mRace->mHeightFemale : data.mRace->mHeightMale;
+        const float weight = data.mIsFemale ? data.mRace->mWeightFemale : data.mRace->mWeightMale;
+        scale.x() *= weight;
+        scale.y() *= weight;
+        scale.z() *= height;
     }
 }

@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m11-saved-ragdoll-pose",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=SilverToothCave02::ref=0x6629b::side=east\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 16},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_down", "value": "s"},
+    {"type": "sleep", "seconds": 1.5},
+    {"type": "key_up", "value": "s"},
+    {"type": "sleep", "seconds": 0.5},
+    {"type": "mouse_move", "x": 0, "y": 140},
+    {"type": "sleep", "seconds": 0.5},
+    {"type": "screenshot", "name": "saved-ragdoll.png", "minimum_entropy": 0.03},
+    {"type": "mouse_move", "x": 0, "y": -140},
+    {"type": "key_held", "value": "Tab"},
+    {"type": "sleep", "seconds": 3},
+    {"type": "screenshot", "name": "saved-ragdoll-third-person.png", "minimum_entropy": 0.03},
+    {"type": "key_held", "value": "Tab"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 5},
+    {"type": "key", "value": "F9"},
+    {"type": "sleep", "seconds": 8},
+    {"type": "screenshot", "name": "saved-ragdoll-reloaded.png", "minimum_entropy": 0.03},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 20,
+  "expected_exit": 0,
+  "expected_log": [
+    "M11 actor assembled:.*race=Breton.*parts=[1-9].*ragdoll_bones=18",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Unable to attach ESM4 actor part",
+    "Unable to attach ESM4 creature part",
+    "Unable to load registered actor animation group",
+    "invalid transform",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

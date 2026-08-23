@@ -11,6 +11,9 @@
 
 #include "../mwphysics/physicssystem.hpp"
 
+#include "../mwrender/objects.hpp"
+#include "../mwrender/renderinginterface.hpp"
+
 #include "../mwworld/actiondoor.hpp"
 #include "../mwworld/actionteleport.hpp"
 #include "../mwworld/failedaction.hpp"
@@ -109,6 +112,13 @@ namespace MWClass
     ESM4Creature::ESM4Creature()
         : ESM4InteractiveBase(ESM4::Creature::sRecordId)
     {
+    }
+
+    void ESM4Creature::insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,
+        MWRender::RenderingInterface& renderingInterface) const
+    {
+        if (!model.empty())
+            renderingInterface.getObjects().insertCreature4(ptr, model);
     }
 
     std::unique_ptr<MWWorld::Action> ESM4Creature::activate(

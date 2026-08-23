@@ -490,6 +490,14 @@ namespace NifOsg
                 {
                     const Nif::NiControllerSequence& embedded = *timeline.mSequence;
                     std::string group = Misc::StringUtils::lowerCase(embedded.mName);
+                    // Oblivion actor animation files contain one controller sequence per
+                    // KF, but their internal names are implementation labels (for
+                    // example "IdleK") rather than the gameplay animation group.  The
+                    // filename is the authoritative group name used by records and
+                    // scripts.  Embedded sequences in NIF models keep their explicit
+                    // names and can still contain multiple independent groups.
+                    if (nif.getFilename().extension() == VFS::Path::ExtensionView("kf"))
+                        group = std::string(nif.getFilename().stem());
                     target.mTextKeys.emplace(timeline.mTimelineStart, group + ": start");
                     target.mTextKeys.emplace(timeline.mTimelineStop, group + ": stop");
                     if (!embedded.mTextKeys.empty()
@@ -501,14 +509,15 @@ namespace NifOsg
                     for (const Nif::ControlledBlock& block : embedded.mControlledBlocks)
                     {
                         if (block.mInterpolator.empty()
-                            || block.mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator)
+                            || (block.mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator
+                                && block.mInterpolator->mRecordType != Nif::RC_NiBSplineTransformInterpolator
+                                && block.mInterpolator->mRecordType != Nif::RC_NiBSplineCompTransformInterpolator))
                             continue;
                         const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
                         if (node.empty())
                             continue;
                         tracks[node].push_back({ timeline.mTimelineStart, timeline.mTimelineStop, embedded.mStartTime,
-                            embedded.mStopTime,
-                            static_cast<const Nif::NiTransformInterpolator*>(block.mInterpolator.getPtr()) });
+                            embedded.mStopTime, block.mInterpolator.getPtr() });
                     }
                 }
 

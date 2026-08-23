@@ -32,6 +32,20 @@ namespace MWWorld
             EXPECT_TRUE(CellRef(legacy).getFormKey().isNull());
         }
 
+        TEST(MWWorldPtrTest, cellRefExposesSavedNpcAndCreatureRagdollPoses)
+        {
+            ESM4::ActorCharacter actor;
+            actor.mRagdoll.mBones.emplace_back();
+            ASSERT_NE(CellRef(actor).getRagdollPose(), nullptr);
+
+            ESM4::ActorCreature creature;
+            creature.mRagdoll.mBones.emplace_back();
+            ASSERT_NE(CellRef(creature).getRagdollPose(), nullptr);
+
+            ESM4::Reference reference;
+            EXPECT_EQ(CellRef(reference).getRagdollPose(), nullptr);
+        }
+
         TEST(MWWorldPtrTest, toStringShouldReturnHumanReadableTextRepresentationOfPtrWithNullRef)
         {
             Ptr ptr;

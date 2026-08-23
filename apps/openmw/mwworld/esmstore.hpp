@@ -15,6 +15,7 @@
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm4/loadinfo.hpp>
 #include <components/esm4/loadclmt.hpp>
+#include <components/esm4/loadeyes.hpp>
 #include <components/esm4/loadgras.hpp>
 #include <components/esm4/loadmusc.hpp>
 #include <components/esm4/loadqust.hpp>
@@ -102,6 +103,7 @@ namespace ESM4
     struct Creature;
     struct Dialogue;
     struct Door;
+    struct Eyes;
     struct Flora;
     struct Furniture;
     struct GameSetting;
@@ -170,7 +172,7 @@ namespace MWWorld
             Store<ESM4::Activator>, Store<ESM4::ActorCharacter>, Store<ESM4::ActorCreature>, Store<ESM4::Ammunition>,
             Store<ESM4::Armor>, Store<ESM4::ArmorAddon>, Store<ESM4::Book>, Store<ESM4::Cell>, Store<ESM4::Clothing>,
             Store<ESM4::Class>, Store<ESM4::Climate>, Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Dialogue>,
-            Store<ESM4::Door>,
+            Store<ESM4::Door>, Store<ESM4::Eyes>,
             Store<ESM4::Furniture>, Store<ESM4::Flora>, Store<ESM4::GameSetting>, Store<ESM4::GlobalVariable>,
             Store<ESM4::Grass>,
             Store<ESM4::Hair>, Store<ESM4::HeadPart>, Store<ESM4::Ingredient>, Store<ESM4::ItemMod>,

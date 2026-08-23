@@ -136,6 +136,132 @@ osg::Group {
         EXPECT_FLOAT_EQ(value.interpKey(3.f), 0.f);
     }
 
+    TEST(NifOsgControllerTest, ignoresUnsetBethesdaSequenceTransformComponents)
+    {
+        constexpr float unset = -std::numeric_limits<float>::max();
+        auto rotations = std::make_shared<Nif::QuaternionKeyMap>();
+        rotations->mInterpolationType = Nif::InterpolationType_Linear;
+        rotations->mKeys = { { 0.f, { osg::Quat(), {}, {} } },
+            { 1.f, { osg::Quat(osg::PI_2, osg::X_AXIS), {}, {} } } };
+
+        Nif::NiKeyframeData data;
+        data.mRotations = rotations;
+        data.mTranslations = std::make_shared<Nif::Vector3KeyMap>();
+        data.mScales = std::make_shared<Nif::FloatKeyMap>();
+        Nif::NiTransformInterpolator interpolator;
+        interpolator.mRecordType = Nif::RC_NiTransformInterpolator;
+        interpolator.mData = Nif::NiKeyframeDataPtr(&data);
+        interpolator.mDefaultValue
+            = { osg::Vec3f(4.f, 5.f, 6.f), osg::Quat(unset, unset, unset, unset), unset };
+
+        class Source final : public SceneUtil::ControllerSource
+        {
+        public:
+            float getValue(osg::NodeVisitor*) override { return 0.5f; }
+        };
+        NifOsg::KeyframeController controller(
+            { { 0.f, 1.f, 0.f, 1.f, &interpolator } });
+        controller.setSource(std::make_shared<Source>());
+
+        const auto transform = controller.getCurrentTransformation(nullptr);
+        ASSERT_TRUE(transform.mRotation);
+        EXPECT_NEAR(transform.mRotation->x(), std::sin(osg::PI_4 / 2.f), 1e-6f);
+        EXPECT_EQ(transform.mTranslation, osg::Vec3f(4.f, 5.f, 6.f));
+        EXPECT_FALSE(transform.mScale);
+    }
+
+    TEST(NifOsgControllerTest, evaluatesTransformBSplineSequenceTracks)
+    {
+        constexpr float unset = -std::numeric_limits<float>::max();
+        Nif::NiBSplineData data;
+        data.mFloatControlPoints = {
+            0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 2.f, 0.f, 0.f, 3.f, 0.f, 0.f,
+            1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f,
+            1.f, 1.f, 1.f, 1.f,
+        };
+        Nif::NiBSplineBasisData basis;
+        basis.mNumControlPoints = 4;
+        Nif::NiBSplineTransformInterpolator interpolator;
+        interpolator.mRecordType = Nif::RC_NiBSplineTransformInterpolator;
+        interpolator.mStartTime = 10.f;
+        interpolator.mStopTime = 20.f;
+        interpolator.mSplineData = Nif::NiBSplineDataPtr(&data);
+        interpolator.mBasisData = Nif::NiBSplineBasisDataPtr(&basis);
+        interpolator.mValue = { osg::Vec3f(unset, unset, unset), osg::Quat(unset, unset, unset, unset), unset };
+        interpolator.mTranslationHandle = 0;
+        interpolator.mRotationHandle = 12;
+        interpolator.mScaleHandle = 28;
+
+        class Source final : public SceneUtil::ControllerSource
+        {
+        public:
+            float getValue(osg::NodeVisitor*) override { return 1.f; }
+        };
+        NifOsg::KeyframeController controller(
+            { { 0.f, 2.f, 10.f, 20.f, &interpolator } });
+        controller.setSource(std::make_shared<Source>());
+
+        const auto transform = controller.getCurrentTransformation(nullptr);
+        ASSERT_TRUE(transform.mTranslation);
+        EXPECT_NEAR(transform.mTranslation->x(), 1.5f, 1e-6f);
+        EXPECT_NEAR(transform.mTranslation->y(), 0.f, 1e-6f);
+        ASSERT_TRUE(transform.mRotation);
+        EXPECT_NEAR(transform.mRotation->w(), 1.f, 1e-6f);
+        ASSERT_TRUE(transform.mScale);
+        EXPECT_NEAR(*transform.mScale, 1.f, 1e-6f);
+    }
+
+    TEST(NifOsgControllerTest, decodesCompactTransformBSplineSequenceTracks)
+    {
+        constexpr float unset = -std::numeric_limits<float>::max();
+        Nif::NiBSplineData data;
+        for (int i = 0; i < 4; ++i)
+        {
+            data.mCompactControlPoints.insert(
+                data.mCompactControlPoints.end(), { 32767, 0, -32767 });
+        }
+        for (int i = 0; i < 4; ++i)
+            data.mCompactControlPoints.insert(data.mCompactControlPoints.end(), { 32767, 0, 0, 0 });
+        data.mCompactControlPoints.insert(data.mCompactControlPoints.end(), 4, 0);
+        Nif::NiBSplineBasisData basis;
+        basis.mNumControlPoints = 4;
+        Nif::NiBSplineCompTransformInterpolator interpolator;
+        interpolator.mRecordType = Nif::RC_NiBSplineCompTransformInterpolator;
+        interpolator.mStartTime = 0.f;
+        interpolator.mStopTime = 1.f;
+        interpolator.mSplineData = Nif::NiBSplineDataPtr(&data);
+        interpolator.mBasisData = Nif::NiBSplineBasisDataPtr(&basis);
+        interpolator.mValue = { osg::Vec3f(unset, unset, unset), osg::Quat(unset, unset, unset, unset), unset };
+        interpolator.mTranslationHandle = 0;
+        interpolator.mRotationHandle = 12;
+        interpolator.mScaleHandle = 28;
+        interpolator.mTranslationOffset = 10.f;
+        interpolator.mTranslationHalfRange = 2.f;
+        interpolator.mRotationOffset = 0.f;
+        interpolator.mRotationHalfRange = 1.f;
+        interpolator.mScaleOffset = 2.f;
+        interpolator.mScaleHalfRange = 1.f;
+
+        class Source final : public SceneUtil::ControllerSource
+        {
+        public:
+            float getValue(osg::NodeVisitor*) override { return 0.5f; }
+        };
+        NifOsg::KeyframeController controller(
+            { { 0.f, 1.f, 0.f, 1.f, &interpolator } });
+        controller.setSource(std::make_shared<Source>());
+
+        const auto transform = controller.getCurrentTransformation(nullptr);
+        ASSERT_TRUE(transform.mTranslation);
+        EXPECT_NEAR(transform.mTranslation->x(), 12.f, 1e-6f);
+        EXPECT_NEAR(transform.mTranslation->y(), 10.f, 1e-6f);
+        EXPECT_NEAR(transform.mTranslation->z(), 8.f, 1e-6f);
+        ASSERT_TRUE(transform.mRotation);
+        EXPECT_NEAR(transform.mRotation->w(), 1.f, 1e-6f);
+        ASSERT_TRUE(transform.mScale);
+        EXPECT_NEAR(*transform.mScale, 2.f, 1e-6f);
+    }
+
     TEST(NifOsgControllerTest, centerFacingBillboardUsesEyeToObjectDirection)
     {
         Nif::NiTransform transform = Nif::NiTransform::getIdentity();

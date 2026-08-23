@@ -103,14 +103,15 @@ namespace MWClass
         MWGui::ToolTipInfo getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const override;
     };
 
-    // Creatures are deliberately non-acting visual placeholders until the actor milestones. They still need to
-    // expose their native inventory so the prison key carried by the tutorial goblin can be recovered.
     class ESM4Creature final : public ESM4InteractiveBase<ESM4Creature, ESM4::Creature>
     {
         friend MWWorld::RegisteredClass<ESM4Creature, ESM4Base<ESM4::Creature>>;
         ESM4Creature();
 
     public:
+        bool useAnim() const override { return true; }
+        void insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,
+            MWRender::RenderingInterface& renderingInterface) const override;
         std::unique_ptr<MWWorld::Action> activate(
             const MWWorld::Ptr& ptr, const MWWorld::Ptr& actor) const override;
     };

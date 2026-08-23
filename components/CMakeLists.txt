@@ -205,6 +205,8 @@ add_component_dir (esm4
     common
     dialogue
     effect
+    facegen
+    ragdoll
     formidfields
     grid
     grouptype

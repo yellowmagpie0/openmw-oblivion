@@ -18,6 +18,8 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwsound/testnativeaudio.cpp
 
+    mwrender/testtes4facegen.cpp
+
     mwgui/tooltips.cpp
     mwgui/weightedsearch.cpp
 

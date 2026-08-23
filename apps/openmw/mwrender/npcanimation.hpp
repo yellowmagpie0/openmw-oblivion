@@ -3,6 +3,7 @@
 
 #include "actoranimation.hpp"
 #include "animation.hpp"
+#include "tes4facegen.hpp"
 #include "weaponanimation.hpp"
 
 #include <components/vfs/pathutil.hpp>
@@ -48,6 +49,11 @@ namespace MWRender
 
         // Bounded Parts
         PartHolderPtr mObjectParts[ESM::PRT_Count];
+        // The Oblivion player is projected into an ESM3 NPC for the existing
+        // player/mechanics pipeline, but its visual records remain native ESM4.
+        std::vector<PartHolderPtr> mOblivionParts;
+        std::vector<Tes4FaceMorph> mOblivionFaceMorphs;
+        float mOblivionFaceAnimationTime = 0.f;
         std::array<MWSound::Sound*, ESM::PRT_Count> mSounds;
 
         const ESM::NPC* mNpc;
@@ -81,6 +87,7 @@ namespace MWRender
         float mAimingFactor;
 
         void updateNpcBase();
+        void updateOblivionPlayerParts();
 
         NpcType getNpcType() const;
 

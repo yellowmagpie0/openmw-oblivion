@@ -27,6 +27,38 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_m11_equipment_matrix_tracks_slots_assets_and_sex_fallbacks(self):
+        dump = "\n".join(
+            (
+                "  Record: RACE",
+                "  Id: 0x1",
+                "  EditorId: Imperial",
+                "  RaceFlags: 1",
+                "  Record: ARMO",
+                "  Id: 0x2",
+                "  EditorId: SharedCuirass",
+                r"  ModelMale: Armor\Shared\Cuirass.NIF",
+                "  ModelFemale: ",
+                "  BipedSlots: 4",
+                "  Record: CLOT",
+                "  Id: 0x3",
+                "  EditorId: FemaleDress",
+                "  ModelMale: ",
+                r"  ModelFemale: Clothes\Dress\Dress.NIF",
+                "  BipedSlots: 12",
+            )
+        )
+        races = MODULE._parse_m11_races(dump, "Oblivion.esm")
+        self.assertEqual([(race["id"], race["editor_id"]) for race in races], [("0x1", "Imperial")])
+        equipment = MODULE._parse_m11_equipment(dump, "Oblivion.esm")
+        references, matrix = MODULE._resolve_m11_equipment_assets(
+            equipment,
+            {"meshes/armor/shared/cuirass.nif", "meshes/clothes/dress/dress.nif"},
+        )
+        self.assertEqual([record["slot_names"] for record in matrix], [["upper_body"], ["upper_body", "lower_body"]])
+        self.assertTrue(all(reference["passed"] for reference in references))
+        self.assertTrue(all(record["passed"] and record["male"] == record["female"] for record in matrix))
+
     def test_m10_asset_paths_match_runtime_prefix_extension_and_directory_rules(self):
         self.assertEqual(
             MODULE.m10_resource_candidates(r"Sky\sun.tga", "textures", ".dds"),

@@ -45,12 +45,28 @@ namespace SceneUtil
             if (!isRig)
                 return;
 
-            for (auto it = getNodePath().rbegin() + 1; it != getNodePath().rend(); ++it)
+            const auto firstParent = getNodePath().rbegin() + 1;
+            if (mFilter.empty())
             {
-                const osg::Node* parent = *it;
-                if (!filterMatches(parent->getName()))
-                    break;
-                node = parent;
+                // An empty filter means "all rigged shapes", not "copy every
+                // ancestor". Preserve the shape's immediate parent because it
+                // owns the material state and local NIF transform, but leave
+                // the source bone hierarchy behind. The attached RigGeometry
+                // must resolve its influences against the destination actor's
+                // authoritative skeleton.
+                if (firstParent != getNodePath().rend()
+                    && dynamic_cast<const SceneUtil::Skeleton*>(*firstParent) == nullptr)
+                    node = *firstParent;
+            }
+            else
+            {
+                for (auto it = firstParent; it != getNodePath().rend(); ++it)
+                {
+                    const osg::Node* parent = *it;
+                    if (!filterMatches(parent->getName()))
+                        break;
+                    node = parent;
+                }
             }
             mToCopy.emplace(node);
         }

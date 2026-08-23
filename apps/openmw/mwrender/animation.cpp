@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <numeric>
 
 #include <osg/BlendFunc>
 #include <osg/Material>
@@ -32,6 +33,8 @@
 #include <components/misc/constants.hpp>
 #include <components/misc/pathhelpers.hpp>
 #include <components/misc/resourcehelpers.hpp>
+
+#include <components/nifosg/matrixtransform.hpp>
 
 #include <components/vfs/manager.hpp>
 #include <components/vfs/pathutil.hpp>
@@ -670,8 +673,92 @@ namespace MWRender
             loadAdditionalAnimations(kfname, baseModel);
     }
 
+    void Animation::addAnimDirectory(VFS::Path::NormalizedView directory)
+    {
+        constexpr VFS::Path::ExtensionView kf("kf");
+        std::map<std::string, VFS::Path::Normalized, std::less<>> files;
+        for (const VFS::Path::Normalized& name : mResourceSystem->getVFS()->getRecursiveDirectoryIterator(directory))
+        {
+            if (name.extension() != kf)
+                continue;
+            std::string group(name.stem());
+            // Prefer the family-root KF over an idleanims file with the same
+            // stem. Archive iterator ordering is not a compatibility rule.
+            const auto [it, inserted] = files.try_emplace(group, name);
+            if (!inserted && name.value().size() < it->second.value().size())
+                it->second = name;
+        }
+
+        const auto add = [&](std::string group, const VFS::Path::Normalized& path, std::string sourceGroup) {
+            mLazyAnimSources.insert_or_assign(group, LazyAnimSource{ path, std::move(sourceGroup) });
+            mSupportedAnimations.insert(std::move(group));
+        };
+        for (const auto& [group, path] : files)
+            add(group, path, group);
+
+        // OpenMW mechanics uses its historic canonical movement group names;
+        // Oblivion uses "fast" for running and "backward" for "back".
+        // Register aliases only when a native file exists and do the rename in
+        // a per-instance KeyframeHolder so the shared resource cache is intact.
+        const auto alias = [&](std::string_view target, std::string_view source) {
+            if (mLazyAnimSources.contains(target))
+                return;
+            const auto found = files.find(std::string(source));
+            if (found != files.end())
+                add(std::string(target), found->second, std::string(source));
+        };
+        alias("walkforward", "forward");
+        alias("walkback", files.contains("walkbackward") ? "walkbackward" : "backward");
+        alias("walkleft", "left");
+        alias("walkright", "right");
+        alias("runforward", files.contains("walkfastforward") ? "walkfastforward" : "fastforward");
+        alias("runback", files.contains("walkfastbackward") ? "walkfastbackward" : "fastbackward");
+        alias("runleft", files.contains("walkfastleft") ? "walkfastleft" : "fastleft");
+        alias("runright", files.contains("walkfastright") ? "walkfastright" : "fastright");
+        alias("turnleft", "walkturnleft");
+        alias("turnright", "walkturnright");
+        alias("swimwalkforward", "swimforward");
+        alias("swimwalkback", "swimbackward");
+        alias("swimwalkleft", "swimleft");
+        alias("swimwalkright", "swimright");
+        alias("swimrunforward", "swimfastforward");
+        alias("swimrunback", "swimfastbackward");
+        alias("swimrunleft", "swimfastleft");
+        alias("swimrunright", "swimfastright");
+        alias("sneakback", "sneakbackward");
+        alias("death1", files.contains("death") ? "death"
+                : (files.contains("deathidle") ? "deathidle" : "stagger"));
+        mSupportedDirections.clear();
+    }
+
+    void Animation::ensureAnimSource(std::string_view group)
+    {
+        std::string normalized = Misc::StringUtils::lowerCase(group);
+        const auto source = mLazyAnimSources.find(normalized);
+        if (source == mLazyAnimSources.end() || !mLoadedLazyAnimations.insert(normalized).second)
+            return;
+
+        if (const std::shared_ptr<AnimSource> loaded
+            = addSingleAnimSource(source->second.mPath, mObjectRoot ? mObjectRoot->getName() : std::string{},
+                source->second.mGroup == normalized ? std::string_view{} : std::string_view(normalized), false))
+        {
+            const std::size_t boundControllers
+                = std::accumulate(std::begin(loaded->mControllerMap), std::end(loaded->mControllerMap), std::size_t{ 0 },
+                    [](std::size_t count, const AnimSource::ControllerMap& map) { return count + map.size(); });
+            Log(Debug::Info) << "M11 animation loaded: ref=" << mPtr.getCellRef().getRefId()
+                             << " group=" << normalized << " source=" << source->second.mPath
+                             << " controllers=" << boundControllers << " skipped_tracks="
+                             << (loaded->mKeyframes->mKeyframeControllers.size() - boundControllers);
+            return;
+        }
+
+        Log(Debug::Warning) << "Unable to load registered actor animation group '" << normalized << "' from "
+                            << source->second.mPath;
+    }
+
     std::shared_ptr<Animation::AnimSource> Animation::addSingleAnimSource(
-        VFS::Path::NormalizedView kfname, const std::string& baseModel)
+        VFS::Path::NormalizedView kfname, const std::string& baseModel, std::string_view groupAlias,
+        bool warnMissingBones)
     {
         if (!mResourceSystem->getVFS()->exists(kfname))
             return nullptr;
@@ -680,6 +767,23 @@ namespace MWRender
 
         if (keyframes == nullptr || keyframes->mTextKeys.empty() || keyframes->mKeyframeControllers.empty())
             return nullptr;
+
+        if (!groupAlias.empty())
+        {
+            osg::ref_ptr<SceneUtil::KeyframeHolder> renamed
+                = new SceneUtil::KeyframeHolder(*keyframes, osg::CopyOp::SHALLOW_COPY);
+            const std::string sourceGroup(kfname.stem());
+            SceneUtil::TextKeyMap keys;
+            for (const auto& [time, text] : renamed->mTextKeys)
+            {
+                if (text.starts_with(sourceGroup) && text.substr(sourceGroup.size()).starts_with(":"))
+                    keys.emplace(time, std::string(groupAlias) + text.substr(sourceGroup.size()));
+                else
+                    keys.emplace(time, std::string(text));
+            }
+            renamed->mTextKeys = std::move(keys);
+            keyframes = std::move(renamed);
+        }
 
         std::shared_ptr<AnimSource> animsrc = std::make_shared<AnimSource>();
 
@@ -694,8 +798,9 @@ namespace MWRender
             NodeMap::const_iterator found = nodeMap.find(bonename);
             if (found == nodeMap.end())
             {
-                Log(Debug::Warning) << "Warning: addAnimSource: can't find bone '" + bonename << "' in " << baseModel
-                                    << " (referenced by " << kfname << ")";
+                if (warnMissingBones)
+                    Log(Debug::Warning) << "Warning: addAnimSource: can't find bone '" + bonename << "' in "
+                                        << baseModel << " (referenced by " << kfname << ")";
                 continue;
             }
 
@@ -789,6 +894,9 @@ namespace MWRender
         mAccumCtrl = nullptr;
 
         mSupportedAnimations.clear();
+        mLazyAnimSources.clear();
+        mLoadedLazyAnimations.clear();
+        mReportedLazyAnimations.clear();
         mSupportedDirections.clear();
         mAnimSources.clear();
 
@@ -797,7 +905,7 @@ namespace MWRender
 
     bool Animation::hasAnimation(std::string_view anim) const
     {
-        return mSupportedAnimations.find(anim) != mSupportedAnimations.end();
+        return mSupportedAnimations.find(Misc::StringUtils::lowerCase(anim)) != mSupportedAnimations.end();
     }
 
     bool Animation::isLoopingAnimation(std::string_view group) const
@@ -893,7 +1001,11 @@ namespace MWRender
         float speedmult, std::string_view start, std::string_view stop, float startpoint, uint32_t loops,
         bool loopfallback)
     {
-        if (!mObjectRoot || mAnimSources.empty())
+        if (!mObjectRoot)
+            return;
+
+        ensureAnimSource(groupname);
+        if (mAnimSources.empty())
             return;
 
         if (groupname.empty())
@@ -945,6 +1057,17 @@ namespace MWRender
                 state.mStartKey = start;
                 state.mStopKey = stop;
                 mStates[std::string{ groupname }] = state;
+
+                const std::string lowerGroup = Misc::StringUtils::lowerCase(groupname);
+                if (mLoadedLazyAnimations.contains(lowerGroup) && mReportedLazyAnimations.insert(lowerGroup).second)
+                {
+                    const std::size_t boundControllers = std::accumulate(std::begin(state.mSource->mControllerMap),
+                        std::end(state.mSource->mControllerMap), std::size_t{ 0 },
+                        [](std::size_t count, const AnimSource::ControllerMap& map) { return count + map.size(); });
+                    Log(Debug::Info) << "M11 animation playing: ref=" << mPtr.getCellRef().getRefId()
+                                     << " group=" << groupname << " start=" << state.mStartTime
+                                     << " stop=" << state.mStopTime << " bound_controllers=" << boundControllers;
+                }
 
                 if (state.mPlaying)
                 {

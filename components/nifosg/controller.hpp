@@ -2,6 +2,8 @@
 #define COMPONENTS_NIFOSG_CONTROLLER_H
 
 #include <algorithm>
+#include <cstdint>
+#include <optional>
 #include <set>
 #include <type_traits>
 #include <vector>
@@ -306,7 +308,7 @@ namespace NifOsg
             float mTimelineStop{ 0.f };
             float mSourceStart{ 0.f };
             float mSourceStop{ 0.f };
-            const Nif::NiTransformInterpolator* mInterpolator{ nullptr };
+            const Nif::NiInterpolator* mInterpolator{ nullptr };
         };
 
         KeyframeController();
@@ -334,9 +336,28 @@ namespace NifOsg
         Vec3Interpolator mTranslations;
         FloatInterpolator mScales;
 
+        struct BSplineTransformTrack
+        {
+            float mTimelineStart{ 0.f };
+            float mTimelineStop{ 0.f };
+            float mSourceStart{ 0.f };
+            float mSourceStop{ 0.f };
+            float mSplineStart{ 0.f };
+            float mSplineStop{ 0.f };
+            std::uint32_t mControlPointCount{ 0 };
+            std::vector<float> mTranslations;
+            std::vector<float> mRotations;
+            std::vector<float> mScales;
+            std::optional<osg::Vec3f> mDefaultTranslation;
+            std::optional<osg::Quat> mDefaultRotation;
+            std::optional<float> mDefaultScale;
+        };
+        std::vector<BSplineTransformTrack> mBSplineTracks;
+
         Nif::NiKeyframeData::AxisOrder mAxisOrder{ Nif::NiKeyframeData::AxisOrder::Order_XYZ };
 
         osg::Quat getXYZRotation(float time) const;
+        KfTransform getBSplineTransformation(float time) const;
     };
 #ifdef _MSC_VER
 #pragma warning(pop)

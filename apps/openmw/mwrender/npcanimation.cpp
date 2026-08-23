@@ -1,6 +1,7 @@
 #include "npcanimation.hpp"
 
 #include <osg/Depth>
+#include <osg/Material>
 #include <osg/MatrixTransform>
 #include <osg/UserDataContainer>
 
@@ -8,6 +9,7 @@
 #include <osgUtil/RenderBin>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm/gameprofile.hpp>
 
 #include <components/misc/rng.hpp>
 
@@ -16,6 +18,13 @@
 #include <components/esm3/loadbody.hpp>
 #include <components/esm3/loadmgef.hpp>
 #include <components/esm3/loadrace.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadclot.hpp>
+#include <components/esm4/loadeyes.hpp>
+#include <components/esm4/loadhair.hpp>
+#include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadrace.hpp>
+#include <components/misc/strings/lower.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/depth.hpp>
@@ -44,6 +53,7 @@
 #include "renderbin.hpp"
 #include "renderingmanager.hpp"
 #include "rotatecontroller.hpp"
+#include "util.hpp"
 #include "vismask.hpp"
 
 namespace
@@ -459,6 +469,9 @@ namespace MWRender
     void NpcAnimation::updateNpcBase()
     {
         clearAnimSources();
+        mOblivionParts.clear();
+        mOblivionFaceMorphs.clear();
+        mOblivionFaceAnimationTime = 0.f;
         for (size_t i = 0; i < ESM::PRT_Count; i++)
             removeIndividualPart((ESM::PartReferenceType)i);
 
@@ -525,6 +538,8 @@ namespace MWRender
         setObjectRoot(smodel, true, true, false);
 
         updateParts();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            updateOblivionPlayerParts();
 
         if (!base.empty())
             addAnimSource(base, smodel);
@@ -539,6 +554,9 @@ namespace MWRender
         if (customArgonianSwim)
             addAnimSource(Settings::models().mXargonianswimkna.get().value(), smodel);
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            addAnimDirectory(VFS::Path::Normalized(smodel).parent());
+
         if (is1stPerson)
         {
             mObjectRoot->setNodeMask(Mask_FirstPerson);
@@ -547,6 +565,178 @@ namespace MWRender
         }
 
         mWeaponAnimationTime->updateStartTime();
+    }
+
+    namespace
+    {
+        const ESM4::Npc* findOblivionPlayer(const MWWorld::ESMStore& store)
+        {
+            for (const ESM4::Npc& npc : store.get<ESM4::Npc>())
+                if (Misc::StringUtils::ciEqual(npc.mEditorId, "Player"))
+                    return &npc;
+            return nullptr;
+        }
+
+        template <class Record>
+        std::string_view oblivionEquipmentModel(const Record& record, bool female)
+        {
+            if (female && !record.mModelFemale.empty())
+                return record.mModelFemale.getOriginal();
+            if (!record.mModelMale.empty())
+                return record.mModelMale.getOriginal();
+            if (!record.mModelFemale.empty())
+                return record.mModelFemale.getOriginal();
+            return record.mModel.getOriginal();
+        }
+
+        std::string_view oblivionBodyMesh(std::size_t part, bool female)
+        {
+            switch (part)
+            {
+                case ESM4::Race::UpperBody:
+                    return female ? "characters/_male/femaleupperbody.nif" : "characters/_male/upperbody.nif";
+                case ESM4::Race::LowerBody:
+                    return female ? "characters/_male/femalelowerbody.nif" : "characters/_male/lowerbody.nif";
+                case ESM4::Race::Hands:
+                    return "characters/_male/hand.nif";
+                case ESM4::Race::Feet:
+                    return "characters/_male/foot.nif";
+                default:
+                    return {};
+            }
+        }
+    }
+
+    void NpcAnimation::updateOblivionPlayerParts()
+    {
+        if (mObjectRoot == nullptr)
+            return;
+        const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
+        const ESM4::Npc* player = findOblivionPlayer(store);
+        if (player == nullptr)
+            return;
+        const ESM4::Race* race = store.get<ESM4::Race>().search(ESM::RefId(player->mRace));
+        if (race == nullptr)
+            return;
+
+        const bool female = (player->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+        std::uint32_t covered = 0;
+        std::set<std::string, std::less<>> attachedModels;
+        const auto attachPart = [&](std::string_view model, std::string_view bone, std::string_view texture = {},
+                                    bool faceGen = false, bool bodyTexture = false) -> osg::ref_ptr<osg::Node> {
+            if (model.empty())
+                return {};
+            const VFS::Path::Normalized path
+                = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model));
+            if (!attachedModels.emplace(path.value()).second)
+                return {};
+            try
+            {
+                osg::ref_ptr<osg::Node> node = attach(path, bone, {}, false);
+                if (!texture.empty())
+                    overrideAllTextures(VFS::Path::Normalized(texture), mResourceSystem, *node);
+                if (faceGen)
+                    applyTes4FaceGen(path.value(), *node, *player, *race, female, texture, bodyTexture,
+                        mResourceSystem, mOblivionFaceMorphs);
+                mOblivionParts.emplace_back(std::make_unique<PartHolder>(node));
+                return node;
+            }
+            catch (const std::exception& e)
+            {
+                Log(Debug::Warning) << "Unable to attach Oblivion player part " << path << ": " << e.what();
+                return {};
+            }
+        };
+
+        // Until the native equipment/inventory milestone, the base inventory
+        // is Oblivion's authoritative initial equipped set, as it is for NPCs.
+        if (mViewMode != VM_HeadOnly)
+        {
+            const auto visibleInView = [&](std::uint32_t slots) {
+                return mViewMode != VM_FirstPerson
+                    || (slots & (ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_Hands)) != 0;
+            };
+            for (const ESM4::InventoryItem& item : player->mInventory)
+            {
+                const ESM::FormId id = ESM::FormId::fromUint32(item.item);
+                if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(id))
+                {
+                    const std::uint32_t slots = armor->mArmorFlags & 0xffffu;
+                    if (visibleInView(slots) && (slots == 0 || (slots & ~covered) != 0))
+                    {
+                        attachPart(oblivionEquipmentModel(*armor, female),
+                            slots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair) ? "Bip01 Head" : "Bip01");
+                        covered |= slots;
+                    }
+                }
+                else if (const ESM4::Clothing* clothing = store.get<ESM4::Clothing>().search(id))
+                {
+                    const std::uint32_t slots = clothing->mClothingFlags & 0xffffu;
+                    if (visibleInView(slots) && (slots == 0 || (slots & ~covered) != 0))
+                    {
+                        attachPart(oblivionEquipmentModel(*clothing, female),
+                            slots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair) ? "Bip01 Head" : "Bip01");
+                        covered |= slots;
+                    }
+                }
+            }
+
+            static constexpr std::array<std::uint32_t, ESM4::Race::NumBodyParts> bodySlots = {
+                ESM4::Armor::TES4_UpperBody, ESM4::Armor::TES4_LowerBody, ESM4::Armor::TES4_Hands,
+                ESM4::Armor::TES4_Feet, ESM4::Armor::TES4_Tail
+            };
+            const auto& body = female ? race->mBodyPartsFemale : race->mBodyPartsMale;
+            for (std::size_t i = 0; i < body.size() && i < bodySlots.size(); ++i)
+            {
+                if ((covered & bodySlots[i]) == 0 && (mViewMode != VM_FirstPerson
+                                                        || (bodySlots[i]
+                                                            & (ESM4::Armor::TES4_UpperBody
+                                                                | ESM4::Armor::TES4_Hands))))
+                {
+                    const std::string_view model
+                        = body[i].mesh.empty() ? oblivionBodyMesh(i, female) : body[i].mesh;
+                    attachPart(model, "Bip01", body[i].texture, true, true);
+                }
+            }
+        }
+
+        if (mViewMode != VM_FirstPerson && (covered & ESM4::Armor::TES4_Head) == 0)
+        {
+            const auto& head
+                = female && !race->mHeadPartsFemale.empty() ? race->mHeadPartsFemale : race->mHeadParts;
+            for (std::size_t i = 0; i < head.size(); ++i)
+            {
+                if ((i == ESM4::Race::EarMale && female) || (i == ESM4::Race::EarFemale && !female))
+                    continue;
+                std::string_view texture = head[i].texture;
+                if ((i == ESM4::Race::EyeLeft || i == ESM4::Race::EyeRight) && !player->mEyes.isZeroOrUnset())
+                    if (const ESM4::Eyes* eyes = store.get<ESM4::Eyes>().search(player->mEyes))
+                        texture = eyes->mIcon;
+                attachPart(head[i].mesh, "Bip01 Head", texture, true);
+            }
+            const ESM::FormId hairId
+                = player->mHair.isZeroOrUnset() ? race->mDefaultHair[female ? 1 : 0] : player->mHair;
+            if ((covered & ESM4::Armor::TES4_Hair) == 0 && !hairId.isZeroOrUnset())
+                if (const ESM4::Hair* hair = store.get<ESM4::Hair>().search(hairId))
+                    if (const osg::ref_ptr<osg::Node> node
+                        = attachPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true))
+                    {
+                        osg::ref_ptr<osg::Material> material = new osg::Material;
+                        const osg::Vec4f color(player->mHairColour.red / 255.f, player->mHairColour.green / 255.f,
+                            player->mHairColour.blue / 255.f, 1.f);
+                        material->setColorMode(osg::Material::OFF);
+                        material->setAmbient(osg::Material::FRONT_AND_BACK, color);
+                        material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
+                        node->getOrCreateStateSet()->setAttributeAndModes(
+                            material, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+                    }
+        }
+
+        Log(Debug::Info) << "M11 player assembled: sex=" << (female ? "female" : "male")
+                         << " view=" << (mViewMode == VM_FirstPerson ? "first" : "third")
+                         << " parts=" << mOblivionParts.size()
+                         << " face_morph_meshes=" << mOblivionFaceMorphs.size() << " covered_slots=0x" << std::hex
+                         << covered << std::dec << " animation_groups=" << mSupportedAnimations.size();
     }
 
     std::string NpcAnimation::getSheathedShieldMesh(const MWWorld::ConstPtr& shield) const
@@ -706,6 +896,13 @@ namespace MWRender
     osg::Vec3f NpcAnimation::runAnimation(float timepassed)
     {
         osg::Vec3f ret = Animation::runAnimation(timepassed);
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            mOblivionFaceAnimationTime += timepassed;
+            animateTes4FaceGen(
+                mOblivionFaceMorphs, mOblivionFaceAnimationTime, false, false, 0.f, mOblivionFaceAnimationTime);
+        }
 
         mHeadAnimationTime->update(timepassed);
 

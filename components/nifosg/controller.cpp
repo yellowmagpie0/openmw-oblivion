@@ -9,6 +9,10 @@
 
 #include <osgParticle/Emitter>
 
+#include <array>
+#include <cmath>
+#include <limits>
+
 #include <components/nif/data.hpp>
 #include <components/sceneutil/clone.hpp>
 #include <components/sceneutil/morphgeometry.hpp>
@@ -17,6 +21,25 @@
 
 namespace NifOsg
 {
+    namespace
+    {
+        bool isValidTransformComponent(float value)
+        {
+            return std::isfinite(value) && std::abs(value) < std::numeric_limits<float>::max();
+        }
+
+        bool isValidTransformVector(const osg::Vec3f& value)
+        {
+            return isValidTransformComponent(value.x()) && isValidTransformComponent(value.y())
+                && isValidTransformComponent(value.z());
+        }
+
+        bool isValidTransformQuaternion(const osg::Quat& value)
+        {
+            return isValidTransformComponent(value.x()) && isValidTransformComponent(value.y())
+                && isValidTransformComponent(value.z()) && isValidTransformComponent(value.w());
+        }
+    }
 
     ControllerFunction::ControllerFunction(const Nif::NiTimeController* ctrl)
         : mFrequency(ctrl->mFrequency)
@@ -87,6 +110,7 @@ namespace NifOsg
         , mZRotations(copy.mZRotations)
         , mTranslations(copy.mTranslations)
         , mScales(copy.mScales)
+        , mBSplineTracks(copy.mBSplineTracks)
         , mAxisOrder(copy.mAxisOrder)
     {
     }
@@ -162,11 +186,83 @@ namespace NifOsg
         std::vector<FloatInterpolator::SequenceSegment> zRotations;
         std::vector<Vec3Interpolator::SequenceSegment> translations;
         std::vector<FloatInterpolator::SequenceSegment> scales;
+        const auto hasKeys = [](const auto& keys) { return keys != nullptr && !keys->mKeys.empty(); };
         for (const SequenceTrack& track : tracks)
         {
             if (track.mInterpolator == nullptr)
                 continue;
-            const Nif::NiTransformInterpolator& interpolator = *track.mInterpolator;
+            if (track.mInterpolator->mRecordType == Nif::RC_NiBSplineTransformInterpolator
+                || track.mInterpolator->mRecordType == Nif::RC_NiBSplineCompTransformInterpolator)
+            {
+                const auto& spline = *static_cast<const Nif::NiBSplineTransformInterpolator*>(track.mInterpolator);
+                if (spline.mSplineData.empty() || spline.mBasisData.empty())
+                    continue;
+                const Nif::NiBSplineData& data = *spline.mSplineData.getPtr();
+                BSplineTransformTrack decoded;
+                decoded.mTimelineStart = track.mTimelineStart;
+                decoded.mTimelineStop = track.mTimelineStop;
+                decoded.mSourceStart = track.mSourceStart;
+                decoded.mSourceStop = track.mSourceStop;
+                decoded.mSplineStart = spline.mStartTime;
+                decoded.mSplineStop = spline.mStopTime;
+                decoded.mControlPointCount = spline.mBasisData->mNumControlPoints;
+                if (isValidTransformVector(spline.mValue.mTranslation))
+                    decoded.mDefaultTranslation = spline.mValue.mTranslation;
+                if (isValidTransformQuaternion(spline.mValue.mRotation))
+                    decoded.mDefaultRotation = spline.mValue.mRotation;
+                if (isValidTransformComponent(spline.mValue.mScale))
+                    decoded.mDefaultScale = spline.mValue.mScale;
+
+                const auto copyControlPoints = [&](std::uint32_t handle, std::size_t dimensions, float offset,
+                                                   float halfRange, bool compact) {
+                    std::vector<float> result;
+                    if (handle == std::numeric_limits<std::uint32_t>::max() || decoded.mControlPointCount == 0
+                        || dimensions > std::numeric_limits<std::size_t>::max() / decoded.mControlPointCount)
+                        return result;
+                    const std::size_t count = dimensions * decoded.mControlPointCount;
+                    if (compact)
+                    {
+                        if (handle > data.mCompactControlPoints.size()
+                            || count > data.mCompactControlPoints.size() - handle)
+                            return result;
+                        result.reserve(count);
+                        for (std::size_t i = 0; i < count; ++i)
+                            result.push_back(offset
+                                + static_cast<float>(data.mCompactControlPoints[handle + i]) * halfRange / 32767.f);
+                    }
+                    else
+                    {
+                        if (handle > data.mFloatControlPoints.size() || count > data.mFloatControlPoints.size() - handle)
+                            return result;
+                        result.assign(data.mFloatControlPoints.begin() + handle,
+                            data.mFloatControlPoints.begin() + handle + count);
+                    }
+                    return result;
+                };
+
+                if (track.mInterpolator->mRecordType == Nif::RC_NiBSplineCompTransformInterpolator)
+                {
+                    const auto& compressed = static_cast<const Nif::NiBSplineCompTransformInterpolator&>(spline);
+                    decoded.mTranslations = copyControlPoints(spline.mTranslationHandle, 3,
+                        compressed.mTranslationOffset, compressed.mTranslationHalfRange, true);
+                    decoded.mRotations = copyControlPoints(
+                        spline.mRotationHandle, 4, compressed.mRotationOffset, compressed.mRotationHalfRange, true);
+                    decoded.mScales = copyControlPoints(
+                        spline.mScaleHandle, 1, compressed.mScaleOffset, compressed.mScaleHalfRange, true);
+                }
+                else
+                {
+                    decoded.mTranslations
+                        = copyControlPoints(spline.mTranslationHandle, 3, 0.f, 0.f, false);
+                    decoded.mRotations = copyControlPoints(spline.mRotationHandle, 4, 0.f, 0.f, false);
+                    decoded.mScales = copyControlPoints(spline.mScaleHandle, 1, 0.f, 0.f, false);
+                }
+                mBSplineTracks.push_back(std::move(decoded));
+                continue;
+            }
+            if (track.mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator)
+                continue;
+            const auto& interpolator = *static_cast<const Nif::NiTransformInterpolator*>(track.mInterpolator);
             const Nif::NiQuatTransform& value = interpolator.mDefaultValue;
             const auto makeSegment = [&](const auto& keys, const auto& defaultValue) {
                 using Segment = typename std::remove_reference_t<decltype(keys)>::element_type;
@@ -175,18 +271,29 @@ namespace NifOsg
             };
             if (interpolator.mData.empty())
             {
-                rotations.push_back(makeSegment(Nif::QuaternionKeyMapPtr(), value.mRotation));
-                translations.push_back(makeSegment(Nif::Vector3KeyMapPtr(), value.mTranslation));
-                scales.push_back(makeSegment(Nif::FloatKeyMapPtr(), value.mScale));
+                if (isValidTransformQuaternion(value.mRotation))
+                    rotations.push_back(makeSegment(Nif::QuaternionKeyMapPtr(), value.mRotation));
+                if (isValidTransformVector(value.mTranslation))
+                    translations.push_back(makeSegment(Nif::Vector3KeyMapPtr(), value.mTranslation));
+                if (isValidTransformComponent(value.mScale))
+                    scales.push_back(makeSegment(Nif::FloatKeyMapPtr(), value.mScale));
                 continue;
             }
             const Nif::NiKeyframeData& data = *interpolator.mData.getPtr();
-            rotations.push_back(makeSegment(data.mRotations, value.mRotation));
-            xRotations.push_back(makeSegment(data.mXRotations, 0.f));
-            yRotations.push_back(makeSegment(data.mYRotations, 0.f));
-            zRotations.push_back(makeSegment(data.mZRotations, 0.f));
-            translations.push_back(makeSegment(data.mTranslations, value.mTranslation));
-            scales.push_back(makeSegment(data.mScales, value.mScale));
+            const bool hasXyzRotation
+                = hasKeys(data.mXRotations) || hasKeys(data.mYRotations) || hasKeys(data.mZRotations);
+            if (hasKeys(data.mRotations) || (!hasXyzRotation && isValidTransformQuaternion(value.mRotation)))
+                rotations.push_back(makeSegment(data.mRotations, value.mRotation));
+            if (hasKeys(data.mXRotations))
+                xRotations.push_back(makeSegment(data.mXRotations, 0.f));
+            if (hasKeys(data.mYRotations))
+                yRotations.push_back(makeSegment(data.mYRotations, 0.f));
+            if (hasKeys(data.mZRotations))
+                zRotations.push_back(makeSegment(data.mZRotations, 0.f));
+            if (hasKeys(data.mTranslations) || isValidTransformVector(value.mTranslation))
+                translations.push_back(makeSegment(data.mTranslations, value.mTranslation));
+            if (hasKeys(data.mScales) || isValidTransformComponent(value.mScale))
+                scales.push_back(makeSegment(data.mScales, value.mScale));
             mAxisOrder = data.mAxisOrder;
         }
         mRotations = QuaternionInterpolator(std::move(rotations));
@@ -233,8 +340,92 @@ namespace NifOsg
         return xr * yr * zr;
     }
 
+    KeyframeController::KfTransform KeyframeController::getBSplineTransformation(float time) const
+    {
+        KfTransform result;
+        const BSplineTransformTrack* selected = nullptr;
+        for (const BSplineTransformTrack& track : mBSplineTracks)
+        {
+            if (time >= track.mTimelineStart && time <= track.mTimelineStop)
+            {
+                selected = &track;
+                break;
+            }
+        }
+        if (selected == nullptr)
+            return result;
+
+        float sourceTime = selected->mSourceStart;
+        const float timelineSpan = selected->mTimelineStop - selected->mTimelineStart;
+        if (timelineSpan > 0.f)
+        {
+            const float amount = std::clamp((time - selected->mTimelineStart) / timelineSpan, 0.f, 1.f);
+            sourceTime += amount * (selected->mSourceStop - selected->mSourceStart);
+        }
+        float normalized = 0.f;
+        if (selected->mSplineStop > selected->mSplineStart)
+            normalized = std::clamp((sourceTime - selected->mSplineStart)
+                    / (selected->mSplineStop - selected->mSplineStart),
+                0.f, 1.f);
+
+        const auto evaluate = [&](const std::vector<float>& points, std::size_t dimensions, std::size_t component) {
+            const std::size_t count = selected->mControlPointCount;
+            if (count == 0 || points.size() != count * dimensions || component >= dimensions)
+                return 0.f;
+            if (count == 1)
+                return points[component];
+            if (count < 4)
+            {
+                const float position = normalized * static_cast<float>(count - 1);
+                const std::size_t low = std::min(static_cast<std::size_t>(position), count - 2);
+                const float amount = position - static_cast<float>(low);
+                return points[low * dimensions + component] * (1.f - amount)
+                    + points[(low + 1) * dimensions + component] * amount;
+            }
+
+            const std::size_t segmentCount = count - 3;
+            const float position = normalized * static_cast<float>(segmentCount);
+            const std::size_t segment
+                = std::min(static_cast<std::size_t>(position), segmentCount - 1);
+            const float u = normalized >= 1.f ? 1.f : position - static_cast<float>(segment);
+            const float oneMinusU = 1.f - u;
+            const std::array<float, 4> basis = { oneMinusU * oneMinusU * oneMinusU / 6.f,
+                (3.f * u * u * u - 6.f * u * u + 4.f) / 6.f,
+                (-3.f * u * u * u + 3.f * u * u + 3.f * u + 1.f) / 6.f, u * u * u / 6.f };
+            float value = 0.f;
+            for (std::size_t i = 0; i < basis.size(); ++i)
+                value += points[(segment + i) * dimensions + component] * basis[i];
+            return value;
+        };
+
+        if (!selected->mTranslations.empty())
+            result.mTranslation = osg::Vec3f(evaluate(selected->mTranslations, 3, 0),
+                evaluate(selected->mTranslations, 3, 1), evaluate(selected->mTranslations, 3, 2));
+        else
+            result.mTranslation = selected->mDefaultTranslation;
+        if (!selected->mRotations.empty())
+        {
+            // NiBSplineData stores quaternion control points in NIF's W, X,
+            // Y, Z field order. osg::Quat's value constructor is X, Y, Z, W.
+            osg::Quat rotation(evaluate(selected->mRotations, 4, 1), evaluate(selected->mRotations, 4, 2),
+                evaluate(selected->mRotations, 4, 3), evaluate(selected->mRotations, 4, 0));
+            if (rotation.length2() > 0.f)
+                rotation /= std::sqrt(rotation.length2());
+            result.mRotation = rotation;
+        }
+        else
+            result.mRotation = selected->mDefaultRotation;
+        if (!selected->mScales.empty())
+            result.mScale = evaluate(selected->mScales, 1, 0);
+        else
+            result.mScale = selected->mDefaultScale;
+        return result;
+    }
+
     osg::Vec3f KeyframeController::getTranslation(float time) const
     {
+        if (const auto value = getBSplineTransformation(time).mTranslation)
+            return *value;
         if (!mTranslations.empty())
             return mTranslations.interpKey(time);
         return osg::Vec3f();
@@ -281,6 +472,14 @@ namespace NifOsg
 
             if (!mScales.empty())
                 out.mScale = mScales.interpKey(time);
+
+            const KfTransform spline = getBSplineTransformation(time);
+            if (spline.mRotation)
+                out.mRotation = spline.mRotation;
+            if (spline.mTranslation)
+                out.mTranslation = spline.mTranslation;
+            if (spline.mScale)
+                out.mScale = spline.mScale;
         }
 
         return out;

@@ -1,0 +1,112 @@
+{
+  "expected": {
+    "archive_count": 17,
+    "creature_family_count": 43,
+    "creature_family_fingerprint": "sha256:308c53de864ebebc2410835d1d2d57996fb95ecc8da92b50804e9c5b6ae95ede",
+    "equipment_asset_reference_count": 2593,
+    "equipment_fingerprint": "sha256:8822b1abb785fcda333f89d3871ff6f84a0ad3e293f13cab616c7c072d92473b",
+    "equipment_record_count": 1749,
+    "equipment_slot_counts": {
+      "amulet": 110,
+      "back_weapon": 0,
+      "feet": 256,
+      "hair": 255,
+      "hands": 248,
+      "head": 60,
+      "left_ring": 45,
+      "lower_body": 324,
+      "quiver": 0,
+      "right_ring": 221,
+      "shield": 227,
+      "side_weapon": 0,
+      "tail": 2,
+      "torch": 0,
+      "upper_body": 386,
+      "weapon": 0
+    },
+    "inventory_counts": {
+      "actor_animations": 860,
+      "actor_skeletons": 4,
+      "armor_models": 496,
+      "clothing_models": 500,
+      "creature_animations": 1467,
+      "creature_skeletons": 43,
+      "facegen_egm": 99,
+      "facegen_egt": 20,
+      "facegen_tri": 86,
+      "voice_audio": 50942,
+      "voice_lip": 50915
+    },
+    "inventory_fingerprint": "sha256:3fd60d251c5fce17234078483d71b15f2e116ff46bb6f758818e25d33e38fba3",
+    "missing_companion_count": 0,
+    "missing_equipment_asset_count": 0,
+    "missing_equipment_sex_model_count": 0,
+    "missing_race_asset_count": 0,
+    "playable_race_count": 10,
+    "race_asset_fingerprint": "sha256:d1e7e95e473204a9f3976de0aabde425dc7ae217f83333804f19b7a1c40d0fb0",
+    "race_asset_reference_count": 364,
+    "race_record_count": 15,
+    "unpaired_voice_audio_count": 33,
+    "unpaired_voice_lip_count": 6,
+    "vfs_entry_count": 147535,
+    "voice_pair_count": 50909
+  },
+  "official_content": [
+    {
+      "name": "Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "size": 277504985
+    },
+    {
+      "name": "DLCShiveringIsles.esp",
+      "sha256": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+      "size": 85
+    },
+    {
+      "name": "DLCBattlehornCastle.esp",
+      "sha256": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+      "size": 676894
+    },
+    {
+      "name": "DLCFrostcrag.esp",
+      "sha256": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+      "size": 191358
+    },
+    {
+      "name": "DLCHorseArmor.esp",
+      "sha256": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+      "size": 97179
+    },
+    {
+      "name": "DLCMehrunesRazor.esp",
+      "sha256": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+      "size": 728780
+    },
+    {
+      "name": "DLCOrrery.esp",
+      "sha256": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+      "size": 47424
+    },
+    {
+      "name": "DLCSpellTomes.esp",
+      "sha256": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+      "size": 625246
+    },
+    {
+      "name": "DLCThievesDen.esp",
+      "sha256": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+      "size": 233735
+    },
+    {
+      "name": "DLCVileLair.esp",
+      "sha256": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+      "size": 257153
+    },
+    {
+      "name": "Knights.esp",
+      "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+      "size": 2211935
+    }
+  ],
+  "schema_version": 1
+}

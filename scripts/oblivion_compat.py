@@ -2186,6 +2186,525 @@ def run_m10_asset_audit(args: argparse.Namespace) -> dict[str, Any]:
     return report
 
 
+def _m11_actor_inventory(entries: set[str]) -> dict[str, list[str]]:
+    actor_roots = ("meshes/characters/_male/", "meshes/characters/_1stperson/")
+    return {
+        "actor_skeletons": sorted(
+            path
+            for path in entries
+            if path.startswith(actor_roots) and Path(path).name.startswith("skeleton") and path.endswith(".nif")
+        ),
+        "actor_animations": sorted(
+            path for path in entries if path.startswith(actor_roots) and path.endswith(".kf")
+        ),
+        "creature_skeletons": sorted(
+            path
+            for path in entries
+            if path.startswith("meshes/creatures/") and Path(path).name == "skeleton.nif"
+        ),
+        "creature_animations": sorted(
+            path for path in entries if path.startswith("meshes/creatures/") and path.endswith(".kf")
+        ),
+        "facegen_tri": sorted(
+            path for path in entries if path.startswith("meshes/characters/") and path.endswith(".tri")
+        ),
+        "facegen_egm": sorted(
+            path for path in entries if path.startswith("meshes/characters/") and path.endswith(".egm")
+        ),
+        "facegen_egt": sorted(
+            path for path in entries if path.startswith("meshes/characters/") and path.endswith(".egt")
+        ),
+        "armor_models": sorted(path for path in entries if path.startswith("meshes/armor/") and path.endswith(".nif")),
+        "clothing_models": sorted(
+            path for path in entries if path.startswith("meshes/clothes/") and path.endswith(".nif")
+        ),
+        "voice_audio": sorted(
+            path
+            for path in entries
+            if path.startswith("sound/voice/") and Path(path).suffix in {".mp3", ".ogg", ".wav", ".flac"}
+        ),
+        "voice_lip": sorted(path for path in entries if path.startswith("sound/voice/") and path.endswith(".lip")),
+    }
+
+
+def _parse_m11_races(output: str, plugin: str) -> list[dict[str, Any]]:
+    races: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for line in output.splitlines():
+        if line == "  Record: RACE":
+            current = {
+                "plugin": plugin,
+                "id": "",
+                "editor_id": "",
+                "flags": 0,
+                "parts": [],
+                "facegen": {},
+            }
+            races.append(current)
+            continue
+        if line.startswith("  Record: "):
+            current = None
+            continue
+        if current is None:
+            continue
+        match = re.fullmatch(r"  (Id|EditorId|RaceFlags): ?(.*)", line)
+        if match:
+            name, value = match.groups()
+            if name == "Id":
+                current["id"] = value
+            elif name == "EditorId":
+                current["editor_id"] = value
+            else:
+                current["flags"] = int(value)
+            continue
+        match = re.fullmatch(r"  FaceGen(Shape|Texture)Modes(Male|Female): (\d+)(?:/(\d+))?", line)
+        if match:
+            mode, sex, symmetric, asymmetric = match.groups()
+            current["facegen"][f"{mode.casefold()}_{sex.casefold()}"] = [
+                int(symmetric),
+                *([int(asymmetric)] if asymmetric is not None else []),
+            ]
+            continue
+        match = re.fullmatch(r"  ((?:Head|Body)Part(?:Male|Female))(\d+): (.*)\t(.*)", line)
+        if match:
+            kind, index, mesh, texture = match.groups()
+            current["parts"].append(
+                {"kind": kind, "index": int(index), "mesh": mesh.strip(), "texture": texture.strip()}
+            )
+    return races
+
+
+def _resolve_m11_race_assets(races: list[dict[str, Any]], entries: set[str]) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    for race in races:
+        for part in race["parts"]:
+            for field, prefix, extension in (("mesh", "meshes", None), ("texture", "textures", ".dds")):
+                raw = part[field]
+                if not raw:
+                    continue
+                candidates = m10_resource_candidates(raw, prefix, extension)
+                resolved = next((candidate for candidate in candidates if candidate in entries), "")
+                result.append(
+                    {
+                        "plugin": race["plugin"],
+                        "race": race["editor_id"],
+                        "id": race["id"],
+                        "part": part["kind"],
+                        "index": part["index"],
+                        "field": field,
+                        "raw": raw,
+                        "resolved": resolved,
+                        "passed": bool(resolved),
+                    }
+                )
+    return result
+
+
+M11_BIPED_SLOTS = {
+    0: "head",
+    1: "hair",
+    2: "upper_body",
+    3: "lower_body",
+    4: "hands",
+    5: "feet",
+    6: "right_ring",
+    7: "left_ring",
+    8: "amulet",
+    9: "weapon",
+    10: "back_weapon",
+    11: "side_weapon",
+    12: "quiver",
+    13: "shield",
+    14: "torch",
+    15: "tail",
+}
+
+
+def _parse_m11_equipment(output: str, plugin: str) -> list[dict[str, Any]]:
+    equipment: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for line in output.splitlines():
+        match = re.fullmatch(r"  Record: (ARMO|CLOT)", line)
+        if match:
+            current = {
+                "plugin": plugin,
+                "type": match.group(1),
+                "id": "",
+                "editor_id": "",
+                "slots": 0,
+                "model_male": "",
+                "model_female": "",
+            }
+            equipment.append(current)
+            continue
+        if line.startswith("  Record: "):
+            current = None
+            continue
+        if current is None:
+            continue
+        match = re.fullmatch(r"  (Id|EditorId|BipedSlots|ModelMale|ModelFemale): ?(.*)", line)
+        if not match:
+            continue
+        name, value = match.groups()
+        if name == "Id":
+            current["id"] = value
+        elif name == "EditorId":
+            current["editor_id"] = value
+        elif name == "BipedSlots":
+            current["slots"] = int(value)
+        else:
+            current[f"model_{name.removeprefix('Model').casefold()}"] = value.strip()
+    return equipment
+
+
+def _resolve_m11_equipment_assets(
+    equipment: list[dict[str, Any]], entries: set[str]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    references: list[dict[str, Any]] = []
+    sex_matrix: list[dict[str, Any]] = []
+    for record in equipment:
+        resolved_models: dict[str, str] = {}
+        for sex in ("male", "female"):
+            raw = record[f"model_{sex}"]
+            if not raw:
+                continue
+            candidates = m10_resource_candidates(raw, "meshes", ".nif")
+            resolved = next((candidate for candidate in candidates if candidate in entries), "")
+            resolved_models[sex] = resolved
+            references.append(
+                {
+                    "plugin": record["plugin"],
+                    "type": record["type"],
+                    "id": record["id"],
+                    "editor_id": record["editor_id"],
+                    "sex": sex,
+                    "raw": raw,
+                    "resolved": resolved,
+                    "passed": bool(resolved),
+                }
+            )
+        # Oblivion intentionally leaves the female MOD3 empty when the male
+        # MODL is shared by both sexes (and vice versa for a few dresses).
+        male = resolved_models.get("male") or resolved_models.get("female") or ""
+        female = resolved_models.get("female") or resolved_models.get("male") or ""
+        sex_matrix.append(
+            {
+                "plugin": record["plugin"],
+                "type": record["type"],
+                "id": record["id"],
+                "editor_id": record["editor_id"],
+                "slots": record["slots"],
+                "slot_names": [name for bit, name in M11_BIPED_SLOTS.items() if record["slots"] & (1 << bit)],
+                "male": male,
+                "female": female,
+                "passed": bool(male and female),
+            }
+        )
+    return references, sex_matrix
+
+
+def m11_count_lock_from_report(report: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "official_content": report["official_content"],
+        "expected": {
+            "archive_count": report["summary"]["archive_count"],
+            "vfs_entry_count": report["summary"]["vfs_entry_count"],
+            "inventory_counts": report["summary"]["inventory_counts"],
+            "inventory_fingerprint": report["summary"]["inventory_fingerprint"],
+            "creature_family_count": report["summary"]["creature_family_count"],
+            "creature_family_fingerprint": report["summary"]["creature_family_fingerprint"],
+            "voice_pair_count": report["summary"]["voice_pair_count"],
+            "unpaired_voice_audio_count": report["summary"]["unpaired_voice_audio_count"],
+            "unpaired_voice_lip_count": report["summary"]["unpaired_voice_lip_count"],
+            "missing_companion_count": report["summary"]["missing_companion_count"],
+            "race_record_count": report["summary"]["race_record_count"],
+            "playable_race_count": report["summary"]["playable_race_count"],
+            "race_asset_reference_count": report["summary"]["race_asset_reference_count"],
+            "missing_race_asset_count": report["summary"]["missing_race_asset_count"],
+            "race_asset_fingerprint": report["summary"]["race_asset_fingerprint"],
+            "equipment_record_count": report["summary"]["equipment_record_count"],
+            "equipment_asset_reference_count": report["summary"]["equipment_asset_reference_count"],
+            "missing_equipment_asset_count": report["summary"]["missing_equipment_asset_count"],
+            "missing_equipment_sex_model_count": report["summary"]["missing_equipment_sex_model_count"],
+            "equipment_slot_counts": report["summary"]["equipment_slot_counts"],
+            "equipment_fingerprint": report["summary"]["equipment_fingerprint"],
+        },
+    }
+
+
+def run_m11_asset_audit(args: argparse.Namespace) -> dict[str, Any]:
+    source = args.source.resolve()
+    build = args.build.resolve()
+    data = args.oblivion_data.resolve()
+    output = args.output.resolve()
+    bsatool = build / "bsatool"
+    esmtool = build / "esmtool"
+    for required in (source, build, data, bsatool, esmtool):
+        if not required.exists():
+            raise FileNotFoundError(required)
+
+    plugins = [data / name for name in OFFICIAL_PLUGIN_ORDER]
+    missing_plugins = [str(path) for path in plugins if not path.is_file()]
+    if missing_plugins:
+        raise RuntimeError("missing official plugins: " + ", ".join(missing_plugins))
+
+    entries: set[str] = set()
+    archives: list[dict[str, Any]] = []
+    for archive in discover_files(data, {".bsa"}):
+        result = run_command([str(bsatool), "list", str(archive)], cwd=source, timeout=args.timeout)
+        listed = {
+            normalize_vfs_path(line)
+            for line in result["output"].splitlines()
+            if line.strip() and not line.startswith("BSA archive")
+        }
+        listed.discard("")
+        entries.update(listed)
+        archives.append(
+            {
+                "name": archive.name,
+                "entry_count": len(listed),
+                "exit_code": result["exit_code"],
+                "duration_seconds": result["duration_seconds"],
+            }
+        )
+    for path in data.rglob("*"):
+        if path.is_file() and path.suffix.casefold() not in {".bsa", ".esm", ".esp"}:
+            entries.add(normalize_vfs_path(path.relative_to(data).as_posix()))
+
+    races: list[dict[str, Any]] = []
+    equipment: list[dict[str, Any]] = []
+    plugin_reports: list[dict[str, Any]] = []
+    for plugin in plugins:
+        result = run_command(
+            [str(esmtool), "dump", "-t", "RACE", "-t", "ARMO", "-t", "CLOT", str(plugin)],
+            cwd=source,
+            timeout=args.timeout,
+        )
+        parsed = _parse_m11_races(result["output"], plugin.name)
+        parsed_equipment = _parse_m11_equipment(result["output"], plugin.name)
+        races.extend(parsed)
+        equipment.extend(parsed_equipment)
+        plugin_reports.append(
+            {
+                "name": plugin.name,
+                "exit_code": result["exit_code"],
+                "race_count": len(parsed),
+                "equipment_count": len(parsed_equipment),
+                "duration_seconds": result["duration_seconds"],
+            }
+        )
+    race_assets = _resolve_m11_race_assets(races, entries)
+    missing_race_assets = [reference for reference in race_assets if not reference["passed"]]
+    playable_races = [race for race in races if race["flags"] & 1]
+    race_lines = sorted(
+        "\t".join(
+            (
+                reference["plugin"],
+                reference["race"],
+                reference["part"],
+                str(reference["index"]),
+                reference["field"],
+                reference["resolved"],
+            )
+        )
+        for reference in race_assets
+    )
+    equipment_assets, equipment_sex_matrix = _resolve_m11_equipment_assets(equipment, entries)
+    missing_equipment_assets = [reference for reference in equipment_assets if not reference["passed"]]
+    missing_equipment_sex_models = [record for record in equipment_sex_matrix if not record["passed"]]
+    equipment_slot_counts = {
+        name: sum(bool(record["slots"] & (1 << bit)) for record in equipment)
+        for bit, name in M11_BIPED_SLOTS.items()
+    }
+    equipment_lines = sorted(
+        "\t".join(
+            (
+                record["plugin"],
+                record["type"],
+                record["id"],
+                str(record["slots"]),
+                record["male"],
+                record["female"],
+            )
+        )
+        for record in equipment_sex_matrix
+    )
+
+    inventory = _m11_actor_inventory(entries)
+    creature_families: list[dict[str, Any]] = []
+    for skeleton in inventory["creature_skeletons"]:
+        directory = skeleton.rsplit("/", 1)[0] + "/"
+        groups = sorted(
+            Path(path).stem
+            for path in inventory["creature_animations"]
+            if path.startswith(directory) and "/" not in path[len(directory) :]
+        )
+        creature_families.append(
+            {
+                "directory": directory,
+                "skeleton": skeleton,
+                "animation_count": len(groups),
+                "has_idle": "idle" in groups,
+                "has_death": "death" in groups or any(group.startswith("death") for group in groups),
+                "groups": groups,
+            }
+        )
+
+    # These three 32x32 EGTs are shared color grids sampled by several body
+    # meshes; unlike head EGTs, their basename intentionally is not a NIF.
+    shared_texture_grids = {
+        "meshes/characters/_male/body.egt",
+        "meshes/characters/_male/upperbodyhumanfemale.egt",
+        "meshes/characters/_male/upperbodyhumanmale.egt",
+    }
+    companions: list[dict[str, str]] = []
+    for extension in (".tri", ".egm", ".egt"):
+        for path in sorted(entry for entry in entries if entry.startswith("meshes/") and entry.endswith(extension)):
+            nif = path[: -len(extension)] + ".nif"
+            if nif not in entries and path not in shared_texture_grids:
+                companions.append({"asset": path, "expected": nif})
+
+    audio_stems = {str(Path(path).with_suffix("")) for path in inventory["voice_audio"]}
+    lip_stems = {str(Path(path).with_suffix("")) for path in inventory["voice_lip"]}
+    paired = audio_stems & lip_stems
+    inventory_paths = sorted(path for values in inventory.values() for path in values)
+    family_lines = [
+        f'{item["directory"]}\t{item["animation_count"]}\t{int(item["has_idle"])}\t{int(item["has_death"])}'
+        for item in creature_families
+    ]
+    summary = {
+        "archive_count": len(archives),
+        "vfs_entry_count": len(entries),
+        "inventory_counts": {name: len(paths) for name, paths in inventory.items()},
+        "inventory_fingerprint": "sha256:" + hashlib.sha256("\n".join(inventory_paths).encode()).hexdigest(),
+        "creature_family_count": len(creature_families),
+        "creature_family_fingerprint": "sha256:" + hashlib.sha256("\n".join(family_lines).encode()).hexdigest(),
+        "voice_pair_count": len(paired),
+        "unpaired_voice_audio_count": len(audio_stems - lip_stems),
+        "unpaired_voice_lip_count": len(lip_stems - audio_stems),
+        "missing_companion_count": len(companions),
+        "race_record_count": len(races),
+        "playable_race_count": len(playable_races),
+        "race_asset_reference_count": len(race_assets),
+        "missing_race_asset_count": len(missing_race_assets),
+        "race_asset_fingerprint": "sha256:" + hashlib.sha256("\n".join(race_lines).encode()).hexdigest(),
+        "equipment_record_count": len(equipment),
+        "equipment_asset_reference_count": len(equipment_assets),
+        "missing_equipment_asset_count": len(missing_equipment_assets),
+        "missing_equipment_sex_model_count": len(missing_equipment_sex_models),
+        "equipment_slot_counts": equipment_slot_counts,
+        "equipment_fingerprint": "sha256:"
+        + hashlib.sha256("\n".join(equipment_lines).encode()).hexdigest(),
+    }
+    report: dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": utc_now(),
+        "official_content": [
+            {name: fingerprint[name] for name in ("name", "size", "sha256")}
+            for fingerprint in (file_fingerprint(plugin) for plugin in plugins)
+        ],
+        "archives": archives,
+        "plugins": plugin_reports,
+        "inventory": inventory,
+        "races": races,
+        "race_asset_references": race_assets,
+        "missing_race_assets": missing_race_assets,
+        "equipment": equipment,
+        "equipment_asset_references": equipment_assets,
+        "missing_equipment_assets": missing_equipment_assets,
+        "equipment_sex_matrix": equipment_sex_matrix,
+        "missing_equipment_sex_models": missing_equipment_sex_models,
+        "creature_families": creature_families,
+        "missing_companions": companions,
+        "shared_body_texture_grids": sorted(shared_texture_grids),
+        "summary": summary,
+    }
+    count_lock_path = args.count_lock.resolve()
+    if args.write_count_lock:
+        write_json(count_lock_path, m11_count_lock_from_report(report))
+    if count_lock_path.is_file():
+        expected = json.loads(count_lock_path.read_text(encoding="utf-8"))
+        actual = m11_count_lock_from_report(report)
+        failures = []
+        if expected != actual:
+            failures.append("official M11 actor asset inventory differs from its count lock")
+        report["count_lock"] = {"passed": not failures, "failures": failures}
+    else:
+        report["count_lock"] = {"passed": False, "failures": [f"missing count lock: {count_lock_path}"]}
+    required_actor_skeletons = {
+        "meshes/characters/_male/skeleton.nif",
+        "meshes/characters/_male/skeletonbeast.nif",
+        "meshes/characters/_1stperson/skeleton.nif",
+    }
+    report["checks"] = {
+        "required_actor_skeletons": required_actor_skeletons.issubset(inventory["actor_skeletons"]),
+        "actor_idle": any(Path(path).name == "idle.kf" for path in inventory["actor_animations"]),
+        "actor_death": any(Path(path).name.startswith("death") for path in inventory["actor_animations"]),
+        "creature_animation_families": all(item["animation_count"] > 0 for item in creature_families),
+        "facegen_companions": not companions,
+        "voice_lip_pairs": bool(paired),
+        "playable_race_sexes": len(playable_races) >= 10
+        and all(
+            # TES4 stores one shared nine-entry head table. Sex-specific ears
+            # occupy indices 1 and 2; there is no second female head table.
+            # Beast races intentionally omit the separate human ear meshes.
+            sum(part["kind"] == "HeadPartMale" and bool(part["mesh"]) for part in race["parts"]) >= 7
+            # Most humanoid body table entries select only a skin texture;
+            # the actual naked-body geometry comes from the biped slot mesh.
+            and any(
+                part["kind"] == "BodyPartMale" and bool(part["mesh"] or part["texture"])
+                for part in race["parts"]
+            )
+            and any(
+                part["kind"] == "BodyPartFemale" and bool(part["mesh"] or part["texture"])
+                for part in race["parts"]
+            )
+            for race in playable_races
+        ),
+        "playable_race_facegen": len(playable_races) >= 10
+        and all(
+            race["facegen"]
+            == {
+                "shape_male": [50, 30],
+                # TES4 stores one common race basis rather than the separate
+                # male/female arrays introduced in later file formats.
+                "shape_female": [0, 0],
+                "texture_male": [50],
+                "texture_female": [0],
+            }
+            for race in playable_races
+        ),
+        "race_assets_resolve": not missing_race_assets,
+        "equipment_assets_resolve": not missing_equipment_assets,
+        "equipment_sex_matrix": not missing_equipment_sex_models,
+        "equipment_biped_slots": all(
+            equipment_slot_counts[name] > 0
+            for name in (
+                "head",
+                "hair",
+                "upper_body",
+                "lower_body",
+                "hands",
+                "feet",
+                "right_ring",
+                "left_ring",
+                "amulet",
+                "shield",
+                "tail",
+            )
+        ),
+    }
+    report["passed"] = (
+        all(archive["exit_code"] == 0 for archive in archives)
+        and all(plugin["exit_code"] == 0 for plugin in plugin_reports)
+        and all(report["checks"].values())
+        and report["count_lock"]["passed"]
+    )
+    write_json(output / "m11-assets.json", report)
+    return report
+
+
 def validate_form_graph_report(report: dict[str, Any], allowlist: dict[str, Any]) -> dict[str, Any]:
     unresolved = report.get("unresolved", [])
     rules = allowlist.get("allowed", [])
@@ -2714,6 +3233,21 @@ def make_parser() -> argparse.ArgumentParser:
     )
     m10_assets.add_argument("--timeout", type=float, default=120)
 
+    m11_assets = subparsers.add_parser(
+        "m11-assets", help="count-lock official actor, FaceGen, animation, creature, and voice/lip assets"
+    )
+    m11_assets.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m11_assets.add_argument("--build", type=Path, required=True)
+    m11_assets.add_argument("--oblivion-data", type=Path, required=True)
+    m11_assets.add_argument("--output", type=Path, required=True)
+    m11_assets.add_argument(
+        "--count-lock",
+        type=Path,
+        default=Path(__file__).resolve().parent / "data" / "oblivion_compat" / "oblivion_m11_asset_counts.json",
+    )
+    m11_assets.add_argument("--write-count-lock", action="store_true")
+    m11_assets.add_argument("--timeout", type=float, default=120)
+
     runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
     runtime.add_argument(
         "operation", choices=("inspect", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
@@ -2825,6 +3359,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_m6_acceptance(args)
         elif args.command == "m10-assets":
             result = run_m10_asset_audit(args)
+        elif args.command == "m11-assets":
+            result = run_m11_asset_audit(args)
         elif args.command == "runtime-state":
             result = run_runtime_state(args)
         else:
@@ -2851,6 +3387,15 @@ def main(argv: list[str] | None = None) -> int:
             "exception_review": result.get("exception_review", {}),
             "count_lock": result.get("count_lock", {}),
             "evidence": str(args.output.resolve() / "m10-assets.json"),
+        }
+    elif args.command == "m11-assets":
+        printable = {
+            "passed": result.get("passed", False),
+            "milestone": "M11",
+            "summary": result.get("summary", {}),
+            "checks": result.get("checks", {}),
+            "count_lock": result.get("count_lock", {}),
+            "evidence": str(args.output.resolve() / "m11-assets.json"),
         }
     print(json.dumps(printable, indent=2, sort_keys=True))
     return 0 if result.get("passed", False) else 1

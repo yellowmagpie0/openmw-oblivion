@@ -39,7 +39,7 @@ namespace MWLua
         const MWWorld::Class& cls = ptr.getClass();
         if (cls.isActivator())
             return &mActivatorsInScene;
-        if (cls.isActor())
+        if (cls.isActor() || ptr.mRef->getType() == ESM::REC_NPC_4 || ptr.mRef->getType() == ESM::REC_CREA4)
             return &mActorsInScene;
         if (ptr.mRef->getType() == ESM::REC_DOOR || ptr.mRef->getType() == ESM::REC_DOOR4)
             return &mDoorsInScene;

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m11-real-actor-equipment-and-lip-gallery",
+  "cwd": "{source}",
+  "environment": {
+    "ALSOFT_DRIVERS": "wave",
+    "ALSOFT_CONF": "{output}/config/alsoft.conf"
+  },
+  "files": [
+    {
+      "path": "config/alsoft.conf",
+      "content": "[wave]\nfile = {output}/m11-voice.wav\n"
+    },
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{output}/test-data\"\ncontent=Oblivion.esm\ncontent=m11-test.omwscripts\nstart=AnvilHorseWhisperer::ref=0x4e9a4::side=east\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Sound]\nmaster volume = 1.0\nvoice volume = 1.0\n[General]\nscreenshot format = png\n"
+    },
+    {
+      "path": "test-data/m11-test.omwscripts",
+      "content": "GLOBAL: scripts/m11_voice_test.lua\n"
+    },
+    {
+      "path": "test-data/scripts/m11_voice_test.lua",
+      "content": "local core = require('openmw.core')\nlocal types = require('openmw.types')\nlocal world = require('openmw.world')\n\nlocal actorFoundAt\nlocal played = false\nlocal function onUpdate()\n    if played then return end\n    local player = world.players[1]\n    for _, actor in pairs(world.activeActors) do\n        if actor ~= player and types.ESM4NPC.objectIsInstance(actor) then\n            actorFoundAt = actorFoundAt or core.getSimulationTime()\n            if core.getSimulationTime() - actorFoundAt >= 7.5 then\n                core.sound.say('sound/voice/oblivion.esm/redguard/m/charactergen_chargenvoice_0001e8d3_1.mp3', actor)\n                played = true\n            end\n            return\n        end\n    end\nend\n\nreturn {{ engineHandlers = {{ onUpdate = onUpdate }} }}\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 16},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "actor-equipment-gallery.png", "minimum_entropy": 0.04},
+    {"type": "sleep", "seconds": 2.5},
+    {"type": "screenshot", "name": "voice-lip-active.png", "minimum_entropy": 0.04},
+    {"type": "sleep", "seconds": 0.5},
+    {"type": "screenshot", "name": "voice-lip-later.png", "minimum_entropy": 0.04},
+    {"type": "sleep", "seconds": 4.25},
+    {"type": "assert_file", "path_glob": "m11-voice.wav", "expected_count": 1, "minimum_size": 50000}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 20,
+  "expected_exit": 0,
+  "expected_log": [
+    "M11 actor assembled:.*parts=[1-9].*face_morph_meshes=[1-9].*animation_groups=[1-9]",
+    "M11 animation loaded:.*group=idle.*characters/_male/idle.kf.*controllers=[1-9]",
+    "M11 animation playing:.*group=idle.*bound_controllers=[1-9]",
+    "M11 lip companion:.*voice=sound/voice/oblivion.esm/redguard/m/charactergen_chargenvoice_0001e8d3_1.mp3.*facefx_bytes=[1-9]"
+  ],
+  "forbidden_log": [
+    "Unable to apply FaceGen",
+    "Unable to attach ESM4 actor part",
+    "Unable to validate FaceFX lip companion",
+    "Unable to load registered actor animation group",
+    "can't find bone",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

@@ -77,6 +77,7 @@ namespace MWRender
 
         void insertNPC(const MWWorld::Ptr& ptr);
         void insertCreature(const MWWorld::Ptr& ptr, const std::string& model, bool weaponsShields);
+        void insertCreature4(const MWWorld::Ptr& ptr, const std::string& model);
 
         Animation* getAnimation(const MWWorld::Ptr& ptr);
         const Animation* getAnimation(const MWWorld::ConstPtr& ptr) const;

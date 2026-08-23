@@ -6,8 +6,6 @@
     { "record": "ACHR", "subrecord": "XLOD", "reason": "Reference LOD semantics are deferred to world rendering." },
     { "record": "ACHR", "subrecord": "XMRC", "reason": "Merchant container semantics are deferred to actor services." },
     { "record": "ACHR", "subrecord": "XPCI", "reason": "Reference location metadata is deferred to runtime world state." },
-    { "record": "ACHR", "subrecord": "XRGD", "reason": "Ragdoll payload semantics are deferred to actor animation." },
-    { "record": "ACRE", "subrecord": "XRGD", "reason": "Ragdoll payload semantics are deferred to actor animation." },
     { "record": "ACTI", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "ALCH", "subrecord": "EFID", "reason": "Effect semantics are deferred to the magic-system milestone." },
     { "record": "ALCH", "subrecord": "EFIT", "reason": "Effect semantics are deferred to the magic-system milestone." },

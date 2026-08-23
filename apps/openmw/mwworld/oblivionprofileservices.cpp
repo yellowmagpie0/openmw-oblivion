@@ -491,6 +491,17 @@ namespace MWWorld
         race.mId = raceId;
         race.mName = nativeRace != nullptr && !nativeRace->mFullName.empty() ? nativeRace->mFullName : "Imperial";
         race.mData.mFlags = ESM::Race::Playable;
+        if (nativeRace != nullptr
+            && (Misc::StringUtils::ciEqual(nativeRace->mEditorId, "Argonian")
+                || Misc::StringUtils::ciEqual(nativeRace->mEditorId, "Khajiit")))
+            race.mData.mFlags |= ESM::Race::Beast;
+        if (nativeRace != nullptr)
+        {
+            race.mData.mMaleHeight = nativeRace->mHeightMale;
+            race.mData.mFemaleHeight = nativeRace->mHeightFemale;
+            race.mData.mMaleWeight = nativeRace->mWeightMale;
+            race.mData.mFemaleWeight = nativeRace->mWeightFemale;
+        }
         const std::array<unsigned char, ESM::Attribute::Length> maleRaceAttributes
             = nativeRace != nullptr ? attributes(nativeRace->mAttribMale)
                                     : std::array<unsigned char, ESM::Attribute::Length>{ 40, 40, 40, 40, 40, 40, 40, 40 };
@@ -530,7 +541,10 @@ namespace MWWorld
         player.mRace = raceId;
         player.mClass = classId;
         const VFS::Path::Normalized skeleton = meshPath(nativePlayer.mModel);
-        player.mModel = skeleton.value();
+        // ESM3 NPC model fields are relative to the meshes VFS root. Keeping
+        // the prefix here would make NpcAnimation's normal correction produce
+        // "meshes/meshes/..." when it recognizes this as a custom skeleton.
+        player.mModel = skeleton.value().substr(std::string_view("meshes/").size());
         player.mFlags = ESM::NPC::Base;
         player.setIsMale((nativePlayer.mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) == 0);
         player.mNpdt.mLevel = std::max<std::int16_t>(1, nativePlayer.mBaseConfig.tes4.levelOrOffset);
@@ -572,17 +586,20 @@ namespace MWWorld
             player.mNpdt.mSkills[ESM::RefId(id)] = value != 0 ? value : 5;
         store.insertStatic(player);
 
+        const VFS::Path::Normalized firstPersonSkeleton("meshes/characters/_1stperson/skeleton.nif");
+        const VFS::Path::Normalized beastSkeleton("meshes/characters/_male/skeletonbeast.nif");
         const VFS::Path::Normalized idle("meshes/characters/_male/idle.kf");
+        const VFS::Path::Normalized firstPersonIdle("meshes/characters/_1stperson/idle.kf");
         Settings::models().mXbaseanim.set(skeleton);
         Settings::models().mBaseanim.set(skeleton);
-        Settings::models().mXbaseanim1st.set(skeleton);
-        Settings::models().mBaseanimkna.set(skeleton);
-        Settings::models().mBaseanimkna1st.set(skeleton);
+        Settings::models().mXbaseanim1st.set(firstPersonSkeleton);
+        Settings::models().mBaseanimkna.set(beastSkeleton);
+        Settings::models().mBaseanimkna1st.set(firstPersonSkeleton);
         Settings::models().mXbaseanimfemale.set(skeleton);
         Settings::models().mBaseanimfemale.set(skeleton);
-        Settings::models().mBaseanimfemale1st.set(skeleton);
+        Settings::models().mBaseanimfemale1st.set(firstPersonSkeleton);
         Settings::models().mXbaseanimkf.set(idle);
-        Settings::models().mXbaseanim1stkf.set(idle);
+        Settings::models().mXbaseanim1stkf.set(firstPersonIdle);
         Settings::models().mXbaseanimfemalekf.set(idle);
 
         // Oblivion ships a complete native sky set under meshes/sky. Select it before the

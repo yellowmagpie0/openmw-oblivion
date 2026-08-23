@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m11-real-creature-animation-roster",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=GoblinJimsCave::ref=0x67067::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 16},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key_down", "value": "s"},
+    {"type": "sleep", "seconds": 1.5},
+    {"type": "key_up", "value": "s"},
+    {"type": "sleep", "seconds": 0.5},
+    {"type": "screenshot", "name": "goblin-roster.png", "minimum_entropy": 0.03},
+    {"type": "sleep", "seconds": 0.5},
+    {"type": "screenshot", "name": "goblin-roster-later.png", "minimum_entropy": 0.03},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 5},
+    {"type": "key", "value": "F9"},
+    {"type": "sleep", "seconds": 8},
+    {"type": "screenshot", "name": "goblin-roster-reloaded.png", "minimum_entropy": 0.03},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 20,
+  "expected_exit": 0,
+  "expected_log": [
+    "M11 creature assembled:.*creatures/goblin/skeleton.nif.*parts=[1-9].*animation_groups=[1-9]",
+    "M11 animation loaded:.*group=idle.*creatures/goblin/idle.kf",
+    "M11 animation playing:.*group=idle.*bound_controllers=[1-9]",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Unable to load registered actor animation group",
+    "Unable to attach ESM4 creature part",
+    "can't find bone",
+    "invalid transform",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

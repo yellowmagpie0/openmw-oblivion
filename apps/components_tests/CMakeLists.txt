@@ -72,6 +72,8 @@ file(GLOB UNITTEST_SRC_FILES
 
     esm4/includes.cpp
     esm4/formidfields.cpp
+    esm4/facegen.cpp
+    esm4/ragdoll.cpp
     esm4/rawrecord.cpp
     esm4/reference.cpp
     esm4/runtimestate.cpp

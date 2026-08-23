@@ -118,6 +118,15 @@ namespace MWRender
             ptr.getClass().getContainerStore(ptr).setContListener(static_cast<ActorAnimation*>(anim.get()));
     }
 
+    void Objects::insertCreature4(const MWWorld::Ptr& ptr, const std::string& model)
+    {
+        insertBegin(ptr);
+        ptr.getRefData().getBaseNode()->setNodeMask(Mask_Actor);
+        osg::ref_ptr<ESM4CreatureAnimation> animation(new ESM4CreatureAnimation(
+            ptr, model, osg::ref_ptr<osg::Group>(ptr.getRefData().getBaseNode()), mResourceSystem));
+        mObjects.emplace(ptr.mRef, std::move(animation));
+    }
+
     void Objects::insertNPC(const MWWorld::Ptr& ptr)
     {
         insertBegin(ptr);

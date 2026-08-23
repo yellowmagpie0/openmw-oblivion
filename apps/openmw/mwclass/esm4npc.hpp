@@ -56,6 +56,8 @@ namespace MWClass
 
         VFS::Path::NormalizedView getModel(const MWWorld::ConstPtr& ptr) const override;
         std::string_view getName(const MWWorld::ConstPtr& ptr) const override;
+        bool useAnim() const override { return true; }
+        void adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const override;
 
         static const ESM4::Npc* getTraitsRecord(const MWWorld::Ptr& ptr);
         static const ESM4::Race* getRace(const MWWorld::Ptr& ptr);

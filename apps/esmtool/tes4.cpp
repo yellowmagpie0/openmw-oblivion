@@ -233,6 +233,83 @@ namespace EsmTool
                 std::cout << "\n  ModelFemale: " << value.mModelFemale.getOriginal();
             if constexpr (ESM4::HasModelFemaleWorld<T>)
                 std::cout << "\n  ModelFemaleWorld: " << value.mModelFemaleWorld.getOriginal();
+            if constexpr (requires { value.mRace; })
+                std::cout << "\n  RaceId: " << value.mRace;
+            if constexpr (requires { value.mHair; })
+                std::cout << "\n  HairId: " << value.mHair;
+            if constexpr (requires { value.mEyes; })
+                std::cout << "\n  EyesId: " << value.mEyes;
+            if constexpr (requires { value.mRagdoll; value.mRagdollBiped; })
+            {
+                if (!value.mRagdoll.mBones.empty())
+                {
+                    std::cout << "\n  RagdollRootMetadata: " << value.mRagdoll.mRootMetadata;
+                    std::cout << "\n  RagdollRootPosition: " << value.mRagdoll.mRootPosition[0] << " "
+                              << value.mRagdoll.mRootPosition[1] << " " << value.mRagdoll.mRootPosition[2];
+                    std::cout << "\n  RagdollRootRotation: " << value.mRagdoll.mRootRotation[0] << " "
+                              << value.mRagdoll.mRootRotation[1] << " " << value.mRagdoll.mRootRotation[2];
+                    std::cout << "\n  RagdollBones: " << value.mRagdoll.mBones.size();
+                    for (const auto& bone : value.mRagdoll.mBones)
+                    {
+                        std::cout << "\n  RagdollBone: " << bone.mBone << " position=" << bone.mPosition[0] << " "
+                                  << bone.mPosition[1] << " " << bone.mPosition[2] << " rotation="
+                                  << bone.mRotation[0] << " " << bone.mRotation[1] << " " << bone.mRotation[2];
+                    }
+                }
+                if (!value.mRagdollBiped.empty())
+                    std::cout << "\n  RagdollBipedBytes: " << value.mRagdollBiped.size();
+            }
+            if constexpr (requires { value.mInventory; })
+            {
+                std::cout << "\n  Inventory: " << value.mInventory.size();
+                for (const auto& item : value.mInventory)
+                {
+                    if constexpr (requires { item.item; item.count; })
+                        std::cout << " " << ESM::FormId::fromUint32(item.item) << "x" << item.count;
+                    else if constexpr (requires { std::cout << item; })
+                        std::cout << " " << item;
+                }
+            }
+            if constexpr (requires { value.mIcon; })
+                std::cout << "\n  Icon: " << value.mIcon;
+            if constexpr (requires { value.mArmorFlags; })
+                std::cout << "\n  BipedSlots: " << (value.mArmorFlags & 0xffffu);
+            if constexpr (requires { value.mClothingFlags; })
+                std::cout << "\n  BipedSlots: " << (value.mClothingFlags & 0xffffu);
+            if constexpr (requires { value.mHeadParts; value.mBodyPartsMale; value.mBodyPartsFemale; })
+            {
+                std::cout << "\n  RaceFlags: " << value.mRaceFlags;
+                const auto writeParts = [&](std::string_view label, const auto& parts) {
+                    for (std::size_t index = 0; index < parts.size(); ++index)
+                        std::cout << "\n  " << label << index << ": " << parts[index].mesh << "\t"
+                                  << parts[index].texture;
+                };
+                writeParts("HeadPartMale", value.mHeadParts);
+                writeParts("HeadPartFemale", value.mHeadPartsFemale);
+                writeParts("BodyPartMale", value.mBodyPartsMale);
+                writeParts("BodyPartFemale", value.mBodyPartsFemale);
+                std::cout << "\n  FaceGenShapeModesMale: " << value.mSymShapeModeCoefficients.size() << "/"
+                          << value.mAsymShapeModeCoefficients.size();
+                std::cout << "\n  FaceGenShapeModesFemale: " << value.mSymShapeModeCoeffFemale.size() << "/"
+                          << value.mAsymShapeModeCoeffFemale.size();
+                std::cout << "\n  FaceGenTextureModesMale: " << value.mSymTextureModeCoefficients.size();
+                std::cout << "\n  FaceGenTextureModesFemale: " << value.mSymTextureModeCoeffFemale.size();
+            }
+            if constexpr (requires { value.mSymShapeModeCoefficients; value.mAsymShapeModeCoefficients;
+                              value.mSymTextureModeCoefficients; })
+            {
+                const auto writeRange = [&](std::string_view label, const std::vector<float>& values) {
+                    std::cout << "\n  " << label << ": " << values.size();
+                    if (!values.empty())
+                    {
+                        const auto [minimum, maximum] = std::minmax_element(values.begin(), values.end());
+                        std::cout << " range=" << *minimum << ".." << *maximum;
+                    }
+                };
+                writeRange("FaceGenShapeModes", value.mSymShapeModeCoefficients);
+                writeRange("FaceGenAsymmetricModes", value.mAsymShapeModeCoefficients);
+                writeRange("FaceGenTextureModes", value.mSymTextureModeCoefficients);
+            }
             if constexpr (ESM4::HasNif<T>)
                 std::cout << "\n  Nif:" << WriteArray("\n  - ", value.mNif);
             if constexpr (ESM4::HasKf<T>)

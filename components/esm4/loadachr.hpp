@@ -34,6 +34,7 @@
 #include <components/esm/refid.hpp>
 
 #include "reference.hpp" // Placement, EnableParent
+#include "ragdoll.hpp"
 
 #include <components/esm/formkey.hpp>
 
@@ -62,6 +63,8 @@ namespace ESM4
         EnableParent mEsp;
 
         std::int32_t mCount = 1;
+        RagdollPose mRagdoll;
+        std::vector<std::uint8_t> mRagdollBiped;
 
         void load(ESM4::Reader& reader);
         // void save(ESM4::Writer& writer) const;

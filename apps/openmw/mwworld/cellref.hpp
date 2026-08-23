@@ -6,6 +6,7 @@
 #include <components/esm/esmbridge.hpp>
 #include <components/esm3/cellref.hpp>
 #include <components/esm4/loadrefr.hpp>
+#include <components/esm4/loadachr.hpp>
 
 namespace ESM
 {
@@ -68,6 +69,14 @@ namespace MWWorld
                 std::string_view operator()(const ESM4::ActorCharacter& ref) { return ref.mEditorId; }
             };
             return std::visit(Visitor(), mCellRef.mVariant);
+        }
+
+        const ESM4::RagdollPose* getRagdollPose() const
+        {
+            if (const auto* actor = std::get_if<ESM4::ActorCharacter>(&mCellRef.mVariant);
+                actor != nullptr && !actor->mRagdoll.mBones.empty())
+                return &actor->mRagdoll;
+            return nullptr;
         }
 
         // For doors - true if this door teleports to somewhere else, false

@@ -183,7 +183,15 @@ namespace MWRender
         typedef std::vector<std::shared_ptr<AnimSource>> AnimSourceList;
         AnimSourceList mAnimSources;
 
-        std::unordered_set<std::string_view> mSupportedAnimations;
+        std::unordered_set<std::string> mSupportedAnimations;
+        struct LazyAnimSource
+        {
+            VFS::Path::Normalized mPath;
+            std::string mGroup;
+        };
+        std::map<std::string, LazyAnimSource, std::less<>> mLazyAnimSources;
+        std::unordered_set<std::string> mLoadedLazyAnimations;
+        std::unordered_set<std::string> mReportedLazyAnimations;
         mutable std::vector<std::pair<std::string, MWWorld::MovementDirectionFlags>> mSupportedDirections;
 
         osg::ref_ptr<osg::Group> mInsert;
@@ -295,7 +303,18 @@ namespace MWRender
          * @param baseModel The filename of the mObjectRoot, only used for error messages.
          */
         void addAnimSource(std::string_view model, const std::string& baseModel);
-        std::shared_ptr<AnimSource> addSingleAnimSource(VFS::Path::NormalizedView kfname, const std::string& baseModel);
+        std::shared_ptr<AnimSource> addSingleAnimSource(VFS::Path::NormalizedView kfname, const std::string& baseModel,
+            std::string_view groupAlias = {}, bool warnMissingBones = true);
+
+        /** Register every KF below a directory without eagerly cloning its controllers.
+         *
+         * Bethesda actor archives contain one animation group per KF and hundreds of
+         * files per skeleton family.  Registered groups are reported by hasAnimation,
+         * then loaded on first playback.  A later registration for the same filename
+         * stem has priority, matching the existing AnimSource ordering rules.
+         */
+        void addAnimDirectory(VFS::Path::NormalizedView directory);
+        void ensureAnimSource(std::string_view group);
 
         /** Adds an additional light to the given node using the specified ESM record. */
         void addExtraLight(osg::ref_ptr<osg::Group> parent, const SceneUtil::LightCommon& light);

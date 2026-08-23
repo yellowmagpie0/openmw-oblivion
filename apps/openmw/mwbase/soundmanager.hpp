@@ -151,6 +151,12 @@ namespace MWBase
         /// and get an average loudness value (scale [0,1]) at the current time position.
         /// If the actor is not saying anything, returns 0.
 
+        virtual VFS::Path::Normalized getSaySoundFile(const MWWorld::ConstPtr&) const { return {}; }
+        ///< Return the VFS path of an actor's current voice line, if any.
+
+        virtual float getSaySoundOffset(const MWWorld::ConstPtr&) const { return 0.f; }
+        ///< Return the playback position of an actor's current voice line.
+
         virtual SoundStream* playTrack(const MWSound::DecoderPtr& decoder, Type type) = 0;
         ///< Play a 2D audio track, using a custom decoder. The caller is expected to call
         /// stopTrack with the returned handle when done.

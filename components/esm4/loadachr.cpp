@@ -27,6 +27,7 @@
 #include "loadachr.hpp"
 
 #include <stdexcept>
+#include <sstream>
 
 #include "reader.hpp"
 //#include "writer.hpp"
@@ -88,8 +89,18 @@ void ESM4::ActorCharacter::load(ESM4::Reader& reader)
                 reader.get(mCount);
                 break;
             }
-            case ESM::fourCC("XRGD"): // ragdoll
-            case ESM::fourCC("XRGB"): // ragdoll biped
+            case ESM::fourCC("XRGD"): // saved ragdoll pose
+            {
+                std::string bytes(subHdr.dataSize, '\0');
+                reader.get(bytes.data(), bytes.size());
+                std::istringstream stream(bytes, std::ios::binary);
+                mRagdoll = loadRagdollPose(stream, bytes.size());
+                break;
+            }
+            case ESM::fourCC("XRGB"): // saved ragdoll biped metadata
+                mRagdollBiped.resize(subHdr.dataSize);
+                reader.get(mRagdollBiped.data(), mRagdollBiped.size());
+                break;
             case ESM::fourCC("XHRS"): // horse formId
             case ESM::fourCC("XMRC"): // merchant container formId
             // TES5

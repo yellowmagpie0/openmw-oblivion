@@ -76,6 +76,7 @@ namespace MWSound
         {
             const MWWorld::CellStore* mCell;
             StreamPtr mStream;
+            VFS::Path::Normalized mFile;
         };
 
         typedef std::map<const MWWorld::LiveCellRefBase*, SaySound> SaySoundMap;
@@ -202,6 +203,8 @@ namespace MWSound
         ///< Stop an actor speaking
 
         float getSaySoundLoudness(const MWWorld::ConstPtr& reference) const override;
+        VFS::Path::Normalized getSaySoundFile(const MWWorld::ConstPtr& reference) const override;
+        float getSaySoundOffset(const MWWorld::ConstPtr& reference) const override;
         ///< Check the currently playing say sound for this actor
         /// and get an average loudness value (scale [0,1]) at the current time position.
         /// If the actor is not saying anything, returns 0.
