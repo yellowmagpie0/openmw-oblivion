@@ -1,5 +1,6 @@
 #include "worldimp.hpp"
 
+#include <array>
 #include <charconv>
 #include <fstream>
 #include <limits>
@@ -28,12 +29,21 @@
 #include <components/esm3/loadregn.hpp>
 #include <components/esm3/loadstat.hpp>
 #include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadammo.hpp>
+#include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadcont.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loaddoor.hpp>
 #include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadingr.hpp>
+#include <components/esm4/loadkeym.hpp>
+#include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadstat.hpp>
+#include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadwrld.hpp>
 #include <components/esm4/runtimestate.hpp>
 
@@ -381,8 +391,43 @@ namespace MWWorld
             ESM::RefId cellId = findExteriorPosition(startCell, pos);
             if (!cellId.empty())
             {
-                changeToCell(cellId, pos, true);
-                adjustPosition(getPlayerPtr(), false);
+                if (startReference)
+                {
+                    const CellStore* cell = mWorldModel.findCell(cellId);
+                    std::optional<ESM::Position> target;
+                    if (cell)
+                        cell->forEachConst(
+                            [&](const ConstPtr& ptr) {
+                                if (ptr.getCellRef().getRefNum().mIndex == *startReference)
+                                {
+                                    target = ptr.getCellRef().getPosition();
+                                    return false;
+                                }
+                                return true;
+                            },
+                            true);
+                    if (!target)
+                        throw std::runtime_error("TES4 start reference is not present in exterior cell: 0x"
+                            + std::to_string(*startReference));
+                    pos = *target;
+                    pos.pos[0] += startReferenceOffset.x();
+                    pos.pos[1] += startReferenceOffset.y();
+                    pos.pos[2] += 16.f;
+                    pos.rot[0] = pos.rot[1] = 0.f;
+                    pos.rot[2] = startReferenceYaw;
+                    Log(Debug::Info) << "M12 exterior start target: cell=" << startCell << " ref=0x" << std::hex
+                                     << *startReference << std::dec << " position=" << pos.pos[0] << ','
+                                     << pos.pos[1] << ',' << pos.pos[2];
+                    // Exact reference-relative starts are used by deterministic movement courses, including starts
+                    // below a water surface. Ground adjustment would discard that Z coordinate and invalidate the
+                    // swimming course.
+                    changeToCell(cellId, pos, false);
+                }
+                else
+                {
+                    changeToCell(cellId, pos, true);
+                    adjustPosition(getPlayerPtr(), false);
+                }
             }
             else
             {
@@ -570,6 +615,47 @@ namespace MWWorld
         addDynamicStat("magicka", stats.getMagicka());
         addDynamicStat("fatigue", stats.getFatigue());
         state.mPlayer.mActorValues.emplace("level", stats.getLevel());
+        state.mPlayer.mActorValues.emplace("encumbrance", player.getClass().getEncumbrance(player));
+        state.mPlayer.mActorValues.emplace("carryweight", player.getClass().getCapacity(player));
+        static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
+            "endurance", "personality", "luck" };
+        for (std::size_t i = 0; i < attributeNames.size(); ++i)
+        {
+            const MWMechanics::AttributeValue& value = stats.getAttribute(ESM::Attribute::indexToRefId(i));
+            state.mPlayer.mActorValues.emplace(std::string(attributeNames[i]) + ".base", value.getBase());
+            state.mPlayer.mActorValues.emplace(std::string(attributeNames[i]) + ".modifier", value.getModifier());
+        }
+        static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics, ESM::Skill::LongBlade,
+            ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand, ESM::Skill::HeavyArmor,
+            ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration, ESM::Skill::Destruction,
+            ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration, ESM::Skill::Acrobatics,
+            ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile, ESM::Skill::Security,
+            ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+        static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt", "handtohand",
+            "heavyarmor", "alchemy", "alteration", "conjuration", "destruction", "illusion", "mysticism",
+            "restoration", "acrobatics", "lightarmor", "marksman", "mercantile", "security", "sneak",
+            "speechcraft" };
+        const MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
+        state.mPlayer.mActorValues.emplace("breath_time.current", npcStats.getTimeToStartDrowning());
+        for (std::size_t i = 0; i < skillIds.size(); ++i)
+        {
+            const MWMechanics::SkillValue& value = npcStats.getSkill(ESM::RefId(skillIds[i]));
+            state.mPlayer.mActorValues.emplace(std::string(skillNames[i]) + ".base", value.getBase());
+            state.mPlayer.mActorValues.emplace(std::string(skillNames[i]) + ".modifier", value.getModifier());
+        }
+        const ESM::NPC* playerBase = player.get<ESM::NPC>()->mBase;
+        state.mPlayer.mName = playerBase->mName;
+        if (const ESM::FormId* race = playerBase->mRace.getIf<ESM::FormId>())
+            state.mPlayer.mRace = resolver.toFormKey(*race);
+        if (const ESM::FormId* characterClass = playerBase->mClass.getIf<ESM::FormId>())
+            state.mPlayer.mClass = resolver.toFormKey(*characterClass);
+        else
+            state.mPlayer.mClass = ESM::FormKey::dynamic("player-class", 1);
+        const ESM::RefId& birthSign = mPlayer->getBirthSign();
+        if (const ESM::FormId* sign = birthSign.getIf<ESM::FormId>())
+            state.mPlayer.mBirthSign = resolver.toFormKey(*sign);
+        state.mPlayer.mFemale = !playerBase->isMale();
+        state.mPlayer.mCharacterGenerationFlags = mPlayer->getOblivionCharacterGenerationFlags();
 
         // Player inventory is currently projected through the TES3 actor facade. Preserve a previously loaded native
         // inventory overlay, or seed it from the native Player NPC until ESM4 item classes gain ContainerStore support.
@@ -768,6 +854,41 @@ namespace MWWorld
         return state;
     }
 
+    float World::getOblivionPlayerInventoryWeight() const
+    {
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        std::vector<ESM4::RuntimeInventoryItem> inventory;
+        if (mOblivionRuntimeState)
+            inventory = mOblivionRuntimeState->mPlayer.mInventory;
+        else
+            for (const ESM4::Npc& npc : mStore.get<ESM4::Npc>())
+                if (Misc::StringUtils::ciEqual(npc.mEditorId, "Player"))
+                {
+                    for (const ESM4::InventoryItem& item : npc.mInventory)
+                        inventory.push_back({ resolver.toFormKey(ESM::FormId::fromUint32(item.item)),
+                            static_cast<std::int32_t>(item.count) });
+                    break;
+                }
+        const auto itemWeight = [&](const ESM::FormId& id) {
+            if (const auto* item = mStore.get<ESM4::Ammunition>().search(id)) return item->mData.mWeight;
+            if (const auto* item = mStore.get<ESM4::Potion>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::Armor>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::Book>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::Clothing>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::Ingredient>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::Key>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::MiscItem>().search(id)) return item->mData.weight;
+            if (const auto* item = mStore.get<ESM4::Weapon>().search(id)) return item->mData.weight;
+            return 0.f;
+        };
+        float result = 0.f;
+        for (const ESM4::RuntimeInventoryItem& item : inventory)
+            if (item.mCount > 0)
+                if (const std::optional<ESM::FormId> id = resolver.toFormId(item.mBase))
+                    result += itemWeight(*id) * item.mCount;
+        return std::max(0.f, result);
+    }
+
     void World::applyOblivionRuntimeState()
     {
         if (!mOblivionRuntimeState)
@@ -841,6 +962,33 @@ namespace MWWorld
         mGlobalVariables[Globals::sTimeScale].setFloat(static_cast<float>(state.mClock.mTimeScale));
         mTimeManager->setup(mGlobalVariables);
 
+        if (state.mVersion >= 3)
+        {
+            const std::optional<ESM::FormId> race = resolver.toFormId(state.mPlayer.mRace);
+            const std::optional<ESM::FormId> characterClass = resolver.toFormId(state.mPlayer.mClass);
+            ESM::NPC playerBase = *mStore.get<ESM::NPC>().find(ESM::RefId::stringRefId("Player"));
+            if (!characterClass && !state.mPlayer.mClass.isDynamic())
+                throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
+            const ESM::RefId classId
+                = characterClass ? ESM::RefId(*characterClass) : playerBase.mClass;
+            if (!race || mStore.get<ESM::Race>().search(ESM::RefId(*race)) == nullptr
+                || mStore.get<ESM::Class>().search(classId) == nullptr)
+                throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
+            playerBase.mName = state.mPlayer.mName;
+            playerBase.mRace = ESM::RefId(*race);
+            playerBase.mClass = classId;
+            playerBase.setIsMale(!state.mPlayer.mFemale);
+            const ESM::NPC* inserted = mStore.insert(playerBase);
+            mPlayer->set(inserted);
+            if (state.mPlayer.mBirthSign.isNull())
+                mPlayer->setBirthSign({});
+            else if (const std::optional<ESM::FormId> birthSign = resolver.toFormId(state.mPlayer.mBirthSign))
+                mPlayer->setBirthSign(ESM::RefId(*birthSign));
+            else
+                throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
+            mPlayer->setOblivionCharacterGenerationFlags(state.mPlayer.mCharacterGenerationFlags);
+        }
+
         const std::optional<ESM::FormId> playerCellId = resolver.toFormId(state.mPlayer.mCell);
         if (!playerCellId || !playerCellId->hasContentFile())
             throw std::runtime_error("TES4 runtime-state player cell cannot be resolved");
@@ -871,6 +1019,45 @@ namespace MWWorld
         stats.setFatigue(applyDynamicStat("fatigue", stats.getFatigue()));
         if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
             stats.setLevel(static_cast<int>(level->second));
+        static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
+            "endurance", "personality", "luck" };
+        for (std::size_t i = 0; i < attributeNames.size(); ++i)
+        {
+            MWMechanics::AttributeValue value = stats.getAttribute(ESM::Attribute::indexToRefId(i));
+            const std::string prefix(attributeNames[i]);
+            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".base");
+                found != state.mPlayer.mActorValues.end())
+                value.setBase(static_cast<float>(found->second), true);
+            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".modifier");
+                found != state.mPlayer.mActorValues.end())
+                value.setModifier(static_cast<float>(found->second));
+            stats.setAttribute(ESM::Attribute::indexToRefId(i), value);
+        }
+        static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics, ESM::Skill::LongBlade,
+            ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand, ESM::Skill::HeavyArmor,
+            ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration, ESM::Skill::Destruction,
+            ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration, ESM::Skill::Acrobatics,
+            ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile, ESM::Skill::Security,
+            ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+        static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt", "handtohand",
+            "heavyarmor", "alchemy", "alteration", "conjuration", "destruction", "illusion", "mysticism",
+            "restoration", "acrobatics", "lightarmor", "marksman", "mercantile", "security", "sneak",
+            "speechcraft" };
+        MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
+        if (const auto breath = state.mPlayer.mActorValues.find("breath_time.current");
+            breath != state.mPlayer.mActorValues.end())
+            npcStats.setTimeToStartDrowning(static_cast<float>(breath->second));
+        for (std::size_t i = 0; i < skillIds.size(); ++i)
+        {
+            MWMechanics::SkillValue& value = npcStats.getSkill(ESM::RefId(skillIds[i]));
+            const std::string prefix(skillNames[i]);
+            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".base");
+                found != state.mPlayer.mActorValues.end())
+                value.setBase(static_cast<float>(found->second), true);
+            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".modifier");
+                found != state.mPlayer.mActorValues.end())
+                value.setModifier(static_cast<float>(found->second));
+        }
 
         // Load every target cell first, then build a stable-key index. This also makes moved-reference restoration
         // independent of plugin order and of the order in which cell records appeared in the save.
@@ -999,7 +1186,9 @@ namespace MWWorld
         }
         Log(Debug::Info) << "Applied TES4 runtime state: " << state.mGlobals.size() << " globals, "
                          << state.mReferences.size() << " references, next dynamic serial "
-                         << state.mNextDynamicSerial;
+                         << state.mNextDynamicSerial << ", player fatigue=" << stats.getFatigue().getCurrent() << "/"
+                         << stats.getFatigue().getBase() << " speed="
+                         << stats.getAttribute(ESM::Attribute::Speed).getBase();
         if (mOblivionScriptManager)
             mOblivionScriptManager->restore(state);
     }

@@ -856,7 +856,7 @@ void OMW::Engine::prepareEngine()
     mEnvironment.setWindowManager(*mWindowManager);
 
     mInputManager = std::make_unique<MWInput::InputManager>(mWindow, mViewer, mScreenCaptureHandler, keybinderUser,
-        keybinderUserExists, userGameControllerdb, gameControllerdb, mGrab);
+        keybinderUserExists, userGameControllerdb, gameControllerdb, mGrab, resolveResourceProfile());
     mEnvironment.setInputManager(*mInputManager);
 
     // Create sound system

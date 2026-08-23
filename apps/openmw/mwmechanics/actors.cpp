@@ -983,10 +983,14 @@ namespace MWMechanics
                                                  ->get<ESM::GameSetting>()
                                                  .find("fHoldBreathTime")
                                                  ->mValue.getFloat();
+        const float holdBreathTime
+            = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            ? 4.f + stats.getAttribute(ESM::Attribute::Endurance).getModified() * 0.3f
+            : fHoldBreathTime;
         if (stats.getTimeToStartDrowning() == -1.f)
-            stats.setTimeToStartDrowning(fHoldBreathTime);
+            stats.setTimeToStartDrowning(holdBreathTime);
 
-        if (!isPlayer && stats.getTimeToStartDrowning() < fHoldBreathTime / 2)
+        if (!isPlayer && stats.getTimeToStartDrowning() < holdBreathTime / 2)
         {
             AiSequence& seq = actorClass.getCreatureStats(ptr).getAiSequence();
             if (seq.getTypeId() != AiPackageTypeId::Breathe) // Only add it once
@@ -1033,7 +1037,7 @@ namespace MWMechanics
             }
         }
         else
-            stats.setTimeToStartDrowning(fHoldBreathTime);
+            stats.setTimeToStartDrowning(holdBreathTime);
     }
 
     static void updateEquippedLight(const MWWorld::Ptr& ptr, float duration, bool mayEquip)

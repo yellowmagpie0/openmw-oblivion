@@ -96,6 +96,7 @@ namespace ESM4
     struct Armor;
     struct ArmorAddon;
     struct Book;
+    struct BirthSign;
     struct Cell;
     struct Class;
     struct Clothing;
@@ -170,7 +171,7 @@ namespace MWWorld
             Store<ESM::Attribute>,
 
             Store<ESM4::Activator>, Store<ESM4::ActorCharacter>, Store<ESM4::ActorCreature>, Store<ESM4::Ammunition>,
-            Store<ESM4::Armor>, Store<ESM4::ArmorAddon>, Store<ESM4::Book>, Store<ESM4::Cell>, Store<ESM4::Clothing>,
+            Store<ESM4::Armor>, Store<ESM4::ArmorAddon>, Store<ESM4::Book>, Store<ESM4::BirthSign>, Store<ESM4::Cell>, Store<ESM4::Clothing>,
             Store<ESM4::Class>, Store<ESM4::Climate>, Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Dialogue>,
             Store<ESM4::Door>, Store<ESM4::Eyes>,
             Store<ESM4::Furniture>, Store<ESM4::Flora>, Store<ESM4::GameSetting>, Store<ESM4::GlobalVariable>,

@@ -7,11 +7,13 @@
 #include <limits>
 #include <optional>
 #include <string_view>
+#include <type_traits>
 #include <variant>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm3/variant.hpp>
+#include <components/esm4/playermechanics.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/settings/values.hpp>
 
@@ -55,6 +57,8 @@ namespace
         std::string_view("fMinWalkSpeed"),
         std::string_view("fMiscSkillBonus"),
         std::string_view("fPCbaseMagickaMult"),
+        std::string_view("fSneakUseDelay"),
+        std::string_view("fSneakUseDist"),
         std::string_view("fSneakSpeedMultiplier"),
         std::string_view("fSpecialSkillBonus"),
         std::string_view("fStromWalkMult"),
@@ -315,6 +319,34 @@ namespace
         return true;
     }
 
+    void setFloatSetting(MWWorld::ESMStore& store, std::string_view id, float value)
+    {
+        ESM::GameSetting setting;
+        setting.blank();
+        setting.mId = ESM::RefId::stringRefId(id);
+        setting.mValue = ESM::Variant(value);
+        store.getWritable<ESM::GameSetting>().insertStatic(setting);
+    }
+
+    std::optional<float> nativeFloatSetting(const MWWorld::ESMStore& store, std::string_view id)
+    {
+        for (const ESM4::GameSetting& setting : store.get<ESM4::GameSetting>())
+        {
+            if (!Misc::StringUtils::ciEqual(setting.mEditorId, id))
+                continue;
+            return std::visit(
+                [](const auto& value) -> std::optional<float> {
+                    using T = std::decay_t<decltype(value)>;
+                    if constexpr (std::is_arithmetic_v<T>)
+                        return static_cast<float>(value);
+                    else
+                        return std::nullopt;
+                },
+                setting.mData);
+        }
+        return std::nullopt;
+    }
+
     bool addGlobal(MWWorld::ESMStore& store, std::string_view id, ESM::Variant value)
     {
         const ESM::RefId refId = ESM::RefId::stringRefId(id);
@@ -340,6 +372,90 @@ namespace
     {
         return { value.strength, value.intelligence, value.willpower, value.agility, value.speed, value.endurance,
             value.personality, value.luck };
+    }
+
+    ESM::RefId skillId(std::uint32_t nativeSkill)
+    {
+        static const std::array ids{ ESM::Skill::Armorer, ESM::Skill::Athletics, ESM::Skill::LongBlade,
+            ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand, ESM::Skill::HeavyArmor,
+            ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration, ESM::Skill::Destruction,
+            ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration, ESM::Skill::Acrobatics,
+            ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile, ESM::Skill::Security,
+            ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+        const int index = ESM4::playerSkillIndex(nativeSkill);
+        return index >= 0 ? ESM::RefId(ids[index]) : ESM::RefId{};
+    }
+
+    ESM::RefId attributeId(std::uint32_t index)
+    {
+        return index < ESM::Attribute::Length ? ESM::Attribute::indexToRefId(index) : ESM::RefId{};
+    }
+
+    ESM::Race projectRace(const ESM4::Race& source)
+    {
+        ESM::Race race;
+        race.blank();
+        race.mId = ESM::RefId(source.mId);
+        race.mName = source.mFullName;
+        race.mDescription = source.mDesc;
+        if ((source.mRaceFlags & 1) != 0)
+            race.mData.mFlags |= ESM::Race::Playable;
+        if (Misc::StringUtils::ciEqual(source.mEditorId, "Argonian")
+            || Misc::StringUtils::ciEqual(source.mEditorId, "Khajiit"))
+            race.mData.mFlags |= ESM::Race::Beast;
+        race.mData.mMaleHeight = source.mHeightMale;
+        race.mData.mFemaleHeight = source.mHeightFemale;
+        race.mData.mMaleWeight = source.mWeightMale;
+        race.mData.mFemaleWeight = source.mWeightFemale;
+        const auto male = attributes(source.mAttribMale);
+        const auto female = attributes(source.mAttribFemale);
+        for (int i = 0; i < ESM::Attribute::Length; ++i)
+        {
+            race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, male[i]);
+            race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, female[i]);
+        }
+        std::size_t bonusIndex = 0;
+        for (const auto& [nativeSkill, bonus] : source.mSkillBonus)
+        {
+            const ESM::RefId id = skillId(nativeSkill);
+            if (!id.empty() && bonusIndex < race.mData.mBonus.size())
+                race.mData.mBonus[bonusIndex++] = { id, bonus };
+        }
+        for (const ESM::FormId power : source.mBonusSpells)
+            race.mPowers.mList.emplace_back(power);
+        return race;
+    }
+
+    ESM::Class projectClass(const ESM4::Class& source)
+    {
+        ESM::Class result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mDescription = source.mDesc;
+        for (std::size_t i = 0; i < result.mData.mAttribute.size(); ++i)
+            result.mData.mAttribute[i] = attributeId(source.mData.mFavoredAttributes[i]);
+        result.mData.mSpecialization = std::min<std::uint32_t>(source.mData.mSpecialization, ESM::Class::Stealth);
+        result.mData.mIsPlayable = (source.mData.mFlags & 1) != 0;
+        result.mData.mServices = source.mData.mServices;
+        for (std::size_t i = 0; i < 5; ++i)
+            result.mData.mSkills[i][1] = skillId(source.mData.mMajorSkills[i]);
+        result.mData.mSkills[0][0] = skillId(source.mData.mMajorSkills[5]);
+        result.mData.mSkills[1][0] = skillId(source.mData.mMajorSkills[6]);
+        return result;
+    }
+
+    ESM::BirthSign projectBirthSign(const ESM4::BirthSign& source)
+    {
+        ESM::BirthSign result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mDescription = source.mDescription;
+        result.mTexture = source.mIcon;
+        for (const ESM::FormId spell : source.mSpells)
+            result.mPowers.mList.emplace_back(spell);
+        return result;
     }
 
     VFS::Path::Normalized meshPath(const ESM::Path& source)
@@ -401,6 +517,11 @@ namespace MWWorld
         addFloat("fFatigueSwimRunMult", 0.f);
         addFloat("fFatigueSwimWalkBase", 2.5f);
         addFloat("fFatigueSwimWalkMult", 0.f);
+        // The shared stealth observer update uses this TES3-named contract. Oblivion's equivalent is implemented
+        // in the executable rather than exposed as GMSTs; retain the shared one-second sampling cadence and
+        // 500-unit interaction radius.
+        addFloat("fSneakUseDelay", 1.f);
+        addFloat("fSneakUseDist", 500.f);
         // Shared OpenMW audio code expresses record attenuation in the same
         // distance scale as TES3. Oblivion keeps these constants in the game
         // executable instead of GMST records, so install the canonical values
@@ -411,10 +532,10 @@ namespace MWWorld
         addFloat("fAudioVoiceDefaultMaxDistance", 60.f);
         addFloat("fAudioMinDistanceMult", 20.f);
         addFloat("fAudioMaxDistanceMult", 50.f);
-        addInt("iMaxActivateDist", 192);
+        addInt("iMaxActivateDist", 150);
         // Legacy UI and focus services still consume these two common runtime contracts.
         // Oblivion does not ship the identically named Morrowind settings.
-        addInt("iMaxInfoDist", 192);
+        addInt("iMaxInfoDist", 150);
         addInt("iLevelUpTotal", 10);
         addInt("iMonthsToRespawn", 1);
         addString("sDefaultCellname", "Wilderness");
@@ -422,6 +543,55 @@ namespace MWWorld
         addString("FontColor_color_normal", "255,255,255");
         addString("fontcolor_color_normal_over", "255,255,255");
         addString("fontcolor_color_normal_pressed", "204,204,204");
+        // TES4's actor-value display names are not carried under the TES3 GMST identifiers used by the shared UI.
+        // Populate those identifiers with the actual Oblivion names so character creation never exposes compatibility
+        // enum names such as "Longblade" or generated "Skill ..." placeholders.
+        for (const auto& [id, name] : std::array{
+                 std::pair{ "sAttributeStrength", "Strength" },
+                 std::pair{ "sAttributeIntelligence", "Intelligence" },
+                 std::pair{ "sAttributeWillpower", "Willpower" },
+                 std::pair{ "sAttributeAgility", "Agility" },
+                 std::pair{ "sAttributeSpeed", "Speed" },
+                 std::pair{ "sAttributeEndurance", "Endurance" },
+                 std::pair{ "sAttributePersonality", "Personality" },
+                 std::pair{ "sAttributeLuck", "Luck" },
+                 std::pair{ "sSkillArmorer", "Armorer" },
+                 std::pair{ "sSkillAthletics", "Athletics" },
+                 std::pair{ "sSkillLongblade", "Blade" },
+                 std::pair{ "sSkillBlock", "Block" },
+                 std::pair{ "sSkillBluntweapon", "Blunt" },
+                 std::pair{ "sSkillHandtohand", "Hand to Hand" },
+                 std::pair{ "sSkillHeavyarmor", "Heavy Armor" },
+                 std::pair{ "sSkillAlchemy", "Alchemy" },
+                 std::pair{ "sSkillAlteration", "Alteration" },
+                 std::pair{ "sSkillConjuration", "Conjuration" },
+                 std::pair{ "sSkillDestruction", "Destruction" },
+                 std::pair{ "sSkillIllusion", "Illusion" },
+                 std::pair{ "sSkillMysticism", "Mysticism" },
+                 std::pair{ "sSkillRestoration", "Restoration" },
+                 std::pair{ "sSkillAcrobatics", "Acrobatics" },
+                 std::pair{ "sSkillLightarmor", "Light Armor" },
+                 std::pair{ "sSkillMarksman", "Marksman" },
+                 std::pair{ "sSkillMercantile", "Mercantile" },
+                 std::pair{ "sSkillSecurity", "Security" },
+                 std::pair{ "sSkillSneak", "Sneak" },
+                 std::pair{ "sSkillSpeechcraft", "Speechcraft" },
+                 std::pair{ "sSpecializationCombat", "Combat" },
+                 std::pair{ "sSpecializationMagic", "Magic" },
+                 std::pair{ "sSpecializationStealth", "Stealth" },
+                 std::pair{ "sSkillClassMajor", "Major Skills" },
+                 std::pair{ "sSkillClassMinor", "Major Skills 6-7" },
+                 std::pair{ "sSkillClassMisc", "Other Skills" },
+                 std::pair{ "sChooseClassMenu1", "Specialization" },
+                 std::pair{ "sChooseClassMenu2", "Favored Attributes" },
+                 std::pair{ "sChooseClassMenu3", "Major Skills" },
+                 std::pair{ "sChooseClassMenu4", "Major Skills 6-7" },
+                 std::pair{ "sBack", "Back" },
+                 std::pair{ "sNext", "Next" },
+                 std::pair{ "sDone", "Done" },
+                 std::pair{ "sOK", "OK" },
+             })
+            addString(id, name);
 
         for (std::string_view id : sRuntimeSettingIds)
         {
@@ -432,6 +602,18 @@ namespace MWWorld
             else
                 addInt(id, 0);
         }
+
+        const auto aliasFloat = [&](std::string_view runtimeId, std::string_view nativeId, float fallback) {
+            setFloatSetting(store, runtimeId, nativeFloatSetting(store, nativeId).value_or(fallback));
+        };
+        aliasFloat("fMinWalkSpeed", "fMoveCharWalkMin", 90.f);
+        aliasFloat("fMaxWalkSpeed", "fMoveCharWalkMax", 130.f);
+        aliasFloat("fBaseRunMultiplier", "fMoveRunMult", 3.f);
+        aliasFloat("fAthleticsRunBonus", "fMoveRunAthleticsMult", 0.f);
+        aliasFloat("fEncumberedMoveEffect", "fMoveEncumEffect", 0.4f);
+        aliasFloat("fEncumbranceStrMult", "fActorStrengthEncumbranceMult", 5.f);
+        aliasFloat("fSneakSpeedMultiplier", "fMoveSneakMult", 0.6f);
+        aliasFloat("fHoldBreathTime", "fActorSwimBreathBase", 4.f);
 
         for (const ESM4::GlobalVariable& source : store.get<ESM4::GlobalVariable>())
         {
@@ -466,71 +648,98 @@ namespace MWWorld
             store.insertStatic(paralyze);
         }
 
-        for (int i = 0; i < ESM::Skill::Length; ++i)
+        static const std::array nativeSkillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics,
+            ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+            ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+            ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+            ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+            ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+        static const std::array skillAttributes{ ESM::Attribute::Endurance, ESM::Attribute::Speed,
+            ESM::Attribute::Strength, ESM::Attribute::Endurance, ESM::Attribute::Strength,
+            ESM::Attribute::Strength, ESM::Attribute::Endurance, ESM::Attribute::Intelligence,
+            ESM::Attribute::Willpower, ESM::Attribute::Intelligence, ESM::Attribute::Willpower,
+            ESM::Attribute::Personality, ESM::Attribute::Intelligence, ESM::Attribute::Willpower,
+            ESM::Attribute::Speed, ESM::Attribute::Speed, ESM::Attribute::Agility, ESM::Attribute::Personality,
+            ESM::Attribute::Agility, ESM::Attribute::Agility, ESM::Attribute::Personality };
+        for (std::size_t nativeIndex = 0; nativeIndex < nativeSkillIds.size(); ++nativeIndex)
         {
-            const ESM::RefId id = ESM::Skill::indexToRefId(i);
+            const ESM::RefId id(nativeSkillIds[nativeIndex]);
             if (store.get<ESM::Skill>().search(id) == nullptr)
             {
                 ESM::Skill skill;
                 skill.blank();
                 skill.mId = *id.getIf<ESM::SkillId>();
-                skill.mData.mAttribute = ESM::Attribute::indexToRefId(i % ESM::Attribute::Length);
-                skill.mData.mSpecialization = i % 3;
+                skill.mName = ESM4::playerSkillName(nativeIndex);
+                skill.mData.mAttribute = ESM::RefId(skillAttributes[nativeIndex]);
+                skill.mData.mSpecialization = nativeIndex <= 6 ? ESM::Class::Combat
+                    : (nativeIndex <= 13 ? ESM::Class::Magic : ESM::Class::Stealth);
                 store.insertStatic(skill);
             }
         }
+        // Several shared mechanics caches are indexed by the complete TES3 skill enum. Keep its six non-Oblivion
+        // slots available as internal records; the player projection, class data, ObScript actor values, and M12
+        // save schema expose only the 21 native skills above.
+        for (int i = 0; i < ESM::Skill::Length; ++i)
+        {
+            const ESM::RefId id = ESM::Skill::indexToRefId(i);
+            if (store.get<ESM::Skill>().search(id) != nullptr)
+                continue;
+            ESM::Skill skill;
+            skill.blank();
+            skill.mId = *id.getIf<ESM::SkillId>();
+            skill.mData.mAttribute = ESM::Attribute::Luck;
+            skill.mData.mSpecialization = ESM::Class::Combat;
+            store.insertStatic(skill);
+        }
+
+        for (const ESM4::Race& source : store.get<ESM4::Race>())
+            store.insertStatic(projectRace(source));
+        for (const ESM4::Class& source : store.get<ESM4::Class>())
+            store.insertStatic(projectClass(source));
+        for (const ESM4::BirthSign& source : store.get<ESM4::BirthSign>())
+            store.insertStatic(projectBirthSign(source));
 
         const ESM4::Npc& nativePlayer = findPlayer(store);
         report.mPlayerSource = nativePlayer.mEditorId + "@" + nativePlayer.mId.toString();
         const ESM4::Race* nativeRace = store.get<ESM4::Race>().search(ESM::RefId(nativePlayer.mRace));
         const ESM4::Class* nativeClass = store.get<ESM4::Class>().search(ESM::RefId(nativePlayer.mClass));
 
-        const ESM::RefId raceId = ESM::RefId::stringRefId("OpenMWOblivionPlayerRace");
-        ESM::Race race;
-        race.blank();
-        race.mId = raceId;
-        race.mName = nativeRace != nullptr && !nativeRace->mFullName.empty() ? nativeRace->mFullName : "Imperial";
-        race.mData.mFlags = ESM::Race::Playable;
-        if (nativeRace != nullptr
-            && (Misc::StringUtils::ciEqual(nativeRace->mEditorId, "Argonian")
-                || Misc::StringUtils::ciEqual(nativeRace->mEditorId, "Khajiit")))
-            race.mData.mFlags |= ESM::Race::Beast;
-        if (nativeRace != nullptr)
-        {
-            race.mData.mMaleHeight = nativeRace->mHeightMale;
-            race.mData.mFemaleHeight = nativeRace->mHeightFemale;
-            race.mData.mMaleWeight = nativeRace->mWeightMale;
-            race.mData.mFemaleWeight = nativeRace->mWeightFemale;
-        }
+        const ESM::RefId raceId
+            = nativeRace != nullptr ? ESM::RefId(nativeRace->mId) : ESM::RefId::stringRefId("OpenMWOblivionPlayerRace");
         const std::array<unsigned char, ESM::Attribute::Length> maleRaceAttributes
             = nativeRace != nullptr ? attributes(nativeRace->mAttribMale)
                                     : std::array<unsigned char, ESM::Attribute::Length>{ 40, 40, 40, 40, 40, 40, 40, 40 };
         const std::array<unsigned char, ESM::Attribute::Length> femaleRaceAttributes
             = nativeRace != nullptr ? attributes(nativeRace->mAttribFemale) : maleRaceAttributes;
-        for (int i = 0; i < ESM::Attribute::Length; ++i)
+        if (nativeRace == nullptr)
         {
-            race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, maleRaceAttributes[i]);
-            race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, femaleRaceAttributes[i]);
+            ESM::Race race;
+            race.blank();
+            race.mId = raceId;
+            race.mName = "Imperial";
+            race.mData.mFlags = ESM::Race::Playable;
+            for (int i = 0; i < ESM::Attribute::Length; ++i)
+            {
+                race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, maleRaceAttributes[i]);
+                race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, femaleRaceAttributes[i]);
+            }
+            store.insertStatic(race);
         }
-        store.insertStatic(race);
         report.mRaceSource = nativeRace != nullptr ? nativeRace->mEditorId + "@" + nativeRace->mId.toString() : "default";
 
-        const ESM::RefId classId = ESM::RefId::stringRefId("OpenMWOblivionPlayerClass");
-        ESM::Class characterClass;
-        characterClass.blank();
-        characterClass.mId = classId;
-        characterClass.mName
-            = nativeClass != nullptr && !nativeClass->mFullName.empty() ? nativeClass->mFullName : "Adventurer";
-        characterClass.mData.mAttribute = { ESM::Attribute::Strength, ESM::Attribute::Endurance };
-        characterClass.mData.mSpecialization = ESM::Class::Combat;
-        characterClass.mData.mIsPlayable = 1;
-        for (std::size_t i = 0; i < characterClass.mData.mSkills.size(); ++i)
+        const ESM::RefId classId = nativeClass != nullptr ? ESM::RefId(nativeClass->mId)
+                                                          : ESM::RefId::stringRefId("OpenMWOblivionPlayerClass");
+        if (nativeClass == nullptr)
         {
-            characterClass.mData.mSkills[i][0] = ESM::Skill::indexToRefId(i);
-            characterClass.mData.mSkills[i][1]
-                = ESM::Skill::indexToRefId(i + characterClass.mData.mSkills.size());
+            ESM::Class characterClass;
+            characterClass.blank();
+            characterClass.mId = classId;
+            characterClass.mName = "Adventurer";
+            characterClass.mData.mAttribute = { ESM::Attribute::Strength, ESM::Attribute::Endurance };
+            characterClass.mData.mSpecialization = ESM::Class::Combat;
+            characterClass.mData.mIsPlayable = 1;
+            store.insertStatic(characterClass);
         }
-        store.insertStatic(characterClass);
         report.mClassSource
             = nativeClass != nullptr ? nativeClass->mEditorId + "@" + nativeClass->mId.toString() : "default";
 
@@ -548,42 +757,38 @@ namespace MWWorld
         player.mFlags = ESM::NPC::Base;
         player.setIsMale((nativePlayer.mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) == 0);
         player.mNpdt.mLevel = std::max<std::int16_t>(1, nativePlayer.mBaseConfig.tes4.levelOrOffset);
-        player.mNpdt.mHealth = static_cast<std::uint16_t>(std::clamp<std::uint32_t>(nativePlayer.mData.health, 1, 65535));
-        player.mNpdt.mFatigue = std::max<std::uint16_t>(1, nativePlayer.mBaseConfig.tes4.fatigue);
-        const auto playerAttributes = attributes(nativePlayer.mData.attribs);
-        for (int i = 0; i < ESM::Attribute::Length; ++i)
-            player.mNpdt.mAttributes[ESM::Attribute::indexToRefId(i)]
-                = playerAttributes[i] != 0 ? playerAttributes[i] : maleRaceAttributes[i];
-        player.mNpdt.mMana = std::max<std::uint16_t>(
-            1, static_cast<std::uint16_t>(player.mNpdt.mAttributes[ESM::Attribute::Intelligence] * 2));
-        const ESM4::Npc::SkillValues& skills = nativePlayer.mData.skills;
-        const std::array nativeSkills{
-            std::pair{ ESM::Skill::Armorer, skills.armorer },
-            std::pair{ ESM::Skill::Athletics, skills.athletics },
-            std::pair{ ESM::Skill::LongBlade, skills.blade },
-            std::pair{ ESM::Skill::Block, skills.block },
-            std::pair{ ESM::Skill::BluntWeapon, skills.blunt },
-            std::pair{ ESM::Skill::HandToHand, skills.handToHand },
-            std::pair{ ESM::Skill::HeavyArmor, skills.heavyArmor },
-            std::pair{ ESM::Skill::Alchemy, skills.alchemy },
-            std::pair{ ESM::Skill::Alteration, skills.alteration },
-            std::pair{ ESM::Skill::Conjuration, skills.conjuration },
-            std::pair{ ESM::Skill::Destruction, skills.destruction },
-            std::pair{ ESM::Skill::Illusion, skills.illusion },
-            std::pair{ ESM::Skill::Mysticism, skills.mysticism },
-            std::pair{ ESM::Skill::Restoration, skills.restoration },
-            std::pair{ ESM::Skill::Acrobatics, skills.acrobatics },
-            std::pair{ ESM::Skill::LightArmor, skills.lightArmor },
-            std::pair{ ESM::Skill::Marksman, skills.marksman },
-            std::pair{ ESM::Skill::Mercantile, skills.mercantile },
-            std::pair{ ESM::Skill::Security, skills.security },
-            std::pair{ ESM::Skill::Sneak, skills.sneak },
-            std::pair{ ESM::Skill::Speechcraft, skills.speechcraft },
-        };
         for (int i = 0; i < ESM::Skill::Length; ++i)
             player.mNpdt.mSkills[ESM::Skill::indexToRefId(i)] = 5;
-        for (const auto& [id, value] : nativeSkills)
-            player.mNpdt.mSkills[ESM::RefId(id)] = value != 0 ? value : 5;
+        if (nativeRace != nullptr && nativeClass != nullptr)
+        {
+            const ESM4::PlayerCharacterStats built = ESM4::buildPlayerCharacterStats(
+                *nativeRace, *nativeClass, nullptr, !player.isMale());
+            for (int i = 0; i < ESM::Attribute::Length; ++i)
+                player.mNpdt.mAttributes[ESM::Attribute::indexToRefId(i)]
+                    = static_cast<unsigned char>(std::clamp(built.mAttributes[i], 0.f, 255.f));
+            for (std::size_t i = 0; i < nativeSkillIds.size(); ++i)
+                player.mNpdt.mSkills[ESM::RefId(nativeSkillIds[i])]
+                    = static_cast<unsigned char>(std::clamp(built.mSkills[i], 0.f, 255.f));
+            player.mNpdt.mHealth = static_cast<std::uint16_t>(std::clamp(built.mHealth, 1.f, 65535.f));
+            player.mNpdt.mMana = static_cast<std::uint16_t>(std::clamp(built.mMagicka, 1.f, 65535.f));
+            player.mNpdt.mFatigue = static_cast<std::uint16_t>(std::clamp(built.mFatigue, 1.f, 65535.f));
+            Log(Debug::Info) << "M12 player stats: race=" << player.mRace << " class=" << player.mClass
+                             << " sex=" << (player.isMale() ? "male" : "female") << " health=" << built.mHealth
+                             << " magicka=" << built.mMagicka << " fatigue=" << built.mFatigue
+                             << " capacity=" << built.mCapacity << " breath=" << built.mBreathTime;
+        }
+        else
+        {
+            player.mNpdt.mHealth
+                = static_cast<std::uint16_t>(std::clamp<std::uint32_t>(nativePlayer.mData.health, 1, 65535));
+            player.mNpdt.mFatigue = std::max<std::uint16_t>(1, nativePlayer.mBaseConfig.tes4.fatigue);
+            const auto playerAttributes = attributes(nativePlayer.mData.attribs);
+            for (int i = 0; i < ESM::Attribute::Length; ++i)
+                player.mNpdt.mAttributes[ESM::Attribute::indexToRefId(i)]
+                    = playerAttributes[i] != 0 ? playerAttributes[i] : maleRaceAttributes[i];
+            player.mNpdt.mMana = std::max<std::uint16_t>(
+                1, static_cast<std::uint16_t>(player.mNpdt.mAttributes[ESM::Attribute::Intelligence] * 2));
+        }
         store.insertStatic(player);
 
         const VFS::Path::Normalized firstPersonSkeleton("meshes/characters/_1stperson/skeleton.nif");
@@ -610,6 +815,8 @@ namespace MWWorld
         Settings::models().mSkynight02.set(VFS::Path::Normalized("meshes/sky/stars_oblivion.nif"));
         Settings::models().mWeathersnow.set(VFS::Path::Normalized("meshes/sky/snow.nif"));
         Settings::water().mShader.set(true);
+        Settings::camera().mFieldOfView.set(75.f);
+        Settings::camera().mFirstPersonFieldOfView.set(75.f);
 
         Log(Debug::Info) << "Installed Oblivion profile services: " << report.mNativeGameSettings
                          << " native GMSTs, " << report.mRuntimeContractSettings << " reviewed runtime settings, "

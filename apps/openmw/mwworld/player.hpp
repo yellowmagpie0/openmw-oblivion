@@ -54,6 +54,8 @@ namespace MWWorld
         std::map<ESM::RefId, float> mSaveAttributes;
 
         bool mJumping;
+        bool mOblivionJumpRequested = false;
+        std::uint8_t mOblivionCharacterGenerationFlags = 0;
 
     public:
         Player(const ESM::NPC* player);
@@ -81,6 +83,9 @@ namespace MWWorld
 
         void setBirthSign(const ESM::RefId& sign);
         const ESM::RefId& getBirthSign() const;
+        void markOblivionCharacterGeneration(std::uint8_t flag) { mOblivionCharacterGenerationFlags |= flag; }
+        void setOblivionCharacterGenerationFlags(std::uint8_t flags) { mOblivionCharacterGenerationFlags = flags; }
+        std::uint8_t getOblivionCharacterGenerationFlags() const { return mOblivionCharacterGenerationFlags; }
 
         void setDrawState(MWMechanics::DrawState state);
         MWMechanics::DrawState getDrawState(); /// \todo constness
@@ -97,6 +102,14 @@ namespace MWWorld
 
         void setJumping(bool jumping);
         bool getJumping() const;
+
+        void requestOblivionJump() { mOblivionJumpRequested = true; }
+        bool consumeOblivionJumpRequest()
+        {
+            const bool requested = mOblivionJumpRequested;
+            mOblivionJumpRequested = false;
+            return requested;
+        }
 
         /// Checks all nearby actors to see if anyone has an aipackage against you
         bool isInCombat();

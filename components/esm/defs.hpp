@@ -163,6 +163,7 @@ namespace ESM
         REC_ASTP4 = esm4Recname(ESM4::REC_ASTP), // Association Type
         REC_AVIF4 = esm4Recname(ESM4::REC_AVIF), // Actor Values/Perk Tree Graphics
         REC_BOOK4 = esm4Recname(ESM4::REC_BOOK), // Book
+        REC_BSGN4 = esm4Recname(ESM4::REC_BSGN), // Birthsign
         REC_BPTD4 = esm4Recname(ESM4::REC_BPTD), // Body Part Data
         REC_CAMS4 = esm4Recname(ESM4::REC_CAMS), // Camera Shot
         REC_CELL4 = esm4Recname(ESM4::REC_CELL), // Cell

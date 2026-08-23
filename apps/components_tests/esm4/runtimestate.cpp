@@ -33,6 +33,11 @@ namespace
         state.mPlayer.mPosition.rot[2] = 1.25f;
         state.mPlayer.mActorValues = { { "health", 42.25 }, { "magicka", 31.0 } };
         state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
+        state.mPlayer.mName = "Bendu Olo";
+        state.mPlayer.mRace = ESM::FormKey::content("Oblivion.esm", 0x907);
+        state.mPlayer.mClass = ESM::FormKey::content("Oblivion.esm", 0x237a8);
+        state.mPlayer.mBirthSign = ESM::FormKey::content("Oblivion.esm", 0x22a37);
+        state.mPlayer.mCharacterGenerationFlags = 15;
         state.mGlobals.emplace(ESM::FormKey::content("Oblivion.esm", 0x33), std::int64_t(9));
         state.mGlobals.emplace(ESM::FormKey::content("Oblivion.esm", 0x34), 1.5);
 
@@ -148,6 +153,9 @@ namespace
         state = makeState();
         state.mPlayer.mCell = {};
         EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state = makeState();
+        state.mPlayer.mCharacterGenerationFlags = 0x20;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
 
     TEST(ESM4RuntimeState, rejectsDuplicateReferencesAndInvalidInventory)
@@ -173,7 +181,7 @@ namespace
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":2"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":3"), std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":2}]"),
@@ -190,10 +198,30 @@ namespace
         state.mScriptEventSequence = 0;
         state.mScriptInstances.clear();
         state.mQuests.clear();
+        state.mPlayer.mName.clear();
+        state.mPlayer.mRace = {};
+        state.mPlayer.mClass = {};
+        state.mPlayer.mBirthSign = {};
+        state.mPlayer.mCharacterGenerationFlags = 0;
         const auto bytes = state.serializeBinary();
         const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(bytes);
         EXPECT_EQ(loaded.mVersion, 1u);
         EXPECT_TRUE(loaded.mScriptInstances.empty());
         EXPECT_TRUE(loaded.mQuests.empty());
+    }
+
+    TEST(ESM4RuntimeState, versionTwoPayloadMigratesWithoutCharacterGenerationState)
+    {
+        auto state = makeState();
+        state.mVersion = 2;
+        state.mPlayer.mName.clear();
+        state.mPlayer.mRace = {};
+        state.mPlayer.mClass = {};
+        state.mPlayer.mBirthSign = {};
+        state.mPlayer.mCharacterGenerationFlags = 0;
+        const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_EQ(loaded.mVersion, 2u);
+        EXPECT_TRUE(loaded.mPlayer.mRace.isNull());
+        EXPECT_EQ(loaded.canonicalJson().find("character_generation_flags"), std::string::npos);
     }
 }

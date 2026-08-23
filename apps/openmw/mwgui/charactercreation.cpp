@@ -153,6 +153,34 @@ namespace MWGui
 
     void CharacterCreation::spawnDialog(const GuiMode id)
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // Oblivion's ShowRaceMenu/ShowClassMenu/ShowBirthsignMenu commands are independent entry points.
+            // The TES3 flow normally destroys each dialog through its Next/Back callback, but a native command can
+            // replace one without invoking that callback. Tear down every inactive dialog so command-driven menus do
+            // not remain visible or continue accepting input beneath the new one.
+            MWBase::WindowManager* window = MWBase::Environment::get().getWindowManager();
+            if (id != GM_Name)
+                window->removeDialog(std::move(mNameDialog));
+            if (id != GM_Race)
+                window->removeDialog(std::move(mRaceDialog));
+            if (id != GM_Class)
+                window->removeDialog(std::move(mClassChoiceDialog));
+            if (id != GM_ClassGenerate)
+            {
+                window->removeDialog(std::move(mGenerateClassQuestionDialog));
+                window->removeDialog(std::move(mGenerateClassResultDialog));
+            }
+            if (id != GM_ClassPick)
+                window->removeDialog(std::move(mPickClassDialog));
+            if (id != GM_ClassCreate)
+                window->removeDialog(std::move(mCreateClassDialog));
+            if (id != GM_Birth)
+                window->removeDialog(std::move(mBirthSignDialog));
+            if (id != GM_Review)
+                window->removeDialog(std::move(mReviewDialog));
+        }
+
         try
         {
             switch (id)
@@ -304,6 +332,8 @@ namespace MWGui
 
     void CharacterCreation::onReviewDialogDone(WindowBase* parWindow)
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            MWBase::Environment::get().getWorld()->getPlayer().markOblivionCharacterGeneration(0x10);
         MWBase::Environment::get().getWindowManager()->removeDialog(std::move(mReviewDialog));
         MWBase::Environment::get().getWindowManager()->popGuiMode();
     }
@@ -369,6 +399,8 @@ namespace MWGui
         selectPickedClass();
 
         MWBase::Environment::get().getWindowManager()->popGuiMode();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return;
         MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Class);
     }
 
@@ -429,6 +461,8 @@ namespace MWGui
         selectRace();
 
         MWBase::Environment::get().getWindowManager()->popGuiMode();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return;
         MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Name);
     }
 
@@ -462,6 +496,8 @@ namespace MWGui
         selectBirthSign();
 
         MWBase::Environment::get().getWindowManager()->popGuiMode();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return;
         MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Class);
     }
 
@@ -707,6 +743,11 @@ namespace MWGui
     void CharacterCreation::handleDialogDone(CSE currentStage, int nextMode)
     {
         MWBase::Environment::get().getWindowManager()->popGuiMode();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            mCreationStage = std::max(mCreationStage, currentStage);
+            return;
+        }
         if (mCreationStage == CSE_ReviewNext)
         {
             MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Review);

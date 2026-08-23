@@ -126,6 +126,7 @@ namespace MWBase
 
         virtual void setRandomSeed(uint32_t seed) = 0;
         virtual ESM::GameProfile getGameProfile() const = 0;
+        virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
         ///< \param seed The seed used when starting a new game.
 
         virtual void startNewGame(bool bypass) = 0;

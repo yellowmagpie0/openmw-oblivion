@@ -217,6 +217,7 @@ namespace MWWorld
             const std::filesystem::path& userDataPath, ESM::GameProfile requestedGameProfile);
 
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
+        float getOblivionPlayerInventoryWeight() const override;
 
         // Bounded native interaction surface for the M5 prison slice.
         void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});

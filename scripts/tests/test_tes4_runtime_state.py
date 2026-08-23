@@ -7,7 +7,7 @@ from scripts import tes4_runtime_state as state_io
 
 def make_state() -> dict:
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "profile": "oblivion",
         "next_dynamic_serial": 7,
         "content": [{"plugin": "Oblivion.esm", "fingerprint": "sha256:test"}],
@@ -18,6 +18,12 @@ def make_state() -> dict:
             "position": [0.0] * 6,
             "actor_values": {"health.current": 25.0},
             "inventory": [],
+            "name": "Bendu Olo",
+            "race": "content:oblivion.esm:000907",
+            "class": "content:oblivion.esm:0237a8",
+            "birthsign": "content:oblivion.esm:022a37",
+            "female": False,
+            "character_generation_flags": 15,
         },
         "globals": {},
         "references": [],
@@ -61,11 +67,22 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         old["script_instances"] = []
         old["quests"] = []
         old["schema_version"] = 1
+        for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+            del old["player"][key]
         loaded = state_io.decode_payload(state_io.encode_payload(old))
         self.assertEqual(loaded["schema_version"], 1)
         self.assertNotIn("script_event_sequence", loaded)
         self.assertNotIn("script_instances", loaded)
         self.assertNotIn("quests", loaded)
+
+    def test_version_two_payload_loads_without_m12_character_state(self) -> None:
+        old = make_state()
+        old["schema_version"] = 2
+        for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+            del old["player"][key]
+        loaded = state_io.decode_payload(state_io.encode_payload(old))
+        self.assertEqual(loaded["schema_version"], 2)
+        self.assertNotIn("race", loaded["player"])
 
     def test_script_state_rejects_non_finite_and_canonicalizes_stages(self) -> None:
         invalid = make_state()

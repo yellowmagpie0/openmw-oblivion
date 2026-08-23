@@ -129,6 +129,17 @@ namespace EsmTool
             return stream;
         }
 
+        std::ostream& operator<<(std::ostream& stream, const WriteData<ESM4::Class::Data>& write)
+        {
+            stream << " favored-attributes=" << write.mValue.mFavoredAttributes[0] << ','
+                   << write.mValue.mFavoredAttributes[1] << " specialization=" << write.mValue.mSpecialization
+                   << " major-skills=";
+            for (std::size_t i = 0; i < write.mValue.mMajorSkills.size(); ++i)
+                stream << (i ? "," : "") << write.mValue.mMajorSkills[i];
+            stream << " flags=" << write.mValue.mFlags << " services=" << write.mValue.mServices;
+            return stream;
+        }
+
         struct WriteCellFlags
         {
             std::uint16_t mValue;
@@ -270,6 +281,8 @@ namespace EsmTool
                         std::cout << " " << item;
                 }
             }
+            if constexpr (requires { value.mSpells; })
+                std::cout << "\n  Spells:" << WriteArray(" ", value.mSpells);
             if constexpr (requires { value.mIcon; })
                 std::cout << "\n  Icon: " << value.mIcon;
             if constexpr (requires { value.mArmorFlags; })
@@ -398,7 +411,7 @@ namespace EsmTool
                     readTypedRecord<ESM4::Book>(params, reader);
                     return true;
                 case ESM4::REC_BSGN:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    readTypedRecord<ESM4::BirthSign>(params, reader);
                     return true;
                 case ESM4::REC_BPTD:
                     readTypedRecord<ESM4::BodyPartData>(params, reader);

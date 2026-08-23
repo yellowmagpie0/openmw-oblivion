@@ -1,17 +1,21 @@
 #include "mechanicsmanagerimp.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 
 #include <osg/Stats>
 
-#include <components/misc/rng.hpp>
-
+#include <components/debug/debuglog.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm3/loadmgef.hpp>
 #include <components/esm3/stolenitems.hpp>
+#include <components/esm4/playermechanics.hpp>
+
+#include <components/misc/rng.hpp>
 
 #include <components/sceneutil/positionattitudetransform.hpp>
 
@@ -131,6 +135,69 @@ namespace MWMechanics
             npcStats.setAttribute(attribute, value);
 
         const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const ESM4::Race* race = esmStore.get<ESM4::Race>().search(player->mRace);
+            const ESM4::Class* characterClass = esmStore.get<ESM4::Class>().search(player->mClass);
+            ESM4::Class customClass;
+            if (characterClass == nullptr)
+            {
+                if (const ESM::Class* facade = esmStore.get<ESM::Class>().search(player->mClass))
+                {
+                    for (std::size_t i = 0; i < facade->mData.mAttribute.size(); ++i)
+                        customClass.mData.mFavoredAttributes[i]
+                            = std::max(0, ESM::Attribute::refIdToIndex(facade->mData.mAttribute[i]));
+                    customClass.mData.mSpecialization = facade->mData.mSpecialization;
+                    static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics,
+                        ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+                        ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+                        ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+                        ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+                        ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+                    const auto nativeSkill = [&](const ESM::RefId& id) {
+                        const auto found = std::ranges::find(skillIds, id);
+                        return found == skillIds.end() ? std::uint32_t(ESM4::Race::Skill_None)
+                                                       : std::uint32_t(ESM4::Race::Skill_Armorer
+                                                           + std::distance(skillIds.begin(), found));
+                    };
+                    for (std::size_t i = 0; i < 5; ++i)
+                        customClass.mData.mMajorSkills[i] = nativeSkill(facade->mData.mSkills[i][1]);
+                    customClass.mData.mMajorSkills[5] = nativeSkill(facade->mData.mSkills[0][0]);
+                    customClass.mData.mMajorSkills[6] = nativeSkill(facade->mData.mSkills[1][0]);
+                    characterClass = &customClass;
+                }
+            }
+            if (race != nullptr && characterClass != nullptr)
+            {
+                const ESM::RefId& birthSignId = MWBase::Environment::get().getWorld()->getPlayer().getBirthSign();
+                const ESM4::BirthSign* birthSign
+                    = birthSignId.empty() ? nullptr : esmStore.get<ESM4::BirthSign>().search(birthSignId);
+                const ESM4::PlayerCharacterStats built
+                    = ESM4::buildPlayerCharacterStats(*race, *characterClass, birthSign, !player->isMale());
+                static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics,
+                    ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+                    ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+                    ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+                    ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+                    ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+                for (std::size_t i = 0; i < built.mAttributes.size(); ++i)
+                    creatureStats.setAttribute(ESM::Attribute::indexToRefId(i), built.mAttributes[i]);
+                for (std::size_t i = 0; i < built.mSkills.size(); ++i)
+                    npcStats.getSkill(ESM::RefId(skillIds[i])).setBase(built.mSkills[i], true);
+                creatureStats.setHealth(DynamicStat<float>(built.mHealth));
+                creatureStats.setMagicka(DynamicStat<float>(built.mMagicka));
+                creatureStats.setFatigue(DynamicStat<float>(built.mFatigue));
+                npcStats.setTimeToStartDrowning(built.mBreathTime);
+                Log(Debug::Info) << "M12 player stats: race=" << player->mRace << " class=" << player->mClass
+                                 << " sex=" << (player->isMale() ? "male" : "female")
+                                 << " health=" << built.mHealth << " magicka=" << built.mMagicka
+                                 << " fatigue=" << built.mFatigue << " capacity=" << built.mCapacity
+                                 << " breath=" << built.mBreathTime;
+                mActors.updateActor(ptr, 0);
+                return;
+            }
+        }
 
         // race
         if (mRaceSelected)
@@ -408,6 +475,9 @@ namespace MWMechanics
 
         world->getStore().insert(player);
 
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            world->getPlayer().markOblivionCharacterGeneration(0x01);
+
         mUpdatePlayer = true;
     }
 
@@ -429,6 +499,9 @@ namespace MWMechanics
             world->renderPlayer();
         }
 
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            world->getPlayer().markOblivionCharacterGeneration(0x02);
+
         mRaceSelected = true;
         buildPlayer();
         mUpdatePlayer = true;
@@ -436,7 +509,10 @@ namespace MWMechanics
 
     void MechanicsManager::setPlayerBirthsign(const ESM::RefId& id)
     {
-        MWBase::Environment::get().getWorld()->getPlayer().setBirthSign(id);
+        MWBase::World* world = MWBase::Environment::get().getWorld();
+        world->getPlayer().setBirthSign(id);
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            world->getPlayer().markOblivionCharacterGeneration(0x08);
         buildPlayer();
         mUpdatePlayer = true;
     }
@@ -449,6 +525,9 @@ namespace MWMechanics
         player.mClass = id;
 
         world->getStore().insert(player);
+
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            world->getPlayer().markOblivionCharacterGeneration(0x04);
 
         mClassSelected = true;
         buildPlayer();
@@ -465,6 +544,9 @@ namespace MWMechanics
         player.mClass = ptr->mId;
 
         world->getStore().insert(player);
+
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            world->getPlayer().markOblivionCharacterGeneration(0x04);
 
         mClassSelected = true;
         buildPlayer();

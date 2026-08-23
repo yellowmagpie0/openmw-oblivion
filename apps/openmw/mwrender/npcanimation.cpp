@@ -615,11 +615,15 @@ namespace MWRender
         const ESM4::Npc* player = findOblivionPlayer(store);
         if (player == nullptr)
             return;
-        const ESM4::Race* race = store.get<ESM4::Race>().search(ESM::RefId(player->mRace));
+        const ESM::RefId selectedRace = mNpc != nullptr ? mNpc->mRace : ESM::RefId(player->mRace);
+        const ESM4::Race* race = store.get<ESM4::Race>().search(selectedRace);
+        if (race == nullptr)
+            race = store.get<ESM4::Race>().search(ESM::RefId(player->mRace));
         if (race == nullptr)
             return;
 
-        const bool female = (player->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+        const bool female = mNpc != nullptr ? !mNpc->isMale()
+                                           : (player->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
         std::uint32_t covered = 0;
         std::set<std::string, std::less<>> attachedModels;
         const auto attachPart = [&](std::string_view model, std::string_view bone, std::string_view texture = {},

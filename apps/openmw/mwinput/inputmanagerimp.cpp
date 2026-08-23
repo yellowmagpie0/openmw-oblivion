@@ -27,10 +27,10 @@ namespace MWInput
     InputManager::InputManager(SDL_Window* window, osg::ref_ptr<osgViewer::Viewer> viewer,
         osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler, const std::filesystem::path& userFile,
         bool userFileExists, const std::filesystem::path& userControllerBindingsFile,
-        const std::filesystem::path& controllerBindingsFile, bool grab)
+        const std::filesystem::path& controllerBindingsFile, bool grab, ESM::GameProfile gameProfile)
         : mControlsDisabled(false)
         , mInputWrapper(std::make_unique<SDLUtil::InputWrapper>(window, viewer, grab))
-        , mBindingsManager(std::make_unique<BindingsManager>(userFile, userFileExists))
+        , mBindingsManager(std::make_unique<BindingsManager>(userFile, userFileExists, gameProfile))
         , mControlSwitch(std::make_unique<ControlSwitch>())
         , mActionManager(std::make_unique<ActionManager>(mBindingsManager.get(), viewer, screenCaptureHandler))
         , mKeyboardManager(std::make_unique<KeyboardManager>(mBindingsManager.get()))

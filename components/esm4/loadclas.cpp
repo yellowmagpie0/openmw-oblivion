@@ -54,6 +54,25 @@ void ESM4::Class::load(ESM4::Reader& reader)
                 reader.getZString(mIcon);
                 break;
             case ESM::fourCC("DATA"):
+                if (subHdr.dataSize == 48 || subHdr.dataSize == 52)
+                {
+                    for (std::uint32_t& value : mData.mFavoredAttributes)
+                        reader.get(value);
+                    reader.get(mData.mSpecialization);
+                    for (std::uint32_t& value : mData.mMajorSkills)
+                        reader.get(value);
+                    reader.get(mData.mFlags);
+                    reader.get(mData.mServices);
+                    if (subHdr.dataSize == 52)
+                    {
+                        reader.get(mData.mTrainingSkill);
+                        reader.get(mData.mTrainingLevel);
+                        reader.get(mData.mUnused);
+                    }
+                }
+                else
+                    reader.skipSubRecordData();
+                break;
             case ESM::fourCC("ATTR"):
             case ESM::fourCC("PRPS"):
                 reader.skipSubRecordData();

@@ -22,7 +22,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 2;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 3;
 
     struct RuntimeContentIdentity
     {
@@ -76,6 +76,12 @@ namespace ESM4
         ESM::Position mPosition{};
         std::map<std::string, double, std::less<>> mActorValues;
         std::vector<RuntimeInventoryItem> mInventory;
+        std::string mName;
+        ESM::FormKey mRace;
+        ESM::FormKey mClass;
+        ESM::FormKey mBirthSign;
+        bool mFemale = false;
+        std::uint8_t mCharacterGenerationFlags = 0;
 
         friend bool operator==(const RuntimePlayerState&, const RuntimePlayerState&) = default;
     };

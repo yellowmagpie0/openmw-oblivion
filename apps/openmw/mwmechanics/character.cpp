@@ -2003,6 +2003,11 @@ namespace MWMechanics
             CreatureStats& stats = cls.getCreatureStats(mPtr);
             Movement& movementSettings = cls.getMovementSettings(mPtr);
 
+            // Oblivion input queues jump until this point so the standard Lua player-control update cannot clear the
+            // one-frame request before physics consumes it.
+            if (isPlayer && world->getPlayer().consumeOblivionJumpRequest())
+                movementSettings.mPosition[2] = 1.f;
+
             // Force Jump Logic
 
             isMoving = (std::abs(movementSettings.mPosition[0]) > .5 || std::abs(movementSettings.mPosition[1]) > .5);

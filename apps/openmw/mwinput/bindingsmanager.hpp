@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <components/sdlutil/events.hpp>
+#include <components/esm/gameprofile.hpp>
 
 namespace MWInput
 {
@@ -16,7 +17,7 @@ namespace MWInput
     class BindingsManager
     {
     public:
-        BindingsManager(const std::filesystem::path& userFile, bool userFileExists);
+        BindingsManager(const std::filesystem::path& userFile, bool userFileExists, ESM::GameProfile gameProfile);
 
         virtual ~BindingsManager();
 
@@ -69,6 +70,8 @@ namespace MWInput
 
     private:
         void setupSDLKeyMappings();
+
+        ESM::GameProfile mGameProfile;
 
         std::unique_ptr<InputControlSystem> mInputBinder;
         std::unique_ptr<BindingsListener> mListener;

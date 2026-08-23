@@ -342,6 +342,41 @@ class OblivionCompatTests(unittest.TestCase):
                 ["a", "space", "period", "minus", "underscore"],
             )
 
+    def test_virtual_gamepad_actions_emit_xbox_button_and_axis_events(self):
+        self.assertEqual(
+            [MODULE.VirtualGamepad.BUTTONS[name] for name in ("back", "start", "guide", "leftstick", "rightstick")],
+            [314, 315, 316, 317, 318],
+        )
+        pad = mock.Mock()
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(
+            MODULE, "_VIRTUAL_GAMEPAD", pad
+        ), mock.patch.object(MODULE.time, "sleep"):
+            button = MODULE._run_action(
+                {"type": "gamepad_button", "value": "a", "hold_seconds": 0},
+                environment={},
+                output=Path(temporary),
+            )
+            axis = MODULE._run_action(
+                {"type": "gamepad_axis", "axis": "left_y", "value": -1},
+                environment={},
+                output=Path(temporary),
+            )
+            trigger = MODULE._run_action(
+                {"type": "gamepad_axis", "axis": "left_trigger", "value": 0.5},
+                environment={},
+                output=Path(temporary),
+            )
+        self.assertTrue(button["passed"] and axis["passed"] and trigger["passed"])
+        self.assertEqual(
+            pad.event.call_args_list,
+            [
+                mock.call(MODULE.VirtualGamepad.EV_KEY, MODULE.VirtualGamepad.BUTTONS["a"], 1),
+                mock.call(MODULE.VirtualGamepad.EV_KEY, MODULE.VirtualGamepad.BUTTONS["a"], 0),
+                mock.call(MODULE.VirtualGamepad.EV_ABS, MODULE.VirtualGamepad.AXES["left_y"], -32767),
+                mock.call(MODULE.VirtualGamepad.EV_ABS, MODULE.VirtualGamepad.AXES["left_trigger"], 16384),
+            ],
+        )
+
     def test_tes4_runtime_state_codec_mutates_every_family_and_preserves_other_save_bytes(self):
         state = {
             "schema_version": 1,

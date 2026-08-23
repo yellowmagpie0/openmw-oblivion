@@ -391,6 +391,14 @@ namespace ESM4
         checkSize(mQuests.size(), "quest list");
         if (mVersion < 2 && (mScriptEventSequence != 0 || !mScriptInstances.empty() || !mQuests.empty()))
             throw std::runtime_error("TES4 runtime-state version 1 cannot contain ObScript state");
+        if (mVersion < 3 && (!mPlayer.mName.empty() || !mPlayer.mRace.isNull() || !mPlayer.mClass.isNull()
+                || !mPlayer.mBirthSign.isNull() || mPlayer.mFemale || mPlayer.mCharacterGenerationFlags != 0))
+            throw std::runtime_error("TES4 runtime-state version 1/2 cannot contain character-generation state");
+        if (mVersion >= 3
+            && (mPlayer.mName.size() > 1024 || mPlayer.mRace.isNull() || mPlayer.mClass.isNull()))
+            throw std::runtime_error("Invalid TES4 runtime-state character-generation state");
+        if (mVersion >= 3 && mPlayer.mCharacterGenerationFlags > 0x1f)
+            throw std::runtime_error("Invalid TES4 runtime-state character-generation flags");
 
         if (mPlayer.mReference.isNull() || mPlayer.mCell.isNull())
             throw std::runtime_error("TES4 runtime-state player has a null required FormKey");
@@ -502,6 +510,15 @@ namespace ESM4
             writer.floating(value);
         }
         writeInventory(writer, mPlayer.mInventory);
+        if (mVersion >= 3)
+        {
+            writer.string(mPlayer.mName);
+            writeKey(writer, mPlayer.mRace);
+            writeKey(writer, mPlayer.mClass);
+            writeKey(writer, mPlayer.mBirthSign);
+            writer.integer<std::uint8_t>(mPlayer.mFemale ? 1 : 0);
+            writer.integer(mPlayer.mCharacterGenerationFlags);
+        }
 
         writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mGlobals.size()));
         for (const auto& [key, value] : mGlobals)
@@ -603,6 +620,18 @@ namespace ESM4
                 throw std::runtime_error("Duplicate TES4 runtime-state player actor value");
         }
         result.mPlayer.mInventory = readInventory(reader);
+        if (result.mVersion >= 3)
+        {
+            result.mPlayer.mName = reader.string();
+            result.mPlayer.mRace = readKey(reader);
+            result.mPlayer.mClass = readKey(reader);
+            result.mPlayer.mBirthSign = readKey(reader);
+            const std::uint8_t female = reader.integer<std::uint8_t>();
+            if (female > 1)
+                throw std::runtime_error("Invalid TES4 runtime-state player sex");
+            result.mPlayer.mFemale = female != 0;
+            result.mPlayer.mCharacterGenerationFlags = reader.integer<std::uint8_t>();
+        }
 
         const std::uint32_t globalCount = reader.count();
         for (std::uint32_t i = 0; i < globalCount; ++i)
@@ -791,7 +820,15 @@ namespace ESM4
             stream << "{\"base\":\"" << escapeJson(mPlayer.mInventory[i].mBase.serialize())
                    << "\",\"count\":" << mPlayer.mInventory[i].mCount << '}';
         }
-        stream << "]},\"globals\":{";
+        stream << ']';
+        if (mVersion >= 3)
+            stream << ",\"name\":\"" << escapeJson(mPlayer.mName) << "\",\"race\":\""
+                   << escapeJson(mPlayer.mRace.serialize()) << "\",\"class\":\""
+                   << escapeJson(mPlayer.mClass.serialize()) << "\",\"birthsign\":\""
+                   << escapeJson(mPlayer.mBirthSign.serialize()) << "\",\"female\":"
+                   << (mPlayer.mFemale ? "true" : "false") << ",\"character_generation_flags\":"
+                   << static_cast<unsigned>(mPlayer.mCharacterGenerationFlags);
+        stream << "},\"globals\":{";
         index = 0;
         for (const auto& [key, value] : mGlobals)
         {

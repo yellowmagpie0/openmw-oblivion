@@ -19,8 +19,8 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 2
-SUPPORTED_VERSIONS = {1, CURRENT_VERSION}
+CURRENT_VERSION = 3
+SUPPORTED_VERSIONS = {1, 2, CURRENT_VERSION}
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
 MAX_PAYLOAD = 256 * 1024 * 1024
@@ -229,6 +229,16 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             raise RuntimeStateError(f"Duplicate TES4 actor value {name}")
         player["actor_values"][name] = reader.unpack("<d")
     player["inventory"] = _inventory(reader)
+    if version >= 3:
+        player["name"] = reader.string()
+        player["race"] = reader.string()
+        player["class"] = reader.string()
+        player["birthsign"] = reader.string()
+        female = reader.unpack("<B")
+        if female > 1:
+            raise RuntimeStateError("Invalid TES4 runtime-state player sex")
+        player["female"] = bool(female)
+        player["character_generation_flags"] = reader.unpack("<B")
     result["player"] = player
 
     globals_: dict[str, Any] = {}
@@ -339,6 +349,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         writer.string(name)
         writer.pack("<d", float(actor_values[name]))
     _write_inventory(writer, player["inventory"])
+    if version >= 3:
+        writer.string(str(player["name"]))
+        writer.string(str(player["race"]))
+        writer.string(str(player["class"]))
+        writer.string(str(player.get("birthsign", "null")))
+        writer.pack("<B", int(bool(player.get("female", False))))
+        writer.pack("<B", int(player.get("character_generation_flags", 0)))
     globals_ = state["globals"]
     writer.pack("<I", len(globals_))
     for key in sorted(globals_):
@@ -456,13 +473,20 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])
     result.setdefault("quests", [])
+    player = result["player"]
+    player.setdefault("name", "Bendu Olo")
+    player.setdefault("race", "content:oblivion.esm:000907")
+    player.setdefault("class", "content:oblivion.esm:0230e6")
+    player.setdefault("birthsign", "null")
+    player.setdefault("female", False)
+    player.setdefault("character_generation_flags", 0)
     result["next_dynamic_serial"] += 41
     # Oblivion.esm declares GameHour as an integer GLOB even though OpenMW's time facade accepts a float, so use an
     # exactly representable value until the profile owns a fractional-hour adapter.
     result["clock"].update({"year": 434, "month": 5, "day": 12, "hour": 12.0, "time_scale": 0.0})
     if label != "exterior":
-        result["player"]["position"][0] += 32.0
-    actor = result["player"]["actor_values"]
+        player["position"][0] += 32.0
+    actor = player["actor_values"]
     actor["health.current"] = min(actor.get("health.base", 50.0) + actor.get("health.modifier", 0.0), 37.0)
     actor["magicka.current"] = 19.0
     actor["level"] = 2.0
@@ -526,10 +550,10 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     if unlockable is not None:
         unlockable["custom_state"]["locked"] = False
 
-    if not result["player"]["inventory"]:
-        result["player"]["inventory"] = [{"base": primary["base"], "count": 2}]
+    if not player["inventory"]:
+        player["inventory"] = [{"base": primary["base"], "count": 2}]
     else:
-        result["player"]["inventory"][0]["count"] = 2
+        player["inventory"][0]["count"] = 2
 
     calendar_ids = {0x35, 0x36, 0x37, 0x38, 0x39, 0x3A}
     mutable_global = next(

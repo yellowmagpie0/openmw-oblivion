@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m12-player-stats-controls-and-camera",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{source}/scripts/data/oblivion_compat/m12_player_events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/m12-runtime-report.json"
+  },
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "xvfb": true,
+  "virtual_gamepad": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 20},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "first-person-start.png", "minimum_entropy": 0.03},
+    {"type": "key_held", "value": "r"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "third-person-keyboard.png", "minimum_entropy": 0.03},
+    {"type": "key_held", "value": "r"},
+    {"type": "sleep", "seconds": 1},
+    {"type": "gamepad_button", "value": "rightstick", "hold_seconds": 0.2},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "third-person-gamepad.png", "minimum_entropy": 0.03},
+    {"type": "gamepad_button", "value": "rightstick", "hold_seconds": 0.2},
+    {"type": "sleep", "seconds": 1},
+    {"type": "screenshot", "name": "first-person-gamepad.png", "minimum_entropy": 0.03},
+    {"type": "key_held", "value": "e"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "gamepad_axis", "axis": "left_trigger", "value": 1},
+    {"type": "sleep", "seconds": 0.2},
+    {"type": "gamepad_axis", "axis": "left_trigger", "value": 0},
+    {"type": "sleep", "seconds": 2},
+    {"type": "key_down", "value": "w"},
+    {"type": "sleep", "seconds": 0.35},
+    {"type": "key_up", "value": "w"},
+    {"type": "key_down", "value": "Shift_L"},
+    {"type": "key_down", "value": "w"},
+    {"type": "sleep", "seconds": 0.35},
+    {"type": "key_up", "value": "w"},
+    {"type": "key_up", "value": "Shift_L"},
+    {"type": "gamepad_axis", "axis": "left_y", "value": -1},
+    {"type": "sleep", "seconds": 0.35},
+    {"type": "gamepad_axis", "axis": "left_y", "value": 0},
+    {"type": "gamepad_button", "value": "a"},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "key", "value": "F9"},
+    {"type": "sleep", "seconds": 8},
+    {"type": "screenshot", "name": "after-reload.png", "minimum_entropy": 0.03},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST"]},
+    {"type": "assert_file", "path_glob": "m12-runtime-report.json", "expected_count": 1, "minimum_size": 256, "contains_ascii": ["runtime_state", "character_generation_flags", "speed.base"]}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 60,
+  "expected_exit": 0,
+  "expected_log": [
+    "M12 player stats: race=.*class=.*health=.*magicka=.*fatigue=.*capacity=.*breath=",
+    "M7 ObScript: disableplayercontrols movement=true fighting=true view=true looking=true",
+    "M7 ObScript: enableplayercontrols movement=true fighting=true view=true looking=true",
+    "M11 animation loaded: ref=\"Player\" group=walkforward",
+    "M11 animation loaded: ref=\"Player\" group=runforward",
+    "M12 player movement: mode=jump input=keyboard-mouse",
+    "M12 player movement: mode=jump input=gamepad",
+    "M5 start target applied: player=672,-40",
+    "M5 activation focus: result=.*input=gamepad player=67[01].*,1[0-9][0-9]",
+    "Writing saved game 'Quicksave'",
+    "Applied TES4 runtime state:.*player fatigue=1[0-4][0-9].*/145 speed=47"
+  ],
+  "forbidden_log": [
+    "deferred command=(enableplayercontrols|disableplayercontrols)",
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ]
+}

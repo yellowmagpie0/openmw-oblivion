@@ -223,6 +223,7 @@ add_component_dir (esm4
     loadarmo
     loadaspc
     loadbook
+    loadbsgn
     loadbptd
     loadcell
     loadclas
@@ -268,6 +269,7 @@ add_component_dir (esm4
     loadnpc
     loadotft
     loadpack
+    playermechanics
     loadpgrd
     loadpgre
     loadpwat

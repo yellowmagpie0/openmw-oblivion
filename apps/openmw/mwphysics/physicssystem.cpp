@@ -30,6 +30,7 @@
 #include <components/settings/values.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/inputmanager.hpp"
 #include "../mwbase/world.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
@@ -72,6 +73,9 @@ namespace
             MWBase::Environment::get().getWorld()->getPlayer().setJumping(true);
         }
 
+        const float verticalImpulse = ptr.getClass().getMovementSettings(ptr).mPosition[2];
+        float fatigueBefore = 0.f;
+        float fatigueAfter = 0.f;
         // Decrease fatigue
         if (!isPlayer || !MWBase::Environment::get().getWorld()->getGodModeState())
         {
@@ -82,8 +86,20 @@ namespace
             const float normalizedEncumbrance = std::min(1.f, ptr.getClass().getNormalizedEncumbrance(ptr));
             const float fatigueDecrease = fFatigueJumpBase + normalizedEncumbrance * fFatigueJumpMult;
             MWMechanics::DynamicStat<float> fatigue = ptr.getClass().getCreatureStats(ptr).getFatigue();
+            fatigueBefore = fatigue.getCurrent();
             fatigue.setCurrent(fatigue.getCurrent() - fatigueDecrease);
+            fatigueAfter = fatigue.getCurrent();
             ptr.getClass().getCreatureStats(ptr).setFatigue(fatigue);
+        }
+        if (isPlayer
+            && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const char* inputSource
+                = MWBase::Environment::get().getInputManager()->joystickLastUsed() ? "gamepad" : "keyboard-mouse";
+            Log(Debug::Info) << "M12 player movement: mode=jump input=" << inputSource
+                             << " vertical=" << verticalImpulse << " fatigue=" << fatigueBefore << "->"
+                             << fatigueAfter << " encumbrance=" << ptr.getClass().getEncumbrance(ptr)
+                             << " capacity=" << ptr.getClass().getCapacity(ptr);
         }
         ptr.getClass().getMovementSettings(ptr).mPosition[2] = 0;
     }

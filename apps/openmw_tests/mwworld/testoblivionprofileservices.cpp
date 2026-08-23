@@ -16,6 +16,11 @@ namespace
         gameSetting.mEditorId = "fFatigueBase";
         gameSetting.mData = 42.f;
         store.getWritable<ESM4::GameSetting>().insertStatic(gameSetting);
+        ESM4::GameSetting walkMax{};
+        walkMax.mId = ESM::FormId{ 0x11, 0 };
+        walkMax.mEditorId = "fMoveCharWalkMax";
+        walkMax.mData = 137.f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(walkMax);
 
         ESM4::GlobalVariable year{};
         year.mId = ESM::FormId{ 0x20, 0 };
@@ -43,7 +48,19 @@ namespace
         characterClass.mId = ESM::FormId{ 0x30e6, 0 };
         characterClass.mEditorId = "CharactergenClass";
         characterClass.mFullName = "Native Adventurer";
+        characterClass.mData.mFavoredAttributes = { 3, 5 };
+        characterClass.mData.mSpecialization = 2;
+        characterClass.mData.mMajorSkills = { 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20 };
+        characterClass.mData.mFlags = 1;
         store.getWritable<ESM4::Class>().insertStatic(characterClass);
+
+        ESM4::BirthSign birthSign{};
+        birthSign.mId = ESM::FormId{ 0x1fd94, 0 };
+        birthSign.mEditorId = "BirthSignThief";
+        birthSign.mFullName = "The Thief";
+        birthSign.mDescription = "Fortifies Agility, Speed, and Luck.";
+        birthSign.mSpells.push_back(ESM::FormId{ 0x22a46, 0 });
+        store.getWritable<ESM4::BirthSign>().insertStatic(birthSign);
 
         ESM4::Npc player{};
         player.mId = ESM::FormId{ 7, 0 };
@@ -63,7 +80,7 @@ namespace
 
         const MWWorld::OblivionProfileInstallReport report = MWWorld::OblivionProfileServices::install(store);
 
-        EXPECT_EQ(report.mNativeGameSettings, 1);
+        EXPECT_EQ(report.mNativeGameSettings, 2);
         EXPECT_EQ(report.mNativeGlobals, 2);
         EXPECT_EQ(report.mPlayerSource, "Player@0x7");
         EXPECT_EQ(report.mRaceSource, "Imperial@0x907");
@@ -72,13 +89,28 @@ namespace
         const auto& settings = store.get<ESM::GameSetting>();
         ASSERT_NE(settings.search("fFatigueBase"), nullptr);
         EXPECT_FLOAT_EQ(settings.find("fFatigueBase")->mValue.getFloat(), 42.f);
+        EXPECT_FLOAT_EQ(settings.find("fMaxWalkSpeed")->mValue.getFloat(), 137.f);
+        EXPECT_EQ(settings.find("iMaxActivateDist")->mValue.getInteger(), 150);
         EXPECT_FLOAT_EQ(settings.find("fSwimHeightScale")->mValue.getFloat(), 0.75f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSneakBase")->mValue.getFloat(), 1.5f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSneakMult")->mValue.getFloat(), 1.5f);
+        EXPECT_EQ(store.get<ESM::Skill>().find(ESM::Skill::LongBlade)->mName, "Blade");
+        EXPECT_EQ(store.get<ESM::Skill>().find(ESM::Skill::Mercantile)->mName, "Mercantile");
+        EXPECT_TRUE(store.get<ESM::Skill>().find(ESM::Skill::ShortBlade)->mName.empty());
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimRunBase")->mValue.getFloat(), 7.f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimRunMult")->mValue.getFloat(), 0.f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimWalkBase")->mValue.getFloat(), 2.5f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSwimWalkMult")->mValue.getFloat(), 0.f);
+        EXPECT_FLOAT_EQ(settings.find("fSneakUseDist")->mValue.getFloat(), 500.f);
+        EXPECT_FLOAT_EQ(settings.find("fSneakUseDelay")->mValue.getFloat(), 1.f);
+        EXPECT_EQ(settings.find("sSkillLongblade")->mValue.getString(), "Blade");
+        EXPECT_EQ(settings.find("sSkillHandtohand")->mValue.getString(), "Hand to Hand");
+        EXPECT_EQ(settings.find("sAttributeStrength")->mValue.getString(), "Strength");
+        EXPECT_EQ(settings.find("sSpecializationStealth")->mValue.getString(), "Stealth");
+        EXPECT_EQ(settings.find("sChooseClassMenu3")->mValue.getString(), "Major Skills");
+        EXPECT_EQ(settings.find("sChooseClassMenu4")->mValue.getString(), "Major Skills 6-7");
+        EXPECT_EQ(settings.find("sBack")->mValue.getString(), "Back");
+        EXPECT_EQ(settings.find("sDone")->mValue.getString(), "Done");
         EXPECT_FLOAT_EQ(settings.find("fAudioDefaultMinDistance")->mValue.getFloat(), 5.f);
         EXPECT_FLOAT_EQ(settings.find("fAudioDefaultMaxDistance")->mValue.getFloat(), 40.f);
         EXPECT_FLOAT_EQ(settings.find("fAudioVoiceDefaultMinDistance")->mValue.getFloat(), 10.f);
@@ -103,13 +135,27 @@ namespace
         // the VFS prefix when selecting the Oblivion skeleton.
         EXPECT_EQ(adaptedPlayer->mModel.getNormalized().value(), "characters/_male/skeleton.nif");
         EXPECT_EQ(adaptedPlayer->mNpdt.mLevel, 3);
-        EXPECT_EQ(adaptedPlayer->mNpdt.mHealth, 88);
-        EXPECT_EQ(adaptedPlayer->mNpdt.mFatigue, 77);
-        EXPECT_EQ(adaptedPlayer->mNpdt.getAttribute(ESM::Attribute::Strength), 41);
-        EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Armorer), 31);
-        EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Speechcraft), 52);
+        // Initial live stats are projected from the native race/class formula, not the NPC's placeholder DATA.
+        EXPECT_EQ(adaptedPlayer->mNpdt.mHealth, 50);
+        EXPECT_EQ(adaptedPlayer->mNpdt.mMana, 80);
+        EXPECT_EQ(adaptedPlayer->mNpdt.mFatigue, 140);
+        EXPECT_EQ(adaptedPlayer->mNpdt.getAttribute(ESM::Attribute::Strength), 45);
+        EXPECT_EQ(adaptedPlayer->mNpdt.getAttribute(ESM::Attribute::Agility), 35);
+        EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Armorer), 5);
+        EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Acrobatics), 30);
+        EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Speechcraft), 30);
 
         EXPECT_EQ(store.get<ESM::Race>().find(adaptedPlayer->mRace)->mName, "Native Imperial");
-        EXPECT_EQ(store.get<ESM::Class>().find(adaptedPlayer->mClass)->mName, "Native Adventurer");
+        const ESM::Class* adaptedClass = store.get<ESM::Class>().find(adaptedPlayer->mClass);
+        EXPECT_EQ(adaptedClass->mName, "Native Adventurer");
+        EXPECT_EQ(adaptedClass->mData.mAttribute[0], ESM::Attribute::Agility);
+        EXPECT_EQ(adaptedClass->mData.mAttribute[1], ESM::Attribute::Endurance);
+        EXPECT_EQ(adaptedClass->mData.mSpecialization, ESM::Class::Stealth);
+        EXPECT_EQ(adaptedClass->mData.mSkills[0][1], ESM::Skill::Acrobatics);
+        EXPECT_EQ(adaptedClass->mData.mSkills[0][0], ESM::Skill::Sneak);
+        const ESM::BirthSign* adaptedSign = store.get<ESM::BirthSign>().find(ESM::RefId(birthSign.mId));
+        EXPECT_EQ(adaptedSign->mName, "The Thief");
+        ASSERT_EQ(adaptedSign->mPowers.mList.size(), 1u);
+        EXPECT_EQ(adaptedSign->mPowers.mList.front(), ESM::RefId(birthSign.mSpells.front()));
     }
 }

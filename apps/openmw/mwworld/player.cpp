@@ -19,6 +19,7 @@
 #include "../mwworld/worldmodel.hpp"
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/inputmanager.hpp"
 #include "../mwbase/luamanager.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
@@ -199,11 +200,14 @@ namespace MWWorld
 
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
         {
+            const char* inputSource
+                = MWBase::Environment::get().getInputManager()->joystickLastUsed() ? "gamepad" : "keyboard-mouse";
             const ESM::Position& playerPosition = player.getRefData().getPosition();
             const osg::Vec3d cameraPosition
                 = MWBase::Environment::get().getWorld()->getRenderingManager()->getCamera()->getPosition();
             if (toActivate.isEmpty())
-                Log(Debug::Info) << "M5 activation focus: result=empty player=" << playerPosition.pos[0] << ','
+                Log(Debug::Info) << "M5 activation focus: result=empty input=" << inputSource
+                                 << " player=" << playerPosition.pos[0] << ','
                                  << playerPosition.pos[1] << ',' << playerPosition.pos[2] << " camera="
                                  << cameraPosition.x() << ',' << cameraPosition.y() << ',' << cameraPosition.z();
             else
@@ -212,7 +216,8 @@ namespace MWWorld
                 Log(Debug::Info) << "M5 activation focus: result=object ref="
                                  << toActivate.getCellRef().getFormKey().serialize() << " type="
                                  << toActivate.getClass().getType() << " tooltip="
-                                 << (toActivate.getClass().hasToolTip(toActivate) ? "true" : "false") << " player="
+                                 << (toActivate.getClass().hasToolTip(toActivate) ? "true" : "false")
+                                 << " input=" << inputSource << " player="
                                  << playerPosition.pos[0] << ',' << playerPosition.pos[1] << ','
                                  << playerPosition.pos[2] << " object=" << focusPosition.pos[0] << ','
                                  << focusPosition.pos[1] << ',' << focusPosition.pos[2] << " base="
@@ -285,6 +290,8 @@ namespace MWWorld
         mMarkedCell = nullptr;
         mTeleported = false;
         mJumping = false;
+        mOblivionJumpRequested = false;
+        mOblivionCharacterGenerationFlags = 0;
         mCurrentCrimeId = -1;
         mPaidCrimeId = -1;
         mPreviousItems.clear();

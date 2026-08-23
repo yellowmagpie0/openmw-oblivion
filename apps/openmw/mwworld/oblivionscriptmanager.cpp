@@ -1,6 +1,7 @@
 #include "oblivionscriptmanager.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <charconv>
 #include <cmath>
@@ -43,9 +44,12 @@
 #include <components/vfs/recursivedirectoryiterator.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/inputmanager.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwgui/mode.hpp"
+#include "../mwmechanics/npcstats.hpp"
 #include "../mwsound/sound.hpp"
 #include "action.hpp"
 #include "class.hpp"
@@ -440,8 +444,9 @@ namespace MWWorld
         mSequence = 0;
         mDepth = 0;
         mElapsed = 0;
-        for (ScheduledEvent& event : mScheduledEvents)
-            event.mExecuted = false;
+        // OPENMW_OBSCRIPT_EVENTS is a process-local acceptance driver, not game content. Its commands must execute
+        // once per launched scenario: replaying them after an in-process quickload can mutate actor values twice and
+        // hide persistence regressions. A fresh process constructs a fresh manager with every event unexecuted.
     }
 
     ESM::FormKey OblivionScriptManager::keyFor(const Ptr& ptr) const
@@ -1326,11 +1331,44 @@ namespace MWWorld
             const std::string attribute = lower(ObScript::valueString(argument(0)));
             if (objectKey() == ESM::FormKey::dynamic("player", 1))
             {
-                if (!mWorld.mOblivionRuntimeState)
-                    return double(0);
-                const auto value = mWorld.mOblivionRuntimeState->mPlayer.mActorValues.find(attribute);
-                return value == mWorld.mOblivionRuntimeState->mPlayer.mActorValues.end() ? double(0)
-                                                                                         : value->second;
+                const Ptr player = mWorld.getPlayerPtr();
+                const MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+                const MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
+                static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility",
+                    "speed", "endurance", "personality", "luck" };
+                for (std::size_t i = 0; i < attributeNames.size(); ++i)
+                    if (attribute == attributeNames[i])
+                    {
+                        const MWMechanics::AttributeValue& value
+                            = stats.getAttribute(ESM::Attribute::indexToRefId(i));
+                        return name == "getbaseav" ? double(value.getBase()) : double(value.getModified());
+                    }
+                static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt",
+                    "handtohand", "heavyarmor", "alchemy", "alteration", "conjuration", "destruction",
+                    "illusion", "mysticism", "restoration", "acrobatics", "lightarmor", "marksman",
+                    "mercantile", "security", "sneak", "speechcraft" };
+                static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics,
+                    ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+                    ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+                    ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+                    ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+                    ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+                for (std::size_t i = 0; i < skillNames.size(); ++i)
+                    if (attribute == skillNames[i])
+                    {
+                        const MWMechanics::SkillValue& value = npcStats.getSkill(ESM::RefId(skillIds[i]));
+                        return name == "getbaseav" ? double(value.getBase()) : double(value.getModified());
+                    }
+                const auto dynamic = [&](const MWMechanics::DynamicStat<float>& value) {
+                    return name == "getbaseav" ? double(value.getBase()) : double(value.getCurrent());
+                };
+                if (attribute == "health") return dynamic(stats.getHealth());
+                if (attribute == "magicka") return dynamic(stats.getMagicka());
+                if (attribute == "fatigue") return dynamic(stats.getFatigue());
+                if (attribute == "encumbrance") return double(player.getClass().getEncumbrance(player));
+                if (attribute == "carryweight") return double(player.getClass().getCapacity(player));
+                if (attribute == "level") return double(stats.getLevel());
+                return double(0);
             }
             if (const ESM4::RuntimeReferenceState* state = referenceState(objectKey()))
             {
@@ -1347,11 +1385,63 @@ namespace MWWorld
             const double value = ObScript::asNumber(argument(1));
             if (objectKey() == ESM::FormKey::dynamic("player", 1))
             {
-                if (!mWorld.mOblivionRuntimeState)
+                const Ptr player = mWorld.getPlayerPtr();
+                MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+                MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
+                static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility",
+                    "speed", "endurance", "personality", "luck" };
+                bool applied = false;
+                for (std::size_t i = 0; i < attributeNames.size(); ++i)
+                    if (attribute == attributeNames[i])
+                    {
+                        MWMechanics::AttributeValue actorValue = stats.getAttribute(ESM::Attribute::indexToRefId(i));
+                        actorValue.setBase(static_cast<float>(name == "modav" ? actorValue.getBase() + value : value),
+                            name != "modav");
+                        stats.setAttribute(ESM::Attribute::indexToRefId(i), actorValue);
+                        applied = true;
+                    }
+                static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt",
+                    "handtohand", "heavyarmor", "alchemy", "alteration", "conjuration", "destruction",
+                    "illusion", "mysticism", "restoration", "acrobatics", "lightarmor", "marksman",
+                    "mercantile", "security", "sneak", "speechcraft" };
+                static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics,
+                    ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+                    ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+                    ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+                    ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+                    ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+                for (std::size_t i = 0; i < skillNames.size(); ++i)
+                    if (attribute == skillNames[i])
+                    {
+                        MWMechanics::SkillValue& actorValue = npcStats.getSkill(ESM::RefId(skillIds[i]));
+                        actorValue.setBase(static_cast<float>(name == "modav" ? actorValue.getBase() + value : value),
+                            name != "modav");
+                        applied = true;
+                    }
+                const auto setDynamic = [&](MWMechanics::DynamicStat<float> actorValue, auto setter) {
+                    if (name == "modav")
+                        actorValue.setCurrent(actorValue.getCurrent() + static_cast<float>(value), true, true);
+                    else
+                    {
+                        actorValue.setBase(static_cast<float>(value));
+                        actorValue.setCurrent(static_cast<float>(value), true, true);
+                    }
+                    (stats.*setter)(actorValue);
+                    applied = true;
+                };
+                if (attribute == "health") setDynamic(stats.getHealth(), &MWMechanics::CreatureStats::setHealth);
+                else if (attribute == "magicka")
+                    setDynamic(stats.getMagicka(), &MWMechanics::CreatureStats::setMagicka);
+                else if (attribute == "fatigue")
+                    setDynamic(stats.getFatigue(), &MWMechanics::CreatureStats::setFatigue);
+                else if (attribute == "level")
+                {
+                    stats.setLevel(static_cast<int>(name == "modav" ? stats.getLevel() + value : value));
+                    applied = true;
+                }
+                if (applied)
                     mWorld.mOblivionRuntimeState
                         = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
-                double& current = mWorld.mOblivionRuntimeState->mPlayer.mActorValues[attribute];
-                current = name == "modav" ? current + value : value;
             }
             else if (ESM4::RuntimeReferenceState* state = referenceState(objectKey()))
             {
@@ -1467,6 +1557,48 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "showracemenu" || name == "showclassmenu" || name == "showbirthsignmenu")
+        {
+            MWBase::WindowManager* window = MWBase::Environment::get().getWindowManager();
+            // Native scripts can open these independently. Do not stack stale character-generation dialogs, and
+            // expose the real playable CLAS list directly instead of the Morrowind questionnaire choice screen.
+            for (const MWGui::GuiMode characterMode : { MWGui::GM_Name, MWGui::GM_Race, MWGui::GM_Class,
+                     MWGui::GM_ClassGenerate, MWGui::GM_ClassPick, MWGui::GM_ClassCreate, MWGui::GM_Birth,
+                     MWGui::GM_Review })
+                window->removeGuiMode(characterMode);
+            const MWGui::GuiMode mode = name == "showracemenu" ? MWGui::GM_Race
+                : name == "showclassmenu" ? MWGui::GM_ClassPick : MWGui::GM_Birth;
+            window->pushGuiMode(mode);
+            trace("character_menu command=" + name);
+            return std::int64_t(0);
+        }
+
+        if (name == "enableplayercontrols" || name == "disableplayercontrols")
+        {
+            const bool enable = name == "enableplayercontrols";
+            MWBase::InputManager* input = MWBase::Environment::get().getInputManager();
+            const auto selected = [&](std::size_t index) {
+                return arguments.empty() || index >= arguments.size() || ObScript::asInteger(argument(index)) != 0;
+            };
+            if (selected(0))
+            {
+                input->toggleControlSwitch("playercontrols", enable);
+                input->toggleControlSwitch("playerjumping", enable);
+            }
+            if (selected(1))
+            {
+                input->toggleControlSwitch("playerfighting", enable);
+                input->toggleControlSwitch("playermagic", enable);
+            }
+            if (selected(2)) input->toggleControlSwitch("playerviewswitch", enable);
+            if (selected(3)) input->toggleControlSwitch("playerlooking", enable);
+            trace(name + " movement=" + (selected(0) ? "true" : "false")
+                + " fighting=" + (selected(1) ? "true" : "false")
+                + " view=" + (selected(2) ? "true" : "false")
+                + " looking=" + (selected(3) ? "true" : "false"));
+            return std::int64_t(0);
+        }
+
         // These commands acknowledge state owned by later AI/UI/audio/magic
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.
@@ -1475,7 +1607,7 @@ namespace MWWorld
             "cast", "addspell", "removespell", "moddisposition", "setessential", "addscriptpackage",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
             "pathpointenable", "pathpointdisable", "stopcombat", "startcombat", "equipitem", "unequipitem",
-            "forceflee", "setrestrained", "setunconscious", "enableplayercontrols", "disableplayercontrols" };
+            "forceflee", "setrestrained", "setunconscious" };
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());
@@ -1601,6 +1733,29 @@ namespace MWWorld
                 event.mWords.size() >= 4 ? ptrFor(key(3)) : Ptr{});
         else if (kind == "effect" && event.mWords.size() >= 4)
             dispatchEffect(key(1), event.mWords[2], ptrFor(key(3)), event.mWords.size() >= 5 ? ptrFor(key(4)) : Ptr{});
+        else if (kind == "command" && event.mWords.size() >= 3)
+        {
+            const ESM::FormKey targetKey = key(1);
+            std::vector<ObScript::Value> arguments;
+            for (std::size_t i = 3; i < event.mWords.size(); ++i)
+            {
+                char* end = nullptr;
+                const double number = std::strtod(event.mWords[i].c_str(), &end);
+                if (end != event.mWords[i].c_str() && *end == '\0')
+                    arguments.emplace_back(number);
+                else
+                    arguments.emplace_back(event.mWords[i]);
+            }
+            ObScript::RuntimeContext context;
+            context.mUnit.mOwner = targetKey;
+            context.mUnit.mRevisionPlugin = "acceptance";
+            context.mSelf = targetKey;
+            context.mInstance = targetKey;
+            context.mEvent = "acceptance";
+            context.mSequence = ++mSequence;
+            call(event.mWords[2], ObScript::Value(ObScript::ReferenceValue{ targetKey, event.mWords[1] }), arguments,
+                context, {});
+        }
         else
             throw std::runtime_error("Invalid M7 scheduled event command " + kind);
         trace("acceptance-event command=" + kind);
@@ -1610,28 +1765,41 @@ namespace MWWorld
     {
         if (mReportPath.empty())
             return;
-        std::ofstream out(mReportPath);
-        if (!out)
-            return;
-        out << "{\"schema_version\":1,\"compiled_units\":" << mCompiledUnits
+        // Assemble the report before replacing the prior snapshot. Acceptance tooling may read this path while a
+        // scheduled event is capturing live world state, and must never observe a transient zero-byte document.
+        std::ostringstream report;
+        report << "{\"schema_version\":1,\"compiled_units\":" << mCompiledUnits
             << ",\"compilation_failures\":" << mCompilationFailures << ",\"event_sequence\":" << mSequence
             << ",\"diagnostics\":[";
         for (std::size_t i = 0; i < mDiagnostics.size(); ++i)
         {
-            if (i) out << ',';
-            out << "{\"code\":\"" << jsonEscape(mDiagnostics[i].mCode) << "\",\"message\":\""
+            if (i) report << ',';
+            report << "{\"code\":\"" << jsonEscape(mDiagnostics[i].mCode) << "\",\"message\":\""
                 << jsonEscape(mDiagnostics[i].mMessage) << "\",\"command\":\""
                 << jsonEscape(mDiagnostics[i].mCommand) << "\",\"unit\":\""
                 << jsonEscape(mDiagnostics[i].mUnit.serialize()) << "\",\"event\":\""
                 << jsonEscape(mDiagnostics[i].mEvent) << "\",\"sequence\":" << mDiagnostics[i].mSequence << '}';
         }
-        out << "],\"command_counts\":{";
+        report << "],\"command_counts\":{";
         std::size_t index = 0;
         for (const auto& [name, count] : mCommandCounts)
-            out << (index++ ? "," : "") << '"' << jsonEscape(name) << "\":" << count;
-        out << "},\"trace\":[";
+            report << (index++ ? "," : "") << '"' << jsonEscape(name) << "\":" << count;
+        report << "},\"trace\":[";
         for (std::size_t i = 0; i < mTrace.size(); ++i)
-            out << (i ? "," : "") << '"' << jsonEscape(mTrace[i]) << '"';
-        out << "]}";
+            report << (i ? "," : "") << '"' << jsonEscape(mTrace[i]) << '"';
+        report << "],\"runtime_state\":" << mWorld.captureOblivionRuntimeState().canonicalJson() << '}';
+
+        const std::filesystem::path temporary = mReportPath.string() + ".tmp";
+        {
+            std::ofstream out(temporary, std::ios::trunc);
+            if (!out)
+                return;
+            out << report.str();
+        }
+        std::error_code error;
+        std::filesystem::rename(temporary, mReportPath, error);
+        if (error)
+            Log(Debug::Error) << "Failed to replace Oblivion runtime report " << mReportPath << ": "
+                              << error.message();
     }
 }

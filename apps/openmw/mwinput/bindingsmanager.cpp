@@ -171,8 +171,10 @@ namespace MWInput
         bool mDetectingKeyboard;
     };
 
-    BindingsManager::BindingsManager(const std::filesystem::path& userFile, bool userFileExists)
-        : mUserFile(userFile)
+    BindingsManager::BindingsManager(
+        const std::filesystem::path& userFile, bool userFileExists, ESM::GameProfile gameProfile)
+        : mGameProfile(gameProfile)
+        , mUserFile(userFile)
         , mDragDrop(false)
     {
         const auto file = userFileExists ? userFile : std::filesystem::path();
@@ -274,6 +276,12 @@ namespace MWInput
         defaultKeyBindings[A_Rest] = SDL_SCANCODE_T;
         defaultKeyBindings[A_GameMenu] = SDL_SCANCODE_ESCAPE;
         defaultKeyBindings[A_TogglePOV] = SDL_SCANCODE_TAB;
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            defaultKeyBindings[A_ToggleSpell] = SDL_SCANCODE_C;
+            defaultKeyBindings[A_TogglePOV] = SDL_SCANCODE_R;
+            defaultKeyBindings[A_Inventory] = SDL_SCANCODE_TAB;
+        }
         defaultKeyBindings[A_QuickKey1] = SDL_SCANCODE_1;
         defaultKeyBindings[A_QuickKey2] = SDL_SCANCODE_2;
         defaultKeyBindings[A_QuickKey3] = SDL_SCANCODE_3;
@@ -293,7 +301,8 @@ namespace MWInput
         defaultKeyBindings[A_TogglePostProcessorHUD] = SDL_SCANCODE_F2;
 
         std::map<int, int> defaultMouseButtonBindings;
-        defaultMouseButtonBindings[A_Inventory] = SDL_BUTTON_RIGHT;
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            defaultMouseButtonBindings[A_Inventory] = SDL_BUTTON_RIGHT;
         defaultMouseButtonBindings[A_Use] = SDL_BUTTON_LEFT;
 
         std::map<int, ICS::InputControlSystem::MouseWheelClick> defaultMouseWheelBindings;
@@ -680,6 +689,10 @@ namespace MWInput
     {
         auto manager = MWBase::Environment::get().getInputManager();
         manager->resetIdleTime();
+
+        if (mGameProfile == ESM::GameProfile::Oblivion && action == A_Jump)
+            Log(Debug::Info) << "M12 input action: jump value=" << previousValue << "->" << currentValue
+                             << " source=" << (manager->joystickLastUsed() ? "gamepad" : "keyboard-mouse");
 
         if (mDragDrop && action != A_GameMenu && action != A_Inventory)
             return;

@@ -27,6 +27,7 @@
 #ifndef ESM4_CLAS_H
 #define ESM4_CLAS_H
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -42,7 +43,14 @@ namespace ESM4
     {
         struct Data
         {
-            std::uint32_t attr;
+            std::array<std::uint32_t, 2> mFavoredAttributes{};
+            std::uint32_t mSpecialization = 0;
+            std::array<std::uint32_t, 7> mMajorSkills{};
+            std::uint32_t mFlags = 0;
+            std::uint32_t mServices = 0;
+            std::uint8_t mTrainingSkill = 0;
+            std::uint8_t mTrainingLevel = 0;
+            std::uint16_t mUnused = 0;
         };
 
         ESM::FormId mId; // from the header

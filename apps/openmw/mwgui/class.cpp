@@ -70,7 +70,18 @@ namespace MWGui
     {
         mCurrentClassId = classId;
 
-        setClassImage(mClassImage, mCurrentClassId);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // Oblivion CLAS records do not provide the TES3 level-up portraits expected by this shared dialog.
+            // Hiding the absent portrait avoids a missing-texture surface while retaining the native class list and
+            // all seven native major skills.
+            mClassImage->getParent()->setVisible(false);
+        }
+        else
+        {
+            mClassImage->getParent()->setVisible(true);
+            setClassImage(mClassImage, mCurrentClassId);
+        }
 
         mClassName->setCaption(
             MWBase::Environment::get().getESMStore()->get<ESM::Class>().find(mCurrentClassId)->mName);
@@ -320,7 +331,17 @@ namespace MWGui
             ToolTips::createSkillToolTip(mMajorSkill[i], major);
         }
 
-        setClassImage(mClassImage, mCurrentClassId);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // TES4 classes have no TES3 level-up portrait. Hide the complete framed image slot so a missing
+            // compatibility texture cannot obscure the native class data.
+            mClassImage->getParent()->setVisible(false);
+        }
+        else
+        {
+            mClassImage->getParent()->setVisible(true);
+            setClassImage(mClassImage, mCurrentClassId);
+        }
     }
 
     bool PickClassDialog::onControllerButtonEvent(const SDL_ControllerButtonEvent& arg)

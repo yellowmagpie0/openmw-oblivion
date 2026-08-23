@@ -19,6 +19,7 @@
 #include <components/esm3/loadrace.hpp>
 #include <components/esm3/loadsoun.hpp>
 #include <components/esm3/npcstate.hpp>
+#include <components/esm4/playermechanics.hpp>
 #include <components/settings/values.hpp>
 #include <components/vfs/pathutil.hpp>
 
@@ -946,6 +947,11 @@ namespace MWClass
         if (stats.isParalyzed() || stats.getKnockedDown() || stats.isDead())
             return 0.f;
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return ESM4::playerJumpVelocity(
+                       getSkill(ptr, ESM::Skill::Acrobatics), getEncumbrance(ptr), getCapacity(ptr))
+                * std::sqrt(stats.getFatigueTerm());
+
         const GMST& gmst = getGmst();
         const MWMechanics::MagicEffects& mageffects = stats.getMagicEffects();
         const float encumbranceTerm = gmst.fJumpEncumbranceBase->mValue.getFloat()
@@ -1046,7 +1052,12 @@ namespace MWClass
     {
         // According to UESP, inventory weight is ignored in werewolf form. Does that include
         // feather and burden effects?
-        return getNpcStats(ptr).isWerewolf() ? 0.0f : Actor::getEncumbrance(ptr);
+        if (getNpcStats(ptr).isWerewolf())
+            return 0.f;
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && ptr == MWMechanics::getPlayer())
+            return MWBase::Environment::get().getWorld()->getOblivionPlayerInventoryWeight();
+        return Actor::getEncumbrance(ptr);
     }
 
     void Npc::skillUsageSucceeded(const MWWorld::Ptr& ptr, ESM::RefId skill, int usageType, float extraFactor) const
@@ -1396,6 +1407,10 @@ namespace MWClass
         const float normalizedEncumbrance = getNormalizedEncumbrance(ptr);
         const bool sneaking = MWBase::Environment::get().getMechanicsManager()->isSneaking(ptr);
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return ESM4::playerWalkSpeed(stats.getAttribute(ESM::Attribute::Speed).getModified(), getEncumbrance(ptr),
+                getCapacity(ptr), sneaking);
+
         float walkSpeed = gmst.fMinWalkSpeed->mValue.getFloat()
             + 0.01f * stats.getAttribute(ESM::Attribute::Speed).getModified()
                 * (gmst.fMaxWalkSpeed->mValue.getFloat() - gmst.fMinWalkSpeed->mValue.getFloat());
@@ -1409,6 +1424,12 @@ namespace MWClass
 
     float Npc::getRunSpeed(const MWWorld::Ptr& ptr) const
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const MWMechanics::NpcStats& stats = getNpcStats(ptr);
+            return ESM4::playerRunSpeed(stats.getAttribute(ESM::Attribute::Speed).getModified(), getEncumbrance(ptr),
+                getCapacity(ptr));
+        }
         const GMST& gmst = getGmst();
         return getWalkSpeed(ptr)
             * (0.01f * getSkill(ptr, ESM::Skill::Athletics) * gmst.fAthleticsRunBonus->mValue.getFloat()
@@ -1417,6 +1438,9 @@ namespace MWClass
 
     float Npc::getSwimSpeed(const MWWorld::Ptr& ptr) const
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return MWBase::Environment::get().getMechanicsManager()->isRunning(ptr) ? getRunSpeed(ptr)
+                                                                                     : getWalkSpeed(ptr);
         const MWMechanics::MagicEffects& effects = getNpcStats(ptr).getMagicEffects();
         const bool running = MWBase::Environment::get().getMechanicsManager()->isRunning(ptr);
         return getSwimSpeedImpl(ptr, getGmst(), effects, running ? getRunSpeed(ptr) : getWalkSpeed(ptr));

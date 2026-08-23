@@ -7,6 +7,7 @@
 #include <osgViewer/ViewerEventHandlers>
 
 #include <components/sdlutil/events.hpp>
+#include <components/esm/gameprofile.hpp>
 #include <components/settings/settings.hpp>
 #include <filesystem>
 
@@ -51,7 +52,7 @@ namespace MWInput
         InputManager(SDL_Window* window, osg::ref_ptr<osgViewer::Viewer> viewer,
             osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler, const std::filesystem::path& userFile,
             bool userFileExists, const std::filesystem::path& userControllerBindingsFile,
-            const std::filesystem::path& controllerBindingsFile, bool grab);
+            const std::filesystem::path& controllerBindingsFile, bool grab, ESM::GameProfile gameProfile);
 
         ~InputManager() final;
 

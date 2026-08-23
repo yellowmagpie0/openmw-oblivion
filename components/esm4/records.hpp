@@ -12,6 +12,7 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadaspc.hpp>
 #include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadbsgn.hpp>
 #include <components/esm4/loadbptd.hpp>
 #include <components/esm4/loadcell.hpp>
 #include <components/esm4/loadclas.hpp>

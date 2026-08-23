@@ -21,6 +21,7 @@ import re
 import shutil
 import signal
 import statistics
+import struct
 import subprocess
 import sys
 import time
@@ -28,11 +29,72 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - virtual playback is Linux-only
+    fcntl = None  # type: ignore[assignment]
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tes4_runtime_state as tes4_state  # noqa: E402
 
 
 SCHEMA_VERSION = 1
+
+
+def _ioc(direction: int, kind: str, number: int, size: int = 0) -> int:
+    return (direction << 30) | (ord(kind) << 8) | number | (size << 16)
+
+
+class VirtualGamepad:
+    """Small Linux uinput Xbox-compatible pad used by runtime acceptance playback."""
+
+    EV_SYN, EV_KEY, EV_ABS = 0, 1, 3
+    SYN_REPORT = 0
+    BUTTONS = {
+        "a": 304, "b": 305, "x": 307, "y": 308, "leftshoulder": 310, "rightshoulder": 311,
+        "back": 314, "start": 315, "guide": 316, "leftstick": 317, "rightstick": 318,
+        "dpad_up": 544, "dpad_down": 545, "dpad_left": 546, "dpad_right": 547,
+    }
+    AXES = {"left_x": 0, "left_y": 1, "left_trigger": 2, "right_x": 3, "right_y": 4,
+            "right_trigger": 5, "dpad_x": 16, "dpad_y": 17}
+
+    def __init__(self) -> None:
+        if fcntl is None or not Path("/dev/uinput").exists():
+            raise RuntimeError("virtual gamepad playback requires Linux uinput")
+        self.fd = os.open("/dev/uinput", os.O_WRONLY | os.O_NONBLOCK)
+        set_bit = lambda number, value: fcntl.ioctl(self.fd, _ioc(1, "U", number, 4), value)
+        set_bit(100, self.EV_KEY)
+        set_bit(100, self.EV_ABS)
+        for code in self.BUTTONS.values():
+            set_bit(101, code)
+        for code in self.AXES.values():
+            set_bit(103, code)
+        maximum = [0] * 64
+        minimum = [0] * 64
+        for code in (0, 1, 3, 4):
+            maximum[code], minimum[code] = 32767, -32768
+        for code in (2, 5):
+            maximum[code], minimum[code] = 32767, 0
+        for code in (16, 17):
+            maximum[code], minimum[code] = 1, -1
+        descriptor = struct.pack("80sHHHHI", b"OpenMW M12 Virtual Gamepad", 0x03, 0x045E, 0x028E, 0x0110, 0)
+        descriptor += struct.pack("256i", *(maximum + minimum + [0] * 128))
+        os.write(self.fd, descriptor)
+        fcntl.ioctl(self.fd, _ioc(0, "U", 1))
+        time.sleep(0.5)
+
+    def event(self, event_type: int, code: int, value: int) -> None:
+        os.write(self.fd, struct.pack("llHHi", 0, 0, event_type, code, value))
+        os.write(self.fd, struct.pack("llHHi", 0, 0, self.EV_SYN, self.SYN_REPORT, 0))
+
+    def close(self) -> None:
+        if self.fd >= 0:
+            fcntl.ioctl(self.fd, _ioc(0, "U", 2))
+            os.close(self.fd)
+            self.fd = -1
+
+
+_VIRTUAL_GAMEPAD: VirtualGamepad | None = None
 OFFICIAL_PLUGIN_ORDER = (
     "Oblivion.esm",
     "DLCShiveringIsles.esp",
@@ -401,6 +463,27 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
     if action_type == "sleep":
         time.sleep(float(action.get("seconds", 0)))
         return {"type": action_type, "passed": True, "duration_seconds": time.monotonic() - started}
+    if action_type in ("gamepad_button", "gamepad_axis"):
+        if _VIRTUAL_GAMEPAD is None:
+            raise RuntimeError("gamepad action requires virtual_gamepad=true in the scenario")
+        if action_type == "gamepad_button":
+            button = str(action["value"]).casefold()
+            if button not in VirtualGamepad.BUTTONS:
+                raise ValueError(f"Unknown gamepad button {button!r}")
+            _VIRTUAL_GAMEPAD.event(VirtualGamepad.EV_KEY, VirtualGamepad.BUTTONS[button], 1)
+            time.sleep(float(action.get("hold_seconds", 0.08)))
+            _VIRTUAL_GAMEPAD.event(VirtualGamepad.EV_KEY, VirtualGamepad.BUTTONS[button], 0)
+        else:
+            axis = str(action["axis"]).casefold()
+            if axis not in VirtualGamepad.AXES:
+                raise ValueError(f"Unknown gamepad axis {axis!r}")
+            value = max(-1.0, min(1.0, float(action["value"])))
+            if axis.endswith("trigger"):
+                raw = round(max(0.0, value) * 32767)
+            else:
+                raw = round(value * (1 if axis.startswith("dpad") else 32767))
+            _VIRTUAL_GAMEPAD.event(VirtualGamepad.EV_ABS, VirtualGamepad.AXES[axis], raw)
+        return {"type": action_type, "passed": True, "duration_seconds": time.monotonic() - started}
     if action_type == "assert_file":
         pattern = Path(str(action["path_glob"]))
         if pattern.is_absolute() or ".." in pattern.parts:
@@ -579,6 +662,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
 
 
 def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -> dict[str, Any]:
+    global _VIRTUAL_GAMEPAD
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
     if raw.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"Unsupported scenario schema: {raw.get('schema_version')!r}")
@@ -603,9 +687,12 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         destination.write_text(str(generated["content"]), encoding="utf-8")
     environment = dict(os.environ)
     environment.update({str(key): str(value) for key, value in manifest.get("environment", {}).items()})
+    environment.setdefault("OPENMW_SUPPRESS_ERROR_DIALOG", "1")
     xvfb_process: subprocess.Popen[str] | None = None
     started = time.monotonic()
     try:
+        if manifest.get("virtual_gamepad", False):
+            _VIRTUAL_GAMEPAD = VirtualGamepad()
         if manifest.get("xvfb", False):
             xvfb_process, display = _start_xvfb(
                 output, int(manifest.get("width", 1280)), int(manifest.get("height", 720))
@@ -673,6 +760,9 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         write_json(output / "scenario.json", result)
         return result
     finally:
+        if _VIRTUAL_GAMEPAD is not None:
+            _VIRTUAL_GAMEPAD.close()
+            _VIRTUAL_GAMEPAD = None
         if xvfb_process is not None and xvfb_process.poll() is None:
             xvfb_process.terminate()
             try:
