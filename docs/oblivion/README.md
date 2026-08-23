@@ -106,6 +106,14 @@ death poses. See [`M11-ACTORS-ANIMATION.md`](M11-ACTORS-ANIMATION.md) for the
 count-locked race/equipment/creature census and the player, actor, voice,
 creature, ragdoll, save/load, and Morrowind runtime evidence.
 
+M12 is accepted with native player race/class/birthsign statistics, all 21
+skills, live actor values, controls, movement modes, fatigue, encumbrance,
+swimming, camera and activation behavior, real character-generation screens,
+and version-3 player save state. See
+[`M12-PLAYER-MECHANICS.md`](M12-PLAYER-MECHANICS.md) for formula tests and the
+keyboard, physical-gamepad, tutorial, exterior, visual, save/load, official
+script, and Morrowind evidence.
+
 To try the first interactive slice directly:
 
 ```sh
@@ -154,6 +162,7 @@ Current implementation reports:
 - [`M9-EXTERIOR-WORLD.md`](M9-EXTERIOR-WORLD.md)
 - [`M10-ENVIRONMENT-MEDIA.md`](M10-ENVIRONMENT-MEDIA.md)
 - [`M11-ACTORS-ANIMATION.md`](M11-ACTORS-ANIMATION.md)
+- [`M12-PLAYER-MECHANICS.md`](M12-PLAYER-MECHANICS.md)
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.

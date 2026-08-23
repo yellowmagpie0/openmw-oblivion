@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-22",
+  "updated": "2026-08-23",
   "base_revision": "cdd9860bd098cea9beaec94a853fe2ce398e5fce",
   "milestones": {
     "M0": {
@@ -234,7 +234,35 @@
         "Count-locked official race/equipment/animation/creature/voice census plus full unit, NIF, visual, and Morrowind regression gates"
       ],
       "open_gates": []
+    },
+    "M12": {
+      "status": "accepted",
+      "report": "docs/oblivion/M12-PLAYER-MECHANICS.md",
+      "revision": "94383690e9478bdc866592912e9d3a724f7b00d4",
+      "evidence": [
+        "build/oblivion-compat/m12-final-tests/components-tests.log",
+        "build/oblivion-compat/m12-final-tests/openmw-tests.log",
+        "build/oblivion-compat/m12-final-tests/python-tests.log",
+        "build/oblivion-compat/m12-player-final12/scenario.json",
+        "build/oblivion-compat/m12-player-final12/m12-runtime-report.json",
+        "build/oblivion-compat/m12-jump-final5/scenario.json",
+        "build/oblivion-compat/m12-menus-final9/scenario.json",
+        "build/oblivion-compat/m12-menus-final9/m12-character-report.json",
+        "build/oblivion-compat/m12-activation-final4/scenario.json",
+        "build/oblivion-compat/m12-swim-final5/scenario.json",
+        "build/oblivion-compat/m12-m7-wide-regression/scenario.json",
+        "build/oblivion-compat/m12-morrowind-regression/scenario.json"
+      ],
+      "delivered": [
+        "Native TES4 CLAS and BSGN data with race, sex, class, specialization, major-skill, and birthsign projections",
+        "Eight attributes, exactly 21 skills, live actor values, derived health, magicka, fatigue, carry capacity, and breath",
+        "Profile-native walk, run, sneak, encumbrance, jump, fatigue recovery, swimming, camera, activation, keyboard, and gamepad behavior",
+        "Real race, class, and birthsign character-generation screens and stable completed-stage state",
+        "Version-3 stable player identity and full actor-value persistence with prior-schema migration",
+        "Formula/property, physical-input, real tutorial/exterior, visual, save/load, official-script, and Morrowind regression evidence"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "Begin M12 player statistics, controls, movement, camera, and character-creation backend compatibility"
+  "next_bounded_delivery": "Begin M13 items, inventory, equipment, locks, and economy compatibility"
 }
