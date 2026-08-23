@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-13",
+  "updated": "2026-08-22",
   "base_revision": "cdd9860bd098cea9beaec94a853fe2ce398e5fce",
   "milestones": {
     "M0": {
@@ -209,7 +209,32 @@
         "Accelerated exterior/interior/quasi-exterior cycles, seven-weather matrix, real audio/video, save-state, full unit, and Morrowind regression evidence"
       ],
       "open_gates": []
+    },
+    "M11": {
+      "status": "accepted",
+      "report": "docs/oblivion/M11-ACTORS-ANIMATION.md",
+      "revision": "d5966e5192cda3a9cee90d9b7fa45c4885c40dba",
+      "evidence": [
+        "build/oblivion-compat/m11-assets-acceptance-20260822/m11-assets.json",
+        "build/oblivion-compat/m11-runtime-player-accepted-20260822/scenario.json",
+        "build/oblivion-compat/m11-runtime-actor-final-20260822/scenario.json",
+        "build/oblivion-compat/m11-runtime-creature-accepted-20260822/scenario.json",
+        "build/oblivion-compat/m11-runtime-ragdoll-accepted2-20260822/scenario.json",
+        "build/oblivion-compat/m11-morrowind-regression-20260822/scenario.json",
+        "build/oblivion-compat/m11-niftest.log",
+        "build/oblivion-compat/m11-niftest-scene.log"
+      ],
+      "delivered": [
+        "Race/sex EGM, EGT, and TRI FaceGen with native head, eyes, hair, skin, scale, and exact facial channels",
+        "Biped-slot-aware sex-specific armor, clothing, body-part, and destination-skeleton attachment",
+        "Distinct first/third-person and beast skeletons with lazy native KF groups and B-spline transforms",
+        "Animated multipart official creature families and script-visible native NPC/creature actor objects",
+        "Official voice/LIP binding using real playback time and loudness for synchronized TRI speech motion",
+        "Native XRGD/XRGB parsing, death groups, saved biped-pose application, and save/load runtime evidence",
+        "Count-locked official race/equipment/animation/creature/voice census plus full unit, NIF, visual, and Morrowind regression gates"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "Begin M11 actor appearance, skeleton, animation, FaceGen, and lip-animation compatibility"
+  "next_bounded_delivery": "Begin M12 player statistics, controls, movement, camera, and character-creation backend compatibility"
 }

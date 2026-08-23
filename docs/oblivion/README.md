@@ -99,6 +99,13 @@ video playback plus a count-locked official-media audit. See
 [`M10-ENVIRONMENT-MEDIA.md`](M10-ENVIRONMENT-MEDIA.md) for the complete runtime,
 visual, waveform, save-state, and Morrowind-regression evidence.
 
+M11 is accepted with native race/sex FaceGen, multipart actors and equipment,
+first/third-person skeletons, lazily loaded KF groups and B-spline transforms,
+animated creature families, voice-linked facial motion, and persisted XRGD
+death poses. See [`M11-ACTORS-ANIMATION.md`](M11-ACTORS-ANIMATION.md) for the
+count-locked race/equipment/creature census and the player, actor, voice,
+creature, ragdoll, save/load, and Morrowind runtime evidence.
+
 To try the first interactive slice directly:
 
 ```sh
@@ -146,6 +153,7 @@ Current implementation reports:
 - [`M8-STATIC-RENDERING.md`](M8-STATIC-RENDERING.md)
 - [`M9-EXTERIOR-WORLD.md`](M9-EXTERIOR-WORLD.md)
 - [`M10-ENVIRONMENT-MEDIA.md`](M10-ENVIRONMENT-MEDIA.md)
+- [`M11-ACTORS-ANIMATION.md`](M11-ACTORS-ANIMATION.md)
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.
