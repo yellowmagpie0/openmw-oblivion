@@ -10,10 +10,10 @@ game(s) and provide their data directories locally.
 
 ## Current status
 
-The latest compatibility ledger (2026-08-08) records milestones M0 through M5
-as accepted. The next bounded delivery is the M6 ObScript frontend. This is
-not a complete Oblivion replacement yet; it is an incrementally verified
-vertical implementation.
+The latest compatibility ledger (2026-08-31) records milestones M0 through M13
+as accepted. The next bounded delivery is M14 navigation, detection, and AI
+packages. This is not a complete Oblivion replacement yet; it is an
+incrementally verified vertical implementation.
 
 The accepted work currently includes:
 
@@ -29,6 +29,14 @@ The accepted work currently includes:
   with collision, focus, activation, take/loot/read/harvest interactions,
   ownership and locks, animated and keyed doors, teleport traversal, and saved
   state mutations.
+- Native ObScript compilation and execution across released base-game and DLC
+  scripts, including persistent object and quest state.
+- Static and exterior rendering, terrain/LOD/grass, weather, water, audio,
+  voice, video, actors, FaceGen, multipart equipment, creatures, animation,
+  player statistics, character creation, controls, movement, and camera.
+- Live native items, inventory/container stacks, equipment and quick keys,
+  condition/charge, locks and ownership, and barter, repair, recharge, and
+  training backends with versioned save persistence.
 - A deterministic compatibility harness with JSON/HTML evidence, scenario
   manifests, visual captures, Morrowind regression tests, and ASan/UBSan
   parser coverage.
@@ -39,21 +47,11 @@ with proprietary-data fingerprints and generated evidence kept below `build/`.
 
 ## Known limitations
 
-Oblivion support is deliberately bounded at the current milestone. NPC AI,
-combat, the full Oblivion UI, native menus, complete rendering/material
-parity, and ObScript execution are still future work. Placeholder UI/materials
-are expected in the current prison slice.
-
-The committed tree can also expose the following known startup compatibility
-diagnostic after the prison cell loads:
-
-```text
-Failed to start new game: MagicEffect '"Shield"' not found
-```
-
-That indicates a missing shared-bootstrap compatibility record, not missing
-Oblivion data. The cell may still render, but a clean interactive startup is
-not yet a claim of full gameplay compatibility.
+Oblivion support is deliberately bounded at the current milestone. Navigation
+and AI packages, combat/stealth/crime, complete magic and effects, alchemy and
+enchanting, dialogue/quests, the full native Oblivion UI, and final integration
+and performance work remain later roadmap milestones. The current shared menu
+presentation is functional but is not a claim of M19 UI parity.
 
 ## Try the interactive slice
 
@@ -79,8 +77,8 @@ Use the mouse to look, `W/A/S/D` to move, `Space` to activate, `F5` to
 quicksave, and `Esc` to quit.
 
 The launcher is a development entry point, not a packaged end-user build. For
-the deterministic visual smoke test and the complete M5 acceptance campaign,
-see [`docs/oblivion/M5-INTERACTIVE-INTERIOR.md`](docs/oblivion/M5-INTERACTIVE-INTERIOR.md).
+the latest item/equipment/economy implementation and interactive checks, see
+[`docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md`](docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md).
 
 ## Build and test
 

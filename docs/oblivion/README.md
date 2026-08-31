@@ -114,6 +114,15 @@ and version-3 player save state. See
 keyboard, physical-gamepad, tutorial, exterior, visual, save/load, official
 script, and Morrowind evidence.
 
+M13 is accepted with 5,436 native base-master item definitions, live inventory
+and container stacks, equipment slots and visuals, eight quick keys, condition,
+charge, ammunition, ownership, locks and lockpicks, harvesting, and native
+barter/repair/recharge/training backends. See
+[`M13-ITEMS-INVENTORY-ECONOMY.md`](M13-ITEMS-INVENTORY-ECONOMY.md) for the
+complete category matrix, formula/property tests, market/tutorial save-reload
+courses, keyed-door/trap routes, visual inspection, and Morrowind isolation
+evidence.
+
 To try the first interactive slice directly:
 
 ```sh
@@ -163,6 +172,7 @@ Current implementation reports:
 - [`M10-ENVIRONMENT-MEDIA.md`](M10-ENVIRONMENT-MEDIA.md)
 - [`M11-ACTORS-ANIMATION.md`](M11-ACTORS-ANIMATION.md)
 - [`M12-PLAYER-MECHANICS.md`](M12-PLAYER-MECHANICS.md)
+- [`M13-ITEMS-INVENTORY-ECONOMY.md`](M13-ITEMS-INVENTORY-ECONOMY.md)
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-23",
-  "base_revision": "cdd9860bd098cea9beaec94a853fe2ce398e5fce",
+  "updated": "2026-08-31",
+  "base_revision": "85d35873eebe12999690bdb7886e48330c8e12be",
   "milestones": {
     "M0": {
       "status": "accepted",
@@ -262,7 +262,31 @@
         "Formula/property, physical-input, real tutorial/exterior, visual, save/load, official-script, and Morrowind regression evidence"
       ],
       "open_gates": []
+    },
+    "M13": {
+      "status": "accepted",
+      "report": "docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md",
+      "revision": "85d35873eebe12999690bdb7886e48330c8e12be",
+      "evidence": [
+        "build/oblivion-compat/m13-final-tests/components-tests.log",
+        "build/oblivion-compat/m13-final-tests/openmw-tests.log",
+        "build/oblivion-compat/m13-final-tests/python-tests.log",
+        "build/oblivion-compat/m13-market-final/scenario.json",
+        "build/oblivion-compat/m13-market-final/m13-state-verification.json",
+        "build/oblivion-compat/m13-tutorial-accepted/scenario.json",
+        "build/oblivion-compat/m13-key-route-final/scenario.json",
+        "build/oblivion-compat/m13-trap-regression/scenario.json",
+        "build/oblivion-compat/m13-morrowind-final/scenario.json"
+      ],
+      "delivered": [
+        "All native TES4 item families projected into count-locked live stores with released names, models, icons, values, weights, and category semantics",
+        "Metadata-aware inventory/container stacks, transfers, consumption, ownership, equipment conflicts, ammunition, lights, eight quick keys, and actor visuals",
+        "Native container, harvest, key, lockpick, trap, barter, repair, recharge, and fixed-price training backends",
+        "Version-4 stable item-instance persistence with schema migration, strict validation, and save/load after every operation",
+        "Real market/tutorial item matrices, keyed-door/trap routes, visual reload checks, full unit suites, and Morrowind isolation evidence"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "Begin M13 items, inventory, equipment, locks, and economy compatibility"
+  "next_bounded_delivery": "Begin M14 navigation, detection, and AI package compatibility"
 }
