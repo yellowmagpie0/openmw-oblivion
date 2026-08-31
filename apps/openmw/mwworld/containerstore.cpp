@@ -24,6 +24,7 @@
 #include "esmstore.hpp"
 #include "localscripts.hpp"
 #include "manualref.hpp"
+#include "oblivionprofileservices.hpp"
 #include "player.hpp"
 #include "refdata.hpp"
 #include "worldmodel.hpp"
@@ -386,6 +387,11 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2)
     }
 
     return ptr1 != ptr2 // an item never stacks onto itself
+        // TES4 ownership belongs to the item instance and survives transfer.
+        // Morrowind deliberately discards ownership when an item enters a
+        // container, so keep that historical behavior profile-gated.
+        && (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion
+            || ptr1.getCellRef().getOwner() == ptr2.getCellRef().getOwner())
         && ptr1.getCellRef().getSoul() == ptr2.getCellRef().getSoul()
 
         && ptr1.getClass().getRemainingUsageTime(ptr1) == ptr2.getClass().getRemainingUsageTime(ptr2)
@@ -429,8 +435,10 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
     pos.pos[2] = 0;
     item.getCellRef().setPosition(pos);
 
-    // We do not need to store owners for items in container stores - we do not use it anyway.
-    item.getCellRef().setOwner(ESM::RefId());
+    // TES4 retains ownership on stolen items through inventory transfers.
+    // TES3 container ownership remains intentionally actor/container based.
+    if (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+        item.getCellRef().setOwner(ESM::RefId());
     item.getCellRef().resetGlobalVariable();
     item.getCellRef().setFaction(ESM::RefId());
     item.getCellRef().setFactionRank(-2);
@@ -1071,47 +1079,62 @@ void MWWorld::ContainerStore::readState(const ESM::InventoryState& inventory)
     size_t index = 0;
     for (const ESM::ObjectState& state : inventory.mItems)
     {
-        int type = MWBase::Environment::get().getESMStore()->find(state.mRef.mRefID);
+        const ESMStore& store = *MWBase::Environment::get().getESMStore();
+        ESM::ObjectState projectedState;
+        const ESM::ObjectState* itemState = &state;
+        int type = store.find(state.mRef.mRefID);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const ESM::RefId sharedId = OblivionProfileServices::sharedItemId(store, state.mRef.mRefID);
+            const int sharedType = OblivionProfileServices::sharedItemType(store, sharedId);
+            if (sharedType != 0)
+            {
+                projectedState = state;
+                projectedState.mRef.mRefID = sharedId;
+                itemState = &projectedState;
+                type = sharedType;
+            }
+        }
 
         size_t thisIndex = index++;
 
         switch (type)
         {
             case ESM::REC_ALCH:
-                getState(mLists.mPotions, state);
+                getState(mLists.mPotions, *itemState);
                 break;
             case ESM::REC_APPA:
-                getState(mLists.mAppas, state);
+                getState(mLists.mAppas, *itemState);
                 break;
             case ESM::REC_ARMO:
-                readEquipmentState(getState(mLists.mArmors, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mArmors, *itemState), thisIndex, inventory);
                 break;
             case ESM::REC_BOOK:
-                readEquipmentState(getState(mLists.mBooks, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mBooks, *itemState), thisIndex, inventory);
                 break; // not equipable as such, but for selectedEnchantItem
             case ESM::REC_CLOT:
-                readEquipmentState(getState(mLists.mClothes, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mClothes, *itemState), thisIndex, inventory);
                 break;
             case ESM::REC_INGR:
-                getState(mLists.mIngreds, state);
+                getState(mLists.mIngreds, *itemState);
                 break;
             case ESM::REC_LOCK:
-                readEquipmentState(getState(mLists.mLockpicks, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mLockpicks, *itemState), thisIndex, inventory);
                 break;
             case ESM::REC_MISC:
-                getState(mLists.mMiscItems, state);
+                getState(mLists.mMiscItems, *itemState);
                 break;
             case ESM::REC_PROB:
-                readEquipmentState(getState(mLists.mProbes, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mProbes, *itemState), thisIndex, inventory);
                 break;
             case ESM::REC_REPA:
-                getState(mLists.mRepairs, state);
+                getState(mLists.mRepairs, *itemState);
                 break;
             case ESM::REC_WEAP:
-                readEquipmentState(getState(mLists.mWeapons, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mWeapons, *itemState), thisIndex, inventory);
                 break;
             case ESM::REC_LIGH:
-                readEquipmentState(getState(mLists.mLights, state), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mLights, *itemState), thisIndex, inventory);
                 break;
             case 0:
                 Log(Debug::Warning) << "Dropping inventory reference to '" << state.mRef.mRefID

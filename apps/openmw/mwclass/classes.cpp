@@ -3,6 +3,7 @@
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadalch.hpp>
 #include <components/esm4/loadammo.hpp>
+#include <components/esm4/loadappa.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadbook.hpp>
 #include <components/esm4/loadclot.hpp>
@@ -19,6 +20,8 @@
 #include <components/esm4/loadmstt.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadscol.hpp>
+#include <components/esm4/loadsgst.hpp>
+#include <components/esm4/loadslgm.hpp>
 #include <components/esm4/loadstat.hpp>
 #include <components/esm4/loadterm.hpp>
 #include <components/esm4/loadtree.hpp>
@@ -79,6 +82,7 @@ namespace MWClass
 
         ESM4Activator::registerSelf();
         ESM4Takeable<ESM4::Ammunition>::registerSelf();
+        ESM4Takeable<ESM4::Apparatus>::registerSelf();
         ESM4Takeable<ESM4::Armor>::registerSelf();
         ESM4Book::registerSelf();
         ESM4Takeable<ESM4::Clothing>::registerSelf();
@@ -95,6 +99,8 @@ namespace MWClass
         ESM4Named<ESM4::MovableStatic>::registerSelf();
         ESM4Npc::registerSelf();
         ESM4Takeable<ESM4::Potion>::registerSelf();
+        ESM4Takeable<ESM4::SigilStone>::registerSelf();
+        ESM4Takeable<ESM4::SoulGem>::registerSelf();
         ESM4Static::registerSelf();
         ESM4Named<ESM4::StaticCollection>::registerSelf();
         ESM4Named<ESM4::Terminal>::registerSelf();

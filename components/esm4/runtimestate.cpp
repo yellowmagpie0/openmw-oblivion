@@ -248,24 +248,73 @@ namespace ESM4
             }
         }
 
-        void writeInventory(BinaryWriter& writer, const std::vector<RuntimeInventoryItem>& inventory)
+        std::string escapeJson(std::string_view value);
+
+        void writeInventory(BinaryWriter& writer, const std::vector<RuntimeInventoryItem>& inventory,
+            std::uint32_t version)
         {
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(inventory.size()));
             for (const RuntimeInventoryItem& item : inventory)
             {
                 writeKey(writer, item.mBase);
                 writer.integer(item.mCount);
+                if (version >= 4)
+                {
+                    writer.integer(item.mCondition);
+                    writer.floating(item.mCharge);
+                    writer.integer(item.mEquippedSlots);
+                    writer.integer(item.mHotkey);
+                    writeKey(writer, item.mOwner);
+                    writer.floating(item.mRemainingUsageTime);
+                }
             }
         }
 
-        std::vector<RuntimeInventoryItem> readInventory(BinaryReader& reader)
+        std::vector<RuntimeInventoryItem> readInventory(BinaryReader& reader, std::uint32_t version)
         {
             std::vector<RuntimeInventoryItem> result;
             const std::uint32_t count = reader.count();
             result.reserve(count);
             for (std::uint32_t i = 0; i < count; ++i)
-                result.push_back({ readKey(reader), reader.integer<std::int32_t>() });
+            {
+                RuntimeInventoryItem item;
+                item.mBase = readKey(reader);
+                item.mCount = reader.integer<std::int32_t>();
+                if (version >= 4)
+                {
+                    item.mCondition = reader.integer<std::int32_t>();
+                    item.mCharge = reader.float32();
+                    item.mEquippedSlots = reader.integer<std::uint32_t>();
+                    item.mHotkey = reader.integer<std::int8_t>();
+                    item.mOwner = readKey(reader);
+                    item.mRemainingUsageTime = reader.float32();
+                }
+                result.push_back(std::move(item));
+            }
             return result;
+        }
+
+        void writeJsonInventory(
+            std::ostream& stream, const std::vector<RuntimeInventoryItem>& inventory, std::uint32_t version)
+        {
+            stream << '[';
+            for (std::size_t i = 0; i < inventory.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                const RuntimeInventoryItem& item = inventory[i];
+                stream << "{\"base\":\"" << escapeJson(item.mBase.serialize()) << "\",\"count\":"
+                       << item.mCount;
+                if (version >= 4)
+                    stream << ",\"condition\":" << item.mCondition << ",\"charge\":"
+                           << std::setprecision(9) << item.mCharge << ",\"equipped_slots\":"
+                           << item.mEquippedSlots << ",\"hotkey\":" << static_cast<int>(item.mHotkey)
+                           << ",\"owner\":\"" << escapeJson(item.mOwner.serialize())
+                           << "\",\"remaining_usage_time\":" << std::setprecision(9)
+                           << item.mRemainingUsageTime;
+                stream << '}';
+            }
+            stream << ']';
         }
 
         void validatePosition(const ESM::Position& position)
@@ -419,9 +468,40 @@ namespace ESM4
             if (name.empty() || !std::isfinite(value))
                 throw std::runtime_error("Invalid TES4 runtime-state player actor value");
         }
-        for (const RuntimeInventoryItem& item : mPlayer.mInventory)
-            if (item.mBase.isNull() || item.mCount == 0)
-                throw std::runtime_error("Invalid TES4 runtime-state player inventory entry");
+        const auto validateInventory = [&](const std::vector<RuntimeInventoryItem>& inventory,
+                                           std::string_view label, bool actorInventory) {
+            std::uint32_t occupiedSlots = 0;
+            std::uint8_t occupiedHotkeys = 0;
+            for (const RuntimeInventoryItem& item : inventory)
+            {
+                if (item.mBase.isNull() || item.mCount == 0 || (mVersion >= 4 && item.mCount < 0))
+                    throw std::runtime_error("Invalid TES4 runtime-state " + std::string(label) + " entry");
+                if (mVersion < 4)
+                {
+                    if (item.mCondition != -1 || item.mCharge != -1.f || item.mEquippedSlots != 0
+                        || item.mHotkey != -1 || !item.mOwner.isNull() || item.mRemainingUsageTime != -1.f)
+                        throw std::runtime_error("TES4 runtime-state version 1/2/3 cannot contain M13 item state");
+                    continue;
+                }
+                if (item.mCondition < -1 || !std::isfinite(item.mCharge) || item.mCharge < -1.f
+                    || !std::isfinite(item.mRemainingUsageTime) || item.mRemainingUsageTime < -1.f
+                    || (item.mEquippedSlots & ~0x7ffffu) != 0 || item.mHotkey < -1 || item.mHotkey > 7)
+                    throw std::runtime_error("Invalid TES4 runtime-state " + std::string(label) + " metadata");
+                if (!actorInventory && item.mHotkey != -1)
+                    throw std::runtime_error("TES4 reference inventory cannot contain player hotkeys");
+                if ((occupiedSlots & item.mEquippedSlots) != 0)
+                    throw std::runtime_error("Conflicting TES4 runtime-state equipped slots");
+                occupiedSlots |= item.mEquippedSlots;
+                if (item.mHotkey >= 0)
+                {
+                    const std::uint8_t bit = static_cast<std::uint8_t>(1u << item.mHotkey);
+                    if ((occupiedHotkeys & bit) != 0)
+                        throw std::runtime_error("Duplicate TES4 runtime-state inventory hotkey");
+                    occupiedHotkeys |= bit;
+                }
+            }
+        };
+        validateInventory(mPlayer.mInventory, "player inventory", true);
 
         for (const auto& [key, value] : mGlobals)
         {
@@ -442,9 +522,7 @@ namespace ESM4
             validatePosition(reference.mPosition);
             checkSize(reference.mInventory.size(), "reference inventory");
             checkSize(reference.mCustomState.size(), "reference custom state");
-            for (const RuntimeInventoryItem& item : reference.mInventory)
-                if (item.mBase.isNull() || item.mCount == 0)
-                    throw std::runtime_error("Invalid TES4 runtime-state reference inventory entry");
+            validateInventory(reference.mInventory, "reference inventory", false);
             for (const auto& [name, value] : reference.mCustomState)
             {
                 if (name.empty())
@@ -509,7 +587,7 @@ namespace ESM4
             writer.string(name);
             writer.floating(value);
         }
-        writeInventory(writer, mPlayer.mInventory);
+        writeInventory(writer, mPlayer.mInventory, mVersion);
         if (mVersion >= 3)
         {
             writer.string(mPlayer.mName);
@@ -540,7 +618,7 @@ namespace ESM4
             if (reference.mOwner)
                 writeKey(writer, *reference.mOwner);
             writer.integer(reference.mLockLevel);
-            writeInventory(writer, reference.mInventory);
+            writeInventory(writer, reference.mInventory, mVersion);
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(reference.mCustomState.size()));
             for (const auto& [name, value] : reference.mCustomState)
             {
@@ -619,7 +697,7 @@ namespace ESM4
             if (!result.mPlayer.mActorValues.emplace(name, reader.float64()).second)
                 throw std::runtime_error("Duplicate TES4 runtime-state player actor value");
         }
-        result.mPlayer.mInventory = readInventory(reader);
+        result.mPlayer.mInventory = readInventory(reader, result.mVersion);
         if (result.mVersion >= 3)
         {
             result.mPlayer.mName = reader.string();
@@ -662,7 +740,7 @@ namespace ESM4
             if (hasOwner)
                 reference.mOwner = readKey(reader);
             reference.mLockLevel = reader.integer<std::int32_t>();
-            reference.mInventory = readInventory(reader);
+            reference.mInventory = readInventory(reader, result.mVersion);
             const std::uint32_t customCount = reader.count();
             for (std::uint32_t j = 0; j < customCount; ++j)
             {
@@ -812,15 +890,8 @@ namespace ESM4
         std::size_t index = 0;
         for (const auto& [name, value] : mPlayer.mActorValues)
             stream << (index++ ? "," : "") << '"' << escapeJson(name) << "\":" << std::setprecision(17) << value;
-        stream << "},\"inventory\":[";
-        for (std::size_t i = 0; i < mPlayer.mInventory.size(); ++i)
-        {
-            if (i)
-                stream << ',';
-            stream << "{\"base\":\"" << escapeJson(mPlayer.mInventory[i].mBase.serialize())
-                   << "\",\"count\":" << mPlayer.mInventory[i].mCount << '}';
-        }
-        stream << ']';
+        stream << "},\"inventory\":";
+        writeJsonInventory(stream, mPlayer.mInventory, mVersion);
         if (mVersion >= 3)
             stream << ",\"name\":\"" << escapeJson(mPlayer.mName) << "\",\"race\":\""
                    << escapeJson(mPlayer.mRace.serialize()) << "\",\"class\":\""
@@ -852,15 +923,9 @@ namespace ESM4
                 stream << '"' << escapeJson(reference.mOwner->serialize()) << '"';
             else
                 stream << "null";
-            stream << ",\"lock_level\":" << reference.mLockLevel << ",\"inventory\":[";
-            for (std::size_t j = 0; j < reference.mInventory.size(); ++j)
-            {
-                if (j)
-                    stream << ',';
-                stream << "{\"base\":\"" << escapeJson(reference.mInventory[j].mBase.serialize())
-                       << "\",\"count\":" << reference.mInventory[j].mCount << '}';
-            }
-            stream << "],\"custom_state\":{";
+            stream << ",\"lock_level\":" << reference.mLockLevel << ",\"inventory\":";
+            writeJsonInventory(stream, reference.mInventory, mVersion);
+            stream << ",\"custom_state\":{";
             index = 0;
             for (const auto& [name, value] : reference.mCustomState)
             {

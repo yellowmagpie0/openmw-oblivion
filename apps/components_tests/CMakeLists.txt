@@ -71,6 +71,7 @@ file(GLOB UNITTEST_SRC_FILES
     toutf8/toutf8.cpp
 
     esm4/includes.cpp
+    esm4/inventorymechanics.cpp
     esm4/formidfields.cpp
     esm4/facegen.cpp
     esm4/ragdoll.cpp

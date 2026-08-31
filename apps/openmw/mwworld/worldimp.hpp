@@ -4,6 +4,10 @@
 #include <osg/Timer>
 #include <osg/ref_ptr>
 
+#include <optional>
+#include <utility>
+#include <vector>
+
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <components/esm/gameprofile.hpp>
@@ -53,6 +57,7 @@ namespace ESM
 
 namespace ESM4
 {
+    struct RuntimeInventoryItem;
     struct RuntimeState;
 }
 
@@ -226,6 +231,16 @@ namespace MWWorld
         bool dispatchOblivionActivation(const Ptr& ptr, const Ptr& actor);
         void runOblivionScripts(double secondsPassed);
         bool oblivionPlayerHasItem(const ESM::RefId& id);
+        int oblivionPlayerItemCount(const ESM::FormKey& key);
+        int oblivionChangePlayerInventory(
+            const ESM::FormKey& key, int delta, const ESM::FormKey& owner = {});
+        int oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item);
+        bool oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip);
+        std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
+        void oblivionPlayerEquipmentChanged();
+        bool oblivionSetPlayerHotkey(const ESM::RefId& sharedId, int hotkey);
+        std::optional<std::vector<std::pair<ESM::RefId, std::uint32_t>>>
+            oblivionReferenceEquipment(const ESM::FormKey& key) const;
 
         void loadData(const Files::Collections& fileCollections, const std::vector<std::string>& contentFiles,
             const std::vector<std::string>& groundcoverFiles, ToUTF8::Utf8Encoder* encoder,

@@ -14,10 +14,15 @@
 #include <components/esm/records.hpp>
 #include <components/esm3/variant.hpp>
 #include <components/esm4/playermechanics.hpp>
+#include <components/esm4/loadappa.hpp>
+#include <components/esm4/loadligh.hpp>
+#include <components/esm4/loadsgst.hpp>
+#include <components/esm4/loadslgm.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/settings/values.hpp>
 
 #include "esmstore.hpp"
+#include "containerstore.hpp"
 #include "globals.hpp"
 
 namespace
@@ -391,6 +396,263 @@ namespace
         return index < ESM::Attribute::Length ? ESM::Attribute::indexToRefId(index) : ESM::RefId{};
     }
 
+    template <class T>
+    T clampInteger(std::uint64_t value)
+    {
+        return static_cast<T>(std::min<std::uint64_t>(value, std::numeric_limits<T>::max()));
+    }
+
+    std::string inventoryModel(const ESM::Path& source)
+    {
+        if (source.empty())
+            return {};
+        const auto& value = source.getNormalized();
+        if (value.view().starts_with("meshes/"))
+            return value.value().substr(std::string_view("meshes/").size());
+        return value.value();
+    }
+
+    ESM::RefId bookSkillId(std::int8_t nativeSkill)
+    {
+        static const std::array ids{ ESM::Skill::Armorer, ESM::Skill::Athletics, ESM::Skill::LongBlade,
+            ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand, ESM::Skill::HeavyArmor,
+            ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration, ESM::Skill::Destruction,
+            ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration, ESM::Skill::Acrobatics,
+            ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile, ESM::Skill::Security,
+            ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+        return nativeSkill >= 0 && static_cast<std::size_t>(nativeSkill) < ids.size()
+            ? ESM::RefId(ids[nativeSkill])
+            : ESM::RefId{};
+    }
+
+    std::uint16_t enchantmentCapacity(const ESM::FormId& enchantment, std::uint16_t points)
+    {
+        return enchantment.isZeroOrUnset() ? 0 : points;
+    }
+
+    ESM::Weapon projectAmmunition(const ESM4::Ammunition& source)
+    {
+        ESM::Weapon result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mType = ESM::Weapon::Arrow;
+        result.mData.mWeight = source.mData.mWeight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.mValue);
+        const auto damage = static_cast<unsigned char>(std::clamp(std::lround(source.mData.mDamage), 0l, 255l));
+        result.mData.mChop = result.mData.mSlash = result.mData.mThrust = { damage, damage };
+        result.mData.mSpeed = source.mData.mSpeed;
+        return result;
+    }
+
+    ESM::Apparatus projectApparatus(const ESM4::Apparatus& source)
+    {
+        ESM::Apparatus result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mType = std::min<int>(source.mData.type, ESM::Apparatus::Retort);
+        result.mData.mQuality = source.mData.quality;
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        return result;
+    }
+
+    int armorType(std::uint32_t slots)
+    {
+        if (slots & ESM4::Armor::TES4_Shield) return ESM::Armor::Shield;
+        if (slots & ESM4::Armor::TES4_Head) return ESM::Armor::Helmet;
+        if (slots & ESM4::Armor::TES4_UpperBody) return ESM::Armor::Cuirass;
+        if (slots & ESM4::Armor::TES4_LowerBody) return ESM::Armor::Greaves;
+        if (slots & ESM4::Armor::TES4_Feet) return ESM::Armor::Boots;
+        if (slots & ESM4::Armor::TES4_Hands) return ESM::Armor::RGauntlet;
+        return ESM::Armor::Cuirass;
+    }
+
+    ESM::Armor projectArmor(const ESM4::Armor& source)
+    {
+        ESM::Armor result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModelMaleWorld.empty() ? source.mModelMale : source.mModelMaleWorld);
+        result.mIcon = source.mIconMale;
+        result.mData.mType = armorType(source.mArmorFlags);
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mHealth = clampInteger<std::int32_t>(source.mData.health);
+        result.mData.mArmor = source.mData.armor;
+        result.mData.mEnchant = enchantmentCapacity(source.mEnchantment, source.mEnchantmentPoints);
+        return result;
+    }
+
+    int clothingType(std::uint32_t slots)
+    {
+        if (slots & (ESM4::Armor::TES4_RightRing | ESM4::Armor::TES4_LeftRing)) return ESM::Clothing::Ring;
+        if (slots & ESM4::Armor::TES4_Amulet) return ESM::Clothing::Amulet;
+        if ((slots & (ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody))
+            == (ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody))
+            return ESM::Clothing::Robe;
+        if (slots & ESM4::Armor::TES4_UpperBody) return ESM::Clothing::Shirt;
+        if (slots & ESM4::Armor::TES4_LowerBody) return ESM::Clothing::Pants;
+        if (slots & ESM4::Armor::TES4_Feet) return ESM::Clothing::Shoes;
+        if (slots & ESM4::Armor::TES4_Hands) return ESM::Clothing::RGlove;
+        return ESM::Clothing::Robe;
+    }
+
+    ESM::Clothing projectClothing(const ESM4::Clothing& source)
+    {
+        ESM::Clothing result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModelMaleWorld.empty() ? source.mModelMale : source.mModelMaleWorld);
+        result.mIcon = source.mIconMale;
+        result.mData.mType = clothingType(source.mClothingFlags);
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::uint16_t>(source.mData.value);
+        result.mData.mEnchant = enchantmentCapacity(source.mEnchantment, source.mEnchantmentPoints);
+        return result;
+    }
+
+    ESM::Book projectBook(const ESM4::Book& source)
+    {
+        ESM::Book result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mText = source.mText;
+        result.mData.mSkillId = bookSkillId(source.mData.bookSkill);
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mIsScroll = (source.mData.flags & ESM4::Book::Flag_Scroll) != 0;
+        result.mData.mEnchant = enchantmentCapacity(source.mEnchantment, source.mEnchantmentPoints);
+        return result;
+    }
+
+    ESM::Ingredient projectIngredient(const ESM4::Ingredient& source)
+    {
+        ESM::Ingredient result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        return result;
+    }
+
+    template <class Source>
+    ESM::Miscellaneous projectMisc(const Source& source, bool key)
+    {
+        ESM::Miscellaneous result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mFlags = key ? ESM::Miscellaneous::Key : 0;
+        return result;
+    }
+
+    ESM::Lockpick projectLockpick(const ESM4::MiscItem& source)
+    {
+        ESM::Lockpick result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mQuality = 1.f;
+        result.mData.mUses = 1;
+        return result;
+    }
+
+    ESM::Repair projectRepair(const ESM4::MiscItem& source)
+    {
+        ESM::Repair result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mQuality = 1.f;
+        result.mData.mUses = 1;
+        return result;
+    }
+
+    ESM::Potion projectPotion(const ESM4::Potion& source)
+    {
+        ESM::Potion result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = std::max(0, source.mItem.value);
+        return result;
+    }
+
+    ESM::Light projectLight(const ESM4::Light& source)
+    {
+        ESM::Light result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mSound = ESM::RefId(source.mSound);
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mTime = source.mData.time;
+        result.mData.mRadius = clampInteger<std::int32_t>(source.mData.radius);
+        result.mData.mColor = source.mData.colour;
+        result.mData.mFlags = source.mData.flags;
+        return result;
+    }
+
+    int weaponType(std::uint32_t type)
+    {
+        static constexpr std::array types{ ESM::Weapon::LongBladeOneHand, ESM::Weapon::LongBladeTwoHand,
+            ESM::Weapon::BluntOneHand, ESM::Weapon::BluntTwoWide, ESM::Weapon::BluntTwoWide,
+            ESM::Weapon::MarksmanBow };
+        return type < types.size() ? types[type] : ESM::Weapon::LongBladeOneHand;
+    }
+
+    ESM::Weapon projectWeapon(const ESM4::Weapon& source)
+    {
+        ESM::Weapon result;
+        result.blank();
+        result.mId = ESM::RefId(source.mId);
+        result.mName = source.mFullName;
+        result.mModel = inventoryModel(source.mModel);
+        result.mIcon = source.mIcon;
+        result.mData.mType = weaponType(source.mData.type);
+        result.mData.mWeight = source.mData.weight;
+        result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
+        result.mData.mHealth = clampInteger<std::uint16_t>(source.mData.health);
+        result.mData.mSpeed = source.mData.speed;
+        result.mData.mReach = source.mData.reach;
+        result.mData.mEnchant = enchantmentCapacity(source.mEnchantment, source.mEnchantmentPoints);
+        const auto damage = clampInteger<unsigned char>(source.mData.damage);
+        result.mData.mChop = result.mData.mSlash = result.mData.mThrust = { damage, damage };
+        return result;
+    }
+
     ESM::Race projectRace(const ESM4::Race& source)
     {
         ESM::Race race;
@@ -471,6 +733,199 @@ namespace
 
 namespace MWWorld
 {
+    ESM::RefId OblivionProfileServices::sharedItemId(const ESMStore& store, const ESM::RefId& nativeId)
+    {
+        if (const ESM4::MiscItem* item = store.get<ESM4::MiscItem>().search(nativeId);
+            item != nullptr && Misc::StringUtils::ciEqual(item->mEditorId, "Gold001"))
+            return ContainerStore::sGoldId;
+        // Runtime FormIds carry a load-order byte, while the projected shared
+        // records retain the authoritative local FormId from their TES4
+        // definition. Resolve through the native store and return that exact
+        // definition ID so ManualRef can construct the projected item.
+        const auto definitionId = [&](const auto& nativeStore) -> std::optional<ESM::RefId> {
+            if (const auto* item = nativeStore.search(nativeId))
+                return ESM::RefId(item->mId);
+            return std::nullopt;
+        };
+#define OPENMW_TES4_SHARED_ITEM_ID(Type) \
+        if (const auto id = definitionId(store.get<ESM4::Type>()); id) return *id
+        OPENMW_TES4_SHARED_ITEM_ID(Ammunition);
+        OPENMW_TES4_SHARED_ITEM_ID(Apparatus);
+        OPENMW_TES4_SHARED_ITEM_ID(Armor);
+        OPENMW_TES4_SHARED_ITEM_ID(Book);
+        OPENMW_TES4_SHARED_ITEM_ID(Clothing);
+        OPENMW_TES4_SHARED_ITEM_ID(Ingredient);
+        OPENMW_TES4_SHARED_ITEM_ID(Key);
+        OPENMW_TES4_SHARED_ITEM_ID(Light);
+        OPENMW_TES4_SHARED_ITEM_ID(MiscItem);
+        OPENMW_TES4_SHARED_ITEM_ID(Potion);
+        OPENMW_TES4_SHARED_ITEM_ID(SigilStone);
+        OPENMW_TES4_SHARED_ITEM_ID(SoulGem);
+        OPENMW_TES4_SHARED_ITEM_ID(Weapon);
+#undef OPENMW_TES4_SHARED_ITEM_ID
+        return nativeId;
+    }
+
+    ESM::RefId OblivionProfileServices::nativeItemId(const ESMStore& store, const ESM::RefId& sharedId)
+    {
+        if (sharedId != ContainerStore::sGoldId)
+            return sharedId;
+        for (const ESM4::MiscItem& item : store.get<ESM4::MiscItem>())
+            if (Misc::StringUtils::ciEqual(item.mEditorId, "Gold001"))
+                return ESM::RefId(item.mId);
+        return sharedId;
+    }
+
+    int OblivionProfileServices::sharedItemType(const ESMStore& store, const ESM::RefId& sharedId)
+    {
+        // ESMStore::find intentionally reports the authoritative TES4 record
+        // type for a FormId. ContainerStore, however, persists the projected
+        // TES3 facade type. Resolve that facade explicitly when restoring an
+        // Oblivion inventory so a native ARMO/WEAP/etc. does not get rejected
+        // as an invalid shared inventory record.
+        if (store.get<ESM::Potion>().search(sharedId) != nullptr)
+            return ESM::REC_ALCH;
+        if (store.get<ESM::Apparatus>().search(sharedId) != nullptr)
+            return ESM::REC_APPA;
+        if (store.get<ESM::Armor>().search(sharedId) != nullptr)
+            return ESM::REC_ARMO;
+        if (store.get<ESM::Book>().search(sharedId) != nullptr)
+            return ESM::REC_BOOK;
+        if (store.get<ESM::Clothing>().search(sharedId) != nullptr)
+            return ESM::REC_CLOT;
+        if (store.get<ESM::Ingredient>().search(sharedId) != nullptr)
+            return ESM::REC_INGR;
+        if (store.get<ESM::Lockpick>().search(sharedId) != nullptr)
+            return ESM::REC_LOCK;
+        if (store.get<ESM::Repair>().search(sharedId) != nullptr)
+            return ESM::REC_REPA;
+        if (store.get<ESM::Light>().search(sharedId) != nullptr)
+            return ESM::REC_LIGH;
+        if (store.get<ESM::Weapon>().search(sharedId) != nullptr)
+            return ESM::REC_WEAP;
+        if (store.get<ESM::Miscellaneous>().search(sharedId) != nullptr)
+            return ESM::REC_MISC;
+        return 0;
+    }
+
+    std::optional<ESM4::InventoryItemDefinition> OblivionProfileServices::itemDefinition(
+        const ESMStore& store, const ESM::RefId& id)
+    {
+        ESM4::InventoryItemDefinition result;
+        if (const ESM4::Ammunition* ammunition = store.get<ESM4::Ammunition>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Ammunition;
+            result.mValue = clampInteger<std::int32_t>(ammunition->mData.mValue);
+            result.mWeight = ammunition->mData.mWeight;
+            result.mSlots = ESM4::InventorySlotAmmunition;
+        }
+        else if (const ESM4::Apparatus* apparatus = store.get<ESM4::Apparatus>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Apparatus;
+            result.mValue = clampInteger<std::int32_t>(apparatus->mData.value);
+            result.mWeight = apparatus->mData.weight;
+        }
+        else if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Armor;
+            result.mValue = clampInteger<std::int32_t>(armor->mData.value);
+            result.mWeight = armor->mData.weight;
+            result.mMaxCondition
+                = armor->mData.health == 0 ? -1 : clampInteger<std::int32_t>(armor->mData.health);
+            const std::uint16_t capacity = enchantmentCapacity(armor->mEnchantment, armor->mEnchantmentPoints);
+            result.mMaxCharge = capacity == 0 ? -1.f : capacity;
+            result.mSlots = armor->mArmorFlags & 0xffffu;
+            result.mChooseOneSlot = result.mSlots
+                == (ESM4::Armor::TES4_RightRing | ESM4::Armor::TES4_LeftRing);
+        }
+        else if (const ESM4::Book* book = store.get<ESM4::Book>().search(id))
+        {
+            result.mType = (book->mData.flags & ESM4::Book::Flag_Scroll) != 0
+                ? ESM4::InventoryItemType::Scroll
+                : ESM4::InventoryItemType::Book;
+            result.mValue = clampInteger<std::int32_t>(book->mData.value);
+            result.mWeight = book->mData.weight;
+            const std::uint16_t capacity = enchantmentCapacity(book->mEnchantment, book->mEnchantmentPoints);
+            result.mMaxCharge = capacity == 0 ? -1.f : capacity;
+            result.mConsumable = result.mType == ESM4::InventoryItemType::Scroll;
+        }
+        else if (const ESM4::Clothing* clothing = store.get<ESM4::Clothing>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Clothing;
+            result.mValue = clampInteger<std::int32_t>(clothing->mData.value);
+            result.mWeight = clothing->mData.weight;
+            const std::uint16_t capacity = enchantmentCapacity(clothing->mEnchantment, clothing->mEnchantmentPoints);
+            result.mMaxCharge = capacity == 0 ? -1.f : capacity;
+            result.mSlots = clothing->mClothingFlags & 0xffffu;
+            result.mChooseOneSlot = result.mSlots
+                == (ESM4::Armor::TES4_RightRing | ESM4::Armor::TES4_LeftRing);
+        }
+        else if (const ESM4::Ingredient* ingredient = store.get<ESM4::Ingredient>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Ingredient;
+            result.mValue = clampInteger<std::int32_t>(ingredient->mData.value);
+            result.mWeight = ingredient->mData.weight;
+            result.mConsumable = true;
+        }
+        else if (const ESM4::Key* key = store.get<ESM4::Key>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Key;
+            result.mValue = clampInteger<std::int32_t>(key->mData.value);
+            result.mWeight = key->mData.weight;
+        }
+        else if (const ESM4::Light* light = store.get<ESM4::Light>().search(id))
+        {
+            if ((light->mData.flags & ESM4::Light::Carryable) == 0)
+                return std::nullopt;
+            result.mType = ESM4::InventoryItemType::Light;
+            result.mValue = clampInteger<std::int32_t>(light->mData.value);
+            result.mWeight = light->mData.weight;
+            result.mSlots = ESM4::InventorySlotLight;
+            result.mMaxUsageTime = light->mData.time > 0 ? static_cast<float>(light->mData.time) : -1.f;
+        }
+        else if (const ESM4::MiscItem* miscellaneous = store.get<ESM4::MiscItem>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Miscellaneous;
+            result.mValue = clampInteger<std::int32_t>(miscellaneous->mData.value);
+            result.mWeight = miscellaneous->mData.weight;
+        }
+        else if (const ESM4::Potion* potion = store.get<ESM4::Potion>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Potion;
+            result.mValue = std::max(0, potion->mItem.value);
+            result.mWeight = potion->mData.weight;
+            result.mConsumable = true;
+        }
+        else if (const ESM4::SigilStone* stone = store.get<ESM4::SigilStone>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::SigilStone;
+            result.mValue = clampInteger<std::int32_t>(stone->mData.value);
+            result.mWeight = stone->mData.weight;
+            result.mConsumable = true;
+        }
+        else if (const ESM4::SoulGem* gem = store.get<ESM4::SoulGem>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::SoulGem;
+            result.mValue = clampInteger<std::int32_t>(gem->mData.value);
+            result.mWeight = gem->mData.weight;
+            result.mConsumable = gem->mSoul != 0;
+        }
+        else if (const ESM4::Weapon* weapon = store.get<ESM4::Weapon>().search(id))
+        {
+            result.mType = ESM4::InventoryItemType::Weapon;
+            result.mValue = clampInteger<std::int32_t>(weapon->mData.value);
+            result.mWeight = weapon->mData.weight;
+            result.mMaxCondition
+                = weapon->mData.health == 0 ? -1 : clampInteger<std::int32_t>(weapon->mData.health);
+            const std::uint16_t capacity = enchantmentCapacity(weapon->mEnchantment, weapon->mEnchantmentPoints);
+            result.mMaxCharge = capacity == 0 ? -1.f : capacity;
+            result.mSlots = ESM4::InventorySlotWeapon;
+        }
+        else
+            return std::nullopt;
+        return result;
+    }
+
     OblivionProfileInstallReport OblivionProfileServices::install(ESMStore& store)
     {
         OblivionProfileInstallReport report;
@@ -699,6 +1154,88 @@ namespace MWWorld
         for (const ESM4::BirthSign& source : store.get<ESM4::BirthSign>())
             store.insertStatic(projectBirthSign(source));
 
+        // M13 projects item definitions only. The mutable state remains in
+        // InventoryStore/RuntimeState, while all names, icons, models, values,
+        // weights, and category semantics continue to originate in TES4.
+        for (const ESM4::Ammunition& source : store.get<ESM4::Ammunition>())
+        {
+            store.insertStatic(projectAmmunition(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Apparatus& source : store.get<ESM4::Apparatus>())
+        {
+            store.insertStatic(projectApparatus(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Armor& source : store.get<ESM4::Armor>())
+        {
+            store.insertStatic(projectArmor(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Book& source : store.get<ESM4::Book>())
+        {
+            store.insertStatic(projectBook(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Clothing& source : store.get<ESM4::Clothing>())
+        {
+            store.insertStatic(projectClothing(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Ingredient& source : store.get<ESM4::Ingredient>())
+        {
+            store.insertStatic(projectIngredient(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Key& source : store.get<ESM4::Key>())
+        {
+            store.insertStatic(projectMisc(source, true));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::MiscItem& source : store.get<ESM4::MiscItem>())
+        {
+            if (Misc::StringUtils::ciEqual(source.mEditorId, "Lockpick"))
+                store.insertStatic(projectLockpick(source));
+            else if (Misc::StringUtils::ciEqual(source.mEditorId, "RepairHammer"))
+                store.insertStatic(projectRepair(source));
+            else
+                store.insertStatic(projectMisc(source, false));
+            if (Misc::StringUtils::ciEqual(source.mEditorId, "Gold001"))
+            {
+                ESM::Miscellaneous gold = projectMisc(source, false);
+                gold.mId = ContainerStore::sGoldId;
+                store.insertStatic(gold);
+            }
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Potion& source : store.get<ESM4::Potion>())
+        {
+            store.insertStatic(projectPotion(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::SigilStone& source : store.get<ESM4::SigilStone>())
+        {
+            store.insertStatic(projectMisc(source, false));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::SoulGem& source : store.get<ESM4::SoulGem>())
+        {
+            store.insertStatic(projectMisc(source, false));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Light& source : store.get<ESM4::Light>())
+        {
+            if ((source.mData.flags & ESM4::Light::Carryable) == 0)
+                continue;
+            store.insertStatic(projectLight(source));
+            ++report.mProjectedItems;
+        }
+        for (const ESM4::Weapon& source : store.get<ESM4::Weapon>())
+        {
+            store.insertStatic(projectWeapon(source));
+            ++report.mProjectedItems;
+        }
+
         const ESM4::Npc& nativePlayer = findPlayer(store);
         report.mPlayerSource = nativePlayer.mEditorId + "@" + nativePlayer.mId.toString();
         const ESM4::Race* nativeRace = store.get<ESM4::Race>().search(ESM::RefId(nativePlayer.mRace));
@@ -789,6 +1326,16 @@ namespace MWWorld
             player.mNpdt.mMana = std::max<std::uint16_t>(
                 1, static_cast<std::uint16_t>(player.mNpdt.mAttributes[ESM::Attribute::Intelligence] * 2));
         }
+        for (const ESM4::InventoryItem& item : nativePlayer.mInventory)
+        {
+            const ESM::RefId nativeId(ESM::FormId::fromUint32(item.item));
+            const ESM::RefId id = sharedItemId(store, nativeId);
+            // The generic static-record index is finalized later in ESMStore setup.  The native
+            // definition registry is already complete here and is the authoritative projection gate.
+            if (item.count != 0 && itemDefinition(store, nativeId).has_value())
+                player.mInventory.mList.push_back(
+                    { clampInteger<std::int32_t>(item.count), id });
+        }
         store.insertStatic(player);
 
         const VFS::Path::Normalized firstPersonSkeleton("meshes/characters/_1stperson/skeleton.nif");
@@ -820,8 +1367,9 @@ namespace MWWorld
 
         Log(Debug::Info) << "Installed Oblivion profile services: " << report.mNativeGameSettings
                          << " native GMSTs, " << report.mRuntimeContractSettings << " reviewed runtime settings, "
-                         << report.mNativeGlobals << " native globals, player " << report.mPlayerSource << ", race "
-                         << report.mRaceSource << ", class " << report.mClassSource;
+                         << report.mNativeGlobals << " native globals, " << report.mProjectedItems
+                         << " native items, player " << report.mPlayerSource << ", race " << report.mRaceSource
+                         << ", class " << report.mClassSource;
         return report;
     }
 }

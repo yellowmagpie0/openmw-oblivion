@@ -16,6 +16,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
+#include "../mwworld/worldimp.hpp"
 #include "../mwworld/player.hpp"
 
 #include "../mwbase/environment.hpp"
@@ -139,6 +140,10 @@ namespace MWGui
 
     void QuickKeysMenu::unassign(keyData* key)
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && key->index >= 1 && key->index <= 8 && !key->id.empty())
+            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                ->oblivionSetPlayerHotkey(key->id, -1);
         key->button->clearUserStrings();
         key->button->setItem(MWWorld::Ptr());
 
@@ -189,6 +194,10 @@ namespace MWGui
         }
 
         mSelected = &mKey[index];
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && mSelected->index > 8)
+            return;
 
         // prevent reallocation of zero key from ESM::QuickKeys::Type::HandToHand
         if (mSelected->index == 10)
@@ -254,6 +263,9 @@ namespace MWGui
         mSelected->type = ESM::QuickKeys::Type::Item;
         mSelected->id = item.getCellRef().getRefId();
         mSelected->name = item.getClass().getName(item);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                ->oblivionSetPlayerHotkey(mSelected->id, mSelected->index - 1);
 
         mSelected->button->setItem(item, ItemWidget::Barter);
         mSelected->button->setUserString("ToolTipType", "ItemPtr");
@@ -284,6 +296,9 @@ namespace MWGui
         mSelected->type = ESM::QuickKeys::Type::MagicItem;
         mSelected->id = item.getCellRef().getRefId();
         mSelected->name = item.getClass().getName(item);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                ->oblivionSetPlayerHotkey(mSelected->id, mSelected->index - 1);
 
         float scale = 1.f;
         MyGUI::ITexture* texture
@@ -357,6 +372,9 @@ namespace MWGui
     void QuickKeysMenu::activateQuickKey(int index)
     {
         assert(index >= 1 && index <= 10);
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion && index > 8)
+            return;
 
         keyData* key = &mKey[index - 1];
 

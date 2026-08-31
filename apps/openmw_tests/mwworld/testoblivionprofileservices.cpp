@@ -76,12 +76,128 @@ namespace
         player.mData.attribs = { 41, 42, 43, 44, 45, 46, 47, 48 };
         player.mData.skills.armorer = 31;
         player.mData.skills.speechcraft = 52;
+
+        ESM4::Ammunition ammunition{};
+        ammunition.mId = ESM::FormId{ 0x100, 0 };
+        ammunition.mFullName = "Iron Arrow";
+        ammunition.mModel = "weapons/iron/arrow.nif";
+        ammunition.mIcon = "icons/iron_arrow.dds";
+        ammunition.mData.mValue = 1;
+        ammunition.mData.mWeight = 0.1f;
+        ammunition.mData.mDamage = 8.f;
+        store.getWritable<ESM4::Ammunition>().insertStatic(ammunition);
+
+        ESM4::Apparatus apparatus{};
+        apparatus.mId = ESM::FormId{ 0x109, 0 };
+        apparatus.mFullName = "Novice Mortar & Pestle";
+        apparatus.mData = { 0, 40, 3.f, 0.5f };
+        store.getWritable<ESM4::Apparatus>().insertStatic(apparatus);
+
+        ESM4::Armor armor{};
+        armor.mId = ESM::FormId{ 0x101, 0 };
+        armor.mFullName = "Iron Cuirass";
+        armor.mModelMaleWorld = "armor/iron/cuirass_gnd.nif";
+        armor.mIconMale = "icons/iron_cuirass.dds";
+        armor.mArmorFlags = ESM4::Armor::TES4_UpperBody;
+        // Missing ANAM used to expose an indeterminate capacity from native
+        // records. ENAM is authoritative; stray points alone are not.
+        armor.mEnchantmentPoints = 54321;
+        armor.mData = { 12, 100, 250, 30.f };
+        store.getWritable<ESM4::Armor>().insertStatic(armor);
+
+        ESM4::Book book{};
+        book.mId = ESM::FormId{ 0x102, 0 };
+        book.mFullName = "Armorer Manual";
+        book.mData = { 0, 0, 0, ESM4::Book::BookSkill_Armorer, 25, 1.f };
+        store.getWritable<ESM4::Book>().insertStatic(book);
+
+        ESM4::Clothing clothing{};
+        clothing.mId = ESM::FormId{ 0x103, 0 };
+        clothing.mFullName = "Copper Ring";
+        clothing.mClothingFlags = ESM4::Armor::TES4_RightRing | ESM4::Armor::TES4_LeftRing;
+        clothing.mData = { 12, 0.1f };
+        store.getWritable<ESM4::Clothing>().insertStatic(clothing);
+
+        ESM4::Ingredient ingredient{};
+        ingredient.mId = ESM::FormId{ 0x104, 0 };
+        ingredient.mFullName = "Stinkhorn Cap";
+        ingredient.mData = { 3, 0.2f };
+        store.getWritable<ESM4::Ingredient>().insertStatic(ingredient);
+
+        ESM4::Key key{};
+        key.mId = ESM::FormId{ 0x105, 0 };
+        key.mFullName = "Market Key";
+        key.mData = { 0, 0.f };
+        store.getWritable<ESM4::Key>().insertStatic(key);
+
+        ESM4::MiscItem miscellaneous{};
+        miscellaneous.mId = ESM::FormId{ 0x106, 0 };
+        miscellaneous.mFullName = "Ruby";
+        miscellaneous.mData = { 50, 0.2f };
+        store.getWritable<ESM4::MiscItem>().insertStatic(miscellaneous);
+
+        ESM4::MiscItem lockpick{};
+        lockpick.mId = ESM::FormId{ 0x10d, 0 };
+        lockpick.mEditorId = "Lockpick";
+        lockpick.mFullName = "Lockpick";
+        lockpick.mData = { 3, 0.f };
+        store.getWritable<ESM4::MiscItem>().insertStatic(lockpick);
+
+        ESM4::MiscItem repairHammer{};
+        repairHammer.mId = ESM::FormId{ 0x10e, 0 };
+        repairHammer.mEditorId = "RepairHammer";
+        repairHammer.mFullName = "Repair Hammer";
+        repairHammer.mData = { 10, 1.f };
+        store.getWritable<ESM4::MiscItem>().insertStatic(repairHammer);
+
+        ESM4::Potion potion{};
+        potion.mId = ESM::FormId{ 0x107, 0 };
+        potion.mFullName = "Restore Health";
+        potion.mData.weight = 0.5f;
+        potion.mItem.value = 30;
+        store.getWritable<ESM4::Potion>().insertStatic(potion);
+
+        ESM4::SigilStone sigilStone{};
+        sigilStone.mId = ESM::FormId{ 0x10a, 0 };
+        sigilStone.mFullName = "Descendent Sigil Stone";
+        sigilStone.mData = { 1, 500, 1.f };
+        store.getWritable<ESM4::SigilStone>().insertStatic(sigilStone);
+
+        ESM4::SoulGem soulGem{};
+        soulGem.mId = ESM::FormId{ 0x10b, 0 };
+        soulGem.mFullName = "Common Soul Gem";
+        soulGem.mSoul = 3;
+        soulGem.mSoulCapacity = 3;
+        soulGem.mData = { 150, 0.4f };
+        store.getWritable<ESM4::SoulGem>().insertStatic(soulGem);
+
+        ESM4::Light light{};
+        light.mId = ESM::FormId{ 0x10c, 0 };
+        light.mFullName = "Torch";
+        light.mData.flags = ESM4::Light::Carryable;
+        light.mData.time = 1000;
+        light.mData.value = 1;
+        light.mData.weight = 0.f;
+        store.getWritable<ESM4::Light>().insertStatic(light);
+
+        ESM4::Weapon weapon{};
+        weapon.mId = ESM::FormId{ 0x108, 0 };
+        weapon.mFullName = "Iron Sword";
+        weapon.mData.type = 0;
+        weapon.mData.value = 25;
+        weapon.mData.health = 180;
+        weapon.mData.weight = 12.f;
+        weapon.mData.damage = 9;
+        store.getWritable<ESM4::Weapon>().insertStatic(weapon);
+
+        player.mInventory.push_back({ ammunition.mId.toUint32(), 20 });
         store.getWritable<ESM4::Npc>().insertStatic(player);
 
         const MWWorld::OblivionProfileInstallReport report = MWWorld::OblivionProfileServices::install(store);
 
         EXPECT_EQ(report.mNativeGameSettings, 2);
         EXPECT_EQ(report.mNativeGlobals, 2);
+        EXPECT_EQ(report.mProjectedItems, 15);
         EXPECT_EQ(report.mPlayerSource, "Player@0x7");
         EXPECT_EQ(report.mRaceSource, "Imperial@0x907");
         EXPECT_EQ(report.mClassSource, "CharactergenClass@0x30e6");
@@ -144,6 +260,73 @@ namespace
         EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Armorer), 5);
         EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Acrobatics), 30);
         EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Speechcraft), 30);
+        ASSERT_EQ(adaptedPlayer->mInventory.mList.size(), 1u);
+        EXPECT_EQ(adaptedPlayer->mInventory.mList[0].mItem, ESM::RefId(ammunition.mId));
+        EXPECT_EQ(adaptedPlayer->mInventory.mList[0].mCount, 20);
+
+        const ESM::Weapon* adaptedAmmo = store.get<ESM::Weapon>().search(ESM::RefId(ammunition.mId));
+        ASSERT_NE(adaptedAmmo, nullptr);
+        EXPECT_EQ(adaptedAmmo->mData.mType, ESM::Weapon::Arrow);
+        EXPECT_EQ(adaptedAmmo->mData.mChop[0], 8);
+        const ESM::Armor* adaptedArmor = store.get<ESM::Armor>().search(ESM::RefId(armor.mId));
+        ASSERT_NE(adaptedArmor, nullptr);
+        EXPECT_EQ(adaptedArmor->mData.mType, ESM::Armor::Cuirass);
+        EXPECT_EQ(adaptedArmor->mData.mHealth, 250);
+        EXPECT_EQ(adaptedArmor->mData.mEnchant, 0);
+        EXPECT_EQ(store.get<ESM::Book>().find(ESM::RefId(book.mId))->mData.mSkillId, ESM::Skill::Armorer);
+        EXPECT_EQ(store.get<ESM::Clothing>().find(ESM::RefId(clothing.mId))->mData.mType, ESM::Clothing::Ring);
+        EXPECT_FLOAT_EQ(store.get<ESM::Ingredient>().find(ESM::RefId(ingredient.mId))->mData.mWeight, 0.2f);
+        EXPECT_EQ(store.get<ESM::Miscellaneous>().find(ESM::RefId(key.mId))->mData.mFlags,
+            ESM::Miscellaneous::Key);
+        EXPECT_EQ(store.get<ESM::Miscellaneous>().find(ESM::RefId(miscellaneous.mId))->mData.mValue, 50);
+        EXPECT_EQ(store.get<ESM::Lockpick>().find(ESM::RefId(lockpick.mId))->mData.mUses, 1);
+        EXPECT_EQ(store.get<ESM::Repair>().find(ESM::RefId(repairHammer.mId))->mData.mUses, 1);
+        EXPECT_EQ(store.get<ESM::Potion>().find(ESM::RefId(potion.mId))->mData.mValue, 30);
+        EXPECT_EQ(store.get<ESM::Weapon>().find(ESM::RefId(weapon.mId))->mData.mHealth, 180);
+        EXPECT_FLOAT_EQ(store.get<ESM::Apparatus>().find(ESM::RefId(apparatus.mId))->mData.mQuality, 0.5f);
+        EXPECT_EQ(store.get<ESM::Miscellaneous>().find(ESM::RefId(sigilStone.mId))->mData.mValue, 500);
+        EXPECT_EQ(store.get<ESM::Miscellaneous>().find(ESM::RefId(soulGem.mId))->mData.mValue, 150);
+        EXPECT_EQ(store.get<ESM::Light>().find(ESM::RefId(light.mId))->mData.mTime, 1000);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(ammunition.mId)),
+            ESM::REC_WEAP);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(apparatus.mId)),
+            ESM::REC_APPA);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(armor.mId)), ESM::REC_ARMO);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(book.mId)), ESM::REC_BOOK);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(clothing.mId)), ESM::REC_CLOT);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(ingredient.mId)),
+            ESM::REC_INGR);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(key.mId)), ESM::REC_MISC);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(light.mId)), ESM::REC_LIGH);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(miscellaneous.mId)),
+            ESM::REC_MISC);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(lockpick.mId)), ESM::REC_LOCK);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(repairHammer.mId)),
+            ESM::REC_REPA);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(potion.mId)), ESM::REC_ALCH);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(sigilStone.mId)),
+            ESM::REC_MISC);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(soulGem.mId)), ESM::REC_MISC);
+        EXPECT_EQ(MWWorld::OblivionProfileServices::sharedItemType(store, ESM::RefId(weapon.mId)), ESM::REC_WEAP);
+
+        const auto armorDefinition
+            = MWWorld::OblivionProfileServices::itemDefinition(store, ESM::RefId(armor.mId));
+        ASSERT_TRUE(armorDefinition.has_value());
+        EXPECT_EQ(armorDefinition->mType, ESM4::InventoryItemType::Armor);
+        EXPECT_EQ(armorDefinition->mSlots, ESM4::Armor::TES4_UpperBody);
+        EXPECT_EQ(armorDefinition->mMaxCondition, 250);
+        EXPECT_EQ(armorDefinition->mMaxCharge, -1.f);
+        const auto ringDefinition
+            = MWWorld::OblivionProfileServices::itemDefinition(store, ESM::RefId(clothing.mId));
+        ASSERT_TRUE(ringDefinition.has_value());
+        EXPECT_TRUE(ringDefinition->mChooseOneSlot);
+        const auto lightDefinition
+            = MWWorld::OblivionProfileServices::itemDefinition(store, ESM::RefId(light.mId));
+        ASSERT_TRUE(lightDefinition.has_value());
+        EXPECT_EQ(lightDefinition->mType, ESM4::InventoryItemType::Light);
+        EXPECT_EQ(lightDefinition->mSlots, ESM4::InventorySlotLight);
+        EXPECT_FLOAT_EQ(lightDefinition->mMaxUsageTime, 1000.f);
+        EXPECT_TRUE(MWWorld::OblivionProfileServices::itemDefinition(store, ESM::RefId(soulGem.mId))->mConsumable);
 
         EXPECT_EQ(store.get<ESM::Race>().find(adaptedPlayer->mRace)->mName, "Native Imperial");
         const ESM::Class* adaptedClass = store.get<ESM::Class>().find(adaptedPlayer->mClass);

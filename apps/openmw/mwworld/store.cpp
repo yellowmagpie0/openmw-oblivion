@@ -1372,6 +1372,7 @@ template class MWWorld::TypedDynamicStore<ESM4::ActorCreature, ESM::FormId>;
 
 template class MWWorld::TypedDynamicStore<ESM4::Activator>;
 template class MWWorld::TypedDynamicStore<ESM4::Ammunition>;
+template class MWWorld::TypedDynamicStore<ESM4::Apparatus>;
 template class MWWorld::TypedDynamicStore<ESM4::Armor>;
 template class MWWorld::TypedDynamicStore<ESM4::ArmorAddon>;
 template class MWWorld::TypedDynamicStore<ESM4::Book>;
@@ -1410,6 +1411,8 @@ template class MWWorld::TypedDynamicStore<ESM4::Potion>;
 template class MWWorld::TypedDynamicStore<ESM4::Race>;
 template class MWWorld::TypedDynamicStore<ESM4::Region>;
 template class MWWorld::TypedDynamicStore<ESM4::Road>;
+template class MWWorld::TypedDynamicStore<ESM4::SigilStone>;
+template class MWWorld::TypedDynamicStore<ESM4::SoulGem>;
 template class MWWorld::TypedDynamicStore<ESM4::Script>;
 template class MWWorld::TypedDynamicStore<ESM4::Quest>;
 template class MWWorld::TypedDynamicStore<ESM4::DialogInfo>;

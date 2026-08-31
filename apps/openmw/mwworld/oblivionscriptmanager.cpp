@@ -16,6 +16,7 @@
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadappa.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadbook.hpp>
 #include <components/esm4/loadclot.hpp>
@@ -34,9 +35,12 @@
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadscpt.hpp>
+#include <components/esm4/loadsgst.hpp>
+#include <components/esm4/loadslgm.hpp>
 #include <components/esm4/loadsndr.hpp>
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/inventorymechanics.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/resource/resourcesystem.hpp>
@@ -50,11 +54,14 @@
 #include "../mwbase/windowmanager.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwmechanics/npcstats.hpp"
+#include "../mwrender/esm4npcanimation.hpp"
+#include "../mwrender/renderingmanager.hpp"
 #include "../mwsound/sound.hpp"
 #include "action.hpp"
 #include "class.hpp"
 #include "esmstore.hpp"
 #include "globalvariablename.hpp"
+#include "oblivionprofileservices.hpp"
 #include "worldimp.hpp"
 #include "weather.hpp"
 
@@ -132,6 +139,7 @@ namespace MWWorld
             {
                 case ESM::REC_ACTI4: return ptr.get<ESM4::Activator>()->mBase->mScriptId;
                 case ESM::REC_ALCH4: return ptr.get<ESM4::Potion>()->mBase->mScriptId;
+                case ESM::REC_APPA4: return ptr.get<ESM4::Apparatus>()->mBase->mScriptId;
                 case ESM::REC_ARMO4: return ptr.get<ESM4::Armor>()->mBase->mScriptId;
                 case ESM::REC_BOOK4: return ptr.get<ESM4::Book>()->mBase->mScriptId;
                 case ESM::REC_CLOT4: return ptr.get<ESM4::Clothing>()->mBase->mScriptId;
@@ -145,6 +153,8 @@ namespace MWWorld
                 case ESM::REC_LIGH4: return ptr.get<ESM4::Light>()->mBase->mScriptId;
                 case ESM::REC_MISC4: return ptr.get<ESM4::MiscItem>()->mBase->mScriptId;
                 case ESM::REC_NPC_4: return ptr.get<ESM4::Npc>()->mBase->mScriptId;
+                case ESM::REC_SGST4: return ptr.get<ESM4::SigilStone>()->mBase->mScriptId;
+                case ESM::REC_SLGM4: return ptr.get<ESM4::SoulGem>()->mBase->mScriptId;
                 case ESM::REC_WEAP4: return ptr.get<ESM4::Weapon>()->mBase->mScriptId;
                 default: return {};
             }
@@ -154,33 +164,6 @@ namespace MWWorld
         {
             return static_cast<std::int32_t>(std::clamp<std::int64_t>(ObScript::asInteger(value),
                 std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()));
-        }
-
-        void changeInventory(
-            std::vector<ESM4::RuntimeInventoryItem>& inventory, const ESM::FormKey& item, std::int32_t delta)
-        {
-            if (item.isNull() || delta == 0)
-                return;
-            auto found = std::find_if(inventory.begin(), inventory.end(),
-                [&](const ESM4::RuntimeInventoryItem& value) { return value.mBase == item; });
-            if (found == inventory.end())
-                inventory.push_back({ item, delta });
-            else
-                found->mCount = static_cast<std::int32_t>(std::clamp<std::int64_t>(
-                    static_cast<std::int64_t>(found->mCount) + delta,
-                    std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()));
-            std::erase_if(inventory, [](const auto& value) { return value.mCount == 0; });
-            std::sort(inventory.begin(), inventory.end(), [](const auto& left, const auto& right) {
-                return left.mBase < right.mBase;
-            });
-        }
-
-        std::int32_t inventoryCount(
-            const std::vector<ESM4::RuntimeInventoryItem>& inventory, const ESM::FormKey& item)
-        {
-            const auto found = std::find_if(inventory.begin(), inventory.end(),
-                [&](const ESM4::RuntimeInventoryItem& value) { return value.mBase == item; });
-            return found == inventory.end() ? 0 : found->mCount;
         }
 
         ESM4::RuntimeScriptValue saveValue(const ObScript::Value& value)
@@ -299,6 +282,7 @@ namespace MWWorld
         };
         indexBaseScripts(mStore.get<ESM4::Activator>());
         indexBaseScripts(mStore.get<ESM4::Potion>());
+        indexBaseScripts(mStore.get<ESM4::Apparatus>());
         indexBaseScripts(mStore.get<ESM4::Armor>());
         indexBaseScripts(mStore.get<ESM4::Book>());
         indexBaseScripts(mStore.get<ESM4::Clothing>());
@@ -312,6 +296,8 @@ namespace MWWorld
         indexBaseScripts(mStore.get<ESM4::Light>());
         indexBaseScripts(mStore.get<ESM4::MiscItem>());
         indexBaseScripts(mStore.get<ESM4::Npc>());
+        indexBaseScripts(mStore.get<ESM4::SigilStone>());
+        indexBaseScripts(mStore.get<ESM4::SoulGem>());
         indexBaseScripts(mStore.get<ESM4::Weapon>());
         const auto indexReferences = [&](const auto& store) {
             for (const auto& reference : store)
@@ -1069,27 +1055,82 @@ namespace MWWorld
             const auto item = keyFromValue(argument(itemArg));
             if (!item)
                 return std::int64_t(0);
-            std::vector<ESM4::RuntimeInventoryItem>* inventory = nullptr;
             if (owner == ESM::FormKey::dynamic("player", 1))
             {
-                if (!mWorld.mOblivionRuntimeState)
-                    mWorld.mOblivionRuntimeState
-                        = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
-                inventory = &mWorld.mOblivionRuntimeState->mPlayer.mInventory;
+                if (name == "getitemcount")
+                    return std::int64_t(mWorld.oblivionPlayerItemCount(*item));
+                const std::int32_t count = std::max<std::int32_t>(1, boundedCount(argument(itemArg + 1)));
+                mWorld.oblivionChangePlayerInventory(*item, name == "additem" ? count : -count);
+                trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
+                    + " count=" + std::to_string(count));
+                if (name == "additem")
+                    dispatchBaseEvent(*item, "onadd", owner);
+                return std::int64_t(0);
             }
-            else if (ESM4::RuntimeReferenceState* state = referenceState(owner))
-                inventory = &state->mInventory;
-            if (!inventory)
+            ESM4::RuntimeReferenceState* state = referenceState(owner);
+            if (!state)
                 return std::int64_t(0);
             if (name == "getitemcount")
-                return std::int64_t(inventoryCount(*inventory, *item));
+                return std::int64_t(ESM4::inventoryCount(state->mInventory, *item));
             const std::int32_t count = std::max<std::int32_t>(1, boundedCount(argument(itemArg + 1)));
-            changeInventory(*inventory, *item, name == "additem" ? count : -count);
+            if (name == "additem")
+            {
+                ESM4::RuntimeInventoryItem added;
+                added.mBase = *item;
+                added.mCount = count;
+                if (const std::optional<ESM::FormId> id = mResolver.toFormId(*item))
+                    if (auto definition = OblivionProfileServices::itemDefinition(mWorld.mStore, ESM::RefId(*id)))
+                    {
+                        added.mCondition = definition->mMaxCondition;
+                        added.mCharge = definition->mMaxCharge;
+                    }
+                ESM4::addInventoryItem(state->mInventory, std::move(added));
+            }
+            else
+                ESM4::removeInventoryItem(state->mInventory, *item, count);
             trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
                 + " count=" + std::to_string(count));
             if (name == "additem")
                 dispatchBaseEvent(*item, "onadd", owner);
             return std::int64_t(0);
+        }
+
+        if (name == "equipitem" || name == "unequipitem")
+        {
+            const auto item = keyFromValue(argument(0));
+            if (!item)
+                return std::int64_t(0);
+            const bool equip = name == "equipitem";
+            const ESM::FormKey owner = objectKey();
+            bool changed = false;
+            if (owner == ESM::FormKey::dynamic("player", 1))
+                changed = mWorld.oblivionEquipPlayerItem(*item, equip);
+            else if (ESM4::RuntimeReferenceState* state = referenceState(owner))
+            {
+                if (equip)
+                {
+                    if (const std::optional<ESM::FormId> id = mResolver.toFormId(*item))
+                        if (auto definition
+                            = OblivionProfileServices::itemDefinition(mWorld.mStore, ESM::RefId(*id)))
+                        {
+                            definition->mBase = *item;
+                            changed = ESM4::equipInventoryItem(state->mInventory, *definition);
+                        }
+                }
+                else
+                    changed = ESM4::unequipInventoryItem(state->mInventory, *item);
+                if (changed)
+                {
+                    const Ptr actor = ptrFor(owner);
+                    if (!actor.isEmpty() && mWorld.mRendering != nullptr)
+                        if (auto* animation
+                            = dynamic_cast<MWRender::ESM4NpcAnimation*>(mWorld.mRendering->getAnimation(actor)))
+                            animation->refreshEquipment();
+                }
+            }
+            trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
+                + " changed=" + (changed ? "true" : "false"));
+            return std::int64_t(changed);
         }
 
         if (name == "moveto" || name == "movetomarker")
@@ -1606,7 +1647,7 @@ namespace MWWorld
             "evaluatepackage", "evp", "addtopic", "showmap",
             "cast", "addspell", "removespell", "moddisposition", "setessential", "addscriptpackage",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
-            "pathpointenable", "pathpointdisable", "stopcombat", "startcombat", "equipitem", "unequipitem",
+            "pathpointenable", "pathpointdisable", "stopcombat", "startcombat",
             "forceflee", "setrestrained", "setunconscious" };
         if (deferred.contains(name))
         {

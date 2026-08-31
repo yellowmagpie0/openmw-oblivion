@@ -1,0 +1,103 @@
+# Establish an exact inventory matrix independently of the Player NPC's base
+# inventory, then exercise stacking, consumption/removal, all equip pseudo-
+# slots, and a multi-part clothing/armor conflict before save/reload.
+at 1 command player removeitem Arrow1Iron 999
+at 1 command player removeitem MortarPestle 999
+at 1 command player removeitem IronCuirass 999
+at 1 command player removeitem SKLxArmorer1 999
+at 1 command player removeitem ScrollStandardFireDamageTarget1Novice 999
+at 1 command player removeitem MiddleShirt01 999
+at 1 command player removeitem Potato 999
+at 1 command player removeitem ImperialPrisonKey 999
+at 1 command player removeitem Torch02 999
+at 1 command player removeitem Gold001 999999
+at 1 command player removeitem RepairHammer 999
+at 1 command player removeitem Lockpick 999
+at 1 command player removeitem PotionRestoreHealth 999
+at 1 command player removeitem SSAbsSTRForSTR1 999
+at 1 command player removeitem SoulGemEmpty1Petty 999
+at 1 command player removeitem WeapIronLongsword 999
+
+at 2 command player additem Arrow1Iron 24
+at 2 command player additem MortarPestle 1
+at 2 command player additem IronCuirass 1
+at 2 command player additem SKLxArmorer1 1
+at 2 command player additem ScrollStandardFireDamageTarget1Novice 2
+at 2 command player additem MiddleShirt01 1
+at 2 command player additem Potato 3
+at 2 command player additem ImperialPrisonKey 1
+at 2 command player additem Torch02 1
+at 2 command player additem Gold001 500
+at 2 command player additem RepairHammer 2
+at 2 command player additem Lockpick 5
+at 2 command player additem PotionRestoreHealth 2
+at 2 command player additem SSAbsSTRForSTR1 1
+at 2 command player additem SoulGemEmpty1Petty 1
+at 2 command player additem WeapIronLongsword 1
+
+at 3 command player equipitem MiddleShirt01
+at 3 command player equipitem WeapIronLongsword
+at 3 command player equipitem Arrow1Iron
+at 3 command player equipitem Torch02
+
+# These removals model one use of each consumable family at the inventory
+# layer; magic and alchemy effects remain owned by M16/M17.
+at 5 command player removeitem Potato 1
+at 5 command player removeitem PotionRestoreHealth 1
+at 5 command player removeitem ScrollStandardFireDamageTarget1Novice 1
+
+# A cuirass conflicts with the upper-body shirt. Re-equipping it after an
+# explicit round trip leaves the native armor slot as the final persisted set.
+at 7 command player equipitem IronCuirass
+at 9 command player unequipitem IronCuirass
+at 9 command player equipitem MiddleShirt01
+at 11 command player equipitem IronCuirass
+
+# Exercise a market-style sale and reacquisition round trip for every non-
+# currency family after the matrix is established. This also proves removal of
+# equipped one-off items does not leave phantom equipment behind. The gold
+# delta is reversed before the final state, then all four equipment families
+# are restored for the visual/save test.
+at 13 command player removeitem Arrow1Iron 1
+at 13 command player removeitem MortarPestle 1
+at 13 command player removeitem IronCuirass 1
+at 13 command player removeitem SKLxArmorer1 1
+at 13 command player removeitem ScrollStandardFireDamageTarget1Novice 1
+at 13 command player removeitem MiddleShirt01 1
+at 13 command player removeitem Potato 1
+at 13 command player removeitem ImperialPrisonKey 1
+at 13 command player removeitem Torch02 1
+at 13 command player removeitem RepairHammer 1
+at 13 command player removeitem Lockpick 1
+at 13 command player removeitem PotionRestoreHealth 1
+at 13 command player removeitem SSAbsSTRForSTR1 1
+at 13 command player removeitem SoulGemEmpty1Petty 1
+at 13 command player removeitem WeapIronLongsword 1
+at 13 command player additem Gold001 315
+
+at 14 command player removeitem Gold001 315
+at 14 command player additem Arrow1Iron 1
+at 14 command player additem MortarPestle 1
+at 14 command player additem IronCuirass 1
+at 14 command player additem SKLxArmorer1 1
+at 14 command player additem ScrollStandardFireDamageTarget1Novice 1
+at 14 command player additem MiddleShirt01 1
+at 14 command player additem Potato 1
+at 14 command player additem ImperialPrisonKey 1
+at 14 command player additem Torch02 1
+at 14 command player additem RepairHammer 1
+at 14 command player additem Lockpick 1
+at 14 command player additem PotionRestoreHealth 1
+at 14 command player additem SSAbsSTRForSTR1 1
+at 14 command player additem SoulGemEmpty1Petty 1
+at 14 command player additem WeapIronLongsword 1
+
+at 15 command player equipitem WeapIronLongsword
+at 15 command player equipitem Arrow1Iron
+at 15 command player equipitem Torch02
+at 15 command player equipitem IronCuirass
+
+# Consume and replace one repair hammer to exercise the repair-tool inventory
+# transition independently from the merchant repair formula/backend tests.
+at 16 command player removeitem RepairHammer 1
+at 17 command player additem RepairHammer 1

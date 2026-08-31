@@ -22,7 +22,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 3;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 4;
 
     struct RuntimeContentIdentity
     {
@@ -38,6 +38,21 @@ namespace ESM4
     {
         ESM::FormKey mBase;
         std::int32_t mCount = 0;
+        // -1 identifies an item category without condition/charge. A value of
+        // zero is a valid broken or discharged item.
+        std::int32_t mCondition = -1;
+        float mCharge = -1.f;
+        // TES4 biped bits occupy the low 16 bits. M13 reserves the next three
+        // bits for the weapon, ammunition, and portable-light pseudo-slots.
+        std::uint32_t mEquippedSlots = 0;
+        // Oblivion exposes eight quick keys. -1 means that no key is bound.
+        std::int8_t mHotkey = -1;
+        // A non-null owner survives theft/transfer until the item is sold to
+        // a legitimate merchant. M15 consumes this identity for crime.
+        ESM::FormKey mOwner;
+        // Portable lights keep a fractional burn duration independently from
+        // durability and enchantment charge. -1 selects the base duration.
+        float mRemainingUsageTime = -1.f;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };

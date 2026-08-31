@@ -36,6 +36,7 @@
 #include "../mwbase/soundmanager.hpp"
 #include "../mwclass/esm4npc.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "util.hpp"
 
@@ -82,6 +83,13 @@ namespace MWRender
             // only lead to the NPC not being rendered.
             updatePartsTES5(*traits);
         }
+    }
+
+    void ESM4NpcAnimation::refreshEquipment()
+    {
+        mParts.clear();
+        mFaceMorphs.clear();
+        updateParts();
     }
 
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
@@ -703,18 +711,35 @@ namespace MWRender
             std::uint32_t mSlots = 0;
         };
         std::vector<Equipment> equipment;
-        for (const ESM4::Armor* armor : MWClass::ESM4Npc::getEquippedArmor(mPtr))
-            equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), armor->mArmorFlags & 0xffffu });
-        for (const ESM4::Clothing* clothing : MWClass::ESM4Npc::getEquippedClothing(mPtr))
-            equipment.push_back({ chooseTes4EquipmentModel(clothing, isFemale), clothing->mClothingFlags & 0xffffu });
+        const auto runtimeEquipment
+            = static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                  ->oblivionReferenceEquipment(mPtr.getCellRef().getFormKey());
+        if (runtimeEquipment)
+        {
+            const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
+            for (const auto& [id, slots] : *runtimeEquipment)
+            {
+                if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(id))
+                    equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), slots });
+                else if (const ESM4::Clothing* clothing = store.get<ESM4::Clothing>().search(id))
+                    equipment.push_back({ chooseTes4EquipmentModel(clothing, isFemale), slots });
+            }
+        }
+        else
+        {
+            for (const ESM4::Armor* armor : MWClass::ESM4Npc::getEquippedArmor(mPtr))
+                equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), armor->mArmorFlags & 0xffffu });
+            for (const ESM4::Clothing* clothing : MWClass::ESM4Npc::getEquippedClothing(mPtr))
+                equipment.push_back(
+                    { chooseTes4EquipmentModel(clothing, isFemale), clothing->mClothingFlags & 0xffffu });
+        }
 
         std::uint32_t covered = 0;
         std::set<std::string, std::less<>> attachedModels;
         for (const Equipment& item : equipment)
         {
-            // Inventory records are the only equipped-state source before M13.
-            // Resolve mutually exclusive biped slots deterministically and never
-            // attach the same mesh twice through inventory plus default outfit.
+            // Resolve mutually exclusive biped slots deterministically and
+            // never attach the same mesh twice through inventory plus outfit.
             if (item.mModel.empty() || (item.mSlots != 0 && (item.mSlots & ~covered) == 0))
                 continue;
             const VFS::Path::Normalized normalized(item.mModel);

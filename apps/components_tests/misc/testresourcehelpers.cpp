@@ -101,6 +101,27 @@ namespace Misc::ResourceHelpers
             EXPECT_EQ(correctResourcePath({ { sound } }, path, *vfs, mp3), "sound/sound");
         }
 
+        TEST(MiscResourceHelpersCorrectIconPath, shouldPreferOfficialOblivionMenuIconHierarchy)
+        {
+            constexpr VFS::Path::NormalizedView source("weapons/ironlongsword.dds");
+            constexpr VFS::Path::NormalizedView oblivion("textures/menus/icons/weapons/ironlongsword.dds");
+            const std::unique_ptr<const VFS::Manager> vfs
+                = TestingOpenMW::createTestVFS({ { oblivion, nullptr } });
+            EXPECT_EQ(correctIconPath(source, *vfs), oblivion);
+        }
+
+        TEST(MiscResourceHelpersCorrectIconPath, shouldTranslateOblivionTgaAndRetainMorrowindFallback)
+        {
+            constexpr VFS::Path::NormalizedView source("icons/clutter/repairhammer.tga");
+            constexpr VFS::Path::NormalizedView oblivion("textures/menus/icons/clutter/repairhammer.dds");
+            const std::unique_ptr<const VFS::Manager> oblivionVfs
+                = TestingOpenMW::createTestVFS({ { oblivion, nullptr } });
+            EXPECT_EQ(correctIconPath(source, *oblivionVfs), oblivion);
+
+            const std::unique_ptr<const VFS::Manager> empty = TestingOpenMW::createTestVFS({});
+            EXPECT_EQ(correctIconPath(source, *empty), "icons/clutter/repairhammer.dds");
+        }
+
         struct MiscResourceHelpersCorrectResourcePathShouldRemoveExtraPrefix : TestWithParam<VFS::Path::NormalizedView>
         {
         };

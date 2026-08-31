@@ -191,6 +191,19 @@ VFS::Path::Normalized Misc::ResourceHelpers::correctTexturePath(
 
 VFS::Path::Normalized Misc::ResourceHelpers::correctIconPath(VFS::Path::NormalizedView resPath, const VFS::Manager& vfs)
 {
+    // Oblivion stores inventory icons under the menu texture hierarchy while
+    // its records name them relative to the Icons directory. Prefer that
+    // official path when present; Morrowind keeps using the existing Icons
+    // root because the candidate simply does not exist in its VFS.
+    std::string_view relative = resPath.value();
+    constexpr std::string_view iconPrefix = "icons/";
+    if (relative.starts_with(iconPrefix))
+        relative.remove_prefix(iconPrefix.size());
+    VFS::Path::Normalized oblivion("textures/menus/icons");
+    oblivion /= relative;
+    oblivion.changeExtension(dds);
+    if (vfs.exists(oblivion))
+        return oblivion;
     return correctResourcePath({ { icons } }, resPath, vfs, dds);
 }
 

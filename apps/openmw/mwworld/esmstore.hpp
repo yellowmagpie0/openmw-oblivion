@@ -93,6 +93,7 @@ namespace ESM4
     struct ActorCharacter;
     struct ActorCreature;
     struct Ammunition;
+    struct Apparatus;
     struct Armor;
     struct ArmorAddon;
     struct Book;
@@ -130,6 +131,8 @@ namespace ESM4
     struct Race;
     struct Region;
     struct Road;
+    struct SigilStone;
+    struct SoulGem;
     struct Reference;
     struct Sound;
     struct SoundReference;
@@ -171,6 +174,7 @@ namespace MWWorld
             Store<ESM::Attribute>,
 
             Store<ESM4::Activator>, Store<ESM4::ActorCharacter>, Store<ESM4::ActorCreature>, Store<ESM4::Ammunition>,
+            Store<ESM4::Apparatus>,
             Store<ESM4::Armor>, Store<ESM4::ArmorAddon>, Store<ESM4::Book>, Store<ESM4::BirthSign>, Store<ESM4::Cell>, Store<ESM4::Clothing>,
             Store<ESM4::Class>, Store<ESM4::Climate>, Store<ESM4::Container>, Store<ESM4::Creature>, Store<ESM4::Dialogue>,
             Store<ESM4::Door>, Store<ESM4::Eyes>,
@@ -181,7 +185,7 @@ namespace MWWorld
             Store<ESM4::LevelledItem>,
             Store<ESM4::LevelledNpc>, Store<ESM4::Light>, Store<ESM4::MiscItem>, Store<ESM4::MovableStatic>,
             Store<ESM4::Music>, Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>,
-            Store<ESM4::Region>, Store<ESM4::Road>,
+            Store<ESM4::Region>, Store<ESM4::Road>, Store<ESM4::SigilStone>, Store<ESM4::SoulGem>,
             Store<ESM4::Reference>,
             Store<ESM4::Script>, Store<ESM4::Quest>, Store<ESM4::DialogInfo>, Store<ESM4::Sound>,
             Store<ESM4::SoundReference>, Store<ESM4::Static>, Store<ESM4::StaticCollection>,

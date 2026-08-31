@@ -14,6 +14,7 @@
 #include <components/esm3/loadmgef.hpp>
 #include <components/esm3/stolenitems.hpp>
 #include <components/esm4/playermechanics.hpp>
+#include <components/esm4/inventorymechanics.hpp>
 
 #include <components/misc/rng.hpp>
 
@@ -652,6 +653,17 @@ namespace MWMechanics
 
         MWWorld::Ptr playerPtr = getPlayer();
         const MWMechanics::NpcStats& playerStats = playerPtr.getClass().getNpcStats(playerPtr);
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const ESM4::BarterActor playerActor{
+                playerPtr.getClass().getSkill(playerPtr, ESM::Skill::Mercantile),
+                playerStats.getAttribute(ESM::Attribute::Luck).getModified() };
+            const ESM4::BarterActor merchantActor{ ptr.getClass().getSkill(ptr, ESM::Skill::Mercantile),
+                sellerStats.getAttribute(ESM::Attribute::Luck).getModified() };
+            return ESM4::barterOffer(
+                basePrice, buying, playerActor, merchantActor, getDerivedDisposition(ptr));
+        }
 
         // I suppose the temporary disposition change (second param to getDerivedDisposition()) _has_ to be considered
         // here, otherwise one would get different prices when exiting and re-entering the dialogue window...

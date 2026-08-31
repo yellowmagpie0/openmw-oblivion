@@ -7,13 +7,25 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/weapontype.hpp"
 
 #include "class.hpp"
-#include "esmstore.hpp"
+#include "worldimp.hpp"
+
+namespace
+{
+    std::uint32_t oblivionEquipmentSlots(
+        const MWWorld::Ptr& item, int sharedSlot)
+    {
+        auto* world = static_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        return world->oblivionEquipmentSlots(item, sharedSlot);
+    }
+}
 
 void MWWorld::InventoryStore::copySlots(const InventoryStore& store)
 {
@@ -176,6 +188,29 @@ void MWWorld::InventoryStore::equip(int slot, const ContainerStoreIterator& iter
 
     if (std::find(slots.first.begin(), slots.first.end(), slot) == slots.first.end())
         throw std::runtime_error("invalid slot");
+
+    // TES4 apparel may cover several biped parts even though the shared item
+    // facade exposes one representative TES3 slot. Remove every native slot
+    // conflict so robes, armor, rings, weapons, ammunition, and torches obey
+    // Oblivion's equipment model when equipped through the shared UI.
+    if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+    {
+        const std::uint32_t nativeSlots = oblivionEquipmentSlots(*iterator, slot);
+        if (nativeSlots != 0)
+        {
+            const bool updatesEnabled = mUpdatesEnabled;
+            mUpdatesEnabled = false;
+            for (int occupied = 0; occupied < static_cast<int>(mSlots.size()); ++occupied)
+            {
+                if (mSlots[occupied] == end() || mSlots[occupied] == iterator)
+                    continue;
+                const std::uint32_t occupiedSlots = oblivionEquipmentSlots(*mSlots[occupied], occupied);
+                if ((occupiedSlots & nativeSlots) != 0)
+                    unequipSlot(occupied);
+            }
+            mUpdatesEnabled = updatesEnabled;
+        }
+    }
 
     if (mSlots[slot] != end())
         unequipSlot(slot);

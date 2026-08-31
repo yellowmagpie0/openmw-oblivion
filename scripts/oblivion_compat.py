@@ -1084,6 +1084,94 @@ def validate_m5_runtime_state(label: str, state: dict[str, Any]) -> dict[str, An
     }
 
 
+def validate_m13_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
+    """Validate the deterministic official-item matrix used by both M13 courses."""
+
+    expected_counts = {
+        "content:oblivion.esm:017829": 24,  # Arrow1Iron
+        "content:oblivion.esm:0105e3": 1,   # MortarPestle
+        "content:oblivion.esm:01c6d1": 1,   # IronCuirass
+        "content:oblivion.esm:0243d9": 1,   # SKLxArmorer1
+        "content:oblivion.esm:0888be": 1,   # novice fire scroll after one use
+        "content:oblivion.esm:0229ad": 1,   # MiddleShirt01
+        "content:oblivion.esm:03368c": 2,   # Potato after one use
+        "content:oblivion.esm:092d8a": 1,   # ImperialPrisonKey
+        "content:oblivion.esm:02cf9f": 1,   # Torch02
+        "content:oblivion.esm:00000f": 500, # Gold001
+        "content:oblivion.esm:00000c": 2,   # RepairHammer
+        "content:oblivion.esm:00000a": 5,   # Lockpick
+        "content:oblivion.esm:098496": 1,   # restore-health potion after one use
+        "content:oblivion.esm:041fa5": 1,   # SSAbsSTRForSTR1
+        "content:oblivion.esm:023d67": 1,   # SoulGemEmpty1Petty
+        "content:oblivion.esm:000c0c": 1,   # WeapIronLongsword
+    }
+    expected_slots = {
+        "content:oblivion.esm:017829": 1 << 17,
+        "content:oblivion.esm:01c6d1": 1 << 2,
+        "content:oblivion.esm:02cf9f": 1 << 18,
+        "content:oblivion.esm:000c0c": 1 << 16,
+    }
+    failures: list[str] = []
+    inventory = state.get("player", {}).get("inventory", [])
+    by_base: dict[str, list[dict[str, Any]]] = {}
+    for item in inventory:
+        by_base.setdefault(str(item.get("base")), []).append(item)
+
+    if state.get("schema_version") != 4:
+        failures.append(f"expected schema version 4, got {state.get('schema_version')}")
+    if set(by_base) != set(expected_counts):
+        failures.append(
+            "item identity set differs: "
+            f"missing={sorted(set(expected_counts) - set(by_base))} "
+            f"unexpected={sorted(set(by_base) - set(expected_counts))}"
+        )
+    for base, count in expected_counts.items():
+        entries = by_base.get(base, [])
+        if len(entries) != 1:
+            failures.append(f"{base} has {len(entries)} stacks instead of one")
+            continue
+        item = entries[0]
+        if item.get("count") != count:
+            failures.append(f"{base} count={item.get('count')} expected={count}")
+        slots = int(item.get("equipped_slots", 0))
+        if slots != expected_slots.get(base, 0):
+            failures.append(f"{base} equipped_slots={slots} expected={expected_slots.get(base, 0)}")
+        if item.get("hotkey", -1) != -1 or item.get("owner", "null") != "null":
+            failures.append(f"{base} unexpectedly retained hotkey or owner metadata")
+
+    for base, condition in (
+        ("content:oblivion.esm:01c6d1", 300),
+        ("content:oblivion.esm:000c0c", 140),
+    ):
+        if by_base.get(base) and by_base[base][0].get("condition") != condition:
+            failures.append(f"{base} condition was not preserved at {condition}")
+    for base, entries in by_base.items():
+        if entries and float(entries[0].get("charge", -1)) != -1.0:
+            failures.append(f"unenchanted matrix item {base} acquired a TES3 enchantment charge")
+    torch = by_base.get("content:oblivion.esm:02cf9f", [])
+    if torch:
+        remaining = float(torch[0].get("remaining_usage_time", -1))
+        if not 0 < remaining <= 1000:
+            failures.append(f"torch remaining_usage_time={remaining} is outside (0, 1000]")
+
+    occupied = 0
+    for entries in by_base.values():
+        if not entries:
+            continue
+        slots = int(entries[0].get("equipped_slots", 0))
+        if occupied & slots:
+            failures.append("persisted equipment slots overlap")
+        occupied |= slots
+    return {
+        "passed": not failures,
+        "failures": failures,
+        "schema_version": state.get("schema_version"),
+        "item_categories": len(expected_counts),
+        "inventory_stacks": len(inventory),
+        "equipped_slots": occupied,
+    }
+
+
 def run_m4_acceptance(args: argparse.Namespace) -> dict[str, Any]:
     source = args.source.resolve()
     build = args.build.resolve()
@@ -3340,7 +3428,7 @@ def make_parser() -> argparse.ArgumentParser:
 
     runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
     runtime.add_argument(
-        "operation", choices=("inspect", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
+        "operation", choices=("inspect", "m13-verify", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
     )
     runtime.add_argument("save", type=Path)
     runtime.add_argument("--output", type=Path)
@@ -3354,6 +3442,9 @@ def run_runtime_state(args: argparse.Namespace) -> dict[str, Any]:
     state = tes4_state.load_save(args.save)
     if args.operation == "inspect":
         result = {"passed": True, "save": str(args.save), "state": state}
+    elif args.operation == "m13-verify":
+        result = validate_m13_runtime_state(state)
+        result["save"] = str(args.save)
     elif args.operation == "compare":
         if args.expected is None:
             raise ValueError("runtime-state compare requires --expected")

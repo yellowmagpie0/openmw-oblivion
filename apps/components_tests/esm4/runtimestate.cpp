@@ -32,7 +32,9 @@ namespace
         state.mPlayer.mPosition.pos[1] = -3.f;
         state.mPlayer.mPosition.rot[2] = 1.25f;
         state.mPlayer.mActorValues = { { "health", 42.25 }, { "magicka", 31.0 } };
-        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 1, 125, 80.f,
+            0x4, 2, ESM::FormKey::content("Oblivion.esm", 0x7) } };
+        state.mPlayer.mInventory.front().mRemainingUsageTime = 812.5f;
         state.mPlayer.mName = "Bendu Olo";
         state.mPlayer.mRace = ESM::FormKey::content("Oblivion.esm", 0x907);
         state.mPlayer.mClass = ESM::FormKey::content("Oblivion.esm", 0x237a8);
@@ -49,7 +51,8 @@ namespace
         reference.mPosition.pos[2] = 64.f;
         reference.mOwner = ESM::FormKey::content("Oblivion.esm", 0x300);
         reference.mLockLevel = 40;
-        reference.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
+        reference.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), 3, -1, -1.f, 0, -1,
+            ESM::FormKey::content("Oblivion.esm", 0x300) } };
         reference.mCustomState = { { "harvested", true }, { "label", std::string("opened") } };
         state.mReferences.push_back(std::move(reference));
         state.mScriptEventSequence = 91;
@@ -176,15 +179,21 @@ namespace
         state = makeState();
         state.mGlobals.begin()->second = std::numeric_limits<double>::infinity();
         EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state = makeState();
+        state.mPlayer.mInventory.front().mRemainingUsageTime = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
 
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":3"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":4"), std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
-        EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":2}]"),
+        EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"
+                                 "\"condition\":125,\"charge\":80,\"equipped_slots\":4,\"hotkey\":2,"
+                                 "\"owner\":\"content:oblivion.esm:000007\","
+                                 "\"remaining_usage_time\":812.5}]"),
             std::string::npos);
         EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
         EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
@@ -203,6 +212,8 @@ namespace
         state.mPlayer.mClass = {};
         state.mPlayer.mBirthSign = {};
         state.mPlayer.mCharacterGenerationFlags = 0;
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
+        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
         const auto bytes = state.serializeBinary();
         const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(bytes);
         EXPECT_EQ(loaded.mVersion, 1u);
@@ -219,9 +230,28 @@ namespace
         state.mPlayer.mClass = {};
         state.mPlayer.mBirthSign = {};
         state.mPlayer.mCharacterGenerationFlags = 0;
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
+        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
         const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
         EXPECT_EQ(loaded.mVersion, 2u);
         EXPECT_TRUE(loaded.mPlayer.mRace.isNull());
         EXPECT_EQ(loaded.canonicalJson().find("character_generation_flags"), std::string::npos);
+    }
+
+    TEST(ESM4RuntimeState, versionThreePayloadMigratesWithoutM13ItemMetadata)
+    {
+        auto state = makeState();
+        state.mVersion = 3;
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
+        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
+        const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_EQ(loaded.mVersion, 3u);
+        ASSERT_EQ(loaded.mPlayer.mInventory.size(), 1u);
+        EXPECT_EQ(loaded.mPlayer.mInventory[0].mCondition, -1);
+        EXPECT_EQ(loaded.mPlayer.mInventory[0].mCharge, -1.f);
+        EXPECT_EQ(loaded.mPlayer.mInventory[0].mEquippedSlots, 0u);
+        EXPECT_EQ(loaded.mPlayer.mInventory[0].mHotkey, -1);
+        EXPECT_TRUE(loaded.mPlayer.mInventory[0].mOwner.isNull());
+        EXPECT_EQ(loaded.mPlayer.mInventory[0].mRemainingUsageTime, -1.f);
     }
 }

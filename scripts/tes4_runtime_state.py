@@ -19,8 +19,8 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 3
-SUPPORTED_VERSIONS = {1, 2, CURRENT_VERSION}
+CURRENT_VERSION = 4
+SUPPORTED_VERSIONS = {1, 2, 3, CURRENT_VERSION}
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
 MAX_PAYLOAD = 256 * 1024 * 1024
@@ -181,15 +181,82 @@ def _write_script_value(writer: _Writer, value: dict[str, Any] | None) -> None:
         raise RuntimeStateError(f"Unsupported TES4 runtime-state script value {value!r}")
 
 
-def _inventory(reader: _Reader) -> list[dict[str, Any]]:
-    return [{"base": reader.string(), "count": reader.unpack("<i")} for _ in range(reader.count())]
+def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
+    result = []
+    for _ in range(reader.count()):
+        item: dict[str, Any] = {"base": reader.string(), "count": reader.unpack("<i")}
+        if version >= 4:
+            item.update({
+                "condition": reader.unpack("<i"),
+                "charge": reader.unpack("<f"),
+                "equipped_slots": reader.unpack("<I"),
+                "hotkey": reader.unpack("<b"),
+                "owner": reader.string(),
+                "remaining_usage_time": reader.unpack("<f"),
+            })
+        result.append(item)
+    return result
 
 
-def _write_inventory(writer: _Writer, value: list[dict[str, Any]]) -> None:
+def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int) -> None:
     writer.pack("<I", len(value))
     for item in value:
         writer.string(str(item["base"]))
         writer.pack("<i", int(item["count"]))
+        if version >= 4:
+            writer.pack("<i", int(item.get("condition", -1)))
+            writer.pack("<f", float(item.get("charge", -1.0)))
+            writer.pack("<I", int(item.get("equipped_slots", 0)))
+            writer.pack("<b", int(item.get("hotkey", -1)))
+            writer.string(str(item.get("owner", "null")))
+            writer.pack("<f", float(item.get("remaining_usage_time", -1.0)))
+
+
+def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) -> None:
+    occupied_slots = 0
+    occupied_hotkeys = 0
+    metadata = {
+        "condition", "charge", "equipped_slots", "hotkey", "owner", "remaining_usage_time"
+    }
+    for item in value:
+        count = int(item.get("count", 0))
+        if str(item.get("base", "null")) == "null" or count == 0 or (version >= 4 and count < 0):
+            raise RuntimeStateError("Invalid TES4 runtime-state inventory entry")
+        if version < 4:
+            if metadata.intersection(item):
+                raise RuntimeStateError("TES4 runtime-state version 1/2/3 cannot contain M13 item state")
+            continue
+        condition = int(item.get("condition", -1))
+        charge = float(item.get("charge", -1.0))
+        usage = float(item.get("remaining_usage_time", -1.0))
+        slots = int(item.get("equipped_slots", 0))
+        hotkey = int(item.get("hotkey", -1))
+        if (condition < -1 or not math.isfinite(charge) or charge < -1.0
+                or not math.isfinite(usage) or usage < -1.0 or slots & ~0x7FFFF
+                or hotkey < -1 or hotkey > 7):
+            raise RuntimeStateError("Invalid TES4 runtime-state inventory metadata")
+        if not actor and hotkey != -1:
+            raise RuntimeStateError("TES4 reference inventory cannot contain player hotkeys")
+        if occupied_slots & slots:
+            raise RuntimeStateError("Conflicting TES4 runtime-state equipped slots")
+        occupied_slots |= slots
+        if hotkey >= 0:
+            bit = 1 << hotkey
+            if occupied_hotkeys & bit:
+                raise RuntimeStateError("Duplicate TES4 runtime-state inventory hotkey")
+            occupied_hotkeys |= bit
+
+
+def _upgrade_inventory(value: list[dict[str, Any]]) -> None:
+    """Materialize the v4 item fields when promoting an older save state."""
+
+    for item in value:
+        item.setdefault("condition", -1)
+        item.setdefault("charge", -1.0)
+        item.setdefault("equipped_slots", 0)
+        item.setdefault("hotkey", -1)
+        item.setdefault("owner", "null")
+        item.setdefault("remaining_usage_time", -1.0)
 
 
 def decode_payload(payload: bytes) -> dict[str, Any]:
@@ -228,7 +295,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         if name in player["actor_values"]:
             raise RuntimeStateError(f"Duplicate TES4 actor value {name}")
         player["actor_values"][name] = reader.unpack("<d")
-    player["inventory"] = _inventory(reader)
+    player["inventory"] = _inventory(reader, version)
     if version >= 3:
         player["name"] = reader.string()
         player["race"] = reader.string()
@@ -269,7 +336,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             raise RuntimeStateError("Invalid TES4 runtime-state owner flag")
         reference["owner"] = reader.string() if has_owner else None
         reference["lock_level"] = reader.unpack("<i")
-        reference["inventory"] = _inventory(reader)
+        reference["inventory"] = _inventory(reader, version)
         custom: dict[str, Any] = {}
         for _ in range(reader.count()):
             name = reader.string()
@@ -279,6 +346,9 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         reference["custom_state"] = custom
         references.append(reference)
     result["references"] = references
+    _validate_inventory(result["player"]["inventory"], version, True)
+    for reference in references:
+        _validate_inventory(reference["inventory"], version, False)
     if version >= 2:
         result["script_event_sequence"] = reader.unpack("<Q")
         result["script_instances"] = []
@@ -340,6 +410,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
     writer.pack("<d", float(clock["hour"]))
     writer.pack("<d", float(clock["time_scale"]))
     player = state["player"]
+    _validate_inventory(player["inventory"], version, True)
     writer.string(str(player["reference"]))
     writer.string(str(player["cell"]))
     _write_position(writer, player["position"])
@@ -348,7 +419,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
     for name in sorted(actor_values):
         writer.string(name)
         writer.pack("<d", float(actor_values[name]))
-    _write_inventory(writer, player["inventory"])
+    _write_inventory(writer, player["inventory"], version)
     if version >= 3:
         writer.string(str(player["name"]))
         writer.string(str(player["race"]))
@@ -362,6 +433,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         writer.string(key)
         _write_value(writer, globals_[key])
     references = sorted(state["references"], key=lambda item: item["key"])
+    for reference in references:
+        _validate_inventory(reference["inventory"], version, False)
     writer.pack("<I", len(references))
     for reference in references:
         writer.string(str(reference["key"]))
@@ -374,7 +447,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         if reference["owner"] is not None:
             writer.string(str(reference["owner"]))
         writer.pack("<i", int(reference["lock_level"]))
-        _write_inventory(writer, reference["inventory"])
+        _write_inventory(writer, reference["inventory"], version)
         custom = reference["custom_state"]
         writer.pack("<I", len(custom))
         for name in sorted(custom):
@@ -455,6 +528,9 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("script_event_sequence", 0)
     state.setdefault("script_instances", [])
     state.setdefault("quests", [])
+    _upgrade_inventory(state["player"]["inventory"])
+    for reference in state["references"]:
+        _upgrade_inventory(reference["inventory"])
     payload = encode_payload(state)
     record_body = struct.pack("<4sI", b"VERS", 4) + struct.pack("<I", CURRENT_VERSION)
     for offset in range(0, len(payload), CHUNK_SIZE):
@@ -473,6 +549,9 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])
     result.setdefault("quests", [])
+    _upgrade_inventory(result["player"]["inventory"])
+    for reference in result["references"]:
+        _upgrade_inventory(reference["inventory"])
     player = result["player"]
     player.setdefault("name", "Bendu Olo")
     player.setdefault("race", "content:oblivion.esm:000907")
@@ -573,6 +652,9 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
         local_id = int(global_key.rsplit(":", 1)[-1], 16)
         if local_id in calendar_values:
             result["globals"][global_key] = calendar_values[local_id]
+    _upgrade_inventory(player["inventory"])
+    for reference in references:
+        _upgrade_inventory(reference["inventory"])
     return result
 
 

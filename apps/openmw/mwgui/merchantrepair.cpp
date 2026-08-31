@@ -1,6 +1,7 @@
 #include "merchantrepair.hpp"
 
 #include <components/esm3/loadgmst.hpp>
+#include <components/esm4/inventorymechanics.hpp>
 #include <components/settings/values.hpp>
 
 #include <MyGUI_Button.h>
@@ -10,6 +11,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
@@ -76,9 +78,9 @@ namespace MWGui
                 float p = static_cast<float>(std::max(1, basePrice));
                 float r = static_cast<float>(std::max(1, static_cast<int>(maxDurability / p)));
 
-                int x = static_cast<int>((maxDurability - durability) / r);
-                x = static_cast<int>(fRepairMult * x);
-                x = std::max(1, x);
+                int x = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                    ? ESM4::repairCost(basePrice, durability, maxDurability)
+                    : std::max(1, static_cast<int>(fRepairMult * ((maxDurability - durability) / r)));
 
                 int price = MWBase::Environment::get().getMechanicsManager()->getBarterOffer(mActor, x, true);
 

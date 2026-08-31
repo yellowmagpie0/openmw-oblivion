@@ -24,6 +24,7 @@ namespace MWRender
             const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem);
 
         osg::Vec3f runAnimation(float timepassed) override;
+        void refreshEquipment();
 
     private:
         osg::ref_ptr<osg::Node> insertPart(

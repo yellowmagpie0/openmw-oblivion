@@ -38,6 +38,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
@@ -670,18 +671,23 @@ namespace MWRender
             }
         };
 
-        // Until the native equipment/inventory milestone, the base inventory
-        // is Oblivion's authoritative initial equipped set, as it is for NPCs.
         if (mViewMode != VM_HeadOnly)
         {
             const auto visibleInView = [&](std::uint32_t slots) {
                 return mViewMode != VM_FirstPerson
                     || (slots & (ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_Hands)) != 0;
             };
-            for (const ESM4::InventoryItem& item : player->mInventory)
+            MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
+            for (auto iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
             {
-                const ESM::FormId id = ESM::FormId::fromUint32(item.item);
-                if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(id))
+                const MWWorld::Ptr item = *iterator;
+                if (!inventory.isEquipped(item))
+                    continue;
+                const ESM::RefId refId = item.getCellRef().getRefId();
+                const ESM::FormId* id = refId.getIf<ESM::FormId>();
+                if (id == nullptr)
+                    continue;
+                if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(*id))
                 {
                     const std::uint32_t slots = armor->mArmorFlags & 0xffffu;
                     if (visibleInView(slots) && (slots == 0 || (slots & ~covered) != 0))
@@ -691,7 +697,7 @@ namespace MWRender
                         covered |= slots;
                     }
                 }
-                else if (const ESM4::Clothing* clothing = store.get<ESM4::Clothing>().search(id))
+                else if (const ESM4::Clothing* clothing = store.get<ESM4::Clothing>().search(*id))
                 {
                     const std::uint32_t slots = clothing->mClothingFlags & 0xffffu;
                     if (visibleInView(slots) && (slots == 0 || (slots & ~covered) != 0))
@@ -997,7 +1003,13 @@ namespace MWRender
         try
         {
             std::string_view bonename = sPartList.at(type);
-            if (type == ESM::PRT_Weapon)
+            const bool oblivion
+                = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+            if (oblivion && type == ESM::PRT_Shield)
+                bonename = "Torch";
+            else if (oblivion && type == ESM::PRT_Weapon)
+                bonename = "Weapon";
+            else if (type == ESM::PRT_Weapon)
             {
                 const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
                 MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
@@ -1354,6 +1366,15 @@ namespace MWRender
         }
 
         updateParts();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && mPtr == MWMechanics::getPlayer())
+        {
+            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                ->oblivionPlayerEquipmentChanged();
+            mOblivionParts.clear();
+            mOblivionFaceMorphs.clear();
+            updateOblivionPlayerParts();
+        }
     }
 
     void NpcAnimation::setVampire(bool vampire)

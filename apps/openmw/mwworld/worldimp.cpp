@@ -45,6 +45,7 @@
 #include <components/esm4/loadstat.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadwrld.hpp>
+#include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include <components/misc/constants.hpp>
@@ -157,6 +158,20 @@ namespace MWWorld
                 { Globals::sCrimeGoldTurnIn, ESM::Variant(0) },
                 { Globals::sPCHasTurnIn, ESM::Variant(0) },
             };
+        }
+
+        std::uint32_t getNativeEquippedSlots(const InventoryStore& inventory, const ConstPtr& item,
+            const ESM4::InventoryItemDefinition& definition)
+        {
+            if (!definition.mChooseOneSlot)
+                return definition.mSlots;
+            const auto isItemInSlot = [&](int slot) {
+                const ConstContainerStoreIterator equipped = inventory.getSlot(slot);
+                return equipped != inventory.cend() && *equipped == item;
+            };
+            return isItemInSlot(InventoryStore::Slot_LeftRing)
+                ? static_cast<std::uint32_t>(ESM4::Armor::TES4_LeftRing)
+                : static_cast<std::uint32_t>(ESM4::Armor::TES4_RightRing);
         }
     }
 
@@ -657,26 +672,47 @@ namespace MWWorld
         state.mPlayer.mFemale = !playerBase->isMale();
         state.mPlayer.mCharacterGenerationFlags = mPlayer->getOblivionCharacterGenerationFlags();
 
-        // Player inventory is currently projected through the TES3 actor facade. Preserve a previously loaded native
-        // inventory overlay, or seed it from the native Player NPC until ESM4 item classes gain ContainerStore support.
+        // The projected InventoryStore is the live authority. TES4 metadata
+        // which has no shared-store equivalent is joined back by stable base
+        // key and written into the native v4 stack schema.
+        std::map<ESM::FormKey, std::int8_t> previousHotkeys;
         if (mOblivionRuntimeState)
-            state.mPlayer.mInventory = mOblivionRuntimeState->mPlayer.mInventory;
-        else
+            for (const ESM4::RuntimeInventoryItem& item : mOblivionRuntimeState->mPlayer.mInventory)
+                if (item.mHotkey >= 0)
+                    previousHotkeys.emplace(item.mBase, item.mHotkey);
+        InventoryStore& liveInventory = player.getClass().getInventoryStore(player);
+        for (auto iterator = liveInventory.begin(); iterator != liveInventory.end(); ++iterator)
         {
-            for (const ESM4::Npc& npc : mStore.get<ESM4::Npc>())
+            const Ptr itemPtr = *iterator;
+            const ESM::RefId baseId
+                = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
+            const ESM::FormId* formId = baseId.getIf<ESM::FormId>();
+            if (formId == nullptr || itemPtr.getCellRef().getCount() <= 0)
+                continue;
+            ESM4::RuntimeInventoryItem item;
+            item.mBase = resolver.toFormKey(*formId);
+            item.mCount = itemPtr.getCellRef().getCount();
+            if (auto definition = OblivionProfileServices::itemDefinition(mStore, baseId))
             {
-                if (!Misc::StringUtils::ciEqual(npc.mEditorId, "Player"))
-                    continue;
-                for (const ESM4::InventoryItem& item : npc.mInventory)
-                {
-                    const ESM::FormKey key = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
-                    const std::int32_t count = static_cast<std::int32_t>(
-                        std::min<std::uint32_t>(item.count, std::numeric_limits<std::int32_t>::max()));
-                    if (!key.isNull() && count != 0)
-                        state.mPlayer.mInventory.push_back({ key, count });
-                }
-                break;
+                item.mCondition = definition->mMaxCondition < 0 ? -1
+                    : itemPtr.getCellRef().getCharge() < 0 ? definition->mMaxCondition
+                                                          : itemPtr.getCellRef().getCharge();
+                item.mCharge = definition->mMaxCharge < 0.f ? -1.f
+                    : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
+                                                                       : itemPtr.getCellRef().getEnchantmentCharge();
+                item.mRemainingUsageTime = definition->mMaxUsageTime < 0.f ? -1.f
+                    : itemPtr.getClass().getRemainingUsageTime(itemPtr);
+                if (liveInventory.isEquipped(itemPtr))
+                    item.mEquippedSlots = getNativeEquippedSlots(liveInventory, itemPtr, *definition);
             }
+            if (const ESM::FormId* owner = itemPtr.getCellRef().getOwner().getIf<ESM::FormId>())
+                item.mOwner = resolver.toFormKey(*owner);
+            if (const auto previous = previousHotkeys.find(item.mBase); previous != previousHotkeys.end())
+            {
+                item.mHotkey = previous->second;
+                previousHotkeys.erase(previous);
+            }
+            ESM4::addInventoryItem(state.mPlayer.mInventory, std::move(item));
         }
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
@@ -746,6 +782,20 @@ namespace MWWorld
                     {
                         reference.mInventory = previous->second->mInventory;
                         reference.mCustomState = previous->second->mCustomState;
+                        if (mOblivionRuntimeState->mVersion < 4
+                            && (ptr.getClass().getType() == ESM::REC_NPC_4
+                                || ptr.getClass().getType() == ESM::REC_CREA4))
+                        {
+                            const std::vector<ESM4::RuntimeInventoryItem> migrated = reference.mInventory;
+                            for (const ESM4::RuntimeInventoryItem& item : migrated)
+                                if (const std::optional<ESM::FormId> id = resolver.toFormId(item.mBase))
+                                    if (auto definition = OblivionProfileServices::itemDefinition(
+                                            mStore, ESM::RefId(*id)))
+                                    {
+                                        definition->mBase = item.mBase;
+                                        ESM4::equipInventoryItem(reference.mInventory, *definition);
+                                    }
+                        }
 
                         // Scripted non-looping animations retain their final
                         // visual pose after playback, but the renderer's live
@@ -790,7 +840,8 @@ namespace MWWorld
                     }
                     else
                     {
-                        const auto addInventory = [&](const std::vector<ESM4::InventoryItem>& inventory) {
+                        const auto addInventory
+                            = [&](const std::vector<ESM4::InventoryItem>& inventory, bool equip) {
                             for (const ESM4::InventoryItem& item : inventory)
                             {
                                 const ESM::FormKey itemKey
@@ -798,19 +849,40 @@ namespace MWWorld
                                 const std::int32_t count = static_cast<std::int32_t>(std::min<std::uint32_t>(
                                     item.count, std::numeric_limits<std::int32_t>::max()));
                                 if (!itemKey.isNull() && count != 0)
-                                    reference.mInventory.push_back({ itemKey, count });
+                                {
+                                    ESM4::RuntimeInventoryItem runtimeItem;
+                                    runtimeItem.mBase = itemKey;
+                                    runtimeItem.mCount = count;
+                                    if (const auto definition = OblivionProfileServices::itemDefinition(
+                                            mStore, ESM::RefId(ESM::FormId::fromUint32(item.item))))
+                                    {
+                                        runtimeItem.mCondition = definition->mMaxCondition;
+                                        runtimeItem.mCharge = definition->mMaxCharge;
+                                    }
+                                    reference.mInventory.push_back(std::move(runtimeItem));
+                                    if (equip)
+                                    {
+                                        auto definition = OblivionProfileServices::itemDefinition(
+                                            mStore, ESM::RefId(ESM::FormId::fromUint32(item.item)));
+                                        if (definition && definition->mSlots != 0)
+                                        {
+                                            definition->mBase = itemKey;
+                                            ESM4::equipInventoryItem(reference.mInventory, *definition);
+                                        }
+                                    }
+                                }
                             }
                         };
                         switch (ptr.getClass().getType())
                         {
                             case ESM::REC_CONT4:
-                                addInventory(ptr.get<ESM4::Container>()->mBase->mInventory);
+                                addInventory(ptr.get<ESM4::Container>()->mBase->mInventory, false);
                                 break;
                             case ESM::REC_CREA4:
-                                addInventory(ptr.get<ESM4::Creature>()->mBase->mInventory);
+                                addInventory(ptr.get<ESM4::Creature>()->mBase->mInventory, true);
                                 break;
                             case ESM::REC_NPC_4:
-                                addInventory(ptr.get<ESM4::Npc>()->mBase->mInventory);
+                                addInventory(ptr.get<ESM4::Npc>()->mBase->mInventory, true);
                                 break;
                             default:
                                 break;
@@ -850,42 +922,32 @@ namespace MWWorld
         });
         if (mOblivionScriptManager)
             mOblivionScriptManager->capture(state);
+        const auto normalizeNativeInventory = [](std::vector<ESM4::RuntimeInventoryItem>& inventory) {
+            for (ESM4::RuntimeInventoryItem& item : inventory)
+                if (item.mCount < 0)
+                    item.mCount = item.mCount == std::numeric_limits<std::int32_t>::min()
+                        ? std::numeric_limits<std::int32_t>::max()
+                        : -item.mCount;
+            ESM4::normalizeInventory(inventory);
+        };
+        normalizeNativeInventory(state.mPlayer.mInventory);
+        for (ESM4::RuntimeReferenceState& reference : state.mReferences)
+            normalizeNativeInventory(reference.mInventory);
         state.validate();
         return state;
     }
 
     float World::getOblivionPlayerInventoryWeight() const
     {
-        const ESM::FormKeyResolver resolver(mContentFiles);
-        std::vector<ESM4::RuntimeInventoryItem> inventory;
-        if (mOblivionRuntimeState)
-            inventory = mOblivionRuntimeState->mPlayer.mInventory;
-        else
-            for (const ESM4::Npc& npc : mStore.get<ESM4::Npc>())
-                if (Misc::StringUtils::ciEqual(npc.mEditorId, "Player"))
-                {
-                    for (const ESM4::InventoryItem& item : npc.mInventory)
-                        inventory.push_back({ resolver.toFormKey(ESM::FormId::fromUint32(item.item)),
-                            static_cast<std::int32_t>(item.count) });
-                    break;
-                }
-        const auto itemWeight = [&](const ESM::FormId& id) {
-            if (const auto* item = mStore.get<ESM4::Ammunition>().search(id)) return item->mData.mWeight;
-            if (const auto* item = mStore.get<ESM4::Potion>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::Armor>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::Book>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::Clothing>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::Ingredient>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::Key>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::MiscItem>().search(id)) return item->mData.weight;
-            if (const auto* item = mStore.get<ESM4::Weapon>().search(id)) return item->mData.weight;
-            return 0.f;
-        };
         float result = 0.f;
-        for (const ESM4::RuntimeInventoryItem& item : inventory)
-            if (item.mCount > 0)
-                if (const std::optional<ESM::FormId> id = resolver.toFormId(item.mBase))
-                    result += itemWeight(*id) * item.mCount;
+        const Ptr player = const_cast<World*>(this)->getPlayerPtr();
+        const ContainerStore& inventory = player.getClass().getContainerStore(player);
+        for (auto iterator = inventory.cbegin(); iterator != inventory.cend(); ++iterator)
+        {
+            const ConstPtr item = *iterator;
+            if (item.getCellRef().getCount() > 0)
+                result += item.getClass().getWeight(item) * item.getCellRef().getCount();
+        }
         return std::max(0.f, result);
     }
 
@@ -995,6 +1057,49 @@ namespace MWWorld
         CellStore& playerCell = mWorldModel.getCell(ESM::RefId(*playerCellId));
         mPlayer->setCell(&playerCell);
         const Ptr player = getPlayerPtr();
+        InventoryStore& playerInventory = player.getClass().getInventoryStore(player);
+        playerInventory.clear();
+        std::vector<std::pair<ContainerStoreIterator, std::uint32_t>> equippedItems;
+        for (const ESM4::RuntimeInventoryItem& saved : state.mPlayer.mInventory)
+        {
+            const std::optional<ESM::FormId> itemId = resolver.toFormId(saved.mBase);
+            if (!itemId || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*itemId)))
+                throw std::runtime_error("TES4 runtime-state player item cannot be resolved: "
+                    + saved.mBase.serialize());
+            const ESM::RefId sharedId
+                = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*itemId));
+            ManualRef source(mStore, sharedId, saved.mCount);
+            Ptr item = source.getPtr();
+            if (saved.mCondition >= 0)
+                item.getCellRef().setCharge(saved.mCondition);
+            if (saved.mCharge >= 0.f)
+                item.getCellRef().setEnchantmentCharge(saved.mCharge);
+            if (saved.mRemainingUsageTime >= 0.f)
+                item.getClass().setRemainingUsageTime(item, saved.mRemainingUsageTime);
+            if (!saved.mOwner.isNull())
+            {
+                const std::optional<ESM::FormId> owner = resolver.toFormId(saved.mOwner);
+                if (!owner)
+                    throw std::runtime_error("TES4 runtime-state item owner cannot be resolved: "
+                        + saved.mOwner.serialize());
+                item.getCellRef().setOwner(ESM::RefId(*owner));
+            }
+            ContainerStoreIterator added
+                = static_cast<ContainerStore&>(playerInventory).add(item, saved.mCount, false);
+            if (saved.mEquippedSlots != 0)
+                equippedItems.emplace_back(added, saved.mEquippedSlots);
+        }
+        for (const auto& [item, nativeSlots] : equippedItems)
+        {
+            const std::vector<int> slots = (*item).getClass().getEquipmentSlots(*item).first;
+            if (slots.empty())
+                continue;
+            int selected = slots.front();
+            if ((nativeSlots & ESM4::Armor::TES4_LeftRing) != 0
+                && std::ranges::find(slots, InventoryStore::Slot_LeftRing) != slots.end())
+                selected = InventoryStore::Slot_LeftRing;
+            playerInventory.equip(selected, item);
+        }
         player.getRefData().setPosition(state.mPlayer.mPosition);
         MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
         const auto applyDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& current) {

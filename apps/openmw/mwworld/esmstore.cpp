@@ -406,6 +406,7 @@ namespace MWWorld
             case ESM::REC_ACTI4:
             case ESM::REC_ALCH4:
             case ESM::REC_AMMO4:
+            case ESM::REC_APPA4:
             case ESM::REC_ARMO4:
             case ESM::REC_BOOK4:
             case ESM::REC_CONT4:
@@ -424,6 +425,8 @@ namespace MWWorld
             case ESM::REC_MSTT4:
             case ESM::REC_NPC_4:
             case ESM::REC_SCOL4:
+            case ESM::REC_SGST4:
+            case ESM::REC_SLGM4:
             case ESM::REC_STAT4:
             case ESM::REC_TERM4:
             case ESM::REC_TREE4:

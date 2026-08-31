@@ -75,6 +75,40 @@ namespace
                 return func(store.get<ESM::Weapon>());
             case ESM::REC_BODY:
                 return func(store.get<ESM::BodyPart>());
+            // M13 keeps native TES4 records authoritative while presenting
+            // projected shared item records to ContainerStore. Both records
+            // intentionally have the same FormId, so select the projected
+            // record family explicitly when constructing a manual inventory
+            // reference instead of following the global native type index.
+            case ESM::REC_AMMO4:
+                return func(store.get<ESM::Weapon>());
+            case ESM::REC_APPA4:
+                return func(store.get<ESM::Apparatus>());
+            case ESM::REC_ARMO4:
+                return func(store.get<ESM::Armor>());
+            case ESM::REC_BOOK4:
+                return func(store.get<ESM::Book>());
+            case ESM::REC_CLOT4:
+                return func(store.get<ESM::Clothing>());
+            case ESM::REC_INGR4:
+                return func(store.get<ESM::Ingredient>());
+            case ESM::REC_KEYM4:
+                return func(store.get<ESM::Miscellaneous>());
+            case ESM::REC_LIGH4:
+                return func(store.get<ESM::Light>());
+            case ESM::REC_MISC4:
+                if (store.get<ESM::Lockpick>().search(name) != nullptr)
+                    return func(store.get<ESM::Lockpick>());
+                if (store.get<ESM::Repair>().search(name) != nullptr)
+                    return func(store.get<ESM::Repair>());
+                return func(store.get<ESM::Miscellaneous>());
+            case ESM::REC_ALCH4:
+                return func(store.get<ESM::Potion>());
+            case ESM::REC_SGST4:
+            case ESM::REC_SLGM4:
+                return func(store.get<ESM::Miscellaneous>());
+            case ESM::REC_WEAP4:
+                return func(store.get<ESM::Weapon>());
             case ESM::REC_STAT4:
                 return func(store.get<ESM4::Static>());
             case ESM::REC_TERM4:

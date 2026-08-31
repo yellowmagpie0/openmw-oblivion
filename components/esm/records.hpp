@@ -47,6 +47,7 @@
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadalch.hpp>
 #include <components/esm4/loadammo.hpp>
+#include <components/esm4/loadappa.hpp>
 #include <components/esm4/loadarma.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadbook.hpp>
@@ -80,6 +81,8 @@
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadscol.hpp>
+#include <components/esm4/loadsgst.hpp>
+#include <components/esm4/loadslgm.hpp>
 #include <components/esm4/loadsndr.hpp>
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadstat.hpp>

@@ -475,6 +475,36 @@ class OblivionCompatTests(unittest.TestCase):
         state["references"][0]["deleted"] = True
         self.assertFalse(MODULE.validate_m5_runtime_state("owned", state)["passed"])
 
+    def test_m13_state_validator_checks_exact_categories_metadata_and_slots(self):
+        counts = {
+            "017829": 24, "0105e3": 1, "01c6d1": 1, "0243d9": 1, "0888be": 1,
+            "0229ad": 1, "03368c": 2, "092d8a": 1, "02cf9f": 1, "00000f": 500,
+            "00000c": 2, "098496": 1, "041fa5": 1, "023d67": 1, "000c0c": 1,
+            "00000a": 5,
+        }
+        slots = {"017829": 1 << 17, "01c6d1": 1 << 2, "02cf9f": 1 << 18, "000c0c": 1 << 16}
+        inventory = []
+        for local, count in counts.items():
+            inventory.append({
+                "base": f"content:oblivion.esm:{local}",
+                "count": count,
+                "condition": {"01c6d1": 300, "000c0c": 140}.get(local, -1),
+                "charge": -1.0,
+                "equipped_slots": slots.get(local, 0),
+                "hotkey": -1,
+                "owner": "null",
+                "remaining_usage_time": 900.0 if local == "02cf9f" else -1.0,
+            })
+        state = {"schema_version": 4, "player": {"inventory": inventory}}
+        self.assertTrue(MODULE.validate_m13_runtime_state(state)["passed"])
+
+        inventory[0]["count"] -= 1
+        inventory[5]["equipped_slots"] = 1 << 2
+        result = MODULE.validate_m13_runtime_state(state)
+        self.assertFalse(result["passed"])
+        self.assertTrue(any("count=" in failure for failure in result["failures"]))
+        self.assertTrue(any("equipped_slots=" in failure for failure in result["failures"]))
+
     def test_form_graph_validator_accepts_only_reviewed_stable_edges(self):
         report = {
             "key_count": 3,

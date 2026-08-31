@@ -250,6 +250,7 @@ add_component_dir (esm4
     loadimod
     loadinfo
     loadingr
+    inventorymechanics
     loadkeym
     loadland
     loadlgtm
