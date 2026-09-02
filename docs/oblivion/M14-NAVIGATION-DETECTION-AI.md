@@ -19,11 +19,13 @@ acceptance evidence without satisfying the reopened gates below.
   now scopes selection/phase/route, persisted targets and group relationships,
   destinations, interruptions, stalled phases, and near/separated/near distance
   outcomes. The city manifest now scopes all nine named NPCs and rejects their
-  route failures, locked-door failures, and excessive reselection. Tutorial,
-  detection, and horse still rely mainly on global checks. The door manifest
-  now requires its named actor to route, encounter a bounded obstruction,
+  route failures, locked-door failures, and excessive reselection. The door
+  manifest requires its named actor to route, encounter a bounded obstruction,
   recover, and perform a door transition without excessive reselection or a
-  missing navmesh.
+  missing navmesh. The detection manifest now scopes outcomes to the named
+  player/Valen Dreth pair and requires both occluded non-detection and visible
+  positive detection; the recorded evidence contains only the former. Tutorial
+  and horse still rely mainly on global checks.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.

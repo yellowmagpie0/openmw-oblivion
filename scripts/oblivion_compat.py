@@ -465,6 +465,7 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             if field in m14 and (not isinstance(m14[field], list) or not all(isinstance(item, dict) for item in m14[field])):
                 raise ValueError(f"M14 {field} must be a list of event match objects")
         _validate_m14_actor_event_requirements(m14.get("actor_event_requirements", []), "M14")
+        _validate_m14_detection_requirements(m14.get("detection_requirements", []), "M14")
         if "forbidden_event_names" in m14 and (
             not isinstance(m14["forbidden_event_names"], list)
             or not all(isinstance(item, str) and item for item in m14["forbidden_event_names"])
@@ -497,6 +498,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
                     raise ValueError(f"M14 event matcher field {field!r} must be a list of objects")
             _validate_m14_actor_event_requirements(
                 action.get("actor_event_requirements", []), "M14 event assertion")
+            _validate_m14_detection_requirements(
+                action.get("detection_requirements", []), "M14 event assertion")
         if m14 is not None and action_type == "m14_advance_clock":
             has_hour = "game_hour" in action
             has_delta = "hours" in action
@@ -606,6 +609,49 @@ def _validate_m14_actor_event_requirements(value: Any, label: str) -> None:
         fragments = requirement.get("forbidden_reason_substrings", [])
         if not isinstance(fragments, list) or not all(isinstance(item, str) and item for item in fragments):
             raise ValueError(f"{prefix} forbidden_reason_substrings must be a list of non-empty strings")
+
+
+def _validate_m14_detection_requirements(value: Any, label: str) -> None:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} detection_requirements must be a list")
+    pairs: set[tuple[str, str]] = set()
+    for index, requirement in enumerate(value):
+        prefix = f"{label} detection_requirements[{index}]"
+        if not isinstance(requirement, dict):
+            raise ValueError(f"{prefix} must be an object")
+        observer = requirement.get("observer")
+        target = requirement.get("target")
+        if not isinstance(observer, str) or not observer:
+            raise ValueError(f"{prefix} requires a stable observer key")
+        if not isinstance(target, str) or not target:
+            raise ValueError(f"{prefix} requires a stable target key")
+        pair = (observer, target)
+        if pair in pairs:
+            raise ValueError(f"{prefix} duplicates observer/target pair {observer} -> {target}")
+        pairs.add(pair)
+        outcomes = requirement.get("required_outcomes", [])
+        if not isinstance(outcomes, list) or not all(isinstance(item, dict) and item for item in outcomes):
+            raise ValueError(f"{prefix} required_outcomes must be a list of non-empty event match objects")
+        for outcome_index, outcome in enumerate(outcomes):
+            outcome_prefix = f"{prefix} required_outcomes[{outcome_index}]"
+            if not set(outcome) <= {"detected", "line_of_sight", "score"}:
+                raise ValueError(f"{outcome_prefix} contains unsupported detection fields")
+            for field in ("detected", "line_of_sight"):
+                if field in outcome and not isinstance(outcome[field], bool):
+                    raise ValueError(f"{outcome_prefix} {field} must be boolean")
+            if "score" in outcome and (
+                isinstance(outcome["score"], bool)
+                or not isinstance(outcome["score"], (int, float))
+                or not math.isfinite(float(outcome["score"]))
+            ):
+                raise ValueError(f"{outcome_prefix} score must be finite and numeric")
+        for field in ("minimum_event_count", "maximum_event_count"):
+            if field in requirement and (
+                not isinstance(requirement[field], int) or requirement[field] < 0
+            ):
+                raise ValueError(f"{prefix} {field} must be a non-negative integer")
+        if requirement.get("minimum_event_count", 0) > requirement.get("maximum_event_count", math.inf):
+            raise ValueError(f"{prefix} minimum_event_count exceeds maximum_event_count")
 
 
 def _validate_m14_actor_state_requirements(value: Any, label: str) -> None:
@@ -764,6 +810,51 @@ def _validate_m14_actor_events(
     return failures, summaries
 
 
+def _validate_m14_detection_events(
+    events: list[dict[str, Any]], requirements: list[dict[str, Any]]
+) -> tuple[list[str], dict[str, Any]]:
+    failures: list[str] = []
+    summaries: dict[str, Any] = {}
+    for requirement in requirements:
+        observer = str(requirement["observer"])
+        target = str(requirement["target"])
+        pair_events = [
+            event for event in events
+            if event.get("event") == "detection"
+            and event.get("observer") == observer
+            and event.get("target") == target
+        ]
+        pair_failures: list[str] = []
+        minimum = int(requirement.get("minimum_event_count", 0))
+        maximum = requirement.get("maximum_event_count")
+        if len(pair_events) < minimum:
+            pair_failures.append(f"event count {len(pair_events)} is below {minimum}")
+        if maximum is not None and len(pair_events) > int(maximum):
+            pair_failures.append(f"event count {len(pair_events)} exceeds {maximum}")
+        for outcome in requirement.get("required_outcomes", []):
+            if not any(_m14_event_matches(event, outcome) for event in pair_events):
+                pair_failures.append(f"missing required outcome: {outcome}")
+
+        pair_key = f"{observer} -> {target}"
+        summaries[pair_key] = {
+            "observer": observer,
+            "target": target,
+            "events": len(pair_events),
+            "outcomes": [
+                {
+                    "detected": event.get("detected"),
+                    "line_of_sight": event.get("line_of_sight"),
+                    "score": event.get("score"),
+                }
+                for event in pair_events
+            ],
+            "failures": pair_failures,
+            "passed": not pair_failures,
+        }
+        failures.extend(f"M14 detection {pair_key}: {failure}" for failure in pair_failures)
+    return failures, summaries
+
+
 def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, Any]:
     config = manifest.get("m14")
     if not isinstance(config, dict):
@@ -860,12 +951,16 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, An
     actor_failures, actor_summaries = _validate_m14_actor_events(
         events, config.get("actor_event_requirements", []))
     failures.extend(actor_failures)
+    detection_failures, detection_summaries = _validate_m14_detection_events(
+        events, config.get("detection_requirements", []))
+    failures.extend(detection_failures)
     return {
         "enabled": True,
         "path": str(event_path),
         "events": len(events),
         "event_types": dict(sorted(event_counts.items())),
         "actors": actor_summaries,
+        "detections": detection_summaries,
         "failures": failures,
         "passed": not failures,
     }
@@ -1194,6 +1289,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
                 "maximum_no_progress_events": action.get("maximum_no_progress_events"),
                 "maximum_phase_repeat": action.get("maximum_phase_repeat", 8),
                 "actor_event_requirements": action.get("actor_event_requirements", []),
+                "detection_requirements": action.get("detection_requirements", []),
             }
         }
         result = _validate_m14_events(config, output)

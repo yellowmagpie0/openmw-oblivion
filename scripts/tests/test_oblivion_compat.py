@@ -334,6 +334,74 @@ class OblivionCompatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicates actor"):
             MODULE.validate_scenario_manifest(manifest)
 
+    def test_m14_detection_requirements_are_scoped_to_named_pair_and_outcomes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                "\n".join(
+                    (
+                        '{"event":"detection","observer":"actor:guard","target":"actor:a",'
+                        '"line_of_sight":false,"detected":false,"score":0}',
+                        '{"event":"detection","observer":"actor:guard","target":"actor:b",'
+                        '"line_of_sight":true,"detected":true,"score":20}',
+                    )
+                ) + "\n",
+                encoding="utf-8",
+            )
+            requirement = {
+                "observer": "actor:guard",
+                "target": "actor:a",
+                "minimum_event_count": 2,
+                "maximum_event_count": 4,
+                "required_outcomes": [
+                    {"line_of_sight": False, "detected": False, "score": 0},
+                    {"line_of_sight": True, "detected": True},
+                ],
+            }
+            result = MODULE._validate_m14_events(
+                {"m14": {"event_file": "ai-events.jsonl", "detection_requirements": [requirement]}},
+                output,
+            )
+            self.assertFalse(result["passed"])
+            pair = result["detections"]["actor:guard -> actor:a"]
+            self.assertEqual(pair["events"], 1)
+            self.assertTrue(any("missing required outcome" in failure for failure in pair["failures"]))
+
+            requirement.update({"target": "actor:b", "minimum_event_count": 1})
+            requirement["required_outcomes"] = [{"line_of_sight": True, "detected": True}]
+            result = MODULE._validate_m14_events(
+                {"m14": {"event_file": "ai-events.jsonl", "detection_requirements": [requirement]}},
+                output,
+            )
+            self.assertTrue(result["passed"])
+
+    def test_m14_manifest_rejects_malformed_detection_requirements(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-detections",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {
+                "event_file": "ai-events.jsonl",
+                "detection_requirements": [{"observer": "actor:a", "required_outcomes": []}],
+            },
+        }
+        with self.assertRaisesRegex(ValueError, "stable target key"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["m14"]["detection_requirements"] = [
+            {"observer": "actor:a", "target": "actor:b", "required_outcomes": "visible"}
+        ]
+        with self.assertRaisesRegex(ValueError, "required_outcomes"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["m14"]["detection_requirements"] = [
+            {"observer": "actor:a", "target": "actor:b", "required_outcomes": [{"detected": 1}]}
+        ]
+        with self.assertRaisesRegex(ValueError, "detected must be boolean"):
+            MODULE.validate_scenario_manifest(manifest)
+        requirement = {"observer": "actor:a", "target": "actor:b", "required_outcomes": []}
+        manifest["m14"]["detection_requirements"] = [requirement, dict(requirement)]
+        with self.assertRaisesRegex(ValueError, "duplicates observer/target pair"):
+            MODULE.validate_scenario_manifest(manifest)
+
     def test_m14_actor_state_requirements_are_scoped_and_exact(self):
         states = [
             {
