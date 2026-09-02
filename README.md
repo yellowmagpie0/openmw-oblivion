@@ -10,10 +10,11 @@ game(s) and provide their data directories locally.
 
 ## Current status
 
-The latest compatibility ledger (2026-08-31) records milestones M0 through M13
-as accepted. The next bounded delivery is M14 navigation, detection, and AI
-packages. This is not a complete Oblivion replacement yet; it is an
-incrementally verified vertical implementation.
+The latest compatibility ledger (2026-09-01) records milestones M0 through M13
+as accepted. M14 navigation, detection, and AI packages is in progress: a large
+candidate implementation exists, but its integration and real-content evidence
+do not yet satisfy the M14 acceptance plan. This is not a complete Oblivion
+replacement yet; it is an incrementally verified vertical implementation.
 
 The accepted work currently includes:
 

@@ -1,6 +1,6 @@
 # OpenMW Oblivion Compatibility Program
 
-Status: accepted roadmap; M14 accepted on 2026-09-01; next delivery is M15
+Status: accepted roadmap; M14 implementation and verification in progress
 Target: original English Oblivion 1.2.0416 GOTY data, followed by Shivering Isles,
 Knights of the Nine, and every installed official DLC  
 Compatibility requirement: preserve Morrowind behavior and OpenMW-native saves
@@ -26,7 +26,7 @@ This ledger is the resume point. Detailed evidence and open gates live in
 | M11 | Accepted: native TES4 actors, animation, FaceGen, creatures, and visual gates passed | `docs/oblivion/M11-ACTORS-ANIMATION.md` |
 | M12 | Accepted: native player mechanics, character creation, movement, and regression gates passed | `docs/oblivion/M12-PLAYER-MECHANICS.md` |
 | M13 | Accepted: native items, inventory, equipment, locks, and economy gates passed | `docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md` |
-| M14 | Accepted: native navigation, detection, AI packages, process tiers, doors, companions, horses, and Morrowind gates passed | `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md` |
+| M14 | In progress: candidate native navigation/AI implementation exists; integration and real-content acceptance gates remain open | `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md` |
 
 ## 1. Goal and delivery model
 

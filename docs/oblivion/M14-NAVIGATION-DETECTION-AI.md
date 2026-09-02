@@ -1,7 +1,41 @@
 # M14 navigation, detection, and AI packages
 
-Status: accepted on 2026-09-01. Implementation revision is the working tree
-based on `a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`.
+Status: **in progress**. Commit
+`d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9` is a candidate implementation,
+not an accepted milestone. It was delivered as one aggregate change based on
+`a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`, without the required phase
+checkpoints.
+
+The earlier acceptance declaration was withdrawn after review of the plan,
+changes, and textual evidence. The existing audit, scenario, save, and test
+artifacts are retained as diagnostic inputs, but must not be cited as M14
+acceptance evidence without satisfying the reopened gates below.
+
+## Reopened acceptance gates
+
+- Replace global event/count checks with actor-specific assertions for package
+  order, target, phase, route, cell transitions, arrival, interruption, and
+  persistence. The current validator lets unrelated actors satisfy a scenario.
+- Fix and rerun the companion course. Its recorded leader reaches
+  `bounded-repath-exhausted`, while the observed companion has the same cell and
+  position before obstruction, during obstruction, and after alleged recovery.
+- Fix and rerun the city course. Its passing event stream contains hundreds of
+  stalled routes and repeated locked-door failures, including repeated failures
+  for named schedule actors. Record each named actor at every package boundary,
+  compare high and low processing, and reload at the required clock boundaries.
+- Replace the tutorial smoke run with assertions for the real Emperor/Blades
+  actors, declared packages, targets, door sequence, arrival, and reload
+  continuation.
+- Expand the door, detection, horse, and Morrowind runs to the complete matrices
+  in the implementation plan. The current runs cover only small smoke subsets.
+- Add the engine integration coverage required by section 15.2 of the plan.
+  The five current engine tests exercise pure selection/schedule/phase helpers,
+  not the actor, world, navigation, inventory, script, companion, or mount
+  integrations claimed by the former report.
+- Produce durable full-build, full-test, ASan, and UBSan logs from a clean tree
+  at the final implementation revision.
+- Restore phase-sized implementation commits for subsequent repair work and use
+  a separate final acceptance commit after every definition-of-done item passes.
 
 M14 promotes the native TES4 navigation and AI data that was previously parsed
 but discarded into a complete profile-owned runtime. Oblivion NPCs and
@@ -9,7 +43,7 @@ creatures now share the existing M11 render/animation and M12/M13 actor state,
 while a stable-keyed coordinator owns package selection, schedule evaluation,
 path execution, process tiers, detection, doors, companions, and horses.
 
-## Delivered implementation
+## Candidate implementation present
 
 - `PACK` and `PGRD` are native stable-keyed stores. `CTDA` and TES4 `CTDT`
   conditions share one typed representation; `PTDT` location/target typing and
@@ -50,7 +84,7 @@ The canonical profile is the eleven installed official files listed by
 `m14-audit`: `Oblivion.esm`, the local 85-byte `DLCShiveringIsles.esp` stub,
 and the nine installed DLC/Knights files. The count lock is
 [`oblivion_m14_data_counts.json`](../../scripts/data/oblivion_compat/oblivion_m14_data_counts.json).
-The accepted audit is
+The provisional audit artifact is
 [`m14-audit.json`](../../build/oblivion-compat/m14-audit-final6/m14-audit.json)
 with the inspectable HTML report beside it. The lossless parser census is
 [`baseline.json`](../../build/oblivion-compat/m14-lossless-final3/baseline.json):
@@ -87,9 +121,10 @@ as reviewed data, with no unreviewed fallback. All reachable condition
 functions and run-on contexts are supported (`0:Subject` accounts for all
 6,830 audited conditions).
 
-## Verification
+## Provisional verification record
 
-The final native build passed:
+The aggregate implementation recorded the following commands as passing. These
+results establish a buildable baseline, not milestone acceptance:
 
 ```sh
 cmake --build build --target esmtool components-tests openmw-tests openmw -j2
@@ -119,11 +154,13 @@ mount reciprocity. The Python verifier covers schema 5, v1--v4 migration,
 corruption, content identity, chronology, routes, overlays, detection, and
 mount/companion relationships.
 
-## Real-content acceptance
+## Provisional real-content runs
 
-All six Oblivion M14 scenarios and the Morrowind isolation scenario completed
-with exit code zero, clean process logs, required captures, structured event
-streams, and validated quicksaves:
+All six Oblivion M14 scenario commands and the Morrowind isolation command
+completed according to the current harness. Review found that the harness did
+not assert the required scenario outcomes, and some passing streams contain
+stalls and repeated route failures. These directories are therefore diagnostic
+evidence only:
 
 | Scenario | Evidence |
 | --- | --- |
@@ -135,20 +172,19 @@ streams, and validated quicksaves:
 | Horses | `build/oblivion-compat/m14-scenario-horse-final21/` |
 | Morrowind isolation | `build/oblivion-compat/morrowind-m14-final3/` |
 
-The city replay covers five calendar checkpoints and named NPC package
-histories. The door and companion courses exercise resolved XTEL transitions,
-locked/keyed permissions, obstruction recovery, and save/reload. Detection
-records exact script and native-service probes. The horse course records one
-mount and one dismount and verifies the rider relationship. Historical M7,
-M12, and M13 scenarios were rerun after the actor/process integration: the two
-M7 reload/runtime runs, five M12 courses, and two M13 matrices all passed.
+The city run records five calendar checkpoints, but does not prove the required
+named-NPC histories, high/low equivalence, or reload boundaries. The companion
+run does not demonstrate separation and recovery. The tutorial, door,
+detection, horse, and Morrowind runs cover only subsets of their planned
+matrices. Historical M7, M12, and M13 runs remain useful regression signals but
+cannot substitute for the open M14 gates.
 
-Visual review covered the tutorial interior, city, door course, horse mount,
-detection scene, companion scene, and Morrowind frame. Actors, world placement,
-door/terrain geometry, horse attachment, and post-process scene stability show
-no M14 regression to the accepted M11--M13 visuals. The existing magenta
-fallback HUD/resource markers visible in these captures are also present in
-the accepted M13 captures and are not produced by the M14 systems.
+The previous report recorded visual review of the tutorial interior, city, door
+course, horse mount, detection scene, companion scene, and Morrowind frame.
+Those captures remain useful for later comparison, but they do not prove the
+missing behavioral and persistence gates. The existing magenta fallback
+HUD/resource markers visible in the captures are also present in accepted M13
+captures and are not attributed to the M14 candidate.
 
 ## Boundaries and known limitations
 
@@ -156,8 +192,8 @@ M15 still owns combat, damage, crime, arrest, and mounted combat. M16 owns real
 magic-effect execution; observed CastMagic packages expose the typed boundary
 instead of faking a cast. M18 owns dialogue content/topic selection, and M19
 owns the complete Oblivion UI. The local Shivering Isles file is an 85-byte
-stub, so this acceptance is for the installed canonical profile and does not
-claim coverage of expansion data that is not present.
+stub, so all current audit and runtime evidence is limited to the installed
+canonical profile and does not cover expansion data that is not present.
 
 ## Reproduce
 

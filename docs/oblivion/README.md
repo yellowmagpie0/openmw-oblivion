@@ -123,14 +123,14 @@ complete category matrix, formula/property tests, market/tutorial save-reload
 courses, keyed-door/trap routes, visual inspection, and Morrowind isolation
 evidence.
 
-M14 is accepted with native TES4 PACK/PGRD stores, pathgrid/door routing,
-high/low actor processing, deterministic schedules and detection, all observed
-package behaviors, companions, horses, ObScript AI commands, and version-5 AI
-state. See
+M14 is in progress. A candidate implementation includes native TES4 PACK/PGRD
+stores, pathgrid/door routing, actor processing, schedules, detection, package
+behaviors, companions, horses, ObScript AI commands, and version-5 AI state.
+Its current scenario harness and integration tests do not yet prove the M14
+acceptance requirements, and recorded runtime evidence contains unresolved
+stalls and repeated route failures. See
 [`M14-NAVIGATION-DETECTION-AI.md`](M14-NAVIGATION-DETECTION-AI.md) for the
-count-locked official-content audit, focused/full test totals, six real-data
-Oblivion scenarios, historical regressions, visual inspection, and reproduction
-commands.
+provisional implementation record and the gates that must be rerun or replaced.
 
 To try the first interactive slice directly:
 

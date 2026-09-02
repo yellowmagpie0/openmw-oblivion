@@ -1,14 +1,17 @@
 # M14 navigation, detection, and AI packages: implementation plan
 
-Status: **accepted on 2026-09-01**. Executed against the working tree based on
-revision `a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`, after accepted M13. The
-durable acceptance report is
-`docs/oblivion/M14-NAVIGATION-DETECTION-AI.md`; generated evidence remains
-below `build/oblivion-compat/`.
+Status: **in progress**. Commit
+`d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9` contains a large candidate
+implementation based on `a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`, after
+accepted M13. Its previous acceptance declaration was withdrawn because the
+implementation and evidence do not satisfy this plan. The provisional report
+is `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md`; generated diagnostic
+artifacts remain below `build/oblivion-compat/`.
 
-This document was the execution handoff and is now the completed checklist.
-The phases were followed in order, each focused gate was kept buildable, and
-the final checklist below records the acceptance evidence. The roadmap
+The candidate was committed as one aggregate change rather than the required
+phase checkpoints. Resume from the earliest open gate, make subsequent repairs
+in the phase-sized commits required by section 14, and do not mark M14 accepted
+until every item in section 19 is independently demonstrated. The roadmap
 definition remains authoritative:
 
 - Interpret TES4 pathgrids and package data.
@@ -701,6 +704,25 @@ Do not combine all M14 work into one unreviewable change. Each checkpoint below
 must build, run its focused tests, pass `git diff --check`, and be committed
 before proceeding. Suggested commit subjects are illustrative.
 
+### Current checkpoint after acceptance review
+
+The aggregate candidate contains code corresponding to every phase, but code
+presence is not a passed phase gate. Use this table as the resume point and
+update it only when the named gate has fresh, actor-specific evidence.
+
+| Phase | Candidate state | Gate state |
+| --- | --- | --- |
+| 0: baseline | Audit and ordinary test artifacts exist, but the implementation history has no durable baseline checkpoint | Open: reproduce from the candidate revision and retain exact logs |
+| 1: records/audit | PACK/PGRD stores, typed data, audit tooling, and a count lock are present | Open: independently review parsing/identity claims and rerun full sanitizer coverage |
+| 2: pathgrids | Graph, overlay, foreign/object-link, Scene, and navigator code plus focused component tests are present | Open: complete lifecycle/door integration and real-cell gates under sanitizers |
+| 3: actor bridge | NPC/creature actor bridge code is present | Open: add the required physics, stats, inventory-identity, movement, reload, and TES3-isolation integration tests |
+| 4: pure AI rules | Schedule, condition, selection, phase, and detection helpers have focused tests | Open: prove complete reachable-condition coverage, calendar/FPS properties, and the full detection matrix |
+| 5: high process | Selector and high-process locomotion code is present | Open: prove a synthetic population, real high-process movement, phase reloads, and absence of TES3 AI conversion |
+| 6: doors/low process/state | Door, low-process, obstruction, and schema-5 code is present | Open: resolve recorded stalls/locked-door cycles and prove deterministic promotion, reload, and door behavior |
+| 7: package behaviors | Candidate behavior branches exist for the required package families, companions, and horses | Open: add behavior-specific integration, interruption, persistence, and real-content evidence |
+| 8: ObScript/audit | Candidate M14 command/query bindings exist | Open: test every context and command against the live service and retain official-corpus/deferred-trace evidence |
+| 9: acceptance | A report and scenario artifacts were produced | Invalidated: strengthen the harness, rerun every section 16 scenario, then perform a new acceptance review and commit |
+
 ### Phase 0: reproduce the baseline and lock the worklist
 
 1. Build `esmtool`, `components-tests`, `openmw-tests`, and `openmw`.
@@ -1000,42 +1022,47 @@ detection score, or persistence; those require structured state evidence.
 
 M14 is complete only when every item is true:
 
-- [x] Every winning official-profile TES4 PACK and PGRD is loaded by stable key,
+- [ ] Every winning official-profile TES4 PACK and PGRD is loaded by stable key,
       associated correctly, included in a reviewed count/fingerprint lock, and
       has no unreviewed routing/package skip.
-- [x] All package types and condition functions reachable from official winning
+- [ ] All package types and condition functions reachable from official winning
       actor lists have implemented, tested semantics or an honest typed later-
       milestone action boundary that does not fake completion.
-- [x] TES4 NPCs and creatures are real mechanics actors sharing the M11 render,
+- [ ] TES4 NPCs and creatures are real mechanics actors sharing the M11 render,
       M12 stats/formulas, and M13 inventory/equipment authorities.
-- [x] TES4 pathgrids, foreign links, object links, overlays, and Recast/Detour
+- [ ] TES4 pathgrids, foreign links, object links, overlays, and Recast/Detour
       integration pass synthetic, lifecycle, and real-cell checks.
-- [x] Schedules and package priority are deterministic across FPS, timescale,
+- [ ] Schedules and package priority are deterministic across FPS, timescale,
       wait/rest, cell loading, and save/load.
-- [x] High and low processing preserve the same package intent and actor route
+- [ ] High and low processing preserve the same package intent and actor route
       without stalls or wall-crossing teleports.
-- [x] Wander, Travel, Follow, Escort, Eat, Sleep, Use Item At, Flee, Pursue,
+- [ ] Wander, Travel, Follow, Escort, Eat, Sleep, Use Item At, Flee, Pursue,
       dialogue approach, companion travel, and horse behavior pass unit,
       integration, interruption, persistence, and applicable real-data tests.
-- [x] Detection has exact fixed probes, monotonic property coverage, real LOS,
+- [ ] Detection has exact fixed probes, monotonic property coverage, real LOS,
       and consistent script/condition/package results.
-- [x] Every M14-owned ObScript placeholder is removed and the official script
+- [ ] Every M14-owned ObScript placeholder is removed and the official script
       corpus plus live runtime contains no M14 deferred trace.
-- [x] Runtime schema v5 has strict C++/Python parity, v1--v4 migration, content
+- [ ] Runtime schema v5 has strict C++/Python parity, v1--v4 migration, content
       reorder behavior, corruption rejection, and save/reload coverage in each
       significant package phase.
-- [x] Tutorial escorts and the representative 24-hour city population complete
+- [ ] Tutorial escorts and the representative 24-hour city population complete
       their expected package/cell transitions with no package-order error,
       repeated door edge, unbounded repath, or teleport loop.
-- [x] Companion, obstruction, detection, horse, and Morrowind regression
+- [ ] Companion, obstruction, detection, horse, and Morrowind regression
       scenarios pass; required visuals have been inspected.
-- [x] Full component, engine, Python, sanitizer, audit, and end-to-end suites are
+- [ ] Full component, engine, Python, sanitizer, audit, and end-to-end suites are
       green from a clean tree, and `git diff --check` passes.
-- [x] The final M14 report names implementation revision, exact content profile,
+- [ ] The final M14 report names implementation revision, exact content profile,
       test totals, durable evidence paths, known later-milestone boundaries, and
       interactive reproduction commands.
-- [x] Only after all preceding checks, M14 is marked `accepted` and
+- [ ] Only after all preceding checks, M14 is marked `accepted` and
       `next_bounded_delivery` moves to M15.
+
+No checkbox is retained merely because corresponding code exists or a weak
+smoke scenario passed. Parser/audit code, native runtime services, persistence,
+and focused pure tests provide a useful candidate baseline, but their complete
+criteria must be reverified as the step-by-step implementation resumes.
 
 ## 20. Practical handoff notes
 

@@ -288,9 +288,10 @@
       "open_gates": []
     },
     "M14": {
-      "status": "accepted",
+      "status": "in_progress",
       "report": "docs/oblivion/M14-NAVIGATION-DETECTION-AI.md",
-      "revision": "working-tree based on a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
+      "candidate_revision": "d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9",
+      "base_revision": "a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
       "evidence": [
         "build/oblivion-compat/m14-audit-final6/m14-audit.json",
         "build/oblivion-compat/m14-audit-final6/m14-audit.html",
@@ -314,16 +315,28 @@
         "build/oblivion-compat/m13-market-m14-final3/scenario.json",
         "build/oblivion-compat/m13-tutorial-final2/scenario.json"
       ],
-      "delivered": [
-        "Native stable-keyed TES4 PACK/PGRD stores, typed CTDA/CTDT conditions, and count-locked audit coverage",
-        "Validated native pathgrid service with local/foreign edges, PGRL object links, overlays, navigator adapters, and door routing",
-        "Real TES4 NPC/creature actor bridge sharing M11 rendering and M12/M13 mechanics state",
-        "Deterministic package selection, schedules, conditions, detection, high/low processing, obstruction recovery, and persistence schema 5",
-        "Wander, Travel, Find, Follow, Accompany, Escort, Eat, Sleep, Use Item At, Flee Not Combat, Pursue, dialogue approach, companions, and horses",
-        "M14 ObScript commands/queries, real-content scenarios, visual inspection, historical regressions, and Morrowind isolation"
+      "candidate_implementation": [
+        "Native stable-keyed TES4 PACK/PGRD stores, typed CTDA/CTDT conditions, and count-locked audit tooling",
+        "Pathgrid service with local/foreign edges, PGRL object links, overlays, navigator adapters, and door-routing code",
+        "TES4 NPC/creature actor bridge intended to share M11 rendering and M12/M13 mechanics state",
+        "Package selection, schedules, conditions, detection, high/low processing, obstruction recovery, and persistence schema 5",
+        "Candidate implementations of observed package behaviors, companions, and horses",
+        "M14 ObScript command/query bindings and provisional real-content scenario tooling"
       ],
-      "open_gates": []
+      "open_gates": [
+        "Replace global event/count checks with actor-specific package, phase, route, transition, outcome, and persistence assertions",
+        "Resolve recorded bounded-repath and repeated locked-door failures, then rerun the named 24-hour city schedule at high and low process with required reload boundaries",
+        "Demonstrate real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation",
+        "Demonstrate companion separation and recovery; the current passing evidence records a stalled leader and no observed companion movement",
+        "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix",
+        "Complete the planned detection sweep across LOS, distance, facing, light, movement, skills, seeds, and interior/exterior scenes",
+        "Complete horse travel, high/low processing, door-boundary dismount, remount, query, and reload coverage",
+        "Run the required Morrowind AI behavior matrix and compare it to a pre-M14 baseline",
+        "Add engine integration tests for actors, world/navigation, inventory actions, scripts, companions, mounts, and TES3 isolation",
+        "Produce durable clean-tree full-build, full-test, ASan, UBSan, audit, and end-to-end evidence at the final revision",
+        "Land subsequent repairs in phase-sized commits and create a separate acceptance commit only after every M14 definition-of-done item passes"
+      ]
     }
   },
-  "next_bounded_delivery": "Begin M15 combat, stealth, crime, and jail compatibility"
+  "next_bounded_delivery": "Complete M14 navigation, detection, and AI package compatibility"
 }
