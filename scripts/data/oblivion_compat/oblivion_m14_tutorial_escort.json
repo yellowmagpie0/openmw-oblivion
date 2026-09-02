@@ -25,6 +25,56 @@
       {"event": "selection"},
       {"event": "phase"}
     ],
+    "actor_event_requirements": [
+      {
+        "actor": "content:oblivion.esm:032a18",
+        "required_event_order": [
+          {"event": "selection", "package": "content:oblivion.esm:032b47"},
+          {"event": "selection", "package": "content:oblivion.esm:032ae8"},
+          {"event": "route", "package": "content:oblivion.esm:032ae8"},
+          {"event": "door-transition"}
+        ],
+        "minimum_event_counts": {"route": 2, "door-transition": 1},
+        "maximum_event_counts": {"selection": 16, "route-blocked": 8},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]
+      },
+      {
+        "actor": "content:oblivion.esm:032a17",
+        "required_event_order": [
+          {"event": "selection", "package": "content:oblivion.esm:032b47"},
+          {"event": "selection", "package": "content:oblivion.esm:032aeb"},
+          {"event": "route", "package": "content:oblivion.esm:032aeb"},
+          {"event": "door-transition"}
+        ],
+        "minimum_event_counts": {"route": 2, "door-transition": 1},
+        "maximum_event_counts": {"selection": 16, "route-blocked": 8},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]
+      },
+      {
+        "actor": "content:oblivion.esm:032a16",
+        "required_event_order": [
+          {"event": "selection", "package": "content:oblivion.esm:032b47"},
+          {"event": "selection", "package": "content:oblivion.esm:032aea"},
+          {"event": "route", "package": "content:oblivion.esm:032aea"},
+          {"event": "door-transition"}
+        ],
+        "minimum_event_counts": {"route": 2, "door-transition": 1},
+        "maximum_event_counts": {"selection": 16, "route-blocked": 8},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]
+      },
+      {
+        "actor": "content:oblivion.esm:032a15",
+        "required_event_order": [
+          {"event": "selection", "package": "content:oblivion.esm:032b47"},
+          {"event": "selection", "package": "content:oblivion.esm:032ae9"},
+          {"event": "route", "package": "content:oblivion.esm:032ae9"},
+          {"event": "door-transition"}
+        ],
+        "minimum_event_counts": {"route": 2, "door-transition": 1},
+        "maximum_event_counts": {"selection": 16, "route-blocked": 8},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]
+      }
+    ],
     "forbidden_event_names": ["direct-teleport", "tes3-ai", "unsupported", "unresolved", "phase-loop", "route-loop"],
     "forbidden_reason_substrings": ["direct-teleport", "tes3-ai", "unsupported", "unresolved-package", "deferred-m14"],
     "maximum_repeated_events": {"tier": 16},
@@ -43,7 +93,12 @@
     {"type": "key", "value": "F5"},
     {"type": "sleep", "seconds": 6},
     {"type": "m14_checkpoint", "name": "after-quicksave", "minimum_actor_count": 3000, "minimum_companion_count": 1, "minimum_mount_count": 1, "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]},
-    {"type": "m14_assert_events", "minimum_event_count": 100, "maximum_route_blocked": 500, "maximum_no_progress_events": 500},
+    {"type": "m14_assert_events", "minimum_event_count": 100, "actor_event_requirements": [
+      {"actor": "content:oblivion.esm:032a18", "required_event_order": [{"event": "selection", "package": "content:oblivion.esm:032b47"}, {"event": "selection", "package": "content:oblivion.esm:032ae8"}, {"event": "route", "package": "content:oblivion.esm:032ae8"}, {"event": "door-transition"}], "minimum_event_counts": {"route": 2, "door-transition": 1}, "maximum_event_counts": {"selection": 16, "route-blocked": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
+      {"actor": "content:oblivion.esm:032a17", "required_event_order": [{"event": "selection", "package": "content:oblivion.esm:032b47"}, {"event": "selection", "package": "content:oblivion.esm:032aeb"}, {"event": "route", "package": "content:oblivion.esm:032aeb"}, {"event": "door-transition"}], "minimum_event_counts": {"route": 2, "door-transition": 1}, "maximum_event_counts": {"selection": 16, "route-blocked": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
+      {"actor": "content:oblivion.esm:032a16", "required_event_order": [{"event": "selection", "package": "content:oblivion.esm:032b47"}, {"event": "selection", "package": "content:oblivion.esm:032aea"}, {"event": "route", "package": "content:oblivion.esm:032aea"}, {"event": "door-transition"}], "minimum_event_counts": {"route": 2, "door-transition": 1}, "maximum_event_counts": {"selection": 16, "route-blocked": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
+      {"actor": "content:oblivion.esm:032a15", "required_event_order": [{"event": "selection", "package": "content:oblivion.esm:032b47"}, {"event": "selection", "package": "content:oblivion.esm:032ae9"}, {"event": "route", "package": "content:oblivion.esm:032ae9"}, {"event": "door-transition"}], "minimum_event_counts": {"route": 2, "door-transition": 1}, "maximum_event_counts": {"selection": 16, "route-blocked": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]}
+    ], "maximum_route_blocked": 500, "maximum_no_progress_events": 500},
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
     {"type": "key_held", "value": "grave"},
     {"type": "type", "value": "exit()", "delay_ms": 1},

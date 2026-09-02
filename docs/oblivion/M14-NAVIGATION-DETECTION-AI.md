@@ -27,7 +27,11 @@ acceptance evidence without satisfying the reopened gates below.
   positive detection; the recorded evidence contains only the former. The horse
   manifest now requires exact player/horse mount, reciprocal rider, and dismount
   events plus reciprocal saved-state relationships at both checkpoints.
-  Tutorial still relies mainly on global checks.
+  The tutorial manifest now scopes Uriel Septim, Baurus, Glenroy, and Captain
+  Renault and requires each to leave `CGBladesWaitToMove`, select the correct
+  first movement package, route, and cross a door without routing failures.
+  The recorded run does none of those things and still lacks the required
+  multi-checkpoint reload sequence.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.
