@@ -24,8 +24,10 @@ acceptance evidence without satisfying the reopened gates below.
   recover, and perform a door transition without excessive reselection or a
   missing navmesh. The detection manifest now scopes outcomes to the named
   player/Valen Dreth pair and requires both occluded non-detection and visible
-  positive detection; the recorded evidence contains only the former. Tutorial
-  and horse still rely mainly on global checks.
+  positive detection; the recorded evidence contains only the former. The horse
+  manifest now requires exact player/horse mount, reciprocal rider, and dismount
+  events plus reciprocal saved-state relationships at both checkpoints.
+  Tutorial still relies mainly on global checks.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.
