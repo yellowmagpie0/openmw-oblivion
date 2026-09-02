@@ -328,7 +328,7 @@
         "Resolve recorded bounded-repath and repeated locked-door failures, then rerun the named 24-hour city schedule at high and low process with required reload boundaries",
         "Demonstrate real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation",
         "Demonstrate companion separation and recovery; the current passing evidence records a stalled leader and no observed companion movement",
-        "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix",
+        "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix; the current door checkpoints show zero route-generation change and zero recovery movement",
         "Complete the planned detection sweep across LOS, distance, facing, light, movement, skills, seeds, and interior/exterior scenes",
         "Complete horse travel, high/low processing, door-boundary dismount, remount, query, and reload coverage",
         "Run the required Morrowind AI behavior matrix and compare it to a pre-M14 baseline",

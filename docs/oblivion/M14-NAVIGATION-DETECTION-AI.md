@@ -22,9 +22,12 @@ acceptance evidence without satisfying the reopened gates below.
   route failures, locked-door failures, and excessive reselection. The door
   manifest requires its named actor to route, encounter a bounded obstruction,
   recover, and perform a door transition without excessive reselection or a
-  missing navmesh. The detection manifest now scopes outcomes to the named
-  player/Valen Dreth pair and requires both occluded non-detection and visible
-  positive detection; the recorded evidence contains only the former. The horse
+  missing navmesh. It also compares the named actor across open, obstructed,
+  and recovered checkpoints, requiring route-generation changes and recovery
+  movement; the recorded checkpoints have neither. The detection manifest now
+  scopes outcomes to the named player/Valen Dreth pair and requires both
+  occluded non-detection and visible positive detection; the recorded evidence
+  contains only the former. The horse
   manifest now requires exact player/horse mount, reciprocal rider, and dismount
   events plus reciprocal saved-state relationships at both checkpoints.
   The tutorial manifest now scopes Uriel Septim, Baurus, Glenroy, and Captain

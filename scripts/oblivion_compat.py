@@ -45,7 +45,8 @@ SCENARIO_ACTION_TYPES = {
     "sleep", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "key_up", "key_held",
     "key_hold", "type_held", "type", "mouse_move", "mouse_move_absolute", "mouse_click", "mouse_down",
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
-    "m14_observe", "m14_actor_distance", "m14_advance_clock", "m14_obstruction", "m14_debug_navigation",
+    "m14_observe", "m14_actor_distance", "m14_actor_state_delta", "m14_advance_clock",
+    "m14_obstruction", "m14_debug_navigation",
 }
 FORBIDDEN_M14_ACTION_TYPES = {
     "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
@@ -556,6 +557,43 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
                 raise ValueError("m14_actor_distance minimum_distance exceeds maximum_distance")
             if "expected_same_cell" in action and not isinstance(action["expected_same_cell"], bool):
                 raise ValueError("m14_actor_distance expected_same_cell must be boolean")
+        if m14 is not None and action_type == "m14_actor_state_delta":
+            if not isinstance(action.get("actor"), str) or not action["actor"]:
+                raise ValueError("m14_actor_state_delta actor must be a stable actor key")
+            for field in ("before_checkpoint", "after_checkpoint"):
+                if not isinstance(action.get(field), str) or not action[field]:
+                    raise ValueError(f"m14_actor_state_delta {field} must be a non-empty string")
+            changed = action.get("required_changed_fields", [])
+            if not isinstance(changed, list) or not all(isinstance(field, str) and field for field in changed):
+                raise ValueError("m14_actor_state_delta required_changed_fields must be a list of field names")
+            increases = action.get("minimum_field_increases", {})
+            if not isinstance(increases, dict) or not all(
+                isinstance(field, str) and field
+                and not isinstance(value, bool)
+                and isinstance(value, (int, float))
+                and math.isfinite(float(value)) and float(value) > 0.0
+                for field, value in increases.items()
+            ):
+                raise ValueError(
+                    "m14_actor_state_delta minimum_field_increases must map fields to positive numbers")
+            distances: dict[str, float] = {}
+            for field in ("minimum_position_delta", "maximum_position_delta"):
+                if field in action:
+                    try:
+                        distances[field] = float(action[field])
+                    except (TypeError, ValueError, OverflowError) as error:
+                        raise ValueError(f"m14_actor_state_delta {field} must be numeric") from error
+                    if not math.isfinite(distances[field]) or distances[field] < 0.0:
+                        raise ValueError(f"m14_actor_state_delta {field} must be finite and non-negative")
+            if distances.get("minimum_position_delta", 0.0) > distances.get(
+                "maximum_position_delta", math.inf
+            ):
+                raise ValueError(
+                    "m14_actor_state_delta minimum_position_delta exceeds maximum_position_delta")
+            if "expected_same_cell" in action and not isinstance(action["expected_same_cell"], bool):
+                raise ValueError("m14_actor_state_delta expected_same_cell must be boolean")
+            if not changed and not increases and not distances and "expected_same_cell" not in action:
+                raise ValueError("m14_actor_state_delta requires at least one comparison assertion")
         if m14 is not None and action_type == "m14_obstruction":
             reference = action.get("reference")
             if not isinstance(reference, str) or not re.fullmatch(r"(?:0x[0-9A-Fa-f]{1,8}|[A-Za-z_][A-Za-z0-9_]*)", reference):
@@ -1409,6 +1447,94 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             "target": target_key,
             "distance": distance,
             "same_cell": same_cell,
+            "failures": failures,
+            "duration_seconds": round(time.monotonic() - started, 6),
+            "passed": not failures,
+        }
+    if action_type == "m14_actor_state_delta":
+        states: list[dict[str, Any]] = []
+        sources: list[Path] = []
+        for field in ("before_checkpoint", "after_checkpoint"):
+            source_path = _scenario_output_path(output, action[field], f"M14 actor-state {field}")
+            source = json.loads(source_path.read_text(encoding="utf-8"))
+            state = source.get("runtime_state") if isinstance(source, dict) else None
+            if not isinstance(state, dict):
+                raise ValueError(f"M14 actor-state source has no runtime_state: {source_path}")
+            states.append(state)
+            sources.append(source_path)
+        actor_key = str(action["actor"])
+        actor_states = [
+            next((item for item in state.get("actor_ai", [])
+                  if isinstance(item, dict) and str(item.get("actor", "")) == actor_key), None)
+            for state in states
+        ]
+        failures: list[str] = []
+        for label, actor_state in zip(("before", "after"), actor_states):
+            if actor_state is None:
+                failures.append(f"M14 actor-state {label} checkpoint is missing actor {actor_key}")
+
+        position_delta: float | None = None
+        same_cell: bool | None = None
+        field_increases: dict[str, float | None] = {}
+        if all(actor_state is not None for actor_state in actor_states):
+            before, after = actor_states
+            assert before is not None and after is not None
+            for field in action.get("required_changed_fields", []):
+                if before.get(field) == after.get(field):
+                    failures.append(f"M14 actor-state field {field!r} did not change")
+            for field, minimum in action.get("minimum_field_increases", {}).items():
+                before_value, after_value = before.get(field), after.get(field)
+                delta: float | None = None
+                if (
+                    not isinstance(before_value, bool) and isinstance(before_value, (int, float))
+                    and not isinstance(after_value, bool) and isinstance(after_value, (int, float))
+                    and math.isfinite(float(before_value)) and math.isfinite(float(after_value))
+                ):
+                    delta = float(after_value) - float(before_value)
+                field_increases[field] = delta
+                if delta is None:
+                    failures.append(f"M14 actor-state field {field!r} is not finite and numeric")
+                elif delta < float(minimum):
+                    failures.append(
+                        f"M14 actor-state field {field!r} increased by {delta:.6f}, "
+                        f"minimum is {float(minimum):.6f}")
+            if "minimum_position_delta" in action or "maximum_position_delta" in action:
+                positions: list[list[float]] = []
+                for label, actor_state in (("before", before), ("after", after)):
+                    raw_position = actor_state.get("last_valid_position")
+                    if not isinstance(raw_position, list) or len(raw_position) < 3:
+                        failures.append(f"M14 actor-state {label} checkpoint has no valid position")
+                        break
+                    try:
+                        position = [float(value) for value in raw_position[:3]]
+                    except (TypeError, ValueError, OverflowError):
+                        failures.append(f"M14 actor-state {label} position is not numeric")
+                        break
+                    if not all(math.isfinite(value) for value in position):
+                        failures.append(f"M14 actor-state {label} position is non-finite")
+                        break
+                    positions.append(position)
+                if len(positions) == 2:
+                    position_delta = math.dist(positions[0], positions[1])
+                    minimum = float(action.get("minimum_position_delta", 0.0))
+                    maximum = float(action.get("maximum_position_delta", math.inf))
+                    if position_delta < minimum or position_delta > maximum:
+                        failures.append(
+                            f"M14 actor position delta {position_delta:.6f} is outside "
+                            f"{minimum:.6f}..{maximum:.6f}")
+            same_cell = before.get("cell") == after.get("cell")
+            if "expected_same_cell" in action and same_cell != bool(action["expected_same_cell"]):
+                failures.append(
+                    f"M14 actor-state same-cell result {same_cell} does not match "
+                    f"{action['expected_same_cell']}")
+        return {
+            "type": action_type,
+            "before_source": str(sources[0]),
+            "after_source": str(sources[1]),
+            "actor": actor_key,
+            "position_delta": position_delta,
+            "same_cell": same_cell,
+            "field_increases": field_increases,
             "failures": failures,
             "duration_seconds": round(time.monotonic() - started, 6),
             "passed": not failures,

@@ -527,6 +527,60 @@ class OblivionCompatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exceeds"):
             MODULE.validate_scenario_manifest(manifest)
 
+    def test_m14_actor_state_delta_compares_named_checkpoint_states(self):
+        before = {
+            "actor_ai": [{"actor": "actor:a", "cell": "cell:one", "package": "package:one",
+                          "route_generation": 2, "last_valid_position": [0.0, 0.0, 0.0]}]
+        }
+        after = {
+            "actor_ai": [{"actor": "actor:a", "cell": "cell:one", "package": "package:two",
+                          "route_generation": 4, "last_valid_position": [3.0, 4.0, 0.0]}]
+        }
+        action = {
+            "type": "m14_actor_state_delta",
+            "actor": "actor:a",
+            "before_checkpoint": "checkpoints/before.json",
+            "after_checkpoint": "checkpoints/after.json",
+            "minimum_position_delta": 4.9,
+            "maximum_position_delta": 5.1,
+            "required_changed_fields": ["package"],
+            "minimum_field_increases": {"route_generation": 1},
+            "expected_same_cell": True,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "checkpoints").mkdir()
+            (output / "checkpoints" / "before.json").write_text(
+                json.dumps({"runtime_state": before}), encoding="utf-8")
+            (output / "checkpoints" / "after.json").write_text(
+                json.dumps({"runtime_state": after}), encoding="utf-8")
+            result = MODULE._run_action(action, environment={}, output=output)
+            self.assertTrue(result["passed"])
+            self.assertEqual(result["position_delta"], 5.0)
+            self.assertEqual(result["field_increases"], {"route_generation": 2.0})
+
+            action["minimum_position_delta"] = 6.0
+            result = MODULE._run_action(action, environment={}, output=output)
+            self.assertFalse(result["passed"])
+            self.assertTrue(any("position delta" in failure for failure in result["failures"]))
+
+    def test_m14_actor_state_delta_manifest_requires_a_typed_assertion(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-state-delta",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {"event_file": "ai-events.jsonl"},
+            "actions": [{
+                "type": "m14_actor_state_delta", "actor": "actor:a",
+                "before_checkpoint": "before.json", "after_checkpoint": "after.json",
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "at least one comparison assertion"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["actions"][0]["minimum_field_increases"] = {"route_generation": 0}
+        with self.assertRaisesRegex(ValueError, "positive numbers"):
+            MODULE.validate_scenario_manifest(manifest)
+
     def test_m14_state_validator_rejects_occluded_detection_and_direct_markers(self):
         state = {"schema_version": 5, "ai_rng_state": 1, "actor_ai": [], "path_points": [], "companions": [],
                  "mounts": [], "detection_vectors": [{"score": 12, "line_of_sight": False, "detected": True}]}
