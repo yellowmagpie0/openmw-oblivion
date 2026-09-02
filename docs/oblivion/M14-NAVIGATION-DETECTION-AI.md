@@ -17,8 +17,8 @@ acceptance evidence without satisfying the reopened gates below.
   now supported by the harness, then add actor-specific comparisons for package
   order, route, cell transitions, arrival, and recovery. The companion manifest
   now scopes selection/phase/route, persisted targets and group relationships,
-  destinations, interruptions, and stalled phases; the remaining manifests
-  still rely mainly on global checks.
+  destinations, interruptions, stalled phases, and near/separated/near distance
+  outcomes; the remaining manifests still rely mainly on global checks.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.

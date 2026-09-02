@@ -45,7 +45,7 @@ SCENARIO_ACTION_TYPES = {
     "sleep", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "key_up", "key_held",
     "key_hold", "type_held", "type", "mouse_move", "mouse_move_absolute", "mouse_click", "mouse_down",
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
-    "m14_observe", "m14_advance_clock", "m14_obstruction", "m14_debug_navigation",
+    "m14_observe", "m14_actor_distance", "m14_advance_clock", "m14_obstruction", "m14_debug_navigation",
 }
 FORBIDDEN_M14_ACTION_TYPES = {
     "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
@@ -530,6 +530,29 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             for field in ("label", "expected_base", "expected_cell"):
                 if field in action and (not isinstance(action[field], str) or not action[field]):
                     raise ValueError(f"m14_observe {field} must be a non-empty string")
+        if m14 is not None and action_type == "m14_actor_distance":
+            for field in ("actor", "target"):
+                if not isinstance(action.get(field), str) or not action[field]:
+                    raise ValueError(f"m14_actor_distance {field} must be a stable actor key")
+            if "checkpoint" in action and (
+                not isinstance(action["checkpoint"], str) or not action["checkpoint"]
+            ):
+                raise ValueError("m14_actor_distance checkpoint must be a non-empty string")
+            if "minimum_distance" not in action and "maximum_distance" not in action:
+                raise ValueError("m14_actor_distance requires a minimum_distance or maximum_distance")
+            distances: dict[str, float] = {}
+            for field in ("minimum_distance", "maximum_distance"):
+                if field in action:
+                    try:
+                        distances[field] = float(action[field])
+                    except (TypeError, ValueError, OverflowError) as error:
+                        raise ValueError(f"m14_actor_distance {field} must be numeric") from error
+                    if not math.isfinite(distances[field]) or distances[field] < 0.0:
+                        raise ValueError(f"m14_actor_distance {field} must be finite and non-negative")
+            if distances.get("minimum_distance", 0.0) > distances.get("maximum_distance", math.inf):
+                raise ValueError("m14_actor_distance minimum_distance exceeds maximum_distance")
+            if "expected_same_cell" in action and not isinstance(action["expected_same_cell"], bool):
+                raise ValueError("m14_actor_distance expected_same_cell must be boolean")
         if m14 is not None and action_type == "m14_obstruction":
             reference = action.get("reference")
             if not isinstance(reference, str) or not re.fullmatch(r"(?:0x[0-9A-Fa-f]{1,8}|[A-Za-z_][A-Za-z0-9_]*)", reference):
@@ -1231,6 +1254,69 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         write_json(observation_path, report)
         report["observation"] = str(observation_path)
         return report
+    if action_type == "m14_actor_distance":
+        checkpoint = action.get("checkpoint")
+        if checkpoint is None:
+            state, source_path = _m14_latest_runtime_state(output)
+        else:
+            source_path = _scenario_output_path(output, checkpoint, "M14 actor-distance checkpoint")
+            source = json.loads(source_path.read_text(encoding="utf-8"))
+            state = source.get("runtime_state") if isinstance(source, dict) else None
+            if not isinstance(state, dict):
+                raise ValueError(f"M14 actor-distance source has no runtime_state: {source_path}")
+        states = {
+            str(item.get("actor", "null")): item
+            for item in state.get("actor_ai", [])
+            if isinstance(item, dict)
+        }
+        actor_key, target_key = str(action["actor"]), str(action["target"])
+        failures: list[str] = []
+        actor_state, target_state = states.get(actor_key), states.get(target_key)
+        if actor_state is None:
+            failures.append(f"M14 actor-distance actor is absent: {actor_key}")
+        if target_state is None:
+            failures.append(f"M14 actor-distance target is absent: {target_key}")
+        distance: float | None = None
+        same_cell: bool | None = None
+        if actor_state is not None and target_state is not None:
+            positions: list[list[float]] = []
+            for label, actor in (("actor", actor_state), ("target", target_state)):
+                raw_position = actor.get("last_valid_position")
+                if not isinstance(raw_position, list) or len(raw_position) < 3:
+                    failures.append(f"M14 actor-distance {label} has no valid position")
+                    break
+                try:
+                    position = [float(value) for value in raw_position[:3]]
+                except (TypeError, ValueError, OverflowError):
+                    failures.append(f"M14 actor-distance {label} position is not numeric")
+                    break
+                if not all(math.isfinite(value) for value in position):
+                    failures.append(f"M14 actor-distance {label} position is non-finite")
+                    break
+                positions.append(position)
+            if len(positions) == 2:
+                distance = math.dist(positions[0], positions[1])
+                minimum = float(action.get("minimum_distance", 0.0))
+                maximum = float(action.get("maximum_distance", math.inf))
+                if distance < minimum or distance > maximum:
+                    failures.append(
+                        f"M14 actor distance {distance:.6f} is outside {minimum:.6f}..{maximum:.6f}")
+            same_cell = actor_state.get("cell") == target_state.get("cell")
+            if "expected_same_cell" in action and same_cell != bool(action["expected_same_cell"]):
+                failures.append(
+                    f"M14 actor-distance same-cell result {same_cell} does not match "
+                    f"{action['expected_same_cell']}")
+        return {
+            "type": action_type,
+            "source": str(source_path),
+            "actor": actor_key,
+            "target": target_key,
+            "distance": distance,
+            "same_cell": same_cell,
+            "failures": failures,
+            "duration_seconds": round(time.monotonic() - started, 6),
+            "passed": not failures,
+        }
     if action_type == "m14_advance_clock":
         events = _read_m14_events(output / "ai-events.jsonl")
         if "game_hour" in action:

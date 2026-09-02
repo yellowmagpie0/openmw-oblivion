@@ -85,6 +85,7 @@
               "m14_checkpoint",
               "m14_assert_events",
               "m14_observe",
+              "m14_actor_distance",
               "m14_advance_clock",
               "m14_obstruction",
               "m14_debug_navigation"
@@ -118,6 +119,10 @@
           "label": {"type": "string", "minLength": 1},
           "expected_base": {"type": "string", "minLength": 1},
           "expected_cell": {"type": "string", "minLength": 1},
+          "target": {"type": "string", "minLength": 1},
+          "minimum_distance": {"type": "number", "minimum": 0},
+          "maximum_distance": {"type": "number", "minimum": 0},
+          "expected_same_cell": {"type": "boolean"},
           "game_hour": {"type": "number", "minimum": 0, "exclusiveMaximum": 24},
           "hours": {"type": "number", "minimum": 0},
           "year": {"type": "integer", "minimum": 1},

@@ -415,6 +415,50 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertFalse(result["actor_requirements"]["actor:a"]["passed"])
             self.assertTrue(any("forbidden value" in failure for failure in result["failures"]))
 
+    def test_m14_actor_distance_uses_named_saved_actors(self):
+        state = {
+            "actor_ai": [
+                {"actor": "actor:a", "cell": "cell:one", "last_valid_position": [0.0, 0.0, 0.0]},
+                {"actor": "actor:b", "cell": "cell:one", "last_valid_position": [300.0, 400.0, 0.0]},
+            ]
+        }
+        action = {
+            "type": "m14_actor_distance",
+            "checkpoint": "checkpoints/distance.json",
+            "actor": "actor:a",
+            "target": "actor:b",
+            "minimum_distance": 499.0,
+            "maximum_distance": 501.0,
+            "expected_same_cell": True,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            checkpoint = output / "checkpoints" / "distance.json"
+            checkpoint.parent.mkdir()
+            checkpoint.write_text(json.dumps({"runtime_state": state}), encoding="utf-8")
+            result = MODULE._run_action(action, environment={}, output=output)
+            self.assertTrue(result["passed"])
+            self.assertEqual(result["distance"], 500.0)
+
+            action["minimum_distance"] = 501.0
+            result = MODULE._run_action(action, environment={}, output=output)
+            self.assertFalse(result["passed"])
+            self.assertTrue(any("outside" in failure for failure in result["failures"]))
+
+    def test_m14_actor_distance_manifest_requires_bounded_numeric_thresholds(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-distance",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {"event_file": "ai-events.jsonl"},
+            "actions": [{"type": "m14_actor_distance", "actor": "actor:a", "target": "actor:b"}],
+        }
+        with self.assertRaisesRegex(ValueError, "requires a minimum_distance or maximum_distance"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["actions"][0].update({"minimum_distance": 10, "maximum_distance": 5})
+        with self.assertRaisesRegex(ValueError, "exceeds"):
+            MODULE.validate_scenario_manifest(manifest)
+
     def test_m14_state_validator_rejects_occluded_detection_and_direct_markers(self):
         state = {"schema_version": 5, "ai_rng_state": 1, "actor_ai": [], "path_points": [], "companions": [],
                  "mounts": [], "detection_vectors": [{"score": 12, "line_of_sight": False, "detected": True}]}
