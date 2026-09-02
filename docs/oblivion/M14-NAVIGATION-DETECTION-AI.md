@@ -35,8 +35,10 @@ acceptance evidence without satisfying the reopened gates below.
   first movement package, route, and cross a door without routing failures.
   Its checkpoint also requires the four exact actor/base pairs to have left the
   wait package with active destinations and no terminal interruption. The
-  recorded run does none of those things and still lacks exact target checks
-  and the required multi-checkpoint reload sequence.
+  course now quickloads that save, writes a post-load save, requires a logged
+  load, and repeats the four named-state checks. The recorded run predates this
+  boundary and does none of the required escort work; exact target checks and
+  the remaining contextual reload sequence are still open.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.

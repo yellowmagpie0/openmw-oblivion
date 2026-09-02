@@ -99,6 +99,17 @@
         {"actor": "content:oblivion.esm:032a16", "expected": {"base": "content:oblivion.esm:023f2b"}, "forbidden_values": {"package": ["null", "content:oblivion.esm:032b47"], "phase": [0, 8, 12]}, "required_truthy": ["has_destination"], "forbidden_interruption_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
         {"actor": "content:oblivion.esm:032a15", "expected": {"base": "content:oblivion.esm:02349f"}, "forbidden_values": {"package": ["null", "content:oblivion.esm:032b47"], "phase": [0, 8, 12]}, "required_truthy": ["has_destination"], "forbidden_interruption_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]}
       ]},
+    {"type": "key", "value": "F9"},
+    {"type": "sleep", "seconds": 8},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "m14_checkpoint", "name": "after-reload", "minimum_actor_count": 3000, "minimum_companion_count": 1, "minimum_mount_count": 1, "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "actor_state_requirements": [
+        {"actor": "content:oblivion.esm:032a18", "expected": {"base": "content:oblivion.esm:023f2e"}, "forbidden_values": {"package": ["null", "content:oblivion.esm:032b47"], "phase": [0, 8, 12]}, "required_truthy": ["has_destination"], "forbidden_interruption_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
+        {"actor": "content:oblivion.esm:032a17", "expected": {"base": "content:oblivion.esm:023f2a"}, "forbidden_values": {"package": ["null", "content:oblivion.esm:032b47"], "phase": [0, 8, 12]}, "required_truthy": ["has_destination"], "forbidden_interruption_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
+        {"actor": "content:oblivion.esm:032a16", "expected": {"base": "content:oblivion.esm:023f2b"}, "forbidden_values": {"package": ["null", "content:oblivion.esm:032b47"], "phase": [0, 8, 12]}, "required_truthy": ["has_destination"], "forbidden_interruption_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
+        {"actor": "content:oblivion.esm:032a15", "expected": {"base": "content:oblivion.esm:02349f"}, "forbidden_values": {"package": ["null", "content:oblivion.esm:032b47"], "phase": [0, 8, 12]}, "required_truthy": ["has_destination"], "forbidden_interruption_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]}
+      ]},
     {"type": "m14_assert_events", "minimum_event_count": 100, "actor_event_requirements": [
       {"actor": "content:oblivion.esm:032a18", "required_event_order": [{"event": "selection", "package": "content:oblivion.esm:032b47"}, {"event": "selection", "package": "content:oblivion.esm:032ae8"}, {"event": "route", "package": "content:oblivion.esm:032ae8"}, {"event": "door-transition"}], "minimum_event_counts": {"route": 2, "door-transition": 1}, "maximum_event_counts": {"selection": 16, "route-blocked": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
       {"actor": "content:oblivion.esm:032a17", "required_event_order": [{"event": "selection", "package": "content:oblivion.esm:032b47"}, {"event": "selection", "package": "content:oblivion.esm:032aeb"}, {"event": "route", "package": "content:oblivion.esm:032aeb"}, {"event": "door-transition"}], "minimum_event_counts": {"route": 2, "door-transition": 1}, "maximum_event_counts": {"selection": 16, "route-blocked": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]},
@@ -114,6 +125,6 @@
   "terminate_after_actions": true,
   "timeout_seconds": 120,
   "expected_exit": 0,
-  "expected_log": ["Selected game profile: oblivion", "Starting a new game", "Writing saved game 'Quicksave'"],
+  "expected_log": ["Selected game profile: oblivion", "Starting a new game", "Writing saved game 'Quicksave'", "Loading saved game 'Quicksave'"],
   "forbidden_log": ["Unsupported ObScript command", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
 }
