@@ -16,7 +16,9 @@ on 2026-08-08.
   families through the raw record path.
 - Reader skip instrumentation counts skipped record/subrecord pairs and bytes.
   `scripts/data/oblivion_compat/tes4_skipped_subrecords.json` is the reviewed
-  88-pair allowlist; the baseline fails on an unlisted pair.
+  allowlist for semantics not yet owned by a milestone; the baseline fails on
+  an unlisted pair. The M1 checkpoint contained 88 pairs; M14 subsequently
+  promoted `ACHR/XHRS`, `PACK/CTDT`, and `PGRD/PGAG` out of this deferred set.
 - `apps/components_tests/esm4/rawrecord.cpp` contains ordinary, compressed,
   extended-size, truncation, malformed-boundary, trailing-stream, and bounded
   mutation-corpus cases.

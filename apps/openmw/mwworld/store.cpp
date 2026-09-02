@@ -411,7 +411,8 @@ namespace MWWorld
         const auto value = mStaticFormKeys.find(key);
         if (value == mStaticFormKeys.end())
             return false;
-        return eraseStatic(value->second);
+        const Id id = value->second;
+        return eraseStatic(id);
     }
 
     template <class T, class Id>
@@ -1264,7 +1265,10 @@ namespace MWWorld
     bool Store<ESM4::Cell>::eraseStatic(const ESM::FormKey& key)
     {
         const auto id = mStaticFormKeys.find(key);
-        return id != mStaticFormKeys.end() && eraseStatic(id->second);
+        if (id == mStaticFormKeys.end())
+            return false;
+        const ESM::RefId cellId = id->second;
+        return eraseStatic(cellId);
     }
 
     void Store<ESM4::Cell>::insertCell(ESM4::Cell* cellPtr)
@@ -1406,6 +1410,8 @@ template class MWWorld::TypedDynamicStore<ESM4::MiscItem>;
 template class MWWorld::TypedDynamicStore<ESM4::MovableStatic>;
 template class MWWorld::TypedDynamicStore<ESM4::Music>;
 template class MWWorld::TypedDynamicStore<ESM4::Npc>;
+template class MWWorld::TypedDynamicStore<ESM4::AIPackage>;
+template class MWWorld::TypedDynamicStore<ESM4::Pathgrid>;
 template class MWWorld::TypedDynamicStore<ESM4::Outfit>;
 template class MWWorld::TypedDynamicStore<ESM4::Potion>;
 template class MWWorld::TypedDynamicStore<ESM4::Race>;

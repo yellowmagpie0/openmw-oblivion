@@ -168,8 +168,15 @@ namespace EsmTool
         {
             reader.getRecordData();
 
-            T value;
-            value.load(reader);
+            T value{};
+            // Empty deletion overrides have no typed payload.  Keep the
+            // header available for the optional FormKey graph, but do not
+            // run a strict loader against the previous record's subrecord
+            // context.
+            const bool emptyDeleted = (reader.hdr().record.flags & ESM4::Rec_Deleted) != 0
+                && reader.hdr().record.dataSize == 0;
+            if (!emptyDeleted)
+                value.load(reader);
 
             if (params.mGraph != nullptr && !reader.getFormKeyFromHeader().isNull())
             {

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-31",
-  "base_revision": "85d35873eebe12999690bdb7886e48330c8e12be",
+  "updated": "2026-09-01",
+  "base_revision": "a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
   "milestones": {
     "M0": {
       "status": "accepted",
@@ -286,7 +286,44 @@
         "Real market/tutorial item matrices, keyed-door/trap routes, visual reload checks, full unit suites, and Morrowind isolation evidence"
       ],
       "open_gates": []
+    },
+    "M14": {
+      "status": "accepted",
+      "report": "docs/oblivion/M14-NAVIGATION-DETECTION-AI.md",
+      "revision": "working-tree based on a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
+      "evidence": [
+        "build/oblivion-compat/m14-audit-final6/m14-audit.json",
+        "build/oblivion-compat/m14-audit-final6/m14-audit.html",
+        "build/oblivion-compat/m14-lossless-final3/baseline.json",
+        "build/oblivion-compat/m14-lossless-final3/baseline.html",
+        "build/oblivion-compat/m14-scenario-tutorial-final5/scenario.json",
+        "build/oblivion-compat/m14-scenario-city-city6/scenario.json",
+        "build/oblivion-compat/m14-scenario-doors-final3/scenario.json",
+        "build/oblivion-compat/m14-scenario-companion-final3/scenario.json",
+        "build/oblivion-compat/m14-scenario-detection-final5/scenario.json",
+        "build/oblivion-compat/m14-scenario-detection-final5/obscript-report.json",
+        "build/oblivion-compat/m14-scenario-horse-final21/scenario.json",
+        "build/oblivion-compat/morrowind-m14-final3/scenario.json",
+        "build/oblivion-compat/m7-runtime-final7/scenario.json",
+        "build/oblivion-compat/m7-reload-final7/scenario.json",
+        "build/oblivion-compat/m12-jump-final5/scenario.json",
+        "build/oblivion-compat/m12-swim-final7/scenario.json",
+        "build/oblivion-compat/m12-activation-final5/scenario.json",
+        "build/oblivion-compat/m12-menus-final6/scenario.json",
+        "build/oblivion-compat/m12-player-final6/scenario.json",
+        "build/oblivion-compat/m13-market-m14-final3/scenario.json",
+        "build/oblivion-compat/m13-tutorial-final2/scenario.json"
+      ],
+      "delivered": [
+        "Native stable-keyed TES4 PACK/PGRD stores, typed CTDA/CTDT conditions, and count-locked audit coverage",
+        "Validated native pathgrid service with local/foreign edges, PGRL object links, overlays, navigator adapters, and door routing",
+        "Real TES4 NPC/creature actor bridge sharing M11 rendering and M12/M13 mechanics state",
+        "Deterministic package selection, schedules, conditions, detection, high/low processing, obstruction recovery, and persistence schema 5",
+        "Wander, Travel, Find, Follow, Accompany, Escort, Eat, Sleep, Use Item At, Flee Not Combat, Pursue, dialogue approach, companions, and horses",
+        "M14 ObScript commands/queries, real-content scenarios, visual inspection, historical regressions, and Morrowind isolation"
+      ],
+      "open_gates": []
     }
   },
-  "next_bounded_delivery": "Begin M14 navigation, detection, and AI package compatibility"
+  "next_bounded_delivery": "Begin M15 combat, stealth, crime, and jail compatibility"
 }

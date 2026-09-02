@@ -82,12 +82,17 @@ namespace ESM4
 
         ESM::RefId mParent; // cell FormId, from the loading sequence
                             // NOTE: for exterior cells it will be the dummy cell FormId
+        ESM::FormKey mParentKey; // stable owning-cell identity
 
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
         std::string mFullName;
         ESM::FormId mBaseObj;
+        // Stable counterpart of NAME.  PGRL object links use the placed
+        // reference key and need this identity to classify its base object
+        // without reconstructing a load-order index later.
+        ESM::FormKey mBaseKey;
 
         ESM::Position mPos;
         float mScale = 1.0f;

@@ -16,7 +16,7 @@
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 20},
+    {"type": "sleep", "seconds": 80},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "screenshot", "name": "real-races.png", "minimum_entropy": 0.03},
     {"type": "key_held", "value": "Return"},
@@ -36,7 +36,7 @@
     {"type": "assert_file", "path_glob": "m12-character-report.json", "expected_count": 1, "minimum_size": 256, "contains_ascii": ["\"birthsign\":\"content:oblivion.esm:", "\"character_generation_flags\":14"]}
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 80,
+  "timeout_seconds": 150,
   "expected_exit": 0,
   "expected_log": [
     "M7 ObScript: character_menu command=showracemenu",

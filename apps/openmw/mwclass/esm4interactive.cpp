@@ -1,14 +1,29 @@
 #include "esm4interactive.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+
 #include <MyGUI_TextIterator.h>
 #include <MyGUI_UString.h>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm3/loadclas.hpp>
+#include <components/esm3/doorstate.hpp>
+#include <components/esm3/loadskil.hpp>
+#include <components/esm4/playermechanics.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
 
+#include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/oblivionai.hpp"
+#include "../mwworld/actionopen.hpp"
+#include "../mwworld/actionhorse.hpp"
+#include "../mwworld/actiontalk.hpp"
 #include "../mwphysics/physicssystem.hpp"
 
 #include "../mwrender/objects.hpp"
@@ -17,6 +32,8 @@
 #include "../mwworld/actiondoor.hpp"
 #include "../mwworld/actionteleport.hpp"
 #include "../mwworld/failedaction.hpp"
+#include "../mwworld/manualref.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/worldimp.hpp"
 
@@ -24,6 +41,40 @@ namespace MWClass
 {
     namespace
     {
+        void fillCreatureInventory(ESM4CreatureCustomData& data, const std::vector<ESM4::InventoryItem>& items,
+            const MWWorld::ESMStore& store)
+        {
+            for (const ESM4::InventoryItem& item : items)
+            {
+                if (item.count == 0)
+                    continue;
+                const ESM::RefId nativeId(ESM::FormId::fromUint32(item.item));
+                const ESM::RefId sharedId = MWWorld::OblivionProfileServices::sharedItemId(store, nativeId);
+                const int count = static_cast<int>(std::min<std::uint32_t>(item.count,
+                    static_cast<std::uint32_t>(std::numeric_limits<int>::max())));
+                try
+                {
+                    MWWorld::ManualRef ref(store, sharedId, count);
+                    data.mInventoryStore.add(ref.getPtr(), count, false);
+                }
+                catch (const std::exception& error)
+                {
+                    Log(Debug::Warning) << "Oblivion creature inventory item " << nativeId.toDebugString()
+                                        << " was not projected: " << error.what();
+                }
+            }
+        }
+
+        bool isRunning(const MWWorld::Ptr& ptr)
+        {
+            return MWBase::Environment::get().getMechanicsManager()->isRunning(ptr);
+        }
+
+        bool isSneaking(const MWWorld::Ptr& ptr)
+        {
+            return MWBase::Environment::get().getMechanicsManager()->isSneaking(ptr);
+        }
+
         void setActionSound(MWWorld::Action& action, const ESM::FormId& sound)
         {
             if (!sound.isZeroOrUnset())
@@ -110,8 +161,227 @@ namespace MWClass
     }
 
     ESM4Creature::ESM4Creature()
-        : ESM4InteractiveBase(ESM4::Creature::sRecordId)
+        : MWWorld::RegisteredClass<ESM4Creature, Actor>(ESM4::Creature::sRecordId)
     {
+    }
+
+    void ESM4Creature::ensureCustomData(const MWWorld::Ptr& ptr) const
+    {
+        if (ptr.getRefData().getCustomData())
+            return;
+
+        auto data = std::make_unique<ESM4CreatureCustomData>();
+        const ESM4::Creature* base = ptr.get<ESM4::Creature>()->mBase;
+        const auto attributes = std::array<std::uint8_t, 8>{ base->mData.attribs.strength,
+            base->mData.attribs.intelligence, base->mData.attribs.willpower, base->mData.attribs.agility,
+            base->mData.attribs.speed, base->mData.attribs.endurance, base->mData.attribs.personality,
+            base->mData.attribs.luck };
+        for (std::size_t i = 0; i < attributes.size(); ++i)
+            data->mCreatureStats.setAttribute(ESM::Attribute::indexToRefId(static_cast<int>(i)), attributes[i]);
+        data->mCreatureStats.setHealth(MWMechanics::DynamicStat<float>(static_cast<float>(base->mData.health)));
+        data->mCreatureStats.setMagicka(
+            MWMechanics::DynamicStat<float>(static_cast<float>(base->mBaseConfig.tes4.baseSpell)));
+        data->mCreatureStats.setFatigue(
+            MWMechanics::DynamicStat<float>(static_cast<float>(base->mBaseConfig.tes4.fatigue)));
+        data->mCreatureStats.setLevel(std::max(1, static_cast<int>(base->mBaseConfig.tes4.levelOrOffset)));
+        data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Hello, base->mAIData.energyLevel);
+        data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Fight, base->mAIData.aggression);
+        data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Flee, base->mAIData.confidence);
+        data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Alarm, base->mAIData.responsibility);
+        data->mInventoryStore.setPtr(ptr);
+        const MWWorld::ESMStore* store = MWBase::Environment::get().getESMStore();
+        fillCreatureInventory(*data, base->mInventory, *store);
+        // Adding projected inventory stacks can advance the WorldModel pointer
+        // registry. Refresh the owner SafePtr before native equipment
+        // initialization accesses the owning actor.
+        data->mInventoryStore.setPtr(ptr);
+        ptr.getRefData().setCustomData(std::move(data));
+        ESM4CreatureCustomData& initialized = ptr.getRefData().getCustomData()->asESM4CreatureCustomData();
+        initialized.mInventoryStore.setPtr(ptr);
+        MWWorld::OblivionProfileServices::equipNativeApparel(initialized.mInventoryStore, *store);
+        initialized.mInventoryStore.setPtr(ptr);
+    }
+
+    MWWorld::Ptr ESM4Creature::copyToCellImpl(const MWWorld::ConstPtr& ptr, MWWorld::CellStore& cell) const
+    {
+        const MWWorld::LiveCellRef<ESM4::Creature>* ref = ptr.get<ESM4::Creature>();
+        MWWorld::Ptr result(cell.insert(ref), &cell);
+        if (result.getRefData().getCustomData())
+            result.getClass().getInventoryStore(result).setPtr(result);
+        return result;
+    }
+
+    std::string_view ESM4Creature::getName(const MWWorld::ConstPtr& ptr) const
+    {
+        return ptr.get<ESM4::Creature>()->mBase->mFullName;
+    }
+
+    MWGui::ToolTipInfo ESM4Creature::getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const
+    {
+        return ESM4Impl::getToolTipInfo(getName(ptr), count);
+    }
+
+    MWMechanics::CreatureStats& ESM4Creature::getCreatureStats(const MWWorld::Ptr& ptr) const
+    {
+        ensureCustomData(ptr);
+        return ptr.getRefData().getCustomData()->asESM4CreatureCustomData().mCreatureStats;
+    }
+
+    MWWorld::ContainerStore& ESM4Creature::getContainerStore(const MWWorld::Ptr& ptr) const
+    {
+        ensureCustomData(ptr);
+        return ptr.getRefData().getCustomData()->asESM4CreatureCustomData().mInventoryStore;
+    }
+
+    MWWorld::InventoryStore& ESM4Creature::getInventoryStore(const MWWorld::Ptr& ptr) const
+    {
+        ensureCustomData(ptr);
+        return ptr.getRefData().getCustomData()->asESM4CreatureCustomData().mInventoryStore;
+    }
+
+    ESM::RefId ESM4Creature::getScript(const MWWorld::ConstPtr& ptr) const
+    {
+        return ESM::RefId(ptr.get<ESM4::Creature>()->mBase->mScriptId);
+    }
+
+    float ESM4Creature::getCapacity(const MWWorld::Ptr& ptr) const
+    {
+        return getCreatureStats(ptr).getAttribute(ESM::Attribute::Strength).getModified() * 5.f;
+    }
+
+    float ESM4Creature::getArmorRating(const MWWorld::Ptr& ptr, bool) const
+    {
+        float result = 0.f;
+        MWWorld::InventoryStore& inventory = getInventoryStore(ptr);
+        for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+        {
+            const MWWorld::ContainerStoreIterator item = inventory.getSlot(slot);
+            if (item != inventory.end())
+                result += item->getClass().getArmorRating(*item);
+        }
+        return result;
+    }
+
+    bool ESM4Creature::isEssential(const MWWorld::ConstPtr& ptr) const
+    {
+        return (ptr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_Essential) != 0;
+    }
+
+    bool ESM4Creature::isPersistent(const MWWorld::ConstPtr& ptr) const
+    {
+        return (ptr.get<ESM4::Creature>()->mBase->mFlags & ESM4::Rec_Persistent) != 0;
+    }
+
+    int ESM4Creature::getServices(const MWWorld::ConstPtr&) const
+    {
+        return 0;
+    }
+
+    MWMechanics::Movement& ESM4Creature::getMovementSettings(const MWWorld::Ptr& ptr) const
+    {
+        ensureCustomData(ptr);
+        return ptr.getRefData().getCustomData()->asESM4CreatureCustomData().mMovement;
+    }
+
+    float ESM4Creature::getMaxSpeed(const MWWorld::Ptr& ptr) const
+    {
+        const MWMechanics::CreatureStats& stats = getCreatureStats(ptr);
+        if (stats.isParalyzed() || stats.getKnockedDown() || stats.isDead())
+            return 0.f;
+        if (MWBase::Environment::get().getWorld()->isSwimming(ptr))
+            return getSwimSpeed(ptr);
+        return isRunning(ptr) ? getRunSpeed(ptr) : getWalkSpeed(ptr);
+    }
+
+    float ESM4Creature::getJump(const MWWorld::Ptr& ptr) const
+    {
+        const MWMechanics::CreatureStats& stats = getCreatureStats(ptr);
+        if (stats.isParalyzed() || stats.getKnockedDown() || stats.isDead())
+            return 0.f;
+        return ESM4::playerJumpVelocity(50.f, getEncumbrance(ptr), getCapacity(ptr));
+    }
+
+    float ESM4Creature::getWalkSpeed(const MWWorld::Ptr& ptr) const
+    {
+        return ESM4::playerWalkSpeed(getCreatureStats(ptr).getAttribute(ESM::Attribute::Speed).getModified(),
+            getEncumbrance(ptr), getCapacity(ptr), isSneaking(ptr));
+    }
+
+    float ESM4Creature::getRunSpeed(const MWWorld::Ptr& ptr) const
+    {
+        return ESM4::playerRunSpeed(getCreatureStats(ptr).getAttribute(ESM::Attribute::Speed).getModified(),
+            getEncumbrance(ptr), getCapacity(ptr));
+    }
+
+    float ESM4Creature::getSwimSpeed(const MWWorld::Ptr& ptr) const
+    {
+        return isRunning(ptr) ? getRunSpeed(ptr) : getWalkSpeed(ptr);
+    }
+
+    bool ESM4Creature::isBipedal(const MWWorld::ConstPtr&) const
+    {
+        return true;
+    }
+
+    bool ESM4Creature::canFly(const MWWorld::ConstPtr&) const
+    {
+        return false;
+    }
+
+    bool ESM4Creature::canSwim(const MWWorld::ConstPtr&) const
+    {
+        return true;
+    }
+
+    bool ESM4Creature::canWalk(const MWWorld::ConstPtr&) const
+    {
+        return true;
+    }
+
+    int ESM4Creature::getBaseFightRating(const MWWorld::ConstPtr& ptr) const
+    {
+        return ptr.get<ESM4::Creature>()->mBase->mAIData.aggression;
+    }
+
+    ESM::RefId ESM4Creature::getPrimaryFaction(const MWWorld::ConstPtr& ptr) const
+    {
+        return ESM::RefId(ESM::FormId::fromUint32(ptr.get<ESM4::Creature>()->mBase->mFaction.faction));
+    }
+
+    int ESM4Creature::getPrimaryFactionRank(const MWWorld::ConstPtr& ptr) const
+    {
+        return ptr.get<ESM4::Creature>()->mBase->mFaction.faction == 0
+            ? -1
+            : ptr.get<ESM4::Creature>()->mBase->mFaction.rank;
+    }
+
+    float ESM4Creature::getSkill(const MWWorld::Ptr& ptr, ESM::RefId id) const
+    {
+        const ESM::Skill* skill = MWBase::Environment::get().getESMStore()->get<ESM::Skill>().search(id);
+        if (skill == nullptr)
+            return 0.f;
+        switch (skill->mData.mSpecialization)
+        {
+            case ESM::Class::Combat:
+                return ptr.get<ESM4::Creature>()->mBase->mData.combat;
+            case ESM::Class::Magic:
+                return ptr.get<ESM4::Creature>()->mBase->mData.magic;
+            case ESM::Class::Stealth:
+                return ptr.get<ESM4::Creature>()->mBase->mData.stealth;
+            default:
+                return 0.f;
+        }
+    }
+
+    VFS::Path::NormalizedView ESM4Creature::getModel(const MWWorld::ConstPtr& ptr) const
+    {
+        return ptr.get<ESM4::Creature>()->mBase->mModel.getNormalized();
+    }
+
+    void ESM4Creature::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const
+    {
+        if (rendering)
+            scale *= ptr.get<ESM4::Creature>()->mBase->mBaseScale;
     }
 
     void ESM4Creature::insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,
@@ -122,15 +392,41 @@ namespace MWClass
     }
 
     std::unique_ptr<MWWorld::Action> ESM4Creature::activate(
-        const MWWorld::Ptr& ptr, const MWWorld::Ptr&) const
+        const MWWorld::Ptr& ptr, const MWWorld::Ptr& actor) const
     {
-        return std::make_unique<MWWorld::OblivionInteractionAction>(
-            ptr, MWWorld::OblivionInteractionKind::Container);
+        const MWMechanics::CreatureStats& stats = getCreatureStats(ptr);
+        if (stats.isDead())
+            return std::make_unique<MWWorld::ActionOpen>(ptr);
+        auto* world = dynamic_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        if (world != nullptr && world->getOblivionAiService() != nullptr
+            && world->getOblivionAiService()->isHorse(ptr))
+            return std::make_unique<MWWorld::ActionHorse>(ptr);
+        if (!stats.getKnockedDown())
+            return std::make_unique<MWWorld::ActionTalk>(ptr);
+        return std::make_unique<MWWorld::FailedAction>();
     }
 
     ESM4Door::ESM4Door()
         : ESM4InteractiveBase(ESM4::Door::sRecordId)
     {
+    }
+
+    void ESM4Door::insertObject(const MWWorld::Ptr& ptr, const std::string& model, const osg::Quat& rotation,
+        MWPhysics::PhysicsSystem& physics) const
+    {
+        insertObjectPhysics(ptr, model, rotation, physics);
+
+        // A door can be paged out while an open/close transition is in
+        // progress. Resume that transition when the native reference becomes
+        // resident, exactly as the TES3 door class does.
+        if (ptr.getRefData().getCustomData())
+        {
+            const ESM4DoorCustomData& customData
+                = ptr.getRefData().getCustomData()->asESM4DoorCustomData();
+            if (customData.mDoorState != MWWorld::DoorState::Idle)
+                MWBase::Environment::get().getWorld()->activateDoor(ptr, customData.mDoorState);
+        }
     }
 
     void ESM4Door::insertObjectPhysics(const MWWorld::Ptr& ptr, const std::string& model, const osg::Quat& rotation,
@@ -139,14 +435,54 @@ namespace MWClass
         physics.addObject(ptr, VFS::Path::toNormalized(model), rotation, MWPhysics::CollisionType_Door);
     }
 
-    MWWorld::DoorState ESM4Door::getDoorState(const MWWorld::ConstPtr&) const
+    void ESM4Door::ensureCustomData(const MWWorld::Ptr& ptr) const
     {
-        // World owns the active transition and the settled angle is stored in RefData.
-        return MWWorld::DoorState::Idle;
+        if (!ptr.getRefData().getCustomData())
+            ptr.getRefData().setCustomData(std::make_unique<ESM4DoorCustomData>());
     }
 
-    void ESM4Door::setDoorState(const MWWorld::Ptr&, MWWorld::DoorState) const
+    MWWorld::DoorState ESM4Door::getDoorState(const MWWorld::ConstPtr& ptr) const
     {
+        if (!ptr.getRefData().getCustomData())
+            return MWWorld::DoorState::Idle;
+        const ESM4DoorCustomData& customData = ptr.getRefData().getCustomData()->asESM4DoorCustomData();
+        return customData.mDoorState;
+    }
+
+    void ESM4Door::setDoorState(const MWWorld::Ptr& ptr, MWWorld::DoorState state) const
+    {
+        if (ptr.getCellRef().getTeleport())
+            throw std::runtime_error("load doors can't be moved");
+        ensureCustomData(ptr);
+        ESM4DoorCustomData& customData = ptr.getRefData().getCustomData()->asESM4DoorCustomData();
+        customData.mDoorState = state;
+    }
+
+    void ESM4Door::readAdditionalState(const MWWorld::Ptr& ptr, const ESM::ObjectState& state) const
+    {
+        if (!state.mHasCustomState)
+            return;
+        ensureCustomData(ptr);
+        ESM4DoorCustomData& customData = ptr.getRefData().getCustomData()->asESM4DoorCustomData();
+        const ESM::DoorState& doorState = state.asDoorState();
+        const int value = doorState.mDoorState;
+        customData.mDoorState = value >= static_cast<int>(MWWorld::DoorState::Idle)
+                && value <= static_cast<int>(MWWorld::DoorState::Closing)
+            ? static_cast<MWWorld::DoorState>(value)
+            : MWWorld::DoorState::Idle;
+    }
+
+    void ESM4Door::writeAdditionalState(const MWWorld::ConstPtr& ptr, ESM::ObjectState& state) const
+    {
+        if (!ptr.getRefData().getCustomData())
+        {
+            state.mHasCustomState = false;
+            return;
+        }
+
+        const ESM4DoorCustomData& customData = ptr.getRefData().getCustomData()->asESM4DoorCustomData();
+        ESM::DoorState& doorState = state.asDoorState();
+        doorState.mDoorState = static_cast<int>(customData.mDoorState);
     }
 
     std::unique_ptr<MWWorld::Action> ESM4Door::activate(
@@ -161,7 +497,15 @@ namespace MWClass
         if (ptr.getCellRef().isLocked())
         {
             const ESM::RefId key = ptr.getCellRef().getKey();
-            if (!key.empty() && world->oblivionPlayerHasItem(key))
+            bool hasKey = false;
+            if (!actor.isEmpty())
+                hasKey = !actor.getClass().getContainerStore(actor).search(key).isEmpty();
+            // Keep the player fallback for projected/native inventory
+            // identities. NPCs must pass through their own container above;
+            // the default activation path must never unlock for them.
+            if (!hasKey && actor == world->getPlayerPtr())
+                hasKey = !key.empty() && world->oblivionPlayerHasItem(key);
+            if (!key.empty() && hasKey)
             {
                 ptr.getCellRef().unlock();
                 if (actor == world->getPlayerPtr())
@@ -184,7 +528,7 @@ namespace MWClass
                              << ptr.getCellRef().getFormKey().serialize() << " destination="
                              << ptr.getCellRef().getDestCell();
             auto action = std::make_unique<MWWorld::ActionTeleport>(
-                ptr.getCellRef().getDestCell(), ptr.getCellRef().getDoorDest(), true);
+                ptr.getCellRef().getDestCell(), ptr.getCellRef().getDoorDest(), actor == world->getPlayerPtr());
             setActionSound(*action, door->mOpenSound);
             return action;
         }

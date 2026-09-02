@@ -13,6 +13,8 @@
 #include <components/debug/debuglog.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm3/variant.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadclot.hpp>
 #include <components/esm4/playermechanics.hpp>
 #include <components/esm4/loadappa.hpp>
 #include <components/esm4/loadligh.hpp>
@@ -22,8 +24,10 @@
 #include <components/settings/values.hpp>
 
 #include "esmstore.hpp"
+#include "class.hpp"
 #include "containerstore.hpp"
 #include "globals.hpp"
+#include "inventorystore.hpp"
 
 namespace
 {
@@ -895,6 +899,7 @@ namespace MWWorld
             result.mValue = std::max(0, potion->mItem.value);
             result.mWeight = potion->mData.weight;
             result.mConsumable = true;
+            result.mFood = (potion->mItem.flags & 0x00000002u) != 0;
         }
         else if (const ESM4::SigilStone* stone = store.get<ESM4::SigilStone>().search(id))
         {
@@ -924,6 +929,94 @@ namespace MWWorld
         else
             return std::nullopt;
         return result;
+    }
+
+    void OblivionProfileServices::equipNativeApparel(InventoryStore& inventory, const ESMStore& store)
+    {
+        struct Candidate
+        {
+            ESM::RefId mSharedId;
+            std::vector<int> mSharedSlots;
+            std::uint32_t mNativeSlots = 0;
+            std::int32_t mValue = 0;
+            bool mChooseOneSlot = false;
+        };
+
+        std::vector<Candidate> candidates;
+        for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
+        {
+            const Ptr item = *iterator;
+            if (item.isEmpty() || item.getCellRef().getCount() != 1)
+                continue;
+            const ESM::RefId nativeId = nativeItemId(store, item.getCellRef().getRefId());
+            const auto definition = itemDefinition(store, nativeId);
+            if (!definition || (definition->mType != ESM4::InventoryItemType::Armor
+                                   && definition->mType != ESM4::InventoryItemType::Clothing)
+                || definition->mSlots == 0)
+                continue;
+            const std::vector<int> sharedSlots = item.getClass().getEquipmentSlots(item).first;
+            if (sharedSlots.empty())
+                continue;
+            candidates.push_back({ item.getCellRef().getRefId(), sharedSlots, definition->mSlots,
+                definition->mValue, definition->mChooseOneSlot });
+        }
+
+        std::sort(candidates.begin(), candidates.end(), [](const Candidate& left, const Candidate& right) {
+            if (left.mValue != right.mValue)
+                return left.mValue > right.mValue;
+            return left.mSharedId < right.mSharedId;
+        });
+
+        std::uint32_t occupied = 0;
+        for (const Candidate& candidate : candidates)
+        {
+            std::uint32_t selectedNativeSlots = candidate.mNativeSlots;
+            int selectedSharedSlot = candidate.mSharedSlots.front();
+            if (candidate.mChooseOneSlot)
+            {
+                const std::uint32_t available = candidate.mNativeSlots & ~occupied;
+                if (available == 0)
+                    continue;
+                if ((available & ESM4::Armor::TES4_LeftRing) != 0
+                    && std::find(candidate.mSharedSlots.begin(), candidate.mSharedSlots.end(),
+                                    InventoryStore::Slot_LeftRing)
+                        != candidate.mSharedSlots.end())
+                {
+                    selectedSharedSlot = InventoryStore::Slot_LeftRing;
+                    selectedNativeSlots = ESM4::Armor::TES4_LeftRing;
+                }
+                else
+                {
+                    selectedSharedSlot = InventoryStore::Slot_RightRing;
+                    selectedNativeSlots = ESM4::Armor::TES4_RightRing;
+                }
+            }
+            else if ((candidate.mNativeSlots & occupied) != 0)
+                continue;
+
+            ContainerStoreIterator item = inventory.end();
+            for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
+            {
+                if (iterator->getCellRef().getRefId() == candidate.mSharedId
+                    && iterator->getCellRef().getCount() == 1)
+                {
+                    item = iterator;
+                    break;
+                }
+            }
+            if (item == inventory.end())
+                continue;
+            try
+            {
+                inventory.equip(selectedSharedSlot, item);
+                occupied = (occupied & ~candidate.mNativeSlots) | selectedNativeSlots;
+            }
+            catch (const std::exception& error)
+            {
+                Log(Debug::Warning) << "TES4 native apparel could not be equipped for "
+                                    << candidate.mSharedId.toDebugString() << ": " << error.what();
+            }
+        }
     }
 
     OblivionProfileInstallReport OblivionProfileServices::install(ESMStore& store)
@@ -977,6 +1070,17 @@ namespace MWWorld
         // 500-unit interaction radius.
         addFloat("fSneakUseDelay", 1.f);
         addFloat("fSneakUseDist", 500.f);
+        // Shared actor head-tracking still consumes these TES3-named
+        // settings. Oblivion keeps the equivalent values in its executable;
+        // install the reviewed native defaults so a TES4 actor never trips a
+        // missing-GMST error in the common actor pass.
+        addFloat("fMaxHeadTrackDistance", 400.f);
+        addFloat("fInteriorHeadTrackMult", 0.5f);
+        // Oblivion keeps these greeting constants in its executable rather than
+        // exposing them as TES4 GMST records. Install the reviewed native values
+        // for the dialogue-approach bridge.
+        addInt("iGreetDistanceMultiplier", 6);
+        addFloat("fGreetDistanceReset", 2000.f);
         // Shared OpenMW audio code expresses record attenuation in the same
         // distance scale as TES3. Oblivion keeps these constants in the game
         // executable instead of GMST records, so install the canonical values

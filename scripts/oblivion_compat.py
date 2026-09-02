@@ -36,9 +36,21 @@ except ImportError:  # pragma: no cover - virtual playback is Linux-only
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tes4_runtime_state as tes4_state  # noqa: E402
+import tes4_m14_audit as tes4_m14  # noqa: E402
 
 
 SCHEMA_VERSION = 1
+
+SCENARIO_ACTION_TYPES = {
+    "sleep", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "key_up", "key_held",
+    "key_hold", "type_held", "type", "mouse_move", "mouse_move_absolute", "mouse_click", "mouse_down",
+    "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
+    "m14_observe", "m14_advance_clock", "m14_obstruction", "m14_debug_navigation",
+}
+FORBIDDEN_M14_ACTION_TYPES = {
+    "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
+    "set_position", "consume_item", "open_door", "mount_horse", "force_success",
+}
 
 
 def _ioc(direction: int, kind: str, number: int, size: int = 0) -> int:
@@ -429,6 +441,346 @@ def expand_value(value: Any, variables: dict[str, str]) -> Any:
     return value
 
 
+def validate_scenario_manifest(raw: dict[str, Any]) -> None:
+    if not isinstance(raw, dict):
+        raise ValueError("Scenario manifest must be a JSON object")
+    if raw.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError(f"Unsupported scenario schema: {raw.get('schema_version')!r}")
+    if not isinstance(raw.get("name"), str) or not raw["name"]:
+        raise ValueError("Scenario manifest requires a non-empty name")
+    command = raw.get("command")
+    if not isinstance(command, list) or not command or not all(isinstance(item, str) for item in command):
+        raise ValueError("Scenario manifest command must be a non-empty string list")
+    actions = raw.get("actions", [])
+    if not isinstance(actions, list):
+        raise ValueError("Scenario actions must be a list")
+    m14 = raw.get("m14")
+    if m14 is not None:
+        if not isinstance(m14, dict):
+            raise ValueError("Scenario m14 section must be an object")
+        event_file = m14.get("event_file")
+        if not isinstance(event_file, str) or not event_file:
+            raise ValueError("M14 scenarios require an output-relative event_file")
+        for field in ("required_events", "forbidden_events", "required_event_order"):
+            if field in m14 and (not isinstance(m14[field], list) or not all(isinstance(item, dict) for item in m14[field])):
+                raise ValueError(f"M14 {field} must be a list of event match objects")
+        if "forbidden_event_names" in m14 and (
+            not isinstance(m14["forbidden_event_names"], list)
+            or not all(isinstance(item, str) and item for item in m14["forbidden_event_names"])
+        ):
+            raise ValueError("M14 forbidden_event_names must be a list of non-empty strings")
+        if "forbidden_reason_substrings" in m14 and (
+            not isinstance(m14["forbidden_reason_substrings"], list)
+            or not all(isinstance(item, str) and item for item in m14["forbidden_reason_substrings"])
+        ):
+            raise ValueError("M14 forbidden_reason_substrings must be a list of non-empty strings")
+        if "maximum_repeated_events" in m14 and (
+            not isinstance(m14["maximum_repeated_events"], dict)
+            or not all(isinstance(value, int) and value >= 1 for value in m14["maximum_repeated_events"].values())
+        ):
+            raise ValueError("M14 maximum_repeated_events must map event names to positive integers")
+    for index, action in enumerate(actions):
+        if not isinstance(action, dict) or not isinstance(action.get("type"), str):
+            raise ValueError(f"Scenario action {index} must be an object with a type")
+        action_type = action["type"]
+        if action_type not in SCENARIO_ACTION_TYPES:
+            raise ValueError(f"Unsupported scenario action: {action_type!r}")
+        if m14 is not None and action_type in FORBIDDEN_M14_ACTION_TYPES:
+            raise ValueError(f"M14 scenarios cannot use direct-mutation action {action_type!r}")
+        if m14 is not None and action_type == "command":
+            raise ValueError("M14 scenarios must use typed controls instead of arbitrary commands")
+        if action_type == "m14_assert_events":
+            for field in ("required", "forbidden", "required_events", "forbidden_events", "required_event_order"):
+                if field in action and (not isinstance(action[field], list)
+                                        or not all(isinstance(item, dict) for item in action[field])):
+                    raise ValueError(f"M14 event matcher field {field!r} must be a list of objects")
+        if m14 is not None and action_type == "m14_advance_clock":
+            has_hour = "game_hour" in action
+            has_delta = "hours" in action
+            if has_hour == has_delta:
+                raise ValueError("m14_advance_clock requires exactly one of game_hour or hours")
+            try:
+                value = float(action["game_hour"] if has_hour else action["hours"])
+            except (TypeError, ValueError, OverflowError) as error:
+                raise ValueError("m14_advance_clock time must be numeric") from error
+            if not math.isfinite(value) or value < 0.0 or (has_hour and value >= 24.0):
+                raise ValueError("m14_advance_clock time is outside its valid range")
+            if "day" in action and (not isinstance(action["day"], int) or action["day"] < 0):
+                raise ValueError("m14_advance_clock day must be a non-negative integer")
+        if m14 is not None and action_type == "m14_checkpoint":
+            for field in ("expected_day",):
+                if field in action and (not isinstance(action[field], int) or action[field] < 1):
+                    raise ValueError(f"M14 checkpoint {field} must be a positive integer")
+            for field in ("expected_hour", "clock_tolerance_hours"):
+                if field in action:
+                    try:
+                        value = float(action[field])
+                    except (TypeError, ValueError, OverflowError) as error:
+                        raise ValueError(f"M14 checkpoint {field} must be numeric") from error
+                    if not math.isfinite(value) or value < 0.0 or (field == "expected_hour" and value >= 24.0):
+                        raise ValueError(f"M14 checkpoint {field} is outside its valid range")
+        if m14 is not None and action_type == "m14_observe":
+            if not isinstance(action.get("actor"), str) or not action["actor"]:
+                raise ValueError("m14_observe requires a stable actor FormKey")
+            for field in ("label", "expected_base", "expected_cell"):
+                if field in action and (not isinstance(action[field], str) or not action[field]):
+                    raise ValueError(f"m14_observe {field} must be a non-empty string")
+        if m14 is not None and action_type == "m14_obstruction":
+            reference = action.get("reference")
+            if not isinstance(reference, str) or not re.fullmatch(r"(?:0x[0-9A-Fa-f]{1,8}|[A-Za-z_][A-Za-z0-9_]*)", reference):
+                raise ValueError("m14_obstruction reference must be a FormID or editor ID")
+            if action.get("operation") not in ("add", "remove"):
+                raise ValueError("m14_obstruction operation must be add or remove")
+        if m14 is not None and action_type == "m14_debug_navigation":
+            if action.get("mode", "navmesh") != "navmesh":
+                raise ValueError("m14_debug_navigation currently supports only navmesh mode")
+
+
+def _scenario_output_path(output: Path, value: Any, label: str) -> Path:
+    relative = Path(str(value))
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ValueError(f"{label} must stay below its output directory: {relative}")
+    return output / relative
+
+
+def _read_m14_events(path: Path) -> list[dict[str, Any]]:
+    if not path.is_file():
+        return []
+    events: list[dict[str, Any]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"Invalid M14 event JSON at {path}:{line_number}: {error}") from error
+        if not isinstance(value, dict) or not isinstance(value.get("event"), str):
+            raise ValueError(f"Invalid M14 event object at {path}:{line_number}")
+        events.append(value)
+    return events
+
+
+def _m14_event_matches(event: dict[str, Any], expected: dict[str, Any]) -> bool:
+    return all(event.get(key) == value for key, value in expected.items())
+
+
+def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, Any]:
+    config = manifest.get("m14")
+    if not isinstance(config, dict):
+        return {"enabled": False, "passed": True, "events": 0}
+    event_path = _scenario_output_path(output, config.get("event_file", "ai-events.jsonl"), "M14 event file")
+    events = _read_m14_events(event_path)
+    failures: list[str] = []
+    if config.get("require_event_file", True) and not event_path.is_file():
+        failures.append(f"missing structured AI event stream: {event_path}")
+    minimum_count = int(config.get("minimum_event_count", 0))
+    maximum_count = config.get("maximum_event_count")
+    if len(events) < minimum_count:
+        failures.append(f"M14 event count {len(events)} is below {minimum_count}")
+    if maximum_count is not None and len(events) > int(maximum_count):
+        failures.append(f"M14 event count {len(events)} exceeds {maximum_count}")
+    for expected in config.get("required_events", []):
+        if not isinstance(expected, dict) or not any(_m14_event_matches(event, expected) for event in events):
+            failures.append(f"missing required M14 event: {expected}")
+    for forbidden in config.get("forbidden_events", []):
+        if not isinstance(forbidden, dict):
+            failures.append(f"invalid forbidden M14 event matcher: {forbidden}")
+        elif any(_m14_event_matches(event, forbidden) for event in events):
+            failures.append(f"forbidden M14 event observed: {forbidden}")
+
+    order = config.get("required_event_order", [])
+    cursor = 0
+    for expected in order:
+        found = next((index for index in range(cursor, len(events))
+                      if _m14_event_matches(events[index], expected)), None)
+        if found is None:
+            failures.append(f"M14 event order requirement was not met after index {cursor}: {expected}")
+            break
+        cursor = found + 1
+
+    forbidden_names = {
+        "direct-teleport", "test-teleport", "scenario-teleport", "tes3-ai", "tes3-fallback",
+        "unsupported", "unresolved", "route-loop", "phase-loop", "deferred-m14",
+    }
+    forbidden_names.update(str(value) for value in config.get("forbidden_event_names", []))
+    reason_fragments = {
+        "direct-teleport", "test-teleport", "scenario-teleport", "tes3-ai", "tes3-fallback",
+        "unsupported", "unresolved-package", "deferred-m14",
+    }
+    reason_fragments.update(str(value).casefold() for value in config.get("forbidden_reason_substrings", []))
+    for index, event in enumerate(events):
+        event_name = str(event.get("event", ""))
+        reason = str(event.get("reason", "")).casefold()
+        if event_name.casefold() in {name.casefold() for name in forbidden_names}:
+            failures.append(f"forbidden M14 event type at index {index}: {event_name}")
+            break
+        if any(fragment in reason for fragment in reason_fragments):
+            failures.append(f"forbidden M14 event reason at index {index}: {event.get('reason')}")
+            break
+        for key, value in event.items():
+            if isinstance(value, float) and not math.isfinite(value):
+                failures.append(f"non-finite M14 event field at index {index}: {key}")
+                break
+
+    maximum_repeated = config.get("maximum_repeated_events", {})
+    event_counts = collections.Counter(str(event["event"]) for event in events)
+    for event_name, maximum in maximum_repeated.items():
+        actual = event_counts.get(str(event_name), 0)
+        if actual > int(maximum):
+            failures.append(f"M14 event type {event_name!r} repeated {actual} times, maximum is {maximum}")
+    if config.get("maximum_route_blocked") is not None:
+        actual = event_counts.get("route-blocked", 0)
+        if actual > int(config["maximum_route_blocked"]):
+            failures.append(f"M14 route-blocked events {actual} exceed {config['maximum_route_blocked']}")
+    if config.get("maximum_no_progress_events") is not None:
+        no_progress_names = {"route-blocked", "low-process-reconcile-failed", "route-no-progress"}
+        actual = sum(1 for event in events if str(event.get("event")) in no_progress_names)
+        if actual > int(config["maximum_no_progress_events"]):
+            failures.append(
+                f"M14 no-progress events {actual} exceed {config['maximum_no_progress_events']}"
+            )
+
+    maximum_phase_repeat = config.get("maximum_phase_repeat", 8)
+    if maximum_phase_repeat is not None:
+        previous: tuple[Any, ...] | None = None
+        repeat = 0
+        for event in events:
+            identity = (
+                event.get("event"), event.get("actor"), event.get("package"),
+                event.get("from"), event.get("to"), event.get("reason"),
+            )
+            if event.get("event") == "phase" and identity == previous:
+                repeat += 1
+                if repeat >= int(maximum_phase_repeat):
+                    failures.append(f"M14 phase transition repeated {repeat + 1} times: {identity}")
+                    break
+            else:
+                previous = identity
+                repeat = 0
+    return {
+        "enabled": True,
+        "path": str(event_path),
+        "events": len(events),
+        "event_types": dict(sorted(event_counts.items())),
+        "failures": failures,
+        "passed": not failures,
+    }
+
+
+def _m14_run_console_commands(commands: list[str], *, environment: dict[str, str], output: Path,
+                              timeout: float, settle_seconds: float = 0.25) -> dict[str, Any]:
+    """Run the small, typed M14 console control surface through the live UI."""
+
+    executable = shutil.which("xdotool")
+    if not executable:
+        raise RuntimeError("xdotool is required for M14 console controls")
+    if not commands:
+        raise ValueError("M14 console control requires at least one command")
+
+    executed: list[list[str]] = []
+    outputs: list[str] = []
+    exit_code = 0
+
+    def run(arguments: list[str]) -> None:
+        nonlocal exit_code
+        command = [executable, *arguments]
+        executed.append(command)
+        completed = subprocess.run(
+            command,
+            cwd=output,
+            env=environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            check=False,
+        )
+        outputs.append(completed.stdout)
+        exit_code = exit_code or completed.returncode
+
+    run(["search", "--onlyvisible", "--name", "OpenMW", "windowfocus", "--sync", "%@"])
+    run(["key", "grave"])
+    # Console opening is asynchronous; settle focus before the first typed
+    # control so a prior UI widget cannot consume part of the command.
+    time.sleep(0.35)
+    for command in commands:
+        run(["type", "--delay", "1", command])
+        run(["key", "Return"])
+        time.sleep(settle_seconds)
+    run(["key", "grave"])
+    # Closing the console returns focus to the game asynchronously. Let one
+    # settled interval elapse before a following save/checkpoint observes the
+    # control's effect.
+    time.sleep(settle_seconds)
+    # Console focus can remain on the MyGUI layer after a calendar-changing
+    # command. Reassert the game window so the next ordinary input (notably
+    # F5 in a checkpoint) is delivered to OpenMW.
+    run(["search", "--onlyvisible", "--name", "OpenMW", "windowfocus", "--sync", "%@"])
+    return {
+        "commands": executed,
+        "console_commands": commands,
+        "exit_code": exit_code,
+        "output": "".join(outputs),
+        "passed": exit_code == 0,
+    }
+
+
+def _m14_latest_runtime_state(output: Path) -> tuple[dict[str, Any], Path]:
+    checkpoints = sorted((path for path in (output / "checkpoints").glob("*.json") if path.is_file()),
+                         key=lambda path: path.stat().st_mtime_ns, reverse=True)
+    for checkpoint in checkpoints:
+        value = json.loads(checkpoint.read_text(encoding="utf-8"))
+        state = value.get("runtime_state") if isinstance(value, dict) else None
+        if isinstance(state, dict):
+            return state, checkpoint
+    save = _single_save(output)
+    return tes4_state.load_save(save), save
+
+
+def _m14_days_in_month(year: int, month: int) -> int:
+    days = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+    return days[month] + int(month == 1 and leap)
+
+
+def _m14_add_clock_hours(year: int, month: int, day: int, hour: float, delta: float) -> tuple[int, int, int, float, int]:
+    total = hour + delta
+    day_delta = math.floor(total / 24.0)
+    target_hour = total % 24.0
+    target_year, target_month, target_day = year, month, day
+    for _ in range(day_delta):
+        target_day += 1
+        if target_day > _m14_days_in_month(target_year, target_month):
+            target_day = 1
+            target_month += 1
+            if target_month == 12:
+                target_month = 0
+                target_year += 1
+    return target_year, target_month, target_day, target_hour, day_delta
+
+
+def _m14_current_clock(output: Path, events: list[dict[str, Any]]) -> tuple[int, int, int, float]:
+    try:
+        state, _ = _m14_latest_runtime_state(output)
+        clock = state.get("clock", {})
+        if isinstance(clock, dict):
+            return (
+                int(clock.get("year", 433)),
+                int(clock.get("month", 0)),
+                int(clock.get("day", 1)),
+                float(clock.get("hour", 0.0)),
+            )
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError):
+        pass
+    for event in reversed(events):
+        try:
+            return 433, 0, 1, float(event["game_hour"])
+        except (KeyError, TypeError, ValueError, OverflowError):
+            continue
+    raise RuntimeError("m14_advance_clock(hours=...) requires a prior checkpoint or AI event clock")
+
+
 def _start_xvfb(output: Path, width: int, height: int) -> tuple[subprocess.Popen[str], str]:
     executable = shutil.which("Xvfb")
     if not executable:
@@ -519,6 +871,267 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             "duration_seconds": round(time.monotonic() - started, 6),
             "passed": passed,
         }
+    if action_type == "m14_checkpoint":
+        checkpoint_path = _scenario_output_path(
+            output, action.get("checkpoint", f"checkpoints/{action.get('name', 'checkpoint')}.json"),
+            "M14 checkpoint",
+        )
+        failures: list[str] = []
+        save: Path | None = None
+        state: dict[str, Any] | None = None
+        validation: dict[str, Any] = {"passed": False, "failures": ["checkpoint was not read"]}
+        try:
+            save = _single_save(output)
+            state = tes4_state.load_save(save)
+            validation = validate_m14_runtime_state(state)
+            clock = state.get("clock", {}) if isinstance(state, dict) else {}
+            if isinstance(clock, dict):
+                if "expected_day" in action and int(clock.get("day", -1)) != int(action["expected_day"]):
+                    failures.append(
+                        f"M14 checkpoint calendar day {clock.get('day')} does not match {action['expected_day']}"
+                    )
+                if "expected_hour" in action:
+                    expected_hour = float(action["expected_hour"])
+                    tolerance = float(action.get("clock_tolerance_hours", 0.1))
+                    actual_hour = float(clock.get("hour", float("nan")))
+                    if not math.isfinite(actual_hour) or abs(actual_hour - expected_hour) > tolerance:
+                        failures.append(
+                            f"M14 checkpoint game hour {actual_hour!r} is outside "
+                            f"{expected_hour!r} +/- {tolerance!r}"
+                        )
+            minimum_actor_count = int(action.get("minimum_actor_count", 0))
+            if validation["actor_count"] < minimum_actor_count:
+                failures.append(
+                    f"M14 checkpoint has {validation['actor_count']} actors, expected at least {minimum_actor_count}"
+                )
+            required_types = {int(value) for value in action.get("required_package_types", [])}
+            observed_types = {int(item.get("package_type", 255)) for item in state.get("actor_ai", [])}
+            missing_types = sorted(required_types - observed_types)
+            if missing_types:
+                failures.append(f"M14 checkpoint is missing package types {missing_types}")
+            required_phases = {int(value) for value in action.get("required_phases", [])}
+            observed_phases = {int(item.get("phase", 0)) for item in state.get("actor_ai", [])}
+            missing_phases = sorted(required_phases - observed_phases)
+            if missing_phases:
+                failures.append(f"M14 checkpoint is missing phases {missing_phases}")
+            required_actors = {str(value) for value in action.get("required_actor_keys", [])}
+            observed_actors = {str(item.get("actor", "null")) for item in state.get("actor_ai", [])}
+            missing_actors = sorted(required_actors - observed_actors)
+            if missing_actors:
+                failures.append(f"M14 checkpoint is missing actors {missing_actors}")
+            for name, minimum, actual in (
+                ("companion", int(action.get("minimum_companion_count", 0)), validation["companion_count"]),
+                ("mount", int(action.get("minimum_mount_count", 0)), validation["mount_count"]),
+                ("detection vector", int(action.get("minimum_detection_vector_count", 0)),
+                 validation["detection_vector_count"]),
+            ):
+                if actual < minimum:
+                    failures.append(f"M14 checkpoint has {actual} {name}s, expected at least {minimum}")
+            required_mounted_actor = action.get("required_mounted_actor")
+            required_mounted_horse = action.get("required_mounted_horse")
+            if required_mounted_actor is not None:
+                mounted = [relation for relation in state.get("mounts", [])
+                           if bool(relation.get("mounted", False))
+                           and str(relation.get("rider", "null")) == str(required_mounted_actor)]
+                if required_mounted_horse is not None:
+                    mounted = [relation for relation in mounted
+                               if str(relation.get("horse", "null")) == str(required_mounted_horse)]
+                if not mounted:
+                    failures.append(
+                        f"M14 checkpoint has no mounted relation for actor {required_mounted_actor}"
+                    )
+            required_dismounted_actor = action.get("required_dismounted_actor")
+            if required_dismounted_actor is not None:
+                if any(bool(relation.get("mounted", False))
+                       and str(relation.get("rider", "null")) == str(required_dismounted_actor)
+                       for relation in state.get("mounts", [])):
+                    failures.append(
+                        f"M14 checkpoint still has actor {required_dismounted_actor} mounted"
+                    )
+            if not validation["passed"]:
+                failures.extend(str(value) for value in validation["failures"])
+        except (OSError, RuntimeError, ValueError) as error:
+            failures.append(str(error))
+        report = {
+            "type": action_type,
+            "save": str(save) if save else None,
+            "validation": validation,
+            "runtime_state": state,
+            "failures": failures,
+            "duration_seconds": round(time.monotonic() - started, 6),
+            "passed": not failures and validation.get("passed", False),
+        }
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        write_json(checkpoint_path, report)
+        report["checkpoint"] = str(checkpoint_path)
+        result = dict(report)
+        result.pop("runtime_state", None)
+        return result
+    if action_type == "m14_assert_events":
+        event_file = action.get("event_file", "ai-events.jsonl")
+        config = {
+            "m14": {
+                "event_file": event_file,
+                "require_event_file": True,
+                "minimum_event_count": action.get("minimum_event_count", 0),
+                "maximum_event_count": action.get("maximum_event_count"),
+                "required_events": action.get("required_events", action.get("required", [])),
+                "forbidden_events": action.get("forbidden_events", action.get("forbidden", [])),
+                "required_event_order": action.get("required_event_order", []),
+                "forbidden_event_names": action.get("forbidden_event_names", []),
+                "forbidden_reason_substrings": action.get("forbidden_reason_substrings", []),
+                "maximum_repeated_events": action.get("maximum_repeated_events", {}),
+                "maximum_route_blocked": action.get("maximum_route_blocked"),
+                "maximum_no_progress_events": action.get("maximum_no_progress_events"),
+                "maximum_phase_repeat": action.get("maximum_phase_repeat", 8),
+            }
+        }
+        result = _validate_m14_events(config, output)
+        result.update({"type": action_type, "duration_seconds": round(time.monotonic() - started, 6)})
+        return result
+    if action_type == "m14_observe":
+        observation_path = _scenario_output_path(
+            output, action.get("observation", f"observations/{action['actor'].replace(':', '_')}.json"),
+            "M14 observation",
+        )
+        source_value = action.get("checkpoint")
+        source_path: Path
+        if source_value is not None:
+            source_path = _scenario_output_path(output, source_value, "M14 observation checkpoint")
+            source_value_json = json.loads(source_path.read_text(encoding="utf-8"))
+            state = source_value_json.get("runtime_state") if isinstance(source_value_json, dict) else None
+            if not isinstance(state, dict):
+                raise ValueError(f"M14 observation source has no runtime_state: {source_path}")
+        else:
+            state, source_path = _m14_latest_runtime_state(output)
+        validation = validate_m14_runtime_state(state)
+        actor_key = str(action["actor"])
+        actor_state = next((item for item in state.get("actor_ai", [])
+                            if str(item.get("actor", "")) == actor_key), None)
+        failures = list(validation["failures"])
+        if actor_state is None:
+            failures.append(f"M14 observation actor is absent: {actor_key}")
+        else:
+            expected_base = action.get("expected_base")
+            if expected_base is not None and str(actor_state.get("base", "null")) != str(expected_base):
+                failures.append(
+                    f"M14 observation actor {actor_key} has base {actor_state.get('base')!r}, "
+                    f"expected {expected_base!r}"
+                )
+            expected_cell = action.get("expected_cell")
+            if expected_cell is not None and str(actor_state.get("cell", "null")) != str(expected_cell):
+                failures.append(
+                    f"M14 observation actor {actor_key} has cell {actor_state.get('cell')!r}, "
+                    f"expected {expected_cell!r}"
+                )
+        events = _read_m14_events(
+            _scenario_output_path(output, action.get("event_file", "ai-events.jsonl"), "M14 event file")
+        )
+        report = {
+            "type": action_type,
+            "actor": actor_key,
+            "label": action.get("label"),
+            "source": str(source_path),
+            "state": actor_state,
+            "clock": state.get("clock"),
+            "event_count": len(events),
+            "event_types": dict(sorted(collections.Counter(str(event["event"]) for event in events).items())),
+            "validation": validation,
+            "failures": failures,
+            "duration_seconds": round(time.monotonic() - started, 6),
+            "passed": not failures,
+        }
+        write_json(observation_path, report)
+        report["observation"] = str(observation_path)
+        return report
+    if action_type == "m14_advance_clock":
+        events = _read_m14_events(output / "ai-events.jsonl")
+        if "game_hour" in action:
+            target_hour = float(action["game_hour"])
+            current_year, current_month, current_day, _ = _m14_current_clock(output, events)
+            target_year = int(action.get("year", current_year))
+            target_month = int(action.get("month", current_month))
+            target_day = int(action.get("day", current_day))
+            elapsed_days = 0
+        else:
+            current_year, current_month, current_day, current_hour = _m14_current_clock(output, events)
+            target_year, target_month, target_day, target_hour, elapsed_days = _m14_add_clock_hours(
+                current_year, current_month, current_day, current_hour, float(action["hours"])
+            )
+            if "year" in action:
+                target_year = int(action["year"])
+            if "month" in action:
+                target_month = int(action["month"])
+            if "day" in action:
+                target_day = int(action["day"])
+        commands = []
+        # OpenMW's console accepts literal values for `set`, but does not
+        # evaluate expressions such as `GameDaysPassed + 1`.  GameDay,
+        # GameMonth, GameYear, and GameHour are the authoritative calendar
+        # facade used by the Oblivion profile, so advance those fields
+        # explicitly when a duration crosses midnight.
+        if elapsed_days > 0:
+            # Set the complete target date explicitly. DateTimeManager keeps
+            # the calendar facade separate from the raw GameHour global, so a
+            # large hour literal can advance its internal day without making
+            # the corresponding GameDay value persist in a save.
+            if target_year != current_year:
+                commands.append(f"set GameYear to {target_year}")
+            if target_month != current_month:
+                commands.append(f"set GameMonth to {target_month}")
+            commands.append(f"set GameDay to {target_day}")
+            commands.append(f"set GameHour to {target_hour:.9f}")
+        else:
+            if target_year != current_year:
+                commands.append(f"set GameYear to {target_year}")
+            if target_month != current_month:
+                commands.append(f"set GameMonth to {target_month}")
+            if target_day != current_day or "day" in action or "hours" in action:
+                commands.append(f"set GameDay to {target_day}")
+            commands.append(f"set GameHour to {target_hour:.9f}")
+        control = _m14_run_console_commands(
+            commands, environment=environment, output=output,
+            timeout=float(action.get("timeout_seconds", 30)),
+            settle_seconds=float(action.get("settle_seconds", 0.25)),
+        )
+        control.update({
+            "type": action_type,
+            "target_year": target_year,
+            "target_month": target_month,
+            "target_day": target_day if ("day" in action or "hours" in action) else None,
+            "target_hour": target_hour,
+            "duration_seconds": round(time.monotonic() - started, 6),
+        })
+        return control
+    if action_type == "m14_obstruction":
+        operation = str(action["operation"])
+        # The fixture supplies a stable reference that is already part of the
+        # real cell. "add" enables that obstruction; "remove" disables it.
+        console_command = ("enable" if operation == "add" else "disable") + " " + str(action["reference"])
+        control = _m14_run_console_commands(
+            [console_command], environment=environment, output=output,
+            timeout=float(action.get("timeout_seconds", 30)),
+            settle_seconds=float(action.get("settle_seconds", 0.25)),
+        )
+        control.update({
+            "type": action_type,
+            "operation": operation,
+            "reference": str(action["reference"]),
+            "duration_seconds": round(time.monotonic() - started, 6),
+        })
+        return control
+    if action_type == "m14_debug_navigation":
+        control = _m14_run_console_commands(
+            ["togglenavmesh"], environment=environment, output=output,
+            timeout=float(action.get("timeout_seconds", 30)),
+            settle_seconds=float(action.get("settle_seconds", 0.25)),
+        )
+        control.update({
+            "type": action_type,
+            "mode": "navmesh",
+            "duration_seconds": round(time.monotonic() - started, 6),
+        })
+        return control
     if action_type == "screenshot":
         executable = shutil.which("import")
         if not executable:
@@ -664,8 +1277,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
 def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -> dict[str, Any]:
     global _VIRTUAL_GAMEPAD
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if raw.get("schema_version") != SCHEMA_VERSION:
-        raise ValueError(f"Unsupported scenario schema: {raw.get('schema_version')!r}")
+    validate_scenario_manifest(raw)
     variables = dict(variables)
     variables.setdefault("source", str(Path(__file__).resolve().parents[1]))
     variables.setdefault("python", sys.executable)
@@ -688,6 +1300,16 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
     environment = dict(os.environ)
     environment.update({str(key): str(value) for key, value in manifest.get("environment", {}).items()})
     environment.setdefault("OPENMW_SUPPRESS_ERROR_DIALOG", "1")
+    m14_config = manifest.get("m14")
+    if isinstance(m14_config, dict):
+        event_path = _scenario_output_path(output, m14_config.get("event_file", "ai-events.jsonl"), "M14 event file")
+        event_path.parent.mkdir(parents=True, exist_ok=True)
+        environment["OPENMW_OBLIVION_AI_EVENTS"] = str(event_path)
+        if "fixed_seed" in m14_config:
+            fixed_seed = int(m14_config["fixed_seed"])
+            if fixed_seed <= 0:
+                raise ValueError("M14 fixed_seed must be a positive integer")
+            environment["OPENMW_OBLIVION_AI_SEED"] = str(fixed_seed)
     xvfb_process: subprocess.Popen[str] | None = None
     started = time.monotonic()
     try:
@@ -743,6 +1365,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             and not forbidden_findings
             and all(result["passed"] for result in action_results)
         )
+        m14_result = _validate_m14_events(manifest, output)
+        passed = passed and m14_result.get("passed", True)
         result = {
             "schema_version": SCHEMA_VERSION,
             "name": manifest.get("name", manifest_path.stem),
@@ -754,6 +1378,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             "missing_expected_log": missing_expected,
             "forbidden_log_findings": forbidden_findings,
             "actions": action_results,
+            "m14": m14_result,
             "duration_seconds": round(time.monotonic() - started, 6),
             "passed": passed,
         }
@@ -1170,6 +1795,423 @@ def validate_m13_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
         "inventory_stacks": len(inventory),
         "equipped_slots": occupied,
     }
+
+
+def validate_m14_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
+    """Validate the persisted native AI contract independently of the engine."""
+
+    failures: list[str] = []
+    if not isinstance(state, dict):
+        return {
+            "passed": False,
+            "failures": ["TES4 runtime state is not an object"],
+            "schema_version": None,
+            "actor_count": 0,
+            "overlay_count": 0,
+            "companion_count": 0,
+            "mount_count": 0,
+            "detection_vector_count": 0,
+        }
+
+    def collection(name: str) -> list[Any]:
+        value = state.get(name, [])
+        if not isinstance(value, list):
+            failures.append(f"TES4 runtime-state {name} is not a list")
+            return []
+        if len(value) > tes4_state.MAX_COLLECTION:
+            failures.append(f"TES4 runtime-state {name} exceeds the size limit")
+            return []
+        return value
+
+    def text_value(item: dict[str, Any], name: str, default: str = "null", *, required: bool = False) -> str:
+        value = item.get(name, default)
+        if not isinstance(value, str):
+            failures.append(f"TES4 runtime-state {name} is not a string")
+            return default
+        if required and (not value or value == "null"):
+            failures.append(f"TES4 runtime-state {name} is null or empty")
+        return value
+
+    def integer_value(item: dict[str, Any], name: str, default: int, *, minimum: int | None = None,
+                      maximum: int | None = None) -> int:
+        if name not in item:
+            return default
+        value = item[name]
+        if isinstance(value, bool) or not isinstance(value, int):
+            failures.append(f"TES4 runtime-state {name} is not an integer")
+            return default
+        if minimum is not None and value < minimum or maximum is not None and value > maximum:
+            failures.append(f"TES4 runtime-state {name} is outside its valid range")
+            return default
+        return value
+
+    def real_value(item: dict[str, Any], name: str, default: float = 0.0, *, minimum: float | None = None) -> float:
+        if name not in item:
+            return default
+        value = item[name]
+        if isinstance(value, bool):
+            failures.append(f"TES4 runtime-state {name} is not numeric")
+            return default
+        try:
+            result = float(value)
+        except (TypeError, ValueError, OverflowError):
+            failures.append(f"TES4 runtime-state {name} is not numeric")
+            return default
+        if not math.isfinite(result) or minimum is not None and result < minimum:
+            failures.append(f"TES4 runtime-state {name} is outside its valid range")
+            return default
+        return result
+
+    def boolean_value(item: dict[str, Any], name: str, default: bool = False) -> bool:
+        if name not in item:
+            return default
+        value = item[name]
+        if not isinstance(value, bool):
+            failures.append(f"TES4 runtime-state {name} is not boolean")
+            return default
+        return value
+
+    def position_value(item: dict[str, Any], name: str) -> None:
+        value = item.get(name)
+        if not isinstance(value, list) or len(value) != 6:
+            failures.append(f"TES4 runtime-state {name} is not a six-component position")
+            return
+        for component in value:
+            if isinstance(component, bool):
+                failures.append(f"TES4 runtime-state {name} contains a boolean component")
+                return
+            try:
+                if not math.isfinite(float(component)):
+                    raise ValueError
+            except (TypeError, ValueError, OverflowError):
+                failures.append(f"TES4 runtime-state {name} contains a non-finite component")
+                return
+
+    def schedule_window_value(item: dict[str, Any], name: str) -> None:
+        value = item.get(name)
+        if value is None:
+            return
+        if not isinstance(value, dict):
+            failures.append(f"TES4 runtime-state {name} is not an object")
+            return
+        for side in ("start", "end"):
+            instant = value.get(side)
+            if isinstance(instant, list) and len(instant) == 4:
+                year, month, day = instant[:3]
+                hour = instant[3]
+                if any(isinstance(component, bool) or not isinstance(component, int)
+                       for component in (year, month, day)):
+                    failures.append(f"TES4 runtime-state {name}.{side} has non-integer date fields")
+                    continue
+                if isinstance(hour, bool):
+                    failures.append(f"TES4 runtime-state {name}.{side} has a non-numeric hour")
+                    continue
+                try:
+                    hour = float(hour)
+                except (TypeError, ValueError, OverflowError):
+                    failures.append(f"TES4 runtime-state {name}.{side} has a non-numeric hour")
+                    continue
+            elif isinstance(instant, dict):
+                year = integer_value(instant, "year", 1)
+                month = integer_value(instant, "month", 0)
+                day = integer_value(instant, "day", 1)
+                hour = real_value(instant, "hour")
+            else:
+                failures.append(f"TES4 runtime-state {name}.{side} is not a calendar value")
+                continue
+            if not tes4_state._valid_calendar([year, month, day, hour]):
+                failures.append(f"TES4 runtime-state {name}.{side} is not a valid calendar instant")
+        real_value(value, "duration_hours", minimum=0.0)
+
+    if state.get("schema_version") != 5:
+        failures.append(f"expected schema version 5, got {state.get('schema_version')}")
+    rng = state.get("ai_rng_state", 0)
+    if isinstance(rng, bool) or not isinstance(rng, int) or rng <= 0:
+        failures.append("AI RNG state is not a non-zero integer")
+
+    procedure_for_type = {index: index + 1 for index in range(13)}
+    actor_keys: set[str] = set()
+    actor_ai = collection("actor_ai")
+    for actor in actor_ai:
+        if not isinstance(actor, dict):
+            failures.append("TES4 runtime-state actor AI entry is not an object")
+            continue
+        key = text_value(actor, "actor", required=True)
+        if key == "null" or key in actor_keys:
+            failures.append(f"duplicate or null actor identity: {key}")
+        actor_keys.add(key)
+        for identity in ("base", "cell"):
+            text_value(actor, identity, required=True)
+        source = integer_value(actor, "source", 0, minimum=0, maximum=2)
+        package_type = integer_value(actor, "package_type", 255, minimum=0, maximum=255)
+        procedure = integer_value(actor, "procedure", 0, minimum=0, maximum=13)
+        package = text_value(actor, "package")
+        script_package = text_value(actor, "script_package")
+        if source == 0:
+            if package != "null" or package_type != 255 or procedure != 0:
+                failures.append(f"idle actor {key} contains active package state")
+        elif source in (1, 2):
+            if package == "null" or procedure_for_type.get(package_type) != procedure:
+                failures.append(f"actor {key} has inconsistent package/procedure state")
+        else:
+            failures.append(f"actor {key} has invalid package source {source}")
+        if source == 2 and script_package == "null":
+            failures.append(f"script-owned actor {key} has no script package")
+        pathgrid = text_value(actor, "pathgrid")
+        path_node = integer_value(actor, "path_node", 0, minimum=0, maximum=0xffffffff)
+        if pathgrid == "null" and path_node != 0:
+            failures.append(f"actor {key} has a path node without a pathgrid")
+        has_destination = boolean_value(actor, "has_destination")
+        destination_cell = text_value(actor, "destination_cell")
+        if has_destination and destination_cell == "null":
+            failures.append(f"actor {key} has destination coordinates without a destination cell")
+        action_reserved = boolean_value(actor, "action_reserved")
+        if action_reserved and package_type in (3, 8):
+            if text_value(actor, "action_item") == "null":
+                failures.append(f"actor {key} reserves an item package without an item")
+        for counter in ("selection_generation", "route_generation", "transition_generation"):
+            integer_value(actor, counter, 0, minimum=0, maximum=0xffffffffffffffff)
+        integer_value(actor, "list_index", 0, minimum=0, maximum=0xffffffff)
+        integer_value(actor, "repath_attempts", 0, minimum=0, maximum=8)
+        integer_value(actor, "formation_index", -1, minimum=-1, maximum=0x7fffffff)
+        phase = integer_value(actor, "phase", 0, minimum=0, maximum=12)
+        integer_value(actor, "tier", 0, minimum=0, maximum=1)
+        integer_value(actor, "boundary", 0, minimum=0, maximum=3)
+        integer_value(actor, "condition_result", 0, minimum=0, maximum=3)
+        interruption = text_value(actor, "interruption_reason", "")
+        if len(interruption) > 1024:
+            failures.append(f"actor {key} interruption reason is too long")
+        if phase == 3 and text_value(actor, "door") == "null":
+            failures.append(f"actor {key} is in door phase without an intended door")
+        for timer in (
+            "action_timer", "duration_remaining", "no_progress_seconds", "door_cooldown", "low_process_timer",
+            "next_low_process_tick",
+        ):
+            real_value(actor, timer, minimum=0.0)
+        position_value(actor, "destination_position")
+        position_value(actor, "last_valid_position")
+        schedule_window_value(actor, "schedule_window")
+
+    path_points = collection("path_points")
+    overlay_keys: set[tuple[str, int]] = set()
+    for point in path_points:
+        if not isinstance(point, dict):
+            failures.append("TES4 runtime-state path-point overlay is not an object")
+            continue
+        pathgrid = text_value(point, "pathgrid")
+        node = integer_value(point, "node", 0, minimum=0, maximum=0xffffffff)
+        boolean_value(point, "enabled", True)
+        key = (pathgrid, node)
+        if key[0] == "null" or key in overlay_keys:
+            failures.append(f"duplicate or null path-point overlay: {key}")
+        overlay_keys.add(key)
+
+    actor_ai_by_key = {
+        str(actor.get("actor", "null")): actor for actor in actor_ai if isinstance(actor, dict)
+    }
+    companion_pairs: set[tuple[str, str]] = set()
+    companion_edges: dict[str, list[str]] = {}
+    companion_groups: dict[str, set[int]] = {}
+    companions = collection("companions")
+    for relation in companions:
+        if not isinstance(relation, dict):
+            failures.append("TES4 runtime-state companion relation is not an object")
+            continue
+        leader = text_value(relation, "leader")
+        member = text_value(relation, "member")
+        group = text_value(relation, "group", leader)
+        side_with = text_value(relation, "side_with")
+        formation = integer_value(relation, "formation_index", -1, minimum=-1, maximum=0x7fffffff)
+        if (leader == "null" or member == "null" or group == "null" or leader == member
+                or (leader, member) in companion_pairs or formation < -1
+                or (side_with != "null" and side_with == leader)):
+            failures.append(f"invalid or duplicate companion relation: {leader}->{member}")
+            continue
+        companion_pairs.add((leader, member))
+        companion_edges.setdefault(leader, []).append(member)
+        member_state = actor_ai_by_key.get(member)
+        if member_state is not None and (
+            (str(member_state.get("target", "null")) != "null"
+             and str(member_state.get("target")) != leader)
+            or (str(member_state.get("companion_group", "null")) != "null"
+                and str(member_state.get("companion_group")) != group)
+            or str(member_state.get("companion_side_with", "null")) != side_with
+        ):
+            failures.append(f"companion relation {leader}->{member} is not reciprocal")
+        if formation >= 0 and formation in companion_groups.setdefault(group, set()):
+            failures.append(f"companion group {group} reuses formation index {formation}")
+        if formation >= 0:
+            companion_groups[group].add(formation)
+
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit_companion(key: str) -> None:
+        if key in visiting:
+            failures.append("companion relations contain a cycle")
+            return
+        if key in visited:
+            return
+        visiting.add(key)
+        for member in companion_edges.get(key, []):
+            visit_companion(member)
+        visiting.remove(key)
+        visited.add(key)
+
+    for leader in sorted(companion_edges):
+        visit_companion(leader)
+
+    horses: set[str] = set()
+    riders: set[str] = set()
+    mount_pairs: set[tuple[str, str]] = set()
+    mounts = collection("mounts")
+    for relation in mounts:
+        if not isinstance(relation, dict):
+            failures.append("TES4 runtime-state mount relation is not an object")
+            continue
+        horse = text_value(relation, "horse")
+        rider = text_value(relation, "rider")
+        pair = (horse, rider)
+        if (horse == "null" or rider == "null" or horse == rider or pair in mount_pairs
+                or horse in horses or rider in riders):
+            failures.append(f"invalid or duplicate mount relation: {horse}->{rider}")
+            continue
+        mount_pairs.add(pair)
+        horses.add(horse)
+        riders.add(rider)
+        horse_state = actor_ai_by_key.get(horse)
+        rider_state = actor_ai_by_key.get(rider)
+        mounted = boolean_value(relation, "mounted")
+        if mounted:
+            if ((horse_state is not None and str(horse_state.get("rider", "null")) != rider)
+                    or (rider_state is not None and str(rider_state.get("mount", "null")) != horse)):
+                failures.append(f"mounted relation {horse}->{rider} is not reciprocal")
+        elif ((horse_state is not None and str(horse_state.get("rider", "null")) == rider)
+              or (rider_state is not None and str(rider_state.get("mount", "null")) == horse)):
+            failures.append(f"inactive mount relation {horse}->{rider} has active actor state")
+
+    for key, actor in actor_ai_by_key.items():
+        mount = str(actor.get("mount", "null"))
+        rider = str(actor.get("rider", "null"))
+        if mount in actor_ai_by_key and str(actor_ai_by_key[mount].get("rider", "null")) != key:
+            failures.append(f"actor {key} mount state is not reciprocal")
+        if rider in actor_ai_by_key and str(actor_ai_by_key[rider].get("mount", "null")) != key:
+            failures.append(f"actor {key} rider state is not reciprocal")
+
+    # Test fixtures must observe movement through the native door/action path;
+    # a marker that claims direct position teleportation is evidence of a
+    # forbidden scenario shortcut and invalidates the save report.
+    def has_forbidden_marker(value: Any) -> bool:
+        if isinstance(value, dict):
+            for name, item in value.items():
+                lowered = str(name).casefold().replace("_", "-")
+                if lowered in {"direct-teleport", "test-teleport", "scenario-teleport"}:
+                    return True
+                if has_forbidden_marker(item):
+                    return True
+        elif isinstance(value, list):
+            return any(has_forbidden_marker(item) for item in value)
+        return False
+
+    if has_forbidden_marker(state):
+        failures.append("runtime state contains a direct-teleport test marker")
+
+    detection_vectors = collection("detection_vectors")
+    detection_pairs: set[tuple[str, str]] = set()
+    for vector in detection_vectors:
+        if not isinstance(vector, dict):
+            failures.append("TES4 runtime-state detection vector is not an object")
+            continue
+        observer = text_value(vector, "observer")
+        target = text_value(vector, "target")
+        score = real_value(vector, "score", -1.0)
+        line_of_sight = boolean_value(vector, "line_of_sight")
+        detected = boolean_value(vector, "detected")
+        if (observer == "null" or target == "null" or observer == target
+                or (observer, target) in detection_pairs):
+            failures.append("detection vector identity is null, self-referential, or duplicated")
+        detection_pairs.add((observer, target))
+        if not math.isfinite(score) or not 0.0 <= score <= 100.0:
+            failures.append("detection vector score is outside [0, 100]")
+        if not line_of_sight and detected:
+            failures.append("occluded detection vector is marked detected")
+
+    return {
+        "passed": not failures,
+        "failures": failures,
+        "schema_version": state.get("schema_version"),
+        "actor_count": len(actor_ai),
+        "overlay_count": len(path_points),
+        "companion_count": len(companions),
+        "mount_count": len(mounts),
+        "detection_vector_count": len(detection_vectors),
+    }
+
+
+def run_m14_audit(args: argparse.Namespace) -> dict[str, Any]:
+    """Audit winning native PACK/PGRD data without starting the engine."""
+
+    source = args.source.resolve()
+    data = args.oblivion_data.resolve()
+    output = args.output.resolve()
+    if not source.is_dir():
+        raise FileNotFoundError(source)
+    if not data.is_dir():
+        raise FileNotFoundError(data)
+    count_lock = args.count_lock.resolve() if args.count_lock else None
+    report = tes4_m14.audit(
+        data,
+        OFFICIAL_PLUGIN_ORDER,
+        count_lock_path=count_lock,
+        write_count_lock=args.write_count_lock,
+    )
+    report.update(
+        {
+            "generated_at": utc_now(),
+            "repository": {
+                "source": str(source),
+                "revision": run_command(["git", "rev-parse", "HEAD"], cwd=source, timeout=10)["output"].strip(),
+                "status": run_command(["git", "status", "--short"], cwd=source, timeout=10)["output"].splitlines(),
+            },
+            "oblivion_data": str(data),
+            "count_lock_path": str(count_lock) if count_lock else None,
+        }
+    )
+    output.mkdir(parents=True, exist_ok=True)
+    write_json(output / "m14-audit.json", report)
+    rows = []
+    checks = {
+        "count lock": report["count_lock"],
+        "reachable condition functions": {
+            "passed": not report["unsupported"]["condition_functions"],
+        },
+        "condition run-on contexts": {
+            "passed": not report["unsupported"].get("condition_run_on", {}),
+        },
+        "actor package references": {"passed": not report["unsupported"]["actor_packages"]},
+        "routing references": {"passed": not report["unsupported"]["invalid_references"]},
+        "cell pathgrid uniqueness": {"passed": not report["ambiguous_pathgrid_cells"]},
+    }
+    for name, result in checks.items():
+        rows.append(
+            f"<tr><td>{html.escape(name)}</td><td>{'PASS' if result.get('passed') else 'FAIL'}</td></tr>"
+        )
+    status = "PASS" if report["passed"] else "FAIL"
+    (output / "m14-audit.html").write_text(
+        "<!doctype html><html lang='en'><head><meta charset='utf-8'><title>M14 audit</title>"
+        "<style>body{font-family:sans-serif;max-width:1100px;margin:2rem auto}"
+        "table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:.35rem .7rem}</style></head><body>"
+        f"<h1>OpenMW Oblivion M14 audit: {status}</h1>"
+        f"<p>Winning PACK: {report['summary']['winning_pack_count']}; "
+        f"winning PGRD: {report['summary']['winning_pgrd_count']}; "
+        f"pathgrid nodes: {report['summary']['pathgrid_node_count']}.</p>"
+        f"<table><tr><th>Gate</th><th>Result</th></tr>{''.join(rows)}</table>"
+        f"<p>Package fingerprint: <code>{html.escape(report['package_fingerprint'])}</code><br>"
+        f"Pathgrid fingerprint: <code>{html.escape(report['pathgrid_fingerprint'])}</code></p>"
+        "</body></html>",
+        encoding="utf-8",
+    )
+    return report
 
 
 def run_m4_acceptance(args: argparse.Namespace) -> dict[str, Any]:
@@ -3426,9 +4468,22 @@ def make_parser() -> argparse.ArgumentParser:
     m11_assets.add_argument("--write-count-lock", action="store_true")
     m11_assets.add_argument("--timeout", type=float, default=120)
 
+    m14_audit = subparsers.add_parser(
+        "m14-audit", help="audit winning native Oblivion PACK/PGRD and actor navigation data"
+    )
+    m14_audit.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    m14_audit.add_argument("--oblivion-data", type=Path, required=True)
+    m14_audit.add_argument("--output", type=Path, required=True)
+    m14_audit.add_argument(
+        "--count-lock",
+        type=Path,
+        default=Path(__file__).resolve().parent / "data" / "oblivion_compat" / "oblivion_m14_data_counts.json",
+    )
+    m14_audit.add_argument("--write-count-lock", action="store_true")
+
     runtime = subparsers.add_parser("runtime-state", help="inspect or rewrite the native T4ST record in an OpenMW save")
     runtime.add_argument(
-        "operation", choices=("inspect", "m13-verify", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
+        "operation", choices=("inspect", "m13-verify", "m14-verify", "mutate", "compare", "corrupt", "missing-content", "bad-fingerprint")
     )
     runtime.add_argument("save", type=Path)
     runtime.add_argument("--output", type=Path)
@@ -3444,6 +4499,9 @@ def run_runtime_state(args: argparse.Namespace) -> dict[str, Any]:
         result = {"passed": True, "save": str(args.save), "state": state}
     elif args.operation == "m13-verify":
         result = validate_m13_runtime_state(state)
+        result["save"] = str(args.save)
+    elif args.operation == "m14-verify":
+        result = validate_m14_runtime_state(state)
         result["save"] = str(args.save)
     elif args.operation == "compare":
         if args.expected is None:
@@ -3542,6 +4600,8 @@ def main(argv: list[str] | None = None) -> int:
             result = run_m10_asset_audit(args)
         elif args.command == "m11-assets":
             result = run_m11_asset_audit(args)
+        elif args.command == "m14-audit":
+            result = run_m14_audit(args)
         elif args.command == "runtime-state":
             result = run_runtime_state(args)
         else:
@@ -3577,6 +4637,15 @@ def main(argv: list[str] | None = None) -> int:
             "checks": result.get("checks", {}),
             "count_lock": result.get("count_lock", {}),
             "evidence": str(args.output.resolve() / "m11-assets.json"),
+        }
+    elif args.command == "m14-audit":
+        printable = {
+            "passed": result.get("passed", False),
+            "milestone": "M14",
+            "summary": result.get("summary", {}),
+            "unsupported": result.get("unsupported", {}),
+            "count_lock": result.get("count_lock", {}),
+            "evidence": str(args.output.resolve() / "m14-audit.json"),
         }
     print(json.dumps(printable, indent=2, sort_keys=True))
     return 0 if result.get("passed", False) else 1

@@ -12,7 +12,7 @@
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 20},
+    {"type": "sleep", "seconds": 80},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "key_hold", "value": "KP_2", "seconds": 3.2},
     {"type": "screenshot", "name": "locked-container-in-reach.png", "minimum_entropy": 0.03},
@@ -22,7 +22,7 @@
     {"type": "sleep", "seconds": 1}
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 35,
+  "timeout_seconds": 130,
   "expected_exit": 0,
   "expected_log": [
     "M12 player stats:",

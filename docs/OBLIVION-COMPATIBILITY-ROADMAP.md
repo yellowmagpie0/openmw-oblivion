@@ -1,6 +1,6 @@
 # OpenMW Oblivion Compatibility Program
 
-Status: accepted roadmap, implementation in progress  
+Status: accepted roadmap; M14 accepted on 2026-09-01; next delivery is M15
 Target: original English Oblivion 1.2.0416 GOTY data, followed by Shivering Isles,
 Knights of the Nine, and every installed official DLC  
 Compatibility requirement: preserve Morrowind behavior and OpenMW-native saves
@@ -10,7 +10,7 @@ Compatibility requirement: preserve Morrowind behavior and OpenMW-native saves
 This ledger is the resume point. Detailed evidence and open gates live in
 `docs/oblivion/` and generated artifacts live in `build/oblivion-compat/`.
 
-| Milestone | State on 2026-08-08 | Durable report |
+| Milestone | State on 2026-09-01 | Durable report |
 | --- | --- | --- |
 | M0 | Accepted | `docs/oblivion/M0-BASELINE.md` |
 | M1 | Accepted: strict parser, mutation corpus, and official-content sanitizer gates passed | `docs/oblivion/M1-TES4-PARSING.md` |
@@ -18,6 +18,15 @@ This ledger is the resume point. Detailed evidence and open gates live in
 | M3 | Accepted: native profile services and standalone interior/exterior gates passed | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | Accepted: exact native state restarts, reorder, diagnostics, visuals, and Morrowind gates passed | `docs/oblivion/M4-RUNTIME-STATE.md` |
 | M5 | Accepted: interactive prison traversal, activation/state, paired visuals, and Morrowind gates passed | `docs/oblivion/M5-INTERACTIVE-INTERIOR.md` |
+| M6 | Accepted: deterministic native ObScript frontend and complete official corpus gate passed | `docs/oblivion/M6-OBScript-FRONTEND.md` |
+| M7 | Accepted: native ObScript runtime, process-restart reload, and Morrowind gates passed | `docs/oblivion/M7-OBScript-RUNTIME.md` |
+| M8 | Accepted: native static rendering, collision, and official asset gates passed | `docs/oblivion/M8-STATIC-RENDERING.md` |
+| M9 | Accepted: exterior world, terrain, paging, map, and Morrowind gates passed | `docs/oblivion/M9-EXTERIOR-WORLD.md` |
+| M10 | Accepted: environment, weather, media, audio, video, and Morrowind gates passed | `docs/oblivion/M10-ENVIRONMENT-MEDIA.md` |
+| M11 | Accepted: native TES4 actors, animation, FaceGen, creatures, and visual gates passed | `docs/oblivion/M11-ACTORS-ANIMATION.md` |
+| M12 | Accepted: native player mechanics, character creation, movement, and regression gates passed | `docs/oblivion/M12-PLAYER-MECHANICS.md` |
+| M13 | Accepted: native items, inventory, equipment, locks, and economy gates passed | `docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md` |
+| M14 | Accepted: native navigation, detection, AI packages, process tiers, doors, companions, horses, and Morrowind gates passed | `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md` |
 
 ## 1. Goal and delivery model
 

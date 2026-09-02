@@ -1,0 +1,165 @@
+/*
+  Copyright (C) 2026 OpenMW contributors
+
+  This file is part of OpenMW.
+
+  OpenMW is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License version 3, or (at your option) any
+  later version.
+*/
+#include <gtest/gtest.h>
+
+#include <array>
+
+#include <components/esm4/aipackagedata.hpp>
+#include <components/esm4/aiphase.hpp>
+#include <components/esm4/aiselection.hpp>
+
+namespace
+{
+    using namespace ESM4;
+
+    ESM::FormKey key(std::uint32_t id)
+    {
+        return ESM::FormKey::content("m14-test.esm", id);
+    }
+
+    PackageCandidate candidate(std::uint32_t id, AIPackageType type, std::size_t listIndex)
+    {
+        PackageCandidate result;
+        result.mKey = key(id);
+        result.mType = type;
+        result.mListIndex = listIndex;
+        result.mSchedule.mStartHour = -1;
+        result.mSchedule.mDuration = 0;
+        return result;
+    }
+
+    TEST(OblivionAiTest, MapsEveryNativePackageTypeToItsProcedure)
+    {
+        constexpr std::array types{
+            AIPackageType::Find, AIPackageType::Follow, AIPackageType::Escort, AIPackageType::Eat,
+            AIPackageType::Sleep, AIPackageType::Wander, AIPackageType::Travel, AIPackageType::Accompany,
+            AIPackageType::UseItemAt, AIPackageType::Ambush, AIPackageType::FleeNotCombat,
+            AIPackageType::CastMagic, AIPackageType::Pursue,
+        };
+        for (const AIPackageType type : types)
+            EXPECT_NE(packageProcedure(type), PackageProcedure::None);
+        EXPECT_EQ(packageProcedure(AIPackageType::Unknown), PackageProcedure::None);
+    }
+
+    TEST(OblivionAiTest, ScriptPackagePrecedesBaseListAndBaseOrderIsStable)
+    {
+        PackageSelectionRequest request;
+        request.mNow = { 433, 6, 26, 12.0 };
+        request.mEvaluationGeneration = 17;
+        request.mBasePackages = { candidate(1, AIPackageType::Wander, 4),
+            candidate(2, AIPackageType::Eat, 9) };
+        request.mScriptPackage = candidate(3, AIPackageType::Travel, 0);
+
+        PackageSelection selected = selectPackage(request);
+        ASSERT_TRUE(selected.hasPackage());
+        EXPECT_EQ(selected.mSource, PackageSource::Script);
+        EXPECT_EQ(selected.mPackage, key(3));
+        EXPECT_EQ(selected.mType, AIPackageType::Travel);
+        EXPECT_EQ(selected.mEvaluationGeneration, 17u);
+
+        request.mScriptPackage.reset();
+        selected = selectPackage(request);
+        ASSERT_TRUE(selected.hasPackage());
+        EXPECT_EQ(selected.mSource, PackageSource::Base);
+        EXPECT_EQ(selected.mPackage, key(1));
+        EXPECT_EQ(selected.mListIndex, 4u);
+    }
+
+    TEST(OblivionAiTest, ScheduleWindowHandlesMidnightAndZeroDuration)
+    {
+        PackageSchedule schedule;
+        schedule.mStartHour = 22;
+        schedule.mDuration = 4;
+
+        const auto active = schedule.activeWindow({ 433, 6, 27, 1.5 });
+        ASSERT_TRUE(active.has_value());
+        EXPECT_EQ(active->mStart, (CalendarInstant{ 433, 6, 26, 22.0 }));
+        EXPECT_EQ(active->mEnd, (CalendarInstant{ 433, 6, 27, 2.0 }));
+
+        EXPECT_FALSE(schedule.activeWindow({ 433, 6, 27, 2.0 }).has_value());
+
+        schedule.mStartHour = -1;
+        schedule.mDuration = 0;
+        const auto allDay = schedule.activeWindow({ 433, 6, 27, 23.5 });
+        ASSERT_TRUE(allDay.has_value());
+        EXPECT_DOUBLE_EQ(allDay->mDurationHours, 24.0);
+        EXPECT_EQ(allDay->mStart, (CalendarInstant{ 433, 6, 27, 23.5 }));
+    }
+
+    TEST(OblivionAiTest, DoorTransitionPreservesRouteAndIncrementsGeneration)
+    {
+        PackageSelection selection;
+        selection.mSource = PackageSource::Base;
+        selection.mPackage = key(10);
+        selection.mType = AIPackageType::Travel;
+        selection.mListIndex = 2;
+        selection.mEvaluationGeneration = 4;
+        selection.mWindow = ScheduleWindow{ { 433, 6, 26, 0.0 }, { 433, 6, 27, 0.0 }, 24.0 };
+
+        PackagePhaseState state = beginPackagePhase(selection, key(100), key(101));
+        EXPECT_EQ(state.mPhase, PackagePhase::Select);
+        EXPECT_EQ(advancePackagePhase(state, { 0.f, true, true, false, false, true, false, false, false, false,
+                              false, true })
+                      .mTo,
+            PackagePhase::Resolve);
+        EXPECT_EQ(advancePackagePhase(state, { 0.f, true, true, false, false, true, false, false, false, false,
+                              false, true })
+                      .mTo,
+            PackagePhase::Path);
+
+        const PackagePhaseTransition reachedDoor
+            = advancePackagePhase(state, { 0.f, true, true, true, true, false, false, false, false, false, false,
+                true });
+        EXPECT_EQ(reachedDoor.mTo, PackagePhase::Door);
+
+        const PackagePhaseTransition crossed
+            = advancePackagePhase(state, { 0.f, true, true, true, true, true, false, false, false, false, false,
+                true, true });
+        EXPECT_EQ(crossed.mTo, PackagePhase::Path);
+        EXPECT_EQ(state.mTransitionGeneration, 1u);
+
+        const PackagePhaseTransition arrived
+            = advancePackagePhase(state, { 0.f, true, true, true, false, true, false, false, false, false, false,
+                true });
+        EXPECT_EQ(arrived.mTo, PackagePhase::Arrive);
+        PackagePhaseInput actionFinished;
+        actionFinished.mResolved = true;
+        actionFinished.mRouteAvailable = true;
+        actionFinished.mActionCompleted = true;
+        EXPECT_EQ(advancePackagePhase(state, actionFinished).mTo, PackagePhase::Act);
+        EXPECT_EQ(advancePackagePhase(state, actionFinished).mTo, PackagePhase::Complete);
+    }
+
+    TEST(OblivionAiTest, RepathBudgetEndsInTypedStalledBoundary)
+    {
+        PackageSelection selection;
+        selection.mSource = PackageSource::Base;
+        selection.mPackage = key(20);
+        selection.mType = AIPackageType::Travel;
+        PackagePhaseState state = beginPackagePhase(selection, key(200), key(201));
+        static_cast<void>(advancePackagePhase(state, { 0.f, true, true, false, false, true, false, false, false,
+            false, false, true }));
+        static_cast<void>(advancePackagePhase(state, { 0.f, true, true, false, false, true, false, false, false,
+            false, false, true }));
+        ASSERT_EQ(state.mPhase, PackagePhase::Path);
+
+        for (int attempt = 0; attempt < 8; ++attempt)
+            EXPECT_EQ(advancePackagePhase(state, { 0.25f, true, false, false, false, false, false, false, false,
+                                  false, false, false })
+                          .mTo,
+                PackagePhase::Path);
+        const PackagePhaseTransition stalled
+            = advancePackagePhase(state, { 0.25f, true, false, false, false, false, false, false, false, false,
+                false, false });
+        EXPECT_EQ(stalled.mTo, PackagePhase::Stalled);
+        EXPECT_EQ(stalled.mBoundary, PhaseBoundary::None);
+        EXPECT_EQ(state.mInterruptionReason, "bounded-repath-exhausted");
+    }
+}

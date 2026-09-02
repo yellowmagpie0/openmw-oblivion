@@ -17,7 +17,6 @@
       "items": {
         "type": "object",
         "required": ["path", "content"],
-        "additionalProperties": false,
         "properties": {
           "path": {"type": "string", "minLength": 1},
           "content": {"type": "string"}
@@ -25,6 +24,7 @@
       }
     },
     "xvfb": {"type": "boolean"},
+    "virtual_gamepad": {"type": "boolean"},
     "width": {"type": "integer", "minimum": 320},
     "height": {"type": "integer", "minimum": 200},
     "timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
@@ -32,6 +32,30 @@
     "expected_exit": {"oneOf": [{"type": "integer"}, {"const": "timeout"}]},
     "expected_log": {"type": "array", "items": {"type": "string"}},
     "forbidden_log": {"type": "array", "items": {"type": "string"}},
+    "m14": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_file"],
+      "properties": {
+        "event_file": {"type": "string", "minLength": 1},
+        "fixed_seed": {"type": "integer", "exclusiveMinimum": 0},
+        "require_event_file": {"type": "boolean"},
+        "minimum_event_count": {"type": "integer", "minimum": 0},
+        "maximum_event_count": {"type": "integer", "minimum": 0},
+        "required_events": {"type": "array", "items": {"type": "object"}},
+        "forbidden_events": {"type": "array", "items": {"type": "object"}},
+        "required_event_order": {"type": "array", "items": {"type": "object"}},
+        "forbidden_event_names": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "forbidden_reason_substrings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "maximum_repeated_events": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 1}
+        },
+        "maximum_route_blocked": {"type": "integer", "minimum": 0},
+        "maximum_no_progress_events": {"type": "integer", "minimum": 0},
+        "maximum_phase_repeat": {"type": "integer", "minimum": 1}
+      }
+    },
     "actions": {
       "type": "array",
       "items": {
@@ -41,6 +65,8 @@
           "type": {
             "enum": [
               "sleep",
+              "gamepad_button",
+              "gamepad_axis",
               "screenshot",
               "key",
               "key_down",
@@ -54,7 +80,13 @@
               "mouse_click",
               "focus_window",
               "command",
-              "assert_file"
+              "assert_file",
+              "m14_checkpoint",
+              "m14_assert_events",
+              "m14_observe",
+              "m14_advance_clock",
+              "m14_obstruction",
+              "m14_debug_navigation"
             ]
           },
           "seconds": {"type": "number", "minimum": 0},
@@ -78,7 +110,52 @@
           "expected_count": {"type": "integer", "minimum": 0},
           "minimum_size": {"type": "integer", "minimum": 0},
           "contains_ascii": {"type": "array", "items": {"type": "string"}},
-          "forbidden_ascii": {"type": "array", "items": {"type": "string"}}
+          "forbidden_ascii": {"type": "array", "items": {"type": "string"}},
+          "checkpoint": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "actor": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1},
+          "expected_base": {"type": "string", "minLength": 1},
+          "expected_cell": {"type": "string", "minLength": 1},
+          "game_hour": {"type": "number", "minimum": 0, "exclusiveMaximum": 24},
+          "hours": {"type": "number", "minimum": 0},
+          "year": {"type": "integer", "minimum": 1},
+          "month": {"type": "integer", "minimum": 0, "maximum": 11},
+          "day": {"type": "integer", "minimum": 0},
+          "expected_day": {"type": "integer", "minimum": 1},
+          "expected_hour": {"type": "number", "minimum": 0, "exclusiveMaximum": 24},
+          "clock_tolerance_hours": {"type": "number", "minimum": 0},
+          "settle_seconds": {"type": "number", "minimum": 0},
+          "reference": {"type": "string", "minLength": 1},
+          "operation": {"enum": ["add", "remove"]},
+          "mode": {"enum": ["navmesh"]},
+          "minimum_actor_count": {"type": "integer", "minimum": 0},
+          "minimum_companion_count": {"type": "integer", "minimum": 0},
+          "minimum_mount_count": {"type": "integer", "minimum": 0},
+          "minimum_detection_vector_count": {"type": "integer", "minimum": 0},
+          "required_mounted_actor": {"type": "string", "minLength": 1},
+          "required_mounted_horse": {"type": "string", "minLength": 1},
+          "required_dismounted_actor": {"type": "string", "minLength": 1},
+          "required_actor_keys": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "required_package_types": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+          "required_phases": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+          "event_file": {"type": "string", "minLength": 1},
+          "minimum_event_count": {"type": "integer", "minimum": 0},
+          "maximum_event_count": {"type": "integer", "minimum": 0},
+          "required_events": {"type": "array", "items": {"type": "object"}},
+          "forbidden_events": {"type": "array", "items": {"type": "object"}},
+          "required": {"type": "array", "items": {"type": "object"}},
+          "forbidden": {"type": "array", "items": {"type": "object"}},
+          "required_event_order": {"type": "array", "items": {"type": "object"}},
+          "forbidden_event_names": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "forbidden_reason_substrings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "maximum_repeated_events": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 1}
+          },
+          "maximum_route_blocked": {"type": "integer", "minimum": 0},
+          "maximum_no_progress_events": {"type": "integer", "minimum": 0},
+          "maximum_phase_repeat": {"type": "integer", "minimum": 1}
         }
       }
     }

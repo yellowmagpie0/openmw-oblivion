@@ -49,8 +49,10 @@ void ESM4::Cell::load(ESM4::Reader& reader)
 {
     ESM::FormId formId = reader.getFormIdFromHeader();
     mId = formId;
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
     mParent = reader.currWorld();
+    mParentKey = reader.currWorldFormKey();
     mWaterHeight = sInvalidWaterLevel;
     reader.clearCellGrid(); // clear until XCLC FIXME: somehow do this automatically?
 

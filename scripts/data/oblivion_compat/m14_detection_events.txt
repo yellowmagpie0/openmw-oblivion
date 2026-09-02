@@ -1,0 +1,8 @@
+# Read-only M14 detection probes. These call the native query surface and do
+# not mutate actor, package, movement, inventory, or world state.
+at 2 command player GetDetectionLevel content:oblivion.esm:01fc43
+at 2 command player GetDetected content:oblivion.esm:01fc43
+at 2 command player GetLOS content:oblivion.esm:01fc43
+at 4 command content:oblivion.esm:01fc43 GetDetectionLevel player
+at 4 command content:oblivion.esm:01fc43 GetDetected player
+at 4 command content:oblivion.esm:01fc43 GetLOS player

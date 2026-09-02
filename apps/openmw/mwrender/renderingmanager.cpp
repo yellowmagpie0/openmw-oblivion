@@ -71,6 +71,7 @@
 #include "actorspaths.hpp"
 #include "camera.hpp"
 #include "effectmanager.hpp"
+#include "esm4npcanimation.hpp"
 #include "fogmanager.hpp"
 #include "groundcover.hpp"
 #include "navmesh.hpp"
@@ -1553,7 +1554,11 @@ namespace MWRender
             if (ptr.getClass().isNpc())
             {
                 rootNode->setNodeMask(Mask_Actor);
-                animation = new NpcAnimation(ptr, osg::ref_ptr<osg::Group>(rootNode), mResourceSystem);
+                if (ptr.getType() == ESM::REC_NPC_4)
+                    animation = new ESM4NpcAnimation(
+                        ptr, osg::ref_ptr<osg::Group>(rootNode), mResourceSystem);
+                else
+                    animation = new NpcAnimation(ptr, osg::ref_ptr<osg::Group>(rootNode), mResourceSystem);
             }
         }
 

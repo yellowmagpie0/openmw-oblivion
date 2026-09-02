@@ -71,7 +71,12 @@ file(GLOB UNITTEST_SRC_FILES
     toutf8/toutf8.cpp
 
     esm4/includes.cpp
+    esm4/aipackagedata.cpp
+    esm4/aiconditions.cpp
+    esm4/detection.cpp
     esm4/inventorymechanics.cpp
+    esm4/aiselection.cpp
+    esm4/aiphase.cpp
     esm4/formidfields.cpp
     esm4/facegen.cpp
     esm4/ragdoll.cpp
@@ -79,6 +84,9 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/reference.cpp
     esm4/runtimestate.cpp
     esm4/playermechanics.cpp
+    esm4/pathgriddata.cpp
+    esm4/testloadpack.cpp
+    esm4/testloadpgrd.cpp
 
     obscript/frontend.cpp
 

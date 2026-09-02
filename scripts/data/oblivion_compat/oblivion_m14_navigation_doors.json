@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m14-navigation-doors-obstruction",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x15985a\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1419,
+    "minimum_event_count": 100,
+    "required_events": [{"event": "route"}],
+    "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+    "forbidden_event_names": ["direct-teleport", "tes3-ai", "unsupported", "unresolved", "phase-loop", "route-loop"],
+    "forbidden_reason_substrings": ["direct-teleport", "tes3-ai", "unsupported", "unresolved-package", "deferred-m14"],
+    "maximum_repeated_events": {"tier": 16},
+    "maximum_route_blocked": 1000,
+    "maximum_no_progress_events": 1000,
+    "maximum_phase_repeat": 8
+  },
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 80},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "door-course-open.png", "minimum_entropy": 0.02},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "m14_checkpoint", "name": "door-open", "minimum_actor_count": 3000, "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]},
+    {"type": "m14_observe", "actor": "content:oblivion.esm:01fc43", "observation": "observations/door-open-valen.json"},
+    {"type": "m14_obstruction", "reference": "0x159857", "operation": "remove", "settle_seconds": 0.4},
+    {"type": "sleep", "seconds": 8},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "m14_checkpoint", "name": "door-obstructed", "minimum_actor_count": 3000, "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]},
+    {"type": "m14_observe", "actor": "content:oblivion.esm:01fc43", "observation": "observations/door-obstructed-valen.json"},
+    {"type": "m14_obstruction", "reference": "0x159857", "operation": "add", "settle_seconds": 0.4},
+    {"type": "sleep", "seconds": 8},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 6},
+    {"type": "m14_checkpoint", "name": "door-recovered", "minimum_actor_count": 3000, "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]},
+    {"type": "m14_debug_navigation", "settle_seconds": 0.3},
+    {"type": "screenshot", "name": "door-course-navmesh.png", "minimum_entropy": 0.02},
+    {"type": "m14_assert_events", "minimum_event_count": 100, "required_events": [{"event": "route"}], "maximum_route_blocked": 1000, "maximum_no_progress_events": 1000},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type", "value": "exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 2}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 180,
+  "expected_exit": 0,
+  "expected_log": ["Selected game profile: oblivion", "Starting a new game", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Unsupported ObScript command", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

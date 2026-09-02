@@ -77,7 +77,7 @@ add_openmw_dir (mwsound
 
 add_openmw_dir (mwworld
     refdata worldimp scene globals class action nullaction actionteleport
-    containerstore actiontalk actiontake manualref player cellvisitors failedaction
+    containerstore actiontalk actiontake actionhorse manualref player cellvisitors failedaction
     worldmodel localscripts customdata inventorystore ptr actionopen actionread actionharvest
     actionequip timestamp actionalchemy cellstore actionapply actioneat
     store esmstore fallback actionrepair actionsoulgem livecellref actiondoor
@@ -104,7 +104,7 @@ add_openmw_dir (mwmechanics
     aicast aiescort aiface aiactivate aicombat recharge repair enchanting pathfinding pathgrid security spellcasting spellresistance
     disease pickpocket levelledlist combat steering obstacle autocalcspell difficultyscaling aicombataction summoning
     character actors objects aistate weaponpriority spellpriority weapontype spellutil
-    spelleffects
+    spelleffects oblivionai
     )
 
 add_openmw_dir (mwstate

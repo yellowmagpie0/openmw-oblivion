@@ -205,7 +205,9 @@ namespace MWClass
         if (slots.first.empty())
             return { 0, {} };
 
-        if (npc.getClass().isNpc())
+        // Do not cast an ESM4 NPC reference to the TES3 NPC layout. TES4
+        // actors use these projected item classes only for inventory slots.
+        if (npc.getClass().isNpc() && npc.getType() == ESM::REC_NPC_)
         {
             const ESM::RefId& npcRace = npc.get<ESM::NPC>()->mBase->mRace;
 

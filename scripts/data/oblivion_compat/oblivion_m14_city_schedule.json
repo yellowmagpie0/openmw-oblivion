@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m14-city-schedule-24-hour",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ICMarketDistrict01::ref=0x038490::side=east\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1415,
+    "minimum_event_count": 1,
+    "required_event_order": [
+      {"event": "selection"},
+      {"event": "phase"}
+    ],
+    "required_events": [
+      {"event": "route"},
+      {"event": "route-navmesh"}
+    ],
+    "forbidden_event_names": ["direct-teleport", "tes3-ai", "unsupported", "unresolved", "phase-loop", "route-loop"],
+    "forbidden_reason_substrings": ["direct-teleport", "tes3-ai", "unsupported", "unresolved-package", "deferred-m14"],
+    "maximum_repeated_events": {"tier": 16},
+    "maximum_route_blocked": 1000,
+    "maximum_no_progress_events": 1000,
+    "maximum_phase_repeat": 8
+  },
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 80},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "city-morning.png", "minimum_entropy": 0.02},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "m14_checkpoint", "name": "morning", "minimum_actor_count": 3000, "minimum_companion_count": 1, "minimum_mount_count": 1, "required_actor_keys": ["content:oblivion.esm:01d15d", "content:oblivion.esm:01d20b", "content:oblivion.esm:01d15e", "content:oblivion.esm:01e073", "content:oblivion.esm:0153aa", "content:oblivion.esm:01e078", "content:oblivion.esm:01c4b7", "content:oblivion.esm:01c4c6", "content:oblivion.esm:0c45b8"], "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "expected_day": 27, "expected_hour": 1, "clock_tolerance_hours": 0.25},
+    {"type": "m14_observe", "actor": "content:oblivion.esm:01fc43", "observation": "observations/city-morning-player.json"},
+    {"type": "m14_observe", "label": "Thoronir / Market District", "actor": "content:oblivion.esm:01d15d", "expected_base": "content:oblivion.esm:015e9e", "observation": "observations/city-thoronir.json"},
+    {"type": "m14_observe", "label": "Jensine / Market District", "actor": "content:oblivion.esm:01d20b", "expected_base": "content:oblivion.esm:015ea4", "observation": "observations/city-jensine.json"},
+    {"type": "m14_observe", "label": "Rindir / Market District", "actor": "content:oblivion.esm:01d15e", "expected_base": "content:oblivion.esm:015e9c", "observation": "observations/city-rindir.json"},
+    {"type": "m14_observe", "label": "Gilen Norvalo / Temple District", "actor": "content:oblivion.esm:01e073", "expected_base": "content:oblivion.esm:01d24e", "observation": "observations/city-gilen-norvalo.json"},
+    {"type": "m14_observe", "label": "Amantius Allectus / Temple District", "actor": "content:oblivion.esm:0153aa", "expected_base": "content:oblivion.esm:0097a5", "observation": "observations/city-amantius-allectus.json"},
+    {"type": "m14_observe", "label": "Seridur / Temple District", "actor": "content:oblivion.esm:01e078", "expected_base": "content:oblivion.esm:01cf76", "observation": "observations/city-seridur.json"},
+    {"type": "m14_observe", "label": "Luther Broad / Elven Gardens", "actor": "content:oblivion.esm:01c4b7", "expected_base": "content:oblivion.esm:023de6", "observation": "observations/city-luther-broad.json"},
+    {"type": "m14_observe", "label": "Dovyn Aren / Elven Gardens", "actor": "content:oblivion.esm:01c4c6", "expected_base": "content:oblivion.esm:01605c", "observation": "observations/city-dovyn-aren.json"},
+    {"type": "m14_observe", "label": "Shady Sam / Elven Gardens", "actor": "content:oblivion.esm:0c45b8", "expected_base": "content:oblivion.esm:0c45b5", "observation": "observations/city-shady-sam.json"},
+    {"type": "m14_advance_clock", "hours": 6, "settle_seconds": 0.2},
+    {"type": "sleep", "seconds": 4},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "m14_checkpoint", "name": "midday", "minimum_actor_count": 3000, "required_actor_keys": ["content:oblivion.esm:01d15d", "content:oblivion.esm:01d20b", "content:oblivion.esm:01d15e", "content:oblivion.esm:01e073", "content:oblivion.esm:0153aa", "content:oblivion.esm:01e078", "content:oblivion.esm:01c4b7", "content:oblivion.esm:01c4c6", "content:oblivion.esm:0c45b8"], "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "expected_day": 27, "expected_hour": 7, "clock_tolerance_hours": 0.25},
+    {"type": "m14_observe", "actor": "content:oblivion.esm:01fc43", "observation": "observations/city-midday-player.json"},
+    {"type": "m14_advance_clock", "hours": 6, "settle_seconds": 0.2},
+    {"type": "sleep", "seconds": 4},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "m14_checkpoint", "name": "evening", "minimum_actor_count": 3000, "required_actor_keys": ["content:oblivion.esm:01d15d", "content:oblivion.esm:01d20b", "content:oblivion.esm:01d15e", "content:oblivion.esm:01e073", "content:oblivion.esm:0153aa", "content:oblivion.esm:01e078", "content:oblivion.esm:01c4b7", "content:oblivion.esm:01c4c6", "content:oblivion.esm:0c45b8"], "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "expected_day": 27, "expected_hour": 13, "clock_tolerance_hours": 0.25},
+    {"type": "m14_advance_clock", "hours": 6, "settle_seconds": 0.2},
+    {"type": "sleep", "seconds": 4},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 2},
+    {"type": "m14_checkpoint", "name": "midnight", "minimum_actor_count": 3000, "required_actor_keys": ["content:oblivion.esm:01d15d", "content:oblivion.esm:01d20b", "content:oblivion.esm:01d15e", "content:oblivion.esm:01e073", "content:oblivion.esm:0153aa", "content:oblivion.esm:01e078", "content:oblivion.esm:01c4b7", "content:oblivion.esm:01c4c6", "content:oblivion.esm:0c45b8"], "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "expected_day": 27, "expected_hour": 19, "clock_tolerance_hours": 0.25},
+    {"type": "m14_advance_clock", "hours": 6, "settle_seconds": 0.2},
+    {"type": "sleep", "seconds": 20},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 4},
+    {"type": "m14_checkpoint", "name": "next-morning", "minimum_actor_count": 3000, "required_actor_keys": ["content:oblivion.esm:01d15d", "content:oblivion.esm:01d20b", "content:oblivion.esm:01d15e", "content:oblivion.esm:01e073", "content:oblivion.esm:0153aa", "content:oblivion.esm:01e078", "content:oblivion.esm:01c4b7", "content:oblivion.esm:01c4c6", "content:oblivion.esm:0c45b8"], "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "expected_day": 28, "expected_hour": 1, "clock_tolerance_hours": 0.25},
+    {"type": "m14_debug_navigation", "settle_seconds": 0.3},
+    {"type": "sleep", "seconds": 2},
+    {"type": "screenshot", "name": "city-navmesh.png", "minimum_entropy": 0.02},
+    {"type": "m14_assert_events", "minimum_event_count": 1, "maximum_route_blocked": 1000, "maximum_no_progress_events": 1000},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type", "value": "exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 2}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 110,
+  "expected_exit": 0,
+  "expected_log": ["Selected game profile: oblivion", "Starting a new game", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Unsupported ObScript command", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

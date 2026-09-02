@@ -1703,7 +1703,7 @@ namespace MWRender
 
         if (Settings::game().mUseAdditionalAnimSources && mPtr.getClass().isActor())
         {
-            if (isCreature)
+            if (isCreature && mPtr.getType() == ESM::Creature::sRecordId)
             {
                 MWWorld::LiveCellRef<ESM::Creature>* ref = mPtr.get<ESM::Creature>();
                 if (ref->mBase->mFlags & ESM::Creature::Bipedal)
@@ -1712,7 +1712,7 @@ namespace MWRender
                     inject = true;
                 }
             }
-            else
+            else if (!isCreature && mPtr.getType() == ESM::NPC::sRecordId)
             {
                 inject = true;
                 MWWorld::LiveCellRef<ESM::NPC>* ref = mPtr.get<ESM::NPC>();

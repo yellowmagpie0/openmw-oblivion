@@ -95,7 +95,7 @@ namespace MWWorld
             ESM::VisitOverload{
                 [&](const ESM4::Reference& ref) { return ref.mDoor.destPos; },
                 [&](const ESM::CellRef& ref) -> ESM::Position { return ref.mDoorDest; },
-                [&](const ESM4::ActorCharacter&) -> ESM::Position { throw std::logic_error("Not applicable"); },
+                [&](const ESM4::ActorCharacter&) -> ESM::Position { return {}; },
             },
             mCellRef.mVariant);
     }
@@ -123,7 +123,7 @@ namespace MWWorld
             return ESM::RefId();
         };
         auto actorDestCell
-            = [&](const ESM4::ActorCharacter&) -> ESM::RefId { throw std::logic_error("Not applicable"); };
+            = [&](const ESM4::ActorCharacter&) -> ESM::RefId { return {}; };
 
         return std::visit(ESM::VisitOverload{ esm3Visit, esm4Visit, actorDestCell }, mCellRef.mVariant);
     }
@@ -148,7 +148,7 @@ namespace MWWorld
         return std::visit(ESM::VisitOverload{
                               [&](const ESM4::Reference& /*ref*/) { return 0.f; },
                               [&](const ESM::CellRef& ref) { return ref.mEnchantmentCharge; },
-                              [&](const ESM4::ActorCharacter&) -> float { throw std::logic_error("Not applicable"); },
+                              [&](const ESM4::ActorCharacter&) -> float { return 0.f; },
                           },
             mCellRef.mVariant);
     }
@@ -275,18 +275,30 @@ namespace MWWorld
     {
         if (owner != getOwner())
         {
-            ESM::FormId esm4Owner{};
-            if (!owner.empty())
-            {
-                const ESM::FormId* formId = owner.getIf<ESM::FormId>();
-                if (formId == nullptr)
-                    throw std::logic_error("TES4 reference owner must be a FormId");
-                esm4Owner = *formId;
-            }
             mChanged = true;
             std::visit(ESM::VisitOverload{
-                           [&](ESM4::Reference& ref) { ref.mOwner = esm4Owner; },
-                           [&](ESM4::ActorCharacter& ref) { ref.mOwner = esm4Owner; },
+                           [&](ESM4::Reference& ref) {
+                               if (!owner.empty())
+                               {
+                                   const ESM::FormId* formId = owner.getIf<ESM::FormId>();
+                                   if (formId == nullptr)
+                                       throw std::logic_error("TES4 reference owner must be a FormId");
+                                   ref.mOwner = *formId;
+                               }
+                               else
+                                   ref.mOwner = {};
+                           },
+                           [&](ESM4::ActorCharacter& ref) {
+                               if (!owner.empty())
+                               {
+                                   const ESM::FormId* formId = owner.getIf<ESM::FormId>();
+                                   if (formId == nullptr)
+                                       throw std::logic_error("TES4 reference owner must be a FormId");
+                                   ref.mOwner = *formId;
+                               }
+                               else
+                                   ref.mOwner = {};
+                           },
                            [&](ESM::CellRef& ref) { ref.mOwner = owner; },
                        },
                 mCellRef.mVariant);
@@ -353,7 +365,7 @@ namespace MWWorld
         {
             bool operator()(const ESM::CellRef& ref) { return ref.mIsLocked; }
             bool operator()(const ESM4::Reference& ref) { return ref.mIsLocked; }
-            bool operator()(const ESM4::ActorCharacter&) { throw std::logic_error("Not applicable"); }
+            bool operator()(const ESM4::ActorCharacter&) { return false; }
         };
         return std::visit(Visitor(), mCellRef.mVariant);
     }

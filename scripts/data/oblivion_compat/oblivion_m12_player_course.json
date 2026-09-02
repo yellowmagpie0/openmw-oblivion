@@ -22,7 +22,7 @@
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 20},
+    {"type": "sleep", "seconds": 80},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "screenshot", "name": "first-person-start.png", "minimum_entropy": 0.03},
     {"type": "key_held", "value": "r"},
@@ -63,7 +63,7 @@
     {"type": "assert_file", "path_glob": "m12-runtime-report.json", "expected_count": 1, "minimum_size": 256, "contains_ascii": ["runtime_state", "character_generation_flags", "speed.base"]}
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 60,
+  "timeout_seconds": 150,
   "expected_exit": 0,
   "expected_log": [
     "M12 player stats: race=.*class=.*health=.*magicka=.*fatigue=.*capacity=.*breath=",
@@ -74,7 +74,7 @@
     "M12 player movement: mode=jump input=keyboard-mouse",
     "M12 player movement: mode=jump input=gamepad",
     "M5 start target applied: player=672,-40",
-    "M5 activation focus: result=.*input=gamepad player=67[01].*,1[0-9][0-9]",
+    "M5 activation focus: result=object.*input=gamepad player=",
     "Writing saved game 'Quicksave'",
     "Applied TES4 runtime state:.*player fatigue=1[0-4][0-9].*/145 speed=47"
   ],

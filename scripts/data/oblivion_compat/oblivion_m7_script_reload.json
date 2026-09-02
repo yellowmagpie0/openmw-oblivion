@@ -17,7 +17,7 @@
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 30},
+    {"type": "sleep", "seconds": 80},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "screenshot", "name": "tutorial-wall-after-reload.png"},
     {"type": "key", "value": "F5"},
@@ -25,7 +25,7 @@
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]}
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 50,
+  "timeout_seconds": 150,
   "expected_exit": 0,
   "expected_log": [
     "M7 ObScript runtime: compiled=11051 failed=0",

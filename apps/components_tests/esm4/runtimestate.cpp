@@ -67,6 +67,69 @@ namespace
         return state;
     }
 
+    ESM4::RuntimeState makeM14State()
+    {
+        ESM4::RuntimeState state = makeState();
+        state.mAiRngState = 0x123456789abcdef0ULL;
+
+        ESM4::RuntimeActorAiState actor;
+        actor.mActor = ESM::FormKey::content("Oblivion.esm", 0x500);
+        actor.mBase = ESM::FormKey::content("Oblivion.esm", 0x501);
+        actor.mPackage = ESM::FormKey::content("Knights.esp", 0x502);
+        actor.mScriptPackage = ESM::FormKey::dynamic("m14-script", 1);
+        actor.mTarget = ESM::FormKey::content("Oblivion.esm", 0x503);
+        actor.mTargetBase = ESM::FormKey::content("Oblivion.esm", 0x504);
+        actor.mCell = state.mPlayer.mCell;
+        actor.mPathgrid = ESM::FormKey::content("Oblivion.esm", 0x505);
+        actor.mDoor = ESM::FormKey::content("Oblivion.esm", 0x506);
+        actor.mDestinationCell = state.mPlayer.mCell;
+        actor.mDestinationPosition = state.mPlayer.mPosition;
+        actor.mDestinationPosition.pos[0] = 128.f;
+        actor.mLastValidCell = state.mPlayer.mCell;
+        actor.mLastValidPosition = state.mPlayer.mPosition;
+        actor.mLastValidPosition.pos[1] = 256.f;
+        actor.mActionItem = ESM::FormKey::content("Oblivion.esm", 0x507);
+        actor.mLastTransitionDoor = ESM::FormKey::content("Oblivion.esm", 0x508);
+        actor.mCompanionGroup = ESM::FormKey::dynamic("m14-group", 1);
+        actor.mCompanionSideWith = ESM::FormKey::content("Oblivion.esm", 0x50b);
+        actor.mMount = ESM::FormKey::content("Oblivion.esm", 0x509);
+        actor.mRider = ESM::FormKey::content("Oblivion.esm", 0x50a);
+        actor.mScheduleWindow = ESM4::ScheduleWindow{
+            { 3, 8, 17, 12.0 }, { 3, 8, 17, 16.0 }, 4.0 };
+        actor.mConditionResult = ESM4::ConditionResult::True;
+        actor.mSource = ESM4::PackageSource::Script;
+        actor.mPackageType = ESM4::AIPackageType::Eat;
+        actor.mProcedure = ESM4::PackageProcedure::Eat;
+        actor.mPhase = ESM4::PackagePhase::Wait;
+        actor.mTier = ESM4::ProcessTier::Low;
+        actor.mBoundary = ESM4::PhaseBoundary::None;
+        actor.mListIndex = 7;
+        actor.mPathNode = 4;
+        actor.mRepathAttempts = 2;
+        actor.mFormationIndex = 3;
+        actor.mSelectionGeneration = 11;
+        actor.mRouteGeneration = 12;
+        actor.mTransitionGeneration = 13;
+        actor.mActionTimer = 1.5f;
+        actor.mDurationRemaining = 2.5f;
+        actor.mNoProgressSeconds = 0.25f;
+        actor.mDoorCooldown = 0.5f;
+        actor.mLowProcessTimer = 0.75f;
+        actor.mNextLowProcessTick = 0.25f;
+        actor.mRestrained = true;
+        actor.mActionReserved = true;
+        actor.mHasDestination = true;
+        actor.mInterruptionReason = "m14-test";
+        state.mActorAi.push_back(actor);
+
+        state.mPathPoints.push_back({ actor.mPathgrid, actor.mPathNode, false });
+        state.mCompanions.push_back({ actor.mTarget, actor.mActor, actor.mCompanionGroup,
+            actor.mCompanionSideWith, actor.mFormationIndex });
+        state.mMounts.push_back({ actor.mMount, actor.mRider, actor.mBase, actor.mLastTransitionDoor, true });
+        state.mDetectionVectors.push_back({ actor.mActor, actor.mTarget, 72.5, true, true });
+        return state;
+    }
+
     TEST(ESM4RuntimeState, binaryRoundTripPreservesEveryStateFamily)
     {
         const ESM4::RuntimeState expected = makeState();
@@ -75,6 +138,71 @@ namespace
         EXPECT_EQ(actual, expected);
         EXPECT_EQ(actual.serializeBinary(), bytes);
         EXPECT_EQ(actual.canonicalJson(), expected.canonicalJson());
+    }
+
+    TEST(ESM4RuntimeState, versionFivePersistsNativeAiIntentRelationsAndTimers)
+    {
+        const ESM4::RuntimeState expected = makeM14State();
+        const auto bytes = expected.serializeBinary();
+        const ESM4::RuntimeState actual = ESM4::RuntimeState::deserializeBinary(bytes);
+        ASSERT_EQ(actual.mVersion, 5u);
+        ASSERT_EQ(actual.mActorAi.size(), 1u);
+        EXPECT_EQ(actual.mActorAi.front(), expected.mActorAi.front());
+        EXPECT_EQ(actual.mPathPoints, expected.mPathPoints);
+        EXPECT_EQ(actual.mCompanions, expected.mCompanions);
+        EXPECT_EQ(actual.mMounts, expected.mMounts);
+        EXPECT_EQ(actual.mDetectionVectors, expected.mDetectionVectors);
+        EXPECT_EQ(actual.serializeBinary(), bytes);
+        const std::string json = actual.canonicalJson();
+        EXPECT_NE(json.find("\"destination_cell\":\"content:oblivion.esm:01650f\""), std::string::npos);
+        EXPECT_NE(json.find("\"path_points\":[{\"pathgrid\":\"content:oblivion.esm:000505\""),
+            std::string::npos);
+        EXPECT_NE(json.find("\"mounted\":true"), std::string::npos);
+        EXPECT_NE(json.find("\"detection_vectors\":[{\"observer\":\"content:oblivion.esm:000500\""),
+            std::string::npos);
+    }
+
+    TEST(ESM4RuntimeState, versionFiveAllowsAnIdleActorWithUnknownPackageType)
+    {
+        ESM4::RuntimeState state = makeState();
+        state.mAiRngState = 1;
+        ESM4::RuntimeActorAiState actor;
+        actor.mActor = ESM::FormKey::content("Oblivion.esm", 0x600);
+        actor.mBase = ESM::FormKey::content("Oblivion.esm", 0x601);
+        actor.mCell = state.mPlayer.mCell;
+        actor.mSource = ESM4::PackageSource::None;
+        actor.mPackageType = ESM4::AIPackageType::Unknown;
+        actor.mProcedure = ESM4::PackageProcedure::None;
+        state.mActorAi.push_back(actor);
+
+        const auto bytes = state.serializeBinary();
+        const ESM4::RuntimeState restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        ASSERT_EQ(restored.mActorAi.size(), 1u);
+        EXPECT_EQ(restored.mActorAi.front().mPackageType, ESM4::AIPackageType::Unknown);
+    }
+
+    TEST(ESM4RuntimeState, rejectsNonReciprocalMountedActorState)
+    {
+        ESM4::RuntimeState state = makeState();
+        state.mAiRngState = 1;
+
+        ESM4::RuntimeActorAiState horse;
+        horse.mActor = ESM::FormKey::content("Oblivion.esm", 0x610);
+        horse.mBase = ESM::FormKey::content("Oblivion.esm", 0x611);
+        horse.mCell = state.mPlayer.mCell;
+        horse.mRider = ESM::FormKey::content("Oblivion.esm", 0x620);
+
+        ESM4::RuntimeActorAiState rider;
+        rider.mActor = ESM::FormKey::content("Oblivion.esm", 0x620);
+        rider.mBase = ESM::FormKey::content("Oblivion.esm", 0x621);
+        rider.mCell = state.mPlayer.mCell;
+        rider.mMount = horse.mActor;
+
+        state.mActorAi = { horse, rider };
+        state.mMounts.push_back({ horse.mActor, rider.mActor, horse.mBase, {}, true });
+        rider.mMount = {};
+        state.mActorAi[1] = rider;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
 
     TEST(ESM4RuntimeState, openMwSaveRecordSupportsChunkedPayloads)
@@ -187,7 +315,7 @@ namespace
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":4"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":5"), std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"

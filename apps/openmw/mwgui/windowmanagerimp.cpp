@@ -2367,8 +2367,16 @@ namespace MWGui
 
         mConsole->setVisible(!visible);
 
-        if (visible && !mGuiModes.empty())
-            mKeyboardNavigation->restoreFocus(mGuiModes.back());
+        if (visible)
+        {
+            // Console::onOpen() moves keyboard focus to its command line.  A
+            // hidden command line must not keep consuming input after the
+            // console is closed, especially when no GUI mode is active and
+            // there is no saved navigation focus to restore.
+            setKeyFocusWidget(nullptr);
+            if (!mGuiModes.empty())
+                mKeyboardNavigation->restoreFocus(mGuiModes.back());
+        }
 
         updateVisible();
     }

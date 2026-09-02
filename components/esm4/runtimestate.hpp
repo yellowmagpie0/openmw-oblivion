@@ -14,6 +14,8 @@
 #include <components/esm/gameprofile.hpp>
 #include <components/esm/position.hpp>
 
+#include "aiphase.hpp"
+
 namespace ESM
 {
     class ESMReader;
@@ -22,7 +24,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 4;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 5;
 
     struct RuntimeContentIdentity
     {
@@ -125,6 +127,104 @@ namespace ESM4
         friend bool operator==(const RuntimeQuestState&, const RuntimeQuestState&) = default;
     };
 
+    struct RuntimeActorAiState
+    {
+        ESM::FormKey mActor;
+        ESM::FormKey mBase;
+        ESM::FormKey mPackage;
+        // Persist the transient script-package slot independently from the
+        // currently selected package.
+        ESM::FormKey mScriptPackage;
+        ESM::FormKey mTarget;
+        ESM::FormKey mTargetBase;
+        ESM::FormKey mCell;
+        ESM::FormKey mPathgrid;
+        ESM::FormKey mDoor;
+        ESM::FormKey mDestinationCell;
+        ESM::Position mDestinationPosition{};
+        ESM::FormKey mLastValidCell;
+        ESM::Position mLastValidPosition{};
+        ESM::FormKey mActionItem;
+        ESM::FormKey mLastTransitionDoor;
+        ESM::FormKey mCompanionGroup;
+        ESM::FormKey mCompanionSideWith;
+        ESM::FormKey mMount;
+        ESM::FormKey mRider;
+        std::optional<ScheduleWindow> mScheduleWindow;
+        ConditionResult mConditionResult = ConditionResult::False;
+        PackageSource mSource = PackageSource::None;
+        AIPackageType mPackageType = AIPackageType::Unknown;
+        PackageProcedure mProcedure = PackageProcedure::None;
+        PackagePhase mPhase = PackagePhase::Select;
+        ProcessTier mTier = ProcessTier::High;
+        PhaseBoundary mBoundary = PhaseBoundary::None;
+        std::uint32_t mListIndex = 0;
+        std::uint32_t mPathNode = 0;
+        std::uint32_t mRepathAttempts = 0;
+        std::int32_t mFormationIndex = -1;
+        std::uint64_t mSelectionGeneration = 0;
+        std::uint64_t mRouteGeneration = 0;
+        std::uint64_t mTransitionGeneration = 0;
+        float mActionTimer = 0.0f;
+        float mDurationRemaining = 0.0f;
+        float mNoProgressSeconds = 0.0f;
+        float mDoorCooldown = 0.0f;
+        float mLowProcessTimer = 0.0f;
+        // Countdown to the next abstract low-process update.  The route
+        // progress timer above and this cadence timer are intentionally
+        // separate: one measures simulated travel, the other prevents a
+        // loaded actor from being processed once per render frame.
+        float mNextLowProcessTick = 0.0f;
+        bool mRestrained = false;
+        bool mActionReserved = false;
+        bool mHasDestination = false;
+        std::string mInterruptionReason;
+
+        friend bool operator==(const RuntimeActorAiState&, const RuntimeActorAiState&) = default;
+    };
+
+    struct RuntimePathPointState
+    {
+        ESM::FormKey mPathgrid;
+        std::uint32_t mNode = 0;
+        bool mEnabled = true;
+
+        friend bool operator==(const RuntimePathPointState&, const RuntimePathPointState&) = default;
+    };
+
+    struct RuntimeCompanionRelation
+    {
+        ESM::FormKey mLeader;
+        ESM::FormKey mMember;
+        ESM::FormKey mGroup;
+        ESM::FormKey mSideWith;
+        std::int32_t mFormationIndex = -1;
+
+        friend bool operator==(const RuntimeCompanionRelation&, const RuntimeCompanionRelation&) = default;
+    };
+
+    struct RuntimeMountRelation
+    {
+        ESM::FormKey mHorse;
+        ESM::FormKey mRider;
+        ESM::FormKey mOwner;
+        ESM::FormKey mLastRidden;
+        bool mMounted = false;
+
+        friend bool operator==(const RuntimeMountRelation&, const RuntimeMountRelation&) = default;
+    };
+
+    struct RuntimeDetectionVector
+    {
+        ESM::FormKey mObserver;
+        ESM::FormKey mTarget;
+        double mScore = 0.0;
+        bool mDetected = false;
+        bool mLineOfSight = false;
+
+        friend bool operator==(const RuntimeDetectionVector&, const RuntimeDetectionVector&) = default;
+    };
+
     // Versioned, load-order-independent state owned by the Oblivion profile.
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
@@ -143,6 +243,12 @@ namespace ESM4
         std::uint64_t mScriptEventSequence = 0;
         std::vector<RuntimeScriptInstance> mScriptInstances;
         std::vector<RuntimeQuestState> mQuests;
+        std::uint64_t mAiRngState = 1;
+        std::vector<RuntimeActorAiState> mActorAi;
+        std::vector<RuntimePathPointState> mPathPoints;
+        std::vector<RuntimeCompanionRelation> mCompanions;
+        std::vector<RuntimeMountRelation> mMounts;
+        std::vector<RuntimeDetectionVector> mDetectionVectors;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

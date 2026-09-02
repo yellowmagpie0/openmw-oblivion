@@ -11,6 +11,7 @@
 namespace MWWorld
 {
     class ESMStore;
+    class InventoryStore;
 
     struct OblivionProfileInstallReport
     {
@@ -34,6 +35,12 @@ namespace MWWorld
         static ESM::RefId sharedItemId(const ESMStore& store, const ESM::RefId& nativeId);
         static ESM::RefId nativeItemId(const ESMStore& store, const ESM::RefId& sharedId);
         static int sharedItemType(const ESMStore& store, const ESM::RefId& sharedId);
+
+        // Populate the shared equipment slots from a projected native actor
+        // inventory.  This is deliberately separate from InventoryStore's
+        // TES3 auto-equip heuristic: TES4 slot conflicts and ring choice are
+        // resolved from the native item definition.
+        static void equipNativeApparel(InventoryStore& inventory, const ESMStore& store);
     };
 }
 

@@ -33,6 +33,7 @@
 
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/esm/path.hpp>
 
 #include "actor.hpp"
@@ -175,6 +176,7 @@ namespace ESM4
 #pragma pack(pop)
 
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey; // stable identity, independent of load-order indices
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         bool mIsTES4;
@@ -203,6 +205,7 @@ namespace ESM4
 
         AIData mAIData;
         std::vector<ESM::FormId> mAIPackages; // seems to be in priority order, 0 = highest priority
+        std::vector<ESM::FormKey> mAIPackageKeys; // same order, used by native TES4 AI
         ActorBaseConfig mBaseConfig; // union
         ActorFaction mFaction;
         Data mData;

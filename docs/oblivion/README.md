@@ -123,6 +123,15 @@ complete category matrix, formula/property tests, market/tutorial save-reload
 courses, keyed-door/trap routes, visual inspection, and Morrowind isolation
 evidence.
 
+M14 is accepted with native TES4 PACK/PGRD stores, pathgrid/door routing,
+high/low actor processing, deterministic schedules and detection, all observed
+package behaviors, companions, horses, ObScript AI commands, and version-5 AI
+state. See
+[`M14-NAVIGATION-DETECTION-AI.md`](M14-NAVIGATION-DETECTION-AI.md) for the
+count-locked official-content audit, focused/full test totals, six real-data
+Oblivion scenarios, historical regressions, visual inspection, and reproduction
+commands.
+
 To try the first interactive slice directly:
 
 ```sh
@@ -173,6 +182,7 @@ Current implementation reports:
 - [`M11-ACTORS-ANIMATION.md`](M11-ACTORS-ANIMATION.md)
 - [`M12-PLAYER-MECHANICS.md`](M12-PLAYER-MECHANICS.md)
 - [`M13-ITEMS-INVENTORY-ECONOMY.md`](M13-ITEMS-INVENTORY-ECONOMY.md)
+- [`M14-NAVIGATION-DETECTION-AI.md`](M14-NAVIGATION-DETECTION-AI.md)
 
 The roadmap ledger distinguishes accepted milestones from foundations that
 have begun but have not passed their complete content/runtime acceptance gate.

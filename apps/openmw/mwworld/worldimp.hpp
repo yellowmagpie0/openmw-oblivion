@@ -84,6 +84,11 @@ namespace MWPhysics
     class Object;
 }
 
+namespace MWMechanics
+{
+    class OblivionAiService;
+}
+
 namespace MWWorld
 {
     enum class OblivionInteractionKind;
@@ -98,6 +103,7 @@ namespace MWWorld
     class World final : public MWBase::World
     {
         friend class OblivionScriptManager;
+        friend class MWMechanics::OblivionAiService;
     private:
         Resource::ResourceSystem* mResourceSystem;
 
@@ -115,6 +121,7 @@ namespace MWWorld
         std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
         std::uint64_t mNextOblivionDynamicSerial = 1;
         std::unique_ptr<OblivionScriptManager> mOblivionScriptManager;
+        std::unique_ptr<MWMechanics::OblivionAiService> mOblivionAi;
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
 
@@ -230,6 +237,10 @@ namespace MWWorld
         bool isOblivionDefaultActivation() const { return mOblivionDefaultActivation; }
         bool dispatchOblivionActivation(const Ptr& ptr, const Ptr& actor);
         void runOblivionScripts(double secondsPassed);
+        MWMechanics::OblivionAiService* getOblivionAiService() { return mOblivionAi.get(); }
+        const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
+        OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }
+        const OblivionScriptManager* getOblivionScriptManager() const { return mOblivionScriptManager.get(); }
         bool oblivionPlayerHasItem(const ESM::RefId& id);
         int oblivionPlayerItemCount(const ESM::FormKey& key);
         int oblivionChangePlayerInventory(

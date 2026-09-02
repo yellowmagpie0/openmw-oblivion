@@ -33,6 +33,9 @@
 
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
+
+#include "aipackagedata.hpp"
 
 namespace ESM4
 {
@@ -45,16 +48,24 @@ namespace ESM4
         struct PKDT // data
         {
             std::uint32_t flags;
-            std::int32_t type;
+            std::uint8_t type;
+            std::uint8_t unknown[3];
+        };
+
+        struct PKDTShort // legacy TES4 data layout
+        {
+            std::uint16_t flags;
+            std::uint8_t type;
+            std::uint8_t unknown;
         };
 
         struct PSDT // schedule
         {
-            std::uint8_t month; // Any = 0xff
-            std::uint8_t dayOfWeek; // Any = 0xff
+            std::int8_t month; // Any = -1
+            std::int8_t dayOfWeek; // Any = -1
             std::uint8_t date; // Any = 0
-            std::uint8_t time; // Any = 0xff
-            std::uint32_t duration;
+            std::int8_t time; // Any = -1
+            std::int32_t duration;
         };
 
         struct PLDT // location
@@ -89,6 +100,7 @@ namespace ESM4
 #pragma pack(pop)
 
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey; // stable identity, independent of load-order indices
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
@@ -98,6 +110,19 @@ namespace ESM4
         PLDT mLocation;
         PTDT mTarget;
         std::vector<CTDA> mConditions;
+
+        // Canonical M14 values.  The packed members above remain available so
+        // diagnostics and future writers can reproduce the source bytes.
+        PackageFlags mPackageFlags;
+        AIPackageType mPackageType = AIPackageType::Unknown;
+        PackageSchedule mScheduleData;
+        PackageLocation mLocationData;
+        PackageTarget mTargetData;
+        std::vector<PackageCondition> mCanonicalConditions;
+
+        std::vector<std::uint8_t> mRawPKDT;
+        std::vector<std::uint32_t> mSkippedSubrecords;
+        bool mUsedShortPKDT = false;
 
         void load(ESM4::Reader& reader);
         // void save(ESM4::Writer& writer) const;

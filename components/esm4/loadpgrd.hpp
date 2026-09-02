@@ -28,11 +28,11 @@
 #define ESM4_PGRD_H
 
 #include <cstdint>
-#include <string>
 #include <vector>
 
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 
 namespace ESM4
 {
@@ -48,8 +48,8 @@ namespace ESM4
             float y;
             float z;
             std::uint8_t numLinks;
-            std::uint8_t priority; // probably padding, repurposing
-            std::uint16_t unknown; // probably padding
+            std::uint8_t priority; // raw TES4 field; do not derive gameplay state from it
+            std::uint16_t unknown; // raw TES4 field
         };
 
         struct PGRR
@@ -60,7 +60,8 @@ namespace ESM4
 
         struct PGRI
         {
-            std::int32_t localNode;
+            std::uint16_t localNode;
+            std::uint16_t unknown;
             float x; // foreign
             float y; // foreign
             float z; // foreign
@@ -70,19 +71,26 @@ namespace ESM4
         struct PGRL
         {
             ESM::FormId object;
+            ESM::FormKey objectKey;
             std::vector<std::int32_t> linkedNodes;
         };
 
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey;
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
-        std::string mEditorId; // FIXME: no such record for PGRD, but keep here to avoid extra work for now
+        // PGRD records are grouped under their owning CELL.  This stable key
+        // is filled by the ESM4 store from record metadata, not fabricated
+        // from the numeric PGRD FormID.
+        ESM::FormKey mOwningCell;
 
         std::int16_t mData; // number of nodes
         std::vector<PGRP> mNodes;
         std::vector<PGRR> mLinks;
         std::vector<PGRI> mForeign;
         std::vector<PGRL> mObjects;
+        std::vector<std::uint8_t> mGraphAttributes; // exact PGAG payload
+        bool mHasPgrr = false;
 
         void load(ESM4::Reader& reader);
         // void save(ESM4::Writer& writer) const;

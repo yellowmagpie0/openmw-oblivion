@@ -17,6 +17,9 @@
 #include <components/esm4/loadclmt.hpp>
 #include <components/esm4/loadeyes.hpp>
 #include <components/esm4/loadgras.hpp>
+#include <components/esm4/loadpack.hpp>
+#include <components/esm4/loadpgrd.hpp>
+#include <components/esm4/pathgriddata.hpp>
 #include <components/esm4/loadmusc.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadregn.hpp>
@@ -126,6 +129,8 @@ namespace ESM4
     struct Music;
     struct MovableStatic;
     struct Npc;
+    struct AIPackage;
+    struct Pathgrid;
     struct Outfit;
     struct Potion;
     struct Race;
@@ -187,6 +192,7 @@ namespace MWWorld
             Store<ESM4::Music>, Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>,
             Store<ESM4::Region>, Store<ESM4::Road>, Store<ESM4::SigilStone>, Store<ESM4::SoulGem>,
             Store<ESM4::Reference>,
+            Store<ESM4::AIPackage>, Store<ESM4::Pathgrid>,
             Store<ESM4::Script>, Store<ESM4::Quest>, Store<ESM4::DialogInfo>, Store<ESM4::Sound>,
             Store<ESM4::SoundReference>, Store<ESM4::Static>, Store<ESM4::StaticCollection>,
             Store<ESM4::Terminal>, Store<ESM4::TextureSet>, Store<ESM4::Tree>, Store<ESM4::Water>,
@@ -201,6 +207,12 @@ namespace MWWorld
         }
 
         std::unique_ptr<ESMStoreImp> mStoreImp;
+
+        // Native TES4 pathgrids are immutable definitions plus mutable node
+        // overlays.  Keeping the adapter here gives mechanics and scripts one
+        // profile-neutral service without inserting compatibility records into
+        // the TES3 pathgrid store.
+        ESM4::PathgridService mOblivionPathgrids;
 
         std::unordered_map<ESM::RefId, int> mRefCount;
 
@@ -263,6 +275,9 @@ namespace MWWorld
 
         const ESM::FormKeyIndex& getFormKeyIndex() const { return mFormKeyIndex; }
         std::optional<ESM::FormKey> findEsm4FormKey(std::string_view editorId) const;
+
+        ESM4::PathgridService& getOblivionPathgridService() { return mOblivionPathgrids; }
+        const ESM4::PathgridService& getOblivionPathgridService() const { return mOblivionPathgrids; }
 
         template <class T>
         const T* search(const ESM::FormKey& key) const

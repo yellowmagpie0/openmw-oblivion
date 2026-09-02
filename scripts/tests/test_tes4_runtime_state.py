@@ -64,6 +64,87 @@ def make_state() -> dict:
     }
 
 
+def make_m14_state() -> dict:
+    state = make_state()
+    state["schema_version"] = 5
+    state["content"][0]["plugin"] = "oblivion.esm"
+    state["ai_rng_state"] = 0x123456789ABCDEF0
+    actor = {
+        "actor": "content:oblivion.esm:000500",
+        "base": "content:oblivion.esm:000501",
+        "package": "content:oblivion.esm:000502",
+        "script_package": "dynamic:m14-script:0000000000000001",
+        "target": "content:oblivion.esm:000503",
+        "target_base": "content:oblivion.esm:000504",
+        "cell": "content:oblivion.esm:01650f",
+        "pathgrid": "content:oblivion.esm:000505",
+        "door": "content:oblivion.esm:000506",
+        "destination_cell": "content:oblivion.esm:01650f",
+        "destination_position": [128.0, -3.0, 0.0, 0.0, 0.0, 1.25],
+        "last_valid_cell": "content:oblivion.esm:01650f",
+        "last_valid_position": [12.5, 256.0, 0.0, 0.0, 0.0, 1.25],
+        "action_item": "content:oblivion.esm:000507",
+        "last_transition_door": "content:oblivion.esm:000508",
+        "companion_group": "dynamic:m14-group:0000000000000001",
+        "companion_side_with": "content:oblivion.esm:00050b",
+        "mount": "content:oblivion.esm:000509",
+        "rider": "content:oblivion.esm:00050a",
+        "schedule_window": {
+            "start": [3, 8, 17, 12.0],
+            "end": [3, 8, 17, 16.0],
+            "duration_hours": 4.0,
+        },
+        "condition_result": 0,
+        "source": 2,
+        "package_type": 3,
+        "procedure": 4,
+        "phase": 6,
+        "tier": 1,
+        "boundary": 0,
+        "list_index": 7,
+        "path_node": 4,
+        "repath_attempts": 2,
+        "formation_index": 3,
+        "selection_generation": 11,
+        "route_generation": 12,
+        "transition_generation": 13,
+        "action_timer": 1.5,
+        "duration_remaining": 2.5,
+        "no_progress_seconds": 0.25,
+        "door_cooldown": 0.5,
+        "low_process_timer": 0.75,
+        "next_low_process_tick": 0.25,
+        "restrained": True,
+        "action_reserved": True,
+        "has_destination": True,
+        "interruption_reason": "m14-test",
+    }
+    state["actor_ai"] = [actor]
+    state["path_points"] = [{"pathgrid": actor["pathgrid"], "node": 4, "enabled": False}]
+    state["companions"] = [{
+        "leader": actor["target"],
+        "member": actor["actor"],
+        "group": actor["companion_group"],
+        "side_with": actor["companion_side_with"],
+        "formation_index": 3,
+    }]
+    state["mounts"] = [{
+        "horse": actor["mount"],
+        "rider": actor["rider"],
+        "owner": actor["base"],
+        "last_ridden": actor["last_transition_door"],
+        "mounted": True,
+    }]
+    state["detection_vectors"] = [{
+        "observer": actor["actor"],
+        "target": actor["target"],
+        "score": 72.5,
+        "detected": True,
+        "line_of_sight": True,
+    }]
+    return state
+
+
 class Tes4RuntimeStateTests(unittest.TestCase):
     def test_m7_payload_round_trip_preserves_typed_locals_and_quests(self) -> None:
         expected = make_state()
@@ -71,6 +152,63 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         payload = state_io.encode_payload(make_state())
         self.assertEqual(state_io.decode_payload(payload), expected)
         self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+
+    def test_m14_payload_round_trip_preserves_ai_intent_relations_and_timers(self) -> None:
+        expected = make_m14_state()
+        payload = state_io.encode_payload(expected)
+        self.assertEqual(state_io.decode_payload(payload), expected)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+
+    def test_m14_idle_actor_uses_unknown_package_type(self) -> None:
+        expected = make_state()
+        expected["schema_version"] = 5
+        expected["ai_rng_state"] = 1
+        expected["actor_ai"] = [{
+            "actor": "content:oblivion.esm:000600",
+            "base": "content:oblivion.esm:000601",
+            "cell": expected["player"]["cell"],
+            "source": 0,
+            "package_type": 255,
+            "procedure": 0,
+        }]
+        payload = state_io.encode_payload(expected)
+        restored = state_io.decode_payload(payload)["actor_ai"][0]
+        self.assertEqual(restored["package"], "null")
+        self.assertEqual(restored["package_type"], 255)
+        self.assertEqual(restored["procedure"], 0)
+
+    def test_m14_rejects_non_reciprocal_mounted_actor_state(self) -> None:
+        state = make_state()
+        state["schema_version"] = 5
+        state["ai_rng_state"] = 1
+        horse = {
+            "actor": "content:oblivion.esm:000610",
+            "base": "content:oblivion.esm:000611",
+            "cell": state["player"]["cell"],
+            "rider": "content:oblivion.esm:000620",
+            "source": 0,
+            "package_type": 255,
+            "procedure": 0,
+        }
+        rider = {
+            "actor": "content:oblivion.esm:000620",
+            "base": "content:oblivion.esm:000621",
+            "cell": state["player"]["cell"],
+            "mount": "null",
+            "source": 0,
+            "package_type": 255,
+            "procedure": 0,
+        }
+        state["actor_ai"] = [horse, rider]
+        state["mounts"] = [{
+            "horse": horse["actor"],
+            "rider": rider["actor"],
+            "owner": horse["base"],
+            "last_ridden": "null",
+            "mounted": True,
+        }]
+        with self.assertRaisesRegex(state_io.RuntimeStateError, "reciprocal"):
+            state_io.encode_payload(state)
 
     def test_version_one_payload_loads_with_empty_m7_state(self) -> None:
         old = make_state()

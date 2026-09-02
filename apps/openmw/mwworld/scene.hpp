@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <components/esm/exteriorcelllocation.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/misc/constants.hpp>
 
 namespace osg
@@ -196,6 +197,10 @@ namespace MWWorld
         void updateObjectScale(const Ptr& ptr);
 
         bool isCellActive(const CellStore& cell);
+
+        // Rebuild the Detour off-mesh view for a native TES4 pathgrid after
+        // an ObScript path-point overlay changes its enabled nodes.
+        void refreshOblivionPathgrid(const ESM::FormKey& pathgrid);
 
         void preload(const std::string& mesh, bool useAnim = false);
 

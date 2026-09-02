@@ -43,6 +43,10 @@ namespace ESM4
         bool mChooseOneSlot = false;
         bool mConsumable = false;
         float mMaxUsageTime = -1.f;
+        // TES4 marks edible ALCH records with the ENIT food bit. Keep it
+        // distinct from mConsumable because ordinary potions are usable but
+        // are not valid Eat-package targets.
+        bool mFood = false;
     };
 
     struct BarterParameters

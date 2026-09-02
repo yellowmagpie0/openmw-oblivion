@@ -2,6 +2,7 @@
 
 #include <array>
 #include <charconv>
+#include <cmath>
 #include <fstream>
 #include <limits>
 #include <vector>
@@ -77,6 +78,7 @@
 #include <components/loadinglistener/loadinglistener.hpp>
 
 #include <components/esm/attr.hpp>
+#include <components/esm/util.hpp>
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm3/loadnpc.hpp>
@@ -99,6 +101,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
+#include "../mwmechanics/oblivionai.hpp"
 #include "../mwmechanics/spellcasting.hpp"
 #include "../mwmechanics/spellutil.hpp"
 #include "../mwmechanics/summoning.hpp"
@@ -140,6 +143,39 @@ namespace MWWorld
 {
     namespace
     {
+        GlobalVariableName canonicalOblivionGlobal(GlobalVariableName name)
+        {
+            if (Misc::StringUtils::ciEqual(name.getValue(), "GameDaysPassed"))
+                return Globals::sDaysPassed;
+            if (Misc::StringUtils::ciEqual(name.getValue(), "GameHour"))
+                return Globals::sGameHour;
+            if (Misc::StringUtils::ciEqual(name.getValue(), "GameDay"))
+                return Globals::sDay;
+            if (Misc::StringUtils::ciEqual(name.getValue(), "GameMonth"))
+                return Globals::sMonth;
+            if (Misc::StringUtils::ciEqual(name.getValue(), "GameYear"))
+                return Globals::sYear;
+            if (Misc::StringUtils::ciEqual(name.getValue(), "TimeScale"))
+                return Globals::sTimeScale;
+            return name;
+        }
+
+        void synchronizeOblivionCalendarGlobals(Globals& globals)
+        {
+            static const std::array<std::pair<GlobalVariableName, GlobalVariableName>, 5> aliases{{
+                { Globals::sDaysPassed, GlobalVariableName(std::string_view("gamedayspassed")) },
+                { Globals::sGameHour, GlobalVariableName(std::string_view("gamehour")) },
+                { Globals::sDay, GlobalVariableName(std::string_view("gameday")) },
+                { Globals::sMonth, GlobalVariableName(std::string_view("gamemonth")) },
+                { Globals::sYear, GlobalVariableName(std::string_view("gameyear")) },
+            }};
+            for (const auto& [canonical, native] : aliases)
+            {
+                if (globals.getType(native) != ' ')
+                    globals[native] = globals[canonical];
+            }
+        }
+
         std::vector<std::pair<GlobalVariableName, ESM::Variant>> generateDefaultGlobals()
         {
             return {
@@ -294,7 +330,10 @@ namespace MWWorld
         mStore.movePlayerRecord();
 
         if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            mOblivionAi = std::make_unique<MWMechanics::OblivionAiService>(*this);
             mOblivionScriptManager = std::make_unique<OblivionScriptManager>(*this, mStore, mContentFiles);
+        }
 
         mSwimHeightScale = mStore.get<ESM::GameSetting>().find("fSwimHeightScale")->mValue.getFloat();
     }
@@ -330,12 +369,16 @@ namespace MWWorld
     {
         mGlobalVariables.fill(mStore);
         mTimeManager->setup(mGlobalVariables);
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            synchronizeOblivionCalendarGlobals(mGlobalVariables);
     }
 
     void World::startNewGame(bool bypass)
     {
         if (mOblivionScriptManager)
             mOblivionScriptManager->clear();
+        if (mOblivionAi)
+            mOblivionAi->clear();
         mGoToJail = false;
         mLevitationEnabled = true;
         mTeleportEnabled = true;
@@ -413,7 +456,14 @@ namespace MWWorld
                     if (cell)
                         cell->forEachConst(
                             [&](const ConstPtr& ptr) {
-                                if (ptr.getCellRef().getRefNum().mIndex == *startReference)
+                                // TES4 references in a loaded content file carry the runtime content-file
+                                // index in RefNum::mIndex (for example 0x200000 + the on-disk FormID),
+                                // while the deterministic start syntax intentionally uses the raw FormID.
+                                // Compare the load-order-independent key as well so exterior ACHR/ACRE
+                                // references remain addressable without changing the public start syntax.
+                                if (ptr.getCellRef().getRefNum().mIndex == *startReference
+                                    || (ptr.getCellRef().getFormKey().isContent()
+                                        && ptr.getCellRef().getFormKey().localId() == *startReference))
                                 {
                                     target = ptr.getCellRef().getPosition();
                                     return false;
@@ -422,8 +472,54 @@ namespace MWWorld
                             },
                             true);
                     if (!target)
+                    {
+                        // Persistent TES4 ACHR/ACRE references are stored under the world's
+                        // persistent-cell group rather than the exterior grid cell selected above.
+                        // The normal cell-local scan therefore cannot see a stable horse or rider
+                        // even though the reference is valid and its position belongs to that grid.
+                        // Resolve the native record first, then ask its post-processed owning cell
+                        // to materialize the live reference. WorldModel::getPtrByRefId is not a
+                        // suitable fallback here: its preloaded-cell fast path indexes base IDs,
+                        // while a start reference is a placed-reference ID.
+                        const auto findPersistentReference = [&](const auto& store, const ESM::FormKey& referenceKey) {
+                            const auto* nativeReference = store.search(referenceKey);
+                            if (nativeReference == nullptr)
+                                return;
+                            const CellStore* owningCell = mWorldModel.findCell(nativeReference->mParent);
+                            if (owningCell == nullptr)
+                                return;
+                            owningCell->forEachConst(
+                                [&](const ConstPtr& ptr) {
+                                    if (ptr.getCellRef().getFormKey() == referenceKey)
+                                    {
+                                        target = ptr.getCellRef().getPosition();
+                                        return false;
+                                    }
+                                    return true;
+                                },
+                                true);
+                        };
+                        // FormID 0 belongs to the master file in TES4. The runtime
+                        // content list also contains builtin.omwscripts, so using
+                        // FormKeyResolver::toFormKey on a raw master FormID would
+                        // incorrectly choose that synthetic file. Try every loaded
+                        // content identity and retain only an actually indexed ref.
+                        for (const std::string& contentFile : mContentFiles)
+                        {
+                            const ESM::FormKey referenceKey = ESM::FormKey::content(contentFile, *startReference);
+                            findPersistentReference(mStore.get<ESM4::ActorCharacter>(), referenceKey);
+                            if (!target)
+                                findPersistentReference(mStore.get<ESM4::ActorCreature>(), referenceKey);
+                            if (!target)
+                                findPersistentReference(mStore.get<ESM4::Reference>(), referenceKey);
+                            if (target)
+                                break;
+                        }
+                    }
+                    if (!target)
                         throw std::runtime_error("TES4 start reference is not present in exterior cell: 0x"
                             + std::to_string(*startReference));
+                    const osg::Vec3f startLookTarget = target->asVec3();
                     pos = *target;
                     pos.pos[0] += startReferenceOffset.x();
                     pos.pos[1] += startReferenceOffset.y();
@@ -434,9 +530,28 @@ namespace MWWorld
                                      << *startReference << std::dec << " position=" << pos.pos[0] << ','
                                      << pos.pos[1] << ',' << pos.pos[2];
                     // Exact reference-relative starts are used by deterministic movement courses, including starts
-                    // below a water surface. Ground adjustment would discard that Z coordinate and invalidate the
-                    // swimming course.
-                    changeToCell(cellId, pos, false);
+                    // below a water surface. Change the cell without grounding first, then apply the exact global
+                    // position through the normal movement path so rendering, physics, and the player cell grid all
+                    // see the same coordinates.
+                    changeToCell(cellId, pos, true);
+                    moveObject(getPlayerPtr(), pos.asVec3(), true, false);
+                    // The camera is attached during changeToCell, before the exact position restore. Reapply the
+                    // reference-facing view explicitly so a persistent exterior start points at its target even
+                    // when no input frame has yet supplied a look delta.
+                    mRendering->getCamera()->setPitch(-pos.rot[0]);
+                    mRendering->getCamera()->setYaw(-pos.rot[2]);
+                    mRendering->getCamera()->update(0.001f, true);
+                    const osg::Vec3d cameraPosition = mRendering->getCamera()->getPosition();
+                    const osg::Vec3f lookDelta = startLookTarget - osg::Vec3f(
+                        static_cast<float>(cameraPosition.x()), static_cast<float>(cameraPosition.y()),
+                        static_cast<float>(cameraPosition.z()));
+                    const float horizontalDistance = std::hypot(lookDelta.x(), lookDelta.y());
+                    if (horizontalDistance > 0.001f)
+                    {
+                        mRendering->getCamera()->setYaw(std::atan2(-lookDelta.x(), lookDelta.y()));
+                        mRendering->getCamera()->setPitch(
+                            std::atan2(lookDelta.z(), horizontalDistance));
+                    }
                 }
                 else
                 {
@@ -454,7 +569,9 @@ namespace MWWorld
                     if (cell)
                         cell->forEachConst(
                             [&](const ConstPtr& ptr) {
-                                if (ptr.getCellRef().getRefNum().mIndex == *startReference)
+                                if (ptr.getCellRef().getRefNum().mIndex == *startReference
+                                    || (ptr.getCellRef().getFormKey().isContent()
+                                        && ptr.getCellRef().getFormKey().localId() == *startReference))
                                 {
                                     target = ptr.getCellRef().getPosition();
                                     return false;
@@ -572,6 +689,8 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        if (mOblivionAi)
+            mOblivionAi->clear();
         mNextOblivionDynamicSerial = 1;
         mLastOblivionScriptSeconds = 0;
         if (mOblivionScriptManager)
@@ -612,12 +731,31 @@ namespace MWWorld
         state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
         // Class stat access still uses the historical mutable Ptr API even for read-only save serialization.
         const MWWorld::Ptr player = const_cast<World*>(this)->getPlayerPtr();
+        if (player.isEmpty())
+            throw std::runtime_error("TES4 runtime-state capture has no player reference");
         state.mPlayer.mPosition = player.getRefData().getPosition();
         if (player.isInCell())
         {
-            const ESM::RefId cellId = player.getCell()->getCell()->getId();
-            if (const ESM::FormId* formId = cellId.getIf<ESM::FormId>())
-                state.mPlayer.mCell = resolver.toFormKey(*formId);
+            const MWWorld::Cell* cell = player.getCell()->getCell();
+            if (cell->isExterior() && cell->isEsm4())
+            {
+                const ESM::ExteriorCellLocation location = ESM::positionToExteriorCellLocation(
+                    player.getRefData().getPosition().pos[0], player.getRefData().getPosition().pos[1],
+                    cell->getWorldSpace());
+                if (const ESM4::Cell* nativeCell = mStore.get<ESM4::Cell>().searchExterior(location))
+                    state.mPlayer.mCell = nativeCell->mFormKey;
+            }
+            if (state.mPlayer.mCell.isNull())
+            {
+                const ESM::RefId cellId = cell->getId();
+                if (const ESM::FormId* formId = cellId.getIf<ESM::FormId>())
+                    state.mPlayer.mCell = resolver.toFormKey(*formId);
+                else if (cell->isEsm4())
+                    // ESM4 exterior cells can be represented by a synthesized
+                    // world-model RefId while their native identity remains on
+                    // the variant. Runtime state must retain that stable key.
+                    state.mPlayer.mCell = cell->getEsm4().mFormKey;
+            }
         }
         const MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
         const auto addDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& value) {
@@ -681,9 +819,13 @@ namespace MWWorld
                 if (item.mHotkey >= 0)
                     previousHotkeys.emplace(item.mBase, item.mHotkey);
         InventoryStore& liveInventory = player.getClass().getInventoryStore(player);
+        try
+        {
         for (auto iterator = liveInventory.begin(); iterator != liveInventory.end(); ++iterator)
         {
             const Ptr itemPtr = *iterator;
+            if (itemPtr.isEmpty())
+                continue;
             const ESM::RefId baseId
                 = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
             const ESM::FormId* formId = baseId.getIf<ESM::FormId>();
@@ -713,6 +855,11 @@ namespace MWWorld
                 previousHotkeys.erase(previous);
             }
             ESM4::addInventoryItem(state.mPlayer.mInventory, std::move(item));
+        }
+        }
+        catch (const std::exception& error)
+        {
+            throw std::runtime_error("TES4 runtime-state player inventory capture failed: " + std::string(error.what()));
         }
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
@@ -746,13 +893,83 @@ namespace MWWorld
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
                 previousReferences.emplace(reference.mKey, &reference);
 
+        const auto captureNativeActorInventory = [&](const Ptr& owner) {
+            std::vector<ESM4::RuntimeInventoryItem> result;
+            const ESM::FormKey ownerKey = owner.isEmpty() ? ESM::FormKey{} : owner.getCellRef().getFormKey();
+            try
+            {
+            if (owner.isEmpty())
+                return result;
+            const unsigned ownerType = owner.getClass().getType();
+            if (ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
+                return result;
+            const ESM::FormKeyResolver inventoryResolver(mContentFiles);
+            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
+            for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
+            {
+                const Ptr itemPtr = *iterator;
+                if (itemPtr.isEmpty())
+                    continue;
+                const ESM::RefId nativeId
+                    = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
+                const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
+                if (formId == nullptr || itemPtr.getCellRef().getCount() <= 0)
+                    continue;
+                ESM4::RuntimeInventoryItem item;
+                item.mBase = inventoryResolver.toFormKey(*formId);
+                item.mCount = itemPtr.getCellRef().getCount();
+                if (const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId))
+                {
+                    item.mCondition = definition->mMaxCondition < 0 ? -1
+                        : itemPtr.getCellRef().getCharge() < 0 ? definition->mMaxCondition
+                                                              : itemPtr.getCellRef().getCharge();
+                    item.mCharge = definition->mMaxCharge < 0.f ? -1.f
+                        : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
+                                                                           : itemPtr.getCellRef().getEnchantmentCharge();
+                    try
+                    {
+                        item.mRemainingUsageTime = definition->mMaxUsageTime < 0.f ? -1.f
+                            : itemPtr.getClass().getRemainingUsageTime(itemPtr);
+                    }
+                    catch (const std::exception& error)
+                    {
+                        throw std::runtime_error("remaining usage time for item " + item.mBase.serialize()
+                            + ": " + std::string(error.what()));
+                    }
+                    if (inventory.isEquipped(itemPtr))
+                        item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
+                }
+                if (const ESM::FormId* ownerId = itemPtr.getCellRef().getOwner().getIf<ESM::FormId>())
+                    item.mOwner = inventoryResolver.toFormKey(*ownerId);
+                ESM4::addInventoryItem(result, std::move(item));
+            }
+            return result;
+            }
+            catch (const std::exception& error)
+            {
+                throw std::runtime_error("TES4 runtime-state actor inventory " + ownerKey.serialize()
+                    + " capture failed: " + std::string(error.what()));
+            }
+        };
+
         auto& worldModel = const_cast<WorldModel&>(mWorldModel);
+        try
+        {
         worldModel.forEachLoadedCellStore([&](CellStore& cell) {
             cell.forEachConst(
                 [&](const ConstPtr& ptr) {
+                    // CellStore visitors may expose a placeholder while a
+                    // reference is being removed. It has no stable identity
+                    // or MWClass and cannot contribute to a TES4 save.
+                    if (ptr.isEmpty())
+                        return true;
                     const ESM::FormKey key = ptr.getCellRef().getFormKey();
                     if (key.isNull())
                         return true;
+                    try
+                    {
+                    const Ptr mutablePtr(const_cast<LiveCellRefBase*>(ptr.mRef),
+                        const_cast<CellStore*>(ptr.mCell));
                     const ESM::RefId baseRefId = ptr.getCellRef().getRefId();
                     const ESM::FormId* baseId = baseRefId.getIf<ESM::FormId>();
                     const ESM::FormId* cellId = ptr.getCell()->getCell()->getId().getIf<ESM::FormId>();
@@ -769,13 +986,18 @@ namespace MWWorld
                     const ESM::RefId ownerId = ptr.getCellRef().getOwner();
                     if (const ESM::FormId* owner = ownerId.getIf<ESM::FormId>())
                         reference.mOwner = resolver.toFormKey(*owner);
-                    try
+                    const unsigned type = ptr.getClass().getType();
+                    const bool actorReference = type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
+                    if (!actorReference)
                     {
-                        reference.mLockLevel = ptr.getCellRef().getLockLevel();
-                    }
-                    catch (const std::logic_error&)
-                    {
-                        reference.mLockLevel = 0;
+                        try
+                        {
+                            reference.mLockLevel = ptr.getCellRef().getLockLevel();
+                        }
+                        catch (const std::logic_error&)
+                        {
+                            reference.mLockLevel = 0;
+                        }
                     }
 
                     if (const auto previous = previousReferences.find(key); previous != previousReferences.end())
@@ -888,24 +1110,40 @@ namespace MWWorld
                                 break;
                         }
                     }
+                    if (actorReference)
+                        reference.mInventory = captureNativeActorInventory(mutablePtr);
                     reference.mCustomState["count"]
                         = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
                     reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
                     reference.mCustomState["record_type"]
                         = static_cast<std::int64_t>(ptr.getClass().getType());
-                    try
+                    if (!actorReference)
                     {
-                        reference.mCustomState["locked"] = ptr.getCellRef().isLocked();
-                    }
-                    catch (const std::logic_error&)
-                    {
-                        // Actor references do not have lock state.
+                        try
+                        {
+                            reference.mCustomState["locked"] = ptr.getCellRef().isLocked();
+                        }
+                        catch (const std::logic_error&)
+                        {
+                            // Some projected references do not have lock state.
+                        }
                     }
                     state.mReferences.push_back(std::move(reference));
                     return true;
+                    }
+                    catch (const std::exception& error)
+                    {
+                        throw std::runtime_error("TES4 runtime-state reference " + key.serialize()
+                            + " capture failed: " + std::string(error.what()));
+                    }
                 },
                 true);
         });
+        }
+        catch (const std::exception& error)
+        {
+            throw std::runtime_error("TES4 runtime-state reference capture failed: " + std::string(error.what()));
+        }
         // Runtime-created forms may not have a projected MWClass yet. Keep their native state alive so later profile
         // slices can instantiate them without losing identity or allocation order in intervening saves.
         if (mOblivionRuntimeState)
@@ -922,6 +1160,8 @@ namespace MWWorld
         });
         if (mOblivionScriptManager)
             mOblivionScriptManager->capture(state);
+        if (mOblivionAi)
+            mOblivionAi->capture(state);
         const auto normalizeNativeInventory = [](std::vector<ESM4::RuntimeInventoryItem>& inventory) {
             for (ESM4::RuntimeInventoryItem& item : inventory)
                 if (item.mCount < 0)
@@ -1023,6 +1263,7 @@ namespace MWWorld
         mGlobalVariables[Globals::sGameHour].setFloat(static_cast<float>(state.mClock.mHour));
         mGlobalVariables[Globals::sTimeScale].setFloat(static_cast<float>(state.mClock.mTimeScale));
         mTimeManager->setup(mGlobalVariables);
+        synchronizeOblivionCalendarGlobals(mGlobalVariables);
 
         if (state.mVersion >= 3)
         {
@@ -1185,6 +1426,55 @@ namespace MWWorld
                 },
                 true);
         });
+
+        const auto applyNativeActorInventory = [&](const Ptr& owner,
+                                                   const std::vector<ESM4::RuntimeInventoryItem>& saved) {
+            if (owner.isEmpty() || (owner.getClass().getType() != ESM::REC_NPC_4
+                    && owner.getClass().getType() != ESM::REC_CREA4))
+                return;
+            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
+            inventory.clear();
+            std::vector<std::pair<ContainerStoreIterator, std::uint32_t>> actorEquippedItems;
+            for (const ESM4::RuntimeInventoryItem& item : saved)
+            {
+                const std::optional<ESM::FormId> itemId = resolver.toFormId(item.mBase);
+                if (!itemId || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*itemId)))
+                    throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
+                        + item.mBase.serialize());
+                const ESM::RefId sharedId
+                    = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*itemId));
+                ManualRef source(mStore, sharedId, item.mCount);
+                Ptr itemPtr = source.getPtr();
+                if (item.mCondition >= 0)
+                    itemPtr.getCellRef().setCharge(item.mCondition);
+                if (item.mCharge >= 0.f)
+                    itemPtr.getCellRef().setEnchantmentCharge(item.mCharge);
+                if (item.mRemainingUsageTime >= 0.f)
+                    itemPtr.getClass().setRemainingUsageTime(itemPtr, item.mRemainingUsageTime);
+                if (!item.mOwner.isNull())
+                {
+                    const std::optional<ESM::FormId> ownerId = resolver.toFormId(item.mOwner);
+                    if (!ownerId)
+                        throw std::runtime_error("TES4 runtime-state actor item owner cannot be resolved: "
+                            + item.mOwner.serialize());
+                    itemPtr.getCellRef().setOwner(ESM::RefId(*ownerId));
+                }
+                ContainerStoreIterator added = inventory.add(itemPtr, item.mCount, false);
+                if (item.mEquippedSlots != 0)
+                    actorEquippedItems.emplace_back(added, item.mEquippedSlots);
+            }
+            for (const auto& [item, nativeSlots] : actorEquippedItems)
+            {
+                const std::vector<int> slots = (*item).getClass().getEquipmentSlots(*item).first;
+                if (slots.empty())
+                    continue;
+                int selected = slots.front();
+                if ((nativeSlots & ESM4::Armor::TES4_LeftRing) != 0
+                    && std::ranges::find(slots, InventoryStore::Slot_LeftRing) != slots.end())
+                    selected = InventoryStore::Slot_LeftRing;
+                inventory.equip(selected, item);
+            }
+        };
         for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
         {
             const auto found = references.find(reference.mKey);
@@ -1247,6 +1537,8 @@ namespace MWWorld
                 if (const auto* number = std::get_if<double>(&scale->second))
                     ptr.getCellRef().setScale(static_cast<float>(*number));
 
+            applyNativeActorInventory(ptr, reference.mInventory);
+
             const auto animationGroup = reference.mCustomState.find("obscript.animation_group");
             const auto animationProgress = reference.mCustomState.find("obscript.animation_progress");
             std::optional<double> progress;
@@ -1296,6 +1588,8 @@ namespace MWWorld
                          << stats.getAttribute(ESM::Attribute::Speed).getBase();
         if (mOblivionScriptManager)
             mOblivionScriptManager->restore(state);
+        if (mOblivionAi)
+            mOblivionAi->restore(state);
     }
 
     void World::runOblivionScripts(double secondsPassed)
@@ -1487,24 +1781,40 @@ namespace MWWorld
 
     void World::setGlobalInt(GlobalVariableName name, int value)
     {
-        mTimeManager->updateGlobalInt(name, value);
-        mGlobalVariables[name].setInteger(value);
+        const GlobalVariableName canonical = mGameProfile == ESM::GameProfile::Oblivion
+            ? canonicalOblivionGlobal(name)
+            : name;
+        mTimeManager->updateGlobalInt(canonical, value);
+        mGlobalVariables[canonical].setInteger(value);
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            synchronizeOblivionCalendarGlobals(mGlobalVariables);
     }
 
     void World::setGlobalFloat(GlobalVariableName name, float value)
     {
-        mTimeManager->updateGlobalFloat(name, value);
-        mGlobalVariables[name].setFloat(value);
+        const GlobalVariableName canonical = mGameProfile == ESM::GameProfile::Oblivion
+            ? canonicalOblivionGlobal(name)
+            : name;
+        mTimeManager->updateGlobalFloat(canonical, value);
+        mGlobalVariables[canonical].setFloat(value);
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            synchronizeOblivionCalendarGlobals(mGlobalVariables);
     }
 
     int World::getGlobalInt(GlobalVariableName name) const
     {
-        return mGlobalVariables[name].getInteger();
+        const GlobalVariableName canonical = mGameProfile == ESM::GameProfile::Oblivion
+            ? canonicalOblivionGlobal(name)
+            : name;
+        return mGlobalVariables[canonical].getInteger();
     }
 
     float World::getGlobalFloat(GlobalVariableName name) const
     {
-        return mGlobalVariables[name].getFloat();
+        const GlobalVariableName canonical = mGameProfile == ESM::GameProfile::Oblivion
+            ? canonicalOblivionGlobal(name)
+            : name;
+        return mGlobalVariables[canonical].getFloat();
     }
 
     char World::getGlobalVariableType(GlobalVariableName name) const
@@ -1758,6 +2068,8 @@ namespace MWWorld
 
         mWeatherManager->advanceTime(hours, incremental);
         mTimeManager->advanceTime(hours, mGlobalVariables);
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            synchronizeOblivionCalendarGlobals(mGlobalVariables);
 
         if (!incremental)
         {
@@ -3731,8 +4043,24 @@ namespace MWWorld
                 if (xResult.ec == std::errc::result_out_of_range || yResult.ec == std::errc::result_out_of_range)
                     throw std::runtime_error("Cell coordinates out of range.");
                 else if (xResult.ec == std::errc{} && yResult.ec == std::errc{})
-                    cellStore
-                        = &mWorldModel.getExterior(ESM::ExteriorCellLocation(x, y, ESM::Cell::sDefaultWorldspaceId));
+                {
+                    ESM::RefId worldspace = ESM::Cell::sDefaultWorldspaceId;
+                    if (mGameProfile == ESM::GameProfile::Oblivion)
+                    {
+                        // Oblivion's ordinary exterior grid is the TES4
+                        // Tamriel worldspace, not the legacy TES3 default
+                        // worldspace used by the coordinate shorthand.
+                        // Keep the shorthand stable while selecting the real
+                        // ESM4 CELL/PGRD records behind it.
+                        if (const std::optional<ESM::FormKey> key = mStore.findEsm4FormKey("Tamriel"))
+                        {
+                            const ESM::FormKeyResolver resolver(mContentFiles);
+                            if (const std::optional<ESM::FormId> id = resolver.toFormId(*key))
+                                worldspace = ESM::RefId(*id);
+                        }
+                    }
+                    cellStore = &mWorldModel.getExterior(ESM::ExteriorCellLocation(x, y, worldspace));
+                }
                 // ignore std::errc::invalid_argument, as this means that name probably refers to a interior cell
                 // instead of comma separated coordinates
             }

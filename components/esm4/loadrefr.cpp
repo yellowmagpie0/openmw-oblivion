@@ -38,6 +38,7 @@ void ESM4::Reference::load(ESM4::Reader& reader)
     mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
     mParent = reader.currCell();
+    mParentKey = reader.currCellFormKey();
 
     ESM::FormId mid;
     ESM::FormId sid;
@@ -55,9 +56,14 @@ void ESM4::Reference::load(ESM4::Reader& reader)
                 break;
             case ESM::fourCC("NAME"):
             {
-                ESM::FormId baseId;
-                reader.getFormId(baseId);
-                mBaseObj = baseId;
+                ESM::FormId32 rawValue = 0;
+                if (!reader.getExact(rawValue))
+                    reader.fail("REFR NAME is truncated");
+                const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+                reader.recordRawFormId(raw);
+                mBaseObj = raw;
+                reader.adjustFormId(mBaseObj);
+                mBaseKey = reader.resolveRawFormId(raw);
                 break;
             }
             case ESM::fourCC("DATA"):

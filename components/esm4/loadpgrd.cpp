@@ -1,43 +1,70 @@
 /*
   Copyright (C) 2020-2021 cc9cii
+  Copyright (C) 2026 OpenMW contributors
 
-  This software is provided 'as-is', without any express or implied
-  warranty.  In no event will the authors be held liable for any damages
-  arising from the use of this software.
+  This file is part of OpenMW.
 
-  Permission is granted to anyone to use this software for any purpose,
-  including commercial applications, and to alter it and redistribute it
-  freely, subject to the following restrictions:
-
-  1. The origin of this software must not be misrepresented; you must not
-     claim that you wrote the original software. If you use this software
-     in a product, an acknowledgment in the product documentation would be
-     appreciated but is not required.
-  2. Altered source versions must be plainly marked as such, and must not be
-     misrepresented as being the original software.
-  3. This notice may not be removed or altered from any source distribution.
-
-  cc9cii cc9c@iinet.net.au
-
-  Much of the information on the data structures are based on the information
-  from Tes4Mod:Mod_File_Format and Tes5Mod:File_Formats but also refined by
-  trial & error.  See http://en.uesp.net/wiki for details.
-
+  OpenMW is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License version 3, or (at your option) any
+  later version.
 */
 #include "loadpgrd.hpp"
 
-#include <stdexcept>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "reader.hpp"
-#include <components/esm/refid.hpp> // FIXME: for mEditorId workaround
-//#include "writer.hpp"
+
+namespace
+{
+    template <class T>
+    T readValue(ESM4::Reader& reader, const char* name)
+    {
+        T value{};
+        if (!reader.getExact(value))
+            reader.fail(std::string("PGRD ") + name + " is truncated");
+        return value;
+    }
+
+    void readBytes(ESM4::Reader& reader, std::vector<std::uint8_t>& result, const char* name)
+    {
+        result.resize(reader.subRecordHeader().dataSize);
+        if (!result.empty() && !reader.get(result.data(), result.size()))
+            reader.fail(std::string("PGRD ") + name + " is truncated");
+    }
+
+    ESM::FormKey readObjectKey(ESM4::Reader& reader, ESM::FormId& adjusted)
+    {
+        const ESM::FormId32 rawValue = readValue<ESM::FormId32>(reader, "PGRL object FormID");
+        const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+        reader.recordRawFormId(raw);
+        adjusted = raw;
+        reader.adjustFormId(adjusted);
+        return reader.resolveRawFormId(raw);
+    }
+}
 
 void ESM4::Pathgrid::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
+    mOwningCell = {};
+    mData = 0;
+    mNodes.clear();
+    mLinks.clear();
+    mForeign.clear();
+    mObjects.clear();
+    mGraphAttributes.clear();
+    mHasPgrr = false;
 
-    mEditorId = ESM::RefId(mId).serializeText(); // FIXME: quick workaround to use existing code
+    std::vector<std::int16_t> linkEnds;
+    bool hasData = false;
+    bool hasNodes = false;
+    bool hasForeign = false;
 
     while (reader.getSubRecordHeader())
     {
@@ -45,114 +72,131 @@ void ESM4::Pathgrid::load(ESM4::Reader& reader)
         switch (subHdr.typeId)
         {
             case ESM::fourCC("DATA"):
-                reader.get(mData);
+                if (hasData)
+                    reader.fail("PGRD has duplicate DATA subrecords");
+                if (subHdr.dataSize != sizeof(mData))
+                    reader.fail("PGRD DATA has size " + std::to_string(subHdr.dataSize) + ", expected 2");
+                mData = readValue<std::int16_t>(reader, "DATA");
+                if (mData < 0)
+                    reader.fail("PGRD DATA contains a negative node count");
+                hasData = true;
                 break;
+
             case ESM::fourCC("PGRP"):
             {
-                std::size_t numNodes = subHdr.dataSize / sizeof(PGRP);
-                if (numNodes != std::size_t(mData)) // keep gcc quiet
-                    throw std::runtime_error("ESM4::PGRD::load numNodes mismatch");
-
-                mNodes.resize(numNodes);
-                for (std::size_t i = 0; i < numNodes; ++i)
-                {
-                    reader.get(mNodes.at(i));
-
-                    if (int(mNodes.at(i).z) % 2 == 0)
-                        mNodes.at(i).priority = 0;
-                    else
-                        mNodes.at(i).priority = 1;
-                }
-
+                if (subHdr.dataSize % sizeof(PGRP) != 0)
+                    reader.fail("PGRD PGRP size is not a multiple of 16");
+                const std::size_t count = subHdr.dataSize / sizeof(PGRP);
+                mNodes.reserve(mNodes.size() + count);
+                for (std::size_t index = 0; index < count; ++index)
+                    mNodes.push_back(readValue<PGRP>(reader, "PGRP"));
+                hasNodes = true;
                 break;
             }
+
             case ESM::fourCC("PGRR"):
             {
-                PGRR link;
-
-                for (std::size_t i = 0; i < std::size_t(mData); ++i) // keep gcc quiet
-                {
-                    for (std::size_t j = 0; j < mNodes[i].numLinks; ++j)
-                    {
-                        link.startNode = std::int16_t(i);
-
-                        reader.get(link.endNode);
-                        if (link.endNode == -1)
-                            continue;
-
-                        // ICMarketDistrictTheBestDefenseBasement doesn't have a PGRR sub-record
-                        // CELL formId 00049E2A
-                        // PGRD formId 000304B7
-                        // if (mFormId == 0x0001C2C8)
-                        // std::cout << link.startNode << "," << link.endNode << std::endl;
-                        mLinks.push_back(link);
-                    }
-                }
-
+                if (subHdr.dataSize % sizeof(std::int16_t) != 0)
+                    reader.fail("PGRD PGRR size is not a multiple of 2");
+                const std::size_t count = subHdr.dataSize / sizeof(std::int16_t);
+                linkEnds.reserve(linkEnds.size() + count);
+                for (std::size_t index = 0; index < count; ++index)
+                    linkEnds.push_back(readValue<std::int16_t>(reader, "PGRR"));
+                mHasPgrr = true;
                 break;
             }
+
             case ESM::fourCC("PGRI"):
             {
-                std::size_t numForeign = subHdr.dataSize / sizeof(PGRI);
-                mForeign.resize(numForeign);
-                for (std::size_t i = 0; i < numForeign; ++i)
-                {
-                    reader.get(mForeign.at(i));
-                    // mForeign.at(i).localNode;// &= 0xffff; // some have junk high bits (maybe flags?)
-                }
-
+                if (subHdr.dataSize % sizeof(PGRI) != 0)
+                    reader.fail("PGRD PGRI size is not a multiple of 16");
+                const std::size_t count = subHdr.dataSize / sizeof(PGRI);
+                mForeign.reserve(mForeign.size() + count);
+                for (std::size_t index = 0; index < count; ++index)
+                    mForeign.push_back(readValue<PGRI>(reader, "PGRI"));
+                hasForeign = true;
                 break;
             }
+
             case ESM::fourCC("PGRL"):
             {
-                PGRL objLink;
-                reader.getFormId(objLink.object);
-                //                                        object             linkedNode
-                std::size_t numNodes = (subHdr.dataSize - sizeof(int32_t)) / sizeof(int32_t);
+                if (subHdr.dataSize < sizeof(ESM::FormId32)
+                    || (subHdr.dataSize - sizeof(ESM::FormId32)) % sizeof(std::int32_t) != 0)
+                    reader.fail("PGRD PGRL has an invalid size");
 
-                objLink.linkedNodes.resize(numNodes);
-                for (std::size_t i = 0; i < numNodes; ++i)
-                    reader.get(objLink.linkedNodes.at(i));
-
-                mObjects.push_back(std::move(objLink));
-
+                PGRL object;
+                object.objectKey = readObjectKey(reader, object.object);
+                const std::size_t count = (subHdr.dataSize - sizeof(ESM::FormId32)) / sizeof(std::int32_t);
+                object.linkedNodes.resize(count);
+                for (std::int32_t& node : object.linkedNodes)
+                    node = readValue<std::int32_t>(reader, "PGRL linked node");
+                mObjects.push_back(std::move(object));
                 break;
             }
+
             case ESM::fourCC("PGAG"):
             {
-#if 0
-                std::vector<unsigned char> mDataBuf(subHdr.dataSize);
-                reader.get(mDataBuf.data(), subHdr.dataSize);
-
-                std::ostringstream ss;
-                ss << mEditorId << " " << ESM::printName(subHdr.typeId) << ":size " << subHdr.dataSize << "\n";
-                for (std::size_t i = 0; i < subHdr.dataSize; ++i)
-                {
-                    //if (mDataBuf[i] > 64 && mDataBuf[i] < 91) // looks like printable ascii char
-                        //ss << (char)(mDataBuf[i]) << " ";
-                    //else
-                        ss << std::setfill('0') << std::setw(2) << std::hex << (int)(mDataBuf[i]);
-                    if ((i & 0x000f) == 0xf) // wrap around
-                        ss << "\n";
-                    else if (i < subHdr.dataSize-1)
-                        ss << " ";
-                }
-                std::cout << ss.str() << std::endl;
-#else
-                reader.skipSubRecordData();
-#endif
+                std::vector<std::uint8_t> payload;
+                readBytes(reader, payload, "PGAG");
+                mGraphAttributes.insert(mGraphAttributes.end(), payload.begin(), payload.end());
                 break;
             }
+
             default:
-                throw std::runtime_error("ESM4::PGRD::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
+                reader.fail("PGRD has unknown subrecord " + ESM::printName(subHdr.typeId));
+        }
+    }
+
+    if (!hasData)
+        reader.fail("PGRD is missing DATA");
+    if (!hasNodes)
+        reader.fail("PGRD is missing PGRP");
+    if (mNodes.size() != static_cast<std::size_t>(mData))
+        reader.fail("PGRD DATA/PGRP node count mismatch");
+
+    std::size_t expectedLinks = 0;
+    for (const PGRP& node : mNodes)
+    {
+        if (expectedLinks > std::numeric_limits<std::size_t>::max() - node.numLinks)
+            reader.fail("PGRD link count overflows the host size type");
+        expectedLinks += node.numLinks;
+    }
+
+    if (mHasPgrr)
+    {
+        if (linkEnds.size() != expectedLinks)
+            reader.fail("PGRD PGRR link count does not match PGRP");
+        mLinks.reserve(expectedLinks);
+        std::size_t offset = 0;
+        for (std::size_t start = 0; start < mNodes.size(); ++start)
+        {
+            for (std::size_t link = 0; link < mNodes[start].numLinks; ++link)
+            {
+                const std::int16_t end = linkEnds[offset++];
+                if (end != -1 && (end < 0 || end >= mData))
+                    reader.fail("PGRD PGRR points outside the local node array");
+                mLinks.push_back({ static_cast<std::int16_t>(start), end });
+            }
+        }
+    }
+    else if (expectedLinks != 0)
+        reader.fail("PGRD has linked PGRP nodes but no PGRR subrecord");
+
+    if (hasForeign)
+    {
+        for (const PGRI& point : mForeign)
+        {
+            if (point.localNode >= mData)
+                reader.fail("PGRD PGRI local node is outside the node array");
+        }
+    }
+
+    for (const PGRL& object : mObjects)
+    {
+        for (const std::int32_t node : object.linkedNodes)
+        {
+            if (node != -1 && (node < 0 || node >= mData))
+                reader.fail("PGRD PGRL linked node is outside the node array");
         }
     }
 }
-
-// void ESM4::Pathgrid::save(ESM4::Writer& writer) const
-//{
-// }
-
-// void ESM4::Pathgrid::blank()
-//{
-// }

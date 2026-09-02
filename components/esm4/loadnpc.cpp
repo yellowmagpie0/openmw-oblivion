@@ -36,7 +36,10 @@
 void ESM4::Npc::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
+    mAIPackages.clear();
+    mAIPackageKeys.clear();
 
     std::uint32_t esmVer = reader.esmVersion();
     mIsTES4 = (esmVer == ESM::VER_080 || esmVer == ESM::VER_100) && !reader.hasFormVersion();
@@ -69,8 +72,18 @@ void ESM4::Npc::load(ESM4::Reader& reader)
                 reader.getFormId(mSpell.emplace_back());
                 break;
             case ESM::fourCC("PKID"):
-                reader.getFormId(mAIPackages.emplace_back());
+            {
+                ESM::FormId32 rawValue = 0;
+                if (!reader.getExact(rawValue))
+                    reader.fail("NPC_ PKID is truncated");
+                const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+                reader.recordRawFormId(raw);
+                ESM::FormId adjusted = raw;
+                reader.adjustFormId(adjusted);
+                mAIPackages.push_back(adjusted);
+                mAIPackageKeys.push_back(reader.resolveRawFormId(raw));
                 break;
+            }
             case ESM::fourCC("SNAM"):
             {
                 // FO4, FO76

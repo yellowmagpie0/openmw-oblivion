@@ -695,12 +695,24 @@ namespace NifOsg
             const unsigned int amount = mMinToSpawn == mMaxToSpawn
                 ? mMinToSpawn
                 : mMinToSpawn + Misc::Rng::rollDice(static_cast<unsigned int>(mMaxToSpawn - mMinToSpawn + 1));
+            // createParticle may grow the underlying particle container and invalidate parent.
+            // Copy everything needed by the child template before creating the first child.
+            const auto shape = parent->getShape();
+            const auto position = parent->getPosition();
+            const auto parentVelocity = parent->getVelocity();
+            const auto sizeRange = parent->getSizeRange();
+            const auto colorRange = parent->getColorRange();
+            const auto alphaRange = parent->getAlphaRange();
+            const auto radius = parent->getRadius();
+            const auto angle = parent->getAngle();
+            const auto angularVelocity = parent->getAngularVelocity();
+            const auto generation = mGenerations[i];
             for (unsigned int childIndex = 0; childIndex < amount; ++childIndex)
             {
                 ParticleAgeSetter childTemplate(0.f);
-                childTemplate.setShape(parent->getShape());
-                childTemplate.setPosition(parent->getPosition());
-                osg::Vec3f velocity = parent->getVelocity();
+                childTemplate.setShape(shape);
+                childTemplate.setPosition(position);
+                osg::Vec3f velocity = parentVelocity;
                 const float speedScale
                     = std::max(0.f, 1.f + mSpeedVariation * (2.f * Misc::Rng::rollClosedProbability() - 1.f));
                 velocity *= speedScale;
@@ -716,12 +728,12 @@ namespace NifOsg
                             * velocity;
                 }
                 childTemplate.setVelocity(velocity);
-                childTemplate.setSizeRange(parent->getSizeRange());
-                childTemplate.setColorRange(parent->getColorRange());
-                childTemplate.setAlphaRange(parent->getAlphaRange());
-                childTemplate.setRadius(parent->getRadius());
-                childTemplate.setAngle(parent->getAngle());
-                childTemplate.setAngularVelocity(parent->getAngularVelocity());
+                childTemplate.setSizeRange(sizeRange);
+                childTemplate.setColorRange(colorRange);
+                childTemplate.setAlphaRange(alphaRange);
+                childTemplate.setRadius(radius);
+                childTemplate.setAngle(angle);
+                childTemplate.setAngularVelocity(angularVelocity);
                 childTemplate.setLifeTime(std::max(std::numeric_limits<float>::epsilon(),
                     mLifespan + mLifespanVariation * Misc::Rng::rollClosedProbability()));
                 if (osgParticle::Particle* child = particleSystem->createParticle(&childTemplate))
@@ -733,7 +745,7 @@ namespace NifOsg
                     for (int candidate = 0; candidate < newCount; ++candidate)
                         if (particleSystem->getParticle(candidate) == child)
                         {
-                            mGenerations[candidate] = static_cast<unsigned short>(mGenerations[i] + 1);
+                            mGenerations[candidate] = static_cast<unsigned short>(generation + 1);
                             mLastAges[candidate] = 0.0;
                             mSpawned[candidate] = false;
                             break;

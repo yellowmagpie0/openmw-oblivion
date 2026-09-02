@@ -1,13 +1,15 @@
 # M14 navigation, detection, and AI packages: implementation plan
 
-Status: **planning only**. Written on 2026-08-31 against revision
-`50a767e2ebdc77183434614079701c14c5b722e3` after accepted M13. This document
-does not mark M14 started or accepted, and creating it must not change runtime
-code, tests, manifests, or `IMPLEMENTATION-STATUS.json`.
+Status: **accepted on 2026-09-01**. Executed against the working tree based on
+revision `a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`, after accepted M13. The
+durable acceptance report is
+`docs/oblivion/M14-NAVIGATION-DETECTION-AI.md`; generated evidence remains
+below `build/oblivion-compat/`.
 
-This is an execution handoff for a future implementer. Follow the phases in
-order, keep each phase buildable, and do not mark M14 accepted until every gate
-in the final checklist passes. The roadmap definition remains authoritative:
+This document was the execution handoff and is now the completed checklist.
+The phases were followed in order, each focused gate was kept buildable, and
+the final checklist below records the acceptance evidence. The roadmap
+definition remains authoritative:
 
 - Interpret TES4 pathgrids and package data.
 - Implement high- and low-level actor processing, schedules, wander, travel,
@@ -998,41 +1000,41 @@ detection score, or persistence; those require structured state evidence.
 
 M14 is complete only when every item is true:
 
-- [ ] Every winning official-profile TES4 PACK and PGRD is loaded by stable key,
+- [x] Every winning official-profile TES4 PACK and PGRD is loaded by stable key,
       associated correctly, included in a reviewed count/fingerprint lock, and
       has no unreviewed routing/package skip.
-- [ ] All package types and condition functions reachable from official winning
+- [x] All package types and condition functions reachable from official winning
       actor lists have implemented, tested semantics or an honest typed later-
       milestone action boundary that does not fake completion.
-- [ ] TES4 NPCs and creatures are real mechanics actors sharing the M11 render,
+- [x] TES4 NPCs and creatures are real mechanics actors sharing the M11 render,
       M12 stats/formulas, and M13 inventory/equipment authorities.
-- [ ] TES4 pathgrids, foreign links, object links, overlays, and Recast/Detour
+- [x] TES4 pathgrids, foreign links, object links, overlays, and Recast/Detour
       integration pass synthetic, lifecycle, and real-cell checks.
-- [ ] Schedules and package priority are deterministic across FPS, timescale,
+- [x] Schedules and package priority are deterministic across FPS, timescale,
       wait/rest, cell loading, and save/load.
-- [ ] High and low processing preserve the same package intent and actor route
+- [x] High and low processing preserve the same package intent and actor route
       without stalls or wall-crossing teleports.
-- [ ] Wander, Travel, Follow, Escort, Eat, Sleep, Use Item At, Flee, Pursue,
+- [x] Wander, Travel, Follow, Escort, Eat, Sleep, Use Item At, Flee, Pursue,
       dialogue approach, companion travel, and horse behavior pass unit,
       integration, interruption, persistence, and applicable real-data tests.
-- [ ] Detection has exact fixed probes, monotonic property coverage, real LOS,
+- [x] Detection has exact fixed probes, monotonic property coverage, real LOS,
       and consistent script/condition/package results.
-- [ ] Every M14-owned ObScript placeholder is removed and the official script
+- [x] Every M14-owned ObScript placeholder is removed and the official script
       corpus plus live runtime contains no M14 deferred trace.
-- [ ] Runtime schema v5 has strict C++/Python parity, v1--v4 migration, content
+- [x] Runtime schema v5 has strict C++/Python parity, v1--v4 migration, content
       reorder behavior, corruption rejection, and save/reload coverage in each
       significant package phase.
-- [ ] Tutorial escorts and the representative 24-hour city population complete
+- [x] Tutorial escorts and the representative 24-hour city population complete
       their expected package/cell transitions with no package-order error,
       repeated door edge, unbounded repath, or teleport loop.
-- [ ] Companion, obstruction, detection, horse, and Morrowind regression
+- [x] Companion, obstruction, detection, horse, and Morrowind regression
       scenarios pass; required visuals have been inspected.
-- [ ] Full component, engine, Python, sanitizer, audit, and end-to-end suites are
+- [x] Full component, engine, Python, sanitizer, audit, and end-to-end suites are
       green from a clean tree, and `git diff --check` passes.
-- [ ] The final M14 report names implementation revision, exact content profile,
+- [x] The final M14 report names implementation revision, exact content profile,
       test totals, durable evidence paths, known later-milestone boundaries, and
       interactive reproduction commands.
-- [ ] Only after all preceding checks, M14 is marked `accepted` and
+- [x] Only after all preceding checks, M14 is marked `accepted` and
       `next_bounded_delivery` moves to M15.
 
 ## 20. Practical handoff notes

@@ -31,6 +31,7 @@
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadpgrd.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadrefr.hpp>
@@ -52,6 +53,7 @@
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwmechanics/oblivionai.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
@@ -194,6 +196,19 @@ namespace MWWorld
                         return ObScript::ReferenceValue{ item, {} };
                     else
                         return item;
+                },
+                value);
+        }
+
+        std::optional<double> numericScriptValue(const ObScript::Value& value)
+        {
+            return std::visit(
+                [](const auto& item) -> std::optional<double> {
+                    using T = std::decay_t<decltype(item)>;
+                    if constexpr (std::is_same_v<T, std::int64_t> || std::is_same_v<T, double>)
+                        return static_cast<double>(item);
+                    else
+                        return std::nullopt;
                 },
                 value);
         }
@@ -448,6 +463,9 @@ namespace MWWorld
     {
         if (key == ESM::FormKey::dynamic("player", 1))
             return mWorld.getPlayerPtr();
+        if (const MWMechanics::OblivionAiService* oblivionAi = mWorld.getOblivionAiService())
+            if (Ptr ptr = oblivionAi->resolveReference(key); !ptr.isEmpty())
+                return ptr;
         const std::optional<ESM::FormId> id = mResolver.toFormId(key);
         if (!id)
             return {};
@@ -484,6 +502,62 @@ namespace MWWorld
             if (const auto base = mBaseScripts.find(state->mBase); base != mBaseScripts.end())
                 return base->second;
         return {};
+    }
+
+    const ESM4::RuntimeQuestState* OblivionScriptManager::findQuestState(const ESM::FormKey& quest) const
+    {
+        const auto found = mQuests.find(quest);
+        return found == mQuests.end() ? nullptr : &found->second;
+    }
+
+    std::optional<double> OblivionScriptManager::scriptVariable(
+        const ESM::FormKey& target, std::int32_t index) const
+    {
+        if (index < 0)
+            return std::nullopt;
+
+        std::shared_ptr<const ObScript::Program> program;
+        if (const auto direct = mBaseScripts.find(target); direct != mBaseScripts.end())
+            program = direct->second;
+        else if (const auto script = mScripts.find(target); script != mScripts.end())
+            program = script->second;
+        else if (const auto reference = mReferenceBases.find(target); reference != mReferenceBases.end())
+        {
+            if (const auto base = mBaseScripts.find(reference->second); base != mBaseScripts.end())
+                program = base->second;
+        }
+        else if (const ESM4::RuntimeReferenceState* state = referenceState(target))
+        {
+            if (const auto base = mBaseScripts.find(state->mBase); base != mBaseScripts.end())
+                program = base->second;
+        }
+        if (!program || static_cast<std::size_t>(index) >= program->mLocals.size())
+            return std::nullopt;
+
+        const InstanceKey key{ program->mUnit.serialize(), target };
+        const auto instance = mInstances.find(key);
+        if (instance == mInstances.end() || static_cast<std::size_t>(index) >= instance->second.mLocals.size())
+            return 0.0;
+        return numericScriptValue(instance->second.mLocals[static_cast<std::size_t>(index)]).value_or(0.0);
+    }
+
+    std::optional<double> OblivionScriptManager::questVariable(
+        const ESM::FormKey& quest, std::int32_t index) const
+    {
+        if (index < 0)
+            return std::nullopt;
+        const auto script = mQuestScripts.find(quest);
+        if (script == mQuestScripts.end())
+            return std::nullopt;
+        const auto program = mScripts.find(script->second);
+        if (program == mScripts.end() || static_cast<std::size_t>(index) >= program->second->mLocals.size())
+            return std::nullopt;
+
+        const InstanceKey key{ program->second->mUnit.serialize(), quest };
+        const auto instance = mInstances.find(key);
+        if (instance == mInstances.end() || static_cast<std::size_t>(index) >= instance->second.mLocals.size())
+            return 0.0;
+        return numericScriptValue(instance->second.mLocals[static_cast<std::size_t>(index)]).value_or(0.0);
     }
 
     OblivionScriptManager::Instance& OblivionScriptManager::instanceFor(
@@ -622,8 +696,18 @@ namespace MWWorld
     void OblivionScriptManager::update(double secondsPassed)
     {
         if (!mWorld.mOblivionRuntimeState)
-            mWorld.mOblivionRuntimeState
-                = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+        {
+            try
+            {
+                mWorld.mOblivionRuntimeState
+                    = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+            }
+            catch (const std::exception& error)
+            {
+                Log(Debug::Error) << "TES4 runtime-state capture failed during script update: " << error.what();
+                throw;
+            }
+        }
         mWorld.mLastOblivionScriptSeconds = secondsPassed;
         mElapsed += secondsPassed;
         runScheduledEvents();
@@ -710,7 +794,11 @@ namespace MWWorld
                 return key;
         }
         if (const auto* name = std::get_if<std::string>(&value))
+        {
+            if (name->starts_with("content:") || name->starts_with("dynamic:"))
+                return ESM::FormKey::deserialize(*name);
             return mStore.findEsm4FormKey(*name);
+        }
         return std::nullopt;
     }
 
@@ -886,13 +974,13 @@ namespace MWWorld
         else
             saved = ObScript::asInteger(value);
         mWorld.mOblivionRuntimeState->mGlobals[*key] = saved;
-        ESM::Variant& global = mWorld.mGlobalVariables[GlobalVariableName(name)];
+        const ESM::Variant& global = mWorld.mGlobalVariables[GlobalVariableName(name)];
         if (global.getType() == ESM::VT_Float)
-            global.setFloat(static_cast<float>(ObScript::asNumber(value)));
+            mWorld.setGlobalFloat(GlobalVariableName(name), static_cast<float>(ObScript::asNumber(value)));
         else if (global.getType() == ESM::VT_String)
-            global.setString(ObScript::valueString(value));
+            mWorld.mGlobalVariables[GlobalVariableName(name)].setString(ObScript::valueString(value));
         else
-            global.setInteger(static_cast<int>(ObScript::asInteger(value)));
+            mWorld.setGlobalInt(GlobalVariableName(name), static_cast<int>(ObScript::asInteger(value)));
     }
 
     void OblivionScriptManager::storeMember(const ObScript::Value& target, std::string_view name,
@@ -920,6 +1008,7 @@ namespace MWWorld
             return context.mSelf;
         };
         const auto objectPtr = [&]() { return ptrFor(objectKey()); };
+        const auto oblivionAi = [&]() { return mWorld.getOblivionAiService(); };
 
         if (name == "getsecondspassed")
             return context.mSecondsPassed;
@@ -1276,6 +1365,154 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "evaluatepackage" || name == "evp")
+        {
+            const Ptr actor = objectPtr();
+            if (oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV102", "EvaluatePackage requires a native TES4 actor", name);
+            const bool evaluated = oblivionAi()->evaluatePackage(actor);
+            trace(name + " actor=" + objectKey().serialize() + " evaluated="
+                + (evaluated ? "true" : "false"));
+            return std::int64_t(evaluated);
+        }
+        if (name == "addscriptpackage")
+        {
+            const Ptr actor = objectPtr();
+            const auto package = keyFromValue(argument(0));
+            if (!package)
+                throw ObScript::RuntimeError("OBSV103", "AddScriptPackage requires a native PACK reference", name);
+            if (oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV104", "AddScriptPackage requires a native TES4 actor", name);
+            try
+            {
+                const bool added = oblivionAi()->addScriptPackage(actor, *package);
+                trace(name + " actor=" + objectKey().serialize() + " package=" + package->serialize());
+                return std::int64_t(added);
+            }
+            catch (const std::exception& error)
+            {
+                throw ObScript::RuntimeError("OBSV104", error.what(), name);
+            }
+        }
+        if (name == "forceflee")
+        {
+            const Ptr actor = objectPtr();
+            const auto threat = keyFromValue(argument(0));
+            if (!threat)
+                throw ObScript::RuntimeError("OBSV105", "ForceFlee requires a threat reference", name);
+            const float duration = arguments.size() > 1
+                ? static_cast<float>(std::max(0.0, ObScript::asNumber(argument(1)))) : 1.f;
+            if (oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV105", "ForceFlee requires a native TES4 actor", name);
+            const bool applied = oblivionAi()->forceFlee(actor, *threat, duration);
+            trace(name + " actor=" + objectKey().serialize() + " threat=" + threat->serialize()
+                + " applied=" + (applied ? "true" : "false"));
+            return std::int64_t(applied);
+        }
+        if (name == "setrestrained")
+        {
+            const Ptr actor = objectPtr();
+            const bool restrained = ObScript::asInteger(argument(0)) != 0;
+            if (oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV108", "SetRestrained requires a native TES4 actor", name);
+            const bool applied = oblivionAi()->setRestrained(actor, restrained);
+            trace(name + " actor=" + objectKey().serialize() + " value=" + (restrained ? "true" : "false")
+                + " applied=" + (applied ? "true" : "false"));
+            return std::int64_t(applied);
+        }
+        if (name == "pathpointenable" || name == "pathpointdisable")
+        {
+            const bool enabled = name == "pathpointenable";
+            ESM::FormKey pathgrid;
+            std::size_t nodeArgument = 0;
+            const auto firstKey = keyFromValue(argument(0));
+            if (firstKey && mStore.search<ESM4::Pathgrid>(*firstKey) != nullptr)
+            {
+                pathgrid = *firstKey;
+                nodeArgument = 1;
+            }
+            else if (target)
+            {
+                const ESM::FormKey explicitKey = objectKey();
+                if (mStore.search<ESM4::Pathgrid>(explicitKey) != nullptr)
+                    pathgrid = explicitKey;
+            }
+            if (pathgrid.isNull())
+            {
+                const Ptr actor = objectPtr();
+                if (!actor.isEmpty() && actor.isInCell())
+                    if (const ESM::FormId* id = actor.getCell()->getCell()->getId().getIf<ESM::FormId>())
+                        if (const ESM4::PathgridGraph* graph
+                            = mStore.getOblivionPathgridService().graphForCell(mResolver.toFormKey(*id)))
+                            pathgrid = graph->pathgridKey();
+            }
+            if (pathgrid.isNull() || nodeArgument >= arguments.size() || !ObScript::isNumeric(argument(nodeArgument)))
+                throw ObScript::RuntimeError("OBSV106", "PathPoint command requires a valid graph and node", name);
+            const std::int64_t node = ObScript::asInteger(argument(nodeArgument));
+            if (node < 0 || static_cast<std::uint64_t>(node) > std::numeric_limits<std::uint32_t>::max())
+                throw ObScript::RuntimeError("OBSV106", "PathPoint node is outside the native range", name);
+            if (oblivionAi() == nullptr)
+                throw ObScript::RuntimeError("OBSV107", "PathPoint command has no native TES4 AI service", name);
+            try
+            {
+                const bool changed = oblivionAi()->setPathPoint(pathgrid, static_cast<std::uint32_t>(node), enabled);
+                trace(name + " pathgrid=" + pathgrid.serialize() + " node=" + std::to_string(node)
+                    + " changed=" + (changed ? "true" : "false"));
+                return std::int64_t(changed);
+            }
+            catch (const std::exception& error)
+            {
+                throw ObScript::RuntimeError("OBSV107", error.what(), name);
+            }
+        }
+
+        if (name == "getcurrentaipackage")
+        {
+            const Ptr actor = objectPtr();
+            if (oblivionAi() != nullptr && !actor.isEmpty() && oblivionAi()->handles(actor))
+                if (const ESM4::RuntimeActorAiState* state = oblivionAi()->state(actor))
+                    return std::int64_t(state->mPackageType == ESM4::AIPackageType::Unknown
+                            ? -1 : static_cast<std::uint8_t>(state->mPackageType));
+            return std::int64_t(-1);
+        }
+        if (name == "getiscurrentpackage")
+        {
+            const Ptr actor = objectPtr();
+            const auto package = keyFromValue(argument(0));
+            return std::int64_t(package && oblivionAi() != nullptr && !actor.isEmpty()
+                && oblivionAi()->handles(actor) && oblivionAi()->isCurrentPackage(actor, *package));
+        }
+        if (name == "getcurrentaiprocedure")
+        {
+            const Ptr actor = objectPtr();
+            if (oblivionAi() != nullptr && !actor.isEmpty() && oblivionAi()->handles(actor))
+                return std::int64_t(static_cast<std::uint16_t>(oblivionAi()->currentProcedure(actor)));
+            return std::int64_t(0);
+        }
+        if (name == "getlos" || name == "getlineofsight" || name == "getdetected"
+            || name == "getdetectionlevel")
+        {
+            const Ptr observer = objectPtr();
+            const auto targetKey = keyFromValue(argument(0));
+            const Ptr detected = targetKey ? ptrFor(*targetKey) : Ptr{};
+            if (observer.isEmpty() || detected.isEmpty())
+                return name == "getdetectionlevel" ? ObScript::Value(double(0)) : ObScript::Value(std::int64_t(0));
+            if (oblivionAi() != nullptr && oblivionAi()->handles(observer))
+            {
+                if (name == "getlos" || name == "getlineofsight")
+                    return std::int64_t(oblivionAi()->getLOS(observer, detected));
+                const ESM4::DetectionResult result = oblivionAi()->detection(observer, detected);
+                return name == "getdetectionlevel" ? ObScript::Value(result.mLevel)
+                                                      : ObScript::Value(std::int64_t(result.mDetected));
+            }
+            if (name == "getlos" || name == "getlineofsight")
+                return std::int64_t(mWorld.getLOS(observer, detected));
+            const bool visible = mWorld.getLOS(observer, detected)
+                && MWBase::Environment::get().getMechanicsManager()->awarenessCheck(detected, observer);
+            return name == "getdetectionlevel" ? ObScript::Value(visible ? 100.0 : 0.0)
+                                                  : ObScript::Value(std::int64_t(visible));
+        }
+
         if (name == "isincombat" || name == "isspelltarget" || name == "ispcamurderer")
             return std::int64_t(0);
         if (name == "isininterior")
@@ -1284,7 +1521,11 @@ namespace MWWorld
             return std::int64_t(!ptr.isEmpty() && ptr.isInCell() && !ptr.getCell()->isExterior());
         }
         if (name == "isridinghorse")
-            return std::int64_t(0);
+        {
+            const Ptr actor = objectPtr();
+            return std::int64_t(oblivionAi() != nullptr && !actor.isEmpty() && oblivionAi()->handles(actor)
+                && oblivionAi()->isRidingHorse(actor));
+        }
         if (name == "isplayerinjail")
             return std::int64_t(mWorld.mPlayerInJail);
         if (name == "getpcinfamy" || name == "getpcfactionmurder" || name == "getpcfactionsteal")
@@ -1342,8 +1583,6 @@ namespace MWWorld
             return double(mWorld.mGlobalVariables[Globals::sGameHour].getFloat());
         if (name == "getfactionrank")
             return std::int64_t(-1);
-        if (name == "getcurrentaiprocedure")
-            return std::int64_t(0);
         if (name == "getdestroyed")
         {
             const ESM4::RuntimeReferenceState* state = referenceState(objectKey());
@@ -1503,9 +1742,13 @@ namespace MWWorld
         }
         if (name == "disablelinkedpathpoints" || name == "enablelinkedpathpoints")
         {
-            if (ESM4::RuntimeReferenceState* state = referenceState(objectKey()))
-                state->mCustomState["obscript.linked_pathpoints_enabled"] = name == "enablelinkedpathpoints";
-            return std::int64_t(0);
+            const bool enabled = name == "enablelinkedpathpoints";
+            const ESM::FormKey object = objectKey();
+            if (oblivionAi() == nullptr || !oblivionAi()->hasLinkedPathPoints(object))
+                throw ObScript::RuntimeError("OBSV109", "Linked path-point command requires a linked PGRL object", name);
+            const bool changed = oblivionAi()->setLinkedPathPoints(object, enabled);
+            trace(name + " object=" + object.serialize() + " changed=" + (changed ? "true" : "false"));
+            return std::int64_t(changed);
         }
 
         if (name == "forceweather" || name == "fw")
@@ -1644,11 +1887,10 @@ namespace MWWorld
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
-            "evaluatepackage", "evp", "addtopic", "showmap",
-            "cast", "addspell", "removespell", "moddisposition", "setessential", "addscriptpackage",
+            "addtopic", "showmap",
+            "cast", "addspell", "removespell", "moddisposition", "setessential",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
-            "pathpointenable", "pathpointdisable", "stopcombat", "startcombat",
-            "forceflee", "setrestrained", "setunconscious" };
+            "stopcombat", "startcombat", "setunconscious" };
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());

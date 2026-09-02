@@ -2,7 +2,6 @@
   "schema_version": 1,
   "description": "Official Oblivion subrecords whose bounds and payload lengths are validated by the TES4 reader but whose semantics are deliberately deferred to later gameplay milestones. Any newly observed pair fails the M1 gate.",
   "allowed": [
-    { "record": "ACHR", "subrecord": "XHRS", "reason": "Horse relationship semantics are deferred to actor gameplay." },
     { "record": "ACHR", "subrecord": "XLOD", "reason": "Reference LOD semantics are deferred to world rendering." },
     { "record": "ACHR", "subrecord": "XMRC", "reason": "Merchant container semantics are deferred to actor services." },
     { "record": "ACHR", "subrecord": "XPCI", "reason": "Reference location metadata is deferred to runtime world state." },
@@ -54,8 +53,6 @@
     { "record": "KEYM", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "LIGH", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "MISC", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
-    { "record": "PACK", "subrecord": "CTDT", "reason": "AI package conditions are deferred to AI gameplay." },
-    { "record": "PGRD", "subrecord": "PGAG", "reason": "Pathgrid auxiliary metadata is deferred to navigation." },
     { "record": "QUST", "subrecord": "CNAM", "reason": "Quest target metadata is deferred to quests." },
     { "record": "QUST", "subrecord": "QSDT", "reason": "ObScript retains the stage-result entry ordinal; the QSDT flag byte remains deferred to quest runtime semantics." },
     { "record": "QUST", "subrecord": "QSTA", "reason": "Quest target metadata is deferred to quests." },

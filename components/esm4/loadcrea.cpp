@@ -38,7 +38,10 @@
 void ESM4::Creature::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
+    mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
+    mAIPackages.clear();
+    mAIPackageKeys.clear();
 
     while (reader.getSubRecordHeader())
     {
@@ -66,8 +69,18 @@ void ESM4::Creature::load(ESM4::Reader& reader)
                 reader.getFormId(mSpell.emplace_back());
                 break;
             case ESM::fourCC("PKID"):
-                reader.getFormId(mAIPackages.emplace_back());
+            {
+                ESM::FormId32 rawValue = 0;
+                if (!reader.getExact(rawValue))
+                    reader.fail("CREA PKID is truncated");
+                const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+                reader.recordRawFormId(raw);
+                ESM::FormId adjusted = raw;
+                reader.adjustFormId(adjusted);
+                mAIPackages.push_back(adjusted);
+                mAIPackageKeys.push_back(reader.resolveRawFormId(raw));
                 break;
+            }
             case ESM::fourCC("SNAM"):
                 reader.get(mFaction);
                 reader.adjustFormId(mFaction.faction);

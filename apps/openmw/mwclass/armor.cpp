@@ -357,7 +357,11 @@ namespace MWClass
         if (slots.first.empty())
             return { 0, {} };
 
-        if (npc.getClass().isNpc())
+        // Oblivion actors use the shared TES3 inventory item facades, but
+        // their live reference is an ESM4 NPC. Only the TES3 branch may read
+        // the TES3 NPC race record here; the common slot/health checks above
+        // are valid for both profiles.
+        if (npc.getClass().isNpc() && npc.getType() == ESM::REC_NPC_)
         {
             const ESM::RefId& npcRace = npc.get<ESM::NPC>()->mBase->mRace;
 

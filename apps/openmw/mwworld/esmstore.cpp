@@ -16,6 +16,7 @@
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
+#include <components/esm4/pathgriddata.hpp>
 #include <components/files/conversion.hpp>
 #include <components/esmloader/load.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -280,8 +281,23 @@ namespace MWWorld
                     if (T::sRecordId == esm4RecName)
                     {
                         reader.getRecordData();
-                        T value;
-                        value.load(reader);
+                        T value{};
+                        // TES4 deletion overrides commonly carry no
+                        // subrecords at all. They still need to pass through
+                        // the stable-key index so the winning record removes
+                        // the master entry, but decoding an empty PACK/PGRD
+                        // (or another typed record) would incorrectly report
+                        // a missing mandatory payload.
+                        const bool deleted = (reader.hdr().record.flags & ESM4::Rec_Deleted) != 0;
+                        // Keep the historical strict decode for deleted
+                        // records that contain a payload (their embedded
+                        // references still contribute to the load-order
+                        // index).  The common zero-payload tombstone has no
+                        // typed data to decode and must be handled from its
+                        // header alone.
+                        const bool emptyDeleted = deleted && reader.hdr().record.dataSize == 0;
+                        if (!emptyDeleted)
+                            value.load(reader);
                         bool enableParentInverted = false;
                         if constexpr (requires { value.mEsp.flags; })
                             enableParentInverted = (value.mEsp.flags & ESM4::EnableParent::Flag_Inversed) != 0;
@@ -296,6 +312,10 @@ namespace MWWorld
                         const ESM::FormKey key = metadata.mKey;
                         if constexpr (requires { value.mFormKey = key; })
                             value.mFormKey = key;
+                        if constexpr (requires { value.mOwningCell = ESM::FormKey{}; })
+                            value.mOwningCell = metadata.mParent.value_or(ESM::FormKey{});
+                        if constexpr (requires { value.mParentKey = ESM::FormKey{}; })
+                            value.mParentKey = metadata.mParent.value_or(ESM::FormKey{});
                         if (key == sourceCandidate)
                         {
                             if constexpr (requires { value.mId = ESM::FormId{}; })
@@ -309,7 +329,7 @@ namespace MWWorld
                                 stores.mEsm4EditorIds.insert_or_assign(
                                     Misc::StringUtils::lowerCase(std::string_view(value.mEditorId)), key);
                         }
-                        if ((reader.hdr().record.flags & ESM4::Rec_Deleted) != 0)
+                        if (deleted)
                             store.eraseStatic(key);
                         else
                             store.insertStatic(value, key);
@@ -581,6 +601,90 @@ namespace MWWorld
         getWritable<ESM4::Reference>().preprocessReferences(get<ESM4::Cell>());
         getWritable<ESM4::ActorCharacter>().preprocessReferences(get<ESM4::Cell>());
         getWritable<ESM4::ActorCreature>().preprocessReferences(get<ESM4::Cell>());
+
+        // Build the native pathgrid view only after the complete load order is
+        // indexed.  The generic loader has already copied the first stable
+        // group parent into mOwningCell, so no file-order or numeric FormID
+        // inference is needed here.
+        mOblivionPathgrids.clear();
+        for (const ESM4::Pathgrid& pathgrid : get<ESM4::Pathgrid>())
+        {
+            if (pathgrid.mOwningCell.isNull())
+            {
+                Log(Debug::Error) << "TES4 PGRD " << pathgrid.mFormKey
+                                  << " has no stable owning CELL parent";
+                continue;
+            }
+
+            const ESM4::Cell* cell = get<ESM4::Cell>().search(pathgrid.mOwningCell);
+            if (cell == nullptr)
+            {
+                Log(Debug::Error) << "TES4 PGRD " << pathgrid.mFormKey << " references missing CELL "
+                                  << pathgrid.mOwningCell;
+                continue;
+            }
+
+            ESM4::PathgridTransform transform;
+            // Oblivion stores interior PGRP/PGRI coordinates relative to the
+            // cell, but exterior pathgrids in the released data are already
+            // in Tamriel world coordinates.  Applying the exterior cell
+            // origin a second time would move every native node by one cell.
+            transform.mCoordinatesAreLocal = !cell->isExterior();
+
+            mOblivionPathgrids.registerPathgrid(pathgrid, pathgrid.mOwningCell, transform);
+        }
+        // PGRI destinations are resolved only after every winning graph is
+        // present.  A missing/ambiguous endpoint remains typed as such and is
+        // never converted into a wall-crossing fallback.
+        mOblivionPathgrids.resolveForeignLinks(128.0f);
+        mOblivionPathgrids.classifyObjectLinks([this](const ESM::FormKey& object) {
+            const auto classifyBase = [this](const ESM::FormKey& base) {
+                if (base.isNull())
+                    return ESM4::PathgridObjectKind::Missing;
+                const ESM::FormRecordMetadata* winner = mFormKeyIndex.winner(base);
+                if (winner == nullptr)
+                    return ESM4::PathgridObjectKind::Missing;
+                if (winner->mDeleted)
+                    return ESM4::PathgridObjectKind::Deleted;
+                if (winner->mRecordType == ESM::REC_DOOR4)
+                    return ESM4::PathgridObjectKind::Door;
+                if (winner->mRecordType == ESM::REC_FURN4)
+                    return ESM4::PathgridObjectKind::Furniture;
+                return ESM4::PathgridObjectKind::Other;
+            };
+
+            const ESM::FormRecordMetadata* winner = mFormKeyIndex.winner(object);
+            if (winner == nullptr)
+                return ESM4::PathgridObjectKind::Missing;
+            if (winner->mDeleted)
+                return ESM4::PathgridObjectKind::Deleted;
+            // Accept the direct-base representation used by some TES4
+            // writers, while treating the native PGRL representation as a
+            // placed reference whose NAME selects the base object.
+            if (winner->mRecordType == ESM::REC_DOOR4)
+                return ESM4::PathgridObjectKind::Door;
+            if (winner->mRecordType == ESM::REC_FURN4)
+                return ESM4::PathgridObjectKind::Furniture;
+            if (winner->mRecordType == ESM::REC_REFR4)
+            {
+                const ESM4::Reference* reference = get<ESM4::Reference>().search(object);
+                return reference == nullptr ? ESM4::PathgridObjectKind::Missing
+                                             : classifyBase(reference->mBaseKey);
+            }
+            if (winner->mRecordType == ESM::REC_ACHR4)
+            {
+                const ESM4::ActorCharacter* reference = get<ESM4::ActorCharacter>().search(object);
+                return reference == nullptr ? ESM4::PathgridObjectKind::Missing
+                                             : classifyBase(reference->mBaseKey);
+            }
+            if (winner->mRecordType == ESM::REC_ACRE4)
+            {
+                const ESM4::ActorCreature* reference = get<ESM4::ActorCreature>().search(object);
+                return reference == nullptr ? ESM4::PathgridObjectKind::Missing
+                                             : classifyBase(reference->mBaseKey);
+            }
+            return ESM4::PathgridObjectKind::Other;
+        });
 
         rebuildIdsIndex();
         mStoreImp->mStaticIds = mStoreImp->mIds;

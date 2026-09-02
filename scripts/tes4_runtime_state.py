@@ -19,12 +19,14 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 4
-SUPPORTED_VERSIONS = {1, 2, 3, CURRENT_VERSION}
+CURRENT_VERSION = 5
+SUPPORTED_VERSIONS = {1, 2, 3, 4, CURRENT_VERSION}
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
 MAX_PAYLOAD = 256 * 1024 * 1024
 CHUNK_SIZE = 60 * 1024
+DEFAULT_MIGRATION_RACE = "content:oblivion.esm:000907"
+DEFAULT_MIGRATION_CLASS = "content:oblivion.esm:0230e6"
 
 
 class RuntimeStateError(RuntimeError):
@@ -90,7 +92,10 @@ class _Writer:
 
 
 def _position(reader: _Reader) -> list[float]:
-    return [reader.unpack("<f") for _ in range(6)]
+    value = [reader.unpack("<f") for _ in range(6)]
+    if not all(math.isfinite(item) for item in value):
+        raise RuntimeStateError("TES4 runtime-state position is not finite")
+    return value
 
 
 def _write_position(writer: _Writer, value: list[float]) -> None:
@@ -98,6 +103,46 @@ def _write_position(writer: _Writer, value: list[float]) -> None:
         raise RuntimeStateError("Invalid TES4 runtime-state position")
     for item in value:
         writer.pack("<f", item)
+
+
+def _calendar(reader: _Reader) -> list[int | float]:
+    value: list[int | float] = [reader.unpack("<i"), reader.unpack("<i"), reader.unpack("<i"), reader.unpack("<d")]
+    if not _valid_calendar(value):
+        raise RuntimeStateError("Invalid TES4 runtime-state schedule calendar")
+    return value
+
+
+def _write_calendar(writer: _Writer, value: list[int | float]) -> None:
+    if (len(value) != 4 or not _valid_calendar(value)
+            or not 0 <= int(value[1]) < 12 or not 1 <= int(value[2]) <= 31
+            or not math.isfinite(float(value[3])) or not 0.0 <= float(value[3]) < 24.0):
+        raise RuntimeStateError("Invalid TES4 runtime-state schedule calendar")
+    writer.pack("<i", int(value[0]))
+    writer.pack("<i", int(value[1]))
+    writer.pack("<i", int(value[2]))
+    writer.pack("<d", float(value[3]))
+
+
+def _is_leap_year(year: int) -> bool:
+    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+
+
+def _days_in_month(year: int, month: int) -> int:
+    days = (31, 29 if _is_leap_year(year) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    return days[month] if 0 <= month < len(days) else 0
+
+
+def _valid_calendar(value: Any) -> bool:
+    if not isinstance(value, list) or len(value) != 4:
+        return False
+    try:
+        year, month, day = int(value[0]), int(value[1]), int(value[2])
+        hour = float(value[3])
+    except (TypeError, ValueError, OverflowError):
+        return False
+    if not 0 <= month < 12 or not 1 <= day <= _days_in_month(year, month):
+        return False
+    return math.isfinite(hour) and 0.0 <= hour < 24.0
 
 
 def _value(reader: _Reader) -> bool | int | float | str:
@@ -210,6 +255,442 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
             writer.pack("<b", int(item.get("hotkey", -1)))
             writer.string(str(item.get("owner", "null")))
             writer.pack("<f", float(item.get("remaining_usage_time", -1.0)))
+
+
+def _finite_float(reader: _Reader, label: str) -> float:
+    value = reader.unpack("<f")
+    if not math.isfinite(value) or value < 0.0:
+        raise RuntimeStateError(f"Invalid TES4 runtime-state {label}")
+    return value
+
+
+def _read_actor_ai(reader: _Reader) -> dict[str, Any]:
+    actor = {
+        "actor": reader.string(),
+        "base": reader.string(),
+        "package": reader.string(),
+        "script_package": reader.string(),
+        "target": reader.string(),
+        "target_base": reader.string(),
+        "cell": reader.string(),
+        "pathgrid": reader.string(),
+        "door": reader.string(),
+        "destination_cell": reader.string(),
+        "last_valid_cell": reader.string(),
+        "action_item": reader.string(),
+        "last_transition_door": reader.string(),
+        "companion_group": reader.string(),
+        "companion_side_with": reader.string(),
+        "mount": reader.string(),
+        "rider": reader.string(),
+        "schedule_window": None,
+        "condition_result": 0,
+    }
+    has_schedule_window = reader.unpack("<B")
+    if has_schedule_window > 1:
+        raise RuntimeStateError("Invalid TES4 runtime-state actor schedule-window flag")
+    if has_schedule_window:
+        actor["schedule_window"] = {
+            "start": _calendar(reader),
+            "end": _calendar(reader),
+            "duration_hours": reader.unpack("<d"),
+        }
+        if (not math.isfinite(float(actor["schedule_window"]["duration_hours"]))
+                or float(actor["schedule_window"]["duration_hours"]) < 0.0):
+            raise RuntimeStateError("Invalid TES4 runtime-state actor schedule window")
+    actor["condition_result"] = reader.unpack("<B")
+    if int(actor["condition_result"]) > 3:
+        raise RuntimeStateError("Invalid TES4 runtime-state actor condition result")
+    actor["destination_position"] = _position(reader)
+    actor["last_valid_position"] = _position(reader)
+    actor.update({
+        "source": reader.unpack("<B"),
+        "package_type": reader.unpack("<B"),
+        "procedure": reader.unpack("<H"),
+        "phase": reader.unpack("<B"),
+        "tier": reader.unpack("<B"),
+        "boundary": reader.unpack("<B"),
+        "list_index": reader.unpack("<I"),
+        "path_node": reader.unpack("<I"),
+        "repath_attempts": reader.unpack("<I"),
+        "formation_index": reader.unpack("<i"),
+        "selection_generation": reader.unpack("<Q"),
+        "route_generation": reader.unpack("<Q"),
+        "transition_generation": reader.unpack("<Q"),
+        "action_timer": _finite_float(reader, "actor action timer"),
+        "duration_remaining": _finite_float(reader, "actor duration"),
+        "no_progress_seconds": _finite_float(reader, "actor no-progress timer"),
+        "door_cooldown": _finite_float(reader, "actor door cooldown"),
+        "low_process_timer": _finite_float(reader, "actor low-process timer"),
+        "next_low_process_tick": _finite_float(reader, "actor next low-process tick"),
+    })
+    restrained, reserved, has_destination = reader.unpack("<B"), reader.unpack("<B"), reader.unpack("<B")
+    if restrained > 1 or reserved > 1 or has_destination > 1:
+        raise RuntimeStateError("Invalid TES4 runtime-state actor AI flags")
+    actor["restrained"] = bool(restrained)
+    actor["action_reserved"] = bool(reserved)
+    actor["has_destination"] = bool(has_destination)
+    actor["interruption_reason"] = reader.string()
+    return actor
+
+
+def _validate_ai(state: dict[str, Any]) -> None:
+    actors = state.get("actor_ai", [])
+    seen: set[str] = set()
+    actor_ai_by_key: dict[str, dict[str, Any]] = {}
+    procedure_for_type = {index: index + 1 for index in range(13)}
+    for actor in actors:
+        required = ("actor", "base", "cell")
+        if any(str(actor.get(key, "null")) == "null" for key in required):
+            raise RuntimeStateError("Invalid TES4 runtime-state actor AI identity")
+        actor_key = str(actor["actor"])
+        if actor_key in seen:
+            raise RuntimeStateError(f"Duplicate TES4 runtime-state actor AI identity {actor_key}")
+        seen.add(actor_key)
+        actor_ai_by_key[actor_key] = actor
+        if (str(actor.get("companion_side_with", "null")) == actor_key):
+            raise RuntimeStateError("TES4 actor companion side-with points to itself")
+        source = int(actor.get("source", 0))
+        package_type = int(actor.get("package_type", 255))
+        procedure = int(actor.get("procedure", 0))
+        if source == 0:
+            if (str(actor.get("package", "null")) != "null"
+                    or package_type != 255 or procedure != 0):
+                raise RuntimeStateError("TES4 idle actor AI state contains a package")
+        elif source in (1, 2):
+            if str(actor.get("package", "null")) == "null" or package_type not in procedure_for_type:
+                raise RuntimeStateError("TES4 active actor AI state has an invalid package identity")
+            if procedure != procedure_for_type[package_type]:
+                raise RuntimeStateError("TES4 active actor AI state has an invalid package procedure")
+        if source == 2 and str(actor.get("script_package", "null")) == "null":
+            raise RuntimeStateError("TES4 script-owned actor AI state has no script package")
+        if source not in (0, 1, 2):
+            raise RuntimeStateError("Invalid TES4 runtime-state actor AI source")
+        if str(actor.get("pathgrid", "null")) == "null" and int(actor.get("path_node", 0)) != 0:
+            raise RuntimeStateError("TES4 actor AI state has a node without a pathgrid")
+        if (int(actor.get("repath_attempts", 0)) > 8
+                or int(actor.get("formation_index", -1)) < -1
+                or len(str(actor.get("interruption_reason", ""))) > 1024):
+            raise RuntimeStateError("Invalid TES4 actor AI counters")
+        if not 0 <= int(actor.get("condition_result", 0)) <= 3:
+            raise RuntimeStateError("Invalid TES4 runtime-state actor condition result")
+        schedule_window = actor.get("schedule_window")
+        if schedule_window is not None:
+            if not isinstance(schedule_window, dict):
+                raise RuntimeStateError("Invalid TES4 runtime-state actor schedule window")
+            for key in ("start", "end"):
+                calendar = schedule_window.get(key)
+                if not _valid_calendar(calendar):
+                    raise RuntimeStateError("Invalid TES4 runtime-state actor schedule window")
+            duration = float(schedule_window.get("duration_hours", 0.0))
+            if not math.isfinite(duration) or duration < 0.0:
+                raise RuntimeStateError("Invalid TES4 runtime-state actor schedule window")
+        for key in (
+            "action_timer", "duration_remaining", "no_progress_seconds", "door_cooldown", "low_process_timer",
+            "next_low_process_tick",
+        ):
+            value = float(actor.get(key, 0.0))
+            if not math.isfinite(value) or value < 0.0:
+                raise RuntimeStateError("Invalid TES4 actor AI timer")
+        if bool(actor.get("has_destination", False)) and str(actor.get("destination_cell", "null")) == "null":
+            raise RuntimeStateError("TES4 actor AI destination has no destination cell")
+        if not 0 <= int(actor.get("source", 0)) <= 2 or not 0 <= int(actor.get("package_type", 255)) <= 255:
+            raise RuntimeStateError("Invalid TES4 actor AI enum")
+        if not 0 <= int(actor.get("procedure", 0)) <= 13 or not 0 <= int(actor.get("phase", 0)) <= 12:
+            raise RuntimeStateError("Invalid TES4 actor AI phase enum")
+        if not 0 <= int(actor.get("tier", 0)) <= 1 or not 0 <= int(actor.get("boundary", 0)) <= 3:
+            raise RuntimeStateError("Invalid TES4 actor AI process enum")
+
+    points = state.get("path_points", [])
+    point_keys: set[tuple[str, int]] = set()
+    for point in points:
+        key = (str(point.get("pathgrid", "null")), int(point.get("node", 0)))
+        if key[0] == "null" or key in point_keys:
+            raise RuntimeStateError("Invalid or duplicate TES4 path-point overlay")
+        point_keys.add(key)
+
+    companions = state.get("companions", [])
+    companion_pairs: set[tuple[str, str]] = set()
+    edges: dict[str, list[str]] = {}
+    for relation in companions:
+        leader, member = str(relation.get("leader", "null")), str(relation.get("member", "null"))
+        group = str(relation.get("group", leader))
+        side_with = str(relation.get("side_with", "null"))
+        if (leader == "null" or member == "null" or group == "null" or leader == member
+                or (leader, member) in companion_pairs
+                or (side_with != "null" and side_with == leader)
+                or int(relation.get("formation_index", -1)) < -1):
+            raise RuntimeStateError("Invalid or duplicate TES4 companion relation")
+        companion_pairs.add((leader, member))
+        edges.setdefault(leader, []).append(member)
+        member_state = actor_ai_by_key.get(member)
+        if member_state is not None:
+            if ((str(member_state.get("target", "null")) != "null"
+                 and str(member_state.get("target")) != leader)
+                    or (str(member_state.get("companion_group", "null")) != "null"
+                        and str(member_state.get("companion_group")) != group)
+                    or str(member_state.get("companion_side_with", "null")) != side_with):
+                raise RuntimeStateError("TES4 companion relation is not reciprocal in actor AI state")
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(key: str) -> None:
+        if key in visiting:
+            raise RuntimeStateError("TES4 companion relations contain a cycle")
+        if key in visited:
+            return
+        visiting.add(key)
+        for member in edges.get(key, []):
+            visit(member)
+        visiting.remove(key)
+        visited.add(key)
+
+    for leader in sorted(edges):
+        visit(leader)
+
+    horses: set[str] = set()
+    riders: set[str] = set()
+    mount_pairs: set[tuple[str, str]] = set()
+    for relation in state.get("mounts", []):
+        horse, rider = str(relation.get("horse", "null")), str(relation.get("rider", "null"))
+        if (horse == "null" or rider == "null" or horse == rider
+                or (horse, rider) in mount_pairs or horse in horses or rider in riders):
+            raise RuntimeStateError("Invalid or duplicate TES4 mount relation")
+        mount_pairs.add((horse, rider))
+        horses.add(horse)
+        riders.add(rider)
+        horse_state = actor_ai_by_key.get(horse)
+        rider_state = actor_ai_by_key.get(rider)
+        if bool(relation.get("mounted", False)):
+            if ((horse_state is not None and str(horse_state.get("rider", "null")) != rider)
+                    or (rider_state is not None and str(rider_state.get("mount", "null")) != horse)):
+                raise RuntimeStateError("TES4 mounted relation is not reciprocal in actor AI state")
+        elif ((horse_state is not None and str(horse_state.get("rider", "null")) == rider)
+              or (rider_state is not None and str(rider_state.get("mount", "null")) == horse)):
+            raise RuntimeStateError("TES4 inactive mount relation has active actor AI state")
+
+    for key, actor in actor_ai_by_key.items():
+        mount = str(actor.get("mount", "null"))
+        rider = str(actor.get("rider", "null"))
+        horse_state = actor_ai_by_key.get(mount)
+        rider_state = actor_ai_by_key.get(rider)
+        if horse_state is not None and str(horse_state.get("rider", "null")) != key:
+            raise RuntimeStateError("TES4 actor mount state is not reciprocal")
+        if rider_state is not None and str(rider_state.get("mount", "null")) != key:
+            raise RuntimeStateError("TES4 actor rider state is not reciprocal")
+
+    detection_pairs: set[tuple[str, str]] = set()
+    for vector in state.get("detection_vectors", []):
+        observer = str(vector.get("observer", "null"))
+        target = str(vector.get("target", "null"))
+        score = float(vector.get("score", 0.0))
+        line_of_sight = bool(vector.get("line_of_sight", False))
+        if (observer == "null" or target == "null" or observer == target
+                or (observer, target) in detection_pairs
+                or not math.isfinite(score) or not 0.0 <= score <= 100.0
+                or (bool(vector.get("detected", False)) and not line_of_sight)):
+            raise RuntimeStateError("Invalid or duplicate TES4 detection vector")
+        detection_pairs.add((observer, target))
+
+
+def _validate_basic_state(state: dict[str, Any]) -> None:
+    """Validate the common envelope and the pre-M14 state shared by C++.
+
+    The Python tool is also used to inspect saves produced by the engine, so
+    this deliberately mirrors the C++ RuntimeState::validate checks instead
+    of relying on a successful struct.pack as validation.
+    """
+
+    version = state.get("schema_version")
+    if version not in SUPPORTED_VERSIONS or state.get("profile") != "oblivion":
+        raise RuntimeStateError("Unsupported TES4 runtime-state schema or profile")
+    try:
+        if int(state.get("next_dynamic_serial", 0)) == 0:
+            raise RuntimeStateError("TES4 runtime-state dynamic serial must be non-zero")
+    except (TypeError, ValueError, OverflowError) as error:
+        raise RuntimeStateError("Invalid TES4 runtime-state dynamic serial") from error
+
+    clock = state.get("clock")
+    if not isinstance(clock, dict):
+        raise RuntimeStateError("Invalid TES4 runtime-state clock")
+    try:
+        clock_value = [int(clock["year"]), int(clock["month"]), int(clock["day"]), float(clock["hour"])]
+        time_scale = float(clock["time_scale"])
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise RuntimeStateError("Invalid TES4 runtime-state clock") from error
+    if not _valid_calendar(clock_value) or not math.isfinite(time_scale):
+        raise RuntimeStateError("TES4 runtime-state clock is not finite")
+
+    def check_collection(value: Any, label: str) -> list[Any]:
+        if not isinstance(value, list) or len(value) > MAX_COLLECTION:
+            raise RuntimeStateError(f"TES4 runtime-state {label} exceeds the size limit")
+        return value
+
+    content = check_collection(state.get("content", []), "content list")
+    plugins: set[str] = set()
+    for item in content:
+        if not isinstance(item, dict):
+            raise RuntimeStateError("Invalid TES4 runtime-state content identity")
+        plugin = str(item.get("plugin", "")).casefold()
+        fingerprint = str(item.get("fingerprint", ""))
+        if not plugin or plugin in plugins:
+            raise RuntimeStateError(f"Duplicate TES4 runtime-state content identity: {plugin}")
+        if not fingerprint:
+            raise RuntimeStateError("TES4 runtime-state content fingerprint is empty")
+        plugins.add(plugin)
+
+    player = state.get("player")
+    if not isinstance(player, dict) or str(player.get("reference", "null")) == "null" \
+            or str(player.get("cell", "null")) == "null":
+        raise RuntimeStateError("TES4 runtime-state player has a null required FormKey")
+    try:
+        _write_position(_Writer(), player["position"])
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise RuntimeStateError("Invalid TES4 runtime-state player position") from error
+    actor_values = player.get("actor_values", {})
+    if not isinstance(actor_values, dict) or len(actor_values) > MAX_COLLECTION:
+        raise RuntimeStateError("TES4 runtime-state player actor-value list exceeds the size limit")
+    for name, value in actor_values.items():
+        if not str(name) or not math.isfinite(float(value)):
+            raise RuntimeStateError("Invalid TES4 runtime-state player actor value")
+    inventory = player.get("inventory")
+    if not isinstance(inventory, list):
+        raise RuntimeStateError("Invalid TES4 runtime-state player inventory")
+    _validate_inventory(inventory, version, True)
+    if version < 3:
+        if any(key in player for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags")):
+            raise RuntimeStateError("TES4 runtime-state version 1/2 cannot contain character-generation state")
+    else:
+        if (not isinstance(player.get("name"), str) or len(player["name"]) > 1024
+                or str(player.get("race", "null")) == "null" or str(player.get("class", "null")) == "null"
+                or int(player.get("character_generation_flags", 0)) > 0x1f):
+            raise RuntimeStateError("Invalid TES4 runtime-state character-generation state")
+        if not isinstance(player.get("female", False), bool):
+            raise RuntimeStateError("Invalid TES4 runtime-state player sex")
+
+    globals_ = state.get("globals", {})
+    if not isinstance(globals_, dict) or len(globals_) > MAX_COLLECTION:
+        raise RuntimeStateError("TES4 runtime-state global list exceeds the size limit")
+    for key, value in globals_.items():
+        if str(key) == "null" or not str(key):
+            raise RuntimeStateError("TES4 runtime-state global has a null FormKey")
+        _write_value(_Writer(), value)
+
+    references = check_collection(state.get("references", []), "reference list")
+    reference_keys: set[str] = set()
+    for reference in references:
+        if not isinstance(reference, dict):
+            raise RuntimeStateError("Invalid TES4 runtime-state reference")
+        key = str(reference.get("key", "null"))
+        if (key == "null" or str(reference.get("base", "null")) == "null"
+                or str(reference.get("cell", "null")) == "null" or key in reference_keys):
+            raise RuntimeStateError("Invalid or duplicate TES4 runtime-state reference")
+        reference_keys.add(key)
+        owner = reference.get("owner")
+        if owner is not None and str(owner) == "null":
+            raise RuntimeStateError("TES4 runtime-state reference has a null owner")
+        _write_position(_Writer(), reference["position"])
+        reference_inventory = reference.get("inventory")
+        if not isinstance(reference_inventory, list):
+            raise RuntimeStateError("Invalid TES4 runtime-state reference inventory")
+        _validate_inventory(reference_inventory, version, False)
+        custom = reference.get("custom_state", {})
+        if not isinstance(custom, dict) or len(custom) > MAX_COLLECTION:
+            raise RuntimeStateError("TES4 runtime-state reference custom state exceeds the size limit")
+        for name, value in custom.items():
+            if not str(name):
+                raise RuntimeStateError("TES4 runtime-state custom-state key is empty")
+            _write_value(_Writer(), value)
+
+    scripts = check_collection(state.get("script_instances", []), "script instance list")
+    quests = check_collection(state.get("quests", []), "quest list")
+    if version < 2 and (state.get("script_event_sequence", 0) != 0 or scripts or quests):
+        raise RuntimeStateError("TES4 runtime-state version 1 cannot contain ObScript state")
+    script_keys: set[tuple[str, str]] = set()
+    for script in scripts:
+        identity = (str(script.get("unit", "")), str(script.get("context", "null")))
+        if not identity[0] or identity[1] == "null" or identity in script_keys:
+            raise RuntimeStateError("Invalid or duplicate TES4 runtime-state script instance")
+        script_keys.add(identity)
+        locals_ = script.get("locals", [])
+        if not isinstance(locals_, list) or len(locals_) > MAX_COLLECTION:
+            raise RuntimeStateError("TES4 runtime-state script local list exceeds the size limit")
+        for value in locals_:
+            _write_script_value(_Writer(), value)
+    quest_keys: set[str] = set()
+    for quest in quests:
+        key = str(quest.get("quest", "null"))
+        if key == "null" or key in quest_keys:
+            raise RuntimeStateError("Invalid or duplicate TES4 runtime-state quest")
+        quest_keys.add(key)
+        completed = quest.get("completed_stages", [])
+        try:
+            if not isinstance(completed, list):
+                raise ValueError
+            # encode_payload canonicalizes this list, while decode_payload
+            # rejects a non-canonical wire representation just like C++.
+            [int(value) for value in completed]
+        except (TypeError, ValueError, OverflowError) as error:
+            raise RuntimeStateError("Invalid TES4 runtime-state quest stages") from error
+
+    if version >= 5:
+        try:
+            if int(state.get("ai_rng_state", 0)) == 0:
+                raise RuntimeStateError("TES4 runtime-state AI RNG state must be non-zero")
+        except (TypeError, ValueError, OverflowError) as error:
+            raise RuntimeStateError("Invalid TES4 runtime-state AI RNG state") from error
+        _validate_ai(state)
+
+
+def _write_actor_ai(writer: _Writer, actor: dict[str, Any]) -> None:
+    for key in (
+        "actor", "base", "package", "script_package", "target", "target_base", "cell", "pathgrid", "door",
+        "destination_cell", "last_valid_cell", "action_item", "last_transition_door", "companion_group",
+        "companion_side_with", "mount", "rider",
+    ):
+        writer.string(str(actor.get(key, "null")))
+    schedule_window = actor.get("schedule_window")
+    if schedule_window is None:
+        writer.pack("<B", 0)
+    else:
+        writer.pack("<B", 1)
+        _write_calendar(writer, schedule_window["start"])
+        _write_calendar(writer, schedule_window["end"])
+        duration = float(schedule_window.get("duration_hours", 0.0))
+        if not math.isfinite(duration) or duration < 0.0:
+            raise RuntimeStateError("Invalid TES4 runtime-state actor schedule window")
+        writer.pack("<d", duration)
+    condition_result = int(actor.get("condition_result", 0))
+    if not 0 <= condition_result <= 3:
+        raise RuntimeStateError("Invalid TES4 runtime-state actor condition result")
+    writer.pack("<B", condition_result)
+    _write_position(writer, actor.get("destination_position", [0.0] * 6))
+    _write_position(writer, actor.get("last_valid_position", [0.0] * 6))
+    writer.pack("<B", int(actor.get("source", 0)))
+    writer.pack("<B", int(actor.get("package_type", 255)))
+    writer.pack("<H", int(actor.get("procedure", 0)))
+    writer.pack("<B", int(actor.get("phase", 0)))
+    writer.pack("<B", int(actor.get("tier", 0)))
+    writer.pack("<B", int(actor.get("boundary", 0)))
+    writer.pack("<I", int(actor.get("list_index", 0)))
+    writer.pack("<I", int(actor.get("path_node", 0)))
+    writer.pack("<I", int(actor.get("repath_attempts", 0)))
+    writer.pack("<i", int(actor.get("formation_index", -1)))
+    writer.pack("<Q", int(actor.get("selection_generation", 0)))
+    writer.pack("<Q", int(actor.get("route_generation", 0)))
+    writer.pack("<Q", int(actor.get("transition_generation", 0)))
+    for key in (
+        "action_timer", "duration_remaining", "no_progress_seconds", "door_cooldown", "low_process_timer",
+        "next_low_process_tick",
+    ):
+        value = float(actor.get(key, 0.0))
+        if not math.isfinite(value) or value < 0.0:
+            raise RuntimeStateError("Invalid TES4 actor AI timer")
+        writer.pack("<f", value)
+    writer.pack("<B", int(bool(actor.get("restrained", False))))
+    writer.pack("<B", int(bool(actor.get("action_reserved", False))))
+    writer.pack("<B", int(bool(actor.get("has_destination", False))))
+    writer.string(str(actor.get("interruption_reason", "")))
 
 
 def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) -> None:
@@ -385,6 +866,54 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             result["quests"].append({
                 "quest": quest, "stage": stage, "running": bool(running), "completed_stages": completed,
             })
+    if version >= 5:
+        result["ai_rng_state"] = reader.unpack("<Q")
+        result["actor_ai"] = [_read_actor_ai(reader) for _ in range(reader.count())]
+        result["path_points"] = []
+        for _ in range(reader.count()):
+            pathgrid, node, enabled = reader.string(), reader.unpack("<I"), reader.unpack("<B")
+            if enabled > 1:
+                raise RuntimeStateError("Invalid TES4 runtime-state path-point overlay flag")
+            result["path_points"].append({"pathgrid": pathgrid, "node": node, "enabled": bool(enabled)})
+        result["companions"] = []
+        for _ in range(reader.count()):
+            result["companions"].append({
+                "leader": reader.string(),
+                "member": reader.string(),
+                "group": reader.string(),
+                "side_with": reader.string(),
+                "formation_index": reader.unpack("<i"),
+            })
+        result["mounts"] = []
+        for _ in range(reader.count()):
+            horse, rider, owner, last_ridden = (reader.string() for _ in range(4))
+            mounted = reader.unpack("<B")
+            if mounted > 1:
+                raise RuntimeStateError("Invalid TES4 runtime-state mount flag")
+            result["mounts"].append({
+                "horse": horse,
+                "rider": rider,
+                "owner": owner,
+                "last_ridden": last_ridden,
+                "mounted": bool(mounted),
+            })
+        result["detection_vectors"] = []
+        for _ in range(reader.count()):
+            observer, target = reader.string(), reader.string()
+            score = reader.unpack("<d")
+            if not math.isfinite(score) or not 0.0 <= score <= 100.0:
+                raise RuntimeStateError("Invalid TES4 runtime-state detection vector score")
+            detected, line_of_sight = reader.unpack("<B"), reader.unpack("<B")
+            if detected > 1 or line_of_sight > 1:
+                raise RuntimeStateError("Invalid TES4 runtime-state detection vector flags")
+            result["detection_vectors"].append({
+                "observer": observer,
+                "target": target,
+                "score": score,
+                "detected": bool(detected),
+                "line_of_sight": bool(line_of_sight),
+            })
+    _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
     return result
@@ -394,6 +923,9 @@ def encode_payload(state: dict[str, Any]) -> bytes:
     version = state.get("schema_version")
     if version not in SUPPORTED_VERSIONS or state.get("profile") != "oblivion":
         raise RuntimeStateError("Unsupported TES4 runtime-state schema or profile")
+    if version < 5 and state.get("detection_vectors"):
+        raise RuntimeStateError("TES4 runtime-state version 1/2/3/4 cannot contain detection vectors")
+    _validate_basic_state(state)
     writer = _Writer()
     writer.add(MAGIC)
     writer.pack("<I", version)
@@ -474,6 +1006,59 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<I", len(completed))
             for stage in completed:
                 writer.pack("<i", stage)
+    if version >= 5:
+        _validate_ai(state)
+        rng_state = int(state.get("ai_rng_state", 1))
+        if rng_state == 0:
+            raise RuntimeStateError("TES4 runtime-state AI RNG state must be non-zero")
+        writer.pack("<Q", rng_state)
+
+        actors = sorted(state.get("actor_ai", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(actors))
+        for actor in actors:
+            _write_actor_ai(writer, actor)
+
+        points = sorted(state.get("path_points", []), key=lambda item: (item["pathgrid"], int(item["node"])))
+        writer.pack("<I", len(points))
+        for point in points:
+            writer.string(str(point["pathgrid"]))
+            writer.pack("<I", int(point["node"]))
+            writer.pack("<B", int(bool(point.get("enabled", True))))
+
+        companions = sorted(
+            state.get("companions", []), key=lambda item: (item["leader"], item["member"])
+        )
+        writer.pack("<I", len(companions))
+        for relation in companions:
+            writer.string(str(relation["leader"]))
+            writer.string(str(relation["member"]))
+            writer.string(str(relation.get("group", relation["leader"])))
+            writer.string(str(relation.get("side_with", "null")))
+            writer.pack("<i", int(relation.get("formation_index", -1)))
+
+        mounts = sorted(state.get("mounts", []), key=lambda item: (item["horse"], item["rider"]))
+        writer.pack("<I", len(mounts))
+        for relation in mounts:
+            writer.string(str(relation["horse"]))
+            writer.string(str(relation["rider"]))
+            writer.string(str(relation.get("owner", "null")))
+            writer.string(str(relation.get("last_ridden", "null")))
+            writer.pack("<B", int(bool(relation.get("mounted", False))))
+
+        vectors = sorted(
+            state.get("detection_vectors", []),
+            key=lambda item: (item["observer"], item["target"]),
+        )
+        writer.pack("<I", len(vectors))
+        for vector in vectors:
+            writer.string(str(vector["observer"]))
+            writer.string(str(vector["target"]))
+            score = float(vector.get("score", 0.0))
+            if not math.isfinite(score) or not 0.0 <= score <= 100.0:
+                raise RuntimeStateError("Invalid TES4 runtime-state detection vector score")
+            writer.pack("<d", score)
+            writer.pack("<B", int(bool(vector.get("detected", False))))
+            writer.pack("<B", int(bool(vector.get("line_of_sight", False))))
     return writer.finish()
 
 
@@ -524,10 +1109,26 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
     state = copy.deepcopy(state)
+    # v1/v2 did not carry character-generation fields.  Promote them with
+    # stable Oblivion defaults before encoding v5; without this step a real
+    # legacy save could be decoded but not rewritten by the migration tool.
+    player = state.setdefault("player", {})
+    player.setdefault("name", "")
+    player.setdefault("race", DEFAULT_MIGRATION_RACE)
+    player.setdefault("class", DEFAULT_MIGRATION_CLASS)
+    player.setdefault("birthsign", "null")
+    player.setdefault("female", False)
+    player.setdefault("character_generation_flags", 0)
     state["schema_version"] = CURRENT_VERSION
     state.setdefault("script_event_sequence", 0)
     state.setdefault("script_instances", [])
     state.setdefault("quests", [])
+    state.setdefault("ai_rng_state", 1)
+    state.setdefault("actor_ai", [])
+    state.setdefault("path_points", [])
+    state.setdefault("companions", [])
+    state.setdefault("mounts", [])
+    state.setdefault("detection_vectors", [])
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
@@ -549,6 +1150,12 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])
     result.setdefault("quests", [])
+    result.setdefault("ai_rng_state", 1)
+    result.setdefault("actor_ai", [])
+    result.setdefault("path_points", [])
+    result.setdefault("companions", [])
+    result.setdefault("mounts", [])
+    result.setdefault("detection_vectors", [])
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])

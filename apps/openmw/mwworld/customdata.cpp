@@ -63,6 +63,20 @@ namespace MWWorld
         throw std::logic_error(error.str());
     }
 
+    MWClass::ESM4DoorCustomData& CustomData::asESM4DoorCustomData()
+    {
+        std::stringstream error;
+        error << "bad cast " << typeid(this).name() << " to ESM4DoorCustomData";
+        throw std::logic_error(error.str());
+    }
+
+    const MWClass::ESM4DoorCustomData& CustomData::asESM4DoorCustomData() const
+    {
+        std::stringstream error;
+        error << "bad cast " << typeid(this).name() << " to ESM4DoorCustomData";
+        throw std::logic_error(error.str());
+    }
+
     MWClass::CreatureLevListCustomData& CustomData::asCreatureLevListCustomData()
     {
         std::stringstream error;
@@ -88,6 +102,20 @@ namespace MWWorld
     {
         std::stringstream error;
         error << "bad cast " << typeid(this).name() << " to ESM4NpcCustomData";
+        throw std::logic_error(error.str());
+    }
+
+    MWClass::ESM4CreatureCustomData& CustomData::asESM4CreatureCustomData()
+    {
+        std::stringstream error;
+        error << "bad cast " << typeid(this).name() << " to ESM4CreatureCustomData";
+        throw std::logic_error(error.str());
+    }
+
+    const MWClass::ESM4CreatureCustomData& CustomData::asESM4CreatureCustomData() const
+    {
+        std::stringstream error;
+        error << "bad cast " << typeid(this).name() << " to ESM4CreatureCustomData";
         throw std::logic_error(error.str());
     }
 }

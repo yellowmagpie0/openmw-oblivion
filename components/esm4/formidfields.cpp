@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -91,6 +92,13 @@ namespace ESM4
         {
             return std::find(values.begin(), values.end(), value) != values.end();
         }
+    }
+
+    std::uint8_t conditionParameterFormIdMask(std::uint32_t function)
+    {
+        if (function > std::numeric_limits<std::uint16_t>::max())
+            return 0;
+        return conditionParameterMask(static_cast<std::uint16_t>(function));
     }
 
     bool mayContainFormIds(std::uint32_t recordType, std::uint32_t subRecordType)

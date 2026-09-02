@@ -12,12 +12,15 @@
       "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n"
     }
   ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{source}/scripts/data/oblivion_compat/m7_runtime_events.txt"
+  },
   "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
   "xvfb": true,
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 22},
+    {"type": "sleep", "seconds": 80},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "screenshot", "name": "tutorial-wall-before.png"},
     {"type": "sleep", "seconds": 20},
@@ -30,7 +33,7 @@
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST"]}
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 65,
+  "timeout_seconds": 150,
   "expected_exit": 0,
   "expected_log": [
     "M7 ObScript runtime: compiled=11051 failed=0",

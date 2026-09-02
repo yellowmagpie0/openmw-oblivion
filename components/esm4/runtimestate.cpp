@@ -3,12 +3,14 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <limits>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
+#include <tuple>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
@@ -145,6 +147,29 @@ namespace ESM4
             for (float& value : result.rot)
                 value = reader.float32();
             return result;
+        }
+
+        void writeCalendar(BinaryWriter& writer, const CalendarInstant& instant)
+        {
+            writer.integer(instant.mYear);
+            writer.integer(instant.mMonth);
+            writer.integer(instant.mDay);
+            writer.floating(instant.mHour);
+        }
+
+        CalendarInstant readCalendar(BinaryReader& reader)
+        {
+            CalendarInstant result;
+            result.mYear = reader.integer<std::int32_t>();
+            result.mMonth = reader.integer<std::int32_t>();
+            result.mDay = reader.integer<std::int32_t>();
+            result.mHour = reader.float64();
+            return result;
+        }
+
+        bool validCalendar(const CalendarInstant& instant)
+        {
+            return isValidCalendarInstant(instant);
         }
 
         void writeValue(BinaryWriter& writer, const RuntimeValue& value)
@@ -425,7 +450,8 @@ namespace ESM4
             throw std::runtime_error("TES4 runtime state requires the Oblivion game profile");
         if (mNextDynamicSerial == 0)
             throw std::runtime_error("TES4 runtime-state dynamic serial must be non-zero");
-        if (!std::isfinite(mClock.mHour) || !std::isfinite(mClock.mTimeScale))
+        if (!validCalendar(CalendarInstant{ mClock.mYear, mClock.mMonth, mClock.mDay, mClock.mHour })
+            || !std::isfinite(mClock.mTimeScale))
             throw std::runtime_error("TES4 runtime-state clock is not finite");
         const auto checkSize = [](std::size_t size, std::string_view name) {
             if (size > sMaximumCollectionSize)
@@ -438,8 +464,15 @@ namespace ESM4
         checkSize(mReferences.size(), "reference list");
         checkSize(mScriptInstances.size(), "script instance list");
         checkSize(mQuests.size(), "quest list");
+        checkSize(mActorAi.size(), "actor AI list");
+        checkSize(mPathPoints.size(), "path-point overlay list");
+        checkSize(mCompanions.size(), "companion relation list");
+        checkSize(mMounts.size(), "mount relation list");
+        checkSize(mDetectionVectors.size(), "detection vector list");
         if (mVersion < 2 && (mScriptEventSequence != 0 || !mScriptInstances.empty() || !mQuests.empty()))
             throw std::runtime_error("TES4 runtime-state version 1 cannot contain ObScript state");
+        if (mVersion < 5 && !mDetectionVectors.empty())
+            throw std::runtime_error("TES4 runtime-state version 1/2/3/4 cannot contain detection vectors");
         if (mVersion < 3 && (!mPlayer.mName.empty() || !mPlayer.mRace.isNull() || !mPlayer.mClass.isNull()
                 || !mPlayer.mBirthSign.isNull() || mPlayer.mFemale || mPlayer.mCharacterGenerationFlags != 0))
             throw std::runtime_error("TES4 runtime-state version 1/2 cannot contain character-generation state");
@@ -554,6 +587,175 @@ namespace ESM4
                     != quest.mCompletedStages.end())
                 throw std::runtime_error("TES4 runtime-state completed quest stages are not sorted and unique");
         }
+
+        if (mVersion >= 5)
+        {
+            if (mAiRngState == 0)
+                throw std::runtime_error("TES4 runtime-state AI RNG state must be non-zero");
+
+            std::set<ESM::FormKey> actorKeys;
+            std::map<ESM::FormKey, const RuntimeActorAiState*> actorAiByKey;
+            for (const RuntimeActorAiState& actor : mActorAi)
+            {
+                if (actor.mActor.isNull() || actor.mBase.isNull() || actor.mCell.isNull()
+                    || !actorKeys.insert(actor.mActor).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 runtime-state actor AI identity");
+                actorAiByKey.emplace(actor.mActor, &actor);
+                if (!actor.mCompanionSideWith.isNull() && actor.mCompanionSideWith == actor.mActor)
+                    throw std::runtime_error("TES4 actor companion side-with points to itself");
+                if (actor.mSource == PackageSource::None)
+                {
+                    if (!actor.mPackage.isNull() || actor.mPackageType != AIPackageType::Unknown
+                        || actor.mProcedure != PackageProcedure::None)
+                        throw std::runtime_error("TES4 idle actor AI state contains a package");
+                }
+                else if (actor.mPackage.isNull() || actor.mPackageType == AIPackageType::Unknown
+                    || actor.mProcedure != packageProcedure(actor.mPackageType))
+                    throw std::runtime_error("TES4 active actor AI state has an invalid package identity");
+                if (actor.mSource == PackageSource::Script && actor.mScriptPackage.isNull())
+                    throw std::runtime_error("TES4 script-owned actor AI state has no script package");
+                if (actor.mPathgrid.isNull() && actor.mPathNode != 0)
+                    throw std::runtime_error("TES4 actor AI state has a node without a pathgrid");
+                if (actor.mFormationIndex < -1 || actor.mRepathAttempts > 8
+                    || actor.mInterruptionReason.size() > 1024)
+                    throw std::runtime_error("Invalid TES4 actor AI counters: " + actor.mActor.serialize()
+                        + " repath=" + std::to_string(actor.mRepathAttempts)
+                        + " formation=" + std::to_string(actor.mFormationIndex)
+                        + " interruption_size=" + std::to_string(actor.mInterruptionReason.size()));
+                const auto validTimer = [&](float value, std::string_view name) {
+                    if (!std::isfinite(value) || value < 0.f)
+                        throw std::runtime_error("Invalid TES4 actor AI " + std::string(name) + ": "
+                            + std::to_string(value) + " for " + actor.mActor.serialize());
+                };
+                validTimer(actor.mActionTimer, "action timer");
+                validTimer(actor.mDurationRemaining, "duration");
+                validTimer(actor.mNoProgressSeconds, "no-progress timer");
+                validTimer(actor.mDoorCooldown, "door cooldown");
+                validTimer(actor.mLowProcessTimer, "low-process timer");
+                validTimer(actor.mNextLowProcessTick, "next low-process tick");
+                validatePosition(actor.mDestinationPosition);
+                validatePosition(actor.mLastValidPosition);
+                if (actor.mHasDestination && actor.mDestinationCell.isNull())
+                    throw std::runtime_error("TES4 actor AI destination has no destination cell");
+                if (static_cast<std::uint8_t>(actor.mConditionResult)
+                    > static_cast<std::uint8_t>(ConditionResult::Unsupported))
+                    throw std::runtime_error("Invalid TES4 actor AI condition result");
+                if (actor.mScheduleWindow
+                    && (!validCalendar(actor.mScheduleWindow->mStart)
+                        || !validCalendar(actor.mScheduleWindow->mEnd)
+                        || !std::isfinite(actor.mScheduleWindow->mDurationHours)
+                        || actor.mScheduleWindow->mDurationHours < 0.0))
+                    throw std::runtime_error("Invalid TES4 actor AI schedule window");
+                if (static_cast<std::uint8_t>(actor.mSource) > static_cast<std::uint8_t>(PackageSource::Script)
+                    || (actor.mSource != PackageSource::None
+                        && static_cast<std::uint8_t>(actor.mPackageType)
+                        > static_cast<std::uint8_t>(AIPackageType::Pursue))
+                    || static_cast<std::uint16_t>(actor.mProcedure) > static_cast<std::uint16_t>(PackageProcedure::Pursue)
+                    || static_cast<std::uint8_t>(actor.mPhase) > static_cast<std::uint8_t>(PackagePhase::Stalled)
+                    || static_cast<std::uint8_t>(actor.mTier) > static_cast<std::uint8_t>(ProcessTier::Low)
+                    || static_cast<std::uint8_t>(actor.mBoundary) > static_cast<std::uint8_t>(PhaseBoundary::ReadyForDialogue))
+                    throw std::runtime_error("Invalid TES4 actor AI enum value");
+            }
+
+            std::set<std::pair<ESM::FormKey, std::uint32_t>> pathPoints;
+            for (const RuntimePathPointState& point : mPathPoints)
+            {
+                if (point.mPathgrid.isNull() || !pathPoints.emplace(point.mPathgrid, point.mNode).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 path-point overlay");
+            }
+
+            std::set<std::pair<ESM::FormKey, ESM::FormKey>> companionPairs;
+            std::map<ESM::FormKey, std::vector<ESM::FormKey>> companionEdges;
+            for (const RuntimeCompanionRelation& relation : mCompanions)
+            {
+                if (relation.mLeader.isNull() || relation.mMember.isNull() || relation.mGroup.isNull()
+                    || relation.mLeader == relation.mMember
+                    || (relation.mFormationIndex < -1)
+                    || (!relation.mSideWith.isNull() && relation.mSideWith == relation.mLeader)
+                    || !companionPairs.emplace(relation.mLeader, relation.mMember).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 companion relation");
+                if (const auto member = actorAiByKey.find(relation.mMember); member != actorAiByKey.end())
+                {
+                    if ((!member->second->mTarget.isNull() && member->second->mTarget != relation.mLeader)
+                        || (!member->second->mCompanionGroup.isNull()
+                            && member->second->mCompanionGroup != relation.mGroup)
+                        || member->second->mCompanionSideWith != relation.mSideWith)
+                        throw std::runtime_error("TES4 companion relation is not reciprocal in actor AI state");
+                }
+                companionEdges[relation.mLeader].push_back(relation.mMember);
+            }
+            std::map<ESM::FormKey, std::uint8_t> visit;
+            std::function<bool(const ESM::FormKey&)> hasCycle = [&](const ESM::FormKey& key) -> bool {
+                auto& mark = visit[key];
+                if (mark == 1)
+                    return true;
+                if (mark == 2)
+                    return false;
+                mark = 1;
+                const auto found = companionEdges.find(key);
+                if (found != companionEdges.end())
+                    for (const ESM::FormKey& member : found->second)
+                        if (hasCycle(member))
+                            return true;
+                mark = 2;
+                return false;
+            };
+            for (const auto& [leader, members] : companionEdges)
+                if (hasCycle(leader))
+                    throw std::runtime_error("TES4 companion relations contain a cycle");
+
+            std::set<std::pair<ESM::FormKey, ESM::FormKey>> mountPairs;
+            std::set<ESM::FormKey> horses;
+            std::set<ESM::FormKey> riders;
+            for (const RuntimeMountRelation& relation : mMounts)
+            {
+                if (relation.mHorse.isNull() || relation.mRider.isNull() || relation.mHorse == relation.mRider
+                    || !mountPairs.emplace(relation.mHorse, relation.mRider).second
+                    || !horses.insert(relation.mHorse).second || !riders.insert(relation.mRider).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 mount relation");
+
+                const auto horse = actorAiByKey.find(relation.mHorse);
+                const auto rider = actorAiByKey.find(relation.mRider);
+                if (relation.mMounted)
+                {
+                    if ((horse != actorAiByKey.end() && horse->second->mRider != relation.mRider)
+                        || (rider != actorAiByKey.end() && rider->second->mMount != relation.mHorse))
+                        throw std::runtime_error("TES4 mounted relation is not reciprocal in actor AI state");
+                }
+                else if ((horse != actorAiByKey.end() && horse->second->mRider == relation.mRider)
+                    || (rider != actorAiByKey.end() && rider->second->mMount == relation.mHorse))
+                    throw std::runtime_error("TES4 inactive mount relation has active actor AI state");
+            }
+
+            // Actor state is authoritative while an actor is loaded.  A
+            // relation may refer to an unloaded actor, so only validate the
+            // reciprocal side when that side is present in this save chunk.
+            for (const auto& [key, actor] : actorAiByKey)
+            {
+                if (!actor->mMount.isNull())
+                {
+                    const auto horse = actorAiByKey.find(actor->mMount);
+                    if (horse != actorAiByKey.end() && horse->second->mRider != key)
+                        throw std::runtime_error("TES4 actor mount state is not reciprocal");
+                }
+                if (!actor->mRider.isNull())
+                {
+                    const auto rider = actorAiByKey.find(actor->mRider);
+                    if (rider != actorAiByKey.end() && rider->second->mMount != key)
+                        throw std::runtime_error("TES4 actor rider state is not reciprocal");
+                }
+            }
+
+            std::set<std::pair<ESM::FormKey, ESM::FormKey>> detectionPairs;
+            for (const RuntimeDetectionVector& vector : mDetectionVectors)
+            {
+                if (vector.mObserver.isNull() || vector.mTarget.isNull() || vector.mObserver == vector.mTarget
+                    || !detectionPairs.emplace(vector.mObserver, vector.mTarget).second
+                    || !std::isfinite(vector.mScore) || vector.mScore < 0.0 || vector.mScore > 100.0
+                    || (vector.mDetected && !vector.mLineOfSight))
+                    throw std::runtime_error("Invalid or duplicate TES4 detection vector");
+            }
+        }
     }
 
     std::vector<std::uint8_t> RuntimeState::serializeBinary() const
@@ -649,6 +851,124 @@ namespace ESM4
                 writer.integer<std::uint32_t>(static_cast<std::uint32_t>(quest.mCompletedStages.size()));
                 for (const std::int32_t stage : quest.mCompletedStages)
                     writer.integer(stage);
+            }
+        }
+
+        if (mVersion >= 5)
+        {
+            writer.integer(mAiRngState);
+
+            std::vector<RuntimeActorAiState> actors = mActorAi;
+            std::sort(actors.begin(), actors.end(), [](const auto& left, const auto& right) {
+                return left.mActor < right.mActor;
+            });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actors.size()));
+            for (const RuntimeActorAiState& actor : actors)
+            {
+                writeKey(writer, actor.mActor);
+                writeKey(writer, actor.mBase);
+                writeKey(writer, actor.mPackage);
+                writeKey(writer, actor.mScriptPackage);
+                writeKey(writer, actor.mTarget);
+                writeKey(writer, actor.mTargetBase);
+                writeKey(writer, actor.mCell);
+                writeKey(writer, actor.mPathgrid);
+                writeKey(writer, actor.mDoor);
+                writeKey(writer, actor.mDestinationCell);
+                writeKey(writer, actor.mLastValidCell);
+                writeKey(writer, actor.mActionItem);
+                writeKey(writer, actor.mLastTransitionDoor);
+                writeKey(writer, actor.mCompanionGroup);
+                writeKey(writer, actor.mCompanionSideWith);
+                writeKey(writer, actor.mMount);
+                writeKey(writer, actor.mRider);
+                writer.integer<std::uint8_t>(actor.mScheduleWindow ? 1 : 0);
+                if (actor.mScheduleWindow)
+                {
+                    writeCalendar(writer, actor.mScheduleWindow->mStart);
+                    writeCalendar(writer, actor.mScheduleWindow->mEnd);
+                    writer.floating(actor.mScheduleWindow->mDurationHours);
+                }
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mConditionResult));
+                writePosition(writer, actor.mDestinationPosition);
+                writePosition(writer, actor.mLastValidPosition);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mSource));
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mPackageType));
+                writer.integer<std::uint16_t>(static_cast<std::uint16_t>(actor.mProcedure));
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mPhase));
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mTier));
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mBoundary));
+                writer.integer(actor.mListIndex);
+                writer.integer(actor.mPathNode);
+                writer.integer(actor.mRepathAttempts);
+                writer.integer(actor.mFormationIndex);
+                writer.integer(actor.mSelectionGeneration);
+                writer.integer(actor.mRouteGeneration);
+                writer.integer(actor.mTransitionGeneration);
+                writer.floating(actor.mActionTimer);
+                writer.floating(actor.mDurationRemaining);
+                writer.floating(actor.mNoProgressSeconds);
+                writer.floating(actor.mDoorCooldown);
+                writer.floating(actor.mLowProcessTimer);
+                writer.floating(actor.mNextLowProcessTick);
+                writer.integer<std::uint8_t>(actor.mRestrained ? 1 : 0);
+                writer.integer<std::uint8_t>(actor.mActionReserved ? 1 : 0);
+                writer.integer<std::uint8_t>(actor.mHasDestination ? 1 : 0);
+                writer.string(actor.mInterruptionReason);
+            }
+
+            std::vector<RuntimePathPointState> points = mPathPoints;
+            std::sort(points.begin(), points.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mPathgrid, left.mNode) < std::tie(right.mPathgrid, right.mNode);
+            });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(points.size()));
+            for (const RuntimePathPointState& point : points)
+            {
+                writeKey(writer, point.mPathgrid);
+                writer.integer(point.mNode);
+                writer.integer<std::uint8_t>(point.mEnabled ? 1 : 0);
+            }
+
+            std::vector<RuntimeCompanionRelation> companions = mCompanions;
+            std::sort(companions.begin(), companions.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mLeader, left.mMember) < std::tie(right.mLeader, right.mMember);
+            });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(companions.size()));
+            for (const RuntimeCompanionRelation& relation : companions)
+            {
+                writeKey(writer, relation.mLeader);
+                writeKey(writer, relation.mMember);
+                writeKey(writer, relation.mGroup);
+                writeKey(writer, relation.mSideWith);
+                writer.integer(relation.mFormationIndex);
+            }
+
+            std::vector<RuntimeMountRelation> mounts = mMounts;
+            std::sort(mounts.begin(), mounts.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mHorse, left.mRider) < std::tie(right.mHorse, right.mRider);
+            });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mounts.size()));
+            for (const RuntimeMountRelation& relation : mounts)
+            {
+                writeKey(writer, relation.mHorse);
+                writeKey(writer, relation.mRider);
+                writeKey(writer, relation.mOwner);
+                writeKey(writer, relation.mLastRidden);
+                writer.integer<std::uint8_t>(relation.mMounted ? 1 : 0);
+            }
+
+            std::vector<RuntimeDetectionVector> detectionVectors = mDetectionVectors;
+            std::sort(detectionVectors.begin(), detectionVectors.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mObserver, left.mTarget) < std::tie(right.mObserver, right.mTarget);
+            });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(detectionVectors.size()));
+            for (const RuntimeDetectionVector& vector : detectionVectors)
+            {
+                writeKey(writer, vector.mObserver);
+                writeKey(writer, vector.mTarget);
+                writer.floating(vector.mScore);
+                writer.integer<std::uint8_t>(vector.mDetected ? 1 : 0);
+                writer.integer<std::uint8_t>(vector.mLineOfSight ? 1 : 0);
             }
         }
 
@@ -788,6 +1108,146 @@ namespace ESM4
                     quest.mCompletedStages.push_back(reader.integer<std::int32_t>());
                 result.mQuests.push_back(std::move(quest));
             }
+        }
+
+        if (result.mVersion >= 5)
+        {
+            result.mAiRngState = reader.integer<std::uint64_t>();
+            const std::uint32_t actorCount = reader.count();
+            result.mActorAi.reserve(actorCount);
+            for (std::uint32_t i = 0; i < actorCount; ++i)
+            {
+                RuntimeActorAiState actor;
+                actor.mActor = readKey(reader);
+                actor.mBase = readKey(reader);
+                actor.mPackage = readKey(reader);
+                actor.mScriptPackage = readKey(reader);
+                actor.mTarget = readKey(reader);
+                actor.mTargetBase = readKey(reader);
+                actor.mCell = readKey(reader);
+                actor.mPathgrid = readKey(reader);
+                actor.mDoor = readKey(reader);
+                actor.mDestinationCell = readKey(reader);
+                actor.mLastValidCell = readKey(reader);
+                actor.mActionItem = readKey(reader);
+                actor.mLastTransitionDoor = readKey(reader);
+                actor.mCompanionGroup = readKey(reader);
+                actor.mCompanionSideWith = readKey(reader);
+                actor.mMount = readKey(reader);
+                actor.mRider = readKey(reader);
+                const std::uint8_t hasScheduleWindow = reader.integer<std::uint8_t>();
+                if (hasScheduleWindow > 1)
+                    throw std::runtime_error("Invalid TES4 actor AI schedule-window flag");
+                if (hasScheduleWindow)
+                {
+                    ScheduleWindow window;
+                    window.mStart = readCalendar(reader);
+                    window.mEnd = readCalendar(reader);
+                    window.mDurationHours = reader.float64();
+                    actor.mScheduleWindow = std::move(window);
+                }
+                const std::uint8_t conditionResult = reader.integer<std::uint8_t>();
+                if (conditionResult > static_cast<std::uint8_t>(ConditionResult::Unsupported))
+                    throw std::runtime_error("Invalid TES4 actor AI condition result");
+                actor.mConditionResult = static_cast<ConditionResult>(conditionResult);
+                actor.mDestinationPosition = readPosition(reader);
+                actor.mLastValidPosition = readPosition(reader);
+                actor.mSource = static_cast<PackageSource>(reader.integer<std::uint8_t>());
+                actor.mPackageType = static_cast<AIPackageType>(reader.integer<std::uint8_t>());
+                actor.mProcedure = static_cast<PackageProcedure>(reader.integer<std::uint16_t>());
+                actor.mPhase = static_cast<PackagePhase>(reader.integer<std::uint8_t>());
+                actor.mTier = static_cast<ProcessTier>(reader.integer<std::uint8_t>());
+                actor.mBoundary = static_cast<PhaseBoundary>(reader.integer<std::uint8_t>());
+                actor.mListIndex = reader.integer<std::uint32_t>();
+                actor.mPathNode = reader.integer<std::uint32_t>();
+                actor.mRepathAttempts = reader.integer<std::uint32_t>();
+                actor.mFormationIndex = reader.integer<std::int32_t>();
+                actor.mSelectionGeneration = reader.integer<std::uint64_t>();
+                actor.mRouteGeneration = reader.integer<std::uint64_t>();
+                actor.mTransitionGeneration = reader.integer<std::uint64_t>();
+                actor.mActionTimer = reader.float32();
+                actor.mDurationRemaining = reader.float32();
+                actor.mNoProgressSeconds = reader.float32();
+                actor.mDoorCooldown = reader.float32();
+                actor.mLowProcessTimer = reader.float32();
+                actor.mNextLowProcessTick = reader.float32();
+                const std::uint8_t restrained = reader.integer<std::uint8_t>();
+                const std::uint8_t reserved = reader.integer<std::uint8_t>();
+                const std::uint8_t hasDestination = reader.integer<std::uint8_t>();
+                if (restrained > 1 || reserved > 1 || hasDestination > 1)
+                    throw std::runtime_error("Invalid TES4 actor AI flags");
+                actor.mRestrained = restrained != 0;
+                actor.mActionReserved = reserved != 0;
+                actor.mHasDestination = hasDestination != 0;
+                actor.mInterruptionReason = reader.string();
+                result.mActorAi.push_back(std::move(actor));
+            }
+
+            const std::uint32_t pointCount = reader.count();
+            result.mPathPoints.reserve(pointCount);
+            for (std::uint32_t i = 0; i < pointCount; ++i)
+            {
+                RuntimePathPointState point;
+                point.mPathgrid = readKey(reader);
+                point.mNode = reader.integer<std::uint32_t>();
+                const std::uint8_t enabled = reader.integer<std::uint8_t>();
+                if (enabled > 1)
+                    throw std::runtime_error("Invalid TES4 path-point overlay flag");
+                point.mEnabled = enabled != 0;
+                result.mPathPoints.push_back(std::move(point));
+            }
+
+            const std::uint32_t companionCount = reader.count();
+            result.mCompanions.reserve(companionCount);
+            for (std::uint32_t i = 0; i < companionCount; ++i)
+            {
+                RuntimeCompanionRelation relation;
+                relation.mLeader = readKey(reader);
+                relation.mMember = readKey(reader);
+                relation.mGroup = readKey(reader);
+                relation.mSideWith = readKey(reader);
+                relation.mFormationIndex = reader.integer<std::int32_t>();
+                result.mCompanions.push_back(std::move(relation));
+            }
+
+            const std::uint32_t mountCount = reader.count();
+            result.mMounts.reserve(mountCount);
+            for (std::uint32_t i = 0; i < mountCount; ++i)
+            {
+                RuntimeMountRelation relation;
+                relation.mHorse = readKey(reader);
+                relation.mRider = readKey(reader);
+                relation.mOwner = readKey(reader);
+                relation.mLastRidden = readKey(reader);
+                const std::uint8_t mounted = reader.integer<std::uint8_t>();
+                if (mounted > 1)
+                    throw std::runtime_error("Invalid TES4 mount relation flag");
+                relation.mMounted = mounted != 0;
+                result.mMounts.push_back(std::move(relation));
+            }
+
+            const std::uint32_t detectionCount = reader.count();
+            result.mDetectionVectors.reserve(detectionCount);
+            for (std::uint32_t i = 0; i < detectionCount; ++i)
+            {
+                RuntimeDetectionVector vector;
+                vector.mObserver = readKey(reader);
+                vector.mTarget = readKey(reader);
+                vector.mScore = reader.float64();
+                const std::uint8_t detected = reader.integer<std::uint8_t>();
+                const std::uint8_t lineOfSight = reader.integer<std::uint8_t>();
+                if (detected > 1 || lineOfSight > 1)
+                    throw std::runtime_error("Invalid TES4 runtime-state detection vector flags");
+                vector.mDetected = detected != 0;
+                vector.mLineOfSight = lineOfSight != 0;
+                result.mDetectionVectors.push_back(std::move(vector));
+            }
+        }
+        else
+        {
+            // Older saves did not persist an AI stream. Derive a stable seed
+            // from state that already existed instead of consuming gameplay RNG.
+            result.mAiRngState = result.mNextDynamicSerial == 0 ? 1 : result.mNextDynamicSerial;
         }
 
         if (!reader.eof())
@@ -964,7 +1424,143 @@ namespace ESM4
                 stream << (j ? "," : "") << quest.mCompletedStages[j];
             stream << "]}";
         }
-        stream << "]}";
+        stream << "]";
+        if (mVersion >= 5)
+        {
+            stream << ",\"ai_rng_state\":" << mAiRngState << ",\"actor_ai\":[";
+            std::vector<RuntimeActorAiState> actors = mActorAi;
+            std::sort(actors.begin(), actors.end(), [](const auto& left, const auto& right) {
+                return left.mActor < right.mActor;
+            });
+            for (std::size_t i = 0; i < actors.size(); ++i)
+            {
+                const RuntimeActorAiState& actor = actors[i];
+                if (i)
+                    stream << ',';
+                stream << "{\"actor\":\"" << escapeJson(actor.mActor.serialize()) << "\",\"base\":\""
+                       << escapeJson(actor.mBase.serialize()) << "\",\"package\":\""
+                       << escapeJson(actor.mPackage.serialize()) << "\",\"script_package\":\""
+                       << escapeJson(actor.mScriptPackage.serialize())
+                       << "\",\"target\":\""
+                       << escapeJson(actor.mTarget.serialize()) << "\",\"target_base\":\""
+                       << escapeJson(actor.mTargetBase.serialize()) << "\",\"cell\":\""
+                       << escapeJson(actor.mCell.serialize()) << "\",\"pathgrid\":\""
+                       << escapeJson(actor.mPathgrid.serialize()) << "\",\"door\":\""
+                       << escapeJson(actor.mDoor.serialize()) << "\",\"destination_cell\":\""
+                       << escapeJson(actor.mDestinationCell.serialize()) << "\",\"destination_position\":";
+                writeJsonPosition(stream, actor.mDestinationPosition);
+                stream << ",\"last_valid_cell\":\"" << escapeJson(actor.mLastValidCell.serialize())
+                       << "\",\"last_valid_position\":";
+                writeJsonPosition(stream, actor.mLastValidPosition);
+                stream << ",\"action_item\":\"" << escapeJson(actor.mActionItem.serialize())
+                       << "\",\"last_transition_door\":\""
+                       << escapeJson(actor.mLastTransitionDoor.serialize()) << "\",\"companion_group\":\""
+                       << escapeJson(actor.mCompanionGroup.serialize()) << "\",\"companion_side_with\":\""
+                       << escapeJson(actor.mCompanionSideWith.serialize()) << "\",\"mount\":\""
+                       << escapeJson(actor.mMount.serialize()) << "\",\"rider\":\""
+                       << escapeJson(actor.mRider.serialize()) << "\",\"schedule_window\":";
+                if (!actor.mScheduleWindow)
+                    stream << "null";
+                else
+                {
+                    const auto writeJsonCalendar = [&stream](const CalendarInstant& instant) {
+                        stream << "[" << instant.mYear << "," << instant.mMonth << "," << instant.mDay << ","
+                               << std::setprecision(17) << instant.mHour << "]";
+                    };
+                    stream << "{\"start\":";
+                    writeJsonCalendar(actor.mScheduleWindow->mStart);
+                    stream << ",\"end\":";
+                    writeJsonCalendar(actor.mScheduleWindow->mEnd);
+                    stream << ",\"duration_hours\":" << std::setprecision(17)
+                           << actor.mScheduleWindow->mDurationHours << "}";
+                }
+                stream << ",\"condition_result\":" << static_cast<unsigned>(actor.mConditionResult)
+                       << ",\"source\":"
+                       << static_cast<unsigned>(actor.mSource) << ",\"package_type\":"
+                       << static_cast<unsigned>(actor.mPackageType) << ",\"procedure\":"
+                       << static_cast<unsigned>(actor.mProcedure) << ",\"phase\":"
+                       << static_cast<unsigned>(actor.mPhase) << ",\"tier\":"
+                       << static_cast<unsigned>(actor.mTier) << ",\"boundary\":"
+                       << static_cast<unsigned>(actor.mBoundary) << ",\"list_index\":" << actor.mListIndex
+                       << ",\"path_node\":" << actor.mPathNode << ",\"repath_attempts\":"
+                       << actor.mRepathAttempts << ",\"formation_index\":" << actor.mFormationIndex
+                       << ",\"selection_generation\":" << actor.mSelectionGeneration
+                       << ",\"route_generation\":" << actor.mRouteGeneration
+                       << ",\"transition_generation\":" << actor.mTransitionGeneration
+                       << ",\"action_timer\":" << std::setprecision(9) << actor.mActionTimer
+                       << ",\"duration_remaining\":" << actor.mDurationRemaining
+                       << ",\"no_progress_seconds\":" << actor.mNoProgressSeconds
+                       << ",\"door_cooldown\":" << actor.mDoorCooldown
+                       << ",\"low_process_timer\":" << actor.mLowProcessTimer
+                       << ",\"next_low_process_tick\":" << actor.mNextLowProcessTick
+                       << ",\"has_destination\":" << (actor.mHasDestination ? "true" : "false")
+                       << ",\"restrained\":"
+                       << (actor.mRestrained ? "true" : "false") << ",\"action_reserved\":"
+                       << (actor.mActionReserved ? "true" : "false") << ",\"interruption_reason\":\""
+                       << escapeJson(actor.mInterruptionReason) << "\"}";
+            }
+            stream << "],\"path_points\":[";
+            std::vector<RuntimePathPointState> points = mPathPoints;
+            std::sort(points.begin(), points.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mPathgrid, left.mNode) < std::tie(right.mPathgrid, right.mNode);
+            });
+            for (std::size_t i = 0; i < points.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                stream << "{\"pathgrid\":\"" << escapeJson(points[i].mPathgrid.serialize())
+                       << "\",\"node\":" << points[i].mNode << ",\"enabled\":"
+                       << (points[i].mEnabled ? "true" : "false") << "}";
+            }
+            stream << "],\"companions\":[";
+            std::vector<RuntimeCompanionRelation> companions = mCompanions;
+            std::sort(companions.begin(), companions.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mLeader, left.mMember) < std::tie(right.mLeader, right.mMember);
+            });
+            for (std::size_t i = 0; i < companions.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                stream << "{\"leader\":\"" << escapeJson(companions[i].mLeader.serialize())
+                       << "\",\"member\":\"" << escapeJson(companions[i].mMember.serialize())
+                       << "\",\"group\":\"" << escapeJson(companions[i].mGroup.serialize())
+                       << "\",\"side_with\":\"" << escapeJson(companions[i].mSideWith.serialize())
+                       << "\",\"formation_index\":" << companions[i].mFormationIndex << "}";
+            }
+            stream << "],\"mounts\":[";
+            std::vector<RuntimeMountRelation> mounts = mMounts;
+            std::sort(mounts.begin(), mounts.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mHorse, left.mRider) < std::tie(right.mHorse, right.mRider);
+            });
+            for (std::size_t i = 0; i < mounts.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                stream << "{\"horse\":\"" << escapeJson(mounts[i].mHorse.serialize())
+                       << "\",\"rider\":\"" << escapeJson(mounts[i].mRider.serialize())
+                       << "\",\"owner\":\"" << escapeJson(mounts[i].mOwner.serialize())
+                       << "\",\"last_ridden\":\"" << escapeJson(mounts[i].mLastRidden.serialize())
+                       << "\",\"mounted\":" << (mounts[i].mMounted ? "true" : "false") << "}";
+            }
+            stream << "],\"detection_vectors\":[";
+            std::vector<RuntimeDetectionVector> detectionVectors = mDetectionVectors;
+            std::sort(detectionVectors.begin(), detectionVectors.end(), [](const auto& left, const auto& right) {
+                return std::tie(left.mObserver, left.mTarget) < std::tie(right.mObserver, right.mTarget);
+            });
+            for (std::size_t i = 0; i < detectionVectors.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                const RuntimeDetectionVector& vector = detectionVectors[i];
+                stream << "{\"observer\":\"" << escapeJson(vector.mObserver.serialize())
+                       << "\",\"target\":\"" << escapeJson(vector.mTarget.serialize())
+                       << "\",\"score\":" << std::setprecision(17) << vector.mScore
+                       << ",\"detected\":" << (vector.mDetected ? "true" : "false")
+                       << ",\"line_of_sight\":" << (vector.mLineOfSight ? "true" : "false") << "}";
+            }
+            stream << "]";
+        }
+        stream << "}";
         return stream.str();
     }
 }

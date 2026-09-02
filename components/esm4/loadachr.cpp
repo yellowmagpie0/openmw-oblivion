@@ -38,6 +38,7 @@ void ESM4::ActorCharacter::load(ESM4::Reader& reader)
     mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
     mParent = reader.currCell();
+    mParentKey = reader.currCellFormKey();
 
     while (reader.getSubRecordHeader())
     {
@@ -51,8 +52,17 @@ void ESM4::ActorCharacter::load(ESM4::Reader& reader)
                 reader.getZString(mFullName);
                 break;
             case ESM::fourCC("NAME"):
-                reader.getFormId(mBaseObj);
+            {
+                ESM::FormId32 rawValue = 0;
+                if (!reader.getExact(rawValue))
+                    reader.fail("ACHR/ACRE NAME is truncated");
+                const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+                reader.recordRawFormId(raw);
+                mBaseObj = raw;
+                reader.adjustFormId(mBaseObj);
+                mBaseKey = reader.resolveRawFormId(raw);
                 break;
+            }
             case ESM::fourCC("DATA"):
                 reader.get(mPos);
                 break;
@@ -102,6 +112,19 @@ void ESM4::ActorCharacter::load(ESM4::Reader& reader)
                 reader.get(mRagdollBiped.data(), mRagdollBiped.size());
                 break;
             case ESM::fourCC("XHRS"): // horse formId
+            {
+                if (subHdr.dataSize != sizeof(ESM::FormId32))
+                    reader.fail("ACHR XHRS has an invalid payload size");
+                ESM::FormId32 rawValue = 0;
+                if (!reader.getExact(rawValue))
+                    reader.fail("ACHR XHRS is truncated");
+                const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+                reader.recordRawFormId(raw);
+                mHorse = raw;
+                reader.adjustFormId(mHorse);
+                mHorseKey = reader.resolveRawFormId(raw);
+                break;
+            }
             case ESM::fourCC("XMRC"): // merchant container formId
             // TES5
             case ESM::fourCC("XAPD"): // activation parent

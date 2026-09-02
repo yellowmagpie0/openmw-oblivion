@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m14-detection-query-matrix",
+  "cwd": "{source}",
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{source}/scripts/data/oblivion_compat/m14_detection_events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/obscript-report.json"
+  },
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1416,
+    "minimum_event_count": 100,
+    "required_events": [
+      {"event": "detection"}
+    ],
+    "required_event_order": [
+      {"event": "selection"},
+      {"event": "detection"}
+    ],
+    "forbidden_event_names": ["direct-teleport", "tes3-ai", "unsupported", "unresolved", "phase-loop", "route-loop"],
+    "forbidden_reason_substrings": ["direct-teleport", "tes3-ai", "unsupported", "unresolved-package", "deferred-m14"],
+    "maximum_repeated_events": {"tier": 16},
+    "maximum_route_blocked": 500,
+    "maximum_no_progress_events": 500,
+    "maximum_phase_repeat": 8
+  },
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {"type": "sleep", "seconds": 80},
+    {"type": "focus_window", "name": "OpenMW"},
+    {"type": "screenshot", "name": "detection-initial.png", "minimum_entropy": 0.02},
+    {"type": "key", "value": "F5"},
+    {"type": "sleep", "seconds": 7},
+    {"type": "m14_checkpoint", "name": "detection-probed", "minimum_actor_count": 3000, "minimum_detection_vector_count": 1, "required_package_types": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]},
+    {"type": "m14_observe", "actor": "content:oblivion.esm:01fc43", "observation": "observations/detection-player.json"},
+    {"type": "m14_assert_events", "minimum_event_count": 100, "required_events": [{"event": "detection"}], "maximum_route_blocked": 500, "maximum_no_progress_events": 500},
+    {"type": "assert_file", "path_glob": "obscript-report.json", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["getdetectionlevel", "getdetected", "getlos"], "forbidden_ascii": ["unsupported"]},
+    {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
+    {"type": "key_held", "value": "grave"},
+    {"type": "type", "value": "exit()", "delay_ms": 1},
+    {"type": "key_held", "value": "Return"},
+    {"type": "sleep", "seconds": 2}
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 150,
+  "expected_exit": 0,
+  "expected_log": ["Selected game profile: oblivion", "Starting a new game", "Writing saved game 'Quicksave'"],
+  "forbidden_log": ["Unsupported ObScript command", "Error in frame", "onFrame failed", "Segmentation fault", "Assertion.*failed", "Aborted"]
+}

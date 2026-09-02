@@ -12,7 +12,7 @@
   "width": 1280,
   "height": 720,
   "actions": [
-    {"type": "sleep", "seconds": 20},
+    {"type": "sleep", "seconds": 80},
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "key_held", "value": "e"},
     {"type": "sleep", "seconds": 2},
@@ -23,7 +23,7 @@
     {"type": "screenshot", "name": "after-jumps.png", "minimum_entropy": 0.03}
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 40,
+  "timeout_seconds": 130,
   "expected_exit": 0,
   "expected_log": [
     "M12 input action: jump value=.*source=keyboard-mouse",

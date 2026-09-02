@@ -1,5 +1,11 @@
 #include "esm4npc.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <set>
+
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadlvli.hpp>
@@ -7,11 +13,22 @@
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadotft.hpp>
 #include <components/esm4/loadrace.hpp>
+#include <components/esm4/playermechanics.hpp>
 
 #include <components/misc/resourcehelpers.hpp>
 
+#include "../mwbase/environment.hpp"
+#include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/world.hpp"
+#include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/movement.hpp"
+#include "../mwworld/actionopen.hpp"
+#include "../mwworld/actiontalk.hpp"
+#include "../mwworld/failedaction.hpp"
+#include "../mwworld/manualref.hpp"
 #include "../mwworld/customdata.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 
 #include "esm4base.hpp"
 
@@ -57,21 +74,85 @@ namespace MWClass
         return nullptr;
     }
 
-    class ESM4NpcCustomData : public MWWorld::TypedCustomData<ESM4NpcCustomData>
+    namespace
     {
-    public:
-        const ESM4::Npc* mTraits = nullptr;
-        const ESM4::Npc* mBaseData = nullptr;
-        const ESM4::Race* mRace = nullptr;
-        bool mIsFemale = false;
+        const std::array<ESM::RefId, 21>& skillIds()
+        {
+            // ESM::Skill IDs are dynamically initialized in loadskil.cpp.
+            // Keep this table function-local so it cannot copy those IDs
+            // during static initialization before their backing strings
+            // exist.
+            static const std::array<ESM::RefId, 21> ids = { ESM::Skill::Armorer, ESM::Skill::Athletics,
+                ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+                ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+                ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+                ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+                ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+            return ids;
+        }
 
-        // TODO: Use InventoryStore instead (currently doesn't support ESM4 objects)
-        std::vector<const ESM4::Armor*> mEquippedArmor;
-        std::vector<const ESM4::Clothing*> mEquippedClothing;
+        std::array<std::uint8_t, 8> attributes(const ESM4::AttributeValues& value)
+        {
+            return { value.strength, value.intelligence, value.willpower, value.agility, value.speed,
+                value.endurance, value.personality, value.luck };
+        }
 
-        ESM4NpcCustomData& asESM4NpcCustomData() override { return *this; }
-        const ESM4NpcCustomData& asESM4NpcCustomData() const override { return *this; }
-    };
+        void fillInventory(ESM4NpcCustomData& data, const std::vector<ESM4::InventoryItem>& items,
+            const MWWorld::ESMStore& store)
+        {
+            for (const ESM4::InventoryItem& item : items)
+            {
+                if (item.count == 0)
+                    continue;
+                const ESM::RefId nativeId(ESM::FormId::fromUint32(item.item));
+                const ESM::RefId sharedId = MWWorld::OblivionProfileServices::sharedItemId(store, nativeId);
+                const int count = static_cast<int>(std::min<std::uint32_t>(item.count,
+                    static_cast<std::uint32_t>(std::numeric_limits<int>::max())));
+                try
+                {
+                    MWWorld::ManualRef ref(store, sharedId, count);
+                    data.mInventoryStore.add(ref.getPtr(), count, false);
+                }
+                catch (const std::exception& error)
+                {
+                    Log(Debug::Warning) << "Oblivion NPC inventory item " << nativeId.toDebugString()
+                                        << " was not projected: " << error.what();
+                }
+            }
+        }
+
+        void cacheEquipment(ESM4NpcCustomData& data, const MWWorld::ESMStore& store)
+        {
+            data.mEquippedArmor.clear();
+            data.mEquippedClothing.clear();
+            std::set<ESM::RefId> seen;
+            const MWWorld::InventoryStore& inventory = data.mInventoryStore;
+            for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+            {
+                const MWWorld::ConstContainerStoreIterator item = inventory.getSlot(slot);
+                if (item == inventory.end())
+                    continue;
+                const ESM::RefId id = item->getCellRef().getRefId();
+                if (!seen.insert(id).second)
+                    continue;
+                if (const auto* armor = store.get<ESM4::Armor>().search(id))
+                    data.mEquippedArmor.push_back(armor);
+                else if (const auto* clothing = store.get<ESM4::Clothing>().search(id))
+                    data.mEquippedClothing.push_back(clothing);
+            }
+        }
+
+        const ESM4::Npc* baseData(const ESM4NpcCustomData& data)
+        {
+            return data.mBaseData != nullptr ? data.mBaseData : data.mTraits;
+        }
+
+        std::uint32_t actorFlags(const ESM4NpcCustomData& data)
+        {
+            const ESM4::Npc* record = baseData(data);
+            return record == nullptr ? 0 : record->mBaseConfig.tes4.flags;
+        }
+    }
 
     ESM4NpcCustomData& ESM4Npc::getCustomData(const MWWorld::ConstPtr& ptr)
     {
@@ -86,6 +167,13 @@ namespace MWClass
             return data->asESM4NpcCustomData();
 
         auto data = std::make_unique<ESM4NpcCustomData>();
+
+        // ConstPtr is used here because model/name queries are const virtuals,
+        // while InventoryStore needs the mutable identity of its owner. Ptr's
+        // underlying reference is still the same live object; this mirrors the
+        // existing RefData custom-data cache semantics.
+        const MWWorld::Ptr mutablePtr(const_cast<MWWorld::LiveCellRefBase*>(ptr.mRef),
+            const_cast<MWWorld::CellStore*>(ptr.mCell));
 
         const MWWorld::ESMStore* store = MWBase::Environment::get().getESMStore();
         const ESM4::Npc* const base = ptr.get<ESM4::Npc>()->mBase;
@@ -117,37 +205,209 @@ namespace MWClass
                 data->mIsFemale = data->mTraits->mBaseConfig.tes5.flags & ESM4::Npc::TES5_Female;
         }
 
-        if (auto inv = chooseTemplate(npcRecs, ESM4::Npc::Template_UseInventory))
+        const ESM4::Npc* statsRecord = data->mBaseData != nullptr ? data->mBaseData : data->mTraits;
+        if (statsRecord == nullptr)
+            statsRecord = base;
+
+        if (statsRecord != nullptr)
         {
-            for (const ESM4::InventoryItem& item : inv->mInventory)
-            {
-                if (auto* armor
-                    = ESM4Impl::resolveLevelled<ESM4::LevelledItem, ESM4::Armor>(ESM::FormId::fromUint32(item.item)))
-                    data->mEquippedArmor.push_back(armor);
-                else if (data->mTraits != nullptr && data->mTraits->mIsTES4)
-                {
-                    const auto* clothing = ESM4Impl::resolveLevelled<ESM4::LevelledItem, ESM4::Clothing>(
-                        ESM::FormId::fromUint32(item.item));
-                    if (clothing)
-                        data->mEquippedClothing.push_back(clothing);
-                }
-            }
-            if (!inv->mDefaultOutfit.isZeroOrUnset())
-            {
-                if (const ESM4::Outfit* outfit = store->get<ESM4::Outfit>().search(inv->mDefaultOutfit))
-                {
-                    for (ESM::FormId itemId : outfit->mInventory)
-                        if (auto* armor = ESM4Impl::resolveLevelled<ESM4::LevelledItem, ESM4::Armor>(itemId))
-                            data->mEquippedArmor.push_back(armor);
-                }
-                else
-                    Log(Debug::Error) << "Outfit not found: " << ESM::RefId(inv->mDefaultOutfit);
-            }
+            const auto attrs = attributes(statsRecord->mData.attribs);
+            for (std::size_t i = 0; i < attrs.size(); ++i)
+                data->mNpcStats.setAttribute(ESM::Attribute::indexToRefId(static_cast<int>(i)), attrs[i]);
+            const std::array<std::uint8_t, 21> skills = { statsRecord->mData.skills.armorer,
+                statsRecord->mData.skills.athletics, statsRecord->mData.skills.blade, statsRecord->mData.skills.block,
+                statsRecord->mData.skills.blunt, statsRecord->mData.skills.handToHand,
+                statsRecord->mData.skills.heavyArmor, statsRecord->mData.skills.alchemy,
+                statsRecord->mData.skills.alteration, statsRecord->mData.skills.conjuration,
+                statsRecord->mData.skills.destruction, statsRecord->mData.skills.illusion,
+                statsRecord->mData.skills.mysticism, statsRecord->mData.skills.restoration,
+                statsRecord->mData.skills.acrobatics, statsRecord->mData.skills.lightArmor,
+                statsRecord->mData.skills.marksman, statsRecord->mData.skills.mercantile,
+                statsRecord->mData.skills.security, statsRecord->mData.skills.sneak,
+                statsRecord->mData.skills.speechcraft };
+            const auto& ids = skillIds();
+            for (std::size_t i = 0; i < skills.size(); ++i)
+                data->mNpcStats.getSkill(ids[i]).setBase(skills[i]);
+
+            data->mNpcStats.setHealth(MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mData.health)));
+            data->mNpcStats.setMagicka(
+                MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mBaseConfig.tes4.baseSpell)));
+            data->mNpcStats.setFatigue(
+                MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mBaseConfig.tes4.fatigue)));
+            data->mNpcStats.setLevel(std::max(1, static_cast<int>(statsRecord->mBaseConfig.tes4.levelOrOffset)));
+            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Hello, statsRecord->mAIData.energyLevel);
+            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Fight, statsRecord->mAIData.aggression);
+            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Flee, statsRecord->mAIData.confidence);
+            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Alarm, statsRecord->mAIData.responsibility);
+
+            data->mInventoryStore.setPtr(mutablePtr);
+            fillInventory(*data, statsRecord->mInventory, *store);
+            // Inventory projection may advance the WorldModel pointer
+            // registry. Refresh the owner SafePtr before native equipment
+            // initialization accesses the owning actor through InventoryStore.
+            data->mInventoryStore.setPtr(mutablePtr);
         }
 
-        ESM4NpcCustomData& res = *data;
         refData.setCustomData(std::move(data));
+        ESM4NpcCustomData& res = refData.getCustomData()->asESM4NpcCustomData();
+        res.mInventoryStore.setPtr(mutablePtr);
+        MWWorld::OblivionProfileServices::equipNativeApparel(res.mInventoryStore, *store);
+        res.mInventoryStore.setPtr(mutablePtr);
+        cacheEquipment(res, *store);
         return res;
+    }
+
+    MWMechanics::CreatureStats& ESM4Npc::getCreatureStats(const MWWorld::Ptr& ptr) const
+    {
+        return getCustomData(ptr).mNpcStats;
+    }
+
+    MWMechanics::NpcStats& ESM4Npc::getNpcStats(const MWWorld::Ptr& ptr) const
+    {
+        return getCustomData(ptr).mNpcStats;
+    }
+
+    MWWorld::ContainerStore& ESM4Npc::getContainerStore(const MWWorld::Ptr& ptr) const
+    {
+        return getCustomData(ptr).mInventoryStore;
+    }
+
+    MWWorld::InventoryStore& ESM4Npc::getInventoryStore(const MWWorld::Ptr& ptr) const
+    {
+        return getCustomData(ptr).mInventoryStore;
+    }
+
+    ESM::RefId ESM4Npc::getScript(const MWWorld::ConstPtr& ptr) const
+    {
+        return ESM::RefId(ptr.get<ESM4::Npc>()->mBase->mScriptId);
+    }
+
+    float ESM4Npc::getCapacity(const MWWorld::Ptr& ptr) const
+    {
+        return getNpcStats(ptr).getAttribute(ESM::Attribute::Strength).getModified() * 5.f;
+    }
+
+    float ESM4Npc::getArmorRating(const MWWorld::Ptr& ptr, bool) const
+    {
+        float result = 0.f;
+        MWWorld::InventoryStore& inventory = getInventoryStore(ptr);
+        for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+        {
+            const MWWorld::ContainerStoreIterator item = inventory.getSlot(slot);
+            if (item != inventory.end())
+                result += item->getClass().getArmorRating(*item);
+        }
+        return result;
+    }
+
+    bool ESM4Npc::isEssential(const MWWorld::ConstPtr& ptr) const
+    {
+        const auto& data = getCustomData(ptr);
+        return (actorFlags(data) & ESM4::Npc::TES4_Essential) != 0;
+    }
+
+    int ESM4Npc::getServices(const MWWorld::ConstPtr&) const
+    {
+        return 0;
+    }
+
+    bool ESM4Npc::isPersistent(const MWWorld::ConstPtr& ptr) const
+    {
+        return (ptr.get<ESM4::Npc>()->mBase->mFlags & ESM4::Rec_Persistent) != 0;
+    }
+
+    MWMechanics::Movement& ESM4Npc::getMovementSettings(const MWWorld::Ptr& ptr) const
+    {
+        return getCustomData(ptr).mMovement;
+    }
+
+    float ESM4Npc::getMaxSpeed(const MWWorld::Ptr& ptr) const
+    {
+        const MWMechanics::NpcStats& stats = getNpcStats(ptr);
+        if (stats.isParalyzed() || stats.getKnockedDown() || stats.isDead())
+            return 0.f;
+        const MWBase::World* world = MWBase::Environment::get().getWorld();
+        const bool running = MWBase::Environment::get().getMechanicsManager()->isRunning(ptr);
+        const bool sneaking = MWBase::Environment::get().getMechanicsManager()->isSneaking(ptr);
+        if (world->isSwimming(ptr))
+            return getSwimSpeed(ptr);
+        return running && !sneaking ? getRunSpeed(ptr) : getWalkSpeed(ptr);
+    }
+
+    float ESM4Npc::getJump(const MWWorld::Ptr& ptr) const
+    {
+        const MWMechanics::NpcStats& stats = getNpcStats(ptr);
+        if (stats.isParalyzed() || stats.getKnockedDown() || stats.isDead())
+            return 0.f;
+        return ESM4::playerJumpVelocity(getSkill(ptr, ESM::Skill::Acrobatics), getEncumbrance(ptr), getCapacity(ptr))
+            * std::sqrt(std::max(0.f, stats.getFatigueTerm()));
+    }
+
+    float ESM4Npc::getWalkSpeed(const MWWorld::Ptr& ptr) const
+    {
+        const MWMechanics::NpcStats& stats = getNpcStats(ptr);
+        return ESM4::playerWalkSpeed(stats.getAttribute(ESM::Attribute::Speed).getModified(), getEncumbrance(ptr),
+            getCapacity(ptr), MWBase::Environment::get().getMechanicsManager()->isSneaking(ptr));
+    }
+
+    float ESM4Npc::getRunSpeed(const MWWorld::Ptr& ptr) const
+    {
+        const MWMechanics::NpcStats& stats = getNpcStats(ptr);
+        return ESM4::playerRunSpeed(stats.getAttribute(ESM::Attribute::Speed).getModified(), getEncumbrance(ptr),
+            getCapacity(ptr));
+    }
+
+    float ESM4Npc::getSwimSpeed(const MWWorld::Ptr& ptr) const
+    {
+        return MWBase::Environment::get().getMechanicsManager()->isRunning(ptr) ? getRunSpeed(ptr) : getWalkSpeed(ptr);
+    }
+
+    float ESM4Npc::getSkill(const MWWorld::Ptr& ptr, ESM::RefId id) const
+    {
+        return getNpcStats(ptr).getSkill(id).getModified();
+    }
+
+    int ESM4Npc::getBaseFightRating(const MWWorld::ConstPtr& ptr) const
+    {
+        return ptr.get<ESM4::Npc>()->mBase->mAIData.aggression;
+    }
+
+    ESM::RefId ESM4Npc::getPrimaryFaction(const MWWorld::ConstPtr& ptr) const
+    {
+        return ESM::RefId(ESM::FormId::fromUint32(ptr.get<ESM4::Npc>()->mBase->mFaction.faction));
+    }
+
+    int ESM4Npc::getPrimaryFactionRank(const MWWorld::ConstPtr& ptr) const
+    {
+        if (ptr.get<ESM4::Npc>()->mBase->mFaction.faction == 0)
+            return -1;
+        return ptr.get<ESM4::Npc>()->mBase->mFaction.rank;
+    }
+
+    std::unique_ptr<MWWorld::Action> ESM4Npc::activate(
+        const MWWorld::Ptr& ptr, const MWWorld::Ptr&) const
+    {
+        const MWMechanics::CreatureStats& stats = getCreatureStats(ptr);
+        if (stats.isDead())
+            return std::make_unique<MWWorld::ActionOpen>(ptr);
+        if (!stats.getKnockedDown())
+            return std::make_unique<MWWorld::ActionTalk>(ptr);
+        return std::make_unique<MWWorld::FailedAction>();
+    }
+
+    void ESM4Npc::getModelsToPreload(
+        const MWWorld::ConstPtr& ptr, std::vector<VFS::Path::NormalizedView>& models) const
+    {
+        const auto model = getModel(ptr);
+        if (!model.empty())
+            models.push_back(model);
+        const auto& data = getCustomData(ptr);
+        for (const ESM4::Armor* armor : data.mEquippedArmor)
+            if (!armor->mModel.empty())
+                models.push_back(armor->mModel.getNormalized());
+        for (const ESM4::Clothing* clothing : data.mEquippedClothing)
+            if (!clothing->mModel.empty())
+                models.push_back(clothing->mModel.getNormalized());
     }
 
     const std::vector<const ESM4::Armor*>& ESM4Npc::getEquippedArmor(const MWWorld::Ptr& ptr)
@@ -182,6 +442,8 @@ namespace MWClass
             return {};
         if (data.mTraits->mIsTES4)
             return data.mTraits->mModel.getNormalized();
+        if (data.mRace == nullptr)
+            return {};
         return data.mIsFemale ? data.mRace->mModelFemale.getNormalized() : data.mRace->mModelMale.getNormalized();
     }
 

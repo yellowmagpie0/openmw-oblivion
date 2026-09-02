@@ -83,6 +83,20 @@ namespace
         return ptr.getClass().isActor() ? makeActorOsgQuat(pos) : Misc::Convert::makeOsgQuat(pos);
     }
 
+    // Detour's pathgrid adapter still consumes ESM3's cell wrapper. The
+    // native TES4 graph remains owned by PathgridService; this short-lived
+    // cell view only supplies coordinate-conversion policy for the call.
+    ESM::Cell makeNavigatorCell(const ESM4::Cell& cell)
+    {
+        ESM::Cell result;
+        result.mId = cell.mId;
+        result.mName = cell.mEditorId;
+        result.mData.mFlags = cell.isExterior() ? 0 : ESM::Cell::Interior;
+        result.mData.mX = cell.mX;
+        result.mData.mY = cell.mY;
+        return result;
+    }
+
     osg::Quat makeNodeRotation(const MWWorld::Ptr& ptr, RotationOrder order)
     {
         if (order == RotationOrder::inverse)
@@ -405,7 +419,18 @@ namespace MWWorld
                            if (const auto pathgrid = mWorld.getStore().get<ESM::Pathgrid>().search(c))
                                mNavigator.removePathgrid(*pathgrid);
                        },
-                       [&](const ESM4::Cell& /*c*/) {},
+                       [&](const ESM4::Cell& c) {
+                           if (c.mFormKey.isNull())
+                               Log(Debug::Warning) << "Cannot unload TES4 pathgrid for a cell without a stable key";
+                           else
+                           {
+                               ESM4::PathgridService& service = mWorld.getStore().getOblivionPathgridService();
+                               if (const ESM4::PathgridGraph* graph = service.graphForCell(c.mFormKey))
+                                   if (const ESM::Pathgrid* pathgrid = service.navigatorPathgrid(graph->pathgridKey()))
+                                       mNavigator.removePathgrid(*pathgrid);
+                               service.cellUnloaded(c.mFormKey);
+                           }
+                       },
                    },
             *cell->getCell());
 
@@ -484,7 +509,18 @@ namespace MWWorld
                            if (const auto pathgrid = mWorld.getStore().get<ESM::Pathgrid>().search(c))
                                mNavigator.addPathgrid(c, *pathgrid);
                        },
-                       [&](const ESM4::Cell& /*c*/) {},
+                       [&](const ESM4::Cell& c) {
+                           if (c.mFormKey.isNull())
+                               Log(Debug::Warning) << "Cannot load TES4 pathgrid for a cell without a stable key";
+                           else
+                           {
+                               ESM4::PathgridService& service = mWorld.getStore().getOblivionPathgridService();
+                               service.cellLoaded(c.mFormKey);
+                               if (const ESM4::PathgridGraph* graph = service.graphForCell(c.mFormKey))
+                                   if (const ESM::Pathgrid* pathgrid = service.navigatorPathgrid(graph->pathgridKey()))
+                                       mNavigator.addPathgrid(makeNavigatorCell(c), *pathgrid);
+                           }
+                       },
                    },
             *cell.getCell());
 
@@ -1092,6 +1128,31 @@ namespace MWWorld
     bool Scene::isCellActive(const CellStore& cell)
     {
         return mActiveCells.contains(&cell);
+    }
+
+    void Scene::refreshOblivionPathgrid(const ESM::FormKey& pathgrid)
+    {
+        ESM4::PathgridService& service = mWorld.getStore().getOblivionPathgridService();
+        const ESM4::PathgridGraph* graph = service.graph(pathgrid);
+        const ESM::Pathgrid* nativeView = service.navigatorPathgrid(pathgrid);
+        if (graph == nullptr || nativeView == nullptr)
+            return;
+
+        for (CellStore* cell : mActiveCells)
+        {
+            if (cell == nullptr)
+                continue;
+            ESM::visit(ESM::VisitOverload{
+                           [&](const ESM::Cell&) {},
+                           [&](const ESM4::Cell& value) {
+                               if (value.mFormKey != graph->cellKey())
+                                   return;
+                               mNavigator.removePathgrid(*nativeView);
+                               mNavigator.addPathgrid(makeNavigatorCell(value), *nativeView);
+                           },
+                       },
+                *cell->getCell());
+        }
     }
 
     class PreloadMeshItem : public SceneUtil::WorkItem

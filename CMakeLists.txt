@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(GNUInstallDirs)
+include(CTest)
 
 option(OPENMW_GL4ES_MANUAL_INIT "Manually initialize gl4es. This is more reliable on platforms without a windowing system. Requires gl4es to be configured with -DNOEGL=ON -DNO_LOADER=ON -DNO_INIT_CONSTRUCTOR=ON." OFF)
 if(OPENMW_GL4ES_MANUAL_INIT)
@@ -658,6 +659,13 @@ else ()
         add_compile_options("-Wno-unused-but-set-parameter" "-Wduplicated-branches" "-Wduplicated-cond" "-Wlogical-op")
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105438
         add_compile_options("-Wno-array-bounds")
+        # GCC's duplicated-branch analysis can recurse for several minutes on
+        # the intentionally exhaustive TES4 runtime-state validation switch.
+        # Sanitizer builds retain ASan/UBSan while avoiding that unrelated
+        # warning pass; ordinary builds keep the normal warning set.
+        if (CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
+            add_compile_options("-Wno-duplicated-branches" "-Wno-duplicated-cond")
+        endif()
     endif()
 endif ()
 
@@ -708,6 +716,9 @@ endif()
 
 if (BUILD_COMPONENTS_TESTS)
     add_subdirectory(apps/components_tests)
+    if (BUILD_TESTING)
+        add_test(NAME components-tests COMMAND components-tests)
+    endif()
 endif()
 
 if (BUILD_BENCHMARKS)
@@ -728,6 +739,9 @@ endif()
 
 if (BUILD_OPENMW_TESTS)
     add_subdirectory(apps/openmw_tests)
+    if (BUILD_TESTING)
+        add_test(NAME openmw-tests COMMAND openmw-tests)
+    endif()
 endif()
 
 if (WIN32)

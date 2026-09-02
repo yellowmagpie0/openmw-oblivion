@@ -1974,7 +1974,7 @@ namespace MWMechanics
 
         float scale = mPtr.getCellRef().getScale();
 
-        if (!Settings::game().mNormaliseRaceSpeed && cls.isNpc())
+        if (!Settings::game().mNormaliseRaceSpeed && cls.isNpc() && mPtr.getType() == ESM::NPC::sRecordId)
         {
             const ESM::NPC* npc = mPtr.get<ESM::NPC>()->mBase;
             const ESM::Race* race = world->getStore().get<ESM::Race>().find(npc->mRace);

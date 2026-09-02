@@ -33,6 +33,7 @@
 
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/esm/path.hpp>
 
 #include "actor.hpp"
@@ -108,6 +109,7 @@ namespace ESM4
 #pragma pack(pop)
 
         ESM::FormId mId; // from the header
+        ESM::FormKey mFormKey; // stable identity, independent of load-order indices
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
@@ -120,6 +122,7 @@ namespace ESM4
 
         AIData mAIData;
         std::vector<ESM::FormId> mAIPackages;
+        std::vector<ESM::FormKey> mAIPackageKeys;
         ActorBaseConfig mBaseConfig;
         ActorFaction mFaction;
         Data mData;

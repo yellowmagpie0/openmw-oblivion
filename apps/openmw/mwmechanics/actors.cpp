@@ -26,6 +26,7 @@
 #include "../mwworld/player.hpp"
 #include "../mwworld/scene.hpp"
 #include "../mwworld/worldmodel.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwbase/dialoguemanager.hpp"
 #include "../mwbase/environment.hpp"
@@ -37,6 +38,8 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwmechanics/aibreathe.hpp"
+
+#include "oblivionai.hpp"
 
 #include "../mwrender/vismask.hpp"
 
@@ -1290,6 +1293,17 @@ namespace MWMechanics
         if (!actor.getClass().isActor())
             return false;
 
+        MWBase::World* const baseWorld = MWBase::Environment::get().getWorld();
+        MWWorld::World* const nativeWorld = dynamic_cast<MWWorld::World*>(baseWorld);
+        MWMechanics::OblivionAiService* const oblivionAi
+            = nativeWorld == nullptr ? nullptr : nativeWorld->getOblivionAiService();
+
+        // Native TES4 perception is observer-owned. Keep the legacy awareness
+        // path for Morrowind actors, but do not reduce a native observer to the
+        // old binary LOS/awareness check.
+        if (oblivionAi != nullptr && !observer.isEmpty() && oblivionAi->handles(observer))
+            return oblivionAi->detection(observer, actor).mDetected;
+
         // If an observer is NPC, check if he detected an actor
         if (!observer.isEmpty() && observer.getClass().isNpc())
         {
@@ -1305,6 +1319,13 @@ namespace MWMechanics
         {
             if (neighbor == actor)
                 continue;
+
+            if (oblivionAi != nullptr && oblivionAi->handles(neighbor))
+            {
+                if (oblivionAi->detection(neighbor, actor).mDetected)
+                    return true;
+                continue;
+            }
 
             const bool result = MWBase::Environment::get().getWorld()->getLOS(neighbor, actor)
                 && MWBase::Environment::get().getMechanicsManager()->awarenessCheck(actor, neighbor);
@@ -1550,6 +1571,15 @@ namespace MWMechanics
                     player.getClass().getCreatureStats(player).setHitAttemptActor({});
             }
             const int actorsProcessingRange = Settings::game().mActorsProcessingRange;
+            MWWorld::World* const nativeWorld = dynamic_cast<MWWorld::World*>(world);
+
+            // The native TES4 coordinator owns a state-only low-process pass
+            // for actors whose CellStore is not resident. Loaded actors are
+            // skipped by the service and continue through the high/low path
+            // below, so a promotion never creates a second AI owner.
+            if (aiActive && nativeWorld != nullptr)
+                if (MWMechanics::OblivionAiService* oblivionAi = nativeWorld->getOblivionAiService())
+                    oblivionAi->updateUnloaded(duration);
 
             // AI and magic effects update
             for (Actor& actor : mActors)
@@ -1564,6 +1594,9 @@ namespace MWMechanics
                 const float distSqr = (playerPos - actor.getPtr().getRefData().getPosition().asVec3()).length2();
                 // AI processing is only done within given distance to the player.
                 const bool inProcessingRange = distSqr <= actorsProcessingRange * actorsProcessingRange;
+                MWMechanics::OblivionAiService* const oblivionAi
+                    = nativeWorld == nullptr ? nullptr : nativeWorld->getOblivionAiService();
+                const bool nativeAi = !isPlayer && oblivionAi != nullptr && oblivionAi->handles(actor.getPtr());
 
                 // If dead or no longer in combat, no longer store any actors who attempted to hit us. Also remove for
                 // the player.
@@ -1593,8 +1626,22 @@ namespace MWMechanics
                     MWWorld::Scene* worldScene = MWBase::Environment::get().getWorldScene();
                     const bool cellChanged = worldScene->hasCellChanged();
                     const MWWorld::Ptr actorPtr = actor.getPtr(); // make a copy of the map key to avoid it being
-                                                                  // invalidated when the player teleports
+                    // invalidated when the player teleports
                     updateActor(actorPtr, duration);
+
+                    if (aiActive && nativeAi && !(luaControls && luaControls->mDisableAI))
+                    {
+                        try
+                        {
+                            oblivionAi->update(actorPtr, duration, inProcessingRange);
+                        }
+                        catch (const std::exception& error)
+                        {
+                            Log(Debug::Error) << "TES4 AI update failed for " << actorPtr.toString() << ": "
+                                              << error.what();
+                            throw;
+                        }
+                    }
 
                     // Looping magic VFX update
                     // Note: we need to do this before any of the animations are updated.
@@ -1608,7 +1655,7 @@ namespace MWMechanics
                         return; // for now abort update of the old cell when cell changes by teleportation magic effect
                                 // a better solution might be to apply cell changes at the end of the frame
                     }
-                    if (aiActive && inProcessingRange)
+                    if (aiActive && inProcessingRange && !nativeAi)
                     {
                         if (engageCombatTimerStatus == Misc::TimerStatus::Elapsed)
                         {
@@ -1643,7 +1690,7 @@ namespace MWMechanics
                             }
                         }
                     }
-                    else if (aiActive && !isPlayer && isConscious(actor.getPtr())
+                    else if (aiActive && !isPlayer && !nativeAi && isConscious(actor.getPtr())
                         && !(luaControls && luaControls->mDisableAI))
                     {
                         CreatureStats& stats = actor.getPtr().getClass().getCreatureStats(actor.getPtr());
@@ -1663,6 +1710,14 @@ namespace MWMechanics
                         updateLuaControls(actor.getPtr(), isPlayer, *luaControls);
                 }
             }
+
+            // Native TES4 door traversal is committed only after the actor
+            // iteration above.  A teleporting door can replace a Ptr's cell
+            // store and must never invalidate the range-for iterator that is
+            // still walking mActors.
+            if (nativeWorld != nullptr)
+                if (MWMechanics::OblivionAiService* oblivionAi = nativeWorld->getOblivionAiService())
+                    oblivionAi->commitPendingTransitions();
 
             if (Settings::game().mNPCsAvoidCollisions)
                 predictAndAvoidCollisions(duration);
@@ -1816,7 +1871,9 @@ namespace MWMechanics
                 // Play dying words
                 // Note: It's not known whether the soundgen tags scream, roar, and moan are reliable
                 // for NPCs since some of the npc death animation files are missing them.
-                MWBase::Environment::get().getDialogueManager()->say(actor.getPtr(), ESM::RefId::stringRefId("hit"));
+                if (actor.getPtr().getType() != ESM::REC_NPC_4 && actor.getPtr().getType() != ESM::REC_CREA4)
+                    MWBase::Environment::get().getDialogueManager()->say(
+                        actor.getPtr(), ESM::RefId::stringRefId("hit"));
 
                 // Apply soultrap
                 if (actor.getPtr().getType() == ESM::Creature::sRecordId)
@@ -1932,7 +1989,7 @@ namespace MWMechanics
             }
         }
 
-        fastForwardAi();
+        fastForwardAi(hours);
     }
 
     void Actors::updateSneaking(CharacterController* ctrl, float duration)
@@ -2402,10 +2459,17 @@ namespace MWMechanics
         return it->second->getGreetingState();
     }
 
-    void Actors::fastForwardAi() const
+    void Actors::fastForwardAi(double hours) const
     {
         if (!MWBase::Environment::get().getMechanicsManager()->isAIActive())
             return;
+
+        MWBase::World* const baseWorld = MWBase::Environment::get().getWorld();
+        MWWorld::World* const nativeWorld = dynamic_cast<MWWorld::World*>(baseWorld);
+        MWMechanics::OblivionAiService* const oblivionAi
+            = nativeWorld == nullptr ? nullptr : nativeWorld->getOblivionAiService();
+        if (oblivionAi != nullptr)
+            oblivionAi->fastForward(static_cast<float>(std::max(0.0, hours)));
 
         for (const Actor& actor : mActors)
         {
@@ -2413,6 +2477,8 @@ namespace MWMechanics
                 continue;
             const MWWorld::Ptr ptr = actor.getPtr();
             if (ptr == getPlayer() || !isConscious(ptr) || ptr.getClass().getCreatureStats(ptr).isParalyzed())
+                continue;
+            if (oblivionAi != nullptr && oblivionAi->handles(ptr))
                 continue;
             MWMechanics::AiSequence& seq = ptr.getClass().getCreatureStats(ptr).getAiSequence();
             seq.fastForward(ptr);

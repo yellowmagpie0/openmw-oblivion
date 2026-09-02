@@ -200,9 +200,14 @@ add_component_dir (esmterrain
     )
 
 add_component_dir (esm4
+    aiconditions
+    aipackagedata
+    aiselection
+    aiphase
     actor
     cellgrid
     common
+    detection
     dialogue
     effect
     facegen
@@ -270,6 +275,7 @@ add_component_dir (esm4
     loadnpc
     loadotft
     loadpack
+    pathgriddata
     playermechanics
     loadpgrd
     loadpgre

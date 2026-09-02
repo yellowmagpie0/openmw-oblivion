@@ -35,6 +35,7 @@
 #include <components/esm/exteriorcelllocation.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm4/reader.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/misc/constants.hpp>
 
 #include "lighting.hpp"
@@ -66,9 +67,11 @@ namespace ESM4
         static constexpr int sSize = Constants::ESM4CellSizeInUnits;
 
         ESM::RefId mId; // from the header
+        ESM::FormKey mFormKey; // stable identity, independent of load-order indices
         std::uint32_t mFlags = 0; // from the header, see enum type RecordFlag for details
 
         ESM::RefId mParent; // world formId (for grouping cells), from the loading sequence
+        ESM::FormKey mParentKey; // stable worldspace identity
 
         std::string mEditorId;
         std::string mFullName;

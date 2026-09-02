@@ -209,6 +209,108 @@ class OblivionCompatTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             MODULE.expand_value("{missing}", {})
 
+    def test_m14_manifest_rejects_direct_mutation_and_validates_event_matchers(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-test",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {"event_file": "ai-events.jsonl", "required_events": [{"event": "phase"}]},
+            "actions": [{"type": "m14_assert_events", "required": [{"event": "phase"}]}],
+        }
+        MODULE.validate_scenario_manifest(manifest)
+        manifest["actions"].append({"type": "move_actor"})
+        with self.assertRaises(ValueError):
+            MODULE.validate_scenario_manifest(manifest)
+
+    def test_m14_event_stream_checker_is_structured_and_exact(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                '{"event":"phase","actor":"content:oblivion.esm:000001","to":2}\n',
+                encoding="utf-8",
+            )
+            result = MODULE._validate_m14_events(
+                {
+                    "m14": {
+                        "event_file": "ai-events.jsonl",
+                        "required_events": [{"event": "phase", "to": 2}],
+                        "forbidden_events": [{"event": "teleport"}],
+                        "minimum_event_count": 1,
+                    }
+                },
+                output,
+            )
+            self.assertTrue(result["passed"])
+            self.assertEqual(result["event_types"], {"phase": 1})
+
+    def test_m14_state_validator_rejects_occluded_detection_and_direct_markers(self):
+        state = {"schema_version": 5, "ai_rng_state": 1, "actor_ai": [], "path_points": [], "companions": [],
+                 "mounts": [], "detection_vectors": [{"score": 12, "line_of_sight": False, "detected": True}]}
+        result = MODULE.validate_m14_runtime_state(state)
+        self.assertFalse(result["passed"])
+        self.assertTrue(any("occluded" in failure for failure in result["failures"]))
+        state["detection_vectors"][0]["detected"] = False
+        state["direct_teleport"] = True
+        self.assertFalse(MODULE.validate_m14_runtime_state(state)["passed"])
+
+    def test_m14_event_stream_checker_enforces_order_and_repeat_bounds(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                "\n".join(
+                    (
+                        '{"event":"selection","actor":"content:oblivion.esm:000001"}',
+                        '{"event":"phase","actor":"content:oblivion.esm:000001","from":0,"to":1}',
+                        '{"event":"phase","actor":"content:oblivion.esm:000001","from":0,"to":1}',
+                    )
+                ) + "\n",
+                encoding="utf-8",
+            )
+            result = MODULE._validate_m14_events(
+                {
+                    "m14": {
+                        "event_file": "ai-events.jsonl",
+                        "required_event_order": [{"event": "selection"}, {"event": "phase", "to": 1}],
+                        "maximum_repeated_events": {"phase": 1},
+                    }
+                },
+                output,
+            )
+            self.assertFalse(result["passed"])
+            self.assertTrue(any("repeated" in failure for failure in result["failures"]))
+
+    def test_m14_state_validator_rejects_wrong_collection_and_numeric_types(self):
+        state = {
+            "schema_version": 5,
+            "ai_rng_state": 1,
+            "actor_ai": {},
+            "path_points": [],
+            "companions": [],
+            "mounts": [],
+            "detection_vectors": [],
+        }
+        result = MODULE.validate_m14_runtime_state(state)
+        self.assertFalse(result["passed"])
+        self.assertTrue(any("actor_ai" in failure for failure in result["failures"]))
+        state["actor_ai"] = [{"actor": [], "source": "base"}]
+        result = MODULE.validate_m14_runtime_state(state)
+        self.assertFalse(result["passed"])
+        self.assertTrue(any("not a string" in failure or "not an integer" in failure for failure in result["failures"]))
+
+    def test_m14_typed_controls_reject_ambiguous_clock_and_bad_obstruction(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-control-test",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {"event_file": "ai-events.jsonl"},
+            "actions": [{"type": "m14_advance_clock", "hours": 1, "game_hour": 4}],
+        }
+        with self.assertRaises(ValueError):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["actions"] = [{"type": "m14_obstruction", "reference": "../door", "operation": "add"}]
+        with self.assertRaises(ValueError):
+            MODULE.validate_scenario_manifest(manifest)
+
     def test_test_log_summary_detects_incomplete_tests(self):
         result = MODULE.summarize_test_log(
             "TEST_START\t1\tpasses\nTEST_OK\t1\tpasses\nTEST_START\t2\tincomplete\n"

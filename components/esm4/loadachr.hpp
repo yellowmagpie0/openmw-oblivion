@@ -49,11 +49,15 @@ namespace ESM4
         ESM::FormKey mFormKey; // stable identity, independent of load-order indices
         ESM::RefId mParent; // cell FormId , from the loading sequence
                             // NOTE: for exterior cells it will be the dummy cell FormId
+        ESM::FormKey mParentKey; // stable owning-cell identity
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
         std::string mFullName;
         ESM::FormId mBaseObj;
+        ESM::FormKey mBaseKey;
+        ESM::FormId mHorse;
+        ESM::FormKey mHorseKey;
 
         ESM::Position mPos;
         float mScale = 1.0f;
