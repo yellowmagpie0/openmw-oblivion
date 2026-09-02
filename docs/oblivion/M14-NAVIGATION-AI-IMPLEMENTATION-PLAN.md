@@ -712,7 +712,7 @@ update it only when the named gate has fresh, actor-specific evidence.
 
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |
-| 0: baseline | Audit and ordinary test artifacts exist; the harness now supports actor-scoped ordered events, counts, and forbidden failure reasons | Open: migrate the remaining scenarios, reproduce from the candidate revision, and retain exact logs |
+| 0: baseline | Audit and ordinary test artifacts exist; the harness now supports actor-scoped ordered events, counts, failure reasons, and exact saved-state fields | Open: migrate the remaining scenarios, add cross-checkpoint outcome comparisons, reproduce from the candidate revision, and retain exact logs |
 | 1: records/audit | PACK/PGRD stores, typed data, audit tooling, and a count lock are present | Open: independently review parsing/identity claims and rerun full sanitizer coverage |
 | 2: pathgrids | Graph, overlay, foreign/object-link, Scene, and navigator code plus focused component tests are present | Open: complete lifecycle/door integration and real-cell gates under sanitizers |
 | 3: actor bridge | NPC/creature actor bridge code is present | Open: add the required physics, stats, inventory-identity, movement, reload, and TES3-isolation integration tests |

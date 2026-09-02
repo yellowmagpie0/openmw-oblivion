@@ -334,6 +334,87 @@ class OblivionCompatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicates actor"):
             MODULE.validate_scenario_manifest(manifest)
 
+    def test_m14_actor_state_requirements_are_scoped_and_exact(self):
+        states = [
+            {
+                "actor": "actor:a",
+                "phase": 6,
+                "target": "actor:b",
+                "has_destination": True,
+                "interruption_reason": "",
+            },
+            {
+                "actor": "actor:b",
+                "phase": 12,
+                "target": "null",
+                "has_destination": True,
+                "interruption_reason": "bounded-repath-exhausted",
+            },
+        ]
+        requirements = [
+            {
+                "actor": "actor:a",
+                "expected": {"phase": 6, "target": "actor:b"},
+                "forbidden_values": {"phase": [12]},
+                "required_truthy": ["has_destination"],
+                "forbidden_interruption_substrings": ["repath-exhausted"],
+            }
+        ]
+        failures, summaries = MODULE._validate_m14_actor_states(states, requirements)
+        self.assertEqual(failures, [])
+        self.assertTrue(summaries["actor:a"]["passed"])
+
+        requirements[0]["actor"] = "actor:b"
+        failures, summaries = MODULE._validate_m14_actor_states(states, requirements)
+        self.assertFalse(summaries["actor:b"]["passed"])
+        self.assertTrue(any("forbidden value" in failure for failure in failures))
+        self.assertTrue(any("forbidden interruption" in failure for failure in failures))
+
+    def test_m14_manifest_rejects_malformed_actor_state_requirements(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-actor-state",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {"event_file": "ai-events.jsonl"},
+            "actions": [{"type": "m14_checkpoint", "actor_state_requirements": [{"expected": {}}]}],
+        }
+        with self.assertRaisesRegex(ValueError, "stable actor key"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["actions"][0]["actor_state_requirements"] = [
+            {"actor": "actor:a", "forbidden_values": {"phase": 12}}
+        ]
+        with self.assertRaisesRegex(ValueError, "value lists"):
+            MODULE.validate_scenario_manifest(manifest)
+
+    def test_m14_checkpoint_applies_actor_state_requirements(self):
+        state = {
+            "clock": {"day": 27, "hour": 1.0},
+            "actor_ai": [{"actor": "actor:a", "phase": 12, "interruption_reason": "stalled"}],
+        }
+        validation = {
+            "passed": True,
+            "failures": [],
+            "actor_count": 1,
+            "companion_count": 0,
+            "mount_count": 0,
+            "detection_vector_count": 0,
+        }
+        action = {
+            "type": "m14_checkpoint",
+            "name": "actor-state",
+            "actor_state_requirements": [
+                {"actor": "actor:a", "forbidden_values": {"phase": [12]}}
+            ],
+        }
+        with tempfile.TemporaryDirectory() as temporary, \
+                mock.patch.object(MODULE, "_single_save", return_value=Path(temporary) / "save.omwsave"), \
+                mock.patch.object(MODULE.tes4_state, "load_save", return_value=state), \
+                mock.patch.object(MODULE, "validate_m14_runtime_state", return_value=validation):
+            result = MODULE._run_action(action, environment={}, output=Path(temporary))
+            self.assertFalse(result["passed"])
+            self.assertFalse(result["actor_requirements"]["actor:a"]["passed"])
+            self.assertTrue(any("forbidden value" in failure for failure in result["failures"]))
+
     def test_m14_state_validator_rejects_occluded_detection_and_direct_markers(self):
         state = {"schema_version": 5, "ai_rng_state": 1, "actor_ai": [], "path_points": [], "companions": [],
                  "mounts": [], "detection_vectors": [{"score": 12, "line_of_sight": False, "detected": True}]}

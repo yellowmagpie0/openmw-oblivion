@@ -13,11 +13,12 @@ acceptance evidence without satisfying the reopened gates below.
 
 ## Reopened acceptance gates
 
-- Migrate every scenario to the actor-scoped event requirements now supported by
-  the harness, then add actor-specific assertions for package order, target,
-  phase, route, cell transitions, arrival, interruption, and persistence. The
-  companion manifest now scopes selection/phase/route and route-failure checks;
-  the remaining manifests still rely mainly on global checks.
+- Migrate every scenario to the actor-scoped event and saved-state requirements
+  now supported by the harness, then add actor-specific comparisons for package
+  order, route, cell transitions, arrival, and recovery. The companion manifest
+  now scopes selection/phase/route, persisted targets and group relationships,
+  destinations, interruptions, and stalled phases; the remaining manifests
+  still rely mainly on global checks.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.

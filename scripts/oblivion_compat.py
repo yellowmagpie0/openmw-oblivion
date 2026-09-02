@@ -511,6 +511,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             if "day" in action and (not isinstance(action["day"], int) or action["day"] < 0):
                 raise ValueError("m14_advance_clock day must be a non-negative integer")
         if m14 is not None and action_type == "m14_checkpoint":
+            _validate_m14_actor_state_requirements(
+                action.get("actor_state_requirements", []), "M14 checkpoint")
             for field in ("expected_day",):
                 if field in action and (not isinstance(action[field], int) or action[field] < 1):
                     raise ValueError(f"M14 checkpoint {field} must be a positive integer")
@@ -581,6 +583,80 @@ def _validate_m14_actor_event_requirements(value: Any, label: str) -> None:
         fragments = requirement.get("forbidden_reason_substrings", [])
         if not isinstance(fragments, list) or not all(isinstance(item, str) and item for item in fragments):
             raise ValueError(f"{prefix} forbidden_reason_substrings must be a list of non-empty strings")
+
+
+def _validate_m14_actor_state_requirements(value: Any, label: str) -> None:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} actor_state_requirements must be a list")
+    actors: set[str] = set()
+    for index, requirement in enumerate(value):
+        prefix = f"{label} actor_state_requirements[{index}]"
+        if not isinstance(requirement, dict):
+            raise ValueError(f"{prefix} must be an object")
+        actor = requirement.get("actor")
+        if not isinstance(actor, str) or not actor:
+            raise ValueError(f"{prefix} requires a stable actor key")
+        if actor in actors:
+            raise ValueError(f"{prefix} duplicates actor {actor}")
+        actors.add(actor)
+        expected = requirement.get("expected", {})
+        if not isinstance(expected, dict) or not all(isinstance(field, str) and field for field in expected):
+            raise ValueError(f"{prefix} expected must map non-empty field names to values")
+        forbidden = requirement.get("forbidden_values", {})
+        if not isinstance(forbidden, dict) or not all(
+            isinstance(field, str) and field and isinstance(values, list)
+            for field, values in forbidden.items()
+        ):
+            raise ValueError(f"{prefix} forbidden_values must map non-empty field names to value lists")
+        required_truthy = requirement.get("required_truthy", [])
+        if not isinstance(required_truthy, list) or not all(
+            isinstance(field, str) and field for field in required_truthy
+        ):
+            raise ValueError(f"{prefix} required_truthy must be a list of non-empty field names")
+        fragments = requirement.get("forbidden_interruption_substrings", [])
+        if not isinstance(fragments, list) or not all(isinstance(item, str) and item for item in fragments):
+            raise ValueError(
+                f"{prefix} forbidden_interruption_substrings must be a list of non-empty strings")
+
+
+def _validate_m14_actor_states(
+    actor_states: list[dict[str, Any]], requirements: list[dict[str, Any]]
+) -> tuple[list[str], dict[str, Any]]:
+    states = {str(state.get("actor", "null")): state for state in actor_states if isinstance(state, dict)}
+    failures: list[str] = []
+    summaries: dict[str, Any] = {}
+    for requirement in requirements:
+        actor = str(requirement["actor"])
+        state = states.get(actor)
+        actor_failures: list[str] = []
+        if state is None:
+            actor_failures.append("actor is absent from runtime state")
+        else:
+            for field, expected in requirement.get("expected", {}).items():
+                actual = state.get(field)
+                if actual != expected:
+                    actor_failures.append(f"field {field!r} is {actual!r}, expected {expected!r}")
+            for field, forbidden in requirement.get("forbidden_values", {}).items():
+                actual = state.get(field)
+                if actual in forbidden:
+                    actor_failures.append(f"field {field!r} has forbidden value {actual!r}")
+            for field in requirement.get("required_truthy", []):
+                if not state.get(field):
+                    actor_failures.append(f"field {field!r} is not truthy")
+            interruption = str(state.get("interruption_reason", "")).casefold()
+            fragments = [
+                str(value).casefold() for value in requirement.get("forbidden_interruption_substrings", [])
+            ]
+            if any(fragment in interruption for fragment in fragments):
+                actor_failures.append(
+                    f"forbidden interruption reason observed: {state.get('interruption_reason')}")
+        summaries[actor] = {
+            "state": state,
+            "failures": actor_failures,
+            "passed": not actor_failures,
+        }
+        failures.extend(f"M14 actor {actor}: {failure}" for failure in actor_failures)
+    return failures, summaries
 
 
 def _read_m14_events(path: Path) -> list[dict[str, Any]]:
@@ -984,6 +1060,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         failures: list[str] = []
         save: Path | None = None
         state: dict[str, Any] | None = None
+        actor_requirements: dict[str, Any] = {}
         validation: dict[str, Any] = {"passed": False, "failures": ["checkpoint was not read"]}
         try:
             save = _single_save(output)
@@ -1024,6 +1101,9 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             missing_actors = sorted(required_actors - observed_actors)
             if missing_actors:
                 failures.append(f"M14 checkpoint is missing actors {missing_actors}")
+            actor_failures, actor_requirements = _validate_m14_actor_states(
+                state.get("actor_ai", []), action.get("actor_state_requirements", []))
+            failures.extend(actor_failures)
             for name, minimum, actual in (
                 ("companion", int(action.get("minimum_companion_count", 0)), validation["companion_count"]),
                 ("mount", int(action.get("minimum_mount_count", 0)), validation["mount_count"]),
@@ -1062,6 +1142,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             "save": str(save) if save else None,
             "validation": validation,
             "runtime_state": state,
+            "actor_requirements": actor_requirements if state is not None else {},
             "failures": failures,
             "duration_seconds": round(time.monotonic() - started, 6),
             "passed": not failures and validation.get("passed", False),

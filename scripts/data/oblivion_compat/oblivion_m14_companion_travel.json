@@ -58,20 +58,35 @@
     {"type": "screenshot", "name": "companion-initial.png", "minimum_entropy": 0.02},
     {"type": "key", "value": "F5"},
     {"type": "sleep", "seconds": 7},
-    {"type": "m14_checkpoint", "name": "companion-initial", "minimum_actor_count": 3000, "minimum_companion_count": 2, "required_actor_keys": ["content:oblivion.esm:062c78", "content:oblivion.esm:062c7a", "content:oblivion.esm:062c79"], "required_package_types": [1, 7]},
+    {"type": "m14_checkpoint", "name": "companion-initial", "minimum_actor_count": 3000, "minimum_companion_count": 2, "required_actor_keys": ["content:oblivion.esm:062c78", "content:oblivion.esm:062c7a", "content:oblivion.esm:062c79"], "required_package_types": [1, 7],
+      "actor_state_requirements": [
+        {"actor": "content:oblivion.esm:062c78", "expected": {"package_type": 7, "target": "content:oblivion.esm:062c7a", "companion_group": "content:oblivion.esm:062c7a", "formation_index": 0, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]},
+        {"actor": "content:oblivion.esm:062c7a", "expected": {"package_type": 7, "target": "content:oblivion.esm:062c79", "companion_group": "content:oblivion.esm:062c79", "formation_index": 0, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]},
+        {"actor": "content:oblivion.esm:062c79", "expected": {"package_type": 6, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]}
+      ]},
     {"type": "m14_observe", "actor": "content:oblivion.esm:062c7a", "observation": "observations/companion-member-initial.json"},
     {"type": "m14_observe", "actor": "content:oblivion.esm:062c79", "observation": "observations/companion-leader-initial.json"},
     {"type": "m14_obstruction", "reference": "0xb5d5b", "operation": "add", "settle_seconds": 0.4},
     {"type": "sleep", "seconds": 8},
     {"type": "key", "value": "F5"},
     {"type": "sleep", "seconds": 7},
-    {"type": "m14_checkpoint", "name": "companion-separated", "minimum_actor_count": 3000, "minimum_companion_count": 2, "required_actor_keys": ["content:oblivion.esm:062c78", "content:oblivion.esm:062c7a", "content:oblivion.esm:062c79"], "required_package_types": [1, 7]},
+    {"type": "m14_checkpoint", "name": "companion-separated", "minimum_actor_count": 3000, "minimum_companion_count": 2, "required_actor_keys": ["content:oblivion.esm:062c78", "content:oblivion.esm:062c7a", "content:oblivion.esm:062c79"], "required_package_types": [1, 7],
+      "actor_state_requirements": [
+        {"actor": "content:oblivion.esm:062c78", "expected": {"package_type": 7, "target": "content:oblivion.esm:062c7a", "companion_group": "content:oblivion.esm:062c7a", "formation_index": 0, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]},
+        {"actor": "content:oblivion.esm:062c7a", "expected": {"package_type": 7, "target": "content:oblivion.esm:062c79", "companion_group": "content:oblivion.esm:062c79", "formation_index": 0, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]},
+        {"actor": "content:oblivion.esm:062c79", "expected": {"package_type": 6, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]}
+      ]},
     {"type": "m14_observe", "actor": "content:oblivion.esm:062c7a", "observation": "observations/companion-member-obstructed.json"},
     {"type": "m14_obstruction", "reference": "0xb5d5b", "operation": "remove", "settle_seconds": 0.4},
     {"type": "sleep", "seconds": 8},
     {"type": "key", "value": "F5"},
     {"type": "sleep", "seconds": 7},
-    {"type": "m14_checkpoint", "name": "companion-reunited", "minimum_actor_count": 3000, "minimum_companion_count": 2, "required_actor_keys": ["content:oblivion.esm:062c78", "content:oblivion.esm:062c7a", "content:oblivion.esm:062c79"], "required_package_types": [1, 7]},
+    {"type": "m14_checkpoint", "name": "companion-reunited", "minimum_actor_count": 3000, "minimum_companion_count": 2, "required_actor_keys": ["content:oblivion.esm:062c78", "content:oblivion.esm:062c7a", "content:oblivion.esm:062c79"], "required_package_types": [1, 7],
+      "actor_state_requirements": [
+        {"actor": "content:oblivion.esm:062c78", "expected": {"package_type": 7, "target": "content:oblivion.esm:062c7a", "companion_group": "content:oblivion.esm:062c7a", "formation_index": 0, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]},
+        {"actor": "content:oblivion.esm:062c7a", "expected": {"package_type": 7, "target": "content:oblivion.esm:062c79", "companion_group": "content:oblivion.esm:062c79", "formation_index": 0, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]},
+        {"actor": "content:oblivion.esm:062c79", "expected": {"package_type": 6, "interruption_reason": ""}, "forbidden_values": {"phase": [8, 12]}, "required_truthy": ["has_destination"]}
+      ]},
     {"type": "m14_observe", "actor": "content:oblivion.esm:062c7a", "observation": "observations/companion-member-recovered.json"},
     {"type": "m14_debug_navigation", "settle_seconds": 0.3},
     {"type": "screenshot", "name": "companion-navmesh.png", "minimum_entropy": 0.02},

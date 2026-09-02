@@ -138,6 +138,7 @@
           "required_mounted_horse": {"type": "string", "minLength": 1},
           "required_dismounted_actor": {"type": "string", "minLength": 1},
           "required_actor_keys": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "actor_state_requirements": {"$ref": "#/$defs/actorStateRequirements"},
           "required_package_types": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
           "required_phases": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
           "event_file": {"type": "string", "minLength": 1},
@@ -163,6 +164,30 @@
     }
   },
   "$defs": {
+    "actorStateRequirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actor"],
+        "properties": {
+          "actor": {"type": "string", "minLength": 1},
+          "expected": {"type": "object"},
+          "forbidden_values": {
+            "type": "object",
+            "additionalProperties": {"type": "array"}
+          },
+          "required_truthy": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "forbidden_interruption_substrings": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
     "actorEventRequirements": {
       "type": "array",
       "items": {
