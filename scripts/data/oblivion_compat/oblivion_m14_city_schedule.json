@@ -25,6 +25,71 @@
       {"event": "route"},
       {"event": "route-navmesh"}
     ],
+    "actor_event_requirements": [
+      {
+        "actor": "content:oblivion.esm:01d15d",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:01d20b",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:01d15e",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:01e073",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:0153aa",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:01e078",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:01c4b7",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:01c4c6",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      },
+      {
+        "actor": "content:oblivion.esm:0c45b8",
+        "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+        "minimum_event_counts": {"route": 1},
+        "maximum_event_counts": {"route-blocked": 0, "selection": 24},
+        "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked"]
+      }
+    ],
     "forbidden_event_names": ["direct-teleport", "tes3-ai", "unsupported", "unresolved", "phase-loop", "route-loop"],
     "forbidden_reason_substrings": ["direct-teleport", "tes3-ai", "unsupported", "unresolved-package", "deferred-m14"],
     "maximum_repeated_events": {"tier": 16},

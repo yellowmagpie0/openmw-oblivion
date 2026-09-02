@@ -324,7 +324,7 @@
         "M14 ObScript command/query bindings and provisional real-content scenario tooling"
       ],
       "open_gates": [
-        "Migrate every M14 scenario to the new actor-scoped event, saved-state, and actor-distance requirements; the companion manifest now scopes selection/phase/route, persisted relationships, destinations, interruptions, stalled phases, separation, and reunion",
+        "Migrate every M14 scenario to the new actor-scoped event, saved-state, and actor-distance requirements; companion and city now have named-actor gates, while tutorial, doors, detection, and horse remain",
         "Resolve recorded bounded-repath and repeated locked-door failures, then rerun the named 24-hour city schedule at high and low process with required reload boundaries",
         "Demonstrate real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation",
         "Demonstrate companion separation and recovery; the current passing evidence records a stalled leader and no observed companion movement",

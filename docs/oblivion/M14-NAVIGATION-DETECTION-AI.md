@@ -18,7 +18,9 @@ acceptance evidence without satisfying the reopened gates below.
   order, route, cell transitions, arrival, and recovery. The companion manifest
   now scopes selection/phase/route, persisted targets and group relationships,
   destinations, interruptions, stalled phases, and near/separated/near distance
-  outcomes; the remaining manifests still rely mainly on global checks.
+  outcomes. The city manifest now scopes all nine named NPCs and rejects their
+  route failures, locked-door failures, and excessive reselection. Tutorial,
+  doors, detection, and horse still rely mainly on global checks.
 - Fix and rerun the companion course. Its recorded leader reaches
   `bounded-repath-exhausted`, while the observed companion has the same cell and
   position before obstruction, during obstruction, and after alleged recovery.
