@@ -45,6 +45,7 @@
         "required_events": {"type": "array", "items": {"type": "object"}},
         "forbidden_events": {"type": "array", "items": {"type": "object"}},
         "required_event_order": {"type": "array", "items": {"type": "object"}},
+        "actor_event_requirements": {"$ref": "#/$defs/actorEventRequirements"},
         "forbidden_event_names": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "forbidden_reason_substrings": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "maximum_repeated_events": {
@@ -147,6 +148,7 @@
           "required": {"type": "array", "items": {"type": "object"}},
           "forbidden": {"type": "array", "items": {"type": "object"}},
           "required_event_order": {"type": "array", "items": {"type": "object"}},
+          "actor_event_requirements": {"$ref": "#/$defs/actorEventRequirements"},
           "forbidden_event_names": {"type": "array", "items": {"type": "string", "minLength": 1}},
           "forbidden_reason_substrings": {"type": "array", "items": {"type": "string", "minLength": 1}},
           "maximum_repeated_events": {
@@ -156,6 +158,36 @@
           "maximum_route_blocked": {"type": "integer", "minimum": 0},
           "maximum_no_progress_events": {"type": "integer", "minimum": 0},
           "maximum_phase_repeat": {"type": "integer", "minimum": 1}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "actorEventRequirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actor"],
+        "properties": {
+          "actor": {"type": "string", "minLength": 1},
+          "minimum_event_count": {"type": "integer", "minimum": 0},
+          "maximum_event_count": {"type": "integer", "minimum": 0},
+          "required_events": {"type": "array", "items": {"type": "object"}},
+          "forbidden_events": {"type": "array", "items": {"type": "object"}},
+          "required_event_order": {"type": "array", "items": {"type": "object"}},
+          "minimum_event_counts": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0}
+          },
+          "maximum_event_counts": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0}
+          },
+          "forbidden_reason_substrings": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          }
         }
       }
     }

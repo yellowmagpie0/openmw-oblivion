@@ -464,6 +464,7 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
         for field in ("required_events", "forbidden_events", "required_event_order"):
             if field in m14 and (not isinstance(m14[field], list) or not all(isinstance(item, dict) for item in m14[field])):
                 raise ValueError(f"M14 {field} must be a list of event match objects")
+        _validate_m14_actor_event_requirements(m14.get("actor_event_requirements", []), "M14")
         if "forbidden_event_names" in m14 and (
             not isinstance(m14["forbidden_event_names"], list)
             or not all(isinstance(item, str) and item for item in m14["forbidden_event_names"])
@@ -494,6 +495,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
                 if field in action and (not isinstance(action[field], list)
                                         or not all(isinstance(item, dict) for item in action[field])):
                     raise ValueError(f"M14 event matcher field {field!r} must be a list of objects")
+            _validate_m14_actor_event_requirements(
+                action.get("actor_event_requirements", []), "M14 event assertion")
         if m14 is not None and action_type == "m14_advance_clock":
             has_hour = "game_hour" in action
             has_delta = "hours" in action
@@ -543,6 +546,43 @@ def _scenario_output_path(output: Path, value: Any, label: str) -> Path:
     return output / relative
 
 
+def _validate_m14_actor_event_requirements(value: Any, label: str) -> None:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} actor_event_requirements must be a list")
+    actors: set[str] = set()
+    for index, requirement in enumerate(value):
+        prefix = f"{label} actor_event_requirements[{index}]"
+        if not isinstance(requirement, dict):
+            raise ValueError(f"{prefix} must be an object")
+        actor = requirement.get("actor")
+        if not isinstance(actor, str) or not actor:
+            raise ValueError(f"{prefix} requires a stable actor key")
+        if actor in actors:
+            raise ValueError(f"{prefix} duplicates actor {actor}")
+        actors.add(actor)
+        for field in ("required_events", "forbidden_events", "required_event_order"):
+            if field in requirement and (
+                not isinstance(requirement[field], list)
+                or not all(isinstance(item, dict) for item in requirement[field])
+            ):
+                raise ValueError(f"{prefix} {field} must be a list of event match objects")
+        for field in ("minimum_event_count", "maximum_event_count"):
+            if field in requirement and (
+                not isinstance(requirement[field], int) or requirement[field] < 0
+            ):
+                raise ValueError(f"{prefix} {field} must be a non-negative integer")
+        for field in ("minimum_event_counts", "maximum_event_counts"):
+            counts = requirement.get(field, {})
+            if not isinstance(counts, dict) or not all(
+                isinstance(name, str) and name and isinstance(count, int) and count >= 0
+                for name, count in counts.items()
+            ):
+                raise ValueError(f"{prefix} {field} must map event names to non-negative integers")
+        fragments = requirement.get("forbidden_reason_substrings", [])
+        if not isinstance(fragments, list) or not all(isinstance(item, str) and item for item in fragments):
+            raise ValueError(f"{prefix} forbidden_reason_substrings must be a list of non-empty strings")
+
+
 def _read_m14_events(path: Path) -> list[dict[str, Any]]:
     if not path.is_file():
         return []
@@ -562,6 +602,67 @@ def _read_m14_events(path: Path) -> list[dict[str, Any]]:
 
 def _m14_event_matches(event: dict[str, Any], expected: dict[str, Any]) -> bool:
     return all(event.get(key) == value for key, value in expected.items())
+
+
+def _validate_m14_actor_events(
+    events: list[dict[str, Any]], requirements: list[dict[str, Any]]
+) -> tuple[list[str], dict[str, Any]]:
+    failures: list[str] = []
+    summaries: dict[str, Any] = {}
+    for requirement in requirements:
+        actor = str(requirement["actor"])
+        actor_events = [event for event in events if event.get("actor") == actor]
+        counts = collections.Counter(str(event["event"]) for event in actor_events)
+        actor_failures: list[str] = []
+
+        minimum = int(requirement.get("minimum_event_count", 0))
+        maximum = requirement.get("maximum_event_count")
+        if len(actor_events) < minimum:
+            actor_failures.append(f"event count {len(actor_events)} is below {minimum}")
+        if maximum is not None and len(actor_events) > int(maximum):
+            actor_failures.append(f"event count {len(actor_events)} exceeds {maximum}")
+
+        for expected in requirement.get("required_events", []):
+            if not any(_m14_event_matches(event, expected) for event in actor_events):
+                actor_failures.append(f"missing required event: {expected}")
+        for forbidden in requirement.get("forbidden_events", []):
+            if any(_m14_event_matches(event, forbidden) for event in actor_events):
+                actor_failures.append(f"forbidden event observed: {forbidden}")
+
+        cursor = 0
+        for expected in requirement.get("required_event_order", []):
+            found = next((index for index in range(cursor, len(actor_events))
+                          if _m14_event_matches(actor_events[index], expected)), None)
+            if found is None:
+                actor_failures.append(f"event order requirement was not met after actor event {cursor}: {expected}")
+                break
+            cursor = found + 1
+
+        for event_name, expected in requirement.get("minimum_event_counts", {}).items():
+            actual = counts.get(str(event_name), 0)
+            if actual < int(expected):
+                actor_failures.append(f"event type {event_name!r} occurred {actual} times, minimum is {expected}")
+        for event_name, maximum_count in requirement.get("maximum_event_counts", {}).items():
+            actual = counts.get(str(event_name), 0)
+            if actual > int(maximum_count):
+                actor_failures.append(
+                    f"event type {event_name!r} occurred {actual} times, maximum is {maximum_count}")
+
+        fragments = [str(value).casefold() for value in requirement.get("forbidden_reason_substrings", [])]
+        for event in actor_events:
+            reason = str(event.get("reason", "")).casefold()
+            if any(fragment in reason for fragment in fragments):
+                actor_failures.append(f"forbidden reason observed: {event.get('reason')}")
+                break
+
+        summaries[actor] = {
+            "events": len(actor_events),
+            "event_types": dict(sorted(counts.items())),
+            "failures": actor_failures,
+            "passed": not actor_failures,
+        }
+        failures.extend(f"M14 actor {actor}: {failure}" for failure in actor_failures)
+    return failures, summaries
 
 
 def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, Any]:
@@ -657,11 +758,15 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, An
             else:
                 previous = identity
                 repeat = 0
+    actor_failures, actor_summaries = _validate_m14_actor_events(
+        events, config.get("actor_event_requirements", []))
+    failures.extend(actor_failures)
     return {
         "enabled": True,
         "path": str(event_path),
         "events": len(events),
         "event_types": dict(sorted(event_counts.items())),
+        "actors": actor_summaries,
         "failures": failures,
         "passed": not failures,
     }
@@ -984,6 +1089,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
                 "maximum_route_blocked": action.get("maximum_route_blocked"),
                 "maximum_no_progress_events": action.get("maximum_no_progress_events"),
                 "maximum_phase_repeat": action.get("maximum_phase_repeat", 8),
+                "actor_event_requirements": action.get("actor_event_requirements", []),
             }
         }
         result = _validate_m14_events(config, output)

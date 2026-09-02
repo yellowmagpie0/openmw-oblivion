@@ -243,6 +243,97 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertTrue(result["passed"])
             self.assertEqual(result["event_types"], {"phase": 1})
 
+    def test_m14_actor_event_requirements_cannot_be_satisfied_by_another_actor(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                "\n".join(
+                    (
+                        '{"event":"selection","actor":"actor:a"}',
+                        '{"event":"phase","actor":"actor:b","to":2}',
+                        '{"event":"route","actor":"actor:b"}',
+                    )
+                ) + "\n",
+                encoding="utf-8",
+            )
+            result = MODULE._validate_m14_events(
+                {
+                    "m14": {
+                        "event_file": "ai-events.jsonl",
+                        "required_events": [{"event": "route"}],
+                        "actor_event_requirements": [
+                            {
+                                "actor": "actor:a",
+                                "required_events": [{"event": "route"}],
+                                "minimum_event_counts": {"phase": 1},
+                            }
+                        ],
+                    }
+                },
+                output,
+            )
+            self.assertFalse(result["passed"])
+            self.assertNotIn("actor:b", result["actors"])
+            self.assertEqual(result["actors"]["actor:a"]["event_types"], {"selection": 1})
+            self.assertTrue(any("actor:a" in failure and "missing required event" in failure
+                                for failure in result["failures"]))
+
+    def test_m14_actor_event_requirements_enforce_scoped_order_counts_and_reasons(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                "\n".join(
+                    (
+                        '{"event":"selection","actor":"actor:a"}',
+                        '{"event":"phase","actor":"actor:b","reason":"bounded-repath-exhausted"}',
+                        '{"event":"phase","actor":"actor:a","to":1}',
+                        '{"event":"route","actor":"actor:a"}',
+                    )
+                ) + "\n",
+                encoding="utf-8",
+            )
+            requirement = {
+                "actor": "actor:a",
+                "required_event_order": [
+                    {"event": "selection"}, {"event": "phase", "to": 1}, {"event": "route"}
+                ],
+                "minimum_event_counts": {"route": 1},
+                "maximum_event_counts": {"phase": 1},
+                "forbidden_reason_substrings": ["bounded-repath-exhausted"],
+            }
+            result = MODULE._validate_m14_events(
+                {"m14": {"event_file": "ai-events.jsonl", "actor_event_requirements": [requirement]}},
+                output,
+            )
+            self.assertTrue(result["passed"])
+            self.assertTrue(result["actors"]["actor:a"]["passed"])
+
+            requirement["actor"] = "actor:b"
+            result = MODULE._validate_m14_events(
+                {"m14": {"event_file": "ai-events.jsonl", "actor_event_requirements": [requirement]}},
+                output,
+            )
+            self.assertFalse(result["passed"])
+            self.assertTrue(any("forbidden reason" in failure for failure in result["failures"]))
+
+    def test_m14_manifest_rejects_malformed_actor_event_requirements(self):
+        manifest = {
+            "schema_version": 1,
+            "name": "m14-actor-events",
+            "command": [sys.executable, "-c", "pass"],
+            "m14": {"event_file": "ai-events.jsonl", "actor_event_requirements": [{"required_events": []}]},
+        }
+        with self.assertRaisesRegex(ValueError, "stable actor key"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["m14"]["actor_event_requirements"] = [
+            {"actor": "actor:a", "maximum_event_counts": {"phase": -1}}
+        ]
+        with self.assertRaisesRegex(ValueError, "non-negative integers"):
+            MODULE.validate_scenario_manifest(manifest)
+        manifest["m14"]["actor_event_requirements"] = [{"actor": "actor:a"}, {"actor": "actor:a"}]
+        with self.assertRaisesRegex(ValueError, "duplicates actor"):
+            MODULE.validate_scenario_manifest(manifest)
+
     def test_m14_state_validator_rejects_occluded_detection_and_direct_markers(self):
         state = {"schema_version": 5, "ai_rng_state": 1, "actor_ai": [], "path_points": [], "companions": [],
                  "mounts": [], "detection_vectors": [{"score": 12, "line_of_sight": False, "detected": True}]}
