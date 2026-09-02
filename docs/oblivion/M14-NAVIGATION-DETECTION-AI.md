@@ -195,6 +195,14 @@ evidence only:
 | Horses | `build/oblivion-compat/m14-scenario-horse-final21/` |
 | Morrowind isolation | `build/oblivion-compat/morrowind-m14-final3/` |
 
+A focused navigation repair was verified in
+`build/oblivion-compat/m14-navmesh-agent-bounds-fix/`. Multipart TES4 NPC
+models no longer register zero-sized agents, convex and multi-sphere collision
+input no longer aborts navmesh tile jobs, and Valen Dreth produced 53 successful
+continuous routes with no `navmesh is not found` event. The scenario remains a
+failure because its separate obstruction invalidation, door-transition, and
+package-reselection gates are still open.
+
 The city run records five calendar checkpoints, but does not prove the required
 named-NPC histories, high/low equivalence, or reload boundaries. The companion
 run does not demonstrate separation and recovery. The tutorial, door,

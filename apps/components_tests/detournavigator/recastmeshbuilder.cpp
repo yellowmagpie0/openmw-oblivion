@@ -7,7 +7,9 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionShapes/btTriangleMesh.h>
 
 #include <DetourCommon.h>
@@ -171,6 +173,41 @@ namespace
             }))
             << recastMesh->getMesh().getIndices();
         EXPECT_EQ(recastMesh->getMesh().getAreaTypes(), std::vector<AreaType>(12, AreaType_ground));
+    }
+
+    TEST_F(DetourNavigatorRecastMeshBuilderTest, add_convex_hull_shape_should_produce_mesh)
+    {
+        const std::array points{ btVector3(-1, -1, 0), btVector3(-1, 1, 0), btVector3(1, -1, 0),
+            btVector3(0, 0, 2) };
+        btConvexHullShape shape;
+        for (const btVector3& point : points)
+            shape.addPoint(point, false);
+        shape.recalcLocalAabb();
+
+        RecastMeshBuilder builder(mBounds);
+        builder.addObject(static_cast<const btCollisionShape&>(shape), btTransform::getIdentity(), AreaType_ground,
+            mSource, mObjectTransform);
+        const auto recastMesh = std::move(builder).create(mVersion);
+        EXPECT_FALSE(recastMesh->getMesh().getVertices().empty());
+        EXPECT_FALSE(recastMesh->getMesh().getIndices().empty());
+        EXPECT_EQ(recastMesh->getMesh().getIndices().size() % 3, 0u);
+        EXPECT_EQ(recastMesh->getMesh().getAreaTypes().size(), recastMesh->getMesh().getIndices().size() / 3);
+    }
+
+    TEST_F(DetourNavigatorRecastMeshBuilderTest, add_multi_sphere_shape_should_produce_mesh)
+    {
+        const std::array positions{ btVector3(0, 0, -1), btVector3(0, 0, 1) };
+        const std::array<btScalar, 2> radii{ 1, 1 };
+        btMultiSphereShape shape(positions.data(), radii.data(), static_cast<int>(positions.size()));
+
+        RecastMeshBuilder builder(mBounds);
+        builder.addObject(static_cast<const btCollisionShape&>(shape), btTransform::getIdentity(), AreaType_ground,
+            mSource, mObjectTransform);
+        const auto recastMesh = std::move(builder).create(mVersion);
+        EXPECT_FALSE(recastMesh->getMesh().getVertices().empty());
+        EXPECT_FALSE(recastMesh->getMesh().getIndices().empty());
+        EXPECT_EQ(recastMesh->getMesh().getIndices().size() % 3, 0u);
+        EXPECT_EQ(recastMesh->getMesh().getAreaTypes().size(), recastMesh->getMesh().getIndices().size() / 3);
     }
 
     TEST_F(DetourNavigatorRecastMeshBuilderTest, add_compound_shape)

@@ -20,7 +20,8 @@ namespace MWPhysics
 {
 
     Actor::Actor(const MWWorld::Ptr& ptr, const Resource::BulletShape* shape, PhysicsTaskScheduler* scheduler,
-        bool canWaterWalk, DetourNavigator::CollisionShapeType collisionShapeType)
+        bool canWaterWalk, DetourNavigator::CollisionShapeType collisionShapeType,
+        const osg::Vec3f& fallbackHalfExtents)
         : PtrHolder(ptr, ptr.getRefData().getPosition().asVec3())
         , mStandingOnPtr(nullptr)
         , mCanWaterWalk(canWaterWalk)
@@ -37,10 +38,11 @@ namespace MWPhysics
         , mActive(false)
         , mTaskScheduler(scheduler)
     {
-        // We can not create actor without collisions - he will fall through the ground.
-        // In this case we should autogenerate collision box based on mesh shape
-        // (NPCs have bodyparts and use a different approach)
-        if (!ptr.getClass().isNpc() && mOriginalHalfExtents.length2() == 0.f)
+        // We can not create an actor without collisions: it will fall through the ground and its
+        // zero-sized agent bounds will be rejected by the navigator. First try the model collision
+        // shape, then use the configured actor bounds for multipart NPC models that have neither a
+        // root collision box nor a standalone collision shape.
+        if (mOriginalHalfExtents.length2() == 0.f)
         {
             if (shape->mCollisionShape)
             {
@@ -58,8 +60,12 @@ namespace MWPhysics
             }
 
             if (mOriginalHalfExtents.length2() == 0.f)
-                Log(Debug::Error) << "Error: Failed to calculate bounding box for actor \""
-                                  << ptr.getCellRef().getRefId() << "\".";
+            {
+                mOriginalHalfExtents = fallbackHalfExtents;
+                mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
+                Log(Debug::Warning) << "Using fallback collision bounds for actor \""
+                                    << ptr.getCellRef().getRefId() << "\".";
+            }
         }
 
         const btVector3 halfExtents = Misc::Convert::toBullet(mOriginalHalfExtents);

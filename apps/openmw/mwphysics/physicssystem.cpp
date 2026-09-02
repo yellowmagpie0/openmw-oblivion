@@ -599,7 +599,8 @@ namespace MWPhysics
         const bool canWaterWalk = effects.getOrDefault(ESM::MagicEffect::WaterWalking).getMagnitude() > 0;
 
         auto actor = std::make_shared<Actor>(
-            ptr, shape, mTaskScheduler.get(), canWaterWalk, Settings::game().mActorCollisionShapeType);
+            ptr, shape, mTaskScheduler.get(), canWaterWalk, Settings::game().mActorCollisionShapeType,
+            Settings::game().mDefaultActorPathfindHalfExtents);
 
         mActors.emplace(ptr.mRef, std::move(actor));
     }

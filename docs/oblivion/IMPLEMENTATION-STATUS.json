@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-09-01",
+  "updated": "2026-09-02",
   "base_revision": "a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
   "milestones": {
     "M0": {
@@ -304,6 +304,7 @@
         "build/oblivion-compat/m14-scenario-detection-final5/scenario.json",
         "build/oblivion-compat/m14-scenario-detection-final5/obscript-report.json",
         "build/oblivion-compat/m14-scenario-horse-final21/scenario.json",
+        "build/oblivion-compat/m14-navmesh-agent-bounds-fix/scenario.json",
         "build/oblivion-compat/morrowind-m14-final3/scenario.json",
         "build/oblivion-compat/m7-runtime-final7/scenario.json",
         "build/oblivion-compat/m7-reload-final7/scenario.json",
@@ -318,7 +319,7 @@
       "candidate_implementation": [
         "Native stable-keyed TES4 PACK/PGRD stores, typed CTDA/CTDT conditions, and count-locked audit tooling",
         "Pathgrid service with local/foreign edges, PGRL object links, overlays, navigator adapters, and door-routing code",
-        "TES4 NPC/creature actor bridge intended to share M11 rendering and M12/M13 mechanics state",
+        "TES4 NPC/creature actor bridge sharing M11 rendering and M12/M13 mechanics state, with nonzero multipart-NPC collision and navigator bounds",
         "Package selection, schedules, conditions, detection, high/low processing, obstruction recovery, and persistence schema 5",
         "Candidate implementations of observed package behaviors, companions, and horses",
         "M14 ObScript command/query bindings and provisional real-content scenario tooling"

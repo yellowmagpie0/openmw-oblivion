@@ -28,7 +28,8 @@ namespace MWPhysics
     {
     public:
         Actor(const MWWorld::Ptr& ptr, const Resource::BulletShape* shape, PhysicsTaskScheduler* scheduler,
-            bool canWaterWalk, DetourNavigator::CollisionShapeType collisionShapeType);
+            bool canWaterWalk, DetourNavigator::CollisionShapeType collisionShapeType,
+            const osg::Vec3f& fallbackHalfExtents);
         ~Actor() override;
 
         Actor(const Actor&) = delete;

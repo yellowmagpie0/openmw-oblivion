@@ -19,6 +19,7 @@ class btBoxShape;
 class btCollisionShape;
 class btCompoundShape;
 class btConcaveShape;
+class btConvexShape;
 class btHeightfieldTerrainShape;
 class btTriangleCallback;
 
@@ -50,6 +51,8 @@ namespace DetourNavigator
         void addObject(const btHeightfieldTerrainShape& shape, const btTransform& transform, const AreaType areaType);
 
         void addObject(const btBoxShape& shape, const btTransform& transform, const AreaType areaType);
+
+        void addObject(const btConvexShape& shape, const btTransform& transform, const AreaType areaType);
 
         void addWater(const osg::Vec2i& cellPosition, const Water& water);
 

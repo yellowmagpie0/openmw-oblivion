@@ -9,7 +9,9 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/CollisionShapes/btConcaveShape.h>
+#include <BulletCollision/CollisionShapes/btConvexShape.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <LinearMath/btAabbUtil2.h>
 #include <LinearMath/btTransform.h>
 
@@ -156,6 +158,8 @@ namespace DetourNavigator
             return addObject(static_cast<const btConcaveShape&>(shape), transform, areaType);
         else if (shape.getShapeType() == BOX_SHAPE_PROXYTYPE)
             return addObject(static_cast<const btBoxShape&>(shape), transform, areaType);
+        else if (shape.isConvex())
+            return addObject(static_cast<const btConvexShape&>(shape), transform, areaType);
         std::ostringstream message;
         message << "Unsupported shape type: " << BroadphaseNativeTypes(shape.getShapeType());
         throw InvalidArgument(message.str());
@@ -213,6 +217,24 @@ namespace DetourNavigator
                 vertices[j] = transform(position);
             }
             mTriangles.emplace_back(makeRecastMeshTriangle(vertices.data(), areaType));
+        }
+    }
+
+    void RecastMeshBuilder::addObject(
+        const btConvexShape& shape, const btTransform& transform, const AreaType areaType)
+    {
+        btShapeHull hull(&shape);
+        if (!hull.buildHull(shape.getMargin()))
+            throw InvalidArgument("Failed to build a convex hull for navmesh input");
+
+        const btVector3* vertices = hull.getVertexPointer();
+        const unsigned int* indices = hull.getIndexPointer();
+        for (int i = 0; i < hull.numIndices(); i += 3)
+        {
+            std::array<btVector3, 3> triangle;
+            for (std::size_t j = 0; j < triangle.size(); ++j)
+                triangle[j] = transform(vertices[indices[i + static_cast<int>(j)]]);
+            mTriangles.emplace_back(makeRecastMeshTriangle(triangle.data(), areaType));
         }
     }
 
