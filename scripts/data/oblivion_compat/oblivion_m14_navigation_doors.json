@@ -19,6 +19,25 @@
     "minimum_event_count": 100,
     "required_events": [{"event": "route"}],
     "required_event_order": [{"event": "selection"}, {"event": "phase"}, {"event": "route"}],
+    "actor_event_requirements": [
+      {
+        "actor": "content:oblivion.esm:01fc43",
+        "required_event_order": [
+          {"event": "selection"},
+          {"event": "route"},
+          {"event": "route-blocked"},
+          {"event": "route"},
+          {"event": "door-transition"}
+        ],
+        "minimum_event_counts": {"route": 2, "route-blocked": 1, "door-transition": 1},
+        "maximum_event_counts": {"selection": 24, "route-blocked": 8, "door-transition": 4},
+        "forbidden_reason_substrings": [
+          "bounded-repath-exhausted",
+          "door-locked",
+          "navmesh is not found"
+        ]
+      }
+    ],
     "forbidden_event_names": ["direct-teleport", "tes3-ai", "unsupported", "unresolved", "phase-loop", "route-loop"],
     "forbidden_reason_substrings": ["direct-teleport", "tes3-ai", "unsupported", "unresolved-package", "deferred-m14"],
     "maximum_repeated_events": {"tier": 16},
