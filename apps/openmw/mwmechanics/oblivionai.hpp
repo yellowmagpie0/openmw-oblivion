@@ -107,6 +107,9 @@ namespace MWMechanics
             // foreign-door intent, but this route is the primary motion path
             // whenever the resident navmesh can solve the segment.
             std::vector<osg::Vec3f> mContinuousRoute;
+            // Native route cursor to resume at after the collision-aware
+            // resident-cell segment has been consumed.
+            std::optional<std::size_t> mContinuousRouteEndCursor;
             std::optional<osg::Vec3f> mDestination;
             ESM::FormKey mDestinationCell;
             // ACHR.XHRS identifies the actor's last-ridden horse. It is not

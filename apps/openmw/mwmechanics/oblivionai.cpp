@@ -2766,16 +2766,16 @@ namespace MWMechanics
         const bool sameCell = destinationCell.isNull() || destinationCell == live.mState.mCell;
         live.mContinuousRoute.clear();
         live.mContinuousRouteCursor = 0;
+        live.mContinuousRouteEndCursor.reset();
         live.mRouteDoor.reset();
 
-        // Recast/Detour is the continuous movement authority whenever both
-        // endpoints are in the resident cell. Native PGRD remains a parallel
-        // intent graph: it supplies stable node identity and foreign-door
-        // boundaries, while this route supplies collision-aware motion around
-        // static geometry and dynamic navmesh obstacles.
-        bool hasContinuousRoute = false;
-        if (sameCell)
-        {
+        // Recast/Detour is the continuous movement authority for every
+        // resident-cell segment, including approaches to doors and seamless
+        // PGRI boundaries. Native PGRD remains the stable intent graph.
+        const auto prepareContinuousRoute = [&](const osg::Vec3f& target,
+                                                std::span<const osg::Vec3f> checkpoints) {
+            bool success = false;
+            DetourNavigator::Status status = DetourNavigator::Status::NavMeshNotFound;
             if (DetourNavigator::Navigator* navigator = mWorld.getNavigator())
             {
                 DetourNavigator::Flags flags = DetourNavigator::Flag_none;
@@ -2808,21 +2808,26 @@ namespace MWMechanics
                         }
                     }
 
-                    const DetourNavigator::Status status = DetourNavigator::findPath(*navigator,
-                        mWorld.getPathfindingAgentBounds(actor), actor.getRefData().getPosition().asVec3(), destination,
-                        flags, costs, sArrivalTolerance, std::span<const osg::Vec3f>{},
-                        std::back_inserter(live.mContinuousRoute));
-                    hasContinuousRoute = status == DetourNavigator::Status::Success
-                        && !live.mContinuousRoute.empty();
-                    if (!hasContinuousRoute)
+                    status = DetourNavigator::findPath(*navigator, mWorld.getPathfindingAgentBounds(actor),
+                        actor.getRefData().getPosition().asVec3(), target, flags, costs, sArrivalTolerance,
+                        checkpoints, std::back_inserter(live.mContinuousRoute));
+                    success = status == DetourNavigator::Status::Success && !live.mContinuousRoute.empty();
+                    if (!success)
                         live.mContinuousRoute.clear();
-
-                    std::ostringstream navmeshEvent;
-                    navmeshEvent << "status=" << DetourNavigator::getMessage(status)
-                                 << " continuous=" << (hasContinuousRoute ? "true" : "false");
-                    logEvent("route-navmesh", live, navmeshEvent.str());
                 }
             }
+
+            std::ostringstream navmeshEvent;
+            navmeshEvent << "status=" << DetourNavigator::getMessage(status)
+                         << " continuous=" << (success ? "true" : "false");
+            logEvent("route-navmesh", live, navmeshEvent.str());
+            return success;
+        };
+
+        bool hasContinuousRoute = false;
+        if (sameCell)
+        {
+            hasContinuousRoute = prepareContinuousRoute(destination, {});
         }
 
         if (!destinationCell.isNull() && live.mState.mCell != destinationCell)
@@ -2855,10 +2860,24 @@ namespace MWMechanics
         {
             if (!sameCell && prepareDoorRoute(live, *start, destinationCell, &actor))
             {
+                std::vector<osg::Vec3f> checkpoints;
+                checkpoints.reserve(live.mRoute.size());
+                for (std::size_t index = live.mRouteCursor; index < live.mRoute.size(); ++index)
+                {
+                    const ESM4::PathgridGraph* routeGraph = service.graph(live.mRoute[index].mPathgrid);
+                    if (routeGraph == nullptr || routeGraph->cellKey() != live.mState.mCell)
+                        break;
+                    const ESM4::PathgridPoint point = routeGraph->worldPoint(live.mRoute[index].mNode);
+                    checkpoints.emplace_back(point.mX, point.mY, point.mZ);
+                }
+                hasContinuousRoute = prepareContinuousRoute(live.mRouteDoorPosition, checkpoints);
+                if (hasContinuousRoute)
+                    live.mContinuousRouteEndCursor = live.mRoute.size();
                 std::ostringstream routeEvent;
                 routeEvent << "generation=" << live.mState.mRouteGeneration << " nodes=" << live.mRoute.size()
                            << " destination_cell=" << destinationCell.serialize()
-                           << " door=" << live.mState.mDoor.serialize() << " continuous=false";
+                           << " door=" << live.mState.mDoor.serialize()
+                           << " continuous=" << (hasContinuousRoute ? "true" : "false");
                 logEvent("route", live, routeEvent.str());
                 return true;
             }
@@ -2871,10 +2890,24 @@ namespace MWMechanics
         {
             if (!sameCell && prepareDoorRoute(live, *start, destinationCell, &actor))
             {
+                std::vector<osg::Vec3f> checkpoints;
+                checkpoints.reserve(live.mRoute.size());
+                for (std::size_t index = live.mRouteCursor; index < live.mRoute.size(); ++index)
+                {
+                    const ESM4::PathgridGraph* routeGraph = service.graph(live.mRoute[index].mPathgrid);
+                    if (routeGraph == nullptr || routeGraph->cellKey() != live.mState.mCell)
+                        break;
+                    const ESM4::PathgridPoint point = routeGraph->worldPoint(live.mRoute[index].mNode);
+                    checkpoints.emplace_back(point.mX, point.mY, point.mZ);
+                }
+                hasContinuousRoute = prepareContinuousRoute(live.mRouteDoorPosition, checkpoints);
+                if (hasContinuousRoute)
+                    live.mContinuousRouteEndCursor = live.mRoute.size();
                 std::ostringstream routeEvent;
                 routeEvent << "generation=" << live.mState.mRouteGeneration << " nodes=" << live.mRoute.size()
                            << " destination_cell=" << destinationCell.serialize()
-                           << " door=" << live.mState.mDoor.serialize() << " continuous=false";
+                           << " door=" << live.mState.mDoor.serialize()
+                           << " continuous=" << (hasContinuousRoute ? "true" : "false");
                 logEvent("route", live, routeEvent.str());
                 return true;
             }
@@ -2888,6 +2921,37 @@ namespace MWMechanics
         live.mState.mPathgrid = live.mRoute.front().mPathgrid;
         live.mState.mPathNode = live.mRoute.front().mNode;
         live.mState.mRouteGeneration = route.mRoute->mGeneration;
+        if (!sameCell)
+        {
+            const auto foreign = std::find_if(live.mRoute.begin() + live.mRouteCursor, live.mRoute.end(),
+                [&](const ESM4::PathgridNodeKey& node) {
+                    const ESM4::PathgridGraph* routeGraph = service.graph(node.mPathgrid);
+                    return routeGraph != nullptr && routeGraph->cellKey() != live.mState.mCell;
+                });
+            if (foreign != live.mRoute.end() && foreign != live.mRoute.begin())
+            {
+                const std::size_t foreignIndex = static_cast<std::size_t>(foreign - live.mRoute.begin());
+                const ESM4::PathgridNodeKey& boundary = live.mRoute[foreignIndex - 1];
+                if (const ESM4::PathgridGraph* boundaryGraph = service.graph(boundary.mPathgrid))
+                {
+                    std::vector<osg::Vec3f> checkpoints;
+                    checkpoints.reserve(foreignIndex - live.mRouteCursor);
+                    for (std::size_t index = live.mRouteCursor; index < foreignIndex; ++index)
+                    {
+                        const ESM4::PathgridGraph* routeGraph = service.graph(live.mRoute[index].mPathgrid);
+                        if (routeGraph == nullptr)
+                            break;
+                        const ESM4::PathgridPoint point = routeGraph->worldPoint(live.mRoute[index].mNode);
+                        checkpoints.emplace_back(point.mX, point.mY, point.mZ);
+                    }
+                    const ESM4::PathgridPoint point = boundaryGraph->worldPoint(boundary.mNode);
+                    hasContinuousRoute = prepareContinuousRoute(
+                        osg::Vec3f(point.mX, point.mY, point.mZ), checkpoints);
+                    if (hasContinuousRoute)
+                        live.mContinuousRouteEndCursor = foreignIndex;
+                }
+            }
+        }
         std::ostringstream routeEvent;
         routeEvent << "generation=" << live.mState.mRouteGeneration << " nodes=" << live.mRoute.size()
                    << " destination_cell=" << destinationCell.serialize()
@@ -4017,8 +4081,7 @@ namespace MWMechanics
             live.mAbstractPositionDirty = true;
         };
 
-        if ((live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell)
-            && !live.mContinuousRoute.empty())
+        if (!live.mContinuousRoute.empty())
         {
             while (live.mContinuousRouteCursor < live.mContinuousRoute.size())
             {
@@ -4046,16 +4109,26 @@ namespace MWMechanics
                 return true;
             }
 
-            // findSmoothPath normally ends within the requested tolerance.
-            // Keep the final arrival check explicit so a partial/degenerate
-            // output can never be interpreted as permission to cross a cell
-            // boundary or snap the actor to the destination.
-            if (distanceSquared(position, destination) <= sArrivalTolerance * sArrivalTolerance)
+            if (live.mContinuousRouteEndCursor)
             {
-                reached = true;
-                return true;
+                live.mRouteCursor = std::max(live.mRouteCursor, *live.mContinuousRouteEndCursor);
+                live.mContinuousRouteEndCursor.reset();
             }
-            return false;
+
+            if (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell)
+            {
+                // findSmoothPath normally ends within the requested tolerance.
+                // Keep the final arrival check explicit so a partial output
+                // cannot be interpreted as arrival.
+                if (distanceSquared(position, destination) <= sArrivalTolerance * sArrivalTolerance)
+                {
+                    reached = true;
+                    return true;
+                }
+                return false;
+            }
+            // The continuous segment ends at a real native boundary. Resume
+            // the PGRD/PGRL route below to cross it through its typed path.
         }
 
         if (live.mRouteCursor < live.mRoute.size())
