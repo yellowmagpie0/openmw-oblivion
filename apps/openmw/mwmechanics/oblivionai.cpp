@@ -5325,11 +5325,15 @@ namespace MWMechanics
                     static_cast<double>(mutableTarget.getClass().getEncumbrance(mutableTarget) / capacity), 0.0, 1.0)
                     * 0.1;
         }
-        input.mRandomSample = static_cast<double>(stableChoice(actorKey(observer), actorKey(target).mValue) % 10000)
-            / 10000.0;
-        const ESM4::DetectionResult result = ESM4::calculateDetection(input);
         const ESM::FormKey observerKey = actorKey(observer);
         const ESM::FormKey targetKey = actorKey(target);
+        const std::uint64_t evaluationGeneration = mNextEvaluationGeneration++;
+        if (mNextEvaluationGeneration == 0)
+            mNextEvaluationGeneration = 1;
+        input.mRandomSample = static_cast<double>(
+            stableChoice(observerKey, stableChoice(targetKey, evaluationGeneration)) % 10000)
+            / 10000.0;
+        const ESM4::DetectionResult result = ESM4::calculateDetection(input);
         if (!observerKey.isNull() && !targetKey.isNull() && observerKey != targetKey && result.mValid)
             mDetectionVectors[{ observerKey, targetKey }] = {
                 observerKey, targetKey, result.mLevel, result.mDetected, input.mLineOfSight };
@@ -5340,7 +5344,8 @@ namespace MWMechanics
                          << jsonQuote(targetKey.serialize()) << ",\"score\":"
                          << std::setprecision(9) << result.mLevel << ",\"detected\":"
                          << (result.mDetected ? "true" : "false") << ",\"line_of_sight\":"
-                         << (input.mLineOfSight ? "true" : "false") << "}\n";
+                         << (input.mLineOfSight ? "true" : "false") << ",\"random_sample\":"
+                         << input.mRandomSample << ",\"generation\":" << evaluationGeneration << "}\n";
             mEventStream.flush();
         }
         return result;

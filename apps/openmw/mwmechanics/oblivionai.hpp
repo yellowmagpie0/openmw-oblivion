@@ -179,7 +179,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByDestinationCell;
         mutable std::map<std::pair<ESM::FormKey, ESM::FormKey>, ESM4::RuntimeDetectionVector> mDetectionVectors;
         mutable std::map<std::string, std::uint64_t> mDiagnosticCounters;
-        std::uint64_t mNextEvaluationGeneration = 1;
+        mutable std::uint64_t mNextEvaluationGeneration = 1;
         mutable std::ofstream mEventStream;
         std::optional<ESM4::CalendarInstant> mSimulationNow;
 
