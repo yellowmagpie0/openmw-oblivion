@@ -127,11 +127,6 @@ namespace ESM4
     };
 
     PackageProcedure packageProcedure(AIPackageType type);
-    // These procedures select another action while their schedule window is
-    // still active.  The distinction matters when a completed action is
-    // revisited by the runtime selector: one-shot packages must remain
-    // complete, while native Wander/Eat packages may run again.
-    bool packageRepeatsWithinWindow(AIPackageType type);
     PackagePhaseState beginPackagePhase(const PackageSelection& selection, ESM::FormKey actor,
         ESM::FormKey base);
     PackagePhaseTransition advancePackagePhase(PackagePhaseState& state, const PackagePhaseInput& input);

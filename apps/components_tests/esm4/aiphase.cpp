@@ -22,9 +22,6 @@ TEST(ESM4AIPhase, MapsAllNativePackageProcedures)
     EXPECT_EQ(ESM4::packageProcedure(ESM4::AIPackageType::UseItemAt), ESM4::PackageProcedure::UseItemAt);
     EXPECT_EQ(ESM4::packageProcedure(ESM4::AIPackageType::CastMagic), ESM4::PackageProcedure::CastMagic);
     EXPECT_EQ(ESM4::packageProcedure(ESM4::AIPackageType::Unknown), ESM4::PackageProcedure::None);
-    EXPECT_TRUE(ESM4::packageRepeatsWithinWindow(ESM4::AIPackageType::Wander));
-    EXPECT_TRUE(ESM4::packageRepeatsWithinWindow(ESM4::AIPackageType::Eat));
-    EXPECT_FALSE(ESM4::packageRepeatsWithinWindow(ESM4::AIPackageType::Travel));
 }
 
 TEST(ESM4AIPhase, ResolvesRouteDoorAndActionInOrder)

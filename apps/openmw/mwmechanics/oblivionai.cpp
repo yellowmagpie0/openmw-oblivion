@@ -1786,7 +1786,8 @@ namespace MWMechanics
 
         const ESM4::PackageSelection result = ESM4::selectPackage(request);
         const bool sameWindow = live.mSelectedWindow.has_value() == result.mWindow.has_value()
-            && (!live.mSelectedWindow || *live.mSelectedWindow == *result.mWindow);
+            && (!live.mSelectedWindow || *live.mSelectedWindow == *result.mWindow
+                || ESM4::calendarHoursUntil(request.mNow, live.mSelectedWindow->mEnd) > 0.0);
         const bool sameSelection = !restart
             && ((!result.hasPackage() && live.mState.mPackage.isNull()
                     && live.mState.mSource == ESM4::PackageSource::None)
@@ -2264,7 +2265,8 @@ namespace MWMechanics
 
         const ESM4::PackageSelection result = ESM4::selectPackage(request);
         const bool sameWindow = live.mSelectedWindow.has_value() == result.mWindow.has_value()
-            && (!live.mSelectedWindow || *live.mSelectedWindow == *result.mWindow);
+            && (!live.mSelectedWindow || *live.mSelectedWindow == *result.mWindow
+                || ESM4::calendarHoursUntil(request.mNow, live.mSelectedWindow->mEnd) > 0.0);
         const bool sameSelection = !restart
             && ((!result.hasPackage() && live.mState.mPackage.isNull()
                     && live.mState.mSource == ESM4::PackageSource::None)
@@ -3192,16 +3194,20 @@ namespace MWMechanics
         if (live.mState.mDoorCooldown > 0.f)
             live.mState.mDoorCooldown = std::max(0.f, live.mState.mDoorCooldown - duration);
 
+        const bool routeChanged = (live.mState.mPhase == ESM4::PackagePhase::Interrupted
+                                      || live.mState.mPhase == ESM4::PackagePhase::Stalled)
+            && !live.mState.mPathgrid.isNull()
+            && live.mState.mRouteGeneration
+                != mWorld.mStore.getOblivionPathgridService().generation(live.mState.mPathgrid);
         if (live.mNeedsSelection
             || (live.mSelectionCheckTimer <= 0.f
                 && (live.mState.mPhase == ESM4::PackagePhase::Interrupted
                     || live.mState.mPhase == ESM4::PackagePhase::Complete
-                    || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull()))))
+                    || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
+                    || routeChanged)))
         {
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
-            const bool restart = live.mNeedsSelection
-                || (!idleWait && (live.mState.mPhase != ESM4::PackagePhase::Complete
-                        || ESM4::packageRepeatsWithinWindow(live.mState.mPackageType)));
+            const bool restart = live.mNeedsSelection || (!idleWait && routeChanged);
             selectUnloaded(live, restart);
         }
 
@@ -4412,7 +4418,9 @@ namespace MWMechanics
             }
         }
 
-        const bool stalledRouteChanged = live.mState.mPhase == ESM4::PackagePhase::Stalled
+        const bool stalledRouteChanged = (live.mState.mPhase == ESM4::PackagePhase::Stalled
+                                             || live.mState.mPhase == ESM4::PackagePhase::Interrupted)
+            && !live.mState.mPathgrid.isNull()
             && live.mState.mRouteGeneration
                 != mWorld.mStore.getOblivionPathgridService().generation(live.mState.mPathgrid);
         if (live.mSelectionCheckTimer <= 0.f
@@ -4420,12 +4428,12 @@ namespace MWMechanics
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
                 || stalledRouteChanged))
         {
-            // Interrupted/stalled work must retry, while a completed package
-            // is only replaced when the schedule/condition selector chooses a
-            // different winner or the recorded schedule window has ended.
+            // A terminal package remains terminal while it is still the
+            // selected winner. Retry only after an explicit graph change;
+            // schedule and condition reevaluation can still choose a new
+            // package without restarting the old one.
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
-            const bool restart = !idleWait && (live.mState.mPhase != ESM4::PackagePhase::Complete
-                || ESM4::packageRepeatsWithinWindow(live.mState.mPackageType));
+            const bool restart = !idleWait && stalledRouteChanged;
             select(actor, live, restart);
         }
 

@@ -203,6 +203,13 @@ continuous routes with no `navmesh is not found` event. The scenario remains a
 failure because its separate obstruction invalidation, door-transition, and
 package-reselection gates are still open.
 
+The scheduler repair in `build/oblivion-compat/m14-scheduler-fix/` reduced the
+door-course event stream from 229,223 to 22,718 events and Valen Dreth from 54
+selections to one. Terminal packages now retain their completed or interrupted
+state while the same schedule winner remains active, and retry only after a
+real pathgrid generation change. The course still fails its independent
+obstruction and door-transition requirements.
+
 The city run records five calendar checkpoints, but does not prove the required
 named-NPC histories, high/low equivalence, or reload boundaries. The companion
 run does not demonstrate separation and recovery. The tutorial, door,

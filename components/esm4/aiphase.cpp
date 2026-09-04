@@ -49,18 +49,6 @@ namespace ESM4
         return PackageProcedure::None;
     }
 
-    bool packageRepeatsWithinWindow(AIPackageType type)
-    {
-        switch (type)
-        {
-            case AIPackageType::Eat:
-            case AIPackageType::Wander:
-                return true;
-            default:
-                return false;
-        }
-    }
-
     PackagePhaseState beginPackagePhase(const PackageSelection& selection, ESM::FormKey actor,
         ESM::FormKey base)
     {

@@ -305,6 +305,7 @@
         "build/oblivion-compat/m14-scenario-detection-final5/obscript-report.json",
         "build/oblivion-compat/m14-scenario-horse-final21/scenario.json",
         "build/oblivion-compat/m14-navmesh-agent-bounds-fix/scenario.json",
+        "build/oblivion-compat/m14-scheduler-fix/scenario.json",
         "build/oblivion-compat/morrowind-m14-final3/scenario.json",
         "build/oblivion-compat/m7-runtime-final7/scenario.json",
         "build/oblivion-compat/m7-reload-final7/scenario.json",
