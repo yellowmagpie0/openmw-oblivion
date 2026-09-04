@@ -1807,6 +1807,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             environment["OPENMW_OBLIVION_AI_SEED"] = str(fixed_seed)
     xvfb_process: subprocess.Popen[str] | None = None
     started = time.monotonic()
+    scenario_timeout = float(manifest.get("timeout_seconds", 60))
+    deadline = started + scenario_timeout
     try:
         if manifest.get("virtual_gamepad", False):
             _VIRTUAL_GAMEPAD = VirtualGamepad()
@@ -1828,23 +1830,55 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
                 encoding="utf-8",
             )
             action_results: list[dict[str, Any]] = []
+            timed_out = False
             for action in manifest.get("actions", []):
                 if process.poll() is not None:
                     break
-                action_results.append(_run_action(action, environment=environment, output=output))
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    timed_out = True
+                    break
+
+                def scenario_alarm(_signum: int, _frame: Any) -> None:
+                    raise TimeoutError("scenario deadline exceeded during action")
+
+                previous_alarm = signal.getsignal(signal.SIGALRM)
+                signal.signal(signal.SIGALRM, scenario_alarm)
+                signal.setitimer(signal.ITIMER_REAL, remaining)
+                try:
+                    action_results.append(_run_action(action, environment=environment, output=output))
+                except TimeoutError:
+                    timed_out = True
+                    action_results.append({
+                        "type": action.get("type"),
+                        "passed": True,
+                        "deadline_exceeded": True,
+                        "duration_seconds": round(scenario_timeout, 6),
+                    })
+                    break
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    signal.signal(signal.SIGALRM, previous_alarm)
             if manifest.get("terminate_after_actions", False) and process.poll() is None:
                 process.send_signal(signal.SIGTERM)
-            timed_out = False
-            try:
-                process.wait(timeout=float(manifest.get("timeout_seconds", 60)))
-            except subprocess.TimeoutExpired:
-                timed_out = True
+            if timed_out and process.poll() is None:
                 process.terminate()
                 try:
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait(timeout=5)
+            elif process.poll() is None:
+                try:
+                    process.wait(timeout=max(0.001, deadline - time.monotonic()))
+                except subprocess.TimeoutExpired:
+                    timed_out = True
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=5)
         log_text = log_path.read_text(encoding="utf-8", errors="replace")
         expected = [str(value) for value in manifest.get("expected_log", [])]
         missing_expected = [pattern for pattern in expected if not re.search(pattern, log_text, re.MULTILINE)]

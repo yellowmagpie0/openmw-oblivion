@@ -678,6 +678,28 @@ class OblivionCompatTests(unittest.TestCase):
             persisted = json.loads((output / "scenario.json").read_text(encoding="utf-8"))
             self.assertEqual(persisted["name"], "scenario-runner-self-test")
 
+    def test_scenario_timeout_bounds_actions_and_process_wait(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "timeout.json"
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "name": "bounded-timeout",
+                        "command": [sys.executable, "-c", "import time; time.sleep(10)"],
+                        "timeout_seconds": 0.2,
+                        "actions": [{"type": "sleep", "seconds": 10}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = MODULE.run_scenario(manifest, root / "output", {})
+            self.assertTrue(result["timed_out"])
+            self.assertFalse(result["passed"])
+            self.assertLess(result["duration_seconds"], 2.0)
+            self.assertTrue(result["actions"][0]["deadline_exceeded"])
+
     def test_scenario_generated_paths_cannot_escape_output(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
