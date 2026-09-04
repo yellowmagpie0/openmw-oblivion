@@ -208,7 +208,7 @@ namespace MWMechanics
             LiveActor& live) const;
         bool prepareUnloadedRoute(LiveActor& live);
         bool prepareDoorRoute(LiveActor& live, const ESM4::PathgridNodeKey& start,
-            const ESM::FormKey& destinationCell);
+            const ESM::FormKey& destinationCell, const MWWorld::Ptr* actor = nullptr);
         float unloadedMovementSpeed(const LiveActor& live) const;
         bool advanceUnloadedMovement(LiveActor& live, float duration, bool& reached);
         bool transitionUnloaded(LiveActor& live, const ESM4::PackagePhaseInput& input);
@@ -230,7 +230,8 @@ namespace MWMechanics
         std::optional<ESM::FormKey> doorForEdge(const ESM4::PathgridNodeKey& source,
             const ESM4::PathgridNodeKey& destination) const;
         bool canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, bool& locked) const;
-        bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked) const;
+        bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked,
+            const MWWorld::Ptr* actor = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);
         bool completeAction(const MWWorld::Ptr& actor, LiveActor& live);
         void stopMovement(const MWWorld::Ptr& actor) const;
