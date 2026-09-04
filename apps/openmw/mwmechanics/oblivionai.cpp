@@ -3487,29 +3487,37 @@ namespace MWMechanics
         {
             if (!loadedPtrFor(live.mState.mActor).isEmpty())
                 continue;
-            live.mState.mTier = ESM4::ProcessTier::Low;
-            if (!std::isfinite(live.mState.mNextLowProcessTick)
-                || live.mState.mNextLowProcessTick < 0.f)
+            try
             {
-                Log(Debug::Warning) << "TES4 AI recovered an invalid low-process tick for actor "
-                                    << live.mState.mActor.serialize();
-                live.mState.mNextLowProcessTick = 0.25f;
+                live.mState.mTier = ESM4::ProcessTier::Low;
+                if (!std::isfinite(live.mState.mNextLowProcessTick)
+                    || live.mState.mNextLowProcessTick < 0.f)
+                {
+                    Log(Debug::Warning) << "TES4 AI recovered an invalid low-process tick for actor "
+                                        << live.mState.mActor.serialize();
+                    live.mState.mNextLowProcessTick = 0.25f;
+                }
+                else if (live.mState.mNextLowProcessTick == 0.f)
+                    live.mState.mNextLowProcessTick = 0.25f;
+                live.mState.mNextLowProcessTick -= elapsed;
+                unsigned steps = 0;
+                while (live.mState.mNextLowProcessTick <= 0.f && steps < 8)
+                {
+                    executeUnloadedFixedStep(live, 0.25f);
+                    live.mState.mNextLowProcessTick += 0.25f;
+                    ++steps;
+                }
+                if (steps == 8 && live.mState.mNextLowProcessTick < 0.f)
+                    live.mState.mNextLowProcessTick = 0.f;
+                if (!std::isfinite(live.mState.mNextLowProcessTick)
+                    || live.mState.mNextLowProcessTick < 0.f)
+                    live.mState.mNextLowProcessTick = 0.f;
             }
-            else if (live.mState.mNextLowProcessTick == 0.f)
-                live.mState.mNextLowProcessTick = 0.25f;
-            live.mState.mNextLowProcessTick -= elapsed;
-            unsigned steps = 0;
-            while (live.mState.mNextLowProcessTick <= 0.f && steps < 8)
+            catch (const std::exception& error)
             {
-                executeUnloadedFixedStep(live, 0.25f);
-                live.mState.mNextLowProcessTick += 0.25f;
-                ++steps;
+                Log(Debug::Error) << "TES4 low-process AI update failed for actor "
+                                  << live.mState.mActor.serialize() << ": " << error.what();
             }
-            if (steps == 8 && live.mState.mNextLowProcessTick < 0.f)
-                live.mState.mNextLowProcessTick = 0.f;
-            if (!std::isfinite(live.mState.mNextLowProcessTick)
-                || live.mState.mNextLowProcessTick < 0.f)
-                live.mState.mNextLowProcessTick = 0.f;
         }
     }
 
@@ -4756,62 +4764,71 @@ namespace MWMechanics
                 continue;
             live.mPendingDoor = false;
 
-            const MWWorld::Ptr actor = ptrFor(live.mState.mActor);
-            bool locked = false;
-            if (actor.isEmpty() || !canUseDoor(actor, live, locked))
-            {
-                if (!actor.isEmpty())
-                    transitionPackage(actor, live,
-                        { 0.f, true, true, true, true, false, locked, false, false, false, false, true });
-                continue;
-            }
-
-            const ESM::FormKey doorKey = live.mState.mDoor;
-            const bool crossingCell = !live.mDestinationCell.isNull()
-                && live.mDestinationCell != live.mState.mCell;
             try
             {
-                const MWWorld::Ptr door = ptrFor(doorKey);
-                // This is the ordinary profile activation path. It checks
-                // the actor's ownership/key rules and uses ActionTeleport for
-                // teleport doors; the AI never writes a destination position
-                // directly or unlocks a reference as a side effect.
-                mWorld.activateOblivionReferenceDefault(door, actor);
-                logEvent("door-transition", live, "door=" + doorKey.serialize());
+
+                const MWWorld::Ptr actor = ptrFor(live.mState.mActor);
+                bool locked = false;
+                if (actor.isEmpty() || !canUseDoor(actor, live, locked))
+                {
+                    if (!actor.isEmpty())
+                        transitionPackage(actor, live,
+                            { 0.f, true, true, true, true, false, locked, false, false, false, false, true });
+                    continue;
+                }
+
+                const ESM::FormKey doorKey = live.mState.mDoor;
+                const bool crossingCell = !live.mDestinationCell.isNull()
+                    && live.mDestinationCell != live.mState.mCell;
+                try
+                {
+                    const MWWorld::Ptr door = ptrFor(doorKey);
+                    // This is the ordinary profile activation path. It checks
+                    // the actor's ownership/key rules and uses ActionTeleport for
+                    // teleport doors; the AI never writes a destination position
+                    // directly or unlocks a reference as a side effect.
+                    mWorld.activateOblivionReferenceDefault(door, actor);
+                    logEvent("door-transition", live, "door=" + doorKey.serialize());
+                }
+                catch (const std::exception& error)
+                {
+                    Log(Debug::Warning) << "TES4 AI door transition failed for actor "
+                                        << live.mState.mActor.serialize() << ": " << error.what();
+                    logEvent("door-failure", live, "door=" + doorKey.serialize());
+                    transitionPackage(actor, live,
+                        { 0.f, true, true, true, true, false, false, false, false, false, true, true });
+                    continue;
+                }
+
+                const MWWorld::Ptr movedActor = ptrFor(live.mState.mActor);
+                if (!movedActor.isEmpty())
+                    synchronizeIdentity(live, movedActor);
+                live.mState.mLastTransitionDoor = doorKey;
+                live.mState.mDoorCooldown = 2.f;
+                // A teleport door invalidates the source-cell route. Rebuild from
+                // the realized destination cell on the next fixed step instead of
+                // interpreting a consumed source route as arrival.
+                const bool continueRoute = crossingCell || live.mRouteCursor < live.mRoute.size();
+                if (crossingCell)
+                {
+                    live.mRoute.clear();
+                    live.mContinuousRoute.clear();
+                    live.mRouteCursor = 0;
+                    live.mContinuousRouteCursor = 0;
+                    live.mForeignRouteTarget.reset();
+                    live.mRouteDoor.reset();
+                    live.mState.mPathgrid = {};
+                    live.mState.mPathNode = 0;
+                    live.mState.mDoor = {};
+                }
+                transitionPackage(movedActor.isEmpty() ? actor : movedActor, live,
+                    { 0.f, true, true, true, true, true, false, false, true, false, false, true, continueRoute });
             }
             catch (const std::exception& error)
             {
-                Log(Debug::Warning) << "TES4 AI door transition failed for actor "
-                                    << live.mState.mActor.serialize() << ": " << error.what();
-                logEvent("door-failure", live, "door=" + doorKey.serialize());
-                transitionPackage(actor, live,
-                    { 0.f, true, true, true, true, false, false, false, false, false, true, true });
-                continue;
+                Log(Debug::Error) << "TES4 AI transition commit failed for actor "
+                                  << live.mState.mActor.serialize() << ": " << error.what();
             }
-
-            const MWWorld::Ptr movedActor = ptrFor(live.mState.mActor);
-            if (!movedActor.isEmpty())
-                synchronizeIdentity(live, movedActor);
-            live.mState.mLastTransitionDoor = doorKey;
-            live.mState.mDoorCooldown = 2.f;
-            // A teleport door invalidates the source-cell route. Rebuild from
-            // the realized destination cell on the next fixed step instead of
-            // interpreting a consumed source route as arrival.
-            const bool continueRoute = crossingCell || live.mRouteCursor < live.mRoute.size();
-            if (crossingCell)
-            {
-                live.mRoute.clear();
-                live.mContinuousRoute.clear();
-                live.mRouteCursor = 0;
-                live.mContinuousRouteCursor = 0;
-                live.mForeignRouteTarget.reset();
-                live.mRouteDoor.reset();
-                live.mState.mPathgrid = {};
-                live.mState.mPathNode = 0;
-                live.mState.mDoor = {};
-            }
-            transitionPackage(movedActor.isEmpty() ? actor : movedActor, live,
-                { 0.f, true, true, true, true, true, false, false, true, false, false, true, continueRoute });
         }
     }
 

@@ -1639,7 +1639,6 @@ namespace MWMechanics
                         {
                             Log(Debug::Error) << "TES4 AI update failed for " << actorPtr.toString() << ": "
                                               << error.what();
-                            throw;
                         }
                     }
 
