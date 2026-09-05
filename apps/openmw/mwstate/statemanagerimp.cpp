@@ -372,10 +372,11 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
     }
 }
 
-void MWState::StateManager::quickSave(std::string name)
+void MWState::StateManager::quickSave(std::string name, bool allowDuringCharacterGeneration)
 {
     if (!(mState == State_Running
-            && MWBase::Environment::get().getWorld()->getGlobalInt(MWWorld::Globals::sCharGenState) == -1 // char gen
+            && (allowDuringCharacterGeneration
+                || MWBase::Environment::get().getWorld()->getGlobalInt(MWWorld::Globals::sCharGenState) == -1)
             && MWBase::Environment::get().getWindowManager()->isSavingAllowed()))
     {
         // You can not save your game right now

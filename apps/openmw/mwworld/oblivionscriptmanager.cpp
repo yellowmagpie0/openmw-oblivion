@@ -52,6 +52,7 @@
 #include "../mwbase/inputmanager.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/soundmanager.hpp"
+#include "../mwbase/statemanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwmechanics/oblivionai.hpp"
 #include "../mwgui/mode.hpp"
@@ -1073,6 +1074,12 @@ namespace MWWorld
         }
         if (name == "getignorefriendlyhits")
             return std::int64_t(mIgnoreFriendlyHits);
+        if (name == "autosave")
+        {
+            MWBase::Environment::get().getStateManager()->quickSave("Autosave", true);
+            trace("autosave");
+            return std::int64_t(0);
+        }
 
         if (name == "enable" || name == "disable")
         {
