@@ -233,6 +233,8 @@ namespace MWMechanics
         std::optional<ESM::FormKey> doorForEdge(const ESM4::PathgridNodeKey& source,
             const ESM4::PathgridNodeKey& destination) const;
         bool canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, bool& locked) const;
+        bool hasDoorOwnershipPermission(const LiveActor& live, const ESM::FormKey& owner,
+            const MWWorld::Ptr* actor = nullptr) const;
         bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked,
             const MWWorld::Ptr* actor = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);

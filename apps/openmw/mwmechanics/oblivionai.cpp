@@ -3659,6 +3659,8 @@ namespace MWMechanics
             return false;
         const MWWorld::Ptr door = loadedPtrFor(live.mState.mDoor);
         ESM::RefId key;
+        ESM::FormKey owner;
+        const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         if (door.isEmpty())
         {
             // Low-process and cross-cell checks must not load a CellStore just
@@ -3673,6 +3675,7 @@ namespace MWMechanics
             if (!location.mLocked)
                 return true;
             key = location.mKey;
+            owner = location.mOwner;
         }
         else
         {
@@ -3684,10 +3687,40 @@ namespace MWMechanics
             if (!door.getCellRef().isLocked())
                 return true;
             key = door.getCellRef().getKey();
+            if (const ESM::FormId* id = door.getCellRef().getOwner().getIf<ESM::FormId>())
+                owner = resolver.toFormKey(*id);
         }
+        if (hasDoorOwnershipPermission(live, owner, &actor))
+            return true;
         const bool hasKey = !key.empty() && !actor.getClass().getContainerStore(actor).search(key).isEmpty();
         locked = !hasKey;
         return hasKey;
+    }
+
+    bool OblivionAiService::hasDoorOwnershipPermission(
+        const LiveActor& live, const ESM::FormKey& owner, const MWWorld::Ptr* actor) const
+    {
+        if (owner.isNull())
+            return false;
+        if (owner == live.mState.mActor || owner == live.mState.mBase)
+            return true;
+
+        const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
+        if (actor != nullptr && !actor->isEmpty())
+        {
+            const ESM::RefId faction = actor->getClass().getPrimaryFaction(*actor);
+            if (const ESM::FormId* id = faction.getIf<ESM::FormId>(); id != nullptr && resolver.toFormKey(*id) == owner)
+                return true;
+        }
+
+        if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
+            if (npc->mFaction.faction != 0 && resolver.toFormKey(ESM::FormId::fromUint32(npc->mFaction.faction)) == owner)
+                return true;
+        if (const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(live.mState.mBase))
+            if (creature->mFaction.faction != 0
+                && resolver.toFormKey(ESM::FormId::fromUint32(creature->mFaction.faction)) == owner)
+                return true;
+        return false;
     }
 
     bool OblivionAiService::canUseUnloadedDoor(
@@ -3703,12 +3736,17 @@ namespace MWMechanics
         // data. The key itself is immutable for unloaded references.
         bool isLocked = door.mLocked;
         ESM::RefId doorKey = door.mKey;
+        ESM::FormKey doorOwner = door.mOwner;
         if (const MWWorld::Ptr loadedDoor = loadedPtrFor(door.mReference); !loadedDoor.isEmpty())
         {
             if (!loadedDoor.getRefData().isEnabled())
                 return false;
             isLocked = loadedDoor.getCellRef().isLocked();
             doorKey = loadedDoor.getCellRef().getKey();
+            if (const ESM::FormId* id = loadedDoor.getCellRef().getOwner().getIf<ESM::FormId>())
+                doorOwner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(*id);
+            else
+                doorOwner = {};
         }
         else if (mWorld.mOblivionRuntimeState)
         {
@@ -3722,9 +3760,13 @@ namespace MWMechanics
                 if (savedDoor->mDeleted || !savedDoor->mEnabled)
                     return false;
                 isLocked = savedDoor->mLockLevel > 0;
+                if (savedDoor->mOwner)
+                    doorOwner = *savedDoor->mOwner;
             }
         }
         if (!isLocked)
+            return true;
+        if (hasDoorOwnershipPermission(live, doorOwner, actor))
             return true;
 
         const ESM::FormId* keyId = doorKey.getIf<ESM::FormId>();
