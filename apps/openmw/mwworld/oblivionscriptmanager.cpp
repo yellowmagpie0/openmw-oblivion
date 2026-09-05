@@ -1563,6 +1563,12 @@ namespace MWWorld
 
         if (name == "isincombat" || name == "isspelltarget" || name == "ispcamurderer")
             return std::int64_t(0);
+        if (name == "issneaking")
+        {
+            const Ptr actor = objectPtr();
+            return std::int64_t(!actor.isEmpty()
+                && MWBase::Environment::get().getMechanicsManager()->isSneaking(actor));
+        }
         if (name == "isininterior")
         {
             const Ptr ptr = objectPtr();
