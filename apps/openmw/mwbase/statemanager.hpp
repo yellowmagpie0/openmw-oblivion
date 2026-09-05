@@ -73,7 +73,7 @@ namespace MWBase
 
         /// Simple saver, writes over the file if already existing
         /** Used for quick save and autosave **/
-        virtual void quickSave(std::string = "Quicksave", bool allowDuringCharacterGeneration = false) = 0;
+        virtual void quickSave(std::string = "Quicksave") = 0;
 
         /// Simple loader, loads the last saved file
         /** Used for quickload **/

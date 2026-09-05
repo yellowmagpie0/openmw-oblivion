@@ -372,11 +372,12 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
     }
 }
 
-void MWState::StateManager::quickSave(std::string name, bool allowDuringCharacterGeneration)
+void MWState::StateManager::quickSave(std::string name)
 {
-    if (!(mState == State_Running
-            && (allowDuringCharacterGeneration
-                || MWBase::Environment::get().getWorld()->getGlobalInt(MWWorld::Globals::sCharGenState) == -1)
+    const MWBase::World* world = MWBase::Environment::get().getWorld();
+    const bool characterGenerationAllowsSaving = world->getGameProfile() == ESM::GameProfile::Oblivion
+        || world->getGlobalInt(MWWorld::Globals::sCharGenState) == -1;
+    if (!(mState == State_Running && characterGenerationAllowsSaving
             && MWBase::Environment::get().getWindowManager()->isSavingAllowed()))
     {
         // You can not save your game right now

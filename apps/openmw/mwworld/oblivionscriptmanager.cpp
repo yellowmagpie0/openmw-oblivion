@@ -1076,7 +1076,7 @@ namespace MWWorld
             return std::int64_t(mIgnoreFriendlyHits);
         if (name == "autosave")
         {
-            MWBase::Environment::get().getStateManager()->quickSave("Autosave", true);
+            MWBase::Environment::get().getStateManager()->quickSave("Autosave");
             trace("autosave");
             return std::int64_t(0);
         }

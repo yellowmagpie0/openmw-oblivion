@@ -71,7 +71,7 @@ namespace MWState
         /// Saves a file, using supplied filename, overwritting if needed
         /** This is mostly used for quicksaving and autosaving, for they use the same name over and over again
             \param name Name of save, defaults to "Quicksave"**/
-        void quickSave(std::string name = "Quicksave", bool allowDuringCharacterGeneration = false) override;
+        void quickSave(std::string name = "Quicksave") override;
 
         /// Loads the last saved file
         /** Used for quickload **/
