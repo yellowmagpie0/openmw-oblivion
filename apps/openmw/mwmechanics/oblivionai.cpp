@@ -2728,63 +2728,80 @@ namespace MWMechanics
         std::size_t sourceNodeCount = 0;
         std::size_t sourceRouteCount = 0;
         std::size_t sourceLockedCount = 0;
-        const auto sourceDoors = mUnloadedDoorsByCell.find(live.mState.mCell);
-        if (sourceDoors == mUnloadedDoorsByCell.end())
-        {
-            live.mLastRouteFailure = "door-route-no-source-doors";
-            return false;
-        }
-        for (const std::size_t index : sourceDoors->second)
-        {
-            const UnloadedLocation& door = mUnloadedLocations[index];
-            ++sourceDoorCount;
-            if (!door.mEnabled || door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()
-                || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
-                continue;
-            bool locked = false;
-            if (!canUseUnloadedDoor(live, door, locked, actor))
+        const auto considerDoorCell = [&](const ESM::FormKey& candidateCell) {
+            // A door need not be in the actor's current cell. Exterior PGRI
+            // edges can lead across several cells before the first XTEL edge.
+            // Native pathgrid routing determines whether a candidate door
+            // source is reachable without teleporting.
+            if (remainingHops.find(candidateCell) == remainingHops.end())
+                return;
+            const auto sourceDoors = mUnloadedDoorsByCell.find(candidateCell);
+            if (sourceDoors == mUnloadedDoorsByCell.end())
+                return;
+            for (const std::size_t index : sourceDoors->second)
             {
-                sourceLockedCount += locked ? 1 : 0;
-                continue;
+                const UnloadedLocation& door = mUnloadedLocations[index];
+                ++sourceDoorCount;
+                if (!door.mEnabled || door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()
+                    || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
+                    continue;
+                bool locked = false;
+                if (!canUseUnloadedDoor(live, door, locked, actor))
+                {
+                    sourceLockedCount += locked ? 1 : 0;
+                    continue;
+                }
+                ++sourceUsableCount;
+
+                const auto destination = mUnloadedLocationByReference.find(door.mTeleportDoor);
+                if (destination == mUnloadedLocationByReference.end())
+                    continue;
+                const UnloadedLocation& marker = mUnloadedLocations[destination->second];
+                if (!marker.mEnabled || marker.mCell.isNull())
+                    continue;
+                const auto remaining = remainingHops.find(marker.mCell);
+                if (remaining == remainingHops.end())
+                    continue;
+                ++sourceReachableCellCount;
+
+                const ESM4::PathgridGraph* doorGraph = service.graphForCell(door.mCell);
+                const auto doorNode = doorGraph
+                    ? service.nearestEnabledNode(doorGraph->pathgridKey(),
+                          { door.mPosition.x(), door.mPosition.y(), door.mPosition.z() }, 4096.f)
+                    : std::nullopt;
+                if (!doorNode)
+                    continue;
+                ++sourceNodeCount;
+                const ESM4::PathgridRouteResult route = service.route(start, *doorNode);
+                if (!route)
+                    continue;
+                ++sourceRouteCount;
+
+                const ESM4::PathgridPoint nodePoint = doorGraph->worldPoint(doorNode->mNode);
+                const float cost = route.mRoute->mCost
+                    + (osg::Vec3f(nodePoint.mX, nodePoint.mY, nodePoint.mZ) - door.mPosition).length();
+                const std::size_t hopCount = remaining->second + 1;
+                if (!bestRoute || hopCount < bestHopCount
+                    || (hopCount == bestHopCount
+                        && (cost < bestCost || (cost == bestCost && door.mReference < *bestDoor))))
+                {
+                    bestHopCount = hopCount;
+                    bestCost = cost;
+                    bestDoor = door.mReference;
+                    bestDoorPosition = door.mPosition;
+                    bestRoute = *route.mRoute;
+                }
             }
-            ++sourceUsableCount;
+        };
 
-            const auto destination = mUnloadedLocationByReference.find(door.mTeleportDoor);
-            if (destination == mUnloadedLocationByReference.end())
-                continue;
-            const UnloadedLocation& marker = mUnloadedLocations[destination->second];
-            if (!marker.mEnabled || marker.mCell.isNull())
-                continue;
-            const auto remaining = remainingHops.find(marker.mCell);
-            if (remaining == remainingHops.end())
-                continue;
-            ++sourceReachableCellCount;
-
-            const auto doorNode = service.nearestEnabledNode(sourceGraph->pathgridKey(),
-                { door.mPosition.x(), door.mPosition.y(), door.mPosition.z() }, 4096.f);
-            if (!doorNode)
-                continue;
-            ++sourceNodeCount;
-            const ESM4::PathgridRouteResult route = service.route(start, *doorNode);
-            if (!route)
-                continue;
-            ++sourceRouteCount;
-
-            const ESM4::PathgridPoint nodePoint = sourceGraph->worldPoint(doorNode->mNode);
-            const float cost = route.mRoute->mCost
-                + (osg::Vec3f(nodePoint.mX, nodePoint.mY, nodePoint.mZ) - door.mPosition).length();
-            const std::size_t hopCount = remaining->second + 1;
-            if (!bestRoute || hopCount < bestHopCount
-                || (hopCount == bestHopCount
-                    && (cost < bestCost || (cost == bestCost && door.mReference < *bestDoor))))
-            {
-                bestHopCount = hopCount;
-                bestCost = cost;
-                bestDoor = door.mReference;
-                bestDoorPosition = door.mPosition;
-                bestRoute = *route.mRoute;
-            }
-        }
+        // Nearly every interior route begins with a resident-cell door. Keep
+        // that common path cheap; search other door-source cells only when no
+        // current-cell edge reaches the destination through the door graph.
+        considerDoorCell(live.mState.mCell);
+        if (!bestRoute)
+            for (const auto& [candidateCell, _] : remainingHops)
+                if (candidateCell != live.mState.mCell)
+                    considerDoorCell(candidateCell);
 
         if (!bestRoute || !bestDoor)
         {
