@@ -86,12 +86,15 @@ void ESM4::Npc::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("SNAM"):
             {
+                ActorFaction faction{};
                 // FO4, FO76
                 if (subHdr.dataSize == 5)
-                    reader.get(&mFaction, 5);
+                    reader.get(&faction, 5);
                 else
-                    reader.get(mFaction);
-                reader.adjustFormId(mFaction.faction);
+                    reader.get(faction);
+                reader.adjustFormId(faction.faction);
+                mFactions.push_back(faction);
+                mFaction = faction;
                 break;
             }
             case ESM::fourCC("RNAM"):

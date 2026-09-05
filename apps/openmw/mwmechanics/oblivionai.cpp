@@ -1153,10 +1153,13 @@ namespace MWMechanics
                 const std::optional<ESM::FormId> factionId = resolver.toFormId(parameterKey);
                 if (!factionId)
                     return value(0.0);
-                const ESM::FormId primaryFaction = npc != nullptr
-                    ? ESM::FormId::fromUint32(npc->mFaction.faction)
-                    : creature != nullptr ? ESM::FormId::fromUint32(creature->mFaction.faction) : ESM::FormId{};
-                return value(primaryFaction == *factionId ? 1.0 : 0.0);
+                const auto containsFaction = [factionId](const auto* actor) {
+                    return actor != nullptr
+                        && std::any_of(actor->mFactions.begin(), actor->mFactions.end(), [factionId](const auto& item) {
+                               return ESM::FormId::fromUint32(item.faction) == *factionId;
+                           });
+                };
+                return value(containsFaction(npc) || containsFaction(creature) ? 1.0 : 0.0);
             }
             if (function == "GetDeadCount")
             {
@@ -1976,16 +1979,24 @@ namespace MWMechanics
             if (const MWWorld::Ptr actor = loadedPtrFor(live.mState.mActor); !actor.isEmpty())
             {
                 if (actor.getClass().isNpc())
-                    return actor.getClass().getNpcStats(actor).isInFaction(
-                        ESM::RefId(resolver.toFormId(owner).value_or(ESM::FormId{})));
-                return actor.getClass().getPrimaryFaction(actor)
-                    == ESM::RefId(resolver.toFormId(owner).value_or(ESM::FormId{}));
+                {
+                    if (actor.getClass().getNpcStats(actor).isInFaction(
+                            ESM::RefId(resolver.toFormId(owner).value_or(ESM::FormId{}))))
+                        return true;
+                }
+                else if (actor.getClass().getPrimaryFaction(actor)
+                    == ESM::RefId(resolver.toFormId(owner).value_or(ESM::FormId{})))
+                    return true;
             }
             const ESM::FormId ownerId = resolver.toFormId(owner).value_or(ESM::FormId{});
             if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
-                return ESM::FormId::fromUint32(npc->mFaction.faction) == ownerId;
+                return std::any_of(npc->mFactions.begin(), npc->mFactions.end(), [ownerId](const auto& faction) {
+                    return ESM::FormId::fromUint32(faction.faction) == ownerId;
+                });
             if (const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(live.mState.mBase))
-                return ESM::FormId::fromUint32(creature->mFaction.faction) == ownerId;
+                return std::any_of(creature->mFactions.begin(), creature->mFactions.end(), [ownerId](const auto& faction) {
+                    return ESM::FormId::fromUint32(faction.faction) == ownerId;
+                });
             return false;
         };
         const auto usableFurniture = [&](const StableLocation& furniture) {
@@ -2654,13 +2665,19 @@ namespace MWMechanics
         const ESM::FormKey& destinationCell, const MWWorld::Ptr* actor)
     {
         if (destinationCell.isNull() || destinationCell == live.mState.mCell)
+        {
+            live.mLastRouteFailure = "door-route-same-or-missing-cell";
             return false;
+        }
 
         const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
         const ESM4::PathgridGraph* sourceGraph = service.graph(start.mPathgrid);
         if (sourceGraph == nullptr || sourceGraph->cellKey() != live.mState.mCell
             || !sourceGraph->contains(start.mNode) || !sourceGraph->isEnabled(start.mNode))
+        {
+            live.mLastRouteFailure = "door-route-invalid-source-node";
             return false;
+        }
 
         // Resolve a shortest coarse route backwards from the requested cell.
         // A native package destination may be behind several interiors (for
@@ -2672,6 +2689,8 @@ namespace MWMechanics
         std::queue<ESM::FormKey> pendingCells;
         remainingHops.emplace(destinationCell, 0);
         pendingCells.push(destinationCell);
+        std::size_t reverseDoors = 0;
+        std::size_t reverseLocked = 0;
         while (!pendingCells.empty())
         {
             const ESM::FormKey cell = pendingCells.front();
@@ -2683,12 +2702,16 @@ namespace MWMechanics
             for (const std::size_t index : incoming->second)
             {
                 const UnloadedLocation& door = mUnloadedLocations[index];
+                ++reverseDoors;
                 if (!door.mEnabled || door.mType != ESM::REC_DOOR4 || door.mCell.isNull()
                     || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                     continue;
                 bool locked = false;
                 if (!canUseUnloadedDoor(live, door, locked, actor))
+                {
+                    reverseLocked += locked ? 1 : 0;
                     continue;
+                }
                 if (remainingHops.emplace(door.mCell, distance + 1).second)
                     pendingCells.push(door.mCell);
             }
@@ -2699,18 +2722,32 @@ namespace MWMechanics
         osg::Vec3f bestDoorPosition;
         std::size_t bestHopCount = std::numeric_limits<std::size_t>::max();
         float bestCost = std::numeric_limits<float>::max();
+        std::size_t sourceDoorCount = 0;
+        std::size_t sourceUsableCount = 0;
+        std::size_t sourceReachableCellCount = 0;
+        std::size_t sourceNodeCount = 0;
+        std::size_t sourceRouteCount = 0;
+        std::size_t sourceLockedCount = 0;
         const auto sourceDoors = mUnloadedDoorsByCell.find(live.mState.mCell);
         if (sourceDoors == mUnloadedDoorsByCell.end())
+        {
+            live.mLastRouteFailure = "door-route-no-source-doors";
             return false;
+        }
         for (const std::size_t index : sourceDoors->second)
         {
             const UnloadedLocation& door = mUnloadedLocations[index];
+            ++sourceDoorCount;
             if (!door.mEnabled || door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()
                 || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                 continue;
             bool locked = false;
             if (!canUseUnloadedDoor(live, door, locked, actor))
+            {
+                sourceLockedCount += locked ? 1 : 0;
                 continue;
+            }
+            ++sourceUsableCount;
 
             const auto destination = mUnloadedLocationByReference.find(door.mTeleportDoor);
             if (destination == mUnloadedLocationByReference.end())
@@ -2721,14 +2758,17 @@ namespace MWMechanics
             const auto remaining = remainingHops.find(marker.mCell);
             if (remaining == remainingHops.end())
                 continue;
+            ++sourceReachableCellCount;
 
             const auto doorNode = service.nearestEnabledNode(sourceGraph->pathgridKey(),
                 { door.mPosition.x(), door.mPosition.y(), door.mPosition.z() }, 4096.f);
             if (!doorNode)
                 continue;
+            ++sourceNodeCount;
             const ESM4::PathgridRouteResult route = service.route(start, *doorNode);
             if (!route)
                 continue;
+            ++sourceRouteCount;
 
             const ESM4::PathgridPoint nodePoint = sourceGraph->worldPoint(doorNode->mNode);
             const float cost = route.mRoute->mCost
@@ -2747,7 +2787,20 @@ namespace MWMechanics
         }
 
         if (!bestRoute || !bestDoor)
+        {
+            std::ostringstream diagnostic;
+            diagnostic << "door-route-unavailable source_doors=" << sourceDoorCount
+                       << " source_usable=" << sourceUsableCount
+                       << " source_locked=" << sourceLockedCount
+                       << " source_reaching_destination=" << sourceReachableCellCount
+                       << " source_nodes=" << sourceNodeCount
+                       << " source_routes=" << sourceRouteCount
+                       << " reverse_cells=" << remainingHops.size()
+                       << " reverse_doors=" << reverseDoors
+                       << " reverse_locked=" << reverseLocked;
+            live.mLastRouteFailure = diagnostic.str();
             return false;
+        }
         live.mRoute = std::move(bestRoute->mNodes);
         live.mRouteCursor = live.mRoute.size() > 1 ? 1 : live.mRoute.size();
         live.mForeignRouteTarget.reset();
@@ -3018,7 +3071,8 @@ namespace MWMechanics
                 logEvent("route", live, routeEvent.str());
                 return true;
             }
-            live.mLastRouteFailure = route.mDiagnostic.empty() ? "pathgrid-route-unavailable" : route.mDiagnostic;
+            if (live.mLastRouteFailure.empty())
+                live.mLastRouteFailure = route.mDiagnostic.empty() ? "pathgrid-route-unavailable" : route.mDiagnostic;
             return false;
         }
         live.mRoute = route.mRoute->mNodes;
@@ -3690,7 +3744,19 @@ namespace MWMechanics
             if (const ESM::FormId* id = door.getCellRef().getOwner().getIf<ESM::FormId>())
                 owner = resolver.toFormKey(*id);
         }
-        if (hasDoorOwnershipPermission(live, owner, &actor))
+        bool ownsConnectedCell = false;
+        if (const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
+            indexed != mUnloadedLocationByReference.end())
+        {
+            const UnloadedLocation& location = mUnloadedLocations[indexed->second];
+            ownsConnectedCell = hasCellOwnershipPermission(live, location.mCell, &actor);
+            if (!ownsConnectedCell)
+                if (const auto marker = mUnloadedLocationByReference.find(location.mTeleportDoor);
+                    marker != mUnloadedLocationByReference.end())
+                    ownsConnectedCell
+                        = hasCellOwnershipPermission(live, mUnloadedLocations[marker->second].mCell, &actor);
+        }
+        if (hasDoorOwnershipPermission(live, owner, &actor) || ownsConnectedCell)
             return true;
         const bool hasKey = !key.empty() && !actor.getClass().getContainerStore(actor).search(key).isEmpty();
         locked = !hasKey;
@@ -3705,6 +3771,17 @@ namespace MWMechanics
         if (owner == live.mState.mActor || owner == live.mState.mBase)
             return true;
 
+        // Oblivion's GenericOwner faction is an ownership/crime marker for
+        // the player, not a faction that stock NPCs join. City gates and
+        // other scheduled AI boundaries use it on locked doors, so native
+        // actors may traverse those routes without silently generalizing the
+        // exception to arbitrary owned locks.
+        static const ESM::FormKey sGenericOwner = ESM::FormKey::content("oblivion.esm", 0x0534f2);
+        if (owner == sGenericOwner
+            && (mWorld.mStore.search<ESM4::Npc>(live.mState.mBase) != nullptr
+                || mWorld.mStore.search<ESM4::Creature>(live.mState.mBase) != nullptr))
+            return true;
+
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         if (actor != nullptr && !actor->isEmpty())
         {
@@ -3713,14 +3790,29 @@ namespace MWMechanics
                 return true;
         }
 
-        if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
-            if (npc->mFaction.faction != 0 && resolver.toFormKey(ESM::FormId::fromUint32(npc->mFaction.faction)) == owner)
-                return true;
-        if (const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(live.mState.mBase))
-            if (creature->mFaction.faction != 0
-                && resolver.toFormKey(ESM::FormId::fromUint32(creature->mFaction.faction)) == owner)
-                return true;
+        const auto containsFaction = [&resolver, &owner](const auto* base) {
+            return base != nullptr
+                && std::any_of(base->mFactions.begin(), base->mFactions.end(), [&resolver, &owner](const auto& item) {
+                       return item.faction != 0
+                           && resolver.toFormKey(ESM::FormId::fromUint32(item.faction)) == owner;
+                   });
+        };
+        if (containsFaction(mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
+            || containsFaction(mWorld.mStore.search<ESM4::Creature>(live.mState.mBase)))
+            return true;
         return false;
+    }
+
+    bool OblivionAiService::hasCellOwnershipPermission(
+        const LiveActor& live, const ESM::FormKey& cell, const MWWorld::Ptr* actor) const
+    {
+        if (cell.isNull())
+            return false;
+        const ESM4::Cell* record = mWorld.mStore.search<ESM4::Cell>(cell);
+        if (record == nullptr || record->mOwner == ESM::FormId{})
+            return false;
+        const ESM::FormKey owner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(record->mOwner);
+        return hasDoorOwnershipPermission(live, owner, actor);
     }
 
     bool OblivionAiService::canUseUnloadedDoor(
@@ -3766,7 +3858,12 @@ namespace MWMechanics
         }
         if (!isLocked)
             return true;
-        if (hasDoorOwnershipPermission(live, doorOwner, actor))
+        bool ownsConnectedCell = hasCellOwnershipPermission(live, door.mCell, actor);
+        if (!ownsConnectedCell)
+            if (const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
+                marker != mUnloadedLocationByReference.end())
+                ownsConnectedCell = hasCellOwnershipPermission(live, mUnloadedLocations[marker->second].mCell, actor);
+        if (hasDoorOwnershipPermission(live, doorOwner, actor) || ownsConnectedCell)
             return true;
 
         const ESM::FormId* keyId = doorKey.getIf<ESM::FormId>();

@@ -235,6 +235,8 @@ namespace MWMechanics
         bool canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, bool& locked) const;
         bool hasDoorOwnershipPermission(const LiveActor& live, const ESM::FormKey& owner,
             const MWWorld::Ptr* actor = nullptr) const;
+        bool hasCellOwnershipPermission(const LiveActor& live, const ESM::FormKey& cell,
+            const MWWorld::Ptr* actor = nullptr) const;
         bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked,
             const MWWorld::Ptr* actor = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);

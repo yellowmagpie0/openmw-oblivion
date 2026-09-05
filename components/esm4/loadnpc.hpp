@@ -207,6 +207,9 @@ namespace ESM4
         std::vector<ESM::FormId> mAIPackages; // seems to be in priority order, 0 = highest priority
         std::vector<ESM::FormKey> mAIPackageKeys; // same order, used by native TES4 AI
         ActorBaseConfig mBaseConfig; // union
+        std::vector<ActorFaction> mFactions;
+        // Compatibility view retained for callers that require one primary
+        // faction. Native TES4 records may contain several SNAM entries.
         ActorFaction mFaction;
         Data mData;
         ESM::FormId mCombatStyle;

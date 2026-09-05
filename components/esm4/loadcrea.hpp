@@ -124,6 +124,9 @@ namespace ESM4
         std::vector<ESM::FormId> mAIPackages;
         std::vector<ESM::FormKey> mAIPackageKeys;
         ActorBaseConfig mBaseConfig;
+        std::vector<ActorFaction> mFactions;
+        // Compatibility view retained for callers that require one primary
+        // faction. Native TES4 records may contain several SNAM entries.
         ActorFaction mFaction;
         Data mData;
         ESM::FormId mCombatStyle;
