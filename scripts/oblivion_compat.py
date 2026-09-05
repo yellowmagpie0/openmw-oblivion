@@ -42,11 +42,11 @@ import tes4_m14_audit as tes4_m14  # noqa: E402
 SCHEMA_VERSION = 1
 
 SCENARIO_ACTION_TYPES = {
-    "sleep", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "key_up", "key_held",
+    "sleep", "wait_log", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "key_up", "key_held",
     "key_hold", "type_held", "type", "mouse_move", "mouse_move_absolute", "mouse_click", "mouse_down",
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
     "m14_observe", "m14_actor_distance", "m14_actor_state_delta", "m14_advance_clock",
-    "m14_obstruction", "m14_debug_navigation",
+    "m14_obstruction", "m14_debug_navigation", "m14_console",
 }
 FORBIDDEN_M14_ACTION_TYPES = {
     "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
@@ -455,6 +455,11 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
     actions = raw.get("actions", [])
     if not isinstance(actions, list):
         raise ValueError("Scenario actions must be a list")
+    if "reviewed_error_log" in raw and (
+        not isinstance(raw["reviewed_error_log"], list)
+        or not all(isinstance(item, str) and item for item in raw["reviewed_error_log"])
+    ):
+        raise ValueError("Scenario reviewed_error_log must be a list of non-empty patterns")
     m14 = raw.get("m14")
     if m14 is not None:
         if not isinstance(m14, dict):
@@ -488,6 +493,14 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
         action_type = action["type"]
         if action_type not in SCENARIO_ACTION_TYPES:
             raise ValueError(f"Unsupported scenario action: {action_type!r}")
+        if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
+            raise ValueError(f"Scenario action {index} wait_log requires a non-empty pattern")
+        if action_type == "m14_console" and (
+            not isinstance(action.get("commands"), list)
+            or not action["commands"]
+            or not all(isinstance(command, str) and command for command in action["commands"])
+        ):
+            raise ValueError(f"Scenario action {index} m14_console requires non-empty string commands")
         if m14 is not None and action_type in FORBIDDEN_M14_ACTION_TYPES:
             raise ValueError(f"M14 scenarios cannot use direct-mutation action {action_type!r}")
         if m14 is not None and action_type == "command":
@@ -647,6 +660,8 @@ def _validate_m14_actor_event_requirements(value: Any, label: str) -> None:
         fragments = requirement.get("forbidden_reason_substrings", [])
         if not isinstance(fragments, list) or not all(isinstance(item, str) and item for item in fragments):
             raise ValueError(f"{prefix} forbidden_reason_substrings must be a list of non-empty strings")
+        if "allow_bounded_repath" in requirement and not isinstance(requirement["allow_bounded_repath"], bool):
+            raise ValueError(f"{prefix} allow_bounded_repath must be a boolean")
 
 
 def _validate_m14_detection_requirements(value: Any, label: str) -> None:
@@ -825,13 +840,21 @@ def _validate_m14_actor_events(
             actual = counts.get(str(event_name), 0)
             if actual < int(expected):
                 actor_failures.append(f"event type {event_name!r} occurred {actual} times, minimum is {expected}")
-        for event_name, maximum_count in requirement.get("maximum_event_counts", {}).items():
+        maximum_event_counts = dict(requirement.get("maximum_event_counts", {}))
+        # Named M14 actors are strict by default. A scenario that deliberately
+        # exercises an obstruction must record an explicit non-zero budget;
+        # unrelated population failures cannot satisfy or fail that fixture.
+        maximum_event_counts.setdefault("route-blocked", 0)
+        maximum_event_counts.setdefault("selection", 24)
+        for event_name, maximum_count in maximum_event_counts.items():
             actual = counts.get(str(event_name), 0)
             if actual > int(maximum_count):
                 actor_failures.append(
                     f"event type {event_name!r} occurred {actual} times, maximum is {maximum_count}")
 
         fragments = [str(value).casefold() for value in requirement.get("forbidden_reason_substrings", [])]
+        if not requirement.get("allow_bounded_repath", False) and "bounded-repath-exhausted" not in fragments:
+            fragments.append("bounded-repath-exhausted")
         for event in actor_events:
             reason = str(event.get("reason", "")).casefold()
             if any(fragment in reason for fragment in fragments):
@@ -1036,16 +1059,25 @@ def _m14_run_console_commands(commands: list[str], *, environment: dict[str, str
         outputs.append(completed.stdout)
         exit_code = exit_code or completed.returncode
 
+    def press(key: str) -> None:
+        # SDL/MyGUI can miss a synthetic key event when xdotool emits an
+        # immediate press/release pair. Match the reliable held-input path
+        # used by the scenario runner.
+        run(["keydown", key])
+        time.sleep(0.08)
+        run(["keyup", key])
+        time.sleep(0.04)
+
     run(["search", "--onlyvisible", "--name", "OpenMW", "windowfocus", "--sync", "%@"])
-    run(["key", "grave"])
+    press("grave")
     # Console opening is asynchronous; settle focus before the first typed
     # control so a prior UI widget cannot consume part of the command.
     time.sleep(0.35)
     for command in commands:
         run(["type", "--delay", "1", command])
-        run(["key", "Return"])
+        press("Return")
         time.sleep(settle_seconds)
-    run(["key", "grave"])
+    press("grave")
     # Closing the console returns focus to the game asynchronously. Let one
     # settled interval elapse before a following save/checkpoint observes the
     # control's effect.
@@ -1152,6 +1184,23 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
     if action_type == "sleep":
         time.sleep(float(action.get("seconds", 0)))
         return {"type": action_type, "passed": True, "duration_seconds": time.monotonic() - started}
+    if action_type == "wait_log":
+        pattern = re.compile(str(action["pattern"]), re.MULTILINE)
+        timeout = float(action.get("timeout_seconds", 30))
+        log_path = output / str(action.get("path", "process.log"))
+        matched = False
+        while time.monotonic() - started < timeout:
+            if log_path.is_file() and pattern.search(log_path.read_text(encoding="utf-8", errors="replace")):
+                matched = True
+                break
+            time.sleep(0.1)
+        return {
+            "type": action_type,
+            "pattern": pattern.pattern,
+            "path": str(log_path),
+            "passed": matched,
+            "duration_seconds": round(time.monotonic() - started, 6),
+        }
     if action_type in ("gamepad_button", "gamepad_axis"):
         if _VIRTUAL_GAMEPAD is None:
             raise RuntimeError("gamepad action requires virtual_gamepad=true in the scenario")
@@ -1598,6 +1647,18 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             "duration_seconds": round(time.monotonic() - started, 6),
         })
         return control
+    if action_type == "m14_console":
+        commands = [str(command) for command in action.get("commands", [])]
+        control = _m14_run_console_commands(
+            commands, environment=environment, output=output,
+            timeout=float(action.get("timeout_seconds", 30)),
+            settle_seconds=float(action.get("settle_seconds", 0.25)),
+        )
+        control.update({
+            "type": action_type,
+            "duration_seconds": round(time.monotonic() - started, 6),
+        })
+        return control
     if action_type == "m14_obstruction":
         operation = str(action["operation"])
         # The fixture supplies a stable reference that is already part of the
@@ -1809,6 +1870,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
     started = time.monotonic()
     scenario_timeout = float(manifest.get("timeout_seconds", 60))
     deadline = started + scenario_timeout
+    process: subprocess.Popen[str] | None = None
     try:
         if manifest.get("virtual_gamepad", False):
             _VIRTUAL_GAMEPAD = VirtualGamepad()
@@ -1884,6 +1946,10 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         missing_expected = [pattern for pattern in expected if not re.search(pattern, log_text, re.MULTILINE)]
         forbidden = [str(value) for value in manifest.get("forbidden_log", [])]
         forbidden_findings = check_log_text(log_text, forbidden_patterns=forbidden)["findings"]
+        reviewed_errors = [str(value) for value in manifest.get("reviewed_error_log", [])]
+        unreviewed_error_findings = check_log_text(
+            log_text, forbidden_patterns=[r"\sE\]"], allow_patterns=reviewed_errors
+        )["findings"] if "reviewed_error_log" in manifest else []
         expected_exit = manifest.get("expected_exit", 0)
         exit_ok = process.returncode == expected_exit
         if expected_exit == "timeout":
@@ -1892,6 +1958,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             exit_ok
             and not missing_expected
             and not forbidden_findings
+            and not unreviewed_error_findings
             and all(result["passed"] for result in action_results)
         )
         m14_result = _validate_m14_events(manifest, output)
@@ -1906,6 +1973,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             "timed_out": timed_out,
             "missing_expected_log": missing_expected,
             "forbidden_log_findings": forbidden_findings,
+            "unreviewed_error_log_findings": unreviewed_error_findings,
             "actions": action_results,
             "m14": m14_result,
             "duration_seconds": round(time.monotonic() - started, 6),
@@ -1914,6 +1982,13 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         write_json(output / "scenario.json", result)
         return result
     finally:
+        if process is not None and process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
         if _VIRTUAL_GAMEPAD is not None:
             _VIRTUAL_GAMEPAD.close()
             _VIRTUAL_GAMEPAD = None

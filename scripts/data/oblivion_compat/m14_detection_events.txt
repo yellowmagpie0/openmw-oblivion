@@ -1,8 +1,13 @@
-# Read-only M14 detection probes. These call the native query surface and do
-# not mutate actor, package, movement, inventory, or world state.
-at 2 command player GetDetectionLevel content:oblivion.esm:01fc43
-at 2 command player GetDetected content:oblivion.esm:01fc43
-at 2 command player GetLOS content:oblivion.esm:01fc43
-at 4 command content:oblivion.esm:01fc43 GetDetectionLevel player
-at 4 command content:oblivion.esm:01fc43 GetDetected player
-at 4 command content:oblivion.esm:01fc43 GetLOS player
+# Controlled probes bracket the ordinary console relocation in the scenario.
+# Observer skill is changed through normal ObScript; results are never injected.
+at 5 command player ModAV Agility 100
+at 5 command player ModAV Luck 100
+at 5 command player ModAV Sneak 100
+at 7 command player GetDetectionLevel content:oblivion.esm:01fc43
+at 7 command player GetDetected content:oblivion.esm:01fc43
+at 7 command player GetDetected content:oblivion.esm:01fc43
+at 7 command player GetDetected content:oblivion.esm:01fc43
+at 7 command player GetDetected content:oblivion.esm:01fc43
+at 15 command player GetDetectionLevel content:oblivion.esm:01fc43
+at 15 command player GetDetected content:oblivion.esm:01fc43
+at 15 command player GetLOS content:oblivion.esm:01fc43

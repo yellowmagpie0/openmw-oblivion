@@ -32,6 +32,7 @@
     "expected_exit": {"oneOf": [{"type": "integer"}, {"const": "timeout"}]},
     "expected_log": {"type": "array", "items": {"type": "string"}},
     "forbidden_log": {"type": "array", "items": {"type": "string"}},
+    "reviewed_error_log": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "m14": {
       "type": "object",
       "additionalProperties": false,
@@ -66,6 +67,7 @@
           "type": {
             "enum": [
               "sleep",
+              "wait_log",
               "gamepad_button",
               "gamepad_axis",
               "screenshot",
@@ -87,11 +89,14 @@
               "m14_observe",
               "m14_actor_distance",
               "m14_advance_clock",
+              "m14_console",
               "m14_obstruction",
               "m14_debug_navigation"
             ]
           },
           "seconds": {"type": "number", "minimum": 0},
+          "pattern": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
           "hold_seconds": {"type": "number", "minimum": 0},
           "pause_seconds": {"type": "number", "minimum": 0},
           "name": {"type": "string"},
@@ -106,6 +111,7 @@
           "button": {"type": "integer", "minimum": 1},
           "delay_ms": {"type": "integer", "minimum": 0},
           "command": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "commands": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
           "timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
           "expected_exit": {"type": "integer"},
           "path_glob": {"type": "string", "minLength": 1},
@@ -214,6 +220,7 @@
             "type": "object",
             "additionalProperties": {"type": "integer", "minimum": 0}
           },
+          "allow_bounded_repath": {"type": "boolean"},
           "forbidden_reason_substrings": {
             "type": "array",
             "items": {"type": "string", "minLength": 1}

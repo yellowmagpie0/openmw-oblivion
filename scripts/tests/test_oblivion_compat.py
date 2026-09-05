@@ -700,6 +700,53 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertLess(result["duration_seconds"], 2.0)
             self.assertTrue(result["actions"][0]["deadline_exceeded"])
 
+    def test_scenario_rejects_unreviewed_error_lines(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "errors.json"
+            value = {
+                "schema_version": 1,
+                "name": "reviewed-errors",
+                "command": [sys.executable, "-c", "print('[00:00:00 E] reviewed resource')"],
+                "reviewed_error_log": ["different resource"],
+            }
+            manifest.write_text(json.dumps(value), encoding="utf-8")
+            result = MODULE.run_scenario(manifest, root / "unreviewed", {})
+            self.assertFalse(result["passed"])
+            self.assertEqual(len(result["unreviewed_error_log_findings"]), 1)
+
+            value["reviewed_error_log"] = ["reviewed resource"]
+            manifest.write_text(json.dumps(value), encoding="utf-8")
+            result = MODULE.run_scenario(manifest, root / "reviewed", {})
+            self.assertTrue(result["passed"])
+            self.assertEqual(result["unreviewed_error_log_findings"], [])
+
+    def test_wait_log_action_observes_process_readiness(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "process.log").write_text("Starting a new game\n", encoding="utf-8")
+            result = MODULE._run_action(
+                {"type": "wait_log", "pattern": "Starting a new game", "timeout_seconds": 0.1},
+                environment={},
+                output=output,
+            )
+            self.assertTrue(result["passed"])
+
+    def test_m14_named_actor_event_budgets_are_strict_by_default(self):
+        actor = "content:oblivion.esm:000123"
+        events = [{"event": "selection", "actor": actor} for _ in range(25)]
+        events.append({"event": "route-blocked", "actor": actor, "reason": "blocked"})
+        failures, _ = MODULE._validate_m14_actor_events(events, [{"actor": actor}])
+        self.assertTrue(any("selection" in failure for failure in failures))
+        self.assertTrue(any("route-blocked" in failure for failure in failures))
+
+        requirements = [{
+            "actor": actor,
+            "maximum_event_counts": {"selection": 25, "route-blocked": 1},
+        }]
+        failures, _ = MODULE._validate_m14_actor_events(events, requirements)
+        self.assertEqual(failures, [])
+
     def test_scenario_generated_paths_cannot_escape_output(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
