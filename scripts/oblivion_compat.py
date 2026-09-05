@@ -501,6 +501,10 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             or not all(isinstance(command, str) and command for command in action["commands"])
         ):
             raise ValueError(f"Scenario action {index} m14_console requires non-empty string commands")
+        if action_type == "m14_checkpoint" and "save_name" in action and (
+            not isinstance(action["save_name"], str) or not action["save_name"]
+        ):
+            raise ValueError(f"Scenario action {index} m14_checkpoint save_name must be a non-empty string")
         if m14 is not None and action_type in FORBIDDEN_M14_ACTION_TYPES:
             raise ValueError(f"M14 scenarios cannot use direct-mutation action {action_type!r}")
         if m14 is not None and action_type == "command":
@@ -1268,7 +1272,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         actor_requirements: dict[str, Any] = {}
         validation: dict[str, Any] = {"passed": False, "failures": ["checkpoint was not read"]}
         try:
-            save = _single_save(output)
+            save = _single_save(output, action.get("save_name"))
             state = tes4_state.load_save(save)
             validation = validate_m14_runtime_state(state)
             clock = state.get("clock", {}) if isinstance(state, dict) else {}
@@ -2214,10 +2218,15 @@ def run_m3_acceptance(args: argparse.Namespace) -> dict[str, Any]:
     return report
 
 
-def _single_save(directory: Path) -> Path:
+def _single_save(directory: Path, save_name: str | None = None) -> Path:
     matches = sorted(directory.glob("userdata/saves/*/*.omwsave"))
+    if save_name is not None:
+        matches = [path for path in matches if path.stem.casefold() == save_name.casefold()]
     if len(matches) != 1:
-        raise RuntimeError(f"Expected exactly one OpenMW save below {directory}, found {len(matches)}")
+        selected = f" named {save_name!r}" if save_name is not None else ""
+        raise RuntimeError(
+            f"Expected exactly one OpenMW save{selected} below {directory}, found {len(matches)}"
+        )
     return matches[0]
 
 

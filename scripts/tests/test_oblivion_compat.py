@@ -483,6 +483,19 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertFalse(result["actor_requirements"]["actor:a"]["passed"])
             self.assertTrue(any("forbidden value" in failure for failure in result["failures"]))
 
+    def test_single_save_can_select_named_slot_among_multiple_saves(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            saves = output / "userdata" / "saves" / "player"
+            saves.mkdir(parents=True)
+            (saves / "Autosave.omwsave").write_bytes(b"autosave")
+            quicksave = saves / "Quicksave.omwsave"
+            quicksave.write_bytes(b"quicksave")
+
+            self.assertEqual(MODULE._single_save(output, "quicksave"), quicksave)
+            with self.assertRaisesRegex(RuntimeError, "found 2"):
+                MODULE._single_save(output)
+
     def test_m14_actor_distance_uses_named_saved_actors(self):
         state = {
             "actor_ai": [
