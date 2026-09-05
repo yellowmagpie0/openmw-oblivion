@@ -1215,6 +1215,23 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "getequipped")
+        {
+            const auto item = keyFromValue(argument(0));
+            if (!item || !mWorld.mOblivionRuntimeState)
+                return std::int64_t(0);
+            const ESM::FormKey owner = objectKey();
+            const std::vector<ESM4::RuntimeInventoryItem>* inventory = nullptr;
+            if (owner == ESM::FormKey::dynamic("player", 1))
+                inventory = &mWorld.mOblivionRuntimeState->mPlayer.mInventory;
+            else if (const ESM4::RuntimeReferenceState* state = referenceState(owner))
+                inventory = &state->mInventory;
+            return std::int64_t(inventory != nullptr
+                && std::ranges::any_of(*inventory, [&](const ESM4::RuntimeInventoryItem& entry) {
+                       return entry.mBase == *item && entry.mCount > 0 && entry.mEquippedSlots != 0;
+                   }));
+        }
+
         if (name == "equipitem" || name == "unequipitem")
         {
             const auto item = keyFromValue(argument(0));
