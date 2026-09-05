@@ -30,6 +30,7 @@ namespace MWWorld
         OblivionScriptManager(World& world, ESMStore& store, const std::vector<std::string>& contentFiles);
 
         void clear();
+        void startNewGame();
         void update(double secondsPassed);
         bool dispatchObjectEvent(const Ptr& self, std::string_view event, const Ptr& actionReference = {});
         bool dispatchObjectEvent(const ESM::FormKey& self, std::string_view event,
@@ -111,6 +112,7 @@ namespace MWWorld
         std::size_t mCompilationFailures = 0;
         std::map<std::string, std::uint64_t, std::less<>> mCommandCounts;
         std::set<ESM::FormKey> mSuppressedActivations;
+        bool mIgnoreFriendlyHits = false;
 
         void compileCorpus();
         void indexNativeVoices();

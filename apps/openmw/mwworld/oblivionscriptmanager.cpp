@@ -445,9 +445,23 @@ namespace MWWorld
         mSequence = 0;
         mDepth = 0;
         mElapsed = 0;
+        mIgnoreFriendlyHits = false;
         // OPENMW_OBSCRIPT_EVENTS is a process-local acceptance driver, not game content. Its commands must execute
         // once per launched scenario: replaying them after an in-process quickload can mutate actor values twice and
         // hide persistence regressions. A fresh process constructs a fresh manager with every event unexecuted.
+    }
+
+    void OblivionScriptManager::startNewGame()
+    {
+        clear();
+        // CharacterGen is a native engine bootstrap quest rather than a
+        // Start Game Enabled record. Starting it here lets its ordinary
+        // GameMode script drive the tutorial state and package conditions.
+        if (const auto characterGen = mStore.findEsm4FormKey("Charactergen"))
+        {
+            questState(*characterGen).mRunning = true;
+            trace("startquest quest=" + characterGen->serialize() + " reason=new-game");
+        }
     }
 
     ESM::FormKey OblivionScriptManager::keyFor(const Ptr& ptr) const
@@ -1012,6 +1026,8 @@ namespace MWWorld
 
         if (name == "getsecondspassed")
             return context.mSecondsPassed;
+        if (name == "getbuttonpressed")
+            return std::int64_t(MWBase::Environment::get().getWindowManager()->readPressedButton());
         if (name == "getself" || name == "getcontainer")
             return ObScript::ReferenceValue{ context.mSelf, "self" };
         if (name == "getactionref" || name == "getactionreference")
@@ -1042,6 +1058,21 @@ namespace MWWorld
         }
         if (name == "getquestrunning")
             return std::int64_t(questState(subjectKey()).mRunning);
+        if (name == "setinchargen")
+        {
+            const bool enabled = ObScript::asInteger(argument(0)) != 0;
+            mWorld.mGlobalVariables[Globals::sCharGenState].setInteger(enabled ? 1 : -1);
+            trace("setinchargen enabled=" + std::string(enabled ? "true" : "false"));
+            return std::int64_t(0);
+        }
+        if (name == "setignorefriendlyhits")
+        {
+            mIgnoreFriendlyHits = ObScript::asInteger(argument(0)) != 0;
+            trace("setignorefriendlyhits enabled=" + std::string(mIgnoreFriendlyHits ? "true" : "false"));
+            return std::int64_t(0);
+        }
+        if (name == "getignorefriendlyhits")
+            return std::int64_t(mIgnoreFriendlyHits);
 
         if (name == "enable" || name == "disable")
         {

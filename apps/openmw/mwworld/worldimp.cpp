@@ -376,7 +376,12 @@ namespace MWWorld
     void World::startNewGame(bool bypass)
     {
         if (mOblivionScriptManager)
-            mOblivionScriptManager->clear();
+        {
+            if (bypass)
+                mOblivionScriptManager->clear();
+            else
+                mOblivionScriptManager->startNewGame();
+        }
         if (mOblivionAi)
             mOblivionAi->clear();
         mGoToJail = false;
