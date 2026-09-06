@@ -722,6 +722,24 @@ the initial dialogue-dependent wait. Do not use `SetStage` or a package override
 to claim escort progression. Section 16.1 permits dialogue-independent waiting
 controls only; the real escort/arrival/reload gate remains open.
 
+2026-09-06 repair checkpoint: affected-route overlay invalidation is repaired;
+the city course now synchronizes startup to a named route and passes its
+current five-checkpoint course (`m14-city-overlay-ready/`). Engine tests pass
+522/522, Python tests 67/67, and ASan/UBSan component tests 1,582/1,582. These
+are repair-stage results, not final clean-revision acceptance. Reviewed
+content-gap counts are now locked and pass the official audit.
+
+Completion requires a scope decision for the tutorial prerequisite: native
+`Say`/`SayTo` currently choose/play a voice file, but do not perform the real
+conditioned dialogue selection/result progression needed to leave the initial
+CharacterGen wait. M18 owns that behavior under section 1. Implementing the
+minimum real prerequisite needs explicit approval to expand beyond M14; a
+scheduled test dialogue-result event or `SetStage` is not equivalent evidence.
+Until that decision, do not mark the tutorial or M14 complete. Even after the
+prerequisite is authorized and implemented, companion recovery, valid door
+fixtures, the full process/reload/detection/horse/Morrowind matrices, engine
+integration coverage, and final clean-revision verification remain required.
+
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |
 | 0: baseline | Audit and ordinary test artifacts exist; the harness supports actor-scoped ordered events, counts, failure reasons, exact saved-state fields, named-actor checkpoint deltas, pair-distance outcomes, and named detection-pair outcomes; all six core scenarios use named-identity gates and tutorial has a four-actor before/after quickload pair | Open: add exact tutorial targets and the remaining before-door, after-door, waiting, and package-transition reload boundaries; expand detection and horse beyond their smoke gates; reproduce from the candidate revision and retain exact logs |
