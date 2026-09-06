@@ -31,6 +31,7 @@
 #include <string>
 
 #include "script.hpp" // TargetCondition
+#include "aipackagedata.hpp"
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
 #include <components/esm/formkey.hpp>
@@ -56,6 +57,13 @@ namespace ESM4
 
     struct DialogInfo
     {
+        struct Response
+        {
+            TargetResponseData mData{};
+            std::string mText;
+            std::string mNotes;
+            std::string mEdits;
+        };
         ESM::FormId mId; // from the header
         ESM::FormKey mFormKey;
         std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
@@ -65,17 +73,23 @@ namespace ESM4
         ESM::FormId mQuest;
         ESM::FormId mSound; // unused?
 
-        TargetResponseData mResponseData;
+        TargetResponseData mResponseData{};
         std::string mResponse;
         std::string mNotes;
         std::string mEdits;
 
-        std::uint8_t mDialType; // DialType
-        std::uint8_t mNextSpeaker;
-        std::uint16_t mInfoFlags; // see above enum
+        std::uint8_t mDialType = 0; // DialType
+        std::uint8_t mNextSpeaker = 0;
+        std::uint16_t mInfoFlags = 0; // see above enum
 
-        TargetCondition mTargetCondition;
+        TargetCondition mTargetCondition{};
         ESM::FormId mParam3; // TES5 only
+
+        // Retain native response/condition order; the legacy scalar fields
+        // above remain the last entry for existing dump consumers.
+        std::vector<Response> mResponses;
+        std::vector<PackageCondition> mCanonicalConditions;
+        ESM::FormId mPreviousInfo;
 
         std::vector<ScriptDefinition> mResultScripts;
 

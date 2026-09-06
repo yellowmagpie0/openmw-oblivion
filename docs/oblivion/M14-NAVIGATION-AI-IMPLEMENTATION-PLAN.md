@@ -729,14 +729,14 @@ current five-checkpoint course (`m14-city-overlay-ready/`). Engine tests pass
 are repair-stage results, not final clean-revision acceptance. Reviewed
 content-gap counts are now locked and pass the official audit.
 
-Completion requires a scope decision for the tutorial prerequisite: native
+The user approved the minimum real dialogue prerequisite on 2026-09-06. Native
 `Say`/`SayTo` currently choose/play a voice file, but do not perform the real
 conditioned dialogue selection/result progression needed to leave the initial
 CharacterGen wait. M18 owns that behavior under section 1. Implementing the
-minimum real prerequisite needs explicit approval to expand beyond M14; a
+minimum real prerequisite is now authorized beyond M14; a
 scheduled test dialogue-result event or `SetStage` is not equivalent evidence.
-Until that decision, do not mark the tutorial or M14 complete. Even after the
-prerequisite is authorized and implemented, companion recovery, valid door
+Do not mark the tutorial or M14 complete before that behavior is verified.
+Even after the prerequisite is implemented, companion recovery, valid door
 fixtures, the full process/reload/detection/horse/Morrowind matrices, engine
 integration coverage, and final clean-revision verification remain required.
 

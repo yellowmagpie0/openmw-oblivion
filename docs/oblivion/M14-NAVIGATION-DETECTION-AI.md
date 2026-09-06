@@ -431,6 +431,19 @@ enabled (`m14-repair-sanitizer-build.log`, `m14-repair-sanitizer-tests.log`).
 These are repair-stage component results, not final clean-tree engine/runtime
 sanitizer acceptance. Full overlay lifecycle integration remains open.
 
+### Authorized dialogue prerequisite: retained INFO data (2026-09-06)
+
+The user authorized the minimum real dialogue prerequisite for the tutorial;
+this does not accept or complete M18. INFO now retains all native conditions
+and ordered responses instead of only the final entries, reads the native
+three-byte flags, and retains the previous-INFO link. Stable condition keys
+use the existing PACK decoder. Binary reader fixtures cover both condition
+layouts, response order/notes isolation, flags, predecessor, and malformed
+CTDT rejection. All 1,584 component tests pass
+(`m14-dialogue-data-component-tests.log`). The initial build failed on an
+incorrect test member name, corrected before this pass; its log is retained.
+Runtime selection/result dispatch and tutorial verification remain open.
+
 ## Reproduce
 
 Build and run the audit:

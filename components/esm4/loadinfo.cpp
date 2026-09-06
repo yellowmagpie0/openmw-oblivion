@@ -51,6 +51,11 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
         scriptStarted = false;
     };
     const auto startScript = [&]() { scriptStarted = true; };
+    bool responseStarted = false;
+    const auto finishResponse = [&]() {
+        if (responseStarted)
+            mResponses.push_back({ mResponseData, mResponse, mNotes, mEdits });
+    };
 
     while (reader.getSubRecordHeader())
     {
@@ -65,6 +70,12 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 break; // FO3 (not used in FONV?)
             case ESM::fourCC("TRDT"):
             {
+                finishResponse();
+                responseStarted = true;
+                mResponseData = {};
+                mResponse.clear();
+                mNotes.clear();
+                mEdits.clear();
                 if (subHdr.dataSize == 16) // TES4
                     reader.get(&mResponseData, 16);
                 else if (subHdr.dataSize == 20) // FO3
@@ -88,16 +99,20 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 reader.getZString(mEdits);
                 break; // not in TES4
             case ESM::fourCC("CTDA"): // FIXME: how to detect if 1st/2nd param is a formid?
+            case ESM::fourCC("CTDT"):
             {
-                if (subHdr.dataSize == 24) // TES4
+                if (subHdr.typeId == ESM::fourCC("CTDT") && subHdr.dataSize != 20)
+                    reader.fail("INFO CTDT must have 20 bytes");
+                if (subHdr.dataSize == 24 || subHdr.dataSize == 20)
                 {
-                    reader.get(&mTargetCondition, 24);
-                    reader.recordCurrentSubRecordFormIds(mTargetCondition, 24);
-                }
-                else if (subHdr.dataSize == 20) // FO3
-                {
-                    reader.get(&mTargetCondition, 20);
-                    reader.recordCurrentSubRecordFormIds(mTargetCondition, 20);
+                    std::vector<std::uint8_t> data(subHdr.dataSize);
+                    if (!reader.get(data.data(), data.size()))
+                        reader.fail("INFO condition is truncated");
+                    mTargetCondition = {};
+                    std::memcpy(&mTargetCondition, data.data(), data.size());
+                    reader.recordCurrentSubRecordFormIds(data);
+                    mCanonicalConditions.push_back(decodePackageCondition(data,
+                        [&reader](ESM::FormId raw) { return reader.resolveRawFormId(raw); }));
                 }
                 else if (subHdr.dataSize == 28)
                 {
@@ -203,7 +218,15 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("DATA"): // always 3 for TES4 ?
             {
-                if (subHdr.dataSize == 4) // FO3/FONV
+                if (subHdr.dataSize == 3) // TES4: byte flags, no high flag byte
+                {
+                    reader.get(mDialType);
+                    reader.get(mNextSpeaker);
+                    std::uint8_t flags = 0;
+                    reader.get(flags);
+                    mInfoFlags = flags;
+                }
+                else if (subHdr.dataSize == 4) // FO3/FONV
                 {
                     reader.get(mDialType);
                     reader.get(mNextSpeaker);
@@ -213,12 +236,13 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                     reader.skipSubRecordData(); // FIXME
                 break;
             }
+            case ESM::fourCC("PNAM"):
+                reader.getFormId(mPreviousInfo);
+                break;
             case ESM::fourCC("NAME"): // FormId add topic (not always present)
-            case ESM::fourCC("CTDT"): // older version of CTDA? 20 bytes
             case ESM::fourCC("SCHD"): // 28 bytes
             case ESM::fourCC("TCLT"): // FormId choice
             case ESM::fourCC("TCLF"): // FormId
-            case ESM::fourCC("PNAM"): // TES4 DLC
             case ESM::fourCC("TPIC"): // TES4 DLC
             case ESM::fourCC("ANAM"): // FO3 speaker formid
             case ESM::fourCC("DNAM"): // FO3 speech challenge
@@ -261,6 +285,7 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 throw std::runtime_error("ESM4::INFO::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
     }
+    finishResponse();
     finishScript();
 }
 

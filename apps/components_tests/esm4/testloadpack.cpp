@@ -1,6 +1,7 @@
 #include <components/esm/fourcc.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadpack.hpp>
+#include <components/esm4/loadinfo.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
 #include <components/toutf8/toutf8.hpp>
@@ -113,12 +114,79 @@ namespace
         return result;
     }
 
+    ESM4::DialogInfo loadInfo(const std::vector<char>& payload)
+    {
+        std::vector<char> plugin = makeHeader();
+        appendRecord(plugin, ESM4::REC_INFO, 0, 0x4321, payload);
+        auto stream = std::make_unique<std::stringstream>(
+            std::string(plugin.begin(), plugin.end()), std::ios::in | std::ios::binary);
+        const ToUTF8::StatelessUtf8Encoder encoder(ToUTF8::WINDOWS_1252);
+        ESM4::Reader reader(std::move(stream), "memory.esm", nullptr, &encoder, true);
+        EXPECT_TRUE(reader.getRecordHeader());
+        reader.getRecordData();
+        ESM4::DialogInfo result;
+        result.load(reader);
+        return result;
+    }
+
     std::vector<char> makePackagePlugin()
     {
         std::vector<char> result = makeHeader();
         appendRecord(result, ESM4::REC_PACK, 0, 0x1234, makePackagePayload());
         return result;
     }
+}
+
+TEST(ESM4LoadInfo, RetainsNativeConditionsResponsesFlagsAndPredecessor)
+{
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("DATA"), { 1, 2, ESM4::INFO_RunImmediately });
+    appendSubRecord(payload, ESM::fourCC("PNAM"), bytes(std::uint32_t{ 0x1234 }));
+    ESM4::AIPackage::CTDA condition{};
+    condition.fnIndex = 72; // GetIsID, with a stable base-record parameter.
+    condition.param1 = 0x3456;
+    condition.compValue = 1.f;
+    appendSubRecord(payload, ESM::fourCC("CTDA"), bytes(condition));
+    condition.fnIndex = 58; // GetStage must not overwrite GetIsID.
+    condition.compValue = 6.f;
+    auto shortCondition = bytes(condition);
+    shortCondition.resize(20);
+    appendSubRecord(payload, ESM::fourCC("CTDT"), shortCondition);
+    for (int number = 1; number <= 2; ++number)
+    {
+        ESM4::TargetResponseData response{};
+        response.responseNo = number;
+        auto data = bytes(response);
+        data.resize(16);
+        appendSubRecord(payload, ESM::fourCC("TRDT"), data);
+        appendSubRecord(payload, ESM::fourCC("NAM1"), { static_cast<char>('0' + number), 0 });
+        if (number == 1)
+            appendSubRecord(payload, ESM::fourCC("NAM2"), { 'n', 0 });
+    }
+    const auto info = loadInfo(payload);
+    ASSERT_EQ(info.mCanonicalConditions.size(), 2u);
+    EXPECT_EQ(info.mCanonicalConditions[0].mFunction, 72);
+    EXPECT_EQ(info.mCanonicalConditions[0].mParameter1.mReferenceKey, ESM::FormKey::content("memory.esm", 0x3456));
+    EXPECT_EQ(info.mCanonicalConditions[1].mFunction, 58);
+    EXPECT_FLOAT_EQ(info.mCanonicalConditions[1].mComparisonValue, 6.f);
+    ASSERT_EQ(info.mResponses.size(), 2u);
+    EXPECT_EQ(info.mResponses[0].mData.responseNo, 1u);
+    EXPECT_EQ(info.mResponses[0].mText, "1");
+    EXPECT_EQ(info.mResponses[0].mNotes, "n");
+    EXPECT_EQ(info.mResponses[1].mText, "2");
+    EXPECT_TRUE(info.mResponses[1].mNotes.empty());
+    EXPECT_EQ(info.mResponse, "2");
+    EXPECT_EQ(info.mInfoFlags, ESM4::INFO_RunImmediately);
+    EXPECT_EQ(info.mDialType, 1);
+    EXPECT_EQ(info.mNextSpeaker, 2);
+    EXPECT_EQ(info.mPreviousInfo, ESM::FormId::fromUint32(0x1234));
+}
+
+TEST(ESM4LoadInfo, RejectsMalformedLegacyCondition)
+{
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("CTDT"), std::vector<char>(19));
+    EXPECT_THROW(loadInfo(payload), std::runtime_error);
 }
 
 TEST(ESM4LoadPackage, DecodesAllNativeFieldsAndBothConditionLayouts)
