@@ -726,6 +726,8 @@ def count_lock_snapshot(report: dict[str, Any]) -> dict[str, Any]:
         "schema_version": 1,
         "official_content": report["official_content"],
         "expected": {
+            "actors_without_packages": summary["actors_without_packages"],
+            "cells_without_usable_graph": summary["cells_without_usable_graph"],
             "winning_pack_count": summary["winning_pack_count"],
             "winning_pgrd_count": summary["winning_pgrd_count"],
             "winning_cell_count": summary["winning_cell_count"],

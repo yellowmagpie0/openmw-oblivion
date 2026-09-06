@@ -27,6 +27,16 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_m14_count_lock_rejects_growth_in_reviewed_content_gaps(self):
+        lock = json.loads((SOURCE / "scripts/data/oblivion_compat/oblivion_m14_data_counts.json").read_text())
+        report = {"official_content": lock["official_content"], "summary": dict(lock["expected"])}
+        self.assertTrue(MODULE.tes4_m14.validate_count_lock(report, lock)["passed"])
+        for field in ("actors_without_packages", "cells_without_usable_graph"):
+            with self.subTest(field=field):
+                report["summary"][field] += 1
+                self.assertFalse(MODULE.tes4_m14.validate_count_lock(report, lock)["passed"])
+                report["summary"][field] -= 1
+
     def test_m11_equipment_matrix_tracks_slots_assets_and_sex_fallbacks(self):
         dump = "\n".join(
             (

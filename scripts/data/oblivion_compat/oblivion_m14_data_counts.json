@@ -1,5 +1,7 @@
 {
   "expected": {
+    "actors_without_packages": 180,
+    "cells_without_usable_graph": 27277,
     "condition_function_distribution": {
       "132:GetPCInFaction": 1,
       "136:GetIsReference": 16,

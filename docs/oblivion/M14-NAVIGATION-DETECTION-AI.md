@@ -382,6 +382,15 @@ the native Balmora smoke course, ordinary quicksave, absence of TES4 save
 markers, and clean exit/error checks. This is not a direct no-game quicksave
 regression test or the full pre-M14 AI behavior comparison; those remain open.
 
+### Reviewed content-gap count locks (2026-09-06)
+
+The official-content lock now pins the previously report-only counts of 180
+actors without packages and 27,277 cells without usable graphs. These are
+content inventory counts, not permission to ignore a missing route for a
+scenario actor. `m14-count-gap-lock/m14-audit.json` passes against the unchanged
+official content fingerprints. Python coverage rejects growth in either count;
+all 64 tests pass (`m14-count-gap-tests.log`).
+
 ## Reproduce
 
 Build and run the audit:
