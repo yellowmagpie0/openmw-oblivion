@@ -375,9 +375,11 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
 void MWState::StateManager::quickSave(std::string name)
 {
     const MWBase::World* world = MWBase::Environment::get().getWorld();
-    const bool characterGenerationAllowsSaving = world->getGameProfile() == ESM::GameProfile::Oblivion
-        || world->getGlobalInt(MWWorld::Globals::sCharGenState) == -1;
-    if (!(mState == State_Running && characterGenerationAllowsSaving
+    // No game's globals are available at the main menu. Keep this guard
+    // ahead of profile/global queries, as well as the actual save operation.
+    if (!(mState == State_Running
+            && (world->getGameProfile() == ESM::GameProfile::Oblivion
+                || world->getGlobalInt(MWWorld::Globals::sCharGenState) == -1)
             && MWBase::Environment::get().getWindowManager()->isSavingAllowed()))
     {
         // You can not save your game right now

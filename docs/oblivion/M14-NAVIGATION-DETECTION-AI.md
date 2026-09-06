@@ -371,6 +371,17 @@ this is not a new runtime run or a companion distance pass. The tutorial
 counter-repair stream still fails its previously recorded progression and
 blocked-route checks. No acceptance gate is closed by this harness change.
 
+### Quicksave no-game guard repair (2026-09-06)
+
+The TES4 CharacterGen saving exception had moved profile/global queries ahead
+of the running-game check. Quicksave now short-circuits those queries when no
+game is running, retaining the TES3 CharacterGen restriction and TES4 exception.
+Build and 521 engine tests pass (`m14-quicksave-guard-build.log`,
+`m14-quicksave-guard-engine-tests.log`). `m14-morrowind-quicksave-guard/` passes
+the native Balmora smoke course, ordinary quicksave, absence of TES4 save
+markers, and clean exit/error checks. This is not a direct no-game quicksave
+regression test or the full pre-M14 AI behavior comparison; those remain open.
+
 ## Reproduce
 
 Build and run the audit:
