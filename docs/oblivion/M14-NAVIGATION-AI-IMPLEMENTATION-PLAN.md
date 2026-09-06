@@ -958,6 +958,13 @@ interior doors, separate the companion with an obstruction, reunite, and
 save/reload on both sides of a transition. Verify target key, formation index,
 cell history, distance bounds, and no recursive follower cycle.
 
+Current repair evidence (2026-09-06): `m14-companion-live-target/` exercises
+active target reroutes and member/leader door crossings with clean event/error
+checks. Initial and separated distance checks pass, but final recovery is
+863.54 units against the unchanged 512-unit maximum. This gate remains open:
+fix remaining recovery lag, prove the obstruction causes the separation, and
+complete formation/cycle, process-tier, and both-side save/reload coverage.
+
 ### 16.5 Detection matrix
 
 Suggested manifest: `oblivion_m14_detection.json`.

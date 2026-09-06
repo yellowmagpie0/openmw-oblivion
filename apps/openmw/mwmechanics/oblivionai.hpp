@@ -215,6 +215,8 @@ namespace MWMechanics
         bool prepareDoorRoute(LiveActor& live, const ESM4::PathgridNodeKey& start,
             const ESM::FormKey& destinationCell, const MWWorld::Ptr* actor = nullptr);
         float unloadedMovementSpeed(const LiveActor& live) const;
+        void refreshMovingTargetRoute(LiveActor& live, const ESM4::AIPackage& current,
+            const MWWorld::Ptr& residentActor = {});
         bool shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
             const osg::Vec3f& position) const;
         bool advanceUnloadedMovement(LiveActor& live, float duration, bool& reached,

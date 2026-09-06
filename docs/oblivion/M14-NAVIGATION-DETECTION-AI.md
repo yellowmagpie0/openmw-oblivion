@@ -337,6 +337,26 @@ events, including 640 route-blocked occurrences (1,000 allowed), 580 door
 transitions, and 13 tier events. This does not replace the still-missing paired
 high/low runs and reloads at every required schedule boundary.
 
+### Active moving-target route refresh (2026-09-06)
+
+Follow-like Path processing now refreshes a cumulatively displaced destination
+while moving, rather than waiting to consume the old route. Resident high,
+resident low, and unloaded paths use the same persisted displacement threshold.
+Active boundary crossings finish before rerouting; target movement does not
+reset no-progress/retry budgets. Resident target resolution respects dirty
+logical positions/cells while player targets remain live.
+
+Build and 521 engine tests pass (`m14-follow-live-target-build.log`,
+`m14-follow-live-target-engine-tests.log`). The fresh native
+`m14-companion-live-target/` run has clean exit/error and event checks, including
+70 member target-route refreshes and a door transition for both member and
+leader. Initial spacing is 328.81, separation is 742.34, and final recovery is
+863.54 units in the same cell. Recovery still fails the unchanged 512-unit
+limit, so companion acceptance remains open. Next investigate remaining
+pathgrid/gait lag and prove obstruction causality, formation/cycle handling,
+and the required high/low and save/reload transition matrix. This course is
+runtime evidence for refresh activity, not exhaustive integration coverage.
+
 ### Named-actor adverse-event budgets (2026-09-06)
 
 Named actors now default to zero door failures, action-commit failures,

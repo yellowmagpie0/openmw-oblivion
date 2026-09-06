@@ -2395,6 +2395,10 @@ namespace MWMechanics
             || record.mPackageType == ESM4::AIPackageType::Escort
             || record.mPackageType == ESM4::AIPackageType::Accompany)
             live.mState.mCompanionGroup = targetKey;
+        if (const auto logical = mActors.find(targetKey);
+            logical != mActors.end() && logical->second.mAbstractPositionDirty
+            && targetKey != ESM::FormKey::dynamic("player", 1))
+            return logical->second.mState.mLastValidPosition.asVec3();
         return target->getRefData().getPosition().asVec3();
     }
 
@@ -2402,7 +2406,8 @@ namespace MWMechanics
         const ESM4::AIPackage& record, LiveActor& live, ESM::FormKey& targetKey) const
     {
         targetKey = {};
-        const osg::Vec3f actorPosition = actor.getRefData().getPosition().asVec3();
+        const osg::Vec3f actorPosition = live.mAbstractPositionDirty
+            ? live.mState.mLastValidPosition.asVec3() : actor.getRefData().getPosition().asVec3();
         const bool followLike = record.mPackageType == ESM4::AIPackageType::Follow
             || record.mPackageType == ESM4::AIPackageType::Accompany
             || record.mPackageType == ESM4::AIPackageType::Pursue;
@@ -2505,6 +2510,10 @@ namespace MWMechanics
             if (target.isEmpty())
                 return std::nullopt;
             live.mDestinationCell = cellKey(target);
+            if (const auto logical = mActors.find(targetKey);
+                logical != mActors.end() && logical->second.mAbstractPositionDirty
+                && targetKey != ESM::FormKey::dynamic("player", 1))
+                live.mDestinationCell = logical->second.mState.mCell;
             const float requestedDistance = static_cast<float>(record.mTargetData.mDistance);
             const float followDistance = requestedDistance > 0.f ? requestedDistance : 128.f;
             osg::Vec3f offset = actorPosition - *targetPosition;
@@ -3116,6 +3125,47 @@ namespace MWMechanics
         return true;
     }
 
+    void OblivionAiService::refreshMovingTargetRoute(
+        LiveActor& live, const ESM4::AIPackage& current, const MWWorld::Ptr& residentActor)
+    {
+        const auto type = live.mState.mPackageType;
+        if (type != ESM4::AIPackageType::Follow && type != ESM4::AIPackageType::Accompany
+            && type != ESM4::AIPackageType::Pursue && type != ESM4::AIPackageType::Escort)
+            return;
+        // Finish an already-entered boundary before considering another
+        // target route. A moving leader must not make us oscillate on an edge.
+        if (live.mForeignRouteTarget || !live.mState.mDoor.isNull() || live.mPendingDoor)
+            return;
+        const ESM::FormKey oldCell = live.mDestinationCell;
+        ESM::FormKey target;
+        const std::optional<osg::Vec3f> destination = residentActor.isEmpty()
+            ? resolveUnloadedDestination(current, live)
+            : resolveDestination(residentActor, current, live, target);
+        if (!destination)
+        {
+            // Retain the last known route. The existing Wait/Resolve handling
+            // reports an unavailable target once that route has been consumed.
+            live.mDestinationCell = oldCell;
+            return;
+        }
+        if (!residentActor.isEmpty())
+            live.mState.mTarget = target;
+        if (!updateOblivionMovingDestination(live.mState, live.mDestinationCell, *destination))
+            return;
+        live.mDestination = destination;
+        live.mRoute.clear();
+        live.mContinuousRoute.clear();
+        live.mRouteCursor = 0;
+        live.mContinuousRouteCursor = 0;
+        live.mContinuousRouteEndCursor.reset();
+        live.mRouteDoor.reset();
+        live.mState.mPathgrid = {};
+        live.mState.mPathNode = 0;
+        // Keep no-progress and retry budgets: target motion is not evidence
+        // that this actor actually moved. Path prepares the new route once.
+        logEvent("target-route-refresh", live, "moving-target");
+    }
+
     bool OblivionAiService::shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
         const osg::Vec3f& position) const
     {
@@ -3433,6 +3483,7 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Path)
         {
+            refreshMovingTargetRoute(live, *current);
             if (live.mRoute.empty() && live.mDestination && !prepareUnloadedRoute(live))
                 live.mState.mRepathAttempts = std::min<std::uint32_t>(8, live.mState.mRepathAttempts + 1);
             const osg::Vec3f previous = live.mState.mLastValidPosition.asVec3();
@@ -4750,6 +4801,7 @@ namespace MWMechanics
 
         if (live.mState.mPhase == ESM4::PackagePhase::Path)
         {
+            refreshMovingTargetRoute(live, *current, highProcess ? actor : MWWorld::Ptr{});
             if (live.mRoute.empty() && live.mDestination)
             {
                 // A save stores the stable destination intent, not ephemeral
