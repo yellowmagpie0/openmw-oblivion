@@ -232,6 +232,28 @@ class OblivionCompatTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             MODULE.validate_scenario_manifest(manifest)
 
+    def test_m14_console_cannot_force_quest_or_actor_progression(self):
+        manifest = {"schema_version": 1, "name": "controls", "command": ["openmw"],
+                    "m14": {"event_file": "ai-events.jsonl"}}
+        for command in ("SetStage CharacterGen 10", "PositionCell 1 2 3 4 cell",
+                        "coc cell\nSetStage CharacterGen 10", "coc cell; enable 123",
+                        "coc cell\r", "coc cell\n", "enable 123", ""):
+            with self.subTest(command=command):
+                manifest["actions"] = [{"type": "m14_console", "commands": [command]}]
+                with self.assertRaises(ValueError):
+                    MODULE.validate_scenario_manifest(manifest)
+        manifest["actions"] = [{"type": "m14_console", "commands": ["coc ImperialDungeon01"]}]
+        MODULE.validate_scenario_manifest(manifest)
+        for action_type in ("type", "type_held"):
+            manifest["actions"] = [{"type": action_type, "value": "SetStage CharacterGen 10"}]
+            with self.assertRaises(ValueError):
+                MODULE.validate_scenario_manifest(manifest)
+            manifest["actions"] = [{"type": action_type, "value": "exit()"}]
+            MODULE.validate_scenario_manifest(manifest)
+        with self.assertRaises(ValueError):
+            MODULE._run_action({"type": "m14_console", "commands": ["SetStage CharacterGen 10"]},
+                               environment={}, output=Path("unused"))
+
     def test_m14_event_stream_checker_is_structured_and_exact(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
@@ -804,6 +826,36 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertFalse(result["passed"])
             self.assertLess(result["duration_seconds"], 2.0)
             self.assertTrue(result["actions"][0]["deadline_exceeded"])
+
+    def test_scenario_action_exception_is_retained_as_failed_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "failure.json"
+            manifest.write_text(json.dumps({
+                "schema_version": 1, "name": "action-failure",
+                "command": [sys.executable, "-c", "import time; time.sleep(10)"],
+                "actions": [{"type": "sleep", "seconds": 0}],
+                "terminate_after_actions": True,
+            }))
+            with mock.patch.object(MODULE, "_run_action", side_effect=ValueError("missing save")):
+                result = MODULE.run_scenario(manifest, root / "output", {})
+            self.assertFalse(result["passed"])
+            self.assertEqual(result["actions"][0]["error"], "ValueError: missing save")
+            self.assertFalse(json.loads((root / "output/scenario.json").read_text())["passed"])
+
+    def test_scenario_clean_early_exit_does_not_pass_unexecuted_actions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "early.json"
+            manifest.write_text(json.dumps({
+                "schema_version": 1, "name": "early-exit",
+                "command": [sys.executable, "-c", "pass"],
+                "actions": [{"type": "sleep", "seconds": 0.2}, {"type": "sleep", "seconds": 0}],
+            }))
+            result = MODULE.run_scenario(manifest, root / "output", {})
+            self.assertEqual(result["exit_code"], 0)
+            self.assertFalse(result["actions_complete"])
+            self.assertFalse(result["passed"])
 
     def test_scenario_rejects_unreviewed_error_lines(self):
         with tempfile.TemporaryDirectory() as temporary:

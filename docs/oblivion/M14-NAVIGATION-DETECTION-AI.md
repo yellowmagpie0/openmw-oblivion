@@ -391,6 +391,20 @@ scenario actor. `m14-count-gap-lock/m14-audit.json` passes against the unchanged
 official content fingerprints. Python coverage rejects growth in either count;
 all 64 tests pass (`m14-count-gap-tests.log`).
 
+### Harness controls and durable failures (2026-09-06)
+
+`m14_console` is restricted to single-line player `coc <cell-editor-id>`
+placement. Raw text controls in M14 manifests permit only `exit()`; quest and
+actor mutations must not bypass the typed-control restrictions. This is a
+manifest validation guard, not a security sandbox for arbitrary keyboard input.
+Regression checks reject quest-stage forcing and newline/command injection at
+validation and console execution boundaries.
+
+Action exceptions now produce failed `scenario.json` evidence instead of
+escaping without a report, and a clean process exit cannot pass a course with
+unexecuted actions. All 67 Python tests pass (`m14-harness-failure-tests.log`),
+including missing-save failure retention and clean early-exit rejection.
+
 ## Reproduce
 
 Build and run the audit:

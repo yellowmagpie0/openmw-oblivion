@@ -442,6 +442,18 @@ def expand_value(value: Any, variables: dict[str, str]) -> Any:
     return value
 
 
+def _validate_m14_console_commands(commands: Any) -> None:
+    # This escape hatch exists only for player cell placement in the LOS
+    # course. Do not let it bypass typed obstruction/clock controls or force
+    # quest/package progression. Keep each command a single console line.
+    if not isinstance(commands, list) or not commands or not all(
+        isinstance(command, str)
+        and re.fullmatch(r'coc [A-Za-z0-9_]+', command, flags=re.IGNORECASE)
+        for command in commands
+    ):
+        raise ValueError("m14_console permits only 'coc <cell-editor-id>' player placement")
+
+
 def validate_scenario_manifest(raw: dict[str, Any]) -> None:
     if not isinstance(raw, dict):
         raise ValueError("Scenario manifest must be a JSON object")
@@ -495,12 +507,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             raise ValueError(f"Unsupported scenario action: {action_type!r}")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
             raise ValueError(f"Scenario action {index} wait_log requires a non-empty pattern")
-        if action_type == "m14_console" and (
-            not isinstance(action.get("commands"), list)
-            or not action["commands"]
-            or not all(isinstance(command, str) and command for command in action["commands"])
-        ):
-            raise ValueError(f"Scenario action {index} m14_console requires non-empty string commands")
+        if action_type == "m14_console":
+            _validate_m14_console_commands(action.get("commands"))
         if action_type == "m14_checkpoint" and "save_name" in action and (
             not isinstance(action["save_name"], str) or not action["save_name"]
         ):
@@ -509,6 +517,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             raise ValueError(f"M14 scenarios cannot use direct-mutation action {action_type!r}")
         if m14 is not None and action_type == "command":
             raise ValueError("M14 scenarios must use typed controls instead of arbitrary commands")
+        if m14 is not None and action_type in ("type", "type_held") and action.get("value") != "exit()":
+            raise ValueError("M14 raw text input is limited to exit(); use typed scenario controls")
         if action_type == "m14_assert_events":
             for field in ("required", "forbidden", "required_events", "forbidden_events", "required_event_order"):
                 if field in action and (not isinstance(action[field], list)
@@ -1715,6 +1725,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         })
         return control
     if action_type == "m14_console":
+        _validate_m14_console_commands(action.get("commands"))
         commands = [str(command) for command in action.get("commands", [])]
         control = _m14_run_console_commands(
             commands, environment=environment, output=output,
@@ -1985,6 +1996,14 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
                         "duration_seconds": round(scenario_timeout, 6),
                     })
                     break
+                except Exception as error:
+                    # Preserve failed evidence (including missing saves) in
+                    # scenario.json instead of escaping without a report.
+                    action_results.append({
+                        "type": action.get("type"), "passed": False,
+                        "error": f"{type(error).__name__}: {error}",
+                    })
+                    break
                 finally:
                     signal.setitimer(signal.ITIMER_REAL, 0)
                     signal.signal(signal.SIGALRM, previous_alarm)
@@ -2021,8 +2040,11 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         exit_ok = process.returncode == expected_exit
         if expected_exit == "timeout":
             exit_ok = timed_out
+        actions_complete = len(action_results) == len(manifest.get("actions", []))
         passed = (
             exit_ok
+            and (not timed_out or expected_exit == "timeout")
+            and (actions_complete or (timed_out and expected_exit == "timeout"))
             and not missing_expected
             and not forbidden_findings
             and not unreviewed_error_findings
@@ -2037,6 +2059,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             "command": command,
             "exit_code": process.returncode,
             "expected_exit": expected_exit,
+            "actions_complete": actions_complete,
             "timed_out": timed_out,
             "missing_expected_log": missing_expected,
             "forbidden_log_findings": forbidden_findings,
