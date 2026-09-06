@@ -697,6 +697,10 @@ detection observer=<FormKey> target=<FormKey> score=<...> detected=<0|1>
 ```
 
 Rate-limit repeated diagnostics but keep counters in the final report.
+Failure budgets must count occurrences, not sampled log lines. Diagnostic
+summaries close each counter epoch before clear, restore, and shutdown; live
+samples carry cumulative counts. Final verification rejects missing or
+inconsistent totals. Aggregates are not evidence for ordered actions.
 
 ## 14. Implementation phases and commit checkpoints
 
@@ -709,6 +713,14 @@ before proceeding. Suggested commit subjects are illustrative.
 The aggregate candidate contains code corresponding to every phase, but code
 presence is not a passed phase gate. Use this table as the resume point and
 update it only when the named gate has fresh, actor-specific evidence.
+
+Current verification repair: historical quickload streams may have lost
+diagnostic totals when the service reset its counters. Rerun those courses with
+the counter-preservation fix; a prior `passed` result is not sufficient. The
+tutorial currently saves and reloads native CharacterGen state but remains at
+the initial dialogue-dependent wait. Do not use `SetStage` or a package override
+to claim escort progression. Section 16.1 permits dialogue-independent waiting
+controls only; the real escort/arrival/reload gate remains open.
 
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |

@@ -806,6 +806,56 @@ def _m14_event_matches(event: dict[str, Any], expected: dict[str, Any]) -> bool:
     return all(event.get(key) == value for key, value in expected.items())
 
 
+def _m14_event_counts(events: list[dict[str, Any]], actor: str | None = None,
+                      *, require_complete: bool = False) -> collections.Counter:
+    """Count occurrences, not sampled diagnostic lines; summaries close a counter epoch.
+
+    Keep this separate from ordered-event validation: an aggregate cannot prove
+    when an individual action happened. Legacy streams without inline counters
+    are supported when their closing summaries are present.
+    """
+    counts: collections.Counter = collections.Counter()
+    observed: dict[str, int] = {}
+    diagnostic_names = {"route-blocked", "door-failure", "action-commit-failed",
+                        "low-process-reconcile-failed", "fast-forward-bounded"}
+    for event in events:
+        name = str(event["event"])
+        event_actor = event.get("actor")
+        summary = name == "diagnostic-summary"
+        if not summary and name not in diagnostic_names:
+            if "diagnostic_count" in event:
+                raise ValueError("M14 occurrence counter attached to a non-diagnostic event")
+            if actor is None or actor == event_actor:
+                counts[name] += 1
+            continue
+        if summary:
+            key = event.get("key", "")
+            if not isinstance(key, str) or "|actor=" not in key or "|reason=" not in key:
+                raise ValueError("Invalid M14 diagnostic summary key")
+            name, rest = key.split("|actor=", 1)
+            if name not in diagnostic_names:
+                raise ValueError("Invalid M14 diagnostic summary event type")
+            event_actor, _ = rest.split("|reason=", 1)
+            cumulative = event.get("count")
+        else:
+            key = f"{name}|actor={event_actor}|reason={event.get('reason', '')}"
+            cumulative = event.get("diagnostic_count", observed.get(key, 0) + 1)
+        if not isinstance(cumulative, int) or isinstance(cumulative, bool) or cumulative <= 0:
+            raise ValueError("Invalid M14 diagnostic occurrence count")
+        previous = observed.get(key, 0)
+        if cumulative < previous or (not summary and cumulative == previous):
+            raise ValueError("M14 diagnostic count decreased without a closing summary")
+        if actor is None or actor == event_actor:
+            counts[name] += cumulative - previous
+        if summary:
+            observed.pop(key, None)
+        else:
+            observed[key] = cumulative
+    if require_complete and observed:
+        raise ValueError("M14 diagnostic stream is missing closing summaries")
+    return counts
+
+
 def _validate_m14_actor_events(
     events: list[dict[str, Any]], requirements: list[dict[str, Any]]
 ) -> tuple[list[str], dict[str, Any]]:
@@ -814,15 +864,16 @@ def _validate_m14_actor_events(
     for requirement in requirements:
         actor = str(requirement["actor"])
         actor_events = [event for event in events if event.get("actor") == actor]
-        counts = collections.Counter(str(event["event"]) for event in actor_events)
+        counts = _m14_event_counts(events, actor)
+        event_count = sum(counts.values())
         actor_failures: list[str] = []
 
         minimum = int(requirement.get("minimum_event_count", 0))
         maximum = requirement.get("maximum_event_count")
-        if len(actor_events) < minimum:
-            actor_failures.append(f"event count {len(actor_events)} is below {minimum}")
-        if maximum is not None and len(actor_events) > int(maximum):
-            actor_failures.append(f"event count {len(actor_events)} exceeds {maximum}")
+        if event_count < minimum:
+            actor_failures.append(f"event count {event_count} is below {minimum}")
+        if maximum is not None and event_count > int(maximum):
+            actor_failures.append(f"event count {event_count} exceeds {maximum}")
 
         for expected in requirement.get("required_events", []):
             if not any(_m14_event_matches(event, expected) for event in actor_events):
@@ -866,7 +917,7 @@ def _validate_m14_actor_events(
                 break
 
         summaries[actor] = {
-            "events": len(actor_events),
+            "events": event_count,
             "event_types": dict(sorted(counts.items())),
             "failures": actor_failures,
             "passed": not actor_failures,
@@ -920,21 +971,27 @@ def _validate_m14_detection_events(
     return failures, summaries
 
 
-def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, Any]:
+def _validate_m14_events(manifest: dict[str, Any], output: Path, *, final: bool = False) -> dict[str, Any]:
     config = manifest.get("m14")
     if not isinstance(config, dict):
         return {"enabled": False, "passed": True, "events": 0}
     event_path = _scenario_output_path(output, config.get("event_file", "ai-events.jsonl"), "M14 event file")
-    events = _read_m14_events(event_path)
+    try:
+        events = _read_m14_events(event_path)
+        event_counts = _m14_event_counts(events, require_complete=final)
+    except ValueError as error:
+        return {"enabled": True, "path": str(event_path), "events": 0, "event_types": {},
+                "actors": {}, "detections": {}, "failures": [str(error)], "passed": False}
+    event_count = sum(event_counts.values())
     failures: list[str] = []
     if config.get("require_event_file", True) and not event_path.is_file():
         failures.append(f"missing structured AI event stream: {event_path}")
     minimum_count = int(config.get("minimum_event_count", 0))
     maximum_count = config.get("maximum_event_count")
-    if len(events) < minimum_count:
-        failures.append(f"M14 event count {len(events)} is below {minimum_count}")
-    if maximum_count is not None and len(events) > int(maximum_count):
-        failures.append(f"M14 event count {len(events)} exceeds {maximum_count}")
+    if event_count < minimum_count:
+        failures.append(f"M14 event count {event_count} is below {minimum_count}")
+    if maximum_count is not None and event_count > int(maximum_count):
+        failures.append(f"M14 event count {event_count} exceeds {maximum_count}")
     for expected in config.get("required_events", []):
         if not isinstance(expected, dict) or not any(_m14_event_matches(event, expected) for event in events):
             failures.append(f"missing required M14 event: {expected}")
@@ -979,7 +1036,6 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, An
                 break
 
     maximum_repeated = config.get("maximum_repeated_events", {})
-    event_counts = collections.Counter(str(event["event"]) for event in events)
     for event_name, maximum in maximum_repeated.items():
         actual = event_counts.get(str(event_name), 0)
         if actual > int(maximum):
@@ -990,7 +1046,7 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, An
             failures.append(f"M14 route-blocked events {actual} exceed {config['maximum_route_blocked']}")
     if config.get("maximum_no_progress_events") is not None:
         no_progress_names = {"route-blocked", "low-process-reconcile-failed", "route-no-progress"}
-        actual = sum(1 for event in events if str(event.get("event")) in no_progress_names)
+        actual = sum(event_counts[name] for name in no_progress_names)
         if actual > int(config["maximum_no_progress_events"]):
             failures.append(
                 f"M14 no-progress events {actual} exceed {config['maximum_no_progress_events']}"
@@ -998,21 +1054,23 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, An
 
     maximum_phase_repeat = config.get("maximum_phase_repeat", 8)
     if maximum_phase_repeat is not None:
-        previous: tuple[Any, ...] | None = None
-        repeat = 0
+        previous_phases: dict[Any, tuple[tuple[Any, ...], int]] = {}
         for event in events:
+            actor = event.get("actor")
+            if event.get("event") == "selection":
+                previous_phases.pop(actor, None)
+            if event.get("event") != "phase":
+                continue
             identity = (
                 event.get("event"), event.get("actor"), event.get("package"),
                 event.get("from"), event.get("to"), event.get("reason"),
             )
-            if event.get("event") == "phase" and identity == previous:
-                repeat += 1
-                if repeat >= int(maximum_phase_repeat):
-                    failures.append(f"M14 phase transition repeated {repeat + 1} times: {identity}")
-                    break
-            else:
-                previous = identity
-                repeat = 0
+            previous, count = previous_phases.get(actor, ((), 0))
+            count = count + 1 if identity == previous else 1
+            previous_phases[actor] = identity, count
+            if count > int(maximum_phase_repeat):
+                failures.append(f"M14 phase transition repeated {count} times: {identity}")
+                break
     actor_failures, actor_summaries = _validate_m14_actor_events(
         events, config.get("actor_event_requirements", []))
     failures.extend(actor_failures)
@@ -1022,7 +1080,8 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path) -> dict[str, An
     return {
         "enabled": True,
         "path": str(event_path),
-        "events": len(events),
+        "events": event_count,
+        "event_lines": len(events),
         "event_types": dict(sorted(event_counts.items())),
         "actors": actor_summaries,
         "detections": detection_summaries,
@@ -1424,6 +1483,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         events = _read_m14_events(
             _scenario_output_path(output, action.get("event_file", "ai-events.jsonl"), "M14 event file")
         )
+        event_counts = _m14_event_counts(events)
         report = {
             "type": action_type,
             "actor": actor_key,
@@ -1431,8 +1491,9 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             "source": str(source_path),
             "state": actor_state,
             "clock": state.get("clock"),
-            "event_count": len(events),
-            "event_types": dict(sorted(collections.Counter(str(event["event"]) for event in events).items())),
+            "event_count": sum(event_counts.values()),
+            "event_lines": len(events),
+            "event_types": dict(sorted(event_counts.items())),
             "validation": validation,
             "failures": failures,
             "duration_seconds": round(time.monotonic() - started, 6),
@@ -1965,7 +2026,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             and not unreviewed_error_findings
             and all(result["passed"] for result in action_results)
         )
-        m14_result = _validate_m14_events(manifest, output)
+        m14_result = _validate_m14_events(manifest, output, final=True)
         passed = passed and m14_result.get("passed", True)
         result = {
             "schema_version": SCHEMA_VERSION,

@@ -630,6 +630,88 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertFalse(result["passed"])
             self.assertTrue(any("repeated" in failure for failure in result["failures"]))
 
+    def test_m14_diagnostic_counts_include_suppressed_occurrences_and_reload_epochs(self):
+        key = "route-blocked|actor=actor:a|reason=obstruction"
+        sample = {"event": "route-blocked", "actor": "actor:a", "reason": "obstruction"}
+        events = [
+            dict(sample, diagnostic_count=1),
+            dict(sample, diagnostic_count=32),
+            {"event": "diagnostic-summary", "key": key, "count": 37},
+            dict(sample, diagnostic_count=1),
+            {"event": "diagnostic-summary", "key": key, "count": 3},
+            {"event": "selection", "actor": "actor:b"},
+        ]
+        self.assertEqual(MODULE._m14_event_counts(events), {"route-blocked": 40, "selection": 1})
+        self.assertEqual(MODULE._m14_event_counts(events, "actor:a"), {"route-blocked": 40})
+        self.assertEqual(MODULE._m14_event_counts(events, "actor:b"), {"selection": 1})
+        failures, summaries = MODULE._validate_m14_actor_events(events, [{
+            "actor": "actor:a", "maximum_event_count": 39,
+            "maximum_event_counts": {"route-blocked": 39},
+            "required_event_order": [{"event": "route-blocked"}] * 4,
+        }])
+        self.assertEqual(summaries["actor:a"]["events"], 40)
+        self.assertTrue(any("occurred 40" in failure for failure in failures))
+        self.assertTrue(any("event order" in failure for failure in failures))
+        self.assertTrue(any("event count 40" in failure for failure in failures))
+
+    def test_m14_diagnostic_counts_support_legacy_summaries(self):
+        events = [{"event": "route-blocked", "actor": "actor:a", "reason": "blocked"}] * 7
+        events.append({"event": "diagnostic-summary",
+                       "key": "route-blocked|actor=actor:a|reason=blocked", "count": 1000})
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events) + "\n", encoding="utf-8")
+            result = MODULE._validate_m14_events({"m14": {
+                "maximum_event_count": 500, "maximum_route_blocked": 500,
+                "maximum_no_progress_events": 500, "maximum_repeated_events": {"route-blocked": 500},
+            }}, output)
+        self.assertEqual(result["events"], 1000)
+        self.assertEqual(result["event_lines"], 8)
+        self.assertEqual(len(result["failures"]), 4)
+
+    def test_m14_diagnostic_counts_reject_malformed_or_decreasing_totals(self):
+        for count in (True, 0, -1, 1.5, "32", None):
+            with self.subTest(count=count), self.assertRaises(ValueError):
+                MODULE._m14_event_counts([{"event": "route-blocked", "diagnostic_count": count}])
+        with self.assertRaises(ValueError):
+            MODULE._m14_event_counts([{"event": "diagnostic-summary", "count": 4}])
+        with self.assertRaises(ValueError):
+            MODULE._m14_event_counts([
+                {"event": "route-blocked", "diagnostic_count": 32},
+                {"event": "route-blocked", "diagnostic_count": 1},
+            ])
+
+    def test_m14_final_diagnostic_validation_requires_closing_summaries(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "ai-events.jsonl").write_text(
+                '{"event":"route-blocked","diagnostic_count":32}\n', encoding="utf-8")
+            manifest = {"m14": {"maximum_route_blocked": 32}}
+            self.assertTrue(MODULE._validate_m14_events(manifest, output)["passed"])
+            result = MODULE._validate_m14_events(manifest, output, final=True)
+            self.assertFalse(result["passed"])
+            self.assertIn("missing closing summaries", result["failures"][0])
+            (output / "ai-events.jsonl").write_text('{"event":', encoding="utf-8")
+            self.assertFalse(MODULE._validate_m14_events(manifest, output, final=True)["passed"])
+
+    def test_m14_phase_repeat_budget_cannot_be_hidden_by_other_actors_or_diagnostics(self):
+        phase = {"event": "phase", "actor": "actor:a", "from": 1, "to": 2}
+        events = [phase, {"event": "phase", "actor": "actor:b", "from": 2, "to": 3},
+                  {"event": "detection", "actor": "actor:a"}, phase]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            path = output / "ai-events.jsonl"
+            manifest = {"m14": {"maximum_phase_repeat": 1}}
+            path.write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
+            self.assertFalse(MODULE._validate_m14_events(manifest, output)["passed"])
+            for boundary in ({"event": "selection", "actor": "actor:a"},
+                             {"event": "phase", "actor": "actor:a", "from": 2, "to": 1}):
+                with self.subTest(boundary=boundary):
+                    path.write_text("\n".join(json.dumps(event) for event in [phase, boundary, phase]),
+                                    encoding="utf-8")
+                    self.assertTrue(MODULE._validate_m14_events(manifest, output)["passed"])
+
     def test_m14_state_validator_rejects_wrong_collection_and_numeric_types(self):
         state = {
             "schema_version": 5,

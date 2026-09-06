@@ -246,6 +246,7 @@ namespace MWMechanics
         bool transitionPackage(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::PackagePhaseInput& input);
         void logTransition(const LiveActor& live, ESM4::PackagePhase oldPhase, std::string_view reason) const;
         void logEvent(std::string_view event, const LiveActor& live, std::string_view reason = {}) const;
+        void flushDiagnosticCounters();
         std::uint64_t stableChoice(const ESM::FormKey& actor, std::uint64_t generation) const;
         std::optional<ESM4::PathgridNodeKey> chooseWanderNode(const MWWorld::Ptr& actor,
             const ESM4::AIPackage& package, const LiveActor& live) const;

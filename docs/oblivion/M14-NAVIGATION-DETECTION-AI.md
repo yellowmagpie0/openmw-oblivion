@@ -226,6 +226,38 @@ captures and are not attributed to the M14 candidate.
 
 ## Boundaries and known limitations
 
+### Diagnostic accounting repair (2026-09-05)
+
+Repeated failure events were sampled by the engine, but the harness counted
+lines rather than occurrences. Failure budgets now include cumulative samples
+and closing summary totals without double counting. Clear, restore, and
+shutdown flush their counters; final verification rejects missing or
+inconsistent summaries. Aggregate counts cannot satisfy ordered-action gates.
+Regression tests cover suppressed repeats, actor isolation, reload epochs,
+legacy summaries, malformed counters, and incomplete streams.
+
+Recounting `m14-city-final` yields 885 route-blocked occurrences, below that
+manifest's explicit 1,000 budget; its event checks still pass. The historical
+`m14-tutorial-named-save` stream has inconsistent totals across quickload and
+must be regenerated. Its save checkpoints prove Autosave/Quicksave discovery
+and native state parsing, not escort completion: the four actors remain in
+`CGBladesWaitToMove`. The uncommitted `SetStage` experiment was withdrawn
+because skipping dialogue is not a permitted dialogue-independent wait control.
+No tutorial acceptance gate has been closed.
+
+Fresh verification in `build/oblivion-compat/m14-tutorial-counter-repair/`
+confirms valid totals across quickload: 23,477 occurrences in 23,369 lines,
+including 540 route-blocked occurrences against the unchanged 500 budget.
+The scenario exits normally with no unreviewed error logs but fails that
+budget and the four escorts' package/door progression checks. Both saves and
+the quickload are logged; counter integrity is fixed, escort behavior is not.
+The rebuilt engine/component suites pass 516/516 and 1,582/1,582 tests; Python
+passes 62/62. Logs are `m14-counter-engine-tests.log`,
+`m14-counter-component-tests.log`, and `m14-counter-test-build.log` under
+`build/oblivion-compat/`. The count-locked content audit passes in
+`m14-audit-counter-repair/`. Per-actor phase-repeat checks now remain effective
+despite interleaved actors or diagnostic events.
+
 M15 still owns combat, damage, crime, arrest, and mounted combat. M16 owns real
 magic-effect execution; observed CastMagic packages expose the typed boundary
 instead of faking a cast. M18 owns dialogue content/topic selection, and M19

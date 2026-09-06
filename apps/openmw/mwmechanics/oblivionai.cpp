@@ -291,6 +291,11 @@ namespace MWMechanics
 
     OblivionAiService::~OblivionAiService()
     {
+        flushDiagnosticCounters();
+    }
+
+    void OblivionAiService::flushDiagnosticCounters()
+    {
         if (!mEventStream)
             return;
         for (const auto& [key, count] : mDiagnosticCounters)
@@ -299,13 +304,14 @@ namespace MWMechanics
                          << ",\"count\":" << count << "}\n";
         }
         mEventStream.flush();
+        mDiagnosticCounters.clear();
     }
 
     void OblivionAiService::clear()
     {
         mActors.clear();
         mDetectionVectors.clear();
-        mDiagnosticCounters.clear();
+        flushDiagnosticCounters();
         mNextEvaluationGeneration = 1;
         seedActors();
     }
@@ -4547,13 +4553,14 @@ namespace MWMechanics
         const bool diagnostic = event == "route-blocked" || event == "door-failure"
             || event == "action-commit-failed" || event == "low-process-reconcile-failed"
             || event == "fast-forward-bounded";
+        std::uint64_t diagnosticCount = 0;
         if (diagnostic)
         {
             const std::string key = std::string(event) + "|actor=" + live.mState.mActor.serialize()
                 + "|reason=" + std::string(reason);
-            const std::uint64_t count = ++mDiagnosticCounters[key];
+            const std::uint64_t count = diagnosticCount = ++mDiagnosticCounters[key];
             // Preserve the first observations and exponentially spaced
-            // repeats in the event stream. The destructor emits the exact
+            // repeats in the event stream. Resets and destruction emit the exact
             // aggregate count, so a persistent obstruction is observable
             // without flooding a long-running save.
             if (count > 1 && (count & (count - 1)) != 0 && count % 32 != 0)
@@ -4564,7 +4571,10 @@ namespace MWMechanics
                      << jsonQuote(live.mState.mPackage.serialize()) << ",\"phase\":"
                      << static_cast<unsigned>(live.mState.mPhase) << ",\"tier\":"
                      << static_cast<unsigned>(live.mState.mTier) << ",\"reason\":" << jsonQuote(reason)
-                     << ",\"game_hour\":" << std::setprecision(9) << now().mHour << "}\n";
+                     << ",\"game_hour\":" << std::setprecision(9) << now().mHour;
+        if (diagnostic)
+            mEventStream << ",\"diagnostic_count\":" << diagnosticCount;
+        mEventStream << "}\n";
         mEventStream.flush();
     }
 
@@ -5759,7 +5769,7 @@ namespace MWMechanics
     {
         mActors.clear();
         mDetectionVectors.clear();
-        mDiagnosticCounters.clear();
+        flushDiagnosticCounters();
         for (const ESM4::RuntimeDetectionVector& vector : state.mDetectionVectors)
             mDetectionVectors.emplace(std::make_pair(vector.mObserver, vector.mTarget), vector);
         mNextEvaluationGeneration = std::max<std::uint64_t>(1, state.mAiRngState);
