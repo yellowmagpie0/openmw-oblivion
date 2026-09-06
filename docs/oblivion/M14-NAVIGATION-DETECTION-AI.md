@@ -337,6 +337,20 @@ events, including 640 route-blocked occurrences (1,000 allowed), 580 door
 transitions, and 13 tier events. This does not replace the still-missing paired
 high/low runs and reloads at every required schedule boundary.
 
+### Named-actor adverse-event budgets (2026-09-06)
+
+Named actors now default to zero door failures, action-commit failures,
+low-process reconciliation failures, and bounded fast-forward failures, in
+addition to the existing zero blocked-route budget. Deliberate adverse cases
+must declare an explicit per-event allowance. Regression tests check each
+event, suppressed occurrences in summaries, exact allowance boundaries, and
+isolation from unrelated actors; all 63 Python tests pass
+(`m14-adverse-budgets-tests.log`). Revalidating existing city-logical-position
+and companion-logical-position streams passes the stricter event checks;
+this is not a new runtime run or a companion distance pass. The tutorial
+counter-repair stream still fails its previously recorded progression and
+blocked-route checks. No acceptance gate is closed by this harness change.
+
 ## Reproduce
 
 Build and run the audit:

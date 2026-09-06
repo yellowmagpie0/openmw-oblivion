@@ -899,7 +899,9 @@ def _validate_m14_actor_events(
         # Named M14 actors are strict by default. A scenario that deliberately
         # exercises an obstruction must record an explicit non-zero budget;
         # unrelated population failures cannot satisfy or fail that fixture.
-        maximum_event_counts.setdefault("route-blocked", 0)
+        for adverse_event in ("route-blocked", "door-failure", "action-commit-failed",
+                              "low-process-reconcile-failed", "fast-forward-bounded"):
+            maximum_event_counts.setdefault(adverse_event, 0)
         maximum_event_counts.setdefault("selection", 24)
         for event_name, maximum_count in maximum_event_counts.items():
             actual = counts.get(str(event_name), 0)

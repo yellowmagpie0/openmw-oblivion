@@ -842,6 +842,27 @@ class OblivionCompatTests(unittest.TestCase):
         failures, _ = MODULE._validate_m14_actor_events(events, requirements)
         self.assertEqual(failures, [])
 
+    def test_m14_named_actor_rejects_each_adverse_event_without_explicit_budget(self):
+        actor = "content:oblivion.esm:000123"
+        for event_name in ("door-failure", "action-commit-failed",
+                           "low-process-reconcile-failed", "fast-forward-bounded"):
+            with self.subTest(event=event_name):
+                events = [{"event": event_name, "actor": actor, "reason": "test",
+                           "diagnostic_count": 1},
+                          {"event": "diagnostic-summary",
+                           "key": f"{event_name}|actor={actor}|reason=test", "count": 3}]
+                failures, summaries = MODULE._validate_m14_actor_events(events, [{"actor": actor}])
+                self.assertTrue(any(event_name in failure for failure in failures))
+                self.assertEqual(summaries[actor]["event_types"][event_name], 3)
+                failures, _ = MODULE._validate_m14_actor_events(events, [{
+                    "actor": actor, "maximum_event_counts": {event_name: 3}}])
+                self.assertEqual(failures, [])
+                failures, _ = MODULE._validate_m14_actor_events(events, [{
+                    "actor": actor, "maximum_event_counts": {event_name: 2}}])
+                self.assertTrue(failures)
+                failures, _ = MODULE._validate_m14_actor_events(events, [{"actor": "unrelated"}])
+                self.assertEqual(failures, [])
+
     def test_scenario_generated_paths_cannot_escape_output(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
