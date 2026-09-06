@@ -444,6 +444,30 @@ CTDT rejection. All 1,584 component tests pass
 incorrect test member name, corrected before this pass; its log is retained.
 Runtime selection/result dispatch and tutorial verification remain open.
 
+### Dialogue voice resources and legacy INFO layouts (2026-09-06)
+
+Voice helpers now follow sex-specific native RACE.VNAM links, reject missing
+or cyclic links, and require all numbered responses for the chosen INFO and
+voice race/sex. Response numbers use the low byte of TRDT, retaining nonzero
+padding in parsed data. Released Valen Dreth is a Dark Elf whose voice links
+resolve to High Elf; the matching recordings are in that archive directory.
+No arbitrary other-race or other-INFO fallback is used by these helpers.
+
+The reader rejects wrong native condition/response/flag sizes but accepts
+legacy two-byte DATA with absent flags. The first strict-DATA runtime probe
+(`m14-tutorial-native-voice-race/`) failed loading native INFO 0253d4. A census
+then identified it and 0253d3 as the base master's two legacy DATA records;
+all 11 local official-profile plugins use the now-supported layouts
+(`m14-dialogue-info-layout-census.log`). This is a layout census, not full
+dialogue semantic acceptance.
+
+All 1,588 component tests pass (`m14-dialogue-legacy-info-component-tests.log`),
+including ordered voice matching, missing response/race/sex rejection, voice
+link chains/cycles, native malformed layouts, and legacy DATA. The first
+voice-helper build failed on a FormId null-check API mistake; corrected builds
+and the original failure log are retained. Runtime tutorial verification is
+still in progress.
+
 ## Reproduce
 
 Build and run the audit:

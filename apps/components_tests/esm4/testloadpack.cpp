@@ -2,6 +2,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadpack.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/dialoguevoices.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
 #include <components/toutf8/toutf8.hpp>
@@ -182,11 +183,74 @@ TEST(ESM4LoadInfo, RetainsNativeConditionsResponsesFlagsAndPredecessor)
     EXPECT_EQ(info.mPreviousInfo, ESM::FormId::fromUint32(0x1234));
 }
 
+TEST(ESM4LoadInfo, ResolvesAllVoiceResponsesWithoutRaceSexOrNumberFallback)
+{
+    ESM4::DialogInfo info;
+    info.mResponses.resize(2);
+    info.mResponses[0].mData.responseNo = 0x01c0ed01; // Nonzero native padding.
+    info.mResponses[1].mData.responseNo = 2;
+    const std::vector<std::string> files{ "voice/imperial/m/line_2.mp3", "voice/imperial/m/line_1.mp3",
+        "voice/breton/f/line_1.mp3", "voice/imperial/f/line_1.mp3" };
+    const auto selected = ESM4::dialogueVoiceFiles(info, files, "imperial", "m");
+    ASSERT_TRUE(selected);
+    EXPECT_EQ(*selected, (std::vector<std::string>{ files[1], files[0] }));
+    EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "imperial", "f"));
+    EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "breton", "m"));
+    EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "", "m"));
+    info.mResponses[1].mData.responseNo = 3;
+    EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "imperial", "m"));
+}
+
+TEST(ESM4LoadInfo, ResolvesSexSpecificVoiceRaceAndRejectsBrokenOrCyclicLinks)
+{
+    ESM4::Race source{}, male{}, female{};
+    source.mId = ESM::FormId::fromUint32(1);
+    male.mId = ESM::FormId::fromUint32(2);
+    female.mId = ESM::FormId::fromUint32(3);
+    source.mVNAM = { male.mId, female.mId };
+    const auto resolve = [&](ESM::FormId id) -> const ESM4::Race* {
+        for (const auto* race : { &source, &male, &female })
+            if (race->mId == id)
+                return race;
+        return nullptr;
+    };
+    EXPECT_EQ(ESM4::dialogueVoiceRace(&source, false, resolve), &male);
+    EXPECT_EQ(ESM4::dialogueVoiceRace(&source, true, resolve), &female);
+    male.mVNAM[0] = ESM::FormId::fromUint32(0);
+    EXPECT_EQ(ESM4::dialogueVoiceRace(&source, false, resolve), &male);
+    male.mVNAM[0] = female.mId;
+    EXPECT_EQ(ESM4::dialogueVoiceRace(&source, false, resolve), &female);
+    female.mVNAM[0] = source.mId;
+    EXPECT_EQ(ESM4::dialogueVoiceRace(&source, false, resolve), nullptr);
+    source.mVNAM[1] = ESM::FormId::fromUint32(4);
+    EXPECT_EQ(ESM4::dialogueVoiceRace(&source, true, resolve), nullptr);
+}
+
 TEST(ESM4LoadInfo, RejectsMalformedLegacyCondition)
 {
     std::vector<char> payload;
     appendSubRecord(payload, ESM::fourCC("CTDT"), std::vector<char>(19));
     EXPECT_THROW(loadInfo(payload), std::runtime_error);
+}
+
+TEST(ESM4LoadInfo, RejectsWrongNativeResponseConditionAndFlagLayouts)
+{
+    for (const auto type : { ESM::fourCC("TRDT"), ESM::fourCC("CTDA"), ESM::fourCC("DATA") })
+    {
+        std::vector<char> payload;
+        appendSubRecord(payload, type, std::vector<char>(19));
+        EXPECT_THROW(loadInfo(payload), std::runtime_error);
+    }
+}
+
+TEST(ESM4LoadInfo, ReadsLegacyTwoByteDataWithAbsentFlags)
+{
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("DATA"), { 1, 2 });
+    const auto info = loadInfo(payload);
+    EXPECT_EQ(info.mDialType, 1);
+    EXPECT_EQ(info.mNextSpeaker, 2);
+    EXPECT_EQ(info.mInfoFlags, 0);
 }
 
 TEST(ESM4LoadPackage, DecodesAllNativeFieldsAndBothConditionLayouts)

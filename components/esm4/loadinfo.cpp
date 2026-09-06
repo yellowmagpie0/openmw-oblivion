@@ -70,6 +70,8 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 break; // FO3 (not used in FONV?)
             case ESM::fourCC("TRDT"):
             {
+                if (!reader.hasFormVersion() && subHdr.dataSize != 16)
+                    reader.fail("TES4 INFO TRDT must have 16 bytes");
                 finishResponse();
                 responseStarted = true;
                 mResponseData = {};
@@ -103,6 +105,8 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
             {
                 if (subHdr.typeId == ESM::fourCC("CTDT") && subHdr.dataSize != 20)
                     reader.fail("INFO CTDT must have 20 bytes");
+                if (!reader.hasFormVersion() && subHdr.typeId == ESM::fourCC("CTDA") && subHdr.dataSize != 24)
+                    reader.fail("TES4 INFO CTDA must have 24 bytes");
                 if (subHdr.dataSize == 24 || subHdr.dataSize == 20)
                 {
                     std::vector<std::uint8_t> data(subHdr.dataSize);
@@ -218,12 +222,15 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("DATA"): // always 3 for TES4 ?
             {
-                if (subHdr.dataSize == 3) // TES4: byte flags, no high flag byte
+                if (!reader.hasFormVersion() && subHdr.dataSize != 2 && subHdr.dataSize != 3)
+                    reader.fail("TES4 INFO DATA must have 2 or 3 bytes");
+                if (subHdr.dataSize == 2 || subHdr.dataSize == 3) // TES4, legacy records omit flags
                 {
                     reader.get(mDialType);
                     reader.get(mNextSpeaker);
                     std::uint8_t flags = 0;
-                    reader.get(flags);
+                    if (subHdr.dataSize == 3)
+                        reader.get(flags);
                     mInfoFlags = flags;
                 }
                 else if (subHdr.dataSize == 4) // FO3/FONV
