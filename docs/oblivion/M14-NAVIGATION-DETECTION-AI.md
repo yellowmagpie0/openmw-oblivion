@@ -52,9 +52,10 @@ acceptance evidence without satisfying the reopened gates below.
 - Expand the door, detection, horse, and Morrowind runs to the complete matrices
   in the implementation plan. The current runs cover only small smoke subsets.
 - Add the engine integration coverage required by section 15.2 of the plan.
-  The five current engine tests exercise pure selection/schedule/phase helpers,
-  not the actor, world, navigation, inventory, script, companion, or mount
-  integrations claimed by the former report.
+  M14 engine-target tests now cover rule helpers, moving-target baselines,
+  binary persistence, gait selection, and logical-position retention. They
+  still do not establish the actor/world/navigation/inventory/script/companion/
+  mount integration coverage claimed by the former report.
 - Produce durable full-build, full-test, ASan, and UBSan logs from a clean tree
   at the final implementation revision.
 - Restore phase-sized implementation commits for subsequent repair work and use
@@ -309,6 +310,32 @@ Build, 520 engine tests, and 62 Python tests pass. Logs:
 (1,519.07), and event gates. Final recovery still fails: 1,923.29, same cell,
 against the unchanged 512 limit. Inspect stale route targets and low-process
 position authority next; no companion acceptance claim follows from this run.
+
+### Low-process position authority repair (2026-09-06)
+
+Resident low processing now resolves destinations, builds paths, and advances
+movement from logical positions using the same routines as unloaded actors.
+Resident native speed still supplies inventory/stat/immobilization constraints.
+Logical progress, rather than a stationary rendered position, resets the
+no-progress timer. Synchronization retains logical cell crossings while the
+observed resident position/cell is unchanged, but recognizes external moves.
+Cross-cell realization is queued for the post-update transition pass; promotion
+validates the logical route position and rebuilds a resident Recast corridor.
+The next fixed step resolves the newly registered Ptr after a cell transfer.
+
+Build and 521 engine tests pass (`m14-low-position-build.log`,
+`m14-low-position-engine-tests.log`); Python remains 62/62.
+`m14-companion-logical-position/` has clean exit/error and event checks but
+still fails final recovery at 1,919.13 units. That run predates the final
+logical-progress timer adjustment. The moving-target route refresh and full
+high/low/reload equivalence gates remain open.
+
+`m14-city-logical-position/`, with the final timer adjustment, passes all
+current checks: five calendar checkpoints, named-actor gates, save checks,
+and clean exit with no unreviewed errors. Its occurrence totals are 30,915
+events, including 640 route-blocked occurrences (1,000 allowed), 580 door
+transitions, and 13 tier events. This does not replace the still-missing paired
+high/low runs and reloads at every required schedule boundary.
 
 ## Reproduce
 

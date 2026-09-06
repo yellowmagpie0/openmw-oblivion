@@ -118,6 +118,7 @@ namespace MWMechanics
             ESM::FormKey mLastRiddenHorse;
             std::optional<ESM4::ScheduleWindow> mSelectedWindow;
             osg::Vec3f mLastObservedPosition;
+            ESM::FormKey mLastObservedCell;
             bool mHasObservedPosition = false;
             std::size_t mRouteCursor = 0;
             std::size_t mContinuousRouteCursor = 0;
@@ -142,6 +143,7 @@ namespace MWMechanics
             float mFixedRemainder = 0.0f;
             float mSelectionCheckTimer = 0.0f;
             bool mPendingDoor = false;
+            bool mPendingRealization = false;
             bool mNeedsSelection = false;
             // Low-process movement advances the persisted last-valid position
             // while the resident actor remains at its old render position.
@@ -215,7 +217,8 @@ namespace MWMechanics
         float unloadedMovementSpeed(const LiveActor& live) const;
         bool shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
             const osg::Vec3f& position) const;
-        bool advanceUnloadedMovement(LiveActor& live, float duration, bool& reached);
+        bool advanceUnloadedMovement(LiveActor& live, float duration, bool& reached,
+            std::optional<float> movementSpeed = std::nullopt);
         bool transitionUnloaded(LiveActor& live, const ESM4::PackagePhaseInput& input);
         void executeUnloadedFixedStep(LiveActor& live, float duration);
         std::optional<MWWorld::Ptr> findReference(const MWWorld::ConstPtr& actor,
@@ -228,7 +231,7 @@ namespace MWMechanics
             const ESM::FormKey& destinationCell);
         bool advanceMovement(const MWWorld::Ptr& actor, LiveActor& live, float duration, bool highProcess,
             bool& reached);
-        bool reconcileAbstractPosition(const MWWorld::Ptr& actor, LiveActor& live);
+        bool reconcileAbstractPosition(const MWWorld::Ptr& actor, LiveActor& live, bool allowCellChange = false);
         bool updateMountedAttachment(const MWWorld::Ptr& rider, LiveActor& live, bool highProcess);
         bool updateDialogueApproach(const MWWorld::Ptr& actor, LiveActor& live);
         bool executeFixedStep(const MWWorld::Ptr& actor, LiveActor& live, float duration, bool highProcess);

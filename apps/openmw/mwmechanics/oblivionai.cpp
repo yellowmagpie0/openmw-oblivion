@@ -567,16 +567,16 @@ namespace MWMechanics
     {
         const ESM::FormKey currentCell = cellKey(actor);
         const osg::Vec3f currentPosition = actor.getRefData().getPosition().asVec3();
-        const bool preserveAbstractPosition = live.mAbstractPositionDirty
-            && !live.mState.mCell.isNull() && currentCell == live.mState.mCell
-            && (!live.mHasObservedPosition
-                || distanceSquared(currentPosition, live.mLastObservedPosition) <= sArrivalTolerance * sArrivalTolerance);
+        const bool preserveAbstractPosition = !live.mState.mCell.isNull()
+            && preserveOblivionAbstractPosition(live.mAbstractPositionDirty, live.mHasObservedPosition,
+                currentCell, live.mLastObservedCell, currentPosition, live.mLastObservedPosition);
         if (live.mAbstractPositionDirty && !preserveAbstractPosition)
             live.mAbstractPositionDirty = false;
 
         live.mState.mActor = actorKey(actor);
         live.mState.mBase = baseKey(actor);
-        live.mState.mCell = currentCell;
+        if (!preserveAbstractPosition)
+            live.mState.mCell = currentCell;
         if (!live.mState.mCell.isNull())
         {
             live.mState.mLastValidCell = live.mState.mCell;
@@ -694,7 +694,8 @@ namespace MWMechanics
             -> std::optional<StableLocation> {
             if (key.isNull())
                 return std::nullopt;
-            if (const auto found = mActors.find(key); found != mActors.end())
+            if (const auto found = mActors.find(key);
+                found != mActors.end() && key != ESM::FormKey::dynamic("player", 1))
                 return StableLocation{ key, found->second.mState.mBase,
                     found->second.mState.mLastValidCell.isNull() ? found->second.mState.mCell
                                                                    : found->second.mState.mLastValidCell,
@@ -3187,14 +3188,15 @@ namespace MWMechanics
                        : ESM4::playerWalkSpeed(speed, encumbrance, capacity, sneaking);
     }
 
-    bool OblivionAiService::advanceUnloadedMovement(LiveActor& live, float duration, bool& reached)
+    bool OblivionAiService::advanceUnloadedMovement(
+        LiveActor& live, float duration, bool& reached, std::optional<float> movementSpeed)
     {
         reached = false;
         if (!live.mDestination)
             return false;
 
         const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
-        const float speed = unloadedMovementSpeed(live);
+        const float speed = movementSpeed ? *movementSpeed : unloadedMovementSpeed(live);
         float remaining = std::max(0.f, duration) * speed;
         auto moveToward = [&](const osg::Vec3f& destination) {
             osg::Vec3f position = live.mState.mLastValidPosition.asVec3();
@@ -4044,7 +4046,8 @@ namespace MWMechanics
         return true;
     }
 
-    bool OblivionAiService::reconcileAbstractPosition(const MWWorld::Ptr& actor, LiveActor& live)
+    bool OblivionAiService::reconcileAbstractPosition(
+        const MWWorld::Ptr& actor, LiveActor& live, bool allowCellChange)
     {
         if (!live.mAbstractPositionDirty)
             return true;
@@ -4052,8 +4055,7 @@ namespace MWMechanics
         const osg::Vec3f abstractPosition = live.mState.mLastValidPosition.asVec3();
         const ESM::FormKey currentCell = cellKey(actor);
         const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
-        bool valid = actor.isInCell() && currentCell == live.mState.mCell
-            && live.mState.mLastValidCell == live.mState.mCell;
+        bool valid = actor.isInCell() && live.mState.mLastValidCell == live.mState.mCell;
 
         if (valid)
         {
@@ -4109,6 +4111,7 @@ namespace MWMechanics
         if (!valid)
         {
             logEvent("low-process-reconcile-failed", live, "bounded-position-validation");
+            live.mState.mCell = currentCell;
             live.mState.mLastValidCell = currentCell;
             live.mState.mLastValidPosition = actor.getRefData().getPosition();
             live.mAbstractPositionDirty = false;
@@ -4127,15 +4130,40 @@ namespace MWMechanics
             return false;
         }
 
+        if (currentCell != live.mState.mCell && !allowCellChange)
+        {
+            // Changing CellStores can add/remove mechanics actors. Defer it
+            // until the actor-update iteration has finished, like door use.
+            live.mPendingRealization = true;
+            return false;
+        }
+
         try
         {
-            const MWWorld::Ptr moved = mWorld.moveObject(actor, actor.getCell(), abstractPosition, true, false);
+            const auto destinationId = ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(live.mState.mCell);
+            if (!destinationId)
+                throw std::runtime_error("abstract destination cell is not a native cell");
+            MWWorld::CellStore& destinationCell = mWorld.mWorldModel.getCell(ESM::RefId(*destinationId));
+            const MWWorld::Ptr moved = mWorld.moveObject(actor, &destinationCell, abstractPosition, true, false);
             if (moved.isEmpty())
                 throw std::runtime_error("moveObject returned an empty actor pointer");
             live.mState.mLastValidPosition = moved.getRefData().getPosition();
             live.mState.mLastValidCell = cellKey(moved);
             live.mAbstractPositionDirty = false;
-            logEvent("low-process-reconcile", live, "bounded-route-position");
+            // Logical routes do not contain a resident Recast corridor. The
+            // next update must build one from the newly realized position.
+            if (live.mState.mPhase == ESM4::PackagePhase::Path)
+            {
+                live.mRoute.clear();
+                live.mContinuousRoute.clear();
+                live.mRouteCursor = 0;
+                live.mContinuousRouteCursor = 0;
+                live.mContinuousRouteEndCursor.reset();
+                live.mForeignRouteTarget.reset();
+                live.mRouteDoor.reset();
+            }
+            logEvent("low-process-reconcile", live,
+                "bounded-route-position from=" + currentCell.serialize() + " to=" + live.mState.mCell.serialize());
             return true;
         }
         catch (const std::exception& error)
@@ -4143,6 +4171,7 @@ namespace MWMechanics
             Log(Debug::Warning) << "TES4 AI low-process position reconciliation failed for actor "
                                 << live.mState.mActor.serialize() << ": " << error.what();
             logEvent("low-process-reconcile-failed", live, "move-object");
+            live.mState.mCell = currentCell;
             live.mState.mLastValidCell = currentCell;
             live.mState.mLastValidPosition = actor.getRefData().getPosition();
             live.mAbstractPositionDirty = false;
@@ -4257,19 +4286,8 @@ namespace MWMechanics
         stats.setMovementFlag(CreatureStats::Flag_Run, run);
         stats.setMovementFlag(CreatureStats::Flag_Sneak, sneak);
         const float speed = std::max(0.f, actor.getClass().getMaxSpeed(actor));
-        const float step = std::max(0.f, duration) * speed;
-        const auto advanceAbstractPosition = [&](const osg::Vec3f& target) {
-            const osg::Vec3f delta = target - position;
-            const float length = delta.length();
-            if (length <= 0.f || step <= 0.f)
-                return;
-            position += delta * (std::min(step, length) / length);
-            live.mState.mLastValidPosition.pos[0] = position.x();
-            live.mState.mLastValidPosition.pos[1] = position.y();
-            live.mState.mLastValidPosition.pos[2] = position.z();
-            live.mState.mLastValidCell = live.mState.mCell;
-            live.mAbstractPositionDirty = true;
-        };
+        if (!highProcess)
+            return advanceUnloadedMovement(live, duration, reached, speed);
 
         if (!live.mContinuousRoute.empty())
         {
@@ -4280,12 +4298,6 @@ namespace MWMechanics
                 {
                     ++live.mContinuousRouteCursor;
                     continue;
-                }
-
-                if (!highProcess)
-                {
-                    advanceAbstractPosition(point);
-                    return true;
                 }
 
                 faceAndMove(actor, point, run, sneak);
@@ -4334,16 +4346,7 @@ namespace MWMechanics
                     const ESM4::PathgridPoint sourcePoint = sourceGraph->worldPoint(source.mNode);
                     const osg::Vec3f sourcePosition(sourcePoint.mX, sourcePoint.mY, sourcePoint.mZ);
                     const float distanceToSource = (sourcePosition - position).length();
-                    if (!highProcess)
-                    {
-                        if (distanceToSource > sArrivalTolerance)
-                        {
-                            advanceAbstractPosition(sourcePosition);
-                            return true;
-                        }
-                        live.mState.mLowProcessTimer = 0.f;
-                    }
-                    else if (distanceToSource > sArrivalTolerance)
+                    if (distanceToSource > sArrivalTolerance)
                     {
                         faceAndMove(actor, sourcePosition, run, sneak);
                         return true;
@@ -4364,27 +4367,6 @@ namespace MWMechanics
 
                 const ESM4::PathgridPoint foreignPoint = graph->worldPoint(node.mNode);
                 const osg::Vec3f foreignPosition(foreignPoint.mX, foreignPoint.mY, foreignPoint.mZ);
-                if (!highProcess)
-                {
-                    if (distanceSquared(position, foreignPosition) > sArrivalTolerance * sArrivalTolerance)
-                    {
-                        advanceAbstractPosition(foreignPosition);
-                        return true;
-                    }
-                    // Low process has no resident CellStore to perform the
-                    // boundary transition.  Commit only after its abstract
-                    // route reaches the resolved foreign endpoint.
-                    live.mState.mCell = graph->cellKey();
-                    live.mState.mLastValidCell = graph->cellKey();
-                    live.mState.mPathgrid = node.mPathgrid;
-                    live.mState.mPathNode = node.mNode;
-                    live.mForeignRouteTarget.reset();
-                    ++live.mRouteCursor;
-                    if (live.mRouteCursor >= live.mRoute.size())
-                        reached = true;
-                    return true;
-                }
-
                 // A resident actor must cross the actual cell boundary.  The
                 // scene/physics layer updates the identity; this controller
                 // only keeps steering toward the resolved PGRI endpoint.
@@ -4403,11 +4385,6 @@ namespace MWMechanics
         {
             if (distanceSquared(position, live.mRouteDoorPosition) > sArrivalTolerance * sArrivalTolerance)
             {
-                if (!highProcess)
-                {
-                    advanceAbstractPosition(live.mRouteDoorPosition);
-                    return true;
-                }
                 faceAndMove(actor, live.mRouteDoorPosition, run, sneak);
                 return true;
             }
@@ -4438,25 +4415,6 @@ namespace MWMechanics
                     }
                 }
             }
-            return true;
-        }
-
-        if (!highProcess)
-        {
-            if ((destination - position).length() > sArrivalTolerance)
-            {
-                advanceAbstractPosition(destination);
-                return true;
-            }
-            live.mState.mLowProcessTimer = 0.f;
-            if (live.mRouteCursor < live.mRoute.size())
-            {
-                ++live.mRouteCursor;
-                // The next fixed low-process tick handles either the next
-                // local node or the explicit foreign-door edge.
-                return true;
-            }
-            reached = true;
             return true;
         }
 
@@ -4632,14 +4590,19 @@ namespace MWMechanics
         return true;
     }
 
-    bool OblivionAiService::executeFixedStep(const MWWorld::Ptr& actor, LiveActor& live, float duration,
+    bool OblivionAiService::executeFixedStep(const MWWorld::Ptr& sourceActor, LiveActor& live, float duration,
         bool highProcess)
     {
+        // A previous fixed step may have realized a low-process cell crossing.
+        // Resolve the registered Ptr before reading its CellStore again.
+        const MWWorld::Ptr registeredActor = loadedPtrFor(live.mState.mActor);
+        const MWWorld::Ptr& actor = registeredActor.isEmpty() ? sourceActor : registeredActor;
         const osg::Vec3f observedPosition = actor.getRefData().getPosition().asVec3();
         const bool madeProgress = !live.mHasObservedPosition
             || (observedPosition - live.mLastObservedPosition).length2() > 0.25f;
         synchronizeIdentity(live, actor);
         live.mLastObservedPosition = observedPosition;
+        live.mLastObservedCell = cellKey(actor);
         live.mHasObservedPosition = true;
         const ESM4::ProcessTier previousTier = live.mState.mTier;
         live.mState.mTier = highProcess ? ESM4::ProcessTier::High : ESM4::ProcessTier::Low;
@@ -4655,7 +4618,24 @@ namespace MWMechanics
         const bool wasMounted = updateMountedAttachment(actor, live, highProcess);
         const bool remainsMounted = wasMounted && !live.mState.mMount.isNull();
         if (highProcess && live.mAbstractPositionDirty && !remainsMounted)
+        {
             static_cast<void>(reconcileAbstractPosition(actor, live));
+            // A cell-crossing realization can replace the Ptr registered by
+            // the world. Resume on the next update with that registered Ptr.
+            stopMovement(actor);
+            return false;
+        }
+        if (highProcess && previousTier == ESM4::ProcessTier::Low
+            && live.mState.mPhase == ESM4::PackagePhase::Path)
+        {
+            live.mRoute.clear();
+            live.mContinuousRoute.clear();
+            live.mRouteCursor = 0;
+            live.mContinuousRouteCursor = 0;
+            live.mContinuousRouteEndCursor.reset();
+            live.mForeignRouteTarget.reset();
+            live.mRouteDoor.reset();
+        }
         if (live.mNeedsSelection)
             select(actor, live);
         if (live.mState.mRestrained)
@@ -4740,7 +4720,11 @@ namespace MWMechanics
         if (live.mState.mPhase == ESM4::PackagePhase::Resolve)
         {
             ESM::FormKey targetKey;
-            const std::optional<osg::Vec3f> destination = resolveDestination(actor, *current, live, targetKey);
+            const std::optional<osg::Vec3f> destination = highProcess
+                ? resolveDestination(actor, *current, live, targetKey)
+                : resolveUnloadedDestination(*current, live);
+            if (!highProcess)
+                targetKey = live.mState.mTarget;
             live.mState.mTarget = targetKey;
             live.mDestination = destination;
             if (destination)
@@ -4753,7 +4737,8 @@ namespace MWMechanics
                 live.mState.mDestinationPosition.pos[1] = destination->y();
                 live.mState.mDestinationPosition.pos[2] = destination->z();
                 live.mState.mHasDestination = true;
-                const bool route = prepareRoute(actor, live, *destination, live.mDestinationCell);
+                const bool route = highProcess ? prepareRoute(actor, live, *destination, live.mDestinationCell)
+                                               : prepareUnloadedRoute(live);
                 transitionPackage(actor, live,
                     { duration, true, route, false, false, true, false, false, false, false, false, true });
             }
@@ -4770,11 +4755,17 @@ namespace MWMechanics
                 // A save stores the stable destination intent, not ephemeral
                 // route vectors. Rebuild the route after the cell stores and
                 // pathgrid service have been restored.
-                if (!prepareRoute(actor, live, *live.mDestination, live.mDestinationCell))
+                const bool prepared = highProcess
+                    ? prepareRoute(actor, live, *live.mDestination, live.mDestinationCell)
+                    : prepareUnloadedRoute(live);
+                if (!prepared)
                     live.mState.mRepathAttempts = std::min<std::uint32_t>(8, live.mState.mRepathAttempts + 1);
             }
+            const osg::Vec3f previousLogicalPosition = live.mState.mLastValidPosition.asVec3();
             bool reached = false;
             const bool route = advanceMovement(actor, live, duration, highProcess, reached);
+            const bool movementProgress = highProcess ? madeProgress
+                : distanceSquared(previousLogicalPosition, live.mState.mLastValidPosition.asVec3()) > 0.01f;
             const bool foreignDestination = !live.mDestinationCell.isNull()
                 && live.mDestinationCell != live.mState.mCell;
             const bool door = reached && !live.mState.mDoor.isNull();
@@ -4792,7 +4783,7 @@ namespace MWMechanics
                 stopMovement(actor);
             transitionPackage(actor, live,
                 { duration, true, validRoute, validReached, door, !door, false, false, false, false, false,
-                    madeProgress || validReached, validRoute });
+                    movementProgress || validReached, validRoute });
             return validRoute;
         }
 
@@ -4854,8 +4845,11 @@ namespace MWMechanics
             if (movingTarget && live.mState.mDurationRemaining > std::max(0.f, duration) / 3600.f)
             {
                 ESM::FormKey refreshedTarget;
-                const std::optional<osg::Vec3f> refreshedDestination
-                    = resolveDestination(actor, *current, live, refreshedTarget);
+                const std::optional<osg::Vec3f> refreshedDestination = highProcess
+                    ? resolveDestination(actor, *current, live, refreshedTarget)
+                    : resolveUnloadedDestination(*current, live);
+                if (!highProcess)
+                    refreshedTarget = live.mState.mTarget;
                 if (!refreshedDestination)
                 {
                     live.mState.mInterruptionReason = "moving-target-unresolved";
@@ -4880,7 +4874,10 @@ namespace MWMechanics
                     live.mState.mDoor = {};
                     live.mState.mRepathAttempts = 0;
                     live.mState.mPhase = ESM4::PackagePhase::Path;
-                    if (!prepareRoute(actor, live, *refreshedDestination, live.mDestinationCell))
+                    const bool prepared = highProcess
+                        ? prepareRoute(actor, live, *refreshedDestination, live.mDestinationCell)
+                        : prepareUnloadedRoute(live);
+                    if (!prepared)
                         live.mState.mRepathAttempts = std::min<std::uint32_t>(8, live.mState.mRepathAttempts + 1);
                     logTransition(live, oldPhase, "moving-target-repath");
                     live.mState.mDurationRemaining
@@ -4981,6 +4978,21 @@ namespace MWMechanics
         // order in which the scene enumerated actors.
         for (auto& [_, live] : mActors)
         {
+            if (live.mPendingRealization)
+            {
+                live.mPendingRealization = false;
+                try
+                {
+                    const MWWorld::Ptr actor = loadedPtrFor(live.mState.mActor);
+                    if (!actor.isEmpty())
+                        static_cast<void>(reconcileAbstractPosition(actor, live, true));
+                }
+                catch (const std::exception& error)
+                {
+                    Log(Debug::Error) << "TES4 AI realization commit failed for actor "
+                                      << live.mState.mActor.serialize() << ": " << error.what();
+                }
+            }
             if (!live.mPendingDoor)
                 continue;
             live.mPendingDoor = false;

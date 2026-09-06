@@ -53,6 +53,19 @@ namespace
         EXPECT_FALSE(MWMechanics::updateOblivionMovingDestination(state, key(100), { 98.f, 0.f, 0.f }));
     }
 
+    TEST(OblivionAiTest, AbstractPositionSurvivesUnchangedResidentPositionButNotExternalMoves)
+    {
+        const osg::Vec3f origin(0.f, 0.f, 0.f);
+        // The logical cell is deliberately not an input: crossing a PGRI edge
+        // must not be undone merely because the resident Ptr is still behind.
+        EXPECT_TRUE(MWMechanics::preserveOblivionAbstractPosition(true, true, key(1), key(1), origin, origin));
+        EXPECT_TRUE(MWMechanics::preserveOblivionAbstractPosition(true, false, key(1), {}, origin, origin));
+        EXPECT_FALSE(MWMechanics::preserveOblivionAbstractPosition(false, false, key(1), {}, origin, origin));
+        EXPECT_FALSE(MWMechanics::preserveOblivionAbstractPosition(true, true, key(2), key(1), origin, origin));
+        EXPECT_FALSE(MWMechanics::preserveOblivionAbstractPosition(
+            true, true, key(1), key(1), { 65.f, 0.f, 0.f }, origin));
+    }
+
     TEST(OblivionAiTest, MovingDestinationUsesPersistedIntentAcrossTiersAndReload)
     {
         RuntimeActorAiState state;

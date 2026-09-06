@@ -7,6 +7,14 @@
 
 namespace MWMechanics
 {
+    inline bool preserveOblivionAbstractPosition(bool dirty, bool hasObservedPosition,
+        const ESM::FormKey& observedCell, const ESM::FormKey& previousObservedCell,
+        const osg::Vec3f& observedPosition, const osg::Vec3f& previousObservedPosition)
+    {
+        return dirty && (!hasObservedPosition || (observedCell == previousObservedCell
+            && (observedPosition - previousObservedPosition).length2() <= 64.f * 64.f));
+    }
+
     // The persisted destination is the last committed route intent, not the
     // last sampled target position. Keep it fixed until cumulative movement
     // warrants a new route, including across process-tier changes and reloads.
