@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm4/dialoguevoices.hpp>
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadalch.hpp>
@@ -27,6 +28,7 @@
 #include <components/esm4/loadfurn.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadingr.hpp>
+#include <components/esm4/loadinfo.hpp>
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
@@ -360,11 +362,12 @@ namespace MWWorld
         Log(Debug::Info) << "M10 native voice index: infos=" << mNativeVoiceFiles.size();
     }
 
-    std::optional<std::string> OblivionScriptManager::findNativeVoice(
-        const ESM::FormKey& topic, const Ptr& actor, const ESM::FormKey& voiceType) const
+    std::optional<OblivionScriptManager::NativeVoice> OblivionScriptManager::findNativeVoice(
+        const ESM::FormKey& topic, const Ptr& actor, const Ptr& target, const ESM::FormKey& voiceType) const
     {
         std::string race;
         std::string sex;
+        const bool diagnose = mDiagnosedVoiceTopics.emplace(topic, keyFor(actor)).second;
         const ESM4::Npc* npc = nullptr;
         if (!voiceType.isNull())
             npc = mStore.search<ESM4::Npc>(voiceType);
@@ -372,29 +375,53 @@ namespace MWWorld
             npc = actor.get<ESM4::Npc>()->mBase;
         if (npc != nullptr)
         {
-            if (const ESM4::Race* raceRecord = mStore.get<ESM4::Race>().search(ESM::RefId(npc->mRace)))
-                race = lower(raceRecord->mFullName);
-            sex = (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0 ? "f" : "m";
+            const bool female = (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+            const auto resolveRace = [&](ESM::FormId id) { return mStore.get<ESM4::Race>().search(ESM::RefId(id)); };
+            const ESM4::Race* voiceRace = ESM4::dialogueVoiceRace(resolveRace(npc->mRace), female, resolveRace);
+            if (voiceRace == nullptr)
+                throw std::runtime_error("Native dialogue voice race is unresolved or cyclic");
+            race = lower(voiceRace->mFullName);
+            sex = female ? "f" : "m";
         }
 
         const auto topicInfos = mTopicInfos.find(topic);
+        if (diagnose)
+            Log(Debug::Info) << "Native dialogue lookup: topic=" << topic.serialize()
+                << " actor=" << keyFor(actor).serialize() << " race=" << race << " sex=" << sex
+                << " infos=" << (topicInfos == mTopicInfos.end() ? 0 : topicInfos->second.size());
         if (topicInfos == mTopicInfos.end())
             return std::nullopt;
-        std::optional<std::string> fallback;
         for (const ESM::FormKey& info : topicInfos->second)
         {
+            const ESM4::DialogInfo* definition = mStore.search<ESM4::DialogInfo>(info);
+            const MWMechanics::OblivionAiService* ai = mWorld.getOblivionAiService();
+            if (definition == nullptr || ai == nullptr)
+                continue;
+            const ESM::FormKey quest = mResolver.toFormKey(definition->mQuest);
+            const auto questState = mQuests.find(quest);
+            if (!quest.isNull() && (questState == mQuests.end() || !questState->second.mRunning))
+                continue;
+            const auto conditions = ai->evaluateDialogueConditions(actor, target, definition->mCanonicalConditions, diagnose);
+            if (diagnose)
+                Log(Debug::Info) << "Native dialogue candidate: info=" << info.serialize()
+                    << " result=" << static_cast<int>(conditions);
+            if (conditions == ESM4::ConditionResult::Unsupported || conditions == ESM4::ConditionResult::MissingContext)
+                throw std::runtime_error("Native dialogue condition cannot be evaluated: " + info.serialize());
+            if (conditions != ESM4::ConditionResult::True)
+                continue;
             const auto files = mNativeVoiceFiles.find(info);
             if (files == mNativeVoiceFiles.end())
-                continue;
-            for (const std::string& path : files->second)
-            {
-                if (!fallback)
-                    fallback = path;
-                if (!race.empty() && path.find("/" + race + "/" + sex + "/") != std::string::npos)
-                    return path;
-            }
+                return std::nullopt;
+            const auto selected = ESM4::dialogueVoiceFiles(*definition, files->second, race, sex);
+            if (diagnose)
+                Log(Debug::Info) << "Native dialogue voices: info=" << info.serialize()
+                    << " files=" << files->second.size() << " responses=" << definition->mResponses.size()
+                    << " matched=" << selected.has_value();
+            if (!selected)
+                return std::nullopt;
+            return NativeVoice{ info, *selected };
         }
-        return fallback;
+        return std::nullopt;
     }
 
     void OblivionScriptManager::loadScheduledEvents()
@@ -433,6 +460,8 @@ namespace MWWorld
 
     void OblivionScriptManager::clear()
     {
+        mNativeSpeech.clear();
+        mDiagnosedVoiceTopics.clear();
         mInstances.clear();
         for (auto& [_, quest] : mQuests)
         {
@@ -725,6 +754,26 @@ namespace MWWorld
         }
         mWorld.mLastOblivionScriptSeconds = secondsPassed;
         mElapsed += secondsPassed;
+        for (auto speech = mNativeSpeech.begin(); speech != mNativeSpeech.end();)
+        {
+            NativeSpeech& current = speech->second;
+            current.mRemaining -= std::max(0.0, secondsPassed);
+            if (current.mRemaining > 0)
+            {
+                ++speech;
+                continue;
+            }
+            const Ptr speaker = ptrFor(speech->first);
+            if (++current.mIndex >= current.mResponses.size() || speaker.isEmpty())
+            {
+                speech = mNativeSpeech.erase(speech);
+                continue;
+            }
+            const auto& [file, duration] = current.mResponses[current.mIndex];
+            current.mRemaining = duration;
+            MWBase::Environment::get().getSoundManager()->say(speaker, VFS::Path::Normalized(file));
+            ++speech;
+        }
         runScheduledEvents();
 
         for (const auto& [questKey, scriptKey] : mQuestScripts)
@@ -1871,8 +1920,10 @@ namespace MWWorld
             const std::size_t voiceArg = name == "sayto" ? 3 : 2;
             const auto topic = keyFromValue(argument(topicArg));
             const auto voiceType = keyFromValue(argument(voiceArg));
-            const std::optional<std::string> voice
-                = topic ? findNativeVoice(*topic, speaker, voiceType.value_or(ESM::FormKey{})) : std::nullopt;
+            const auto targetKey = name == "sayto" ? keyFromValue(argument(0)) : std::nullopt;
+            const Ptr listener = targetKey ? ptrFor(*targetKey) : mWorld.getPlayerPtr();
+            const auto voice = topic ? findNativeVoice(*topic, speaker, listener, voiceType.value_or(ESM::FormKey{}))
+                                     : std::nullopt;
             if (!voice)
             {
                 trace(name + " topic=" + (topic ? topic->serialize() : std::string("null"))
@@ -1880,16 +1931,31 @@ namespace MWWorld
                 return double(0);
             }
             MWBase::SoundManager* manager = MWBase::Environment::get().getSoundManager();
-            const VFS::Path::Normalized path(*voice);
-            const double duration = manager->getSoundFileDuration(path);
+            NativeSpeech speech;
+            double duration = 0;
+            for (const auto& file : voice->mFiles)
+            {
+                const double responseDuration = manager->getSoundFileDuration(VFS::Path::Normalized(file));
+                if (!std::isfinite(responseDuration) || responseDuration <= 0)
+                    throw std::runtime_error("Native dialogue response has no valid duration: " + file);
+                speech.mResponses.emplace_back(file, responseDuration);
+                duration += responseDuration;
+            }
+            speech.mRemaining = speech.mResponses.front().second;
+            const VFS::Path::Normalized path(voice->mFiles.front());
             if (!speaker.isEmpty()
                 && (speaker.getClass().getType() == ESM::REC_NPC_4
                     || speaker.getClass().getType() == ESM::REC_CREA4))
                 manager->say(speaker, path);
             else
                 manager->say(path);
-            trace(name + " topic=" + topic->serialize() + " voice=" + *voice
+            mNativeSpeech.insert_or_assign(keyFor(speaker), std::move(speech));
+            trace(name + " topic=" + topic->serialize() + " info=" + voice->mInfo.serialize()
+                + " responses=" + std::to_string(voice->mFiles.size()) + " voice=" + voice->mFiles.front()
                 + " duration=" + std::to_string(duration));
+            // A scripted Say speaks the selected INFO now; its result must
+            // run against that speaker, not an arbitrary topic voice entry.
+            dispatchDialogueResult(voice->mInfo, 0, speaker);
             return duration;
         }
 
@@ -1983,6 +2049,8 @@ namespace MWWorld
 
     void OblivionScriptManager::restore(const ESM4::RuntimeState& state)
     {
+        mNativeSpeech.clear();
+        mDiagnosedVoiceTopics.clear();
         mSequence = state.mScriptEventSequence;
         mInstances.clear();
         for (const ESM4::RuntimeScriptInstance& saved : state.mScriptInstances)

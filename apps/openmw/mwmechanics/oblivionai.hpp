@@ -86,6 +86,8 @@ namespace MWMechanics
         bool isRidingHorse(const MWWorld::ConstPtr& actor) const;
 
         bool getLOS(const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const;
+        ESM4::ConditionResult evaluateDialogueConditions(const MWWorld::Ptr& speaker,
+            const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose = false) const;
         ESM4::DetectionResult detection(const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const;
 
         // Resolve a stable TES4 reference through the native actor/reference

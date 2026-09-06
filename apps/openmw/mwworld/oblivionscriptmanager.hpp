@@ -97,6 +97,21 @@ namespace MWWorld
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mDialogueResults;
         std::map<ESM::FormKey, std::vector<ESM::FormKey>> mTopicInfos;
         std::map<ESM::FormKey, std::vector<std::string>> mNativeVoiceFiles;
+        struct NativeVoice
+        {
+            ESM::FormKey mInfo;
+            std::vector<std::string> mFiles;
+        };
+        struct NativeSpeech
+        {
+            std::vector<std::pair<std::string, double>> mResponses;
+            std::size_t mIndex = 0;
+            double mRemaining = 0;
+        };
+        // Playback only: result scripts execute when Say starts, never from
+        // this queue. Loading cancels audio without repeating quest effects.
+        std::map<ESM::FormKey, NativeSpeech> mNativeSpeech;
+        mutable std::set<std::pair<ESM::FormKey, ESM::FormKey>> mDiagnosedVoiceTopics;
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mQuestResults;
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
         std::map<InstanceKey, Instance> mInstances;
@@ -116,8 +131,8 @@ namespace MWWorld
 
         void compileCorpus();
         void indexNativeVoices();
-        std::optional<std::string> findNativeVoice(
-            const ESM::FormKey& topic, const Ptr& actor, const ESM::FormKey& voiceType) const;
+        std::optional<NativeVoice> findNativeVoice(
+            const ESM::FormKey& topic, const Ptr& actor, const Ptr& target, const ESM::FormKey& voiceType) const;
         void loadScheduledEvents();
         void runScheduledEvents();
         void executeScheduledEvent(const ScheduledEvent& event);

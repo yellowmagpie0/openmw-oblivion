@@ -468,6 +468,38 @@ voice-helper build failed on a FormId null-check API mistake; corrected builds
 and the original failure log are retained. Runtime tutorial verification is
 still in progress.
 
+### Conditioned scripted speech and real tutorial progression (2026-09-06)
+
+`Say`/`SayTo` now evaluate INFO conditions through the shared AI condition
+context, including the live player's TES3 mechanics proxy for race/sex. They
+require the selected INFO's complete native voice sequence, return its total
+decoded duration, and execute its result synchronously against the speaker.
+This timing is required by Valen's native script, which checks the resulting
+quest stage immediately after `SayTo`. Playback queues contain audio only;
+reload clears them without replaying quest effects. Audio resume, SayOnce/random
+selection, predecessor ordering and interactive dialogue remain M18 limitations.
+
+The tutorial uses ordinary backward player movement to satisfy the released
+taunt-marker distance condition, then waits for real dialogue/stage evidence;
+it does not inject stages, packages or dialogue results. Retained intermediate
+runs (`m14-tutorial-conditioned-say/`, `m14-tutorial-dialogue-prerequisite/`,
+`m14-tutorial-player-dialogue-context/`) failed while exposing the missing
+movement, player condition context and voice-race redirect respectively.
+
+Latest `m14-tutorial-native-dialogue/` is still **FAIL**, with clean engine exit
+0, all actions completed, no timeout and no unreviewed error findings. Native
+speech advances CharacterGen 5 -> 6 -> 9 -> 10. Emperor, Glenroy and Renault
+reach their initial destinations; both v5 save/reload checkpoints pass. Baurus
+remains on 032b46 rather than required 032aeb; all four required door transitions
+are absent. The 530 blocked/no-progress events exceed the unchanged 500 budget.
+These failures remain work items, not waived assertions. Subsequent script and
+package progression and the fixture's actual native door intent need inspection.
+
+Verification: 522 engine tests and 67 Python tests pass
+(`m14-dialogue-verified-engine-tests.log`, `m14-dialogue-verified-python-tests.log`),
+alongside the 1,588 component tests above. This is repair-stage evidence; M14
+remains in progress and final clean-revision/sanitizer verification is pending.
+
 ## Reproduce
 
 Build and run the audit:

@@ -730,10 +730,16 @@ are repair-stage results, not final clean-revision acceptance. Reviewed
 content-gap counts are now locked and pass the official audit.
 
 The user approved the minimum real dialogue prerequisite on 2026-09-06. Native
-`Say`/`SayTo` currently choose/play a voice file, but do not perform the real
-conditioned dialogue selection/result progression needed to leave the initial
-CharacterGen wait. M18 owns that behavior under section 1. Implementing the
-minimum real prerequisite is now authorized beyond M14; a
+`Say`/`SayTo` now select conditioned INFOs, resolve native voice links and ordered
+responses, and dispatch the selected result against the speaker. The real
+`m14-tutorial-native-dialogue/` run progresses CharacterGen through stages
+5, 6, 9 and 10 with ordinary player movement. Both save/reload checkpoints pass,
+but the tutorial still FAILS: Baurus does not select 032aeb, none of the four
+escorts records the required door transition, and 530 blocked/no-progress
+events exceed the unchanged 500 budget. Continue investigating actual native
+package/script progression and door intent; do not accept initial arrivals as
+the complete escort course. M18 owns dialogue under section 1; this is only the
+authorized prerequisite, not M18 acceptance. A
 scheduled test dialogue-result event or `SetStage` is not equivalent evidence.
 Do not mark the tutorial or M14 complete before that behavior is verified.
 Even after the prerequisite is implemented, companion recovery, valid door

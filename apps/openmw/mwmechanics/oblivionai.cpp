@@ -1400,6 +1400,34 @@ namespace MWMechanics
         return mutablePtr(candidates.front());
     }
 
+    ESM4::ConditionResult OblivionAiService::evaluateDialogueConditions(const MWWorld::Ptr& speaker,
+        const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose) const
+    {
+        if (speaker.isEmpty() || !handles(speaker))
+            return ESM4::ConditionResult::MissingContext;
+        LiveActor contextActor;
+        if (const auto existing = mActors.find(actorKey(speaker)); existing != mActors.end())
+            contextActor.mState = existing->second.mState;
+        contextActor.mState.mActor = actorKey(speaker);
+        contextActor.mState.mBase = baseKey(speaker);
+        contextActor.mState.mCell = cellKey(speaker);
+        contextActor.mState.mTarget = target.isEmpty() ? ESM::FormKey{} : actorKey(target);
+        auto context = conditionContext(speaker, contextActor);
+        if (diagnose)
+        {
+            const auto resolve = context.mResolve;
+            context.mResolve = [resolve](const auto& condition, auto subject) {
+                const auto value = resolve(condition, subject);
+                Log(Debug::Info) << "Native dialogue condition: function=" << condition.mFunction
+                    << " subject=" << static_cast<int>(subject) << " actual=" << value.mValue
+                    << " status=" << static_cast<int>(value.mStatus) << " expected=" << condition.mComparisonValue
+                    << " parameter=" << condition.mParameter1.mReferenceKey.serialize();
+                return value;
+            };
+        }
+        return ESM4::evaluateConditions(conditions, context);
+    }
+
     ESM4::ConditionEvaluationContext OblivionAiService::conditionContext(
         const MWWorld::Ptr& actor, const LiveActor& live) const
     {
@@ -1679,6 +1707,29 @@ namespace MWMechanics
             }
             if (function == "GetIsID")
                 return value(!parameterKey.isNull() && baseKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
+            if (function == "GetIsRace" || function == "GetIsSex")
+            {
+                // The TES4 player intentionally uses the shared ESM::NPC
+                // mechanics proxy. Its current race/sex are authoritative,
+                // including character-generation edits and reloads.
+                if (subjectPtr == mWorld.getPlayerPtr())
+                {
+                    const ESM::NPC& player = *subjectPtr.get<ESM::NPC>()->mBase;
+                    if (function == "GetIsSex")
+                        return value(parameter.mNumber == (player.isMale() ? 0 : 1) ? 1.0 : 0.0);
+                    const ESM::FormId* race = player.mRace.getIf<ESM::FormId>();
+                    return value(race != nullptr && !parameterKey.isNull()
+                        && ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(*race) == parameterKey ? 1.0 : 0.0);
+                }
+                if (subjectPtr.getClass().getType() != ESM::REC_NPC_4)
+                    return value(0.0);
+                const ESM4::Npc& npc = *subjectPtr.get<ESM4::Npc>()->mBase;
+                if (function == "GetIsRace")
+                    return value(!parameterKey.isNull()
+                        && ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(npc.mRace) == parameterKey ? 1.0 : 0.0);
+                const bool female = (npc.mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+                return value(parameter.mNumber == (female ? 1 : 0) ? 1.0 : 0.0);
+            }
             if (function == "GetIsReference")
                 return value(!parameterKey.isNull() && actorKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
             if (function == "GetInCell")
