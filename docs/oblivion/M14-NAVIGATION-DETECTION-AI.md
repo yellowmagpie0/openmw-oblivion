@@ -284,6 +284,14 @@ checkpoint to real route events, then investigate the recovery failure without
 relaxing the 512-unit distance requirement. This is not a companion acceptance
 pass and does not establish full formation or process-tier equivalence.
 
+The companion manifest now waits for all three named actors' first route
+events instead of sleeping for 80 seconds from process launch. Its overall
+220-second budget accommodates content startup and the unchanged course steps.
+`m14-companion-observed-start/` passes the initial checkpoint and all event
+checks, exits normally, and fails only final recovery: distance 7,366.22,
+different cells. This isolates an actual follow/recovery problem from startup
+timing. The 512-unit near-distance limit remains unchanged. Python: 62/62.
+
 ## Reproduce
 
 Build and run the audit:
