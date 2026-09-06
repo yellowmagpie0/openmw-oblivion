@@ -9,6 +9,7 @@
 */
 #include "oblivionai.hpp"
 #include "oblivionaidestination.hpp"
+#include "oblivionaigait.hpp"
 
 #include <algorithm>
 #include <array>
@@ -3114,6 +3115,35 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionAiService::shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
+        const osg::Vec3f& position) const
+    {
+        std::optional<float> targetDistance;
+        bool differentCell = false;
+        if (live.mState.mPackageType == ESM4::AIPackageType::Follow
+            || live.mState.mPackageType == ESM4::AIPackageType::Accompany)
+        {
+            // A low-process target's realized Ptr can lag behind its logical
+            // position. Prefer the AI authority, then handle the player and
+            // other resident targets that are not in the actor registry.
+            if (const auto target = mActors.find(live.mState.mTarget);
+                target != mActors.end() && live.mState.mTarget != ESM::FormKey::dynamic("player", 1))
+            {
+                targetDistance = distanceSquared(position, target->second.mState.mLastValidPosition.asVec3());
+                differentCell = live.mState.mCell != target->second.mState.mCell;
+            }
+            else if (const MWWorld::Ptr targetPtr = loadedPtrFor(live.mState.mTarget); !targetPtr.isEmpty())
+            {
+                targetDistance = distanceSquared(position, targetPtr.getRefData().getPosition().asVec3());
+                differentCell = live.mState.mCell != cellKey(targetPtr);
+            }
+        }
+        return oblivionPackageShouldRun(live.mState.mPackageType,
+            current != nullptr ? current->mPackageFlags : ESM4::PackageFlags{},
+            current != nullptr ? static_cast<float>(current->mTargetData.mDistance) : 0.f,
+            targetDistance, differentCell);
+    }
+
     float OblivionAiService::unloadedMovementSpeed(const LiveActor& live) const
     {
         const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase);
@@ -3149,12 +3179,8 @@ namespace MWMechanics
         const ESM4::AIPackage* script = package(live.mState.mScriptPackage);
         if (current == nullptr)
             current = script;
-        const ESM4::AIPackageType type = live.mState.mPackageType;
         const bool sneaking = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
-        const bool running = !sneaking
-            && ((current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysRun))
-                || type == ESM4::AIPackageType::Travel || type == ESM4::AIPackageType::FleeNotCombat
-                || type == ESM4::AIPackageType::Pursue);
+        const bool running = shouldRunPackage(live, current, live.mState.mLastValidPosition.asVec3());
         const float capacity = std::max(0.f, strength * 5.f);
         const float speed = static_cast<float>(attributes.speed);
         return running ? ESM4::playerRunSpeed(speed, encumbrance, capacity)
@@ -4219,7 +4245,18 @@ namespace MWMechanics
         osg::Vec3f position = highProcess
             ? actor.getRefData().getPosition().asVec3()
             : live.mState.mLastValidPosition.asVec3();
-        const float speed = std::max(1.f, actor.getClass().getMaxSpeed(actor));
+        const ESM4::AIPackage* current = package(live.mState.mPackage);
+        if (current == nullptr && live.mTransientPackage && live.mTransientPackage->mFormKey == live.mState.mPackage)
+            current = &*live.mTransientPackage;
+        const bool sneak = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
+        const bool run = shouldRunPackage(live, current, position);
+        // Resident low-process movement uses the same native stats, inventory
+        // and immobilization checks as high process. Set the requested gait
+        // before querying speed; getMaxSpeed observes the movement flags.
+        CreatureStats& stats = actor.getClass().getCreatureStats(actor);
+        stats.setMovementFlag(CreatureStats::Flag_Run, run);
+        stats.setMovementFlag(CreatureStats::Flag_Sneak, sneak);
+        const float speed = std::max(0.f, actor.getClass().getMaxSpeed(actor));
         const float step = std::max(0.f, duration) * speed;
         const auto advanceAbstractPosition = [&](const osg::Vec3f& target) {
             const osg::Vec3f delta = target - position;
@@ -4251,13 +4288,6 @@ namespace MWMechanics
                     return true;
                 }
 
-                const ESM4::AIPackage* current = package(live.mState.mPackage);
-                const bool sneak = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
-                const bool run = !sneak
-                    && ((current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysRun))
-                        || live.mState.mPackageType == ESM4::AIPackageType::Travel
-                        || live.mState.mPackageType == ESM4::AIPackageType::FleeNotCombat
-                        || live.mState.mPackageType == ESM4::AIPackageType::Pursue);
                 faceAndMove(actor, point, run, sneak);
                 return true;
             }
@@ -4315,13 +4345,6 @@ namespace MWMechanics
                     }
                     else if (distanceToSource > sArrivalTolerance)
                     {
-                        const ESM4::AIPackage* current = package(live.mState.mPackage);
-                        const bool sneak = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
-                        const bool run = !sneak
-                            && ((current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysRun))
-                                || live.mState.mPackageType == ESM4::AIPackageType::Travel
-                                || live.mState.mPackageType == ESM4::AIPackageType::FleeNotCombat
-                                || live.mState.mPackageType == ESM4::AIPackageType::Pursue);
                         faceAndMove(actor, sourcePosition, run, sneak);
                         return true;
                     }
@@ -4365,13 +4388,6 @@ namespace MWMechanics
                 // A resident actor must cross the actual cell boundary.  The
                 // scene/physics layer updates the identity; this controller
                 // only keeps steering toward the resolved PGRI endpoint.
-                const ESM4::AIPackage* current = package(live.mState.mPackage);
-                const bool sneak = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
-                const bool run = !sneak
-                    && ((current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysRun))
-                        || live.mState.mPackageType == ESM4::AIPackageType::Travel
-                        || live.mState.mPackageType == ESM4::AIPackageType::FleeNotCombat
-                        || live.mState.mPackageType == ESM4::AIPackageType::Pursue);
                 faceAndMove(actor, foreignPosition, run, sneak);
                 return true;
             }
@@ -4392,13 +4408,6 @@ namespace MWMechanics
                     advanceAbstractPosition(live.mRouteDoorPosition);
                     return true;
                 }
-                const ESM4::AIPackage* current = package(live.mState.mPackage);
-                const bool sneak = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
-                const bool run = !sneak
-                    && ((current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysRun))
-                        || live.mState.mPackageType == ESM4::AIPackageType::Travel
-                        || live.mState.mPackageType == ESM4::AIPackageType::FleeNotCombat
-                        || live.mState.mPackageType == ESM4::AIPackageType::Pursue);
                 faceAndMove(actor, live.mRouteDoorPosition, run, sneak);
                 return true;
             }
@@ -4451,13 +4460,6 @@ namespace MWMechanics
             return true;
         }
 
-        const ESM4::AIPackage* current = package(live.mState.mPackage);
-        const bool sneak = current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysSneak);
-        const bool run = !sneak
-            && ((current != nullptr && current->mPackageFlags.has(ESM4::PackageFlag::AlwaysRun))
-                || live.mState.mPackageType == ESM4::AIPackageType::Travel
-                || live.mState.mPackageType == ESM4::AIPackageType::FleeNotCombat
-                || live.mState.mPackageType == ESM4::AIPackageType::Pursue);
         faceAndMove(actor, destination, run, sneak);
         return true;
     }

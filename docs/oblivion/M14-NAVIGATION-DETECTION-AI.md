@@ -292,6 +292,24 @@ checks, exits normally, and fails only final recovery: distance 7,366.22,
 different cells. This isolates an actual follow/recovery problem from startup
 timing. The 512-unit near-distance limit remains unchanged. Python: 62/62.
 
+### Follow catch-up gait repair (2026-09-06)
+
+Follow/Accompany now run at ordinary native speed when farther than package
+spacing plus a 96-unit margin, or when following across a cell boundary. This
+is an explicit runtime spacing policy, not an original-engine oracle result.
+AlwaysSneak takes precedence and AlwaysRun is retained. All resident route
+segments and unloaded movement use the same policy. Resident movement applies
+the gait before querying native speed, preserving modified stats, inventory
+weight, swimming, and immobilization checks. Player targets use live position
+even if mount bookkeeping has created a cached AI entry.
+
+Build, 520 engine tests, and 62 Python tests pass. Logs:
+`m14-follow-gait-build.log` and `m14-follow-gait-engine-tests.log`.
+`m14-companion-native-gait/` passes initial spacing (290.35), separation
+(1,519.07), and event gates. Final recovery still fails: 1,923.29, same cell,
+against the unchanged 512 limit. Inspect stale route targets and low-process
+position authority next; no companion acceptance claim follows from this run.
+
 ## Reproduce
 
 Build and run the audit:

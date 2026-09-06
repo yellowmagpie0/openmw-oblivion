@@ -16,6 +16,7 @@
 #include <components/esm4/aiselection.hpp>
 
 #include "apps/openmw/mwmechanics/oblivionaidestination.hpp"
+#include "apps/openmw/mwmechanics/oblivionaigait.hpp"
 
 namespace
 {
@@ -73,6 +74,37 @@ namespace
         EXPECT_TRUE(MWMechanics::updateOblivionMovingDestination(restored, key(100), { 100.f, 0.f, 0.f }));
         EXPECT_TRUE(MWMechanics::updateOblivionMovingDestination(restored, key(101), { 100.f, 0.f, 0.f }));
         EXPECT_EQ(restored.mDestinationCell, key(101));
+    }
+
+    TEST(OblivionAiTest, FollowersRunToRecoverPackageSpacing)
+    {
+        for (const auto type : { AIPackageType::Follow, AIPackageType::Accompany })
+        {
+            EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(type, {}, 300.f, 300.f * 300.f, false));
+            EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(type, {}, 300.f, 396.f * 396.f, false));
+            EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(type, {}, 300.f, 397.f * 397.f, false));
+            EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(type, {}, 300.f, 0.f, true));
+            EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(type, {}, 300.f, std::nullopt, false));
+            EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(type, {}, 0.f, 224.f * 224.f, false));
+            EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(type, {}, 0.f, 225.f * 225.f, false));
+        }
+    }
+
+    TEST(OblivionAiTest, CatchUpHonorsSneakAndRunFlagsWithoutChangingOtherPackageGaits)
+    {
+        const auto run = decodePackageFlags(static_cast<std::uint32_t>(PackageFlag::AlwaysRun));
+        const auto sneak = decodePackageFlags(run.mRaw | static_cast<std::uint32_t>(PackageFlag::AlwaysSneak));
+        for (const auto type : { AIPackageType::Follow, AIPackageType::Accompany, AIPackageType::Travel,
+                 AIPackageType::Wander, AIPackageType::Escort, AIPackageType::FleeNotCombat, AIPackageType::Pursue })
+        {
+            EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(type, sneak, 0.f, 1000000.f, true));
+            EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(type, run, 0.f, 0.f, false));
+        }
+        EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Escort, {}, 0.f, 1000000.f, true));
+        EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Wander, {}, 0.f, 1000000.f, true));
+        EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Travel, {}, 0.f, std::nullopt, false));
+        EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Pursue, {}, 0.f, std::nullopt, false));
+        EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::FleeNotCombat, {}, 0.f, std::nullopt, false));
     }
 
     TEST(OblivionAiTest, MapsEveryNativePackageTypeToItsProcedure)
