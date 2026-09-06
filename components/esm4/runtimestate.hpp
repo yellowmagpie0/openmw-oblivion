@@ -24,7 +24,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 5;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 6;
 
     struct RuntimeContentIdentity
     {
@@ -225,6 +225,14 @@ namespace ESM4
         friend bool operator==(const RuntimeDetectionVector&, const RuntimeDetectionVector&) = default;
     };
 
+    struct RuntimePackageDoneEvent
+    {
+        ESM::FormKey mActor;
+        ESM::FormKey mPackage;
+
+        friend bool operator==(const RuntimePackageDoneEvent&, const RuntimePackageDoneEvent&) = default;
+    };
+
     // Versioned, load-order-independent state owned by the Oblivion profile.
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
@@ -249,6 +257,9 @@ namespace ESM4
         std::vector<RuntimeCompanionRelation> mCompanions;
         std::vector<RuntimeMountRelation> mMounts;
         std::vector<RuntimeDetectionVector> mDetectionVectors;
+        // FIFO, not sorted: callbacks can affect subsequent callbacks. A save
+        // inside one callback must retain the rest without replaying that one.
+        std::vector<RuntimePackageDoneEvent> mPendingPackageDone;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

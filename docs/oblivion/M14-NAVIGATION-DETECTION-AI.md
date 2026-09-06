@@ -500,6 +500,22 @@ Verification: 522 engine tests and 67 Python tests pass
 alongside the 1,588 component tests above. This is repair-stage evidence; M14
 remains in progress and final clean-revision/sanitizer verification is pending.
 
+### Durable native package-completion events (2026-09-06)
+
+Inspection found a further tutorial blocker: Renault's native
+`OnPackageDone CGRenoteToMarkerA` advances CharacterGen to stage 12, but the AI
+coordinator was not dispatching package-completion events. Recording a Complete
+phase is not equivalent to executing the native callback.
+
+Runtime schema 6 appends a typed pending-completion FIFO (stable actor/package
+keys), with matching C++ and Python codecs. Version 5 remains readable without
+inventing callbacks for old completed packages. Tests cover FIFO preservation,
+removal of the current event before a callback save, repeated event identities,
+malformed/truncated payload rejection and the older-version boundary. All
+1,591 component tests, 522 engine tests and 68 Python tests pass in
+`m14-package-event-schema-{components,engine,python}.log`. These codec tests do
+not yet establish native callback delivery or tutorial acceptance.
+
 ## Reproduce
 
 Build and run the audit:

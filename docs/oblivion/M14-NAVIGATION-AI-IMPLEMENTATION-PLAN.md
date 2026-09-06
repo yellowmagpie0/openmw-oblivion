@@ -633,10 +633,19 @@ and object-script contexts; invalid targets; save/load; and command ordering in
 one frame. The M7 official script corpus must compile without regression, and
 runtime logs must contain no `deferred command=` entry for an M14-owned command.
 
-## 12. Persistence schema version 5
+## 12. Persistence schema versions 5 and 6
 
 Bump `ESM4::CurrentRuntimeStateVersion` from 4 to 5 and use typed structures,
 not ad-hoc `mCustomState` strings, for AI state. A suggested layout is:
+
+2026-09-06 repair extension: version 6 appends a typed FIFO of pending native
+`OnPackageDone` actor/package identities. Completion callbacks can save or
+change actors, so delivery must occur outside actor iteration and consume the
+current event before invocation while preserving outstanding events in saves.
+Version 5 remains readable and must not synthesize callbacks for already
+completed packages. The FIFO is intentionally ordered, not sorted by FormKey.
+Both C++ and Python codecs support the extension; runtime delivery and native
+tutorial evidence must be verified separately from codec round trips.
 
 - `RuntimeActorAiState` per actor reference with the fields in section 8.1;
 - `RuntimePathPointState` keyed by PGRD FormKey/node index (or object-link key)

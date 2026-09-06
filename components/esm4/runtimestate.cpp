@@ -469,6 +469,12 @@ namespace ESM4
         checkSize(mCompanions.size(), "companion relation list");
         checkSize(mMounts.size(), "mount relation list");
         checkSize(mDetectionVectors.size(), "detection vector list");
+        checkSize(mPendingPackageDone.size(), "pending package completion list");
+        if (mVersion < 6 && !mPendingPackageDone.empty())
+            throw std::runtime_error("TES4 runtime-state versions before 6 cannot contain pending package events");
+        for (const RuntimePackageDoneEvent& event : mPendingPackageDone)
+            if (event.mActor.isNull() || event.mPackage.isNull())
+                throw std::runtime_error("Invalid TES4 pending package completion identity");
         if (mVersion < 2 && (mScriptEventSequence != 0 || !mScriptInstances.empty() || !mQuests.empty()))
             throw std::runtime_error("TES4 runtime-state version 1 cannot contain ObScript state");
         if (mVersion < 5 && !mDetectionVectors.empty())
@@ -972,6 +978,15 @@ namespace ESM4
             }
         }
 
+        if (mVersion >= 6)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPendingPackageDone.size()));
+            for (const RuntimePackageDoneEvent& event : mPendingPackageDone)
+            {
+                writeKey(writer, event.mActor);
+                writeKey(writer, event.mPackage);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1250,6 +1265,13 @@ namespace ESM4
             result.mAiRngState = result.mNextDynamicSerial == 0 ? 1 : result.mNextDynamicSerial;
         }
 
+        if (result.mVersion >= 6)
+        {
+            const std::uint32_t count = reader.count();
+            result.mPendingPackageDone.reserve(count);
+            for (std::uint32_t i = 0; i < count; ++i)
+                result.mPendingPackageDone.push_back({ readKey(reader), readKey(reader) });
+        }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();
@@ -1557,6 +1579,19 @@ namespace ESM4
                        << "\",\"score\":" << std::setprecision(17) << vector.mScore
                        << ",\"detected\":" << (vector.mDetected ? "true" : "false")
                        << ",\"line_of_sight\":" << (vector.mLineOfSight ? "true" : "false") << "}";
+            }
+            stream << "]";
+        }
+        if (mVersion >= 6)
+        {
+            stream << ",\"pending_package_done\":[";
+            for (std::size_t i = 0; i < mPendingPackageDone.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                const RuntimePackageDoneEvent& event = mPendingPackageDone[i];
+                stream << "{\"actor\":\"" << escapeJson(event.mActor.serialize())
+                       << "\",\"package\":\"" << escapeJson(event.mPackage.serialize()) << "\"}";
             }
             stream << "]";
         }

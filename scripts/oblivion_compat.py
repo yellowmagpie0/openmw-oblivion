@@ -2622,8 +2622,8 @@ def validate_m14_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
                 failures.append(f"TES4 runtime-state {name}.{side} is not a valid calendar instant")
         real_value(value, "duration_hours", minimum=0.0)
 
-    if state.get("schema_version") != 5:
-        failures.append(f"expected schema version 5, got {state.get('schema_version')}")
+    if state.get("schema_version") not in (5, 6):
+        failures.append(f"expected AI schema version 5 or 6, got {state.get('schema_version')}")
     rng = state.get("ai_rng_state", 0)
     if isinstance(rng, bool) or not isinstance(rng, int) or rng <= 0:
         failures.append("AI RNG state is not a non-zero integer")

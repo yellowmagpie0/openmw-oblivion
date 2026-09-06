@@ -70,6 +70,7 @@ namespace
     ESM4::RuntimeState makeM14State()
     {
         ESM4::RuntimeState state = makeState();
+        state.mVersion = 5;
         state.mAiRngState = 0x123456789abcdef0ULL;
 
         ESM4::RuntimeActorAiState actor;
@@ -138,6 +139,50 @@ namespace
         EXPECT_EQ(actual, expected);
         EXPECT_EQ(actual.serializeBinary(), bytes);
         EXPECT_EQ(actual.canonicalJson(), expected.canonicalJson());
+    }
+
+    TEST(ESM4RuntimeState, versionSixPreservesPendingPackageCompletionOrder)
+    {
+        auto state = makeM14State();
+        state.mVersion = 6;
+        const auto actor = state.mActorAi.front().mActor;
+        const auto package = state.mActorAi.front().mPackage;
+        state.mPendingPackageDone = { { actor, package },
+            { ESM::FormKey::content("Oblivion.esm", 0x100), package }, { actor, package } };
+        auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_EQ(restored, state);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        // A callback is removed before invocation. A save taken by that
+        // callback must retain only the remaining FIFO, including repeats.
+        restored.mPendingPackageDone.erase(restored.mPendingPackageDone.begin());
+        auto resumed = ESM4::RuntimeState::deserializeBinary(restored.serializeBinary());
+        EXPECT_EQ(resumed.mPendingPackageDone, restored.mPendingPackageDone);
+        ASSERT_EQ(resumed.mPendingPackageDone.size(), 2u);
+        EXPECT_EQ(resumed.mPendingPackageDone.back().mActor, actor);
+        state.mVersion = 5;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, versionSixRejectsInvalidOrTruncatedPackageCompletion)
+    {
+        auto state = makeState();
+        state.mPendingPackageDone.push_back({ {}, ESM::FormKey::content("Oblivion.esm", 1) });
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mPendingPackageDone.front() = { ESM::FormKey::content("Oblivion.esm", 2), {} };
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mPendingPackageDone.front().mPackage = ESM::FormKey::content("Oblivion.esm", 1);
+        auto bytes = state.serializeBinary();
+        bytes.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, versionFiveDoesNotSynthesizeCompletionCallbacks)
+    {
+        auto state = makeM14State();
+        state.mActorAi.front().mPhase = ESM4::PackagePhase::Complete;
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_TRUE(restored.mPendingPackageDone.empty());
+        EXPECT_EQ(restored.mVersion, 5u);
     }
 
     TEST(ESM4RuntimeState, versionFivePersistsNativeAiIntentRelationsAndTimers)
@@ -315,7 +360,7 @@ namespace
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":5"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":6"), std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"

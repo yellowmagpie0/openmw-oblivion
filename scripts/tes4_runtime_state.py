@@ -19,8 +19,8 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 5
-SUPPORTED_VERSIONS = {1, 2, 3, 4, CURRENT_VERSION}
+CURRENT_VERSION = 6
+SUPPORTED_VERSIONS = {1, 2, 3, 4, 5, CURRENT_VERSION}
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
 MAX_PAYLOAD = 256 * 1024 * 1024
@@ -526,6 +526,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError(f"TES4 runtime-state {label} exceeds the size limit")
         return value
 
+    pending = check_collection(state.get("pending_package_done", []), "pending package completion list")
+    if version < 6 and pending:
+        raise RuntimeStateError("TES4 runtime-state versions before 6 cannot contain pending package events")
+    for event in pending:
+        if not isinstance(event, dict) or any(
+            not isinstance(event.get(key), str) or event[key] in ("", "null") for key in ("actor", "package")
+        ):
+            raise RuntimeStateError("Invalid TES4 pending package completion identity")
+
     content = check_collection(state.get("content", []), "content list")
     plugins: set[str] = set()
     for item in content:
@@ -913,6 +922,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 "detected": bool(detected),
                 "line_of_sight": bool(line_of_sight),
             })
+    if version >= 6:
+        result["pending_package_done"] = [
+            {"actor": reader.string(), "package": reader.string()} for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1059,6 +1072,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<d", score)
             writer.pack("<B", int(bool(vector.get("detected", False))))
             writer.pack("<B", int(bool(vector.get("line_of_sight", False))))
+    if version >= 6:
+        pending = state.get("pending_package_done", [])
+        writer.pack("<I", len(pending))
+        for event in pending:
+            writer.string(event["actor"])
+            writer.string(event["package"])
     return writer.finish()
 
 
@@ -1129,6 +1148,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("companions", [])
     state.setdefault("mounts", [])
     state.setdefault("detection_vectors", [])
+    state.setdefault("pending_package_done", [])
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
@@ -1156,6 +1176,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("companions", [])
     result.setdefault("mounts", [])
     result.setdefault("detection_vectors", [])
+    result.setdefault("pending_package_done", [])
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])

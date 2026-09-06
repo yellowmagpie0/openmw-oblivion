@@ -159,6 +159,26 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.decode_payload(payload), expected)
         self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
 
+    def test_version_six_preserves_pending_package_completion_fifo(self) -> None:
+        state = make_m14_state()
+        state["schema_version"] = 6
+        actor = state["actor_ai"][0]
+        event = {"actor": actor["actor"], "package": actor["package"]}
+        state["pending_package_done"] = [event, {**event, "package": "content:oblivion.esm:000001"}, event]
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(decoded, state)
+        decoded["pending_package_done"].pop(0)
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(decoded)), decoded)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(state_io.encode_payload(state)[:-1])
+        state["schema_version"] = 5
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state["schema_version"] = 6
+        state["pending_package_done"] = [{"actor": "null", "package": event["package"]}]
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
     def test_m14_idle_actor_uses_unknown_package_type(self) -> None:
         expected = make_state()
         expected["schema_version"] = 5
