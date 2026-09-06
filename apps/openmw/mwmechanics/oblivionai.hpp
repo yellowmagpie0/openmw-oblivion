@@ -13,6 +13,7 @@
 #include <fstream>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -214,6 +215,7 @@ namespace MWMechanics
         bool prepareUnloadedRoute(LiveActor& live);
         bool prepareDoorRoute(LiveActor& live, const ESM4::PathgridNodeKey& start,
             const ESM::FormKey& destinationCell, const MWWorld::Ptr* actor = nullptr);
+        void invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids);
         float unloadedMovementSpeed(const LiveActor& live) const;
         void refreshMovingTargetRoute(LiveActor& live, const ESM4::AIPackage& current,
             const MWWorld::Ptr& residentActor = {});

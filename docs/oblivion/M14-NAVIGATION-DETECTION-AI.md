@@ -39,13 +39,15 @@ acceptance evidence without satisfying the reopened gates below.
   load, and repeats the four named-state checks. The recorded run predates this
   boundary and does none of the required escort work; exact target checks and
   the remaining contextual reload sequence are still open.
-- Fix and rerun the companion course. Its recorded leader reaches
-  `bounded-repath-exhausted`, while the observed companion has the same cell and
-  position before obstruction, during obstruction, and after alleged recovery.
-- Fix and rerun the city course. Its passing event stream contains hundreds of
-  stalled routes and repeated locked-door failures, including repeated failures
-  for named schedule actors. Record each named actor at every package boundary,
-  compare high and low processing, and reload at the required clock boundaries.
+- Finish companion recovery. Earlier stationary/repath-exhausted evidence is
+  superseded by `m14-companion-live-target/`: the actors move and cross doors,
+  but the final 863.54-unit gap still fails the 512-unit limit. Obstruction
+  causality, formation/cycles, and transition reload coverage remain open.
+- Complete the city matrix. `m14-city-logical-position/` passes the current
+  named-actor and calendar checks, but does not establish high/low equivalence
+  or reload continuation at every required clock boundary. The population
+  stream still has 640 blocked-route occurrences within its explicit budget;
+  a passing fixture is not evidence that every ambient route is repaired.
 - Replace the tutorial smoke run with assertions for the real Emperor/Blades
   actors, declared packages, targets, door sequence, arrival, and reload
   continuation.
@@ -61,8 +63,8 @@ acceptance evidence without satisfying the reopened gates below.
 - Restore phase-sized implementation commits for subsequent repair work and use
   a separate final acceptance commit after every definition-of-done item passes.
 
-M14 promotes the native TES4 navigation and AI data that was previously parsed
-but discarded into a complete profile-owned runtime. Oblivion NPCs and
+M14's candidate promotes native TES4 navigation and AI data that was previously
+parsed but discarded into a profile-owned runtime. Oblivion NPCs and
 creatures now share the existing M11 render/animation and M12/M13 actor state,
 while a stable-keyed coordinator owns package selection, schedule evaluation,
 path execution, process tiers, detection, doors, companions, and horses.
@@ -404,6 +406,30 @@ Action exceptions now produce failed `scenario.json` evidence instead of
 escaping without a report, and a clean process exit cannot pass a course with
 unexecuted actions. All 67 Python tests pass (`m14-harness-failure-tests.log`),
 including missing-save failure retention and clean early-exit rejection.
+
+### Overlay invalidation scope and regression evidence (2026-09-06)
+
+Single-node and linked-object overlays now share affected-route filtering,
+including routes through foreign graphs. They clear stale continuous-corridor
+cursors and door intent only for affected actors in Path. Waiting, acting,
+door, and terminal phases are not forced into Path; unrelated routes and
+no-progress/retry budgets are preserved. A focused helper regression covers
+phase isolation and foreign-graph dependencies. Build and 522 engine tests
+pass (`m14-overlay-scope-build.log`, `m14-overlay-scope-engine-tests.log`).
+
+`m14-city-overlay-scope/` failed because its fixed startup delay attempted a
+save before the game was ready. The old harness escaped without scenario.json;
+the retained process log and `m14-city-overlay-scope.log` record that failure.
+The city manifest now waits for named actor 01d15d's first native route event
+and has a 260-second total budget. `m14-city-overlay-ready/` passes all current
+checks and five calendar checkpoints, with clean exit/error gates. This is a
+city regression, not a direct overlay integration test or the full paired
+high/low/reload matrix.
+
+ASan/UBSan components: 1,582/1,582 pass with leak detection and halt-on-UB
+enabled (`m14-repair-sanitizer-build.log`, `m14-repair-sanitizer-tests.log`).
+These are repair-stage component results, not final clean-tree engine/runtime
+sanitizer acceptance. Full overlay lifecycle integration remains open.
 
 ## Reproduce
 

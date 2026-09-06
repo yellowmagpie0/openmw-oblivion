@@ -5416,23 +5416,33 @@ namespace MWMechanics
         return true;
     }
 
+    void OblivionAiService::invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids)
+    {
+        for (auto& [_, live] : mActors)
+        {
+            if (!oblivionRouteAffectedByOverlay(
+                    live.mState.mPhase, live.mState.mPathgrid, live.mRoute, changedPathgrids))
+                continue;
+            live.mRoute.clear();
+            live.mContinuousRoute.clear();
+            live.mRouteCursor = 0;
+            live.mContinuousRouteCursor = 0;
+            live.mContinuousRouteEndCursor.reset();
+            live.mForeignRouteTarget.reset();
+            live.mRouteDoor.reset();
+            live.mState.mDoor = {};
+            // Rebuild on the next Path tick without changing package/action
+            // state or granting a fresh no-progress/retry budget.
+            logEvent("route-invalidated", live, "pathgrid-overlay");
+        }
+    }
+
     bool OblivionAiService::setPathPoint(const ESM::FormKey& pathgrid, std::uint32_t node, bool enabled)
     {
         const bool changed = mWorld.mStore.getOblivionPathgridService().setNodeEnabled({ pathgrid, node }, enabled);
         if (changed)
         {
-            for (auto& [_, live] : mActors)
-                if (live.mState.mPathgrid == pathgrid)
-                {
-                    live.mRoute.clear();
-                    live.mContinuousRoute.clear();
-                    live.mRouteCursor = 0;
-                    live.mContinuousRouteCursor = 0;
-                    live.mForeignRouteTarget.reset();
-                    live.mRouteDoor.reset();
-                    live.mState.mRepathAttempts = 0;
-                    live.mState.mPhase = ESM4::PackagePhase::Path;
-                }
+            invalidateOverlayRoutes({ pathgrid });
             if (mWorld.mWorldScene)
                 mWorld.mWorldScene->refreshOblivionPathgrid(pathgrid);
         }
@@ -5474,23 +5484,7 @@ namespace MWMechanics
             }
         }
         if (changed)
-            for (auto& [_, live] : mActors)
-            {
-                // An overlay changes the traversability of an edge, so a
-                // cached route is no longer authoritative even when the
-                // actor's current graph is not the graph containing the
-                // linked object (foreign edges may lead into it).
-                if (live.mRoute.empty() && live.mState.mPhase != ESM4::PackagePhase::Path)
-                    continue;
-                live.mRoute.clear();
-                live.mContinuousRoute.clear();
-                live.mRouteCursor = 0;
-                live.mContinuousRouteCursor = 0;
-                live.mForeignRouteTarget.reset();
-                live.mRouteDoor.reset();
-                live.mState.mRepathAttempts = 0;
-                live.mState.mPhase = ESM4::PackagePhase::Path;
-            }
+            invalidateOverlayRoutes(changedPathgrids);
         if (mWorld.mWorldScene)
             for (const ESM::FormKey& pathgrid : changedPathgrids)
                 mWorld.mWorldScene->refreshOblivionPathgrid(pathgrid);

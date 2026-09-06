@@ -1,12 +1,30 @@
 #ifndef OPENMW_MWMECHANICS_OBLIVIONAIDESTINATION_H
 #define OPENMW_MWMECHANICS_OBLIVIONAIDESTINATION_H
 
+#include <set>
+#include <span>
+
 #include <osg/Vec3f>
 
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/pathgriddata.hpp>
 
 namespace MWMechanics
 {
+    inline bool oblivionRouteAffectedByOverlay(ESM4::PackagePhase phase,
+        const ESM::FormKey& currentPathgrid, std::span<const ESM4::PathgridNodeKey> route,
+        const std::set<ESM::FormKey>& changedPathgrids)
+    {
+        if (phase != ESM4::PackagePhase::Path)
+            return false;
+        if (changedPathgrids.contains(currentPathgrid))
+            return true;
+        for (const auto& node : route)
+            if (changedPathgrids.contains(node.mPathgrid))
+                return true;
+        return false;
+    }
+
     inline bool preserveOblivionAbstractPosition(bool dirty, bool hasObservedPosition,
         const ESM::FormKey& observedCell, const ESM::FormKey& previousObservedCell,
         const osg::Vec3f& observedPosition, const osg::Vec3f& previousObservedPosition)

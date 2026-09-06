@@ -38,6 +38,18 @@ namespace
         return result;
     }
 
+    TEST(OblivionAiTest, OverlayInvalidatesOnlyAffectedActiveRoutesIncludingForeignGraphs)
+    {
+        const std::array<PathgridNodeKey, 2> route{ PathgridNodeKey{ key(100), 0 }, { key(101), 1 } };
+        EXPECT_TRUE(MWMechanics::oblivionRouteAffectedByOverlay(PackagePhase::Path, key(100), route, { key(100) }));
+        EXPECT_TRUE(MWMechanics::oblivionRouteAffectedByOverlay(PackagePhase::Path, key(100), route, { key(101) }));
+        EXPECT_FALSE(MWMechanics::oblivionRouteAffectedByOverlay(PackagePhase::Path, key(100), route, { key(102) }));
+        EXPECT_TRUE(MWMechanics::oblivionRouteAffectedByOverlay(PackagePhase::Path, key(100), {}, { key(100) }));
+        for (const auto phase : { PackagePhase::Wait, PackagePhase::Act, PackagePhase::Door,
+                 PackagePhase::Complete, PackagePhase::Interrupted, PackagePhase::Stalled })
+            EXPECT_FALSE(MWMechanics::oblivionRouteAffectedByOverlay(phase, key(100), route, { key(100), key(101) }));
+    }
+
     TEST(OblivionAiTest, MovingDestinationAccumulatesSubThresholdMotion)
     {
         RuntimeActorAiState state;
