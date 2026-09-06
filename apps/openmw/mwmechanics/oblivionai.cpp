@@ -8,6 +8,7 @@
   later version.
 */
 #include "oblivionai.hpp"
+#include "oblivionaidestination.hpp"
 
 #include <algorithm>
 #include <array>
@@ -3556,27 +3557,17 @@ namespace MWMechanics
                 || live.mState.mPackageType == ESM4::AIPackageType::Pursue;
             if (movingTarget && live.mState.mDurationRemaining > std::max(0.f, duration) / 3600.f)
             {
-                const ESM::FormKey previousCell = live.mDestinationCell;
-                const std::optional<osg::Vec3f> previousDestination = live.mDestination;
-                live.mDestination = resolveUnloadedDestination(*current, live);
-                if (!live.mDestination)
+                const std::optional<osg::Vec3f> destination = resolveUnloadedDestination(*current, live);
+                if (!destination)
                 {
                     live.mState.mInterruptionReason = "moving-target-unresolved";
                     transitionUnloaded(live,
                         { duration, true, true, true, false, true, false, false, false, false, true, false });
                     return;
                 }
-                const bool destinationChanged = !previousDestination
-                    || distanceSquared(*previousDestination, *live.mDestination) > 96.f * 96.f;
-                const bool cellChanged = previousCell != live.mDestinationCell;
-                live.mState.mDestinationCell = live.mDestinationCell;
-                live.mState.mDestinationPosition = live.mState.mLastValidPosition;
-                live.mState.mDestinationPosition.pos[0] = live.mDestination->x();
-                live.mState.mDestinationPosition.pos[1] = live.mDestination->y();
-                live.mState.mDestinationPosition.pos[2] = live.mDestination->z();
-                live.mState.mHasDestination = true;
-                if (destinationChanged || cellChanged)
+                if (updateOblivionMovingDestination(live.mState, live.mDestinationCell, *destination))
                 {
+                    live.mDestination = destination;
                     live.mRoute.clear();
                     live.mContinuousRoute.clear();
                     live.mRouteCursor = 0;
@@ -4860,8 +4851,6 @@ namespace MWMechanics
                 || live.mState.mPackageType == ESM4::AIPackageType::Pursue;
             if (movingTarget && live.mState.mDurationRemaining > std::max(0.f, duration) / 3600.f)
             {
-                const ESM::FormKey previousCell = live.mDestinationCell;
-                const std::optional<osg::Vec3f> previousDestination = live.mDestination;
                 ESM::FormKey refreshedTarget;
                 const std::optional<osg::Vec3f> refreshedDestination
                     = resolveDestination(actor, *current, live, refreshedTarget);
@@ -4873,19 +4862,10 @@ namespace MWMechanics
                     return false;
                 }
 
-                const bool destinationChanged = !previousDestination
-                    || distanceSquared(*previousDestination, *refreshedDestination) > 96.f * 96.f;
-                const bool cellChanged = previousCell != live.mDestinationCell;
                 live.mState.mTarget = refreshedTarget;
-                live.mDestination = refreshedDestination;
-                live.mState.mDestinationCell = live.mDestinationCell;
-                live.mState.mDestinationPosition = actor.getRefData().getPosition();
-                live.mState.mDestinationPosition.pos[0] = refreshedDestination->x();
-                live.mState.mDestinationPosition.pos[1] = refreshedDestination->y();
-                live.mState.mDestinationPosition.pos[2] = refreshedDestination->z();
-                live.mState.mHasDestination = true;
-                if (destinationChanged || cellChanged)
+                if (updateOblivionMovingDestination(live.mState, live.mDestinationCell, *refreshedDestination))
                 {
+                    live.mDestination = refreshedDestination;
                     const ESM4::PackagePhase oldPhase = live.mState.mPhase;
                     live.mRoute.clear();
                     live.mContinuousRoute.clear();

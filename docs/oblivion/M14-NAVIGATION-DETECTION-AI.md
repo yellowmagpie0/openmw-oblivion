@@ -265,6 +265,25 @@ owns the complete Oblivion UI. The local Shivering Isles file is an 85-byte
 stub, so all current audit and runtime evidence is limited to the installed
 canonical profile and does not cover expansion data that is not present.
 
+### Moving-target destination repair (2026-09-05)
+
+Loaded and unloaded followers previously updated the waiting destination every
+tick, even below the 96-unit reroute threshold. Slow target movement therefore
+never accumulated enough displacement to restart following. Both paths now
+retain the last routed intent until cumulative movement or a cell change
+requires another route. Shared-helper tests cover sub-threshold samples and
+preservation through binary runtime-state serialization and tier changes.
+The build and all 518 engine tests pass (`m14-follow-destination-build.log`,
+`m14-follow-persistence-test-build.log`, `m14-follow-engine-tests.log`).
+
+`m14-companion-destination-repair/` exits normally and passes its event gates,
+but the full course still fails. Its fixed 80-second startup delay captures
+the initial actors in Resolve without targets/destinations, and its final
+member/leader distance is 6,801.61 with different cells. Synchronize the initial
+checkpoint to real route events, then investigate the recovery failure without
+relaxing the 512-unit distance requirement. This is not a companion acceptance
+pass and does not establish full formation or process-tier equivalence.
+
 ## Reproduce
 
 Build and run the audit:

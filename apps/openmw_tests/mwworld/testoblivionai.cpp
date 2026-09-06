@@ -15,6 +15,8 @@
 #include <components/esm4/aiphase.hpp>
 #include <components/esm4/aiselection.hpp>
 
+#include "apps/openmw/mwmechanics/oblivionaidestination.hpp"
+
 namespace
 {
     using namespace ESM4;
@@ -33,6 +35,44 @@ namespace
         result.mSchedule.mStartHour = -1;
         result.mSchedule.mDuration = 0;
         return result;
+    }
+
+    TEST(OblivionAiTest, MovingDestinationAccumulatesSubThresholdMotion)
+    {
+        RuntimeActorAiState state;
+        ASSERT_TRUE(MWMechanics::updateOblivionMovingDestination(state, key(100), { 0.f, 0.f, 0.f }));
+        for (int step = 1; step <= 96; ++step)
+        {
+            EXPECT_FALSE(MWMechanics::updateOblivionMovingDestination(
+                state, key(100), { static_cast<float>(step), 0.f, 0.f }));
+            EXPECT_FLOAT_EQ(state.mDestinationPosition.pos[0], 0.f);
+        }
+        EXPECT_TRUE(MWMechanics::updateOblivionMovingDestination(state, key(100), { 97.f, 0.f, 0.f }));
+        EXPECT_FLOAT_EQ(state.mDestinationPosition.pos[0], 97.f);
+        EXPECT_FALSE(MWMechanics::updateOblivionMovingDestination(state, key(100), { 98.f, 0.f, 0.f }));
+    }
+
+    TEST(OblivionAiTest, MovingDestinationUsesPersistedIntentAcrossTiersAndReload)
+    {
+        RuntimeActorAiState state;
+        state.mActor = key(10);
+        state.mBase = key(11);
+        state.mCell = key(100);
+        ASSERT_TRUE(MWMechanics::updateOblivionMovingDestination(state, key(100), { 0.f, 0.f, 0.f }));
+        EXPECT_FALSE(MWMechanics::updateOblivionMovingDestination(state, key(100), { 60.f, 0.f, 0.f }));
+        RuntimeState save;
+        save.mPlayer.mReference = key(1);
+        save.mPlayer.mCell = key(100);
+        save.mPlayer.mRace = key(2);
+        save.mPlayer.mClass = key(3);
+        save.mActorAi.push_back(state);
+        RuntimeState loaded = RuntimeState::deserializeBinary(save.serializeBinary());
+        ASSERT_EQ(loaded.mActorAi.size(), 1u);
+        RuntimeActorAiState& restored = loaded.mActorAi.front();
+        restored.mTier = ProcessTier::Low;
+        EXPECT_TRUE(MWMechanics::updateOblivionMovingDestination(restored, key(100), { 100.f, 0.f, 0.f }));
+        EXPECT_TRUE(MWMechanics::updateOblivionMovingDestination(restored, key(101), { 100.f, 0.f, 0.f }));
+        EXPECT_EQ(restored.mDestinationCell, key(101));
     }
 
     TEST(OblivionAiTest, MapsEveryNativePackageTypeToItsProcedure)
