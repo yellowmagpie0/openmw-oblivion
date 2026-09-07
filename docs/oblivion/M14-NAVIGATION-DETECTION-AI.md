@@ -621,6 +621,26 @@ is now `sha256:46f3d110b1b6d60e2443c7f83d6d276ead8f87ecd5fbb18b4b2a3a287b5da904`
 The fresh `m14-audit-comparisons/` passes, covering 6,830 conditions. This closes
 the audit omission, not the outstanding live behavior and acceptance matrices.
 
+### Runtime idle store and hierarchy index (2026-09-07)
+
+IDLE is now registered in the engine's typed store, including its explicit
+template instantiation. An engine test loads a native-layout in-memory plugin,
+resolves its idle by stable identity and selects it through the hierarchy.
+The first engine link failed on the omitted instantiation; that failure is
+retained in `m14-idle-store-build.log`. After correction, all 525 engine tests
+pass (`m14-idle-store-engine-preflight.log`).
+
+The non-owning hierarchy index follows authored predecessor chains, prunes
+false parents, distinguishes optional-file branches from branches requiring
+a file, preserves independent chains, and rejects missing/foreign links,
+duplicates and cycles. Encoded zero and unset parent IDs both mean roots.
+Selection uses an explicit stack, with a 1,024-level regression. Unsupported
+condition exceptions propagate instead of silently selecting another idle.
+All 1,599 component tests pass under ASan/UBSan with leak detection
+(`m14-idle-tree-sanitizer-{build,components}.log`). This does not yet implement
+the PickIdle command, skeleton-family filtering, section-aware playback or
+native animation/save-resume acceptance; those gates remain open.
+
 ## Reproduce
 
 Build and run the audit:

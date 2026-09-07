@@ -21,6 +21,7 @@
 #include <components/esm4/loadstat.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
+#include <components/esm4/idletree.hpp>
 #include <components/files/configurationmanager.hpp>
 #include <components/files/conversion.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -30,6 +31,38 @@
 #include "apps/openmw/mwworld/esmstore.hpp"
 
 static Loading::Listener dummyListener;
+
+TEST(MWWorldStoreTest, tes4IdleStoreLoadsNativeRecordIntoRuntimeHierarchy)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto subrecord = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size()))
+            + bytes(std::uint32_t{ 0 }) + bytes(id) + bytes(std::uint32_t{ 0 }) + data;
+    };
+    const auto header = record(ESM4::REC_TES4, 0,
+        subrecord(ESM::fourCC("HEDR"), bytes(1.0f) + bytes(std::uint32_t{ 2 }) + bytes(std::uint32_t{ 0x800 })));
+    const auto payload = subrecord(ESM::fourCC("EDID"), std::string("NativeIdle\0", 11))
+        + subrecord(ESM::fourCC("ANAM"), std::string(1, '\x04'))
+        + subrecord(ESM::fourCC("DATA"), bytes(std::uint32_t{ 0 }) + bytes(std::uint32_t{ 0 }));
+    auto stream = std::make_unique<std::stringstream>(
+        header + record(ESM4::REC_IDLE, 0x1234, payload), std::ios::in | std::ios::binary);
+    ESM4::Reader reader(std::move(stream), "memory.esm", nullptr, nullptr, true);
+    MWWorld::ESMStore store;
+    store.loadESM4(reader, &dummyListener);
+    const auto key = ESM::FormKey::content("memory.esm", 0x1234);
+    const auto* idle = store.search<ESM4::IdleAnimation>(key);
+    ASSERT_NE(idle, nullptr);
+    EXPECT_EQ(idle->mEditorId, "NativeIdle");
+    EXPECT_EQ(idle->mAnimationGroup, 4);
+    const std::vector<const ESM4::IdleAnimation*> records{ idle };
+    const ESM4::IdleTree tree(records);
+    EXPECT_EQ(tree.select([](const auto&) { return true; }, [](const auto&) { return true; }), idle);
+}
 
 TEST(MWWorldStoreTest, tes4TypedStoreMaintainsStableAndRuntimeIdentityTogether)
 {

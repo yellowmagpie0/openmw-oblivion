@@ -3,6 +3,7 @@
 #include <components/esm4/loadpack.hpp>
 #include <components/esm4/loadinfo.hpp>
 #include <components/esm4/loadidle.hpp>
+#include <components/esm4/idletree.hpp>
 #include <components/esm4/dialoguevoices.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
@@ -152,6 +153,98 @@ namespace
         appendRecord(result, ESM4::REC_PACK, 0, 0x1234, makePackagePayload());
         return result;
     }
+}
+
+TEST(ESM4IdleTree, UsesAuthoredOrderAndPrunesFalseParents)
+{
+    ESM4::IdleAnimation first, second, child, otherRoot;
+    first.mId = ESM::FormId::fromUint32(30);
+    first.mParent = ESM::FormId::fromUint32(0); // Encoded zero and unset are both roots.
+    first.mPrevious = ESM::FormId::fromUint32(0);
+    second.mId = ESM::FormId::fromUint32(10);
+    second.mPrevious = first.mId;
+    child.mId = ESM::FormId::fromUint32(20);
+    child.mParent = first.mId;
+    otherRoot.mId = ESM::FormId::fromUint32(40);
+    const std::vector<const ESM4::IdleAnimation*> records{ &second, &first, &child, &otherRoot };
+    ESM4::IdleTree tree(records);
+    const auto hasFile = [&](const auto& record) { return &record != &first; };
+    EXPECT_EQ(tree.select([](const auto&) { return true; }, hasFile), &child);
+    std::vector<ESM::FormId> visited;
+    EXPECT_EQ(tree.select([&](const auto& record) {
+        visited.push_back(record.mId);
+        return &record != &first;
+    }, hasFile), &second);
+    EXPECT_EQ(visited, (std::vector{ first.mId, second.mId }));
+    EXPECT_EQ(tree.select([&](const auto& record) { return &record != &child; }, hasFile), &second);
+    first.mAnimationGroup = 0x80;
+    EXPECT_EQ(tree.select([&](const auto& record) { return &record != &child; }, hasFile), &first);
+    EXPECT_EQ(tree.select([](const auto&) { return false; }, hasFile), nullptr);
+}
+
+TEST(ESM4IdleTree, RejectsBrokenAndCyclicLinks)
+{
+    ESM4::IdleAnimation a, b;
+    a.mId = ESM::FormId::fromUint32(1);
+    b.mId = ESM::FormId::fromUint32(2);
+    std::vector<const ESM4::IdleAnimation*> records{ &a, &b };
+    a.mParent = b.mId;
+    b.mParent = a.mId;
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+    a.mParent = {};
+    b.mParent = {};
+    a.mPrevious = b.mId;
+    b.mPrevious = a.mId;
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+    a.mPrevious = {};
+    b.mParent = a.mId; // Predecessor is not a sibling.
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+    b.mParent = ESM::FormId::fromUint32(3);
+    b.mPrevious = {};
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+    b.mParent = {};
+    b.mPrevious = ESM::FormId::fromUint32(3);
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+    records.push_back(&a);
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+    records = { nullptr };
+    EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
+}
+
+TEST(ESM4IdleTree, KeepsIndependentChainsAndRejectsUnknownConditionsWithoutFallback)
+{
+    ESM4::IdleAnimation a, b, c, d;
+    a.mId = ESM::FormId::fromUint32(1);
+    b.mId = ESM::FormId::fromUint32(2);
+    c.mId = ESM::FormId::fromUint32(3);
+    d.mId = ESM::FormId::fromUint32(4);
+    b.mPrevious = a.mId;
+    d.mPrevious = c.mId;
+    const std::vector<const ESM4::IdleAnimation*> records{ &a, &c, &d, &b };
+    const ESM4::IdleTree tree(records);
+    std::vector<ESM::FormId> visited;
+    EXPECT_EQ(tree.select([&](const auto& record) {
+        visited.push_back(record.mId);
+        return false;
+    }, [](const auto&) { return true; }), nullptr);
+    EXPECT_EQ(visited, (std::vector{ a.mId, b.mId, c.mId, d.mId }));
+    EXPECT_THROW(tree.select([](const auto&) -> bool {
+        throw std::runtime_error("Missing condition context");
+    }, [](const auto&) { return true; }), std::runtime_error);
+}
+
+TEST(ESM4IdleTree, TraversesDeepParentChainsWithoutRecursiveSelection)
+{
+    std::vector<ESM4::IdleAnimation> storage(1024);
+    std::vector<const ESM4::IdleAnimation*> records;
+    for (std::size_t i = 0; i < storage.size(); ++i)
+    {
+        storage[i].mId = ESM::FormId::fromUint32(static_cast<std::uint32_t>(i + 1));
+        storage[i].mParent = ESM::FormId::fromUint32(static_cast<std::uint32_t>(i));
+        records.push_back(&storage[i]);
+    }
+    const ESM4::IdleTree tree(records);
+    EXPECT_EQ(tree.select([](const auto&) { return true; }, [](const auto&) { return true; }), &storage.back());
 }
 
 TEST(ESM4LoadIdle, PreservesNativeHierarchyFlagsAndOrderedConditions)

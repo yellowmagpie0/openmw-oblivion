@@ -781,6 +781,11 @@ regressions; they no longer read unrelated source-order locals. The unchanged
 `m14-tutorial-native-variables/` still fails at PickIdle and the same Baurus/door
 gates, with 545 blocked/no-progress events against 500. Neither this correction
 nor passing helper tests closes the tutorial gate.
+IDLE parser, runtime-store registration and a validated, non-recursive authored
+hierarchy index now have component/sanitizer and engine-store coverage.
+PickIdle command wiring, skeleton-family selection, playback sections and
+native animation/reload evidence are still outstanding; do not mark this
+prerequisite complete from the store/index tests.
 
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |
