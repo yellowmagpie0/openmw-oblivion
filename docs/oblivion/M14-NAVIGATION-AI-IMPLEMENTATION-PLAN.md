@@ -273,6 +273,12 @@ and a deletion removes the store entry.
   profile. Raw counts above are not the lock. Changed counts or fingerprints
   fail until intentionally reviewed.
 
+  Verification correction (2026-09-07): comparison values/global identities
+  and mixed CTDA/CTDT order are now retained in the audit fingerprint. The old
+  lock failed only on the package fingerprint; after reviewing that isolated
+  change, the official-content audit passes (`m14-audit-comparisons/`). Numeric
+  threshold changes can no longer pass unnoticed. Live acceptance remains open.
+
 Suggested files:
 
 - `components/esm4/loadpack.hpp/.cpp`

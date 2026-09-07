@@ -603,6 +603,24 @@ and all 1,595 component tests pass (`m14-idle-record-build-2.log`,
 `m14-idle-record-components.log`). This is parser coverage only: PickIdle
 selection, section-aware playback and native verification remain unfinished.
 
+### Audit comparison-value and ordering coverage (2026-09-07)
+
+The offline audit now fingerprints condition comparison payload bits, numeric
+values or stable global identities, and preserves interleaved CTDA/CTDT order.
+Non-finite numeric comparisons are rejected. Previously a threshold-only
+change was invisible to the package fingerprint, and mixed layouts were
+regrouped by tag. Regression coverage now checks both, plus global resolution.
+
+The first Python run exposed a test-packing typo
+(`m14-audit-comparisons-python.log`); all 70 tests pass after correction
+(`m14-audit-comparisons-python-2.log`). The official-content audit deliberately
+failed against the old lock (`m14-audit-comparisons-old-lock/`), with exactly
+one difference: the package fingerprint. Content hashes, every locked count,
+and the pathgrid fingerprint were unchanged. The reviewed package fingerprint
+is now `sha256:46f3d110b1b6d60e2443c7f83d6d276ead8f87ecd5fbb18b4b2a3a287b5da904`.
+The fresh `m14-audit-comparisons/` passes, covering 6,830 conditions. This closes
+the audit omission, not the outstanding live behavior and acceptance matrices.
+
 ## Reproduce
 
 Build and run the audit:

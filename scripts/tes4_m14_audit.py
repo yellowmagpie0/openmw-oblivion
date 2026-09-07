@@ -13,6 +13,7 @@ from __future__ import annotations
 import collections
 import hashlib
 import json
+import math
 import struct
 import zlib
 
@@ -462,17 +463,25 @@ def _parse_pack(record: dict[str, Any], subrecords: list[dict[str, Any]], master
             raise _error(plugin, "PACK", ptdt["offset"], f"unknown PTDT discriminant {raw_kind}")
     result["target"] = target
 
-    for condition in _all(subrecords, "CTDA") + _all(subrecords, "CTDT"):
+    for condition in (item for item in subrecords if item["name"] in ("CTDA", "CTDT")):
         expected = 24 if condition["name"] == "CTDA" else 20
         if len(condition["payload"]) != expected:
             raise _error(plugin, "PACK", condition["offset"], f"{condition['name']} has the wrong size")
         payload = condition["payload"]
         function = _i32(payload, 8)
+        comparison_is_global = bool(_u8(payload, 0) & 4)
+        comparison_value = None if comparison_is_global else _f32(payload, 4)
+        if comparison_value is not None and not math.isfinite(comparison_value):
+            raise _error(plugin, "PACK", condition["offset"], "condition comparison is not finite")
         result["conditions"].append({
             "layout": condition["name"],
             "function": function,
             "name": CONDITION_NAMES.get(function, f"Function{function}"),
             "flags": _u8(payload, 0),
+            "comparison_raw": _u32(payload, 4),
+            "comparison_value": comparison_value,
+            "comparison_global_key": _stable_key(plugin, _u32(payload, 4), masters)
+                if comparison_is_global else "null",
             "run_on_raw": _u32(payload, 20) if condition["name"] == "CTDA" else 0,
             "run_on": CONDITION_RUN_ON.get(
                 _u32(payload, 20) if condition["name"] == "CTDA" else 0, "Unknown"

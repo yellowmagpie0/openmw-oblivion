@@ -4,6 +4,7 @@ import importlib.util
 import json
 import shutil
 import subprocess
+import struct
 import sys
 import tempfile
 import unittest
@@ -27,6 +28,35 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_m14_audit_fingerprints_comparisons_and_preserves_mixed_condition_order(self):
+        audit = MODULE.tes4_m14
+        record = {"plugin": "Test.esp", "key": "content:test.esp:000123"}
+        base = [
+            {"name": "PKDT", "offset": 0, "payload": bytes(8)},
+            {"name": "PSDT", "offset": 8, "payload": struct.pack("<bbBbi", -1, -1, 0, -1, 0)},
+        ]
+        def condition(tag, value, flags=0):
+            payload = struct.pack("<B3xfIII", flags, value, 18, 0, 0)
+            if tag == "CTDA":
+                payload += bytes(4)
+            return {"name": tag, "offset": 16, "payload": payload}
+        first = audit._parse_pack(record, base + [condition("CTDT", 1.25), condition("CTDA", 2.5)], [])
+        second = audit._parse_pack(record, base + [condition("CTDT", 1.5), condition("CTDA", 2.5)], [])
+        self.assertEqual([item["layout"] for item in first["conditions"]], ["CTDT", "CTDA"])
+        self.assertEqual([item["comparison_value"] for item in first["conditions"]], [1.25, 2.5])
+        self.assertNotEqual(audit._fingerprint(first), audit._fingerprint(second))
+        for number in (float("nan"), float("inf"), -float("inf")):
+            with self.assertRaises(audit.M14AuditError):
+                audit._parse_pack(record, base + [condition("CTDA", number)], [])
+        global_condition = condition("CTDA", 0, 4)
+        raw = bytearray(global_condition["payload"])
+        struct.pack_into("<I", raw, 4, 0x1234)
+        global_condition["payload"] = bytes(raw)
+        parsed = audit._parse_pack(record, base + [global_condition], ["Oblivion.esm"])["conditions"][0]
+        self.assertIsNone(parsed["comparison_value"])
+        self.assertEqual(parsed["comparison_raw"], 0x1234)
+        self.assertEqual(parsed["comparison_global_key"], "content:oblivion.esm:001234")
+
     def test_m14_count_lock_rejects_growth_in_reviewed_content_gaps(self):
         lock = json.loads((SOURCE / "scripts/data/oblivion_compat/oblivion_m14_data_counts.json").read_text())
         report = {"official_content": lock["official_content"], "summary": dict(lock["expected"])}
