@@ -17,6 +17,7 @@
 
 #include "apps/openmw/mwmechanics/oblivionaidestination.hpp"
 #include "apps/openmw/mwmechanics/oblivionaigait.hpp"
+#include "apps/openmw/mwmechanics/oblivionpackageevents.hpp"
 
 namespace
 {
@@ -36,6 +37,54 @@ namespace
         result.mSchedule.mStartHour = -1;
         result.mSchedule.mDuration = 0;
         return result;
+    }
+
+    TEST(OblivionAiTest, PackageDoneRecordsOnlyNewCompletionsAndPreservesCallbackSave)
+    {
+        MWMechanics::OblivionPackageDoneQueue queue;
+        queue.record(PackagePhase::Act, PackagePhase::Complete, key(1), key(10));
+        queue.record(PackagePhase::Wait, PackagePhase::Complete, key(2), key(20));
+        queue.record(PackagePhase::Complete, PackagePhase::Complete, key(2), key(20));
+        queue.record(PackagePhase::Path, PackagePhase::Interrupted, key(3), key(30));
+        queue.record(PackagePhase::Path, PackagePhase::Stalled, key(3), key(30));
+        queue.record(PackagePhase::Act, PackagePhase::Complete, key(3), {});
+        std::vector<RuntimePackageDoneEvent> saved;
+        std::vector<RuntimePackageDoneEvent> delivered;
+        queue.dispatch([&](const auto& event) {
+            delivered.push_back(event);
+            if (event.mActor == key(1))
+                saved = queue.capture();
+            queue.dispatch([&](const auto&) { FAIL() << "Reentrant dispatch"; });
+        });
+        ASSERT_EQ(delivered.size(), 2u);
+        EXPECT_EQ(delivered[0].mPackage, key(10));
+        ASSERT_EQ(saved.size(), 1u);
+        EXPECT_EQ(saved.front().mActor, key(2));
+        EXPECT_TRUE(queue.capture().empty());
+        queue.restore(saved);
+        queue.dispatch([&](const auto& event) { EXPECT_EQ(event, delivered[1]); });
+        queue.dispatch([&](const auto&) { FAIL() << "Completion repeated"; });
+    }
+
+    TEST(OblivionAiTest, PackageDoneDefersCallbackGeneratedEventsAndStopsAtReload)
+    {
+        MWMechanics::OblivionPackageDoneQueue queue;
+        queue.record(PackagePhase::Act, PackagePhase::Complete, key(1), key(10));
+        queue.dispatch([&](const auto&) {
+            queue.record(PackagePhase::Act, PackagePhase::Complete, key(2), key(20));
+        });
+        ASSERT_EQ(queue.capture().size(), 1u);
+        EXPECT_EQ(queue.capture().front().mActor, key(2));
+        queue.record(PackagePhase::Act, PackagePhase::Complete, key(3), key(30));
+        const std::vector<RuntimePackageDoneEvent> restored{ { key(4), key(40) } };
+        unsigned count = 0;
+        queue.dispatch([&](const auto&) { ++count; queue.restore(restored); });
+        EXPECT_EQ(count, 1u);
+        EXPECT_EQ(queue.capture(), restored);
+        EXPECT_THROW(queue.dispatch([](const auto&) { throw std::runtime_error("callback"); }), std::runtime_error);
+        queue.record(PackagePhase::Act, PackagePhase::Complete, key(5), key(50));
+        queue.dispatch([&](const auto& event) { EXPECT_EQ(event.mActor, key(5)); });
+        EXPECT_TRUE(queue.capture().empty());
     }
 
     TEST(OblivionAiTest, OverlayInvalidatesOnlyAffectedActiveRoutesIncludingForeignGraphs)

@@ -28,6 +28,7 @@
 #include <components/esm4/runtimestate.hpp>
 
 #include "../mwworld/ptr.hpp"
+#include "oblivionpackageevents.hpp"
 
 namespace MWWorld
 {
@@ -176,6 +177,7 @@ namespace MWMechanics
 
         MWWorld::World& mWorld;
         std::map<ESM::FormKey, LiveActor> mActors;
+        OblivionPackageDoneQueue mPendingPackageDone;
         std::vector<UnloadedLocation> mUnloadedLocations;
         std::map<ESM::FormKey, std::size_t> mUnloadedLocationByReference;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedLocationsByBase;
@@ -196,6 +198,7 @@ namespace MWMechanics
         ESM::FormKey cellKey(const MWWorld::ConstPtr& actor) const;
 
         LiveActor& ensure(const MWWorld::ConstPtr& actor);
+        void dispatchPendingPackageDone();
         void synchronizeIdentity(LiveActor& live, const MWWorld::ConstPtr& actor);
         const ESM4::AIPackage* package(const ESM::FormKey& key) const;
         std::vector<ESM4::PackageCandidate> basePackages(const MWWorld::ConstPtr& actor) const;

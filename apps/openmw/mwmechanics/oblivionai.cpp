@@ -311,6 +311,7 @@ namespace MWMechanics
 
     void OblivionAiService::clear()
     {
+        mPendingPackageDone.restore({});
         mActors.clear();
         mDetectionVectors.clear();
         flushDiagnosticCounters();
@@ -3447,6 +3448,7 @@ namespace MWMechanics
         ESM4::PackagePhaseState phase = toPhaseState(live.mState);
         const ESM4::PackagePhaseTransition transition = ESM4::advancePackagePhase(phase, input);
         fromPhaseState(live.mState, phase);
+        mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
         if (transition.mFrom != transition.mTo)
             logTransition(live, oldPhase, transition.mReason);
         if (live.mState.mPhase == ESM4::PackagePhase::Interrupted)
@@ -4556,6 +4558,7 @@ namespace MWMechanics
         ESM4::PackagePhaseState phase = toPhaseState(live.mState);
         const ESM4::PackagePhaseTransition transition = ESM4::advancePackagePhase(phase, input);
         fromPhaseState(live.mState, phase);
+        mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
         if (transition.mFrom != transition.mTo)
             logTransition(live, oldPhase, transition.mReason);
         if (live.mState.mPhase == ESM4::PackagePhase::Interrupted)
@@ -5166,6 +5169,32 @@ namespace MWMechanics
                                   << live.mState.mActor.serialize() << ": " << error.what();
             }
         }
+        dispatchPendingPackageDone();
+    }
+
+    void OblivionAiService::dispatchPendingPackageDone()
+    {
+        MWWorld::OblivionScriptManager* scripts = mWorld.getOblivionScriptManager();
+        if (scripts == nullptr || !mWorld.mScriptsEnabled)
+            return;
+        // Work only on the FIFO present on entry. Script callbacks can change
+        // packages, move/delete actors or request saves. No actor-map iterator
+        // or LiveActor reference may survive a callback. Remove its event
+        // before invocation so a callback save retains only outstanding work.
+        mPendingPackageDone.dispatch([&](const ESM4::RuntimePackageDoneEvent& event) {
+            try
+            {
+                const bool handled = scripts->dispatchObjectEvent(event.mActor, "onpackagedone", event.mPackage);
+                if (handled)
+                    Log(Debug::Info) << "Native AI package done: actor=" << event.mActor.serialize()
+                        << " package=" << event.mPackage.serialize();
+            }
+            catch (const std::exception& error)
+            {
+                Log(Debug::Error) << "TES4 AI package completion dispatch failed for actor "
+                    << event.mActor.serialize() << ": " << error.what();
+            }
+        });
     }
 
     void OblivionAiService::fastForward(float gameHours)
@@ -5282,6 +5311,7 @@ namespace MWMechanics
                 static_cast<void>(reconcileAbstractPosition(actor, live));
             mSimulationNow.reset();
         }
+        dispatchPendingPackageDone();
     }
 
     bool OblivionAiService::evaluatePackage(const MWWorld::Ptr& actor)
@@ -5767,6 +5797,7 @@ namespace MWMechanics
 
     void OblivionAiService::capture(ESM4::RuntimeState& state) const
     {
+        state.mPendingPackageDone = mPendingPackageDone.capture();
         state.mAiRngState = mNextEvaluationGeneration == 0 ? 1 : mNextEvaluationGeneration;
         state.mActorAi.clear();
         state.mActorAi.reserve(mActors.size());
@@ -5858,6 +5889,7 @@ namespace MWMechanics
 
     void OblivionAiService::restore(const ESM4::RuntimeState& state)
     {
+        mPendingPackageDone.restore(state.mPendingPackageDone);
         mActors.clear();
         mDetectionVectors.clear();
         flushDiagnosticCounters();

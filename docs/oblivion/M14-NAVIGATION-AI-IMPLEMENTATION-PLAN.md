@@ -755,6 +755,15 @@ Even after the prerequisite is implemented, companion recovery, valid door
 fixtures, the full process/reload/detection/horse/Morrowind matrices, engine
 integration coverage, and final clean-revision verification remain required.
 
+2026-09-07 completion-event repair: the coordinator now dispatches real
+`OnPackageDone` outside actor iteration with a persisted schema-6 FIFO. The
+latest tutorial (`m14-tutorial-package-done/`) reaches stage 12 through Renault's
+native callback, and both save checkpoints pass. It still fails on unsupported
+`Look` in native result scripts, missing Baurus/door progression, and 530
+blocked/no-progress events against the unchanged 500 budget. Repair `Look` and
+inspect subsequent real triggers before claiming the tutorial complete. The
+run's resource-version mismatch also requires matching-build verification.
+
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |
 | 0: baseline | Audit and ordinary test artifacts exist; the harness supports actor-scoped ordered events, counts, failure reasons, exact saved-state fields, named-actor checkpoint deltas, pair-distance outcomes, and named detection-pair outcomes; all six core scenarios use named-identity gates and tutorial has a four-actor before/after quickload pair | Open: add exact tutorial targets and the remaining before-door, after-door, waiting, and package-transition reload boundaries; expand detection and horse beyond their smoke gates; reproduce from the candidate revision and retain exact logs |

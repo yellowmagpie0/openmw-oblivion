@@ -516,6 +516,29 @@ malformed/truncated payload rejection and the older-version boundary. All
 `m14-package-event-schema-{components,engine,python}.log`. These codec tests do
 not yet establish native callback delivery or tutorial acceptance.
 
+### Native completion delivery and next tutorial failure (2026-09-07)
+
+Both resident and unloaded phase transitions now enqueue `OnPackageDone` only
+when entering Complete. The coordinator delivers the saved FIFO after actor
+iteration (also after fast-forward), with the exact actor and completed PACK
+as the event argument. Queue tests cover duplicate suppression, interruption
+exclusion, callback saves, nested dispatch, callback-created events, reload
+during delivery and exception cleanup. All 524 engine tests pass
+(`m14-package-done-runtime-engine.log`). ASan/UBSan with leak detection also
+passes all 1,591 component and 524 engine tests
+(`m14-package-done-sanitizer-{components,engine}.log`).
+
+`m14-tutorial-package-done/` still FAILS, but now proves native Renault
+(032a15, base 02349f) completes CGRenoteToMarkerA (032ae9), invokes the matching
+script block and advances CharacterGen to 12. Both schema-6 save checkpoints
+pass. The next failure is unsupported `Look`: it aborts the stage-12 result
+and later INFO 032b0d before its progression effects, producing repeated speech.
+The Baurus/door and 530 > 500 blocked/no-progress failures remain. The run also
+reports a binary/resources revision mismatch after interleaved build/commit
+work; future runs must rebuild matching resources before launch. Engine exit
+is 0, no timeout, and all harness actions completed, but error findings are
+not clean. No milestone acceptance is claimed.
+
 ## Reproduce
 
 Build and run the audit:
