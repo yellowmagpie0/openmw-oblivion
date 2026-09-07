@@ -164,7 +164,7 @@ namespace
         }
     }
 
-    TEST(OblivionAiTest, CatchUpHonorsSneakAndRunFlagsWithoutChangingOtherPackageGaits)
+    TEST(OblivionAiTest, CatchUpAndTravelHonorAuthoredGaitFlags)
     {
         const auto run = decodePackageFlags(static_cast<std::uint32_t>(PackageFlag::AlwaysRun));
         const auto sneak = decodePackageFlags(run.mRaw | static_cast<std::uint32_t>(PackageFlag::AlwaysSneak));
@@ -176,9 +176,22 @@ namespace
         }
         EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Escort, {}, 0.f, 1000000.f, true));
         EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Wander, {}, 0.f, 1000000.f, true));
-        EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Travel, {}, 0.f, std::nullopt, false));
+        EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Travel, {}, 0.f, std::nullopt, false));
         EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Pursue, {}, 0.f, std::nullopt, false));
         EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::FleeNotCombat, {}, 0.f, std::nullopt, false));
+    }
+
+    TEST(OblivionAiTest, UnflaggedTravelLeaderWalksWhileSeparatedCompanionRuns)
+    {
+        // Released MS92RoxyAricTelepe and MS92AlonzoFollowRoxyAric flags.
+        const auto leader = decodePackageFlags(0x00000002);
+        const auto follower = decodePackageFlags(0x00400000);
+        EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(
+            AIPackageType::Travel, leader, 0.f, std::nullopt, false));
+        EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(
+            AIPackageType::Accompany, follower, 300.f, 800.f * 800.f, false));
+        EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(
+            AIPackageType::Accompany, follower, 300.f, 300.f * 300.f, false));
     }
 
     TEST(OblivionAiTest, MapsEveryNativePackageTypeToItsProcedure)

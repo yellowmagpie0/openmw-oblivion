@@ -786,6 +786,12 @@ hierarchy index now have component/sanitizer and engine-store coverage.
 PickIdle command wiring, skeleton-family selection, playback sections and
 native animation/reload evidence are still outstanding; do not mark this
 prerequisite complete from the store/index tests.
+The Travel-gait correction keeps the companion within 512 units in
+`m14-companion-authored-gait/`, but that course fails to establish separation
+(347.39 < 512), so recovery is unproven. Its enable/disable controls supply a
+discarded TES3 argument instead of selecting the native reference, and their
+errors are absent from text evidence. Repair the control/acknowledgement and
+actual obstruction assertions before accepting companion or door courses.
 
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |

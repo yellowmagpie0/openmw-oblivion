@@ -12,7 +12,10 @@ namespace MWMechanics
     {
         if (flags.has(ESM4::PackageFlag::AlwaysSneak))
             return false;
-        if (flags.has(ESM4::PackageFlag::AlwaysRun) || type == ESM4::AIPackageType::Travel
+        // Travel uses the ordinary walking gait unless the package asks for
+        // running. Forcing Travel to run also makes an unflagged leader outrun
+        // followers which are already using their legitimate catch-up gait.
+        if (flags.has(ESM4::PackageFlag::AlwaysRun)
             || type == ESM4::AIPackageType::FleeNotCombat || type == ESM4::AIPackageType::Pursue)
             return true;
         if (type != ESM4::AIPackageType::Follow && type != ESM4::AIPackageType::Accompany)

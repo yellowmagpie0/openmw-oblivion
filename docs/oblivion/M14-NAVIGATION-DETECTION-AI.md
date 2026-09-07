@@ -641,6 +641,31 @@ All 1,599 component tests pass under ASan/UBSan with leak detection
 the PickIdle command, skeleton-family filtering, section-aware playback or
 native animation/save-resume acceptance; those gates remain open.
 
+### Travel gait and invalid companion separation evidence (2026-09-07)
+
+Unflagged Travel no longer forces running. Authored AlwaysRun/AlwaysSneak flags
+and ordinary follower catch-up remain authoritative; no actor-speed multiplier
+or distance threshold changed. Released leader PACK 085963 has flags 0x2,
+whereas follower PACK 085967 requests 300-unit spacing. The flag/catch-up
+regression and all 526 engine tests pass (`m14-travel-gait-{build,engine}.log`).
+
+The unchanged `m14-companion-authored-gait/` course still **FAILS**, but not at
+its former recovery-distance gate. Initial/separation/final distances are
+253.36 / 347.39 / 400.28. Initial and final checks pass the unchanged 512 limit;
+the middle check fails to establish separation of at least 512. All actions,
+event gates and checkpoints otherwise pass, engine exit is 0, no timeout, and
+there are no unreviewed error findings. This proves ordinary following, not
+obstruction recovery.
+
+Source inspection then exposed an invalid control: the fixture sends
+`enable 0xb5d5b` / `disable 0xb5d5b` through the TES3 console. Its compiler's
+`x` argument is discarded; these opcodes act on the implicit selected reference,
+not the supplied FormID. Console diagnostics currently appear only in the UI,
+and the harness calls successful key injection a passed control. Moreover,
+released reference 0b5d5b is already enabled initially. Repair target selection,
+text acknowledgements and actual obstruction-state assertions before treating
+this course (or other affected obstruction fixtures) as acceptance evidence.
+
 ## Reproduce
 
 Build and run the audit:
