@@ -28,6 +28,59 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_m14_console_evidence_requires_ordered_acks_and_real_reference_state(self):
+        key = "content:oblivion.esm:0b5d5b"
+        commands = ["prid " + key, "disable"]
+        log = (f"[time I] Native console reference state: reference={key} enabled=1 deleted=0\n"
+               f"[time I] Console command succeeded: {commands[0]}\n"
+               f"[time I] Native console reference state: reference={key} enabled=0 deleted=0\n"
+               "[time I] Console command succeeded: disable\n")
+        verify = lambda text: MODULE._m14_console_evidence(text, commands,
+            expected_reference=key, expected_enabled=False)
+        self.assertTrue(verify(log)["passed"])
+        for bad in ("", log.replace("succeeded: disable", "succeeded: enable"),
+                    log.replace("enabled=0", "enabled=1"), log.replace("deleted=0", "deleted=1"),
+                    log.replace("enabled=1", "enabled=0"),
+                    log.replace(key, "content:oblivion.esm:000001"),
+                    log + "[time W] Console diagnostic: No selected reference\n",
+                    log + "[time I] Console command succeeded: disable\n"):
+            with self.subTest(log=bad):
+                self.assertFalse(verify(bad)["passed"])
+        self.assertFalse(MODULE._m14_console_evidence(log, list(reversed(commands)))["passed"])
+
+    def test_m14_console_does_not_accept_old_logs_or_successful_typing_as_execution(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            log = output / "process.log"
+            acknowledgement = "[time I] Console command succeeded: togglenavmesh\n"
+            log.write_text(acknowledgement)
+            with mock.patch.object(MODULE.shutil, "which", return_value="/bin/xdotool"), \
+                    mock.patch.object(MODULE.time, "sleep"), \
+                    mock.patch.object(MODULE.subprocess, "run", return_value=mock.Mock(returncode=0, stdout="")) as run:
+                result = MODULE._m14_run_console_commands(["togglenavmesh"],
+                    environment={}, output=output, timeout=0)
+                self.assertFalse(result["passed"])
+                self.assertEqual(result["evidence"]["acknowledgements"], [])
+                def execute(command, **kwargs):
+                    if "type" in command:
+                        with log.open("a") as stream:
+                            stream.write(acknowledgement)
+                    return mock.Mock(returncode=0, stdout="")
+                run.side_effect = execute
+                result = MODULE._m14_run_console_commands(["togglenavmesh"],
+                    environment={}, output=output, timeout=0)
+                self.assertTrue(result["passed"])
+
+    def test_m14_obstruction_reference_is_unambiguous_and_cannot_inject_commands(self):
+        self.assertEqual(MODULE._m14_obstruction_reference("0xb5d5b"), "content:oblivion.esm:0b5d5b")
+        self.assertEqual(MODULE._m14_obstruction_reference("content:knights.esp:001234"),
+                         "content:knights.esp:001234")
+        self.assertEqual(MODULE._m14_obstruction_reference("NamedReference"), "NamedReference")
+        for bad in (None, "", "0x0", "0x01001234", "0xb5d5b\ndisable", "x; enable", "../door",
+                    "content:oblivion.esm:000000", "content:../bad.esm:001234", "content:x.esm:001234\n"):
+            with self.subTest(reference=bad):
+                self.assertRaises(ValueError, MODULE._m14_obstruction_reference, bad)
+
     def test_m14_audit_fingerprints_comparisons_and_preserves_mixed_condition_order(self):
         audit = MODULE.tes4_m14
         record = {"plugin": "Test.esp", "key": "content:test.esp:000123"}

@@ -622,9 +622,7 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             if not changed and not increases and not distances and "expected_same_cell" not in action:
                 raise ValueError("m14_actor_state_delta requires at least one comparison assertion")
         if m14 is not None and action_type == "m14_obstruction":
-            reference = action.get("reference")
-            if not isinstance(reference, str) or not re.fullmatch(r"(?:0x[0-9A-Fa-f]{1,8}|[A-Za-z_][A-Za-z0-9_]*)", reference):
-                raise ValueError("m14_obstruction reference must be a FormID or editor ID")
+            _m14_obstruction_reference(action.get("reference"))
             if action.get("operation") not in ("add", "remove"):
                 raise ValueError("m14_obstruction operation must be add or remove")
         if m14 is not None and action_type == "m14_debug_navigation":
@@ -1102,8 +1100,47 @@ def _validate_m14_events(manifest: dict[str, Any], output: Path, *, final: bool 
     }
 
 
+def _m14_obstruction_reference(reference: Any) -> str:
+    if not isinstance(reference, str):
+        raise ValueError("m14_obstruction reference must be a stable FormKey, base-game FormID or editor ID")
+    if re.fullmatch(r"0x[0-9A-Fa-f]{1,6}", reference) and int(reference, 16) != 0:
+        return f"content:oblivion.esm:{int(reference, 16):06x}"
+    if re.fullmatch(r"content:[a-z0-9_.-]+:[0-9a-f]{6}", reference) and int(reference.rsplit(":", 1)[1], 16) != 0:
+        return reference
+    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", reference):
+        return reference
+    raise ValueError("m14_obstruction reference must be a stable FormKey, base-game FormID or editor ID")
+
+
+def _m14_console_evidence(log_text: str, commands: list[str], *, expected_reference: str | None = None,
+                          expected_enabled: bool | None = None) -> dict[str, Any]:
+    acknowledgements = re.findall(r"^.*?Console command succeeded: (.*)$", log_text, re.MULTILINE)
+    diagnostics = re.findall(r"^.*?Console diagnostic: (.*)$", log_text, re.MULTILINE)
+    states = [{"reference": key, "enabled": enabled == "1", "deleted": deleted == "1"}
+              for key, enabled, deleted in re.findall(
+                  r"Native console reference state: reference=(\S+) enabled=([01]) deleted=([01])", log_text)]
+    failures = [f"console diagnostic: {item}" for item in diagnostics]
+    if acknowledgements != commands:
+        failures.append(f"console acknowledgements {acknowledgements!r} do not match {commands!r}")
+    if expected_enabled is not None:
+        if len(states) < 2:
+            failures.append("console did not report the selected reference's before/after state")
+        else:
+            actual = states[-1]
+            if actual["deleted"] or actual["enabled"] != expected_enabled:
+                failures.append("console reference enabled/deleted state does not match the requested operation")
+            if actual["reference"] != (expected_reference or states[0]["reference"]):
+                failures.append("console reference identity does not match the requested obstruction")
+            if states[0]["enabled"] == actual["enabled"]:
+                failures.append("obstruction operation did not change the reference's enabled state")
+    return {"passed": not failures, "failures": failures, "acknowledgements": acknowledgements,
+            "reference_states": states}
+
+
 def _m14_run_console_commands(commands: list[str], *, environment: dict[str, str], output: Path,
-                              timeout: float, settle_seconds: float = 0.25) -> dict[str, Any]:
+                              timeout: float, settle_seconds: float = 0.25,
+                              expected_reference: str | None = None,
+                              expected_enabled: bool | None = None) -> dict[str, Any]:
     """Run the small, typed M14 console control surface through the live UI."""
 
     executable = shutil.which("xdotool")
@@ -1115,6 +1152,8 @@ def _m14_run_console_commands(commands: list[str], *, environment: dict[str, str
     executed: list[list[str]] = []
     outputs: list[str] = []
     exit_code = 0
+    log_path = output / "process.log"
+    log_offset = log_path.stat().st_size if log_path.exists() else 0
 
     def run(arguments: list[str]) -> None:
         nonlocal exit_code
@@ -1161,12 +1200,28 @@ def _m14_run_console_commands(commands: list[str], *, environment: dict[str, str
     # command. Reassert the game window so the next ordinary input (notably
     # F5 in a checkpoint) is delivered to OpenMW.
     run(["search", "--onlyvisible", "--name", "OpenMW", "windowfocus", "--sync", "%@"])
+    deadline = time.monotonic() + timeout
+    while True:
+        if log_path.exists():
+            with log_path.open("rb") as stream:
+                stream.seek(log_offset)
+                log_text = stream.read().decode("utf-8", errors="replace")
+        else:
+            log_text = ""
+        evidence = _m14_console_evidence(log_text, commands,
+            expected_reference=expected_reference, expected_enabled=expected_enabled)
+        if (evidence["passed"] or len(evidence["acknowledgements"]) >= len(commands)
+                or "Console diagnostic:" in log_text or exit_code or time.monotonic() >= deadline):
+            break
+        time.sleep(0.05)
     return {
         "commands": executed,
         "console_commands": commands,
         "exit_code": exit_code,
         "output": "".join(outputs),
-        "passed": exit_code == 0,
+        "passed": exit_code == 0 and evidence["passed"],
+        "failures": ([f"console input failed with exit code {exit_code}"] if exit_code else []) + evidence["failures"],
+        "evidence": evidence,
     }
 
 
@@ -1741,11 +1796,16 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         operation = str(action["operation"])
         # The fixture supplies a stable reference that is already part of the
         # real cell. "add" enables that obstruction; "remove" disables it.
-        console_command = ("enable" if operation == "add" else "disable") + " " + str(action["reference"])
+        reference = _m14_obstruction_reference(action["reference"])
+        if operation not in ("add", "remove"):
+            raise ValueError("m14_obstruction operation must be add or remove")
+        console_command = "enable" if operation == "add" else "disable"
         control = _m14_run_console_commands(
-            [console_command], environment=environment, output=output,
+            ["prid " + reference, console_command], environment=environment, output=output,
             timeout=float(action.get("timeout_seconds", 30)),
             settle_seconds=float(action.get("settle_seconds", 0.25)),
+            expected_reference=reference if reference.startswith("content:") else None,
+            expected_enabled=operation == "add",
         )
         control.update({
             "type": action_type,

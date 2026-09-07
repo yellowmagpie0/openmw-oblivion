@@ -1036,6 +1036,14 @@ checks. Initial and separated distance checks pass, but final recovery is
 fix remaining recovery lag, prove the obstruction causes the separation, and
 complete formation/cycle, process-tier, and both-side save/reload coverage.
 
+2026-09-07 correction: `m14-companion-verified-controls/` supersedes the old
+obstruction-control evidence. The corrected Travel gait keeps final spacing
+below 512, but separation never reaches 512. Fresh text acknowledgements and
+actual reference-state checks prove the fixture's initial enable is a no-op;
+the later disable really changes 0b5d5b and is retained in the save. Replace
+the ineffective obstruction sequence with a causal, verified obstruction
+before accepting separation/recovery. The broader coverage above remains open.
+
 ### 16.5 Detection matrix
 
 Suggested manifest: `oblivion_m14_detection.json`.

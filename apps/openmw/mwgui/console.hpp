@@ -79,6 +79,8 @@ namespace MWGui
         std::string mConsoleMode;
 
         void updateConsoleTitle();
+        bool selectNativeReference(const std::string& command);
+        void reportNativeReferenceState();
 
         void commandBoxKeyPress(MyGUI::Widget* sender, MyGUI::KeyCode key, MyGUI::Char value);
         void acceptCommand(MyGUI::EditBox* sender);

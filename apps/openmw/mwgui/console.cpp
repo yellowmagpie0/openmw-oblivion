@@ -8,15 +8,19 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
+#include <sstream>
 
 #include <components/compiler/exception.hpp>
 #include <components/compiler/extensions0.hpp>
 #include <components/compiler/lineparser.hpp>
 #include <components/compiler/locals.hpp>
 #include <components/compiler/scanner.hpp>
+#include <components/debug/debuglog.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/files/conversion.hpp>
 #include <components/interpreter/interpreter.hpp>
 #include <components/misc/utf8stream.hpp>
+#include <components/misc/strings/lower.hpp>
 #include <components/settings/values.hpp>
 
 #include "apps/openmw/mwgui/textcolours.hpp"
@@ -28,9 +32,11 @@
 #include "../mwbase/luamanager.hpp"
 #include "../mwbase/scriptmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldmodel.hpp"
 
 namespace
 {
@@ -219,7 +225,64 @@ namespace MWGui
 
     void Console::printError(const std::string& msg)
     {
+        Log(Debug::Warning) << "Console diagnostic: " << msg;
         print(msg + "\n", MWBase::WindowManager::sConsoleColor_Error);
+    }
+
+    bool Console::selectNativeReference(const std::string& command)
+    {
+        auto& environment = MWBase::Environment::get();
+        if (environment.getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+            return false;
+        std::istringstream input(command);
+        std::string verb, reference, extra;
+        input >> verb;
+        if (Misc::StringUtils::lowerCase(verb) != "prid")
+            return false;
+        // Clear the previous selection even on failure: a subsequent implicit
+        // command must never mutate a stale target after a failed selection.
+        mPtr = {};
+        updateConsoleTitle();
+        try
+        {
+            if (!(input >> reference) || (input >> extra))
+                throw std::runtime_error("prid requires one stable FormKey or placed-reference editor ID");
+            const auto key = reference.starts_with("content:") ? ESM::FormKey::deserialize(reference)
+                : environment.getESMStore()->findEsm4FormKey(reference).value_or(ESM::FormKey{});
+            if (!key.isContent())
+                throw std::runtime_error("prid requires a content reference; use content:plugin.esm:xxxxxx");
+            const ESM::FormKeyResolver resolver(environment.getWorld()->getContentFiles());
+            const auto id = resolver.toFormId(key);
+            if (!id)
+                throw std::runtime_error("prid reference plugin is not loaded");
+            const auto ptr = environment.getWorldModel()->getPtr(*id);
+            if (ptr.isEmpty() || !ptr.isInCell() || ptr.mRef->isDeleted())
+                throw std::runtime_error("prid reference is not loaded or is deleted");
+            mPtr = ptr;
+            updateConsoleTitle();
+            reportNativeReferenceState();
+            Log(Debug::Info) << "Console command succeeded: " << command;
+        }
+        catch (const std::exception& error)
+        {
+            printError(std::string("Error: ") + error.what());
+        }
+        return true;
+    }
+
+    void Console::reportNativeReferenceState()
+    {
+        auto& environment = MWBase::Environment::get();
+        if (mPtr.isEmpty() || environment.getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+            return;
+        const auto refNum = mPtr.getCellRef().getRefNum();
+        if (!refNum.hasContentFile() || refNum.isZeroOrUnset())
+            return;
+        const ESM::FormKeyResolver resolver(environment.getWorld()->getContentFiles());
+        const auto key = resolver.toFormKey(refNum);
+        Log(Debug::Info) << "Native console reference state: reference=" << key.serialize()
+            << " enabled=" << (mPtr.getRefData().isEnabled() ? 1 : 0)
+            << " deleted=" << (mPtr.mRef->isDeleted() ? 1 : 0);
     }
 
     void Console::execute(const std::string& command)
@@ -237,6 +300,8 @@ namespace MWGui
         }
 
         Compiler::Locals locals;
+        if (selectNativeReference(command))
+            return;
         if (!mPtr.isEmpty())
         {
             const ESM::RefId& script = mPtr.getClass().getScript(mPtr);
@@ -254,6 +319,8 @@ namespace MWGui
                 MWScript::installOpcodes(interpreter, mConsoleOnlyScripts);
                 const Interpreter::Program program = output.getProgram();
                 interpreter.run(program, interpreterContext);
+                reportNativeReferenceState();
+                Log(Debug::Info) << "Console command succeeded: " << command;
             }
             catch (const std::exception& error)
             {

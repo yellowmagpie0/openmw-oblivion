@@ -666,6 +666,31 @@ released reference 0b5d5b is already enabled initially. Repair target selection,
 text acknowledgements and actual obstruction-state assertions before treating
 this course (or other affected obstruction fixtures) as acceptance evidence.
 
+### Verified native console controls (2026-09-07)
+
+Native console `prid` now selects a loaded placed reference by stable FormKey
+or editor ID, without loading remote cells. Failed selection clears the prior
+target. The normal enable/disable opcode then acts on that selected reference.
+Console diagnostics and synchronous command acknowledgements are retained in
+text logs; before/after reports contain the actual stable reference identity
+and enabled/deleted state. The M14 harness requires fresh, ordered acknowledgements
+and, for obstruction operations, an actual state change on the intended target.
+Successful typing, stale acknowledgements, wrong identities and no-ops fail.
+Base-game short hex references are normalized to Oblivion.esm keys; ambiguous
+load-index hex references must be replaced with explicit stable keys.
+
+The first build exposed an incorrect deletion accessor
+(`m14-console-controls-build.log`); corrected build and all 526 engine tests
+pass (`m14-console-controls-build-2.log`, `m14-console-controls-engine.log`).
+All 73 Python tests pass (`m14-console-controls-python-final.log`).
+`m14-companion-verified-controls/` demonstrates real selection of 0b5d5b and
+its enabled-to-disabled transition; the final native save independently
+records enabled=false/deleted=false. Its first enable is correctly rejected
+as a no-op. The course still **FAILS** that control and the separation check
+(347.39 < 512); all event/checkpoint gates pass, all actions finish, clean
+exit 0/no timeout/no unreviewed error findings. Neither the obsolete input-only
+controls nor this failed separation establish obstruction recovery.
+
 ## Reproduce
 
 Build and run the audit:
