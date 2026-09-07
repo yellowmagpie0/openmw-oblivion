@@ -26,6 +26,8 @@
 */
 #include "loadidle.hpp"
 
+// Extended for native TES4 idle conditions, section flags and hierarchy links.
+
 #include <stdexcept>
 
 #include "reader.hpp"
@@ -35,6 +37,7 @@ void ESM4::IdleAnimation::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
     mFlags = reader.hdr().record.flags;
+    mConditions.clear();
 
     while (reader.getSubRecordHeader())
     {
@@ -52,13 +55,14 @@ void ESM4::IdleAnimation::load(ESM4::Reader& reader)
                 break;
             case ESM::fourCC("ANAM"):
             {
+                if (!reader.hasFormVersion() && subHdr.dataSize != 1)
+                    reader.fail("TES4 IDLE ANAM must have 1 byte");
                 switch (subHdr.dataSize)
                 {
                     case 1: // TES4
                     {
                         // Animation group section
-                        uint8_t dummy;
-                        reader.get(dummy);
+                        reader.get(mAnimationGroup);
                         break;
                     }
                     case 8: // Everything else
@@ -80,11 +84,36 @@ void ESM4::IdleAnimation::load(ESM4::Reader& reader)
             case ESM::fourCC("MODB"):
                 reader.get(mBoundRadius);
                 break;
-            case ESM::fourCC("CTDA"): // formId
+            case ESM::fourCC("CTDA"):
             case ESM::fourCC("CTDT"):
+                if (!reader.hasFormVersion())
+                {
+                    const std::size_t expected = subHdr.typeId == ESM::fourCC("CTDT") ? 20 : 24;
+                    if (subHdr.dataSize != expected)
+                        reader.fail("TES4 IDLE condition has an invalid size");
+                    std::vector<std::uint8_t> data(expected);
+                    if (!reader.get(data.data(), data.size()))
+                        reader.fail("TES4 IDLE condition is truncated");
+                    reader.recordCurrentSubRecordFormIds(data);
+                    mConditions.push_back(decodePackageCondition(data,
+                        [&reader](ESM::FormId raw) { return reader.resolveRawFormId(raw); }));
+                }
+                else
+                    reader.skipSubRecordData();
+                break;
+            case ESM::fourCC("DATA"):
+                if (!reader.hasFormVersion())
+                {
+                    if (subHdr.dataSize != 8)
+                        reader.fail("TES4 IDLE DATA must have 8 bytes");
+                    reader.getFormId(mParent);
+                    reader.getFormId(mPrevious);
+                }
+                else
+                    reader.skipSubRecordData();
+                break;
             case ESM::fourCC("CIS1"):
             case ESM::fourCC("CIS2"):
-            case ESM::fourCC("DATA"):
             case ESM::fourCC("MODD"):
             case ESM::fourCC("MODS"):
             case ESM::fourCC("MODT"):

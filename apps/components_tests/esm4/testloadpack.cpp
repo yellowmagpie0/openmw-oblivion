@@ -2,6 +2,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadpack.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loadidle.hpp>
 #include <components/esm4/dialoguevoices.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
@@ -130,11 +131,67 @@ namespace
         return result;
     }
 
+    ESM4::IdleAnimation loadIdle(const std::vector<char>& payload)
+    {
+        std::vector<char> plugin = makeHeader();
+        appendRecord(plugin, ESM4::REC_IDLE, 0, 0x4321, payload);
+        auto stream = std::make_unique<std::stringstream>(
+            std::string(plugin.begin(), plugin.end()), std::ios::in | std::ios::binary);
+        const ToUTF8::StatelessUtf8Encoder encoder(ToUTF8::WINDOWS_1252);
+        ESM4::Reader reader(std::move(stream), "memory.esm", nullptr, &encoder, true);
+        EXPECT_TRUE(reader.getRecordHeader());
+        reader.getRecordData();
+        ESM4::IdleAnimation result;
+        result.load(reader);
+        return result;
+    }
+
     std::vector<char> makePackagePlugin()
     {
         std::vector<char> result = makeHeader();
         appendRecord(result, ESM4::REC_PACK, 0, 0x1234, makePackagePayload());
         return result;
+    }
+}
+
+TEST(ESM4LoadIdle, PreservesNativeHierarchyFlagsAndOrderedConditions)
+{
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("ANAM"), { static_cast<char>(0x84) });
+    auto links = bytes(std::uint32_t{ 0x1234 });
+    append(links, std::uint32_t{ 0x2345 });
+    appendSubRecord(payload, ESM::fourCC("DATA"), links);
+    ESM4::AIPackage::CTDA condition{};
+    condition.fnIndex = 79;
+    condition.param1 = 0x3456;
+    condition.param2 = 11;
+    condition.compValue = 10.f;
+    appendSubRecord(payload, ESM::fourCC("CTDA"), bytes(condition));
+    condition.fnIndex = 72;
+    auto legacy = bytes(condition);
+    legacy.resize(20);
+    appendSubRecord(payload, ESM::fourCC("CTDT"), legacy);
+    const auto idle = loadIdle(payload);
+    EXPECT_EQ(idle.mAnimationGroup, 0x84);
+    EXPECT_EQ(idle.mParent, ESM::FormId::fromUint32(0x1234));
+    EXPECT_EQ(idle.mPrevious, ESM::FormId::fromUint32(0x2345));
+    ASSERT_EQ(idle.mConditions.size(), 2u);
+    EXPECT_EQ(idle.mConditions[0].mFunction, 79);
+    EXPECT_EQ(idle.mConditions[0].mParameter1.mReferenceKey, ESM::FormKey::content("memory.esm", 0x3456));
+    EXPECT_EQ(idle.mConditions[0].mParameter2.mNumber, 11);
+    EXPECT_FLOAT_EQ(idle.mConditions[0].mComparisonValue, 10.f);
+    EXPECT_EQ(idle.mConditions[1].mEncodedSize, 20);
+}
+
+TEST(ESM4LoadIdle, RejectsMalformedNativeLayouts)
+{
+    for (const auto& [tag, size] : std::vector<std::pair<std::uint32_t, std::size_t>>{
+             { ESM::fourCC("ANAM"), 0 }, { ESM::fourCC("ANAM"), 8 }, { ESM::fourCC("DATA"), 7 },
+             { ESM::fourCC("DATA"), 9 }, { ESM::fourCC("CTDA"), 20 }, { ESM::fourCC("CTDT"), 24 } })
+    {
+        std::vector<char> payload;
+        appendSubRecord(payload, tag, std::vector<char>(size));
+        EXPECT_THROW(loadIdle(payload), std::runtime_error);
     }
 }
 

@@ -33,6 +33,7 @@
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
 #include <components/esm/path.hpp>
+#include "aipackagedata.hpp"
 
 namespace ESM4
 {
@@ -42,7 +43,7 @@ namespace ESM4
     struct IdleAnimation
     {
         ESM::FormId mId; // from the header
-        std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
+        std::uint32_t mFlags = 0; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
         std::string mCollision;
@@ -52,7 +53,10 @@ namespace ESM4
         ESM::FormId mParent; // IDLE or AACT
         ESM::FormId mPrevious;
 
-        float mBoundRadius;
+        float mBoundRadius = 0.f;
+        // TES4 ANAM: section in low seven bits; bit 7 allows no file.
+        std::uint8_t mAnimationGroup = 0;
+        std::vector<PackageCondition> mConditions;
 
         void load(ESM4::Reader& reader);
         // void save(ESM4::Writer& writer) const;

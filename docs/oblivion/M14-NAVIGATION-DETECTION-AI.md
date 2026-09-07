@@ -588,6 +588,21 @@ required selection and all four required door transitions remain missing;
 545 blocked/no-progress events exceed the unchanged 500 limit. This fixes
 condition identity, not the remaining tutorial acceptance gates.
 
+### Native idle record retention (2026-09-07)
+
+The IDLE reader now retains native ANAM section flags, DATA parent/predecessor
+links and ordered CTDA/legacy CTDT conditions with stable reference identities.
+Malformed native sizes are rejected; later-game branches remain separate.
+The installed base game's 650 IDLE records contain 650 one-byte ANAMs,
+650 eight-byte DATAs, 1,627 CTDA24s and three CTDT20s. The layout and section
+interpretation agree with the [xEdit TES4 definitions](https://raw.githubusercontent.com/TES5Edit/TES5Edit/dev-4.1.5/Core/wbDefinitionsTES4.pas).
+
+The first test build failed because the test passed a runtime string to the
+literal-only fourCC helper (`m14-idle-record-build.log`). The corrected build
+and all 1,595 component tests pass (`m14-idle-record-build-2.log`,
+`m14-idle-record-components.log`). This is parser coverage only: PickIdle
+selection, section-aware playback and native verification remain unfinished.
+
 ## Reproduce
 
 Build and run the audit:
