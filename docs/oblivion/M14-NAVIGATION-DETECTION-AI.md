@@ -571,6 +571,23 @@ inspection also confirms stage 14 depends on `CGTriggerZoneCellScript`'s real
 overlap events; do not bypass them with stage writes or no-op commands. M14
 remains in progress.
 
+### Native condition variable identities (2026-09-07)
+
+`GetQuestVariable` and `GetScriptVariable` now resolve native SLSD IDs through
+SCVR names into VM locals, rather than treating IDs as source declaration
+offsets. Released CharacterGen's `uniqueIdle` has native ID 11 but is not
+source local 11. Resolution rejects missing/ambiguous identities without
+changing the saved local layout. Sparse IDs, case, reordered declarations,
+and duplicate IDs have regression coverage. All 1,593 component and 524 engine
+tests pass (`m14-native-variable-{components,engine}.log`).
+
+The unchanged native course `m14-tutorial-native-variables/` still **FAILS**:
+it reaches stage 13, completes all actions, exits 0 without timeout and passes
+both save checkpoints, but reports unsupported PickIdle twice. Baurus's
+required selection and all four required door transitions remain missing;
+545 blocked/no-progress events exceed the unchanged 500 limit. This fixes
+condition identity, not the remaining tutorial acceptance gates.
+
 ## Reproduce
 
 Build and run the audit:

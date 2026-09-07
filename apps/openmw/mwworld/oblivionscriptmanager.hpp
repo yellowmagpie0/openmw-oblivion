@@ -64,6 +64,8 @@ namespace MWWorld
             const ObScript::SourceLocation& location) override;
 
     private:
+        std::optional<double> nativeScriptVariable(
+            const ObScript::Program& program, const ESM::FormKey& context, std::int32_t index) const;
         struct InstanceKey
         {
             std::string mUnit;

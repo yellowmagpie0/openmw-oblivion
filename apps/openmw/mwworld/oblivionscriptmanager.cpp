@@ -29,6 +29,7 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/obscript/nativevariables.hpp>
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
@@ -575,14 +576,9 @@ namespace MWWorld
             if (const auto base = mBaseScripts.find(state->mBase); base != mBaseScripts.end())
                 program = base->second;
         }
-        if (!program || static_cast<std::size_t>(index) >= program->mLocals.size())
+        if (!program)
             return std::nullopt;
-
-        const InstanceKey key{ program->mUnit.serialize(), target };
-        const auto instance = mInstances.find(key);
-        if (instance == mInstances.end() || static_cast<std::size_t>(index) >= instance->second.mLocals.size())
-            return 0.0;
-        return numericScriptValue(instance->second.mLocals[static_cast<std::size_t>(index)]).value_or(0.0);
+        return nativeScriptVariable(*program, target, index);
     }
 
     std::optional<double> OblivionScriptManager::questVariable(
@@ -594,14 +590,27 @@ namespace MWWorld
         if (script == mQuestScripts.end())
             return std::nullopt;
         const auto program = mScripts.find(script->second);
-        if (program == mScripts.end() || static_cast<std::size_t>(index) >= program->second->mLocals.size())
+        if (program == mScripts.end())
             return std::nullopt;
+        return nativeScriptVariable(*program->second, quest, index);
+    }
 
-        const InstanceKey key{ program->second->mUnit.serialize(), quest };
+    std::optional<double> OblivionScriptManager::nativeScriptVariable(
+        const ObScript::Program& program, const ESM::FormKey& context, std::int32_t index) const
+    {
+        const ESM4::Script* definition = mStore.search<ESM4::Script>(program.mUnit.mOwner);
+        if (definition == nullptr)
+            return std::nullopt;
+        const auto local = ObScript::nativeLocalIndex(definition->mScript, program, index);
+        if (!local)
+            return std::nullopt;
+        const InstanceKey key{ program.mUnit.serialize(), context };
         const auto instance = mInstances.find(key);
-        if (instance == mInstances.end() || static_cast<std::size_t>(index) >= instance->second.mLocals.size())
+        if (instance == mInstances.end())
             return 0.0;
-        return numericScriptValue(instance->second.mLocals[static_cast<std::size_t>(index)]).value_or(0.0);
+        if (*local >= instance->second.mLocals.size())
+            return std::nullopt;
+        return numericScriptValue(instance->second.mLocals[*local]);
     }
 
     std::optional<Ptr> OblivionScriptManager::scriptedLookTarget(const Ptr& actor) const

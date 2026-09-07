@@ -7,6 +7,7 @@
 #include <components/obscript/compiler.hpp>
 #include <components/obscript/corpus.hpp>
 #include <components/obscript/lexer.hpp>
+#include <components/obscript/nativevariables.hpp>
 #include <components/obscript/parser.hpp>
 #include <components/obscript/scda.hpp>
 #include <components/obscript/vm.hpp>
@@ -26,6 +27,37 @@
 
 namespace
 {
+    TEST(ObScriptNativeVariables, ResolvesSparseNativeIdsByNameNotSourceOffset)
+    {
+        ESM4::ScriptDefinition definition;
+        for (const auto& [index, name] : std::vector<std::pair<std::uint32_t, std::string>>{
+                 { 14, "init" }, { 1, "convCount" }, { 25, "die" }, { 11, "uniqueIdle" } })
+        {
+            ESM4::ScriptLocalVariableData local{};
+            local.index = index;
+            local.variableName = name;
+            definition.localVarData.push_back(local);
+        }
+        ObScript::Program program;
+        for (const auto name : { "INIT", "convCount", "die", "uniqueIdle" })
+        {
+            program.mLocals.emplace_back();
+            program.mLocals.back().mName = name;
+        }
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 11), 3u);
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 14), 0u);
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 25), 2u);
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 1), 1u);
+        for (const auto index : { -1, 0, 2, 99 })
+            EXPECT_FALSE(ObScript::nativeLocalIndex(definition, program, index));
+        std::reverse(program.mLocals.begin(), program.mLocals.end());
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 11), 0u);
+        definition.localVarData.push_back(definition.localVarData.back());
+        EXPECT_FALSE(ObScript::nativeLocalIndex(definition, program, 11));
+        definition.localVarData.clear();
+        EXPECT_FALSE(ObScript::nativeLocalIndex(definition, program, 1));
+    }
+
     class TestRuntimeHost final : public ObScript::RuntimeHost
     {
     public:

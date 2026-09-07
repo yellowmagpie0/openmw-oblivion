@@ -770,6 +770,11 @@ still FAILS: `PickIdle` is unsupported in INFO 00bf0d, native `OnTrigger` is
 not wired to the stage-14 phantom volume, and the Baurus/door/budget gates above
 remain unmet. Real idle and trigger semantics are required, not no-op command
 handlers. Dedicated live head-tracking/StopLook/reload coverage is also open.
+Native variable conditions now resolve SLSD IDs by SCVR name, with sparse-ID
+regressions; they no longer read unrelated source-order locals. The unchanged
+`m14-tutorial-native-variables/` still fails at PickIdle and the same Baurus/door
+gates, with 545 blocked/no-progress events against 500. Neither this correction
+nor passing helper tests closes the tutorial gate.
 
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |
