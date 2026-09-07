@@ -48,6 +48,9 @@ namespace MWWorld
         const ESM4::RuntimeQuestState* findQuestState(const ESM::FormKey& quest) const;
         std::optional<double> scriptVariable(const ESM::FormKey& target, std::int32_t index) const;
         std::optional<double> questVariable(const ESM::FormKey& quest, std::int32_t index) const;
+        // nullopt permits normal head tracking; an empty Ptr retains an
+        // explicit Look whose target is currently unavailable.
+        std::optional<Ptr> scriptedLookTarget(const Ptr& actor) const;
 
         ObScript::Value resolveName(std::string_view name, const ObScript::RuntimeContext& context) override;
         ObScript::Value loadMember(const ObScript::Value& target, std::string_view name,

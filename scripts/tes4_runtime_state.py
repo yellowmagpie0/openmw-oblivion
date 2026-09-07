@@ -610,6 +610,18 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             if not str(name):
                 raise RuntimeStateError("TES4 runtime-state custom-state key is empty")
             _write_value(_Writer(), value)
+            if name == "obscript.look_target":
+                parts = value.split(":") if isinstance(value, str) else []
+                valid = len(parts) == 3 and parts[0] in ("content", "dynamic") and bool(parts[1])
+                if valid:
+                    kind, namespace, number = parts
+                    valid = len(number) == (6 if kind == "content" else 16) and all(
+                        char in "0123456789abcdef" for char in number
+                    ) and int(number, 16) != 0
+                    if kind == "content":
+                        valid = valid and "/" not in namespace and not any("A" <= c <= "Z" for c in namespace)
+                if not valid:
+                    raise RuntimeStateError("Invalid TES4 scripted Look target")
 
     scripts = check_collection(state.get("script_instances", []), "script instance list")
     quests = check_collection(state.get("quests", []), "quest list")

@@ -23,6 +23,7 @@
 #include "../mwworld/datetimemanager.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
+#include "../mwworld/oblivionscriptmanager.hpp"
 #include "../mwworld/player.hpp"
 #include "../mwworld/scene.hpp"
 #include "../mwworld/worldmodel.hpp"
@@ -334,6 +335,14 @@ namespace MWMechanics
             // 3. Player character does not use headtracking in the 1st-person view
             if (!stats.getKnockedDown() && !firstPersonPlayer)
             {
+                if (ptr.getClass().getType() == ESM::REC_NPC_4 || ptr.getClass().getType() == ESM::REC_CREA4)
+                    if (auto* world = dynamic_cast<MWWorld::World*>(&*MWBase::Environment::get().getWorld()))
+                        if (const auto* scripts = world->getOblivionScriptManager())
+                            if (const auto target = scripts->scriptedLookTarget(ptr))
+                            {
+                                ctrl.setHeadTrackTarget(*target);
+                                return;
+                            }
                 bool inCombatOrPursue = stats.getAiSequence().isInCombat() || stats.getAiSequence().isInPursuit();
                 if (inCombatOrPursue)
                 {

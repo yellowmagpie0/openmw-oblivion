@@ -159,6 +159,23 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.decode_payload(payload), expected)
         self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
 
+    def test_scripted_look_target_persistence_and_validation(self) -> None:
+        state = make_m14_state()
+        state["references"] = [{
+            "key": "content:oblivion.esm:000001", "base": "content:oblivion.esm:000002",
+            "cell": state["player"]["cell"], "position": [0.0] * 6, "enabled": True,
+            "deleted": False, "owner": None, "lock_level": 0, "inventory": [],
+            "custom_state": {"obscript.look_target": state["player"]["reference"]},
+        }]
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(decoded["references"], state["references"])
+        self.assertEqual(decoded["actor_ai"], state["actor_ai"])
+        for value in (True, "null", "garbage", "content:oblivion.esm:000000",
+                      "content:Oblivion.esm:000001", "dynamic:player:0000000000000000"):
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError):
+                state["references"][0]["custom_state"]["obscript.look_target"] = value
+                state_io.encode_payload(state)
+
     def test_version_six_preserves_pending_package_completion_fifo(self) -> None:
         state = make_m14_state()
         state["schema_version"] = 6

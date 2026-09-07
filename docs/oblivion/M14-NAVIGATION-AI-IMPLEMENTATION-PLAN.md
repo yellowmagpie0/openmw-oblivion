@@ -764,6 +764,13 @@ blocked/no-progress events against the unchanged 500 budget. Repair `Look` and
 inspect subsequent real triggers before claiming the tutorial complete. The
 run's resource-version mismatch also requires matching-build verification.
 
+Subsequent `m14-tutorial-scripted-look/` repairs Look/StopLook, has matching
+resources, reaches native stage 13 and passes both schema-6 checkpoints. It
+still FAILS: `PickIdle` is unsupported in INFO 00bf0d, native `OnTrigger` is
+not wired to the stage-14 phantom volume, and the Baurus/door/budget gates above
+remain unmet. Real idle and trigger semantics are required, not no-op command
+handlers. Dedicated live head-tracking/StopLook/reload coverage is also open.
+
 | Phase | Candidate state | Gate state |
 | --- | --- | --- |
 | 0: baseline | Audit and ordinary test artifacts exist; the harness supports actor-scoped ordered events, counts, failure reasons, exact saved-state fields, named-actor checkpoint deltas, pair-distance outcomes, and named detection-pair outcomes; all six core scenarios use named-identity gates and tutorial has a four-actor before/after quickload pair | Open: add exact tutorial targets and the remaining before-door, after-door, waiting, and package-transition reload boundaries; expand detection and horse beyond their smoke gates; reproduce from the candidate revision and retain exact logs |

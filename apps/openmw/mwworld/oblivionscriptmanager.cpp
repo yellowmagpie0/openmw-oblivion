@@ -604,6 +604,33 @@ namespace MWWorld
         return numericScriptValue(instance->second.mLocals[static_cast<std::size_t>(index)]).value_or(0.0);
     }
 
+    std::optional<Ptr> OblivionScriptManager::scriptedLookTarget(const Ptr& actor) const
+    {
+        const ESM4::RuntimeReferenceState* state = referenceState(keyFor(actor));
+        if (state == nullptr)
+            return std::nullopt;
+        const auto found = state->mCustomState.find("obscript.look_target");
+        if (found == state->mCustomState.end())
+            return std::nullopt;
+        const auto* saved = std::get_if<std::string>(&found->second);
+        if (saved == nullptr)
+            return Ptr{};
+        const ESM::FormKey key = ESM::FormKey::deserialize(*saved);
+        Ptr target;
+        if (key == ESM::FormKey::dynamic("player", 1))
+            target = mWorld.getPlayerPtr();
+        else if (const auto id = mResolver.toFormId(key))
+            target = mWorld.mWorldModel.getPtr(*id);
+        // Looking never loads a remote cell or resurrects a disabled target.
+        if (target.isEmpty() || !target.getRefData().isEnabled() || target.mRef->isDeleted()
+            || !target.isInCell() || !actor.isInCell()
+            || !mWorld.mWorldScene->getActiveCells().contains(target.getCell())
+            || (target.getCell() != actor.getCell()
+                && (!target.getCell()->isExterior() || !actor.getCell()->isExterior())))
+            return Ptr{};
+        return target;
+    }
+
     OblivionScriptManager::Instance& OblivionScriptManager::instanceFor(
         const ObScript::Program& program, const ESM::FormKey& context)
     {
@@ -1073,6 +1100,27 @@ namespace MWWorld
         };
         const auto objectPtr = [&]() { return ptrFor(objectKey()); };
         const auto oblivionAi = [&]() { return mWorld.getOblivionAiService(); };
+
+        if (name == "look" || name == "stoplook")
+        {
+            const Ptr actor = objectPtr();
+            if (actor.isEmpty() || !actor.getClass().isActor())
+                throw std::runtime_error("Native Look requires an actor reference");
+            ESM4::RuntimeReferenceState* state = referenceState(objectKey());
+            if (state == nullptr)
+                throw std::runtime_error("Native Look cannot persist its actor reference");
+            if (name == "stoplook")
+                state->mCustomState.erase("obscript.look_target");
+            else
+            {
+                const auto key = keyFromValue(argument(0));
+                if (!key || key->isNull())
+                    throw std::runtime_error("Native Look requires a target reference");
+                state->mCustomState["obscript.look_target"] = key->serialize();
+            }
+            trace(name + " actor=" + objectKey().serialize());
+            return std::int64_t(0);
+        }
 
         if (name == "getsecondspassed")
             return context.mSecondsPassed;

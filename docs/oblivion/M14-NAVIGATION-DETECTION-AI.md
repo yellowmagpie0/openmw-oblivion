@@ -539,6 +539,38 @@ work; future runs must rebuild matching resources before launch. Engine exit
 is 0, no timeout, and all harness actions completed, but error findings are
 not clean. No milestone acceptance is claimed.
 
+### Scripted Look and stage-13 progression (2026-09-07)
+
+Native `Look`/`StopLook` now set/clear an explicit head-tracking override without
+changing AI package targets, position or movement. The ordinary character
+controller consumes it for native actors. Script-owned presentation intent is
+stored as a canonical serialized FormKey in the existing reference custom-state
+field `obscript.look_target`; C++ and Python reject malformed/noncanonical
+values. Unavailable, disabled or remote targets do not force a cell load or
+silently select a different head-tracking target. StopLook restores automatic
+tracking. Unit coverage checks persistence and preservation of package state;
+dedicated live StopLook/target-loss/head-pose/reload coverage remains open.
+
+The first build failed on an incorrect variant type and a NotNullPtr cast;
+both failures are retained in `m14-look-build-tests.log`. Corrected verification
+passes 1,592 component tests, 524 engine tests and 69 Python tests
+(`m14-look-verified-{components,engine}.log`, `m14-look-python-tests.log`).
+`m14-tutorial-scripted-look/` advances natively through stage 12 to **13**, with
+no Look diagnostic or resource-version mismatch. Both schema-6 checkpoints
+pass; the final checkpoint records Glenroy and Emperor Look targets as the
+stable player identity. This course did not save after issuing Look and then
+reload that same intent, so it is not dedicated live Look-resume acceptance.
+
+The scenario still **FAILS**: native INFO 00bf0d invokes unsupported `PickIdle`,
+aborting before clearing `CharacterGen.uniqueIdle`. Baurus/escort door gates
+remain unmet, and blocked/no-progress counts remain 530 against 500. Source
+inspection also confirms stage 14 depends on `CGTriggerZoneCellScript`'s real
+`OnTrigger player`, for which no native dispatch path exists. Released trigger
+097a3b uses ACTI 097a3c / `TrigZone02.NIF`, which contains a
+`bhkSimpleShapePhantom`. Implement actual idle selection/playback and phantom
+overlap events; do not bypass them with stage writes or no-op commands. M14
+remains in progress.
+
 ## Reproduce
 
 Build and run the audit:

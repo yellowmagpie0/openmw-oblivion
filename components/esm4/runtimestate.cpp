@@ -567,6 +567,20 @@ namespace ESM4
                 if (name.empty())
                     throw std::runtime_error("TES4 runtime-state custom-state key is empty");
                 validateValue(value);
+                if (name == "obscript.look_target")
+                {
+                    const auto* saved = std::get_if<std::string>(&value);
+                    try
+                    {
+                        if (saved == nullptr || *saved == "null"
+                            || ESM::FormKey::deserialize(*saved).serialize() != *saved)
+                            throw std::invalid_argument("expected a canonical non-null FormKey");
+                    }
+                    catch (const std::invalid_argument&)
+                    {
+                        throw std::runtime_error("Invalid TES4 scripted Look target");
+                    }
+                }
             }
         }
 

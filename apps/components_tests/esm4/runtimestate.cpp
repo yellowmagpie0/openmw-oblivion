@@ -141,6 +141,30 @@ namespace
         EXPECT_EQ(actual.canonicalJson(), expected.canonicalJson());
     }
 
+    TEST(ESM4RuntimeState, scriptedLookReferenceSurvivesSaveWithoutChangingAiTarget)
+    {
+        auto state = makeM14State();
+        auto& reference = state.mReferences.front();
+        reference.mCustomState["obscript.look_target"] = state.mPlayer.mReference.serialize();
+        auto loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_EQ(std::get<std::string>(loaded.mReferences.front().mCustomState.at("obscript.look_target")),
+            state.mPlayer.mReference.serialize());
+        EXPECT_EQ(loaded.mActorAi, state.mActorAi);
+        loaded.mReferences.front().mCustomState.erase("obscript.look_target");
+        const auto stopped = ESM4::RuntimeState::deserializeBinary(loaded.serializeBinary());
+        EXPECT_FALSE(stopped.mReferences.front().mCustomState.contains("obscript.look_target"));
+        EXPECT_EQ(stopped.mActorAi, state.mActorAi);
+        EXPECT_EQ(stopped.mReferences.front().mCustomState.at("label"), reference.mCustomState.at("label"));
+        for (const std::string value : { "null", "content:oblivion.esm:000000", "garbage",
+                 "content:Oblivion.esm:000001", "dynamic:player:0000000000000000" })
+        {
+            reference.mCustomState["obscript.look_target"] = value;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+        reference.mCustomState["obscript.look_target"] = true;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+
     TEST(ESM4RuntimeState, versionSixPreservesPendingPackageCompletionOrder)
     {
         auto state = makeM14State();
