@@ -24,9 +24,6 @@
     {"type": "key", "value": "F5"},
     {"type": "sleep", "seconds": 6},
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "forbidden_ascii": ["GPRO", "T4VR", "T4ST", "OMW4STATE", "TES4 runtime-state"]},
-    {"type": "key_held", "value": "grave"},
-    {"type": "type", "value": "exit()", "delay_ms": 1},
-    {"type": "key_held", "value": "Return"},
     {"type": "sleep", "seconds": 2}
   ],
   "terminate_after_actions": true,

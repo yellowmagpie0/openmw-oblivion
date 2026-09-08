@@ -2009,6 +2009,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
     scenario_timeout = float(manifest.get("timeout_seconds", 60))
     deadline = started + scenario_timeout
     process: subprocess.Popen[str] | None = None
+    shutdown_requested = False
     try:
         if manifest.get("virtual_gamepad", False):
             _VIRTUAL_GAMEPAD = VirtualGamepad()
@@ -2068,6 +2069,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
                     signal.setitimer(signal.ITIMER_REAL, 0)
                     signal.signal(signal.SIGALRM, previous_alarm)
             if manifest.get("terminate_after_actions", False) and process.poll() is None:
+                shutdown_requested = True
                 process.send_signal(signal.SIGTERM)
             if timed_out and process.poll() is None:
                 process.terminate()
@@ -2091,6 +2093,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         expected = [str(value) for value in manifest.get("expected_log", [])]
         missing_expected = [pattern for pattern in expected if not re.search(pattern, log_text, re.MULTILINE)]
         forbidden = [str(value) for value in manifest.get("forbidden_log", [])]
+        if isinstance(m14_config, dict):
+            forbidden.append("Console diagnostic:")
         forbidden_findings = check_log_text(log_text, forbidden_patterns=forbidden)["findings"]
         reviewed_errors = [str(value) for value in manifest.get("reviewed_error_log", [])]
         unreviewed_error_findings = check_log_text(
@@ -2119,6 +2123,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             "command": command,
             "exit_code": process.returncode,
             "expected_exit": expected_exit,
+            "shutdown_requested": shutdown_requested,
             "actions_complete": actions_complete,
             "timed_out": timed_out,
             "missing_expected_log": missing_expected,

@@ -144,9 +144,6 @@
     {"type": "screenshot", "name": "city-navmesh.png", "minimum_entropy": 0.02},
     {"type": "m14_assert_events", "minimum_event_count": 1, "maximum_route_blocked": 1000, "maximum_no_progress_events": 1000},
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
-    {"type": "key_held", "value": "grave"},
-    {"type": "type", "value": "exit()", "delay_ms": 1},
-    {"type": "key_held", "value": "Return"},
     {"type": "sleep", "seconds": 2}
   ],
   "terminate_after_actions": true,

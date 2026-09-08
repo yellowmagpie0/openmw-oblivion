@@ -62,9 +62,6 @@
     {"type": "m14_assert_events", "minimum_event_count": 100, "required_events": [{"event": "detection"}], "detection_requirements": [{"observer": "dynamic:player:0000000000000001", "target": "content:oblivion.esm:01fc43", "minimum_event_count": 2, "maximum_event_count": 32, "required_outcomes": [{"line_of_sight": false, "detected": false, "score": 0}, {"line_of_sight": true, "detected": true}]}]},
     {"type": "assert_file", "path_glob": "obscript-report.json", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["getdetectionlevel", "getdetected", "getlos"], "forbidden_ascii": ["unsupported"]},
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
-    {"type": "key_held", "value": "grave"},
-    {"type": "type", "value": "exit()", "delay_ms": 1},
-    {"type": "key_held", "value": "Return"},
     {"type": "sleep", "seconds": 2}
   ],
   "terminate_after_actions": true,

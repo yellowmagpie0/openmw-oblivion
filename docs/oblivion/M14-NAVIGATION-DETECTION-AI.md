@@ -717,6 +717,14 @@ evidence, not completion of the outstanding runtime matrix.
 
 ## Reproduce
 
+The M14 manifests now omit the invalid `exit()` input and use their explicit
+`terminate_after_actions` shutdown policy. Reports retain `shutdown_requested`
+separately from exit status; native M14 console diagnostics fail regardless of
+the manifest's optional forbidden-log list. All 75 Python tests pass
+(`m14-shutdown-python-3.log`); the first two runs exposed incomplete new test
+manifests (missing name/event_file), retained in `m14-shutdown-python{,-2}.log`.
+The Telepe native course has not yet been rerun with this harness repair.
+
 Build and run the audit:
 
 ```sh

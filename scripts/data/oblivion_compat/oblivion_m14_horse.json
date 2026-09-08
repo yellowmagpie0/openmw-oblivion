@@ -85,9 +85,6 @@
       ]},
     {"type": "m14_assert_events", "minimum_event_count": 100, "actor_event_requirements": [{"actor": "dynamic:player:0000000000000001", "required_event_order": [{"event": "horse-mount", "reason": "horse=content:oblivion.esm:068451"}, {"event": "horse-dismount", "reason": "horse=content:oblivion.esm:068451"}], "minimum_event_counts": {"horse-mount": 1, "horse-dismount": 1}, "maximum_event_counts": {"horse-mount": 1, "horse-dismount": 1}}, {"actor": "content:oblivion.esm:068451", "required_events": [{"event": "horse-rider", "reason": "rider=dynamic:player:0000000000000001"}], "minimum_event_counts": {"horse-rider": 1}, "maximum_event_counts": {"horse-rider": 1, "selection": 8}, "forbidden_reason_substrings": ["bounded-repath-exhausted", "door-locked", "navmesh is not found"]}], "maximum_route_blocked": 500, "maximum_no_progress_events": 500},
     {"type": "assert_file", "path_glob": "userdata/saves/*/*.omwsave", "expected_count": 1, "minimum_size": 1024, "contains_ascii": ["T4ST", "OMW4STATE"]},
-    {"type": "key_held", "value": "grave"},
-    {"type": "type", "value": "exit()", "delay_ms": 1},
-    {"type": "key_held", "value": "Return"},
     {"type": "sleep", "seconds": 2}
   ],
   "terminate_after_actions": true,

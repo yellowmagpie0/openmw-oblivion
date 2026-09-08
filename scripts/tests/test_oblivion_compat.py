@@ -939,6 +939,41 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertEqual(result["exit_code"], 0)
             self.assertFalse(result["actions_complete"])
             self.assertFalse(result["passed"])
+            self.assertFalse(result["shutdown_requested"])
+
+    def test_scenario_records_requested_shutdown_separately_from_clean_exit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "shutdown.json"
+            manifest.write_text(json.dumps({
+                "schema_version": 1,
+                "name": "requested-shutdown",
+                "command": [sys.executable, "-u", "-c",
+                            "import signal, sys, time; "
+                            "signal.signal(signal.SIGTERM, lambda *_: sys.exit(0)); "
+                            "print('ready'); time.sleep(10)"],
+                "actions": [{"type": "wait_log", "pattern": "ready", "timeout_seconds": 2}],
+                "terminate_after_actions": True,
+            }))
+            result = MODULE.run_scenario(manifest, root / "output", {})
+            self.assertTrue(result["passed"])
+            self.assertEqual(result["exit_code"], 0)
+            self.assertTrue(result["shutdown_requested"])
+
+    def test_m14_console_diagnostics_fail_without_manifest_opt_in(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "diagnostic.json"
+            manifest.write_text(json.dumps({
+                "schema_version": 1,
+                "name": "console-diagnostic",
+                "command": [sys.executable, "-c", "print('Console diagnostic: invalid command')"],
+                "m14": {"event_file": "ai-events.jsonl"},
+            }))
+            with mock.patch.object(MODULE, "_validate_m14_events", return_value={"passed": True}):
+                result = MODULE.run_scenario(manifest, root / "output", {})
+            self.assertFalse(result["passed"])
+            self.assertEqual(len(result["forbidden_log_findings"]), 1)
 
     def test_scenario_rejects_unreviewed_error_lines(self):
         with tempfile.TemporaryDirectory() as temporary:
