@@ -777,6 +777,37 @@ diagnostics, with explicit harness-requested shutdown. This establishes causal
 low-process Telepe recovery, not the remaining city/high-process/formation-cycle
 matrix or overall M14 acceptance. The unrelated rendering error is not waived.
 
+### Native path interpolation and remaining arrival failure (2026-09-08)
+
+Embedded NiPathInterpolator now supports percent-track evaluation, bounded
+adaptive arc-length timing, authored X/Y/Z tangent following and axis reversal.
+The constant-velocity table handles nonuniform straight cubics as well as curved
+paths, rounded sample times and float position precision. Degenerate paths do
+not invent a rotation. Missing/non-finite/unordered tracks and unsupported
+banking/AllowFlip modes remain explicit errors. Legacy NiPathController timing
+is unchanged. Flag/axis interpretation follows the
+[NifTools format definitions](https://raw.githubusercontent.com/niftools/nifxml/develop/nif.xml).
+
+All 1,606 component and 529 engine tests pass
+(`m14-path-interpolator-components-final.log`, `m14-path-interpolator-engine.log`).
+Strict released-moth scene construction passes without resource errors
+(`m14-path-interpolator-moth-scene-4.log`). Earlier checks retain an incorrect
+VFS input path, a real sampling-precision failure, and a missing texture archive
+argument (`m14-path-interpolator-moth-scene{,-2,-3}.log`). The precision trace
+(`m14-path-interpolator-precision-2.log`) exposed midpoint rounding between
+adjacent float times; a dedicated regression now covers it. Sanitizers are
+still running; this is not final-revision acceptance.
+
+`m14-companion-telepe-path-animation/` **FAILS**, with no unreviewed rendering
+errors or console diagnostics. All causal door events and four save/reload
+checkpoints pass, but reunited spacing is 560.53 both before/after reload,
+exceeding the unchanged 512 bound. Thus the earlier 264.80 pass is not robust
+arrival evidence. Source inspection found that low-process movement declares
+arrival when the final pathgrid node is consumed, before reaching the actual
+requested destination; the member then remains waiting at that premature
+arrival. Repair route-tail completion and verify across fresh runs. Do not
+increase the spacing bound or hide this failure behind a longer wait.
+
 ## Reproduce
 
 

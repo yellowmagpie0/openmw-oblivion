@@ -526,6 +526,7 @@ namespace NifOsg
     {
     public:
         PathController(const Nif::NiPathController* ctrl);
+        explicit PathController(const Nif::NiPathInterpolator* interpolator);
         PathController() = default;
         PathController(const PathController& copy, const osg::CopyOp& copyop);
 
@@ -533,12 +534,20 @@ namespace NifOsg
 
         void operator()(NifOsg::MatrixTransform*, osg::NodeVisitor*);
 
+        SceneUtil::KeyframeController::KfTransform evaluate(float time) const;
+
     private:
         Vec3Interpolator mPath;
         FloatInterpolator mPercent;
         int mFlags{ 0 };
+        bool mNativeInterpolator{ false };
+        unsigned int mFollowAxis{ 0 };
+        // Parameter and accumulated arc length. Immutable after construction;
+        // each cloned callback retains its own interpolation cursor.
+        std::vector<std::pair<float, double>> mArcLength;
 
         float getPercent(float time) const;
+        void buildArcLength(const Nif::Vector3KeyMap& path);
     };
 
     class LookAtController : public SceneUtil::NodeCallback<LookAtController, NifOsg::MatrixTransform*>,

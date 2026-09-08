@@ -1224,6 +1224,16 @@ namespace NifOsg
                     if (key->mData.empty() && key->mInterpolator.empty())
                         continue;
                     if (!key->mInterpolator.empty()
+                        && key->mInterpolator->mRecordType == Nif::RC_NiPathInterpolator)
+                    {
+                        osg::ref_ptr<PathController> callback = new PathController(
+                            static_cast<const Nif::NiPathInterpolator*>(key->mInterpolator.getPtr()));
+                        setupController(key, callback, animflags);
+                        node->addUpdateCallback(callback);
+                        isAnimated = true;
+                        continue;
+                    }
+                    if (!key->mInterpolator.empty()
                         && key->mInterpolator->mRecordType != Nif::RC_NiTransformInterpolator)
                     {
                         Log(Debug::Error)

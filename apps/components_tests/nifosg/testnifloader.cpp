@@ -19,6 +19,7 @@
 #include <osgParticle/ModularProgram>
 
 #include <array>
+#include <cmath>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
@@ -115,6 +116,198 @@ osg::Group {
   }
 }
 )");
+    }
+
+    struct NativePathFixture
+    {
+        std::shared_ptr<Nif::Vector3KeyMap> path = std::make_shared<Nif::Vector3KeyMap>();
+        std::shared_ptr<Nif::FloatKeyMap> percent = std::make_shared<Nif::FloatKeyMap>();
+        Nif::NiPosData pathData;
+        Nif::NiFloatData percentData;
+        Nif::NiPathInterpolator interpolator;
+
+        NativePathFixture()
+        {
+            path->mInterpolationType = Nif::InterpolationType_Quadratic;
+            // x(t) = 8t^3: a straight curve whose parameter is not distance.
+            path->mKeys = { { 0.f, { osg::Vec3f(), {}, {} } },
+                { 1.f, { osg::Vec3f(8.f, 0.f, 0.f), osg::Vec3f(24.f, 0.f, 0.f), {} } } };
+            percent->mInterpolationType = Nif::InterpolationType_Linear;
+            percent->mKeys = { { 0.f, { 0.f, 0.f, 0.f } }, { 1.f, { 1.f, 0.f, 0.f } } };
+            pathData.mKeyList = path;
+            percentData.mKeyList = percent;
+            interpolator.mRecordType = Nif::RC_NiPathInterpolator;
+            interpolator.mFlags = Nif::NiPathController::Flag_ConstVelocity | Nif::NiPathController::Flag_OpenCurve;
+            interpolator.mFollowAxis = 0;
+            interpolator.mPathData = &pathData;
+            interpolator.mPercentData = &percentData;
+        }
+    };
+
+    TEST(NifOsgControllerTest, pathConstantVelocityAccountsForNonuniformStraightCurveParameterization)
+    {
+        NativePathFixture fixture;
+        PathController controller(&fixture.interpolator);
+        for (float time : { 0.f, 0.125f, 0.5f, 0.9f, 1.f })
+            EXPECT_NEAR(controller.evaluate(time).mTranslation->x(), time * 8.f, 0.001f);
+        PathController clone(controller, osg::CopyOp::SHALLOW_COPY);
+        EXPECT_NEAR(clone.evaluate(0.3f).mTranslation->x(), 2.4f, 0.001f);
+        EXPECT_NEAR(controller.evaluate(0.7f).mTranslation->x(), 5.6f, 0.001f);
+        fixture.interpolator.mFlags = Nif::NiPathController::Flag_OpenCurve;
+        EXPECT_FLOAT_EQ(PathController(&fixture.interpolator).evaluate(0.5f).mTranslation->x(), 1.f);
+
+        fixture.percent->mKeys = { { 0.f, { -0.25f, 0.f, 0.f } }, { 1.f, { 1.25f, 0.f, 0.f } } };
+        fixture.interpolator.mFlags |= Nif::NiPathController::Flag_ConstVelocity;
+        PathController wrapped(&fixture.interpolator);
+        EXPECT_NEAR(wrapped.evaluate(0.f).mTranslation->x(), 6.f, 0.001f);
+        EXPECT_NEAR(wrapped.evaluate(1.f).mTranslation->x(), 2.f, 0.001f);
+    }
+
+    TEST(NifOsgControllerTest, pathFollowUsesAuthoredAxisAndFlip)
+    {
+        NativePathFixture fixture;
+        fixture.path->mInterpolationType = Nif::InterpolationType_Linear;
+        fixture.path->mKeys = { { 0.f, { osg::Vec3f(), {}, {} } },
+            { 1.f, { osg::Vec3f(0.f, 8.f, 0.f), {}, {} } } };
+        for (unsigned axisIndex = 0; axisIndex != 3; ++axisIndex)
+        {
+            fixture.interpolator.mFollowAxis = axisIndex;
+            for (bool flip : { false, true })
+            {
+                fixture.interpolator.mFlags = Nif::NiPathController::Flag_Follow | Nif::NiPathController::Flag_OpenCurve
+                    | (flip ? Nif::NiPathController::Flag_FlipFollowAxis : 0);
+                PathController controller(&fixture.interpolator);
+                for (float time : { 0.f, 0.5f, 1.f })
+                {
+                    const auto result = controller.evaluate(time);
+                    ASSERT_TRUE(result.mRotation);
+                    osg::Vec3f axis;
+                    axis[axisIndex] = flip ? -1.f : 1.f;
+                    EXPECT_LT(((*result.mRotation * axis) - osg::Vec3f(0.f, 1.f, 0.f)).length(), 1e-6f);
+                    EXPECT_FALSE(result.mScale);
+                }
+            }
+        }
+    }
+
+    TEST(NifOsgControllerTest, pathArcLengthHandlesFloatTimeRoundingAndTranslatedCoordinates)
+    {
+        NativePathFixture fixture;
+        const float begin = 0.25f;
+        const float end = std::nextafter(std::nextafter(std::nextafter(begin, 1.f), 1.f), 1.f);
+        fixture.path->mInterpolationType = Nif::InterpolationType_Linear;
+        fixture.path->mKeys = { { 0.f, { osg::Vec3f(256.f, -155.f, 42.f), {}, {} } },
+            { begin, { osg::Vec3f(256.f, -155.f, 42.f), {}, {} } },
+            { end, { osg::Vec3f(264.f, -155.f, 42.f), {}, {} } },
+            { 1.f, { osg::Vec3f(264.f, -155.f, 42.f), {}, {} } } };
+        // There are only four representable parameter values on this tiny
+        // segment. Construction must not subdivide forever looking for a
+        // nonexistent exact midpoint, or misdiagnose rounding as curvature.
+        PathController controller(&fixture.interpolator);
+        EXPECT_FLOAT_EQ(controller.evaluate(0.f).mTranslation->x(), 256.f);
+        EXPECT_FLOAT_EQ(controller.evaluate(1.f).mTranslation->x(), 264.f);
+    }
+
+    TEST(NifOsgControllerTest, closedCurvedPathUsesDistanceAndContinuousSeamDirection)
+    {
+        NativePathFixture fixture;
+        constexpr float tangent = 1.65685425f;
+        fixture.path->mKeys = {
+            { 0.f, { { 1.f, 0.f, 0.f }, { 0.f, tangent, 0.f }, { 0.f, tangent, 0.f } } },
+            { 0.1f, { { 0.f, 1.f, 0.f }, { -tangent, 0.f, 0.f }, { -tangent, 0.f, 0.f } } },
+            { 0.8f, { { -1.f, 0.f, 0.f }, { 0.f, -tangent, 0.f }, { 0.f, -tangent, 0.f } } },
+            { 0.9f, { { 0.f, -1.f, 0.f }, { tangent, 0.f, 0.f }, { tangent, 0.f, 0.f } } },
+            { 1.f, { { 1.f, 0.f, 0.f }, { 0.f, tangent, 0.f }, { 0.f, tangent, 0.f } } },
+        };
+        fixture.interpolator.mFlags = Nif::NiPathController::Flag_ConstVelocity | Nif::NiPathController::Flag_Follow;
+        fixture.interpolator.mFollowAxis = 2;
+        PathController controller(&fixture.interpolator);
+        EXPECT_LT((*controller.evaluate(0.25f).mTranslation - osg::Vec3f(0.f, 1.f, 0.f)).length(), 0.001f);
+        EXPECT_LT((*controller.evaluate(0.5f).mTranslation - osg::Vec3f(-1.f, 0.f, 0.f)).length(), 0.001f);
+        EXPECT_LT((*controller.evaluate(0.75f).mTranslation - osg::Vec3f(0.f, -1.f, 0.f)).length(), 0.001f);
+        for (float time : { 0.f, 1.f })
+        {
+            const auto result = controller.evaluate(time);
+            ASSERT_TRUE(result.mRotation);
+            EXPECT_LT(((*result.mRotation * osg::Vec3f(0.f, 0.f, 1.f)) - osg::Vec3f(0.f, 1.f, 0.f)).length(), 0.001f);
+        }
+    }
+
+    TEST(NifOsgControllerTest, degeneratePathDoesNotInventRotationAndLegacyPathKeepsParameterTiming)
+    {
+        NativePathFixture fixture;
+        Nif::NiPathController legacy;
+        legacy.mPathFlags = Nif::NiPathController::Flag_ConstVelocity;
+        legacy.mPathData = &fixture.pathData;
+        legacy.mPercentData = &fixture.percentData;
+        EXPECT_FLOAT_EQ(PathController(&legacy).evaluate(0.5f).mTranslation->x(), 1.f);
+        fixture.path->mInterpolationType = Nif::InterpolationType_Linear;
+        fixture.path->mKeys = { { 0.f, { osg::Vec3f(2.f, 3.f, 4.f), {}, {} } },
+            { 1.f, { osg::Vec3f(2.f, 3.f, 4.f), {}, {} } } };
+        fixture.interpolator.mFlags |= Nif::NiPathController::Flag_Follow;
+        const auto result = PathController(&fixture.interpolator).evaluate(0.5f);
+        EXPECT_EQ(result.mTranslation, osg::Vec3f(2.f, 3.f, 4.f));
+        EXPECT_FALSE(result.mRotation);
+    }
+
+    TEST(NifOsgControllerTest, pathRejectsMissingMalformedAndUnsupportedData)
+    {
+        NativePathFixture fixture;
+        fixture.interpolator.mFlags |= Nif::NiPathController::Flag_Bank;
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+        fixture.interpolator.mFlags = Nif::NiPathController::Flag_Follow;
+        fixture.interpolator.mFollowAxis = 3;
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+        fixture.interpolator.mFollowAxis = 0;
+        fixture.path->mInterpolationType = Nif::InterpolationType_XYZ;
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+        fixture.path->mInterpolationType = Nif::InterpolationType_Quadratic;
+        fixture.path->mKeys.back().first = 0.f;
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+        fixture.path->mKeys.back().first = 1.f;
+        fixture.percent->mKeys.front().second.mValue = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+        fixture.percent->mKeys.front().second.mValue = 0.f;
+        PathController controller(&fixture.interpolator);
+        EXPECT_THROW(controller.evaluate(std::numeric_limits<float>::infinity()), std::runtime_error);
+        fixture.path->mKeys.clear();
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+        fixture.interpolator.mPathData = nullptr;
+        EXPECT_THROW(PathController{ &fixture.interpolator }, std::runtime_error);
+    }
+
+    TEST_F(NifOsgLoaderTest, attachesNativePathInterpolatorToItsAuthoredNode)
+    {
+        NativePathFixture fixture;
+        Nif::NiAVObject node;
+        init(node);
+        Nif::NiKeyframeController key;
+        init(static_cast<Nif::NiTimeController&>(key));
+        key.mRecordType = Nif::RC_NiKeyframeController;
+        key.mFlags = 8;
+        key.mFrequency = 1.f;
+        key.mTimeStop = 1.f;
+        key.mData = nullptr;
+        key.mInterpolator = &fixture.interpolator;
+        node.mController = &key;
+        Nif::NIFFile file(testNif);
+        file.mRoots.push_back(&node);
+        const auto result = Loader::load(file, &mImageManager, &mMaterialManager);
+        class Visitor : public osg::NodeVisitor
+        {
+        public:
+            unsigned count = 0;
+            Visitor() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+            void apply(osg::Node& value) override
+            {
+                for (auto* callback = value.getUpdateCallback(); callback; callback = callback->getNestedCallback())
+                    if (dynamic_cast<PathController*>(callback))
+                        ++count;
+                traverse(value);
+            }
+        } visitor;
+        result->accept(visitor);
+        EXPECT_EQ(visitor.count, 1u);
     }
 
     TEST(NifOsgControllerTest, multiplexesOverlappingSequenceTracksOnTheSyntheticTimeline)

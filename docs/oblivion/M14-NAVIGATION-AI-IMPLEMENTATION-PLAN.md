@@ -1072,6 +1072,14 @@ repaired; 529 engine and 75 Python tests pass. The native course still FAILS
 overall solely on the moth path-interpolator error, without a log waiver.
 City/high-process transitions and formation/cycle coverage remain open.
 
+The subsequent `m14-companion-telepe-path-animation/` removes the unreviewed
+rendering error but still FAILS: reunited spacing is 560.53 before/after reload
+(limit 512). All door events/checkpoints pass. Low-process route traversal
+prematurely marks its last graph node as destination arrival; complete the
+remaining route tail before claiming recovery is robust. Earlier 264.80
+spacing evidence does not close this gate. Path-interpolator regression tests
+pass (1,606 component / 529 engine), but final sanitizers remain outstanding.
+
 ### 16.5 Detection matrix
 
 Suggested manifest: `oblivion_m14_detection.json`.

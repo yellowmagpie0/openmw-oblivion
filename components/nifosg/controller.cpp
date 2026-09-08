@@ -972,6 +972,9 @@ namespace NifOsg
         , mPath(copy.mPath)
         , mPercent(copy.mPercent)
         , mFlags(copy.mFlags)
+        , mNativeInterpolator(copy.mNativeInterpolator)
+        , mFollowAxis(copy.mFollowAxis)
+        , mArcLength(copy.mArcLength)
     {
     }
 
@@ -980,6 +983,169 @@ namespace NifOsg
         , mPercent(ctrl->mPercentData->mKeyList, 1.f)
         , mFlags(ctrl->mPathFlags)
     {
+    }
+
+    PathController::PathController(const Nif::NiPathInterpolator* interpolator)
+        : mFlags(interpolator->mFlags)
+        , mNativeInterpolator(true)
+        , mFollowAxis(interpolator->mFollowAxis)
+    {
+        if (interpolator->mPathData.empty() || interpolator->mPercentData.empty()
+            || !interpolator->mPathData->mKeyList || !interpolator->mPercentData->mKeyList)
+            throw std::runtime_error("NiPathInterpolator requires path and percent data");
+        // Bank and AllowFlip need a curvature-frame implementation. Do not
+        // silently treat those authored modes as a tangent-only rotation.
+        constexpr unsigned supported = Nif::NiPathController::Flag_CVDataNeedsUpdate
+            | Nif::NiPathController::Flag_OpenCurve | Nif::NiPathController::Flag_ConstVelocity
+            | Nif::NiPathController::Flag_Follow | Nif::NiPathController::Flag_FlipFollowAxis;
+        if ((mFlags & ~supported) != 0)
+            throw std::runtime_error("Unsupported NiPathInterpolator banking or flip-avoidance flags");
+        if ((mFlags & Nif::NiPathController::Flag_Follow) && mFollowAxis > 2)
+            throw std::runtime_error("NiPathInterpolator follow axis is outside X/Y/Z");
+        const auto& path = interpolator->mPathData->mKeyList;
+        const auto& percent = interpolator->mPercentData->mKeyList;
+        const auto validate = [](const auto& keys, const auto& valid) {
+            if (keys.mKeys.empty())
+                throw std::runtime_error("NiPathInterpolator has an empty key track");
+            if (keys.mInterpolationType != Nif::InterpolationType_Linear
+                && keys.mInterpolationType != Nif::InterpolationType_Quadratic
+                && keys.mInterpolationType != Nif::InterpolationType_TCB
+                && keys.mInterpolationType != Nif::InterpolationType_Constant)
+                throw std::runtime_error("NiPathInterpolator has an unsupported key interpolation type");
+            float previous = -std::numeric_limits<float>::infinity();
+            for (const auto& [time, value] : keys.mKeys)
+            {
+                if (!std::isfinite(time) || time <= previous || !valid(value.mValue)
+                    || ((keys.mInterpolationType == Nif::InterpolationType_Quadratic
+                            || keys.mInterpolationType == Nif::InterpolationType_TCB)
+                        && (!valid(value.mInTan) || !valid(value.mOutTan))))
+                    throw std::runtime_error("NiPathInterpolator has invalid or unordered keys");
+                previous = time;
+            }
+        };
+        validate(*path, isValidTransformVector);
+        validate(*percent, isValidTransformComponent);
+        mPath = Vec3Interpolator(path, osg::Vec3f());
+        mPercent = FloatInterpolator(percent, 0.f);
+        if (mFlags & Nif::NiPathController::Flag_ConstVelocity)
+        {
+            if (path->mInterpolationType == Nif::InterpolationType_Constant)
+                throw std::runtime_error("NiPathInterpolator constant velocity requires a continuous path");
+            buildArcLength(*path);
+        }
+    }
+
+    void PathController::buildArcLength(const Nif::Vector3KeyMap& path)
+    {
+        mArcLength.emplace_back(0.f, 0.);
+        const auto subdivide = [&](const auto& self, float begin, const osg::Vec3f& a,
+                                   float end, const osg::Vec3f& b, unsigned depth) -> void {
+            const float middle = (begin + end) * 0.5f;
+            const osg::Vec3f mid = mPath.interpKey(middle);
+            const float quarterTime = begin + (end - begin) * 0.25f;
+            const float threeQuarterTime = begin + (end - begin) * 0.75f;
+            const osg::Vec3f quarter = mPath.interpKey(quarterTime);
+            const osg::Vec3f threeQuarter = mPath.interpKey(threeQuarterTime);
+            if (!isValidTransformVector(a) || !isValidTransformVector(b) || !isValidTransformVector(mid)
+                || !isValidTransformVector(quarter) || !isValidTransformVector(threeQuarter))
+                throw std::runtime_error("NiPathInterpolator path evaluation is non-finite");
+            // Check parameterization as well as curvature: a straight cubic
+            // can have zero chord error and still have nonconstant speed.
+            const osg::Vec3d start(a);
+            const osg::Vec3d delta = osg::Vec3d(b) - start;
+            const auto linear = [&](float time) {
+                return start + delta * ((double(time) - begin) / (double(end) - begin));
+            };
+            const double error = std::max({ (osg::Vec3d(mid) - linear(middle)).length(),
+                (osg::Vec3d(quarter) - linear(quarterTime)).length(),
+                (osg::Vec3d(threeQuarter) - linear(threeQuarterTime)).length() });
+            // Use the actual rounded sample times, not nominal fractions:
+            // between adjacent float times a "midpoint" can be 1/3 or 2/3.
+            // Position interpolation itself also has a float roundoff floor.
+            const double roundoff = 4. * std::numeric_limits<float>::epsilon()
+                * std::max(start.length(), osg::Vec3d(b).length());
+            const double tolerance = 0.0001 + delta.length() * 0.0001 + roundoff;
+            if (error > tolerance)
+            {
+                if (depth == 16 || middle == begin || middle == end)
+                    throw std::runtime_error("NiPathInterpolator arc-length precision limit exceeded");
+                self(self, begin, a, middle, mid, depth + 1);
+                self(self, middle, mid, end, b, depth + 1);
+                return;
+            }
+            if (mArcLength.size() >= 262144)
+                throw std::runtime_error("NiPathInterpolator arc-length sample limit exceeded");
+            mArcLength.emplace_back(end, mArcLength.back().second + (osg::Vec3d(b) - osg::Vec3d(a)).length());
+        };
+        float begin = 0.f;
+        for (const auto& [time, _] : path.mKeys)
+        {
+            const float end = std::clamp(time, 0.f, 1.f);
+            if (end > begin)
+                subdivide(subdivide, begin, mPath.interpKey(begin), end, mPath.interpKey(end), 0);
+            begin = end;
+        }
+        if (begin < 1.f)
+            subdivide(subdivide, begin, mPath.interpKey(begin), 1.f, mPath.interpKey(1.f), 0);
+    }
+
+    SceneUtil::KeyframeController::KfTransform PathController::evaluate(float time) const
+    {
+        if (!std::isfinite(time))
+            throw std::runtime_error("NiPathInterpolator input time is non-finite");
+        float parameter = getPercent(time);
+        if (!std::isfinite(parameter))
+            throw std::runtime_error("NiPathInterpolator percent is non-finite");
+        if (!mArcLength.empty() && mArcLength.back().second > 0.)
+        {
+            const double distance = parameter * mArcLength.back().second;
+            const auto high = std::lower_bound(mArcLength.begin(), mArcLength.end(), distance,
+                [](const auto& sample, double value) { return sample.second < value; });
+            if (high == mArcLength.begin())
+                parameter = high->first;
+            else if (high == mArcLength.end())
+                parameter = 1.f;
+            else
+            {
+                const auto low = std::prev(high);
+                const double fraction = (distance - low->second) / (high->second - low->second);
+                parameter = low->first + (high->first - low->first) * fraction;
+            }
+        }
+        SceneUtil::KeyframeController::KfTransform result;
+        result.mTranslation = mPath.interpKey(parameter);
+        if (!isValidTransformVector(*result.mTranslation))
+            throw std::runtime_error("NiPathInterpolator translation is non-finite");
+        if (mNativeInterpolator && (mFlags & Nif::NiPathController::Flag_Follow))
+        {
+            constexpr float epsilon = 0.0001f;
+            float before = parameter - epsilon;
+            float after = parameter + epsilon;
+            if (mFlags & Nif::NiPathController::Flag_OpenCurve)
+            {
+                before = std::max(before, 0.f);
+                after = std::min(after, 1.f);
+            }
+            else
+            {
+                if (before < 0.f)
+                    before += 1.f;
+                if (after > 1.f)
+                    after -= 1.f;
+            }
+            osg::Vec3f tangent = mPath.interpKey(after) - mPath.interpKey(before);
+            if (!isValidTransformVector(tangent))
+                throw std::runtime_error("NiPathInterpolator tangent is non-finite");
+            if (tangent.normalize() > 0.f)
+            {
+                osg::Vec3f axis;
+                axis[mFollowAxis] = (mFlags & Nif::NiPathController::Flag_FlipFollowAxis) ? -1.f : 1.f;
+                osg::Quat rotation;
+                rotation.makeRotate(axis, tangent);
+                result.mRotation = rotation;
+            }
+        }
+        return result;
     }
 
     float PathController::getPercent(float time) const
@@ -1001,8 +1167,10 @@ namespace NifOsg
         }
 
         float time = getInputValue(nv);
-        float percent = getPercent(time);
-        node->setTranslation(mPath.interpKey(percent));
+        const auto transform = evaluate(time);
+        node->setTranslation(*transform.mTranslation);
+        if (transform.mRotation)
+            node->setRotation(*transform.mRotation);
 
         traverse(node, nv);
     }

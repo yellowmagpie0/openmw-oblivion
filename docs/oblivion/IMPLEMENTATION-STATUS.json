@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-09-02",
+  "updated": "2026-09-08",
   "base_revision": "a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
   "milestones": {
     "M0": {
@@ -315,21 +315,28 @@
         "build/oblivion-compat/m12-menus-final6/scenario.json",
         "build/oblivion-compat/m12-player-final6/scenario.json",
         "build/oblivion-compat/m13-market-m14-final3/scenario.json",
-        "build/oblivion-compat/m13-tutorial-final2/scenario.json"
+        "build/oblivion-compat/m13-tutorial-final2/scenario.json",
+        "build/oblivion-compat/m14-audit-comparisons/m14-audit.json",
+        "build/oblivion-compat/m14-tutorial-native-variables/scenario.json",
+        "build/oblivion-compat/m14-city-overlay-ready/scenario.json",
+        "build/oblivion-compat/m14-companion-telepe-obstruction/scenario.json",
+        "build/oblivion-compat/m14-companion-telepe-recovery/scenario.json",
+        "build/oblivion-compat/m14-companion-telepe-path-animation/scenario.json",
+        "build/oblivion-compat/m14-door-recovery-engine-2.log"
       ],
       "candidate_implementation": [
         "Native stable-keyed TES4 PACK/PGRD stores, typed CTDA/CTDT conditions, and count-locked audit tooling",
         "Pathgrid service with local/foreign edges, PGRL object links, overlays, navigator adapters, and door-routing code",
         "TES4 NPC/creature actor bridge sharing M11 rendering and M12/M13 mechanics state, with nonzero multipart-NPC collision and navigator bounds",
-        "Package selection, schedules, conditions, detection, high/low processing, obstruction recovery, and persistence schema 5",
+        "Package selection, schedules, conditions, detection, high/low processing, obstruction recovery, and persistence schema 6 with deferred package-completion callbacks",
         "Candidate implementations of observed package behaviors, companions, and horses",
         "M14 ObScript command/query bindings and provisional real-content scenario tooling"
       ],
       "open_gates": [
         "Strengthen the named-identity M14 gates with the remaining checkpoint and matrix outcomes; all six core scenarios are scoped and tutorial has a named before/after quickload pair, but it lacks exact targets and the remaining contextual reload sequence, while detection and horse remain smoke subsets",
         "Resolve recorded bounded-repath and repeated locked-door failures, then rerun the named 24-hour city schedule at high and low process with required reload boundaries",
-        "Demonstrate real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation",
-        "Demonstrate companion separation and recovery; the current passing evidence records a stalled leader and no observed companion movement",
+        "Complete real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation: native dialogue/package completion reaches CharacterGen 13, but PickIdle, subsequent real triggers/dialogue prerequisites, Baurus selection, door transitions and blocked-event budget remain open",
+        "Finish robust companion arrival, city/high-process, formation/cycle and clean-course acceptance: causal low-process Telepe door separation/recovery and both-side reload pass their state/event assertions, and the moth rendering error is repaired, but the latest run stops 560.53 units apart against the unchanged 512 bound due to premature route-tail arrival",
         "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix; the current door checkpoints show zero route-generation change and zero recovery movement",
         "Complete the planned detection sweep across LOS, distance, facing, light, movement, skills, seeds, and interior/exterior scenes",
         "Complete horse travel, high/low processing, door-boundary dismount, remount, query, and reload coverage",
