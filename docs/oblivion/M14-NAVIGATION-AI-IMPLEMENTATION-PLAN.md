@@ -1200,6 +1200,15 @@ criteria must be reverified as the step-by-step implementation resumes.
 
 ## 20. Practical handoff notes
 
+2026-09-08 route-tail checkpoint: `m14-companion-telepe-route-tail/` passes
+the unchanged causal Telepe obstruction course and all four checkpoints;
+spacing is 282.43 before/after reload (limit 512). Both pathgrid movement
+tiers now require the actual destination rather than the last graph node.
+The prior 560.53 failure remains evidence of the repaired bug. This closes
+that observed failure, not repeatability, high-process, formation/cycle,
+the remaining door matrix, or section 19 acceptance. Engine 530 and Python
+75 tests pass; fresh sanitizer verification is pending.
+
 - Begin with Phase 0 and commit Phase 1 before attempting visible NPC movement.
   Otherwise parser/store uncertainty will be misdiagnosed as pathfinding bugs.
 - Prefer pure component APIs and stable `FormKey` state. Any new use of a raw

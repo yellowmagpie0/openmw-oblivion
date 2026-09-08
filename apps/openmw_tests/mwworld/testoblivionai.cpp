@@ -40,6 +40,23 @@ namespace
         return result;
     }
 
+    TEST(OblivionAiTest, LastPathgridNodeDoesNotReplaceTheActualDestination)
+    {
+        // The failing Telepe save had consumed the last node but remained
+        // about 178 units from its follow destination. Repeated waiting and
+        // reload cannot repair an arrival that was declared prematurely.
+        const osg::Vec3f lastNodePosition(-673.5923f, 236.0759f, -158.1195f);
+        const osg::Vec3f destination(-496.0045f, 241.5149f, -147.3725f);
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), lastNodePosition, key(1), destination, 64.f));
+        EXPECT_TRUE(MWMechanics::oblivionDestinationReached(
+            key(1), destination + osg::Vec3f(64.f, 0.f, 0.f), key(1), destination, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), destination + osg::Vec3f(65.f, 0.f, 0.f), key(1), destination, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(2), destination, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached({}, destination, {}, destination, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(1), destination, -1.f));
+    }
+
     TEST(OblivionAiTest, DoorRecoveryRequiresAnIdentifiedDoorInterruption)
     {
         RuntimeActorAiState state;

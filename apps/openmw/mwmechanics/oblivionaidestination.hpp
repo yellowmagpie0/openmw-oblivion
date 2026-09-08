@@ -1,6 +1,7 @@
 #ifndef OPENMW_MWMECHANICS_OBLIVIONAIDESTINATION_H
 #define OPENMW_MWMECHANICS_OBLIVIONAIDESTINATION_H
 
+#include <cmath>
 #include <set>
 #include <span>
 
@@ -11,6 +12,13 @@
 
 namespace MWMechanics
 {
+    inline bool oblivionDestinationReached(const ESM::FormKey& cell, const osg::Vec3f& position,
+        const ESM::FormKey& destinationCell, const osg::Vec3f& destination, float tolerance)
+    {
+        return !cell.isNull() && cell == destinationCell && std::isfinite(tolerance) && tolerance >= 0.f
+            && (position - destination).length2() <= tolerance * tolerance;
+    }
+
     inline bool oblivionRouteAffectedByOverlay(ESM4::PackagePhase phase,
         const ESM::FormKey& currentPathgrid, std::span<const ESM4::PathgridNodeKey> route,
         const std::set<ESM::FormKey>& changedPathgrids)

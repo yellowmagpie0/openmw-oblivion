@@ -3377,9 +3377,7 @@ namespace MWMechanics
                 live.mState.mPathNode = node.mNode;
                 live.mForeignRouteTarget.reset();
                 ++live.mRouteCursor;
-                if (live.mRouteCursor >= live.mRoute.size())
-                    reached = true;
-                if (reached || remaining <= 0.f)
+                if (remaining <= 0.f)
                     return true;
                 continue;
             }
@@ -3392,9 +3390,7 @@ namespace MWMechanics
                 <= sArrivalTolerance * sArrivalTolerance)
             {
                 ++live.mRouteCursor;
-                if (live.mRouteCursor >= live.mRoute.size())
-                    reached = true;
-                if (reached || remaining <= 0.f)
+                if (remaining <= 0.f)
                     return true;
                 continue;
             }
@@ -3403,10 +3399,6 @@ namespace MWMechanics
                 <= sArrivalTolerance * sArrivalTolerance)
             {
                 ++live.mRouteCursor;
-                if (live.mRouteCursor >= live.mRoute.size())
-                    reached = true;
-                if (reached)
-                    return true;
                 if (remaining > 0.f)
                     continue;
             }
@@ -3434,13 +3426,18 @@ namespace MWMechanics
             // never an implicit teleport through the boundary.
             return false;
         }
-        if (distanceSquared(live.mState.mLastValidPosition.asVec3(), *live.mDestination)
-            <= sArrivalTolerance * sArrivalTolerance)
+        // Consuming the last graph node is not package arrival. The nearest
+        // node can be hundreds of units from the authored/follow destination.
+        // Spend only the remaining movement budget on the actual route tail.
+        if (oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
+                live.mDestinationCell, *live.mDestination, sArrivalTolerance))
         {
             reached = true;
             return true;
         }
         static_cast<void>(moveToward(*live.mDestination));
+        reached = oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
+            live.mDestinationCell, *live.mDestination, sArrivalTolerance);
         return true;
     }
 
@@ -4521,7 +4518,9 @@ namespace MWMechanics
             if (live.mRouteCursor < live.mRoute.size())
                 ++live.mRouteCursor;
             if (live.mRouteCursor >= live.mRoute.size())
-                reached = true;
+                reached = oblivionDestinationReached(live.mState.mCell, position,
+                    live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
+                    *live.mDestination, sArrivalTolerance);
             else
             {
                 const ESM4::PathgridNodeKey next = live.mRoute[live.mRouteCursor];

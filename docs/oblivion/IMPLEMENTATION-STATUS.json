@@ -322,6 +322,7 @@
         "build/oblivion-compat/m14-companion-telepe-obstruction/scenario.json",
         "build/oblivion-compat/m14-companion-telepe-recovery/scenario.json",
         "build/oblivion-compat/m14-companion-telepe-path-animation/scenario.json",
+        "build/oblivion-compat/m14-companion-telepe-route-tail/scenario.json",
         "build/oblivion-compat/m14-door-recovery-engine-2.log"
       ],
       "candidate_implementation": [
@@ -336,8 +337,8 @@
         "Strengthen the named-identity M14 gates with the remaining checkpoint and matrix outcomes; all six core scenarios are scoped and tutorial has a named before/after quickload pair, but it lacks exact targets and the remaining contextual reload sequence, while detection and horse remain smoke subsets",
         "Resolve recorded bounded-repath and repeated locked-door failures, then rerun the named 24-hour city schedule at high and low process with required reload boundaries",
         "Complete real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation: native dialogue/package completion reaches CharacterGen 13, but PickIdle, subsequent real triggers/dialogue prerequisites, Baurus selection, door transitions and blocked-event budget remain open",
-        "Finish robust companion arrival, city/high-process, formation/cycle and clean-course acceptance: causal low-process Telepe door separation/recovery and both-side reload pass their state/event assertions, and the moth rendering error is repaired, but the latest run stops 560.53 units apart against the unchanged 512 bound due to premature route-tail arrival",
-        "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix; the current door checkpoints show zero route-generation change and zero recovery movement",
+        "Finish companion repeatability, city/high-process and formation/cycle acceptance: the actual route-tail repair passes the native Telepe course with causal disabled-door recovery, four checkpoints, clean logs and spacing 282.43 before/after reload against 512; this does not close the broader matrix",
+        "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix; causal disabled Telepe entrance recovery now passes, while the older stationary prison obstruction fixture remains invalid evidence",
         "Complete the planned detection sweep across LOS, distance, facing, light, movement, skills, seeds, and interior/exterior scenes",
         "Complete horse travel, high/low processing, door-boundary dismount, remount, query, and reload coverage",
         "Run the required Morrowind AI behavior matrix and compare it to a pre-M14 baseline",

@@ -808,6 +808,25 @@ requested destination; the member then remains waiting at that premature
 arrival. Repair route-tail completion and verify across fresh runs. Do not
 increase the spacing bound or hide this failure behind a longer wait.
 
+### Actual route-tail arrival (2026-09-08)
+
+High-process pathgrid fallback and low-process movement no longer equate the
+last graph node with the actual destination. Low process spends only its
+remaining movement budget on the route tail; arrival requires the correct
+cell and distance. Actual door boundaries still enter the door phase.
+The regression retains the failed Telepe coordinates and covers the exact
+tolerance boundary and mismatched/null cells. All 530 engine and 75 Python
+tests pass (`m14-route-tail-engine.log`, `m14-route-tail-python.log`).
+
+`m14-companion-telepe-route-tail/` **PASSES** the unchanged native course:
+all four checkpoints, causal disabled-door/re-enable recovery, and exactly
+one transition per named actor. Reunited spacing is 282.43 units both before
+and after reload against 512. There are no console diagnostics or unreviewed
+errors; all actions finish, exit is 0, shutdown is explicitly harness-requested,
+and no timeout occurs. The preceding 560.53 failure remains retained. This
+single fresh pass is not the remaining high-process/formation/cycle matrix
+or overall milestone acceptance. Fresh sanitizer verification is in progress.
+
 ## Reproduce
 
 
