@@ -691,6 +691,30 @@ as a no-op. The course still **FAILS** that control and the separation check
 exit 0/no timeout/no unreviewed error findings. Neither the obsolete input-only
 controls nor this failed separation establish obstruction recovery.
 
+### Telepe door preflight (2026-09-08)
+
+`m14-companion-telepe-preflight/` **FAILS**, despite all named actor event and
+save checks passing. Roxy Aric, Alonzo and Black Brugo traverse the real 017585
+XTEL door, in that order, and the native schema-6 save places all three in
+Telepe (016637), retaining both follow targets. No named actor has an adverse
+event. This is an unobstructed, low-process door preflight, not causal
+obstruction/recovery or reload acceptance.
+
+The remaining findings are an unsupported `NiPathInterpolator` in
+`meshes/landscape/miscmoth01.nif` and two console diagnostics from `exit()`.
+The latter is not an engine shutdown command: in Lua it only leaves Lua mode,
+and in the native console it is invalid. Earlier exit-0 results with
+`terminate_after_actions` reflect harness-requested SIGTERM shutdown, not a
+successful console quit. Keep those distinct when reporting verification.
+Read-only inspection of the released moth interpolator found flags 0x30
+(constant velocity and follow), follow axis 2; simply attaching the existing
+translation-only PathController would not implement its authored behavior.
+Neither finding has been waived.
+
+All 526 engine tests also pass under ASan/UBSan with leak detection
+(`m14-controls-sanitizer-{build,engine}.log`). This is bounded regression
+evidence, not completion of the outstanding runtime matrix.
+
 ## Reproduce
 
 Build and run the audit:

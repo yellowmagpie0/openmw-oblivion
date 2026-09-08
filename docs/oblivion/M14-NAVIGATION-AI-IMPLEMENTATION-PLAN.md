@@ -725,6 +725,16 @@ before proceeding. Suggested commit subjects are illustrative.
 
 ### Current checkpoint after acceptance review
 
+2026-09-08: the Telepe companion preflight proves all three named actors'
+unobstructed XTEL transitions and saved interior cells, but **fails** on an
+unsupported moth path interpolator and invalid `exit()` console input. It does
+not establish obstruction/recovery or reload behavior. Repair those findings
+without log waivers. Path-interpolator flags require constant velocity and
+orientation-following, not translation-only playback. Also audit dynamic door
+availability: immutable initially-disabled flags must not override enabled
+resident/saved state, nor may disabled/deleted doors remain usable. Sanitized
+engine tests pass 526/526; M14 remains in progress.
+
 The aggregate candidate contains code corresponding to every phase, but code
 presence is not a passed phase gate. Use this table as the resume point and
 update it only when the named gate has fresh, actor-specific evidence.
