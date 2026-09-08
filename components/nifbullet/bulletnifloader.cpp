@@ -88,6 +88,7 @@ namespace NifBullet
 
         mCompoundShape.reset();
         mAvoidCompoundShape.reset();
+        mTriggerCompoundShape.reset();
         mEmbeddedAnimationNodes.clear();
         mBethesdaCollisionStats = {};
         mHavokScale = nif.getBethVersion() < Nif::NIFFile::BETHVER_FO3 ? sHavok660Scale : sHavok2010Scale;
@@ -145,6 +146,8 @@ namespace NifBullet
 
         if (mAvoidCompoundShape)
             mShape->mAvoidCollisionShape = std::move(mAvoidCompoundShape);
+        if (mTriggerCompoundShape)
+            mShape->mTriggerCollisionShape = std::move(mTriggerCompoundShape);
 
         return mShape;
     }
@@ -396,17 +399,19 @@ namespace NifBullet
     }
 
     void BulletNifLoader::addCollisionShape(
-        std::unique_ptr<btCollisionShape> shape, const osg::Matrixf& transform, int animatedRecordIndex)
+        std::unique_ptr<btCollisionShape> shape, const osg::Matrixf& transform, int animatedRecordIndex, bool trigger)
     {
         if (!shape)
             return;
 
         shape->setLocalScaling(shape->getLocalScaling() * Misc::Convert::toBullet(transform.getScale()));
-        if (!mCompoundShape)
-            mCompoundShape.reset(new btCompoundShape);
+        auto& compound = trigger ? mTriggerCompoundShape : mCompoundShape;
+        auto& animatedShapes = trigger ? mShape->mAnimatedTriggerShapes : mShape->mAnimatedShapes;
+        if (!compound)
+            compound.reset(new btCompoundShape);
         if (animatedRecordIndex >= 0)
-            mShape->mAnimatedShapes.emplace(animatedRecordIndex, mCompoundShape->getNumChildShapes());
-        mCompoundShape->addChildShape(matrixToBullet(transform), shape.release());
+            animatedShapes.emplace(animatedRecordIndex, compound->getNumChildShapes());
+        compound->addChildShape(matrixToBullet(transform), shape.release());
     }
 
     void BulletNifLoader::handleBethesdaCollision(
@@ -450,7 +455,8 @@ namespace NifBullet
             transform = phantomTransform * transform;
         }
 
-        addCollisionShape(std::move(shape), transform, args.mAnimated ? node.mRecordIndex : -1);
+        addCollisionShape(std::move(shape), transform, args.mAnimated ? node.mRecordIndex : -1,
+            dynamic_cast<const Nif::bhkPhantom*>(&collision->mBody.get()) != nullptr);
     }
 
     std::unique_ptr<btCollisionShape> BulletNifLoader::makeBethesdaShape(const Nif::bhkShape& shape)

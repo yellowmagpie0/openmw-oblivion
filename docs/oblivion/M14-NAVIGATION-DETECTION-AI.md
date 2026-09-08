@@ -827,6 +827,26 @@ and no timeout occurs. The preceding 560.53 failure remains retained. This
 single fresh pass is not the remaining high-process/formation/cycle matrix
 or overall milestone acceptance. Fresh sanitizer verification is in progress.
 
+### Phantom-volume representation prerequisite (2026-09-08)
+
+Bethesda phantom shapes now occupy a separate collision compound and animation
+index map, rather than becoming solid/navmesh input. Shape instances clone
+and scale this data independently, including trigger-only and mixed solid/
+phantom models. All 1,608 component tests pass
+(`m14-phantom-shape-components-3.log`). The initial build failure used a record
+enum that the parser intentionally aliases; the next test failed because a
+default record reference is unresolved, not null. Both failures and the
+backtrace are retained in `m14-phantom-shape-build.log`,
+`m14-phantom-shape-components-2.log`, and
+`m14-phantom-shape-test-backtrace.log`; the fixture now uses explicit null.
+This is representation coverage only: live overlap queries, transform/lifecycle
+integration, OnTrigger dispatch and native stage-14 evidence remain open.
+
+The preceding route-arrival revision also passes all 1,606 component and 530
+engine tests under ASan/UBSan (`m14-route-tail-sanitizer-{components,engine}.log`).
+Those binaries precede the phantom-shape changes; this is not final M14
+sanitizer acceptance.
+
 ## Reproduce
 
 

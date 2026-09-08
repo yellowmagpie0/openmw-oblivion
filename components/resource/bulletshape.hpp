@@ -46,6 +46,8 @@ namespace Resource
     {
         CollisionShapePtr mCollisionShape;
         CollisionShapePtr mAvoidCollisionShape;
+        // Bethesda phantoms are overlap volumes, never solid/navigation input.
+        CollisionShapePtr mTriggerCollisionShape;
 
         // Used for actors and projectiles. mCollisionShape is used for actors only when we need to autogenerate
         // collision box for creatures. For now, use one file <-> one resource for simplicity.
@@ -56,6 +58,7 @@ namespace Resource
         // In this map, for each animated collision shape,
         // we store the node's record index mapped to the child index of the shape in the btCompoundShape.
         std::map<int, int> mAnimatedShapes;
+        std::map<int, int> mAnimatedTriggerShapes;
 
         VFS::Path::Normalized mFileName;
         std::string mFileHash;
@@ -70,7 +73,7 @@ namespace Resource
 
         void setLocalScaling(const btVector3& scale);
 
-        bool isAnimated() const { return !mAnimatedShapes.empty(); }
+        bool isAnimated() const { return !mAnimatedShapes.empty() || !mAnimatedTriggerShapes.empty(); }
     };
 
     // An instance of a BulletShape that may have its own unique scaling set on collision shapes.

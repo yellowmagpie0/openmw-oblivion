@@ -77,10 +77,11 @@ namespace NifBullet
         void handleBethesdaCollision(const Nif::NiAVObject& node, const Nif::Parent* parent, HandleNodeArgs args);
         std::unique_ptr<btCollisionShape> makeBethesdaShape(const Nif::bhkShape& shape);
         void addCollisionShape(std::unique_ptr<btCollisionShape> shape, const osg::Matrixf& transform,
-            int animatedRecordIndex = -1);
+            int animatedRecordIndex = -1, bool trigger = false);
 
         std::unique_ptr<btCompoundShape, Resource::DeleteCollisionShape> mCompoundShape;
         std::unique_ptr<btCompoundShape, Resource::DeleteCollisionShape> mAvoidCompoundShape;
+        std::unique_ptr<btCompoundShape, Resource::DeleteCollisionShape> mTriggerCompoundShape;
 
         osg::ref_ptr<Resource::BulletShape> mShape;
         std::set<std::string, std::less<>> mEmbeddedAnimationNodes;

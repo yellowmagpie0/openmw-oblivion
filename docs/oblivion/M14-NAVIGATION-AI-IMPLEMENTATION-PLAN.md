@@ -1207,7 +1207,10 @@ tiers now require the actual destination rather than the last graph node.
 The prior 560.53 failure remains evidence of the repaired bug. This closes
 that observed failure, not repeatability, high-process, formation/cycle,
 the remaining door matrix, or section 19 acceptance. Engine 530 and Python
-75 tests pass; fresh sanitizer verification is pending.
+75 tests pass; fresh sanitizer verification passes 1,606 component and 530
+engine tests. Subsequent phantom-volume representation passes 1,608 component
+tests, but overlap/lifecycle integration and OnTrigger/native tutorial evidence
+remain open. The sanitizer binaries precede that subsequent change.
 
 - Begin with Phase 0 and commit Phase 1 before attempting visible NPC movement.
   Otherwise parser/store uncertainty will be misdiagnosed as pathfinding bugs.

@@ -115,8 +115,10 @@ namespace Resource
         : Object(other, copyOp)
         , mCollisionShape(duplicateCollisionShape(other.mCollisionShape.get()))
         , mAvoidCollisionShape(duplicateCollisionShape(other.mAvoidCollisionShape.get()))
+        , mTriggerCollisionShape(duplicateCollisionShape(other.mTriggerCollisionShape.get()))
         , mCollisionBox(other.mCollisionBox)
         , mAnimatedShapes(other.mAnimatedShapes)
+        , mAnimatedTriggerShapes(other.mAnimatedTriggerShapes)
         , mFileName(other.mFileName)
         , mFileHash(other.mFileHash)
         , mVisualCollisionType(other.mVisualCollisionType)
@@ -125,9 +127,12 @@ namespace Resource
 
     void BulletShape::setLocalScaling(const btVector3& scale)
     {
-        mCollisionShape->setLocalScaling(scale);
+        if (mCollisionShape)
+            mCollisionShape->setLocalScaling(scale);
         if (mAvoidCollisionShape)
             mAvoidCollisionShape->setLocalScaling(scale);
+        if (mTriggerCollisionShape)
+            mTriggerCollisionShape->setLocalScaling(scale);
     }
 
     osg::ref_ptr<BulletShapeInstance> makeInstance(osg::ref_ptr<const BulletShape> source)

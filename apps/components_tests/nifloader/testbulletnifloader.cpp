@@ -207,8 +207,9 @@ namespace Resource
     {
         return compareObjects(lhs.mCollisionShape.get(), rhs.mCollisionShape.get())
             && compareObjects(lhs.mAvoidCollisionShape.get(), rhs.mAvoidCollisionShape.get())
+            && compareObjects(lhs.mTriggerCollisionShape.get(), rhs.mTriggerCollisionShape.get())
             && lhs.mCollisionBox == rhs.mCollisionBox && lhs.mVisualCollisionType == rhs.mVisualCollisionType
-            && lhs.mAnimatedShapes == rhs.mAnimatedShapes;
+            && lhs.mAnimatedShapes == rhs.mAnimatedShapes && lhs.mAnimatedTriggerShapes == rhs.mAnimatedTriggerShapes;
     }
 
     static std::ostream& operator<<(std::ostream& stream, Resource::VisualCollisionType value)
@@ -1241,6 +1242,92 @@ namespace
         EXPECT_EQ(mLoader.getBethesdaCollisionStats().mObjects, 1);
         EXPECT_EQ(mLoader.getBethesdaCollisionStats().mUnsupportedObjects, 0);
         EXPECT_EQ(mLoader.getBethesdaCollisionStats().mUnsupportedShapes, 0);
+    }
+
+    TEST_F(TestBulletNifLoader, oblivion_phantom_is_separate_from_solid_collision_and_instances)
+    {
+        Nif::bhkCollisionObject collision;
+        Nif::bhkSimpleShapePhantom phantom;
+        Nif::bhkBoxShape box;
+        collision.mRecordType = Nif::RC_bhkCollisionObject;
+        collision.mBody = Nif::bhkWorldObjectPtr(&phantom);
+        phantom.mRecordType = Nif::RC_bhkSimpleShapePhantom;
+        phantom.mShape = Nif::bhkShapePtr(&box);
+        phantom.mTransform.makeTranslate(1.f, 2.f, 3.f);
+        box.mRecordType = Nif::RC_bhkBoxShape;
+        box.mExtents = osg::Vec3f(1.f, 2.f, 3.f);
+        mNiIntegerExtraData.mData = 2;
+        mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+        mNiNode.mExtraList.push_back(Nif::ExtraPtr(&mNiIntegerExtraData));
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(&collision);
+        mNiNode.mTransform.mTranslation = osg::Vec3f(10.f, 20.f, 30.f);
+        Nif::NIFFile file(testNif);
+        file.mRoots.push_back(&mNiNode);
+        file.mVersion = Nif::NIFFile::VER_OB;
+        file.mBethVersion = 11;
+        const auto result = mLoader.load(file);
+        EXPECT_EQ(result->mCollisionShape, nullptr);
+        EXPECT_EQ(result->mAvoidCollisionShape, nullptr);
+        ASSERT_NE(result->mTriggerCollisionShape, nullptr);
+        const auto& compound = static_cast<const btCompoundShape&>(*result->mTriggerCollisionShape);
+        ASSERT_EQ(compound.getNumChildShapes(), 1);
+        constexpr float havokScale = 10.f / 1.42875f;
+        EXPECT_TRUE(isNear(compound.getChildTransform(0).getOrigin(),
+            btVector3(10.f, 20.f, 30.f) + btVector3(1.f, 2.f, 3.f) * havokScale));
+
+        auto instance = Resource::makeInstance(result);
+        ASSERT_NE(instance->mTriggerCollisionShape, nullptr);
+        EXPECT_NE(instance->mTriggerCollisionShape.get(), result->mTriggerCollisionShape.get());
+        instance->setLocalScaling(btVector3(1.3f, 1.3f, 1.3f));
+        EXPECT_EQ(instance->mTriggerCollisionShape->getLocalScaling(), btVector3(1.3f, 1.3f, 1.3f));
+        EXPECT_EQ(result->mTriggerCollisionShape->getLocalScaling(), btVector3(1.f, 1.f, 1.f));
+
+        // Reusing a loader must not retain phantom geometry from a prior file.
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        const auto empty = mLoader.load(file);
+        EXPECT_EQ(empty->mTriggerCollisionShape, nullptr);
+    }
+
+    TEST_F(TestBulletNifLoader, oblivion_mixed_phantom_and_solid_keep_separate_animation_indices)
+    {
+        Nif::bhkCollisionObject solidCollision;
+        Nif::bhkCollisionObject phantomCollision;
+        Nif::bhkRigidBody body;
+        Nif::bhkSimpleShapePhantom phantom;
+        Nif::bhkBoxShape box;
+        box.mRecordType = Nif::RC_bhkBoxShape;
+        box.mExtents = osg::Vec3f(1.f, 1.f, 1.f);
+        body.mRecordType = Nif::RC_bhkRigidBody;
+        body.mShape = Nif::bhkShapePtr(&box);
+        phantom.mRecordType = Nif::RC_bhkSimpleShapePhantom;
+        phantom.mShape = Nif::bhkShapePtr(&box);
+        phantom.mTransform.makeIdentity();
+        solidCollision.mRecordType = Nif::RC_bhkCollisionObject;
+        solidCollision.mBody = Nif::bhkWorldObjectPtr(&body);
+        phantomCollision.mRecordType = Nif::RC_bhkCollisionObject;
+        phantomCollision.mBody = Nif::bhkWorldObjectPtr(&phantom);
+        mNiIntegerExtraData.mData = 2;
+        mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+        mNiNode.mExtraList.push_back(Nif::ExtraPtr(&mNiIntegerExtraData));
+        mNiNode.mRecordIndex = 10;
+        mNiNode2.mRecordIndex = 20;
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(&solidCollision);
+        mNiNode2.mCollision = Nif::NiCollisionObjectPtr(&phantomCollision);
+        mNiNode.mChildren = Nif::NiAVObjectList{ Nif::NiAVObjectPtr(&mNiNode2) };
+        Nif::NIFFile file(xtestNif);
+        file.mRoots.push_back(&mNiNode);
+        file.mVersion = Nif::NIFFile::VER_OB;
+        file.mBethVersion = 11;
+        const auto result = mLoader.load(file);
+        ASSERT_NE(result->mCollisionShape, nullptr);
+        ASSERT_NE(result->mTriggerCollisionShape, nullptr);
+        EXPECT_EQ(static_cast<const btCompoundShape&>(*result->mCollisionShape).getNumChildShapes(), 1);
+        EXPECT_EQ(static_cast<const btCompoundShape&>(*result->mTriggerCollisionShape).getNumChildShapes(), 1);
+        EXPECT_EQ(result->mAnimatedShapes, (std::map<int, int>{ { 10, 0 } }));
+        EXPECT_EQ(result->mAnimatedTriggerShapes, (std::map<int, int>{ { 20, 0 } }));
+        const auto instance = Resource::makeInstance(result);
+        EXPECT_EQ(instance->mAnimatedTriggerShapes, result->mAnimatedTriggerShapes);
+        EXPECT_TRUE(instance->isAnimated());
     }
 
     TEST_F(TestBulletNifLoader, oblivion_loose_havok_triangle_strips_remain_in_model_units)
