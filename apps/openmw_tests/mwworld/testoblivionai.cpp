@@ -17,6 +17,7 @@
 
 #include "apps/openmw/mwmechanics/oblivionaidestination.hpp"
 #include "apps/openmw/mwmechanics/oblivionaigait.hpp"
+#include "apps/openmw/mwmechanics/obliviondoorstate.hpp"
 #include "apps/openmw/mwmechanics/oblivionpackageevents.hpp"
 
 namespace
@@ -37,6 +38,53 @@ namespace
         result.mSchedule.mStartHour = -1;
         result.mSchedule.mDuration = 0;
         return result;
+    }
+
+    TEST(OblivionAiTest, DoorAvailabilityUsesResidentThenSavedThenAuthoredState)
+    {
+        using MWMechanics::OblivionDoorState;
+        using MWMechanics::resolveOblivionDoorState;
+        const OblivionDoorState authored{ false, true, ESM::RefId(ESM::FormId{ 10, 0 }), key(20) };
+        EXPECT_FALSE(resolveOblivionDoorState(authored, nullptr, std::nullopt).mAvailable);
+        EXPECT_TRUE(resolveOblivionDoorState(authored, nullptr, std::nullopt).mLocked);
+
+        RuntimeReferenceState saved;
+        saved.mEnabled = true;
+        saved.mLockLevel = 0;
+        const auto enabled = resolveOblivionDoorState(authored, &saved, std::nullopt);
+        EXPECT_TRUE(enabled.mAvailable);
+        EXPECT_FALSE(enabled.mLocked);
+        EXPECT_EQ(enabled.mKey, authored.mKey);
+        EXPECT_TRUE(enabled.mOwner.isNull());
+        saved.mDeleted = true;
+        EXPECT_FALSE(resolveOblivionDoorState(authored, &saved, std::nullopt).mAvailable);
+        saved.mDeleted = false;
+        saved.mEnabled = false;
+        saved.mLockLevel = 50;
+        saved.mOwner = key(30);
+        const auto disabled = resolveOblivionDoorState(authored, &saved, std::nullopt);
+        EXPECT_FALSE(disabled.mAvailable);
+        EXPECT_TRUE(disabled.mLocked);
+        EXPECT_EQ(disabled.mOwner, key(30));
+
+        OblivionDoorState resident{ true, false, {}, {} };
+        const auto live = resolveOblivionDoorState(authored, &saved, resident);
+        EXPECT_TRUE(live.mAvailable);
+        EXPECT_FALSE(live.mLocked);
+        EXPECT_TRUE(live.mKey.empty());
+        EXPECT_TRUE(live.mOwner.isNull());
+        saved.mEnabled = true;
+        resident.mAvailable = false;
+        EXPECT_FALSE(resolveOblivionDoorState(authored, &saved, resident).mAvailable);
+        saved.mCustomState["locked"] = false;
+        EXPECT_FALSE(resolveOblivionDoorState(authored, &saved, std::nullopt).mLocked);
+        saved.mLockLevel = 0;
+        saved.mCustomState["locked"] = true;
+        EXPECT_TRUE(resolveOblivionDoorState(authored, &saved, std::nullopt).mLocked);
+        saved.mCustomState["locked"] = std::int64_t(1);
+        EXPECT_THROW(resolveOblivionDoorState(authored, &saved, std::nullopt), std::runtime_error);
+        // A stale snapshot cannot override or invalidate resident state.
+        EXPECT_FALSE(resolveOblivionDoorState(authored, &saved, resident).mAvailable);
     }
 
     TEST(OblivionAiTest, PackageDoneRecordsOnlyNewCompletionsAndPreservesCallbackSave)

@@ -29,6 +29,7 @@
 
 #include "../mwworld/ptr.hpp"
 #include "oblivionpackageevents.hpp"
+#include "obliviondoorstate.hpp"
 
 namespace MWWorld
 {
@@ -210,6 +211,7 @@ namespace MWMechanics
 
         MWWorld::Ptr ptrFor(const ESM::FormKey& key) const;
         MWWorld::Ptr loadedPtrFor(const ESM::FormKey& key) const;
+        OblivionDoorState currentDoorState(const UnloadedLocation& door) const;
         void buildUnloadedLocationIndex();
         void seedActors();
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;

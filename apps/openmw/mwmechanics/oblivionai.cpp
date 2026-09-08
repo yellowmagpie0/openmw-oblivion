@@ -491,7 +491,9 @@ namespace MWMechanics
                 if (destination == mUnloadedLocationByReference.end())
                     continue;
                 const UnloadedLocation& marker = mUnloadedLocations[destination->second];
-                if (!marker.mEnabled || marker.mCell.isNull())
+                // Index all authored edges. Availability is mutable and is
+                // checked when planning/traversing, not frozen at startup.
+                if (marker.mCell.isNull())
                     continue;
                 mUnloadedDoorsByDestinationCell[marker.mCell].push_back(index);
             }
@@ -2773,7 +2775,7 @@ namespace MWMechanics
             {
                 const UnloadedLocation& door = mUnloadedLocations[index];
                 ++reverseDoors;
-                if (!door.mEnabled || door.mType != ESM::REC_DOOR4 || door.mCell.isNull()
+                if (door.mType != ESM::REC_DOOR4 || door.mCell.isNull()
                     || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                     continue;
                 bool locked = false;
@@ -2812,7 +2814,7 @@ namespace MWMechanics
             {
                 const UnloadedLocation& door = mUnloadedLocations[index];
                 ++sourceDoorCount;
-                if (!door.mEnabled || door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()
+                if (door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()
                     || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                     continue;
                 bool locked = false;
@@ -2827,7 +2829,7 @@ namespace MWMechanics
                 if (destination == mUnloadedLocationByReference.end())
                     continue;
                 const UnloadedLocation& marker = mUnloadedLocations[destination->second];
-                if (!marker.mEnabled || marker.mCell.isNull())
+                if (marker.mCell.isNull() || !currentDoorState(marker).mAvailable)
                     continue;
                 const auto remaining = remainingHops.find(marker.mCell);
                 if (remaining == remainingHops.end())
@@ -3579,7 +3581,7 @@ namespace MWMechanics
             }
             const UnloadedLocation& door = mUnloadedLocations[source->second];
             const auto destination = mUnloadedLocationByReference.find(door.mTeleportDoor);
-            if (!door.mEnabled || door.mType != ESM::REC_DOOR4
+            if (door.mType != ESM::REC_DOOR4
                 || destination == mUnloadedLocationByReference.end())
             {
                 transitionUnloaded(live,
@@ -3587,7 +3589,7 @@ namespace MWMechanics
                 return;
             }
             const UnloadedLocation& marker = mUnloadedLocations[destination->second];
-            if (!marker.mEnabled || marker.mCell.isNull())
+            if (marker.mCell.isNull() || !currentDoorState(marker).mAvailable)
             {
                 transitionUnloaded(live,
                     { duration, true, true, true, true, false, false, false, false, false, false, true, false });
@@ -3789,7 +3791,7 @@ namespace MWMechanics
         const ESM4::PathgridNodeKey& source, const ESM4::PathgridNodeKey& destination) const
     {
         const auto isDoorReference = [this](const MWWorld::Ptr& candidate, const ESM::FormKey& key) {
-            if (candidate.isEmpty())
+            if (candidate.isEmpty() || !candidate.getRefData().isEnabled() || candidate.mRef->isDeleted())
                 return false;
             if (candidate.getClass().isDoor())
                 return true;
@@ -3830,7 +3832,7 @@ namespace MWMechanics
                     if (indexed != mUnloadedLocationByReference.end())
                     {
                         const UnloadedLocation& location = mUnloadedLocations[indexed->second];
-                        if (!location.mEnabled || location.mType != ESM::REC_DOOR4)
+                        if (location.mType != ESM::REC_DOOR4 || !currentDoorState(location).mAvailable)
                             continue;
                     }
                     else
@@ -3857,32 +3859,23 @@ namespace MWMechanics
         locked = false;
         if (live.mState.mDoor.isNull())
             return false;
+        if (const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
+            indexed != mUnloadedLocationByReference.end())
+            return canUseUnloadedDoor(live, mUnloadedLocations[indexed->second], locked, &actor);
         const MWWorld::Ptr door = loadedPtrFor(live.mState.mDoor);
         ESM::RefId key;
         ESM::FormKey owner;
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         if (door.isEmpty())
         {
-            // Low-process and cross-cell checks must not load a CellStore just
-            // to inspect a PGRL door. The immutable index contains the same
-            // enabled/lock/key fields as the winning placed REFR.
-            const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
-            if (indexed == mUnloadedLocationByReference.end())
-                return false;
-            const UnloadedLocation& location = mUnloadedLocations[indexed->second];
-            if (!location.mEnabled || location.mType != ESM::REC_DOOR4)
-                return false;
-            if (!location.mLocked)
-                return true;
-            key = location.mKey;
-            owner = location.mOwner;
+            return false;
         }
         else
         {
             const ESM4::Reference* reference = mWorld.mStore.get<ESM4::Reference>().search(live.mState.mDoor);
             const bool isDoor = door.getClass().isDoor()
                 || (reference != nullptr && mWorld.mStore.search<ESM4::Door>(reference->mBaseKey) != nullptr);
-            if (!isDoor)
+            if (!isDoor || !door.getRefData().isEnabled() || door.mRef->isDeleted())
                 return false;
             if (!door.getCellRef().isLocked())
                 return true;
@@ -3961,30 +3954,16 @@ namespace MWMechanics
         return hasDoorOwnershipPermission(live, owner, actor);
     }
 
-    bool OblivionAiService::canUseUnloadedDoor(
-        const LiveActor& live, const UnloadedLocation& door, bool& locked, const MWWorld::Ptr* actor) const
+    OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door) const
     {
-        locked = false;
-        if (!door.mEnabled || door.mType != ESM::REC_DOOR4)
-            return false;
-
-        // The immutable location index is also used for doors in resident
-        // cells, but lock state can change at runtime. Prefer the live CellRef
-        // and then the saved runtime snapshot before falling back to plugin
-        // data. The key itself is immutable for unloaded references.
-        bool isLocked = door.mLocked;
-        ESM::RefId doorKey = door.mKey;
-        ESM::FormKey doorOwner = door.mOwner;
+        const OblivionDoorState authored{ door.mEnabled, door.mLocked, door.mKey, door.mOwner };
         if (const MWWorld::Ptr loadedDoor = loadedPtrFor(door.mReference); !loadedDoor.isEmpty())
         {
-            if (!loadedDoor.getRefData().isEnabled())
-                return false;
-            isLocked = loadedDoor.getCellRef().isLocked();
-            doorKey = loadedDoor.getCellRef().getKey();
+            OblivionDoorState resident{ loadedDoor.getRefData().isEnabled() && !loadedDoor.mRef->isDeleted(),
+                loadedDoor.getCellRef().isLocked(), loadedDoor.getCellRef().getKey(), {} };
             if (const ESM::FormId* id = loadedDoor.getCellRef().getOwner().getIf<ESM::FormId>())
-                doorOwner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(*id);
-            else
-                doorOwner = {};
+                resident.mOwner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(*id);
+            return resolveOblivionDoorState(authored, nullptr, resident);
         }
         else if (mWorld.mOblivionRuntimeState)
         {
@@ -3994,24 +3973,38 @@ namespace MWMechanics
                     return reference.mKey == door.mReference;
                 });
             if (savedDoor != mWorld.mOblivionRuntimeState->mReferences.end())
-            {
-                if (savedDoor->mDeleted || !savedDoor->mEnabled)
-                    return false;
-                isLocked = savedDoor->mLockLevel > 0;
-                if (savedDoor->mOwner)
-                    doorOwner = *savedDoor->mOwner;
-            }
+                return resolveOblivionDoorState(authored, &*savedDoor, std::nullopt);
         }
-        if (!isLocked)
+        return authored;
+    }
+
+    bool OblivionAiService::canUseUnloadedDoor(
+        const LiveActor& live, const UnloadedLocation& door, bool& locked, const MWWorld::Ptr* actor) const
+    {
+        locked = false;
+        if (door.mType != ESM::REC_DOOR4)
+            return false;
+        const OblivionDoorState current = currentDoorState(door);
+        if (!current.mAvailable)
+            return false;
+        if (!door.mTeleportDoor.isNull())
+        {
+            const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
+            if (marker == mUnloadedLocationByReference.end()
+                || !currentDoorState(mUnloadedLocations[marker->second]).mAvailable)
+                return false;
+        }
+        if (!current.mLocked)
             return true;
         bool ownsConnectedCell = hasCellOwnershipPermission(live, door.mCell, actor);
         if (!ownsConnectedCell)
             if (const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
                 marker != mUnloadedLocationByReference.end())
                 ownsConnectedCell = hasCellOwnershipPermission(live, mUnloadedLocations[marker->second].mCell, actor);
-        if (hasDoorOwnershipPermission(live, doorOwner, actor) || ownsConnectedCell)
+        if (hasDoorOwnershipPermission(live, current.mOwner, actor) || ownsConnectedCell)
             return true;
 
+        const ESM::RefId& doorKey = current.mKey;
         const ESM::FormId* keyId = doorKey.getIf<ESM::FormId>();
         if (keyId == nullptr)
         {
@@ -4026,9 +4019,15 @@ namespace MWMechanics
             return false;
         }
 
-        if (actor != nullptr && !actor->isEmpty()
-            && !actor->getClass().getContainerStore(*actor).search(doorKey).isEmpty())
-            return true;
+        // An empty live/saved inventory is authoritative too. Falling back
+        // to the base inventory would resurrect a key removed at runtime.
+        const MWWorld::Ptr residentActor = actor != nullptr ? *actor : loadedPtrFor(live.mState.mActor);
+        if (!residentActor.isEmpty())
+        {
+            const bool hasKey = !residentActor.getClass().getContainerStore(residentActor).search(doorKey).isEmpty();
+            locked = !hasKey;
+            return hasKey;
+        }
 
         const auto containsKey = [key](const auto& inventory) {
             return std::any_of(inventory.begin(), inventory.end(), [key](const auto& item) {
@@ -4042,8 +4041,12 @@ namespace MWMechanics
                 [&live](const ESM4::RuntimeReferenceState& reference) {
                     return reference.mKey == live.mState.mActor;
                 });
-            if (saved != mWorld.mOblivionRuntimeState->mReferences.end() && containsKey(saved->mInventory))
-                return true;
+            if (saved != mWorld.mOblivionRuntimeState->mReferences.end())
+            {
+                const bool hasKey = containsKey(saved->mInventory);
+                locked = !hasKey;
+                return hasKey;
+            }
         }
 
         if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))

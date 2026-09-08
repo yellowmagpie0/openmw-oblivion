@@ -735,6 +735,14 @@ availability: immutable initially-disabled flags must not override enabled
 resident/saved state, nor may disabled/deleted doors remain usable. Sanitized
 engine tests pass 526/526; M14 remains in progress.
 
+The subsequent door-state repair removes immutable enabled-flag gates from
+XTEL indexing and runtime access, uses resident/saved lock and ownership state,
+and prevents removed inventory keys from reappearing through base-data fallback.
+Engine tests pass 527/527. Native disabled-door interruption is observed in the
+in-progress Telepe obstruction run; recovery, both-side reload and the full
+lock/key/ownership matrix are still open. The first fixture's expected
+`route-blocked` event is incorrect for a `door-unavailable` phase interruption.
+
 The aggregate candidate contains code corresponding to every phase, but code
 presence is not a passed phase gate. Use this table as the resume point and
 update it only when the named gate has fresh, actor-specific evidence.

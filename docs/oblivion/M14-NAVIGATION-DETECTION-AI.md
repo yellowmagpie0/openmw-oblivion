@@ -715,8 +715,6 @@ All 526 engine tests also pass under ASan/UBSan with leak detection
 (`m14-controls-sanitizer-{build,engine}.log`). This is bounded regression
 evidence, not completion of the outstanding runtime matrix.
 
-## Reproduce
-
 The M14 manifests now omit the invalid `exit()` input and use their explicit
 `terminate_after_actions` shutdown policy. Reports retain `shutdown_requested`
 separately from exit status; native M14 console diagnostics fail regardless of
@@ -724,6 +722,28 @@ the manifest's optional forbidden-log list. All 75 Python tests pass
 (`m14-shutdown-python-3.log`); the first two runs exposed incomplete new test
 manifests (missing name/event_file), retained in `m14-shutdown-python{,-2}.log`.
 The Telepe native course has not yet been rerun with this harness repair.
+
+### Current door state repair (2026-09-08)
+
+Door planning and traversal now prefer resident state, then saved state, then
+authored data. Initially-disabled XTEL edges remain in the coarse index so
+runtime enabling can make them available. Disabled/deleted source and paired
+destination references are rejected. Saved ownership can explicitly be empty,
+and the saved boolean lock state overrides lock level, matching world restore.
+An empty current actor inventory no longer falls back to an authored key that
+has since been removed. Both resident and unloaded traversal use the shared
+door access checks without force-loading remote cells.
+
+All 527 engine tests pass (`m14-door-state-engine{,-2}.log`, builds in
+`m14-door-state-build{,-2}.log`). The added state-precedence regression is not
+a substitute for the native lock/key/ownership matrix. The first real Telepe
+obstruction run is still in progress: disabling 017585 after the leader crossed
+really interrupted Alonzo with `door-unavailable`. Its fixture incorrectly
+waits for a `route-blocked` event instead of that door-phase transition; retain
+the failed wait and correct the matcher for the next run. Recovery after
+re-enabling remains unverified, as does the complete companion course.
+
+## Reproduce
 
 Build and run the audit:
 
