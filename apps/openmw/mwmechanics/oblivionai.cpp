@@ -3480,6 +3480,9 @@ namespace MWMechanics
             && !live.mState.mPathgrid.isNull()
             && live.mState.mRouteGeneration
                 != mWorld.mStore.getOblivionPathgridService().generation(live.mState.mPathgrid);
+        const bool doorRestored = live.mSelectionCheckTimer <= 0.f && doorInterruptionResolved(live);
+        if (doorRestored)
+            logEvent("door-access-restored", live, "door=" + live.mState.mDoor.serialize());
         if (live.mNeedsSelection
             || (live.mSelectionCheckTimer <= 0.f
                 && (live.mState.mPhase == ESM4::PackagePhase::Interrupted
@@ -3488,7 +3491,7 @@ namespace MWMechanics
                     || routeChanged)))
         {
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
-            const bool restart = live.mNeedsSelection || (!idleWait && routeChanged);
+            const bool restart = live.mNeedsSelection || (!idleWait && (routeChanged || doorRestored));
             selectUnloaded(live, restart);
         }
 
@@ -3952,6 +3955,18 @@ namespace MWMechanics
             return false;
         const ESM::FormKey owner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(record->mOwner);
         return hasDoorOwnershipPermission(live, owner, actor);
+    }
+
+    bool OblivionAiService::doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor) const
+    {
+        if (!isOblivionDoorInterruption(live.mState))
+            return false;
+        bool locked = false;
+        if (actor != nullptr)
+            return canUseDoor(*actor, live, locked);
+        const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
+        return indexed != mUnloadedLocationByReference.end()
+            && canUseUnloadedDoor(live, mUnloadedLocations[indexed->second], locked);
     }
 
     OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door) const
@@ -4789,17 +4804,21 @@ namespace MWMechanics
             && !live.mState.mPathgrid.isNull()
             && live.mState.mRouteGeneration
                 != mWorld.mStore.getOblivionPathgridService().generation(live.mState.mPathgrid);
+        const bool doorRestored = live.mSelectionCheckTimer <= 0.f && doorInterruptionResolved(live, &actor);
+        if (doorRestored)
+            logEvent("door-access-restored", live, "door=" + live.mState.mDoor.serialize());
         if (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
                 || stalledRouteChanged))
         {
             // A terminal package remains terminal while it is still the
-            // selected winner. Retry only after an explicit graph change;
+            // selected winner. Retry after an explicit graph change or when
+            // access to the exact interrupted door has actually returned;
             // schedule and condition reevaluation can still choose a new
             // package without restarting the old one.
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
-            const bool restart = !idleWait && stalledRouteChanged;
+            const bool restart = !idleWait && (stalledRouteChanged || doorRestored);
             select(actor, live, restart);
         }
 

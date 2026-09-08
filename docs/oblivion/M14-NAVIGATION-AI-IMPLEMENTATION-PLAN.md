@@ -1062,6 +1062,16 @@ the later disable really changes 0b5d5b and is retained in the save. Replace
 the ineffective obstruction sequence with a causal, verified obstruction
 before accepting separation/recovery. The broader coverage above remains open.
 
+2026-09-08: `m14-companion-telepe-recovery/` passes all four blocked/reunited
+save/reload checkpoints and its causal low-process XTEL sequence. Disabling
+017585 after the leader crosses interrupts Alonzo outside; reenabling after
+reload yields one access-restored event, then both followers cross. All three
+cross exactly once. Reunited distance is 264.80 before/after reload (limit 512).
+Resident disabled-reference lookup and door-access-triggered restart are
+repaired; 529 engine and 75 Python tests pass. The native course still FAILS
+overall solely on the moth path-interpolator error, without a log waiver.
+City/high-process transitions and formation/cycle coverage remain open.
+
 ### 16.5 Detection matrix
 
 Suggested manifest: `oblivion_m14_detection.json`.

@@ -9,6 +9,12 @@
 
 namespace MWMechanics
 {
+    inline bool isOblivionDoorInterruption(const ESM4::RuntimeActorAiState& state)
+    {
+        return state.mPhase == ESM4::PackagePhase::Interrupted && !state.mDoor.isNull()
+            && (state.mInterruptionReason == "door-unavailable" || state.mInterruptionReason == "door-locked");
+    }
+
     struct OblivionDoorState
     {
         bool mAvailable = true;

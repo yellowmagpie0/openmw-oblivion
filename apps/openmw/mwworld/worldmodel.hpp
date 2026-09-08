@@ -69,6 +69,12 @@ namespace MWWorld
 
         Ptr getPtr(ESM::RefNum refNum) const { return mPtrRegistry.getOrEmpty(refNum); }
 
+        // Also finds inactive/disabled references in already loaded cells.
+        // Does not load cells or register references. Deleted references are
+        // returned so callers can reject them explicitly rather than fall
+        // back to stale authored state. Not a per-actor scheduler lookup.
+        Ptr getResidentPtr(ESM::RefNum refNum);
+
         PtrRegistryView getPtrRegistryView() const { return PtrRegistryView(mPtrRegistry); }
 
         ESM::RefNum getLastGeneratedRefNum() const { return mPtrRegistry.getLastGenerated(); }

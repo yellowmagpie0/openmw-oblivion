@@ -743,7 +743,42 @@ waits for a `route-blocked` event instead of that door-phase transition; retain
 the failed wait and correct the matcher for the next run. Recovery after
 re-enabling remains unverified, as does the complete companion course.
 
+### Disabled-door reload and causal companion recovery (2026-09-08)
+
+The completed first `m14-companion-telepe-obstruction/` run failed: its wait
+used the wrong event, and after reload the console's active-reference registry
+lookup could not select the disabled door. Blocked and blocked-reloaded
+checkpoints passed; restoration and reunion failed. The error and failed
+actions remain in that directory.
+
+Resident lookup now searches already-loaded cells for unregistered disabled
+references without loading remote cells. Callers still reject deleted targets.
+Door interruptions are reevaluated at the existing bounded selection interval;
+only actual access restoration to the identified interrupted door restarts the
+package. Other terminal phases/reasons are not blindly restarted.
+
+All 529 engine tests pass (`m14-door-recovery-engine-2.log`) and 75 Python tests
+pass (`m14-door-recovery-python.log`). The first new resident-lookup test
+crashed because its live deletion operation required a running World, not
+because lookup failed (`m14-door-recovery-engine.log` and
+`m14-door-recovery-test-backtrace.log`). Corrected fixture tests deleted and
+disabled references and confirms an unloaded cell stays unloaded.
+
+`m14-companion-telepe-recovery/` still **FAILS overall** solely on the unreviewed
+moth `NiPathInterpolator` error. Every action and AI gate passes: the leader
+crosses, disabling 017585 causes the member's `door-unavailable` interruption,
+the split survives reload, and reenabling the same reference produces one
+`door-access-restored` event and reunion. Each named actor records exactly one
+door transition; none has route-blocked/adverse diagnostic events. Four native
+schema-6 checkpoints pass (blocked/reloaded and reunited/reloaded). Member-to-
+leader distance is 264.80 both before and after reunion reload, below the
+unchanged 512 bound. Exit is 0, all actions complete, no timeout or console
+diagnostics, with explicit harness-requested shutdown. This establishes causal
+low-process Telepe recovery, not the remaining city/high-process/formation-cycle
+matrix or overall M14 acceptance. The unrelated rendering error is not waived.
+
 ## Reproduce
+
 
 Build and run the audit:
 

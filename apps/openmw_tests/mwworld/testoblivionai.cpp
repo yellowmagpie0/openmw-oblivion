@@ -40,6 +40,29 @@ namespace
         return result;
     }
 
+    TEST(OblivionAiTest, DoorRecoveryRequiresAnIdentifiedDoorInterruption)
+    {
+        RuntimeActorAiState state;
+        state.mPhase = PackagePhase::Interrupted;
+        state.mDoor = key(1);
+        for (const auto* reason : { "door-unavailable", "door-locked" })
+        {
+            state.mInterruptionReason = reason;
+            EXPECT_TRUE(MWMechanics::isOblivionDoorInterruption(state));
+        }
+        state.mDoor = {};
+        EXPECT_FALSE(MWMechanics::isOblivionDoorInterruption(state));
+        state.mDoor = key(1);
+        state.mInterruptionReason = "target-unresolved";
+        EXPECT_FALSE(MWMechanics::isOblivionDoorInterruption(state));
+        state.mInterruptionReason = "door-unavailable";
+        for (const auto phase : { PackagePhase::Path, PackagePhase::Door, PackagePhase::Stalled, PackagePhase::Complete })
+        {
+            state.mPhase = phase;
+            EXPECT_FALSE(MWMechanics::isOblivionDoorInterruption(state));
+        }
+    }
+
     TEST(OblivionAiTest, DoorAvailabilityUsesResidentThenSavedThenAuthoredState)
     {
         using MWMechanics::OblivionDoorState;

@@ -212,6 +212,7 @@ namespace MWMechanics
         MWWorld::Ptr ptrFor(const ESM::FormKey& key) const;
         MWWorld::Ptr loadedPtrFor(const ESM::FormKey& key) const;
         OblivionDoorState currentDoorState(const UnloadedLocation& door) const;
+        bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;
         void buildUnloadedLocationIndex();
         void seedActors();
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;

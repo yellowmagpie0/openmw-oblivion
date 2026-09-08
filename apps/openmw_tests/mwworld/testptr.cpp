@@ -109,5 +109,43 @@ namespace MWWorld
             }
             EXPECT_EQ(worldModel.getPtr(cellRef.mRefNum), Ptr());
         }
+
+        TEST(MWWorldPtrTest, residentLookupFindsUnregisteredDisabledReferencesWithoutLoadingCells)
+        {
+            MWClass::Npc::registerSelf();
+            ESM::NPC npc;
+            npc.blank();
+            npc.mId = ESM::RefId::stringRefId("resident-test");
+            ESMStore store;
+            store.insert(npc);
+            ESM::ReadersCache readers;
+            WorldModel world(store, readers);
+            CellStore& cell = world.getDraftCell();
+            ESM::Cell unloaded;
+            unloaded.blank();
+            unloaded.mName = "resident-lookup-unloaded";
+            unloaded.mData.mFlags = ESM::Cell::Interior;
+            unloaded.updateId();
+            store.insert(unloaded);
+            CellStore& other = world.getCell(unloaded.mId, false);
+            EXPECT_EQ(other.getState(), CellStore::State_Unloaded);
+            ESM::CellRef reference;
+            reference.blank();
+            reference.mRefID = npc.mId;
+            reference.mRefNum = ESM::FormId{ 0x42, 0 };
+            LiveCellRef<ESM::NPC> live(reference, &npc);
+            live.mData.disable();
+            Ptr ptr(cell.insert(&live), &cell);
+            EXPECT_TRUE(world.getPtr(reference.mRefNum).isEmpty());
+            EXPECT_EQ(world.getResidentPtr(reference.mRefNum), ptr);
+            EXPECT_FALSE(ptr.getRefData().isEnabled());
+            EXPECT_TRUE(world.getPtr(reference.mRefNum).isEmpty());
+            ptr.getRefData().setDeletedByContentFile(true);
+            EXPECT_EQ(world.getResidentPtr(reference.mRefNum), ptr);
+            EXPECT_TRUE(ptr.mRef->isDeleted());
+            EXPECT_TRUE(world.getResidentPtr({}).isEmpty());
+            EXPECT_TRUE(world.getResidentPtr(ESM::FormId{ 0x43, 0 }).isEmpty());
+            EXPECT_EQ(other.getState(), CellStore::State_Unloaded);
+        }
     }
 }

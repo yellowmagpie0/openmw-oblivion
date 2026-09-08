@@ -353,6 +353,26 @@ namespace MWWorld
         ptr.mRef->mWorldModel = this;
     }
 
+    Ptr WorldModel::getResidentPtr(ESM::RefNum refNum)
+    {
+        if (refNum.isZeroOrUnset())
+            return {};
+        if (const Ptr ptr = getPtr(refNum); !ptr.isEmpty() && ptr.isInCell())
+            return ptr;
+        Ptr result;
+        forEachLoadedCellStore([&](CellStore& cell) {
+            if (!result.isEmpty() || cell.getState() != CellStore::State_Loaded)
+                return;
+            cell.forEach([&](const Ptr& ptr) {
+                if (ptr.getCellRef().getRefNum() != refNum)
+                    return true;
+                result = ptr;
+                return false;
+            }, true);
+        });
+        return result;
+    }
+
     void WorldModel::deregisterLiveCellRef(LiveCellRefBase& ref) noexcept
     {
         mPtrRegistry.remove(ref);

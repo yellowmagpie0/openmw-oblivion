@@ -255,7 +255,7 @@ namespace MWGui
             const auto id = resolver.toFormId(key);
             if (!id)
                 throw std::runtime_error("prid reference plugin is not loaded");
-            const auto ptr = environment.getWorldModel()->getPtr(*id);
+            const auto ptr = environment.getWorldModel()->getResidentPtr(*id);
             if (ptr.isEmpty() || !ptr.isInCell() || ptr.mRef->isDeleted())
                 throw std::runtime_error("prid reference is not loaded or is deleted");
             mPtr = ptr;
