@@ -47,6 +47,7 @@
 #include <components/esm4/loadwthr.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwphysics/physicssystem.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/datetimemanager.hpp"
@@ -3430,14 +3431,14 @@ namespace MWMechanics
         // node can be hundreds of units from the authored/follow destination.
         // Spend only the remaining movement budget on the actual route tail.
         if (oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
-                live.mDestinationCell, *live.mDestination, sArrivalTolerance))
+                live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType))
         {
             reached = true;
             return true;
         }
         static_cast<void>(moveToward(*live.mDestination));
         reached = oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
-            live.mDestinationCell, *live.mDestination, sArrivalTolerance);
+            live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType);
         return true;
     }
 
@@ -4434,9 +4435,17 @@ namespace MWMechanics
                 // findSmoothPath normally ends within the requested tolerance.
                 // Keep the final arrival check explicit so a partial output
                 // cannot be interpreted as arrival.
-                if (distanceSquared(position, destination) <= sArrivalTolerance * sArrivalTolerance)
+                if (oblivionDestinationReached(live.mState.mCell, position, live.mState.mCell,
+                        destination, sArrivalTolerance, live.mState.mPackageType))
                 {
                     reached = true;
+                    return true;
+                }
+                // Detour's coarse endpoint is not the final Travel standing
+                // slot. Finish its short approach under ordinary collision.
+                if (distanceSquared(position, destination) <= sArrivalTolerance * sArrivalTolerance)
+                {
+                    faceAndMove(actor, destination, run, sneak);
                     return true;
                 }
                 return false;
@@ -4518,9 +4527,13 @@ namespace MWMechanics
             if (live.mRouteCursor < live.mRoute.size())
                 ++live.mRouteCursor;
             if (live.mRouteCursor >= live.mRoute.size())
+            {
                 reached = oblivionDestinationReached(live.mState.mCell, position,
                     live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
-                    *live.mDestination, sArrivalTolerance);
+                    *live.mDestination, sArrivalTolerance, live.mState.mPackageType);
+                if (!reached && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
+                    faceAndMove(actor, *live.mDestination, run, sneak);
+            }
             else
             {
                 const ESM4::PathgridNodeKey next = live.mRoute[live.mRouteCursor];
@@ -4557,6 +4570,10 @@ namespace MWMechanics
     {
         const osg::Vec3f position = actor.getRefData().getPosition().asVec3();
         const float desired = std::atan2(destination.x() - position.x(), destination.y() - position.y());
+        // Steering must update orientation as well as local translation. In
+        // particular, a point behind the actor has no forward component and
+        // cannot be reached by strafing indefinitely at the authored yaw.
+        static_cast<void>(zTurn(actor, desired));
         const float yaw = actor.getRefData().getPosition().rot[2];
         const float relative = wrapAngle(desired - yaw);
         Movement& movement = actor.getClass().getMovementSettings(actor);
@@ -4578,6 +4595,37 @@ namespace MWMechanics
         mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
         if (transition.mFrom != transition.mTo)
             logTransition(live, oldPhase, transition.mReason);
+        if (mEventStream && transition.mFrom != transition.mTo
+            && transition.mTo == ESM4::PackagePhase::Stalled && live.mState.mTier == ESM4::ProcessTier::High
+            && !actor.isEmpty() && live.mDestination)
+        {
+            // Diagnostic only: this ray is not a navigation clearance test.
+            const osg::Vec3f position = actor.getRefData().getPosition().asVec3();
+            osg::Vec3f target = *live.mDestination;
+            if (live.mContinuousRouteCursor < live.mContinuousRoute.size())
+                target = live.mContinuousRoute[live.mContinuousRouteCursor];
+            else if (live.mRouteCursor < live.mRoute.size())
+            {
+                const auto node = live.mRoute[live.mRouteCursor];
+                if (const auto* graph = mWorld.mStore.getOblivionPathgridService().graph(node.mPathgrid);
+                    graph != nullptr && graph->contains(node.mNode))
+                {
+                    const auto point = graph->worldPoint(node.mNode);
+                    target = osg::Vec3f(point.mX, point.mY, point.mZ);
+                }
+            }
+            osg::Vec3f direction(target.x() - position.x(), target.y() - position.y(), 0.f);
+            const float distance = direction.normalize();
+            const osg::Vec3f from = position + osg::Vec3f(0.f, 0.f, 32.f);
+            const auto hit = mWorld.mPhysics->castRay(from, from + direction * std::min(distance, 128.f),
+                { actor }, {}, MWPhysics::CollisionType_World | MWPhysics::CollisionType_Actor);
+            std::ostringstream detail;
+            detail << "position=" << position.x() << ',' << position.y() << ',' << position.z()
+                   << " target=" << target.x() << ',' << target.y() << ',' << target.z()
+                   << " hit=" << (hit.mHit ? "true" : "false")
+                   << " object=" << actorKey(hit.mHitObject).serialize();
+            logEvent("stall-probe", live, detail.str());
+        }
         if (live.mState.mPhase == ESM4::PackagePhase::Interrupted)
         {
             stopMovement(actor);

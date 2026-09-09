@@ -57,6 +57,28 @@ namespace
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(1), destination, -1.f));
     }
 
+    TEST(OblivionAiTest, TravelArrivalSeparatesStandingSlotFromVerticalMarkerOffset)
+    {
+        const osg::Vec3f destination(230.50577f, -91.31252f, -32.12009f);
+        const osg::Vec3f premature(198.19360f, -41.13493f, -31.f);
+        EXPECT_TRUE(MWMechanics::oblivionDestinationReached(key(1), premature, key(1), destination, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), premature, key(1), destination, 64.f, AIPackageType::Travel));
+        for (const float vertical : { -64.f, 0.f, 64.f })
+            EXPECT_TRUE(MWMechanics::oblivionDestinationReached(key(1),
+                destination + osg::Vec3f(16.f, 0.f, vertical), key(1), destination, 64.f, AIPackageType::Travel));
+        for (const auto offset : { osg::Vec3f(17.f, 0.f, 0.f), osg::Vec3f(0.f, 17.f, 0.f),
+                 osg::Vec3f(0.f, 0.f, 65.f), osg::Vec3f(16.f, 16.f, 0.f) })
+            EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+                key(1), destination + offset, key(1), destination, 64.f, AIPackageType::Travel));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), destination, key(2), destination, 64.f, AIPackageType::Travel));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            {}, destination, {}, destination, 64.f, AIPackageType::Travel));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), destination, key(1), destination, -1.f, AIPackageType::Travel));
+    }
+
     TEST(OblivionAiTest, DoorRecoveryRequiresAnIdentifiedDoorInterruption)
     {
         RuntimeActorAiState state;

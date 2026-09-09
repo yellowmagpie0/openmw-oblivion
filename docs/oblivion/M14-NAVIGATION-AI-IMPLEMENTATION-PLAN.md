@@ -1200,6 +1200,18 @@ criteria must be reverified as the step-by-step implementation resumes.
 
 ## 20. Practical handoff notes
 
+2026-09-09 standing-slot checkpoint: `m14-tutorial-standing-slot/` reaches
+stages 12/13 and Renault/Glenroy complete after separating Travel's horizontal
+arrival from vertical marker allowance and enabling yaw steering. It still
+FAILS: Baurus stalls, the Emperor remains in Path, PickIdle is unsupported,
+all four door gates remain absent, and blocked events are 545/500. The failed
+steering-only and three-dimensional-tolerance experiments remain documented.
+Engine 534 and Python 75 tests pass; this is not final sanitizer acceptance.
+The next course must prove ordinary player entry into the real stage-14
+trigger. Use the new waypoint ray diagnostics to investigate Baurus rather
+than extending waits. The pre-M14 TES3 baseline is building; the latest
+Morrowind smoke pass does not close section 16.7.
+
 2026-09-09 tutorial checkpoint: query-only phantom physics and native OnTrigger
 dispatch are implemented, including shared runtime-player event identity.
 Release and ASan/UBSan suites pass 1,609 component/533 engine tests; Python 75

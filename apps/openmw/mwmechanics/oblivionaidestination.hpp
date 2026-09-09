@@ -1,6 +1,7 @@
 #ifndef OPENMW_MWMECHANICS_OBLIVIONAIDESTINATION_H
 #define OPENMW_MWMECHANICS_OBLIVIONAIDESTINATION_H
 
+#include <algorithm>
 #include <cmath>
 #include <set>
 #include <span>
@@ -13,8 +14,20 @@
 namespace MWMechanics
 {
     inline bool oblivionDestinationReached(const ESM::FormKey& cell, const osg::Vec3f& position,
-        const ESM::FormKey& destinationCell, const osg::Vec3f& destination, float tolerance)
+        const ESM::FormKey& destinationCell, const osg::Vec3f& destination, float tolerance,
+        ESM4::AIPackageType type = ESM4::AIPackageType::Unknown)
     {
+        // Travel markers specify a standing place, unlike coarse route nodes.
+        // Keep the vertical allowance for authored markers below the settled
+        // actor's feet, without allowing an actor to occupy a neighbour's slot.
+        if (type == ESM4::AIPackageType::Travel)
+        {
+            const osg::Vec3f delta = position - destination;
+            const float horizontal = std::min(16.f, tolerance);
+            return !cell.isNull() && cell == destinationCell && std::isfinite(tolerance) && tolerance >= 0.f
+                && std::abs(delta.z()) <= tolerance
+                && delta.x() * delta.x() + delta.y() * delta.y() <= horizontal * horizontal;
+        }
         return !cell.isNull() && cell == destinationCell && std::isfinite(tolerance) && tolerance >= 0.f
             && (position - destination).length2() <= tolerance * tolerance;
     }

@@ -890,6 +890,50 @@ the wait again or restore premature graph-node arrival. Actual native trigger
 progression, callback mutation/reload coverage and PickIdle remain unverified;
 passing physics tests does not close the tutorial or M14.
 
+### Travel standing-slot and steering isolation (2026-09-09)
+
+`m14-tutorial-steering-only/` **FAILS** at stage 10: actor yaw changes now
+confirm that steering turns toward its target, but Renault, Baurus and the
+Emperor stall. Turning alone does not repair the coarse final arrival.
+The earlier combined 16-unit three-dimensional tolerance experiment
+(`m14-tutorial-travel-steering/`) reached stage 13 but also stalled the
+Emperor's initial package. That experiment was rejected: authored marker
+height and settled actor feet must not be conflated with horizontal spacing.
+
+The revised Travel final-arrival check requires a 16-unit horizontal standing
+slot while retaining the existing 64-unit vertical allowance. Other package
+arrival and route-node tolerances are unchanged. Both process tiers use the
+same final-arrival predicate; resident movement completes the short approach
+under ordinary collision. Engine tests pass 534/534
+(`m14-travel-standing-slot-engine.log`, `m14-stall-probe-engine.log`).
+
+`m14-tutorial-standing-slot/` still **FAILS**, but reaches actual stages 12 and
+13 without an initial-package stall. Renault and Glenroy complete and preserve
+their positions through reload: [165.616, -54.281, -31.000] and
+[223.555, -80.507, -31.249], respectively. Baurus remains stalled near
+[-491.348, 1182.942, 514.166]; the Emperor remains in Path, not Complete.
+Both checkpoints fail on Baurus, all four door gates remain unmet, and
+545 blocked/no-progress events exceed 500. Native INFO 00bf0d still fails on
+unsupported `PickIdle`. Shutdown is requested, exit is zero, and there is no
+overall timeout. This is an approach repair, not tutorial acceptance.
+
+The next diagnostic course adds ordinary player movement into the authored
+trigger and requires actual stage 14; it does not set quest stages or actor
+positions. A high-process stall probe records a short ray toward the current
+waypoint, including the hit reference. This is diagnostic evidence only, not
+a capsule-clearance test or an obstruction bypass. Python tests pass 75/75
+(`m14-trigger-walk-python.log`). Native trigger progression remains open until
+that course is inspected.
+
+`m14-trigger-morrowind-smoke/` passes save/profile isolation, but is not the
+planned TES3 behavior comparison. A detached pre-M14 worktree at
+`a9acf26cc1e94c97c6ef4c0c53c880b08f82845f` is building. Its first two
+configuration attempts failed on system Bullet precision and modern CMake's
+minimum policy version; both logs remain retained. Configuration succeeds
+with the same fetched Bullet/Recast sources as the candidate and
+`CMAKE_POLICY_VERSION_MINIMUM=3.5` (`m14-prebaseline-configure-3.log`).
+The baseline build and full behavioral comparison are not yet complete.
+
 ## Reproduce
 
 
