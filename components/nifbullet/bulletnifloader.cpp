@@ -452,7 +452,13 @@ namespace NifBullet
         {
             osg::Matrixf phantomTransform = phantom->mTransform;
             phantomTransform.setTrans(phantomTransform.getTrans() * mHavokScale);
-            transform = phantomTransform * transform;
+            // Keep the body-local offset inside the animated node shape.
+            // Object animation replaces the outer node transform each frame;
+            // folding this offset into that transform would lose it on update.
+            shape->setLocalScaling(shape->getLocalScaling() * Misc::Convert::toBullet(phantomTransform.getScale()));
+            auto bodyShape = std::make_unique<btCompoundShape>();
+            bodyShape->addChildShape(matrixToBullet(phantomTransform), shape.release());
+            shape = std::move(bodyShape);
         }
 
         addCollisionShape(std::move(shape), transform, args.mAnimated ? node.mRecordIndex : -1,

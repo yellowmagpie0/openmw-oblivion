@@ -5,6 +5,7 @@
 #include <components/esm4/readerutils.hpp>
 #include <components/files/istreamptr.hpp>
 #include <components/obscript/compiler.hpp>
+#include <components/obscript/builtinreferences.hpp>
 #include <components/obscript/corpus.hpp>
 #include <components/obscript/lexer.hpp>
 #include <components/obscript/nativevariables.hpp>
@@ -27,6 +28,20 @@
 
 namespace
 {
+    TEST(ObScriptBuiltinReferences, EventFiltersAndExpressionsUseTheSamePlayerInstance)
+    {
+        const auto self = ESM::FormKey::content("Oblivion.esm", 0x97a3b);
+        const auto actor = ESM::FormKey::content("Oblivion.esm", 0x32a15);
+        const auto player = ESM::FormKey::dynamic("player", 1);
+        EXPECT_EQ(ObScript::builtinReferenceKey("PlAyEr", self, actor), player);
+        EXPECT_NE(ObScript::builtinReferenceKey("player", self, actor), ESM::FormKey::content("Oblivion.esm", 7));
+        EXPECT_EQ(ObScript::builtinReferenceKey("SELF", self, actor), self);
+        EXPECT_EQ(ObScript::builtinReferenceKey("ActionRef", self, actor), actor);
+        EXPECT_EQ(ObScript::builtinReferenceKey("actionreference", self, actor), actor);
+        EXPECT_FALSE(ObScript::builtinReferenceKey("PlayerOther", self, actor));
+        EXPECT_EQ(ObScript::builtinReferenceKey("self", {}, {}), ESM::FormKey{});
+    }
+
     TEST(ObScriptNativeVariables, ResolvesSparseNativeIdsByNameNotSourceOffset)
     {
         ESM4::ScriptDefinition definition;

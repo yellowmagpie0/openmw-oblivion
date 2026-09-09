@@ -11,6 +11,8 @@ namespace MWPhysics
     btScalar ContactTestResultCallback::addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* col0Wrap,
         int /*partId0*/, int /*index0*/, const btCollisionObjectWrapper* col1Wrap, int /*partId1*/, int /*index1*/)
     {
+        if (mOverlapOnly && cp.getDistance() > 0)
+            return 0.f;
         const btCollisionObject* collisionObject = col0Wrap->m_collisionObject;
         if (collisionObject == mTestedAgainst)
             collisionObject = col1Wrap->m_collisionObject;

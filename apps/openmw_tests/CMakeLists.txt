@@ -19,6 +19,8 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwsound/testnativeaudio.cpp
 
+    mwphysics/testtrigger.cpp
+
     mwrender/testtes4facegen.cpp
 
     mwgui/tooltips.cpp

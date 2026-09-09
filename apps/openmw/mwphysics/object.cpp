@@ -15,7 +15,7 @@
 namespace MWPhysics
 {
     Object::Object(const MWWorld::Ptr& ptr, osg::ref_ptr<Resource::BulletShapeInstance> shapeInstance,
-        osg::Quat rotation, int collisionType, PhysicsTaskScheduler* scheduler)
+        osg::Quat rotation, int collisionType, PhysicsTaskScheduler* scheduler, bool queryOnly)
         : PtrHolder(ptr, osg::Vec3f())
         , mShapeInstance(std::move(shapeInstance))
         , mSolid(true)
@@ -29,8 +29,14 @@ namespace MWPhysics
             Misc::Convert::toBullet(mPosition), Misc::Convert::toBullet(rotation));
         mCollisionObject->setUserPointer(this);
         mShapeInstance->setLocalScaling(mScale);
-        mTaskScheduler->addCollisionObject(mCollisionObject.get(), collisionType,
-            CollisionType_Actor | CollisionType_HeightMap | CollisionType_Projectile);
+        if (queryOnly)
+        {
+            mSolid = false;
+            mCollisionObject->setCollisionFlags(mCollisionObject->getCollisionFlags()
+                | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+        }
+        mTaskScheduler->addCollisionObject(mCollisionObject.get(), queryOnly ? 0 : collisionType,
+            queryOnly ? 0 : CollisionType_Actor | CollisionType_HeightMap | CollisionType_Projectile);
     }
 
     Object::~Object()

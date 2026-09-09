@@ -30,7 +30,7 @@ namespace MWPhysics
     {
     public:
         Object(const MWWorld::Ptr& ptr, osg::ref_ptr<Resource::BulletShapeInstance> shapeInstance, osg::Quat rotation,
-            int collisionType, PhysicsTaskScheduler* scheduler);
+            int collisionType, PhysicsTaskScheduler* scheduler, bool queryOnly = false);
         ~Object() override;
 
         const Resource::BulletShapeInstance* getShapeInstance() const;

@@ -1200,6 +1200,16 @@ criteria must be reverified as the step-by-step implementation resumes.
 
 ## 20. Practical handoff notes
 
+2026-09-09 tutorial checkpoint: query-only phantom physics and native OnTrigger
+dispatch are implemented, including shared runtime-player event identity.
+Release and ASan/UBSan suites pass 1,609 component/533 engine tests; Python 75
+passes. Native tutorial progression is still OPEN. The explicit stage-13 wait
+in `m14-tutorial-trigger-identity/` exposes Renault/Baurus bounded-repath stalls
+at stage 10, both failed reload checkpoints, missing door gates, and 550/500
+blocked events. Investigate coarse arrival/crowding and Baurus navigation;
+then prove actual trigger progression, PickIdle and subsequent prerequisites.
+The earlier short course reaching stage 12 is not equivalent evidence.
+
 2026-09-08 route-tail checkpoint: `m14-companion-telepe-route-tail/` passes
 the unchanged causal Telepe obstruction course and all four checkpoints;
 spacing is 282.43 before/after reload (limit 512). Both pathgrid movement

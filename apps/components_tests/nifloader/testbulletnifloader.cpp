@@ -1272,8 +1272,10 @@ namespace
         const auto& compound = static_cast<const btCompoundShape&>(*result->mTriggerCollisionShape);
         ASSERT_EQ(compound.getNumChildShapes(), 1);
         constexpr float havokScale = 10.f / 1.42875f;
-        EXPECT_TRUE(isNear(compound.getChildTransform(0).getOrigin(),
-            btVector3(10.f, 20.f, 30.f) + btVector3(1.f, 2.f, 3.f) * havokScale));
+        ASSERT_TRUE(compound.getChildShape(0)->isCompound());
+        const auto& bodyCompound = static_cast<const btCompoundShape&>(*compound.getChildShape(0));
+        EXPECT_TRUE(isNear(compound.getChildTransform(0).getOrigin(), btVector3(10.f, 20.f, 30.f)));
+        EXPECT_TRUE(isNear(bodyCompound.getChildTransform(0).getOrigin(), btVector3(1.f, 2.f, 3.f) * havokScale));
 
         auto instance = Resource::makeInstance(result);
         ASSERT_NE(instance->mTriggerCollisionShape, nullptr);
@@ -1314,6 +1316,7 @@ namespace
         mNiNode.mCollision = Nif::NiCollisionObjectPtr(&solidCollision);
         mNiNode2.mCollision = Nif::NiCollisionObjectPtr(&phantomCollision);
         mNiNode.mChildren = Nif::NiAVObjectList{ Nif::NiAVObjectPtr(&mNiNode2) };
+        mNiNode2.mParents.push_back(&mNiNode);
         Nif::NIFFile file(xtestNif);
         file.mRoots.push_back(&mNiNode);
         file.mVersion = Nif::NIFFile::VER_OB;

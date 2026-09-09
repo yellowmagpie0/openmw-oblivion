@@ -847,6 +847,49 @@ engine tests under ASan/UBSan (`m14-route-tail-sanitizer-{components,engine}.log
 Those binaries precede the phantom-shape changes; this is not final M14
 sanitizer acceptance.
 
+### Live phantom queries and stricter tutorial boundary (2026-09-09)
+
+Physics now owns separate query-only phantom objects, with zero physical
+collision group/mask and no contact response. They are excluded from solid,
+navigation and ordinary object lookups. Position, rotation, scale, animation,
+reference updates and removal follow the physics lifecycle. Body-local phantom
+offsets remain nested under animated node transforms. Narrow-phase queries
+reject positive-distance contacts and deduplicate actors; native OnTrigger
+dispatch uses stable-key ordered snapshots and rechecks disabled/deleted state.
+Event filters and ordinary expressions now share builtin reference identity:
+`OnTrigger player` must match the runtime player, not the authored NPC base.
+
+Release component 1,609, engine 533 and Python 75 tests pass
+(`m14-trigger-identity-components.log`, `m14-trigger-identity-engine-2.log`,
+`m14-trigger-identity-python.log`). ASan/UBSan pass all 1,609/533 tests
+(`m14-trigger-sanitizer-{components,engine}-2.log`). Strict released trigger
+collision loading passes (`m14-trigger-runtime-native-collision.log`).
+Retained failures include a read-only position assignment in the lifecycle
+fixture (`m14-trigger-lifecycle-build.log`), missing static-class registration
+(`m14-trigger-identity-engine.log`), and the debug-only parent-link assertion
+in the synthetic mixed-shape fixture (`m14-trigger-sanitizer-components.log`,
+`m14-trigger-sanitizer-backtrace.log`). These fixtures are corrected without
+relaxing the runtime checks.
+
+The unchanged short course `m14-tutorial-native-triggers/` **FAILS** and only
+reaches stage 12 near shutdown; it does not prove idle or trigger progression.
+Replacing its fixed ten-second pause after stage 10 with an explicit bounded
+wait for stage 13 exposes a longer-running failure in
+`m14-tutorial-trigger-identity/`: Renault and Baurus stall with
+bounded-repath-exhausted, both checkpoints fail, the stage-13 wait fails, all
+four door gates remain unmet, and 550 blocked/no-progress events exceed 500.
+The course finishes all actions with explicit harness-requested shutdown and
+no overall timeout or unreviewed rendering errors.
+
+Saved Renault position [222.414, 4.209, -31.339] is about 86 units from her
+marker [169.029, -63.419, -32.117]. Glenroy has already completed at
+[198.550, -40.106, -31.000], about 60 units short of his own marker
+[230.506, -91.313, -32.120]. This suggests crowding around coarse arrival
+positions; it needs a causal navigation fix and fresh evidence. Do not extend
+the wait again or restore premature graph-node arrival. Actual native trigger
+progression, callback mutation/reload coverage and PickIdle remain unverified;
+passing physics tests does not close the tutorial or M14.
+
 ## Reproduce
 
 

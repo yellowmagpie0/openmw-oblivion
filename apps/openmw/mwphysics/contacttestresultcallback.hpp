@@ -15,8 +15,9 @@ namespace MWPhysics
     class ContactTestResultCallback : public btCollisionWorld::ContactResultCallback
     {
     public:
-        explicit ContactTestResultCallback(const btCollisionObject* testedAgainst)
+        explicit ContactTestResultCallback(const btCollisionObject* testedAgainst, bool overlapOnly = false)
             : mTestedAgainst(testedAgainst)
+            , mOverlapOnly(overlapOnly)
         {
         }
 
@@ -27,6 +28,7 @@ namespace MWPhysics
 
     private:
         const btCollisionObject* mTestedAgainst;
+        bool mOverlapOnly;
     };
 }
 

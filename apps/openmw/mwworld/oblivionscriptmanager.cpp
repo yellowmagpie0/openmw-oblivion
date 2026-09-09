@@ -30,6 +30,7 @@
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadinfo.hpp>
 #include <components/obscript/nativevariables.hpp>
+#include <components/obscript/builtinreferences.hpp>
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
@@ -60,6 +61,7 @@
 #include "../mwmechanics/oblivionai.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwmechanics/npcstats.hpp"
+#include "../mwphysics/physicssystem.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/renderingmanager.hpp"
 #include "../mwsound/sound.hpp"
@@ -685,8 +687,10 @@ namespace MWWorld
             bool matches = true;
             if (!entry.mRuntimeArguments.empty())
             {
-                const std::optional<ESM::FormKey> expected = mStore.findEsm4FormKey(entry.mRuntimeArguments.front());
-                matches = expected && *expected == actionReference;
+                auto expected = ObScript::builtinReferenceKey(entry.mRuntimeArguments.front(), self, actionReference);
+                if (!expected)
+                    expected = mStore.findEsm4FormKey(entry.mRuntimeArguments.front());
+                matches = expected && !expected->isNull() && *expected == actionReference;
             }
             if (!matches)
                 continue;
@@ -832,8 +836,32 @@ namespace MWWorld
         });
         for (const Ptr& ptr : objects)
         {
+            if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
+                continue;
             dispatchObjectEvent(ptr, "onload");
+            if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
+                continue;
             dispatchObjectEvent(ptr, "gamemode");
+            if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
+                continue;
+            const auto program = scriptFor(ptr);
+            if (!program || std::none_of(program->mEntryPoints.begin(), program->mEntryPoints.end(),
+                    [](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mEvent, "ontrigger"); }))
+                continue;
+            // Snapshot and order actual narrow-phase overlaps before invoking
+            // scripts: a callback may disable/delete a volume or move actors.
+            auto overlapping = mWorld.mPhysics->getTriggerActors(ptr);
+            std::sort(overlapping.begin(), overlapping.end(), [&](const Ptr& left, const Ptr& right) {
+                return keyFor(left) < keyFor(right);
+            });
+            for (const Ptr& actor : overlapping)
+            {
+                if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
+                    break;
+                if (actor.isEmpty() || !actor.isInCell() || !actor.getRefData().isEnabled() || actor.mRef->isDeleted())
+                    continue;
+                dispatchObjectEvent(ptr, "ontrigger", actor);
+            }
         }
         writeRuntimeReport();
     }
@@ -972,12 +1000,8 @@ namespace MWWorld
     ObScript::Value OblivionScriptManager::resolveName(
         std::string_view name, const ObScript::RuntimeContext& context)
     {
-        if (Misc::StringUtils::ciEqual(name, "self"))
-            return ObScript::ReferenceValue{ context.mSelf, "self" };
-        if (Misc::StringUtils::ciEqual(name, "player"))
-            return ObScript::ReferenceValue{ ESM::FormKey::dynamic("player", 1), "player" };
-        if (Misc::StringUtils::ciEqual(name, "actionref") || Misc::StringUtils::ciEqual(name, "actionreference"))
-            return ObScript::ReferenceValue{ context.mActionReference, "actionref" };
+        if (const auto key = ObScript::builtinReferenceKey(name, context.mSelf, context.mActionReference))
+            return ObScript::ReferenceValue{ *key, lower(name) };
         if (const auto key = mStore.findEsm4FormKey(name))
         {
             if (mWorld.mOblivionRuntimeState)

@@ -160,6 +160,7 @@ namespace MWPhysics
         mTaskScheduler->releaseSharedStates();
         mHeightFields.clear();
         mObjects.clear();
+        mTriggers.clear();
         mActors.clear();
         mProjectiles.clear();
     }
@@ -390,6 +391,25 @@ namespace MWPhysics
         return actors;
     }
 
+    std::vector<MWWorld::Ptr> PhysicsSystem::getTriggerActors(const MWWorld::ConstPtr& ptr) const
+    {
+        const auto found = mTriggers.find(ptr.mRef);
+        if (found == mTriggers.end())
+            return {};
+        // Apply queued script-side transform changes before an overlap query.
+        mTaskScheduler->updateSingleAabb(found->second, true);
+        btCollisionObject* volume = found->second->getCollisionObject();
+        ContactTestResultCallback callback(volume, true);
+        callback.m_collisionFilterGroup = CollisionType_World;
+        callback.m_collisionFilterMask = CollisionType_Actor;
+        mTaskScheduler->contactTest(volume, callback);
+        std::vector<MWWorld::Ptr> result;
+        for (const auto& contact : callback.mResult)
+            if (std::find(result.begin(), result.end(), contact.mObject) == result.end())
+                result.push_back(contact.mObject);
+        return result;
+    }
+
     osg::Vec3f PhysicsSystem::traceDown(const MWWorld::Ptr& ptr, const osg::Vec3f& position, float maxHeight)
     {
         ActorMap::iterator found = mActors.find(ptr.mRef);
@@ -431,7 +451,22 @@ namespace MWPhysics
             ? Misc::ResourceHelpers::correctActorModelPath(mesh, mResourceSystem->getVFS())
             : VFS::Path::Normalized(mesh);
         osg::ref_ptr<Resource::BulletShapeInstance> shapeInstance = mShapeManager->getInstance(animationMesh);
-        if (!shapeInstance || !shapeInstance->mCollisionShape)
+        if (!shapeInstance)
+            return;
+
+        if (shapeInstance->mTriggerCollisionShape)
+        {
+            assert(!mTriggers.contains(ptr.mRef));
+            auto triggerShape = Resource::makeInstance(shapeInstance->getSource());
+            triggerShape->mCollisionShape = std::move(triggerShape->mTriggerCollisionShape);
+            triggerShape->mAnimatedShapes = std::move(triggerShape->mAnimatedTriggerShapes);
+            triggerShape->mAvoidCollisionShape.reset();
+            auto trigger = std::make_shared<Object>(ptr, triggerShape, rotation, 0, mTaskScheduler.get(), true);
+            mTriggers.emplace(ptr.mRef, std::move(trigger));
+            shapeInstance->mTriggerCollisionShape.reset();
+            shapeInstance->mAnimatedTriggerShapes.clear();
+        }
+        if (!shapeInstance->mCollisionShape)
             return;
 
         assert(!getObject(ptr));
@@ -459,6 +494,7 @@ namespace MWPhysics
 
     void PhysicsSystem::remove(const MWWorld::Ptr& ptr)
     {
+        mTriggers.erase(ptr.mRef);
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
             mAnimatedObjects.erase(foundObject->second.get());
@@ -480,6 +516,8 @@ namespace MWPhysics
 
     void PhysicsSystem::updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
     {
+        if (auto trigger = mTriggers.find(old.mRef); trigger != mTriggers.end())
+            trigger->second->updatePtr(updated);
         if (auto foundObject = mObjects.find(old.mRef); foundObject != mObjects.end())
             foundObject->second->updatePtr(updated);
         else if (auto foundActor = mActors.find(old.mRef); foundActor != mActors.end())
@@ -532,6 +570,11 @@ namespace MWPhysics
 
     void PhysicsSystem::updateScale(const MWWorld::Ptr& ptr)
     {
+        if (auto trigger = mTriggers.find(ptr.mRef); trigger != mTriggers.end())
+        {
+            trigger->second->setScale(ptr.getCellRef().getScale());
+            mTaskScheduler->updateSingleAabb(trigger->second);
+        }
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
             float scale = ptr.getCellRef().getScale();
@@ -547,6 +590,11 @@ namespace MWPhysics
 
     void PhysicsSystem::updateRotation(const MWWorld::Ptr& ptr, osg::Quat rotate)
     {
+        if (auto trigger = mTriggers.find(ptr.mRef); trigger != mTriggers.end())
+        {
+            trigger->second->setRotation(rotate);
+            mTaskScheduler->updateSingleAabb(trigger->second);
+        }
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
             foundObject->second->setRotation(rotate);
@@ -564,6 +612,11 @@ namespace MWPhysics
 
     void PhysicsSystem::updatePosition(const MWWorld::Ptr& ptr)
     {
+        if (auto trigger = mTriggers.find(ptr.mRef); trigger != mTriggers.end())
+        {
+            trigger->second->updatePosition();
+            mTaskScheduler->updateSingleAabb(trigger->second);
+        }
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
             foundObject->second->updatePosition();
@@ -714,6 +767,9 @@ namespace MWPhysics
     void PhysicsSystem::stepSimulation(
         float dt, bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
     {
+        for (const auto& [_, trigger] : mTriggers)
+            if (trigger->isAnimated() && trigger->animateCollisionShapes())
+                mTaskScheduler->updateSingleAabb(trigger);
         for (auto& [animatedObject, changed] : mAnimatedObjects)
         {
             if (animatedObject->animateCollisionShapes())

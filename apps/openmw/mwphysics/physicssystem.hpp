@@ -207,6 +207,8 @@ namespace MWPhysics
             int collisionMask) const; ///< get handles this object collides with
         std::vector<ContactPoint> getCollisionsPoints(
             const MWWorld::ConstPtr& ptr, int collisionGroup, int collisionMask) const;
+        /// Actors overlapping authored non-solid phantom geometry. No AABB-only approximation.
+        std::vector<MWWorld::Ptr> getTriggerActors(const MWWorld::ConstPtr& ptr) const;
         osg::Vec3f traceDown(const MWWorld::Ptr& ptr, const osg::Vec3f& position, float maxHeight);
 
         /// @param ignore Optional, a list of Ptr to ignore in the list of results. targets are actors to filter for,
@@ -305,6 +307,8 @@ namespace MWPhysics
 
         using ObjectMap = std::unordered_map<const MWWorld::LiveCellRefBase*, std::shared_ptr<Object>>;
         ObjectMap mObjects;
+        // Query-only objects: excluded from solid, navigator, ray and movement lookups.
+        ObjectMap mTriggers;
 
         std::map<Object*, bool> mAnimatedObjects; // stores pointers to elements in mObjects
 
