@@ -653,7 +653,8 @@ namespace MWPhysics
 
         auto actor = std::make_shared<Actor>(
             ptr, shape, mTaskScheduler.get(), canWaterWalk, Settings::game().mActorCollisionShapeType,
-            Settings::game().mDefaultActorPathfindHalfExtents);
+            MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                ? Settings::game().mDefaultActorPathfindHalfExtents : osg::Vec3f{});
 
         mActors.emplace(ptr.mRef, std::move(actor));
     }

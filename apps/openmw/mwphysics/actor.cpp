@@ -38,11 +38,11 @@ namespace MWPhysics
         , mActive(false)
         , mTaskScheduler(scheduler)
     {
-        // We can not create an actor without collisions: it will fall through the ground and its
-        // zero-sized agent bounds will be rejected by the navigator. First try the model collision
-        // shape, then use the configured actor bounds for multipart NPC models that have neither a
-        // root collision box nor a standalone collision shape.
-        if (mOriginalHalfExtents.length2() == 0.f)
+        // TES3 NPC bounds come from bodyparts; preserve that legacy path.
+        // Oblivion explicitly supplies fallback bounds for multipart models
+        // lacking both a root collision box and a standalone collision shape.
+        const bool allowFallback = fallbackHalfExtents.length2() > 0.f;
+        if ((!ptr.getClass().isNpc() || allowFallback) && mOriginalHalfExtents.length2() == 0.f)
         {
             if (shape->mCollisionShape)
             {
@@ -61,10 +61,16 @@ namespace MWPhysics
 
             if (mOriginalHalfExtents.length2() == 0.f)
             {
-                mOriginalHalfExtents = fallbackHalfExtents;
-                mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
-                Log(Debug::Warning) << "Using fallback collision bounds for actor \""
-                                    << ptr.getCellRef().getRefId() << "\".";
+                if (allowFallback)
+                {
+                    mOriginalHalfExtents = fallbackHalfExtents;
+                    mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
+                    Log(Debug::Warning) << "Using fallback collision bounds for actor \""
+                                        << ptr.getCellRef().getRefId() << "\".";
+                }
+                else
+                    Log(Debug::Error) << "Error: Failed to calculate bounding box for actor \""
+                                      << ptr.getCellRef().getRefId() << "\".";
             }
         }
 
