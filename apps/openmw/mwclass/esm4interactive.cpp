@@ -50,10 +50,10 @@ namespace MWClass
                     continue;
                 const ESM::RefId nativeId(ESM::FormId::fromUint32(item.item));
                 const ESM::RefId sharedId = MWWorld::OblivionProfileServices::sharedItemId(store, nativeId);
-                const int count = static_cast<int>(std::min<std::uint32_t>(item.count,
-                    static_cast<std::uint32_t>(std::numeric_limits<int>::max())));
                 try
                 {
+                    static_cast<void>(ESM4::inventoryItemCount(item));
+                    const int count = item.count;
                     MWWorld::ManualRef ref(store, sharedId, count);
                     data.mInventoryStore.add(ref.getPtr(), count, false);
                 }

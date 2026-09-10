@@ -934,6 +934,60 @@ with the same fetched Bullet/Recast sources as the candidate and
 `CMAKE_POLICY_VERSION_MINIMUM=3.5` (`m14-prebaseline-configure-3.log`).
 The baseline build and full behavioral comparison are not yet complete.
 
+### Signed inventory quantities and actual trigger progression (2026-09-10)
+
+The extended stall probe in `m14-tutorial-trigger-forward/` identifies
+Baurus's cause: `speed=0 encumbrance=3.22123e+09 capacity=500`, despite a clear
+short waypoint ray and forward movement input. His native CNTO entries for
+0b1200 and 009311 contain -1 and -3. The unsigned parser/bridge converted
+them into enormous stacks. The native signed layout is also documented by
+[xOBSE's TESContainer::Data](https://github.com/llde/xOBSE/blob/f64a8fa0481e24b3e159d276b29b721a548876bf/obse/obse/GameForms.h#L813).
+
+CNTO now retains a signed count. Live shared inventories preserve the sign;
+physical quantities, unloaded inventory snapshots, item-count/key queries and
+encumbrance use its magnitude. The unrepresentable INT32_MIN magnitude is
+rejected explicitly. This covers NPC/creature/container initialization and
+the native player projection, not merely Baurus. Raw negative stock intent
+remains available; complete native restocking/consumption acceptance is not
+claimed. Existing inflated failure saves are retained, not silently rewritten.
+
+All 1,610 component and 534 engine tests pass
+(`m14-signed-inventory-{components,engine}.log`), including signed boundary
+tests and a real profile projection retaining -1/-3. Python 75 tests pass
+(`m14-signed-inventory-python.log`). Sanitizer verification is still running.
+
+`m14-tutorial-signed-inventory/` reaches actual stage 14 through OnTrigger
+097a3d on reference 097a3b, following ordinary player movement. The volume is
+disabled afterward. Baurus now selects and completes package 032aeb; after
+reload, his formerly inflated item stacks contain exactly 1 and 3. The
+earlier `m14-tutorial-trigger-walk/` and `m14-tutorial-trigger-forward/`
+courses failed to put the player into the volume and remain retained. One
+screenshot was inspected for orientation; position checkpoints supplied the
+subsequent movement evidence.
+
+The new course still **FAILS**. Glenroy selects 032b16 but interrupts with
+`target-unresolved`: that package's native PLDT targets built-in player
+reference 000014 with radius 120, which is not yet resolved to the runtime
+player. The Emperor still does not complete his approach, PickIdle remains
+unsupported, all four door gates remain missing, and blocked events are
+545/500. Fix native player-reference resolution and remaining arrival/crowding;
+then continue through the stage-15/16 and dialogue prerequisites. Do not
+declare the tutorial or M14 accepted from this partial progression.
+
+Pre-M14 revision a9acf26cc1 builds and passes
+`m14-prebaseline-morrowind-smoke/`. Broader upstream Lua integration at example
+suite revision a41b44d9403ff3f8a1505c1b4bc152c4dd623b64 gives **28/32 baseline**
+(`m14-prebaseline-lua-integration-2.log`) and **30/32 candidate**
+(`m14-signed-inventory-lua-integration.log`). Both fail findPath and findPath
+with checkpoints; the baseline additionally fails castNavigationRay and
+findNearestNavMeshPosition. COLLADA load errors occur in the logs; the exact
+causality/timing remains to be investigated. These are not passing baseline
+acceptance or the full native TES3 AI behavior matrix. The first integration
+attempt loaded Git LFS pointers rather than plugins and was terminated; its
+zero-test failure is retained. Git LFS 3.8.0 was fetched into /tmp with its
+GitHub release SHA-256 verified, without a system-wide installation, and the
+required test assets were subsequently checked out.
+
 ## Reproduce
 
 

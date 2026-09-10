@@ -1,13 +1,34 @@
 #include <components/esm4/inventorymechanics.hpp>
+#include <components/esm4/inventory.hpp>
 
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <bit>
 #include <limits>
 
 namespace
 {
+    TEST(ESM4InventoryMechanics, SignedNativeStockCountsHaveFinitePositiveQuantities)
+    {
+        static_assert(sizeof(ESM4::InventoryItem) == 8);
+        ESM4::InventoryItem item{};
+        for (const std::int32_t count : { 0, 1, 3, -1, -3, std::numeric_limits<std::int32_t>::max() })
+        {
+            item.count = count;
+            EXPECT_EQ(ESM4::inventoryItemCount(item), count < 0 ? -count : count);
+            EXPECT_EQ(item.count, count); // Do not erase authored stock intent.
+        }
+        item.count = std::bit_cast<std::int32_t>(std::uint32_t(0xffffffff));
+        EXPECT_EQ(item.count, -1);
+        EXPECT_EQ(ESM4::inventoryItemCount(item), 1);
+        item.count = std::bit_cast<std::int32_t>(std::uint32_t(0xfffffffd));
+        EXPECT_EQ(ESM4::inventoryItemCount(item), 3);
+        item.count = std::numeric_limits<std::int32_t>::min();
+        EXPECT_THROW(ESM4::inventoryItemCount(item), std::overflow_error);
+    }
+
     ESM::FormKey key(std::uint32_t id)
     {
         return ESM::FormKey::content("Oblivion.esm", id);

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-09-09",
+  "updated": "2026-09-10",
   "base_revision": "a9acf26cc1e94c97c6ef4c0c53c880b08f82845f",
   "milestones": {
     "M0": {
@@ -326,6 +326,12 @@
         "build/oblivion-compat/m14-tutorial-trigger-identity/scenario.json",
         "build/oblivion-compat/m14-tutorial-steering-only/scenario.json",
         "build/oblivion-compat/m14-tutorial-standing-slot/scenario.json",
+        "build/oblivion-compat/m14-tutorial-signed-inventory/scenario.json",
+        "build/oblivion-compat/m14-signed-inventory-components.log",
+        "build/oblivion-compat/m14-signed-inventory-engine.log",
+        "build/oblivion-compat/m14-prebaseline-morrowind-smoke/scenario.json",
+        "build/oblivion-compat/m14-prebaseline-lua-integration-2.log",
+        "build/oblivion-compat/m14-signed-inventory-lua-integration.log",
         "build/oblivion-compat/m14-stall-probe-engine.log",
         "build/oblivion-compat/m14-trigger-morrowind-smoke/scenario.json",
         "build/oblivion-compat/m14-trigger-sanitizer-components-2.log",
@@ -343,7 +349,7 @@
       "open_gates": [
         "Strengthen the named-identity M14 gates with the remaining checkpoint and matrix outcomes; all six core scenarios are scoped and tutorial has a named before/after quickload pair, but it lacks exact targets and the remaining contextual reload sequence, while detection and horse remain smoke subsets",
         "Resolve recorded bounded-repath and repeated locked-door failures, then rerun the named 24-hour city schedule at high and low process with required reload boundaries",
-        "Complete real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation: the standing-slot repair reaches stages 12/13 and Renault/Glenroy complete, but Baurus stalls, the Emperor remains in Path, both checkpoints fail on Baurus, and blocked events are 545/500; actual trigger progression, PickIdle, subsequent dialogue, Baurus selection and all four door gates remain open",
+        "Complete real tutorial escort order, targeting, door transitions, arrival, and save/reload continuation: the signed-inventory repair allows Baurus to complete 032aeb and normal player movement triggers stage 14; Glenroy then cannot resolve native player reference 000014 in package 032b16, the Emperor's approach remains incomplete, PickIdle is unsupported, all four door gates remain missing and blocked events are 545/500",
         "Finish companion repeatability, city/high-process and formation/cycle acceptance: the actual route-tail repair passes the native Telepe course with causal disabled-door recovery, four checkpoints, clean logs and spacing 282.43 before/after reload against 512; this does not close the broader matrix",
         "Complete the planned unlocked, keyed, unkeyed, teleport, obstruction, and unreachable door matrix; causal disabled Telepe entrance recovery now passes, while the older stationary prison obstruction fixture remains invalid evidence",
         "Complete the planned detection sweep across LOS, distance, facing, light, movement, skills, seeds, and interior/exterior scenes",

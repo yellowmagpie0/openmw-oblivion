@@ -826,7 +826,7 @@ namespace MWMechanics
                             const ESM::FormId id = ESM::FormId::fromUint32(item.item);
                             if (const auto definition = MWWorld::OblivionProfileServices::itemDefinition(
                                     mWorld.mStore, ESM::RefId(id)))
-                                encumbrance += definition->mWeight * item.count;
+                                encumbrance += definition->mWeight * ESM4::inventoryItemCount(item);
                         }
                     };
                     if (npc != nullptr)
@@ -858,9 +858,7 @@ namespace MWMechanics
                             continue;
                         ESM4::RuntimeInventoryItem projected;
                         projected.mBase = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
-                        projected.mCount = item.count > static_cast<std::uint32_t>(std::numeric_limits<std::int32_t>::max())
-                            ? std::numeric_limits<std::int32_t>::max()
-                            : static_cast<std::int32_t>(item.count);
+                        projected.mCount = ESM4::inventoryItemCount(item);
                         inventory.push_back(std::move(projected));
                     }
                 };
@@ -877,7 +875,7 @@ namespace MWMechanics
                 const auto add = [&](const std::vector<ESM4::InventoryItem>& inventory) {
                     for (const ESM4::InventoryItem& item : inventory)
                         if (resolver.toFormKey(ESM::FormId::fromUint32(item.item)) == itemKey)
-                            count += item.count;
+                            count += ESM4::inventoryItemCount(item);
                 };
                 if (npc != nullptr)
                     add(npc->mInventory);
@@ -3271,7 +3269,7 @@ namespace MWMechanics
                 const auto definition = MWWorld::OblivionProfileServices::itemDefinition(
                     mWorld.mStore, ESM::RefId(id));
                 if (definition)
-                    encumbrance += definition->mWeight * static_cast<float>(item.count);
+                    encumbrance += definition->mWeight * static_cast<float>(ESM4::inventoryItemCount(item));
             }
         };
         if (npc != nullptr)
@@ -4065,14 +4063,14 @@ namespace MWMechanics
         if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
         {
             if (std::any_of(npc->mInventory.begin(), npc->mInventory.end(), [key, &resolver](const auto& item) {
-                    return item.count > 0 && resolver.toFormKey(ESM::FormId::fromUint32(item.item)) == key;
+                    return ESM4::inventoryItemCount(item) > 0 && resolver.toFormKey(ESM::FormId::fromUint32(item.item)) == key;
                 }))
                 return true;
         }
         if (const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(live.mState.mBase))
         {
             if (std::any_of(creature->mInventory.begin(), creature->mInventory.end(), [key, &resolver](const auto& item) {
-                    return item.count > 0 && resolver.toFormKey(ESM::FormId::fromUint32(item.item)) == key;
+                    return ESM4::inventoryItemCount(item) > 0 && resolver.toFormKey(ESM::FormId::fromUint32(item.item)) == key;
                 }))
                 return true;
         }
@@ -4623,7 +4621,12 @@ namespace MWMechanics
             detail << "position=" << position.x() << ',' << position.y() << ',' << position.z()
                    << " target=" << target.x() << ',' << target.y() << ',' << target.z()
                    << " hit=" << (hit.mHit ? "true" : "false")
-                   << " object=" << actorKey(hit.mHitObject).serialize();
+                   << " object=" << actorKey(hit.mHitObject).serialize()
+                   << " speed=" << actor.getClass().getMaxSpeed(actor)
+                   << " encumbrance=" << actor.getClass().getEncumbrance(actor)
+                   << " capacity=" << actor.getClass().getCapacity(actor)
+                   << " movement=" << actor.getClass().getMovementSettings(actor).mPosition[0]
+                   << ',' << actor.getClass().getMovementSettings(actor).mPosition[1];
             logEvent("stall-probe", live, detail.str());
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Interrupted)

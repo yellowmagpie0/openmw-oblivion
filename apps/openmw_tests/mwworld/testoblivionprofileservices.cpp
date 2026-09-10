@@ -191,6 +191,8 @@ namespace
         store.getWritable<ESM4::Weapon>().insertStatic(weapon);
 
         player.mInventory.push_back({ ammunition.mId.toUint32(), 20 });
+        player.mInventory.push_back({ clothing.mId.toUint32(), -1 });
+        player.mInventory.push_back({ ingredient.mId.toUint32(), -3 });
         store.getWritable<ESM4::Npc>().insertStatic(player);
 
         const MWWorld::OblivionProfileInstallReport report = MWWorld::OblivionProfileServices::install(store);
@@ -260,9 +262,13 @@ namespace
         EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Armorer), 5);
         EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Acrobatics), 30);
         EXPECT_EQ(adaptedPlayer->mNpdt.getSkill(ESM::Skill::Speechcraft), 30);
-        ASSERT_EQ(adaptedPlayer->mInventory.mList.size(), 1u);
+        ASSERT_EQ(adaptedPlayer->mInventory.mList.size(), 3u);
         EXPECT_EQ(adaptedPlayer->mInventory.mList[0].mItem, ESM::RefId(ammunition.mId));
         EXPECT_EQ(adaptedPlayer->mInventory.mList[0].mCount, 20);
+        EXPECT_EQ(adaptedPlayer->mInventory.mList[1].mItem, ESM::RefId(clothing.mId));
+        EXPECT_EQ(adaptedPlayer->mInventory.mList[1].mCount, -1);
+        EXPECT_EQ(adaptedPlayer->mInventory.mList[2].mItem, ESM::RefId(ingredient.mId));
+        EXPECT_EQ(adaptedPlayer->mInventory.mList[2].mCount, -3);
 
         const ESM::Weapon* adaptedAmmo = store.get<ESM::Weapon>().search(ESM::RefId(ammunition.mId));
         ASSERT_NE(adaptedAmmo, nullptr);

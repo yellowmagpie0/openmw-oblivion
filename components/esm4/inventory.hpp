@@ -28,6 +28,8 @@
 #define ESM4_INVENTORY_H
 
 #include <cstdint>
+#include <limits>
+#include <stdexcept>
 
 #include <components/esm/formid.hpp>
 
@@ -47,9 +49,19 @@ namespace ESM4
     struct InventoryItem // NPC_, CREA, CONT
     {
         ESM::FormId32 item;
-        std::uint32_t count;
+        // Negative CNTO counts retain native replenishing-stock intent.
+        std::int32_t count;
     };
 #pragma pack(pop)
+
+    inline std::int32_t inventoryItemCount(const InventoryItem& item)
+    {
+        // Runtime quantities and encumbrance use the magnitude, not the raw
+        // stock flag. Reject the one magnitude the signed runtime cannot hold.
+        if (item.count == std::numeric_limits<std::int32_t>::min())
+            throw std::overflow_error("TES4 inventory count magnitude exceeds the runtime range");
+        return item.count < 0 ? -item.count : item.count;
+    }
 }
 
 #endif // ESM4_INVENTORY_H

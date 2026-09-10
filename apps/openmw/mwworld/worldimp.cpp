@@ -1073,8 +1073,7 @@ namespace MWWorld
                             {
                                 const ESM::FormKey itemKey
                                     = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
-                                const std::int32_t count = static_cast<std::int32_t>(std::min<std::uint32_t>(
-                                    item.count, std::numeric_limits<std::int32_t>::max()));
+                                const std::int32_t count = ESM4::inventoryItemCount(item);
                                 if (!itemKey.isNull() && count != 0)
                                 {
                                     ESM4::RuntimeInventoryItem runtimeItem;

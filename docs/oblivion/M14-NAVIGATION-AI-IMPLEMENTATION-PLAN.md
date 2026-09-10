@@ -1200,6 +1200,19 @@ criteria must be reverified as the step-by-step implementation resumes.
 
 ## 20. Practical handoff notes
 
+2026-09-10 signed-inventory checkpoint: Baurus's stall was zero movement speed
+from approximately 3.2 billion encumbrance caused by unsigned negative CNTO
+counts. Signed initialization and quantity queries now pass 1,610 component,
+534 engine and 75 Python tests; sanitizer verification is pending.
+`m14-tutorial-signed-inventory/` proves actual OnTrigger stage 14, disabled
+trigger state and Baurus completing 032aeb after reload with corrected 1/3
+item counts. It still FAILS: Glenroy's 032b16 PLDT player reference 000014 is
+unresolved, the Emperor's approach remains incomplete, PickIdle and all door
+gates remain open, and blocked events are 545/500. Resolve the builtin native
+player alias (without confusing NPC base 000007), then continue the actual
+stage-15/16 prerequisites. Baseline Morrowind smoke passes, but upstream Lua
+integration is 28/32 baseline and 30/32 candidate, not section-16.7 acceptance.
+
 2026-09-09 standing-slot checkpoint: `m14-tutorial-standing-slot/` reaches
 stages 12/13 and Renault/Glenroy complete after separating Travel's horizontal
 arrival from vertical marker allowance and enabling yaw steering. It still

@@ -1437,8 +1437,11 @@ namespace MWWorld
             // The generic static-record index is finalized later in ESMStore setup.  The native
             // definition registry is already complete here and is the authoritative projection gate.
             if (item.count != 0 && itemDefinition(store, nativeId).has_value())
+            {
+                static_cast<void>(ESM4::inventoryItemCount(item));
                 player.mInventory.mList.push_back(
-                    { clampInteger<std::int32_t>(item.count), id });
+                    { item.count, id });
+            }
         }
         store.insertStatic(player);
 
