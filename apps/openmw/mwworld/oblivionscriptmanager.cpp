@@ -1469,6 +1469,32 @@ namespace MWWorld
             return name == "getlocked" ? ObScript::Value(std::int64_t(ptr.getCellRef().isLocked()))
                                         : ObScript::Value(std::int64_t(ptr.getCellRef().getLockLevel()));
         }
+        if (name == "getopenstate")
+        {
+            const Ptr ptr = objectPtr();
+            if (ptr.isEmpty() || ptr.getClass().getType() != ESM::REC_DOOR4)
+                return std::int64_t(0);
+            return std::int64_t(MWMechanics::oblivionDoorOpenState(ptr.getClass().getDoorState(ptr),
+                ptr.getRefData().getPosition().rot[2], ptr.getCellRef().getPosition().rot[2]));
+        }
+        if (name == "setopenstate")
+        {
+            const Ptr ptr = objectPtr();
+            if (ptr.isEmpty() || ptr.getClass().getType() != ESM::REC_DOOR4)
+                throw ObScript::RuntimeError("OBSV110", "SetOpenState requires a native TES4 door", name);
+            const int requested = static_cast<int>(ObScript::asInteger(argument(0)));
+            const std::optional<MWWorld::DoorState> transition
+                = MWMechanics::oblivionDoorTransition(requested);
+            if (!transition)
+                throw ObScript::RuntimeError("OBSV110", "SetOpenState requires 0 or 1", name);
+            const int current = MWMechanics::oblivionDoorOpenState(ptr.getClass().getDoorState(ptr),
+                ptr.getRefData().getPosition().rot[2], ptr.getCellRef().getPosition().rot[2]);
+            if ((requested == 0 && current != 3 && current != 4)
+                || (requested == 1 && current != 1 && current != 2))
+                mWorld.activateDoor(ptr, *transition);
+            trace(name + " ref=" + objectKey().serialize() + " state=" + std::to_string(requested));
+            return std::int64_t(0);
+        }
         if (name == "getpos" || name == "getangle" || name == "getscale")
         {
             const Ptr ptr = objectPtr();

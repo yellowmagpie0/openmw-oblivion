@@ -184,6 +184,19 @@ namespace
         EXPECT_FALSE(resolveOblivionDoorState(authored, &saved, resident).mAvailable);
     }
 
+    TEST(OblivionAiTest, NativeDoorOpenStateUsesDistinctQueryAndCommandValues)
+    {
+        using MWWorld::DoorState;
+        EXPECT_EQ(MWMechanics::oblivionDoorOpenState(DoorState::Idle, 0.f, 0.f), 3);
+        EXPECT_EQ(MWMechanics::oblivionDoorOpenState(DoorState::Idle, 1.f, 0.f), 1);
+        EXPECT_EQ(MWMechanics::oblivionDoorOpenState(DoorState::Opening, 0.f, 0.f), 2);
+        EXPECT_EQ(MWMechanics::oblivionDoorOpenState(DoorState::Closing, 1.f, 0.f), 4);
+        EXPECT_EQ(MWMechanics::oblivionDoorTransition(0), DoorState::Closing);
+        EXPECT_EQ(MWMechanics::oblivionDoorTransition(1), DoorState::Opening);
+        EXPECT_FALSE(MWMechanics::oblivionDoorTransition(-1));
+        EXPECT_FALSE(MWMechanics::oblivionDoorTransition(2));
+    }
+
     TEST(OblivionAiTest, PackageDoneRecordsOnlyNewCompletionsAndPreservesCallbackSave)
     {
         MWMechanics::OblivionPackageDoneQueue queue;
