@@ -59,6 +59,7 @@
 #include "../mwworld/groundcoverstore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/scene.hpp"
+#include "../mwworld/worldspaceutils.hpp"
 
 #include "../mwgui/postprocessorhud.hpp"
 
@@ -1295,8 +1296,10 @@ namespace MWRender
         if (ESM::isEsm4Ext(worldspace))
         {
             if (const ESM4::World* world = MWBase::Environment::get().getESMStore()->get<ESM4::World>().search(worldspace))
-                nativeGroundcover = !(world->mWorldFlags
-                    & (ESM4::World::WLD_NoGrass | ESM4::World::WLD_NoLandscpe));
+                nativeGroundcover
+                    = MWWorld::hasWorldspaceLandscape(
+                          *world, MWBase::Environment::get().getWorld()->getGameProfile())
+                    && !(world->mWorldFlags & ESM4::World::WLD_NoGrass);
         }
         const bool groundcover = nativeGroundcover
             || (Settings::groundcover().mEnabled && worldspace == ESM::Cell::sDefaultWorldspaceId);

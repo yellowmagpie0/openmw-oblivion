@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include <components/esm/gameprofile.hpp>
 #include <components/esm/refid.hpp>
 
 namespace ESM4
@@ -22,6 +23,9 @@ namespace MWWorld
     /// the complete chain rather than applying a single PNAM hop.
     ESM::RefId resolveWorldspaceInheritance(
         const Store<ESM4::World>& worlds, ESM::RefId worldspace, std::uint16_t useFlag);
+
+    /// Return whether the worldspace permits landscape for the active game's WRLD flag semantics.
+    bool hasWorldspaceLandscape(const ESM4::World& worldspace, ESM::GameProfile gameProfile);
 
     /// Find a world record after applying feature inheritance.
     const ESM4::World* getWorldspaceFeature(

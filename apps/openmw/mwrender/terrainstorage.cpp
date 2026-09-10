@@ -6,6 +6,7 @@
 #include <components/esm4/loadwrld.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/worldspaceutils.hpp"
 
@@ -33,13 +34,14 @@ namespace MWRender
 
     bool TerrainStorage::hasData(ESM::ExteriorCellLocation cellLocation)
     {
-        const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
+        const MWBase::World& world = *MWBase::Environment::get().getWorld();
+        const MWWorld::ESMStore& esmStore = world.getStore();
 
         if (ESM::isEsm4Ext(cellLocation.mWorldspace))
         {
             const auto& worlds = esmStore.get<ESM4::World>();
             const ESM4::World* worldspace = worlds.find(cellLocation.mWorldspace);
-            if (worldspace->mWorldFlags & ESM4::World::WLD_NoLandscpe)
+            if (!MWWorld::hasWorldspaceLandscape(*worldspace, world.getGameProfile()))
                 return false;
             cellLocation.mWorldspace
                 = MWWorld::resolveWorldspaceInheritance(worlds, cellLocation.mWorldspace, ESM4::World::UseFlag_Land);
@@ -71,13 +73,14 @@ namespace MWRender
         maxX = 0;
         maxY = 0;
 
-        const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
+        const MWBase::World& world = *MWBase::Environment::get().getWorld();
+        const MWWorld::ESMStore& esmStore = world.getStore();
 
         if (ESM::isEsm4Ext(worldspace))
         {
             const auto& worlds = esmStore.get<ESM4::World>();
             const ESM4::World* worldRec = worlds.find(worldspace);
-            if (worldRec->mWorldFlags & ESM4::World::WLD_NoLandscpe)
+            if (!MWWorld::hasWorldspaceLandscape(*worldRec, world.getGameProfile()))
                 return;
             worldspace = MWWorld::resolveWorldspaceInheritance(worlds, worldspace, ESM4::World::UseFlag_Land);
 

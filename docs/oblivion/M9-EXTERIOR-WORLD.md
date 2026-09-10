@@ -25,8 +25,10 @@ cell-specific compatibility layer.
   the LTEX-to-GRAS relationship. Record density, placement jitter, slope limits,
   water-distance policy, terrain-normal fitting, random heading, and height
   variation are honored. This path is enabled for TES4 worlds even when the
-  legacy Morrowind groundcover-plugin switch is off; `NoGrass` and `NoLandscape`
-  world flags still take precedence.
+  legacy Morrowind groundcover-plugin switch is off; `NoGrass` still takes
+  precedence. WRLD flag `0x10` is interpreted as TES4's `No LOD Water`, not the
+  `No Landscape` meaning assigned by later formats, so city child worldspaces
+  retain inherited terrain, terrain collision, and vegetation.
 - The native global map derives its bounds, cell scale, and terrain image from
   the dominant/Tamriel LAND worldspace. Visible, enabled map-marker references
   are projected using inherited map coordinates and retain their official label.

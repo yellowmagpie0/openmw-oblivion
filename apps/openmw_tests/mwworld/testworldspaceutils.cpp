@@ -30,6 +30,15 @@ TEST(MWWorldspaceUtilsTest, resolvesCompletePerFeatureInheritanceChain)
     EXPECT_EQ(MWWorld::resolveWorldspaceInheritance(worlds, child, ESM4::World::UseFlag_Water), child);
 }
 
+TEST(MWWorldspaceUtilsTest, treatsTes4Flag10AsNoLodWater)
+{
+    ESM4::World world = makeWorld(1);
+    world.mWorldFlags = ESM4::World::WLD_NoLandscpe;
+
+    EXPECT_TRUE(MWWorld::hasWorldspaceLandscape(world, ESM::GameProfile::Oblivion));
+    EXPECT_FALSE(MWWorld::hasWorldspaceLandscape(world, ESM::GameProfile::Auto));
+}
+
 TEST(MWWorldspaceUtilsTest, stopsSafelyAtMissingParentAndCycles)
 {
     MWWorld::Store<ESM4::World> worlds;

@@ -25,7 +25,7 @@ namespace MWRender
         {
             const auto& worlds = world.getStore().get<ESM4::World>();
             const ESM4::World* worldspace = worlds.find(cellIndex.mWorldspace);
-            if (worldspace->mWorldFlags & ESM4::World::WLD_NoLandscpe)
+            if (!MWWorld::hasWorldspaceLandscape(*worldspace, world.getGameProfile()))
                 return nullptr;
             cellIndex.mWorldspace
                 = MWWorld::resolveWorldspaceInheritance(worlds, cellIndex.mWorldspace, ESM4::World::UseFlag_Land);

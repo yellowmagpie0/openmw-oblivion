@@ -8,6 +8,13 @@
 
 namespace MWWorld
 {
+    bool hasWorldspaceLandscape(const ESM4::World& worldspace, ESM::GameProfile gameProfile)
+    {
+        // WRLD flag 0x10 means "No LOD Water" in TES4 and "No Landscape" in later formats.
+        return gameProfile == ESM::GameProfile::Oblivion
+            || !(worldspace.mWorldFlags & ESM4::World::WLD_NoLandscpe);
+    }
+
     ESM::RefId resolveWorldspaceInheritance(
         const Store<ESM4::World>& worlds, ESM::RefId worldspace, std::uint16_t useFlag)
     {
