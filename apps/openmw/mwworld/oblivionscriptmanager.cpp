@@ -14,6 +14,7 @@
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm4/dialoguevoices.hpp>
+#include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadalch.hpp>
@@ -508,7 +509,7 @@ namespace MWWorld
 
     Ptr OblivionScriptManager::ptrFor(const ESM::FormKey& key)
     {
-        if (key == ESM::FormKey::dynamic("player", 1))
+        if (ESM4::runtimeReferenceKey(key) == ESM::FormKey::dynamic("player", 1))
             return mWorld.getPlayerPtr();
         if (const MWMechanics::OblivionAiService* oblivionAi = mWorld.getOblivionAiService())
             if (Ptr ptr = oblivionAi->resolveReference(key); !ptr.isEmpty())

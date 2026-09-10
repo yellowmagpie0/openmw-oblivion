@@ -990,6 +990,38 @@ required test assets were subsequently checked out.
 
 ## Reproduce
 
+### 2026-09-10 native player-reference and Travel radius verification
+
+The runtime now canonicalizes native player reference 000014, without changing
+record keys or aliasing NPC base 000007/another plugin's local 000014. Live and
+unloaded reference comparisons share this identity. Travel uses its authored
+positive PLDT radius (Glenroy 120, Telepe Aric 512), retaining standing-slot
+arrival for zero-radius markers, and refreshes moving reference destinations.
+Engine 536 and Python 75 tests pass (`m14-player-reference-engine.log`,
+`m14-player-reference-python.log`).
+
+`m14-companion-telepe-native-radius/` **PASSES**, including all four causal
+obstruction/recovery/reload checkpoints, no unreviewed errors, exit 0 and
+requested shutdown without timeout. This is a repeat of the bounded course,
+not the broader formation/tier/door acceptance matrix.
+
+`m14-tutorial-player-reference/` **FAILS**: stage 14 is reached, but not 15/16.
+Glenroy resolves 032b16 and later exhausts repaths at [267.024,-72.5803,-25.8003]
+toward waypoint [402.859,-89.9171,-56], speed 67.6296, encumbrance 98.5/100.
+The diagnostic ray reports no hit; that is not capsule-clearance proof.
+All four required door transitions remain absent, blocked events are 580/500,
+and Baurus's OnPackageDone reports unsupported SetOpenState. PickIdle remains
+unsupported. The run shuts down cleanly and is not an overall timeout.
+
+Signed-inventory ASan/UBSan verification finished: 1,610 component and 534
+engine tests PASS (`m14-signed-inventory-sanitizer-components.log`,
+`m14-signed-inventory-sanitizer-engine.log`); these precede this candidate.
+The upstream Lua comparison's shared path failures include destination-Z
+differences: baseline 1.238647 units, candidate 0.779419 units, with a strict
+0.1-unit matched-point assertion in the candidate failure. COLLADA log errors
+do not establish causality. Inspection also found profile-unrestricted actor
+fallback collision bounds; TES3 isolation and repeat comparison remain open.
+
 
 Build and run the audit:
 

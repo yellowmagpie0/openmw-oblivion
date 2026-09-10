@@ -225,6 +225,7 @@ namespace MWMechanics
             const ESM::FormKey& destinationCell, const MWWorld::Ptr* actor = nullptr);
         void invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids);
         float unloadedMovementSpeed(const LiveActor& live) const;
+        float travelArrivalRadius(const LiveActor& live) const;
         void refreshMovingTargetRoute(LiveActor& live, const ESM4::AIPackage& current,
             const MWWorld::Ptr& residentActor = {});
         bool shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,

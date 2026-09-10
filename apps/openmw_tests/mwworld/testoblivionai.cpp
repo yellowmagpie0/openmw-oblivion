@@ -14,6 +14,7 @@
 #include <components/esm4/aipackagedata.hpp>
 #include <components/esm4/aiphase.hpp>
 #include <components/esm4/aiselection.hpp>
+#include <components/esm4/runtimereferences.hpp>
 
 #include "apps/openmw/mwmechanics/oblivionaidestination.hpp"
 #include "apps/openmw/mwmechanics/oblivionaigait.hpp"
@@ -55,6 +56,40 @@ namespace
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(2), destination, 64.f));
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached({}, destination, {}, destination, 64.f));
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(1), destination, -1.f));
+    }
+
+    TEST(OblivionAiTest, NativePlayerReferenceAliasesRuntimePlayerButNotNpcBase)
+    {
+        const auto player = ESM::FormKey::dynamic("player", 1);
+        EXPECT_EQ(ESM4::runtimeReferenceKey(ESM::FormKey::content("Oblivion.esm", 0x14)), player);
+        EXPECT_EQ(ESM4::runtimeReferenceKey(player), player);
+        for (const auto& other : { ESM::FormKey{}, ESM::FormKey::content("Oblivion.esm", 7),
+                 ESM::FormKey::content("another.esp", 0x14), ESM::FormKey::dynamic("npc", 0x14) })
+        {
+            EXPECT_EQ(ESM4::runtimeReferenceKey(other), other);
+            EXPECT_NE(ESM4::runtimeReferenceKey(other), player);
+        }
+    }
+
+    TEST(OblivionAiTest, TravelHonorsAuthoredRadiusWithoutChangingOtherPackageArrival)
+    {
+        const osg::Vec3f destination(800.f, -100.f, -100.f);
+        for (const float radius : { 120.f, 512.f })
+        {
+            EXPECT_TRUE(MWMechanics::oblivionDestinationReached(key(1),
+                destination + osg::Vec3f(radius, 0.f, 0.f), key(1), destination, 64.f,
+                AIPackageType::Travel, radius));
+            EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1),
+                destination + osg::Vec3f(radius + 1.f, 0.f, 0.f), key(1), destination, 64.f,
+                AIPackageType::Travel, radius));
+            EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1),
+                destination + osg::Vec3f(radius, 0.f, 0.f), key(1), destination, 64.f,
+                AIPackageType::Follow, radius));
+        }
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), destination, key(2), destination, 64.f, AIPackageType::Travel, 120.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), destination, key(1), destination, 64.f, AIPackageType::Travel, -1.f));
     }
 
     TEST(OblivionAiTest, TravelArrivalSeparatesStandingSlotFromVerticalMarkerOffset)

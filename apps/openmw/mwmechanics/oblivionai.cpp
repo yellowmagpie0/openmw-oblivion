@@ -44,6 +44,7 @@
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/playermechanics.hpp>
+#include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/loadwthr.hpp>
 
 #include "../mwbase/environment.hpp"
@@ -381,7 +382,7 @@ namespace MWMechanics
     {
         if (key.isNull())
             return {};
-        if (key == ESM::FormKey::dynamic("player", 1))
+        if (ESM4::runtimeReferenceKey(key) == ESM::FormKey::dynamic("player", 1))
             return mWorld.getPlayerPtr();
 
         // Native actor records carry the same RefNum that the world model
@@ -717,7 +718,7 @@ namespace MWMechanics
                     location.mType };
             }
             if (const MWWorld::Ptr loaded = loadedPtrFor(key); !loaded.isEmpty())
-                return StableLocation{ key, baseKey(loaded), cellKey(loaded), loaded.getRefData().getPosition().asVec3(),
+                return StableLocation{ actorKey(loaded), baseKey(loaded), cellKey(loaded), loaded.getRefData().getPosition().asVec3(),
                     static_cast<ESM::RecNameInts>(loaded.getClass().getType()) };
 
             if (const ESM4::ActorCharacter* reference = mWorld.mStore.get<ESM4::ActorCharacter>().search(key))
@@ -975,7 +976,8 @@ namespace MWMechanics
             if (function == "GetIsID")
                 return value(!parameterKey.isNull() && subjectLocation->mBase == parameterKey ? 1.0 : 0.0);
             if (function == "GetIsReference")
-                return value(!parameterKey.isNull() && subjectLocation->mReference == parameterKey ? 1.0 : 0.0);
+                return value(!parameterKey.isNull()
+                    && subjectLocation->mReference == ESM4::runtimeReferenceKey(parameterKey) ? 1.0 : 0.0);
             if (function == "GetInCell")
                 return value(!parameterKey.isNull() && subjectLocation->mCell == parameterKey ? 1.0 : 0.0);
             if (function == "GetIsCreature")
@@ -1733,7 +1735,8 @@ namespace MWMechanics
                 return value(parameter.mNumber == (female ? 1 : 0) ? 1.0 : 0.0);
             }
             if (function == "GetIsReference")
-                return value(!parameterKey.isNull() && actorKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
+                return value(!parameterKey.isNull()
+                    && actorKey(subjectPtr) == ESM4::runtimeReferenceKey(parameterKey) ? 1.0 : 0.0);
             if (function == "GetInCell")
                 return value(!parameterKey.isNull() && cellKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
             if (function == "GetDayofWeek")
@@ -1941,7 +1944,7 @@ namespace MWMechanics
                         : ESM::REC_ACHR4,
                     true, false, {}, {}, {}, {} };
             if (const MWWorld::Ptr loaded = loadedPtrFor(key); !loaded.isEmpty())
-                return StableLocation{ key, baseKey(loaded), cellKey(loaded), loaded.getRefData().getPosition().asVec3(),
+                return StableLocation{ actorKey(loaded), baseKey(loaded), cellKey(loaded), loaded.getRefData().getPosition().asVec3(),
                     static_cast<ESM::RecNameInts>(loaded.getClass().getType()), loaded.getRefData().isEnabled(),
                     loaded.getCellRef().isLocked(), ownerKey(loaded.getCellRef().getOwner()), {}, {}, {} };
             const auto found = mUnloadedLocationByReference.find(key);
@@ -2285,7 +2288,8 @@ namespace MWMechanics
                     if (record.mPackageType == ESM4::AIPackageType::Sleep && !usableFurniture(*reference))
                         return std::nullopt;
                     live.mDestinationCell = reference->mCell;
-                    if (record.mPackageType == ESM4::AIPackageType::Sleep)
+                    if (record.mPackageType == ESM4::AIPackageType::Sleep
+                        || record.mPackageType == ESM4::AIPackageType::Travel)
                     {
                         live.mState.mTarget = reference->mReference;
                         live.mState.mTargetBase = reference->mBase;
@@ -2709,6 +2713,11 @@ namespace MWMechanics
                     if (record.mPackageType == ESM4::AIPackageType::Sleep)
                         return resolveSleepFurniture(reference);
                     live.mDestinationCell = cellKey(*reference);
+                    if (record.mPackageType == ESM4::AIPackageType::Travel)
+                    {
+                        targetKey = actorKey(*reference);
+                        live.mState.mTargetBase = baseKey(*reference);
+                    }
                     return reference->getRefData().getPosition().asVec3();
                 }
                 if (targetFallback && targetPosition)
@@ -3182,8 +3191,10 @@ namespace MWMechanics
         LiveActor& live, const ESM4::AIPackage& current, const MWWorld::Ptr& residentActor)
     {
         const auto type = live.mState.mPackageType;
+        const bool travelToReference = type == ESM4::AIPackageType::Travel
+            && current.mLocationData.mKind == ESM4::PackageLocationKind::NearReference;
         if (type != ESM4::AIPackageType::Follow && type != ESM4::AIPackageType::Accompany
-            && type != ESM4::AIPackageType::Pursue && type != ESM4::AIPackageType::Escort)
+            && type != ESM4::AIPackageType::Pursue && type != ESM4::AIPackageType::Escort && !travelToReference)
             return;
         // Finish an already-entered boundary before considering another
         // target route. A moving leader must not make us oscillate on an edge.
@@ -3248,6 +3259,16 @@ namespace MWMechanics
             targetDistance, differentCell);
     }
 
+    float OblivionAiService::travelArrivalRadius(const LiveActor& live) const
+    {
+        if (live.mState.mPackageType != ESM4::AIPackageType::Travel)
+            return 0.f;
+        const ESM4::AIPackage* current = package(live.mState.mPackage);
+        if (current == nullptr && live.mTransientPackage && live.mTransientPackage->mFormKey == live.mState.mPackage)
+            current = &*live.mTransientPackage;
+        return current == nullptr ? 0.f : static_cast<float>(current->mLocationData.mRadius);
+    }
+
     float OblivionAiService::unloadedMovementSpeed(const LiveActor& live) const
     {
         const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase);
@@ -3297,6 +3318,15 @@ namespace MWMechanics
         reached = false;
         if (!live.mDestination)
             return false;
+
+        const float radius = travelArrivalRadius(live);
+        if (live.mState.mPackageType == ESM4::AIPackageType::Travel
+            && oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
+                live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius))
+        {
+            reached = true;
+            return true;
+        }
 
         const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
         const float speed = movementSpeed ? *movementSpeed : unloadedMovementSpeed(live);
@@ -3429,14 +3459,14 @@ namespace MWMechanics
         // node can be hundreds of units from the authored/follow destination.
         // Spend only the remaining movement budget on the actual route tail.
         if (oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
-                live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType))
+                live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius))
         {
             reached = true;
             return true;
         }
         static_cast<void>(moveToward(*live.mDestination));
         reached = oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
-            live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType);
+            live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius);
         return true;
     }
 
@@ -4407,6 +4437,16 @@ namespace MWMechanics
         if (!highProcess)
             return advanceUnloadedMovement(live, duration, reached, speed);
 
+        const float radius = travelArrivalRadius(live);
+        if (live.mState.mPackageType == ESM4::AIPackageType::Travel
+            && oblivionDestinationReached(live.mState.mCell, position,
+                live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
+                destination, sArrivalTolerance, live.mState.mPackageType, radius))
+        {
+            reached = true;
+            return true;
+        }
+
         if (!live.mContinuousRoute.empty())
         {
             while (live.mContinuousRouteCursor < live.mContinuousRoute.size())
@@ -4434,7 +4474,7 @@ namespace MWMechanics
                 // Keep the final arrival check explicit so a partial output
                 // cannot be interpreted as arrival.
                 if (oblivionDestinationReached(live.mState.mCell, position, live.mState.mCell,
-                        destination, sArrivalTolerance, live.mState.mPackageType))
+                        destination, sArrivalTolerance, live.mState.mPackageType, radius))
                 {
                     reached = true;
                     return true;
@@ -4528,7 +4568,7 @@ namespace MWMechanics
             {
                 reached = oblivionDestinationReached(live.mState.mCell, position,
                     live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
-                    *live.mDestination, sArrivalTolerance, live.mState.mPackageType);
+                    *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius);
                 if (!reached && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
                     faceAndMove(actor, *live.mDestination, run, sneak);
             }

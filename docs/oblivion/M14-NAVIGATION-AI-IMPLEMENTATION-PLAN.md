@@ -1200,6 +1200,20 @@ criteria must be reverified as the step-by-step implementation resumes.
 
 ## 20. Practical handoff notes
 
+2026-09-10 player-reference/radius checkpoint: native reference 000014 now
+resolves and compares as the runtime player (not NPC base 000007); Travel
+honors positive authored arrival radii and refreshes moving reference routes.
+Engine 536 and Python 75 tests pass. `m14-companion-telepe-native-radius/`
+PASSES all four obstruction/recovery/reload checkpoints with clean shutdown.
+`m14-tutorial-player-reference/` still FAILS at stage 14: Glenroy now resolves
+032b16 but exhausts repaths; stage 15/16 and all four door gates remain absent.
+Blocked events are 580/500. Native Baurus OnPackageDone also exposes unsupported
+SetOpenState, in addition to PickIdle. Investigate those real prerequisites;
+do not extend waits or mark the tutorial accepted. Signed-inventory sanitizer
+verification has now passed 1,610 component and 534 engine tests (predates the
+536-test player-reference candidate). TES3 fallback collision bounds are still
+incorrectly profile-unrestricted and need isolation plus baseline comparison.
+
 2026-09-10 signed-inventory checkpoint: Baurus's stall was zero movement speed
 from approximately 3.2 billion encumbrance caused by unsigned negative CNTO
 counts. Signed initialization and quantity queries now pass 1,610 component,

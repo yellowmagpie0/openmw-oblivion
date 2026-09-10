@@ -15,16 +15,18 @@ namespace MWMechanics
 {
     inline bool oblivionDestinationReached(const ESM::FormKey& cell, const osg::Vec3f& position,
         const ESM::FormKey& destinationCell, const osg::Vec3f& destination, float tolerance,
-        ESM4::AIPackageType type = ESM4::AIPackageType::Unknown)
+        ESM4::AIPackageType type = ESM4::AIPackageType::Unknown, float travelRadius = 0.f)
     {
-        // Travel markers specify a standing place, unlike coarse route nodes.
+        // A positive native Travel radius defines the arrival region; a
+        // zero-radius marker specifies a standing place, unlike route nodes.
         // Keep the vertical allowance for authored markers below the settled
         // actor's feet, without allowing an actor to occupy a neighbour's slot.
         if (type == ESM4::AIPackageType::Travel)
         {
             const osg::Vec3f delta = position - destination;
-            const float horizontal = std::min(16.f, tolerance);
+            const float horizontal = travelRadius > 0.f ? travelRadius : std::min(16.f, tolerance);
             return !cell.isNull() && cell == destinationCell && std::isfinite(tolerance) && tolerance >= 0.f
+                && std::isfinite(travelRadius) && travelRadius >= 0.f
                 && std::abs(delta.z()) <= tolerance
                 && delta.x() * delta.x() + delta.y() * delta.y() <= horizontal * horizontal;
         }

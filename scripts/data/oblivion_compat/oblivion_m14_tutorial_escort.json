@@ -106,6 +106,7 @@
     {"type": "key_hold", "value": "d", "seconds": 1.5},
     {"type": "key_hold", "value": "w", "seconds": 1},
     {"type": "wait_log", "pattern": "setstage quest=content:oblivion.esm:02466e stage=14", "timeout_seconds": 15},
+    {"type": "wait_log", "pattern": "setstage quest=content:oblivion.esm:02466e stage=16", "timeout_seconds": 70},
     {"type": "screenshot", "name": "tutorial-escort-initial.png", "minimum_entropy": 0.02},
     {"type": "key", "value": "F5"},
     {"type": "sleep", "seconds": 6},
