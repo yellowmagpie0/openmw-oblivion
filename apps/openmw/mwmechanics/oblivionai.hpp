@@ -148,6 +148,8 @@ namespace MWMechanics
             float mFixedRemainder = 0.0f;
             float mSelectionCheckTimer = 0.0f;
             bool mPendingDoor = false;
+            ESM::FormKey mIgnoredPhysicalDoor;
+            bool mPhysicalDoorOpened = false;
             bool mPendingRealization = false;
             bool mNeedsSelection = false;
             // Low-process movement advances the persisted last-valid position
@@ -199,6 +201,7 @@ namespace MWMechanics
         ESM::FormKey cellKey(const MWWorld::ConstPtr& actor) const;
 
         LiveActor& ensure(const MWWorld::ConstPtr& actor);
+        static void setPhase(LiveActor& live, ESM4::PackagePhase phase);
         void dispatchPendingPackageDone();
         void synchronizeIdentity(LiveActor& live, const MWWorld::ConstPtr& actor);
         const ESM4::AIPackage* package(const ESM::FormKey& key) const;
@@ -240,6 +243,8 @@ namespace MWMechanics
             LiveActor& live, ESM::FormKey& targetKey) const;
         std::optional<osg::Vec3f> resolveDestination(const MWWorld::Ptr& actor,
             const ESM4::AIPackage& package, LiveActor& live, ESM::FormKey& targetKey) const;
+        bool followDestinationReached(const MWWorld::Ptr& actor,
+            const ESM4::AIPackage& package, const LiveActor& live, bool highProcess) const;
         bool prepareRoute(const MWWorld::Ptr& actor, LiveActor& live, const osg::Vec3f& destination,
             const ESM::FormKey& destinationCell);
         bool advanceMovement(const MWWorld::Ptr& actor, LiveActor& live, float duration, bool highProcess,
@@ -259,9 +264,12 @@ namespace MWMechanics
             const MWWorld::Ptr* actor = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);
         bool completeAction(const MWWorld::Ptr& actor, LiveActor& live);
+        void releasePhysicalDoorCollision(const MWWorld::Ptr& actor, LiveActor& live) const;
         void stopMovement(const MWWorld::Ptr& actor) const;
         void faceAndMove(const MWWorld::Ptr& actor, const osg::Vec3f& destination, bool run, bool sneak = false) const;
         bool transitionPackage(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::PackagePhaseInput& input);
+        void reportPhysicalDoorTransition(const LiveActor& initiator,
+            const ESM::FormKey& door, const ESM::FormKey& cell, std::string_view reason) const;
         void logTransition(const LiveActor& live, ESM4::PackagePhase oldPhase, std::string_view reason) const;
         void logEvent(std::string_view event, const LiveActor& live, std::string_view reason = {}) const;
         void flushDiagnosticCounters();

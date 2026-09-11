@@ -9,6 +9,7 @@
 #include <optional>
 #include <span>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 
 #include <osg/BoundingBox>
@@ -179,6 +180,8 @@ namespace MWPhysics
 
         Projectile* getProjectile(int projectileId) const;
 
+        void setIgnoreCollision(const MWWorld::Ptr& first, const MWWorld::Ptr& second, bool ignore);
+
         // Object or Actor
         void remove(const MWWorld::Ptr& ptr);
 
@@ -292,6 +295,19 @@ namespace MWPhysics
         float mPhysicsDt;
 
     private:
+        using IgnoredCollisionPair = std::pair<btCollisionObject*, btCollisionObject*>;
+
+        struct IgnoredCollisionPairHash
+        {
+            std::size_t operator()(const IgnoredCollisionPair& pair) const
+            {
+                const std::size_t first = std::hash<btCollisionObject*>{}(pair.first);
+                const std::size_t second = std::hash<btCollisionObject*>{}(pair.second);
+                return first ^ (second + 0x9e3779b9 + (first << 6) + (first >> 2));
+            }
+        };
+
+        void clearIgnoredCollisionPairs(btCollisionObject* object);
         void updateWater();
 
         void prepareSimulation(bool willSimulate, std::vector<Simulation>& simulations);
@@ -313,6 +329,7 @@ namespace MWPhysics
         std::map<Object*, bool> mAnimatedObjects; // stores pointers to elements in mObjects
 
         ActorMap mActors;
+        std::unordered_set<IgnoredCollisionPair, IgnoredCollisionPairHash> mIgnoredCollisionPairs;
 
         using ProjectileMap = std::map<int, std::shared_ptr<Projectile>>;
         ProjectileMap mProjectiles;

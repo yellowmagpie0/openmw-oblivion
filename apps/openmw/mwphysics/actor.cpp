@@ -38,11 +38,17 @@ namespace MWPhysics
         , mActive(false)
         , mTaskScheduler(scheduler)
     {
-        // TES3 NPC bounds come from bodyparts; preserve that legacy path.
-        // Oblivion explicitly supplies fallback bounds for multipart models
-        // lacking both a root collision box and a standalone collision shape.
         const bool allowFallback = fallbackHalfExtents.length2() > 0.f;
-        if ((!ptr.getClass().isNpc() || allowFallback) && mOriginalHalfExtents.length2() == 0.f)
+        // TES4 NPC skeleton bounds describe the rendered animation envelope,
+        // including outstretched limbs, rather than the movement hull. Use
+        // the profile-supplied actor bounds for those multipart models while
+        // leaving TES3 NPC bodypart bounds and creature collision unchanged.
+        if (ptr.getClass().isNpc() && allowFallback)
+        {
+            mOriginalHalfExtents = fallbackHalfExtents;
+            mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
+        }
+        else if (!ptr.getClass().isNpc() && mOriginalHalfExtents.length2() == 0.f)
         {
             if (shape->mCollisionShape)
             {
@@ -59,20 +65,18 @@ namespace MWPhysics
                 mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
             }
 
-            if (mOriginalHalfExtents.length2() == 0.f)
+            if (mOriginalHalfExtents.length2() == 0.f && allowFallback)
             {
-                if (allowFallback)
-                {
-                    mOriginalHalfExtents = fallbackHalfExtents;
-                    mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
-                    Log(Debug::Warning) << "Using fallback collision bounds for actor \""
-                                        << ptr.getCellRef().getRefId() << "\".";
-                }
-                else
-                    Log(Debug::Error) << "Error: Failed to calculate bounding box for actor \""
-                                      << ptr.getCellRef().getRefId() << "\".";
+                mOriginalHalfExtents = fallbackHalfExtents;
+                mMeshTranslation = osg::Vec3f(0.f, 0.f, mOriginalHalfExtents.z());
+                Log(Debug::Warning) << "Using fallback collision bounds for actor \""
+                                    << ptr.getCellRef().getRefId() << "\".";
             }
         }
+
+        if (mOriginalHalfExtents.length2() == 0.f)
+            Log(Debug::Error) << "Error: Failed to calculate bounding box for actor \""
+                              << ptr.getCellRef().getRefId() << "\".";
 
         const btVector3 halfExtents = Misc::Convert::toBullet(mOriginalHalfExtents);
         float extRatio = 0.f;

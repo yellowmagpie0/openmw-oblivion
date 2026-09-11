@@ -19,6 +19,7 @@
 #include "apps/openmw/mwmechanics/oblivionaidestination.hpp"
 #include "apps/openmw/mwmechanics/oblivionaigait.hpp"
 #include "apps/openmw/mwmechanics/obliviondoorstate.hpp"
+#include "apps/openmw/mwmechanics/oblivionidle.hpp"
 #include "apps/openmw/mwmechanics/oblivionpackageevents.hpp"
 
 namespace
@@ -49,6 +50,12 @@ namespace
         const osg::Vec3f lastNodePosition(-673.5923f, 236.0759f, -158.1195f);
         const osg::Vec3f destination(-496.0045f, 241.5149f, -147.3725f);
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), lastNodePosition, key(1), destination, 64.f));
+        EXPECT_TRUE(MWMechanics::oblivionRouteTailWithinDirectApproach(lastNodePosition, destination, 256.f));
+        EXPECT_TRUE(MWMechanics::oblivionRouteTailWithinDirectApproach(
+            osg::Vec3f(454.466f, -40.6367f, -60.102f),
+            osg::Vec3f(539.108f, -14.8854f, -102.f), 256.f));
+        EXPECT_FALSE(MWMechanics::oblivionRouteTailWithinDirectApproach(
+            destination + osg::Vec3f(257.f, 0.f, 0.f), destination, 256.f));
         EXPECT_TRUE(MWMechanics::oblivionDestinationReached(
             key(1), destination + osg::Vec3f(64.f, 0.f, 0.f), key(1), destination, 64.f));
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
@@ -112,6 +119,32 @@ namespace
             {}, destination, {}, destination, 64.f, AIPackageType::Travel));
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
             key(1), destination, key(1), destination, -1.f, AIPackageType::Travel));
+    }
+
+    TEST(OblivionAiTest, FollowCompletesWhenItsTargetReachesTheAuthoredDestination)
+    {
+        const osg::Vec3f destination(686.59314f, 80.28291f, -111.98434f);
+        const osg::Vec3f targetAtDestination(755.79565f, 80.77766f, -100.87106f);
+        EXPECT_TRUE(MWMechanics::oblivionFollowDestinationReached(
+            key(1), targetAtDestination, key(1), destination, 70));
+        EXPECT_FALSE(MWMechanics::oblivionFollowDestinationReached(
+            key(1), targetAtDestination + osg::Vec3f(1.f, 0.f, 0.f), key(1), destination, 70));
+        EXPECT_FALSE(MWMechanics::oblivionFollowDestinationReached(
+            key(1), targetAtDestination, key(2), destination, 70));
+        EXPECT_FALSE(MWMechanics::oblivionFollowDestinationReached(
+            key(1), targetAtDestination, key(1), destination, -1));
+
+        PackageSelection selection;
+        selection.mSource = PackageSource::Base;
+        selection.mPackage = key(10);
+        selection.mType = AIPackageType::Follow;
+        PackagePhaseState state = beginPackagePhase(selection, key(100), key(101));
+        state.mPhase = PackagePhase::Wait;
+        state.mDurationRemaining = 1.f;
+        PackagePhaseInput input;
+        input.mActionCompleted = MWMechanics::oblivionFollowDestinationReached(
+            key(1), targetAtDestination, key(1), destination, 70);
+        EXPECT_EQ(advancePackagePhase(state, input).mTo, PackagePhase::Complete);
     }
 
     TEST(OblivionAiTest, DoorRecoveryRequiresAnIdentifiedDoorInterruption)
@@ -197,6 +230,53 @@ namespace
         EXPECT_FALSE(MWMechanics::oblivionDoorTransition(2));
     }
 
+    TEST(OblivionAiTest, ResidentPackageActorsObserveSharedPhysicalDoorTransitions)
+    {
+        RuntimeActorAiState observer;
+        observer.mActor = key(1);
+        observer.mCell = key(10);
+        observer.mPackage = key(20);
+        observer.mTier = ProcessTier::High;
+        EXPECT_TRUE(MWMechanics::observesOblivionPhysicalDoorTransition(
+            observer, key(2), key(10)));
+
+        observer.mActor = key(2);
+        EXPECT_FALSE(MWMechanics::observesOblivionPhysicalDoorTransition(
+            observer, key(2), key(10)));
+        observer.mActor = key(1);
+        observer.mTier = ProcessTier::Low;
+        EXPECT_FALSE(MWMechanics::observesOblivionPhysicalDoorTransition(
+            observer, key(2), key(10)));
+        observer.mTier = ProcessTier::High;
+        observer.mPackage = {};
+        EXPECT_FALSE(MWMechanics::observesOblivionPhysicalDoorTransition(
+            observer, key(2), key(10)));
+        observer.mPackage = key(20);
+        EXPECT_FALSE(MWMechanics::observesOblivionPhysicalDoorTransition(
+            observer, key(2), key(11)));
+    }
+
+    TEST(OblivionAiTest, NativeIdleAnimationMustBelongToTheActorsSkeletonFamily)
+    {
+        IdleAnimation idle;
+        idle.mModel = "Characters\\_Male\\IdleAnims\\FollowMe.kf";
+        idle.mAnimationGroup = 4;
+        EXPECT_EQ(MWMechanics::oblivionIdleAnimationGroup(idle, "meshes/characters/_male/skeleton.nif"),
+            std::optional<std::string>("followme"));
+        EXPECT_EQ(MWMechanics::oblivionPickIdleAnimationGroup(
+                      idle, "meshes/characters/_male/skeleton.nif"),
+            std::optional<std::string>("followme"));
+        EXPECT_FALSE(MWMechanics::oblivionIdleAnimationGroup(
+            idle, "meshes/creatures/horse/skeleton.nif"));
+
+        idle.mAnimationGroup = 5;
+        EXPECT_FALSE(MWMechanics::oblivionPickIdleAnimationGroup(
+            idle, "meshes/characters/_male/skeleton.nif"));
+        idle.mModel = "Characters\\_Male\\IdleAnims";
+        EXPECT_FALSE(MWMechanics::oblivionIdleAnimationGroup(
+            idle, "meshes/characters/_male/skeleton.nif"));
+    }
+
     TEST(OblivionAiTest, PackageDoneRecordsOnlyNewCompletionsAndPreservesCallbackSave)
     {
         MWMechanics::OblivionPackageDoneQueue queue;
@@ -222,6 +302,24 @@ namespace
         queue.restore(saved);
         queue.dispatch([&](const auto& event) { EXPECT_EQ(event, delivered[1]); });
         queue.dispatch([&](const auto&) { FAIL() << "Completion repeated"; });
+    }
+
+    TEST(OblivionAiTest, CompletedPackageRemainsTerminalWhenEvaluationSelectsTheSameWinner)
+    {
+        RuntimeActorAiState state;
+        state.mSource = PackageSource::Base;
+        state.mPackage = key(10);
+        state.mPackageType = AIPackageType::Travel;
+        state.mPhase = PackagePhase::Complete;
+
+        PackageSelection selection;
+        selection.mSource = PackageSource::Base;
+        selection.mPackage = key(10);
+        selection.mType = AIPackageType::Travel;
+        EXPECT_TRUE(MWMechanics::oblivionPackageSelectionMatches(state, std::nullopt, selection, {}));
+
+        selection.mPackage = key(11);
+        EXPECT_FALSE(MWMechanics::oblivionPackageSelectionMatches(state, std::nullopt, selection, {}));
     }
 
     TEST(OblivionAiTest, PackageDoneDefersCallbackGeneratedEventsAndStopsAtReload)
@@ -337,6 +435,46 @@ namespace
         EXPECT_FALSE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Travel, {}, 0.f, std::nullopt, false));
         EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::Pursue, {}, 0.f, std::nullopt, false));
         EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::FleeNotCombat, {}, 0.f, std::nullopt, false));
+    }
+
+    TEST(OblivionAiTest, ProactiveYieldingIsLimitedToGenuinelyIdleNativeActors)
+    {
+        RuntimeActorAiState state;
+        state.mPhase = PackagePhase::Complete;
+        EXPECT_TRUE(MWMechanics::oblivionActorCanProactivelyYield(state));
+
+        state.mRestrained = true;
+        EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+        state.mRestrained = false;
+        state.mActionReserved = true;
+        EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+        state.mActionReserved = false;
+
+        state.mPhase = PackagePhase::Wait;
+        state.mPackage = {};
+        EXPECT_TRUE(MWMechanics::oblivionActorCanProactivelyYield(state));
+        state.mPackage = key(1);
+        EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+        state.mPhase = PackagePhase::Path;
+        state.mPackage = {};
+        EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+
+        state.mHasDestination = true;
+        EXPECT_TRUE(MWMechanics::oblivionActorHasMovingIntent(state));
+        state.mRestrained = true;
+        EXPECT_FALSE(MWMechanics::oblivionActorHasMovingIntent(state));
+        state.mRestrained = false;
+        state.mPhase = PackagePhase::Wait;
+        EXPECT_FALSE(MWMechanics::oblivionActorHasMovingIntent(state));
+
+        const auto direction = MWMechanics::oblivionProactiveYieldDirection(
+            osg::Vec3f(653.f, -21.f, -109.f), osg::Vec3f(594.f, 29.f, -104.f),
+            osg::Vec3f(755.f, 80.f, -104.f), osg::Vec3f(762.f, -6.f, -106.f));
+        ASSERT_TRUE(direction);
+        EXPECT_GT(direction->x(), 0.f);
+        EXPECT_LT(direction->y(), -0.6f);
+        EXPECT_FALSE(MWMechanics::oblivionProactiveYieldDirection(
+            osg::Vec3f(1.f, 2.f, 3.f), osg::Vec3f(1.f, 2.f, 4.f), std::nullopt, std::nullopt));
     }
 
     TEST(OblivionAiTest, UnflaggedTravelLeaderWalksWhileSeparatedCompanionRuns)
@@ -478,5 +616,43 @@ namespace
         EXPECT_EQ(stalled.mTo, PackagePhase::Stalled);
         EXPECT_EQ(stalled.mBoundary, PhaseBoundary::None);
         EXPECT_EQ(state.mInterruptionReason, "bounded-repath-exhausted");
+    }
+
+    TEST(OblivionAiTest, AvailableRouteResetsTheConsecutiveRepathBudget)
+    {
+        PackageSelection selection;
+        selection.mSource = PackageSource::Base;
+        selection.mPackage = key(20);
+        selection.mType = AIPackageType::Follow;
+        PackagePhaseState state = beginPackagePhase(selection, key(200), key(201));
+        state.mPhase = PackagePhase::Path;
+
+        for (int attempt = 0; attempt < 8; ++attempt)
+            EXPECT_EQ(advancePackagePhase(state, { 0.25f, true, false }).mTo,
+                PackagePhase::Path);
+        ASSERT_EQ(state.mRepathAttempts, 8u);
+        EXPECT_EQ(advancePackagePhase(state, { 0.25f, true, true }).mTo,
+            PackagePhase::Path);
+        EXPECT_EQ(state.mRepathAttempts, 0u);
+        EXPECT_TRUE(state.mInterruptionReason.empty());
+    }
+
+    TEST(OblivionAiTest, PermanentLowProcessRouteFailureDoesNotRetry)
+    {
+        PackageSelection selection;
+        selection.mSource = PackageSource::Base;
+        selection.mPackage = key(20);
+        selection.mType = AIPackageType::Travel;
+        PackagePhaseState state = beginPackagePhase(selection, key(200), key(201));
+        state.mPhase = PackagePhase::Path;
+
+        PackagePhaseInput input;
+        input.mResolved = true;
+        input.mPermanentRouteFailure = true;
+        const PackagePhaseTransition transition = advancePackagePhase(state, input);
+        EXPECT_EQ(transition.mTo, PackagePhase::Stalled);
+        EXPECT_EQ(transition.mReason, "route-unavailable");
+        EXPECT_EQ(state.mInterruptionReason, "route-unavailable");
+        EXPECT_EQ(state.mRepathAttempts, 0u);
     }
 }

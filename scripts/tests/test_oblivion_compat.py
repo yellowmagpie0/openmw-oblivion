@@ -1244,6 +1244,68 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertTrue(mutated["references"][0]["custom_state"]["locked"])
             self.assertFalse(mutated["references"][2]["custom_state"]["locked"])
 
+    def test_tes4_runtime_state_version_seven_preserves_door_animation_traversal(self):
+        state = {
+            "schema_version": 7,
+            "profile": "oblivion",
+            "next_dynamic_serial": 2,
+            "content": [{"plugin": "oblivion.esm", "fingerprint": "sha256:test"}],
+            "clock": {"year": 433, "month": 0, "day": 1, "hour": 3.5, "time_scale": 30.0},
+            "player": {
+                "reference": "dynamic:player:0000000000000001",
+                "cell": "content:oblivion.esm:000001",
+                "position": [0.0] * 6,
+                "actor_values": {},
+                "inventory": [],
+                "name": "Bendu Olo",
+                "race": "content:oblivion.esm:000907",
+                "class": "content:oblivion.esm:0230e6",
+                "birthsign": "null",
+                "female": False,
+                "character_generation_flags": 0,
+            },
+            "globals": {},
+            "references": [],
+            "script_event_sequence": 0,
+            "script_instances": [],
+            "quests": [],
+            "ai_rng_state": 1,
+            "actor_ai": [{
+                "actor": "content:oblivion.esm:000500",
+                "base": "content:oblivion.esm:000501",
+                "package": "content:oblivion.esm:000502",
+                "cell": "content:oblivion.esm:000001",
+                "door": "content:oblivion.esm:000506",
+                "source": 1,
+                "package_type": 6,
+                "procedure": 7,
+                "phase": 3,
+                "door_animation_started": True,
+            }],
+            "path_points": [],
+            "companions": [],
+            "mounts": [],
+            "detection_vectors": [],
+            "pending_package_done": [],
+        }
+        payload = MODULE.tes4_state.encode_payload(state)
+        body = b"VERS" + (4).to_bytes(4, "little") + (7).to_bytes(4, "little")
+        body += b"DATA" + len(payload).to_bytes(4, "little") + payload
+        record = b"T4ST" + len(body).to_bytes(4, "little") + b"\0" * 8 + body
+        with tempfile.TemporaryDirectory() as temporary:
+            save = Path(temporary) / "door-animation.omwsave"
+            save.write_bytes(record)
+            restored = MODULE.tes4_state.load_save(save)
+        self.assertEqual(restored["schema_version"], 7)
+        self.assertTrue(restored["actor_ai"][0]["door_animation_started"])
+        self.assertTrue(MODULE.validate_m14_runtime_state(restored)["passed"])
+        restored["actor_ai"][0]["phase"] = 2
+        self.assertFalse(MODULE.validate_m14_runtime_state(restored)["passed"])
+
+        state["schema_version"] = 6
+        with self.assertRaisesRegex(MODULE.tes4_state.RuntimeStateError, "door-animation"):
+            MODULE.tes4_state.encode_payload(state)
+
     def test_m5_state_validator_checks_native_interaction_effects(self):
         state = {
             "player": {

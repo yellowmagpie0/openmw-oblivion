@@ -24,7 +24,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 6;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 7;
 
     struct RuntimeContentIdentity
     {
@@ -178,6 +178,7 @@ namespace ESM4
         bool mRestrained = false;
         bool mActionReserved = false;
         bool mHasDestination = false;
+        bool mDoorAnimationStarted = false;
         std::string mInterruptionReason;
 
         friend bool operator==(const RuntimeActorAiState&, const RuntimeActorAiState&) = default;

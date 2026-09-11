@@ -116,6 +116,10 @@ namespace ESM4
         // destination cell. Keep the route in Path instead of treating the
         // first foreign edge as the final arrival.
         bool mContinueAfterDoor = false;
+        // Low process uses a complete, stable pathgrid/door index. A missing
+        // route there is structural until the graph changes, so retrying it
+        // every fixed step cannot produce a different result.
+        bool mPermanentRouteFailure = false;
     };
 
     struct PackagePhaseTransition

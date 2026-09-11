@@ -3,7 +3,10 @@
 
 #include <optional>
 
+#include <osg/Vec3f>
+
 #include <components/esm4/aipackagedata.hpp>
+#include <components/esm4/runtimestate.hpp>
 
 namespace MWMechanics
 {
@@ -26,6 +29,56 @@ namespace MWMechanics
         // rerouting; this is a native runtime policy, not a speed multiplier.
         const float distance = (requestedFollowDistance > 0.f ? requestedFollowDistance : 128.f) + 96.f;
         return targetInDifferentCell || (targetDistanceSquared && *targetDistanceSquared > distance * distance);
+    }
+
+    inline bool oblivionActorCanProactivelyYield(const ESM4::RuntimeActorAiState& state)
+    {
+        if (state.mRestrained || state.mActionReserved)
+            return false;
+        return state.mPhase == ESM4::PackagePhase::Complete
+            || (state.mPhase == ESM4::PackagePhase::Wait && state.mPackage.isNull());
+    }
+
+    inline bool oblivionActorHasMovingIntent(const ESM4::RuntimeActorAiState& state)
+    {
+        return !state.mRestrained && state.mHasDestination
+            && state.mPhase == ESM4::PackagePhase::Path;
+    }
+
+    inline std::optional<osg::Vec3f> oblivionProactiveYieldDirection(const osg::Vec3f& idlePosition,
+        const osg::Vec3f& movingPosition, const std::optional<osg::Vec3f>& movingDestination,
+        const std::optional<osg::Vec3f>& idleDestination)
+    {
+        osg::Vec3f direction = idlePosition - movingPosition;
+        direction.z() = 0.f;
+        if (direction.normalize() <= 0.f)
+            return std::nullopt;
+
+        if (movingDestination)
+        {
+            osg::Vec3f routeDirection = *movingDestination - movingPosition;
+            routeDirection.z() = 0.f;
+            if (routeDirection.normalize() > 0.f)
+            {
+                osg::Vec3f lateral(routeDirection.y(), -routeDirection.x(), 0.f);
+                if (lateral.x() * direction.x() + lateral.y() * direction.y() < 0.f)
+                    lateral = -lateral;
+                direction += lateral;
+            }
+        }
+
+        if (idleDestination)
+        {
+            osg::Vec3f destinationDirection = *idleDestination - idlePosition;
+            destinationDirection.z() = 0.f;
+            if (destinationDirection.normalize() > 0.f
+                && destinationDirection.x() * direction.x()
+                    + destinationDirection.y() * direction.y() > 0.f)
+                direction += destinationDirection * 0.25f;
+        }
+        if (direction.normalize() <= 0.f)
+            return std::nullopt;
+        return direction;
     }
 }
 

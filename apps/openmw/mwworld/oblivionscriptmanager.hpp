@@ -11,6 +11,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -51,6 +52,8 @@ namespace MWWorld
         // nullopt permits normal head tracking; an empty Ptr retains an
         // explicit Look whose target is currently unavailable.
         std::optional<Ptr> scriptedLookTarget(const Ptr& actor) const;
+        void persistAnimationState(const ESM::FormKey& reference, std::string_view group,
+            int mode, bool playing, bool scripted);
 
         ObScript::Value resolveName(std::string_view name, const ObScript::RuntimeContext& context) override;
         ObScript::Value loadMember(const ObScript::Value& target, std::string_view name,

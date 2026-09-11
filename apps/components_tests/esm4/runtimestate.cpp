@@ -200,6 +200,24 @@ namespace
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::runtime_error);
     }
 
+    TEST(ESM4RuntimeState, versionSevenPersistsDoorAnimationTraversalState)
+    {
+        auto state = makeM14State();
+        state.mVersion = 7;
+        state.mActorAi.front().mPhase = ESM4::PackagePhase::Door;
+        state.mActorAi.front().mDoorAnimationStarted = true;
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        ASSERT_EQ(restored.mActorAi.size(), 1u);
+        EXPECT_TRUE(restored.mActorAi.front().mDoorAnimationStarted);
+        EXPECT_NE(restored.canonicalJson().find("\"door_animation_started\":true"), std::string::npos);
+
+        state.mVersion = 6;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mVersion = 7;
+        state.mActorAi.front().mPhase = ESM4::PackagePhase::Path;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+
     TEST(ESM4RuntimeState, versionFiveDoesNotSynthesizeCompletionCallbacks)
     {
         auto state = makeM14State();
@@ -384,7 +402,7 @@ namespace
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":6"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":7"), std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"

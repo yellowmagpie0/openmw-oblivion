@@ -104,7 +104,13 @@ namespace ESM4
                 }
                 return transition(PackagePhase::Path, "intent-resolved");
             case PackagePhase::Path:
-                if (state.mNoProgressSeconds > 30.0f || state.mRepathAttempts >= 8)
+                if (input.mPermanentRouteFailure)
+                {
+                    state.mInterruptionReason = "route-unavailable";
+                    return transition(PackagePhase::Stalled, "route-unavailable");
+                }
+                if (state.mNoProgressSeconds > 30.0f
+                    || (state.mRepathAttempts >= 8 && !input.mRouteAvailable))
                 {
                     state.mInterruptionReason = "bounded-repath-exhausted";
                     return transition(PackagePhase::Stalled, "bounded-repath-exhausted");
@@ -114,6 +120,7 @@ namespace ESM4
                     ++state.mRepathAttempts;
                     return { from, from, PhaseBoundary::None, "repath-requested" };
                 }
+                state.mRepathAttempts = 0;
                 if (input.mDestinationReached)
                     return transition(input.mDoorRequired ? PackagePhase::Door : PackagePhase::Arrive,
                         input.mDoorRequired ? "door-edge-reached" : "destination-reached");

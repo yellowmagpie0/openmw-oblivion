@@ -34,6 +34,22 @@ namespace MWMechanics
             && (position - destination).length2() <= tolerance * tolerance;
     }
 
+    inline bool oblivionFollowDestinationReached(const ESM::FormKey& targetCell,
+        const osg::Vec3f& targetPosition, const ESM::FormKey& destinationCell,
+        const osg::Vec3f& destination, std::int32_t radius)
+    {
+        return radius >= 0 && oblivionDestinationReached(targetCell, targetPosition,
+            destinationCell, destination, 64.f, ESM4::AIPackageType::Travel,
+            static_cast<float>(radius));
+    }
+
+    inline bool oblivionRouteTailWithinDirectApproach(
+        const osg::Vec3f& position, const osg::Vec3f& destination, float maximumDistance)
+    {
+        return std::isfinite(maximumDistance) && maximumDistance >= 0.f
+            && (position - destination).length2() <= maximumDistance * maximumDistance;
+    }
+
     inline bool oblivionRouteAffectedByOverlay(ESM4::PackagePhase phase,
         const ESM::FormKey& currentPathgrid, std::span<const ESM4::PathgridNodeKey> route,
         const std::set<ESM::FormKey>& changedPathgrids)

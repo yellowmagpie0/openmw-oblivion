@@ -71,6 +71,13 @@ namespace MWMechanics
             return MWWorld::DoorState::Opening;
         return std::nullopt;
     }
+
+    inline bool observesOblivionPhysicalDoorTransition(const ESM4::RuntimeActorAiState& state,
+        const ESM::FormKey& initiator, const ESM::FormKey& cell)
+    {
+        return state.mActor != initiator && state.mTier == ESM4::ProcessTier::High
+            && !state.mPackage.isNull() && !cell.isNull() && state.mCell == cell;
+    }
 }
 
 #endif

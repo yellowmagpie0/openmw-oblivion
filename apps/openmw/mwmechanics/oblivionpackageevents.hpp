@@ -11,13 +11,29 @@
 #define OPENMW_MWMECHANICS_OBLIVIONPACKAGEEVENTS_H
 
 #include <deque>
+#include <optional>
 #include <span>
 #include <vector>
 
+#include <components/esm4/aiselection.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 namespace MWMechanics
 {
+    inline bool oblivionPackageSelectionMatches(const ESM4::RuntimeActorAiState& state,
+        const std::optional<ESM4::ScheduleWindow>& selectedWindow,
+        const ESM4::PackageSelection& selection, const ESM4::CalendarInstant& now)
+    {
+        const bool sameWindow = selectedWindow.has_value() == selection.mWindow.has_value()
+            && (!selectedWindow || *selectedWindow == *selection.mWindow
+                || ESM4::calendarHoursUntil(now, selectedWindow->mEnd) > 0.0);
+        return (!selection.hasPackage() && state.mPackage.isNull()
+                   && state.mSource == ESM4::PackageSource::None)
+            || (selection.hasPackage() && state.mSource == selection.mSource
+                && state.mPackage == selection.mPackage && state.mPackageType == selection.mType
+                && sameWindow);
+    }
+
     // Dispatch outside mechanics iteration. Captures retain outstanding events
     // even when a native callback saves, changes packages, or replaces the game.
     class OblivionPackageDoneQueue

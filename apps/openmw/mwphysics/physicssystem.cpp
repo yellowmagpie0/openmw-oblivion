@@ -498,11 +498,12 @@ namespace MWPhysics
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
             mAnimatedObjects.erase(foundObject->second.get());
-
+            clearIgnoredCollisionPairs(foundObject->second->getCollisionObject());
             mObjects.erase(foundObject);
         }
         else if (auto foundActor = mActors.find(ptr.mRef); foundActor != mActors.end())
         {
+            clearIgnoredCollisionPairs(foundActor->second->getCollisionObject());
             mActors.erase(foundActor);
         }
     }
@@ -558,6 +559,58 @@ namespace MWPhysics
         if (found != mObjects.end())
             return found->second.get();
         return nullptr;
+    }
+
+    void PhysicsSystem::setIgnoreCollision(const MWWorld::Ptr& first, const MWWorld::Ptr& second, bool ignore)
+    {
+        PtrHolder* firstHolder = getActor(first);
+        if (firstHolder == nullptr)
+        {
+            const auto found = mObjects.find(first.mRef);
+            if (found != mObjects.end())
+                firstHolder = found->second.get();
+        }
+
+        PtrHolder* secondHolder = getActor(second);
+        if (secondHolder == nullptr)
+        {
+            const auto found = mObjects.find(second.mRef);
+            if (found != mObjects.end())
+                secondHolder = found->second.get();
+        }
+
+        if (firstHolder == nullptr || secondHolder == nullptr)
+            return;
+
+        btCollisionObject* firstObject = firstHolder->getCollisionObject();
+        btCollisionObject* secondObject = secondHolder->getCollisionObject();
+        if (firstObject == secondObject)
+            return;
+        if (std::less<btCollisionObject*>{}(secondObject, firstObject))
+            std::swap(firstObject, secondObject);
+        const IgnoredCollisionPair pair{ firstObject, secondObject };
+        const bool changed = ignore ? mIgnoredCollisionPairs.insert(pair).second
+                                    : mIgnoredCollisionPairs.erase(pair) != 0;
+        if (!changed)
+            return;
+        firstObject->setIgnoreCollisionCheck(secondObject, ignore);
+        secondObject->setIgnoreCollisionCheck(firstObject, ignore);
+    }
+
+    void PhysicsSystem::clearIgnoredCollisionPairs(btCollisionObject* object)
+    {
+        for (auto pair = mIgnoredCollisionPairs.begin(); pair != mIgnoredCollisionPairs.end();)
+        {
+            if (pair->first != object && pair->second != object)
+            {
+                ++pair;
+                continue;
+            }
+            btCollisionObject* other = pair->first == object ? pair->second : pair->first;
+            object->setIgnoreCollisionCheck(other, false);
+            other->setIgnoreCollisionCheck(object, false);
+            pair = mIgnoredCollisionPairs.erase(pair);
+        }
     }
 
     Projectile* PhysicsSystem::getProjectile(int projectileId) const

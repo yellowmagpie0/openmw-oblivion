@@ -7,9 +7,50 @@
 #include <set>
 #include <span>
 #include <stdexcept>
+#include <vector>
 
 namespace ESM4
 {
+    inline bool isNullIdleLink(ESM::FormId value)
+    {
+        return value.mIndex == 0;
+    }
+
+    inline std::vector<const IdleAnimation*> rootedIdleAnimations(std::span<const IdleAnimation* const> records)
+    {
+        std::map<ESM::FormId, const IdleAnimation*> byId;
+        for (const auto* record : records)
+        {
+            if (record == nullptr || isNullIdleLink(record->mId)
+                || !byId.emplace(record->mId, record).second)
+                throw std::runtime_error("IDLE hierarchy has a null or duplicate record");
+        }
+
+        std::vector<const IdleAnimation*> result;
+        result.reserve(records.size());
+        for (const auto* record : records)
+        {
+            std::set<ESM::FormId> seen;
+            const IdleAnimation* current = record;
+            bool rooted = true;
+            while (!isNullIdleLink(current->mParent))
+            {
+                if (!seen.insert(current->mId).second)
+                    throw std::runtime_error("IDLE hierarchy contains a cycle");
+                const auto parent = byId.find(current->mParent);
+                if (parent == byId.end())
+                {
+                    rooted = false;
+                    break;
+                }
+                current = parent->second;
+            }
+            if (rooted)
+                result.push_back(record);
+        }
+        return result;
+    }
+
     // Non-owning index over the final, override-resolved store. Record order
     // breaks ties between independent chains; DATA, not FormID, orders siblings.
     class IdleTree
@@ -19,21 +60,22 @@ namespace ESM4
         {
             for (const auto* record : records)
             {
-                if (record == nullptr || record->mId.isZeroOrUnset()
+                if (record == nullptr || isNullIdleLink(record->mId)
                     || !mRecords.emplace(record->mId, record).second)
                     throw std::runtime_error("IDLE hierarchy has a null or duplicate record");
-                mChildren[record->mParent.isZeroOrUnset() ? ESM::FormId{} : record->mParent].push_back(record);
+                mChildren[isNullIdleLink(record->mParent) ? ESM::FormId{} : record->mParent].push_back(record);
             }
             for (const auto* record : records)
             {
-                if (!record->mParent.isZeroOrUnset() && !mRecords.contains(record->mParent))
+                if (!isNullIdleLink(record->mParent) && !mRecords.contains(record->mParent))
                     throw std::runtime_error("IDLE hierarchy has a missing parent");
-                if (!record->mPrevious.isZeroOrUnset())
+                if (!isNullIdleLink(record->mPrevious))
                 {
                     const auto previous = mRecords.find(record->mPrevious);
                     if (previous == mRecords.end()
                         || (previous->second->mParent != record->mParent
-                            && !(previous->second->mParent.isZeroOrUnset() && record->mParent.isZeroOrUnset())))
+                            && !(isNullIdleLink(previous->second->mParent)
+                                && isNullIdleLink(record->mParent))))
                         throw std::runtime_error("IDLE hierarchy has a missing or foreign predecessor");
                 }
                 checkChain(record, true);
@@ -47,7 +89,7 @@ namespace ESM4
                 const auto append = [&](ESM::FormId previous) {
                     for (auto it = unordered.rbegin(); it != unordered.rend(); ++it)
                         if ((*it)->mPrevious == previous
-                            || (previous.isZeroOrUnset() && (*it)->mPrevious.isZeroOrUnset()))
+                            || (isNullIdleLink(previous) && isNullIdleLink((*it)->mPrevious)))
                             pending.push_back(*it);
                 };
                 append({});

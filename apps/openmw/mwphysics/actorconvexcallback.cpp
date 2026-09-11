@@ -31,6 +31,9 @@ namespace MWPhysics
     {
         if (convexResult.m_hitCollisionObject == mMe)
             return 1;
+        if (!mMe->checkCollideWith(convexResult.m_hitCollisionObject)
+            || !convexResult.m_hitCollisionObject->checkCollideWith(mMe))
+            return 1;
 
         // override data for actor-actor collisions
         // vanilla Morrowind seems to make overlapping actors collide as though they are both cylinders with a diameter

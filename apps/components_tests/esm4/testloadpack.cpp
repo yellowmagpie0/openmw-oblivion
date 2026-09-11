@@ -211,6 +211,42 @@ TEST(ESM4IdleTree, RejectsBrokenAndCyclicLinks)
     EXPECT_THROW(ESM4::IdleTree{ records }, std::runtime_error);
 }
 
+TEST(ESM4IdleTree, FiltersTreesRootedInExternalActionRecords)
+{
+    ESM4::IdleAnimation root, child, externalRoot, externalChild;
+    root.mId = ESM::FormId::fromUint32(1);
+    child.mId = ESM::FormId::fromUint32(2);
+    child.mParent = root.mId;
+    externalRoot.mId = ESM::FormId::fromUint32(3);
+    externalRoot.mParent = ESM::FormId::fromUint32(100);
+    externalChild.mId = ESM::FormId::fromUint32(4);
+    externalChild.mParent = externalRoot.mId;
+    const std::vector<const ESM4::IdleAnimation*> records{
+        &externalChild, &child, &externalRoot, &root };
+
+    const auto rooted = ESM4::rootedIdleAnimations(records);
+    EXPECT_EQ(rooted, (std::vector<const ESM4::IdleAnimation*>{ &child, &root }));
+    const ESM4::IdleTree tree(rooted);
+    EXPECT_EQ(tree.select([](const auto&) { return true; }, [](const auto&) { return true; }), &child);
+}
+
+TEST(ESM4IdleTree, TreatsZeroObjectIndexAsANullHierarchyLink)
+{
+    ESM4::IdleAnimation root, child;
+    root.mId = ESM::FormId::fromUint32(1);
+    root.mParent = { 0, 1 };
+    root.mPrevious = { 0, 1 };
+    child.mId = ESM::FormId::fromUint32(2);
+    child.mParent = root.mId;
+    child.mPrevious = { 0, 1 };
+    const std::vector<const ESM4::IdleAnimation*> records{ &root, &child };
+
+    const auto rooted = ESM4::rootedIdleAnimations(records);
+    ASSERT_EQ(rooted.size(), 2u);
+    const ESM4::IdleTree tree(rooted);
+    EXPECT_EQ(tree.select([](const auto&) { return true; }, [](const auto&) { return true; }), &child);
+}
+
 TEST(ESM4IdleTree, KeepsIndependentChainsAndRejectsUnknownConditionsWithoutFallback)
 {
     ESM4::IdleAnimation a, b, c, d;

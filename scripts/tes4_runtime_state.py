@@ -19,8 +19,8 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 6
-SUPPORTED_VERSIONS = {1, 2, 3, 4, 5, CURRENT_VERSION}
+CURRENT_VERSION = 7
+SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
 MAX_PAYLOAD = 256 * 1024 * 1024
@@ -264,7 +264,7 @@ def _finite_float(reader: _Reader, label: str) -> float:
     return value
 
 
-def _read_actor_ai(reader: _Reader) -> dict[str, Any]:
+def _read_actor_ai(reader: _Reader, version: int) -> dict[str, Any]:
     actor = {
         "actor": reader.string(),
         "base": reader.string(),
@@ -330,6 +330,11 @@ def _read_actor_ai(reader: _Reader) -> dict[str, Any]:
     actor["restrained"] = bool(restrained)
     actor["action_reserved"] = bool(reserved)
     actor["has_destination"] = bool(has_destination)
+    if version >= 7:
+        door_animation_started = reader.unpack("<B")
+        if door_animation_started > 1:
+            raise RuntimeStateError("Invalid TES4 actor AI door-animation flag")
+        actor["door_animation_started"] = bool(door_animation_started)
     actor["interruption_reason"] = reader.string()
     return actor
 
@@ -394,6 +399,12 @@ def _validate_ai(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Invalid TES4 actor AI timer")
         if bool(actor.get("has_destination", False)) and str(actor.get("destination_cell", "null")) == "null":
             raise RuntimeStateError("TES4 actor AI destination has no destination cell")
+        if bool(actor.get("door_animation_started", False)) and (
+            int(state["schema_version"]) < 7
+            or int(actor.get("phase", 0)) != 3
+            or str(actor.get("door", "null")) == "null"
+        ):
+            raise RuntimeStateError("Invalid TES4 actor AI door-animation state")
         if not 0 <= int(actor.get("source", 0)) <= 2 or not 0 <= int(actor.get("package_type", 255)) <= 255:
             raise RuntimeStateError("Invalid TES4 actor AI enum")
         if not 0 <= int(actor.get("procedure", 0)) <= 13 or not 0 <= int(actor.get("phase", 0)) <= 12:
@@ -663,7 +674,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         _validate_ai(state)
 
 
-def _write_actor_ai(writer: _Writer, actor: dict[str, Any]) -> None:
+def _write_actor_ai(writer: _Writer, actor: dict[str, Any], version: int) -> None:
     for key in (
         "actor", "base", "package", "script_package", "target", "target_base", "cell", "pathgrid", "door",
         "destination_cell", "last_valid_cell", "action_item", "last_transition_door", "companion_group",
@@ -711,6 +722,8 @@ def _write_actor_ai(writer: _Writer, actor: dict[str, Any]) -> None:
     writer.pack("<B", int(bool(actor.get("restrained", False))))
     writer.pack("<B", int(bool(actor.get("action_reserved", False))))
     writer.pack("<B", int(bool(actor.get("has_destination", False))))
+    if version >= 7:
+        writer.pack("<B", int(bool(actor.get("door_animation_started", False))))
     writer.string(str(actor.get("interruption_reason", "")))
 
 
@@ -889,7 +902,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             })
     if version >= 5:
         result["ai_rng_state"] = reader.unpack("<Q")
-        result["actor_ai"] = [_read_actor_ai(reader) for _ in range(reader.count())]
+        result["actor_ai"] = [_read_actor_ai(reader, version) for _ in range(reader.count())]
         result["path_points"] = []
         for _ in range(reader.count()):
             pathgrid, node, enabled = reader.string(), reader.unpack("<I"), reader.unpack("<B")
@@ -1041,7 +1054,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         actors = sorted(state.get("actor_ai", []), key=lambda item: item["actor"])
         writer.pack("<I", len(actors))
         for actor in actors:
-            _write_actor_ai(writer, actor)
+            _write_actor_ai(writer, actor, version)
 
         points = sorted(state.get("path_points", []), key=lambda item: (item["pathgrid"], int(item["node"])))
         writer.pack("<I", len(points))

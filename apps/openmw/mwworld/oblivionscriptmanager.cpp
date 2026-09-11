@@ -14,6 +14,7 @@
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm4/dialoguevoices.hpp>
+#include <components/esm4/idletree.hpp>
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadachr.hpp>
@@ -60,6 +61,7 @@
 #include "../mwbase/statemanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwmechanics/oblivionai.hpp"
+#include "../mwmechanics/oblivionidle.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwphysics/physicssystem.hpp"
@@ -988,6 +990,24 @@ namespace MWWorld
         return found != references.end() && found->mKey == key ? &*found : nullptr;
     }
 
+    void OblivionScriptManager::persistAnimationState(const ESM::FormKey& reference,
+        std::string_view group, int mode, bool playing, bool scripted)
+    {
+        if (ESM4::RuntimeReferenceState* state = referenceState(reference))
+        {
+            state->mCustomState["obscript.animation_group"] = std::string(group);
+            state->mCustomState["obscript.animation_mode"] = std::int64_t(mode);
+            state->mCustomState["obscript.animation_playing"] = playing;
+            state->mCustomState["obscript.animation_scripted"] = scripted;
+            if (playing)
+            {
+                state->mCustomState["obscript.animation_progress"] = 0.0;
+                state->mCustomState["obscript.animation_loop_count"] = std::int64_t(0);
+                state->mCustomState["obscript.animation_absolute"] = false;
+            }
+        }
+    }
+
     const ESM4::RuntimeReferenceState* OblivionScriptManager::referenceState(const ESM::FormKey& key) const
     {
         if (!mWorld.mOblivionRuntimeState)
@@ -1134,6 +1154,14 @@ namespace MWWorld
         };
         const auto objectPtr = [&]() { return ptrFor(objectKey()); };
         const auto oblivionAi = [&]() { return mWorld.getOblivionAiService(); };
+        const auto playAnimation = [&](const Ptr& ptr, const std::string& group, int mode, bool scripted = true) {
+            bool played = false;
+            if (!ptr.isEmpty())
+                played = MWBase::Environment::get().getMechanicsManager()->playAnimationGroup(
+                    ptr, group, mode, 1, scripted);
+            persistAnimationState(objectKey(), group, mode, played, scripted);
+            return played;
+        };
 
         if (name == "look" || name == "stoplook")
         {
@@ -1268,23 +1296,52 @@ namespace MWWorld
             const std::size_t groupArg = 0;
             const std::string group = ObScript::valueString(argument(groupArg));
             const int mode = static_cast<int>(ObScript::asInteger(argument(groupArg + 1)));
+            const bool played = playAnimation(ptr, group, mode);
+            trace("playgroup ref=" + objectKey().serialize() + " group=" + group
+                + " played=" + (played ? "true" : "false"));
+            return std::int64_t(played);
+        }
+        if (name == "pickidle")
+        {
+            const Ptr actor = objectPtr();
+            MWMechanics::OblivionAiService* ai = oblivionAi();
+            MWRender::Animation* animation
+                = actor.isEmpty() ? nullptr : mWorld.mRendering->getAnimation(actor);
+            if (actor.isEmpty() || !actor.getClass().isActor() || ai == nullptr || animation == nullptr)
+                throw ObScript::RuntimeError("OBSV110", "PickIdle requires a loaded native actor", name);
+
+            const std::string skeleton = actor.getClass().getCorrectedModel(actor);
+            const auto& store = mWorld.mStore.get<ESM4::IdleAnimation>();
+            std::vector<const ESM4::IdleAnimation*> records;
+            records.reserve(store.getSize());
+            for (const ESM4::IdleAnimation& idle : store)
+                records.push_back(&idle);
+            const auto rooted = ESM4::rootedIdleAnimations(records);
+            const ESM4::IdleTree tree(rooted);
+            const Ptr player = mWorld.getPlayerPtr();
+            const ESM4::IdleAnimation* selected = tree.select(
+                [&](const ESM4::IdleAnimation& idle) {
+                    return ai->evaluateDialogueConditions(actor, player, idle.mConditions)
+                        == ESM4::ConditionResult::True;
+                },
+                [&](const ESM4::IdleAnimation& idle) {
+                    return MWMechanics::oblivionPickIdleAnimationGroup(idle, skeleton).has_value();
+                });
+
             bool played = false;
-            if (!ptr.isEmpty())
-                played = MWBase::Environment::get().getMechanicsManager()->playAnimationGroup(
-                    ptr, group, mode, 1, true);
-            if (ESM4::RuntimeReferenceState* state = referenceState(objectKey()))
+            std::string group;
+            std::string idleKey = "null";
+            if (selected != nullptr)
             {
-                state->mCustomState["obscript.animation_group"] = group;
-                state->mCustomState["obscript.animation_mode"] = std::int64_t(mode);
-                state->mCustomState["obscript.animation_playing"] = played;
-                if (played)
+                if (const auto key = store.findFormKey(ESM::RefId(selected->mId)))
+                    idleKey = key->serialize();
+                if (const auto selectedGroup = MWMechanics::oblivionPickIdleAnimationGroup(*selected, skeleton))
                 {
-                    state->mCustomState["obscript.animation_progress"] = 0.0;
-                    state->mCustomState["obscript.animation_loop_count"] = std::int64_t(0);
-                    state->mCustomState["obscript.animation_absolute"] = false;
+                    group = *selectedGroup;
+                    played = playAnimation(actor, group, 0, false);
                 }
             }
-            trace("playgroup ref=" + objectKey().serialize() + " group=" + group
+            trace("pickidle actor=" + objectKey().serialize() + " idle=" + idleKey + " group=" + group
                 + " played=" + (played ? "true" : "false"));
             return std::int64_t(played);
         }

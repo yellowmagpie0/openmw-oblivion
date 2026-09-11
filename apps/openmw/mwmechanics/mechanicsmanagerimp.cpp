@@ -26,6 +26,7 @@
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/player.hpp"
 #include "../mwworld/ptr.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwbase/dialoguemanager.hpp"
 #include "../mwbase/environment.hpp"
@@ -44,6 +45,7 @@
 #include "autocalcspell.hpp"
 #include "combat.hpp"
 #include "npcstats.hpp"
+#include "oblivionai.hpp"
 #include "spellutil.hpp"
 
 namespace
@@ -878,7 +880,7 @@ namespace MWMechanics
         if (ptr.getClass().isActor())
             return mActors.checkAnimationPlaying(ptr, groupName);
         else
-            return false;
+            return mObjects.checkAnimationPlaying(ptr, groupName);
     }
 
     bool MechanicsManager::checkScriptedAnimationPlaying(const MWWorld::Ptr& ptr) const
@@ -1694,6 +1696,13 @@ namespace MWMechanics
     {
         if (observer.getClass().getCreatureStats(observer).isDead() || !observer.getRefData().isEnabled())
             return false;
+
+        auto* world = dynamic_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        if (world != nullptr)
+            if (OblivionAiService* oblivionAi = world->getOblivionAiService();
+                oblivionAi != nullptr && oblivionAi->handles(observer))
+                return oblivionAi->detection(observer, ptr).mDetected;
 
         const MWWorld::Store<ESM::GameSetting>& store
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();

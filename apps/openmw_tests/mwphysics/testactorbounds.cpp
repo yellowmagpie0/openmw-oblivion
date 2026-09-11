@@ -69,10 +69,10 @@ namespace
         source->mCollisionShape.reset(new btBoxShape(btVector3(4, 5, 6)));
         check(npc, {}, {}); // TES3 NPCs must not derive bounds from this shape.
         check(creature, {}, osg::Vec3f(4, 5, 6));
-        check(npc, fallback, osg::Vec3f(4, 5, 6));
+        check(npc, fallback, fallback);
         source->mCollisionBox.mExtents = osg::Vec3f(7, 8, 9);
         check(npc, {}, osg::Vec3f(7, 8, 9));
-        check(npc, fallback, osg::Vec3f(7, 8, 9));
+        check(npc, fallback, fallback);
         check(creature, fallback, osg::Vec3f(7, 8, 9));
     }
 }

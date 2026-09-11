@@ -1031,7 +1031,17 @@ namespace MWWorld
                         // FormKey-keyed state so that embedded-NIF animations
                         // restore through the ordinary object path as well.
                         const auto group = reference.mCustomState.find("obscript.animation_group");
-                        if (group != reference.mCustomState.end())
+                        const auto scripted = reference.mCustomState.find("obscript.animation_scripted");
+                        bool isScripted = true;
+                        if (scripted != reference.mCustomState.end())
+                        {
+                            const auto* value = std::get_if<bool>(&scripted->second);
+                            if (value == nullptr)
+                                throw std::runtime_error("TES4 runtime-state animation scripted flag has the wrong type: "
+                                    + reference.mKey.serialize());
+                            isScripted = *value;
+                        }
+                        if (group != reference.mCustomState.end() && isScripted)
                         {
                             if (const auto* name = std::get_if<std::string>(&group->second))
                             {
@@ -1545,6 +1555,16 @@ namespace MWWorld
 
             const auto animationGroup = reference.mCustomState.find("obscript.animation_group");
             const auto animationProgress = reference.mCustomState.find("obscript.animation_progress");
+            const auto animationScripted = reference.mCustomState.find("obscript.animation_scripted");
+            bool scriptedAnimation = true;
+            if (animationScripted != reference.mCustomState.end())
+            {
+                const auto* value = std::get_if<bool>(&animationScripted->second);
+                if (value == nullptr)
+                    throw std::runtime_error("TES4 runtime-state animation scripted flag has the wrong type: "
+                        + reference.mKey.serialize());
+                scriptedAnimation = *value;
+            }
             std::optional<double> progress;
             if (animationProgress != reference.mCustomState.end())
             {
@@ -1562,7 +1582,7 @@ namespace MWWorld
                 if (const auto* value = std::get_if<bool>(&playing->second); value != nullptr && *value)
                     progress = 1.0;
             }
-            if (animationGroup != reference.mCustomState.end() && progress)
+            if (animationGroup != reference.mCustomState.end() && progress && scriptedAnimation)
             {
                 const auto* group = std::get_if<std::string>(&animationGroup->second);
                 if (group == nullptr || group->empty())

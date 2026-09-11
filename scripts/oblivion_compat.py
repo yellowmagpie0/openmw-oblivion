@@ -2687,8 +2687,12 @@ def validate_m14_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
                 failures.append(f"TES4 runtime-state {name}.{side} is not a valid calendar instant")
         real_value(value, "duration_hours", minimum=0.0)
 
-    if state.get("schema_version") not in (5, 6):
-        failures.append(f"expected AI schema version 5 or 6, got {state.get('schema_version')}")
+    schema_version = state.get("schema_version")
+    valid_ai_schema = (not isinstance(schema_version, bool) and isinstance(schema_version, int)
+        and 5 <= schema_version <= tes4_state.CURRENT_VERSION)
+    if not valid_ai_schema:
+        failures.append(
+            f"expected AI schema version 5 through {tes4_state.CURRENT_VERSION}, got {schema_version}")
     rng = state.get("ai_rng_state", 0)
     if isinstance(rng, bool) or not isinstance(rng, int) or rng <= 0:
         failures.append("AI RNG state is not a non-zero integer")
@@ -2742,11 +2746,15 @@ def validate_m14_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
         integer_value(actor, "tier", 0, minimum=0, maximum=1)
         integer_value(actor, "boundary", 0, minimum=0, maximum=3)
         integer_value(actor, "condition_result", 0, minimum=0, maximum=3)
+        door = text_value(actor, "door")
+        door_animation_started = boolean_value(actor, "door_animation_started")
         interruption = text_value(actor, "interruption_reason", "")
         if len(interruption) > 1024:
             failures.append(f"actor {key} interruption reason is too long")
-        if phase == 3 and text_value(actor, "door") == "null":
+        if phase == 3 and door == "null":
             failures.append(f"actor {key} is in door phase without an intended door")
+        if door_animation_started and (not valid_ai_schema or schema_version < 7 or phase != 3 or door == "null"):
+            failures.append(f"actor {key} has invalid door-animation traversal state")
         for timer in (
             "action_timer", "duration_remaining", "no_progress_seconds", "door_cooldown", "low_process_timer",
             "next_low_process_tick",

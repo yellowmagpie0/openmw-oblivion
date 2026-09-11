@@ -642,6 +642,10 @@ namespace ESM4
                         + " repath=" + std::to_string(actor.mRepathAttempts)
                         + " formation=" + std::to_string(actor.mFormationIndex)
                         + " interruption_size=" + std::to_string(actor.mInterruptionReason.size()));
+                if (actor.mDoorAnimationStarted
+                    && (mVersion < 7 || actor.mPhase != PackagePhase::Door || actor.mDoor.isNull()))
+                    throw std::runtime_error(
+                        "Invalid TES4 actor AI door-animation state: " + actor.mActor.serialize());
                 const auto validTimer = [&](float value, std::string_view name) {
                     if (!std::isfinite(value) || value < 0.f)
                         throw std::runtime_error("Invalid TES4 actor AI " + std::string(name) + ": "
@@ -934,6 +938,8 @@ namespace ESM4
                 writer.integer<std::uint8_t>(actor.mRestrained ? 1 : 0);
                 writer.integer<std::uint8_t>(actor.mActionReserved ? 1 : 0);
                 writer.integer<std::uint8_t>(actor.mHasDestination ? 1 : 0);
+                if (mVersion >= 7)
+                    writer.integer<std::uint8_t>(actor.mDoorAnimationStarted ? 1 : 0);
                 writer.string(actor.mInterruptionReason);
             }
 
@@ -1208,6 +1214,13 @@ namespace ESM4
                 actor.mRestrained = restrained != 0;
                 actor.mActionReserved = reserved != 0;
                 actor.mHasDestination = hasDestination != 0;
+                if (result.mVersion >= 7)
+                {
+                    const std::uint8_t doorAnimationStarted = reader.integer<std::uint8_t>();
+                    if (doorAnimationStarted > 1)
+                        throw std::runtime_error("Invalid TES4 actor AI door-animation flag");
+                    actor.mDoorAnimationStarted = doorAnimationStarted != 0;
+                }
                 actor.mInterruptionReason = reader.string();
                 result.mActorAi.push_back(std::move(actor));
             }
@@ -1529,8 +1542,11 @@ namespace ESM4
                        << ",\"door_cooldown\":" << actor.mDoorCooldown
                        << ",\"low_process_timer\":" << actor.mLowProcessTimer
                        << ",\"next_low_process_tick\":" << actor.mNextLowProcessTick
-                       << ",\"has_destination\":" << (actor.mHasDestination ? "true" : "false")
-                       << ",\"restrained\":"
+                       << ",\"has_destination\":" << (actor.mHasDestination ? "true" : "false");
+                if (mVersion >= 7)
+                    stream << ",\"door_animation_started\":"
+                           << (actor.mDoorAnimationStarted ? "true" : "false");
+                stream << ",\"restrained\":"
                        << (actor.mRestrained ? "true" : "false") << ",\"action_reserved\":"
                        << (actor.mActionReserved ? "true" : "false") << ",\"interruption_reason\":\""
                        << escapeJson(actor.mInterruptionReason) << "\"}";

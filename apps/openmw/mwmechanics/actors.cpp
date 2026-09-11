@@ -41,6 +41,7 @@
 #include "../mwmechanics/aibreathe.hpp"
 
 #include "oblivionai.hpp"
+#include "oblivionaigait.hpp"
 
 #include "../mwrender/vismask.hpp"
 
@@ -1380,6 +1381,9 @@ namespace MWMechanics
 
         const MWWorld::Ptr player = getPlayer();
         const MWBase::World* const world = MWBase::Environment::get().getWorld();
+        const auto* nativeWorld = dynamic_cast<const MWWorld::World*>(world);
+        const MWMechanics::OblivionAiService* const oblivionAi
+            = nativeWorld == nullptr ? nullptr : nativeWorld->getOblivionAiService();
 
         struct CacheEntry
         {
@@ -1423,6 +1427,8 @@ namespace MWMechanics
             bool shouldGiveWay = false;
             bool shouldTurnToApproachingActor = !isMoving;
             MWWorld::Ptr currentTarget; // Combat or pursue target (NPCs should not avoid collision with their targets).
+            const ESM4::RuntimeActorAiState* nativeState
+                = oblivionAi != nullptr && oblivionAi->handles(ptr) ? oblivionAi->state(ptr) : nullptr;
             const auto& aiSequence = ptr.getClass().getCreatureStats(ptr).getAiSequence();
             if (!aiSequence.isEmpty())
             {
@@ -1444,6 +1450,11 @@ namespace MWMechanics
                     shouldTurnToApproachingActor = false;
                 }
             }
+            if (!isMoving && giveWayWhenIdle && nativeState != nullptr)
+            {
+                if (oblivionActorCanProactivelyYield(*nativeState))
+                    shouldGiveWay = true;
+            }
 
             if (!shouldAvoidCollision && !shouldGiveWay)
                 continue;
@@ -1462,12 +1473,21 @@ namespace MWMechanics
             float timeToCollision = timeToCheck;
             osg::Vec2f movementCorrection(0, 0);
             float angleToApproachingActor = 0;
+            std::optional<osg::Vec3f> nearbyMovingActor;
+            std::optional<osg::Vec3f> nearbyMovingDestination;
+            float nearbyMovingActorDistance = std::numeric_limits<float>::max();
 
             // Iterate through all other actors and predict collisions.
             for (const CacheEntry& otherCached : cache)
             {
                 const MWWorld::Ptr& otherPtr = otherCached.mPtr;
                 if (otherPtr == ptr || otherPtr == currentTarget)
+                    continue;
+                if (nativeState != nullptr && nativeState->mPhase != ESM4::PackagePhase::Complete
+                    && !nativeState->mTarget.isNull()
+                    && ((otherPtr == player
+                            && nativeState->mTarget == ESM::FormKey::dynamic("player", 1))
+                        || otherPtr.getCellRef().getFormKey() == nativeState->mTarget))
                     continue;
 
                 const osg::Vec3f& otherHalfExtents = otherCached.mHalfExtents;
@@ -1476,12 +1496,33 @@ namespace MWMechanics
                 const float dist = deltaPos.length();
 
                 // Ignore actors which are not close enough or come from behind.
-                if (dist > maxDistToCheck || relPos.y() < 0)
+                if (dist > maxDistToCheck || (relPos.y() < 0 && !shouldGiveWay))
                     continue;
 
                 // Don't check for a collision if vertical distance is greater then the actor's height.
                 if (deltaPos.z() > halfExtents.z() * 2 || deltaPos.z() < -otherHalfExtents.z() * 2)
                     continue;
+
+                const ESM4::RuntimeActorAiState* otherNativeState
+                    = oblivionAi != nullptr && oblivionAi->handles(otherPtr)
+                    ? oblivionAi->state(otherPtr)
+                    : nullptr;
+                const bool otherIsMoving = otherCached.mMovement.asVec3().length2() > 0.01f
+                    || (otherNativeState != nullptr
+                        && oblivionActorHasMovingIntent(*otherNativeState));
+                if (shouldGiveWay && otherIsMoving && dist <= maxDistForStrictAvoiding
+                    && dist < nearbyMovingActorDistance && otherPtr.getRefData().isEnabled()
+                    && !otherPtr.mRef->isDeleted()
+                    && !otherPtr.getClass().getCreatureStats(otherPtr).isDead()
+                    && oblivionAi->getLOS(otherPtr, ptr))
+                {
+                    nearbyMovingActor = deltaPos;
+                    nearbyMovingDestination = otherNativeState != nullptr
+                            && otherNativeState->mDestinationCell == otherNativeState->mCell
+                        ? std::optional<osg::Vec3f>(otherNativeState->mDestinationPosition.asVec3())
+                        : std::nullopt;
+                    nearbyMovingActorDistance = dist;
+                }
 
                 const osg::Vec3f speed = otherCached.mMovement.asVec3() * otherCached.mMaxSpeed;
                 const float rotZ = otherPtr.getRefData().getPosition().rot[2];
@@ -1503,10 +1544,20 @@ namespace MWMechanics
                     continue;
 
                 // Check visibility and awareness last as it's expensive.
-                if (!MWBase::Environment::get().getWorld()->getLOS(otherPtr, ptr))
-                    continue;
-                if (!MWBase::Environment::get().getMechanicsManager()->awarenessCheck(otherPtr, ptr))
-                    continue;
+                const bool nativePair = oblivionAi != nullptr
+                    && (oblivionAi->handles(ptr) || oblivionAi->handles(otherPtr));
+                if (nativePair)
+                {
+                    if (!oblivionAi->getLOS(otherPtr, ptr))
+                        continue;
+                }
+                else
+                {
+                    if (!MWBase::Environment::get().getWorld()->getLOS(otherPtr, ptr))
+                        continue;
+                    if (!MWBase::Environment::get().getMechanicsManager()->awarenessCheck(otherPtr, ptr))
+                        continue;
+                }
 
                 timeToCollision = t;
                 angleToApproachingActor = std::atan2(deltaPos.x(), deltaPos.y());
@@ -1520,6 +1571,25 @@ namespace MWMechanics
                 if (otherPtr.getClass().getCreatureStats(otherPtr).isDead())
                     // In case of dead body still try to go around (it looks natural), but reduce the correction twice.
                     movementCorrection.y() *= 0.5f;
+            }
+
+            if (nearbyMovingActor && nativeState != nullptr)
+            {
+                const std::optional<osg::Vec3f> idleDestination
+                    = nativeState->mHasDestination && nativeState->mDestinationCell == nativeState->mCell
+                    ? std::optional<osg::Vec3f>(nativeState->mDestinationPosition.asVec3())
+                    : std::nullopt;
+                const std::optional<osg::Vec3f> direction = oblivionProactiveYieldDirection(
+                    basePos, basePos + *nearbyMovingActor, nearbyMovingDestination, idleDestination);
+                if (direction)
+                {
+                    const float desired = std::atan2(direction->x(), direction->y());
+                    zTurn(ptr, desired);
+                    const float relative = desired - ptr.getRefData().getPosition().rot[2];
+                    movement.mPosition[0] = std::sin(relative);
+                    movement.mPosition[1] = std::max(std::cos(relative), 0.f);
+                    continue;
+                }
             }
 
             if (timeToCollision < timeToCheck)
