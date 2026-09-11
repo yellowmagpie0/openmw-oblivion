@@ -1,6 +1,6 @@
 # OpenMW Oblivion Compatibility Program
 
-Status: accepted roadmap; M14 implementation and verification in progress
+Status: accepted roadmap; M14 accepted; M15 combat, stealth, crime, and jail is next
 Target: original English Oblivion 1.2.0416 GOTY data, followed by Shivering Isles,
 Knights of the Nine, and every installed official DLC  
 Compatibility requirement: preserve Morrowind behavior and OpenMW-native saves
@@ -10,7 +10,7 @@ Compatibility requirement: preserve Morrowind behavior and OpenMW-native saves
 This ledger is the resume point. Detailed evidence and open gates live in
 `docs/oblivion/` and generated artifacts live in `build/oblivion-compat/`.
 
-| Milestone | State on 2026-09-01 | Durable report |
+| Milestone | State on 2026-09-11 | Durable report |
 | --- | --- | --- |
 | M0 | Accepted | `docs/oblivion/M0-BASELINE.md` |
 | M1 | Accepted: strict parser, mutation corpus, and official-content sanitizer gates passed | `docs/oblivion/M1-TES4-PARSING.md` |
@@ -26,7 +26,7 @@ This ledger is the resume point. Detailed evidence and open gates live in
 | M11 | Accepted: native TES4 actors, animation, FaceGen, creatures, and visual gates passed | `docs/oblivion/M11-ACTORS-ANIMATION.md` |
 | M12 | Accepted: native player mechanics, character creation, movement, and regression gates passed | `docs/oblivion/M12-PLAYER-MECHANICS.md` |
 | M13 | Accepted: native items, inventory, equipment, locks, and economy gates passed | `docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md` |
-| M14 | In progress: candidate native navigation/AI implementation exists; integration and real-content acceptance gates remain open | `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md` |
+| M14 | Accepted: native pathgrids, AI packages, schedules, detection, companions, horses, and Morrowind gates passed | `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md` |
 
 ## 1. Goal and delivery model
 
@@ -658,6 +658,15 @@ handling.
 | M3 | Complete | `docs/oblivion/M3-STANDALONE-BOOT.md` |
 | M4 | Complete | `docs/oblivion/M4-RUNTIME-STATE.md` |
 | M5 | Complete | `docs/oblivion/M5-INTERACTIVE-INTERIOR.md` |
+| M6 | Complete | `docs/oblivion/M6-OBScript-FRONTEND.md` |
+| M7 | Complete | `docs/oblivion/M7-OBScript-RUNTIME.md` |
+| M8 | Complete | `docs/oblivion/M8-STATIC-RENDERING.md` |
+| M9 | Complete | `docs/oblivion/M9-EXTERIOR-WORLD.md` |
+| M10 | Complete | `docs/oblivion/M10-ENVIRONMENT-MEDIA.md` |
+| M11 | Complete | `docs/oblivion/M11-ACTORS-ANIMATION.md` |
+| M12 | Complete | `docs/oblivion/M12-PLAYER-MECHANICS.md` |
+| M13 | Complete | `docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md` |
+| M14 | Complete | `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md` |
 
 Update this table only after the milestone's deliver, verification, and success
 criteria have all passed. Detailed command output and visual review records

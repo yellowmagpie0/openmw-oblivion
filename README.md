@@ -10,11 +10,11 @@ game(s) and provide their data directories locally.
 
 ## Current status
 
-The latest compatibility ledger (2026-09-01) records milestones M0 through M13
-as accepted. M14 navigation, detection, and AI packages is in progress: a large
-candidate implementation exists, but its integration and real-content evidence
-do not yet satisfy the M14 acceptance plan. This is not a complete Oblivion
-replacement yet; it is an incrementally verified vertical implementation.
+The latest compatibility ledger (2026-09-11) records milestones M0 through M14
+as accepted. M14 navigation, detection, and AI packages passed its integration
+and real-content acceptance gates; M15 combat, stealth, crime, and jail is
+next. This is not a complete Oblivion replacement yet; it is an incrementally
+verified vertical implementation.
 
 The accepted work currently includes:
 
@@ -38,6 +38,10 @@ The accepted work currently includes:
 - Live native items, inventory/container stacks, equipment and quick keys,
   condition/charge, locks and ownership, and barter, repair, recharge, and
   training backends with versioned save persistence.
+- Native TES4 navigation and AI: pathgrid routing, door/cell transitions,
+  package selection and schedules, high/low actor processing, detection,
+  companions, and horses, with real-content tutorial and city-schedule
+  evidence.
 - A deterministic compatibility harness with JSON/HTML evidence, scenario
   manifests, visual captures, Morrowind regression tests, and ASan/UBSan
   parser coverage.
@@ -48,8 +52,8 @@ with proprietary-data fingerprints and generated evidence kept below `build/`.
 
 ## Known limitations
 
-Oblivion support is deliberately bounded at the current milestone. Navigation
-and AI packages, combat/stealth/crime, complete magic and effects, alchemy and
+Oblivion support is deliberately bounded at the current milestone.
+Combat/stealth/crime, complete magic and effects, alchemy and
 enchanting, dialogue/quests, the full native Oblivion UI, and final integration
 and performance work remain later roadmap milestones. The current shared menu
 presentation is functional but is not a claim of M19 UI parity.

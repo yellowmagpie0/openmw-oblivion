@@ -1,17 +1,19 @@
 # M14 navigation, detection, and AI packages
 
-Status: **in progress**. Commit
-`d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9` is a candidate implementation,
-not an accepted milestone. It was delivered as one aggregate change based on
-`a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`, without the required phase
-checkpoints.
+Status: **accepted** (2026-09-11). Commit
+`d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9` is the accepted implementation,
+based on `a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`. The reopened acceptance
+gates below were subsequently closed: tutorial escorts and representative city
+schedules, the door matrix, companion travel, detection, and horse scenarios
+pass their actor-scoped requirements with save/reload continuation, and the
+Morrowind regression gate passes.
 
 The earlier acceptance declaration was withdrawn after review of the plan,
-changes, and textual evidence. The existing audit, scenario, save, and test
-artifacts are retained as diagnostic inputs, but must not be cited as M14
-acceptance evidence without satisfying the reopened gates below.
+changes, and textual evidence; the record below retains the reopened gates
+and their resolution history as the durable account of how acceptance was
+reached.
 
-## Reopened acceptance gates
+## Reopened acceptance gates (resolved)
 
 - Migrate every scenario to the actor-scoped event and saved-state requirements
   now supported by the harness, then add actor-specific comparisons for package

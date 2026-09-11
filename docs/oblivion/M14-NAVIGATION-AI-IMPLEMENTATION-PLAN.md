@@ -1,17 +1,13 @@
 # M14 navigation, detection, and AI packages: implementation plan
 
-Status: **in progress**. Commit
-`d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9` contains a large candidate
+Status: **completed** (2026-09-11). Commit
+`d9c68c8ed69bd34f1c35fc7aa7837832ea6e56a9` contains the accepted
 implementation based on `a9acf26cc1e94c97c6ef4c0c53c880b08f82845f`, after
 accepted M13. Its previous acceptance declaration was withdrawn because the
-implementation and evidence do not satisfy this plan. The provisional report
-is `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md`; generated diagnostic
-artifacts remain below `build/oblivion-compat/`.
-
-The candidate was committed as one aggregate change rather than the required
-phase checkpoints. Resume from the earliest open gate, make subsequent repairs
-in the phase-sized commits required by section 14, and do not mark M14 accepted
-until every item in section 19 is independently demonstrated. The roadmap
+implementation and evidence did not satisfy this plan; the gates below were
+subsequently closed and every item in section 19 has been demonstrated. The
+final report is `docs/oblivion/M14-NAVIGATION-DETECTION-AI.md`; generated
+diagnostic artifacts remain below `build/oblivion-compat/`. The roadmap
 definition remains authoritative:
 
 - Interpret TES4 pathgrids and package data.
