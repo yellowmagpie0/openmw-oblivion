@@ -132,6 +132,12 @@ with save/reload continuation. See
 [`M14-NAVIGATION-DETECTION-AI.md`](M14-NAVIGATION-DETECTION-AI.md) for the
 complete implementation record and acceptance evidence.
 
+M15 is next. Its staged implementation and verification handoff is
+[`M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md`](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md).
+The plan covers combat, stealth, crime, arrest, and jail with explicit
+normal-input campaign and fresh-process save/reload gates; it is not an
+implementation acceptance report.
+
 To try the first interactive slice directly:
 
 ```sh

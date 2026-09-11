@@ -430,6 +430,9 @@ package-order errors.
 
 #### M15 - Combat, stealth, crime, and jail
 
+Implementation handoff:
+[`M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md`](oblivion/M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md).
+
 **Deliver:** Implement melee, ranged combat, blocking, armor/damage, stagger,
 knockdown, weapon condition, projectiles, creature attacks,
 death/ragdoll/loot, sneak, pickpocket, trespass, theft, assault, murder, bounty,
