@@ -164,10 +164,21 @@ namespace ESM4
         friend class PathgridService;
     };
 
+    struct PathgridRegistration
+    {
+        const Pathgrid& mDefinition;
+        ESM::FormKey mCell;
+        PathgridTransform mTransform;
+    };
+
     class PathgridService
     {
     public:
         using ObjectResolver = std::function<PathgridObjectKind(const ESM::FormKey&)>;
+
+        PathgridService() = default;
+        // Build the initial index once, without exposing a partially indexed service.
+        explicit PathgridService(std::span<const PathgridRegistration> registrations);
 
         void registerPathgrid(const Pathgrid& definition, const ESM::FormKey& cell,
             PathgridTransform transform = {});
@@ -234,6 +245,7 @@ namespace ESM4
 
         void rebuildNavigatorPathgrid(const ESM::FormKey& pathgrid);
         void rebuildCoarseGraphIndex();
+        void insertPathgrid(const Pathgrid& definition, const ESM::FormKey& cell, PathgridTransform transform);
     };
 }
 

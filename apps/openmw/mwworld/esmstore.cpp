@@ -606,7 +606,8 @@ namespace MWWorld
         // indexed.  The generic loader has already copied the first stable
         // group parent into mOwningCell, so no file-order or numeric FormID
         // inference is needed here.
-        mOblivionPathgrids.clear();
+        std::vector<ESM4::PathgridRegistration> pathgrids;
+        pathgrids.reserve(get<ESM4::Pathgrid>().getSize());
         for (const ESM4::Pathgrid& pathgrid : get<ESM4::Pathgrid>())
         {
             if (pathgrid.mOwningCell.isNull())
@@ -631,8 +632,9 @@ namespace MWWorld
             // origin a second time would move every native node by one cell.
             transform.mCoordinatesAreLocal = !cell->isExterior();
 
-            mOblivionPathgrids.registerPathgrid(pathgrid, pathgrid.mOwningCell, transform);
+            pathgrids.push_back({ pathgrid, pathgrid.mOwningCell, transform });
         }
+        mOblivionPathgrids = ESM4::PathgridService(pathgrids);
         // PGRI destinations are resolved only after every winning graph is
         // present.  A missing/ambiguous endpoint remains typed as such and is
         // never converted into a wall-crossing fallback.

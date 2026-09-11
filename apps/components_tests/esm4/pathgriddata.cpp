@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <array>
 #include <stdexcept>
 
 #include <components/esm4/pathgriddata.hpp>
@@ -165,4 +166,165 @@ TEST(ESM4PathgridData, CellLifecycleIsStableAndIdempotent)
     EXPECT_FALSE(service.isCellLoaded(cellKey));
     EXPECT_EQ(service.loadedCellCount(), 0u);
     EXPECT_THROW(service.cellLoaded({}), std::invalid_argument);
+}
+
+TEST(ESM4PathgridData, BulkConstructionMatchesIncrementalRegistration)
+{
+    ESM4::Pathgrid first = makeGrid(1, { point(0), point(10) }, { { 0, 1 } });
+    first.mForeign.push_back({ 1, 0, 30, 0, 0 });
+    ESM4::Pathgrid::PGRL object;
+    object.objectKey = key(200);
+    object.linkedNodes = { 1 };
+    first.mObjects.push_back(object);
+    const ESM4::Pathgrid second = makeGrid(2, { point(0), point(10) }, { { 0, 1 } });
+    const ESM4::Pathgrid disconnected = makeGrid(3, { point(1000) });
+    const std::array<ESM4::PathgridRegistration, 3> registrations{ {
+        { first, key(101), {} },
+        { second, key(102), { { 30, 0, 0 }, 1.0f, true } },
+        { disconnected, key(103), {} },
+    } };
+    ESM4::PathgridService bulk(registrations);
+    ESM4::PathgridService incremental;
+    for (const auto& registration : registrations)
+        incremental.registerPathgrid(registration.mDefinition, registration.mCell, registration.mTransform);
+
+    EXPECT_EQ(bulk.graphCount(), incremental.graphCount());
+    EXPECT_EQ(bulk.cells(), incremental.cells());
+    EXPECT_EQ(bulk.route({ key(1), 1 }, { key(2), 0 }).mFailure,
+        ESM4::PathgridRouteFailure::UnresolvedForeignLink);
+    EXPECT_TRUE(bulk.resolveForeignLinks(0.01f));
+    EXPECT_TRUE(incremental.resolveForeignLinks(0.01f));
+    const auto classify = [](const ESM::FormKey&) { return ESM4::PathgridObjectKind::Door; };
+    bulk.classifyObjectLinks(classify);
+    incremental.classifyObjectLinks(classify);
+
+    for (const auto& registration : registrations)
+    {
+        const auto& id = registration.mDefinition.mFormKey;
+        ASSERT_NE(bulk.graphForCell(registration.mCell), nullptr);
+        const auto* graph = bulk.graph(id);
+        ASSERT_NE(graph, nullptr);
+        EXPECT_EQ(graph->worldPoint(0), incremental.graph(id)->worldPoint(0));
+        EXPECT_EQ(graph->localEdges(), incremental.graph(id)->localEdges());
+        EXPECT_EQ(bulk.generation(id), incremental.generation(id));
+        const auto* navigator = bulk.navigatorPathgrid(id);
+        ASSERT_NE(navigator, nullptr);
+        EXPECT_EQ(navigator->mPoints.size(), incremental.navigatorPathgrid(id)->mPoints.size());
+        EXPECT_EQ(navigator->mEdges.size(), incremental.navigatorPathgrid(id)->mEdges.size());
+    }
+    EXPECT_EQ(bulk.graph(key(1))->objectLinks().front().mKind, ESM4::PathgridObjectKind::Door);
+    const auto route = bulk.route({ key(1), 0 }, { key(2), 1 });
+    const auto expected = incremental.route({ key(1), 0 }, { key(2), 1 });
+    ASSERT_TRUE(route);
+    ASSERT_TRUE(expected);
+    EXPECT_EQ(route.mRoute->mNodes, expected.mRoute->mNodes);
+    EXPECT_EQ(route.mRoute->mCost, expected.mRoute->mCost);
+    EXPECT_EQ(route.mRoute->mGeneration, expected.mRoute->mGeneration);
+    EXPECT_EQ(bulk.reachableComponent({ key(1), 0 }), incremental.reachableComponent({ key(1), 0 }));
+    EXPECT_EQ(bulk.route({ key(1), 0 }, { key(3), 0 }).mFailure,
+        ESM4::PathgridRouteFailure::DifferentComponent);
+}
+
+TEST(ESM4PathgridData, BulkConstructionPreservesLiveUpdatesAndUnloadedRoutes)
+{
+    ESM4::Pathgrid first = makeGrid(1, { point(0), point(10) }, { { 0, 1 } });
+    first.mForeign.push_back({ 1, 0, 30, 0, 0 });
+    const ESM4::Pathgrid second = makeGrid(2, { point(30) });
+    const std::array<ESM4::PathgridRegistration, 2> registrations{ {
+        { first, key(101), {} }, { second, key(102), {} },
+    } };
+    ESM4::PathgridService service(registrations);
+    service.resolveForeignLinks(0.01f);
+    const auto* navigator = service.navigatorPathgrid(key(1));
+    ASSERT_NE(navigator, nullptr);
+    EXPECT_TRUE(service.cellLoaded(key(101)));
+    EXPECT_TRUE(service.cellUnloaded(key(101)));
+    EXPECT_TRUE(service.route({ key(1), 0 }, { key(2), 0 }));
+    EXPECT_EQ(service.graphCount(), 2u);
+
+    const auto beforeOverlay = service.generation(key(1));
+    EXPECT_TRUE(service.setNodeEnabled({ key(1), 1 }, false));
+    EXPECT_GT(service.generation(key(1)), beforeOverlay);
+    EXPECT_FALSE(service.route({ key(1), 0 }, { key(2), 0 }));
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), navigator);
+    EXPECT_TRUE(service.navigatorPathgrid(key(1))->mEdges.empty());
+    const auto disabled = service.disabledNodes();
+    ASSERT_EQ(disabled.size(), 1u);
+    ESM4::PathgridService restored(registrations);
+    restored.resolveForeignLinks(0.01f);
+    restored.applyOverlay(disabled.front(), false);
+    EXPECT_FALSE(restored.route({ key(1), 0 }, { key(2), 0 }));
+    EXPECT_EQ(restored.disabledNodes(), disabled);
+    EXPECT_TRUE(service.setNodeEnabled({ key(1), 1 }, true));
+    EXPECT_TRUE(service.route({ key(1), 0 }, { key(2), 0 }));
+
+    const auto beforeRemoval = service.generation(key(1));
+    EXPECT_TRUE(service.cellLoaded(key(102)));
+    EXPECT_TRUE(service.unregisterPathgrid(key(2)));
+    EXPECT_FALSE(service.isCellLoaded(key(102)));
+    EXPECT_GT(service.generation(key(1)), beforeRemoval);
+    EXPECT_FALSE(service.graph(key(1))->foreignLinks().front().mDestination);
+    service.registerPathgrid(second, key(102));
+    EXPECT_TRUE(service.route({ key(1), 0 }, { key(2), 0 }));
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), navigator);
+
+    service.registerPathgrid(second, key(104), { { 100, 0, 0 }, 1.0f, true });
+    EXPECT_EQ(service.graphForCell(key(102)), nullptr);
+    ASSERT_NE(service.graphForCell(key(104)), nullptr);
+    EXPECT_EQ(service.route({ key(1), 1 }, { key(2), 0 }).mFailure,
+        ESM4::PathgridRouteFailure::UnresolvedForeignLink);
+    service.registerPathgrid(second, key(104));
+    EXPECT_TRUE(service.route({ key(1), 0 }, { key(2), 0 }));
+}
+
+TEST(ESM4PathgridData, FailedBulkConstructionPreservesExistingService)
+{
+    const ESM4::Pathgrid first = makeGrid(1, { point(0) });
+    const ESM4::Pathgrid second = makeGrid(2, { point(10) });
+    const ESM4::Pathgrid invalid = makeGrid(3, { point(0) }, { { 0, 2 } });
+    ESM4::PathgridService service;
+    service.registerPathgrid(first, key(101));
+    service.cellLoaded(key(101));
+    service.setNodeEnabled({ key(1), 0 }, false);
+    const auto* navigator = service.navigatorPathgrid(key(1));
+    const auto generation = service.generation(key(1));
+    const std::array<ESM4::PathgridRegistration, 2> ambiguous{ {
+        { first, key(101), {} }, { second, key(101), {} },
+    } };
+    EXPECT_THROW(service = ESM4::PathgridService(ambiguous), std::logic_error);
+    const std::array<ESM4::PathgridRegistration, 2> malformed{ {
+        { first, key(101), {} }, { invalid, key(103), {} },
+    } };
+    EXPECT_THROW(service = ESM4::PathgridService(malformed), std::invalid_argument);
+    const std::array<ESM4::PathgridRegistration, 1> missingCell{ { { first, {}, {} } } };
+    EXPECT_THROW(service = ESM4::PathgridService(missingCell), std::invalid_argument);
+    EXPECT_EQ(service.graphCount(), 1u);
+    EXPECT_TRUE(service.isCellLoaded(key(101)));
+    EXPECT_FALSE(service.isNodeEnabled({ key(1), 0 }));
+    EXPECT_EQ(service.generation(key(1)), generation);
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), navigator);
+}
+
+TEST(ESM4PathgridData, BulkConstructionSupportsEmptyAndReplacedGraphs)
+{
+    ESM4::PathgridService empty(std::span<const ESM4::PathgridRegistration>{});
+    EXPECT_EQ(empty.graphCount(), 0u);
+    EXPECT_FALSE(empty.resolveForeignLinks(0.01f));
+
+    const ESM4::Pathgrid first = makeGrid(1, { point(0) });
+    const ESM4::Pathgrid replacement = makeGrid(1, { point(20) });
+    const std::array<ESM4::PathgridRegistration, 2> registrations{ {
+        { first, key(101), {} }, { replacement, key(102), {} },
+    } };
+    ESM4::PathgridService service(registrations);
+    EXPECT_EQ(service.graphCount(), 1u);
+    EXPECT_EQ(service.graphForCell(key(101)), nullptr);
+    ASSERT_NE(service.graphForCell(key(102)), nullptr);
+    EXPECT_EQ(service.graphForCell(key(102))->worldPoint(0), (ESM4::PathgridPoint{ 20, 0, 0 }));
+    service.clear();
+    EXPECT_EQ(service.graphCount(), 0u);
+    EXPECT_TRUE(service.cells().empty());
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), nullptr);
+    service.registerPathgrid(first, key(101));
+    EXPECT_TRUE(service.route({ key(1), 0 }, { key(1), 0 }));
 }

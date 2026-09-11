@@ -419,7 +419,24 @@ namespace ESM4
         return changed;
     }
 
+    PathgridService::PathgridService(std::span<const PathgridRegistration> registrations)
+    {
+        for (const PathgridRegistration& registration : registrations)
+            insertPathgrid(registration.mDefinition, registration.mCell, registration.mTransform);
+        rebuildCoarseGraphIndex();
+    }
+
     void PathgridService::registerPathgrid(const Pathgrid& definition, const ESM::FormKey& cell,
+        PathgridTransform transform)
+    {
+        insertPathgrid(definition, cell, transform);
+        if (mForeignLinkTolerance)
+            resolveForeignLinks(*mForeignLinkTolerance);
+        else
+            rebuildCoarseGraphIndex();
+    }
+
+    void PathgridService::insertPathgrid(const Pathgrid& definition, const ESM::FormKey& cell,
         PathgridTransform transform)
     {
         if (definition.mFormKey.isNull() || cell.isNull())
@@ -443,10 +460,6 @@ namespace ESM4
         mGraphs.insert_or_assign(definition.mFormKey, std::move(graph));
         mNavigatorPathgrids.insert_or_assign(definition.mFormKey, std::move(navigatorPathgrid));
         mCells[cell] = definition.mFormKey;
-        if (mForeignLinkTolerance)
-            resolveForeignLinks(*mForeignLinkTolerance);
-        else
-            rebuildCoarseGraphIndex();
     }
 
     bool PathgridService::unregisterPathgrid(const ESM::FormKey& pathgrid)
