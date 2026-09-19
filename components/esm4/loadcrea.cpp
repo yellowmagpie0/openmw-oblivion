@@ -37,6 +37,11 @@
 
 void ESM4::Creature::load(ESM4::Reader& reader)
 {
+    *this = {};
+    const bool tes4 = !reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f);
+    std::optional<SoundType> soundType;
+    std::optional<Sound> pendingSound;
+    bool hasData = false;
     mId = reader.getFormIdFromHeader();
     mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
@@ -110,22 +115,81 @@ void ESM4::Creature::load(ESM4::Reader& reader)
                     reader.get(&mBaseConfig, 16); // TES4
                 break;
             case ESM::fourCC("DATA"):
-                if (subHdr.dataSize == 17) // FO3
+                if (!tes4 && subHdr.dataSize == 17) // FO3
                     reader.skipSubRecordData();
                 else
-                    reader.get(mData);
+                {
+                    if (tes4 && (hasData || subHdr.dataSize != sizeof(Data)))
+                        reader.fail("CREA DATA has duplicate or invalid native layout");
+                    if (!reader.getExact(mData))
+                        reader.fail("CREA DATA is truncated");
+                    if (tes4 && (mData.creatureType > 5 || mData.soul > 5))
+                        reader.fail("CREA DATA type or soul outside native domain");
+                    hasData = true;
+                }
+                break;
+            case ESM::fourCC("RNAM"):
+                if (tes4)
+                {
+                    std::uint8_t reach = 0;
+                    if (mAttackReach || subHdr.dataSize != 1 || !reader.getExact(reach))
+                        reader.fail("CREA RNAM has duplicate or invalid native layout");
+                    mAttackReach = reach;
+                }
+                else
+                    reader.skipSubRecordData();
                 break;
             case ESM::fourCC("ZNAM"):
                 reader.getFormId(mCombatStyle);
                 break;
             case ESM::fourCC("CSCR"):
-                reader.getFormId(mSoundBase);
+            {
+                ESM::FormId32 raw = 0;
+                if (subHdr.dataSize != 4 || !reader.getExact(raw))
+                    reader.fail("CREA CSCR has invalid layout");
+                mSoundBase = ESM::FormId::fromUint32(raw);
+                reader.recordRawFormId(mSoundBase);
+                mSoundBaseKey = reader.resolveRawFormId(mSoundBase);
+                reader.adjustFormId(mSoundBase);
+                break;
+            }
+            case ESM::fourCC("CSDT"):
+                if (tes4)
+                {
+                    std::uint32_t value = 0;
+                    if (pendingSound || subHdr.dataSize != 4 || !reader.getExact(value) || value > 9)
+                        reader.fail("CREA CSDT has invalid type, layout or order");
+                    soundType = static_cast<SoundType>(value);
+                }
+                else
+                    reader.skipSubRecordData();
                 break;
             case ESM::fourCC("CSDI"):
-                reader.getFormId(mSound);
+                if (tes4)
+                {
+                    ESM::FormId32 raw = 0;
+                    if (!soundType || pendingSound || subHdr.dataSize != 4 || !reader.getExact(raw))
+                        reader.fail("CREA CSDI has invalid layout or order");
+                    mSound = ESM::FormId::fromUint32(raw);
+                    reader.recordRawFormId(mSound);
+                    const ESM::FormKey key = reader.resolveRawFormId(mSound);
+                    reader.adjustFormId(mSound);
+                    pendingSound = Sound{ *soundType, mSound, key, 0 };
+                }
+                else
+                    reader.getFormId(mSound);
                 break;
             case ESM::fourCC("CSDC"):
-                reader.get(mSoundChance);
+                if (tes4)
+                {
+                    if (!pendingSound || subHdr.dataSize != 1 || !reader.getExact(mSoundChance) || mSoundChance > 100)
+                        reader.fail("CREA CSDC has invalid chance, layout or order");
+                    pendingSound->mChance = mSoundChance;
+                    mSounds.push_back(*pendingSound);
+                    pendingSound.reset();
+                }
+                else
+                    reader.get(mSoundChance);
                 break;
             case ESM::fourCC("BNAM"):
                 reader.get(mBaseScale);
@@ -176,8 +240,6 @@ void ESM4::Creature::load(ESM4::Reader& reader)
                 reader.getFormId(mBodyParts.emplace_back());
                 break;
             case ESM::fourCC("MODT"):
-            case ESM::fourCC("RNAM"):
-            case ESM::fourCC("CSDT"):
             case ESM::fourCC("OBND"): // FO3
             case ESM::fourCC("EAMT"): // FO3
             case ESM::fourCC("VTCK"): // FO3
@@ -198,6 +260,8 @@ void ESM4::Creature::load(ESM4::Reader& reader)
                 throw std::runtime_error("ESM4::CREA::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
     }
+    if (pendingSound)
+        reader.fail("CREA sound is missing its CSDC chance");
 }
 
 // void ESM4::Creature::save(ESM4::Writer& writer) const

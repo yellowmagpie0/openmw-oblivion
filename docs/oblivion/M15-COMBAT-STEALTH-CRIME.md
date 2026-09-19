@@ -806,3 +806,38 @@ Python suite passes 137 tests (`S2/audit-06/python-tests.log`). The CLI prints a
 compact summary and links the complete local inventory rather than duplicating
 its million-reference report to stdout. Runtime crime, incarceration and
 release are still pending; these checks establish the data topology only.
+
+### S2 native creature combat input preservation
+
+The native CREA reader now retains optional attack reach, all typed sound
+slots/probabilities and stable inherited/individual sound identities. Soul is
+correctly separated from its padding byte. Loading resets the reused record,
+and malformed native DATA/RNAM/sound lengths, domains, duplicate reach and
+unfinished/unordered sound entries fail explicitly. Later-game sound parsing
+keeps its separate path. `esmtool` exposes the native fields for inspection.
+
+The first malformed-reach/orphan-sound test failed against the old reader
+(`S2/creature-01/red-tests.log`). Three focused creature tests now pass,
+including lengths 0–29, padding, zero/100/101/255 chance boundaries, multi-slot
+preservation and missing-data behavior. The complete normal build passes
+1,642 component and 547 engine tests, with exact inventories and no skips.
+All nine creature/style tests also pass with ASan/UBSan; all 11 official plugins
+parse under those sanitizers without findings. Independent grouped-layout
+Python readback agrees with native output for all **1,001 physical creature
+records and 771 sound entries** across the 11 plugins (992 winning creature
+bases after overrides). Evidence: `S2/creature-01/{test-inventory,
+independent-native-comparison,sanitize-native-read}.json` and adjacent logs.
+
+The unchanged M14 city schedule/save course passes with the rebuilt native
+engine (`creature-01/city/scenario.json`). Both captures were opened: textures,
+geometry, HUD and navigation overlay are present; the inherited downward
+camera/player-body framing remains unsuitable as M15 visual acceptance.
+The tested source/test diff SHA-256 is
+`278ea4c425c935e887a1a2eef3a5a663769ab5574df9ec52b45baee9eb0ae950`.
+
+An isolated original executable launch was also attempted in
+`S2/original-01`, using a fresh local Proton prefix. It produced application
+load error `P:0000065432` before gameplay; its screenshot and launch/Proton logs
+are retained. The dialog was dismissed and that run exited. No original-game
+behavioral probe has passed, and static initializer inspection is not counted
+as one. The native rule/default oracle remains the next open S2 requirement.

@@ -28,6 +28,7 @@
 #define ESM4_CREA_H
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -96,17 +97,37 @@ namespace ESM4
 #pragma pack(push, 1)
         struct Data
         {
-            std::uint8_t unknown;
+            std::uint8_t creatureType;
             std::uint8_t combat;
             std::uint8_t magic;
             std::uint8_t stealth;
-            std::uint16_t soul;
+            std::uint8_t soul;
+            std::uint8_t soulPadding;
             std::uint16_t health;
             std::uint16_t unknown2;
             std::uint16_t damage;
             AttributeValues attribs;
         };
 #pragma pack(pop)
+
+        enum class SoundType : std::uint32_t
+        {
+            LeftFoot, RightFoot, LeftBackFoot, RightBackFoot, Idle,
+            Aware, Attack, Hit, Death, Weapon
+        };
+
+        struct Sound
+        {
+            SoundType mType{};
+            ESM::FormId mId;
+            ESM::FormKey mKey;
+            std::uint8_t mChance{};
+        };
+
+        // Missing data stays explicit; no guessed reach or sound defaults.
+        std::optional<std::uint8_t> mAttackReach;
+        std::vector<Sound> mSounds;
+        ESM::FormKey mSoundBaseKey;
 
         ESM::FormId mId; // from the header
         ESM::FormKey mFormKey; // stable identity, independent of load-order indices

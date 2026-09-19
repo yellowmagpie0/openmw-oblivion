@@ -54,3 +54,21 @@ when every structural content check passes. Future entries must state units,
 rounding/clamping order, thresholds, supported version, independent expected
 values and exact retained original-game probe evidence. Do not infer gameplay
 acceptance from this document or the inventory counts.
+
+## Creature and equipment input layouts
+
+The same pinned xEdit definitions independently describe CREA DATA as 20 bytes:
+creature type, three skills, one-byte soul plus padding, health, padding,
+attack damage and eight attributes. RNAM is one-byte reach. CSDT selects one
+of ten sound families; each following CSDI/CSDC pair is an individual sound and
+byte percentage. A family can contain multiple pairs; later families must not
+overwrite earlier entries. Native readback matches independent decoding of all
+1,001 installed physical creature records, including all 771 sound entries.
+This establishes record semantics, not animation timing or audible acceptance.
+
+WEAP DATA is 30 bytes, AMMO DATA 18 bytes, and ARMO DATA 14 bytes. Equipment
+weight/speed/reach are finite floats; weapon/ammo damage and armor hundredths
+are unsigned 16-bit integers. The audit treats reserved padding as padding,
+preserves all native equipment, and marks enchantment/staff execution as M16.
+Crime ownership and faction values are inventoried without inferring their
+runtime formula or access policy.

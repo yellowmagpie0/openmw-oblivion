@@ -229,6 +229,20 @@ namespace EsmTool
                     std::cout << "\n  CombatAdvanced: dodgeFatigue=" << value.mAdvanced->mDodgeFatigueMultiplier
                               << " attackDuringBlock=" << value.mAdvanced->mAttackDuringBlock;
             }
+            if constexpr (std::is_same_v<T, ESM4::Creature>)
+            {
+                if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                {
+                    std::cout << "\n  CreatureCombat: type=" << unsigned(value.mData.creatureType)
+                              << " soul=" << unsigned(value.mData.soul) << " damage=" << value.mData.damage;
+                    if (value.mAttackReach)
+                        std::cout << " reach=" << unsigned(*value.mAttackReach);
+                    std::cout << " soundBase=" << value.mSoundBaseKey.serialize();
+                    for (const auto& sound : value.mSounds)
+                        std::cout << "\n  CreatureSound: type=" << unsigned(sound.mType)
+                                  << " sound=" << sound.mKey.serialize() << " chance=" << unsigned(sound.mChance);
+                }
+            }
             if constexpr (ESM4::HasFullName<T>)
                 std::cout << "\n  FullName: " << value.mFullName;
             if constexpr (ESM4::HasCellFlags<T>)
