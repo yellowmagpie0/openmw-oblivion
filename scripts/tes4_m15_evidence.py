@@ -217,8 +217,8 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         _unique([(a["snapshot"], a["actor"], a["path"]) for a in assertions], "state assertion")
         if any(a["actor"] not in (case["actor"], case["target"]) for a in assertions):
             raise _error("state assertions must concern the named actor or target")
-    reserved = {settings["event_file"], "scenario.json", "m15-session.json", "m15-manifest.json", "process.log"}
-    if len(reserved) != 5 or reserved & captures:
+    reserved = {settings["event_file"], "scenario.json", "m15-session.json", "m15-manifest.json", "process.log", ".m15-origin"}
+    if len(reserved) != 6 or reserved & captures:
         raise _error("evidence paths collide with reserved output")
     for artifact in settings["artifacts"]:
         path = relative_path(artifact["path"]).as_posix()
@@ -273,6 +273,9 @@ def field(value: Any, path: list[str | int]) -> Any:
 
 
 def validate_events(events: list[dict[str, Any]], run_id: str, epoch: int, pid: int) -> None:
+    if (not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", run_id)
+            or type(epoch) is not int or epoch <= 0 or type(pid) is not int or pid <= 0):
+        raise _error("invalid process/run identity")
     if len(events) < 2:
         raise _error("missing event stream or closing summary")
     tick = -1
@@ -407,6 +410,17 @@ def read_events(path: Path) -> list[dict[str, Any]]:
     return result
 
 
+def diagnostic_counts(log: str) -> dict[str, int]:
+    lines = log.splitlines()
+    return {
+        "error_log_lines": sum(bool(re.search(r"\sE\]", line)) for line in lines),
+        "unsupported_log_lines": sum(bool(re.search(r"Unsupported ObScript command|deferred command=", line))
+                                     for line in lines),
+        "sanitizer_log_lines": sum(bool(re.search(r"AddressSanitizer|UndefinedBehaviorSanitizer|runtime error:", line))
+                                   for line in lines),
+    }
+
+
 def _check_config(manifest: dict[str, Any], output: Path) -> None:
     allowed = {"replace", "resources", "data", "content", "fallback-archive", "start", "skip-menu",
                "new-game", "no-grab", "user-data", "encoding"}
@@ -496,6 +510,14 @@ class Session:
         # written into an evidence label or an unused environment variable.
         self.command = [*command, f"--random-seed={self.settings['seed']}"]
         self.output.mkdir(parents=True, exist_ok=True)
+        origin = self.output / ".m15-origin"
+        with origin.open("x") as stream:
+            stream.write(self.run_id + "\n")
+        # Compare timestamps from the same filesystem clock. Wall-clock time_ns
+        # and inode timestamps need not have identical resolution/rounding.
+        # Fresh exclusive output, run IDs and capture hashes are also required.
+        self.filesystem_start_ns = origin.stat().st_mtime_ns
+        self._receipt(".m15-origin")
         output_path(self.output, self.settings["event_file"]).parent.mkdir(parents=True, exist_ok=True)
 
     def environment(self) -> dict[str, str]:
@@ -518,15 +540,21 @@ class Session:
         manifest_digest = self._receipt("m15-manifest.json")
         metadata = {"run_id": self.run_id, "epoch": self.epoch, "pid": pid,
                     "started_ns": self.started_ns, "engine_sha256": self.engine_digest,
+                    "filesystem_start_ns": self.filesystem_start_ns,
                     "manifest_sha256": manifest_digest,
                     "inputs": self.settings["inputs"], "command": self.command}
         (self.output / "m15-session.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        self._receipt("m15-session.json")
+        # settings.cfg is legitimately rewritten by the engine at shutdown;
+        # its initial contents are covered by the immutable expanded manifest.
+        if output_path(self.output, "config/openmw.cfg").exists():
+            self._receipt("config/openmw.cfg")
 
     def _receipt(self, relative: str) -> str:
         if relative in self.receipts:
             raise _error(f"artifact already captured: {relative}")
         path = output_path(self.output, relative)
-        if path.stat().st_mtime_ns < self.started_ns:
+        if path.stat().st_mtime_ns < self.filesystem_start_ns:
             raise _error(f"stale artifact: {relative}")
         self.receipts[relative] = digest(path)
         return self.receipts[relative]
@@ -534,7 +562,7 @@ class Session:
     def snapshot(self, action: dict[str, Any]) -> dict[str, Any]:
         name = action["name"]
         source = output_path(self.output, action["save"])
-        if source.stat().st_mtime_ns < self.started_ns:
+        if source.stat().st_mtime_ns < self.filesystem_start_ns:
             raise _error("snapshot source save predates the process")
         relative_save = f"snapshots/{name}.omwsave"
         copy = output_path(self.output, relative_save)
@@ -587,6 +615,9 @@ class Session:
         failures = []
         results = []
         try:
+            for path in ("process.log", self.settings["event_file"]):
+                if output_path(self.output, path).exists():
+                    self._receipt(path)
             if not actions_complete:
                 raise _error("process exited before every required action completed")
             for pattern in ERROR_PATTERNS:
@@ -612,6 +643,125 @@ class Session:
             results = [{"id": case["id"], "passed": False, "failures": failures or ["case was not executed"]}
                        for case in self.settings["cases"]]
         return {"run_id": self.run_id, "epoch": self.epoch, "pid": self.pid,
+                "receipts": dict(self.receipts),
+                "diagnostics": diagnostic_counts(log),
                 "case_count": len(results), "passed_count": sum(r["passed"] for r in results),
                 "cases": results, "failures": failures,
                 "passed": not failures and bool(results) and all(r["passed"] for r in results)}
+
+
+def verify_run(output: Path) -> dict[str, Any]:
+    """Replay a completed run's captured evidence without launching or changing it.
+
+    Receipts establish integrity relative to the trusted runner's recorded
+    result, not a cryptographic signature from an untrusted remote producer.
+    The original engine/content paths need not still exist after a checkout;
+    their execution-time fingerprints remain in the captured metadata.
+    """
+    failures: list[str] = []
+    cases: list[dict[str, Any]] = []
+    settings: dict[str, Any] = {}
+    try:
+        output = output.resolve()
+        recorded = _read_json(output / "scenario.json")
+        manifest = _read_json(output / "m15-manifest.json")
+        metadata = _read_json(output / "m15-session.json")
+        if not all(isinstance(value, dict) for value in (recorded, manifest, metadata)):
+            raise _error("run envelope must contain objects")
+        validate_manifest(manifest)
+        settings = manifest["m15"]
+        outcome = recorded.get("m15")
+        if not isinstance(outcome, dict) or not isinstance(outcome.get("receipts"), dict):
+            raise _error("run has no final capture receipts")
+        for key in ("run_id", "epoch", "pid"):
+            if outcome.get(key) != metadata[key]:
+                raise _error("recorded outcome and process metadata disagree")
+        receipts = outcome["receipts"]
+        if type(metadata.get("filesystem_start_ns")) is not int or metadata["filesystem_start_ns"] <= 0:
+            raise _error("missing filesystem freshness epoch")
+        required = {".m15-origin", "m15-manifest.json", "m15-session.json", "process.log", settings["event_file"]}
+        required.update(a["path"] for a in settings["artifacts"])
+        if not required <= receipts.keys():
+            raise _error("run is missing required capture receipts")
+        for path, fingerprint in receipts.items():
+            if not isinstance(fingerprint, str) or not re.fullmatch(r"[0-9a-f]{64}", fingerprint):
+                raise _error("invalid artifact fingerprint")
+            if digest(output_path(output, path)) != fingerprint:
+                raise _error(f"captured evidence was replaced or edited: {path}")
+            if output_path(output, path).stat().st_mtime_ns < metadata["filesystem_start_ns"]:
+                raise _error(f"captured evidence predates the run: {path}")
+        if (output / ".m15-origin").read_text() != metadata["run_id"] + "\n":
+            raise _error("filesystem origin belongs to a different run")
+        if receipts["m15-manifest.json"] != metadata["manifest_sha256"]:
+            raise _error("manifest differs from launch provenance")
+        expected_command = [*manifest["command"], f"--random-seed={settings['seed']}"]
+        if metadata["command"] != expected_command or recorded.get("command") != expected_command:
+            raise _error("recorded launch differs from the declared engine and seed")
+        if not isinstance(recorded.get("actions"), list) or len(recorded["actions"]) != len(manifest["actions"]):
+            raise _error("required actions were not all executed")
+        if any(a.get("passed") is not True for a in recorded["actions"]):
+            raise _error("a recorded action failed")
+        for planned, actual in zip(manifest["actions"], recorded["actions"]):
+            if actual.get("type") != planned["type"] or actual.get("phase") != planned["phase"]:
+                raise _error("recorded action provenance differs from the declared phase/input")
+        if (outcome.get("passed") is not True or recorded.get("passed") is not True or recorded.get("actions_complete") is not True
+                or recorded.get("timed_out") is not False or recorded.get("exit_code") != 0):
+            raise _error("original run failed or did not complete normally")
+        log = (output / "process.log").read_text(encoding="utf-8", errors="replace")
+        if outcome.get("diagnostics") != diagnostic_counts(log):
+            raise _error("recorded diagnostic counts disagree with captured engine log")
+        for pattern in ERROR_PATTERNS:
+            if re.search(pattern, log):
+                raise _error(f"engine/unsupported/sanitizer diagnostic matched {pattern}")
+        events = read_events(output_path(output, settings["event_file"]))
+        validate_events(events, metadata["run_id"], metadata["epoch"], metadata["pid"])
+        snapshots = {}
+        boundaries = set()
+        for action in manifest["actions"]:
+            if action["type"] != "m15_snapshot":
+                continue
+            name = action["name"]
+            relative = f"snapshots/{name}.json"
+            if relative not in receipts:
+                raise _error(f"snapshot has no capture receipt: {name}")
+            snapshot = _read_json(output_path(output, relative))
+            if (snapshot["run_id"] != metadata["run_id"] or snapshot["epoch"] != metadata["epoch"]
+                    or snapshot["name"] != name or type(snapshot["ordinal"]) is not int
+                    or type(snapshot["event_sequence"]) is not int):
+                raise _error("snapshot process identity or ordering is invalid")
+            sequence = snapshot["event_sequence"]
+            if sequence in boundaries or not 1 <= sequence <= len(events):
+                raise _error("snapshot reuses or lacks a completed save boundary")
+            boundaries.add(sequence)
+            boundary = events[sequence - 1]
+            if boundary["event"] != "save-complete":
+                raise _error("snapshot did not observe a completed save")
+            relative_save = snapshot["save"]
+            if relative_save not in receipts or receipts[relative_save] != snapshot["save_sha256"]:
+                raise _error("saved-game copy has no matching capture receipt")
+            if snapshot["save_sha256"] != boundary["save_sha256"]:
+                raise _error("saved-game copy differs from engine acknowledgment")
+            state = tes4_runtime_state.load_save(output_path(output, relative_save))
+            live_path = output_path(output, settings["event_file"]).parent / relative_path(boundary["live"])
+            live_relative = live_path.relative_to(output).as_posix()
+            if (live_relative != snapshot["live"] or live_relative not in receipts
+                    or receipts[live_relative] != boundary["live_sha256"]
+                    or snapshot["live_sha256"] != boundary["live_sha256"]):
+                raise _error("live-state copy differs from engine acknowledgment")
+            if not _equal(state, snapshot["state"]) or not _equal(state, _read_json(live_path)):
+                raise _error("disk save, captured snapshot and live observation disagree")
+            for required_reference in settings.get("required_references", []):
+                actual = actor_state(state, required_reference["key"])
+                if any(k not in actual or not _equal(actual[k], v) for k, v in required_reference.items()):
+                    raise _error("required world reference differs")
+            snapshots[name] = snapshot
+        cases = evaluate_cases(settings["cases"], events, snapshots, metadata["run_id"], metadata["epoch"])
+        if outcome.get("case_count") != len(cases) or outcome.get("passed_count") != sum(c["passed"] for c in cases):
+            raise _error("recorded case counts disagree with independently replayed results")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError) as error:
+        failures.append(str(error))
+    if not cases:
+        cases = [{"id": c["id"], "passed": False, "failures": failures or ["case was not verified"]}
+                 for c in settings.get("cases", [])]
+    return {"kind": "m15-evidence-replay", "case_count": len(cases), "cases": cases,
+            "failures": failures, "passed": not failures and bool(cases) and all(c["passed"] for c in cases)}

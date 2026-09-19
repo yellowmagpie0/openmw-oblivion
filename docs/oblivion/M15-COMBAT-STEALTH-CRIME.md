@@ -568,3 +568,24 @@ The inspected screenshot shows the room's continuous floor, walls and ceiling,
 readable shared HUD and native icon. This accepts the narrow read-only save
 observation course, not M15 gameplay or S1 as a whole. Fresh-process continuation
 and offline evidence-corruption replay are the next open S1 work.
+
+### S1 offline evidence replay
+
+`oblivion_compat.py m15-verify <run-directory>` independently reopens final
+receipts, launch provenance, event identities, every native save/live snapshot,
+required references, diagnostic counts and causal case assertions. It does not
+launch inputs or rewrite the evidence. Original executable/content fingerprints
+remain provenance, so checking out another revision does not invalidate replay.
+Receipts provide integrity against the trusted runner's record, not a signature
+against an attacker who rewrites the entire evidence bundle.
+
+`S1/replay-02/course` passes both execution and offline replay. Ten copies with
+edited save/state bytes, stale or missing capture, old run identity, missing
+summary, hidden command, engine error, incomplete actions or changed phase all
+fail replay; the original still passes. The first phase-control attempt changed
+an already-setup action and therefore correctly passed; the corrected control
+changes an actual exercise action. Both attempts remain local evidence.
+All 119 Python tests pass. Freshness uses an exclusive filesystem origin and
+same-filesystem timestamps, avoiding a transient wall-clock/inode comparison
+failure; repeated timing experiments did not reproduce its original cause.
+Fresh-process continuation remains outstanding; this does not close S1.

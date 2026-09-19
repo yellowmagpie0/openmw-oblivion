@@ -5193,6 +5193,10 @@ def make_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--maximum-mean", type=float, default=0.999)
     inspect.add_argument("--report", type=Path)
 
+    m15_verify = subparsers.add_parser("m15-verify", help="replay immutable M15 run evidence without executing inputs")
+    m15_verify.add_argument("directory", type=Path)
+    m15_verify.add_argument("--report", type=Path)
+
     scenario = subparsers.add_parser("scenario", help="execute a deterministic scenario manifest")
     scenario.add_argument("manifest", type=Path)
     scenario.add_argument("--output", type=Path, required=True)
@@ -5392,6 +5396,12 @@ def main(argv: list[str] | None = None) -> int:
             variables = parse_variables(args.variable)
             variables.setdefault("source", str(Path(__file__).resolve().parents[1]))
             result = run_scenario(args.manifest.resolve(), args.output.resolve(), variables)
+        elif args.command == "m15-verify":
+            result = tes4_m15.verify_run(args.directory)
+            if args.report:
+                if args.report.resolve().is_relative_to(args.directory.resolve()):
+                    raise ValueError("M15 replay reports must not overwrite the evidence directory")
+                write_json(args.report, result)
         elif args.command == "form-graph":
             result = run_form_graph(args)
         elif args.command == "m3-acceptance":

@@ -441,6 +441,20 @@ class M15SessionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "symlink"):
             m15.output_path(self.output, "escape/outside")
 
+    def test_freshness_uses_filesystem_epoch_and_still_rejects_stale_capture(self):
+        with mock.patch.object(m15.time, "time_ns", return_value=10**20):
+            session = self.session()
+            session.start(42)
+        fresh = self.output / "fresh.png"
+        fresh.write_bytes(b"new capture")
+        session._receipt("fresh.png")
+        stale = self.output / "stale.png"
+        stale.write_bytes(b"old capture")
+        old = session.filesystem_start_ns - 1_000_000_000
+        os.utime(stale, ns=(old, old))
+        with self.assertRaisesRegex(ValueError, "stale"):
+            session._receipt("stale.png")
+
     def prepare_evidence(self):
         session = self.session()
         session.start(42)
@@ -503,6 +517,108 @@ class M15TestInventoryTests(unittest.TestCase):
             self.assertFalse(m15.validate_test_results(path, ["Combat.hit"])["passed"])
             path.write_text('<testsuites tests="0"/>')
             self.assertFalse(m15.validate_test_results(path, ["Combat.hit"])["passed"])
+
+
+class M15ReplayTests(unittest.TestCase):
+    setUp = M15SessionTests.setUp
+    session = M15SessionTests.session
+
+    def completed_run(self):
+        import struct
+        from test_tes4_runtime_state import make_state
+        case = self.value["m15"]["cases"][0]
+        case.update(actor=PLAYER, target=PLAYER, action_id="observation-3", events=["save-complete"])
+        case["deltas"] = [{"actor": PLAYER, "path": ["actor_values", "health.current"],
+                           "event_field": "health", "expected": 0}]
+        session = self.session()
+        session.start(42)
+        (self.output / "process.log").write_text("normal mock engine boundary\n")
+        payload = m15.tes4_runtime_state.encode_payload(make_state())
+        subs = b"VERS" + struct.pack("<II", 4, 4) + b"DATA" + struct.pack("<I", len(payload)) + payload
+        saved = b"T4ST" + struct.pack("<III", len(subs), 0, 0) + subs
+        source = self.output / "userdata/quick.omwsave"
+        source.parent.mkdir()
+        source.write_bytes(saved)
+        state = m15.tes4_runtime_state.load_save(source)
+        common = {"run_id": session.run_id, "epoch": 1, "pid": 42}
+        events = [{**common, "event": "run-start", "sequence": 1, "tick": 0}]
+        for index, name in enumerate(("before", "after"), 2):
+            live = self.output / f"live-1-{index}.json"
+            live.write_text(json.dumps(state))
+            events.append({**common, "event": "save-complete", "sequence": index, "tick": index,
+                           "actor": PLAYER, "target": PLAYER, "action_id": f"observation-{index}",
+                           "cause": "normal-save", "result": "committed", "deltas": {"health": 0},
+                           "save": str(source), "save_sha256": m15.digest(source),
+                           "live": live.name, "live_sha256": m15.digest(live)})
+            (self.output / "events.jsonl").write_text(''.join(json.dumps(e) + '\n' for e in events))
+            session.snapshot({"type": "m15_snapshot", "phase": "observe", "name": name,
+                              "save": "userdata/quick.omwsave"})
+        events.append({**common, "event": "run-end", "sequence": 4, "tick": 3,
+                       "event_count": 3, "error_count": 0, "unsupported_count": 0, "pending_count": 0})
+        (self.output / "events.jsonl").write_text(''.join(json.dumps(e) + '\n' for e in events))
+        # GUI capture is mocked here; the actual course independently exercises
+        # ImageMagick inspection and the renderer. This tests receipt replay.
+        (self.output / "capture.png").write_bytes(b"mock capture")
+        session.record_action({"type": "screenshot", "phase": "observe", "name": "capture.png"}, {"passed": True})
+        result = session.finish("normal mock engine boundary\n", True)
+        self.assertTrue(result["passed"], result)
+        recorded = {"passed": True, "actions_complete": True, "timed_out": False, "exit_code": 0,
+                    "command": session.command, "m15": result,
+                    "actions": [{"type": a["type"], "phase": a["phase"], "passed": True}
+                                for a in self.value["actions"]]}
+        (self.output / "scenario.json").write_text(json.dumps(recorded))
+        return recorded
+
+    def test_replay_decodes_native_save_and_accepts_consistent_captures(self):
+        self.completed_run()
+        result = m15.verify_run(self.output)
+        self.assertTrue(result["passed"], result)
+        self.assertEqual(result["case_count"], 1)
+
+    def test_copied_evidence_rejects_edited_save_screenshot_state_log_events_and_metadata(self):
+        import shutil
+        self.completed_run()
+        for name in ("snapshots/after.omwsave", "capture.png", "snapshots/after.json", "live-1-3.json",
+                     "process.log", "events.jsonl", "m15-manifest.json", "m15-session.json"):
+            with self.subTest(name=name):
+                target = self.root / ("changed-" + name.replace("/", "-"))
+                shutil.copytree(self.output, target)
+                with (target / name).open("ab") as stream:
+                    stream.write(b" ")
+                self.assertFalse(m15.verify_run(target)["passed"])
+        self.assertTrue(m15.verify_run(self.output)["passed"])
+
+    def test_missing_receipts_skipped_actions_wrong_launch_and_early_exit_fail(self):
+        recorded = self.completed_run()
+        for change in ("receipt", "skip", "phase", "command", "exit", "timeout", "count"):
+            changed = copy.deepcopy(recorded)
+            if change == "receipt": del changed["m15"]["receipts"]["capture.png"]
+            elif change == "skip": changed["actions"].pop()
+            elif change == "phase": changed["actions"][1]["phase"] = "setup"
+            elif change == "command": changed["command"].append("--script-run=hidden.txt")
+            elif change == "exit": changed["exit_code"] = 1
+            elif change == "timeout": changed["timed_out"] = True
+            else: changed["m15"]["case_count"] = 0
+            (self.output / "scenario.json").write_text(json.dumps(changed))
+            with self.subTest(change=change):
+                self.assertFalse(m15.verify_run(self.output)["passed"])
+
+    def test_replay_rejects_stale_capture_even_if_its_bytes_match(self):
+        self.completed_run()
+        os.utime(self.output / "capture.png", ns=(1, 1))
+        result = m15.verify_run(self.output)
+        self.assertFalse(result["passed"])
+        self.assertIn("predates", result["failures"][0])
+
+    def test_bad_manifest_cli_exits_nonzero_before_creating_a_run(self):
+        import subprocess
+        bad = self.root / "bad.json"
+        bad.write_text(json.dumps({"schema_version": 1, "name": "bad", "command": ["/bin/true"], "m15": {}}))
+        result = subprocess.run([sys.executable, compat.__file__, "scenario", str(bad),
+                                 "--output", str(self.output)], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.output.exists())
+        self.assertIn("M15", result.stderr)
 
 
 if __name__ == "__main__":
