@@ -502,3 +502,22 @@ The fixture start/camera and shared-presentation resource dependencies need
 repair, with a fresh run retained separately. Two-process continuation and
 its negative controls are still open. No combat, stealth, crime, jail,
 official campaign, or full S1 acceptance is claimed by this checkpoint.
+
+The editable fixture source is
+`scripts/data/oblivion_compat/m15_observation_fixture.json`. Regenerate it into
+an empty destination with:
+
+```sh
+python3 scripts/tes4_m15_fixture.py \
+  "/path/to/Oblivion/Data/Oblivion.esm" \
+  build/m15-fixture/m15-fixture.esm
+```
+
+It selects boot/appearance records from the pinned local master and authors a
+floor grid. The 42 KB output has 482 records, including 25 placed floor pieces,
+zero scripts and zero quests. Both Python and `esmtool -q -C dump` reopen it;
+`fixture-graph.json` reports 76 references, zero unresolved targets and zero
+enable-parent cycles. Generated licensed records remain local build artifacts.
+The checked-in `oblivion_m15_observation.json` course is deliberately still
+failing on the blockers listed above; it is a regression target, not accepted
+runtime evidence.
