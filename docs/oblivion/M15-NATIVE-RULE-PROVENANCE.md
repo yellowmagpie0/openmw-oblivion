@@ -114,3 +114,28 @@ where current editor creation defaults differ. Original attack-skill base is 0
 and multiplier 20. xOBSE was used only for navigation; its command table has
 mappings that disagree with inspected original addresses and is not copied as
 an authoritative formula table.
+
+The original advanced-data initializer (`0x4a9bf0`) maps all 21 named GMSTs
+to their CSAD fields. Its getters (starting `0x4a9cb0`) use the record modifiers
+only with the Advanced flag and a valid modifier block; otherwise they read
+native settings. The pure advanced resolver preserves this selection and signed
+modifiers. Malformed required record data is explicitly rejected, as in the
+semantic audit, rather than silently pretending that authored data was applied.
+
+## First live original-setting probes
+
+[Seven inspected live observations](M15-ORIGINAL-SETTING-PROBES.json) now confirm
+numeric lookup in the original 1.2.0416 game. The isolated reference character
+was created through the normal new-game screens. Read-only console `getgs`
+queries observed recoil bonus 30, idle maximum 1.5, attack-skill base 0,
+attack-skill multiplier 20, difficulty multiplier 5, damage-skill multiplier
+1.5 and damage-strength multiplier 0.5. The recoil bonus is the master's override
+of compiled fallback 5. This distinction validates the required override order;
+it does not turn the fallback catalogue into final installed settings.
+
+The original run uses a task-local Proton prefix and windowed 1280x720 settings
+with background keyboard/mouse input enabled for Xvfb. Steam was started
+normally; no executable/DRM modification was used. Input logs, INI files,
+inspected captures, executable hash and a normal prison-start quicksave remain
+under `S2/original-04`. These are setting probes only. Damage/contact/crime,
+style-choice behavior, animation and audio probes remain open.

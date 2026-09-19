@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "scope": "live numeric-setting observations only; physical/crime and policy behavior remain open",
+  "game_version": "1.2.0416",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "input_log": "build/oblivion-compat/m15/S2/original-04/input-log.jsonl",
+  "initialization": "normal new game, default Imperial character creation; no actor stats or quest values changed",
+  "settings": [
+    {
+      "id": "M15-S2-ORACLE-GMST-01",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fAIDefaultAttackDuringRecoilStaggerBonus",
+      "observed": 30,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-style-settings.png",
+      "capture_sha256": "31309ccc747b9c4c001d95e5eec050a7e70871819b9787498048321b2b23fb0f",
+      "inspected": true,
+      "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-02",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fAIDefaultIdleMaxTime",
+      "observed": 1.5,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-style-settings.png",
+      "capture_sha256": "31309ccc747b9c4c001d95e5eec050a7e70871819b9787498048321b2b23fb0f",
+      "inspected": true,
+      "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-03",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fAIDefaultAttackSkillBase",
+      "observed": 0,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-style-settings.png",
+      "capture_sha256": "31309ccc747b9c4c001d95e5eec050a7e70871819b9787498048321b2b23fb0f",
+      "inspected": true,
+      "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-04",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fAIDefaultAttackSkillMult",
+      "observed": 20,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-style-settings.png",
+      "capture_sha256": "31309ccc747b9c4c001d95e5eec050a7e70871819b9787498048321b2b23fb0f",
+      "inspected": true,
+      "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-05",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fDifficultyDamageMultiplier",
+      "observed": 5,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-damage-settings.png",
+      "capture_sha256": "3f74c5938fc29f6f74728b1497121e6b2f249a4b05cb7f431abde72450311d71",
+      "inspected": true,
+      "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-06",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fDamageSkillMult",
+      "observed": 1.5,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-damage-settings.png",
+      "capture_sha256": "3f74c5938fc29f6f74728b1497121e6b2f249a4b05cb7f431abde72450311d71",
+      "inspected": true,
+      "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-07",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fDamageStrengthMult",
+      "observed": 0.5,
+      "capture": "build/oblivion-compat/m15/S2/original-04/live-damage-settings.png",
+      "capture_sha256": "3f74c5938fc29f6f74728b1497121e6b2f249a4b05cb7f431abde72450311d71",
+      "inspected": true,
+      "passed": true
+    }
+  ]
+}

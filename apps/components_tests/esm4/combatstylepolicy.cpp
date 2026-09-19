@@ -112,3 +112,37 @@ TEST(ESM4CombatStylePolicy, ResolvesEveryHistoricalPayloadWithoutConflatingAbsen
         EXPECT_EQ(value.mDoNotAcquire, false);
     }
 }
+
+TEST(ESM4CombatStylePolicy, AdvancedFlagSelectsRecordOrLiveDefaults)
+{
+    ESM4::CombatStyleAdvanced global;
+    global.mAttackSkillBase = 0;
+    global.mAttackSkillMultiplier = 20;
+    global.mDodgeFatigueMultiplier = -20;
+    EXPECT_EQ(ESM4::resolveCombatStyleAdvanced(nullptr, global).mAttackSkillMultiplier, 20);
+    ESM4::CombatStyle record;
+    record.mStandard = defaults();
+    record.mAdvanced = global;
+    record.mAdvanced->mAttackSkillMultiplier = 40;
+    EXPECT_EQ(ESM4::resolveCombatStyleAdvanced(&record, global).mAttackSkillMultiplier, 20);
+    record.mStandard->mFlags |= static_cast<std::uint8_t>(ESM4::CombatStyleFlag::Advanced);
+    EXPECT_EQ(ESM4::resolveCombatStyleAdvanced(&record, global).mAttackSkillMultiplier, 40);
+    record.mAdvanced.reset();
+    EXPECT_THROW(ESM4::resolveCombatStyleAdvanced(&record, global), std::invalid_argument);
+}
+
+TEST(ESM4CombatStylePolicy, AdvancedModifiersRemainSignedAndRequireFiniteAuthoritativeInputs)
+{
+    ESM4::CombatStyleAdvanced global;
+    global.mPowerAttackFatigueMultiplier = -10;
+    EXPECT_EQ(ESM4::resolveCombatStyleAdvanced(nullptr, global).mPowerAttackFatigueMultiplier, -10);
+    ESM4::CombatStyle record;
+    EXPECT_THROW(ESM4::resolveCombatStyleAdvanced(&record, global), std::invalid_argument);
+    record.mStandard = defaults();
+    record.mStandard->mFlags = static_cast<std::uint8_t>(ESM4::CombatStyleFlag::Advanced);
+    record.mAdvanced = global;
+    record.mAdvanced->mPowerAttackFatigueMultiplier = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::resolveCombatStyleAdvanced(&record, global), std::invalid_argument);
+    global.mAttackDuringBlock = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::resolveCombatStyleAdvanced(nullptr, global), std::invalid_argument);
+}

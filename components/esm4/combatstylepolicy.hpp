@@ -10,6 +10,9 @@ namespace ESM4
     // load-time defaults. This does not alter the lossless source record.
     CombatStyleStandard resolveCombatStyleStandard(
         const CombatStyleStandard* record, const CombatStyleStandard& defaults);
+
+    CombatStyleAdvanced resolveCombatStyleAdvanced(
+        const CombatStyle* record, const CombatStyleAdvanced& defaults);
 }
 
 #endif

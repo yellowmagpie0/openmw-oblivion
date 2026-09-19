@@ -75,4 +75,32 @@ namespace ESM4
             result.mRushDistanceMultiplier = defaults.mRushDistanceMultiplier;
         return result;
     }
+    CombatStyleAdvanced resolveCombatStyleAdvanced(const CombatStyle* record, const CombatStyleAdvanced& defaults)
+    {
+        const auto check = [](const CombatStyleAdvanced& value) {
+            for (const float field : { value.mDodgeFatigueMultiplier, value.mDodgeFatigueBase,
+                     value.mEncumberedSpeedBase, value.mEncumberedSpeedMultiplier,
+                     value.mDodgeUnderAttack, value.mDodgeNotUnderAttack,
+                     value.mBackDodgeUnderAttack, value.mBackDodgeNotUnderAttack,
+                     value.mForwardDodgeAttacking, value.mForwardDodgeNotAttacking,
+                     value.mBlockSkillMultiplier, value.mBlockSkillBase, value.mBlockUnderAttack,
+                     value.mBlockNotUnderAttack, value.mAttackSkillMultiplier, value.mAttackSkillBase,
+                     value.mAttackUnderAttack, value.mAttackNotUnderAttack, value.mAttackDuringBlock,
+                     value.mPowerAttackFatigueBase, value.mPowerAttackFatigueMultiplier })
+                if (!std::isfinite(field))
+                    throw std::invalid_argument("native advanced combat policy has nonfinite modifier");
+        };
+        check(defaults);
+        if (!record)
+            return defaults;
+        if (!record->mStandard)
+            throw std::invalid_argument("native combat style lacks standard data");
+        if (!record->mStandard->has(CombatStyleFlag::Advanced))
+            return defaults;
+        if (!record->mAdvanced)
+            throw std::invalid_argument("native advanced combat style lacks modifier data");
+        check(*record->mAdvanced);
+        return *record->mAdvanced;
+    }
+
 }

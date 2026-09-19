@@ -881,3 +881,25 @@ runtime feature-completion count. A new negative-control test first failed on
 the absent checker and now passes; the complete Python suite passes 138 tests.
 `S2/count-lock-01/audit/m15-audit.json` passes both data and count-lock checks,
 while overall acceptance stays false for the explicit rule/oracle gates.
+
+### S2 advanced policy and first live original-setting observations
+
+The advanced resolver now follows the independently inspected original choice
+between authored CSAD modifiers and native setting defaults. Two additional
+cases first failed on the unimplemented path, then passed with explicit missing
+standard/advanced data and nonfinite-input diagnostics. Signed modifiers remain
+signed. All 1,648 component tests pass with exact inventory; all six style-policy
+tests pass under ASan/UBSan (`style-policy-01/advanced-*`). This is still pure
+policy work, not a simulation service or an actor/settings-store adapter.
+
+Original reference input became reliable with windowed rendering and background
+input enabled in the isolated INI. The run completed normal Imperial character
+creation, seven read-only live setting queries, tutorial-message dismissal and
+a normal quicksave. The two settings captures were opened and each numeric
+response checked; exact observations and hashes are in
+`M15-ORIGINAL-SETTING-PROBES.json`. The preserved `original-04/prison-start.ess`
+is local original-game evidence, not an OpenMW save. Earlier failed input/save
+attempts remain in the input log; the first F5 was correctly refused while the
+tutorial message paused the game. No actor values or quest state were injected.
+The new probes narrow the oracle gap but do not satisfy physical/crime behavior
+or original style-selection acceptance. All later stages remain pending.
