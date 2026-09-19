@@ -219,6 +219,26 @@ class M15NativeAuditTests(unittest.TestCase):
             prison['evidence'] = key(0x814)
             self.assertFalse(audit.inventory([path], [prison])['data_passed'])
 
+    def test_count_lock_requires_exact_order_hashes_and_reviewed_counts(self):
+        import copy
+        report = {'plugins': [{'name': 'base.esm', 'sha256': 'a' * 64},
+                              {'name': 'patch.esp', 'sha256': 'b' * 64}],
+                  'summary': {'styles': 1, 'actors': 2}}
+        lock = {'schema_version': 1, 'plugins': copy.deepcopy(report['plugins']),
+                'counts': {'styles': 1, 'actors': 2}}
+        self.assertTrue(audit.check_count_lock(report, lock)['passed'])
+        for candidate in ({}, dict(lock, plugins=[]), dict(lock, counts={'styles': 2}),
+                          dict(lock, counts={'unknown': 0}), dict(lock, schema_version=2),
+                          dict(lock, plugins=list(reversed(lock['plugins']))),
+                          dict(lock, counts={'styles': True, 'actors': 2})):
+            self.assertFalse(audit.check_count_lock(report, candidate)['passed'])
+        changed = copy.deepcopy(report)
+        changed['plugins'][0]['sha256'] = 'b' * 64
+        self.assertFalse(audit.check_count_lock(changed, lock)['passed'])
+        changed = copy.deepcopy(report)
+        changed['summary']['actors'] = 3
+        self.assertFalse(audit.check_count_lock(changed, lock)['passed'])
+
     def test_truncated_headers_and_wrong_game_version_fail_before_inventory(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'fixture.esm'

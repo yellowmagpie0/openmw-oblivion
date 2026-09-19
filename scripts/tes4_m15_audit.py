@@ -398,3 +398,21 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
                     'factions': len(factions), 'equipment': len(equipment), 'owned_forms': len(ownership), 'references': len(references), 'prisons': len(prison_reports), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.
+
+
+def check_count_lock(report: dict, lock: dict) -> dict:
+    """Compare a reviewed, hash-bound inventory; never rewrite the lock."""
+    failures = []
+    if lock.get('schema_version') != 1:
+        failures.append('unsupported count-lock schema')
+    actual = [{'name': p['name'], 'sha256': p['sha256']} for p in report['plugins']]
+    if not lock.get('plugins') or lock['plugins'] != actual:
+        failures.append('content order, names or hashes differ from reviewed count lock')
+    counts = lock.get('counts')
+    if not isinstance(counts, dict) or not counts or set(counts) != set(report['summary']):
+        failures.append('count lock must cover the complete reported summary')
+    else:
+        for key, value in counts.items():
+            if value != report['summary'][key] or type(value) is not type(report['summary'][key]):
+                failures.append(f'count differs from reviewed value: {key}')
+    return {'passed': not failures, 'failures': failures}

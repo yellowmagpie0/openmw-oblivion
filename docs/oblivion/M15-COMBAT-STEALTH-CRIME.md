@@ -869,3 +869,15 @@ behavioral probe. Steam is running on its own Xvfb display and the original
 game uses the local isolated prefix. Native actor/settings integration,
 advanced-style rules, physical/crime formulas, and original gameplay probes
 remain open S2 work; S3–S14 are still pending.
+
+### S2 reviewed input count lock
+
+Commit `35ea91c811` contains the pure style resolver. The input audit now checks
+an editable reviewed count lock against the exact ordered plugin names/hashes
+and complete summary. Changed hashes, counts, order, missing families, empty
+locks and wrong count types fail; the audit never updates its own lock.
+The locked counts are the individually reviewed data families above, not a
+runtime feature-completion count. A new negative-control test first failed on
+the absent checker and now passes; the complete Python suite passes 138 tests.
+`S2/count-lock-01/audit/m15-audit.json` passes both data and count-lock checks,
+while overall acceptance stays false for the explicit rule/oracle gates.

@@ -5436,6 +5436,9 @@ def main(argv: list[str] | None = None) -> int:
             case_inventory = json.loads((Path(__file__).resolve().parents[1] / "docs/oblivion/M15-CASE-INVENTORY.json").read_text())
             result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER],
                                               case_inventory["prisons"])
+            lock_path = Path(__file__).resolve().parent / "data/oblivion_compat/m15_count_lock.json"
+            result["count_lock"] = tes4_m15_audit.check_count_lock(result, json.loads(lock_path.read_text()))
+            result["data_passed"] = result["data_passed"] and result["count_lock"]["passed"]
             write_json(args.output / "m15-audit.json", result)
         elif args.command == "m15-verify":
             if args.restart:
@@ -5519,6 +5522,7 @@ def main(argv: list[str] | None = None) -> int:
             "milestone": "M15",
             "summary": result.get("summary", {}),
             "failure_count": len(result.get("failures", [])),
+            "count_lock": result.get("count_lock", {}),
             "open_gates": result.get("open_gates", []),
             "evidence": str(args.output.resolve() / "m15-audit.json"),
         }
