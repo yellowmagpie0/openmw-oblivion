@@ -721,3 +721,29 @@ all attempts remain in `build*.log`. ASan/UBSan compilation is underway in the
 separate `build/m15-sanitize` tree and is still an open S2 gate. This chunk does
 not resolve runtime defaults, formulas, mastery, equipment/sound/jail audits,
 or original-game probes. S2 remains in progress.
+
+### S2 second chunk: independent semantic inventory
+
+Commit `8027351a29` contains the preceding typed CSTY chunk. The new
+`m15-audit` command independently decodes grouped CSTD layouts, applies winning
+master identities and deletion tombstones, checks actor style references, and
+inventories typed GMSTs and faction crime flags/multipliers. It deliberately
+returns failure while the independent rule/default gates remain open.
+
+```sh
+python3 scripts/oblivion_compat.py m15-audit \
+  --oblivion-data '/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data' \
+  --output build/oblivion-compat/m15/S2/audit-01
+```
+
+The 11 installed plugins yield 129 styles, 3,636 actor bases, 383 winning
+settings, and 495 factions. Structural/decoded-data checks pass; 2,218 actors
+have no explicit combat style and remain listed for verified default-policy
+resolution. The master independently contains 382 distinct GMST FormKeys;
+the additional setting comes from the DLC. This is partial inventory coverage,
+not closure of equipment, creature attack, relationship, sound, animation or
+jail-reference semantics. Six new Python tests cover independent layouts,
+malformed values, master resolution/deletion, missing-style policy, setting and
+faction domains, and invalid headers. The complete Python suite passes 131
+tests (`S2/audit-01/python-tests-final.log`). Baseline command absence and the
+current intentionally failing overall audit are retained in that run directory.

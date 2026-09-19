@@ -36,6 +36,7 @@ except ImportError:  # pragma: no cover - virtual playback is Linux-only
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tes4_runtime_state as tes4_state  # noqa: E402
+import tes4_m15_audit as tes4_m15_audit
 import tes4_m14_audit as tes4_m14  # noqa: E402
 import tes4_m15_evidence as tes4_m15  # noqa: E402
 
@@ -5194,6 +5195,10 @@ def make_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--maximum-mean", type=float, default=0.999)
     inspect.add_argument("--report", type=Path)
 
+    m15_audit = subparsers.add_parser("m15-audit", help="audit native combat data and report unresolved rule gates")
+    m15_audit.add_argument("--oblivion-data", type=Path, required=True)
+    m15_audit.add_argument("--output", type=Path, required=True)
+
     m15_verify = subparsers.add_parser("m15-verify", help="replay immutable M15 run evidence without executing inputs")
     m15_verify.add_argument("directory", type=Path)
     m15_verify.add_argument("--report", type=Path)
@@ -5427,6 +5432,9 @@ def main(argv: list[str] | None = None) -> int:
                 result = tes4_m15.verify_restart(output, args.source_snapshot,
                                                 args.loaded_snapshot, args.final_snapshot)
             write_json(output / "restart.json", result)
+        elif args.command == "m15-audit":
+            result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER])
+            write_json(args.output / "m15-audit.json", result)
         elif args.command == "m15-verify":
             if args.restart:
                 recorded = tes4_m15.parse_json((args.directory / "restart.json").read_text())
