@@ -14,7 +14,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | --- | --- | --- | --- |
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
-| S2 native data/rules | in-progress | Typed CSTY and native inventory work below; preceding S1 closure `eda8168dad` | Typed store/audit/sanitizer checks, original defaults and independently reviewed rules |
+| S2 native data/rules | in-progress | Typed CSTY/CREA, locked audit, setting and actor adapters, first physical helpers below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
 | S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
@@ -952,3 +952,23 @@ exactly. All three GMST cases and all 11 installed official plugin parses pass
 under ASan/UBSan. Evidence and retained failures: `S2/gmst-01`. Tested
 source/test diff SHA-256: `c43e17a57f430bbe9137e58c6a35c8cef9d21a8071ddd9ab81f64361ac9990ea`. These checks establish
 parser acceptance and rejection, not damage or crime gameplay.
+
+### S2 first physical arithmetic and native setting inputs
+
+Commit `e978e10ae5` contains strict GMST loading. New pure helpers implement
+luck-adjusted skill, fatigue scaling and the pre-mitigation weapon product.
+The independently inspected original addresses, setting overrides, float-store
+boundaries and numeric limitations are recorded in the rule provenance file.
+A separate native builder supplies the 11 typed inputs using verified compiled
+fallbacks only for absent settings. Invalid present overrides cannot fall back.
+
+Four behavior cases first failed against unimplemented helpers; the setting
+builder's fifth case separately failed before implementation. A test expectation
+for a half-ULP fatigue result was corrected by hand derivation before running
+the implementation. An initial CMake registration-script assertion is retained
+separately and is not counted as a behavioral failure. All 1,660 component
+tests pass with exact inventory; all 15 physical/settings/style-policy cases
+pass under ASan/UBSan. Evidence: `S2/physical-rules-01`; tested diff SHA-256:
+`2d678cbf62274bbfb51f5327f5808d8a16871aa44dbcf4d177893bf75ad4f5a9`. No world code consumes these physical helpers yet.
+Block, armor, hand-to-hand, mastery, projectiles, crime and original damage
+outcomes remain open S2 work; S3–S14 remain pending.

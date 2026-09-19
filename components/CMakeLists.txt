@@ -241,6 +241,7 @@ add_component_dir (esm4
     loadcsty
     combatstylepolicy
     combatsettings
+    physicalcombat
     loaddial
     loaddobj
     loaddoor

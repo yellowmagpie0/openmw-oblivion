@@ -139,3 +139,64 @@ normally; no executable/DRM modification was used. Input logs, INI files,
 inspected captures, executable hash and a normal prison-start quicksave remain
 under `S2/original-04`. These are setting probes only. Damage/contact/crime,
 style-choice behavior, animation and audio probes remain open.
+
+## First physical arithmetic helpers (behavioral gate still open)
+
+Read-only static inspection of the same hashed original executable identifies
+`0x547b90` (luck-adjusted skill), `0x547f00` (fatigue factor), and `0x547070`
+(weapon pre-mitigation product). Retained disassembly is in
+`S2/sources-01/{effective-skill-rule,fatigue-damage-rule,weapon-damage-rule}.txt`.
+The native caller at `0x484f80` selects actor value 3 (Agility) for weapon type
+5 (bow), otherwise value 0 (Strength); value 7 supplies Luck. It supplies
+current/original weapon condition. Attribute/skill actor values are converted
+to integers by the caller; the pure helper explicitly takes integers and does
+not invent a rounding rule for future world adapters.
+
+With `R` denoting a store to a 32-bit float, the reviewed arithmetic is:
+
+- `effectiveSkill = R(clamp(skill + R(R(luck * luckMult) + luckBase), 0, 100))`.
+- `fatigueFactor = R(fatigueBase - (1 - fatigueRatio) * fatigueMult)`.
+- `baseTerm = R(baseDamage * weaponMult)`.
+- `conditionTerm = R(conditionBase + conditionRatio * conditionMult)`.
+- `skillTerm = R(skillBase + effectiveSkill * percent * skillMult)`.
+- `attributeTerm = R(attributeBase + min(attribute, 100) * percent * attributeMult)`.
+- `subtotal = R(conditionTerm * baseTerm * skillTerm * attributeTerm * fatigueFactor)`.
+- `damage = R(subtotal * callerMultiplier)`; an explicit original argument can
+  bypass the fatigue factor with one.
+
+The percent constant at `0xa3b150` is the exact double representation of the
+float `0.01f`; the skill cap at `0xa309f0` is exactly double 100. The new pure
+helper uses double intermediate arithmetic and the observed float-store
+boundaries. This is not a claim of bit-for-bit emulation of every x87 extended
+intermediate: extreme/near-rounding gameplay probes remain an open gate.
+Nonfinite/overflow inputs diagnose explicitly, as do negative physical factors
+or governing attributes. Skill/Luck integers remain signed before clamping.
+Condition above one and finite fatigue ratios outside 0–1 are not silently
+clamped. Whether an actor may attack in that state belongs to controller policy.
+
+| Setting | Compiled initializer | Installed winning value |
+| --- | ---: | ---: |
+| iActorLuckSkillBase | -20 | absent: -20 |
+| fActorLuckSkillMult | 0.4 | absent: 0.4 |
+| fFatigueBase | 1.25 | 1 |
+| fFatigueMult | 0.5 | 0.5 |
+| fDamageWeaponMult | 1 | 0.5 |
+| fDamageSkillBase | 0.2 | absent: 0.2 |
+| fDamageSkillMult | 1.8 | 1.5 |
+| fDamageWeaponConditionBase | 0 | 0.5 |
+| fDamageWeaponConditionMult | 1 | 0.5 |
+| fDamageStrengthBase | 0.5 | 0.75 |
+| fDamageStrengthMult | 1 | 0.5 |
+
+Compiled facts are in the retained `native-setting-initializers.json`; winning
+values come from the independent hash-bound inventory. The existing live
+original probes verify skill/strength multipliers, but not this entire table
+or the resulting damage. Tests use explicit installed inputs, hand-derived
+products (26.71875, 53.4375, 119.53125, 1.875, 3.75), integer clamp boundaries,
+repaired condition, fatigue bypass, finite-domain rejection and overflow.
+One adjacent-float fatigue case deliberately tests rounding: half an ULP above
+one rounds back to even one; the next ratio produces the next output float.
+
+These helpers do not yet choose weapons, detect contacts, apply mastery,
+block, armor, difficulty, or enchantments, or mutate actors. Those independent
+rule families and original physical outcomes are still required for S2.

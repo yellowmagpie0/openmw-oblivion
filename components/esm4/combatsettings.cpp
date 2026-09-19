@@ -138,4 +138,24 @@ namespace ESM4
         resolveCombatStyleAdvanced(nullptr, advanced);
         return result;
     }
+    PhysicalCombatSettings buildPhysicalCombatSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        PhysicalCombatSettings result{
+            inputs.number("iActorLuckSkillBase", std::int32_t{-20}),
+            inputs.number("fActorLuckSkillMult", .4f),
+            inputs.number("fFatigueBase", 1.25f),
+            inputs.number("fFatigueMult", .5f),
+            inputs.number("fDamageWeaponMult", 1.f),
+            inputs.number("fDamageSkillBase", .2f),
+            inputs.number("fDamageSkillMult", 1.8f),
+            inputs.number("fDamageWeaponConditionBase", 0.f),
+            inputs.number("fDamageWeaponConditionMult", 1.f),
+            inputs.number("fDamageStrengthBase", .5f),
+            inputs.number("fDamageStrengthMult", 1.f),
+        };
+        validatePhysicalCombatSettings(result);
+        return result;
+    }
+
 }
