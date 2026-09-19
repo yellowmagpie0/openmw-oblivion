@@ -841,3 +841,31 @@ load error `P:0000065432` before gameplay; its screenshot and launch/Proton logs
 are retained. The dialog was dismissed and that run exited. No original-game
 behavioral probe has passed, and static initializer inspection is not counted
 as one. The native rule/default oracle remains the next open S2 requirement.
+
+### S2 pure legacy style-policy resolution
+
+Commit `af7e01d1f1` contains the native creature chunk. A separate pure helper
+now resolves missing style versus historical CSTD tails without mutating source
+data. Original-executable static inspection demonstrated distinct range and
+acquisition defaults, and load-time replacement of zero switch/rush values;
+these are documented with original addresses in the rule provenance file.
+A 63-row initializer catalogue records named setting facts and explicitly
+requires winning content overrides. It is not substituted for live settings.
+
+The deliberately unimplemented resolver first failed its new behavior test
+(`S2/style-policy-01/red-tests.log`). Four tests now cover both policy paths,
+all six historical sizes, zero versus next-representable-positive values,
+incomplete defaults, invalid domains and preserved signed bonuses. All 1,646
+component tests pass with an exact inventory; all four policy tests pass under
+ASan/UBSan. Evidence: `style-policy-01/components-final.*`,
+`test-inventory-final.json`, and `sanitize-final.*`. Tested source/test/docs
+diff SHA-256: `af5d804a8ec5dbc23f8239f2d1714caeb692dbff022af51d82df19ff34e14352`.
+
+The isolated original executable now reaches its 1.2.0416 main menu after
+starting the normal Steam client (`original-03/startup.png` inspected).
+Earlier load-error attempts remain retained. Headless input/activation is
+still being investigated in `original-04`; reaching the menu is not a passed
+behavioral probe. Steam is running on its own Xvfb display and the original
+game uses the local isolated prefix. Native actor/settings integration,
+advanced-style rules, physical/crime formulas, and original gameplay probes
+remain open S2 work; S3–S14 are still pending.

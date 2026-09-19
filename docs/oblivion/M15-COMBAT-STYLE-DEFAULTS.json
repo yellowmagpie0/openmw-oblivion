@@ -1,0 +1,487 @@
+{
+  "schema_version": 1,
+  "scope": "combat-style setting initializers; not a physical/crime formula oracle",
+  "game_version": "Oblivion 1.2.0416",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "method": "read-only static inspection of original initializer, DefaultCombatStyle getters and TESCombatStyle loader",
+  "behavioral_probe_passed": false,
+  "content_overrides_required": true,
+  "settings": [
+    {
+      "name": "fAIDefaultAttackDuringAttackMult",
+      "value": 0.75,
+      "storage": "0xb35718",
+      "constructor": "0x9e0fbf",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultAttackDuringBlockMult",
+      "value": 0.5,
+      "storage": "0xb35720",
+      "constructor": "0x9e0fef",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultAttackDuringRecoilStaggerBonus",
+      "value": 5.0,
+      "storage": "0xb355f8",
+      "constructor": "0x9e095f",
+      "type": "float32",
+      "getter": "0x625a60"
+    },
+    {
+      "name": "fAIDefaultAttackDuringUnconsciousBonus",
+      "value": 5.0,
+      "storage": "0xb35600",
+      "constructor": "0x9e098f",
+      "type": "float32",
+      "getter": "0x625a70"
+    },
+    {
+      "name": "fAIDefaultAttackHandBonus",
+      "value": 5.0,
+      "storage": "0xb35608",
+      "constructor": "0x9e09bf",
+      "type": "float32",
+      "getter": "0x625a80"
+    },
+    {
+      "name": "fAIDefaultAttackNoAttackMult",
+      "value": 1.0,
+      "storage": "0xb35728",
+      "constructor": "0x9e1010",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultAttackSkillBase",
+      "value": 0.0,
+      "storage": "0xb35708",
+      "constructor": "0x9e0f50",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultAttackSkillMult",
+      "value": 20.0,
+      "storage": "0xb35710",
+      "constructor": "0x9e0f8f",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultBlockDuringAttackMult",
+      "value": 2.0,
+      "storage": "0xb356f8",
+      "constructor": "0x9e0eff",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultBlockNoAttackMult",
+      "value": 1.0,
+      "storage": "0xb35700",
+      "constructor": "0x9e0f20",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultBlockSkillBase",
+      "value": 0.0,
+      "storage": "0xb356e8",
+      "constructor": "0x9e0e90",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultBlockSkillMult",
+      "value": 20.0,
+      "storage": "0xb356f0",
+      "constructor": "0x9e0ecf",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultBuffStandoffDistance",
+      "value": 325.0,
+      "storage": "0xb35680",
+      "constructor": "0x9e0c2f",
+      "type": "float32",
+      "getter": "0x625b70"
+    },
+    {
+      "name": "fAIDefaultDodgeBackDuringAttackMult",
+      "value": 1.0,
+      "storage": "0xb356c8",
+      "constructor": "0x9e0dd0",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeBackNoAttackMult",
+      "value": 0.699999988079071,
+      "storage": "0xb356d0",
+      "constructor": "0x9e0e0f",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeBackwardMaxTime",
+      "value": 0.75,
+      "storage": "0xb355d0",
+      "constructor": "0x9e088f",
+      "type": "float32",
+      "getter": "0x625a10"
+    },
+    {
+      "name": "fAIDefaultDodgeBackwardMinTime",
+      "value": 0.25,
+      "storage": "0xb355c8",
+      "constructor": "0x9e085f",
+      "type": "float32",
+      "getter": "0x625a00"
+    },
+    {
+      "name": "fAIDefaultDodgeDuringAttackMult",
+      "value": 1.0,
+      "storage": "0xb356b8",
+      "constructor": "0x9e0d70",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeFatigueBase",
+      "value": 0.0,
+      "storage": "0xb35698",
+      "constructor": "0x9e0cb0",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeFatigueMult",
+      "value": -20.0,
+      "storage": "0xb356a0",
+      "constructor": "0x9e0cef",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeForwardMaxTime",
+      "value": 1.0,
+      "storage": "0xb355c0",
+      "constructor": "0x9e0820",
+      "type": "float32",
+      "getter": "0x6259f0"
+    },
+    {
+      "name": "fAIDefaultDodgeForwardMinTime",
+      "value": 0.5,
+      "storage": "0xb355b8",
+      "constructor": "0x9e07ff",
+      "type": "float32",
+      "getter": "0x6259e0"
+    },
+    {
+      "name": "fAIDefaultDodgeForwardNotAttackingMult",
+      "value": 0.5,
+      "storage": "0xb356e0",
+      "constructor": "0x9e0e6f",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeForwardWhileAttackingMult",
+      "value": 1.0,
+      "storage": "0xb356d8",
+      "constructor": "0x9e0e30",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeLeftRightMaxTime",
+      "value": 1.5,
+      "storage": "0xb355b0",
+      "constructor": "0x9e07cf",
+      "type": "float32",
+      "getter": "0x6259d0"
+    },
+    {
+      "name": "fAIDefaultDodgeLeftRightMinTime",
+      "value": 0.5,
+      "storage": "0xb355a8",
+      "constructor": "0x9e079f",
+      "type": "float32",
+      "getter": "0x6259c0"
+    },
+    {
+      "name": "fAIDefaultDodgeNoAttackMult",
+      "value": 0.75,
+      "storage": "0xb356c0",
+      "constructor": "0x9e0daf",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeSpeedBase",
+      "value": -110.0,
+      "storage": "0xb356a8",
+      "constructor": "0x9e0d1f",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultDodgeSpeedMult",
+      "value": 1.0,
+      "storage": "0xb356b0",
+      "constructor": "0x9e0d40",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultGroupStandoffDistance",
+      "value": 325.0,
+      "storage": "0xb35690",
+      "constructor": "0x9e0c8f",
+      "type": "float32",
+      "getter": "0x625b90"
+    },
+    {
+      "name": "fAIDefaultHoldMaxTime",
+      "value": 1.5,
+      "storage": "0xb35658",
+      "constructor": "0x9e0b3f",
+      "type": "float32",
+      "getter": "0x625b20"
+    },
+    {
+      "name": "fAIDefaultHoldMinTime",
+      "value": 0.5,
+      "storage": "0xb35650",
+      "constructor": "0x9e0b0f",
+      "type": "float32",
+      "getter": "0x625b10"
+    },
+    {
+      "name": "fAIDefaultIdleMaxTime",
+      "value": 1.5,
+      "storage": "0xb355e0",
+      "constructor": "0x9e08ef",
+      "type": "float32",
+      "getter": "0x625a30"
+    },
+    {
+      "name": "fAIDefaultIdleMinTime",
+      "value": 0.5,
+      "storage": "0xb355d8",
+      "constructor": "0x9e08bf",
+      "type": "float32",
+      "getter": "0x625a20"
+    },
+    {
+      "name": "fAIDefaultMaximumRangeMult",
+      "value": 1.0,
+      "storage": "0xb35668",
+      "constructor": "0x9e0b90",
+      "type": "float32",
+      "getter": "0x625b40"
+    },
+    {
+      "name": "fAIDefaultOptimalRangeMult",
+      "value": 1.0,
+      "storage": "0xb35660",
+      "constructor": "0x9e0b60",
+      "type": "float32",
+      "getter": "0x625b30"
+    },
+    {
+      "name": "fAIDefaultPowerAttackFatigueBase",
+      "value": 5.0,
+      "storage": "0xb35730",
+      "constructor": "0x9e104f",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultPowerAttackFatigueMult",
+      "value": -10.0,
+      "storage": "0xb35738",
+      "constructor": "0x9e107f",
+      "type": "float32"
+    },
+    {
+      "name": "fAIDefaultPowerAttackRecoilStaggerBonus",
+      "value": 5.0,
+      "storage": "0xb35618",
+      "constructor": "0x9e0a0f",
+      "type": "float32",
+      "getter": "0x625aa0"
+    },
+    {
+      "name": "fAIDefaultPowerAttackUnconsciousBonus",
+      "value": 5.0,
+      "storage": "0xb35620",
+      "constructor": "0x9e0a3f",
+      "type": "float32",
+      "getter": "0x625ab0"
+    },
+    {
+      "name": "fAIDefaultRangedStandoffDistance",
+      "value": 500.0,
+      "storage": "0xb35688",
+      "constructor": "0x9e0c5f",
+      "type": "float32",
+      "getter": "0x625b80"
+    },
+    {
+      "name": "fAIDefaultRushingAttackDistanceMult",
+      "value": 1.0,
+      "storage": "0xb35780",
+      "constructor": "0x9e11a0",
+      "type": "float32",
+      "getter": "0x625bb0"
+    },
+    {
+      "name": "fAIDefaultSwitchToMeleeDistance",
+      "value": 250.0,
+      "storage": "0xb35670",
+      "constructor": "0x9e0bcf",
+      "type": "float32",
+      "getter": "0x625b50"
+    },
+    {
+      "name": "fAIDefaultSwitchToRangedDistance",
+      "value": 1000.0,
+      "storage": "0xb35678",
+      "constructor": "0x9e0bff",
+      "type": "float32",
+      "getter": "0x625b60"
+    },
+    {
+      "name": "iAIDefaultAcrobaticDodgeChance",
+      "value": 0,
+      "storage": "0xb35598",
+      "constructor": "0x9e0757",
+      "type": "int32",
+      "getter": "0x6259a0"
+    },
+    {
+      "name": "iAIDefaultAttackChance",
+      "value": 40,
+      "storage": "0xb355f0",
+      "constructor": "0x9e0937",
+      "type": "int32",
+      "getter": "0x625a50"
+    },
+    {
+      "name": "iAIDefaultBlockChance",
+      "value": 30,
+      "storage": "0xb355e8",
+      "constructor": "0x9e0917",
+      "type": "int32",
+      "getter": "0x625a40"
+    },
+    {
+      "name": "iAIDefaultDoNotAcquire",
+      "value": 0,
+      "storage": "0xb35770",
+      "constructor": "0x9e1167",
+      "type": "int32"
+    },
+    {
+      "name": "iAIDefaultDodgeChance",
+      "value": 75,
+      "storage": "0xb35590",
+      "constructor": "0x9e0737",
+      "type": "int32",
+      "getter": "0x625990"
+    },
+    {
+      "name": "iAIDefaultDodgeLeftRightChance",
+      "value": 50,
+      "storage": "0xb355a0",
+      "constructor": "0x9e0777",
+      "type": "int32",
+      "getter": "0x6259b0"
+    },
+    {
+      "name": "iAIDefaultFleeDisabled",
+      "value": 0,
+      "storage": "0xb35740",
+      "constructor": "0x9e10a7",
+      "type": "int32"
+    },
+    {
+      "name": "iAIDefaultIgnoreAlliesInArea",
+      "value": 0,
+      "storage": "0xb35768",
+      "constructor": "0x9e1147",
+      "type": "int32"
+    },
+    {
+      "name": "iAIDefaultMeleeAlertAllowed",
+      "value": 0,
+      "storage": "0xb35760",
+      "constructor": "0x9e1127",
+      "type": "int32"
+    },
+    {
+      "name": "iAIDefaultPowerAttackBackwardChance",
+      "value": 20,
+      "storage": "0xb35638",
+      "constructor": "0x9e0aa7",
+      "type": "int32",
+      "getter": "0x625ae0"
+    },
+    {
+      "name": "iAIDefaultPowerAttackChance",
+      "value": 25,
+      "storage": "0xb35610",
+      "constructor": "0x9e09e7",
+      "type": "int32",
+      "getter": "0x625a90"
+    },
+    {
+      "name": "iAIDefaultPowerAttackForwardChance",
+      "value": 20,
+      "storage": "0xb35630",
+      "constructor": "0x9e0a87",
+      "type": "int32",
+      "getter": "0x625ad0"
+    },
+    {
+      "name": "iAIDefaultPowerAttackLeftChance",
+      "value": 20,
+      "storage": "0xb35640",
+      "constructor": "0x9e0ac7",
+      "type": "int32",
+      "getter": "0x625af0"
+    },
+    {
+      "name": "iAIDefaultPowerAttackNormalChance",
+      "value": 20,
+      "storage": "0xb35628",
+      "constructor": "0x9e0a67",
+      "type": "int32",
+      "getter": "0x625ac0"
+    },
+    {
+      "name": "iAIDefaultPowerAttackRightChance",
+      "value": 20,
+      "storage": "0xb35648",
+      "constructor": "0x9e0ae7",
+      "type": "int32",
+      "getter": "0x625b00"
+    },
+    {
+      "name": "iAIDefaultPrefersRangedAttacks",
+      "value": 0,
+      "storage": "0xb35758",
+      "constructor": "0x9e1107",
+      "type": "int32"
+    },
+    {
+      "name": "iAIDefaultRejectYield",
+      "value": 0,
+      "storage": "0xb35750",
+      "constructor": "0x9e10e7",
+      "type": "int32"
+    },
+    {
+      "name": "iAIDefaultRushingAttackPercentChance",
+      "value": 25,
+      "storage": "0xb35778",
+      "constructor": "0x9e1187",
+      "type": "int32",
+      "getter": "0x625ba0"
+    },
+    {
+      "name": "iAIDefaultYieldEnabled",
+      "value": 0,
+      "storage": "0xb35748",
+      "constructor": "0x9e10c7",
+      "type": "int32"
+    }
+  ]
+}

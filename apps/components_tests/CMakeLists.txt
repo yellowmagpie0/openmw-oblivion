@@ -86,6 +86,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/runtimestate.cpp
     esm4/playermechanics.cpp
     esm4/pathgriddata.cpp
+    esm4/combatstylepolicy.cpp
     esm4/testloadcrea.cpp
     esm4/testloadcsty.cpp
     esm4/testloadpack.cpp

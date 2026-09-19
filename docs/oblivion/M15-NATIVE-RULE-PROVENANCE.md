@@ -72,3 +72,45 @@ are unsigned 16-bit integers. The audit treats reserved padding as padding,
 preserves all native equipment, and marks enchantment/staff execution as M16.
 Crime ownership and faction values are inventoried without inferring their
 runtime formula or access policy.
+
+## Original combat-style initialization and legacy loading
+
+Read-only inspection of the installed original 1.2.0416 executable, SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+provides an independent static oracle for the first pure style-policy helper.
+Disassembly and extraction scripts remain local in `S2/sources-01`; the
+[63 named initializer facts](M15-COMBAT-STYLE-DEFAULTS.json) contain numeric
+inputs/provenance only. Winning content GMST overrides still apply; this is not
+a list of final installed values or a behavioral-probe pass.
+
+The original DefaultCombatStyle vtable at VA `0xa4109c`, slots 55–89, reads the
+named default settings. Slots 90/91 implement secondary/core flag queries.
+The normal style initializer at `0x4a9a00` and CSTD loader at `0x4abbc0` establish
+two distinct policies. The loader clears the 124-byte standard block, initializes
+selected tails, copies the available subrecord, then applies zero-value fixes.
+
+| Input case | Independently observed original behavior |
+| --- | --- |
+| No explicit style | Use DefaultCombatStyle setting-backed values and flags |
+| Historical CSTD lacks range multipliers | Literal `1, 1`, regardless of default range GMSTs |
+| Historical CSTD lacks switch/buff/ranged/group fields | Corresponding default setting values |
+| Historical CSTD lacks rush chance/distance | Corresponding default setting values |
+| Historical CSTD lacks secondary acquisition flag | False, even if the default-style GMST is true |
+| Stored switch distance is zero | Replace that individual component with its default setting |
+| Stored rush chance or rush distance is zero | Replace with its respective default setting |
+| Other stored zero, or smallest positive switch/rush distance | Preserve exactly |
+
+`resolveCombatStyleStandard` applies those distinctions to immutable inputs;
+it leaves raw/source fields untouched and diagnoses incomplete/invalid defaults.
+It deliberately rejects nonfinite/out-of-domain authored inputs consistently
+with the decoder. The test oracle uses distinct default and record values,
+zero and the immediately adjacent positive float, all six historical sizes,
+invalid inputs and signed additive bonuses. These tests establish pure input
+resolution; actor selection, settings-store integration, advanced-modifier use
+and independent original gameplay remain separate open gates.
+
+A useful discrepancy: original compiled additive attack/power bonuses are 5,
+where current editor creation defaults differ. Original attack-skill base is 0
+and multiplier 20. xOBSE was used only for navigation; its command table has
+mappings that disagree with inspected original addresses and is not copied as
+an authoritative formula table.
