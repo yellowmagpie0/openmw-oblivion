@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "purpose": "Isolated original-game damage measurements; not official campaign acceptance",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc_template": 7,
+  "weapon_template": 3084,
+  "cell": {
+    "id": 16779264,
+    "editor_id": "M15DamageReference",
+    "name": "M15 damage reference room",
+    "ambient": [150, 150, 150]
+  },
+  "room": {
+    "id": 16779265,
+    "reference": 16779280,
+    "model": "Architecture/ImperialCity/Interior/ICGroundFloor01.NIF"
+  },
+  "target": {
+    "id": 16779296,
+    "reference": 16779297,
+    "editor_id": "M15DamageTarget",
+    "name": "M15 reference opponent",
+    "health": 500,
+    "fatigue": 200,
+    "skill": 5,
+    "attribute": 50,
+    "position": [0, 160, 0],
+    "rotation": [0, 0, 3.1415927],
+    "style": 16779298
+  },
+  "weapon": {
+    "id": 16779312,
+    "reference": 16779313,
+    "editor_id": "M15ReferenceSword",
+    "name": "M15 reference sword",
+    "damage": 100,
+    "condition": 1000,
+    "speed": 1,
+    "reach": 1,
+    "weight": 0,
+    "position": [-96, 0, 16],
+    "rotation": [0, 0, 0]
+  }
+}

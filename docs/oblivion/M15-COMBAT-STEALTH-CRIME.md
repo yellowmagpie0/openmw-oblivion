@@ -1045,3 +1045,29 @@ S1 save/load/resave also passes (`npc-inputs-01/native-restart`); both captures
 were opened and show the textured room and HUD. No combat claim is attached
 to that observation-only course. Tested diff SHA-256:
 `bd6aa81967c59deaa1c334db15c0ec698435da529db8856614714d13913bba29`.
+
+### S2 reproducible isolated damage-reference fixture
+
+Commit `54fc77aa57` contains native NPC validation. An editable JSON recipe
+and bounded TES4 writer now produce an eight-record reference plugin: room,
+one mortal fixed-stat opponent, explicit combat style, and an unenchanted
+sword with a normal ground placement. Appearance/model inputs come from the
+hashed licensed master; scripts, packages, spells, factions and weapon
+enchantments are not inherited. This synthetic nonattacking opponent isolates
+incoming-hit measurements; it is not an official campaign or an AI acceptance
+fixture. No expected damage, scripted hit or death is written into the plugin.
+
+Three new tests first failed against the unimplemented writer. All 141 Python
+tests now pass. Native record parsing succeeds; comparing master-only and
+master-plus-fixture graphs adds exactly eight keys and zero unresolved fixture
+references, retaining exactly the same 3,665 known master-only graph findings.
+Evidence: `S2/reference-fixture-01`; generated plugin SHA-256:
+`f7aaac64d2b5c6353f97fdab17d21e78813283a4f241b9b318ef97128494f2a3`.
+Tested source/recipe/test diff SHA-256: `b46ccb9285f0000e8247fff05d7c788649eb13b802244472e01bcfc81eea1650`.
+
+Original runtime setup is in progress. `original-06` retained the Steam
+application-load failure from an unchanged executable copy; `original-07`
+uses the installed executable and isolated prefix, with only the generated
+plugin temporarily added to Data. The tracked launch provenance requires its
+hash-checked cleanup. Structural write/reinspection success is not yet runtime
+acceptance, and no damage measurement has passed.
