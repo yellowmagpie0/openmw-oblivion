@@ -1,0 +1,1008 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "M15 ordinary-input scenario contract",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "command": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ]
+      }
+    },
+    "xvfb": {
+      "type": "boolean"
+    },
+    "virtual_gamepad": {
+      "type": "boolean"
+    },
+    "width": {
+      "const": 1280
+    },
+    "height": {
+      "const": 720
+    },
+    "timeout_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "terminate_after_actions": {
+      "const": true
+    },
+    "expected_exit": {
+      "const": 0
+    },
+    "expected_log": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden_log": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "reviewed_error_log": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "m15": {
+      "$ref": "#/$defs/settings"
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "key"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "pause_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "key_down"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "pause_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "key_up"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "pause_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "key_held"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "pause_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "key_hold"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "pause_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "mouse_click"
+              },
+              "button": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "button"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "mouse_down"
+              },
+              "button": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "button"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "mouse_up"
+              },
+              "button": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "button"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "mouse_move"
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -8192,
+                "maximum": 8192
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -8192,
+                "maximum": 8192
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "mouse_move_absolute"
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -8192,
+                "maximum": 8192
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -8192,
+                "maximum": 8192
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "sleep"
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 60
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "seconds"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "focus_window"
+              },
+              "name": {
+                "const": "OpenMW"
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "wait_log"
+              },
+              "pattern": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "timeout_seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 120
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "pattern",
+              "timeout_seconds"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "screenshot"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minimum_entropy": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "m15_snapshot"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "save": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "name",
+              "save"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "gamepad_button"
+              },
+              "value": {
+                "enum": [
+                  "a",
+                  "b",
+                  "x",
+                  "y",
+                  "leftshoulder",
+                  "rightshoulder",
+                  "back",
+                  "start",
+                  "leftstick",
+                  "rightstick",
+                  "dpad_up",
+                  "dpad_down",
+                  "dpad_left",
+                  "dpad_right"
+                ]
+              },
+              "hold_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phase": {
+                "enum": [
+                  "setup",
+                  "exercise",
+                  "observe",
+                  "restart-continuation"
+                ]
+              },
+              "type": {
+                "const": "gamepad_axis"
+              },
+              "axis": {
+                "enum": [
+                  "left_x",
+                  "left_y",
+                  "right_x",
+                  "right_y",
+                  "left_trigger",
+                  "right_trigger",
+                  "dpad_x",
+                  "dpad_y"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "type",
+              "phase",
+              "axis",
+              "value"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "name",
+    "command",
+    "files",
+    "m15",
+    "actions"
+  ],
+  "$defs": {
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "synthetic",
+            "official"
+          ]
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "audio": {
+          "type": "boolean"
+        },
+        "event_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "role": {
+                "enum": [
+                  "content",
+                  "save",
+                  "archive"
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "sha256",
+              "role"
+            ]
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "actor": {
+                "type": "string",
+                "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+              },
+              "action_id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "events": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]+$",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              },
+              "before": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "after": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "deltas": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "actor": {
+                      "type": "string",
+                      "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+                    },
+                    "path": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        ]
+                      }
+                    },
+                    "event_field": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_-]+$",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "expected": {
+                      "type": "number"
+                    },
+                    "tolerance": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "actor",
+                    "path",
+                    "event_field",
+                    "expected"
+                  ]
+                }
+              },
+              "incident_id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "projectile_id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "transaction_id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "assertions": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "actor": {
+                          "type": "string",
+                          "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+                        },
+                        "path": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            ]
+                          }
+                        },
+                        "snapshot": {
+                          "enum": [
+                            "before",
+                            "after"
+                          ]
+                        },
+                        "mode": {
+                          "const": "exact"
+                        },
+                        "expected": {}
+                      },
+                      "required": [
+                        "actor",
+                        "path",
+                        "snapshot",
+                        "mode",
+                        "expected"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "actor": {
+                          "type": "string",
+                          "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+                        },
+                        "path": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            ]
+                          }
+                        },
+                        "snapshot": {
+                          "enum": [
+                            "before",
+                            "after"
+                          ]
+                        },
+                        "mode": {
+                          "const": "numeric"
+                        },
+                        "expected": {
+                          "type": "number"
+                        },
+                        "tolerance": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "actor",
+                        "path",
+                        "snapshot",
+                        "mode",
+                        "expected",
+                        "tolerance"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "actor",
+              "target",
+              "action_id",
+              "events",
+              "before",
+              "after",
+              "deltas"
+            ]
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "snapshot"
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "kind"
+            ]
+          }
+        }
+      },
+      "required": [
+        "version",
+        "kind",
+        "seed",
+        "audio",
+        "event_file",
+        "inputs",
+        "cases",
+        "artifacts"
+      ]
+    }
+  }
+}

@@ -37,6 +37,7 @@ except ImportError:  # pragma: no cover - virtual playback is Linux-only
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tes4_runtime_state as tes4_state  # noqa: E402
 import tes4_m14_audit as tes4_m14  # noqa: E402
+import tes4_m15_evidence as tes4_m15  # noqa: E402
 
 
 SCHEMA_VERSION = 1
@@ -47,6 +48,7 @@ SCENARIO_ACTION_TYPES = {
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
     "m14_observe", "m14_actor_distance", "m14_actor_state_delta", "m14_advance_clock",
     "m14_obstruction", "m14_debug_navigation", "m14_console",
+    "m15_snapshot",
 }
 FORBIDDEN_M14_ACTION_TYPES = {
     "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
@@ -457,6 +459,8 @@ def _validate_m14_console_commands(commands: Any) -> None:
 def validate_scenario_manifest(raw: dict[str, Any]) -> None:
     if not isinstance(raw, dict):
         raise ValueError("Scenario manifest must be a JSON object")
+    if "m15" in raw:
+        tes4_m15.validate_manifest(raw)
     if raw.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"Unsupported scenario schema: {raw.get('schema_version')!r}")
     if not isinstance(raw.get("name"), str) or not raw["name"]:
@@ -1308,7 +1312,12 @@ def _start_xvfb(output: Path, width: int, height: int) -> tuple[subprocess.Popen
     raise RuntimeError("Unable to allocate an Xvfb display")
 
 
-def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: Path) -> dict[str, Any]:
+def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: Path,
+                m15_session: tes4_m15.Session | None = None) -> dict[str, Any]:
+    if action.get("type") == "m15_snapshot":
+        if m15_session is None:
+            raise ValueError("M15 snapshots require an isolated M15 session")
+        return m15_session.snapshot(action)
     action_type = action.get("type")
     started = time.monotonic()
     if action_type == "sleep":
@@ -1971,6 +1980,9 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
 def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -> dict[str, Any]:
     global _VIRTUAL_GAMEPAD
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if isinstance(raw, dict) and "m15" in raw:
+        raw = tes4_m15.parse_json(manifest_path.read_text(encoding="utf-8"))
+        output = output.resolve()
     validate_scenario_manifest(raw)
     variables = dict(variables)
     variables.setdefault("source", str(Path(__file__).resolve().parents[1]))
@@ -1978,6 +1990,11 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
     variables["output"] = str(output)
     variables["manifest"] = str(manifest_path)
     manifest = expand_value(raw, variables)
+    m15_session = None
+    if "m15" in manifest:
+        if "openmw" not in variables:
+            raise ValueError("M15 requires an explicit trusted openmw executable variable")
+        m15_session = tes4_m15.Session(manifest, output, Path(variables["openmw"]))
     output.mkdir(parents=True, exist_ok=True)
     for directory_name in manifest.get("directories", []):
         relative = Path(str(directory_name))
@@ -1993,6 +2010,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         destination.write_text(str(generated["content"]), encoding="utf-8")
     environment = dict(os.environ)
     environment.update({str(key): str(value) for key, value in manifest.get("environment", {}).items()})
+    if m15_session is not None:
+        environment = m15_session.environment()
     environment.setdefault("OPENMW_SUPPRESS_ERROR_DIALOG", "1")
     m14_config = manifest.get("m14")
     if isinstance(m14_config, dict):
@@ -2030,6 +2049,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
                 stderr=subprocess.STDOUT,
                 encoding="utf-8",
             )
+            if m15_session is not None:
+                m15_session.start(process.pid)
             action_results: list[dict[str, Any]] = []
             timed_out = False
             for action in manifest.get("actions", []):
@@ -2047,7 +2068,13 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
                 signal.signal(signal.SIGALRM, scenario_alarm)
                 signal.setitimer(signal.ITIMER_REAL, remaining)
                 try:
-                    action_results.append(_run_action(action, environment=environment, output=output))
+                    if m15_session is None:
+                        action_results.append(_run_action(action, environment=environment, output=output))
+                    else:
+                        action_result = _run_action(action, environment=environment, output=output,
+                                                    m15_session=m15_session)
+                        m15_session.record_action(action, action_result)
+                        action_results.append(action_result)
                 except TimeoutError:
                     timed_out = True
                     action_results.append({
@@ -2116,6 +2143,9 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
         )
         m14_result = _validate_m14_events(manifest, output, final=True)
         passed = passed and m14_result.get("passed", True)
+        m15_result = m15_session.finish(log_text, actions_complete) if m15_session is not None else None
+        if m15_result is not None:
+            passed = passed and m15_result["passed"]
         result = {
             "schema_version": SCHEMA_VERSION,
             "name": manifest.get("name", manifest_path.stem),
@@ -2134,6 +2164,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             "duration_seconds": round(time.monotonic() - started, 6),
             "passed": passed,
         }
+        if m15_result is not None:
+            result["m15"] = m15_result
         write_json(output / "scenario.json", result)
         return result
     finally:

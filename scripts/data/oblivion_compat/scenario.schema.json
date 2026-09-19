@@ -6,6 +6,7 @@
   "required": ["schema_version", "name", "command"],
   "additionalProperties": false,
   "properties": {
+    "m15": {"$ref": "m15.schema.json#/$defs/settings"},
     "schema_version": {"const": 1},
     "name": {"type": "string", "minLength": 1},
     "cwd": {"type": "string"},
@@ -81,10 +82,13 @@
               "mouse_move",
               "mouse_move_absolute",
               "mouse_click",
+              "mouse_down",
+              "mouse_up",
               "focus_window",
               "command",
               "assert_file",
               "m14_checkpoint",
+              "m15_snapshot",
               "m14_assert_events",
               "m14_observe",
               "m14_actor_distance",
@@ -94,6 +98,8 @@
               "m14_debug_navigation"
             ]
           },
+          "phase": {"enum": ["setup", "exercise", "observe", "restart-continuation"]},
+          "save": {"type": "string", "minLength": 1},
           "seconds": {"type": "number", "minimum": 0},
           "pattern": {"type": "string", "minLength": 1},
           "path": {"type": "string", "minLength": 1},
@@ -105,7 +111,7 @@
           "minimum_entropy": {"type": "number", "minimum": 0, "maximum": 1},
           "minimum_mean": {"type": "number", "minimum": 0, "maximum": 1},
           "maximum_mean": {"type": "number", "minimum": 0, "maximum": 1},
-          "value": {"type": "string"},
+          "value": {"oneOf": [{"type": "string"}, {"type": "number"}]},
           "x": {"oneOf": [{"type": "integer"}, {"type": "string"}]},
           "y": {"oneOf": [{"type": "integer"}, {"type": "string"}]},
           "button": {"type": "integer", "minimum": 1},
@@ -175,6 +181,7 @@
       }
     }
   },
+  "allOf": [{"if": {"required": ["m15"]}, "then": {"$ref": "m15.schema.json"}}],
   "$defs": {
     "actorStateRequirements": {
       "type": "array",

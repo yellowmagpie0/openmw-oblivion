@@ -424,3 +424,37 @@ contains proprietary script source and must remain local.
 There is no newly playable M15 combat/crime/jail implementation to launch at
 this checkpoint. In particular, running `scripts/run-oblivion.sh` still runs
 the pre-M15 mechanics. The remaining work is the rest of S0 and all of S1–S14.
+
+### S1 contract checkpoint (stage remains open)
+
+The runner now recognizes a strict M15 contract with typed nested actions and
+case assertions, setup/exercise/observation boundaries, normal-input controls,
+fingerprinted content and executable, fresh output/run/process identities,
+immutable capture receipts, required artifacts, and one result for every case.
+Actor/target/action and optional incident/projectile/transaction identities
+scope ordered events. Numeric deltas must agree with independently parsed
+native-save state; exact canonical field comparisons preserve nested item
+metadata and boolean types. Missing fields never become zero/default values.
+Generic subprocesses, console input, input-binding overrides, generated event
+files, inherited script hooks, stale streams and edited captures are rejected.
+
+Validation at `build/oblivion-compat/m15/S1/contract-01/`:
+
+- `python-full.log`: 104 Python tests passed (28 M15 tests plus 76 existing).
+- `schema-agreement.log`: independent `jsonschema 4.26.0` draft-2020-12
+  validation agreed with the runtime structural validator on 816 mutations;
+  the parent scenario schema also accepted every structurally valid mutant.
+  The independent dependency is isolated in `build/m15-schema-venv`; the
+  production runner remains standard-library-only.
+- The first city regression failed with a binary/resources revision mismatch,
+  despite passing AI evidence checks. A normal `openmw` rebuild completed;
+  the fresh `m14-city-rebuilt` course then passed, with all actions completed,
+  zero exit status and no timeout. This is automated AI acceptance, not a
+  resolution of the previously documented visual defects.
+
+The tests use deliberately mocked event/state fixtures at the engine boundary;
+none establishes combat, stealth, crime, actual runtime save observation or
+restart acceptance. Engine emission and completed-save acknowledgments are
+still required. Restart continuation currently fails explicitly instead of
+pretending an in-process reload is a second process. Audio artifacts likewise
+cannot pass without an implemented capture path. Keep S1 and S2–S14 open.
