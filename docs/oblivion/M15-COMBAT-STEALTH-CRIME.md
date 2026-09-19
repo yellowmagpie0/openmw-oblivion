@@ -1005,3 +1005,22 @@ and overflow. All 1,668 component tests pass with exact inventory; all 23
 physical/settings/style-policy cases pass under ASan/UBSan. Evidence:
 `S2/physical-rules-03`; tested diff SHA-256:
 `f6f952641656d74cfb1d72ea2416d8a1a676ba41ff8cce6c5f9723cb94465287`. S2 remains in progress.
+
+### S2 complete live lookup coverage for the first 30 physical inputs
+
+Commit `21318aabf3` contains armor arithmetic. Original run `S2/original-05`
+used normal Continue from the preserved prison quicksave, then 27 additional
+read-only `getgs` queries. All seven response captures were opened and inspected;
+combined with the prior three physical queries, they cover every input in
+`M15-PHYSICAL-RULE-INPUTS.json`. The source probe ledger now has 34 observations,
+including the four earlier AI-style settings. Float responses display two
+decimal places; binary precision still comes from the independent record and
+initializer inspection. No actor/quest state or damage result was injected.
+
+One query wrapper returned 143 after all of its child inputs and capture
+returned zero. The game remained alive and later queries completed normally.
+This unexplained orchestration exit is retained in the reference report, so
+no whole-process acceptance gate is claimed. Each recorded numeric observation
+has its inspected capture/hash and input provenance. The original game was
+then exited normally. Actual physical damage probes remain the next oracle
+work; live setting lookups alone do not close S2.

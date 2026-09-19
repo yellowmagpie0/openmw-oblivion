@@ -13,7 +13,8 @@
       "storage": "0xb37388",
       "constructor": "0x9eaa67",
       "type": "int32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-08"
     },
     {
       "name": "fActorLuckSkillMult",
@@ -21,7 +22,8 @@
       "storage": "0xb37390",
       "constructor": "0x9eaa8f",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-09"
     },
     {
       "name": "fFatigueBase",
@@ -33,7 +35,8 @@
         "key": "content:oblivion.esm:02a0cc",
         "type": "f",
         "value": 1.0
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-10"
     },
     {
       "name": "fFatigueMult",
@@ -45,7 +48,8 @@
         "key": "content:oblivion.esm:02a0cd",
         "type": "f",
         "value": 0.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-11"
     },
     {
       "name": "fDamageWeaponMult",
@@ -57,7 +61,8 @@
         "key": "content:oblivion.esm:02a0c5",
         "type": "f",
         "value": 0.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-12"
     },
     {
       "name": "fDamageSkillBase",
@@ -65,7 +70,8 @@
       "storage": "0xb36de0",
       "constructor": "0x9e8b5f",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-13"
     },
     {
       "name": "fDamageSkillMult",
@@ -77,7 +83,8 @@
         "key": "content:oblivion.esm:0051a7",
         "type": "f",
         "value": 1.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-06"
     },
     {
       "name": "fDamageWeaponConditionBase",
@@ -89,7 +96,8 @@
         "key": "content:oblivion.esm:0c7617",
         "type": "f",
         "value": 0.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-14"
     },
     {
       "name": "fDamageWeaponConditionMult",
@@ -101,7 +109,8 @@
         "key": "content:oblivion.esm:0c7618",
         "type": "f",
         "value": 0.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-15"
     },
     {
       "name": "fDamageStrengthBase",
@@ -113,7 +122,8 @@
         "key": "content:oblivion.esm:0051a4",
         "type": "f",
         "value": 0.75
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-16"
     },
     {
       "name": "fDamageStrengthMult",
@@ -125,7 +135,8 @@
         "key": "content:oblivion.esm:0051a5",
         "type": "f",
         "value": 0.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-07"
     },
     {
       "name": "fHandDamageSkillBase",
@@ -133,7 +144,8 @@
       "storage": "0xb36e50",
       "constructor": "0x9e8df0",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-28"
     },
     {
       "name": "fHandDamageSkillMult",
@@ -141,7 +153,8 @@
       "storage": "0xb36e58",
       "constructor": "0x9e8e20",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-29"
     },
     {
       "name": "fHandDamageStrengthBase",
@@ -149,7 +162,8 @@
       "storage": "0xb36e60",
       "constructor": "0x9e8e50",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-30"
     },
     {
       "name": "fHandDamageStrengthMult",
@@ -157,7 +171,8 @@
       "storage": "0xb36e68",
       "constructor": "0x9e8e8f",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-27"
     },
     {
       "name": "fHandHealthMin",
@@ -165,7 +180,8 @@
       "storage": "0xb36e70",
       "constructor": "0x9e8eb0",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-17"
     },
     {
       "name": "fHandHealthMax",
@@ -177,7 +193,8 @@
         "key": "content:oblivion.esm:02a0ca",
         "type": "f",
         "value": 15.0
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-18"
     },
     {
       "name": "fHandFatigueDamageBase",
@@ -189,7 +206,8 @@
         "key": "content:oblivion.esm:05c005",
         "type": "f",
         "value": 1.0
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-19"
     },
     {
       "name": "fHandFatigueDamageMult",
@@ -201,7 +219,8 @@
         "key": "content:oblivion.esm:05c006",
         "type": "f",
         "value": 0.5
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-20"
     },
     {
       "name": "fBlockSkillBase",
@@ -209,7 +228,8 @@
       "storage": "0xb36ee8",
       "constructor": "0x9e9120",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-21"
     },
     {
       "name": "fBlockSkillMult",
@@ -217,7 +237,8 @@
       "storage": "0xb36ef0",
       "constructor": "0x9e9150",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-22"
     },
     {
       "name": "fBlockMax",
@@ -225,7 +246,8 @@
       "storage": "0xb36ef8",
       "constructor": "0x9e918f",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-23"
     },
     {
       "name": "fBlockAmountWeaponMult",
@@ -233,7 +255,8 @@
       "storage": "0xb36f00",
       "constructor": "0x9e91bf",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-24"
     },
     {
       "name": "fBlockAmountHandToHandMult",
@@ -241,7 +264,8 @@
       "storage": "0xb36f08",
       "constructor": "0x9e91ef",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-25"
     },
     {
       "name": "fDifficultyDamageMultiplier",
@@ -253,7 +277,8 @@
         "key": "content:oblivion.esm:0cad59",
         "type": "f",
         "value": 5.0
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-05"
     },
     {
       "name": "fArmorRatingBase",
@@ -261,7 +286,8 @@
       "storage": "0xb36e98",
       "constructor": "0x9e8faf",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-31"
     },
     {
       "name": "fArmorRatingMax",
@@ -269,7 +295,8 @@
       "storage": "0xb36ea0",
       "constructor": "0x9e8fd0",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-32"
     },
     {
       "name": "fArmorRatingConditionBase",
@@ -277,7 +304,8 @@
       "storage": "0xb36ea8",
       "constructor": "0x9e9000",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-33"
     },
     {
       "name": "fArmorRatingConditionMult",
@@ -285,7 +313,8 @@
       "storage": "0xb36eb0",
       "constructor": "0x9e9030",
       "type": "float32",
-      "installed_override": null
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-34"
     },
     {
       "name": "fMaxArmorRating",
@@ -297,7 +326,8 @@
         "key": "content:oblivion.esm:0cd4ba",
         "type": "f",
         "value": 85.0
-      }
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-26"
     }
   ]
 }
