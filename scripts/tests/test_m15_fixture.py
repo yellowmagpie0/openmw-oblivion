@@ -19,6 +19,7 @@ class ObservationFixtureTests(unittest.TestCase):
             self.source += fixture.record(record['type'], record['id'], fixture.string('EDID', record['type']))
         self.recipe['source_sha256'] = hashlib.sha256(self.source).hexdigest()
         self.recipe['copy_types'] = []
+        self.recipe['floor']['radius'] = 2
 
     def test_reproducible_structural_readback_has_only_declared_boot_and_floor_records(self):
         output, metadata = fixture.build(self.source, self.recipe)
@@ -62,7 +63,7 @@ class ObservationFixtureTests(unittest.TestCase):
                 list(fixture.records(data))
 
     def test_floor_bounds_and_identity_collisions_fail(self):
-        for changes in ({'radius': 0}, {'radius': 9}, {'spacing': 0}, {'reference_start': 7}):
+        for changes in ({'radius': -1}, {'radius': 9}, {'spacing': 0}, {'reference_start': 7}):
             candidate = copy.deepcopy(self.recipe)
             candidate['floor'].update(changes)
             with self.subTest(changes=changes), self.assertRaises(ValueError):

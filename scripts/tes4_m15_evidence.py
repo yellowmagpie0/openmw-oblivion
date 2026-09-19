@@ -161,6 +161,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
     _unique([(c["actor"], c["target"], c["action_id"]) for c in settings["cases"]], "case action identity")
     _unique([item["path"] for item in settings["inputs"]], "input path")
     _unique([item["path"] for item in settings["artifacts"]], "artifact path")
+    _unique([item["key"] for item in settings.get("required_references", [])], "required reference")
     if set(manifest.get("environment", {})) - RENDER_ENV:
         raise _error("only renderer environment overrides are permitted")
     if manifest["command"][0] != "{openmw}":
@@ -560,6 +561,10 @@ class Session:
         live_state = _read_json(live_path)
         if not _equal(live_state, state):
             raise _error("independent live observation and decoded disk save disagree")
+        for required in self.settings.get("required_references", []):
+            actual = actor_state(state, required["key"])
+            if any(key not in actual or not _equal(actual[key], value) for key, value in required.items()):
+                raise _error(f"required world reference is missing or differs: {required['key']}")
         self._receipt(live_relative)
         snapshot = {"run_id": self.run_id, "epoch": self.epoch, "name": name,
                     "ordinal": len(self.snapshots), "event_sequence": boundary["sequence"],

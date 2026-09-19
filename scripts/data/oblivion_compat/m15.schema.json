@@ -962,6 +962,41 @@
               "kind"
             ]
           }
+        },
+        "required_references": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+              },
+              "base": {
+                "type": "string",
+                "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+              },
+              "cell": {
+                "type": "string",
+                "pattern": "^(content:[^:/\\\\]+:[0-9a-f]{6}|dynamic:[^:/\\\\]+:[0-9a-f]{16})$"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "deleted": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "key",
+              "base",
+              "cell",
+              "enabled",
+              "deleted"
+            ]
+          }
         }
       },
       "required": [

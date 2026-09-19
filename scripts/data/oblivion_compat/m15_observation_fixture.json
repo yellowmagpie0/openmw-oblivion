@@ -2,12 +2,61 @@
   "version": 1,
   "purpose": "Synthetic S1 save-observation course only; no combat or official-content acceptance",
   "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
-  "copy_types": ["GMST", "HAIR", "EYES"],
-  "records": [
-    {"type": "NPC_", "id": 7, "fields": ["EDID", "FULL", "MODL", "RNAM", "CNAM", "DATA", "ACBS", "FGGS", "FGGA", "FGTS", "HNAM", "LNAM", "HCLR", "ENAM"]},
-    {"type": "RACE", "id": 2311, "omit": ["SPLO", "XNAM"]},
-    {"type": "CLAS", "id": 143590, "omit": []}
+  "copy_types": [
+    "GMST",
+    "HAIR",
+    "EYES"
   ],
-  "cell": {"id": 9437184, "editor_id": "M15Observation", "name": "M15 observation fixture", "ambient": [150, 150, 150]},
-  "floor": {"id": 9437185, "model": "Dungeons/Chargen/IDFloorBrick01.NIF", "spacing": 512, "radius": 2, "reference_start": 9437200}
+  "records": [
+    {
+      "type": "NPC_",
+      "id": 7,
+      "fields": [
+        "EDID",
+        "FULL",
+        "MODL",
+        "RNAM",
+        "CNAM",
+        "DATA",
+        "ACBS",
+        "FGGS",
+        "FGGA",
+        "FGTS",
+        "HNAM",
+        "LNAM",
+        "HCLR",
+        "ENAM"
+      ]
+    },
+    {
+      "type": "RACE",
+      "id": 2311,
+      "omit": [
+        "SPLO",
+        "XNAM"
+      ]
+    },
+    {
+      "type": "CLAS",
+      "id": 143590,
+      "omit": []
+    }
+  ],
+  "cell": {
+    "id": 9437184,
+    "editor_id": "M15Observation",
+    "name": "M15 observation fixture",
+    "ambient": [
+      150,
+      150,
+      150
+    ]
+  },
+  "floor": {
+    "id": 9437185,
+    "model": "Architecture/ImperialCity/Interior/ICGroundFloor01.NIF",
+    "spacing": 512,
+    "radius": 0,
+    "reference_start": 9437200
+  }
 }

@@ -14,7 +14,7 @@
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ncontent=m15-fixture.esm\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ncontent=m15-fixture.esm\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
     },
     {
       "path": "config/settings.cfg",
@@ -34,7 +34,7 @@
     "inputs": [
       {
         "path": "{fixture_data}/m15-fixture.esm",
-        "sha256": "76475e122f6feeaf31d020cb0b704580fe3234e3a3810de5cea3da2944bb9eeb",
+        "sha256": "6c5dbec1728d110aca2df6b33ccff1035047348fe80c72079bf73e1b0e5fa15e",
         "role": "content"
       },
       {
@@ -100,6 +100,15 @@
       {
         "path": "observation.png",
         "kind": "image"
+      }
+    ],
+    "required_references": [
+      {
+        "key": "content:m15-fixture.esm:900010",
+        "base": "content:m15-fixture.esm:900001",
+        "cell": "content:m15-fixture.esm:900000",
+        "enabled": true,
+        "deleted": false
       }
     ]
   },

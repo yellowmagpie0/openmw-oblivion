@@ -90,7 +90,7 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     lighting = ambient + bytes(8) + struct.pack("<ffii ff", 0., 10000., 0, 0, 0., 1.)
     cell_record = record("CELL", cell["id"], string("EDID", cell["editor_id"])
                          + string("FULL", cell["name"]) + sub("DATA", b"\x01") + sub("XCLL", lighting))
-    if not 1 <= floor["radius"] <= 8 or not 1 <= floor["spacing"] <= 4096:
+    if not 0 <= floor["radius"] <= 8 or not 1 <= floor["spacing"] <= 4096:
         raise ValueError("fixture floor dimensions are outside bounded course")
     references = []
     for x in range(-floor["radius"], floor["radius"] + 1):

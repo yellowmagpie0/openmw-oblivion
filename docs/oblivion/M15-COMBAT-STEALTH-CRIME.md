@@ -551,3 +551,20 @@ The first passing image still showed sparse geometry: native NIF inspection
 measured the selected "floor brick" at approximately 91 by 49 units, not a
 complete modular room. That fixture-authoring mistake is being corrected in a
 separate recipe change. It does not waive visual acceptance of gameplay courses.
+
+### S1 room-fixture correction
+
+The recipe now places one complete `ICGroundFloor01` interior instead of the
+small brick-piece grid, and the start is anchored to its named reference.
+This produces 458 records with one placed room, zero scripts and zero quests.
+The course uses actual held-key timing, normal camera input, and a short
+post-save presentation settle. Neither assertion thresholds nor outcomes were
+relaxed. The hash-consistent native snapshots must also contain the declared
+room's exact key, base, cell, enabled and deleted state; an empty scene fails.
+
+`S1/observation-03/` contains the fresh **passing single-process observation
+course**, structural/native graph readback, and 113 passing Python tests.
+The inspected screenshot shows the room's continuous floor, walls and ceiling,
+readable shared HUD and native icon. This accepts the narrow read-only save
+observation course, not M15 gameplay or S1 as a whole. Fresh-process continuation
+and offline evidence-corruption replay are the next open S1 work.

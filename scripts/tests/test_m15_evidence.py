@@ -404,6 +404,34 @@ class M15SessionTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         session.snapshot(action)
 
+    def test_empty_world_cannot_satisfy_declared_fixture_reference(self):
+        session, state, boundary, events, action = self.prepare_snapshot()
+        session.settings["required_references"] = [{"key": VICTIM, "base": OTHER,
+            "cell": "content:fixture.esm:000001", "enabled": True, "deleted": False}]
+        state["references"] = []
+        live = self.output / boundary["live"]
+        live.write_text(json.dumps(state))
+        boundary["live_sha256"] = m15.digest(live)
+        events.write_text(json.dumps(boundary) + "\n")
+        # A hash-consistent save/live pair is still insufficient if the named
+        # world fixture is absent. This is independent of causal event counts.
+        with mock.patch.object(m15.tes4_runtime_state, "load_save", return_value=state):
+            with self.assertRaisesRegex(ValueError, "named actor"):
+                session.snapshot(action)
+
+    def test_declared_world_reference_requires_exact_base_cell_and_enabled_state(self):
+        session, state, boundary, events, action = self.prepare_snapshot()
+        required = {"key": VICTIM, "base": OTHER, "cell": "content:fixture.esm:000001",
+                    "enabled": True, "deleted": False}
+        session.settings["required_references"] = [required]
+        state["references"][0].update(required)
+        live = self.output / boundary["live"]
+        live.write_text(json.dumps(state))
+        boundary["live_sha256"] = m15.digest(live)
+        events.write_text(json.dumps(boundary) + "\n")
+        with mock.patch.object(m15.tes4_runtime_state, "load_save", return_value=state):
+            self.assertTrue(session.snapshot(action)["passed"])
+
     def test_reused_outputs_and_symlink_escape_are_rejected(self):
         self.output.mkdir()
         (self.output / "old-events").write_text("old")
