@@ -937,3 +937,18 @@ pass with all 551 engine tests and an exact inventory. Evidence is in
 `S2/actor-inputs-01`; tested source/test diff SHA-256: `308b9553baf37e4a151ffc202ce25698d225386b7f088d3410647595eb08ed93`.
 These are store/helper tests, not actor/controller gameplay acceptance. S2's
 physical/crime rules and behavioral probes remain open.
+
+### S2 native GMST parser validation
+
+Commit `6e58f387dc` contains actor/store input resolution. Three new binary
+GMST cases demonstrated baseline acceptance of malformed numeric payloads,
+nonfinite values, missing/duplicate/unordered fields and stale reused-record
+data. The TES4 parser now rejects these explicitly, requires native f/i/s
+types and resets each record before loading; deleted tombstones may omit data.
+Later-game value-type handling remains separately gated.
+
+All 1,655 component and 551 engine tests pass; the component inventory matches
+exactly. All three GMST cases and all 11 installed official plugin parses pass
+under ASan/UBSan. Evidence and retained failures: `S2/gmst-01`. Tested
+source/test diff SHA-256: `c43e17a57f430bbe9137e58c6a35c8cef9d21a8071ddd9ab81f64361ac9990ea`. These checks establish
+parser acceptance and rejection, not damage or crime gameplay.
