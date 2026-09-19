@@ -1,0 +1,234 @@
+# M15 combat, stealth, crime, and jail
+
+Status: **in progress; not implemented or accepted**. The execution contract is
+[the staged plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md). Baseline work
+started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clean
+worktree on `master`. No M15 gameplay capability is established by this report.
+
+## Stage ledger
+
+Evidence root: `build/oblivion-compat/m15/`. Generated proprietary content,
+logs, saves, screenshots, and reports are deliberately not committed.
+
+| Stage | Status | Implementation / evidence | Next required gate |
+| --- | --- | --- | --- |
+| S0 baseline and inventory | in-progress | Baseline revision above; `S0/baseline-01/`; results below | Complete winning-record campaign dependency and oracle inventory |
+| S1 evidence harness | pending | No implementation/evidence | Phase isolation, causal/state checks, negative controls, fresh-process restart |
+| S2 native data/rules | pending | No implementation/evidence | Typed CSTY and independently reviewed rule matrix |
+| S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
+| S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
+| S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
+| S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
+| S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
+| S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
+| S9 offenses/witnesses | pending | No implementation/evidence | Exact legal/criminal consequences and persistence |
+| S10 arrest/fine | pending | No implementation/evidence | Physical pursuit and normal choices |
+| S11 jail | pending | No implementation/evidence | Property, sentence, release/escape, restart |
+| S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
+| S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
+| S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S0 requirements and execution
+
+These IDs identify baseline requirements, not completed gameplay tests. Each
+must be split into the concrete permutations in plan sections 8–9 before its
+owning stage is implemented. Future rows in the stage ledger are not passes.
+
+| Case | Owner / level | Oracle and expected result | Evidence / current result |
+| --- | --- | --- | --- |
+| M15-S0-01 | S0 / build metadata | Exact revision, cache, binaries, content identity | Clean source recorded; RelWithDebInfo, GCC, bundled Bullet; content hashes in `content/baseline.json` |
+| M15-S0-02 | S0 / L1 baseline | Existing focused tests execute nonzero counts and pass after rebuild | `rebuilt-components.xml`: 39/39; `rebuilt-engine.xml`: 29/29; `python.log`: 76/76 |
+| M15-S0-03 | S0 / L0 content | Existing reviewed count locks and lossless census pass | `m14-audit/m14-audit.json`, `content/baseline.json`: pass |
+| M15-S0-04 | S0 / L3 regression characterization | Existing city, inventory and TES3 isolation manifests run unchanged in fresh outputs | `m14-city/scenario.json`, `m13-items/scenario.json`, `morrowind/scenario.json`: automated passes; visual limits below |
+| M15-S0-05 | S0 / L0 campaign discovery | Exact forms, original entry/results and prerequisite gaps for E1–E5 | Arena and crime findings below; full winning-record/condition traversal still open |
+| M15-S0-06 | S0 / L5 availability | Identify original-game oracle, external Lua suite, compilers, audio and final build matrix | GCC/Xvfb/xdotool present; Clang not in `/usr/bin` or PATH; Steam Proton installation present but original-game probe not run; external suite not yet resolved |
+
+### Rebuilt baseline
+
+`cmake --build build --target components-tests openmw-tests openmw esmtool -j2`
+completed successfully (`build.log`). This reused the user's existing build
+configuration without changing its CMake options. The initial binary runs are
+also retained as `components.*` and `engine.*`; only `rebuilt-*` establish the
+post-build focused baseline. No skipped tests appeared in these focused runs.
+
+The existing CTest inventory has **two** entries. OpenCS tests are disabled in
+the current cache. Neither the focused runs nor that inventory satisfies S14.
+The full GCC/Clang Debug/RelWithDebInfo matrix, OpenCS, sanitizers, full CTest,
+external Lua integration, original-game oracle, audio and performance/soak
+campaigns remain unrun for M15.
+
+Reproduce from the repository root, choosing a fresh output directory:
+
+```sh
+OUT="$PWD/build/oblivion-compat/m15/S0/baseline-02"
+mkdir -p "$OUT"
+cmake --build build --target components-tests openmw-tests openmw esmtool -j2
+./build/components-tests \
+  --gtest_filter='ESM4RuntimeState.*:ESM4PlayerMechanics.*:ESM4InventoryMechanics.*:ESM4Detection.*' \
+  --gtest_output="xml:$OUT/components.xml"
+./build/openmw-tests \
+  --gtest_filter='OblivionAiTest.*:OblivionProfileServicesTest.*' \
+  --gtest_output="xml:$OUT/engine.xml"
+python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+DATA='/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data'
+python3 scripts/oblivion_compat.py baseline --build "$PWD/build" \
+  --oblivion-data "$DATA" --census-all --require-lossless-tes4 \
+  --hash-archives --output "$OUT/content"
+python3 scripts/oblivion_compat.py m14-audit --oblivion-data "$DATA" \
+  --count-lock scripts/data/oblivion_compat/oblivion_m14_data_counts.json \
+  --output "$OUT/m14-audit"
+./build/esmtool obscript "$OUT/obscript.json" "$DATA/Oblivion.esm"
+```
+
+The census inspected 11/11 plugins and 17/17 archives: zero census failures,
+unsupported record families, or unallowlisted skips. The semantic M14 audit
+matched the checked-in count lock: 7,668 packages, 8,288 pathgrids, 35,565
+cells, 3,636 actors and zero invalid references. These checks establish data
+preservation and existing M14 semantics, **not** M15 combat behavior.
+
+The master-only ObScript audit (`obscript.json`) compiled 9,992 units with
+zero frontend failures (2,031 object, 265 quest, 97 effect, 5,718 dialogue
+result, 1,881 quest result). This is not the full installed-plugin S14 frontend
+audit and does not prove runtime command implementation.
+
+Master SHA-256:
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+`DLCShiveringIsles.esp` is still an 85-byte, zero-record stub. The master does
+contain SE-prefixed records; the stub's count must not be interpreted as
+either expansion runtime coverage or proof that the master has no SE data.
+
+### Rendered baseline and limitations
+
+The unchanged `oblivion_m14_city_schedule.json` passed its actor/event/save
+checks in `m14-city/`. Both `city-morning.png` and `city-navmesh.png` were
+opened and inspected. Geometry is textured and nonempty, but the crosshair
+and HUD contain magenta missing-texture regions. The camera looks down over
+the player/body and ground; these frames do not prove visible NPC movement.
+The second frame contains navigation lines. **Visual acceptance fails** for
+the missing UI textures; do not inherit this as an M15 visual pass.
+
+The unchanged `morrowind_m14_regression.json` passed in `morrowind/`, including
+its no-T4ST save assertion. Its inspected capture shows sky, rock geometry,
+a textured TES3 HUD and crosshair, with the camera against terrain. It is a
+profile/save-isolation smoke test, not evidence of playable Balmora traversal,
+TES3 combat, crime, or jail. Those regression courses remain required.
+
+`oblivion_m13_item_matrix.json` passed in `m13-items/`, with variables
+`scene=prison`, `start=ImperialDungeon01`. Its event-injected inventory setup
+and same-process quickload are existing M13 characterization only; they cannot
+satisfy M15 normal-action or fresh-process restart requirements. These runs
+all use `--no-sound=1` and establish no audible-output behavior.
+
+For the three scenario commands the shared arguments were:
+
+```sh
+python3 scripts/oblivion_compat.py scenario MANIFEST --output FRESH_OUTPUT \
+  --variable "source=$PWD" --variable "openmw=$PWD/build/openmw" \
+  --variable "resources=$PWD/build/resources" \
+  --variable "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data"
+```
+
+M13 additionally used the two variables above. The Morrowind manifest used
+`--variable 'morrowind_data=/home/maciek/.local/share/Steam/steamapps/common/Morrowind/Data Files'`.
+Exact commands and substitutions are also recoverable from each scenario
+report and its generated configuration. All three outputs were fresh.
+
+## Campaign discovery (not yet a complete S0 gate)
+
+All forms in this section belong to `Oblivion.esm`. Use stable keys prefixed
+`content:oblivion.esm:`; never use these six-digit IDs as load-order indices.
+The following observations are from the installed master and its freshly
+compiled corpus. Official-DLC override/condition traversal remains required
+before treating them as the final winning campaign specification.
+
+### E3: first Pit Dog Arena match
+
+Selected target: normal registration with Owyn, receive/equip Battle Raiment,
+request the first match, defeat the first Yellow Team Pit Dog, return to Owyn,
+receive the first-win reward once, and return to the next ready state.
+
+| Role | Form / original unit | Required predicate or dependency |
+| --- | --- | --- |
+| Owyn reference | `127672`, base `0222b6`, Bloodworks `037868` | Actual dialogue/conditions/results |
+| Arena quest | `02991f`, script `02a24a` | Gates and persistent quest variables |
+| ReadyForAMatch first result | INFO `00c0d0` | Sets readiness, enables/moves the original opponent, starts Arena/Aggression/Announcer/Disqualification |
+| Match gate | `127670` | Raiment eligibility via equip/unequip events |
+| First opponent | reference `18ae5b`, base `02a2b1` | Initially held in `18ae56`; legitimate result moves it to match marker `091b7d` |
+| Match cell | `091b46` | Do not confuse `ICArena` (`037867`) with this fight cell |
+| Team gates | `091b7e`, `091b7f` | Original timed unlock/activation |
+| Aggression script | `01e643` | Resolves `Combatant0ARef`; writes aggression and calls `StartCombat Player` |
+| Combatant script | `02a2b8` | Physical `GetDead` increments killed count and sets `FightOver` once; blocks corpse looting |
+| First reward | GREETING INFO `027668` | 50 gold, fame increment, first-win state, `ResetInterior`, quest stops, gate lock and Arena stage 10 |
+| Idle reset | quest `02991f`, stage 10 entry 0 | Clears match variables and stops Arena |
+
+Acceptance must assert named opponent death, `CombatantsKilled` advancing
+from 0 to 1, lawful combat without assault/murder bounty, reward delta 50
+exactly once, authored reset, and restart before fight/after victory before
+reward. Arena corpse looting is explicitly forbidden by its original script;
+do not reuse the dungeon corpse-loot expectation here.
+
+Unclosed prerequisite cases: initial registration and raiment choice INFO
+conditions; dialogue selection/result execution; faction-rank changes;
+`StartCombat`/`StopCombat`/`StopCombatAlarmOnActor`; physical `GetDead`;
+`ResetInterior`; event attribution; announcer dialogue/audio. Inspecting source
+or compiling these commands is not an implementation result.
+
+### E2: Vilverin candidate
+
+Inspected first cell: `01663a`; further cells: `0463f5`, `0463f4`, `0463f3`.
+The first cell contains these exact bandit references/bases:
+
+| Reference | Base | Editor identity |
+| --- | --- | --- |
+| `06c356` | `06c355` | VilverinBanditAmbushNPC |
+| `06c359` | `06c357` | VilverinBanditSittingNPC |
+| `06c35b` | `06c35a` | VilverinBanditBoss |
+| `06c35c` | `06c357` | VilverinBanditSittingNPC |
+| `06c35e` | `06c35d` | VilverinBanditFurnitureKhajiit |
+
+These are candidate targets, **not a locked route**. Required remaining work:
+door/return graph, actor inventory and style, ranged/creature/cover encounter,
+loot and reset dependencies. `VilverinNewBossScript` (`0c80fb`) enables a
+replacement on leaving Vilverin04; a full route must account for that
+trigger instead of assuming all cleared state is permanent.
+
+### E1 and E4–E5
+
+Tutorial cells inspected: `ImperialDungeon01` = `01fbb9`,
+`ImperialDungeon02` = `022288`, `ImperialDungeon03` = `022282`,
+`ImperialDungeon04` = `022ff6`. The existing M14 escort manifest alone cannot
+establish tutorial combat provenance, loot or progression. Exact combat
+targets and legitimate start/end saves remain to be locked.
+
+Two selected prison environments for further tracing are the Imperial prison
+cell `02c17c` (player-cell door `0937ea`) and Chorrol Castle Dungeon `02898e`
+(player-cell door `09502f`). The ordinary jail INFO `0281b7` calls `GoToJail`
+and locks all eight city player-cell doors. Escape variant INFO `0281b8` also
+clears `Crime.PCEscaped`. Pay-gold INFO `027fc8` calls `PayFine`.
+
+Conditional branches demonstrably exist: `TGPayCrimeGold` INFO `0983a3`
+calculates half the bounty; `TGPayFines` INFO `0983a6` removes the assessed
+gold and clears crime gold. `PayFineThief` also appears in INFO `0281b9`.
+Their exact eligibility conditions, guards, evidence/belongings/bed/release
+references, identity-specific branches and formula probes remain open. Do
+not mark guild/identity alternatives inapplicable.
+
+## Confirmed implementation boundaries
+
+- `components/esm4/runtimestate.hpp` still declares schema version 7.
+- `OblivionScriptManager` returns constant zero for `IsInCombat` and
+  `IsPCAMurderer`; `StartCombat`, `StopCombat`, `SetCrimeGold`, `SetEssential`,
+  `SetUnconscious`, ownership and faction-rank writes remain deferred.
+- `esmtool` raw CSTY preservation is not typed combat-style simulation.
+- Existing inventory and AI tests exercise previous milestone contracts;
+  their green results establish no combat/crime/jail service implementation.
+
+## Handoff
+
+Last passed M15 stage: **none**. S0 is still in progress. No source gameplay
+changes or acceptance metadata changes have been made. Continue with the
+smallest open S0 case: lock the full tutorial/dungeon route and remaining
+Arena/guard dialogue conditions against winning installed content, then
+finish original-game/formula probe and requirement inventories. Preserve the
+baseline visual discrepancies and all generated outputs. Do not advance to
+combat implementation while these routes remain unspecified.
