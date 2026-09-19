@@ -189,6 +189,18 @@ namespace Misc::ResourceHelpers
             EXPECT_EQ(correctTexturePath(original, *vfs), original);
         }
 
+        TEST(MiscResourceHelpersCorrectTexturePath, shouldResolveNativeFaceGenEarDefaultWithoutOverridingMods)
+        {
+            constexpr VFS::Path::NormalizedView original("textures/facegen/ears/human/earshuman.dds");
+            constexpr VFS::Path::NormalizedView native("textures/characters/imperial/earshuman.dds");
+            const auto nativeOnly = TestingOpenMW::createTestVFS({ { native, nullptr } });
+            EXPECT_EQ(correctTexturePath(original, *nativeOnly), native);
+            const auto replacement = TestingOpenMW::createTestVFS({ { original, nullptr }, { native, nullptr } });
+            EXPECT_EQ(correctTexturePath(original, *replacement), original);
+            const auto absent = TestingOpenMW::createTestVFS({});
+            EXPECT_EQ(correctTexturePath(original, *absent), original);
+        }
+
         TEST(MiscResourceHelpersCorrectTexturePath, shouldRepairReleasedOblivionDoubleExtensionSeparator)
         {
             constexpr VFS::Path::NormalizedView original("textures/architecture/kvatch/kvatchwood01..dds");

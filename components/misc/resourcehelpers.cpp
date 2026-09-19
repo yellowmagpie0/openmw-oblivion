@@ -147,6 +147,7 @@ VFS::Path::Normalized Misc::ResourceHelpers::correctTexturePath(
     // that provide the originally referenced file.  Every destination below exists in the official
     // Oblivion/SI archives and was selected from the matching asset family.
     static constexpr std::array aliases{
+        std::pair{ "textures/facegen/ears/human/earshuman.dds", "textures/characters/imperial/earshuman.dds" },
         std::pair{ "textures/architecture/anvil/lorgenburn.dds", "textures/architecture/anvil/lorgenhand.dds" },
         std::pair{ "textures/architecture/cheydinhal/cheydinhalstonewall.dds",
             "textures/architecture/cheydinhal/cheydinhalstonewall01.dds" },

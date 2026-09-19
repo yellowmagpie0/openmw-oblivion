@@ -1,5 +1,7 @@
 #include "engine.hpp"
 #include <components/esm4/observation.hpp>
+#include <components/resource/oblivionui.hpp>
+#include <components/vfs/archive.hpp>
 
 #include <cerrno>
 #include <chrono>
@@ -752,6 +754,8 @@ void OMW::Engine::prepareEngine()
     mVFS = std::make_unique<VFS::Manager>();
 
     const ESM::GameProfile resourceProfile = resolveResourceProfile();
+    if (resourceProfile == ESM::GameProfile::Oblivion)
+        mVFS->addArchive(Resource::makeOblivionUiArchive(*mVFS));
     if (mArchives.empty())
     {
         std::size_t registered = 0;

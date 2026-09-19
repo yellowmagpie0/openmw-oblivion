@@ -107,6 +107,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     resource/testobjectcache.cpp
     resource/testresourcesystem.cpp
+    resource/testoblivionui.cpp
 
     vfs/testpathutil.cpp
 

@@ -467,6 +467,19 @@ namespace MWRender
         if (mResourceSystem->getVFS()->exists(VFS::Path::NormalizedView("textures/_land_default.dds")))
             workItem->mTextures.emplace_back("textures/_land_default.dds");
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // This shared list also contains TES3-only weather and swimming
+            // animations. They are optional preloads, not TES4 dependencies;
+            // actual requests still go through the normal diagnostic loader.
+            const auto absent = [this](const VFS::Path::Normalized& path) {
+                return !mResourceSystem->getVFS()->exists(path);
+            };
+            std::erase_if(workItem->mModels, absent);
+            std::erase_if(workItem->mKeyframes, absent);
+            std::erase_if(workItem->mTextures, absent);
+        }
+
         mWorkQueue->addWorkItem(std::move(workItem));
     }
 

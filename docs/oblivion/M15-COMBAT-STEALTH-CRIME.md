@@ -521,3 +521,33 @@ enable-parent cycles. Generated licensed records remain local build artifacts.
 The checked-in `oblivion_m15_observation.json` course is deliberately still
 failing on the blockers listed above; it is a regression target, not accepted
 runtime evidence.
+
+### S1 presentation blocker repair
+
+The Oblivion profile now registers an engine-authored shared UI archive before
+normal game/mod archives. Its editable C++ primitives produce 106 named DDS
+textures for frames, controls, bars, cursor, crosshair, book navigation and the
+damage overlay; three icon aliases use actual native Oblivion archive bytes.
+Replacement resources retain their normal priority. Unknown textures/models
+still fail normally: this is not a catch-all missing-resource replacement.
+It provides functional shared presentation, not the M19 Oblivion UI-parity goal.
+
+The released human-ear NIF default now resolves to the existing native Imperial
+ear texture, preserving a mod's explicit replacement if supplied. Oblivion's
+optional common-asset preload list filters unavailable TES3 weather/swimming
+assets; actual asset requests still use the normal diagnostic loader.
+
+`S1/observation-02/` retains the first passing strict observation run, its
+screenshot, all 1,632 passing component tests, 546 passing engine tests, and a
+passing Morrowind isolation scenario. Seven focused resource tests decode every
+generated DDS, check transparent sight/damage regions, preserve mod priority,
+require native icon bytes, and verify ear-alias behavior. Visual inspection
+confirmed readable Oblivion HUD bars, native hand icon and crosshair without
+magenta missing textures. The Morrowind capture preserves its existing HUD and
+previously documented close-to-terrain camera. No TES3 content/archive was added
+to the Oblivion fixture to achieve this result.
+
+The first passing image still showed sparse geometry: native NIF inspection
+measured the selected "floor brick" at approximately 91 by 49 units, not a
+complete modular room. That fixture-authoring mistake is being corrected in a
+separate recipe change. It does not waive visual acceptance of gameplay courses.
