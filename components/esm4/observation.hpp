@@ -28,7 +28,7 @@ namespace ESM4
 
         ObservationStream(const std::filesystem::path& path, std::string runId,
             std::uint64_t epoch, std::uint64_t pid);
-        void advance();
+        void advance(bool paused = false);
         void record(std::string_view event, const Fields& fields = {});
         void diagnostic(std::string_view message, bool unsupported = false);
         void stateBoundary(std::string_view event, const std::filesystem::path& save,

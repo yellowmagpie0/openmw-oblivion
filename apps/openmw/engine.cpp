@@ -196,8 +196,6 @@ void OMW::Engine::executeLocalScripts()
 
 bool OMW::Engine::frame(unsigned frameNumber, float frametime)
 {
-    if (auto* observation = mWorld->getOblivionObservation())
-        observation->advance();
     const osg::Timer_t frameStart = mViewer->getStartTick();
     const osg::Timer* const timer = osg::Timer::instance();
     osg::Stats* const stats = mViewer->getViewerStats();
@@ -246,6 +244,8 @@ bool OMW::Engine::frame(unsigned frameNumber, float frametime)
         }
 
         bool paused = mWorld->getTimeManager()->isPaused();
+        if (auto* observation = mWorld->getOblivionObservation())
+            observation->advance(paused || mStateManager->getState() == MWBase::StateManager::State_NoGame);
 
         {
             ScopedProfile<UserStatsType::Script> profile(frameStart, frameNumber, *timer, *stats);

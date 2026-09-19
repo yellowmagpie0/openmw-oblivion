@@ -94,11 +94,12 @@ namespace ESM4
         write("run-start", {});
     }
 
-    void ObservationStream::advance()
+    void ObservationStream::advance(bool paused)
     {
         if (mFinished || mTick == std::numeric_limits<std::uint64_t>::max())
             throw std::runtime_error("M15 observation tick outside active run");
-        ++mTick;
+        if (!paused)
+            ++mTick;
     }
 
     void ObservationStream::record(std::string_view event, const Fields& fields)

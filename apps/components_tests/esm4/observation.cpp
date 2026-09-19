@@ -51,6 +51,22 @@ namespace
         EXPECT_THROW(stream.advance(), std::runtime_error);
     }
 
+    TEST_F(ESM4Observation, PausedFramesDoNotAdvanceSimulationTicksOrSuppressEvidence)
+    {
+        ESM4::ObservationStream stream(mEvents, "run", 1, 123);
+        stream.advance();
+        for (int frame = 0; frame < 120; ++frame)
+            stream.advance(true);
+        stream.record("paused-observation");
+        stream.advance(false);
+        stream.record("resumed-observation");
+        stream.finish(0, 0, 0);
+        const std::string data = read(mEvents);
+        EXPECT_NE(data.find("\"tick\":1,\"event\":\"paused-observation\""), std::string::npos);
+        EXPECT_NE(data.find("\"tick\":2,\"event\":\"resumed-observation\""), std::string::npos);
+        EXPECT_NE(data.find("\"event_count\":3"), std::string::npos);
+    }
+
     TEST_F(ESM4Observation, DestructionNeverInventsSuccessfulShutdown)
     {
         { ESM4::ObservationStream stream(mEvents, "run", 1, 123); }

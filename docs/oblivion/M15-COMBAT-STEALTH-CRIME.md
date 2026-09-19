@@ -13,7 +13,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | Stage | Status | Implementation / evidence | Next required gate |
 | --- | --- | --- | --- |
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
-| S1 evidence harness | in-progress | Requirements in plan 4.4 and S1; new implementation pending | Phase isolation, causal/state checks, negative controls, fresh-process restart |
+| S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | pending | No implementation/evidence | Typed CSTY and independently reviewed rule matrix |
 | S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
 | S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
@@ -651,3 +651,39 @@ missing resave or absent second process all fail; the original still passes
 These establish observation and persistence infrastructure, not combat/crime
 acceptance. Final S1 review still needs to align the event tick with simulation
 updates rather than paused presentation frames.
+
+
+### S1 closure: simulation ticks and acceptance ledger
+
+Observation ticks now advance with unpaused simulation updates, after input and
+pause-state processing, rather than every presentation frame. Paused/no-game
+frames still permit lossless evidence without inventing simulated time. The new
+component test failed first (`S1/ticks-red.log`), then passes after the fix.
+The normal-input pause course opens the menu for three seconds at 60 FPS:
+only 29 active ticks separate the two save boundaries, below the predeclared
+60-tick active-work bound. Its distinct-process continuation also passes
+(`S1/ticks-restart-01`, `ticks-pause-check.json`). The editable course is
+`oblivion_m15_pause_observation.json`.
+
+| Requirement | Owner / level | Oracle / result | Retained evidence |
+| --- | --- | --- | --- |
+| M15-S1-01 typed nested contracts | Python / L1 | Strict discriminants, fields and paths; independent schema agrees on 4,368 mutations | `restart-schema-complete.json`; 8 manifest tests |
+| M15-S1-02 phase, freshness, source identity | Runner / L1+L3 | Only ordinary inputs; exclusive outputs, real seed, input/executable fingerprints, scoped actor identities | 12 session tests; `replay-02/course` |
+| M15-S1-03 independent causal state | Verifier / L1+L3 | Named actor deltas, exact/tolerant paths, missing values fail; decoded saves equal separate live observations | 12 causal tests; `observation-03`, `restart-03`/`04` |
+| M15-S1-04 fail-closed aggregate | Runner / L1+L3 | Every case/artifact/action, diagnostics and completion summary required | 5 replay tests; 10 corrupted actual courses in `replay-02` |
+| M15-S1-05 fresh-process restart | Driver / L1+L3 | Same source bytes, distinct PID/epoch, real load acknowledgment and ordinary resave | 6 restart tests; 6 corrupted actual pairs in `restart-controls-01`; `ticks-restart-01` |
+| M15-S1-06 required test counts / isolation | Verification / L1+L3 | Missing filters/skips fail; full inventories and prior-profile scenarios pass | 1 inventory test; `ticks-inventory.json`; `restart-morrowind-01`; `contract-01/m14-city-rebuilt` |
+
+Latest full suites: **1,633 component tests**, **546 engine tests**, and
+**125 Python tests** (including 44 M15 contract/evidence/restart tests and five
+fixture tests). Eight native observation tests cover immutable state, exact
+bytes, identity, closing counts, invalid events, missing saves and pause ticks.
+All requested tests ran; none were skipped. Native suite inventories were
+compared against each binary's unfiltered listing.
+
+The tested simulation-tick source/test diff SHA-256 is
+`b9c55975361b94d221f76875d25aa510cb1d3369c4968661634a181dfcb5e2a2`.
+S1 is accepted only as evidence infrastructure. No physical combat, stealth,
+crime, arrest or jail capability is claimed. S2 begins with typed CSTY decoding
+and independently sourced rule inputs; all later gameplay and universal gates
+remain pending.
