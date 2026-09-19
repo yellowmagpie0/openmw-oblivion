@@ -1024,3 +1024,24 @@ no whole-process acceptance gate is claimed. Each recorded numeric observation
 has its inspected capture/hash and input provenance. The original game was
 then exited normally. Actual physical damage probes remain the next oracle
 work; live setting lookups alone do not close S2.
+
+### S2 native NPC input validation and corrected health investigation
+
+Commit `530b992705` contains complete live lookup coverage for the first 30
+physical inputs. Native NPC DATA/ACBS/AIDT now reject incorrect lengths and
+duplicates; reused records clear prior stats, styles, inventory and spells.
+The independent census confirms all 2,664 physical official NPC records use
+33/16/12-byte layouts. Existing uint32 health is deliberately retained: original
+loader inspection disproved the editor schema's padding interpretation. The
+rejected patch and its failing 100,000-health regression are preserved.
+
+Malformed/reuse tests exposed the old reader behavior before the fix. A first
+sanitizer run additionally caught GTest binding an unaligned packed field;
+the test now copies its value before comparison. The diagnostic remains in
+`S2/npc-inputs-01/sanitize.log`. All 1,671 component and 551 engine tests pass
+with exact inventories. All 22 selected native parser/physical cases and all
+11 official plugin parses pass under ASan/UBSan. A fresh actual two-process
+S1 save/load/resave also passes (`npc-inputs-01/native-restart`); both captures
+were opened and show the textured room and HUD. No combat claim is attached
+to that observation-only course. Tested diff SHA-256:
+`bd6aa81967c59deaa1c334db15c0ec698435da529db8856614714d13913bba29`.

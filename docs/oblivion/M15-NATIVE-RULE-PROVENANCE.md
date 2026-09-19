@@ -266,3 +266,21 @@ zero disables that cap. Its compiled maximum is 90, installed maximum 85.
 The pure cap helper preserves zero-as-disabled and validates finite,
 nonnegative inputs. Mastery/effect contributions before the cap and mitigation
 of an actual hit remain separate reviewed requirements.
+
+## NPC health width: original loader overrides the editor schema
+
+The pinned xEdit NPC DATA definition describes a 16-bit health plus two unused
+bytes. That description is not the runtime rule. Independent official-content
+inspection finds `TestStair` (`085e4b`), `TestArena02` (`0274cc`) and
+`TestArena01` (`0274cb`) encoding **100,000** in the four-byte field. Treating
+the upper bytes as padding would incorrectly reduce each to 34,464.
+
+Original TESNPC RTTI `0xb02fb4` identifies its main vtable at `0xa53dd4`;
+LoadForm slot 7 is `0x527e40`. The DATA branch calls common actor-data loading
+at `0x46bda0`. That routine casts to TESHealthForm (`0xb05cf4`), reads a DWORD
+at `0x46bef8` and writes all four bytes to the health component at `0x46bf04`.
+The native reader therefore keeps its existing **uint32 health**. A proposed
+padding change was discarded before commit, and the regression fixture uses
+100,000 health. Retained investigation and the rejected patch/test are in
+`S2/npc-inputs-01`; this was a corrected investigation, not a preexisting
+32-bit-health defect.

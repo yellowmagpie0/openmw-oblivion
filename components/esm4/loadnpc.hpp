@@ -169,6 +169,8 @@ namespace ESM4
         struct Data
         {
             SkillValues skills;
+            // Original loader consumes all four bytes; some editor schemas
+            // incorrectly label the upper half as padding (official NPCs exceed 65535).
             std::uint32_t health;
             AttributeValues attribs;
         };

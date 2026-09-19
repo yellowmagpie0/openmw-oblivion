@@ -35,6 +35,8 @@
 
 void ESM4::Npc::load(ESM4::Reader& reader)
 {
+    *this = {};
+    bool hasStats = false, hasConfig = false, hasAI = false;
     mId = reader.getFormIdFromHeader();
     mFormKey = reader.getFormKeyFromHeader();
     mFlags = reader.hdr().record.flags;
@@ -119,6 +121,9 @@ void ESM4::Npc::load(ESM4::Reader& reader)
             //
             case ESM::fourCC("AIDT"):
             {
+                if (mIsTES4 && (hasAI || subHdr.dataSize != 12))
+                    reader.fail("TES4 NPC_ AIDT must occur once with exactly 12 bytes");
+                hasAI = true;
                 if (subHdr.dataSize != 12)
                 {
                     reader.skipSubRecordData(); // FIXME: process the subrecord rather than skip
@@ -130,6 +135,9 @@ void ESM4::Npc::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("ACBS"):
             {
+                if (mIsTES4 && (hasConfig || subHdr.dataSize != 16))
+                    reader.fail("TES4 NPC_ ACBS must occur once with exactly 16 bytes");
+                hasConfig = true;
                 switch (subHdr.dataSize)
                 {
                     case 20: // FO4
@@ -147,6 +155,9 @@ void ESM4::Npc::load(ESM4::Reader& reader)
             }
             case ESM::fourCC("DATA"):
             {
+                if (mIsTES4 && (hasStats || subHdr.dataSize != 33))
+                    reader.fail("TES4 NPC_ DATA must occur once with exactly 33 bytes");
+                hasStats = true;
                 if (subHdr.dataSize == 0)
                     break;
 
