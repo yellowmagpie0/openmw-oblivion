@@ -1,0 +1,141 @@
+#include "combatsettings.hpp"
+#include "combatstylepolicy.hpp"
+#include "loadgmst.hpp"
+
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+
+namespace ESM4
+{
+    namespace
+    {
+        std::string key(std::string_view name)
+        {
+            std::string result(name);
+            for (char& c : result)
+                if (c >= 'A' && c <= 'Z')
+                    c += 'a' - 'A';
+            return result;
+        }
+
+        class Inputs
+        {
+            std::map<std::string, const GameSetting*, std::less<>> mValues;
+
+        public:
+            explicit Inputs(std::span<const GameSetting* const> settings)
+            {
+                for (const auto* setting : settings)
+                {
+                    if (!setting || setting->mEditorId.empty())
+                        throw std::invalid_argument("native combat settings include a null or unnamed record");
+                    if (!mValues.emplace(key(setting->mEditorId), setting).second)
+                        throw std::invalid_argument("ambiguous winning native setting: " + setting->mEditorId);
+                }
+            }
+
+            template <typename T> T number(std::string_view name, T fallback) const
+            {
+                const auto found = mValues.find(key(name));
+                if (found == mValues.end())
+                    return fallback;
+                if (const T* value = std::get_if<T>(&found->second->mData))
+                    return *value;
+                throw std::invalid_argument("incorrect native combat setting type: " + std::string(name));
+            }
+
+            std::uint8_t chance(std::string_view name, std::int32_t fallback) const
+            {
+                const auto value = number(name, fallback);
+                if (value < 0 || value > 100)
+                    throw std::invalid_argument("native combat percentage outside domain: " + std::string(name));
+                return static_cast<std::uint8_t>(value);
+            }
+        };
+    }
+
+    CombatStyleDefaults buildCombatStyleDefaults(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        CombatStyleDefaults result;
+        auto& standard = result.mStandard;
+        auto& advanced = result.mAdvanced;
+        // Verified original 1.2.0416 initializer facts, with winning native GMST
+        // overrides applied first. See M15-COMBAT-STYLE-DEFAULTS.json for provenance.
+        standard.mDodgeChance = inputs.chance("iAIDefaultDodgeChance", 75);
+        standard.mLeftRightChance = inputs.chance("iAIDefaultDodgeLeftRightChance", 50);
+        standard.mBlockChance = inputs.chance("iAIDefaultBlockChance", 30);
+        standard.mAttackChance = inputs.chance("iAIDefaultAttackChance", 40);
+        standard.mPowerAttackChance = inputs.chance("iAIDefaultPowerAttackChance", 25);
+        standard.mAcrobaticDodgeChance = inputs.chance("iAIDefaultAcrobaticDodgeChance", 0);
+        standard.mRushChance = inputs.chance("iAIDefaultRushingAttackPercentChance", 25);
+        standard.mDodgeLeftRight = { inputs.number("fAIDefaultDodgeLeftRightMinTime", 0.5f),
+            inputs.number("fAIDefaultDodgeLeftRightMaxTime", 1.5f) };
+        standard.mDodgeForward = { inputs.number("fAIDefaultDodgeForwardMinTime", 0.5f),
+            inputs.number("fAIDefaultDodgeForwardMaxTime", 1.f) };
+        standard.mDodgeBack = { inputs.number("fAIDefaultDodgeBackwardMinTime", 0.25f),
+            inputs.number("fAIDefaultDodgeBackwardMaxTime", 0.75f) };
+        standard.mIdle = { inputs.number("fAIDefaultIdleMinTime", 0.5f),
+            inputs.number("fAIDefaultIdleMaxTime", 1.5f) };
+        standard.mHold = { inputs.number("fAIDefaultHoldMinTime", 0.5f),
+            inputs.number("fAIDefaultHoldMaxTime", 1.5f) };
+        standard.mAttackRecoilBonus = inputs.number("fAIDefaultAttackDuringRecoilStaggerBonus", 5.f);
+        standard.mAttackUnconsciousBonus = inputs.number("fAIDefaultAttackDuringUnconsciousBonus", 5.f);
+        standard.mAttackUnarmedBonus = inputs.number("fAIDefaultAttackHandBonus", 5.f);
+        standard.mPowerAttackRecoilBonus = inputs.number("fAIDefaultPowerAttackRecoilStaggerBonus", 5.f);
+        standard.mPowerAttackUnconsciousBonus = inputs.number("fAIDefaultPowerAttackUnconsciousBonus", 5.f);
+        standard.mBuffStandoff = inputs.number("fAIDefaultBuffStandoffDistance", 325.f);
+        standard.mRushDistanceMultiplier = inputs.number("fAIDefaultRushingAttackDistanceMult", 1.f);
+        standard.mPowerAttackDirections[0] = inputs.chance("iAIDefaultPowerAttackNormalChance", 20);
+        standard.mPowerAttackDirections[1] = inputs.chance("iAIDefaultPowerAttackForwardChance", 20);
+        standard.mPowerAttackDirections[2] = inputs.chance("iAIDefaultPowerAttackBackwardChance", 20);
+        standard.mPowerAttackDirections[3] = inputs.chance("iAIDefaultPowerAttackLeftChance", 20);
+        standard.mPowerAttackDirections[4] = inputs.chance("iAIDefaultPowerAttackRightChance", 20);
+        standard.mRangeMultipliers = std::array<float, 2>{ inputs.number("fAIDefaultOptimalRangeMult", 1.f),
+            inputs.number("fAIDefaultMaximumRangeMult", 1.f) };
+        standard.mSwitchDistances = std::array<float, 2>{ inputs.number("fAIDefaultSwitchToMeleeDistance", 250.f),
+            inputs.number("fAIDefaultSwitchToRangedDistance", 1000.f) };
+        standard.mRangedGroupStandoff = std::array<float, 2>{ inputs.number("fAIDefaultRangedStandoffDistance", 500.f),
+            inputs.number("fAIDefaultGroupStandoffDistance", 325.f) };
+        if (inputs.number("iAIDefaultIgnoreAlliesInArea", std::int32_t{ 0 }) != 0)
+            standard.mFlags |= static_cast<std::uint8_t>(CombatStyleFlag::IgnoreAllies);
+        if (inputs.number("iAIDefaultYieldEnabled", std::int32_t{ 0 }) != 0)
+            standard.mFlags |= static_cast<std::uint8_t>(CombatStyleFlag::WillYield);
+        if (inputs.number("iAIDefaultRejectYield", std::int32_t{ 0 }) != 0)
+            standard.mFlags |= static_cast<std::uint8_t>(CombatStyleFlag::RejectYields);
+        if (inputs.number("iAIDefaultFleeDisabled", std::int32_t{ 0 }) != 0)
+            standard.mFlags |= static_cast<std::uint8_t>(CombatStyleFlag::DisableFleeing);
+        if (inputs.number("iAIDefaultPrefersRangedAttacks", std::int32_t{ 0 }) != 0)
+            standard.mFlags |= static_cast<std::uint8_t>(CombatStyleFlag::PreferRanged);
+        if (inputs.number("iAIDefaultMeleeAlertAllowed", std::int32_t{ 0 }) != 0)
+            standard.mFlags |= static_cast<std::uint8_t>(CombatStyleFlag::MeleeAlert);
+        standard.mDoNotAcquire = inputs.number("iAIDefaultDoNotAcquire", std::int32_t{ 0 }) != 0;
+        advanced.mDodgeFatigueMultiplier = inputs.number("fAIDefaultDodgeFatigueMult", -20.f);
+        advanced.mDodgeFatigueBase = inputs.number("fAIDefaultDodgeFatigueBase", 0.f);
+        advanced.mEncumberedSpeedBase = inputs.number("fAIDefaultDodgeSpeedBase", -110.f);
+        advanced.mEncumberedSpeedMultiplier = inputs.number("fAIDefaultDodgeSpeedMult", 1.f);
+        advanced.mDodgeUnderAttack = inputs.number("fAIDefaultDodgeDuringAttackMult", 1.f);
+        advanced.mDodgeNotUnderAttack = inputs.number("fAIDefaultDodgeNoAttackMult", 0.75f);
+        advanced.mBackDodgeUnderAttack = inputs.number("fAIDefaultDodgeBackDuringAttackMult", 1.f);
+        advanced.mBackDodgeNotUnderAttack = inputs.number("fAIDefaultDodgeBackNoAttackMult", 0.7f);
+        advanced.mForwardDodgeAttacking = inputs.number("fAIDefaultDodgeForwardWhileAttackingMult", 1.f);
+        advanced.mForwardDodgeNotAttacking = inputs.number("fAIDefaultDodgeForwardNotAttackingMult", 0.5f);
+        advanced.mBlockSkillMultiplier = inputs.number("fAIDefaultBlockSkillMult", 20.f);
+        advanced.mBlockSkillBase = inputs.number("fAIDefaultBlockSkillBase", 0.f);
+        advanced.mBlockUnderAttack = inputs.number("fAIDefaultBlockDuringAttackMult", 2.f);
+        advanced.mBlockNotUnderAttack = inputs.number("fAIDefaultBlockNoAttackMult", 1.f);
+        advanced.mAttackSkillMultiplier = inputs.number("fAIDefaultAttackSkillMult", 20.f);
+        advanced.mAttackSkillBase = inputs.number("fAIDefaultAttackSkillBase", 0.f);
+        advanced.mAttackUnderAttack = inputs.number("fAIDefaultAttackDuringAttackMult", 0.75f);
+        advanced.mAttackNotUnderAttack = inputs.number("fAIDefaultAttackNoAttackMult", 1.f);
+        advanced.mAttackDuringBlock = inputs.number("fAIDefaultAttackDuringBlockMult", 0.5f);
+        advanced.mPowerAttackFatigueBase = inputs.number("fAIDefaultPowerAttackFatigueBase", 5.f);
+        advanced.mPowerAttackFatigueMultiplier = inputs.number("fAIDefaultPowerAttackFatigueMult", -10.f);
+        // Validate the same finite/domain contracts as resolved authored policies.
+        resolveCombatStyleStandard(nullptr, standard);
+        resolveCombatStyleAdvanced(nullptr, advanced);
+        return result;
+    }
+}

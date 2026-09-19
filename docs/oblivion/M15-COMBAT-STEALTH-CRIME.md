@@ -903,3 +903,20 @@ attempts remain in the input log; the first F5 was correctly refused while the
 tutorial message paused the game. No actor values or quest state were injected.
 The new probes narrow the oracle gap but do not satisfy physical/crime behavior
 or original style-selection acceptance. All later stages remain pending.
+
+### S2 typed native setting defaults
+
+Commit `ced744e238` contains the advanced resolver and first live setting probes.
+`buildCombatStyleDefaults` now builds all standard/advanced inputs from the 63
+reviewed initializer facts, with case-insensitive native winning GMST overrides.
+Present but wrongly typed, nonfinite or out-of-domain overrides fail explicitly;
+only absent known settings use verified compiled fallback values. It accepts no
+TES3 setting store. Duplicate/unnamed/null input records diagnose an invalid
+winning inventory. Integer flag getters preserve native nonzero semantics.
+
+Four tests first exposed the absent builder, then passed compiled-versus-live
+30/5 bonus distinction, case handling, independent historical-tail behavior,
+percentage boundaries, signed modifiers, invalid overrides and ambiguous input.
+All 1,652 component tests pass with exact inventory; all ten settings/policy
+cases pass under ASan/UBSan (`S2/settings-01`). Actor-store wiring is the next
+bounded chunk. Gameplay formulas and their behavioral probes remain open.
