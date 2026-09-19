@@ -589,3 +589,27 @@ All 119 Python tests pass. Freshness uses an exclusive filesystem origin and
 same-filesystem timestamps, avoiding a transient wall-clock/inode comparison
 failure; repeated timing experiments did not reproduce its original cause.
 Fresh-process continuation remains outstanding; this does not close S1.
+
+### S1 fresh-process load crash repair
+
+The new restart reproducer exposed a graphics-thread crash in both
+`S1/restart-01` and `S1/restart-02`, before a load acknowledgment. The retained
+native backtrace shows `GLObjectsVisitor` traversing a group while the loading
+screen draws during cell insertion. A separate synchronous-rendering diagnostic
+loaded the same save successfully; it is diagnostic evidence, not acceptance.
+
+Loading now joins graphics work and uses synchronous draws for the outer loading
+interval, restoring the configured rendering model when that interval ends.
+Nested loading scopes retain the original model. This protects scene mutation
+without changing normal gameplay rendering policy.
+
+The strict two-process courses `S1/restart-03` and `S1/restart-04` both pass with
+the normal renderer configuration: exact first-save bytes load in a distinct
+PID/epoch, independently captured live state equals the decoded save, and normal
+movement/save input produces a new acknowledged save. The second-process image
+was inspected: complete room, readable HUD and no missing-texture presentation.
+All 546 unfiltered engine tests pass with an exact inventory check, and
+`S1/restart-morrowind-01` passes the existing Morrowind isolation/save course.
+The tested loading-screen diff SHA-256 is
+`afaedea8655318d3aae7b598ff8d8e7b1e06a609f537cbc6cb6b052b097d4d9b`.
+Restart driver/schema/tests are the next separate commit.

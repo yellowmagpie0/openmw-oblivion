@@ -5,6 +5,7 @@
 
 #include <osg/Timer>
 #include <osg/ref_ptr>
+#include <osgViewer/ViewerBase>
 
 #include "windowbase.hpp"
 
@@ -67,6 +68,7 @@ namespace MWGui
         bool mImportantLabel;
 
         int mNestedLoadingCount;
+        osgViewer::ViewerBase::ThreadingModel mLoadingThreadingModel = osgViewer::ViewerBase::SingleThreaded;
 
         size_t mProgress;
 

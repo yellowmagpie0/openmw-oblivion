@@ -159,6 +159,17 @@ namespace MWGui
         if (mNestedLoadingCount++ > 0 && mMainWidget->getVisible())
             return;
 
+        // Loading mutates the scene between progress draws. The first draw's
+        // GLObjectsVisitor can still traverse that graph on the graphics
+        // thread after renderingTraversals returns, even for masked nodes.
+        // Join it before rebuilding objects, and keep loading draws synchronous.
+        // Restore the user's rendering model when the outer load completes.
+        if (mNestedLoadingCount == 1)
+        {
+            mLoadingThreadingModel = mViewer->getThreadingModel();
+            mViewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
+        }
+
         mLoadingOnTime = mTimer.time_m();
 
         // Assign dummy bounding sphere callback to avoid the bounding sphere of the entire scene being recomputed after
@@ -215,6 +226,7 @@ namespace MWGui
 
         MWBase::Environment::get().getWindowManager()->removeGuiMode(GM_Loading);
         MWBase::Environment::get().getWindowManager()->removeGuiMode(GM_LoadingWallpaper);
+        mViewer->setThreadingModel(mLoadingThreadingModel);
     }
 
     void LoadingScreen::changeWallpaper()
