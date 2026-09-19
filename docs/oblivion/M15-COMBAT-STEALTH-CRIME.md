@@ -747,3 +747,37 @@ malformed values, master resolution/deletion, missing-style policy, setting and
 faction domains, and invalid headers. The complete Python suite passes 131
 tests (`S2/audit-01/python-tests-final.log`). Baseline command absence and the
 current intentionally failing overall audit are retained in that run directory.
+
+### S2 equipment, creature and relationship audit
+
+The expanded independent inventory now covers 1,401 weapons, 134 ammunition
+records, 1,112 armor records and 992 creature bases. It decodes physical input
+units, resistance flags, armor hundredths, creature reach/attack damage,
+individual sound slots, animation/model lists, faction relationships and actor
+membership. Enchantment/staff execution remains explicitly M16-owned; records
+are retained rather than treated as nonmagical. Referenced enchantments,
+sounds, inherited-sound creatures and factions must resolve after overrides
+and deletions. All installed data checks pass (`S2/audit-04/m15-audit.json`).
+
+New cases M15-S2-AUD-07/08 cover padded equipment layouts, malformed sizes,
+nonfinite input, all creature sound slots and dangling sound references;
+AUD-09/10 cover native local-index resolution and faction deletion. The full
+Python suite passes 135 tests (`S2/audit-02/python-tests-final.log`). The first
+expanded tests failed on absent inventory fields. A proposed strict FormID
+index check also failed against the shipped master (`audit-03` attempt):
+`0100110b` is a source-file identity under the existing native FormKeyResolver.
+The audit now follows that reviewed resolver policy, with a regression test;
+it does not introduce a different identity interpretation.
+
+The dedicated GCC Debug ASan/UBSan build completed. All six CSTY component
+tests pass under both active runtimes (confirmed by binary dependencies), all
+11 installed plugins parse cleanly, and the malformed NaN fixture is rejected
+with the expected parser diagnostic and no sanitizer report. Evidence is in
+`S2/csty-01/sanitize-{components,native-read,invalid}.*` and each plugin's
+`.sanitize.log`. These are parser checks, not runtime combat sanitizer gates.
+
+The audit exposed existing native CREA losses: RNAM attack reach is skipped,
+and repeated sound slots collapse into one legacy sound/chance pair. The next
+bounded implementation preserves these typed fields and verifies malformed
+sound sequences and native readback before using them in simulation. S2 rule,
+default, ownership/jail and independent gameplay oracle gates remain open.

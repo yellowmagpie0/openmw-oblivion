@@ -87,6 +87,12 @@ def _one(subs: list[dict], name: str, required: bool = False) -> bytes | None:
     return values[0] if values else None
 
 
+def _stable_key(plugin: str, ident: int, masters: list[str]) -> str:
+    # Match FormKeyResolver: indices outside the declared masters name the
+    # source file. The shipped master itself contains such local indices.
+    return binary._stable_key(plugin, ident, masters)
+
+
 def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     """Read TES4 records with group containment and original owning-file keys."""
     data = path.read_bytes()
@@ -117,11 +123,11 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
                 raise M15AuditError('record exceeds containing group')
             if tag == b'GRUP':
                 group_type = struct.unpack_from('<i', data, start + 12)[0]
-                parent = binary._stable_key(path.name, flags, masters) if group_type in binary.CELL_CHILD_GROUPS else cell
+                parent = _stable_key(path.name, flags, masters) if group_type in binary.CELL_CHILD_GROUPS else cell
                 walk(start + 20, finish, parent, depth + 1)
             else:
                 tag = tag.decode('ascii')
-                key = binary._stable_key(path.name, ident, masters)
+                key = _stable_key(path.name, ident, masters)
                 record = {'key': key, 'type': tag, 'plugin': path.name, 'flags': flags,
                           'deleted': bool(flags & binary.DELETED_FLAG), 'cell': cell, 'masters': masters}
                 if tag in wanted and not record['deleted']:
@@ -132,6 +138,94 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     walk(header_end, len(data))
     return {'name': path.name, 'sha256': hashlib.sha256(data).hexdigest(), 'masters': masters,
             'record_count': len(records)}, records
+
+
+def _unpack(payload: bytes | None, format_: str, name: str) -> tuple:
+    if payload is None or len(payload) != struct.calcsize(format_):
+        raise M15AuditError(f'{name}: incorrect or missing layout')
+    return struct.unpack(format_, payload)
+
+
+def _reference(record: dict, payload: bytes | None, name: str) -> str:
+    ident, = _unpack(payload, '<I', name)
+    return _stable_key(record['plugin'], ident, record['masters'])
+
+
+def _equipment(record: dict) -> dict:
+    subs = record['subrecords']
+    tag = record['type']
+    data = _one(subs, 'DATA', True)
+    if tag == 'WEAP':
+        names = ('weapon_type', 'speed', 'reach', 'ignores_normal_resistance', 'value', 'health', 'weight', 'damage')
+        values = _unpack(data, '<B3xffIIIfH', 'WEAP DATA')
+    elif tag == 'AMMO':
+        names = ('speed', 'ignores_normal_resistance', 'value', 'weight', 'damage')
+        values = _unpack(data, '<fB3xIfH', 'AMMO DATA')
+    else:
+        names = ('armor_hundredths', 'value', 'health', 'weight')
+        values = _unpack(data, '<HIIf', 'ARMO DATA')
+    result = dict(zip(names, values, strict=True))
+    if result.get('weapon_type', 0) > 5 or result.get('ignores_normal_resistance', 0) not in (0, 1):
+        raise M15AuditError('equipment type/flag outside native domain')
+    if any(isinstance(value, float) and (not math.isfinite(value) or value < 0) for value in values):
+        raise M15AuditError('equipment has negative/nonfinite physical input')
+    if tag == 'ARMO':
+        result['biped_flags'], = _unpack(_one(subs, 'BMDT', True), '<I', 'ARMO BMDT')
+    enchantment = _one(subs, 'ENAM')
+    result['enchantment'] = _reference(record, enchantment, 'ENAM') if enchantment else 'null'
+    result['magic_semantics'] = 'M16' if result['enchantment'] != 'null' or result.get('weapon_type') == 4 else None
+    result['type'] = tag
+    result['editor_id'] = binary._decode_string(_one(subs, 'EDID') or b'')
+    return result
+
+
+def _creature(record: dict) -> dict:
+    subs = record['subrecords']
+    names = ('type', 'combat_skill', 'magic_skill', 'stealth_skill', 'soul', 'health', 'attack_damage',
+             'strength', 'intelligence', 'willpower', 'agility', 'speed', 'endurance', 'personality', 'luck')
+    result = dict(zip(names, _unpack(_one(subs, 'DATA', True), '<5BxH2xH8B', 'CREA DATA'), strict=True))
+    result['reach'], = _unpack(_one(subs, 'RNAM', True), '<B', 'CREA RNAM')
+    if result['type'] > 5 or result['soul'] > 5:
+        raise M15AuditError('creature type/soul outside native domain')
+    for tag, name in (('BNAM', 'scale'), ('TNAM', 'turning_speed'), ('WNAM', 'foot_weight')):
+        payload = _one(subs, tag)
+        value = _unpack(payload, '<f', tag)[0] if payload is not None else None
+        if value is not None and (not math.isfinite(value) or value < 0):
+            raise M15AuditError(f'invalid creature {name}')
+        result[name] = value
+    inherited = _one(subs, 'CSCR')
+    result['sound_base'] = _reference(record, inherited, 'CSCR') if inherited else 'null'
+    sounds = []
+    sound_type = None
+    pending = None
+    for sub in subs:
+        tag, data = sub['name'], sub['payload']
+        if tag == 'CSDT':
+            if pending is not None:
+                raise M15AuditError('sound missing chance')
+            sound_type, = _unpack(data, '<I', tag)
+            if sound_type > 9:
+                raise M15AuditError('invalid creature sound type')
+        elif tag == 'CSDI':
+            if sound_type is None or pending is not None:
+                raise M15AuditError('unordered creature sound')
+            pending = _reference(record, data, tag)
+        elif tag == 'CSDC':
+            chance, = _unpack(data, '<B', tag)
+            if pending is None or chance > 100:
+                raise M15AuditError('invalid creature sound chance/order')
+            sounds.append({'type': sound_type, 'sound': pending, 'chance': chance})
+            pending = None
+    if pending is not None:
+        raise M15AuditError('sound missing chance')
+    result['sounds'] = sounds
+    result['model'] = binary._decode_string(_one(subs, 'MODL') or b'')
+    for tag, name in (('KFFZ', 'animations'), ('NIFZ', 'meshes')):
+        raw = _one(subs, tag) or b''
+        if raw and raw[-1] != 0:
+            raise M15AuditError(f'unterminated {tag}')
+        result[name] = [binary._decode_string(part) for part in raw.split(b'\0') if part]
+    return result
 
 
 def inventory(paths: list[Path]) -> dict[str, Any]:
@@ -151,7 +245,7 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
             if key in winners and winners[key]['type'] != record['type']:
                 raise M15AuditError(f'{key}: override changes record type')
             winners[key] = record
-    styles, actors, settings, factions = {}, {}, {}, {}
+    styles, actors, settings, factions, equipment = {}, {}, {}, {}, {}
     failures = []
     for key, record in winners.items():
         if record['deleted'] or 'subrecords' not in record:
@@ -170,7 +264,7 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
                 style = _one(subs, 'ZNAM')
                 if style is not None and len(style) != 4:
                     raise M15AuditError('ZNAM must be one FormID')
-                style_key = binary._stable_key(record['plugin'], struct.unpack('<I', style)[0], record['masters']) if style else 'null'
+                style_key = _stable_key(record['plugin'], struct.unpack('<I', style)[0], record['masters']) if style else 'null'
                 ai = _one(subs, 'AIDT')
                 flags = _one(subs, 'ACBS')
                 if ai is None or len(ai) != 12 or flags is None or len(flags) != 16:
@@ -179,6 +273,15 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
                 actors[key] = {'editor_id': edid, 'type': record['type'], 'style': style_key,
                     'aggression': ai[0], 'confidence': ai[1], 'energy': ai[2], 'responsibility': ai[3],
                     'flags': actor_flags, 'essential': bool(actor_flags & 2), 'respawn': bool(actor_flags & 8)}
+                actors[key]['factions'] = []
+                for entry in subs:
+                    if entry['name'] == 'SNAM':
+                        faction, rank = _unpack(entry['payload'], '<Ib3x', 'actor SNAM')
+                        actors[key]['factions'].append({'faction': _stable_key(record['plugin'], faction, record['masters']), 'rank': rank})
+                if record['type'] == 'CREA':
+                    actors[key]['creature'] = _creature(record)
+            elif record['type'] in ('WEAP', 'AMMO', 'ARMO'):
+                equipment[key] = _equipment(record)
             elif record['type'] == 'GMST':
                 payload = _one(subs, 'DATA', True)
                 if not edid or edid[0] not in 'fis':
@@ -202,18 +305,38 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
                 value = struct.unpack('<f', multiplier)[0] if multiplier else None
                 if value is not None and (not math.isfinite(value) or value < 0):
                     raise M15AuditError('invalid faction crime multiplier')
-                factions[key] = {'editor_id': edid, 'flags': payload[0], 'crime_multiplier': value}
+                relations = []
+                for entry in subs:
+                    if entry['name'] == 'XNAM':
+                        faction, modifier = _unpack(entry['payload'], '<Ii', 'FACT XNAM')
+                        relations.append({'faction': _stable_key(record['plugin'], faction, record['masters']), 'modifier': modifier})
+                factions[key] = {'editor_id': edid, 'flags': payload[0], 'crime_multiplier': value, 'relationships': relations}
         except (ValueError, TypeError, struct.error) as error:
             failures.append(f'{key}: {error}')
     for key, actor in actors.items():
         if actor['style'] != 'null' and actor['style'] not in styles:
             failures.append(f'{key}: missing/deleted/wrong-type combat style {actor["style"]}')
+    def check_link(source, target, types):
+        if target != 'null' and (target not in winners or winners[target]['deleted'] or winners[target]['type'] not in types):
+            failures.append(f'{source}: missing/deleted/wrong-type {target}; expected {types}')
+    for key, faction in factions.items():
+        for relation in faction['relationships']:
+            check_link(key, relation['faction'], ('FACT',))
+    for key, item in equipment.items():
+        check_link(key, item['enchantment'], ('ENCH',))
+    for key, actor in actors.items():
+        for membership in actor['factions']:
+            check_link(key, membership['faction'], ('FACT',))
+        if 'creature' in actor:
+            check_link(key, actor['creature']['sound_base'], ('CREA',))
+            for sound in actor['creature']['sounds']:
+                check_link(key, sound['sound'], ('SOUN',))
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
-        'settings': settings, 'factions': factions, 'failures': failures, 'data_passed': not failures,
+        'settings': settings, 'factions': factions, 'equipment': equipment, 'failures': failures, 'data_passed': not failures,
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],
         'summary': {'styles': len(styles), 'actors': len(actors), 'settings': len(settings),
-                    'factions': len(factions), 'default_actors': len(unresolved),
+                    'factions': len(factions), 'equipment': len(equipment), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.

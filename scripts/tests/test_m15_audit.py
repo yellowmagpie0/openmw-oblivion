@@ -108,6 +108,70 @@ class M15NativeAuditTests(unittest.TestCase):
             path.write_bytes(plugin([gmst, faction]))
             self.assertFalse(audit.inventory([path])['data_passed'])
 
+    def test_equipment_decodes_padding_and_rejects_invalid_domains(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.esm'
+            weapon = struct.pack('<B3sffIIIfH', 5, b'xyz', 0.8, 1.25, 1, 75, 100, 8, 12)
+            ammo = struct.pack('<fB3sIfH', 1500, 1, b'xyz', 3, 0.1, 8)
+            armor = struct.pack('<HIIf', 1250, 30, 200, 15)
+            path.write_bytes(plugin([record('WEAP', 0x800, sub('DATA', weapon)),
+                record('AMMO', 0x801, sub('DATA', ammo)),
+                record('ARMO', 0x802, sub('DATA', armor) + sub('BMDT', struct.pack('<I', 0x00802000)))]))
+            result = audit.inventory([path])
+            self.assertTrue(result['data_passed'], result['failures'])
+            self.assertEqual(result['equipment']['content:fixture.esm:000800']['damage'], 12)
+            self.assertEqual(result['equipment']['content:fixture.esm:000801']['damage'], 8)
+            self.assertEqual(result['equipment']['content:fixture.esm:000802']['armor_hundredths'], 1250)
+            for invalid in (weapon[:-1], weapon + b'x', bytes((6,)) + weapon[1:],
+                            weapon[:4] + struct.pack('<f', math.inf) + weapon[8:]):
+                path.write_bytes(plugin([record('WEAP', 0x800, sub('DATA', invalid))]))
+                self.assertFalse(audit.inventory([path])['data_passed'])
+
+    def test_creature_attack_reach_and_multiple_sound_slots_survive_inventory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.esm'
+            creature = sub('AIDT', bytes(12)) + sub('ACBS', bytes(16))
+            creature += sub('DATA', struct.pack('<5BxH2xH8B', 2, 45, 20, 10, 3, 80, 15, *([50] * 8)))
+            creature += sub('RNAM', bytes((48,)))
+            for sound_type, sound in ((6, 0x801), (8, 0x802)):
+                creature += sub('CSDT', struct.pack('<I', sound_type))
+                creature += sub('CSDI', struct.pack('<I', sound)) + sub('CSDC', bytes((100,)))
+            path.write_bytes(plugin([record('CREA', 0x800, creature), record('SOUN', 0x801, b''), record('SOUN', 0x802, b'')]))
+            result = audit.inventory([path])
+            self.assertTrue(result['data_passed'], result['failures'])
+            actor = result['actors']['content:fixture.esm:000800']
+            self.assertEqual(actor['creature']['attack_damage'], 15)
+            self.assertEqual(actor['creature']['reach'], 48)
+            self.assertEqual([s['type'] for s in actor['creature']['sounds']], [6, 8])
+            path.write_bytes(plugin([record('CREA', 0x800, creature)]))
+            self.assertFalse(audit.inventory([path])['data_passed'])
+
+    def test_nonmaster_indices_follow_native_source_file_resolution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.esm'
+            path.write_bytes(plugin([record('CSTY', 0x03000800, sub('CSTD', style()))]))
+            result = audit.inventory([path])
+            self.assertTrue(result['data_passed'])
+            self.assertIn('content:fixture.esm:000800', result['styles'])
+
+    def test_relationships_and_membership_resolve_after_deletion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base, patch = root / 'base.esm', root / 'patch.esp'
+            faction = sub('DATA', b'\x04') + sub('XNAM', struct.pack('<Ii', 0x801, -50))
+            actor = sub('AIDT', bytes(12)) + sub('ACBS', bytes(16))
+            actor += sub('SNAM', struct.pack('<Ib3x', 0x800, 2))
+            base.write_bytes(plugin([record('FACT', 0x800, faction), record('FACT', 0x801, sub('DATA', b'\0')),
+                                     record('NPC_', 0x802, actor)]))
+            result = audit.inventory([base])
+            self.assertTrue(result['data_passed'], result['failures'])
+            self.assertEqual(result['factions']['content:base.esm:000800']['relationships'],
+                             [{'faction': 'content:base.esm:000801', 'modifier': -50}])
+            self.assertEqual(result['actors']['content:base.esm:000802']['factions'],
+                             [{'faction': 'content:base.esm:000800', 'rank': 2}])
+            patch.write_bytes(plugin([record('FACT', 0x801, b'', 0x20)], ('base.esm',)))
+            self.assertFalse(audit.inventory([base, patch])['data_passed'])
+
     def test_truncated_headers_and_wrong_game_version_fail_before_inventory(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'fixture.esm'
