@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "game_version": "Oblivion 1.2.0416",
+  "scope": "physical rule setting inputs; arithmetic/gameplay oracle remains separate",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "content_count_lock": "../../scripts/data/oblivion_compat/m15_count_lock.json",
+  "provenance": "M15-NATIVE-RULE-PROVENANCE.md",
+  "behavioral_damage_probe_passed": false,
+  "settings": [
+    {
+      "name": "iActorLuckSkillBase",
+      "value": -20,
+      "storage": "0xb37388",
+      "constructor": "0x9eaa67",
+      "type": "int32",
+      "installed_override": null
+    },
+    {
+      "name": "fActorLuckSkillMult",
+      "value": 0.4000000059604645,
+      "storage": "0xb37390",
+      "constructor": "0x9eaa8f",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fFatigueBase",
+      "value": 1.25,
+      "storage": "0xb37530",
+      "constructor": "0x9eb3ff",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02a0cc",
+        "type": "f",
+        "value": 1.0
+      }
+    },
+    {
+      "name": "fFatigueMult",
+      "value": 0.5,
+      "storage": "0xb37538",
+      "constructor": "0x9eb42f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02a0cd",
+        "type": "f",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "fDamageWeaponMult",
+      "value": 1.0,
+      "storage": "0xb36dd8",
+      "constructor": "0x9e8b20",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02a0c5",
+        "type": "f",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "fDamageSkillBase",
+      "value": 0.20000000298023224,
+      "storage": "0xb36de0",
+      "constructor": "0x9e8b5f",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fDamageSkillMult",
+      "value": 1.7999999523162842,
+      "storage": "0xb36de8",
+      "constructor": "0x9e8b8f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0051a7",
+        "type": "f",
+        "value": 1.5
+      }
+    },
+    {
+      "name": "fDamageWeaponConditionBase",
+      "value": 0.0,
+      "storage": "0xb36df0",
+      "constructor": "0x9e8bb0",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c7617",
+        "type": "f",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "fDamageWeaponConditionMult",
+      "value": 1.0,
+      "storage": "0xb36df8",
+      "constructor": "0x9e8be0",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c7618",
+        "type": "f",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "fDamageStrengthBase",
+      "value": 0.5,
+      "storage": "0xb36e00",
+      "constructor": "0x9e8c1f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0051a4",
+        "type": "f",
+        "value": 0.75
+      }
+    },
+    {
+      "name": "fDamageStrengthMult",
+      "value": 1.0,
+      "storage": "0xb36e08",
+      "constructor": "0x9e8c40",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0051a5",
+        "type": "f",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "fHandDamageSkillBase",
+      "value": 0.0,
+      "storage": "0xb36e50",
+      "constructor": "0x9e8df0",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fHandDamageSkillMult",
+      "value": 1.0,
+      "storage": "0xb36e58",
+      "constructor": "0x9e8e20",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fHandDamageStrengthBase",
+      "value": 0.0,
+      "storage": "0xb36e60",
+      "constructor": "0x9e8e50",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fHandDamageStrengthMult",
+      "value": 0.75,
+      "storage": "0xb36e68",
+      "constructor": "0x9e8e8f",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fHandHealthMin",
+      "value": 1.0,
+      "storage": "0xb36e70",
+      "constructor": "0x9e8eb0",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fHandHealthMax",
+      "value": 20.0,
+      "storage": "0xb36e78",
+      "constructor": "0x9e8eef",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02a0ca",
+        "type": "f",
+        "value": 15.0
+      }
+    },
+    {
+      "name": "fHandFatigueDamageBase",
+      "value": 0.0,
+      "storage": "0xb36e88",
+      "constructor": "0x9e8f40",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:05c005",
+        "type": "f",
+        "value": 1.0
+      }
+    },
+    {
+      "name": "fHandFatigueDamageMult",
+      "value": 0.25,
+      "storage": "0xb36e80",
+      "constructor": "0x9e8f1f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:05c006",
+        "type": "f",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "fBlockSkillBase",
+      "value": 0.0,
+      "storage": "0xb36ee8",
+      "constructor": "0x9e9120",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fBlockSkillMult",
+      "value": 1.0,
+      "storage": "0xb36ef0",
+      "constructor": "0x9e9150",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fBlockMax",
+      "value": 0.75,
+      "storage": "0xb36ef8",
+      "constructor": "0x9e918f",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fBlockAmountWeaponMult",
+      "value": 0.5,
+      "storage": "0xb36f00",
+      "constructor": "0x9e91bf",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fBlockAmountHandToHandMult",
+      "value": 0.25,
+      "storage": "0xb36f08",
+      "constructor": "0x9e91ef",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fDifficultyDamageMultiplier",
+      "value": 10.0,
+      "storage": "0xb37b88",
+      "constructor": "0x9ed78f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cad59",
+        "type": "f",
+        "value": 5.0
+      }
+    },
+    {
+      "name": "fArmorRatingBase",
+      "value": 0.3499999940395355,
+      "storage": "0xb36e98",
+      "constructor": "0x9e8faf",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fArmorRatingMax",
+      "value": 1.0,
+      "storage": "0xb36ea0",
+      "constructor": "0x9e8fd0",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fArmorRatingConditionBase",
+      "value": 0.0,
+      "storage": "0xb36ea8",
+      "constructor": "0x9e9000",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fArmorRatingConditionMult",
+      "value": 1.0,
+      "storage": "0xb36eb0",
+      "constructor": "0x9e9030",
+      "type": "float32",
+      "installed_override": null
+    },
+    {
+      "name": "fMaxArmorRating",
+      "value": 90.0,
+      "storage": "0xb37d20",
+      "constructor": "0x9edf4f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cd4ba",
+        "type": "f",
+        "value": 85.0
+      }
+    }
+  ]
+}

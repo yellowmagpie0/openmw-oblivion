@@ -242,3 +242,60 @@ TEST(ESM4PhysicalCombat, NativeHandBlockAndDifficultySettingsUseTypedOverrides)
     difficulty.mData = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::buildDifficultyDamageMultiplier(settings), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, ArmorTruncatesBaseHundredthsAndFloorsBeforeCondition)
+{
+    const ESM4::ArmorRatingSettings settings{.35f, 1, 0, 1};
+    // Native caller truncates 14.99 base to 14. At skill 50, floor(14*.675)=9.
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1499, 50, 50, .5f}, settings, installed), 4.5f);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1400, 50, 50, 1.25f}, settings, installed), 11.25f);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1400, 0, 50, 1}, settings, installed), 4);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1400, 100, 50, 1}, settings, installed), 14);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1400, 101, 50, 1}, settings, installed), 14);
+    for (std::uint16_t value : {0, 1, 99, 100, 101})
+        EXPECT_FLOAT_EQ(ESM4::armorRating({value, 0, 50, 1}, settings, installed), 1);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1400, 100, 50, 0}, settings, installed), 0);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({65535, 100, 50, 1}, settings, installed), 655);
+    // At skill 50 the multiplier is .675: base 19 floors to 12, 20 floors to 13.
+    EXPECT_FLOAT_EQ(ESM4::armorRating({1999, 50, 50, 1}, settings, installed), 12);
+    EXPECT_FLOAT_EQ(ESM4::armorRating({2000, 50, 50, 1}, settings, installed), 13);
+}
+
+TEST(ESM4PhysicalCombat, ArmorTotalCapIsIndependentOfItemConditionAndCanBeDisabled)
+{
+    for (float value : {0.f, 1.f, 84.f, std::nextafter(85.f, 0.f), 85.f})
+        EXPECT_FLOAT_EQ(ESM4::capArmorRating(value, 85), value);
+    for (float value : {std::nextafter(85.f, 100.f), 86.f, 1000.f})
+        EXPECT_FLOAT_EQ(ESM4::capArmorRating(value, 85), 85);
+    EXPECT_FLOAT_EQ(ESM4::capArmorRating(1000, 0), 1000);
+    EXPECT_FLOAT_EQ(ESM4::capArmorRating(1000, 1), 1);
+}
+
+TEST(ESM4PhysicalCombat, ArmorSettingsAreTypedAndInvalidInputsFail)
+{
+    const auto settings = ESM4::buildArmorRatingSettings({});
+    EXPECT_FLOAT_EQ(settings.mSkillBase, .35f);
+    EXPECT_FLOAT_EQ(settings.mSkillMaximum, 1);
+    EXPECT_FLOAT_EQ(settings.mConditionBase, 0);
+    EXPECT_FLOAT_EQ(settings.mConditionMultiplier, 1);
+    EXPECT_FLOAT_EQ(ESM4::buildMaximumArmorRating({}), 90);
+    ESM4::GameSetting maximum{};
+    maximum.mEditorId = "fMaxArmorRating";
+    maximum.mData = 85.f;
+    const std::array<const ESM4::GameSetting*, 1> values{ &maximum };
+    EXPECT_FLOAT_EQ(ESM4::buildMaximumArmorRating(values), 85);
+    maximum.mData = std::int32_t{85};
+    EXPECT_THROW(ESM4::buildMaximumArmorRating(values), std::invalid_argument);
+    maximum.mData = -1.f;
+    EXPECT_THROW(ESM4::buildMaximumArmorRating(values), std::invalid_argument);
+    auto bad = settings;
+    bad.mSkillMaximum = .1f;
+    EXPECT_THROW(ESM4::armorRating({1400, 50, 50, 1}, bad, installed), std::invalid_argument);
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::armorRating({1400, 50, 50, invalid}, settings, installed), std::invalid_argument);
+        EXPECT_THROW(ESM4::capArmorRating(invalid, 85), std::invalid_argument);
+        EXPECT_THROW(ESM4::capArmorRating(85, invalid), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::armorRating({65535, 100, 50, std::numeric_limits<float>::max()}, settings, installed), std::invalid_argument);
+}

@@ -158,4 +158,36 @@ namespace ESM4
         const float factor = difficulty < 0.f ? rounded(1.0 / rounded(1.0 - scaled)) : rounded(1.0 + scaled);
         return role == PlayerDamageRole::Victim ? rounded(double(damage) * factor) : rounded(double(damage) / factor);
     }
+    void validateArmorRatingSettings(const ArmorRatingSettings& settings)
+    {
+        for (float value : { settings.mSkillBase, settings.mSkillMaximum,
+                 settings.mConditionBase, settings.mConditionMultiplier })
+            nonnegative(value);
+        if (settings.mSkillBase > settings.mSkillMaximum)
+            throw std::invalid_argument("reversed native armor skill range");
+    }
+
+    float armorRating(const ArmorRatingInput& input, const ArmorRatingSettings& settings,
+        const PhysicalCombatSettings& physical)
+    {
+        validateArmorRatingSettings(settings);
+        validatePhysicalCombatSettings(physical);
+        nonnegative(input.mConditionRatio);
+        // The native caller converts hundredths to integral armor units first.
+        const auto base = input.mBaseHundredths / 100;
+        const float range = rounded(double(settings.mSkillMaximum) - settings.mSkillBase);
+        const float skill = skillValue(input.mSkill, input.mLuck, physical);
+        const float scaled = rounded((settings.mSkillBase + double(skill) / 100.0 * range) * base);
+        const float floored = std::max(1.f, std::floor(scaled));
+        const float condition = rounded(settings.mConditionBase
+            + double(input.mConditionRatio) * settings.mConditionMultiplier);
+        return rounded(double(floored) * condition);
+    }
+
+    float capArmorRating(float total, float maximum)
+    {
+        nonnegative(total);
+        nonnegative(maximum);
+        return maximum == 0.f ? total : std::min(total, maximum);
+    }
 }

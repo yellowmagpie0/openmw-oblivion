@@ -197,4 +197,24 @@ namespace ESM4
             throw std::invalid_argument("invalid native difficulty damage multiplier");
         return result;
     }
+    ArmorRatingSettings buildArmorRatingSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        ArmorRatingSettings result{
+            inputs.number("fArmorRatingBase", .35f),
+            inputs.number("fArmorRatingMax", 1.f),
+            inputs.number("fArmorRatingConditionBase", 0.f),
+            inputs.number("fArmorRatingConditionMult", 1.f),
+        };
+        validateArmorRatingSettings(result);
+        return result;
+    }
+
+    float buildMaximumArmorRating(std::span<const GameSetting* const> settings)
+    {
+        const float result = Inputs(settings).number("fMaxArmorRating", 90.f);
+        if (!std::isfinite(result) || result < 0.f)
+            throw std::invalid_argument("invalid native maximum armor rating");
+        return result;
+    }
 }

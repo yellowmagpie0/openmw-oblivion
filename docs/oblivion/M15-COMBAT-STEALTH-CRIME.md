@@ -988,3 +988,20 @@ inventory; all 20 physical/settings/style-policy tests pass under ASan/UBSan
 (`S2/physical-rules-02`). Tested source/test/provenance diff SHA-256:
 `cd3299f0db78a354dd85db8a8984589f4f01f9456a8bee5ebc19dcc2d7521b55`. Original live setting observations are being
 extended independently; original damage outcomes remain an open gate.
+
+### S2 individual armor rating and total cap
+
+Commit `6a459e5c4e` contains hand/block/difficulty arithmetic. The new armor
+helper follows the independently inspected caller's hundredths truncation,
+skill scaling, floor/minimum and subsequent condition multiplication. A
+separate total cap preserves zero-as-disabled. Typed native setting builders
+and a 30-entry physical-input fact catalogue record compiled values separately
+from installed overrides. Mastery aggregation and actual hit mitigation are
+not established by these helpers.
+
+Three new cases failed against stubs, then passed base/skill/condition/cap
+boundaries, repaired and broken condition, override types, invalid domains
+and overflow. All 1,668 component tests pass with exact inventory; all 23
+physical/settings/style-policy cases pass under ASan/UBSan. Evidence:
+`S2/physical-rules-03`; tested diff SHA-256:
+`f6f952641656d74cfb1d72ea2416d8a1a676ba41ff8cce6c5f9723cb94465287`. S2 remains in progress.

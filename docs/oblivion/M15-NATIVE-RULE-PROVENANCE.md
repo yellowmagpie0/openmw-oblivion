@@ -241,3 +241,28 @@ Zero difficulty is unchanged. The already observed installed multiplier 5
 (compiled 10) yields 6x incoming/one-sixth outgoing at maximum difficulty,
 with the reverse at minimum. Identity dispatch and live damage observations
 remain open; testing these scalar branches alone does not close that gate.
+
+## Armor input rounding and total cap
+
+The original armor caller at `0x488d3e` reads the unsigned 16-bit hundredths
+field, divides by 100, then truncates to an unsigned integral armor value
+before calling `0x547370`. The helper obtains effective skill, stores
+`range = R(fArmorRatingMax - fArmorRatingBase)`, and computes
+`scaled = R((fArmorRatingBase + effectiveSkill/100 * range) * integralBase)`.
+It floors that value with a minimum of one, then multiplies by
+`R(fArmorRatingConditionBase + conditionRatio * fArmorRatingConditionMult)`.
+That ordering matters: 14.99 base at skill 50 becomes integral 14, floors to
+9 after skill scaling, and yields 4.5 at half condition. Flooring after the
+condition multiplication would produce a different answer. Zero condition
+still produces zero with the native condition settings. No equipped items is
+an inventory/aggregation case, not a call to this individual-item helper.
+
+Original evidence: `sources-01/armor-rule-caller.txt`,
+`hand-armor-block-rules.txt`, and `float-integer-helper.txt`. All four item
+settings use absent-record compiled defaults: skill base 0.35, skill maximum
+1, condition base 0 and condition multiplier 1. The separate total-rating
+function around `0x60e763` caps against `fMaxArmorRating` only when positive;
+zero disables that cap. Its compiled maximum is 90, installed maximum 85.
+The pure cap helper preserves zero-as-disabled and validates finite,
+nonnegative inputs. Mastery/effect contributions before the cap and mitigation
+of an actual hit remain separate reviewed requirements.

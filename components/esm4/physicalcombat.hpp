@@ -76,6 +76,25 @@ namespace ESM4
         BlockEquipment mEquipment;
     };
 
+    struct ArmorRatingSettings
+    {
+        float mSkillBase;
+        float mSkillMaximum;
+        float mConditionBase;
+        float mConditionMultiplier;
+    };
+    struct ArmorRatingInput
+    {
+        std::uint16_t mBaseHundredths;
+        std::int32_t mSkill;
+        std::int32_t mLuck;
+        float mConditionRatio;
+    };
+    float armorRating(const ArmorRatingInput& input, const ArmorRatingSettings& settings,
+        const PhysicalCombatSettings& physical);
+    float capArmorRating(float total, float maximum);
+    void validateArmorRatingSettings(const ArmorRatingSettings& settings);
+
     // The caller resolves identities first. Self-inflicted damage follows the
     // original victim-player branch; unknown sources select Unaffected.
     enum class PlayerDamageRole { Unaffected, Attacker, Victim };
