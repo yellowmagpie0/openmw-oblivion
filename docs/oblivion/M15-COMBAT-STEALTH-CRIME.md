@@ -613,3 +613,41 @@ All 546 unfiltered engine tests pass with an exact inventory check, and
 The tested loading-screen diff SHA-256 is
 `afaedea8655318d3aae7b598ff8d8e7b1e06a609f537cbc6cb6b052b097d4d9b`.
 Restart driver/schema/tests are the next separate commit.
+
+### S1 fresh-process driver and replay
+
+`m15-restart <first-manifest> <continuation-manifest> --output <fresh-directory>`
+launches separate configurations/user-data directories. It first independently
+verifies the completed source course, then copies its immutable snapshot bytes
+into the second process's normal save slot. Only the trusted driver may add
+`--load-savegame`; manifests cannot supply that option or launch a continuation
+without source provenance. The second epoch retains the logical run identity,
+requires a different PID, and records the source digest and engine/content
+fingerprints. Load snapshots require an actual native `load-complete` boundary.
+Both courses must pass independently, exact canonical state must survive the
+load, and the continuation must produce a later ordinary save.
+
+Reproduce using the same installed content and generated fixture:
+
+```sh
+python3 scripts/oblivion_compat.py m15-restart \
+  scripts/data/oblivion_compat/oblivion_m15_observation.json \
+  scripts/data/oblivion_compat/oblivion_m15_continuation.json \
+  --output build/oblivion-compat/m15/S1/my-fresh-restart \
+  --variable openmw="$PWD/build/openmw" \
+  --variable resources="$PWD/build/resources" \
+  --variable fixture_data="$PWD/build/oblivion-compat/m15/S1/observation-03/fixture" \
+  --variable oblivion_data='/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data'
+python3 scripts/oblivion_compat.py m15-verify \
+  build/oblivion-compat/m15/S1/my-fresh-restart --restart
+```
+
+All 125 Python tests pass. Independent JSON Schema validation agrees on 816
+structural mutations. Six copies of the actual passing restart evidence with a
+changed transfer, changed load acknowledgment, reused PID, edited source save,
+missing resave or absent second process all fail; the original still passes
+(`S1/restart-controls-01`). The two retained successful native courses are
+`S1/restart-03` and `S1/restart-04`; renderer repair is commit `345087c991`.
+These establish observation and persistence infrastructure, not combat/crime
+acceptance. Final S1 review still needs to align the event tick with simulation
+updates rather than paused presentation frames.

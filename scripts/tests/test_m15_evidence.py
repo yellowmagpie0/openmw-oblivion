@@ -523,36 +523,37 @@ class M15ReplayTests(unittest.TestCase):
     setUp = M15SessionTests.setUp
     session = M15SessionTests.session
 
-    def completed_run(self):
+    def completed_run(self, restart_from=None):
         import struct
         from test_tes4_runtime_state import make_state
         case = self.value["m15"]["cases"][0]
         case.update(actor=PLAYER, target=PLAYER, action_id="observation-3", events=["save-complete"])
         case["deltas"] = [{"actor": PLAYER, "path": ["actor_values", "health.current"],
                            "event_field": "health", "expected": 0}]
-        session = self.session()
-        session.start(42)
+        session = m15.Session(self.value, self.output, self.engine, restart_from)
+        session.start(43 if restart_from else 42)
         (self.output / "process.log").write_text("normal mock engine boundary\n")
         payload = m15.tes4_runtime_state.encode_payload(make_state())
         subs = b"VERS" + struct.pack("<II", 4, 4) + b"DATA" + struct.pack("<I", len(payload)) + payload
         saved = b"T4ST" + struct.pack("<III", len(subs), 0, 0) + subs
         source = self.output / "userdata/quick.omwsave"
-        source.parent.mkdir()
+        source.parent.mkdir(exist_ok=True)
         source.write_bytes(saved)
         state = m15.tes4_runtime_state.load_save(source)
-        common = {"run_id": session.run_id, "epoch": 1, "pid": 42}
+        common = {"run_id": session.run_id, "epoch": session.epoch, "pid": session.pid}
         events = [{**common, "event": "run-start", "sequence": 1, "tick": 0}]
         for index, name in enumerate(("before", "after"), 2):
             live = self.output / f"live-1-{index}.json"
             live.write_text(json.dumps(state))
-            events.append({**common, "event": "save-complete", "sequence": index, "tick": index,
+            boundary = "load-complete" if restart_from and name == "before" else "save-complete"
+            events.append({**common, "event": boundary, "sequence": index, "tick": index,
                            "actor": PLAYER, "target": PLAYER, "action_id": f"observation-{index}",
                            "cause": "normal-save", "result": "committed", "deltas": {"health": 0},
                            "save": str(source), "save_sha256": m15.digest(source),
                            "live": live.name, "live_sha256": m15.digest(live)})
             (self.output / "events.jsonl").write_text(''.join(json.dumps(e) + '\n' for e in events))
             session.snapshot({"type": "m15_snapshot", "phase": "observe", "name": name,
-                              "save": "userdata/quick.omwsave"})
+                              "save": "userdata/quick.omwsave", "boundary": boundary})
         events.append({**common, "event": "run-end", "sequence": 4, "tick": 3,
                        "event_count": 3, "error_count": 0, "unsupported_count": 0, "pending_count": 0})
         (self.output / "events.jsonl").write_text(''.join(json.dumps(e) + '\n' for e in events))
@@ -619,6 +620,90 @@ class M15ReplayTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.output.exists())
         self.assertIn("M15", result.stderr)
+
+
+class M15RestartTests(unittest.TestCase):
+    setUp = M15SessionTests.setUp
+    session = M15SessionTests.session
+    completed_run = M15ReplayTests.completed_run
+
+    def prepare_restart(self):
+        self.completed_run()
+        previous = self.output
+        self.output = self.root / "second"
+        self.value["command"][-1] = str(self.output / "config")
+        self.value["files"][0]["content"] = self.value["files"][0]["content"].replace(str(previous), str(self.output))
+        for action in self.value["actions"]:
+            if action["phase"] in ("setup", "exercise"):
+                action["phase"] = "restart-continuation"
+        return previous
+
+    def test_restart_transfers_verified_bytes_and_assigns_fresh_epoch(self):
+        previous = self.prepare_restart()
+        session = m15.Session(self.value, self.output, self.engine, (previous, "after"))
+        prior = json.loads((previous / "m15-session.json").read_text())
+        self.assertEqual((session.run_id, session.epoch), (prior["run_id"], 2))
+        self.assertEqual((self.output / "restart-input.omwsave").read_bytes(),
+                         (previous / "snapshots/after.omwsave").read_bytes())
+        self.assertEqual(session.command[-1], "--load-savegame=" + str(self.output / session.restart["save"]))
+        with self.assertRaisesRegex(ValueError, "different process"):
+            session.start(42)
+        session.start(43)
+        self.assertEqual(session.environment()["OPENMW_M15_EPOCH"], "2")
+
+    def test_continuation_cannot_launch_without_verified_first_process(self):
+        previous = self.prepare_restart()
+        with self.assertRaisesRegex(ValueError, "restart driver"):
+            self.session()
+        (previous / "snapshots/after.omwsave").write_bytes(b"changed save")
+        with self.assertRaisesRegex(ValueError, "verification"):
+            m15.Session(self.value, self.output, self.engine, (previous, "after"))
+        self.assertFalse(self.output.exists())
+
+    def test_restart_rejects_changed_engine_and_snapshot_path_escape(self):
+        previous = self.prepare_restart()
+        for name in ("../after", "", "after/extra"):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "snapshot name"):
+                m15.Session(self.value, self.output, self.engine, (previous, name))
+        self.engine.write_bytes(b"changed executable")
+        with self.assertRaisesRegex(ValueError, "same engine"):
+            m15.Session(self.value, self.output, self.engine, (previous, "after"))
+
+    def completed_pair(self):
+        self.output = self.root / "first"
+        self.value["command"][-1] = str(self.output / "config")
+        self.value["files"][0]["content"] = self.value["files"][0]["content"].replace(str(self.root / "run"), str(self.output))
+        previous = self.prepare_restart()
+        self.value["actions"][0]["boundary"] = "load-complete"
+        self.completed_run((previous, "after"))
+        return previous
+
+    def test_complete_pair_replays_and_requires_load_before_resave(self):
+        self.completed_pair()
+        result = m15.verify_restart(self.root, "after", "before", "after")
+        self.assertTrue(result["passed"], result)
+        for source, loaded, final in (("before", "before", "after"), ("after", "after", "before"),
+                                      ("after", "missing", "after"), ("after", "before", "before")):
+            with self.subTest(source=source, loaded=loaded, final=final):
+                self.assertFalse(m15.verify_restart(self.root, source, loaded, final)["passed"])
+
+    def test_restart_rejects_changed_transfer_or_second_process_identity(self):
+        self.completed_pair()
+        metadata = self.output / "m15-session.json"
+        original = metadata.read_text()
+        for field, value in (("pid", 42), ("epoch", 1), ("run_id", "old-run")):
+            changed = json.loads(original); changed[field] = value
+            metadata.write_text(json.dumps(changed))
+            with self.subTest(field=field):
+                self.assertFalse(m15.verify_restart(self.root, "after", "before", "after")["passed"])
+        metadata.write_text(original)
+        (self.output / "restart-input.omwsave").write_bytes(b"changed continuation")
+        self.assertFalse(m15.verify_restart(self.root, "after", "before", "after")["passed"])
+
+    def test_missing_second_process_cannot_pass_restart(self):
+        self.completed_run()
+        self.output.rename(self.root / "first")
+        self.assertFalse(m15.verify_restart(self.root, "after", "before", "after")["passed"])
 
 
 if __name__ == "__main__":

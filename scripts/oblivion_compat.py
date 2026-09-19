@@ -1977,7 +1977,8 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
     return result
 
 
-def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -> dict[str, Any]:
+def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
+                 restart_from: tuple[Path, str] | None = None) -> dict[str, Any]:
     global _VIRTUAL_GAMEPAD
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
     if isinstance(raw, dict) and "m15" in raw:
@@ -1994,7 +1995,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
     if "m15" in manifest:
         if "openmw" not in variables:
             raise ValueError("M15 requires an explicit trusted openmw executable variable")
-        m15_session = tes4_m15.Session(manifest, output, Path(variables["openmw"]))
+        m15_session = tes4_m15.Session(manifest, output, Path(variables["openmw"]), restart_from)
     output.mkdir(parents=True, exist_ok=True)
     for directory_name in manifest.get("directories", []):
         relative = Path(str(directory_name))
@@ -5196,6 +5197,16 @@ def make_parser() -> argparse.ArgumentParser:
     m15_verify = subparsers.add_parser("m15-verify", help="replay immutable M15 run evidence without executing inputs")
     m15_verify.add_argument("directory", type=Path)
     m15_verify.add_argument("--report", type=Path)
+    m15_verify.add_argument("--restart", action="store_true", help="verify both epochs and their save/load boundary")
+
+    restart = subparsers.add_parser("m15-restart", help="run and verify two fresh M15 process epochs")
+    restart.add_argument("first", type=Path)
+    restart.add_argument("second", type=Path)
+    restart.add_argument("--output", type=Path, required=True)
+    restart.add_argument("--variable", action="append", default=[])
+    restart.add_argument("--source-snapshot", default="after")
+    restart.add_argument("--loaded-snapshot", default="before")
+    restart.add_argument("--final-snapshot", default="after")
 
     scenario = subparsers.add_parser("scenario", help="execute a deterministic scenario manifest")
     scenario.add_argument("manifest", type=Path)
@@ -5396,8 +5407,36 @@ def main(argv: list[str] | None = None) -> int:
             variables = parse_variables(args.variable)
             variables.setdefault("source", str(Path(__file__).resolve().parents[1]))
             result = run_scenario(args.manifest.resolve(), args.output.resolve(), variables)
+        elif args.command == "m15-restart":
+            output = args.output.resolve()
+            if output.exists() and any(output.iterdir()):
+                raise ValueError("M15 restart output must be fresh")
+            for path in (args.first, args.second):
+                tes4_m15.validate_manifest(tes4_m15.parse_json(path.read_text()))
+            for name in (args.source_snapshot, args.loaded_snapshot, args.final_snapshot):
+                if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
+                    raise ValueError("invalid restart snapshot name")
+            variables = parse_variables(args.variable)
+            first = run_scenario(args.first.resolve(), output / "first", variables)
+            if not first["passed"]:
+                result = {"kind": "m15-fresh-process-restart", "passed": False,
+                          "failures": ["first process failed; continuation was not launched"]}
+            else:
+                run_scenario(args.second.resolve(), output / "second", variables,
+                             (output / "first", args.source_snapshot))
+                result = tes4_m15.verify_restart(output, args.source_snapshot,
+                                                args.loaded_snapshot, args.final_snapshot)
+            write_json(output / "restart.json", result)
         elif args.command == "m15-verify":
-            result = tes4_m15.verify_run(args.directory)
+            if args.restart:
+                recorded = tes4_m15.parse_json((args.directory / "restart.json").read_text())
+                if (not isinstance(recorded, dict) or recorded.get("kind") != "m15-fresh-process-restart"
+                        or recorded.get("passed") is not True):
+                    raise ValueError("original restart course failed or has invalid provenance")
+                result = tes4_m15.verify_restart(args.directory, recorded.get("source_snapshot"),
+                                                recorded.get("loaded_snapshot"), recorded.get("final_snapshot"))
+            else:
+                result = tes4_m15.verify_run(args.directory)
             if args.report:
                 if args.report.resolve().is_relative_to(args.directory.resolve()):
                     raise ValueError("M15 replay reports must not overwrite the evidence directory")

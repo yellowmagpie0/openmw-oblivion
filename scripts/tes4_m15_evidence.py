@@ -217,8 +217,8 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         _unique([(a["snapshot"], a["actor"], a["path"]) for a in assertions], "state assertion")
         if any(a["actor"] not in (case["actor"], case["target"]) for a in assertions):
             raise _error("state assertions must concern the named actor or target")
-    reserved = {settings["event_file"], "scenario.json", "m15-session.json", "m15-manifest.json", "process.log", ".m15-origin"}
-    if len(reserved) != 6 or reserved & captures:
+    reserved = {settings["event_file"], "scenario.json", "m15-session.json", "m15-manifest.json", "process.log", ".m15-origin", "restart-input.omwsave"}
+    if len(reserved) != 7 or reserved & captures:
         raise _error("evidence paths collide with reserved output")
     for artifact in settings["artifacts"]:
         path = relative_path(artifact["path"]).as_posix()
@@ -472,7 +472,8 @@ def _check_config(manifest: dict[str, Any], output: Path) -> None:
 class Session:
     """One process epoch with fresh outputs and immutable observation receipts."""
 
-    def __init__(self, manifest: dict[str, Any], output: Path, engine: Path):
+    def __init__(self, manifest: dict[str, Any], output: Path, engine: Path,
+                 restart_from: tuple[Path, str] | None = None):
         validate_manifest(manifest)
         self.output = output.resolve()
         self.manifest = manifest
@@ -499,8 +500,10 @@ class Session:
         flags = args[:index] + args[index + 2:]
         if set(flags) - {"--replace=config", "--no-grab", "--no-sound=1", "--game-profile=oblivion"}:
             raise _error("unapproved engine launch option")
-        if any(a["phase"] == "restart-continuation" for a in manifest["actions"]):
+        if restart_from is None and any(a["phase"] == "restart-continuation" for a in manifest["actions"]):
             raise _error("restart-continuation requires the fresh-process restart driver")
+        if restart_from is None and any(a.get("boundary") == "load-complete" for a in manifest["actions"]):
+            raise _error("load observation requires the fresh-process restart driver")
         for item in self.settings["inputs"]:
             if digest(Path(item["path"])) != item["sha256"]:
                 raise _error(f"input fingerprint differs: {item['path']}")
@@ -509,6 +512,28 @@ class Session:
         # The seed is supplied through the engine's real option, never merely
         # written into an evidence label or an unused environment variable.
         self.command = [*command, f"--random-seed={self.settings['seed']}"]
+        self.restart = None
+        source_bytes = None
+        if restart_from is not None:
+            previous, name = restart_from
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
+                raise _error("invalid continuation snapshot name")
+            if not verify_run(previous)["passed"]:
+                raise _error("restart source failed independent evidence verification")
+            prior = _read_json(previous / "m15-session.json")
+            source = _read_json(previous / f"snapshots/{name}.json")
+            if prior["epoch"] != 1 or prior["engine_sha256"] != self.engine_digest:
+                raise _error("restart requires the same engine and a first-process source")
+            if not _equal(prior["inputs"], self.settings["inputs"]):
+                raise _error("restart content inputs differ")
+            if not any(a["phase"] == "restart-continuation" for a in manifest["actions"]):
+                raise _error("second process requires explicit continuation input")
+            self.run_id, self.epoch = prior["run_id"], 2
+            source_bytes = output_path(previous, source["save"]).read_bytes()
+            self.restart = {"source_pid": prior["pid"], "source_epoch": 1,
+                            "source_snapshot": name, "save_sha256": source["save_sha256"],
+                            "save": "userdata/saves/M15Continuation/Quicksave.omwsave"}
+            self.command.append("--load-savegame=" + str(output_path(self.output, self.restart["save"])))
         self.output.mkdir(parents=True, exist_ok=True)
         origin = self.output / ".m15-origin"
         with origin.open("x") as stream:
@@ -518,6 +543,14 @@ class Session:
         # Fresh exclusive output, run IDs and capture hashes are also required.
         self.filesystem_start_ns = origin.stat().st_mtime_ns
         self._receipt(".m15-origin")
+        if source_bytes is not None:
+            destination = output_path(self.output, self.restart["save"])
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source_bytes)
+            # Keep an immutable receipt separate from the normal quicksave slot.
+            (self.output / "restart-input.omwsave").write_bytes(source_bytes)
+            if self._receipt("restart-input.omwsave") != self.restart["save_sha256"]:
+                raise _error("continuation save changed during transfer")
         output_path(self.output, self.settings["event_file"]).parent.mkdir(parents=True, exist_ok=True)
 
     def environment(self) -> dict[str, str]:
@@ -533,6 +566,8 @@ class Session:
         return result
 
     def start(self, pid: int) -> None:
+        if self.restart is not None and pid == self.restart["source_pid"]:
+            raise _error("continuation must use a different process")
         self.pid = pid
         manifest_path = self.output / "m15-manifest.json"
         with manifest_path.open("x") as stream:
@@ -542,7 +577,7 @@ class Session:
                     "started_ns": self.started_ns, "engine_sha256": self.engine_digest,
                     "filesystem_start_ns": self.filesystem_start_ns,
                     "manifest_sha256": manifest_digest,
-                    "inputs": self.settings["inputs"], "command": self.command}
+                    "inputs": self.settings["inputs"], "command": self.command, "restart": self.restart}
         (self.output / "m15-session.json").write_text(json.dumps(metadata, indent=2) + "\n")
         self._receipt("m15-session.json")
         # settings.cfg is legitimately rewritten by the engine at shutdown;
@@ -561,6 +596,8 @@ class Session:
 
     def snapshot(self, action: dict[str, Any]) -> dict[str, Any]:
         name = action["name"]
+        if action.get("boundary") == "load-complete" and self.restart is None:
+            raise _error("load observation requires continuation provenance")
         source = output_path(self.output, action["save"])
         if source.stat().st_mtime_ns < self.filesystem_start_ns:
             raise _error("snapshot source save predates the process")
@@ -572,7 +609,7 @@ class Session:
         state = tes4_runtime_state.load_save(copy)
         events = read_events(output_path(self.output, self.settings["event_file"]))
         save_hash = self._receipt(relative_save)
-        boundaries = [event for event in events if event.get("event") == "save-complete"
+        boundaries = [event for event in events if event.get("event") == action.get("boundary", "save-complete")
                       and event.get("save") == str(source.resolve()) and event.get("save_sha256") == save_hash]
         if not boundaries:
             raise _error("snapshot has no completed engine save acknowledgment for these bytes")
@@ -695,6 +732,18 @@ def verify_run(output: Path) -> dict[str, Any]:
         if receipts["m15-manifest.json"] != metadata["manifest_sha256"]:
             raise _error("manifest differs from launch provenance")
         expected_command = [*manifest["command"], f"--random-seed={settings['seed']}"]
+        restart = metadata.get("restart")
+        if restart is not None:
+            if (metadata["epoch"] != 2 or restart["source_epoch"] != 1
+                    or type(restart["source_pid"]) is not int or restart["source_pid"] <= 0
+                    or restart["source_pid"] == metadata["pid"]
+                    or receipts.get("restart-input.omwsave") != restart["save_sha256"]):
+                raise _error("invalid fresh-process continuation provenance")
+            # Paths in provenance are original launch paths; replay may be relocated.
+            original_output = Path(manifest["command"][manifest["command"].index("--config") + 1]).parent
+            expected_command.append("--load-savegame=" + str(original_output / relative_path(restart["save"])))
+        elif metadata["epoch"] != 1:
+            raise _error("later epoch lacks continuation provenance")
         if metadata["command"] != expected_command or recorded.get("command") != expected_command:
             raise _error("recorded launch differs from the declared engine and seed")
         if not isinstance(recorded.get("actions"), list) or len(recorded["actions"]) != len(manifest["actions"]):
@@ -734,7 +783,9 @@ def verify_run(output: Path) -> dict[str, Any]:
                 raise _error("snapshot reuses or lacks a completed save boundary")
             boundaries.add(sequence)
             boundary = events[sequence - 1]
-            if boundary["event"] != "save-complete":
+            if action.get("boundary") == "load-complete" and restart is None:
+                raise _error("load snapshot lacks continuation provenance")
+            if boundary["event"] != action.get("boundary", "save-complete"):
                 raise _error("snapshot did not observe a completed save")
             relative_save = snapshot["save"]
             if relative_save not in receipts or receipts[relative_save] != snapshot["save_sha256"]:
@@ -765,3 +816,45 @@ def verify_run(output: Path) -> dict[str, Any]:
                  for c in settings.get("cases", [])]
     return {"kind": "m15-evidence-replay", "case_count": len(cases), "cases": cases,
             "failures": failures, "passed": not failures and bool(cases) and all(c["passed"] for c in cases)}
+
+
+def verify_restart(output: Path, source_snapshot: str, loaded_snapshot: str,
+                   final_snapshot: str) -> dict[str, Any]:
+    """Require two independently valid epochs and exact state at normal load."""
+    failures = []
+    try:
+        for name in (source_snapshot, loaded_snapshot, final_snapshot):
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
+                raise _error("invalid restart snapshot name")
+        first, second = output / "first", output / "second"
+        for directory in (first, second):
+            result = verify_run(directory)
+            if not result["passed"]:
+                raise _error(f"restart epoch failed: {directory.name}: {result['failures']}")
+        a, b = (_read_json(d / "m15-session.json") for d in (first, second))
+        if (a["run_id"] != b["run_id"] or a["epoch"] != 1 or b["epoch"] != 2
+                or a["pid"] == b["pid"] or a["engine_sha256"] != b["engine_sha256"]
+                or not _equal(a["inputs"], b["inputs"])):
+            raise _error("restart process identities, engine or content differ")
+        restart = b["restart"]
+        source = _read_json(first / f"snapshots/{source_snapshot}.json")
+        loaded = _read_json(second / f"snapshots/{loaded_snapshot}.json")
+        final = _read_json(second / f"snapshots/{final_snapshot}.json")
+        if (restart["source_pid"] != a["pid"] or restart["source_snapshot"] != source_snapshot
+                or source["save_sha256"] != restart["save_sha256"]
+                or loaded["save_sha256"] != source["save_sha256"]):
+            raise _error("second process did not load the exact first-process save")
+        events = read_events(second / _read_json(second / "m15-manifest.json")["m15"]["event_file"])
+        if (events[loaded["event_sequence"] - 1]["event"] != "load-complete"
+                or events[final["event_sequence"] - 1]["event"] != "save-complete"
+                or loaded["event_sequence"] >= final["event_sequence"]):
+            raise _error("restart requires a load followed by a new normal save")
+        if not _equal(source["state"], loaded["state"]):
+            raise _error("canonical state changed across fresh-process load")
+        # The second course's own causal assertions validate ordinary input
+        # between load and resave; time/position may legitimately advance.
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError) as error:
+        failures.append(str(error))
+    return {"kind": "m15-fresh-process-restart", "passed": not failures, "failures": failures,
+            "source_snapshot": source_snapshot, "loaded_snapshot": loaded_snapshot,
+            "final_snapshot": final_snapshot}

@@ -546,6 +546,12 @@
               "save": {
                 "type": "string",
                 "minLength": 1
+              },
+              "boundary": {
+                "enum": [
+                  "save-complete",
+                  "load-complete"
+                ]
               }
             },
             "required": [

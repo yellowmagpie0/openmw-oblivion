@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "name": "m15-synthetic-fresh-process-continuation",
+  "cwd": "{source}",
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=oblivion",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ncontent=m15-fixture.esm\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "xvfb": true,
+  "timeout_seconds": 180,
+  "terminate_after_actions": true,
+  "expected_exit": 0,
+  "m15": {
+    "version": 1,
+    "kind": "synthetic",
+    "seed": 15,
+    "audio": false,
+    "event_file": "events.jsonl",
+    "inputs": [
+      {
+        "path": "{fixture_data}/m15-fixture.esm",
+        "sha256": "6c5dbec1728d110aca2df6b33ccff1035047348fe80c72079bf73e1b0e5fa15e",
+        "role": "content"
+      },
+      {
+        "path": "{oblivion_data}/Oblivion - Meshes.bsa",
+        "sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+        "role": "archive"
+      },
+      {
+        "path": "{oblivion_data}/Oblivion - Textures - Compressed.bsa",
+        "sha256": "d6e6a2155bea688052862df471c631e93572d525fb81b4358da328bd34760bd2",
+        "role": "archive"
+      },
+      {
+        "path": "{oblivion_data}/Oblivion - Misc.bsa",
+        "sha256": "a84290011a4ed5a1ca8d8cff3822eda67bbacd47c750744b7d786cc0a5527ca5",
+        "role": "archive"
+      }
+    ],
+    "cases": [
+      {
+        "id": "read-only-observation",
+        "actor": "dynamic:player:0000000000000001",
+        "target": "dynamic:player:0000000000000001",
+        "action_id": "observation-3",
+        "events": [
+          "save-complete"
+        ],
+        "before": "before",
+        "after": "after",
+        "deltas": [
+          {
+            "actor": "dynamic:player:0000000000000001",
+            "path": [
+              "actor_values",
+              "health.current"
+            ],
+            "event_field": "health",
+            "expected": 0
+          }
+        ],
+        "assertions": [
+          {
+            "actor": "dynamic:player:0000000000000001",
+            "snapshot": "after",
+            "path": [
+              "cell"
+            ],
+            "mode": "exact",
+            "expected": "content:m15-fixture.esm:900000"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "snapshots/before.json",
+        "kind": "snapshot"
+      },
+      {
+        "path": "snapshots/after.json",
+        "kind": "snapshot"
+      },
+      {
+        "path": "observation.png",
+        "kind": "image"
+      }
+    ],
+    "required_references": [
+      {
+        "key": "content:m15-fixture.esm:900010",
+        "base": "content:m15-fixture.esm:900001",
+        "cell": "content:m15-fixture.esm:900000",
+        "enabled": true,
+        "deleted": false
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "wait_log",
+      "phase": "restart-continuation",
+      "pattern": "Loading cell M15Observation",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "focus_window",
+      "phase": "restart-continuation",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "phase": "observe",
+      "path": "events.jsonl",
+      "pattern": "\"event\":\"load-complete\"",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "m15_snapshot",
+      "phase": "observe",
+      "name": "before",
+      "save": "userdata/saves/M15Continuation/Quicksave.omwsave",
+      "boundary": "load-complete"
+    },
+    {
+      "type": "sleep",
+      "phase": "restart-continuation",
+      "seconds": 3
+    },
+    {
+      "type": "key_held",
+      "phase": "restart-continuation",
+      "value": "w",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "key",
+      "phase": "restart-continuation",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "phase": "observe",
+      "path": "events.jsonl",
+      "pattern": "\"sequence\":3,.*\"event\":\"save-complete\"",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "m15_snapshot",
+      "phase": "observe",
+      "name": "after",
+      "save": "userdata/saves/M15Continuation/Quicksave.omwsave"
+    },
+    {
+      "type": "sleep",
+      "phase": "observe",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "phase": "observe",
+      "name": "observation.png",
+      "minimum_entropy": 0.02
+    }
+  ]
+}
