@@ -128,10 +128,82 @@ python3 scripts/oblivion_compat.py scenario MANIFEST --output FRESH_OUTPUT \
   --variable "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data"
 ```
 
+Both M13 prison captures were subsequently opened and inspected: textured
+stone room/window and skeletal debris are visible, with matching magenta HUD,
+crosshair and minimap defects before and after quickload. Neither frame
+visibly establishes the claimed equipment state. Keep the inventory/save
+assertions separate from equipment visual acceptance.
+
 M13 additionally used the two variables above. The Morrowind manifest used
 `--variable 'morrowind_data=/home/maciek/.local/share/Steam/steamapps/common/Morrowind/Data Files'`.
 Exact commands and substitutions are also recoverable from each scenario
 report and its generated configuration. All three outputs were fresh.
+
+## S0 observability: compiled call-site inventory
+
+The baseline handoff was committed as `85616edb5c`. The next bounded change
+adds `static_calls` to each unit in the existing `esmtool obscript` JSON
+report. This is the narrow baseline observability allowed by S0: global
+command counts could not identify which event/context in a selected campaign
+uses an unavailable command. No gameplay, compiler lowering, canonical
+program representation, or runtime command behavior changes.
+
+Each call includes compiled command spelling (including aliases), entry-point
+and instruction indices, event and runtime event arguments, source line and
+column, argument count and member-call status. Calls are emitted in program
+order without deduplicating separate sites. Conditions are included because
+they also require real command implementations. `null` means compilation
+did not produce a program; `[]` means a compiled program contains no calls.
+Neither means the runtime successfully exercised a campaign. Conditional
+calls, including unreachable branches, are deliberately retained for audit.
+
+Evidence is in `S0/static-calls-01/`:
+
+- `baseline-failure.log`: the old report fails the new assertion requiring
+  per-unit calls for `ArenaAggressionScript`.
+- `components.log`: first attempt, 58/59 passed. One new test incorrectly
+  expected lower-case event spelling; inspection of `Compiler::compile`
+  established that events preserve source spelling while runtime arguments
+  are case-folded. The corrected test explicitly checks both contracts.
+- `components-corrected.xml`: 59/59 affected cases, including four new
+  `ObScriptStaticCalls` cases. Tests compile synthetic scripts, exclude
+  comments/strings/member stores, preserve distinct calls and aliases, check
+  source/event/argument context, prove observation does not change canonical
+  programs, and execute an untaken branch to demonstrate that a static call
+  is not runtime coverage.
+- `all-components.xml`: 1,621/1,621 component tests passed.
+- `all-engine.xml`: after rebuilding `openmw-tests`, 546/546 engine tests
+  passed. Neither full suite reports disabled or skipped cases.
+- `python.log`: all 76 Python tests passed.
+- `obscript.json` / `export-validation.log`: the master has 9,992 units and
+  32,747 static calls. Arena's four `StartCombat` sites and its filtered
+  `OnHit Player`/`StopCombat` site were checked against the original scripts.
+  Removing the new field yields exactly the baseline report, including all
+  source/reference/AST/program fingerprints and diagnostics.
+- `official-obscript.json`: all eleven installed official plugins produce
+  11,098 units, 39,845 static calls and zero frontend failures.
+  `official-command.json` retains the exact ordered command arguments.
+
+`tested-implementation.json` records binary SHA-256 hashes and executed XML
+counts. The tested implementation diff against `85616edb5c`, restricted to
+`program.hpp`, `program.cpp`, `apps/esmtool/obscript.cpp` and
+`apps/components_tests/obscript/frontend.cpp`, has SHA-256
+`b2c7eb4f1d13ab446caa67b7842cb97c4e210f09489ef775d6c2d167eb18b920`.
+The full test runs validate this audit change, not the unimplemented S1–S14
+requirements. No M15 runtime acceptance is claimed.
+
+The audit command is unchanged:
+
+```sh
+./build/esmtool obscript OUTPUT.json /absolute/path/Oblivion.esm [other-plugins...]
+```
+
+The calls are static dependencies, not a control-flow proof, resolved dynamic
+receiver identities, winning-record filtering or a declaration of supported
+runtime commands. These are still separate S0/S12 tasks. In particular, an
+original script's legitimate `Kill` or `SetStage` is distinguishable from
+harness mutation by its unit and event provenance; banning the command name
+globally would break the tutorial.
 
 ## Campaign discovery (not yet a complete S0 gate)
 
@@ -199,6 +271,27 @@ Tutorial cells inspected: `ImperialDungeon01` = `01fbb9`,
 `ImperialDungeon04` = `022ff6`. The existing M14 escort manifest alone cannot
 establish tutorial combat provenance, loot or progression. Exact combat
 targets and legitimate start/end saves remain to be locked.
+
+The static inventory further identifies the first authored ambush in
+`ImperialDungeon01`:
+
+| Actor reference | Actor base | Script | Package-completion target |
+| --- | --- | --- | --- |
+| `014a30` | `014a27` | `014a22` | Glenroy |
+| `014a2c` | `014a28` | `014a24` | Glenroy |
+| `0178c3` | `017617` | `017616` | Baurus |
+| `0178c4` | `017619` | `017612` | Renault (`RenoteRef`) |
+
+The four original `OnDeath` callbacks advance CharacterGen to stage 26 once
+`ambushCount` reaches four, then reset that counter. Their `OnDeath Player`
+blocks separately update player-kill attribution. Activation of an eligible
+dead actor sets MQ01's loot state/stage 18 when MQ01 stage 15 has been done.
+The first two scripts intentionally call `RenoteRef.Kill` in `OnHit` and
+advance CharacterGen to 24. A test that requires **all** escorts to survive
+this ambush would contradict original content: protect the actually essential
+escorts, but preserve Renault's authored death. Exact weapon acquisition,
+quest-condition progression and the legitimate starting save still need
+normal-interaction proof.
 
 Two selected prison environments for further tracing are the Imperial prison
 cell `02c17c` (player-cell door `0937ea`) and Chorrol Castle Dungeon `02898e`

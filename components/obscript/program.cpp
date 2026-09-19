@@ -28,6 +28,23 @@ namespace ObScript
         entry.mContexts.insert(context);
     }
 
+    std::vector<StaticCall> collectStaticCalls(const Program& program)
+    {
+        std::vector<StaticCall> result;
+        for (std::size_t entryIndex = 0; entryIndex < program.mEntryPoints.size(); ++entryIndex)
+        {
+            const EntryPoint& entry = program.mEntryPoints[entryIndex];
+            for (std::size_t instructionIndex = 0; instructionIndex < entry.mCode.size(); ++instructionIndex)
+            {
+                const Instruction& instruction = entry.mCode[instructionIndex];
+                if (instruction.mOpcode == OpCode::Call)
+                    result.push_back({ entryIndex, instructionIndex, instruction.mText, instruction.mLocation,
+                        instruction.mArgumentCount, instruction.mMemberCall });
+            }
+        }
+        return result;
+    }
+
     std::string_view toString(ValueType value)
     {
         switch (value)

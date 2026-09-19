@@ -248,6 +248,104 @@ namespace
         return result;
     }
 
+    TEST(ObScriptStaticCalls, inventoriesConditionsAndCommandsWithoutExecutingThem)
+    {
+        const auto unit = makeUnit(0, "begin gamemode\n"
+            "if player.GetDead == 0\n"
+            "player.StartCombat target\n"
+            "endif\n"
+            "end\n"
+            "begin OnHit player\n"
+            "StopCombat\n"
+            "end\n");
+        const auto compiled = ObScript::CompilationCache{}.compile(unit);
+        ASSERT_TRUE(compiled.mDiagnostics.empty());
+        ASSERT_TRUE(compiled.mProgram);
+        const auto before = ObScript::canonical(*compiled.mProgram);
+        const auto calls = ObScript::collectStaticCalls(*compiled.mProgram);
+        ASSERT_EQ(calls.size(), 3u);
+        EXPECT_EQ(calls[0].mName, "getdead");
+        EXPECT_EQ(calls[0].mLocation.mLine, 2u);
+        EXPECT_EQ(calls[0].mArgumentCount, 0u);
+        EXPECT_TRUE(calls[0].mMemberCall);
+        EXPECT_EQ(calls[1].mName, "startcombat");
+        EXPECT_EQ(calls[1].mLocation.mLine, 3u);
+        EXPECT_EQ(calls[1].mArgumentCount, 1u);
+        EXPECT_TRUE(calls[1].mMemberCall);
+        EXPECT_EQ(calls[0].mEntryPoint, calls[1].mEntryPoint);
+        EXPECT_LT(calls[0].mInstruction, calls[1].mInstruction);
+        EXPECT_EQ(calls[2].mName, "stopcombat");
+        EXPECT_EQ(calls[2].mLocation.mLine, 7u);
+        EXPECT_FALSE(calls[2].mMemberCall);
+        EXPECT_NE(calls[1].mEntryPoint, calls[2].mEntryPoint);
+        const auto& hit = compiled.mProgram->mEntryPoints.at(calls[2].mEntryPoint);
+        // Event spelling is retained by the compiler; runtime filters are
+        // case-folded independently. The inventory must not rewrite either.
+        EXPECT_EQ(hit.mEvent, "OnHit");
+        EXPECT_EQ(hit.mRuntimeArguments, std::vector<std::string>{ "player" });
+        EXPECT_EQ(ObScript::canonical(*compiled.mProgram), before);
+        EXPECT_EQ(ObScript::collectStaticCalls(*compiled.mProgram), calls);
+    }
+
+    TEST(ObScriptStaticCalls, doesNotTreatCommentsStringsOrQuestMembersAsCommands)
+    {
+        const auto compiled = ObScript::CompilationCache{}.compile(makeUnit(0,
+            "begin gamemode\n"
+            "; player.Kill\n"
+            "MessageBox \"StartCombat StopCombat\"\n"
+            "set arena.FightOver to 1\n"
+            "end\n"));
+        ASSERT_TRUE(compiled.mDiagnostics.empty());
+        ASSERT_TRUE(compiled.mProgram);
+        const auto calls = ObScript::collectStaticCalls(*compiled.mProgram);
+        ASSERT_EQ(calls.size(), 1u);
+        EXPECT_EQ(calls[0].mName, "messagebox");
+        EXPECT_EQ(calls[0].mLocation.mLine, 3u);
+        EXPECT_EQ(calls[0].mArgumentCount, 1u);
+    }
+
+    TEST(ObScriptStaticCalls, retainsAliasesDuplicateSitesAndUntakenBranches)
+    {
+        const auto compiled = ObScript::CompilationCache{}.compile(makeUnit(0,
+            "begin gamemode\n"
+            "if 0\n"
+            "player.scaonactor\n"
+            "player.StopCombatAlarmOnActor\n"
+            "player.scaonactor\n"
+            "endif\n"
+            "end\n"));
+        ASSERT_TRUE(compiled.mDiagnostics.empty());
+        ASSERT_TRUE(compiled.mProgram);
+        const auto calls = ObScript::collectStaticCalls(*compiled.mProgram);
+        ASSERT_EQ(calls.size(), 3u);
+        EXPECT_EQ(calls[0].mName, "scaonactor");
+        EXPECT_EQ(calls[1].mName, "stopcombatalarmonactor");
+        EXPECT_EQ(calls[2].mName, "scaonactor");
+        EXPECT_NE(calls[0].mInstruction, calls[2].mInstruction);
+        // Static inventory deliberately includes these calls, but running the
+        // event does not. Never interpret the inventory as runtime coverage.
+        auto locals = ObScript::VirtualMachine::makeLocals(*compiled.mProgram);
+        TestRuntimeHost host;
+        ObScript::RuntimeContext context;
+        context.mUnit = compiled.mProgram->mUnit;
+        context.mEvent = "gamemode";
+        const auto report = ObScript::VirtualMachine{}.execute(*compiled.mProgram,
+            compiled.mProgram->mEntryPoints.front(), locals, host, context);
+        EXPECT_TRUE(report.mCompleted);
+        EXPECT_TRUE(report.mDiagnostics.empty());
+        EXPECT_TRUE(host.mCalls.empty());
+    }
+
+    TEST(ObScriptStaticCalls, emptyProgramAndLocalArithmeticHaveNoDependencies)
+    {
+        EXPECT_TRUE(ObScript::collectStaticCalls(ObScript::Program{}).empty());
+        const auto compiled = ObScript::CompilationCache{}.compile(makeUnit(0,
+            "short value\nbegin gamemode\nset value to 1 + 2\nend\n"));
+        ASSERT_TRUE(compiled.mDiagnostics.empty());
+        ASSERT_TRUE(compiled.mProgram);
+        EXPECT_TRUE(ObScript::collectStaticCalls(*compiled.mProgram).empty());
+    }
+
     TEST(ObScriptFrontend, whitespaceAndLineEndingsDoNotChangeAstOrIr)
     {
         const std::vector<std::string> sources{

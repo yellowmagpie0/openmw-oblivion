@@ -4,6 +4,7 @@
 #include "ast.hpp"
 #include "corpus.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -144,6 +145,22 @@ namespace ObScript
         std::vector<CompilationDiagnostic> mDiagnostics;
         bool mCacheHit = false;
     };
+
+    // Static dependency inventory only: a call may be in an untaken branch.
+    // This does not establish runtime reachability or command implementation.
+    struct StaticCall
+    {
+        std::size_t mEntryPoint = 0;
+        std::size_t mInstruction = 0;
+        std::string mName;
+        SourceLocation mLocation;
+        std::uint32_t mArgumentCount = 0;
+        bool mMemberCall = false;
+
+        friend bool operator==(const StaticCall&, const StaticCall&) = default;
+    };
+
+    std::vector<StaticCall> collectStaticCalls(const Program& program);
 
     std::string_view toString(ValueType value);
     std::string_view toString(OpCode value);

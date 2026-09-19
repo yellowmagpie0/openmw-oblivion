@@ -398,7 +398,42 @@ namespace EsmTool
                            << diagnostic.mDiagnostic.mLocation.mLine << ", \"column\": "
                            << diagnostic.mDiagnostic.mLocation.mColumn << '}';
                 }
-                report << "], \"source\": ";
+                // A missing compiled program is not an empty dependency list.
+                // Keep aliases as compiled; resolving runtime support is a
+                // separate campaign audit, not a claim made by the frontend.
+                report << "], \"static_calls\": ";
+                if (audit.mCompilation.mProgram)
+                {
+                    const auto& program = *audit.mCompilation.mProgram;
+                    const auto calls = ObScript::collectStaticCalls(program);
+                    report << '[';
+                    for (std::size_t j = 0; j < calls.size(); ++j)
+                    {
+                        if (j != 0)
+                            report << ',';
+                        const auto& call = calls[j];
+                        const auto& entry = program.mEntryPoints[call.mEntryPoint];
+                        report << "{\"name\": \"" << jsonEscape(call.mName)
+                               << "\", \"entry_point\": " << call.mEntryPoint
+                               << ", \"event\": \"" << jsonEscape(entry.mEvent)
+                               << "\", \"event_arguments\": [";
+                        for (std::size_t k = 0; k < entry.mRuntimeArguments.size(); ++k)
+                        {
+                            if (k != 0)
+                                report << ',';
+                            report << '"' << jsonEscape(entry.mRuntimeArguments[k]) << '"';
+                        }
+                        report << "], \"instruction\": " << call.mInstruction
+                               << ", \"line\": " << call.mLocation.mLine
+                               << ", \"column\": " << call.mLocation.mColumn
+                               << ", \"argument_count\": " << call.mArgumentCount
+                               << ", \"member_call\": " << (call.mMemberCall ? "true" : "false") << '}';
+                    }
+                    report << ']';
+                }
+                else
+                    report << "null";
+                report << ", \"source\": ";
                 if (unit.mDefinition.sourceData)
                     report << '"' << jsonEscape(unit.mDefinition.scriptSource) << '"';
                 else
