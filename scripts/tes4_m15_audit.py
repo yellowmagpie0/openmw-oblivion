@@ -228,7 +228,7 @@ def _creature(record: dict) -> dict:
     return result
 
 
-def inventory(paths: list[Path]) -> dict[str, Any]:
+def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str, Any]:
     if not paths or len({p.name.casefold() for p in paths}) != len(paths):
         raise M15AuditError('content list must be nonempty and unique')
     winners = {}
@@ -246,6 +246,7 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
                 raise M15AuditError(f'{key}: override changes record type')
             winners[key] = record
     styles, actors, settings, factions, equipment = {}, {}, {}, {}, {}
+    ownership, references = {}, {}
     failures = []
     for key, record in winners.items():
         if record['deleted'] or 'subrecords' not in record:
@@ -253,7 +254,25 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
         subs = record['subrecords']
         edid = binary._decode_string(_one(subs, 'EDID') or b'')
         try:
-            if record['type'] == 'CSTY':
+            if record['type'] in ('REFR', 'ACHR', 'ACRE', 'CELL'):
+                owner = _one(subs, 'XOWN')
+                rank = _one(subs, 'XRNK')
+                global_ = _one(subs, 'XGLB')
+                access = {'owner': _reference(record, owner, 'XOWN') if owner is not None else 'null',
+                          'rank': _unpack(rank, '<i', 'XRNK')[0] if rank is not None else None,
+                          'global': _reference(record, global_, 'XGLB') if global_ is not None else 'null'}
+                if any(value is not None for value in (owner, rank, global_)):
+                    ownership[key] = dict(access, type=record['type'], cell=record['cell'])
+                if record['type'] != 'CELL':
+                    base = _reference(record, _one(subs, 'NAME', True), 'NAME')
+                    references[key] = dict(access, type=record['type'], cell=record['cell'], base=base, editor_id=edid)
+                    teleport = _one(subs, 'XTEL')
+                    if teleport is not None:
+                        values = _unpack(teleport, '<I6f', 'XTEL')
+                        if any(not math.isfinite(v) for v in values[1:]):
+                            raise M15AuditError('nonfinite door destination')
+                        references[key]['destination'] = _stable_key(record['plugin'], values[0], record['masters'])
+            elif record['type'] == 'CSTY':
                 style = combat_style(_one(subs, 'CSTD', True), _one(subs, 'CSAD'))
                 style['editor_id'] = edid
                 style['raw_sha256'] = hashlib.sha256(_one(subs, 'CSTD', True) + (_one(subs, 'CSAD') or b'')).hexdigest()
@@ -319,6 +338,16 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
     def check_link(source, target, types):
         if target != 'null' and (target not in winners or winners[target]['deleted'] or winners[target]['type'] not in types):
             failures.append(f'{source}: missing/deleted/wrong-type {target}; expected {types}')
+    for key, access in ownership.items():
+        check_link(key, access['owner'], ('FACT', 'NPC_'))
+        check_link(key, access['global'], ('GLOB',))
+    base_types = tuple(sorted({r['type'] for r in winners.values()} - {'REFR', 'ACHR', 'ACRE', 'CELL'}))
+    for key, reference in references.items():
+        check_link(key, reference['base'], ('NPC_',) if reference['type'] == 'ACHR' else ('CREA',) if reference['type'] == 'ACRE' else base_types)
+        if reference['cell'] is not None:
+            check_link(key, reference['cell'], ('CELL',))
+        if 'destination' in reference:
+            check_link(key, reference['destination'], ('REFR',))
     for key, faction in factions.items():
         for relation in faction['relationships']:
             check_link(key, relation['faction'], ('FACT',))
@@ -331,12 +360,41 @@ def inventory(paths: list[Path]) -> dict[str, Any]:
             check_link(key, actor['creature']['sound_base'], ('CREA',))
             for sound in actor['creature']['sounds']:
                 check_link(key, sound['sound'], ('SOUN',))
+    prison_reports = []
+    for prison in prisons or []:
+        report = {'name': prison['name'], 'forms': {}}
+        check_link(prison['name'], prison['cell'], ('CELL',))
+        if prison['cell'] == 'null':
+            failures.append(f"{prison['name']}: missing prison cell")
+        for role, types in (('prison_marker', ('DOOR',)), ('release_marker', ('DOOR',)),
+                            ('cell_door', ('DOOR',)), ('evidence', ('CONT',)), ('bed_candidate', ('FURN',))):
+            key = prison[role]
+            reference = references.get(key)
+            if reference is None:
+                failures.append(f"{prison['name']}: missing {role} {key}")
+                continue
+            check_link(key, reference['base'], types)
+            if role != 'release_marker' and reference['cell'] != prison['cell']:
+                failures.append(f"{prison['name']}: {role} is outside prison cell")
+            report['forms'][role] = dict(reference, key=key)
+        for role, opposite in (('prison_marker', 'release_marker'), ('release_marker', 'prison_marker')):
+            if report['forms'].get(role, {}).get('destination') != prison[opposite]:
+                failures.append(f"{prison['name']}: {role} lacks reciprocal prison teleport")
+        report['guards'] = []
+        for key in prison['guards']:
+            reference = references.get(key)
+            if reference is None or reference['type'] != 'ACHR':
+                failures.append(f"{prison['name']}: missing guard {key}")
+                continue
+            report['guards'].append(dict(reference, key=key))
+        prison_reports.append(report)
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
-        'settings': settings, 'factions': factions, 'equipment': equipment, 'failures': failures, 'data_passed': not failures,
+        'settings': settings, 'factions': factions, 'equipment': equipment,
+        'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures, 'data_passed': not failures,
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],
         'summary': {'styles': len(styles), 'actors': len(actors), 'settings': len(settings),
-                    'factions': len(factions), 'equipment': len(equipment), 'default_actors': len(unresolved),
+                    'factions': len(factions), 'equipment': len(equipment), 'owned_forms': len(ownership), 'references': len(references), 'prisons': len(prison_reports), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.

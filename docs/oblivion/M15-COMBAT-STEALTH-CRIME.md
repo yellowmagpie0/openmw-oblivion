@@ -781,3 +781,28 @@ and repeated sound slots collapse into one legacy sound/chance pair. The next
 bounded implementation preserves these typed fields and verifies malformed
 sound sequences and native readback before using them in simulation. S2 rule,
 default, ownership/jail and independent gameplay oracle gates remain open.
+
+### S2 ownership and named prison topology
+
+Commit `0592507cbd` contains the preceding equipment/creature/relationship
+audit. The next audit chunk preserves separate reference and cell ownership,
+faction ranks and global gates, checks 1,045,747 winning placed references and
+3,605 explicit ownership entries, and resolves base/cell/door-destination links
+without dangling targets. No gameplay access rule is inferred from these data.
+
+Both S0-selected prisons are rechecked against their actual bed, chest, door,
+guard and marker references. The first check wrongly assumed prison/release
+markers were STAT records; all four are actually DOOR `PrisonMarker` (base
+`000004`, independently dumped in `S2/audit-06/prison-marker-native.log`).
+The corrected check requires DOOR bases and reciprocal prison/release teleports,
+plus matching prison cells for bed/evidence/cell-door roles. It preserves the
+Imperial City guard placement in the adjacent audited cell. Failed attempts
+remain in `audit-06`; `audit-07/m15-audit.json` passes all data checks for both
+prisons while the overall S2 rule/oracle gate correctly remains false.
+
+Cases AUD-11/12 prove separate ownership layers, deleted-owner failure,
+reciprocal marker requirements and wrong prison-role base rejection. The full
+Python suite passes 137 tests (`S2/audit-06/python-tests.log`). The CLI prints a
+compact summary and links the complete local inventory rather than duplicating
+its million-reference report to stdout. Runtime crime, incarceration and
+release are still pending; these checks establish the data topology only.

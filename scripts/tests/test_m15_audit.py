@@ -172,6 +172,53 @@ class M15NativeAuditTests(unittest.TestCase):
             patch.write_bytes(plugin([record('FACT', 0x801, b'', 0x20)], ('base.esm',)))
             self.assertFalse(audit.inventory([base, patch])['data_passed'])
 
+    def test_ownership_keeps_reference_and_cell_policy_separate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.esm'
+            owner = record('FACT', 0x800, sub('DATA', b'\0'))
+            cell = record('CELL', 0x801, sub('XOWN', struct.pack('<I', 0x800)) + sub('XRNK', struct.pack('<i', 2)))
+            item = record('MISC', 0x802, b'')
+            ref = record('REFR', 0x803, sub('NAME', struct.pack('<I', 0x802)))
+            group = struct.pack('<4sIIII', b'GRUP', 20 + len(ref), 0x801, 6, 0) + ref
+            path.write_bytes(plugin([owner, cell, item]) + group)
+            result = audit.inventory([path])
+            self.assertTrue(result['data_passed'], result['failures'])
+            self.assertEqual(result['ownership']['content:fixture.esm:000801']['owner'], 'content:fixture.esm:000800')
+            self.assertEqual(result['ownership']['content:fixture.esm:000801']['rank'], 2)
+            reference = result['references']['content:fixture.esm:000803']
+            self.assertEqual(reference['cell'], 'content:fixture.esm:000801')
+            self.assertEqual(reference['owner'], 'null')
+            self.assertEqual(reference['base'], 'content:fixture.esm:000802')
+            path.write_bytes(plugin([cell, item]) + group)
+            self.assertFalse(audit.inventory([path])['data_passed'])
+
+    def test_prison_markers_are_reciprocal_doors_and_roles_require_real_bases(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.esm'
+            records = [record('CELL', 0x800, b''), record('DOOR', 0x801, b''),
+                       record('CONT', 0x802, b''), record('FURN', 0x803, b'')]
+            refs = []
+            for ident, base, destination in ((0x810, 0x801, 0x811), (0x811, 0x801, 0x810),
+                                              (0x812, 0x801, None), (0x813, 0x802, None), (0x814, 0x803, None)):
+                payload = sub('NAME', struct.pack('<I', base))
+                if destination:
+                    payload += sub('XTEL', struct.pack('<I6f', destination, *([0] * 6)))
+                refs.append(record('REFR', ident, payload))
+            group = struct.pack('<4sIIII', b'GRUP', 20 + sum(map(len, refs)), 0x800, 6, 0) + b''.join(refs)
+            path.write_bytes(plugin(records) + group)
+            key = lambda ident: f'content:fixture.esm:{ident:06x}'
+            prison = dict(name='Fixture', cell=key(0x800), prison_marker=key(0x810), release_marker=key(0x811),
+                          cell_door=key(0x812), evidence=key(0x813), bed_candidate=key(0x814), guards=[])
+            result = audit.inventory([path], [prison])
+            self.assertTrue(result['data_passed'], result['failures'])
+            self.assertEqual(result['summary']['prisons'], 1)
+            prison['release_marker'] = key(0x812)
+            result = audit.inventory([path], [prison])
+            self.assertFalse(result['data_passed'])
+            self.assertTrue(any('reciprocal prison teleport' in failure for failure in result['failures']))
+            prison['evidence'] = key(0x814)
+            self.assertFalse(audit.inventory([path], [prison])['data_passed'])
+
     def test_truncated_headers_and_wrong_game_version_fail_before_inventory(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'fixture.esm'

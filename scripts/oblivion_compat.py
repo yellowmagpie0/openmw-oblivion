@@ -5433,7 +5433,9 @@ def main(argv: list[str] | None = None) -> int:
                                                 args.loaded_snapshot, args.final_snapshot)
             write_json(output / "restart.json", result)
         elif args.command == "m15-audit":
-            result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER])
+            case_inventory = json.loads((Path(__file__).resolve().parents[1] / "docs/oblivion/M15-CASE-INVENTORY.json").read_text())
+            result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER],
+                                              case_inventory["prisons"])
             write_json(args.output / "m15-audit.json", result)
         elif args.command == "m15-verify":
             if args.restart:
@@ -5509,6 +5511,16 @@ def main(argv: list[str] | None = None) -> int:
             "unsupported": result.get("unsupported", {}),
             "count_lock": result.get("count_lock", {}),
             "evidence": str(args.output.resolve() / "m14-audit.json"),
+        }
+    elif args.command == "m15-audit":
+        printable = {
+            "passed": result.get("passed", False),
+            "data_passed": result.get("data_passed", False),
+            "milestone": "M15",
+            "summary": result.get("summary", {}),
+            "failure_count": len(result.get("failures", [])),
+            "open_gates": result.get("open_gates", []),
+            "evidence": str(args.output.resolve() / "m15-audit.json"),
         }
     print(json.dumps(printable, indent=2, sort_keys=True))
     return 0 if result.get("passed", False) else 1
