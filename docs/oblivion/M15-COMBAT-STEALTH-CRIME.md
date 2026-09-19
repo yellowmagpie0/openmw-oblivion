@@ -920,3 +920,20 @@ percentage boundaries, signed modifiers, invalid overrides and ambiguous input.
 All 1,652 component tests pass with exact inventory; all ten settings/policy
 cases pass under ASan/UBSan (`S2/settings-01`). Actor-store wiring is the next
 bounded chunk. Gameplay formulas and their behavioral probes remain open.
+
+### S2 native actor/store input adapter
+
+Commit `53c31d95fd` contains the typed default builder. The new read-only
+`oblivioncombatdata` adapter resolves native NPC/creature bases through stable
+keys and the winning typed CSTY store. Null styles select verified native
+defaults; invalid, deleted, wrong-type and unsupported-profile inputs diagnose
+explicitly. Creature reach remains required. Native static and dynamic setting
+overrides feed the pure builder without consulting the shared TES3 store.
+
+All four new cases failed against the initial unimplemented adapter. The first
+implemented run exposed a test-fixture variant initialization error; that failed
+run is retained. The corrected fixture and added dynamic-override assertion
+pass with all 551 engine tests and an exact inventory. Evidence is in
+`S2/actor-inputs-01`; tested source/test diff SHA-256: `308b9553baf37e4a151ffc202ce25698d225386b7f088d3410647595eb08ed93`.
+These are store/helper tests, not actor/controller gameplay acceptance. S2's
+physical/crime rules and behavioral probes remain open.

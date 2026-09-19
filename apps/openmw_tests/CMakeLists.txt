@@ -8,6 +8,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwworld/teststore.cpp
     mwworld/testduration.cpp
+    mwworld/testoblivioncombatdata.cpp
     mwworld/testoblivionai.cpp
     mwworld/testoblivionprofileservices.cpp
     mwworld/testtimestamp.cpp
