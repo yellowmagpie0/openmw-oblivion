@@ -1,0 +1,664 @@
+{
+  "schema_version": 1,
+  "scope": "Requirement inventory only; no gameplay acceptance",
+  "baseline_revision": "72515455b345ef8700a3c8ebf10feef89db737d1",
+  "cases": [
+    {
+      "id": "M15-F01",
+      "family": "Melee/contact",
+      "owner": "S4",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Blade, blunt, unarmed, creature; normal/power/directional; skill thresholds; fatigue zero/low/full; difficulty boundaries; reach inside/outside; target behind wall; first/third person.",
+      "oracle": "Correct rule values, contact causality, one hit/window, no TES3 random miss, correct fatigue/condition/reaction.",
+      "evidence": "build/oblivion-compat/m15/S4/RUN/M15-F01/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F02",
+      "family": "Block/armor",
+      "owner": "S4",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Shield, weapon, no legal block; angle boundary; early/late input; light/heavy/mixed/no armor; broken/normal/over-repaired condition; cap boundaries.",
+      "oracle": "Exact mitigation and wear, correct actor/slot, no negative health/condition or duplicate fatigue charge.",
+      "evidence": "build/oblivion-compat/m15/S4/RUN/M15-F02/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F03",
+      "family": "Mastery",
+      "owner": "S4",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Every audited combat/Sneak/armor ability; below/at/above threshold; valid/invalid posture/equipment; deterministic proc/non-proc; attack direction; disarm/knockdown/paralysis/armor bypass as applicable.",
+      "oracle": "Real unlocked ability without requiring M16 leveling, correct dropped item/effect duration/mitigation, persistence and no duplicate proc after reload.",
+      "evidence": "build/oblivion-compat/m15/S4/RUN/M15-F03/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F04",
+      "family": "Reactions",
+      "owner": "S4",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Stagger, knockdown, fatigue knockout, essential unconsciousness; attack interrupted; recovery while input held; repeated hits.",
+      "oracle": "Native durations/eligibility, no stuck controller, no incorrect death/crime, save continuity.",
+      "evidence": "build/oblivion-compat/m15/S4/RUN/M15-F04/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F05",
+      "family": "Ranged",
+      "owner": "S5",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Partial/full draw, cancel, no ammo, moving shooter/target, thin wall, long distance, high speed, simultaneous projectiles, cell change.",
+      "oracle": "Analytic trajectory bounds, one ammo debit/impact, no tunneling or ghost damage, exact spent/recovered inventory.",
+      "evidence": "build/oblivion-compat/m15/S5/RUN/M15-F05/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F06",
+      "family": "Death/loot",
+      "owner": "S6",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "NPC/creature/player/essential; melee/arrow/script; simultaneous lethal hits; slopes/stairs; corpse unload; resurrection/reset.",
+      "oracle": "One death/event/death-item generation, valid physical corpse, correct killer, legal loot and no duplication on reload.",
+      "evidence": "build/oblivion-compat/m15/S6/RUN/M15-F06/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F07",
+      "family": "AI",
+      "owner": "S7",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Style variants, aggression/confidence/relationships, ambush, flee/search, ally interference, cover/doors, high/low process, target deletion.",
+      "oracle": "Real attacks, bounded progress, native-only sequence, correct hostility and schedule resumption.",
+      "evidence": "build/oblivion-compat/m15/S7/RUN/M15-F07/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F08",
+      "family": "Horses",
+      "owner": "S7",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Mounted input restriction, incoming melee/arrow, horse crime/ownership, rider/horse essential/death, dismount under interruption.",
+      "oracle": "Vanilla policy, correct damage target, no double crime/hit, reciprocal mount state and safe collision.",
+      "evidence": "build/oblivion-compat/m15/S7/RUN/M15-F08/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F09",
+      "family": "Detection/sneak",
+      "owner": "S8",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Light/dark, LOS/occlusion, near/far, motion/noise, armor/footwear, skills, asleep/unconscious/dead observer, multiple observers.",
+      "oracle": "Actor-pair awareness agrees with UI/scripts, correct sneak multiplier, no omniscient detection.",
+      "evidence": "build/oblivion-compat/m15/S8/RUN/M15-F09/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F10",
+      "family": "Pickpocket",
+      "owner": "S8",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Successful/failed/exit/cancel attempt, legal/forbidden item types, one/many items, value/weight boundaries, victim awareness.",
+      "oracle": "Exact attempt semantics, item conservation/metadata, correct crime intent, no transfer on prohibited/failing action unless native rule says otherwise.",
+      "evidence": "build/oblivion-compat/m15/S8/RUN/M15-F10/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F11",
+      "family": "Ownership",
+      "owner": "S9",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Unowned, reference owner, cell owner, faction/rank, authorized access, owner change, stolen item in mixed stack.",
+      "oracle": "Single legality answer across actions, exact stolen provenance, no blanket confiscation of legitimate property.",
+      "evidence": "build/oblivion-compat/m15/S9/RUN/M15-F11/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F12",
+      "family": "Witnesses",
+      "owner": "S9",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Zero/one/many; victim/bystander/guard; LOS yes/no; responsibility/faction variants; alive/dead/unconscious/disabled; offender known/unknown; observer enters after act.",
+      "oracle": "Native report decision and timing, exact incident/bounty, duplicate reports do not duplicate one offense.",
+      "evidence": "build/oblivion-compat/m15/S9/RUN/M15-F12/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F13",
+      "family": "Offenses",
+      "owner": "S9",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Trespass warning/escalation/leave; theft/pickpocket/horse taking; assault/murder; lawful enemy/Arena/self-defense; companion/delayed-arrow attribution.",
+      "oracle": "Distinct actions and legal exceptions, exact fines/flags, persistent unpaid crime, correct victim/owner.",
+      "evidence": "build/oblivion-compat/m15/S9/RUN/M15-F13/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F14",
+      "family": "Arrest",
+      "owner": "S10",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "One/many guards, cross-cell pursuit, blocked route, sufficient/exact/insufficient funds, accept/reject yield, pay/jail/resist, cancel, flee/reapproach.",
+      "oracle": "Correct guard and choices, transactional money/property, no duplicate dialog, unpaid crime not forgotten.",
+      "evidence": "build/oblivion-compat/m15/S10/RUN/M15-F14/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F15",
+      "family": "Jail",
+      "owner": "S11",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Multiple locations, short/long sentence, no/mixed property, quest items, skill boundaries, serve/cancel/escape, property recovery, re-arrest.",
+      "oracle": "Correct cell/containers/time/penalty/release, distinct escape state, inventory conservation and idempotency.",
+      "evidence": "build/oblivion-compat/m15/S11/RUN/M15-F15/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F16",
+      "family": "Special crime state",
+      "owner": "S11",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Every applicable audited faction/guild discount, immunity or identity-specific bounty path; prerequisites met and unmet.",
+      "oracle": "Correct gating, persistent identity, no imported Skyrim/Morrowind assumptions. If unavailable in installed content, name the absent dependency and retain synthetic coverage.",
+      "evidence": "build/oblivion-compat/m15/S11/RUN/M15-F16/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F17",
+      "family": "Script integration",
+      "owner": "S12",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Each M15 command/condition/event, aliases, object/player/quest/dialogue contexts, bad targets, callback saves/reentrancy.",
+      "oracle": "Live-state agreement, exact event attribution/order, no constant/deferred placeholder, typed failure on unsupported use.",
+      "evidence": "build/oblivion-compat/m15/S12/RUN/M15-F17/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-F18",
+      "family": "Regression",
+      "owner": "S14",
+      "levels": [
+        "L5"
+      ],
+      "variations": "M12 controls/stats, M13 stack/equipment/repair/economy, M14 routes/detection/mounts, TES3 combat/crime/jail/inventory/saves.",
+      "oracle": "Preserved contracts, no native state leakage, no unexplained baseline divergence.",
+      "evidence": "build/oblivion-compat/m15/S14/RUN/M15-F18/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-01",
+      "family": "pay-fine",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-01/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-02",
+      "family": "insufficient-funds",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-02/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-03",
+      "family": "serve",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-03/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-04",
+      "family": "cancel-serving",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-04/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-05",
+      "family": "escape",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-05/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-06",
+      "family": "resist-flee-rearrest",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-06/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-07",
+      "family": "yield-accepted",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-07/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-08",
+      "family": "yield-rejected",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-08/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-09",
+      "family": "guild-half-fine-eligible",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-09/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-10",
+      "family": "guild-half-fine-ineligible",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-10/",
+      "status": "pending"
+    },
+    {
+      "id": "M15-E5-11",
+      "family": "gray-cowl-identity",
+      "owner": "S13",
+      "levels": [
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "variations": "Fresh independent runs; both audited prison environments; restart at consequential transaction boundary",
+      "oracle": "Plan section 9 E5 terminal proof; real witnessed offense; exact named property/gold/bounty/actor deltas; no duplication after restart",
+      "evidence": "build/oblivion-compat/m15/S13/RUN/M15-E5-11/",
+      "status": "pending"
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "M15-E1",
+      "owner": "S13",
+      "start": "Normal new-game prison and escort progression; acquire/equip weapon through interaction; no pre-dead enemy or fabricated quest state",
+      "cell": "content:oblivion.esm:01fbb9",
+      "opponents": [
+        {
+          "reference": "content:oblivion.esm:014a30",
+          "base": "content:oblivion.esm:014a27"
+        },
+        {
+          "reference": "content:oblivion.esm:014a2c",
+          "base": "content:oblivion.esm:014a28"
+        },
+        {
+          "reference": "content:oblivion.esm:0178c3",
+          "base": "content:oblivion.esm:017617"
+        },
+        {
+          "reference": "content:oblivion.esm:0178c4",
+          "base": "content:oblivion.esm:017619"
+        }
+      ],
+      "end": "All four opponents physically dead; CharacterGen stage 26 by authored callbacks; exact normal corpse loot and onward authored progression; essential escorts survive while Renault undergoes original scripted death",
+      "restart": [
+        "combat at valid normal save boundary",
+        "after corpse loot"
+      ],
+      "dependencies": [
+        "OnPackageDone",
+        "StartCombat",
+        "OnHit",
+        "Kill with original unit provenance",
+        "OnDeath and filtered OnDeath Player",
+        "corpse activation",
+        "CharacterGen/MQ01 conditions"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "M15-E2",
+      "owner": "S13",
+      "start": "Vilverin exterior through actual door, naturally level-1 starting character",
+      "entry_doors": [
+        "content:oblivion.esm:066ac8",
+        "content:oblivion.esm:016b61"
+      ],
+      "cells": [
+        "content:oblivion.esm:01663a",
+        "content:oblivion.esm:0463f5"
+      ],
+      "fixed_opponents": [
+        {
+          "reference": "content:oblivion.esm:06c356",
+          "base": "content:oblivion.esm:06c355"
+        },
+        {
+          "reference": "content:oblivion.esm:06c359",
+          "base": "content:oblivion.esm:06c357"
+        },
+        {
+          "reference": "content:oblivion.esm:06c35b",
+          "base": "content:oblivion.esm:06c35a"
+        },
+        {
+          "reference": "content:oblivion.esm:06c35c",
+          "base": "content:oblivion.esm:06c357"
+        },
+        {
+          "reference": "content:oblivion.esm:06c35e",
+          "base": "content:oblivion.esm:06c35d"
+        }
+      ],
+      "leveled_origins": [
+        {
+          "reference": "content:oblivion.esm:04bb72",
+          "base": "content:oblivion.esm:03407b"
+        },
+        {
+          "reference": "content:oblivion.esm:04bb73",
+          "base": "content:oblivion.esm:03407c"
+        },
+        {
+          "reference": "content:oblivion.esm:06bfba",
+          "base": "content:oblivion.esm:03407c"
+        }
+      ],
+      "turnaround_doors": [
+        "content:oblivion.esm:049424",
+        "content:oblivion.esm:049b4a"
+      ],
+      "end": "Full entrance-floor circuit: defeat all five fixed and three leveled actors, including both archers; column/corridor cover and elevation; loot; enter Vilverin02 through door and return; exit to exterior; reenter and verify all eight cleared/looted. This is a representative route, not the four-level boss clear.",
+      "restart": [
+        "active encounter",
+        "after exterior exit before return"
+      ],
+      "dependencies": [
+        "native LVLC spawn identity tied to origin",
+        "leveled equipment",
+        "melee/missile AI",
+        "cover/collision",
+        "corpse loot and door persistence"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "M15-E3",
+      "owner": "S13",
+      "start": "Normal registration and raiment choice with Owyn; first Pit Dog match",
+      "actor": "content:oblivion.esm:127672",
+      "registration": "content:oblivion.esm:029ca6",
+      "raiment_infos": [
+        "content:oblivion.esm:00c1b7",
+        "content:oblivion.esm:00c220"
+      ],
+      "match_info": "content:oblivion.esm:00c0d0",
+      "opponent": {
+        "reference": "content:oblivion.esm:18ae5b",
+        "base": "content:oblivion.esm:02a2b1"
+      },
+      "cell": "content:oblivion.esm:091b46",
+      "reward_info": "content:oblivion.esm:027668",
+      "end": "Physical opponent death; killed count 0->1; no bounty; return to Owyn; exactly 50 gold and authored fame/first-win/reset; no second reward; corpse loot prohibited",
+      "restart": [
+        "before fight",
+        "after victory before reward"
+      ],
+      "dependencies": [
+        "INFO conditions/linked topics/results",
+        "SetFactionRank",
+        "OnEquip/OnUnequip",
+        "timed gates",
+        "Say announcer",
+        "StartCombat/StopCombat/SCAOnActor",
+        "GetDead",
+        "ResetInterior"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "M15-E4",
+      "owner": "content:oblivion.esm:015e9c",
+      "actor": "content:oblivion.esm:01d15e",
+      "base": "content:oblivion.esm:015e9c",
+      "cell": "content:oblivion.esm:02c16d",
+      "trespass_cell": "content:oblivion.esm:049af4",
+      "theft_reference": "content:oblivion.esm:0a6cea",
+      "theft_base": "content:oblivion.esm:091331",
+      "start": "Normal entry during shop hours for legal control; separate clean unseen/seen sneak, pickup, pickpocket, assault and murder cases; private quarters for trespass; witnesses selected by live identities and perception",
+      "end": "Exact lawful/criminal action, ownership, actor-pair detection, incident and bounty chain; no false positives on authorized interaction or unseen-unreported action; each branch has positive and negative controls",
+      "restart": [
+        "after offense before resolution",
+        "after resolution"
+      ],
+      "dependencies": [
+        "one detection authority",
+        "native ownership resolution",
+        "normal transfers and sneak activation",
+        "witness reporting",
+        "crime legality and persisted incidents"
+      ],
+      "status": "pending"
+    }
+  ],
+  "prisons": [
+    {
+      "name": "Imperial City",
+      "cell": "content:oblivion.esm:02c17c",
+      "prison_marker": "content:oblivion.esm:09316e",
+      "release_marker": "content:oblivion.esm:03f288",
+      "cell_door": "content:oblivion.esm:0937ea",
+      "evidence": "content:oblivion.esm:08526f",
+      "bed_candidate": "content:oblivion.esm:00a947",
+      "guards": [
+        "content:oblivion.esm:18d1f3",
+        "content:oblivion.esm:18d1f5"
+      ]
+    },
+    {
+      "name": "Chorrol",
+      "cell": "content:oblivion.esm:02898e",
+      "prison_marker": "content:oblivion.esm:028ce5",
+      "release_marker": "content:oblivion.esm:028ce6",
+      "cell_door": "content:oblivion.esm:09502f",
+      "evidence": "content:oblivion.esm:02b7b2",
+      "bed_candidate": "content:oblivion.esm:02b05a",
+      "guards": [
+        "content:oblivion.esm:028c8a",
+        "content:oblivion.esm:028c8c"
+      ]
+    }
+  ],
+  "crime_units": {
+    "fine": "content:oblivion.esm:027fc8",
+    "jail": "content:oblivion.esm:0281b7",
+    "escape_jail": "content:oblivion.esm:0281b8",
+    "guild_quote": "content:oblivion.esm:0983a3",
+    "guild_payment": "content:oblivion.esm:0983a6",
+    "gray_cowl_script": "content:oblivion.esm:03a82b"
+  },
+  "probe_inventory": {
+    "status": "pending",
+    "target": "Original Oblivion 1.2.0416; verify executable version/hash before probes",
+    "families": [
+      "weapon/unarmed/creature damage and fatigue",
+      "block/armor/condition/mastery",
+      "projectiles",
+      "death/essential/knockout",
+      "sneak/pickpocket",
+      "ownership/witness/bounty",
+      "surrender/fine",
+      "jail sentence/skill/property/escape",
+      "guild and cowl identity"
+    ],
+    "required_evidence": [
+      "executable/content hashes",
+      "normal input procedure",
+      "independent expected values",
+      "rounding/clamps/units",
+      "seed",
+      "initial/final state",
+      "images/audio"
+    ]
+  }
+}

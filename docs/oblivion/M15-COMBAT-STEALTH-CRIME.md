@@ -12,8 +12,8 @@ logs, saves, screenshots, and reports are deliberately not committed.
 
 | Stage | Status | Implementation / evidence | Next required gate |
 | --- | --- | --- | --- |
-| S0 baseline and inventory | in-progress | Baseline revision above; `S0/baseline-01/`; results below | Complete winning-record campaign dependency and oracle inventory |
-| S1 evidence harness | pending | No implementation/evidence | Phase isolation, causal/state checks, negative controls, fresh-process restart |
+| S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
+| S1 evidence harness | in-progress | Requirements in plan 4.4 and S1; new implementation pending | Phase isolation, causal/state checks, negative controls, fresh-process restart |
 | S2 native data/rules | pending | No implementation/evidence | Typed CSTY and independently reviewed rule matrix |
 | S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
 | S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
@@ -318,13 +318,74 @@ not mark guild/identity alternatives inapplicable.
 
 ## Handoff
 
+### S0 inventory closure
+
+The initial incomplete discovery below is superseded by the checked-in
+[case inventory](M15-CASE-INVENTORY.json). It declares all 18 mandatory
+feature families, eleven crime-resolution/identity cases and E1–E4 routes,
+with owning stages, oracles, restart boundaries and evidence destinations.
+These are pending gameplay cases, not inherited passes.
+
+`S0/inventory-02/inspect_winners.py` inspected the eleven fingerprint-matched
+official plugins in their audited load order. `identity-validation.json`
+checked 60 initial declared form occurrences against nondeleted winners;
+`inventory-03/` additionally retains actor flags/factions, equipment/leveled
+lists, GMST input bytes and all 129 winning CSTY records. The missile list's
+ten level-1 variants have no SPLO and use `NPCBanditMissile` (`0ca0d7`), whose
+CSTD payload was inspected directly. Fixed bandits and the selected Arena
+opponent omit ZNAM; S2 must establish verified native default-style semantics.
+
+Vilverin is now a locked **entrance-floor circuit**, including all five fixed
+actors and three leveled origins (`04bb72`, `04bb73`, `06bfba`), two of which
+are archers. Enter through `066ac8`/`016b61`, complete the entire circuit with
+cover/elevation and corpse loot, traverse `049424`/`049b4a` into Vilverin02,
+return and exit, then reenter and verify all eight cleared/looted states. The
+eight required encounters cannot be satisfied by the five melee actors alone.
+The declaration deliberately does not claim the full four-level boss clear.
+
+Arena registration INFO `029ca6` sets combatant rank 0 and ArenaDialogue stage
+20 and unlocks the raiment cabinets. Heavy/light results `00c1b7`/`00c220`
+grant the corresponding raiment. Their original conditions and linked topic
+IDs are retained in the winning record inventory; the original first-match
+conditions include Owyn identity, armor state, combatant rank, quest variables
+and time. S12 must execute these conditions/results, not reproduce their
+effects from harness commands.
+
+Imperial/Chorrol prison pairs resolve to markers `09316e`/`028ce5`, release
+links `03f288`/`028ce6`, evidence chests `08526f`/`02b7b2`, and the declared
+cell doors. Player-owned bed candidates nearest the markers are
+`00a947`/`02b05a`; normal activation and geometry must verify these at S11.
+No second belongings container is invented: determine actual native property
+storage behavior in the jail probes. E4 uses Rindir `01d15e`, his owned placed
+staff `0a6cea`, shop `02c16d` and private quarters `049af4`. Each independent
+branch resets from legitimate initial provenance; no crime is pre-satisfied.
+The cowl identity dependency is real `TGGrayCowlScript` (`03a82b`), in addition
+to the audited guild half-fine dialogue.
+
+Original-game probe families are inventoried, with executable/content hashes,
+procedure, independent expected values, rounding/clamps, state and media
+required. `Oblivion.exe` and Proton Experimental's Wine are installed; no
+original-game probe is claimed yet. The former `/tmp/m14-example-suite.gJaDUq`
+checkout is absent; reacquire pinned revision
+`a41b44d9403ff3f8a1505c1b4bc152c4dd623b64` for the external Lua gate. GCC is
+available; Clang was not found in PATH or `/usr/bin`. Reserve separate
+`build-m15-{gcc,clang}-{debug,relwithdebinfo}` and `build-m15-sanitized`
+directories. These are explicit later acceptance gates, not prerequisites
+silently waived by S0 closure.
+
+S0's baseline reproductions and inventories are complete. Visual baseline
+defects remain classified and must be fixed/compared before media acceptance.
+S1's next bounded task is the typed fail-closed evidence contract and normal
+action isolation, starting with tests that reject the current permissive
+handling of an unknown `m15` manifest section.
+
 Commits completed so far:
 
 - `85616edb5c`: initial baseline, visual discrepancies and campaign findings.
 - `3b5424562a`: compiler-derived call-site inventory, four regression tests,
   full component/engine/Python results and further tutorial findings.
 
-Last passed M15 stage: **none**. S0 is still in progress. No source gameplay
+Earlier handoff (superseded by S0 closure above): no passed M15 stage. No source gameplay
 changes or acceptance metadata changes have been made. Continue with the
 smallest open S0 case: lock the full tutorial/dungeon route and remaining
 Arena/guard dialogue conditions against winning installed content, then
