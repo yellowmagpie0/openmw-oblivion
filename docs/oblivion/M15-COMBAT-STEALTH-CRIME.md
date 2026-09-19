@@ -318,6 +318,12 @@ not mark guild/identity alternatives inapplicable.
 
 ## Handoff
 
+Commits completed so far:
+
+- `85616edb5c`: initial baseline, visual discrepancies and campaign findings.
+- `3b5424562a`: compiler-derived call-site inventory, four regression tests,
+  full component/engine/Python results and further tutorial findings.
+
 Last passed M15 stage: **none**. S0 is still in progress. No source gameplay
 changes or acceptance metadata changes have been made. Continue with the
 smallest open S0 case: lock the full tutorial/dungeon route and remaining
@@ -325,3 +331,35 @@ Arena/guard dialogue conditions against winning installed content, then
 finish original-game/formula probe and requirement inventories. Preserve the
 baseline visual discrepancies and all generated outputs. Do not advance to
 combat implementation while these routes remain unspecified.
+
+### Reviewing the current progress
+
+The existing workspace is on `master` with both changes committed. Nothing
+has been pushed. To inspect this checkpoint in a separate directory without
+switching or resetting the current worktree:
+
+```sh
+git worktree add --detach ../m15-review 3b5424562a
+git log --oneline 72515455b3..3b5424562a
+git show --stat 3b5424562a
+```
+
+The generated evidence remains in the original workspace's
+`build/oblivion-compat/m15/S0/`, not in the new worktree. In the original
+workspace, rerun the audit tests with:
+
+```sh
+cmake --build build --target esmtool components-tests openmw-tests -j2
+./build/components-tests --gtest_filter='ObScriptStaticCalls.*'
+```
+
+For the full checks used for this change, run `./build/components-tests`,
+`./build/openmw-tests`, and the Python discovery command above. Build a new
+worktree with its own CMake cache if testing there; do not reuse the original
+worktree's cache. To inspect the new output, run the `esmtool obscript`
+command above and look at `units[].static_calls`. The official audit JSON
+contains proprietary script source and must remain local.
+
+There is no newly playable M15 combat/crime/jail implementation to launch at
+this checkpoint. In particular, running `scripts/run-oblivion.sh` still runs
+the pre-M15 mechanics. The remaining work is the rest of S0 and all of S1–S14.
