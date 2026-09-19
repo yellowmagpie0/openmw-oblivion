@@ -972,3 +972,19 @@ pass under ASan/UBSan. Evidence: `S2/physical-rules-01`; tested diff SHA-256:
 `2d678cbf62274bbfb51f5327f5808d8a16871aa44dbcf4d177893bf75ad4f5a9`. No world code consumes these physical helpers yet.
 Block, armor, hand-to-hand, mastery, projectiles, crime and original damage
 outcomes remain open S2 work; S3–S14 remain pending.
+
+### S2 hand-to-hand, block and difficulty arithmetic
+
+Commit `6493834a4b` contains the first physical helper chunk. The next helpers
+produce separate hand health/fatigue damage, distinguish shield/weapon/unarmed
+block fractions, and scale physical damage for an explicitly resolved player
+role. Native typed builders provide their setting inputs. Original routines
+and clamp/rounding order are documented in the provenance file. These helpers
+do not establish block eligibility, mastery, or actual world damage dispatch.
+
+Four new arithmetic/domain tests failed against stubs, and a fifth separately
+exposed the absent setting builders. All 1,665 component tests pass with exact
+inventory; all 20 physical/settings/style-policy tests pass under ASan/UBSan
+(`S2/physical-rules-02`). Tested source/test/provenance diff SHA-256:
+`cd3299f0db78a354dd85db8a8984589f4f01f9456a8bee5ebc19dcc2d7521b55`. Original live setting observations are being
+extended independently; original damage outcomes remain an open gate.

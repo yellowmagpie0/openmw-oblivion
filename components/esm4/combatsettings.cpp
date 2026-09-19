@@ -2,6 +2,7 @@
 #include "combatstylepolicy.hpp"
 #include "loadgmst.hpp"
 
+#include <cmath>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -158,4 +159,42 @@ namespace ESM4
         return result;
     }
 
+    HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        HandToHandSettings result{
+            inputs.number("fHandDamageSkillBase", 0.f),
+            inputs.number("fHandDamageSkillMult", 1.f),
+            inputs.number("fHandDamageStrengthBase", 0.f),
+            inputs.number("fHandDamageStrengthMult", .75f),
+            inputs.number("fHandHealthMin", 1.f),
+            inputs.number("fHandHealthMax", 20.f),
+            inputs.number("fHandFatigueDamageBase", 0.f),
+            inputs.number("fHandFatigueDamageMult", .25f),
+        };
+        validateHandToHandSettings(result);
+        return result;
+    }
+
+    BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        BlockSettings result{
+            inputs.number("fBlockSkillBase", 0.f),
+            inputs.number("fBlockSkillMult", 1.f),
+            inputs.number("fBlockMax", .75f),
+            inputs.number("fBlockAmountWeaponMult", .5f),
+            inputs.number("fBlockAmountHandToHandMult", .25f),
+        };
+        validateBlockSettings(result);
+        return result;
+    }
+
+    float buildDifficultyDamageMultiplier(std::span<const GameSetting* const> settings)
+    {
+        const float result = Inputs(settings).number("fDifficultyDamageMultiplier", 10.f);
+        if (!std::isfinite(result) || result < 0.f)
+            throw std::invalid_argument("invalid native difficulty damage multiplier");
+        return result;
+    }
 }

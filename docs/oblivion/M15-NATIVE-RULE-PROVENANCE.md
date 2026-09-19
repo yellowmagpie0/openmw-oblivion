@@ -200,3 +200,44 @@ one rounds back to even one; the next ratio produces the next output float.
 These helpers do not yet choose weapons, detect contacts, apply mastery,
 block, armor, difficulty, or enchantments, or mutate actors. Those independent
 rule families and original physical outcomes are still required for S2.
+
+## Hand-to-hand, block fraction and player difficulty arithmetic
+
+The same original executable's routines `0x547280` and `0x5474a0` provide the
+next pure arithmetic slice (`sources-01/hand-armor-block-rules.txt`). With the
+same `R`, percent constant, effective skill and fatigue factor defined above:
+
+- Hand skill term: `R(fHandDamageSkillBase + effectiveSkill * percent *
+  fHandDamageSkillMult)`; strength term similarly uses the capped Strength and
+  `fHandDamageStrengthBase/Mult` settings.
+- Hand interpolation factor: `min(1, R(strengthTerm * skillTerm * fatigueFactor))`.
+- Hand health damage: `R(fHandHealthMin + (fHandHealthMax - fHandHealthMin) * factor)`.
+- Hand fatigue damage: `R(healthDamage * fHandFatigueDamageMult +
+  fHandFatigueDamageBase)`, or zero when the explicit suppression argument is
+  set. The pure helper preserves this separate output. The gameplay conditions
+  selecting suppression are not yet established by a behavioral probe.
+- Block skill term: `R(fBlockSkillBase + effectiveSkill * percent * fBlockSkillMult)`.
+- Block fraction: `min(fBlockMax, R(fatigueFactor * skillTerm * equipmentFactor))`.
+  The equipment factor is one for a shield, `fBlockAmountWeaponMult` for a weapon,
+  and `fBlockAmountHandToHandMult` for unarmed. Block eligibility, timing, angle,
+  mastery and durability remain separate requirements.
+
+Installed Hand Health Max is 15 (compiled 20), Hand Fatigue Damage Base is 1
+(compiled 0), and Hand Fatigue Damage Mult is 0.5 (compiled 0.25). Other hand
+inputs are compiled defaults: skill base 0/multiplier 1, strength base
+0/multiplier 0.75, health minimum 1. Installed block settings use the compiled
+values: skill base 0/multiplier 1, maximum 0.75, weapon 0.5, unarmed 0.25.
+Typed setting builders apply native overrides and reject invalid domains.
+
+`0x5e2560` supplies difficulty scaling (`sources-01/difficulty-rule-full.txt`).
+For normalized slider `d` in [-1, 1] and native multiplier `m`, first compute
+`scaled = R(d*m)`. The factor is `R(1+scaled)` at nonnegative difficulty and
+`R(1/R(1-scaled))` at negative difficulty. For damage (not healing), multiply
+when the player is the victim; otherwise divide when the player is the source.
+An unknown source or neither-player case is unchanged. The original victim
+branch has priority for self-inflicted damage. The helper takes an explicitly
+resolved role and does not guess actor identity or alter the global slider.
+Zero difficulty is unchanged. The already observed installed multiplier 5
+(compiled 10) yields 6x incoming/one-sixth outgoing at maximum difficulty,
+with the reverse at minimum. Identity dispatch and live damage observations
+remain open; testing these scalar branches alone does not close that gate.

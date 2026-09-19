@@ -83,4 +83,79 @@ namespace ESM4
         const float subtotal = rounded(double(condition) * base * skill * attribute * fatigue);
         return rounded(double(subtotal) * input.mAttackMultiplier);
     }
+    void validateHandToHandSettings(const HandToHandSettings& settings)
+    {
+        for (float value : { settings.mSkillBase, settings.mSkillMultiplier, settings.mStrengthBase,
+                 settings.mStrengthMultiplier, settings.mHealthMinimum, settings.mHealthMaximum,
+                 settings.mFatigueBase, settings.mFatigueMultiplier })
+            nonnegative(value);
+        if (settings.mHealthMinimum > settings.mHealthMaximum)
+            throw std::invalid_argument("reversed native hand damage range");
+    }
+
+    void validateBlockSettings(const BlockSettings& settings)
+    {
+        for (float value : { settings.mSkillBase, settings.mSkillMultiplier, settings.mMaximum,
+                 settings.mWeaponMultiplier, settings.mUnarmedMultiplier })
+            nonnegative(value);
+        if (settings.mMaximum > 1.f)
+            throw std::invalid_argument("native maximum block fraction exceeds one");
+    }
+
+    HandToHandDamage handToHandDamage(const HandToHandInput& input, const HandToHandSettings& settings,
+        const PhysicalCombatSettings& physical)
+    {
+        validatePhysicalCombatSettings(physical);
+        validateHandToHandSettings(settings);
+        if (input.mStrength < 0)
+            throw std::invalid_argument("negative native hand damage strength");
+        constexpr double percent = static_cast<double>(0.01f);
+        const float skill = rounded(settings.mSkillBase
+            + skillValue(input.mSkill, input.mLuck, physical) * percent * settings.mSkillMultiplier);
+        const float strength = rounded(settings.mStrengthBase
+            + std::min(input.mStrength, 100) * percent * settings.mStrengthMultiplier);
+        const float factor = std::min(1.f, rounded(double(strength) * skill * fatigueValue(input.mFatigueRatio, physical)));
+        HandToHandDamage result;
+        result.mHealth = rounded(settings.mHealthMinimum
+            + (double(settings.mHealthMaximum) - settings.mHealthMinimum) * factor);
+        result.mFatigue = input.mSuppressFatigueDamage ? 0.f
+            : rounded(double(result.mHealth) * settings.mFatigueMultiplier + settings.mFatigueBase);
+        return result;
+    }
+
+    float blockFraction(const BlockInput& input, const BlockSettings& settings, const PhysicalCombatSettings& physical)
+    {
+        validatePhysicalCombatSettings(physical);
+        validateBlockSettings(settings);
+        float equipment;
+        switch (input.mEquipment)
+        {
+            case BlockEquipment::Shield: equipment = 1.f; break;
+            case BlockEquipment::Weapon: equipment = settings.mWeaponMultiplier; break;
+            case BlockEquipment::Unarmed: equipment = settings.mUnarmedMultiplier; break;
+            default: throw std::invalid_argument("invalid native block equipment");
+        }
+        constexpr double percent = static_cast<double>(0.01f);
+        const float skill = rounded(settings.mSkillBase
+            + skillValue(input.mSkill, input.mLuck, physical) * percent * settings.mSkillMultiplier);
+        return std::min(settings.mMaximum,
+            rounded(double(fatigueValue(input.mFatigueRatio, physical)) * skill * equipment));
+    }
+
+    float difficultyDamage(float damage, float difficulty, float multiplier, PlayerDamageRole role)
+    {
+        nonnegative(damage);
+        finite(difficulty);
+        nonnegative(multiplier);
+        if (difficulty < -1.f || difficulty > 1.f)
+            throw std::invalid_argument("native difficulty outside normalized slider domain");
+        if (role != PlayerDamageRole::Unaffected && role != PlayerDamageRole::Victim
+            && role != PlayerDamageRole::Attacker)
+            throw std::invalid_argument("invalid player damage role");
+        if (role == PlayerDamageRole::Unaffected || difficulty == 0.f)
+            return damage;
+        const float scaled = rounded(double(difficulty) * multiplier);
+        const float factor = difficulty < 0.f ? rounded(1.0 / rounded(1.0 - scaled)) : rounded(1.0 + scaled);
+        return role == PlayerDamageRole::Victim ? rounded(double(damage) * factor) : rounded(double(damage) / factor);
+    }
 }

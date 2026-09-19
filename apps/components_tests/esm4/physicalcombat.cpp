@@ -123,3 +123,122 @@ TEST(ESM4PhysicalCombat, NativeSettingsOverrideCompiledPhysicalDefaults)
     weapon.mData = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::buildPhysicalCombatSettings(settings), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, HandToHandDamagesHealthAndFatigueFromNativeRange)
+{
+    const ESM4::HandToHandSettings settings{0, 1, 0, .75f, 1, 15, 1, .5f};
+    auto input = ESM4::HandToHandInput{50, 50, 50, 1.f};
+    // 1 + (15-1) * (.5 * .375 * 1) = 3.625; secondary = 1 + .5*3.625.
+    auto result = ESM4::handToHandDamage(input, settings, installed);
+    EXPECT_FLOAT_EQ(result.mHealth, 3.625f);
+    EXPECT_FLOAT_EQ(result.mFatigue, 2.8125f);
+    input = {100, 50, 100, 1};
+    result = ESM4::handToHandDamage(input, settings, installed);
+    EXPECT_FLOAT_EQ(result.mHealth, 11.5f);
+    EXPECT_FLOAT_EQ(result.mFatigue, 6.75f);
+    input.mStrength = 101;
+    EXPECT_FLOAT_EQ(ESM4::handToHandDamage(input, settings, installed).mHealth, 11.5f);
+    input = {0, 50, 0, 0};
+    result = ESM4::handToHandDamage(input, settings, installed);
+    EXPECT_FLOAT_EQ(result.mHealth, 1);
+    EXPECT_FLOAT_EQ(result.mFatigue, 1.5f);
+    input = {100, 50, 100, 3}; // The pre-range interpolation factor caps at one.
+    result = ESM4::handToHandDamage(input, settings, installed);
+    EXPECT_FLOAT_EQ(result.mHealth, 15);
+    EXPECT_FLOAT_EQ(result.mFatigue, 8.5f);
+    input.mSuppressFatigueDamage = true;
+    result = ESM4::handToHandDamage(input, settings, installed);
+    EXPECT_FLOAT_EQ(result.mHealth, 15);
+    EXPECT_FLOAT_EQ(result.mFatigue, 0);
+}
+
+TEST(ESM4PhysicalCombat, BlockingUsesEquipmentAndFatigueBeforeMaximum)
+{
+    const ESM4::BlockSettings settings{0, 1, .75f, .5f, .25f};
+    using Equipment = ESM4::BlockEquipment;
+    for (auto equipment : {Equipment::Shield, Equipment::Weapon, Equipment::Unarmed})
+    {
+        const float factor = equipment == Equipment::Shield ? 1.f : equipment == Equipment::Weapon ? .5f : .25f;
+        EXPECT_NEAR(ESM4::blockFraction({50, 50, .5f, equipment}, settings, installed), .375f * factor, .000001f);
+        EXPECT_FLOAT_EQ(ESM4::blockFraction({0, 50, 1, equipment}, settings, installed), 0);
+        EXPECT_NEAR(ESM4::blockFraction({1, 50, 1, equipment}, settings, installed), .01f * factor, .000001f);
+    }
+    EXPECT_NEAR(ESM4::blockFraction({74, 50, 1, Equipment::Shield}, settings, installed), .74f, .000001f);
+    EXPECT_FLOAT_EQ(ESM4::blockFraction({75, 50, 1, Equipment::Shield}, settings, installed), .75f);
+    EXPECT_FLOAT_EQ(ESM4::blockFraction({76, 50, 1, Equipment::Shield}, settings, installed), .75f);
+    EXPECT_FLOAT_EQ(ESM4::blockFraction({100, 50, 1, Equipment::Weapon}, settings, installed), .5f);
+    EXPECT_FLOAT_EQ(ESM4::blockFraction({100, 50, 1, Equipment::Unarmed}, settings, installed), .25f);
+}
+
+TEST(ESM4PhysicalCombat, DifficultyAffectsOnlyTheResolvedPlayerSide)
+{
+    using Role = ESM4::PlayerDamageRole;
+    for (float slider : {-1.f, -.5f, 0.f, .5f, 1.f})
+    {
+        const float incoming = slider == -1 ? 10.f : slider == -.5f ? 60.f / 3.5f
+            : slider == 0 ? 60.f : slider == .5f ? 210.f : 360.f;
+        const float outgoing = slider == -1 ? 360.f : slider == -.5f ? 210.f
+            : slider == 0 ? 60.f : slider == .5f ? 60.f / 3.5f : 10.f;
+        EXPECT_NEAR(ESM4::difficultyDamage(60, slider, 5, Role::Victim), incoming, .00002f);
+        EXPECT_NEAR(ESM4::difficultyDamage(60, slider, 5, Role::Attacker), outgoing, .00002f);
+        EXPECT_FLOAT_EQ(ESM4::difficultyDamage(60, slider, 5, Role::Unaffected), 60);
+        EXPECT_FLOAT_EQ(ESM4::difficultyDamage(0, slider, 5, Role::Victim), 0);
+    }
+    EXPECT_FLOAT_EQ(ESM4::difficultyDamage(1, 1, 5, Role::Victim), 6);
+    EXPECT_FLOAT_EQ(ESM4::difficultyDamage(60, 1, 0, Role::Victim), 60);
+    for (float tiny : {std::nextafter(0.f, -1.f), std::nextafter(0.f, 1.f)})
+        EXPECT_FLOAT_EQ(ESM4::difficultyDamage(60, tiny, 5, Role::Victim), 60);
+}
+
+TEST(ESM4PhysicalCombat, HandBlockAndDifficultyRejectInvalidDomains)
+{
+    ESM4::HandToHandSettings hand{0, 1, 0, .75f, 1, 15, 1, .5f};
+    ESM4::BlockSettings block{0, 1, .75f, .5f, .25f};
+    const auto shield = ESM4::BlockEquipment::Shield;
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::handToHandDamage({50, 50, 50, value}, hand, installed), std::invalid_argument);
+        EXPECT_THROW(ESM4::blockFraction({50, 50, value, shield}, block, installed), std::invalid_argument);
+        EXPECT_THROW(ESM4::difficultyDamage(10, value, 5, ESM4::PlayerDamageRole::Victim), std::invalid_argument);
+    }
+    hand.mHealthMinimum = 16;
+    EXPECT_THROW(ESM4::handToHandDamage({50, 50, 50, 1}, hand, installed), std::invalid_argument);
+    block.mMaximum = 1.01f;
+    EXPECT_THROW(ESM4::blockFraction({50, 50, 1, shield}, block, installed), std::invalid_argument);
+    block.mMaximum = .75f;
+    EXPECT_THROW(ESM4::blockFraction({50, 50, 1, static_cast<ESM4::BlockEquipment>(99)}, block, installed), std::invalid_argument);
+    for (float value : {std::nextafter(-1.f, -2.f), std::nextafter(1.f, 2.f)})
+        EXPECT_THROW(ESM4::difficultyDamage(10, value, 5, ESM4::PlayerDamageRole::Victim), std::invalid_argument);
+    EXPECT_THROW(ESM4::difficultyDamage(-1, 0, 5, ESM4::PlayerDamageRole::Victim), std::invalid_argument);
+    EXPECT_THROW(ESM4::difficultyDamage(1, 0, -1, ESM4::PlayerDamageRole::Victim), std::invalid_argument);
+    EXPECT_THROW(ESM4::difficultyDamage(1, 0, 5, static_cast<ESM4::PlayerDamageRole>(99)), std::invalid_argument);
+    EXPECT_THROW(ESM4::difficultyDamage(std::numeric_limits<float>::max(), 1, 5,
+        ESM4::PlayerDamageRole::Victim), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, NativeHandBlockAndDifficultySettingsUseTypedOverrides)
+{
+    EXPECT_FLOAT_EQ(ESM4::buildHandToHandSettings({}).mHealthMaximum, 20);
+    EXPECT_FLOAT_EQ(ESM4::buildHandToHandSettings({}).mFatigueMultiplier, .25f);
+    EXPECT_FLOAT_EQ(ESM4::buildBlockSettings({}).mMaximum, .75f);
+    EXPECT_FLOAT_EQ(ESM4::buildDifficultyDamageMultiplier({}), 10);
+    ESM4::GameSetting hand{}, block{}, difficulty{};
+    hand.mEditorId = "fHandHealthMax";
+    hand.mData = 15.f;
+    block.mEditorId = "fBlockMax";
+    block.mData = .6f;
+    difficulty.mEditorId = "fDifficultyDamageMultiplier";
+    difficulty.mData = 5.f;
+    const std::array<const ESM4::GameSetting*, 3> settings{ &hand, &block, &difficulty };
+    EXPECT_FLOAT_EQ(ESM4::buildHandToHandSettings(settings).mHealthMaximum, 15);
+    EXPECT_FLOAT_EQ(ESM4::buildBlockSettings(settings).mMaximum, .6f);
+    EXPECT_FLOAT_EQ(ESM4::buildDifficultyDamageMultiplier(settings), 5);
+    hand.mData = .5f; // Below the compiled minimum.
+    EXPECT_THROW(ESM4::buildHandToHandSettings(settings), std::invalid_argument);
+    block.mData = 1.1f;
+    EXPECT_THROW(ESM4::buildBlockSettings(settings), std::invalid_argument);
+    difficulty.mData = -1.f;
+    EXPECT_THROW(ESM4::buildDifficultyDamageMultiplier(settings), std::invalid_argument);
+    difficulty.mData = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::buildDifficultyDamageMultiplier(settings), std::invalid_argument);
+}
