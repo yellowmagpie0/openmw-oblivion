@@ -238,6 +238,7 @@ add_component_dir (esm4
     loadclot
     loadcont
     loadcrea
+    loadcsty
     loaddial
     loaddobj
     loaddoor

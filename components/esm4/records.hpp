@@ -21,6 +21,7 @@
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadcont.hpp>
 #include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loadcsty.hpp>
 #include <components/esm4/loaddial.hpp>
 #include <components/esm4/loaddobj.hpp>
 #include <components/esm4/loaddoor.hpp>

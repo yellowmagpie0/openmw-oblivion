@@ -208,6 +208,27 @@ namespace EsmTool
                 std::cout << "\n  BaseObj: " << value.mBaseObj;
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
+            if constexpr (std::is_same_v<T, ESM4::CombatStyle>)
+            {
+                if (value.mStandard)
+                {
+                    const auto& style = *value.mStandard;
+                    std::cout << "\n  CombatStyle: dodge=" << unsigned(style.mDodgeChance)
+                              << " block=" << unsigned(style.mBlockChance)
+                              << " attack=" << unsigned(style.mAttackChance)
+                              << " power=" << unsigned(style.mPowerAttackChance)
+                              << " flags=" << unsigned(style.mFlags)
+                              << " idleMin=" << style.mIdle.mMinimum << " idleMax=" << style.mIdle.mMaximum;
+                    if (style.mSwitchDistances)
+                        std::cout << " meleeSwitch=" << (*style.mSwitchDistances)[0]
+                                  << " rangedSwitch=" << (*style.mSwitchDistances)[1];
+                    if (style.mDoNotAcquire)
+                        std::cout << " doNotAcquire=" << *style.mDoNotAcquire;
+                }
+                if (value.mAdvanced)
+                    std::cout << "\n  CombatAdvanced: dodgeFatigue=" << value.mAdvanced->mDodgeFatigueMultiplier
+                              << " attackDuringBlock=" << value.mAdvanced->mAttackDuringBlock;
+            }
             if constexpr (ESM4::HasFullName<T>)
                 std::cout << "\n  FullName: " << value.mFullName;
             if constexpr (ESM4::HasCellFlags<T>)
@@ -457,7 +478,10 @@ namespace EsmTool
                     readTypedRecord<ESM4::Creature>(params, reader);
                     return true;
                 case ESM4::REC_CSTY:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::CombatStyle>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_DEBR:
                     break;

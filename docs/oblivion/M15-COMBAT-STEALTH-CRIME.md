@@ -14,7 +14,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | --- | --- | --- | --- |
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
-| S2 native data/rules | pending | No implementation/evidence | Typed CSTY and independently reviewed rule matrix |
+| S2 native data/rules | in-progress | Typed CSTY and native inventory work below; preceding S1 closure `eda8168dad` | Typed store/audit/sanitizer checks, original defaults and independently reviewed rules |
 | S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
 | S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
@@ -687,3 +687,37 @@ S1 is accepted only as evidence infrastructure. No physical combat, stealth,
 crime, arrest or jail capability is claimed. S2 begins with typed CSTY decoding
 and independently sourced rule inputs; all later gameplay and universal gates
 remain pending.
+
+### S2 first chunk: typed native combat styles
+
+`CombatStyle` now decodes the six verified TES4 CSTD layouts and optional CSAD,
+keeps historical missing tails explicit, validates lengths/finite values/domains,
+and retains every original logical subrecord including padding/unknown fields.
+It is registered in record includes, the native winning store, loader dispatch
+and `esmtool`. Later-game records retain their raw inspection path and are not
+misclassified as TES4 combat policy. The typed store test covers differently
+ordered master lists, a winning override and an empty deletion tombstone.
+
+The original raw reader accepted the deliberately invalid NaN fixture
+(`S2/csty-01/baseline-invalid-read.*`); the typed reader now rejects it. All 11
+installed official plugins pass native readback. Independent grouped-layout
+Python decoding agrees with native dumped probabilities, timers, flags,
+applicable switch-distance/acquisition fields and representative advanced
+modifiers for **all 129 styles**, covering every historical layout.
+See [the pinned data/rule provenance](M15-NATIVE-RULE-PROVENANCE.md).
+
+Six focused component tests cover length/domain boundaries, signed bonuses,
+compressed records, raw preservation, duplicates, missing data and wrong-game
+layouts. All **1,639 component tests** and **547 engine tests** pass, with exact
+unfiltered inventory checks (`S2/csty-01/test-inventory.json`). The existing M14
+city schedule course also passes after loading the new native style store.
+Its capture retains the earlier elevated/downward camera framing, so this is
+an AI regression check, not M15 combat presentation acceptance.
+
+The tested native source/test diff SHA-256 is
+`97eb774bd66092220ac240a750baca2b6a70953e9f023ea22b3cfcd82e93b964`.
+An initial test compile used the wrong FormKey method name and was repaired;
+all attempts remain in `build*.log`. ASan/UBSan compilation is underway in the
+separate `build/m15-sanitize` tree and is still an open S2 gate. This chunk does
+not resolve runtime defaults, formulas, mastery, equipment/sound/jail audits,
+or original-game probes. S2 remains in progress.

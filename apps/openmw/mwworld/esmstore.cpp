@@ -280,6 +280,11 @@ namespace MWWorld
                 {
                     if (T::sRecordId == esm4RecName)
                     {
+                        if constexpr (std::is_same_v<T, ESM4::CombatStyle>)
+                        {
+                            if (reader.hasFormVersion() || (reader.esmVersionF() != 0.8f && reader.esmVersionF() != 1.f))
+                                return false; // Later-game CSTY is not a TES4 combat policy.
+                        }
                         reader.getRecordData();
                         T value{};
                         // TES4 deletion overrides commonly carry no
