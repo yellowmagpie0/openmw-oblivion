@@ -2039,6 +2039,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str]) -
             environment["DISPLAY"] = display
             environment.setdefault("SDL_VIDEODRIVER", "x11")
         command = [str(value) for value in manifest["command"]]
+        if m15_session is not None:
+            command = m15_session.command
         log_path = output / "process.log"
         with log_path.open("w", encoding="utf-8") as log:
             process = subprocess.Popen(

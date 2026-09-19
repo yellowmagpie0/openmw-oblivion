@@ -458,3 +458,47 @@ restart acceptance. Engine emission and completed-save acknowledgments are
 still required. Restart continuation currently fails explicitly instead of
 pretending an in-process reload is a second process. Audio artifacts likewise
 cannot pass without an implemented capture path. Keep S1 and S2–S14 open.
+
+### S1 native observation plumbing (stage remains open)
+
+Native TES4 worlds can now opt into an engine-owned observation stream. It
+records the real PID, run/epoch, monotonic tick/sequence, save/load completion,
+actual disk-save SHA-256, and separately serialized live native state. Shutdown
+summaries are explicit; unwinding/destruction cannot manufacture a successful
+summary. Script/frame diagnostics are counted, and the runner independently
+rejects all engine error, unsupported-command and sanitizer log findings.
+This sink has no actor/world mutation API. Observation failures leave normal
+save/load processing intact and fail evidence validation. TES3 worlds do not
+create this sink.
+
+Snapshots require the matching completed-save acknowledgment, copied save
+bytes and native parser, and exact equality with the independently serialized
+live state. A second snapshot cannot reuse an earlier save acknowledgment.
+Canonical JSON now retains full float values and a fixed numeric locale.
+The declared seed is passed through the actual engine `--random-seed` option.
+The fully expanded scenario is retained and checksummed; declared archives
+must also resolve to fingerprinted inputs. Ignored key timing fields are
+rejected; held keys use the runner's actual timing contract.
+
+Evidence in `build/oblivion-compat/m15/S1/observation-01/`:
+
+- GCC RelWithDebInfo engine, component and engine-test builds completed.
+- `components.xml`: 1,628 tests passed; `openmw.xml`: 546 tests passed.
+  `test-inventory.json` compares exact names against unfiltered binary test
+  inventories and rejects skipped/disabled/incomplete cases.
+- `python-tests.log`: 111 tests passed, including 30 M15 evidence tests and
+  five fixture-builder tests. Seven C++ observation tests cover protocol,
+  interrupted shutdown, malformed/nonfinite input, diagnostics, file hashes,
+  state immutability and full float serialization.
+- `course/`: the first live fixture run copied two real normal-key quicksaves
+  and matched each independently parsed save to its engine live-state capture.
+  **The course failed.** Missing legacy UI/weather/animation resources and a
+  missing default FaceGen ear texture produced engine errors; the screenshot
+  was nearly black. The initial observation delta also used `health` instead
+  of native `health.current`; this field mismatch was corrected and focused
+  native-state tests rerun. No original evidence or expected result was edited.
+
+The fixture start/camera and shared-presentation resource dependencies need
+repair, with a fresh run retained separately. Two-process continuation and
+its negative controls are still open. No combat, stealth, crime, jail,
+official campaign, or full S1 acceptance is claimed by this checkpoint.

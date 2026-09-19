@@ -102,6 +102,7 @@
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
+#include <components/esm4/observation.hpp>
 #include "../mwmechanics/spellcasting.hpp"
 #include "../mwmechanics/spellutil.hpp"
 #include "../mwmechanics/summoning.hpp"
@@ -332,6 +333,7 @@ namespace MWWorld
         if (mGameProfile == ESM::GameProfile::Oblivion)
         {
             mOblivionAi = std::make_unique<MWMechanics::OblivionAiService>(*this);
+            mOblivionObservation = ESM4::ObservationStream::fromEnvironment();
             mOblivionScriptManager = std::make_unique<OblivionScriptManager>(*this, mStore, mContentFiles);
         }
 
@@ -719,6 +721,24 @@ namespace MWWorld
     size_t World::countSavedGameCells() const
     {
         return mWorldModel.countSavedGameRecords();
+    }
+
+    void World::observeOblivionState(std::string_view event, const std::filesystem::path& save) const
+    {
+        if (mOblivionObservation)
+        {
+            try
+            {
+                mOblivionObservation->stateBoundary(event, save, captureOblivionRuntimeState());
+            }
+            catch (const std::exception& error)
+            {
+                // Evidence failure fails the course through both the missing
+                // acknowledgment and this diagnostic. It must not roll back or
+                // interrupt the normal save/load operation being observed.
+                Log(Debug::Error) << "M15 state observation failed: " << error.what();
+            }
+        }
     }
 
     ESM4::RuntimeState World::captureOblivionRuntimeState() const

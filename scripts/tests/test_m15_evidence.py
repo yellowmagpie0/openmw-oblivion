@@ -45,7 +45,7 @@ def evidence():
     for index, kind in enumerate(["run-start", "input", "contact", "damage", "run-end"], 1):
         event = {"run_id": "fresh", "epoch": 1, "pid": 42, "sequence": index, "tick": index, "event": kind}
         if kind not in ("run-start", "run-end"):
-            event.update(actor=PLAYER, target=VICTIM, action_id="swing-1")
+            event.update(actor=PLAYER, target=VICTIM, action_id="swing-1", cause="normal-input", result=kind)
         events.append(event)
     events[3]["deltas"] = {"health": -10}
     events[-1].update(event_count=4, error_count=0, unsupported_count=0, pending_count=0)
@@ -267,7 +267,7 @@ class M15CausalEvidenceTests(unittest.TestCase):
 
     def test_stream_freshness_complete_summary_monotonicity_and_nonzero_errors(self):
         for change in ("old-run", "pid", "epoch", "bool-epoch", "sequence", "tick", "summary", "count",
-                       "pending_count", "unsupported_count", "error_count", "missing-count"):
+                       "pending_count", "unsupported_count", "error_count", "missing-count", "cause", "result"):
             events, _ = evidence()
             if change == "old-run":
                 for event in events:
@@ -286,6 +286,8 @@ class M15CausalEvidenceTests(unittest.TestCase):
                 events[-1]["event_count"] = 999
             elif change == "missing-count":
                 del events[-1]["error_count"]
+            elif change in ("cause", "result"):
+                del events[2][change]
             else:
                 events[-1][change] = 1
             with self.subTest(change=change), self.assertRaises(ValueError):
@@ -352,6 +354,55 @@ class M15SessionTests(unittest.TestCase):
         self.assertNotIn("OPENMW_OBSCRIPT_EVENTS", environment)
         self.assertNotIn("LD_PRELOAD", environment)
         self.assertEqual(environment["OPENMW_M15_RUN_ID"], session.run_id)
+        self.assertEqual(session.command[-1], "--random-seed=15")
+        self.assertNotIn("--random-seed=15", self.value["command"])
+
+    def prepare_snapshot(self):
+        session = self.session()
+        session.start(42)
+        save = self.output / "userdata/quick.omwsave"
+        save.parent.mkdir()
+        save.write_bytes(b"actual saved bytes")
+        state = evidence()[1]["after"]["state"]
+        live = self.output / "live-1-2.json"
+        live.write_text(json.dumps(state))
+        boundary = {"event": "save-complete", "run_id": session.run_id, "pid": 42, "epoch": 1,
+                    "sequence": 2, "save": str(save), "save_sha256": m15.digest(save),
+                    "live": live.name, "live_sha256": m15.digest(live)}
+        event_file = self.output / "events.jsonl"
+        event_file.write_text(json.dumps(boundary) + "\n")
+        action = {"type": "m15_snapshot", "phase": "observe", "name": "before",
+                  "save": "userdata/quick.omwsave"}
+        return session, state, boundary, event_file, action
+
+    def test_snapshot_requires_completed_save_and_independent_live_agreement(self):
+        session, state, boundary, _, action = self.prepare_snapshot()
+        with mock.patch.object(m15.tes4_runtime_state, "load_save", return_value=state):
+            self.assertTrue(session.snapshot(action)["passed"])
+            self.assertEqual(session.snapshots["before"]["event_sequence"], boundary["sequence"])
+            with self.assertRaisesRegex(ValueError, "reuse"):
+                session.snapshot({**action, "name": "after"})
+
+    def test_snapshot_missing_stale_changed_ack_or_changed_live_state_fails(self):
+        # Each negative case gets fresh output, just as a real course must.
+        for fault in ("missing", "save_hash", "epoch", "pid", "run_id", "live_hash", "live_state"):
+            with self.subTest(fault=fault):
+                self.output = self.root / fault
+                self.value["command"][-1] = str(self.output / "config")
+                self.value["files"][0]["content"] = (
+                    f'replace=config\nreplace=data\nuser-data={self.output}/userdata\n'
+                    f'data={self.root}\ncontent=fixture.esm\n')
+                session, state, boundary, events, action = self.prepare_snapshot()
+                if fault == "save_hash": boundary["save_sha256"] = "0" * 64
+                elif fault == "epoch": boundary["epoch"] = 2
+                elif fault == "pid": boundary["pid"] = 99
+                elif fault == "run_id": boundary["run_id"] = "old"
+                elif fault == "live_hash": boundary["live_sha256"] = "0" * 64
+                elif fault == "live_state": state["references"][0]["health"] += 1
+                events.write_text("" if fault == "missing" else json.dumps(boundary) + "\n")
+                with mock.patch.object(m15.tes4_runtime_state, "load_save", return_value=state):
+                    with self.assertRaises(ValueError):
+                        session.snapshot(action)
 
     def test_reused_outputs_and_symlink_escape_are_rejected(self):
         self.output.mkdir()

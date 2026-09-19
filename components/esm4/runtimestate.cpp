@@ -6,6 +6,7 @@
 #include <functional>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -332,10 +333,10 @@ namespace ESM4
                        << item.mCount;
                 if (version >= 4)
                     stream << ",\"condition\":" << item.mCondition << ",\"charge\":"
-                           << std::setprecision(9) << item.mCharge << ",\"equipped_slots\":"
+                           << std::setprecision(17) << item.mCharge << ",\"equipped_slots\":"
                            << item.mEquippedSlots << ",\"hotkey\":" << static_cast<int>(item.mHotkey)
                            << ",\"owner\":\"" << escapeJson(item.mOwner.serialize())
-                           << "\",\"remaining_usage_time\":" << std::setprecision(9)
+                           << "\",\"remaining_usage_time\":" << std::setprecision(17)
                            << item.mRemainingUsageTime;
                 stream << '}';
             }
@@ -435,9 +436,9 @@ namespace ESM4
         {
             stream << '[';
             for (int i = 0; i < 3; ++i)
-                stream << (i == 0 ? "" : ",") << std::setprecision(9) << position.pos[i];
+                stream << (i == 0 ? "" : ",") << std::setprecision(17) << position.pos[i];
             for (int i = 0; i < 3; ++i)
-                stream << ',' << std::setprecision(9) << position.rot[i];
+                stream << ',' << std::setprecision(17) << position.rot[i];
             stream << ']';
         }
     }
@@ -1380,6 +1381,7 @@ namespace ESM4
     {
         validate();
         std::ostringstream stream;
+        stream.imbue(std::locale::classic());
         stream << "{\"schema_version\":" << mVersion << ",\"profile\":\"oblivion\",\"next_dynamic_serial\":"
                << mNextDynamicSerial << ",\"content\":[";
         for (std::size_t i = 0; i < mContent.size(); ++i)
@@ -1536,7 +1538,7 @@ namespace ESM4
                        << ",\"selection_generation\":" << actor.mSelectionGeneration
                        << ",\"route_generation\":" << actor.mRouteGeneration
                        << ",\"transition_generation\":" << actor.mTransitionGeneration
-                       << ",\"action_timer\":" << std::setprecision(9) << actor.mActionTimer
+                       << ",\"action_timer\":" << std::setprecision(17) << actor.mActionTimer
                        << ",\"duration_remaining\":" << actor.mDurationRemaining
                        << ",\"no_progress_seconds\":" << actor.mNoProgressSeconds
                        << ",\"door_cooldown\":" << actor.mDoorCooldown

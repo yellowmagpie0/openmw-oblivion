@@ -59,6 +59,7 @@ namespace ESM4
 {
     struct RuntimeInventoryItem;
     struct RuntimeState;
+    class ObservationStream;
 }
 
 namespace Files
@@ -122,6 +123,7 @@ namespace MWWorld
         std::uint64_t mNextOblivionDynamicSerial = 1;
         std::unique_ptr<OblivionScriptManager> mOblivionScriptManager;
         std::unique_ptr<MWMechanics::OblivionAiService> mOblivionAi;
+        std::unique_ptr<ESM4::ObservationStream> mOblivionObservation;
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
 
@@ -229,6 +231,8 @@ namespace MWWorld
             const std::filesystem::path& userDataPath, ESM::GameProfile requestedGameProfile);
 
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
+        ESM4::ObservationStream* getOblivionObservation() const override { return mOblivionObservation.get(); }
+        void observeOblivionState(std::string_view event, const std::filesystem::path& save) const override;
         float getOblivionPlayerInventoryWeight() const override;
 
         // Bounded native interaction surface for the M5 prison slice.

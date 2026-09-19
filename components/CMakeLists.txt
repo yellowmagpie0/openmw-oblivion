@@ -309,6 +309,7 @@ add_component_dir (esm4
     readerutils
     reference
     runtimestate
+    observation
     script
     typetraits
     vertex

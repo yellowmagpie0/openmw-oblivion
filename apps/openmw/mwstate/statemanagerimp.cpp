@@ -343,6 +343,11 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
         if (filestream.fail())
             throw std::runtime_error("Write operation failed (file stream): " + std::generic_category().message(errno));
 
+        filestream.close();
+        if (filestream.fail())
+            throw std::runtime_error("Closing saved game failed: " + std::generic_category().message(errno));
+        world.observeOblivionState("save-complete", slot->mPath);
+
         Settings::saves().mCharacter.set(Files::pathToUnicodeString(slot->mPath.parent_path().filename()));
         mLastSavegame = slot->mPath;
 
@@ -669,6 +674,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWBase::Environment::get().getWorldScene()->markCellAsUnchanged();
 
         MWBase::Environment::get().getLuaManager()->gameLoaded();
+        MWBase::Environment::get().getWorld()->observeOblivionState("load-complete", filepath);
         for (int actorId : actorIdConverter.mGraveyard)
         {
             auto mapped = actorIdConverter.mMappings.find(actorId);

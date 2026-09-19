@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include <components/esm4/observation.hpp>
 
 #include <cerrno>
 #include <chrono>
@@ -193,6 +194,8 @@ void OMW::Engine::executeLocalScripts()
 
 bool OMW::Engine::frame(unsigned frameNumber, float frametime)
 {
+    if (auto* observation = mWorld->getOblivionObservation())
+        observation->advance();
     const osg::Timer_t frameStart = mViewer->getStartTick();
     const osg::Timer* const timer = osg::Timer::instance();
     osg::Stats* const stats = mViewer->getViewerStats();
@@ -321,6 +324,8 @@ bool OMW::Engine::frame(unsigned frameNumber, float frametime)
     catch (const std::exception& e)
     {
         Log(Debug::Error) << "Error in frame: " << e.what();
+        if (auto* observation = mWorld->getOblivionObservation())
+            observation->diagnostic(e.what());
     }
 
     const bool reportResource = stats->collectStats("resource");
@@ -1148,6 +1153,9 @@ void OMW::Engine::go()
     }
 
     mLuaWorker->join();
+
+    if (auto* observation = mWorld->getOblivionObservation())
+        observation->finish(0, 0, 0);
 
     // Save user settings
     Settings::Manager::saveUser(mCfgMgr.getUserConfigPath() / "settings.cfg");

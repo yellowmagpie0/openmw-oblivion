@@ -35,6 +35,11 @@ namespace Loading
     class Listener;
 }
 
+namespace ESM4
+{
+    class ObservationStream;
+}
+
 namespace ESM
 {
     class ESMReader;
@@ -126,6 +131,8 @@ namespace MWBase
 
         virtual void setRandomSeed(uint32_t seed) = 0;
         virtual ESM::GameProfile getGameProfile() const = 0;
+        virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
+        virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
         ///< \param seed The seed used when starting a new game.
 

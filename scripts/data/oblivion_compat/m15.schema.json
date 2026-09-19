@@ -123,16 +123,6 @@
               "value": {
                 "type": "string",
                 "minLength": 1
-              },
-              "hold_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
-              },
-              "pause_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
               }
             },
             "required": [
@@ -159,16 +149,6 @@
               "value": {
                 "type": "string",
                 "minLength": 1
-              },
-              "hold_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
-              },
-              "pause_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
               }
             },
             "required": [
@@ -195,16 +175,6 @@
               "value": {
                 "type": "string",
                 "minLength": 1
-              },
-              "hold_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
-              },
-              "pause_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
               }
             },
             "required": [
@@ -234,8 +204,8 @@
               },
               "hold_seconds": {
                 "type": "number",
-                "minimum": 0,
-                "maximum": 30
+                "maximum": 30,
+                "exclusiveMinimum": 0
               },
               "pause_seconds": {
                 "type": "number",
@@ -268,21 +238,22 @@
                 "type": "string",
                 "minLength": 1
               },
-              "hold_seconds": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 30
-              },
               "pause_seconds": {
                 "type": "number",
                 "minimum": 0,
                 "maximum": 30
+              },
+              "seconds": {
+                "type": "number",
+                "maximum": 30,
+                "exclusiveMinimum": 0
               }
             },
             "required": [
               "type",
               "phase",
-              "value"
+              "value",
+              "seconds"
             ]
           },
           {

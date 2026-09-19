@@ -74,6 +74,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/aipackagedata.cpp
     esm4/aiconditions.cpp
     esm4/detection.cpp
+    esm4/observation.cpp
     esm4/inventorymechanics.cpp
     esm4/aiselection.cpp
     esm4/aiphase.cpp

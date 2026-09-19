@@ -1,4 +1,5 @@
 #include "oblivionscriptmanager.hpp"
+#include <components/esm4/observation.hpp>
 
 #include <algorithm>
 #include <array>
@@ -271,9 +272,13 @@ namespace MWWorld
             {
                 ++mCompilationFailures;
                 for (const auto& diagnostic : result.mDiagnostics)
+                {
                     Log(Debug::Error) << "M7 ObScript compile: unit=" << unit.mId.serialize()
                                       << " code=" << diagnostic.mDiagnostic.mCode
                                       << " message=" << diagnostic.mDiagnostic.mMessage;
+                    if (auto* observation = mWorld.getOblivionObservation())
+                        observation->diagnostic(diagnostic.mDiagnostic.mMessage);
+                }
                 continue;
             }
             ++mCompiledUnits;
@@ -2186,6 +2191,8 @@ namespace MWWorld
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());
+            if (auto* observation = mWorld.getOblivionObservation())
+                observation->diagnostic("deferred command=" + name + " unit=" + context.mUnit.serialize(), true);
             return std::int64_t(0);
         }
 
@@ -2254,6 +2261,8 @@ namespace MWWorld
     void OblivionScriptManager::recordDiagnostic(const ObScript::RuntimeDiagnostic& diagnostic)
     {
         mDiagnostics.push_back(diagnostic);
+        if (auto* observation = mWorld.getOblivionObservation())
+            observation->diagnostic(diagnostic.mMessage, diagnostic.mCode == "OBSV100");
         Log(Debug::Error) << "M7 ObScript diagnostic: code=" << diagnostic.mCode
                           << " sequence=" << diagnostic.mSequence << " event=" << diagnostic.mEvent
                           << " unit=" << diagnostic.mUnit.serialize() << " command=" << diagnostic.mCommand

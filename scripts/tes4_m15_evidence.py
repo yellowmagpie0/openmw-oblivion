@@ -216,8 +216,8 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         _unique([(a["snapshot"], a["actor"], a["path"]) for a in assertions], "state assertion")
         if any(a["actor"] not in (case["actor"], case["target"]) for a in assertions):
             raise _error("state assertions must concern the named actor or target")
-    reserved = {settings["event_file"], "scenario.json", "m15-session.json", "process.log"}
-    if len(reserved) != 4 or reserved & captures:
+    reserved = {settings["event_file"], "scenario.json", "m15-session.json", "m15-manifest.json", "process.log"}
+    if len(reserved) != 5 or reserved & captures:
         raise _error("evidence paths collide with reserved output")
     for artifact in settings["artifacts"]:
         path = relative_path(artifact["path"]).as_posix()
@@ -291,6 +291,11 @@ def validate_events(events: list[dict[str, Any]], run_id: str, epoch: int, pid: 
         for name in ("actor", "target"):
             if name in event and (not isinstance(event[name], str) or not KEY.fullmatch(event[name])):
                 raise _error(f"invalid stable event {name} identity")
+        if "actor" in event or "target" in event:
+            if not {"actor", "target", "action_id", "cause", "result"} <= event.keys():
+                raise _error("actor-scoped event lacks causal provenance")
+            if any(not isinstance(event[k], str) or not event[k] for k in ("action_id", "cause", "result")):
+                raise _error("actor-scoped event has invalid causal provenance")
         tick = event["tick"]
     if events[0]["event"] != "run-start" or events[-1]["event"] != "run-end":
         raise _error("missing run boundaries")
@@ -419,16 +424,17 @@ def _check_config(manifest: dict[str, Any], output: Path) -> None:
         raise _error("configuration must replace inherited config and data paths")
     if entries.get("user-data") != [str(output / "userdata")]:
         raise _error("user-data must be the fresh run directory")
-    content = {Path(item["path"]).resolve() for item in manifest["m15"]["inputs"] if item["role"] == "content"}
     if not entries.get("content"):
         raise _error("at least one fingerprinted content file is required")
-    for name in entries["content"]:
-        if Path(name).name != name:
-            raise _error("content names cannot traverse data directories")
-        resolved = [(Path(directory) / name).resolve() for directory in entries.get("data", [])
-                    if (Path(directory) / name).is_file()]
-        if not resolved or any(path not in content for path in resolved):
-            raise _error(f"content {name} is missing or not fingerprinted")
+    for directive, role in (("content", "content"), ("fallback-archive", "archive")):
+        fingerprinted = {Path(i["path"]).resolve() for i in manifest["m15"]["inputs"] if i["role"] == role}
+        for name in entries.get(directive, []):
+            if Path(name).name != name:
+                raise _error("content/archive names cannot traverse data directories")
+            resolved = [(Path(directory) / name).resolve() for directory in entries.get("data", [])
+                        if (Path(directory) / name).is_file()]
+            if not resolved or any(path not in fingerprinted for path in resolved):
+                raise _error(f"{role} {name} is missing or not fingerprinted")
     settings = next(f["content"] for f in manifest["files"] if f["path"] == "config/settings.cfg")
     section = ""
     permitted = {
@@ -485,6 +491,9 @@ class Session:
                 raise _error(f"input fingerprint differs: {item['path']}")
         _check_config(manifest, self.output)
         self.engine_digest = digest(self.engine)
+        # The seed is supplied through the engine's real option, never merely
+        # written into an evidence label or an unused environment variable.
+        self.command = [*command, f"--random-seed={self.settings['seed']}"]
         self.output.mkdir(parents=True, exist_ok=True)
         output_path(self.output, self.settings["event_file"]).parent.mkdir(parents=True, exist_ok=True)
 
@@ -495,16 +504,21 @@ class Session:
         result.update(self.manifest.get("environment", {}))
         result.update({
             "OPENMW_SUPPRESS_ERROR_DIALOG": "1", "OPENMW_M15_RUN_ID": self.run_id,
-            "OPENMW_M15_EPOCH": str(self.epoch), "OPENMW_M15_SEED": str(self.settings["seed"]),
+            "OPENMW_M15_EPOCH": str(self.epoch),
             "OPENMW_M15_EVENTS": str(output_path(self.output, self.settings["event_file"])),
         })
         return result
 
     def start(self, pid: int) -> None:
         self.pid = pid
+        manifest_path = self.output / "m15-manifest.json"
+        with manifest_path.open("x") as stream:
+            stream.write(json.dumps(self.manifest, sort_keys=True, allow_nan=False) + "\n")
+        manifest_digest = self._receipt("m15-manifest.json")
         metadata = {"run_id": self.run_id, "epoch": self.epoch, "pid": pid,
                     "started_ns": self.started_ns, "engine_sha256": self.engine_digest,
-                    "inputs": self.settings["inputs"], "command": self.manifest["command"]}
+                    "manifest_sha256": manifest_digest,
+                    "inputs": self.settings["inputs"], "command": self.command}
         (self.output / "m15-session.json").write_text(json.dumps(metadata, indent=2) + "\n")
 
     def _receipt(self, relative: str) -> str:
@@ -528,11 +542,29 @@ class Session:
             stream.write(source.read_bytes())
         state = tes4_runtime_state.load_save(copy)
         events = read_events(output_path(self.output, self.settings["event_file"]))
-        if not events or events[-1].get("run_id") != self.run_id or events[-1].get("pid") != self.pid:
+        save_hash = self._receipt(relative_save)
+        boundaries = [event for event in events if event.get("event") == "save-complete"
+                      and event.get("save") == str(source.resolve()) and event.get("save_sha256") == save_hash]
+        if not boundaries:
+            raise _error("snapshot has no completed engine save acknowledgment for these bytes")
+        boundary = boundaries[-1]
+        if (boundary.get("run_id") != self.run_id or boundary.get("pid") != self.pid
+                or boundary.get("epoch") != self.epoch):
             raise _error("snapshot has no current engine event boundary")
+        if any(s["event_sequence"] == boundary["sequence"] for s in self.snapshots.values()):
+            raise _error("snapshot cannot reuse a prior completed save")
+        live_path = output_path(self.output, self.settings["event_file"]).parent / relative_path(boundary["live"])
+        live_relative = live_path.relative_to(self.output).as_posix()
+        if digest(output_path(self.output, live_relative)) != boundary["live_sha256"]:
+            raise _error("live observation digest differs from engine acknowledgment")
+        live_state = _read_json(live_path)
+        if not _equal(live_state, state):
+            raise _error("independent live observation and decoded disk save disagree")
+        self._receipt(live_relative)
         snapshot = {"run_id": self.run_id, "epoch": self.epoch, "name": name,
-                    "ordinal": len(self.snapshots), "event_sequence": events[-1]["sequence"],
-                    "save": relative_save, "save_sha256": self._receipt(relative_save), "state": state}
+                    "ordinal": len(self.snapshots), "event_sequence": boundary["sequence"],
+                    "save": relative_save, "save_sha256": save_hash,
+                    "live": live_relative, "live_sha256": boundary["live_sha256"], "state": state}
         relative = f"snapshots/{name}.json"
         with output_path(self.output, relative).open("x") as stream:
             stream.write(json.dumps(snapshot, sort_keys=True, allow_nan=False) + "\n")
