@@ -402,3 +402,96 @@ TEST(ESM4CrimeRules, TrespassExitRejectsExactlyLevelOneHundredAndPrivateInterior
     input.mHasDestinationCell = false;
     EXPECT_TRUE(ESM4::playerHasTrespassExitExemption(input));
 }
+
+TEST(ESM4CrimeRules, ReferenceOffLimitsSeparatesObjectsHorsesAndOtherActors)
+{
+    using K = ESM4::ReferenceAccessKind;
+    ESM4::ReferenceAccessInput input;
+    for (K kind : {K::Object, K::Horse})
+    {
+        input.mKind = kind;
+        EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+        input.mHasOwner = true;
+        EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input));
+        input.mPlayerHasClaim = true;
+        EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+        input.mPlayerHasClaim = false; input.mOwnerEvil = true;
+        EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+        input = {};
+    }
+    input.mHasOwner = true;
+    for (K kind : {K::Npc, K::Creature})
+    {
+        input.mKind = kind;
+        EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    }
+}
+
+TEST(ESM4CrimeRules, LivingNpcSneakActivationIsOffLimitsExceptEvilOwnerExemption)
+{
+    using K = ESM4::ReferenceAccessKind;
+    ESM4::ReferenceAccessInput input;
+    input.mKind = K::Npc; input.mPlayerSneaking = true;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input));
+    input.mDead = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    input.mDead = false; input.mHasOwner = true; input.mPlayerHasClaim = true;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input));
+    input.mOwnerEvil = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    input = {}; input.mKind = K::Creature; input.mPlayerSneaking = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+}
+
+TEST(ESM4CrimeRules, DoorOffLimitsDistinguishesDoorClaimAndDestinationClaim)
+{
+    using K = ESM4::ReferenceAccessKind;
+    ESM4::ReferenceAccessInput input;
+    input.mKind = K::Door; input.mDestination = {true, false, false, 1};
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input));
+    input.mDestination.mPlayerHasClaim = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    input.mHasOwner = true;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input)); // Destination claim does not claim the door.
+    input.mPlayerHasClaim = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    input.mDestination.mPlayerHasClaim = false;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input)); // Door claim does not claim the cell.
+    input.mPlayerHasClaim = false; input.mDoorPermission = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    input.mDoorPermission = false; input.mDestination = {}; input.mDoorLocked = true;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input));
+    input.mDoorLocked = false;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+}
+
+TEST(ESM4CrimeRules, DoorOffLimitsHonorsPublicHandChangedExteriorAndEvilOwners)
+{
+    using K = ESM4::ReferenceAccessKind;
+    ESM4::ReferenceAccessInput input;
+    input.mKind = K::Door; input.mDestination.mHasOwner = true;
+    for (unsigned flags : {0, 0x20, 0x21, 0x40, 0x41, 0x61, 0xff})
+    {
+        input.mDestination.mFlags = flags;
+        EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    }
+    input.mDestination.mFlags = 1; input.mDestination.mOwnerEvil = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+    input.mHasOwner = true; input.mDoorLocked = true;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(input));
+    input.mOwnerEvil = true;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(input));
+}
+
+TEST(ESM4CrimeRules, ReferenceOffLimitsRejectsInvalidKindsAndOwnerClaims)
+{
+    ESM4::ReferenceAccessInput input;
+    input.mKind = static_cast<ESM4::ReferenceAccessKind>(99);
+    EXPECT_THROW(ESM4::playerReferenceIsOffLimits(input), std::invalid_argument);
+    input = {}; input.mPlayerHasClaim = true;
+    EXPECT_THROW(ESM4::playerReferenceIsOffLimits(input), std::invalid_argument);
+    input = {}; input.mOwnerEvil = true;
+    EXPECT_THROW(ESM4::playerReferenceIsOffLimits(input), std::invalid_argument);
+    input = {}; input.mDestination.mPlayerHasClaim = true;
+    EXPECT_THROW(ESM4::playerReferenceIsOffLimits(input), std::invalid_argument);
+}

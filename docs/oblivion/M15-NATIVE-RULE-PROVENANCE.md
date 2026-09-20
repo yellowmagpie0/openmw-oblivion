@@ -1493,3 +1493,44 @@ Evidence: `S2/oracle-emulator/door-exit.py`, `door-exit-table.json`,
 `door-exit.log`, `S2/sources-01/door-access-exemption.txt` and
 `door-access-exemption-continuation.txt`. Normal door activation and arrest/
 trespass event ordering remain runtime acceptance work.
+
+## Player reference off-limits query
+
+Original `004DEBF0` first exempts an evil resolved owner: faction flag `02`,
+or the corresponding evil-faction query for an NPC owner. This is the
+reference's **owner**, not automatically the target NPC's own faction.
+
+For doors, an owned/unclaimed door first consults native door permission.
+If permitted it is not off limits; otherwise a locked door is off limits.
+An unlocked door in that branch is off limits when its destination has a
+non-evil owner, is interior and lacks both Public and HandChanged. A claim
+on that destination does not override this branch's unclaimed door owner.
+When the door is unowned or claimed, the same restricted-destination test
+additionally requires **no claim on the destination cell**. Door and cell
+claims are distinct queries; the latter uses `004CAAC0`, which compares NPC
+base identity or faction rank without the reference permission global.
+
+For other targets, sneaking at a living NPC is off limits before checking a
+reference claim. Otherwise an owned/unclaimed non-actor object or horse is off
+limits, but other actors are not classified as theft targets by that branch.
+Native horse query `004D74D0` checks creature type 4. Dead NPC sneak activation
+is therefore not the living-NPC pickpocket branch. This query is not the full
+legality/witness/report path and does not itself create bounty.
+
+`playerReferenceIsOffLimits` preserves these branches over resolved access
+inputs. Native door permission remains an explicit input, including the
+reviewed trespass exit exemption and separate ownership/guard/follower rights.
+It is not replaced with a guessed key or lock test. Invalid kinds and claims
+without an owner diagnose. No inventory, crime ledger or UI state is mutated.
+
+Five tests fail against the false stub, then cover object/actor/horse,
+living/dead sneak, owner exemptions, independent door/cell claims, lock and
+permission controls, destination flags and invalid inputs. **291 independent
+original-helper cases** include all 256 destination flag bytes and both
+faction/NPC evil-owner branches. Record, claim, door permission and actor-state
+queries are boundary stubs; original off-limits decisions, base type checks,
+cell flag helpers and horse query execute unchanged. Evidence:
+`S2/oracle-emulator/reference-access.py`, `reference-access-table.json`,
+`reference-access.log`, `S2/sources-01/ownership-player-query.txt` and
+`ownership-player-continuation.txt`. World resolution, interaction and crime
+reporting remain native runtime gates.

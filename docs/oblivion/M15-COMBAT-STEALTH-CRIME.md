@@ -1985,3 +1985,21 @@ S2 remains in progress; S3–S14 remain pending. Next: compose the native
 reference off-limits policy and complete remaining crime rules.
 
 Tested implementation/test/provenance diff SHA-256: `21b58fac13c4b47f6a1c5b9ff0cebf52212549552e72715e4babd7ed92ec6460`.
+
+### S2 player reference off-limits policy
+
+Commit `26ec466778` contains the player trespass exit exemption. Implemented
+native player-facing reference access over resolved inputs: owner exemptions,
+independent door/cell claims, native door permission, lock/destination policy,
+living-NPC sneak activation and object/horse distinctions. The predicate does
+not report an incident or create another ownership/inventory authority.
+
+Five new tests fail against the stub, then pass. All **1,779 component tests**
+and **135 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/reference-access-01`). **291 original instruction cases** independently
+verify the access branches and every destination flag byte. Normal-input
+crime, complete door permission and world resolution remain runtime gates.
+S2 remains in progress; S3–S14 remain pending. Next: prohibited pickpocket
+items/transfer session rules and remaining crime legality/reporting rules.
+
+Tested implementation/test/provenance diff SHA-256: `c4f3e29fe980760cc74ddf2ece1977102d18054557ec296498c490b66c2b8a61`.

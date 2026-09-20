@@ -29,6 +29,30 @@ namespace ESM4
     ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers);
 
     enum class CrimeOwnerKind { None, Actor, Faction };
+    enum class ReferenceAccessKind { Object, Npc, Creature, Horse, Door };
+    struct DestinationCellAccess
+    {
+        bool mHasOwner = false;
+        bool mOwnerEvil = false;
+        bool mPlayerHasClaim = false;
+        std::uint8_t mFlags = 0;
+    };
+    struct ReferenceAccessInput
+    {
+        ReferenceAccessKind mKind = ReferenceAccessKind::Object;
+        bool mHasOwner = false;
+        bool mOwnerEvil = false;
+        bool mPlayerHasClaim = false;
+        bool mPlayerSneaking = false;
+        bool mDead = false;
+        bool mDoorLocked = false;
+        bool mDoorPermission = false; // Resolved native door permission, including exit exemption.
+        DestinationCellAccess mDestination;
+    };
+    // Native player-facing off-limits query, not reported crime or permission
+    // to bypass other interaction constraints. Inputs require resolved records.
+    bool playerReferenceIsOffLimits(const ReferenceAccessInput& input);
+
     struct DoorTrespassExitInput
     {
         bool mPlayerTrespassing;

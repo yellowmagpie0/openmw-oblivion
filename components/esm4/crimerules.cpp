@@ -52,6 +52,37 @@ namespace ESM4
         return result;
     }
 
+    bool playerReferenceIsOffLimits(const ReferenceAccessInput& input)
+    {
+        switch (input.mKind)
+        {
+            case ReferenceAccessKind::Object:
+            case ReferenceAccessKind::Npc:
+            case ReferenceAccessKind::Creature:
+            case ReferenceAccessKind::Horse:
+            case ReferenceAccessKind::Door: break;
+            default: throw std::invalid_argument("invalid native reference access kind");
+        }
+        const auto& destination = input.mDestination;
+        if ((!input.mHasOwner && (input.mOwnerEvil || input.mPlayerHasClaim))
+            || (!destination.mHasOwner && (destination.mOwnerEvil || destination.mPlayerHasClaim)))
+            throw std::invalid_argument("native reference access claim requires an owner");
+        if (input.mOwnerEvil)
+            return false;
+        if (input.mKind == ReferenceAccessKind::Door)
+        {
+            const bool restrictedDestination = destination.mHasOwner && !destination.mOwnerEvil
+                && (destination.mFlags & CELL_Interior) && !(destination.mFlags & (CELL_Public | CELL_HandChgd));
+            if (input.mHasOwner && !input.mPlayerHasClaim)
+                return !input.mDoorPermission && (input.mDoorLocked || restrictedDestination);
+            return restrictedDestination && !destination.mPlayerHasClaim;
+        }
+        if (input.mKind == ReferenceAccessKind::Npc && input.mPlayerSneaking && !input.mDead)
+            return true;
+        return input.mHasOwner && !input.mPlayerHasClaim
+            && (input.mKind == ReferenceAccessKind::Object || input.mKind == ReferenceAccessKind::Horse);
+    }
+
     bool playerHasTrespassExitExemption(const DoorTrespassExitInput& input)
     {
         if (!input.mPlayerTrespassing || !input.mHasTeleport || !input.mHasLockData || input.mLockLevel == 100)
