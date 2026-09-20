@@ -248,3 +248,56 @@ TEST(ESM4CrimeRules, FactionOwnershipClaimPreservesRankBoundaryAndGlobalMode)
     for (float invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
         EXPECT_THROW(ESM4::hasOwnershipClaim({Kind::Actor, false, invalid, -1, 0, true}), std::invalid_argument);
 }
+
+TEST(ESM4CrimeRules, OwnershipFieldsInheritIndependentlyAcrossReferenceTeleportAndCell)
+{
+    using K = ESM4::OwnershipReferenceKind;
+    const auto owner = ESM::FormKey::content("Owner.esm", 0x801);
+    const auto other = ESM::FormKey::content("Other.esm", 0x801);
+    const auto global = ESM::FormKey::content("Globals.esm", 0x900);
+    std::array<ESM4::OwnershipLayer, 3> layers{{{owner, -1, {}}, {other, 3, {}}, {other, 5, global}}};
+    auto result = ESM4::resolveOwnership(K::Other, layers);
+    EXPECT_EQ(result.mOwner, owner); EXPECT_EQ(result.mRank, 3); EXPECT_EQ(result.mGlobal, global);
+    layers[0] = {}; layers[1].mGlobal = global; layers[2].mGlobal = other;
+    result = ESM4::resolveOwnership(K::Other, layers);
+    EXPECT_EQ(result.mOwner, other); EXPECT_EQ(result.mRank, 3); EXPECT_EQ(result.mGlobal, global);
+    layers[1] = {};
+    result = ESM4::resolveOwnership(K::Other, layers);
+    EXPECT_EQ(result.mOwner, other); EXPECT_EQ(result.mRank, 5); EXPECT_EQ(result.mGlobal, other);
+    result = ESM4::resolveOwnership(K::Other, {});
+    EXPECT_TRUE(result.mOwner.isNull()); EXPECT_EQ(result.mRank, 0); EXPECT_TRUE(result.mGlobal.isNull());
+}
+
+TEST(ESM4CrimeRules, OwnershipInheritanceExceptionsAffectOwnerOnly)
+{
+    using K = ESM4::OwnershipReferenceKind;
+    const auto owner = ESM::FormKey::content("Owner.esm", 0x801);
+    const auto global = ESM::FormKey::content("Globals.esm", 0x900);
+    std::array<ESM4::OwnershipLayer, 3> layers{{{}, {}, {owner, 2, global}}};
+    for (K kind : {K::Actor, K::Furniture, K::Door, K::Activator})
+    {
+        const auto result = ESM4::resolveOwnership(kind, layers);
+        EXPECT_TRUE(result.mOwner.isNull()); EXPECT_EQ(result.mRank, 2); EXPECT_EQ(result.mGlobal, global);
+    }
+    layers[1].mOwner = owner;
+    EXPECT_TRUE(ESM4::resolveOwnership(K::Actor, layers).mOwner.isNull());
+    for (K kind : {K::Furniture, K::Door, K::Activator})
+        EXPECT_EQ(ESM4::resolveOwnership(kind, layers).mOwner, owner);
+    layers[0].mOwner = owner;
+    EXPECT_EQ(ESM4::resolveOwnership(K::Actor, layers).mOwner, owner);
+    EXPECT_THROW(ESM4::resolveOwnership(static_cast<K>(99), layers), std::invalid_argument);
+}
+
+TEST(ESM4CrimeRules, OwnershipRankMinusOneInheritsButOtherSignedRanksArePreserved)
+{
+    using K = ESM4::OwnershipReferenceKind;
+    for (int rank : {std::numeric_limits<int>::min(), -2, 0, 1, std::numeric_limits<int>::max()})
+        for (std::size_t index : {0u, 1u, 2u})
+        {
+            std::array<ESM4::OwnershipLayer, 3> layers{};
+            layers[index].mRank = rank;
+            EXPECT_EQ(ESM4::resolveOwnership(K::Other, layers).mRank, rank);
+        }
+    const std::array<ESM4::OwnershipLayer, 3> inherited{{{{}, -1, {}}, {{}, -1, {}}, {{}, 7, {}}}};
+    EXPECT_EQ(ESM4::resolveOwnership(K::Other, inherited).mRank, 7);
+}

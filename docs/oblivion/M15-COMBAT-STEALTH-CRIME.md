@@ -1932,3 +1932,21 @@ and reaction ordering remain runtime gates. S2 remains in progress; S3–S14
 remain pending. Next: native ownership inheritance and crime access rules.
 
 Tested implementation/test/provenance diff SHA-256: `c5b8433d87acb798443b360312dd3ef19f453c8f2043f953f4bfc9dc33309c94`.
+
+### S2 native ownership-field inheritance
+
+Commit `c905c7143b` contains block-contact eligibility. Implemented independent
+owner/rank/global inheritance with actor and furniture/door/activator owner
+exceptions, direct teleport-destination fields, current-cell fallback and
+signed rank -1 sentinel handling. This is a pure read projection over resolved
+layers; authoritative world/inventory state remains the existing owner.
+
+Three new tests fail against the stub, then pass. All **1,769 component tests**
+and **125 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/ownership-inheritance-01`). **35 original instruction cases** each execute
+all three native queries and confirm precedence, exceptions and signed ranks.
+Normal runtime ownership and access remain integration gates. S2 remains in
+progress; S3–S14 remain pending. Next: cell/door public access and the remaining
+crime-policy rules.
+
+Tested implementation/test/provenance diff SHA-256: `21bee9b530d2be8b89b653698860c4a40867696f667d7cd3936f6adafa090a0e`.

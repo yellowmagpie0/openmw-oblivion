@@ -16,6 +16,40 @@ namespace ESM4
         }
     }
 
+    ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers)
+    {
+        std::size_t ownerLayers;
+        switch (kind)
+        {
+            case OwnershipReferenceKind::Other: ownerLayers = 3; break;
+            case OwnershipReferenceKind::Actor: ownerLayers = 1; break;
+            case OwnershipReferenceKind::Furniture:
+            case OwnershipReferenceKind::Door:
+            case OwnershipReferenceKind::Activator: ownerLayers = 2; break;
+            default: throw std::invalid_argument("invalid native ownership reference kind");
+        }
+        ResolvedOwnership result;
+        for (std::size_t i = 0; i < ownerLayers; ++i)
+            if (!layers[i].mOwner.isNull())
+            {
+                result.mOwner = layers[i].mOwner;
+                break;
+            }
+        for (const auto& layer : layers)
+            if (layer.mRank != -1)
+            {
+                result.mRank = layer.mRank;
+                break;
+            }
+        for (const auto& layer : layers)
+            if (!layer.mGlobal.isNull())
+            {
+                result.mGlobal = layer.mGlobal;
+                break;
+            }
+        return result;
+    }
+
     bool hasOwnershipClaim(const OwnershipClaimInput& input)
     {
         if (input.mGlobalValue && !std::isfinite(*input.mGlobalValue))

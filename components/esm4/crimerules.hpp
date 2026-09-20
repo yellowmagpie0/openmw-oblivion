@@ -1,12 +1,33 @@
 #ifndef OPENMW_ESM4_CRIMERULES_H
 #define OPENMW_ESM4_CRIMERULES_H
 
+#include <components/esm/formkey.hpp>
+
+#include <array>
 #include <cstdint>
 #include <span>
 #include <optional>
 
 namespace ESM4
 {
+    enum class OwnershipReferenceKind { Other, Actor, Furniture, Door, Activator };
+    struct OwnershipLayer
+    {
+        ESM::FormKey mOwner;
+        std::int32_t mRank = -1; // Native missing/inherit sentinel, including authored -1.
+        ESM::FormKey mGlobal;
+    };
+    struct ResolvedOwnership
+    {
+        ESM::FormKey mOwner;
+        std::int32_t mRank = 0;
+        ESM::FormKey mGlobal;
+    };
+    // Layers are reference, teleport destination reference, and current cell.
+    // Each field inherits independently. A missing layer is an empty value;
+    // caller resolves winning records/teleport identity before this pure rule.
+    ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers);
+
     enum class CrimeOwnerKind { None, Actor, Faction };
     struct OwnershipClaimInput
     {

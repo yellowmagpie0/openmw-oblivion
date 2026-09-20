@@ -1393,3 +1393,42 @@ Two new component tests first fail against the None stub, then cover all gate
 failures, all equipment classes, weapon/projectile combinations and invalid
 equipment. World posture, equipped-instance selection, reaction ordering and
 normal-input blocking remain native runtime acceptance work.
+
+## Independent ownership-field inheritance
+
+Original owner query `004DB6B0` first reads reference ExtraOwnership. Actors
+(virtual `+190` true) return that owner directly, including null. Other
+references with no owner try the teleport destination reference's *direct*
+ExtraOwnership (`ExtraTeleport` type `32`, destination getter `0042B410`).
+There is no recursive traversal of the destination's owner hierarchy.
+If still null, furniture type `20`, door `18` and activator `12` stop;
+other reference types try the **current** cell owner at `004CA970`.
+The destination cell's access restrictions are evaluated separately by the
+door off-limits path; they are not an owner fallback here.
+
+Required rank `004DB830` and permission global `004DB7D0` each independently
+try reference, teleport destination reference, then current cell, including
+for actor/furniture/door/activator references. Rank **-1** means inherit even
+when explicitly authored; all other signed int32 values are retained. An
+unresolved final rank becomes 0. Cell rank `004CA990` applies the same -1 to 0
+conversion. Global inheritance selects the first nonnull global *identity*;
+a resolved global with value zero does not cause fallback to another global.
+
+`resolveOwnership` consumes three already resolved layers and the reference
+kind, and returns one read-only owner/rank/global projection. Winning record,
+valid FormKey/type and teleport reference resolution remain caller duties.
+Null/missing layers and explicit null owner/global fields permit fallback;
+this rule does not create another inventory/ownership authority. Invalid
+reference-kind enums diagnose. Ownership permission and crime legality remain
+separate from these field queries.
+
+Evidence: `S2/sources-01/owner-inheritance-rule.txt`,
+`ownership-rank-global.txt`, `cell-ownership-rules.txt`; **35 independent
+original instruction cases** in `S2/oracle-emulator/ownership-inheritance*`.
+Each case executes original owner, rank and global helpers. Only extra-data
+reads and actor/base-kind virtual boundary queries are stubbed; inheritance,
+teleport dereference, cell queries and signed sentinel branches run unchanged.
+Three component tests first fail against the empty-result stub, then cover
+field precedence, type exceptions, empty inputs and signed rank extremes.
+World inheritance, door/public access and normal crime actions are still
+integration gates.
