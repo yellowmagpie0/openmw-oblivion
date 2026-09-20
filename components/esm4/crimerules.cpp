@@ -16,6 +16,26 @@ namespace ESM4
         }
     }
 
+    bool hasOwnershipClaim(const OwnershipClaimInput& input)
+    {
+        if (input.mGlobalValue && !std::isfinite(*input.mGlobalValue))
+            throw std::invalid_argument("nonfinite native ownership global");
+        if (input.mMatchesActorBase && input.mOwnerKind != CrimeOwnerKind::Actor)
+            throw std::invalid_argument("native ownership identity match requires actor owner");
+        const bool globalAllows = input.mGlobalValue && *input.mGlobalValue != 0;
+        switch (input.mOwnerKind)
+        {
+            case CrimeOwnerKind::None:
+                return false;
+            case CrimeOwnerKind::Actor:
+                return input.mMatchesActorBase || globalAllows;
+            case CrimeOwnerKind::Faction:
+                return (input.mUseFactionOwnership || globalAllows)
+                    && input.mActorFactionRank >= input.mRequiredFactionRank;
+        }
+        throw std::invalid_argument("invalid native crime owner kind");
+    }
+
     std::uint8_t advanceJailSkillSelection(std::optional<std::uint8_t> candidate, std::uint32_t draw)
     {
         if (draw > 32767 || (candidate && *candidate >= 12))

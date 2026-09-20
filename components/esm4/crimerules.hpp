@@ -7,6 +7,22 @@
 
 namespace ESM4
 {
+    enum class CrimeOwnerKind { None, Actor, Faction };
+    struct OwnershipClaimInput
+    {
+        CrimeOwnerKind mOwnerKind;
+        bool mMatchesActorBase;
+        std::optional<float> mGlobalValue;
+        std::int32_t mActorFactionRank;
+        std::int32_t mRequiredFactionRank;
+        bool mUseFactionOwnership;
+    };
+    // Requires a resolved, valid actor base. This answers an ownership claim,
+    // not crime legality: unowned property has no claim, but may be taken.
+    // Evil-faction exemptions, access/public-cell policy and witnesses are
+    // evaluated by the crime caller, not folded into this predicate.
+    bool hasOwnershipClaim(const OwnershipClaimInput& input);
+
     enum class CrimeOffense { Theft, Pickpocket, Trespass, Assault, Murder, HorseTheft, JailBreak };
     struct CrimeFineSettings
     {

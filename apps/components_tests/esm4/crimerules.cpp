@@ -216,3 +216,35 @@ TEST(ESM4CrimeRules, AlarmResponsibilityResolvesTypedNativeSetting)
     setting.mData = -1.f;
     EXPECT_THROW(ESM4::buildCrimeReportingSettings(input), std::invalid_argument);
 }
+
+TEST(ESM4CrimeRules, OwnershipClaimUsesActorIdentityAndNonzeroPermissionGlobal)
+{
+    using Kind = ESM4::CrimeOwnerKind;
+    EXPECT_FALSE(ESM4::hasOwnershipClaim({Kind::None, false, {}, -1, 0, true}));
+    EXPECT_TRUE(ESM4::hasOwnershipClaim({Kind::Actor, true, {}, -1, 0, true}));
+    EXPECT_FALSE(ESM4::hasOwnershipClaim({Kind::Actor, false, {}, -1, 0, true}));
+    for (const float global : {0.f, -0.f, 1.f, -1.f, std::numeric_limits<float>::denorm_min(),
+             -std::numeric_limits<float>::denorm_min(), std::numeric_limits<float>::max()})
+    {
+        EXPECT_EQ(ESM4::hasOwnershipClaim({Kind::Actor, false, global, -1, 0, true}), global != 0);
+        EXPECT_TRUE(ESM4::hasOwnershipClaim({Kind::Actor, true, global, -1, 0, false}));
+    }
+}
+
+TEST(ESM4CrimeRules, FactionOwnershipClaimPreservesRankBoundaryAndGlobalMode)
+{
+    using Kind = ESM4::CrimeOwnerKind;
+    struct Case { int rank; int required; bool useFaction; std::optional<float> global; bool expected; };
+    for (const auto& c : {Case{-1, 0, true, {}, false}, {0, 0, true, {}, true},
+             {1, 2, true, {}, false}, {2, 2, true, {}, true}, {3, 2, true, {}, true},
+             {-1, -2, true, {}, true}, {3, 2, false, {}, false},
+             {3, 2, false, 1, true}, {1, 2, false, 1, false},
+             {3, 2, true, 0, true}, {3, 2, false, -1, true}, {3, 2, false, 0, false},
+             {std::numeric_limits<int>::min(), std::numeric_limits<int>::min(), true, {}, true},
+             {std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true, {}, false}})
+        EXPECT_EQ(ESM4::hasOwnershipClaim({Kind::Faction, false, c.global, c.rank, c.required, c.useFaction}), c.expected);
+    EXPECT_THROW(ESM4::hasOwnershipClaim({static_cast<Kind>(3), false, {}, -1, 0, true}), std::invalid_argument);
+    EXPECT_THROW(ESM4::hasOwnershipClaim({Kind::Faction, true, {}, 0, 0, true}), std::invalid_argument);
+    for (float invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::hasOwnershipClaim({Kind::Actor, false, invalid, -1, 0, true}), std::invalid_argument);
+}

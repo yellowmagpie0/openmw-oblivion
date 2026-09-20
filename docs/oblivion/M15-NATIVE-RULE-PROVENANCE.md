@@ -1271,3 +1271,31 @@ controller/animation timing and the complete posture/eligibility chain remain
 integration work. Block data and facing arithmetic alone do not prove a normal
 block works. Bearing construction and overlap/vertical contact remain caller
 geometry work; no duplicate detection service is introduced.
+
+## Ownership claim predicate
+
+Original reference helper `004DE770` first resolves owner (`004DB6B0`), required
+rank (`004DB830`) and permission global (`004DB7D0`), then compares the actor's
+base identity. `hasOwnershipClaim` covers its supplied-input predicate for a
+valid resolved actor base. A matching actor owner succeeds. A different actor
+owner requires a present, nonzero global; negative and positive subnormal values
+are nonzero, not coerced through integer conversion. Unowned property returns
+false from the claim helper; this does **not** mean taking unowned property is
+criminal. Nonfinite globals diagnose invalid state in the native adapter.
+
+Faction ownership always requires actor rank >= required rank. With the native
+caller's faction-ownership mode enabled, the global is ignored. With that mode
+disabled, a nonzero global is additionally required. Signed ranks are preserved:
+a required rank -2 is satisfied by absent-membership rank -1. The original rank
+resolver defaults missing reference/linked-reference/cell rank to zero, but
+resolving that hierarchy belongs to the world adapter. It must not replace
+explicit negative ranks with zero.
+
+Eighteen independent executions of the original helper with only identity,
+record-access and rank-query boundary stubs confirm these branches
+(`S2/oracle-emulator/ownership-claim*`). Reference/teleport/cell inheritance,
+player extra faction ranks, evil-owner exemptions, public-cell access, trespass
+and witness reporting are **not** implemented by this claim predicate. The
+outer `004DEBF0` off-limits query applies evil-owner and object/door checks
+separately. This helper neither changes inventory ownership nor creates a new
+inventory or crime authority.

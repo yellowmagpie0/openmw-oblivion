@@ -1821,3 +1821,23 @@ S3–S14 remain pending, with selected actor policy explanations and remaining
 physical/crime rule families still open.
 
 Tested implementation/test/provenance diff SHA-256: `9e172cbbc71de1c78ee5afae65163fc132ea19473a11db170183506bcef6ecec`.
+
+
+### S2 native ownership claim predicate
+
+Commit `eb204855f1` contains contact-facing cone arithmetic. Added the native
+ownership claim predicate for already resolved actor identity, permission global
+and faction ranks. It preserves nonzero negative/fractional globals, inclusive
+signed rank comparison and the caller's faction-ownership mode. It does not
+classify unowned property as criminal or merge evil-owner/public-cell/witness
+policy into the ownership claim.
+
+Two new tests fail against the stub, then pass. All **1,762 component tests**
+and **118 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/ownership-claim-01`). Eighteen original-helper instruction executions
+independently confirm expected branches using boundary stubs only for record,
+identity and rank queries. World owner inheritance and crime legality remain
+open. Original-17 is conducting the pending read-only cone setting probe.
+S2 remains in progress; S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `463bf494909c0b40c3620bc885439b3971ace02250740e985a9e4fe4d6487faa`.
