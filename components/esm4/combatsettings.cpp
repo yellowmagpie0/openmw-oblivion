@@ -255,4 +255,14 @@ namespace ESM4
             throw std::invalid_argument("invalid native maximum armor rating");
         return result;
     }
+    DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        DurabilitySettings result{
+            inputs.number("fDamageToWeaponPercentage", .01f),
+            inputs.number("fDamageToArmorPercentage", .5f),
+        };
+        validateDurabilitySettings(result);
+        return result;
+    }
 }

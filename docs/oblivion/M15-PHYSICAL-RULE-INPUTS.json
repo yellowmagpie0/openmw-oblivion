@@ -468,6 +468,32 @@
         "value": 2.5
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-46"
+    },
+    {
+      "name": "fDamageToWeaponPercentage",
+      "value": 0.009999999776482582,
+      "storage": "0xb36e10",
+      "constructor": "0x9e8c7f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:09417e",
+        "type": "f",
+        "value": 0.05999999865889549
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-47"
+    },
+    {
+      "name": "fDamageToArmorPercentage",
+      "value": 0.5,
+      "storage": "0xb36e18",
+      "constructor": "0x9e8caf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0052be",
+        "type": "f",
+        "value": 9.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-48"
     }
   ]
 }

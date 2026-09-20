@@ -2,6 +2,7 @@
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <array>
+#include <algorithm>
 #include <utility>
 #include <gtest/gtest.h>
 #include <cmath>
@@ -466,4 +467,63 @@ TEST(ESM4PhysicalCombat, OriginalFirstSwordHealthObservation)
     EXPECT_NEAR(500.f - ESM4::weaponDamage(input, installed), 483.38f, .0051f);
     input.mFatigueRatio = .95f; // Incorrectly debit seven fatigue before contact.
     EXPECT_GT(500.f - ESM4::weaponDamage(input, installed), 483.78f);
+}
+
+TEST(ESM4PhysicalCombat, WeaponWearUsesBaseDamage)
+{
+    const ESM4::DurabilitySettings settings{.06f, 9.f};
+    for (const auto& c : {std::pair{0, 0.f}, {1, .06f}, {99, 5.94f}, {100, 6.f},
+             {101, 6.06f}, {65535, 3932.1f}})
+        EXPECT_NEAR(ESM4::weaponWear(c.first, settings), c.second, std::max(.000001f, c.second * 1e-7f));
+    EXPECT_EQ(ESM4::weaponWear(65535, {0, 9}), 0);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearUsesAbsorbedDamageWithoutIntermediateRounding)
+{
+    const ESM4::DurabilitySettings settings{.06f, 9.f};
+    for (const auto& c : {std::pair{0.f, 0.f}, {.01f, 9.f}, {.5f, 450.f}, {.85f, 765.f}, {1.f, 900.f}})
+        EXPECT_NEAR(ESM4::armorWear(100, c.first, settings), c.second, .0001f);
+    EXPECT_EQ(ESM4::armorWear(0, 1, settings), 0);
+    EXPECT_EQ(ESM4::armorWear(1, 1, settings), 9);
+    EXPECT_EQ(ESM4::armorWear(100, 1, {.06f, 0}), 0);
+    const float below = std::nextafter(.5f, 0.f), above = std::nextafter(.5f, 1.f);
+    EXPECT_LT(ESM4::armorWear(100, below, settings), 450);
+    EXPECT_GT(ESM4::armorWear(100, above, settings), 450);
+    // One original x87 store after both products: exact binary operands
+    // (1+2^-23)*(1-2^-24)*3 round to 3+2^-22, not 3.
+    EXPECT_EQ(ESM4::armorWear(std::nextafter(1.f, 2.f), std::nextafter(1.f, 0.f), {0, 3}),
+        std::nextafter(3.f, 4.f));
+}
+
+TEST(ESM4PhysicalCombat, DurabilityRejectsInvalidInputsAndOverflow)
+{
+    const ESM4::DurabilitySettings settings{.06f, 9.f};
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::weaponWear(1, {invalid, 9}), std::invalid_argument);
+        EXPECT_THROW(ESM4::armorWear(1, 1, {.06f, invalid}), std::invalid_argument);
+        EXPECT_THROW(ESM4::armorWear(invalid, 1, settings), std::invalid_argument);
+        EXPECT_THROW(ESM4::armorWear(1, invalid, settings), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::armorWear(1, std::nextafter(1.f, 2.f), settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::weaponWear(65535, {std::numeric_limits<float>::max(), 9}), std::invalid_argument);
+    EXPECT_THROW(ESM4::armorWear(std::numeric_limits<float>::max(), 1, settings), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, DurabilitySettingsUseNativeTypesAndDefaults)
+{
+    const auto defaults = ESM4::buildDurabilitySettings({});
+    EXPECT_EQ(defaults.mWeaponDamageMultiplier, .01f);
+    EXPECT_EQ(defaults.mArmorDamageMultiplier, .5f);
+    ESM4::GameSetting weapon{}, armor{};
+    weapon.mEditorId = "fDamageToWeaponPercentage";weapon.mData = .06f;
+    armor.mEditorId = "fDamageToArmorPercentage";armor.mData = 9.f;
+    const std::array<const ESM4::GameSetting*, 2> values{&weapon, &armor};
+    const auto result = ESM4::buildDurabilitySettings(values);
+    EXPECT_EQ(result.mWeaponDamageMultiplier, .06f);
+    EXPECT_EQ(result.mArmorDamageMultiplier, 9.f);
+    weapon.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildDurabilitySettings(values), std::invalid_argument);
+    weapon.mData = -.01f;
+    EXPECT_THROW(ESM4::buildDurabilitySettings(values), std::invalid_argument);
 }

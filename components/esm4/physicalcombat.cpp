@@ -39,6 +39,28 @@ namespace ESM4
         }
     }
 
+    void validateDurabilitySettings(const DurabilitySettings& settings)
+    {
+        nonnegative(settings.mWeaponDamageMultiplier);
+        nonnegative(settings.mArmorDamageMultiplier);
+    }
+
+    float weaponWear(std::uint16_t baseDamage, const DurabilitySettings& settings)
+    {
+        validateDurabilitySettings(settings);
+        return rounded(double(baseDamage) * settings.mWeaponDamageMultiplier);
+    }
+
+    float armorWear(float incomingDamage, float absorbedFraction, const DurabilitySettings& settings)
+    {
+        validateDurabilitySettings(settings);
+        nonnegative(incomingDamage);
+        nonnegative(absorbedFraction);
+        if (absorbedFraction > 1.f)
+            throw std::invalid_argument("invalid native absorbed damage fraction");
+        return rounded(double(incomingDamage) * absorbedFraction * settings.mArmorDamageMultiplier);
+    }
+
     void validateCombatMasterySettings(const CombatMasterySettings& settings)
     {
         if (settings.mMinimumSkill.front() < 0

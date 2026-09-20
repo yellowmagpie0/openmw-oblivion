@@ -418,3 +418,33 @@ rejects premature fatigue debit. Captures show equip, windup and recovery,
 not an exact impact frame. Durability, block and the remaining weapon matrix
 are not established by this bounded observation. See the damage probe ledger
 and `S2/original-12/sword-observation.json` for hashes and frozen inputs.
+
+### Durability amount arithmetic
+
+Original functions `0x547240` and `0x547260` independently establish the wear
+amounts. Weapon wear is `R(baseDamage * fDamageToWeaponPercentage)`, with one
+float store. The contact caller at `0x5ff5b4` obtains the weapon's unsigned
+16-bit TESAttackDamageForm value at offset `0x88`, calls `0x547240` at
+`0x5ff5d8`, then passes the result to the actor condition mutation. This uses
+base damage, not computed skill-scaled health damage or maximum condition.
+Armor wear amount is `R(incomingDamage * absorbedFraction *
+fDamageToArmorPercentage)`, with no intervening float store. Contact code at
+`0x5ff789` supplies pre-armor health damage and the capped absorption fraction;
+blocking/mastery can alter the amount later, before condition mutation.
+
+Compiled constructors at `0x9e8c7f`/`0x9e8caf` establish defaults `.01`/`.5`.
+Installed native overrides are approximately `.06`/`9`; original-12 read-only
+lookups display `.06`/`9.00` (GMST probes 47–48). The settings table records
+exact float values and keys. No shared TES3 setting lookup is used.
+
+Four tests cover zero/base-damage extremes, absorption endpoints and adjacent
+floats, native defaults/typed overrides, invalid domains/overflow, and a binary
+rounding discriminator: `(1+2^-23)*(1-2^-24)*3` must round to `3+2^-22` rather
+than a prematurely rounded 3. All four failed against zero-return stubs before
+implementation (`S2/physical-rules-09/red.xml`). These helpers compute amounts;
+contact eligibility, armor-piece distribution, block/mastery adjustments,
+condition mutation and original runtime wear observations remain open. Retained
+original evidence: `sources-01/durability-rules.txt`,
+`durability-initializers.txt`, `contact-damage-continuation.txt`. The newly
+captured `armor-wear-selection.txt` is follow-up evidence, not yet a completed
+selection implementation.

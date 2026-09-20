@@ -544,6 +544,32 @@
       "passed": true,
       "input_log": "build/oblivion-compat/m15/S2/original-11/input-log.jsonl",
       "initialization": "isolated synthetic reference room, after completed first hand-hit observation; read-only lookup"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-47",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fDamageToWeaponPercentage",
+      "observed": 0.06,
+      "capture": "build/oblivion-compat/m15/S2/original-12/fDamageToWeaponPercentage.png",
+      "capture_sha256": "24f643f841c1715f4d288d3ae06f7a20c593acaceebe990a48a0a9225b1f18ac",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/durability-settings-input-log.jsonl",
+      "input_log_sha256": "bd05c8f2c8ca049fa9c565ae9328c074f0c663ba48313aefe241b34294d353d5",
+      "initialization": "original-12, after first sword observation; read-only lookup while paused"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-48",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fDamageToArmorPercentage",
+      "observed": 9.0,
+      "capture": "build/oblivion-compat/m15/S2/original-12/fDamageToArmorPercentage.png",
+      "capture_sha256": "b174aa139f991a2a1f046804df8cd051c230910c4ac198550a04c1ffbe616389",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/durability-settings-input-log.jsonl",
+      "input_log_sha256": "bd05c8f2c8ca049fa9c565ae9328c074f0c663ba48313aefe241b34294d353d5",
+      "initialization": "original-12, after first sword observation; read-only lookup while paused"
     }
   ],
   "display_precision": "Float console responses display two decimal places; these observations are not a binary float readback.",

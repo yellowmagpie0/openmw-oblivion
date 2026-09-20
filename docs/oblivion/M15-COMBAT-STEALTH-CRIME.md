@@ -1225,3 +1225,23 @@ batch still require hash-checked cleanup. S2 remains in progress, S3–S14
 pending. Next bounded task: independently trace durability/mitigation rules.
 
 Tested test/provenance/probe-ledger diff SHA-256: `651d369177c77047db9da126e7aa12194a6e5a4bd3d3c309ca982636d84b3951`.
+
+### S2 durability amount rules
+
+Commit `61ff526b48` contains the original sword-hit characterization. Added
+pure weapon/armor wear amounts and typed native setting factories from reviewed
+original arithmetic/callers. Four new tests fail against the unimplemented
+stubs, then pass, including a case sensitive to premature float rounding.
+All **1,685 component cases** and **37 focused ASan/UBSan cases** pass with
+exact inventories, no skips (`S2/physical-rules-09`). Build/test commands are
+the same as physical-rules-08, with the new evidence directory. Both build
+logs and test XMLs were inspected. Setting catalogue: **44** reviewed physical
+inputs; live numeric ledger: **48** observations. Both new captures opened.
+
+These are wear amount helpers, not condition mutation/runtime acceptance.
+Armor selection, block/mastery adjustments and actual wear observations remain
+open. The reference process is paused, with task-added plugin/player batch
+still pending hash-checked cleanup. S2 remains in progress; S3–S14 pending.
+Next bounded task: armor mitigation and condition application contracts.
+
+Tested implementation/test/provenance diff SHA-256: `3a896a12534be7a1e995ffe5685a590e66e3cab042560d68acd67fa6ddeb20e6`.

@@ -75,6 +75,17 @@ namespace ESM4
     float attackFatigueCost(float weaponWeight, bool powerAttack, const AttackFatigueSettings& settings);
     void validateAttackFatigueSettings(const AttackFatigueSettings& settings);
 
+    struct DurabilitySettings
+    {
+        float mWeaponDamageMultiplier;
+        float mArmorDamageMultiplier;
+    };
+    // Pure wear amounts. Contact eligibility, armor-piece selection and
+    // condition mutation are caller responsibilities.
+    float weaponWear(std::uint16_t baseDamage, const DurabilitySettings& settings);
+    float armorWear(float incomingDamage, float absorbedFraction, const DurabilitySettings& settings);
+    void validateDurabilitySettings(const DurabilitySettings& settings);
+
     struct HandToHandInput
     {
         std::int32_t mSkill;
