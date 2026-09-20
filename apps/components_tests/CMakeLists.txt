@@ -89,6 +89,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/physicalcombat.cpp
     esm4/projectilerules.cpp
     esm4/masteryrules.cpp
+    esm4/stealthrules.cpp
     esm4/combatsettings.cpp
     esm4/combatstylepolicy.cpp
     esm4/testloadnpc.cpp

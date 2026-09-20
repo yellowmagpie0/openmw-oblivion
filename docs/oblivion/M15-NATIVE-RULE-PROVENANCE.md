@@ -881,3 +881,46 @@ source traces. Four new tests fail against stubs, then cover all 128 coverage
 subsets, threshold/permutation/rank cases, stored arithmetic, overrides and
 malformed values (`S2/physical-rules-17`). Real armor mastery execution and
 restart remain pending in the ability matrix.
+
+
+## Sneak attack contact policy
+
+Original `005FF1FC–005FF2C9` excludes creature attackers and requires
+`005E0550` sneaking movement flag 0400 without swimming flag 0800. It queries
+the victim process for awareness of this attacker. Positive detection denies
+the bonus. If the attacker is in the victim's combat-controller target list,
+awareness must also be at most `iAICombatMinDetection` (-50, inclusive).
+`00613670` traverses the controller's target list at +40; pinned GameProcess.h
+independently identifies that member. HighProcess RTTI resolves vtable A71814,
+slot +1C8 to `006285D0`: lookup detection data via +3B0, return signed +0C
+level, or INT_MAX if absent. The pinned DetectionList::Data definition agrees.
+Missing awareness must therefore deny, not become undetected by default.
+
+`005477F0` chooses by base Sneak rank and weapon type. Unarmed (-1), one-handed
+Blade (0), and one-handed Blunt (2) use melee multipliers. Bow (5) uses Marksman
+multipliers. Two-handed weapons and staffs return 1. Compiled melee ranks are
+4/6/6/6/6, Marksman 6/8/8/8/8; installed Marksman overrides are **2/3/3/3/3**.
+Original-15 GMST-99–109 captures were opened/inspected and verify ten
+multipliers plus the signed combat threshold. The actor's own modified Sneak
+value does not replace base mastery rank.
+
+At Master and **multiplier > 1**, `005FF2B6–005FF2C4` sets a bypass flag.
+`005FF712–005FF71C` makes absorbed armor zero, and `005FF7D9–005FF7F1`
+suppresses the victim's block query for this same flag. A two-handed attack
+or a custom multiplier at/below one gets neither bypass. `sneakAttack`
+returns multiplier and both bypass decisions; it does not emit fake damage
+or detector results. Four tests fail against stubs, then cover all ranks,
+weapon types, awareness/posture/target combinations, exact -50/0 and float-one
+boundaries, every setting mapping and malformed input (`S2/stealth-rules-01`).
+Block bypass was additionally traced while implementing and shares the same
+proven predicate; it is separately asserted in the final tests.
+
+**Open integration prerequisite:** the existing M14 `calculateDetection`
+returns a normalized [0,100] score and probabilistic detected flag, which
+cannot directly supply the signed original awareness required here. This must
+be corrected within the existing detector with native source/oracle evidence,
+regression tests and persistence migration; do not subtract an invented offset
+or create a second detector to make these pure tests look integrated.
+Sources: `sneak-attack-multipliers.txt`, `sneak-attack-caller.txt`,
+`sneak-posture-query.txt`, `combat-target-list-query.txt`,
+`sneak-victim-detection-query.txt` and contact continuation under sources-01.

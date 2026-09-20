@@ -978,6 +978,125 @@
       "type": "float32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-98"
+    },
+    {
+      "name": "fPerkSneakAttackMeleeNoviceMult",
+      "value": 4.0,
+      "storage": "0xb37338",
+      "constructor": "0x9ea88f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-99"
+    },
+    {
+      "name": "fPerkSneakAttackMarksmanNoviceMult",
+      "value": 6.0,
+      "storage": "0xb37340",
+      "constructor": "0x9ea8bf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cd3f4",
+        "type": "f",
+        "value": 2.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-100"
+    },
+    {
+      "name": "fPerkSneakAttackMeleeApprenticeMult",
+      "value": 6.0,
+      "storage": "0xb37348",
+      "constructor": "0x9ea8ef",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-101"
+    },
+    {
+      "name": "fPerkSneakAttackMarksmanApprenticeMult",
+      "value": 8.0,
+      "storage": "0xb37350",
+      "constructor": "0x9ea91f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cd3f8",
+        "type": "f",
+        "value": 3.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-102"
+    },
+    {
+      "name": "fPerkSneakAttackMeleeJourneymanMult",
+      "value": 6.0,
+      "storage": "0xb37358",
+      "constructor": "0x9ea94f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-103"
+    },
+    {
+      "name": "fPerkSneakAttackMarksmanJourneymanMult",
+      "value": 8.0,
+      "storage": "0xb37360",
+      "constructor": "0x9ea97f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cd3f6",
+        "type": "f",
+        "value": 3.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-104"
+    },
+    {
+      "name": "fPerkSneakAttackMeleeExpertMult",
+      "value": 6.0,
+      "storage": "0xb37368",
+      "constructor": "0x9ea9af",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-105"
+    },
+    {
+      "name": "fPerkSneakAttackMarksmanExpertMult",
+      "value": 8.0,
+      "storage": "0xb37370",
+      "constructor": "0x9ea9df",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cd3f7",
+        "type": "f",
+        "value": 3.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-106"
+    },
+    {
+      "name": "fPerkSneakAttackMeleeMasterMult",
+      "value": 6.0,
+      "storage": "0xb37378",
+      "constructor": "0x9eaa0f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-107"
+    },
+    {
+      "name": "fPerkSneakAttackMarksmanMasterMult",
+      "value": 8.0,
+      "storage": "0xb37380",
+      "constructor": "0x9eaa3f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cd3f5",
+        "type": "f",
+        "value": 3.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-108"
+    },
+    {
+      "name": "iAICombatMinDetection",
+      "value": -50,
+      "storage": "0xb372f0",
+      "constructor": "0x9ea707",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-109"
     }
   ]
 }

@@ -996,7 +996,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "sneakAttack pure contact eligibility/multipliers and Master armor/block bypass tested; signed actor-pair detection integration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1006,7 +1006,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
+        "replace M14 normalized detector score with independently verified signed native awareness semantics",
         "native normal-input and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-01/"
@@ -1096,10 +1096,13 @@
       "ability": "sneak armor bypass",
       "normal_input": "attack while sneaking",
       "prerequisites": [
-        "target does not detect attacker",
-        "eligible sneak hit"
+        "NPC attacker sneaking and not swimming",
+        "victim awareness and combat-target threshold permit sneak attack",
+        "unarmed, one-handed Blade/Blunt or bow",
+        "Master base Sneak rank",
+        "resolved multiplier strictly greater than one"
       ],
-      "consequence": "ignore armor in damage mitigation",
+      "consequence": "qualifying sneak attack multiplier > 1 bypasses both armor mitigation and blocking",
       "probability_and_draw": null,
       "duration_seconds": null,
       "save_fields_required": [
@@ -1108,7 +1111,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": "mitigateArmor supports caller bypass; eligibility pending",
+      "rule_implementation": "sneakAttack pure contact eligibility/multipliers and Master armor/block bypass tested; signed actor-pair detection integration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1118,7 +1121,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
+        "replace M14 normalized detector score with independently verified signed native awareness semantics",
         "native normal-input and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-04/"

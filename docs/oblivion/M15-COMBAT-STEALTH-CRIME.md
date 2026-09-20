@@ -1556,3 +1556,29 @@ for read-only queries; no task-installed files. Next: sneak eligibility and
 multipliers, followed by remaining stealth/crime rules and actor-policy audit.
 
 Tested implementation/test/provenance diff SHA-256: `4ca51083b1027d277aa6414057250f6c8676641a734d398cc0db8f3b3526ba63`.
+
+
+### S2 sneak attack contact rules
+
+Commit `e52ccc78f6` contains armor mastery arithmetic. Added a pure stealth
+module with native weapon eligibility, base Sneak mastery multipliers,
+victim-specific signed awareness/combat-target thresholds, sneaking/swimming
+posture and Master armor/block bypass. Resolves all eleven typed settings;
+installed bow multipliers differ from compiled defaults. Original-15
+GMST-99–109 captures are inspected; catalog **105**, observations **109**.
+
+Four new tests fail against stubs, then pass; all **1,736 component tests**
+and **88 focused ASan/UBSan tests** pass without skips and match inventories
+(`S2/stealth-rules-01`). Source traces also establish missing detection data
+returns INT_MAX, preventing an unobserved pair from receiving a free bonus.
+
+**Required integration correction:** current M14 detection produces [0,100]
+normalized scores, while original contact rules require signed awareness and
+an existing-combat-target threshold of -50. Native detection must be verified
+and corrected in its existing authority, with regression/migration coverage.
+No invented offset or second detector is accepted. Mastery rows remain pending
+normal gameplay/restart. S2 in progress; S3–S14 pending. Original-15 paused,
+master-only, no installed files. Next: complete native perception rules and
+remaining stealth/crime data/rules, then S2 actor-policy/audit closure.
+
+Tested staged implementation/test/provenance diff SHA-256: `742eda6220bfa28d0af35f4085edc31f72590428bff2220ef69f63352e177f49`.

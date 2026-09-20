@@ -326,6 +326,26 @@ namespace ESM4
         return result;
     }
 
+    SneakAttackSettings buildSneakAttackSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const SneakAttackSettings result{
+            {inputs.number("fPerkSneakAttackMeleeNoviceMult", 4.f),
+                inputs.number("fPerkSneakAttackMeleeApprenticeMult", 6.f),
+                inputs.number("fPerkSneakAttackMeleeJourneymanMult", 6.f),
+                inputs.number("fPerkSneakAttackMeleeExpertMult", 6.f),
+                inputs.number("fPerkSneakAttackMeleeMasterMult", 6.f)},
+            {inputs.number("fPerkSneakAttackMarksmanNoviceMult", 6.f),
+                inputs.number("fPerkSneakAttackMarksmanApprenticeMult", 8.f),
+                inputs.number("fPerkSneakAttackMarksmanJourneymanMult", 8.f),
+                inputs.number("fPerkSneakAttackMarksmanExpertMult", 8.f),
+                inputs.number("fPerkSneakAttackMarksmanMasterMult", 8.f)},
+            inputs.number("iAICombatMinDetection", std::int32_t{-50}),
+        };
+        validateSneakAttackSettings(result);
+        return result;
+    }
+
     ArmorMasterySettings buildArmorMasterySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
