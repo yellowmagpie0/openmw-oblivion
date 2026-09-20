@@ -1611,3 +1611,27 @@ remaining reaction/data requirements and actor-policy audit; native detector
 integration/migration remains a mandatory open item.
 
 Tested implementation/test/provenance diff SHA-256: `d41ec27b118fb615e6d4844cabaed69f7016b61c9ee5940a0d744c4ccc19431f`.
+
+
+### S2 pickpocket chance rules
+
+Commit `1e15e8ad38` contains signed awareness/noise arithmetic. Added typed
+pickpocket factors, checked item-value/count amount, native stored-term and
+integer clamp arithmetic, and distinct transfer versus untouched-menu-exit
+roll comparisons. Actual session, prohibited-item/transfer and crime effects
+remain open. Original-15 GMST-125–132 are captured/inspected; catalog **128**,
+observations **132**. Native item-value provenance and session-flag ordering
+are retained in source traces; no item-weight penalty is invented.
+
+Four new tests fail against stubs, then pass. All **1,744 component tests** and
+**100 focused ASan/UBSan tests** pass, exact inventories/no skips
+(`S2/pickpocket-rules-01`). Twelve original-instruction examples and **1,024**
+differential cases pass under both x87 precision controls, with zero discarded
+mismatches (`S2/oracle-emulator/pickpocket-*`). Probabilistic boundary and
+fixed-seed distribution checks pass. This does not constitute normal gameplay
+or crime acceptance. S2 remains in progress; S3–S14 pending. Original-15
+remains paused master-only; no task-installed files. Next: crime fines,
+reporting/responsibility and jail arithmetic, then remaining reaction/data
+rules and actor-policy audit closure.
+
+Tested implementation/test/provenance diff SHA-256: `c1a6508be97d9f2891bae32665e984ae7eda83ec0e15634e8d202155c788548a`.

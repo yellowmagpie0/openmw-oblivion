@@ -39,6 +39,7 @@ namespace ESM4
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings);
     BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings);
     NativeDetectionSettings buildNativeDetectionSettings(std::span<const GameSetting* const> settings);
+    PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings);
     SneakAttackSettings buildSneakAttackSettings(std::span<const GameSetting* const> settings);
     ArmorMasterySettings buildArmorMasterySettings(std::span<const GameSetting* const> settings);
     ArmorRatingSettings buildArmorRatingSettings(std::span<const GameSetting* const> settings);

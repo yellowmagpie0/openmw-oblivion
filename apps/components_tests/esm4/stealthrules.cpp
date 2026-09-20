@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <limits>
+#include <random>
 #include <stdexcept>
 
 TEST(ESM4StealthRules, SneakMultipliersUseBaseRankAndNativeWeaponEligibility)
@@ -85,4 +86,109 @@ TEST(ESM4StealthRules, SettingsUseEveryRankOverrideAndRejectMalformedInput)
         invalid = defaults; invalid.mMarksmanMultipliers[4] = bad;
         EXPECT_THROW(ESM4::validateSneakAttackSettings(invalid), std::invalid_argument);
     }
+}
+
+TEST(ESM4StealthRules, PickpocketChanceMatchesOriginalStoredArithmetic)
+{
+    const ESM4::PickpocketSettings installed{40, .6f, 0, -.6f, 0, -.1f, 5, 85};
+    struct Case { int mActor; int mTarget; float mAmount; int mExpected; };
+    const std::array cases{
+        Case{0, 0, 0.0f, 40},
+        Case{50, 50, 0.0f, 39},
+        Case{60, 20, 100.0f, 54},
+        Case{100, 0, 0.0f, 85},
+        Case{0, 100, 0.0f, 5},
+        Case{24, 25, 1.0f, 39},
+        Case{25, 24, 1.0f, 40},
+        Case{100, 100, 1.0f, 39},
+        Case{100, 100, 10.0f, 38},
+        Case{100, 100, 100.0f, 29},
+        Case{50, 50, 1000.0f, 5},
+        Case{99, 1, 0.5f, 85},
+    };
+    for (const auto& c : cases)
+        EXPECT_EQ(ESM4::pickpocketChance(c.mActor, c.mTarget, c.mAmount, installed), c.mExpected);
+    // No final float store before integer conversion: 100 - 60.0000038 - 1
+    // truncates to 38, rather than rounding the sum to 39 first.
+    auto exact = installed; exact.mActorSkillMultiplier = 1; exact.mTargetSkillMultiplier = -1;
+    exact.mActorSkillBase = 0; exact.mAmountMultiplier = -1;
+    EXPECT_EQ(ESM4::pickpocketChance(50, 0, std::nextafter(1.f, 0.f), exact), 49);
+    EXPECT_EQ(ESM4::pickpocketChance(50, 0, 1, exact), 49);
+    EXPECT_EQ(ESM4::pickpocketChance(50, 0, std::nextafter(1.f, 2.f), exact), 48);
+    exact.mMinimumChance = 5.9f; exact.mMaximumChance = 85.9f;
+    EXPECT_EQ(ESM4::pickpocketChance(0, 100, 0, exact), 5);
+    EXPECT_EQ(ESM4::pickpocketChance(100, 0, 0, exact), 85);
+}
+
+TEST(ESM4StealthRules, PickpocketAmountUsesItemValueTimesCountWithCheckedConversion)
+{
+    EXPECT_EQ(ESM4::pickpocketAmount(100, 3), 300);
+    EXPECT_EQ(ESM4::pickpocketAmount(0, 100), 0);
+    EXPECT_EQ(ESM4::pickpocketAmount(100, 0), 0);
+    EXPECT_EQ(ESM4::pickpocketAmount(16777217, 1), 16777216.f);
+    EXPECT_THROW(ESM4::pickpocketAmount(-1, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::pickpocketAmount(std::numeric_limits<int>::max(), 2), std::invalid_argument);
+    EXPECT_THROW(ESM4::pickpocketAmount(1, std::numeric_limits<unsigned>::max()), std::invalid_argument);
+}
+
+TEST(ESM4StealthRules, PickpocketTransferAndUntouchedExitUseDifferentRollBoundaries)
+{
+    for (int chance : {0, 1, 5, 40, 75, 85, 99, 100})
+        for (unsigned draw = 0; draw < 100; ++draw)
+        {
+            EXPECT_EQ(ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::Transfer, chance, draw), int(draw) < chance);
+            EXPECT_EQ(ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::UntouchedMenuExit, chance, draw), int(draw) <= chance);
+        }
+    EXPECT_THROW(ESM4::pickpocketCheckSucceeds(static_cast<ESM4::PickpocketCheck>(99), 50, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::Transfer, 101, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::Transfer, -1, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::Transfer, 50, 100), std::invalid_argument);
+    std::mt19937 rng(0x4d15cc);
+    unsigned transfers = 0, exits = 0;
+    for (unsigned i = 0; i < 100000; ++i)
+    {
+        const unsigned draw = rng() % 100;
+        transfers += ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::Transfer, 85, draw);
+        exits += ESM4::pickpocketCheckSucceeds(ESM4::PickpocketCheck::UntouchedMenuExit, 85, draw);
+    }
+    EXPECT_NEAR(transfers, 85000, 600); EXPECT_NEAR(exits, 86000, 600);
+}
+
+TEST(ESM4StealthRules, PickpocketSettingsBindAllFactorsAndRejectMalformedValues)
+{
+    const auto settings = ESM4::buildPickpocketSettings({});
+    EXPECT_EQ(settings.mActorSkillBase, 0); EXPECT_EQ(settings.mActorSkillMultiplier, 1);
+    EXPECT_EQ(settings.mTargetSkillBase, 0); EXPECT_EQ(settings.mTargetSkillMultiplier, -1);
+    EXPECT_EQ(settings.mAmountBase, 0); EXPECT_EQ(settings.mAmountMultiplier, -3);
+    EXPECT_EQ(settings.mMinimumChance, 5); EXPECT_EQ(settings.mMaximumChance, 75);
+    struct Binding { const char* mName; float ESM4::PickpocketSettings::* mMember; float mValue; };
+    const std::array bindings{
+        Binding{"fPickPocketActorSkillBase", &ESM4::PickpocketSettings::mActorSkillBase, 40},
+        Binding{"fPickPocketActorSkillMult", &ESM4::PickpocketSettings::mActorSkillMultiplier, .6f},
+        Binding{"fPickPocketTargetSkillBase", &ESM4::PickpocketSettings::mTargetSkillBase, 1},
+        Binding{"fPickPocketTargetSkillMult", &ESM4::PickpocketSettings::mTargetSkillMultiplier, -.6f},
+        Binding{"fPickPocketAmountBase", &ESM4::PickpocketSettings::mAmountBase, 1},
+        Binding{"fPickPocketAmountMult", &ESM4::PickpocketSettings::mAmountMultiplier, -.1f},
+        Binding{"fPickPocketMinChance", &ESM4::PickpocketSettings::mMinimumChance, 1},
+        Binding{"fPickPocketMaxChance", &ESM4::PickpocketSettings::mMaximumChance, 85},
+    };
+    ESM4::GameSetting value{};
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    for (const auto& binding : bindings)
+    {
+        value.mEditorId = binding.mName; value.mData = binding.mValue;
+        EXPECT_EQ(ESM4::buildPickpocketSettings(values).*binding.mMember, binding.mValue);
+        value.mData = std::int32_t{0};
+        EXPECT_THROW(ESM4::buildPickpocketSettings(values), std::invalid_argument);
+        auto invalid = settings; invalid.*binding.mMember = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(ESM4::pickpocketChance(50, 50, 0, invalid), std::invalid_argument);
+    }
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::pickpocketChance(50, 50, bad, settings), std::invalid_argument);
+    auto invalid = settings; invalid.mMinimumChance = 80;
+    EXPECT_THROW(ESM4::pickpocketChance(0, 0, 0, invalid), std::invalid_argument);
+    invalid = settings; invalid.mActorSkillMultiplier = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::pickpocketChance(100, 0, 0, invalid), std::invalid_argument);
+    invalid = settings; invalid.mActorSkillBase = float(std::numeric_limits<int>::max());
+    EXPECT_THROW(ESM4::pickpocketChance(0, 0, 0, invalid), std::invalid_argument);
 }

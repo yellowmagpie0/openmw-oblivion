@@ -988,3 +988,48 @@ of nine boolean inputs and 512 seeded numeric vectors (seed 5051870), with
 zero C++/original-instruction differences and zero differences between the
 two original x87 precision controls. `detection-comparison.json` and the full
 input/expected corpus are retained; no mismatches or retries were discarded.
+
+
+## Pickpocket chance, amount and check boundaries
+
+Original `00546660–005466F1` stores each of target skill * multiplier + base,
+actor skill * multiplier + base, and amount * multiplier + base as float32.
+It sums those three stored terms and truncates to integer **without a final
+float32 sum store**, then compares the integer (converted to float) against
+minimum and maximum. Fractional limits truncate when returned. Compiled inputs
+are actor 0/1, target 0/-1, amount 0/-3, bounds 5/75; installed inputs are
+actor **40/.6**, target **0/-.6**, amount **0/-.1**, bounds **5/85**.
+Original-15 GMST-125–132 inspected captures confirm all eight settings.
+
+The transfer caller `0059AF49–0059AFDC` obtains integer item value through
+`004842E0 -> 00470520` (TESValueForm, or MagicItem value fallback), multiplies
+by selected quantity B13E94 as integer, then stores float. It does not use
+item weight in this amount. `pickpocketAmount` checks negative/unsupported
+value and integer multiplication overflow before converting. Both actors'
+current Sneak and Luck integer values feed `00547B90`, and adjusted results
+truncate before the chance helper. Existing `effectiveCombatSkill` supplies
+that luck arithmetic; raw base mastery skill is not the chance input.
+
+`0059B007` succeeds on **draw < chance** for transfers. The untouched-menu
+exit check at `00598465–00598490` supplies amount zero and succeeds on
+**draw <= chance**. Both draw modulo 100. The session flag B13E90 starts at
+one (`0059A23B`) and a pickpocket transfer path clears it (`0059A519`), gating
+that exit check; do not always roll again on closing after a transfer. These
+helpers only evaluate the arithmetic/comparison. Native session lifecycle,
+prohibited items, reverse transfer, victim eligibility, actual inventory and
+crime dispatch remain mandatory world/UI work, not accepted by a boolean.
+
+Four new tests fail against stubs, then pass; include all 100 draws at chance
+0/1/5/40/75/85/99/100, distinct exit/transfer boundaries, value/count safety,
+every typed setting binding, fractional clamps and adjacent float truncation
+cases. Fixed seed 5051852 has predeclared 100,000-sample bounds of 85,000 +/-600
+transfer and 86,000 +/-600 exit successes at chance 85. Twelve independent
+original-instruction examples include equal skill 50 yielding **39**, and
+100/100 with amount 10 yielding **38** because stored .6 products do not cancel
+as an ideal decimal formula would. Supplementary direct-instruction comparison
+passes **1,024** cases (400 threshold combinations +624 numeric vectors,
+seed 5051852), with zero C++ mismatch or x87 precision-control difference.
+Emulation is not live original-game pickpocket acceptance. Sources under
+`S2/sources-01/pickpocket-*`; arithmetic evidence `S2/pickpocket-rules-01` and
+`S2/oracle-emulator/pickpocket-*`. Runtime permitted-item and complete session
+semantics remain open.

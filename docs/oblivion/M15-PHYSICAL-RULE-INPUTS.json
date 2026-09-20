@@ -1280,6 +1280,98 @@
         "value": -5.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-124"
+    },
+    {
+      "name": "fPickPocketActorSkillBase",
+      "value": 0.0,
+      "storage": "0xb36950",
+      "constructor": "0x9e7130",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:094046",
+        "type": "f",
+        "value": 40.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-125"
+    },
+    {
+      "name": "fPickPocketActorSkillMult",
+      "value": 1.0,
+      "storage": "0xb36958",
+      "constructor": "0x9e7160",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:00aa93",
+        "type": "f",
+        "value": 0.6000000238418579
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-126"
+    },
+    {
+      "name": "fPickPocketTargetSkillBase",
+      "value": 0.0,
+      "storage": "0xb36960",
+      "constructor": "0x9e7190",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-127"
+    },
+    {
+      "name": "fPickPocketTargetSkillMult",
+      "value": -1.0,
+      "storage": "0xb36968",
+      "constructor": "0x9e71cf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:00aa91",
+        "type": "f",
+        "value": -0.6000000238418579
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-128"
+    },
+    {
+      "name": "fPickPocketAmountBase",
+      "value": 0.0,
+      "storage": "0xb36970",
+      "constructor": "0x9e71f0",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-129"
+    },
+    {
+      "name": "fPickPocketAmountMult",
+      "value": -3.0,
+      "storage": "0xb36978",
+      "constructor": "0x9e722f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:094045",
+        "type": "f",
+        "value": -0.10000000149011612
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-130"
+    },
+    {
+      "name": "fPickPocketMinChance",
+      "value": 5.0,
+      "storage": "0xb369a0",
+      "constructor": "0x9e731f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-131"
+    },
+    {
+      "name": "fPickPocketMaxChance",
+      "value": 75.0,
+      "storage": "0xb369a8",
+      "constructor": "0x9e734f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:00aa92",
+        "type": "f",
+        "value": 85.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-132"
     }
   ]
 }

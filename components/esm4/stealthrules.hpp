@@ -5,6 +5,24 @@
 
 namespace ESM4
 {
+    struct PickpocketSettings
+    {
+        float mActorSkillBase;
+        float mActorSkillMultiplier;
+        float mTargetSkillBase;
+        float mTargetSkillMultiplier;
+        float mAmountBase;
+        float mAmountMultiplier;
+        float mMinimumChance;
+        float mMaximumChance;
+    };
+    enum class PickpocketCheck { Transfer, UntouchedMenuExit };
+    float pickpocketAmount(std::int32_t itemValue, std::uint32_t count);
+    std::int32_t pickpocketChance(std::int32_t actorSkill, std::int32_t targetSkill, float amount,
+        const PickpocketSettings& settings);
+    bool pickpocketCheckSucceeds(PickpocketCheck check, std::int32_t chance, unsigned draw);
+    void validatePickpocketSettings(const PickpocketSettings& settings);
+
     struct SneakAttackSettings
     {
         std::array<float, 5> mMeleeMultipliers;

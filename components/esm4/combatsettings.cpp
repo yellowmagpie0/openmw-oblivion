@@ -350,6 +350,23 @@ namespace ESM4
         return result;
     }
 
+    PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const PickpocketSettings result{
+            inputs.number("fPickPocketActorSkillBase", 0.f),
+            inputs.number("fPickPocketActorSkillMult", 1.f),
+            inputs.number("fPickPocketTargetSkillBase", 0.f),
+            inputs.number("fPickPocketTargetSkillMult", -1.f),
+            inputs.number("fPickPocketAmountBase", 0.f),
+            inputs.number("fPickPocketAmountMult", -3.f),
+            inputs.number("fPickPocketMinChance", 5.f),
+            inputs.number("fPickPocketMaxChance", 75.f),
+        };
+        validatePickpocketSettings(result);
+        return result;
+    }
+
     SneakAttackSettings buildSneakAttackSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
