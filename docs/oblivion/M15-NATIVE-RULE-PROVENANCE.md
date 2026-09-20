@@ -1603,3 +1603,29 @@ its process value as a boundary stub. Evidence:
 `pickpocket-session.log`, and `S2/sources-01/pickpocket-knocked-query.txt`
 alongside the preceding transfer/menu/session traces. Runtime session ownership,
 UI closure, skill events, inventory transfer and crime dispatch remain pending.
+
+## Actor faction crime predicates
+
+Native actor-base query `00467560` returns evil only for a nonempty faction
+list whose every populated entry has FACT flag `02`. One non-evil faction
+clears the result. Native `004675A0` returns special-combat status when any
+entry has FACT flag `04`. Neither reads membership rank or relationship
+modifiers; Hidden and unrelated flag bits do not affect either predicate.
+
+`actorFactionCrimePolicy` implements these distinct reductions over resolved
+faction flags. Missing/deleted faction identities must diagnose during world
+resolution, not be silently removed before this input is built. Reference
+owner exemptions use the owner's policy, not the target's guessed alignment.
+The assault/murder paths separately query special-combat status on both actors
+(`00610A1C`, `00610F9C`); their exemption does not require a shared faction.
+Complete incident legality and reporting remain separate work.
+
+Two component tests first fail against an empty policy, then cover mixed and
+ordered factions, all flag bytes and composed owner-access consequences.
+**1,284 independent original cases** execute both whole native helper bodies
+without call stubs: empty lists, every single flag byte, all pairs of the eight
+native flag combinations, and each with ranks -128/-1/0/127. Evidence:
+`S2/oracle-emulator/faction-policy.py`, `faction-policy-table.json`,
+`faction-policy.log`, `S2/sources-01/crime-faction-flag-queries.txt` and
+`crime-actor-offenses.txt`. This establishes the predicates, not live assault,
+Arena legality or crime reporting acceptance.

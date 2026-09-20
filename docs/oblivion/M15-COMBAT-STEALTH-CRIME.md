@@ -2035,3 +2035,19 @@ gates. S2 remains in progress; S3–S14 remain pending. Next: remaining assault,
 murder, trespass and reporting rules.
 
 Tested implementation/test/provenance diff SHA-256: `524696b6666d4197a670bcc4d9fd874d084581efeb4f1b229885a3759c253a7e`.
+
+### S2 actor faction crime predicates
+
+Commit `4a39e43fee` contains pickpocket check scheduling. Added the native
+all-evil/nonempty and any-special-combat faction reductions. Mixed membership
+and rank-independent flag semantics now have direct coverage, including their
+consequences for reference owner exemptions.
+
+Two new tests fail against the stub, then pass. All **1,786 component tests**
+and **142 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/faction-policy-01`). **1,284 original cases** execute both complete faction
+predicate bodies without boundary-call stubs. S2 remains in progress; S3–S14
+remain pending. Assault/murder legality, witness reporting and actual Arena
+acceptance remain open.
+
+Tested implementation/test/provenance diff SHA-256: `f3baf9b48aca12050c19610153620803bafaf63161358ab3fcc6ff943d4d3ed3`.

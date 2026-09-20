@@ -1,6 +1,7 @@
 #include "crimerules.hpp"
 
 #include "loadcell.hpp"
+#include "loadfact.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -9,6 +10,18 @@
 
 namespace ESM4
 {
+    ActorFactionCrimePolicy actorFactionCrimePolicy(std::span<const std::uint8_t> factionFlags)
+    {
+        ActorFactionCrimePolicy result{!factionFlags.empty(), false};
+        for (const auto flags : factionFlags)
+        {
+            result.mEvil = result.mEvil && (flags & static_cast<std::uint8_t>(FactionFlag::Evil)) != 0;
+            result.mSpecialCombat = result.mSpecialCombat
+                || (flags & static_cast<std::uint8_t>(FactionFlag::SpecialCombat)) != 0;
+        }
+        return result;
+    }
+
     namespace
     {
         void nonnegative(float value)

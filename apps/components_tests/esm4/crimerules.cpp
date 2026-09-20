@@ -495,3 +495,44 @@ TEST(ESM4CrimeRules, ReferenceOffLimitsRejectsInvalidKindsAndOwnerClaims)
     input = {}; input.mDestination.mPlayerHasClaim = true;
     EXPECT_THROW(ESM4::playerReferenceIsOffLimits(input), std::invalid_argument);
 }
+
+TEST(ESM4CrimeRules, ActorFactionPolicyRequiresAllEvilButAnySpecialCombat)
+{
+    const auto empty = ESM4::actorFactionCrimePolicy({});
+    EXPECT_FALSE(empty.mEvil);
+    EXPECT_FALSE(empty.mSpecialCombat);
+    struct Row { std::vector<std::uint8_t> flags; bool evil; bool special; };
+    const Row rows[] = {
+        {{0}, false, false}, {{1}, false, false}, {{2}, true, false}, {{3}, true, false},
+        {{4}, false, true}, {{6}, true, true}, {{7}, true, true},
+        {{2, 2}, true, false}, {{2, 0}, false, false}, {{0, 2}, false, false},
+        {{2, 6}, true, true}, {{6, 2}, true, true}, {{6, 0}, false, true},
+        {{0, 6}, false, true}, {{2, 4, 2}, false, true}, {{3, 7, 3}, true, true},
+    };
+    for (const auto& row : rows)
+    {
+        const auto result = ESM4::actorFactionCrimePolicy(row.flags);
+        EXPECT_EQ(result.mEvil, row.evil);
+        EXPECT_EQ(result.mSpecialCombat, row.special);
+    }
+}
+
+TEST(ESM4CrimeRules, FactionPolicyPreservesIndependentFlagsAndOwnerAccessConsequences)
+{
+    // Hidden and unrelated bits do not change either native mask query.
+    for (unsigned flags = 0; flags < 256; ++flags)
+    {
+        const std::array<std::uint8_t, 1> entries{static_cast<std::uint8_t>(flags)};
+        const auto policy = ESM4::actorFactionCrimePolicy(entries);
+        EXPECT_EQ(policy.mEvil, (flags & 2) != 0);
+        EXPECT_EQ(policy.mSpecialCombat, (flags & 4) != 0);
+    }
+    ESM4::ReferenceAccessInput item;
+    item.mHasOwner = true;
+    const std::array<std::uint8_t, 2> mixedOwner{2, 0};
+    item.mOwnerEvil = ESM4::actorFactionCrimePolicy(mixedOwner).mEvil;
+    EXPECT_TRUE(ESM4::playerReferenceIsOffLimits(item));
+    const std::array<std::uint8_t, 2> evilOwner{2, 6};
+    item.mOwnerEvil = ESM4::actorFactionCrimePolicy(evilOwner).mEvil;
+    EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(item));
+}

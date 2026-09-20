@@ -10,6 +10,15 @@
 
 namespace ESM4
 {
+    struct ActorFactionCrimePolicy
+    {
+        bool mEvil = false;
+        bool mSpecialCombat = false;
+    };
+    // Resolved faction entries, not disposition relationships. Native queries
+    // inspect flags regardless of signed membership rank. Empty is neither.
+    ActorFactionCrimePolicy actorFactionCrimePolicy(std::span<const std::uint8_t> factionFlags);
+
     enum class OwnershipReferenceKind { Other, Actor, Furniture, Door, Activator };
     struct OwnershipLayer
     {
