@@ -16,6 +16,25 @@ namespace ESM4
         }
     }
 
+    std::uint8_t advanceJailSkillSelection(std::optional<std::uint8_t> candidate, std::uint32_t draw)
+    {
+        if (draw > 32767 || (candidate && *candidate >= 12))
+            throw std::invalid_argument("invalid native jail selection state or draw");
+        return static_cast<std::uint8_t>(candidate ? *candidate + draw % 10 : draw % 21);
+    }
+
+    std::optional<std::uint8_t> jailSkillBaseAfterPenalty(std::uint8_t base, float current)
+    {
+        if (!std::isfinite(current) || double(current) < std::numeric_limits<std::int32_t>::min()
+            || double(current) > std::numeric_limits<std::int32_t>::max())
+            throw std::invalid_argument("invalid native jail current skill");
+        if (static_cast<std::int32_t>(current) <= 1)
+            return {};
+        // Original TESNPC setter stores the low byte; the eligibility check
+        // used the modified value, so it does not guarantee a positive base.
+        return static_cast<std::uint8_t>(int(base) - 1);
+    }
+
     void validateCrimeFineSettings(const CrimeFineSettings& settings)
     {
         nonnegative(settings.mTheftMultiplier);

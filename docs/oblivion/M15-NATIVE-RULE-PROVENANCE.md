@@ -1123,3 +1123,49 @@ values, malformed lengths, nonfinite/negative multipliers, duplicates,
 truncation and version rejection. Full component/sanitizer and store results
 are recorded with the chunk report. Typed data availability does not establish
 crime reporting, faction combat legality or gameplay acceptance.
+
+## Jail skill selection and penalty arithmetic
+
+`advanceJailSkillSelection` consumes exactly one supplied original-domain
+15-bit draw. A null candidate starts with draw modulo 21. While the candidate
+is below 12, each subsequent draw adds its remainder modulo 10; zero leaves
+it pending. Values 12–20 complete selection. The pure step rejects already
+completed candidates and out-of-domain draws instead of consuming extra RNG.
+The controller must persist both pending selection and the authoritative RNG;
+that integration remains open. There is no production retry cap, uniform
+21-skill replacement, or synthesized Security/Sneak increase.
+
+Original `0047DF80` delegates to `009859DD`: the latter updates a 32-bit state
+by `state * 0x343FD + 0x269EC3`, shifts by 16 and masks with `0x7FFF`.
+This establishes the draw domain, not a second simulation RNG. Nine retained
+instruction-oracle cases execute `00670808–00670849` with supplied draws,
+confirming results and the exact consumed prefix (`jail-selection-table.json`).
+An independent exact absorbing-chain calculation includes modulo residue bias
+and zero redraws. Under independent uniform 15-bit draws its expected counts
+per 100,000 for actor values 12..20 are **14903, 14177, 13370, 12473, 11477,
+10370, 9141, 7775, 6316**. The fixed-seed test (`0x4D15A1`, predeclared
+600-count tolerance per bin) checks that distribution; it does not assert that
+the original global LCG stream consists of independent samples.
+
+`jailSkillBaseAfterPenalty` covers the reachable decrement branch only.
+`00670860–0067087A` queries the modified/current skill, truncates to int32 and
+skips mutation if the integer is at most one. Otherwise `006708AE–006708CD`
+gets the base skill, subtracts one and invokes its setter. Getter `005F1910`
+floors the base value from `005EAD00`; skills come from the base form, without
+the special health/magicka/fatigue/encumbrance treatment. TESNPC vtable
+`00A53DD4` (RTTI `00B02FB4`) slot `+134` is `00523310`; its skill branch stores
+the low byte at `00523338`, then marks change mask `0x200`. Thus the minimum
+check is **not a clamp on the base**: base one/current two becomes zero, and
+base zero/current two stores 255. Finite/int32-domain input validation avoids
+undefined host conversions. Notification, derived-stat recalculation and
+persistent base-state changes remain controller work.
+
+Nine supplementary instruction-oracle penalty cases execute the actual
+current-value check/conversion and TESNPC byte setter, with synthetic actor
+queries and identity/change-notification adapters. The first harness attempt
+had the wrong incoming register and failed with an unmapped read; its log is
+retained. Corrected EAX initialization produces the independently expected
+threshold and byte-wrap outcomes. This is not buffed-actor gameplay acceptance.
+Artifacts: `S2/oracle-emulator/jail-*`, source traces `random-integer-rule.txt`,
+`jail-base-value-getter.txt`, `npc-base-value-setter.txt` and
+`npc-skill-setter-vtables.json`. Raw executable data stays outside Git.

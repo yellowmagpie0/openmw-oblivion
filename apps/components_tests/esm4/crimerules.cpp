@@ -6,6 +6,8 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <random>
+#include <vector>
 #include <stdexcept>
 
 TEST(ESM4CrimeRules, BaseFinesPreserveFractionalTheftAndNativeOffenseValues)
@@ -100,4 +102,77 @@ TEST(ESM4CrimeRules, NativeSettingsRequireCorrectTypesAndNonnegativeFines)
     EXPECT_EQ(ESM4::buildJailSettings(values).mGoldPerDay, 50);
     value.mData = 50.f;
     EXPECT_THROW(ESM4::buildJailSettings(values), std::invalid_argument);
+}
+
+
+TEST(ESM4CrimeRules, JailSelectionPreservesNativeDrawSequenceAndActorValueRange)
+{
+    struct Case { std::vector<std::uint32_t> draws; std::uint8_t expected; std::size_t consumed; };
+    // Independently executed original 00670808..00670849 instructions.
+    for (const Case& sample : std::vector<Case>{{{12},12,1}, {{20},20,1}, {{21,9,3},12,3},
+             {{0,0,0,9,9},18,5}, {{11,9},20,2}, {{11,1},12,2}, {{32767,9,9},16,2},
+             {{10,1,1},12,3}, {{0,1,1,1,1,1,1,1,1,1,1,1,1},12,13}})
+    {
+        std::optional<std::uint8_t> candidate;
+        std::size_t consumed = 0;
+        for (auto draw : sample.draws)
+        {
+            candidate = ESM4::advanceJailSkillSelection(candidate, draw);
+            ++consumed;
+            if (*candidate >= 12) break;
+        }
+        EXPECT_EQ(candidate, sample.expected);
+        EXPECT_EQ(consumed, sample.consumed);
+    }
+    std::optional<std::uint8_t> candidate;
+    for (unsigned i = 0; i < 1024; ++i)
+    {
+        candidate = ESM4::advanceJailSkillSelection(candidate, 0);
+        EXPECT_EQ(candidate, 0); // Zero draws neither complete nor invent a retry cap.
+    }
+    EXPECT_THROW(ESM4::advanceJailSkillSelection({}, 32768), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceJailSkillSelection({}, UINT32_MAX), std::invalid_argument);
+    for (unsigned completed : {12u, 20u, 21u, 255u})
+        EXPECT_THROW(ESM4::advanceJailSkillSelection(completed, 0), std::invalid_argument);
+}
+
+TEST(ESM4CrimeRules, JailSelectionMatchesIndependentAbsorbingChainDistribution)
+{
+    // Exact residue-weighted calculation for independent uniform 15-bit draws,
+    // including modulo bias and repeated zero draws. Predeclared tolerance 600.
+    const std::array<int, 9> expected{14903,14177,13370,12473,11477,10370,9141,7775,6316};
+    std::array<int, 9> actual{};
+    std::mt19937 random(0x4d15a1);
+    for (unsigned i = 0; i < 100000; ++i)
+    {
+        std::optional<std::uint8_t> candidate;
+        // Test safety bound is not part of the production selection rule.
+        for (unsigned count = 0; count < 100; ++count)
+        {
+            candidate = ESM4::advanceJailSkillSelection(candidate, random() & 32767);
+            if (*candidate >= 12) break;
+        }
+        ASSERT_GE(*candidate, 12);
+        ASSERT_LE(*candidate, 20);
+        ++actual[*candidate - 12];
+    }
+    for (unsigned i = 0; i < actual.size(); ++i)
+        EXPECT_NEAR(actual[i], expected[i], 600);
+}
+
+
+TEST(ESM4CrimeRules, JailPenaltyChecksTruncatedModifiedSkillBeforeNativeByteMutation)
+{
+    for (float skipped : {-100.f, 0.f, 1.f, std::nextafter(2.f, 0.f)})
+        EXPECT_FALSE(ESM4::jailSkillBaseAfterPenalty(100, skipped));
+    for (float changed : {2.f, std::nextafter(2.f, 3.f), 100.f})
+        EXPECT_EQ(ESM4::jailSkillBaseAfterPenalty(5, changed), 4);
+    // The guard is on modified skill, not on the stored base byte.
+    EXPECT_EQ(ESM4::jailSkillBaseAfterPenalty(1, 2), 0);
+    EXPECT_EQ(ESM4::jailSkillBaseAfterPenalty(0, 2), 255);
+    EXPECT_EQ(ESM4::jailSkillBaseAfterPenalty(255, 255), 254);
+    for (float invalid : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), std::numeric_limits<float>::max(),
+             -std::numeric_limits<float>::max()})
+        EXPECT_THROW(ESM4::jailSkillBaseAfterPenalty(5, invalid), std::invalid_argument);
 }

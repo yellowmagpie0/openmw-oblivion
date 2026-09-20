@@ -1687,3 +1687,26 @@ probe. Native rule coverage, selected actor policy explanations and subsequent
 service/persistence/gameplay stages remain mandatory.
 
 Tested implementation/test/provenance diff SHA-256: `a6d7c8ab4719b6e5fdca5e8e697f9d937333aea162519f94b4fadc78b7a9c434`.
+
+
+### S2 jail skill draw and penalty rules
+
+Commit `28ca74cc90` contains typed faction data. Added a one-draw jail skill
+selection step that preserves pending zero draws and native 12–20 actor-value
+selection, plus the modified-skill eligibility check and base-byte decrement.
+Three new behavior tests fail against stubs, then pass. All **1,754 component
+tests** and **110 focused ASan/UBSan tests** pass with exact inventories and no
+skips (`S2/jail-selection-01`). Nine original-instruction selection cases and
+nine penalty cases independently confirm expected boundaries and draw usage.
+A 100,000-sample fixed-seed selection test matches an independent exact
+probability calculation with predeclared 600-count per-bin tolerance.
+
+Original-16 has observed normal assault contact (guard health 127.00→125.71),
+bounty 0→40 and normal arrest/jail entry, matching the pre-action prediction.
+The initial punch without confirmed contact and unsuccessful bed activation
+attempts are retained. Sentence service, release and skill changes are still
+being probed; no full original jail acceptance or native runtime acceptance
+is claimed. RNG/state persistence and skill mutation notifications remain
+controller work. S2 in progress; S3–S14 pending.
+
+Tested implementation/test/provenance diff SHA-256: `0a04d9073d0a9a89c9d3fbcf87cb67188bffd68460faaf5a25b24e181d1cba9a`.
