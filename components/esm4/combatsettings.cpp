@@ -296,6 +296,21 @@ namespace ESM4
         return result;
     }
 
+    KnockbackSettings buildKnockbackSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const KnockbackSettings result{
+            inputs.number("fKnockbackAgilBase", 1.f),
+            inputs.number("fKnockbackAgilMult", -.008f),
+            inputs.number("fKnockbackDamageBase", 50.f),
+            inputs.number("fKnockbackDamageMult", 10.f),
+            inputs.number("fKnockbackForceMax", 512.f),
+            inputs.number("fKnockbackTime", 1.f),
+        };
+        validateKnockbackSettings(result);
+        return result;
+    }
+
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

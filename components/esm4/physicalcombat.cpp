@@ -59,6 +59,44 @@ namespace ESM4
             throw std::invalid_argument("invalid native knockdown chance");
     }
 
+    void validateKnockbackSettings(const KnockbackSettings& settings)
+    {
+        for (float value : {settings.mAgilityBase, settings.mAgilityMultiplier,
+                 settings.mDamageBase, settings.mDamageMultiplier})
+            finite(value);
+        nonnegative(settings.mMaximumForce);
+        nonnegative(settings.mDuration);
+    }
+
+    float damageKnockback(std::int32_t agility, std::int32_t luck, float fatigueRatio,
+        std::int32_t damage, const KnockbackSettings& settings, const PhysicalCombatSettings& physical)
+    {
+        validateKnockbackSettings(settings);
+        validatePhysicalCombatSettings(physical);
+        const float fatigue = fatigueValue(fatigueRatio, physical);
+        if (fatigue == 0)
+            throw std::invalid_argument("singular native knockback fatigue factor");
+        const float adjusted = rounded(double(skillValue(agility, luck, physical)) / fatigue);
+        const float damageFactor = rounded(double(damage) * settings.mDamageMultiplier + settings.mDamageBase);
+        const float agilityFactor = rounded(double(settings.mAgilityMultiplier) * adjusted + settings.mAgilityBase);
+        return std::min(rounded(double(damageFactor) * agilityFactor), settings.mMaximumForce);
+    }
+
+    std::int32_t combatBaseValue(float value)
+    {
+        finite(value);
+        const double result = std::floor(double(value));
+        if (result < std::numeric_limits<std::int32_t>::min() || result > std::numeric_limits<std::int32_t>::max())
+            throw std::invalid_argument("native combat base value integer overflow");
+        return static_cast<std::int32_t>(result);
+    }
+
+    float combatFatigueRatio(float current, std::int32_t base)
+    {
+        finite(current);
+        return base == 0 ? 1.f : rounded(double(current) / static_cast<float>(base));
+    }
+
     bool damageKnockdown(std::int32_t agility, std::int32_t luck, float fatigueRatio,
         std::int32_t damage, unsigned draw, const KnockdownSettings& settings,
         const PhysicalCombatSettings& physical)

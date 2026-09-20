@@ -757,6 +757,60 @@
         "value": 0.30000001192092896
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-75"
+    },
+    {
+      "name": "fKnockbackAgilBase",
+      "value": 1.0,
+      "storage": "0xb36fa8",
+      "constructor": "0x9e95a0",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-76"
+    },
+    {
+      "name": "fKnockbackAgilMult",
+      "value": -0.00800000037997961,
+      "storage": "0xb36fb0",
+      "constructor": "0x9e95df",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-77"
+    },
+    {
+      "name": "fKnockbackDamageBase",
+      "value": 50.0,
+      "storage": "0xb36fb8",
+      "constructor": "0x9e960f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-78"
+    },
+    {
+      "name": "fKnockbackDamageMult",
+      "value": 10.0,
+      "storage": "0xb36fc0",
+      "constructor": "0x9e963f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-79"
+    },
+    {
+      "name": "fKnockbackForceMax",
+      "value": 512.0,
+      "storage": "0xb36fc8",
+      "constructor": "0x9e966f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-80"
+    },
+    {
+      "name": "fKnockbackTime",
+      "value": 1.0,
+      "storage": "0xb36fd0",
+      "constructor": "0x9e9690",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-81"
     }
   ]
 }

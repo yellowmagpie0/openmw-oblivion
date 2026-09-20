@@ -23,6 +23,7 @@ namespace ESM4
     ProjectileSettings buildProjectileSettings(std::span<const GameSetting* const> settings);
     BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings);
     KnockdownSettings buildKnockdownSettings(std::span<const GameSetting* const> settings);
+    KnockbackSettings buildKnockbackSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings);
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);

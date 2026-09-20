@@ -838,3 +838,91 @@ TEST(ESM4PhysicalCombat, KnockdownFixedSeedDistributionMatchesInclusiveDraws)
     // Inclusive 0..25, independently declared 26%, conservative fixed tolerance.
     EXPECT_NEAR(successes, 26000, 700);
 }
+
+TEST(ESM4PhysicalCombat, KnockbackUsesAgilityDividedByFatigueAndUpperCap)
+{
+    const ESM4::KnockbackSettings settings{1, -.008f, 50, 10, 512, 1};
+    struct Case { int agility; int luck; float fatigue; int damage; float force; };
+    for (const auto& c : {Case{40, 50, 1, 10, 102}, {40, 50, 0, 10, 54}, {40, 100, 1, 10, 78},
+             {100, 50, 1, 10, 30}, {101, 50, 1, 10, 30}, {0, 50, 1, 0, 50},
+             {0, 50, 1, 1, 60}, {0, 50, 1, 100, 512}, {0, 50, 1, -10, -50},
+             {100, 50, 0, 10, -90}})
+    {
+        SCOPED_TRACE(c.agility);
+        EXPECT_NEAR(ESM4::damageKnockback(c.agility, c.luck, c.fatigue, c.damage, settings, installed), c.force, .00002f);
+    }
+    auto exact = settings;exact.mAgilityMultiplier = 0;exact.mDamageBase = 0;exact.mDamageMultiplier = 1;
+    EXPECT_EQ(ESM4::damageKnockback(0, 50, 1, 511, exact, installed), 511);
+    EXPECT_EQ(ESM4::damageKnockback(0, 50, 1, 512, exact, installed), 512);
+    EXPECT_EQ(ESM4::damageKnockback(0, 50, 1, 513, exact, installed), 512);
+    exact.mMaximumForce = std::nextafter(512.f, 0.f);
+    EXPECT_EQ(ESM4::damageKnockback(0, 50, 1, 512, exact, installed), exact.mMaximumForce);
+}
+
+TEST(ESM4PhysicalCombat, KnockbackRejectsNonfiniteAndSingularPhysicsInputs)
+{
+    const ESM4::KnockbackSettings settings{1, -.008f, 50, 10, 512, 1};
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::damageKnockback(50, 50, bad, 10, settings, installed), std::invalid_argument);
+        for (float ESM4::KnockbackSettings::* member : {&ESM4::KnockbackSettings::mAgilityBase,
+                 &ESM4::KnockbackSettings::mAgilityMultiplier, &ESM4::KnockbackSettings::mDamageBase,
+                 &ESM4::KnockbackSettings::mDamageMultiplier, &ESM4::KnockbackSettings::mMaximumForce,
+                 &ESM4::KnockbackSettings::mDuration})
+        {
+            auto invalid = settings;invalid.*member = bad;
+            EXPECT_THROW(ESM4::validateKnockbackSettings(invalid), std::invalid_argument);
+        }
+    }
+    auto invalid = settings;invalid.mMaximumForce = -1;
+    EXPECT_THROW(ESM4::validateKnockbackSettings(invalid), std::invalid_argument);
+    invalid = settings;invalid.mDuration = -1;
+    EXPECT_THROW(ESM4::validateKnockbackSettings(invalid), std::invalid_argument);
+    // Original zero divisor would produce nonfinite force. Diagnose at the
+    // native physics boundary; never pass NaN/inf into shared physics.
+    EXPECT_THROW(ESM4::damageKnockback(50, 50, -1, 10, settings, installed), std::invalid_argument);
+    invalid = settings;invalid.mDamageMultiplier = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::damageKnockback(50, 50, 1, 10, invalid, installed), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, KnockbackSettingsUseSignedDefaultsAndTypedOverrides)
+{
+    const auto settings = ESM4::buildKnockbackSettings({});
+    EXPECT_EQ(settings.mAgilityBase, 1);EXPECT_EQ(settings.mAgilityMultiplier, -.008f);
+    EXPECT_EQ(settings.mDamageBase, 50);EXPECT_EQ(settings.mDamageMultiplier, 10);
+    EXPECT_EQ(settings.mMaximumForce, 512);EXPECT_EQ(settings.mDuration, 1);
+    ESM4::GameSetting value{};value.mEditorId = "fKnockbackAgilMult";value.mData = -.02f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildKnockbackSettings(values).mAgilityMultiplier, -.02f);
+    value.mData = std::int32_t{-1};
+    EXPECT_THROW(ESM4::buildKnockbackSettings(values), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, MasteryBaseValueFloorsWithoutLuckOrEffectAdjustment)
+{
+    for (int boundary : {-25, -1, 0, 1, 25, 50, 75, 100, 101})
+    {
+        const float exact = boundary;
+        EXPECT_EQ(ESM4::combatBaseValue(exact), boundary);
+        EXPECT_EQ(ESM4::combatBaseValue(std::nextafter(exact, -std::numeric_limits<float>::infinity())), boundary - 1);
+        EXPECT_EQ(ESM4::combatBaseValue(std::nextafter(exact, std::numeric_limits<float>::infinity())), boundary);
+    }
+    EXPECT_EQ(ESM4::combatBaseValue(float(std::numeric_limits<std::int32_t>::min())), std::numeric_limits<std::int32_t>::min());
+    EXPECT_THROW(ESM4::combatBaseValue(float(std::numeric_limits<std::int32_t>::max())), std::invalid_argument);
+    EXPECT_THROW(ESM4::combatBaseValue(std::numeric_limits<float>::infinity()), std::invalid_argument);
+    EXPECT_THROW(ESM4::combatBaseValue(std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, FatigueRatioUsesRoundedBaseAndZeroFallbackWithoutClamping)
+{
+    for (const auto& c : {std::pair{0.f, 0.f}, {70.f, .5f}, {140.f, 1.f}, {280.f, 2.f}, {-70.f, -.5f}})
+        EXPECT_EQ(ESM4::combatFatigueRatio(c.first, 140), c.second);
+    EXPECT_EQ(ESM4::combatFatigueRatio(0, 0), 1);
+    EXPECT_EQ(ESM4::combatFatigueRatio(140, 0), 1);
+    EXPECT_EQ(ESM4::combatFatigueRatio(70, -140), -.5f);
+    EXPECT_EQ(ESM4::combatFatigueRatio(16777216.f, 16777217), 1); // base integer stores as float first
+    EXPECT_LT(ESM4::combatFatigueRatio(std::nextafter(140.f, 0.f), 140), 1);
+    EXPECT_GT(ESM4::combatFatigueRatio(std::nextafter(140.f, 280.f), 140), 1);
+    EXPECT_THROW(ESM4::combatFatigueRatio(std::numeric_limits<float>::infinity(), 140), std::invalid_argument);
+    EXPECT_THROW(ESM4::combatFatigueRatio(std::numeric_limits<float>::quiet_NaN(), 0), std::invalid_argument);
+}

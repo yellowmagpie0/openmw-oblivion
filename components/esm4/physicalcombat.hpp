@@ -57,6 +57,24 @@ namespace ESM4
         const PhysicalCombatSettings& physical);
     void validateKnockdownSettings(const KnockdownSettings& settings);
 
+    struct KnockbackSettings
+    {
+        float mAgilityBase;
+        float mAgilityMultiplier;
+        float mDamageBase;
+        float mDamageMultiplier;
+        float mMaximumForce;
+        float mDuration;
+    };
+    // Signed force before caller direction/physics; only its upper bound is capped.
+    float damageKnockback(std::int32_t agility, std::int32_t luck, float fatigueRatio,
+        std::int32_t damage, const KnockbackSettings& settings, const PhysicalCombatSettings& physical);
+    void validateKnockbackSettings(const KnockbackSettings& settings);
+    // Mastery uses the base actor value, floored before rank lookup, not the
+    // luck/effect-adjusted combat value. Fatigue divides current by this base.
+    std::int32_t combatBaseValue(float value);
+    float combatFatigueRatio(float current, std::int32_t base);
+
     struct WeaponDamageInput
     {
         std::int32_t mSkill;

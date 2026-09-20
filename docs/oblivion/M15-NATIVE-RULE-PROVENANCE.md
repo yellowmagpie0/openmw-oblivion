@@ -675,3 +675,48 @@ defaults/overrides, malformed inputs and a fixed-seed 100,000-roll sample
 with predeclared 26% +/-700 tolerance. Source traces: `knockdown-rule.txt`,
 `contact-reactions.txt` and `contact-damage-continuation.txt` in
 `S2/sources-01`. Test evidence: `S2/physical-rules-13`.
+
+## Knockback and actor-value normalization
+
+Original `00547690` divides luck-adjusted agility by the fatigue multiplier,
+stores that float, then stores `damage * fKnockbackDamageMult +
+fKnockbackDamageBase` and `adjustedAgility * fKnockbackAgilMult +
+fKnockbackAgilBase`, and multiplies the stored factors. Caller
+`005FFFAF–00600038` uses truncated saved contact damage and applies the
+upper force cap. It does not add a lower zero clamp. Direction and timed
+physics application follow at `0060003C–006000AF`, using `fKnockbackTime`.
+The helper returns signed capped force and leaves transform/physics to the
+caller. A zero fatigue multiplier would make original arithmetic nonfinite;
+this native boundary diagnoses it rather than handing NaN/inf to physics.
+Correct world eligibility/recovery for such a state remains an open case.
+
+Compiled settings (also unoverridden in the audited load order) are agility
+base 1, multiplier -.008, damage base 50, multiplier 10, maximum 512, time 1.
+Original-15 lookups GMST-76–81 confirm the displayed values; GMST-77 displays
+-.01 and cannot establish exact -.008 precision. The exact factor comes from
+compiled bytes and the absent override. All six values are visible in the
+inspected `knockback-settings.png` capture.
+
+Actor mastery calls `005F1910`, which calls base-value resolver `005EAD00`,
+stores a float, truncates and subtracts one for a negative fractional part:
+this is floor, not nearest rounding or luck-adjusted skill. The resolver uses
+the base-form AV virtual `+128`; player dynamic AVs 8–11 also include its
+base adjustment path. Effects/current-value queries are separate. Native
+`combatBaseValue` models the checked float-to-integer floor only; resolving
+all actor/effect contributions is still an integration task.
+
+Fatigue ratio `005F4880` stores the integer base fatigue as a float and divides
+the current AV (`+288`) by it, storing the result. **Only zero** base fatigue
+returns 1; signed nonzero bases still divide and current fatigue is not
+clamped. `combatFatigueRatio` preserves that storage order and behavior.
+Source traces: `actor-base-value-query.txt`, `actor-value-base-components.txt`,
+`actor-fatigue-ratio.txt`, `knockdown-rule.txt` (includes knockback), and
+`contact-reactions.txt`, all under `S2/sources-01`.
+
+Five new tests fail against stubs, then pass, covering signed/zero/normal/
+maximum force, fatigue and luck, cap boundaries, malformed inputs and singular
+physics input diagnostics, typed settings, base-skill floor immediately around
+all mastery thresholds (including negative values), integer overflow, fatigue
+zero fallback and a base value above float's exact integer range. Evidence:
+`S2/physical-rules-14`. These arithmetic tests do not establish world
+knockback, controller interruption, or mastery ability acceptance.

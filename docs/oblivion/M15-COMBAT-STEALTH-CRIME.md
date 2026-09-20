@@ -1416,3 +1416,26 @@ no installed game files were added. S2 in progress; S3–S14 pending.
 Next task: remaining reaction/mastery arithmetic and semantic matrices.
 
 Tested implementation/test/provenance diff SHA-256: `50dceae01c6bc9aeeaa8e6d2d6a82fabda04fa81db7b5afae7270862965551c4`.
+
+### S2 knockback and actor-value input normalization
+
+Commit `41d6387ab3` contains damage-knockdown selection. Added signed
+knockback-force arithmetic, upper cap and typed force/time settings, plus
+base-value floor and fatigue-ratio helpers established from original caller
+traces. Mastery uses base skill, not luck/effect-adjusted damage skill. Zero
+base fatigue returns ratio 1; other signed/current values remain unclamped.
+A singular knockback fatigue divisor diagnoses rather than sending nonfinite
+force to physics; corresponding world-state eligibility remains open.
+
+Five new tests fail with stubs, then pass. All **1,716 component tests** and
+**68 focused ASan/UBSan tests** pass without skips and match exact inventories
+(`S2/physical-rules-14`). Original-15 GMST-76–81 are captured and inspected;
+the console rounds -.008 to -.01, so that lookup explicitly cannot verify
+exact precision. Catalog **77** facts; original setting observations **81**.
+
+S2 remains in progress; S3–S14 pending. Original-15 remains running with
+master-only content for additional read-only queries; no installed files
+were added. Next bounded task: enumerate and implement the remaining mastery
+abilities, including probabilities, eligibility and narrow paralysis state.
+
+Tested implementation/test/provenance diff SHA-256: `36a01ed74e63278b630b4fc58b48bc36501447d703b99caf03cb4bf385e4c17e`.
