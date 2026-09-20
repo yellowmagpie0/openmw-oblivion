@@ -1879,3 +1879,21 @@ remaining rules and original/gameplay gates remain open. S2 remains in progress;
 S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `9ed3f0794ad0769d15b04b869224a13ad16e915550eb7553b2d5bce24ce07da3`.
+
+### S2 selected campaign policy explanations
+
+Commit `a482f878bf` resolves style inputs in the semantic audit. Added
+[M15-CAMPAIGN-COMBAT-POLICIES.md](M15-CAMPAIGN-COMBAT-POLICIES.md) covering the
+selected fixed actors, all twenty leveled opponent alternatives, Rindir,
+Owyn and the four jailors. It distinguishes native default and missile style
+inputs, equipment selection, race inheritance and unresolved magic behavior.
+Independent raw winning-record inspection identifies tutorial bound equipment,
+potions and the Arena ability's Speed/Athletics and resistance effects.
+
+Evidence: `S2/policy-audit-01/campaign-records.json` and its reproducible local
+`inspect_campaign.py`, using the previously locked eleven plugin hashes.
+Reviewed the matching typed equipment/actor audit fields and spell/effect
+payloads. This documentation-only chunk does not change production behavior;
+no new gameplay/test pass is asserted. S2's remaining rule families and original
+policy behavior gates remain open; S3–S14 remain pending. Next: complete the
+remaining block/posture, fatigue-state and crime-policy rule review.
