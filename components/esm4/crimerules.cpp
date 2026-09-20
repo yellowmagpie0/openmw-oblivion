@@ -10,6 +10,48 @@
 
 namespace ESM4
 {
+    void validateCrimeAlarmSettings(const CrimeAlarmSettings& settings)
+    {
+        if (settings.mRecipientDistance < 0)
+            throw std::invalid_argument("invalid native crime alarm recipient distance");
+    }
+
+    bool crimeAlarmReachesLocation(const CrimeAlarmLocation& offender, const CrimeAlarmLocation& recipient,
+        float distanceToOffender, std::span<const CrimeAlarmDoorDestination> doors, const CrimeAlarmSettings& settings)
+    {
+        validateCrimeAlarmSettings(settings);
+        const auto validateLocation = [](const CrimeAlarmLocation& location) {
+            if (location.mInterior && location.mCell.isNull())
+                throw std::invalid_argument("native crime alarm interior without cell identity");
+        };
+        const auto validateDistance = [](float distance) {
+            if (!std::isfinite(distance) || distance < 0)
+                throw std::invalid_argument("invalid native crime alarm spatial distance");
+        };
+        validateLocation(offender);
+        validateLocation(recipient);
+        validateDistance(distanceToOffender);
+        for (const auto& door : doors)
+        {
+            validateLocation(door.mLocation);
+            validateDistance(door.mRecipientDistance);
+        }
+        const bool sameCell = !recipient.mCell.isNull() && recipient.mCell == offender.mCell;
+        const bool sharedExterior = recipient.mWorldspace == offender.mWorldspace
+            && ((!recipient.mCell.isNull() && !recipient.mInterior)
+                || (!offender.mCell.isNull() && !offender.mInterior));
+        if (sameCell || sharedExterior)
+            return double(distanceToOffender) <= settings.mRecipientDistance;
+        for (const auto& door : doors)
+        {
+            const bool matchingDestination = door.mLocation.mCell == recipient.mCell
+                || (door.mLocation.mCell.isNull() && door.mLocation.mWorldspace == recipient.mWorldspace);
+            if (matchingDestination && double(door.mRecipientDistance) <= settings.mRecipientDistance)
+                return true;
+        }
+        return false;
+    }
+
     bool crimeWitnessCandidate(const CrimeWitnessCandidateInput& input)
     {
         if (input.mOffenderPresent && ((input.mOffenderFlags & 0x820u) != 0

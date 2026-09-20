@@ -399,6 +399,14 @@ namespace ESM4
         return result;
     }
 
+    CrimeAlarmSettings buildCrimeAlarmSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const CrimeAlarmSettings result{inputs.number("iCrimeAlarmRecDistance", std::int32_t{10000})};
+        validateCrimeAlarmSettings(result);
+        return result;
+    }
+
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

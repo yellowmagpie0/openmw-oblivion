@@ -170,6 +170,28 @@ namespace ESM4
     // willingness, event delivery, incident ordering or bounty reporting.
     bool crimeWitnessCandidate(const CrimeWitnessCandidateInput& input);
 
+    struct CrimeAlarmSettings
+    {
+        std::int32_t mRecipientDistance;
+    };
+    struct CrimeAlarmLocation
+    {
+        ESM::FormKey mCell;
+        ESM::FormKey mWorldspace;
+        bool mInterior = false;
+    };
+    struct CrimeAlarmDoorDestination
+    {
+        CrimeAlarmLocation mLocation;
+        float mRecipientDistance;
+    };
+    // Spatial recipient gate after actor/package eligibility. Door destinations
+    // come from the caller's native nearby-door query, not all world doors.
+    // Direct-space candidates outside the radius do not retry through doors.
+    bool crimeAlarmReachesLocation(const CrimeAlarmLocation& offender, const CrimeAlarmLocation& recipient,
+        float distanceToOffender, std::span<const CrimeAlarmDoorDestination> doors, const CrimeAlarmSettings& settings);
+    void validateCrimeAlarmSettings(const CrimeAlarmSettings& settings);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;

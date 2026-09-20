@@ -157,3 +157,19 @@ TEST(ESM4CombatSettings, TrespassTimerUsesNativeDefaultAndTypedWinningOverride)
         EXPECT_THROW(ESM4::buildTrespassWarningSettings(settings), std::invalid_argument);
     }
 }
+
+TEST(ESM4CombatSettings, AlarmRecipientDistanceUsesNativeIntegerDefaultAndOverride)
+{
+    EXPECT_EQ(ESM4::buildCrimeAlarmSettings({}).mRecipientDistance, 10000);
+    ESM4::GameSetting setting;
+    setting.mEditorId = "iCrimeAlarmRecDistance";
+    setting.mData = std::int32_t{4000}; // Installed Oblivion.esm:02be94.
+    const std::array<const ESM4::GameSetting*, 1> settings{&setting};
+    EXPECT_EQ(ESM4::buildCrimeAlarmSettings(settings).mRecipientDistance, 4000);
+    setting.mData = std::int32_t{0};
+    EXPECT_EQ(ESM4::buildCrimeAlarmSettings(settings).mRecipientDistance, 0);
+    setting.mData = 4000.f;
+    EXPECT_THROW(ESM4::buildCrimeAlarmSettings(settings), std::invalid_argument);
+    setting.mData = std::int32_t{-1};
+    EXPECT_THROW(ESM4::buildCrimeAlarmSettings(settings), std::invalid_argument);
+}

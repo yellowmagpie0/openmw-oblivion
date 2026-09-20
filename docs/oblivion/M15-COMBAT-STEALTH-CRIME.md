@@ -2108,3 +2108,19 @@ All **552 engine tests** pass with exact inventory/no skips in
 sanitizer tests. The build was completed before the next alarm-spatial-rule
 edits. This is compile/regression evidence, not normal-input M15 runtime
 acceptance. S2 remains in progress and S3–S14 remain pending.
+
+### S2 alarm recipient spatial reach
+
+Commit `e339640c0c` records the engine integration refresh. Added native direct
+cell/exterior-worldspace reach, teleport-destination fallback, inclusive integer
+radius and no door retry after direct-space distance rejection. The typed
+radius adapter preserves compiled 10000 and installed 4000.
+
+Three policy tests fail against the stub; four new tests pass. All **1,800
+component tests**, **156 focused ASan/UBSan tests** and **151 Python tests** pass,
+with exact C++ inventories/no skips (`S2/alarm-reach-01`). **1,728 original
+instruction cases** verify spatial selection and radius branches. Runtime door
+collection, alarm delivery, recipients' reactions and bounty remain open.
+S2 remains in progress; S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `91cd3e5f1e6a952416eff209ea26d066fc405231f00822577c6da24b3a369264`.

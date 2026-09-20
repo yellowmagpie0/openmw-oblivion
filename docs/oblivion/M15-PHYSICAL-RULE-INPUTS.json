@@ -1539,6 +1539,19 @@
         "value": 30.0
       },
       "provenance": "Original static initializer and installed winning GMST; timer instructions independently executed in S2/oracle-emulator/trespass-warning.py. No live-setting probe claimed."
+    },
+    {
+      "name": "iCrimeAlarmRecDistance",
+      "value": 10000,
+      "storage": "0xb36a50",
+      "constructor": "0x9e772a",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02be94",
+        "type": "i",
+        "value": 4000
+      },
+      "provenance": "Original static initializer and installed winning GMST; spatial/radius instructions independently executed in S2/oracle-emulator/alarm-reach.py. No live-setting probe claimed."
     }
   ]
 }

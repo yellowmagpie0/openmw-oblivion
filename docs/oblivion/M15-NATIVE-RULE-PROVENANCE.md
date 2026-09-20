@@ -1767,3 +1767,50 @@ The original list subsequently sorts by distance to the **player** using
 `00673B70`, independently of the offender identity; sorting and runtime event
 order are not implemented by this predicate. Witness hearing, reporting,
 incident idempotence and bounty remain integration gates.
+
+## Alarm recipient spatial reach
+
+Native `0067A420`, called at `0062F90F`, collects alarm recipients through
+process-level actor lists. After its actor/package filters, the spatial branch
+at `0067A593` uses a direct distance check if the recipient has the same nonnull
+cell as the offender, or their worldspace queries match and either has a
+nonnull exterior cell. Two null cells alone do not establish the direct path.
+`004D6670` queries cell worldspace through `004C9CF0`; interiors return null.
+
+Direct-space recipients qualify when the stored float distance to the offender
+is **<= the integer** `iCrimeAlarmRecDistance`. If outside, this branch ends;
+it does not retry via doors. Other spaces can qualify via the caller's supplied
+nearby teleport doors: the destination cell must match the recipient cell
+(including the native null comparison), or its cell must be null and its
+worldspace query match the recipient's. The recipient-to-destination-door
+stored distance uses the same inclusive radius. A different nonnull destination
+cell does not qualify merely because its worldspace matches.
+
+`crimeAlarmReachesLocation` implements this spatial policy over stable resolved
+locations and the caller's actual door destinations. It must not receive all
+doors in the world as a shortcut. Missing stable resolution is an error, not a
+null-cell exception. The function validates finite nonnegative distances and
+interior/cell presence, including supplied unused door inputs. It preserves
+integer radius precision by comparing as double, matching x87 integer loading;
+float 2147483648 is outside integer limit 2147483647.
+
+The executable default is 10000 (`009E772A`, storage `00B36A50`); installed
+Oblivion.esm `02BE94` sets 4000. The typed adapter and rule-input table record
+both; no live-setting probe is claimed. This is recipient reach, not the
+positive-detection witness filter, line-of-sight simulation, willingness or
+bounty commitment. Other recipient exclusions and dialogue/AI dispatch remain
+caller responsibilities.
+
+Three spatial tests first fail against a false stub; a fourth tests typed
+settings. Cases cover distinct interiors, shared/foreign exteriors, null
+locations, door fallback, no retry after direct-distance rejection, inclusive
+thresholds, integer precision and malformed inputs. **1,728 original instruction
+cases** independently execute region selection, door-destination matching and
+both radius branches. Cell flags are read by the native helper; destination
+cell/worldspace queries are boundary stubs. Evidence:
+`S2/oracle-emulator/alarm-reach.py`, `alarm-reach-table.json`, `alarm-reach.log`,
+`S2/sources-01/crime-witness-selection.txt` (`0067A420` onward),
+`crime-alarm-recipient-continuation.txt`, `crime-alarm-recipient-caller.txt`,
+`crime-reference-worldspace.txt` and `crime-cell-worldspace.txt`.
+Ordinary alarm propagation through actual load doors and save/restart remain
+runtime acceptance gates.

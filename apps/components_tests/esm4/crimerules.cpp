@@ -730,3 +730,57 @@ TEST(ESM4CrimeRules, CrimeWitnessEnumerationUsesNativeDisabledAndDeletedFlagMask
         input.mCandidateFlags = 0;
     }
 }
+
+TEST(ESM4CrimeRules, AlarmReachUsesCellIdentityAndExteriorWorldspace)
+{
+    const auto cellA = ESM::FormKey::content("fixture.esm", 1);
+    const auto cellB = ESM::FormKey::content("fixture.esm", 2);
+    const auto world = ESM::FormKey::content("fixture.esm", 3);
+    const auto otherWorld = ESM::FormKey::content("fixture.esm", 4);
+    const ESM4::CrimeAlarmLocation interiorA{cellA, {}, true}, interiorB{cellB, {}, true};
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation(interiorA, interiorA, 4000, {}, {4000}));
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(interiorA, interiorB, 0, {}, {4000}));
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation({cellA, world, false}, {cellB, world, false}, 1, {}, {4000}));
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation({cellA, world, false}, {cellB, otherWorld, false}, 0, {}, {4000}));
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation({}, {}, 0, {}, {4000}));
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation({}, {cellA, {}, false}, 0, {}, {4000}));
+}
+
+TEST(ESM4CrimeRules, AlarmDoorsBridgeSpacesButDoNotRetryDirectDistanceFailures)
+{
+    const auto cellA = ESM::FormKey::content("fixture.esm", 1);
+    const auto cellB = ESM::FormKey::content("fixture.esm", 2);
+    const auto world = ESM::FormKey::content("fixture.esm", 3);
+    const ESM4::CrimeAlarmLocation interiorA{cellA, {}, true}, interiorB{cellB, {}, true};
+    std::array<ESM4::CrimeAlarmDoorDestination, 2> doors{{{interiorA, 0}, {interiorB, 4000}}};
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation(interiorA, interiorB, 100000, doors, {4000}));
+    doors[1].mRecipientDistance = std::nextafter(4000.f, 5000.f);
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(interiorA, interiorB, 0, doors, {4000}));
+    doors[1].mRecipientDistance = 0;
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(interiorB, interiorB, 4001, doors, {4000}));
+    doors[1] = {{{}, world, false}, 4000};
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation(interiorA, {cellB, world, false}, 100000, doors, {4000}));
+    doors[1] = {{cellA, world, false}, 0};
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(interiorA, {cellB, world, false}, 0, doors, {4000}));
+    doors[1] = {{{}, {}, false}, 0};
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation(interiorA, {}, 100000, doors, {4000}));
+}
+
+TEST(ESM4CrimeRules, AlarmRadiusPreservesIntegerPrecisionAndRejectsMalformedInputs)
+{
+    const ESM4::CrimeAlarmLocation location{ESM::FormKey::content("fixture.esm", 1), {}, true};
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation(location, location, -0.f, {}, {0}));
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(location, location,
+        std::numeric_limits<float>::denorm_min(), {}, {0}));
+    EXPECT_TRUE(ESM4::crimeAlarmReachesLocation(location, location, 16777216.f, {}, {16777217}));
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(location, location, 16777218.f, {}, {16777217}));
+    EXPECT_FALSE(ESM4::crimeAlarmReachesLocation(location, location, 2147483648.f, {}, {2147483647}));
+    EXPECT_THROW(ESM4::crimeAlarmReachesLocation(location, location, 0, {}, {-1}), std::invalid_argument);
+    EXPECT_THROW(ESM4::crimeAlarmReachesLocation({{}, {}, true}, location, 0, {}, {1}), std::invalid_argument);
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::crimeAlarmReachesLocation(location, location, invalid, {}, {1}), std::invalid_argument);
+        const std::array<ESM4::CrimeAlarmDoorDestination, 1> doors{{{location, invalid}}};
+        EXPECT_THROW(ESM4::crimeAlarmReachesLocation(location, location, 0, doors, {1}), std::invalid_argument);
+    }
+}
