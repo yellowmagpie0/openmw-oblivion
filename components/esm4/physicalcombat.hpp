@@ -2,9 +2,30 @@
 #define OPENMW_ESM4_PHYSICALCOMBAT_H
 
 #include <cstdint>
+#include <array>
 
 namespace ESM4
 {
+    enum class CombatMastery { Novice, Apprentice, Journeyman, Expert, Master };
+    struct CombatMasterySettings
+    {
+        std::array<std::int32_t, 4> mMinimumSkill;
+    };
+    enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
+    struct PowerAttackSettings
+    {
+        float mBaseMultiplier;
+        float mStandingMultiplier;
+        float mSideMultiplier;
+        float mBackwardMultiplier;
+        float mForwardMultiplier;
+    };
+    CombatMastery combatMastery(std::int32_t skill, const CombatMasterySettings& settings);
+    float powerAttackMultiplier(std::int32_t skill, PowerAttackDirection direction,
+        const PowerAttackSettings& settings, const CombatMasterySettings& mastery);
+    void validateCombatMasterySettings(const CombatMasterySettings& settings);
+    void validatePowerAttackSettings(const PowerAttackSettings& settings);
+
     struct PhysicalCombatSettings
     {
         std::int32_t mLuckSkillBase;

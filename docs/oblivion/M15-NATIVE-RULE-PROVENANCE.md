@@ -310,3 +310,43 @@ arithmetic expectations include weight 0/1/20/100/10000 -> cost
 7/7.1/9/17/1007, the fivefold power branch, and a halfway rounding case that
 requires the intermediate float store. All three new tests failed against
 unimplemented stubs before the implementation.
+
+## Mastery rank and directional power damage selection
+
+Original `0x56a300` compares the supplied integer skill in order against
+`iSkillApprenticeMin`, `iSkillJourneymanMin`, `iSkillExpertMin`, and
+`iSkillMasterMin`. The compiled thresholds are 25/50/75/100, absent from the
+installed overrides. Equality advances to the next rank; skills above 100 stay
+Master and negative skills are Novice with those thresholds. The immutable
+helper validates nonnegative, nondecreasing configured thresholds; equal
+thresholds are supported and follow the original ordered comparisons.
+
+Original `0x546ba0` selects the generic power multiplier below the applicable
+unlock: Standing requires Apprentice, either side requires Journeyman,
+Backward requires Expert, and Forward requires Master. Its callers at
+`0x5ff44d` and `0x5ff4e1` supply the integer combat skill directly, without the
+luck adjustment used by base damage. Caller policy distinguishes actual power
+attacks from normal attacks; the new helper accepts only a typed power
+attack direction. Invalid directions diagnose even at Novice rank. This
+selection does not implement input timing, disarm, knockdown, paralysis or
+other mastery consequences. Those remain open cases.
+
+| Setting | Compiled | Installed |
+| --- | ---: | ---: |
+| fDamagePowerAttackBonus | 3 | 2.5 |
+| fDamagePowerAttackStandBonus | 4 | 3 |
+| fDamagePowerAttackSideBonus | 3 | 2.5 |
+| fDamagePowerAttackBackBonus | 3 | 2.5 |
+| fDamagePowerAttackForwardBonus | 3 | 2.5 |
+
+Retained disassembly: `mastery-level-rule.txt`, `power-attack-damage-rule.txt`,
+`power-attack-damage-callers.txt` under `S2/sources-01`. Tests use deliberately
+different multipliers for every branch and threshold-minus/at/plus-one, so
+identical installed directional values cannot conceal a wrong selection.
+All four new cases failed against unimplemented stubs before the fix.
+
+Original live read-only observations 38–46 confirm these nine inputs in
+`original-11/{mastery,power,directional}-settings.png`. Each capture was opened
+and inspected. The setting ledger now has 46 observations, including all 42
+physical-input facts. Live lookup does not establish the mastery consequences
+or the full power-attack outcome matrix.

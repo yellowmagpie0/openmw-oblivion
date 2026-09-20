@@ -171,6 +171,32 @@ namespace ESM4
         return result;
     }
 
+    CombatMasterySettings buildCombatMasterySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        CombatMasterySettings result{{
+            inputs.number("iSkillApprenticeMin", std::int32_t{25}),
+            inputs.number("iSkillJourneymanMin", std::int32_t{50}),
+            inputs.number("iSkillExpertMin", std::int32_t{75}),
+            inputs.number("iSkillMasterMin", std::int32_t{100}),
+        }};
+        validateCombatMasterySettings(result);
+        return result;
+    }
+    PowerAttackSettings buildPowerAttackSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        PowerAttackSettings result{
+            inputs.number("fDamagePowerAttackBonus", 3.f),
+            inputs.number("fDamagePowerAttackStandBonus", 4.f),
+            inputs.number("fDamagePowerAttackSideBonus", 3.f),
+            inputs.number("fDamagePowerAttackBackBonus", 3.f),
+            inputs.number("fDamagePowerAttackForwardBonus", 3.f),
+        };
+        validatePowerAttackSettings(result);
+        return result;
+    }
+
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

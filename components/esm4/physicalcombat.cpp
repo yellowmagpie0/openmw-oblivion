@@ -39,6 +39,44 @@ namespace ESM4
         }
     }
 
+    void validateCombatMasterySettings(const CombatMasterySettings& settings)
+    {
+        if (settings.mMinimumSkill.front() < 0
+            || !std::is_sorted(settings.mMinimumSkill.begin(), settings.mMinimumSkill.end()))
+            throw std::invalid_argument("invalid native combat mastery thresholds");
+    }
+    void validatePowerAttackSettings(const PowerAttackSettings& settings)
+    {
+        for (const float value : {settings.mBaseMultiplier, settings.mStandingMultiplier,
+                 settings.mSideMultiplier, settings.mBackwardMultiplier, settings.mForwardMultiplier})
+            nonnegative(value);
+    }
+    CombatMastery combatMastery(std::int32_t skill, const CombatMasterySettings& settings)
+    {
+        validateCombatMasterySettings(settings);
+        return static_cast<CombatMastery>(std::upper_bound(settings.mMinimumSkill.begin(),
+            settings.mMinimumSkill.end(), skill) - settings.mMinimumSkill.begin());
+    }
+    float powerAttackMultiplier(std::int32_t skill, PowerAttackDirection direction,
+        const PowerAttackSettings& settings, const CombatMasterySettings& mastery)
+    {
+        validatePowerAttackSettings(settings);
+        const auto rank = combatMastery(skill, mastery);
+        switch (direction)
+        {
+            case PowerAttackDirection::Standing:
+                return rank >= CombatMastery::Apprentice ? settings.mStandingMultiplier : settings.mBaseMultiplier;
+            case PowerAttackDirection::Left:
+            case PowerAttackDirection::Right:
+                return rank >= CombatMastery::Journeyman ? settings.mSideMultiplier : settings.mBaseMultiplier;
+            case PowerAttackDirection::Backward:
+                return rank >= CombatMastery::Expert ? settings.mBackwardMultiplier : settings.mBaseMultiplier;
+            case PowerAttackDirection::Forward:
+                return rank >= CombatMastery::Master ? settings.mForwardMultiplier : settings.mBaseMultiplier;
+        }
+        throw std::invalid_argument("invalid native power attack direction");
+    }
+
     void validatePhysicalCombatSettings(const PhysicalCombatSettings& settings)
     {
         for (const float value : { settings.mLuckSkillMultiplier, settings.mFatigueBase,

@@ -1121,3 +1121,22 @@ S2 remains in progress. The corrected task-added plugin is still installed
 for original reference testing and requires hash-checked removal afterward.
 
 Tested writer/test diff SHA-256: `5413bfe22bb62f30094b86872f62838ca180edcfbda3ca0573f82ceac3738eaf`.
+
+### S2 mastery thresholds and power damage selection
+
+Commit `b161f9de16` contains the reference model/lighting fixes. New immutable
+helpers resolve native mastery rank and select the directional power damage
+multiplier, with typed setting builders. Independently inspected original
+routines establish the ordered thresholds and separate directional unlocks;
+the caller supplies integer skill directly, without luck adjustment. Actual
+mastery effects and controller dispatch remain unimplemented.
+
+Four new tests first failed against stubs. All 1,678 component tests pass with
+exact inventory; all 30 physical/settings/style cases pass under ASan/UBSan
+(`S2/physical-rules-05`). Tests use distinct directional setting overrides to
+expose incorrect selection despite the installed values being mostly equal.
+Live original observations 38–46 confirm all nine added setting inputs, with
+three inspected captures. The fact catalogue now has 42 physical inputs and
+the live setting ledger has 46 observations. S2 remains in progress.
+
+Tested implementation/test/provenance diff SHA-256: `c3d275022fdd9f1aadc68787897721597aa70ee69ce5cfcc5f3445ab5777f814`.

@@ -346,3 +346,81 @@ TEST(ESM4PhysicalCombat, AttackFatigueSettingsUseTypedNativeOverrides)
     base.mData = -1.f;
     EXPECT_THROW(ESM4::buildAttackFatigueSettings(values), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, CombatMasteryUsesNativeThresholds)
+{
+    const ESM4::CombatMasterySettings settings{{25, 50, 75, 100}};
+    using Rank = ESM4::CombatMastery;
+    EXPECT_EQ(ESM4::combatMastery(std::numeric_limits<int>::min(), settings), Rank::Novice);
+    EXPECT_EQ(ESM4::combatMastery(0, settings), Rank::Novice);
+    EXPECT_EQ(ESM4::combatMastery(1, settings), Rank::Novice);
+    for (int tier = 0; tier < 4; ++tier)
+    {
+        const int threshold = (tier + 1) * 25;
+        EXPECT_EQ(ESM4::combatMastery(threshold - 1, settings), static_cast<Rank>(tier));
+        EXPECT_EQ(ESM4::combatMastery(threshold, settings), static_cast<Rank>(tier + 1));
+        EXPECT_EQ(ESM4::combatMastery(threshold + 1, settings), static_cast<Rank>(tier + 1));
+    }
+    EXPECT_EQ(ESM4::combatMastery(std::numeric_limits<int>::max(), settings), Rank::Master);
+    EXPECT_EQ(ESM4::combatMastery(3, {{1, 2, 3, 4}}), Rank::Expert);
+    EXPECT_EQ(ESM4::combatMastery(0, {{0, 0, 0, 0}}), Rank::Master);
+}
+
+TEST(ESM4PhysicalCombat, DirectionalPowerMultipliersUnlockIndependently)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    // Deliberately distinct overrides prove selection even though installed
+    // side/back/forward settings all happen to equal the novice multiplier.
+    const ESM4::PowerAttackSettings settings{2.f, 3.f, 4.f, 5.f, 6.f};
+    using Direction = ESM4::PowerAttackDirection;
+    struct Case { Direction direction; int threshold; float expected; };
+    for (const auto& c : {Case{Direction::Standing, 25, 3.f}, {Direction::Left, 50, 4.f},
+             {Direction::Right, 50, 4.f}, {Direction::Backward, 75, 5.f}, {Direction::Forward, 100, 6.f}})
+    {
+        EXPECT_EQ(ESM4::powerAttackMultiplier(0, c.direction, settings, mastery), 2.f);
+        EXPECT_EQ(ESM4::powerAttackMultiplier(c.threshold - 1, c.direction, settings, mastery), 2.f);
+        EXPECT_EQ(ESM4::powerAttackMultiplier(c.threshold, c.direction, settings, mastery), c.expected);
+        EXPECT_EQ(ESM4::powerAttackMultiplier(c.threshold + 1, c.direction, settings, mastery), c.expected);
+        EXPECT_EQ(ESM4::powerAttackMultiplier(1000, c.direction, settings, mastery), c.expected);
+    }
+    EXPECT_EQ(ESM4::powerAttackMultiplier(100, Direction::Standing, {0, 0, 0, 0, 0}, mastery), 0.f);
+}
+
+TEST(ESM4PhysicalCombat, MasteryAndPowerInputsRejectInvalidDomains)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    const ESM4::PowerAttackSettings settings{2.5f, 3.f, 2.5f, 2.5f, 2.5f};
+    EXPECT_THROW(ESM4::combatMastery(50, {{-1, 50, 75, 100}}), std::invalid_argument);
+    EXPECT_THROW(ESM4::combatMastery(50, {{50, 25, 75, 100}}), std::invalid_argument);
+    for (int skill : {0, 100})
+        EXPECT_THROW(ESM4::powerAttackMultiplier(skill, static_cast<ESM4::PowerAttackDirection>(99), settings, mastery), std::invalid_argument);
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        for (float ESM4::PowerAttackSettings::* member : {&ESM4::PowerAttackSettings::mBaseMultiplier,
+                 &ESM4::PowerAttackSettings::mStandingMultiplier, &ESM4::PowerAttackSettings::mSideMultiplier,
+                 &ESM4::PowerAttackSettings::mBackwardMultiplier, &ESM4::PowerAttackSettings::mForwardMultiplier})
+        {
+            auto bad = settings;bad.*member = invalid;
+            EXPECT_THROW(ESM4::powerAttackMultiplier(0, ESM4::PowerAttackDirection::Standing, bad, mastery), std::invalid_argument);
+        }
+}
+
+TEST(ESM4PhysicalCombat, MasteryAndPowerSettingsUseNativeTypesAndFallbacks)
+{
+    EXPECT_EQ(ESM4::buildCombatMasterySettings({}).mMinimumSkill, (std::array<std::int32_t, 4>{25, 50, 75, 100}));
+    const auto defaults = ESM4::buildPowerAttackSettings({});
+    EXPECT_EQ(defaults.mBaseMultiplier, 3.f);
+    EXPECT_EQ(defaults.mStandingMultiplier, 4.f);
+    EXPECT_EQ(defaults.mSideMultiplier, 3.f);
+    EXPECT_EQ(defaults.mBackwardMultiplier, 3.f);
+    EXPECT_EQ(defaults.mForwardMultiplier, 3.f);
+    ESM4::GameSetting threshold{}, multiplier{};
+    threshold.mEditorId = "iSkillApprenticeMin";threshold.mData = std::int32_t{20};
+    multiplier.mEditorId = "fDamagePowerAttackBonus";multiplier.mData = 2.5f;
+    const std::array<const ESM4::GameSetting*, 2> values{&threshold, &multiplier};
+    EXPECT_EQ(ESM4::buildCombatMasterySettings(values).mMinimumSkill[0], 20);
+    EXPECT_EQ(ESM4::buildPowerAttackSettings(values).mBaseMultiplier, 2.5f);
+    threshold.mData = 20.f;
+    EXPECT_THROW(ESM4::buildCombatMasterySettings(values), std::invalid_argument);
+    multiplier.mData = std::int32_t{3};
+    EXPECT_THROW(ESM4::buildPowerAttackSettings(values), std::invalid_argument);
+}

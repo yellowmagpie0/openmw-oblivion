@@ -20,6 +20,8 @@ namespace ESM4
     CombatStyleDefaults buildCombatStyleDefaults(std::span<const GameSetting* const> settings);
     PhysicalCombatSettings buildPhysicalCombatSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
+    CombatMasterySettings buildCombatMasterySettings(std::span<const GameSetting* const> settings);
+    PowerAttackSettings buildPowerAttackSettings(std::span<const GameSetting* const> settings);
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings);
     BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings);
     ArmorRatingSettings buildArmorRatingSettings(std::span<const GameSetting* const> settings);

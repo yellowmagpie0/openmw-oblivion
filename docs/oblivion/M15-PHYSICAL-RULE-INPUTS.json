@@ -367,6 +367,107 @@
         "value": 5.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-37"
+    },
+    {
+      "name": "iSkillApprenticeMin",
+      "value": 25,
+      "storage": "0xb3a4f8",
+      "constructor": "0x9fab17",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-38"
+    },
+    {
+      "name": "iSkillJourneymanMin",
+      "value": 50,
+      "storage": "0xb3a500",
+      "constructor": "0x9fab37",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-39"
+    },
+    {
+      "name": "iSkillExpertMin",
+      "value": 75,
+      "storage": "0xb3a508",
+      "constructor": "0x9fab57",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-40"
+    },
+    {
+      "name": "iSkillMasterMin",
+      "value": 100,
+      "storage": "0xb3a510",
+      "constructor": "0x9fab77",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-41"
+    },
+    {
+      "name": "fDamagePowerAttackBonus",
+      "value": 3.0,
+      "storage": "0xb36e20",
+      "constructor": "0x9e8cdf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02a0c4",
+        "type": "f",
+        "value": 2.5
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-42"
+    },
+    {
+      "name": "fDamagePowerAttackStandBonus",
+      "value": 4.0,
+      "storage": "0xb36e28",
+      "constructor": "0x9e8d0f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:005258",
+        "type": "f",
+        "value": 3.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-43"
+    },
+    {
+      "name": "fDamagePowerAttackSideBonus",
+      "value": 3.0,
+      "storage": "0xb36e30",
+      "constructor": "0x9e8d3f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:005259",
+        "type": "f",
+        "value": 2.5
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-44"
+    },
+    {
+      "name": "fDamagePowerAttackBackBonus",
+      "value": 3.0,
+      "storage": "0xb36e38",
+      "constructor": "0x9e8d6f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:005257",
+        "type": "f",
+        "value": 2.5
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-45"
+    },
+    {
+      "name": "fDamagePowerAttackForwardBonus",
+      "value": 3.0,
+      "storage": "0xb36e40",
+      "constructor": "0x9e8d9f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:00525a",
+        "type": "f",
+        "value": 2.5
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-46"
     }
   ]
 }
