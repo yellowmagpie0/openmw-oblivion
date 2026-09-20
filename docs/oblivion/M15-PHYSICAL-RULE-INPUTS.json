@@ -878,7 +878,7 @@
       "type": "float32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-88",
-      "note": "Original lookup and constructor/override provenance; recovery integration remains pending."
+      "note": "Typed essential recovery settings and health arithmetic implemented; controller countdown, unconscious animation and save lifecycle remain pending."
     },
     {
       "name": "fEssentialHealthPercentReGain",
@@ -888,7 +888,7 @@
       "type": "float32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-89",
-      "note": "Original lookup and constructor/override provenance; recovery integration remains pending."
+      "note": "Typed essential recovery settings and health arithmetic implemented; controller countdown, unconscious animation and save lifecycle remain pending."
     },
     {
       "name": "fFatigueBlockBase",

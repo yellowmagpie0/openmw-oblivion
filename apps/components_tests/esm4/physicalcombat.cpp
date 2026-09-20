@@ -990,3 +990,47 @@ TEST(ESM4PhysicalCombat, BlockCostsValidateInputsAndTypedNativeDefaults)
     value.mData = std::int32_t{0};
     EXPECT_THROW(ESM4::buildBlockCostSettings(values), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, EssentialRecoverySetsFractionOfBaseAtEntryAndRecovery)
+{
+    const auto settings = ESM4::buildEssentialRecoverySettings({});
+    EXPECT_EQ(settings.mDelay, 10);
+    EXPECT_EQ(settings.mHealthFraction, .3f);
+    for (float current : {-100.f, 0.f, 1.f, 30.f, 100.f, 200.f})
+    {
+        const auto result = ESM4::essentialRecoveryHealth(100, current, settings);
+        EXPECT_EQ(result.mTarget, 30.0000019073486328125f);
+        EXPECT_FLOAT_EQ(result.mAdjustment, 30.0000019073486328125f - current);
+    }
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(0, -1, settings).mAdjustment, 1);
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(1, 0, settings).mTarget, .3f); // no minimum-one clamp
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(100, 0, {0, 0}).mTarget, 0);
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(100, 0, {0, 2}).mTarget, 200); // no upper clamp
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(16777217, 0, {0, 1}).mTarget, 16777216.f);
+    EXPECT_LT(ESM4::essentialRecoveryHealth(100, 0, {0, std::nextafter(.3f, 0.f)}).mTarget, 30);
+    EXPECT_GT(ESM4::essentialRecoveryHealth(100, 0, {0, std::nextafter(.3f, 1.f)}).mTarget, 30);
+}
+
+TEST(ESM4PhysicalCombat, EssentialRecoveryValidatesAndResolvesNativeSettings)
+{
+    const auto settings = ESM4::buildEssentialRecoverySettings({});
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::essentialRecoveryHealth(100, 0, {bad, .3f}), std::invalid_argument);
+        EXPECT_THROW(ESM4::essentialRecoveryHealth(100, 0, {10, bad}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::essentialRecoveryHealth(-1, 0, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::essentialRecoveryHealth(100, std::numeric_limits<float>::infinity(), settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::essentialRecoveryHealth(100, std::numeric_limits<float>::quiet_NaN(), settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::essentialRecoveryHealth(100, 0, {10, std::numeric_limits<float>::max()}), std::invalid_argument);
+    EXPECT_THROW(ESM4::essentialRecoveryHealth(1, -std::numeric_limits<float>::max(), {10, std::numeric_limits<float>::max()}), std::invalid_argument);
+    ESM4::GameSetting delay{}, fraction{};
+    delay.mEditorId = "fEssentialDeathTime"; delay.mData = 5.f;
+    fraction.mEditorId = "fEssentialHealthPercentReGain"; fraction.mData = .5f;
+    const std::array<const ESM4::GameSetting*, 2> values{&delay, &fraction};
+    const auto custom = ESM4::buildEssentialRecoverySettings(values);
+    EXPECT_EQ(custom.mDelay, 5); EXPECT_EQ(custom.mHealthFraction, .5f);
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(100, 10, custom).mAdjustment, 40);
+    fraction.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildEssentialRecoverySettings(values), std::invalid_argument);
+}

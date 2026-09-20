@@ -39,6 +39,23 @@ namespace ESM4
         }
     }
 
+    void validateEssentialRecoverySettings(const EssentialRecoverySettings& settings)
+    {
+        nonnegative(settings.mDelay);
+        nonnegative(settings.mHealthFraction);
+    }
+
+    EssentialRecoveryHealth essentialRecoveryHealth(std::int32_t baseHealth, float currentHealth,
+        const EssentialRecoverySettings& settings)
+    {
+        validateEssentialRecoverySettings(settings);
+        if (baseHealth < 0)
+            throw std::invalid_argument("negative native essential base health");
+        finite(currentHealth);
+        const float target = rounded(double(static_cast<float>(baseHealth)) * settings.mHealthFraction);
+        return {target, rounded(double(target) - currentHealth)};
+    }
+
     std::int32_t creatureNaturalDamage(std::uint16_t baseDamage, float fatigueRatio,
         const PhysicalCombatSettings& settings)
     {

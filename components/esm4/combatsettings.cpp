@@ -326,6 +326,17 @@ namespace ESM4
         return result;
     }
 
+    EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const EssentialRecoverySettings result{
+            inputs.number("fEssentialDeathTime", 10.f),
+            inputs.number("fEssentialHealthPercentReGain", .3f),
+        };
+        validateEssentialRecoverySettings(result);
+        return result;
+    }
+
     BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

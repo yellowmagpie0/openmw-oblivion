@@ -810,3 +810,35 @@ skip the stagger query; a successful stagger skips the subsequent block disarm
 query. These decisions require ordered RNG advancement, not parallel rolls.
 The pure proc helpers remain individually usable, but the future contact
 controller must preserve this order (`defensive-proc-caller.txt`).
+
+
+## Essential unconscious health reset
+
+Original `006006B4` initializes the process recovery timer from
+`fEssentialDeathTime` (compiled/installed 10 seconds). The essential branch
+sets actor state 6 and resets health to base Health times
+`fEssentialHealthPercentReGain` (compiled/installed float32 .3). It first
+stores the integer base as float, then stores the product, then stores
+`target - current` before invoking actor-value mutation. The same arithmetic
+runs again at `00603EFC–00603F5B` during recovery. It can lower current health;
+there is no minimum-one or maximum-base clamp in this calculation.
+
+`essentialRecoveryHealth` implements those stored arithmetic steps and
+returns target and adjustment. It validates finite current health,
+nonnegative base health/settings and arithmetic overflow; a health fraction
+above one remains valid. Controller state, effects, mutation caps, elapsed
+time and saves are deliberately outside this pure helper. Read-only original
+GMST-88–89 confirm settings; they do not prove knockout gameplay.
+
+Recovery update `00603E97–00603EF7` requires actor state 6 and process knocked
+state 1 or 3, invokes the process timer update/getter, and recovers at timer
+less than or equal to zero. Constant A2FAA8 independently decodes to float32
+zero (`essential-timer-comparison.json`). Names and transition semantics of
+the process states remain a runtime investigation; they are not guessed into
+a new public state enum. Source traces: `essential-recovery.txt` and
+`essential-recovery-update.txt` under `S2/sources-01`.
+
+Two tests fail against the zero-return stub, then cover independent arithmetic
+values, signed current health, zero/base/over-base fractions, adjacent float
+boundaries, integer-to-float rounding, typed defaults/overrides, invalid types
+and overflow (`S2/physical-rules-16`). These tests establish arithmetic only.

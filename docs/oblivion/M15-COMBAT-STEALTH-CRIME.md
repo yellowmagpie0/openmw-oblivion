@@ -1514,3 +1514,24 @@ read-only queries; no installed files added. Next: essential recovery and
 remaining armor/stealth/crime rules, then actor policy/audit closure.
 
 Tested staged implementation/test/provenance diff SHA-256: `18a0953668bca8983d5985b2425b914509c053b7877a8804ef4ca910ec144af0`.
+
+
+### S2 essential recovery health arithmetic
+
+Commit `0d693ffa6c` contains block contact costs. Added typed essential
+recovery delay/fraction settings and the health target/adjustment calculation
+shared by entering unconsciousness and recovery. Preserves base-to-float and
+product/subtraction storage, allows signed current health and fractions above
+one, and diagnoses invalid settings/base health/nonfinite results.
+
+Two new tests fail against a stub, then pass. All **1,728 component tests**
+and **80 focused ASan/UBSan tests** pass with exact inventories and no skips
+(`S2/physical-rules-16`). Original GMST-88–89 provide setting confirmation;
+original code independently establishes the arithmetic and zero timer boundary.
+No original essential-knockout gameplay or native lifecycle acceptance is
+claimed. Controller states, timer progression, animation and persistence remain
+open. S2 remains in progress; S3–S14 pending. Original-15 remains paused for
+read-only queries with no task-installed files. Next: armor mastery aggregation
+and remaining stealth/crime rule families, then actor policy/audit closure.
+
+Tested implementation/test/provenance diff SHA-256: `1d3549e8bda66450924b4e8a707fb2f85113fba6db750747127c917778915298`.

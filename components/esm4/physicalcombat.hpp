@@ -42,6 +42,22 @@ namespace ESM4
         float mAttributeMultiplier;
     };
 
+    struct EssentialRecoverySettings
+    {
+        float mDelay;
+        float mHealthFraction;
+    };
+    struct EssentialRecoveryHealth
+    {
+        float mTarget;
+        float mAdjustment;
+    };
+    // Shared by entry into essential unconsciousness and its recovery. The
+    // controller owns eligibility, the countdown and the actor-value mutation.
+    EssentialRecoveryHealth essentialRecoveryHealth(std::int32_t baseHealth, float currentHealth,
+        const EssentialRecoverySettings& settings);
+    void validateEssentialRecoverySettings(const EssentialRecoverySettings& settings);
+
     struct KnockdownSettings
     {
         float mAgilityBase;
