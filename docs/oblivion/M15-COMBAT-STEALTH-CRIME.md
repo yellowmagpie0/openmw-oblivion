@@ -2099,3 +2099,12 @@ selection alone does not report bounty. S2 remains in progress; S3–S14 remain
 pending. Next: crime alarm recipients, spatial reach and report delivery.
 
 Tested implementation/test/provenance diff SHA-256: `63d055b33500c5eba2bd1293a087de78bcda3858a2c64837ed6df904251406ed`.
+
+### S2 integration refresh through witness candidates
+
+Revision `c3359e4512` builds `openmw`, `openmw-tests` and `esmtool` successfully.
+All **552 engine tests** pass with exact inventory/no skips in
+`S2/integration-05`; this supplements its 1,796 component and 152 focused
+sanitizer tests. The build was completed before the next alarm-spatial-rule
+edits. This is compile/regression evidence, not normal-input M15 runtime
+acceptance. S2 remains in progress and S3–S14 remain pending.
