@@ -1356,3 +1356,40 @@ Two new component tests fail against an always-false stub, then exercise the
 reviewed branch, independent causes and nonfinite rejection. Native animation,
 ragdoll, mounted interruption and live recovery acceptance remain controller
 work; this helper does not mutate actor state.
+
+## Block contact eligibility and zero-absorption reactions
+
+Original contact branch `005FF7C9–005FF7F5` suppresses active blocking for
+paralysis or the previously resolved Master sneak bypass. Otherwise
+`005E5670` requires process action **6**. `005FF836–005FF848` then requires
+the reviewed strict facing cone. The actor controller supplies active posture;
+this rule does not invent a timed-parry window or permit blocking from a
+merely held input while another action is active.
+
+Process equipment queries `+F8` and `+EC` distinguish shield, weapon and
+unarmed. At `005FF87E–005FF892`, an unarmed defender facing an attack with a
+weapon record (`stack+2C`) or projectile reference (`EBP`) gets **zero absorbed
+fraction**, while the block-reaction branch continues. Otherwise the existing
+`005474A0` block-fraction helper evaluates skill/luck/fatigue/equipment. Thus
+an active unarmed block against a natural/unarmed attack can absorb damage,
+but the same posture against weapons/arrows must not gain that fraction.
+A zero fraction is not permission to skip all subsequent native reactions.
+
+`blockContactDisposition` returns None, ReactionOnly or Absorb, preserving this
+distinction without mutating damage or condition. The existing `blockFraction`
+remains the arithmetic rule for Absorb. The caller must use zero for
+ReactionOnly and still apply the appropriate reaction logic. Shield/weapon
+selection comes from the equipped instance, not the nominal inventory contents.
+
+Evidence: `S2/sources-01/block-contact-eligibility.txt`,
+`block-contact-inputs.txt`, `contact-argument-setup.txt`, `block-state-query.txt`
+and the previously reviewed sneak-bypass caller. **160 original instruction
+cases** independently verify active posture/paralysis/bypass and the zero
+absorption branch with both attack source kinds and their combinations
+(`S2/oracle-emulator/block-contact.py`, `block-contact-table.json`,
+`block-contact.log`). Only actor-value and process-action reads are boundary
+stubs. Facing-cone arithmetic has its separately reviewed original cases.
+Two new component tests first fail against the None stub, then cover all gate
+failures, all equipment classes, weapon/projectile combinations and invalid
+equipment. World posture, equipped-instance selection, reaction ordering and
+normal-input blocking remain native runtime acceptance work.

@@ -1915,3 +1915,20 @@ is asserted. S2 remains in progress; S3–S14 remain pending. Next: finish block
 contact eligibility and remaining crime-policy rules.
 
 Tested implementation/test/provenance diff SHA-256: `1131820285233ba4586844538552e988390fcf5e314afafbd9fbd3275e9353ce`.
+
+### S2 block contact eligibility
+
+Commit `1e5ec46c10` contains sustained incapacitation rules. Implemented a
+block-contact disposition that preserves active posture, paralysis/sneak
+bypass, facing-cone eligibility and the zero-absorption unarmed reaction branch
+against weapon/projectile attacks. It composes with existing block arithmetic
+and does not mutate actor/inventory state.
+
+Two new tests fail against the stub, then pass. All **1,766 component tests**
+and **122 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/block-contact-01`). **160 original instruction cases** independently
+verify the gates and unarmed absorption exception. Native normal-input block
+and reaction ordering remain runtime gates. S2 remains in progress; S3–S14
+remain pending. Next: native ownership inheritance and crime access rules.
+
+Tested implementation/test/provenance diff SHA-256: `c5b8433d87acb798443b360312dd3ef19f453c8f2043f953f4bfc9dc33309c94`.

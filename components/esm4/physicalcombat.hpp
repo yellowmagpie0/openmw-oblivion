@@ -240,6 +240,20 @@ namespace ESM4
     };
 
     enum class BlockEquipment { Shield, Weapon, Unarmed };
+    struct BlockContactInput
+    {
+        bool mBlocking;
+        bool mParalyzed;
+        bool mBypassBlock;
+        bool mInsideCone;
+        BlockEquipment mEquipment;
+        bool mWeaponAttack;
+        bool mProjectile;
+    };
+    enum class BlockContactDisposition { None, ReactionOnly, Absorb };
+    // ReactionOnly retains block reaction handling but has zero absorbed fraction.
+    BlockContactDisposition blockContactDisposition(const BlockContactInput& input);
+
     struct BlockSettings
     {
         float mSkillBase;

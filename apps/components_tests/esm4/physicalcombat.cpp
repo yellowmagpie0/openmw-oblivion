@@ -1198,3 +1198,40 @@ TEST(ESM4PhysicalCombat, IncapacitationRejectsNonfiniteFatigueEvenWithAnotherCau
             for (bool essential : {false, true})
                 EXPECT_THROW(ESM4::requiresIncapacitation(fatigue, paralyzed, essential), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, BlockContactRequiresActivePostureConeAndNoBypassOrParalysis)
+{
+    using E = ESM4::BlockEquipment;
+    using D = ESM4::BlockContactDisposition;
+    for (E equipment : {E::Shield, E::Weapon, E::Unarmed})
+    {
+        const ESM4::BlockContactInput valid{true, false, false, true, equipment, false, false};
+        EXPECT_EQ(ESM4::blockContactDisposition(valid), D::Absorb);
+        auto changed = valid;
+        changed.mBlocking = false;
+        EXPECT_EQ(ESM4::blockContactDisposition(changed), D::None);
+        changed = valid; changed.mParalyzed = true;
+        EXPECT_EQ(ESM4::blockContactDisposition(changed), D::None);
+        changed = valid; changed.mBypassBlock = true;
+        EXPECT_EQ(ESM4::blockContactDisposition(changed), D::None);
+        changed = valid; changed.mInsideCone = false;
+        EXPECT_EQ(ESM4::blockContactDisposition(changed), D::None);
+    }
+}
+
+TEST(ESM4PhysicalCombat, UnarmedBlockAgainstWeaponsAndProjectilesHasReactionWithoutAbsorption)
+{
+    using E = ESM4::BlockEquipment;
+    using D = ESM4::BlockContactDisposition;
+    for (const auto& attack : {std::pair{true, false}, std::pair{false, true}, std::pair{true, true}})
+    {
+        EXPECT_EQ(ESM4::blockContactDisposition({true, false, false, true, E::Unarmed,
+            attack.first, attack.second}), D::ReactionOnly);
+        for (E equipment : {E::Shield, E::Weapon})
+            EXPECT_EQ(ESM4::blockContactDisposition({true, false, false, true, equipment,
+                attack.first, attack.second}), D::Absorb);
+    }
+    for (bool blocking : {false, true})
+        EXPECT_THROW(ESM4::blockContactDisposition({blocking, false, false, true,
+            static_cast<E>(99), false, false}), std::invalid_argument);
+}

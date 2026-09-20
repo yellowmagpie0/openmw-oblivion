@@ -431,6 +431,22 @@ namespace ESM4
             throw std::invalid_argument("reversed native hand damage range");
     }
 
+    BlockContactDisposition blockContactDisposition(const BlockContactInput& input)
+    {
+        switch (input.mEquipment)
+        {
+            case BlockEquipment::Shield:
+            case BlockEquipment::Weapon:
+            case BlockEquipment::Unarmed: break;
+            default: throw std::invalid_argument("invalid native block equipment");
+        }
+        if (!input.mBlocking || input.mParalyzed || input.mBypassBlock || !input.mInsideCone)
+            return BlockContactDisposition::None;
+        if (input.mEquipment == BlockEquipment::Unarmed && (input.mWeaponAttack || input.mProjectile))
+            return BlockContactDisposition::ReactionOnly;
+        return BlockContactDisposition::Absorb;
+    }
+
     void validateBlockSettings(const BlockSettings& settings)
     {
         for (float value : { settings.mSkillBase, settings.mSkillMultiplier, settings.mMaximum,
