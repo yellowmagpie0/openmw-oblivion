@@ -1950,3 +1950,21 @@ progress; S3–S14 remain pending. Next: cell/door public access and the remaini
 crime-policy rules.
 
 Tested implementation/test/provenance diff SHA-256: `21bee9b530d2be8b89b653698860c4a40867696f667d7cd3936f6adafa090a0e`.
+
+### S2 native cell trespass classification
+
+Commit `00cb062904` contains independent ownership-field inheritance.
+Implemented the original cell trespass predicate with class-guard exemption,
+public/hand-changed flags, permission-global presence, NPC identity and signed
+faction-rank comparison. The global is intentionally not evaluated numerically
+in this query. Door access, ownership claims and reported crime remain distinct.
+
+Three new tests fail against the stub, then pass. All **1,772 component tests**
+and **128 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/cell-trespass-01`). **272 original instruction cases** independently
+confirm every cell-flag byte, the exemption branches and rank boundaries.
+No normal gameplay trespass/report acceptance is claimed. S2 remains in
+progress; S3–S14 remain pending. Next: door/reference access and the remaining
+crime-policy rules.
+
+Tested implementation/test/provenance diff SHA-256: `62b95803a2e9be4ceaf9efdee7336c578d70d99cc8b39daf9c775cbb33e8035b`.

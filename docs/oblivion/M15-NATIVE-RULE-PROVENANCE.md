@@ -1432,3 +1432,36 @@ Three component tests first fail against the empty-result stub, then cover
 field precedence, type exceptions, empty inputs and signed rank extremes.
 World inheritance, door/public access and normal crime actions are still
 integration gates.
+
+## Native cell trespass classification
+
+Actor virtual `+354` (`0060E320`) queries its current cell through
+`004CABC0`. That cell helper first exempts NPCs whose class has the guard
+flag (`005E6C60` -> `0051BEF0`, class flags bit 1). No owner, cell Public
+(`20`) or HandChanged (`40`), a nonnull permission-global **record**, or a
+non-NPC actor also returns false. The global's numeric value is never read
+in this helper. This differs from `hasOwnershipClaim`, and callers must not
+collapse the two policies.
+
+For the remaining NPCs, an NPC-owned cell is trespassing unless the owner's
+base matches the actor's base. A faction-owned cell is trespassing when the
+actor's signed faction rank is **less than** its required rank; raw cell rank
+-1 becomes 0. No interior-bit, evil-owner, global-value, witness, alarm or bounty
+check occurs in this helper. Its caller may apply additional contextual rules;
+a true result alone must not create a reported offense.
+
+`cellTreatsActorAsTrespasser` implements this classification over immutable
+resolved inputs. Guard classification is the class flag, not aggression,
+responsibility or a guessed faction name. Invalid owner kinds and inconsistent
+identity/guard inputs diagnose before exemptions. This does not change native
+world state or enable trespass gameplay by itself.
+
+Independent original-helper execution passes **272 cases**, including all 256
+cell-flag bytes, each exemption and signed rank boundaries. Record/identity/
+class/rank reads are boundary stubs; original classification, mask, sentinel
+and comparison instructions execute unchanged. Evidence:
+`S2/oracle-emulator/cell-trespass.py`, `cell-trespass-table.json`,
+`cell-trespass.log`, and `S2/sources-01/cell-access-rule.txt`.
+Three new component tests fail against the false stub, then exercise the
+reviewed policy. Trespass warning/report timing, witnesses, door activation and
+native save/restart remain separate gates.

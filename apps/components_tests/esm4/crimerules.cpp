@@ -301,3 +301,67 @@ TEST(ESM4CrimeRules, OwnershipRankMinusOneInheritsButOtherSignedRanksArePreserve
     const std::array<ESM4::OwnershipLayer, 3> inherited{{{{}, -1, {}}, {{}, -1, {}}, {{}, 7, {}}}};
     EXPECT_EQ(ESM4::resolveOwnership(K::Other, inherited).mRank, 7);
 }
+
+TEST(ESM4CrimeRules, CellTrespassHasIndependentPublicGuardAndGlobalPresenceExemptions)
+{
+    using K = ESM4::CrimeOwnerKind;
+    const ESM4::CellTrespassInput privateCell{K::Actor, 1, false, true, false, false, -1, 0};
+    EXPECT_TRUE(ESM4::cellTreatsActorAsTrespasser(privateCell));
+    auto changed = privateCell; changed.mMatchesActorBase = true;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(changed));
+    changed = privateCell; changed.mActorIsGuard = true;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(changed));
+    changed = privateCell; changed.mHasPermissionGlobal = true;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(changed));
+    changed = privateCell; changed.mActorIsNpc = false;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(changed));
+    changed = privateCell; changed.mOwnerKind = K::None;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(changed));
+    for (unsigned flags : {0x20, 0x40, 0x60, 0x21, 0x41, 0xff})
+    {
+        changed = privateCell; changed.mCellFlags = flags;
+        EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(changed));
+    }
+    // This query itself has no interior-only or show-sky test.
+    for (unsigned flags : {0, 1, 2, 4, 8, 0x10, 0x80, 0x9f})
+    {
+        changed = privateCell; changed.mCellFlags = flags;
+        EXPECT_TRUE(ESM4::cellTreatsActorAsTrespasser(changed));
+    }
+}
+
+TEST(ESM4CrimeRules, CellTrespassUsesSignedFactionRankAndMissingRankSentinel)
+{
+    using K = ESM4::CrimeOwnerKind;
+    ESM4::CellTrespassInput input{K::Faction, 1, false, true, false, false, -1, -1};
+    EXPECT_TRUE(ESM4::cellTreatsActorAsTrespasser(input)); // Required -1 becomes 0.
+    input.mActorFactionRank = 0;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(input));
+    input.mRequiredRank = 2;
+    for (int rank : {-1, 0, 1})
+    {
+        input.mActorFactionRank = rank;
+        EXPECT_TRUE(ESM4::cellTreatsActorAsTrespasser(input));
+    }
+    for (int rank : {2, 3, std::numeric_limits<int>::max()})
+    {
+        input.mActorFactionRank = rank;
+        EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(input));
+    }
+    input.mRequiredRank = -2; input.mActorFactionRank = -1;
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(input));
+    input.mRequiredRank = std::numeric_limits<int>::min();
+    input.mActorFactionRank = std::numeric_limits<int>::min();
+    EXPECT_FALSE(ESM4::cellTreatsActorAsTrespasser(input));
+}
+
+TEST(ESM4CrimeRules, CellTrespassRejectsInvalidOwnerAndInconsistentIdentityInputs)
+{
+    using K = ESM4::CrimeOwnerKind;
+    ESM4::CellTrespassInput input{static_cast<K>(99), 0x20, true, true, false, false, -1, 0};
+    EXPECT_THROW(ESM4::cellTreatsActorAsTrespasser(input), std::invalid_argument);
+    input.mOwnerKind = K::Faction; input.mMatchesActorBase = true;
+    EXPECT_THROW(ESM4::cellTreatsActorAsTrespasser(input), std::invalid_argument);
+    input.mMatchesActorBase = false; input.mActorIsGuard = true; input.mActorIsNpc = false;
+    EXPECT_THROW(ESM4::cellTreatsActorAsTrespasser(input), std::invalid_argument);
+}

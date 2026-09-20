@@ -29,6 +29,22 @@ namespace ESM4
     ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers);
 
     enum class CrimeOwnerKind { None, Actor, Faction };
+    struct CellTrespassInput
+    {
+        CrimeOwnerKind mOwnerKind;
+        std::uint8_t mCellFlags;
+        bool mHasPermissionGlobal;
+        bool mActorIsNpc;
+        bool mActorIsGuard;
+        bool mMatchesActorBase;
+        std::int32_t mActorFactionRank;
+        std::int32_t mRequiredRank; // Raw cell -1 sentinel resolves to zero.
+    };
+    // Native cell trespass query only; does not report an incident or decide
+    // theft/door access. A permission-global identity suffices here, regardless
+    // of its value. Guard classification comes from the NPC's class flag.
+    bool cellTreatsActorAsTrespasser(const CellTrespassInput& input);
+
     struct OwnershipClaimInput
     {
         CrimeOwnerKind mOwnerKind;

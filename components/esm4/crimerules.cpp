@@ -1,5 +1,7 @@
 #include "crimerules.hpp"
 
+#include "loadcell.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -48,6 +50,28 @@ namespace ESM4
                 break;
             }
         return result;
+    }
+
+    bool cellTreatsActorAsTrespasser(const CellTrespassInput& input)
+    {
+        switch (input.mOwnerKind)
+        {
+            case CrimeOwnerKind::None:
+            case CrimeOwnerKind::Actor:
+            case CrimeOwnerKind::Faction: break;
+            default: throw std::invalid_argument("invalid native cell owner kind");
+        }
+        if (input.mMatchesActorBase && input.mOwnerKind != CrimeOwnerKind::Actor)
+            throw std::invalid_argument("native cell identity match requires actor owner");
+        if (input.mActorIsGuard && !input.mActorIsNpc)
+            throw std::invalid_argument("native guard class requires NPC");
+        if (input.mActorIsGuard || input.mOwnerKind == CrimeOwnerKind::None
+            || (input.mCellFlags & (CELL_Public | CELL_HandChgd)) || input.mHasPermissionGlobal || !input.mActorIsNpc)
+            return false;
+        if (input.mOwnerKind == CrimeOwnerKind::Actor)
+            return !input.mMatchesActorBase;
+        const std::int32_t required = input.mRequiredRank == -1 ? 0 : input.mRequiredRank;
+        return input.mActorFactionRank < required;
     }
 
     bool hasOwnershipClaim(const OwnershipClaimInput& input)
