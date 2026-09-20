@@ -6,6 +6,35 @@
 
 namespace ESM4
 {
+    PickpocketItemDecision pickpocketItemDecision(const PickpocketItemInput& input)
+    {
+        if (input.mDirection != PickpocketDirection::Take && input.mDirection != PickpocketDirection::Place)
+            throw std::invalid_argument("invalid native pickpocket direction");
+        if (!std::isfinite(input.mBaseWeight) || input.mBaseWeight < 0)
+            throw std::invalid_argument("invalid native pickpocket item weight");
+        if (!input.mPlayable)
+            return PickpocketItemDecision::NonPlayable;
+        if (input.mDirection == PickpocketDirection::Take)
+        {
+            if (input.mFirstInstanceBound)
+                return PickpocketItemDecision::Bound;
+            if (input.mAnyInstanceWorn)
+                return PickpocketItemDecision::Equipped;
+        }
+        else
+        {
+            if (input.mQuestItem)
+                return PickpocketItemDecision::QuestItem;
+            if (input.mDrawnEquippedWeapon)
+                return PickpocketItemDecision::DrawnWeapon;
+            if (input.mFirstInstanceBound)
+                return PickpocketItemDecision::Bound;
+            if (input.mBaseWeight > 0)
+                return PickpocketItemDecision::PositiveWeight;
+        }
+        return PickpocketItemDecision::Allowed;
+    }
+
     void validatePickpocketSettings(const PickpocketSettings& settings)
     {
         for (float value : {settings.mActorSkillBase, settings.mActorSkillMultiplier, settings.mTargetSkillBase,

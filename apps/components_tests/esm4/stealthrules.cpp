@@ -192,3 +192,57 @@ TEST(ESM4StealthRules, PickpocketSettingsBindAllFactorsAndRejectMalformedValues)
     invalid = settings; invalid.mActorSkillBase = float(std::numeric_limits<int>::max());
     EXPECT_THROW(ESM4::pickpocketChance(0, 0, 0, invalid), std::invalid_argument);
 }
+
+TEST(ESM4StealthRules, TakingPickpocketItemsHidesWornBoundAndNonPlayableButNotQuestItems)
+{
+    using D = ESM4::PickpocketItemDecision;
+    using R = ESM4::PickpocketDirection;
+    const ESM4::PickpocketItemInput valid{R::Take, true, false, false, false, false, 10};
+    EXPECT_EQ(ESM4::pickpocketItemDecision(valid), D::Allowed);
+    auto input = valid; input.mAnyInstanceWorn = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::Equipped);
+    input = valid; input.mFirstInstanceBound = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::Bound);
+    input = valid; input.mPlayable = false;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::NonPlayable);
+    input = valid; input.mQuestItem = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::Allowed);
+}
+
+TEST(ESM4StealthRules, PlacingPickpocketItemsAppliesQuestDrawnBoundAndPositiveWeightRestrictions)
+{
+    using D = ESM4::PickpocketItemDecision;
+    using R = ESM4::PickpocketDirection;
+    const ESM4::PickpocketItemInput valid{R::Place, true, false, false, false, false, 0};
+    EXPECT_EQ(ESM4::pickpocketItemDecision(valid), D::Allowed);
+    auto input = valid; input.mAnyInstanceWorn = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::Allowed);
+    input = valid; input.mQuestItem = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::QuestItem);
+    input = valid; input.mDrawnEquippedWeapon = true; input.mAnyInstanceWorn = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::DrawnWeapon);
+    input = valid; input.mFirstInstanceBound = true;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::Bound);
+    input = valid; input.mPlayable = false;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::NonPlayable);
+    for (float weight : {std::nextafter(0.f, 1.f), 1.f, std::numeric_limits<float>::max()})
+    {
+        input = valid; input.mBaseWeight = weight;
+        EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::PositiveWeight);
+    }
+    input = valid; input.mBaseWeight = -0.f;
+    EXPECT_EQ(ESM4::pickpocketItemDecision(input), D::Allowed);
+}
+
+TEST(ESM4StealthRules, PickpocketItemPolicyRejectsInvalidDirectionsAndWeights)
+{
+    using R = ESM4::PickpocketDirection;
+    ESM4::PickpocketItemInput input{static_cast<R>(99), true, false, false, false, false, 0};
+    EXPECT_THROW(ESM4::pickpocketItemDecision(input), std::invalid_argument);
+    for (R direction : {R::Take, R::Place})
+        for (float weight : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            input.mDirection = direction; input.mBaseWeight = weight;
+            EXPECT_THROW(ESM4::pickpocketItemDecision(input), std::invalid_argument);
+        }
+}

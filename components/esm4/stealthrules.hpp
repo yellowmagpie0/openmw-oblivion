@@ -5,6 +5,23 @@
 
 namespace ESM4
 {
+    enum class PickpocketDirection { Take, Place };
+    enum class PickpocketItemDecision { Allowed, NonPlayable, Equipped, Bound, QuestItem, DrawnWeapon, PositiveWeight };
+    struct PickpocketItemInput
+    {
+        PickpocketDirection mDirection;
+        bool mPlayable; // Native biped flag for ARMO/CLOT; true for other supported items.
+        bool mAnyInstanceWorn; // Either worn marker in the selected native entry.
+        bool mFirstInstanceBound; // ExtraBoundArmor on the entry's first extra-data instance.
+        bool mQuestItem;
+        bool mDrawnEquippedWeapon;
+        float mBaseWeight;
+    };
+    // Normal live-NPC pickpocket menu policy; corpse/container transfers differ.
+    // Does not transfer inventory or decide the taking success roll. A transfer
+    // click clears untouched-session state before even a rejected attempt.
+    PickpocketItemDecision pickpocketItemDecision(const PickpocketItemInput& input);
+
     struct PickpocketSettings
     {
         float mActorSkillBase;

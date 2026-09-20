@@ -1534,3 +1534,43 @@ cell flag helpers and horse query execute unchanged. Evidence:
 `reference-access.log`, `S2/sources-01/ownership-player-query.txt` and
 `ownership-player-continuation.txt`. World resolution, interaction and crime
 reporting remain native runtime gates.
+
+## Pickpocket item eligibility
+
+Normal live-NPC pickpocket inventory filtering uses `004854F0` from
+`005993DB`. ARMO/CLOT biped non-playable flag `40` hides the entry. For the
+victim's inventory, the first extra-data instance's ExtraBoundArmor marker
+(`0041DF50`) and either worn marker (`00484E80(0)`) hide it. A quest-item flag
+alone does not hide a victim's item. Player inventory visibility and corpse/
+container transfers have different paths and must not reuse this predicate
+without their context.
+
+Placing first rejects quest items (`0059A549`), then the player's drawn
+weapon when the selected entry has a worn marker and its base matches the
+process's equipped weapon (`0059A589–0059A5F9`). Common transfer handling
+rejects the first extra instance's bound marker (`0059A601`). The live-NPC
+reverse-pickpocket branch rejects strictly positive base weight
+(`0059AC42`); both signed zeros pass. Negative/nonfinite weights are outside
+our supported data domain and diagnose, rather than exploiting the original
+raw floating comparison. Placing skips the taking success roll.
+
+`pickpocketItemDecision` represents these item restrictions over resolved
+inputs. It does not transfer inventory or consume RNG. The drawn-weapon input
+means the complete conjunction above, not merely that the player has drawn
+some weapon. Native transfer click handling clears the untouched-menu flag
+`B13E90` at `0059A519`, **before** item retrieval or rejection; session handling
+must preserve that ordering. The M13 term "unbound" for script binding does
+not represent ExtraBoundArmor and must not be substituted for it.
+
+Three component tests fail against an always-allowed stub, then cover each
+restriction, taking/placing asymmetry, signed zero, positive subnormal and
+invalid inputs. **73 independent original instruction cases** exercise
+visibility, quest, bound, weight and drawn-weapon guards. Record virtual reads
+are boundary stubs; biped flags, extra-data queries, worn-list traversal and
+policy branches execute unchanged. Evidence:
+`S2/oracle-emulator/pickpocket-items.py`, `pickpocket-items-table.json`,
+`pickpocket-items.log`; `S2/sources-01/pickpocket-transfer-full.txt`,
+`pickpocket-transfer-prologue.txt`, `container-list-update.txt`,
+`inventory-display-filter.txt`, `inventory-equipped-filter.txt` and
+`item-biped-query.txt`. Session persistence and ordinary UI transfers remain
+runtime gates.

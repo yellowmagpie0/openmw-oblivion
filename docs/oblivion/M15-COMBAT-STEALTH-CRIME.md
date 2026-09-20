@@ -2003,3 +2003,19 @@ S2 remains in progress; S3–S14 remain pending. Next: prohibited pickpocket
 items/transfer session rules and remaining crime legality/reporting rules.
 
 Tested implementation/test/provenance diff SHA-256: `c4f3e29fe980760cc74ddf2ece1977102d18054557ec296498c490b66c2b8a61`.
+
+### S2 pickpocket item eligibility
+
+Commit `f62945d1d1` contains player reference off-limits policy. Added separate
+native taking/placing item restrictions: biped playability, worn and bound
+entries, quest-item asymmetry, drawn equipped weapon and positive weight.
+Transfer-click session ordering is recorded for integration.
+
+Three new tests fail against the stub, then pass. All **1,782 component tests**
+and **138 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/pickpocket-items-01`). **73 original instruction cases** independently
+verify visibility and transfer guards. No ordinary UI transfer, crime or
+persistent session acceptance is claimed. S2 remains in progress; S3–S14
+remain pending. Next: session eligibility and remaining crime rules.
+
+Tested implementation/test/provenance diff SHA-256: `21b2310ad3b76c12996f0b3349b4cb62d81c5c29ca613c79ae2724fb109b9b92`.
