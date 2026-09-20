@@ -1172,3 +1172,29 @@ TEST(ESM4PhysicalCombat, HitConeUsesRoundedAnglesStrictBoundaryAndOneWrap)
     EXPECT_THROW(ESM4::combatHitCone(0, 0, -1), std::invalid_argument);
     EXPECT_THROW(ESM4::combatHitCone(std::numeric_limits<float>::max(), 0, 20), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, IncapacitationUsesStrictNegativeFatigueAndIndependentCauses)
+{
+    // Native process branch 00654642 and recovery branch 00654886.
+    const float below = std::nextafter(0.f, -1.f);
+    const float above = std::nextafter(0.f, 1.f);
+    for (float fatigue : {below, -1.f, -std::numeric_limits<float>::max()})
+        EXPECT_TRUE(ESM4::requiresIncapacitation(fatigue, false, false));
+    for (float fatigue : {-0.f, 0.f, above, 1.f, std::numeric_limits<float>::max()})
+        EXPECT_FALSE(ESM4::requiresIncapacitation(fatigue, false, false));
+    for (float fatigue : {below, 0.f, above, 100.f})
+    {
+        EXPECT_TRUE(ESM4::requiresIncapacitation(fatigue, true, false));
+        EXPECT_TRUE(ESM4::requiresIncapacitation(fatigue, false, true));
+        EXPECT_TRUE(ESM4::requiresIncapacitation(fatigue, true, true));
+    }
+}
+
+TEST(ESM4PhysicalCombat, IncapacitationRejectsNonfiniteFatigueEvenWithAnotherCause)
+{
+    for (float fatigue : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+        for (bool paralyzed : {false, true})
+            for (bool essential : {false, true})
+                EXPECT_THROW(ESM4::requiresIncapacitation(fatigue, paralyzed, essential), std::invalid_argument);
+}

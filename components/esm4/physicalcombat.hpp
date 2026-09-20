@@ -81,6 +81,11 @@ namespace ESM4
         const EssentialRecoverySettings& settings);
     void validateEssentialRecoverySettings(const EssentialRecoverySettings& settings);
 
+    // Sustained incapacitation requirement, not a random hit knockdown or an
+    // animation-completion signal. Essential means already unconscious, not
+    // simply flagged essential. Recovery may begin when this becomes false.
+    bool requiresIncapacitation(float currentFatigue, bool paralyzed, bool essentialUnconscious);
+
     struct KnockdownSettings
     {
         float mAgilityBase;

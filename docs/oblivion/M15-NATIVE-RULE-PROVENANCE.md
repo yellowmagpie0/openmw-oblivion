@@ -1321,3 +1321,38 @@ per-style hashes match the fresh audit. This is data/rule agreement, not an
 executed opponent policy or magic effect. Equipment, spell, faction and actor
 flags remain separately preserved inputs; selected campaign behavior still
 requires its complete policy explanation and gameplay gates.
+
+## Sustained incapacitation requirement
+
+Original high-process update `006545E0`, reached through process virtual
+`+2F4` at actor update `00603E2B`, tests current fatigue at `00654642–00654656`.
+Helper `005E0A60` reads modified actor value `0A` (Fatigue). For finite inputs,
+the entry predicate is **fatigue < 0**, or nonzero paralysis, or actor state 6
+(essential unconscious). Exactly zero, including negative zero, does not
+require a new fatigue knockout. Recovery branch `00654886–006548B4` requires
+fatigue >= 0, no paralysis, and actor state other than 6 before looking up
+and starting a recovery animation. These are entry/recovery eligibility checks,
+not proof that the physics body has settled or recovery animation has finished.
+
+The paralysis virtual `+1A0` is `005E17E0`: integer actor value `30` is tested
+against zero. An imported header's `HasFatigue` name for that vtable slot is
+misleading; the implementation and actor-value table identify Paralysis.
+`requiresIncapacitation` takes the resolved predicate, not an active-effect
+container. Its essential input means already unconscious, not the essential
+base flag. Random impact knockdown is a separate cause and is not erased by a
+false result here. Nonfinite fatigue is rejected at the native rule boundary.
+
+Original entry and recovery instruction slices independently pass **96 cases**:
+negative/positive extremes, ±1, the floats adjacent to zero, both signed zeros,
+paralysis values -1/0/1, essential state 6, and nonessential state 5 controls.
+Only actor-value reads are boundary stubs; original fatigue/paralysis/state
+queries and branch instructions execute unchanged. Evidence:
+`S2/oracle-emulator/incapacitation.py`, `incapacitation-table.json`,
+`incapacitation.log`; source traces `current-fatigue-query.txt`,
+`has-fatigue-query.txt`, `process-knocked-update.txt` and
+`fatigue-state-update.txt` under `S2/sources-01`.
+
+Two new component tests fail against an always-false stub, then exercise the
+reviewed branch, independent causes and nonfinite rejection. Native animation,
+ragdoll, mounted interruption and live recovery acceptance remain controller
+work; this helper does not mutate actor state.

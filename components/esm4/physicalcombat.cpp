@@ -39,6 +39,12 @@ namespace ESM4
         }
     }
 
+    bool requiresIncapacitation(float currentFatigue, bool paralyzed, bool essentialUnconscious)
+    {
+        finite(currentFatigue);
+        return currentFatigue < 0 || paralyzed || essentialUnconscious;
+    }
+
     CombatConeResult combatHitCone(float facingRadians, float bearingRadians, float coneDegrees)
     {
         finite(facingRadians);

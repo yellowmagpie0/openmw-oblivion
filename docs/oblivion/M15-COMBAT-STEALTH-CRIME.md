@@ -1897,3 +1897,21 @@ payloads. This documentation-only chunk does not change production behavior;
 no new gameplay/test pass is asserted. S2's remaining rule families and original
 policy behavior gates remain open; S3–S14 remain pending. Next: complete the
 remaining block/posture, fatigue-state and crime-policy rule review.
+
+### S2 sustained incapacitation requirement
+
+Commit `446e3dfc4e` records selected campaign policy explanations. Implemented
+the native sustained-incapacitation predicate: strict negative fatigue,
+paralysis or existing essential unconsciousness. Exactly zero permits the
+recovery branch when neither independent cause remains. This is not an
+animation completion or random impact-knockdown decision.
+
+Two new tests fail against the stub, then pass. All **1,764 component tests**
+and **120 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/incapacitation-01`). **96 original instruction cases** independently
+confirm entry and recovery conditions, including signed zeros/subnormals,
+extremes and paralysis/state combinations. No live native recovery acceptance
+is asserted. S2 remains in progress; S3–S14 remain pending. Next: finish block
+contact eligibility and remaining crime-policy rules.
+
+Tested implementation/test/provenance diff SHA-256: `1131820285233ba4586844538552e988390fcf5e314afafbd9fbd3275e9353ce`.
