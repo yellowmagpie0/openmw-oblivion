@@ -1372,6 +1372,112 @@
         "value": 85.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-132"
+    },
+    {
+      "name": "iCrimeGoldAttack",
+      "value": 40,
+      "storage": "0xb37688",
+      "constructor": "0x9ebb37",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-133"
+    },
+    {
+      "name": "iCrimeGoldMurder",
+      "value": 1000,
+      "storage": "0xb37690",
+      "constructor": "0x9ebb5a",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-134"
+    },
+    {
+      "name": "fCrimeGoldSteal",
+      "value": 0.5,
+      "storage": "0xb37698",
+      "constructor": "0x9ebb7f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-135"
+    },
+    {
+      "name": "iCrimeGoldPickpocket",
+      "value": 25,
+      "storage": "0xb376a0",
+      "constructor": "0x9ebba7",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-136"
+    },
+    {
+      "name": "iCrimeGoldTresspass",
+      "value": 5,
+      "storage": "0xb376a8",
+      "constructor": "0x9ebbc7",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-137"
+    },
+    {
+      "name": "iCrimeGoldStealHorse",
+      "value": 25,
+      "storage": "0xb376b0",
+      "constructor": "0x9ebbe7",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:047acc",
+        "type": "i",
+        "value": 250
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-138"
+    },
+    {
+      "name": "iCrimeGoldJailBreak",
+      "value": 100,
+      "storage": "0xb36768",
+      "constructor": "0x9e6647",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:00aa00",
+        "type": "i",
+        "value": 50
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-139"
+    },
+    {
+      "name": "iCrimeDaysInPrisonMod",
+      "value": 100,
+      "storage": "0xb376f0",
+      "constructor": "0x9ebd47",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-140"
+    },
+    {
+      "name": "fCrimeAlarmRespMult",
+      "value": 1.7000000476837158,
+      "storage": "0xb36a58",
+      "constructor": "0x9e774f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c4a28",
+        "type": "f",
+        "value": 2.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-141"
+    },
+    {
+      "name": "iCrimeGoldAttackMin",
+      "value": 1000,
+      "storage": "0xb36a60",
+      "constructor": "0x9e777a",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c4a27",
+        "type": "i",
+        "value": 500
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-142"
     }
   ]
 }

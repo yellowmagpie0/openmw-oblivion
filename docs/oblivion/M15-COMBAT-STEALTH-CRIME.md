@@ -1635,3 +1635,29 @@ reporting/responsibility and jail arithmetic, then remaining reaction/data
 rules and actor-policy audit closure.
 
 Tested implementation/test/provenance diff SHA-256: `c1a6508be97d9f2891bae32665e984ae7eda83ec0e15634e8d202155c788548a`.
+
+
+### S2 crime fine and jail sentence arithmetic
+
+Commit `c6cf7942ba` contains pickpocket arithmetic. Added per-incident fines,
+maximum applicable faction crime multiplier (minimum one), and uncapped
+elapsed sentence days/hours with a separate ten-attempt skill-change limit.
+Typed installed settings preserve fractional theft fines and diagnose invalid
+amounts/divisors/overflow. Crime legality, witnesses, committed bounty, actual
+jail service and skill selection remain open. Original-15 GMST-133–142
+captures are inspected; catalog **138**, observations **142**.
+
+Three new behavior tests fail against stubs; the settings test already passes.
+All **1,748 component tests** and **104 focused ASan/UBSan tests** pass with
+exact inventories and no skips (`S2/crime-rules-01`). Original-instruction
+emulation independently confirms ten base-fine and six faction-factor cases.
+This does not constitute original gameplay or native world acceptance.
+
+Original-15 received normal console qqq but the wrapper returned **143**;
+whole-process exit acceptance failed. The process is absent, no task files
+were installed, and the pristine quicksave hash is unchanged. All earlier
+read-only setting observations retain their bounded scope. S2 remains in
+progress; S3–S14 pending. Next: remaining jail/witness rules, faction data and
+selected actor policy audit, followed by native service integration.
+
+Tested implementation/test/provenance diff SHA-256: `12c519e0ab92ceeef2ae4e44e9b1da81fa848f4ad97e9da9858dfcdb12dd66f7`.

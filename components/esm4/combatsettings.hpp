@@ -7,6 +7,7 @@
 #include "masteryrules.hpp"
 #include "stealthrules.hpp"
 #include "detection.hpp"
+#include "crimerules.hpp"
 #include <span>
 
 namespace ESM4
@@ -39,6 +40,8 @@ namespace ESM4
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings);
     BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings);
     NativeDetectionSettings buildNativeDetectionSettings(std::span<const GameSetting* const> settings);
+    CrimeFineSettings buildCrimeFineSettings(std::span<const GameSetting* const> settings);
+    JailSettings buildJailSettings(std::span<const GameSetting* const> settings);
     PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings);
     SneakAttackSettings buildSneakAttackSettings(std::span<const GameSetting* const> settings);
     ArmorMasterySettings buildArmorMasterySettings(std::span<const GameSetting* const> settings);

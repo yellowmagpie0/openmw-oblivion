@@ -245,6 +245,7 @@ add_component_dir (esm4
     projectilerules
     masteryrules
     stealthrules
+    crimerules
     loaddial
     loaddobj
     loaddoor

@@ -1033,3 +1033,61 @@ Emulation is not live original-game pickpocket acceptance. Sources under
 `S2/sources-01/pickpocket-*`; arithmetic evidence `S2/pickpocket-rules-01` and
 `S2/oracle-emulator/pickpocket-*`. Runtime permitted-item and complete session
 semantics remain open.
+
+
+## Crime base fines, faction scaling and sentence arithmetic
+
+Original `00606140` maps native crime kinds 0–5 to theft, pickpocket, trespass,
+assault, murder and horse theft. Theft takes item value (`00470520`) or the
+incident's supplied fallback, substitutes **1 only when value is zero**, then
+stores value * `fCrimeGoldSteal`. Other kinds convert their integer GMST to
+float. This is a per-incident base amount, not final legality or bounty. It
+preserves fractions: value-zero/one theft gives .5 with installed settings;
+there is no whole-gold rounding here. Jail break is separate (`004B9199`),
+converting its integer fine to float for the bounty mutation.
+
+Compiled/installed fines are assault 40, murder 1000, theft multiplier .5,
+pickpocket 25, trespass 5. Horse theft is compiled 25 / installed **250**;
+jail break compiled 100 / installed **50**. Original-15 GMST-133–142 captures
+are inspected. The last group also confirms prison divisor 100, responsibility
+multiplier installed 2 (compiled 1.7) and attack-minimum bounty installed 500
+(compiled 1000); the latter two are provenance, not completed witness/guard
+policies.
+
+`005234A0` starts a faction multiplier at **1** and takes the **largest** value
+from faction memberships (`0051F0A0` returns TESFaction +38, independently
+identified as crimeGoldMultiplier in pinned GameForms.h). `0060F49B–0060F4C6`
+stores base fine times that result before mutation. Direct emulation of the
+actual list walk independently confirms six cases including sub-one/zero
+factors leaving 1 and [2,3] choosing 3. An initial comparison interpretation
+was corrected against that independent oracle before implementing the helper.
+Faction membership/record resolution and which reporting branch applies the
+factor remain caller responsibilities; the helper does not invent per-hold
+bounty or a faction payment discount.
+
+Sentence entry `00670239–00670265` divides float bounty by integer
+`iCrimeDaysInPrisonMod`, truncates to integer, and `0067029C–006702AA`
+raises it to at least one. On service `00670719–0067073F` schedules **days*24
+hours** and adds days to the jail statistic before `006707E8–006707F5` caps
+skill-change attempts at **10**. That cap must not cap elapsed days. Our helper
+checks the original int32 hours range instead of allowing integer overflow.
+Prison destinations, admission, time mutation, skill selection, confiscation,
+release and escape remain native lifecycle work.
+
+Four tests cover offense defaults/overrides, zero/fractional theft, highest
+faction factor with adjacent float-one boundaries, sentence boundaries,
+long sentences with ten skill attempts, all typed settings and invalid/overflow
+inputs. Three behavior tests fail against stubs (the separate implemented
+setting-binding test already passes), then all pass. Ten independent
+original-instruction fine examples and six faction-list examples are retained
+under `S2/oracle-emulator`; they supplement live settings, not gameplay.
+Sources: `crime-fine-rule.txt`, `crime-fine-caller.txt`,
+`faction-crime-multiplier.txt`, `jailbreak-fine.txt`, `jail-sentence-rule.txt`,
+`jail-sentence-continuation.txt` and `jail-serve-rule.txt` under sources-01.
+
+Open jail-selection finding: `0067080A–00670847` initially draws modulo 21,
+then while the candidate is below 12 adds further draws modulo 10. Its reachable
+actor-value candidates are 12–20, despite later Security/Sneak (30/31) increment
+branches. Do not replace this with uniform selection of 21 skills or claim the
+unreachable branches occur naturally. Required original gameplay observations
+and the narrow skill mutation/state/RNG implementation remain open.

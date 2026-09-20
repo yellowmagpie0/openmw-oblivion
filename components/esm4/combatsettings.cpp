@@ -350,6 +350,30 @@ namespace ESM4
         return result;
     }
 
+    CrimeFineSettings buildCrimeFineSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const CrimeFineSettings result{
+            inputs.number("fCrimeGoldSteal", .5f),
+            inputs.number("iCrimeGoldPickpocket", std::int32_t{25}),
+            inputs.number("iCrimeGoldTresspass", std::int32_t{5}),
+            inputs.number("iCrimeGoldAttack", std::int32_t{40}),
+            inputs.number("iCrimeGoldMurder", std::int32_t{1000}),
+            inputs.number("iCrimeGoldStealHorse", std::int32_t{25}),
+            inputs.number("iCrimeGoldJailBreak", std::int32_t{100}),
+        };
+        validateCrimeFineSettings(result);
+        return result;
+    }
+
+    JailSettings buildJailSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const JailSettings result{inputs.number("iCrimeDaysInPrisonMod", std::int32_t{100})};
+        validateJailSettings(result);
+        return result;
+    }
+
     PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
