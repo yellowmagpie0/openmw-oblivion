@@ -1775,3 +1775,28 @@ S2 remains in progress; selected actor policy explanations and remaining rule
 families are open. S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `3aec01ef210eaba45c1864ddf0ca0053229c812645ac5e06dba0b457b0fd860b`.
+
+
+### S2 actor equipment and spell dependency audit
+
+Commit `864c1cc731` contains native melee reach rules. The semantic audit now
+retains ordered CNTO item/count entries, SPLO spell/leveled-spell references,
+and NPC race/class keys, checking all links after winning overrides/deletions.
+Malformed actors are removed from the decoded map after recording failure,
+so partial decoding cannot crash subsequent semantic checks. Two new tests
+fail against the old audit, then pass; all **148 Python tests** pass.
+
+`S2/audit-11` checks all **3636 actors**, **20421 inventory entries**,
+and **5505 spell entries**, with zero data failures and unchanged locked
+counts/hashes. `S2/audit-09` retains the initial 1,690 diagnostics caused by
+incorrectly rejecting native LVSP references. The TES4 record definitions
+confirm SPLO accepts SPEL/LVSP and CNTO includes SGST; tests cover both.
+The intermediate malformed-input KeyErrors are likewise retained and fixed.
+
+Selected tutorial assassins and the first Arena opponent have authored spells;
+these dependencies remain explicit, and neither spelling out an inventory nor
+resolving its FormKeys executes magic or closes a physical combat policy gate.
+S2 remains in progress; the all-content audit still exits 1 for its open
+rule/oracle gates. S3–S14 remain pending.
+
+Tested implementation/test diff SHA-256: `37007c78e8cb20d24bd75a5c60a3d4f94605b365e377e7b6e3da05c9662a8485`.

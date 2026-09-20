@@ -292,6 +292,19 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
                 actors[key] = {'editor_id': edid, 'type': record['type'], 'style': style_key,
                     'aggression': ai[0], 'confidence': ai[1], 'energy': ai[2], 'responsibility': ai[3],
                     'flags': actor_flags, 'essential': bool(actor_flags & 2), 'respawn': bool(actor_flags & 8)}
+                actors[key]['inventory'] = []
+                actors[key]['spells'] = []
+                for entry in subs:
+                    if entry['name'] == 'CNTO':
+                        item, count = _unpack(entry['payload'], '<Ii', 'actor CNTO')
+                        actors[key]['inventory'].append({
+                            'item': _stable_key(record['plugin'], item, record['masters']), 'count': count})
+                    elif entry['name'] == 'SPLO':
+                        actors[key]['spells'].append(_reference(record, entry['payload'], 'actor SPLO'))
+                if record['type'] == 'NPC_':
+                    for tag, name in (('RNAM', 'race'), ('CNAM', 'class')):
+                        payload = _one(subs, tag)
+                        actors[key][name] = _reference(record, payload, tag) if payload is not None else 'null'
                 actors[key]['factions'] = []
                 for entry in subs:
                     if entry['name'] == 'SNAM':
@@ -331,6 +344,8 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
                         relations.append({'faction': _stable_key(record['plugin'], faction, record['masters']), 'modifier': modifier})
                 factions[key] = {'editor_id': edid, 'flags': payload[0], 'crime_multiplier': value, 'relationships': relations}
         except (ValueError, TypeError, struct.error) as error:
+            # Never publish a partially decoded actor to semantic link checks.
+            actors.pop(key, None)
             failures.append(f'{key}: {error}')
     for key, actor in actors.items():
         if actor['style'] != 'null' and actor['style'] not in styles:
@@ -354,6 +369,14 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
     for key, item in equipment.items():
         check_link(key, item['enchantment'], ('ENCH',))
     for key, actor in actors.items():
+        for entry in actor['inventory']:
+            check_link(key, entry['item'], ('WEAP', 'ARMO', 'AMMO', 'MISC', 'KEYM', 'BOOK',
+                'ALCH', 'APPA', 'CLOT', 'INGR', 'SLGM', 'SGST', 'LIGH', 'LVLI'))
+        for spell in actor['spells']:
+            check_link(key, spell, ('SPEL', 'LVSP'))
+        if actor['type'] == 'NPC_':
+            check_link(key, actor['race'], ('RACE',))
+            check_link(key, actor['class'], ('CLAS',))
         for membership in actor['factions']:
             check_link(key, membership['faction'], ('FACT',))
         if 'creature' in actor:

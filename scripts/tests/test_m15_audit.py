@@ -94,6 +94,44 @@ class M15NativeAuditTests(unittest.TestCase):
             self.assertFalse(result['data_passed'])
             self.assertIn('duplicate CSTD', result['failures'][0])
 
+    def test_actor_equipment_spells_and_race_resolve_winning_master_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base, other, patch = (root / name for name in ('base.esm', 'other.esm', 'patch.esp'))
+            base.write_bytes(plugin([record('MISC', 0x800, b''), record('SPEL', 0x801, b''),
+                                    record('RACE', 0x802, b''), record('CLAS', 0x803, b''), record('LVSP', 0x805, b'')]))
+            other.write_bytes(plugin([record('SGST', 0x800, b'')]))
+            actor = sub('AIDT', bytes(12)) + sub('ACBS', bytes(16))
+            actor += sub('CNTO', struct.pack('<Ii', 0x01000800, 3))
+            actor += sub('SPLO', struct.pack('<I', 0x801)) + sub('SPLO', struct.pack('<I', 0x805))
+            actor += sub('RNAM', struct.pack('<I', 0x802)) + sub('CNAM', struct.pack('<I', 0x803))
+            patch.write_bytes(plugin([record('NPC_', 0x02000804, actor)], ('base.esm', 'other.esm')))
+            result = audit.inventory([base, other, patch])
+            self.assertTrue(result['data_passed'], result['failures'])
+            npc = result['actors']['content:patch.esp:000804']
+            self.assertEqual(npc['inventory'], [{'item': 'content:other.esm:000800', 'count': 3}])
+            self.assertEqual(npc['spells'], ['content:base.esm:000801', 'content:base.esm:000805'])
+            self.assertEqual(npc['race'], 'content:base.esm:000802')
+            self.assertEqual(npc['class'], 'content:base.esm:000803')
+            patch.write_bytes(plugin([record('NPC_', 0x02000804, actor),
+                record('SPEL', 0x801, b'', 0x20)], ('base.esm', 'other.esm')))
+            self.assertFalse(audit.inventory([base, other, patch])['data_passed'])
+
+    def test_actor_dependencies_reject_bad_layouts_and_wrong_types(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.esm'
+            core = sub('AIDT', bytes(12)) + sub('ACBS', bytes(16))
+            for tag, size in [('CNTO', 8), ('SPLO', 4), ('RNAM', 4), ('CNAM', 4)]:
+                for bad_size in [0, size - 1, size + 1]:
+                    with self.subTest(tag=tag, size=bad_size):
+                        path.write_bytes(plugin([record('NPC_', 0x800, core + sub(tag, bytes(bad_size)))]))
+                        self.assertFalse(audit.inventory([path])['data_passed'])
+            for tag, data in [('CNTO', struct.pack('<Ii', 0x801, 1)), ('SPLO', struct.pack('<I', 0x801)),
+                              ('RNAM', struct.pack('<I', 0x801)), ('CNAM', struct.pack('<I', 0x801))]:
+                with self.subTest(tag=tag):
+                    path.write_bytes(plugin([record('NPC_', 0x800, core + sub(tag, data)), record('STAT', 0x801, b'')]))
+                    self.assertFalse(audit.inventory([path])['data_passed'])
+
     def test_gmst_types_and_faction_crime_values_are_validated(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'fixture.esm'
