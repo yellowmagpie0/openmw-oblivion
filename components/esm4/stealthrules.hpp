@@ -3,6 +3,8 @@
 
 #include "physicalcombat.hpp"
 
+#include <optional>
+
 namespace ESM4
 {
     enum class PickpocketDirection { Take, Place };
@@ -34,6 +36,17 @@ namespace ESM4
         float mMaximumChance;
     };
     enum class PickpocketCheck { Transfer, UntouchedMenuExit };
+    enum class PickpocketOperation { Take, Place, Exit };
+    struct PickpocketCheckPlan
+    {
+        std::optional<PickpocketCheck> mCheck;
+        bool mFailureCanBeDetected = false;
+    };
+    // After item eligibility for Take/Place. A transfer click clears untouched
+    // before eligibility, even if rejected. Taking still rolls against a knocked
+    // target, but that failed roll does not trigger the caught branch.
+    PickpocketCheckPlan planPickpocketCheck(
+        PickpocketOperation operation, bool untouched, bool targetKnocked);
     float pickpocketAmount(std::int32_t itemValue, std::uint32_t count);
     std::int32_t pickpocketChance(std::int32_t actorSkill, std::int32_t targetSkill, float amount,
         const PickpocketSettings& settings);

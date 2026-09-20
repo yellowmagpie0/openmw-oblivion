@@ -1574,3 +1574,32 @@ policy branches execute unchanged. Evidence:
 `inventory-display-filter.txt`, `inventory-equipped-filter.txt` and
 `item-biped-query.txt`. Session persistence and ordinary UI transfers remain
 runtime gates.
+
+## Pickpocket check scheduling and knocked targets
+
+`planPickpocketCheck` applies inside a live-NPC pickpocket session, after item
+eligibility for transfers. Taking always schedules the transfer roll;
+placing schedules none (`0059AF2B–0059AF49`). Untouched exit schedules the
+zero-amount exit roll only while the target is not knocked
+(`005983A0–005983CB`). A transfer click has already cleared the untouched flag
+before item eligibility, including rejected clicks (`0059A50E–0059A520`).
+
+Taking against a knocked target still consumes its roll. The failed-roll path
+checks the target's knocked predicate at `0059B072`; a true result skips the
+caught branch and proceeds with transfer. It does **not** turn the failed roll
+into a success for the preceding successful-pickpocket statistics. The helper
+therefore returns roll type and failure detectability separately. Target
+virtual `+19C` is `005E04F0`, which reads process virtual `+2E4` and tests
+nonzero; absent process returns false. It is not a base essential flag,
+paralysis check or unconditional success probability.
+
+Two component tests first fail against an empty plan, then cover all operation/
+untouched/knocked combinations, invalid operations, and the previously verified
+strict taking versus inclusive exit boundary. **20 original instruction cases**
+independently verify exit/transfer scheduling, failure detection suppression and
+transfer-click flag clearing. The real actor knocked query executes, with only
+its process value as a boundary stub. Evidence:
+`S2/oracle-emulator/pickpocket-session.py`, `pickpocket-session-table.json`,
+`pickpocket-session.log`, and `S2/sources-01/pickpocket-knocked-query.txt`
+alongside the preceding transfer/menu/session traces. Runtime session ownership,
+UI closure, skill events, inventory transfer and crime dispatch remain pending.

@@ -6,6 +6,22 @@
 
 namespace ESM4
 {
+    PickpocketCheckPlan planPickpocketCheck(PickpocketOperation operation, bool untouched, bool targetKnocked)
+    {
+        switch (operation)
+        {
+            case PickpocketOperation::Take:
+                return {PickpocketCheck::Transfer, !targetKnocked};
+            case PickpocketOperation::Place:
+                return {};
+            case PickpocketOperation::Exit:
+                if (untouched && !targetKnocked)
+                    return {PickpocketCheck::UntouchedMenuExit, true};
+                return {};
+        }
+        throw std::invalid_argument("invalid native pickpocket operation");
+    }
+
     PickpocketItemDecision pickpocketItemDecision(const PickpocketItemInput& input)
     {
         if (input.mDirection != PickpocketDirection::Take && input.mDirection != PickpocketDirection::Place)

@@ -246,3 +246,43 @@ TEST(ESM4StealthRules, PickpocketItemPolicyRejectsInvalidDirectionsAndWeights)
             EXPECT_THROW(ESM4::pickpocketItemDecision(input), std::invalid_argument);
         }
 }
+
+TEST(ESM4StealthRules, PickpocketCheckPlanningPreservesTakingAndExitAsymmetry)
+{
+    using Operation = ESM4::PickpocketOperation;
+    using Check = ESM4::PickpocketCheck;
+    for (bool untouched : {false, true})
+        for (bool knocked : {false, true})
+        {
+            const auto take = ESM4::planPickpocketCheck(Operation::Take, untouched, knocked);
+            ASSERT_EQ(take.mCheck, Check::Transfer);
+            EXPECT_EQ(take.mFailureCanBeDetected, !knocked);
+            // Taking consumes a roll even while knocked; detection suppression
+            // must not turn a failed roll into a successful skill/stat event.
+            EXPECT_FALSE(ESM4::pickpocketCheckSucceeds(*take.mCheck, 39, 39));
+            const auto place = ESM4::planPickpocketCheck(Operation::Place, untouched, knocked);
+            EXPECT_FALSE(place.mCheck);
+            EXPECT_FALSE(place.mFailureCanBeDetected);
+            const auto exit = ESM4::planPickpocketCheck(Operation::Exit, untouched, knocked);
+            if (untouched && !knocked)
+            {
+                ASSERT_EQ(exit.mCheck, Check::UntouchedMenuExit);
+                EXPECT_TRUE(exit.mFailureCanBeDetected);
+                EXPECT_TRUE(ESM4::pickpocketCheckSucceeds(*exit.mCheck, 39, 39));
+                EXPECT_FALSE(ESM4::pickpocketCheckSucceeds(*exit.mCheck, 39, 40));
+            }
+            else
+            {
+                EXPECT_FALSE(exit.mCheck);
+                EXPECT_FALSE(exit.mFailureCanBeDetected);
+            }
+        }
+}
+
+TEST(ESM4StealthRules, PickpocketCheckPlanningRejectsInvalidOperationBeforeExemptions)
+{
+    for (bool untouched : {false, true})
+        for (bool knocked : {false, true})
+            EXPECT_THROW(ESM4::planPickpocketCheck(static_cast<ESM4::PickpocketOperation>(-1), untouched, knocked),
+                std::invalid_argument);
+}

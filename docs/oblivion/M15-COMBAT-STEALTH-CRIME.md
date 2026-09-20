@@ -2019,3 +2019,19 @@ persistent session acceptance is claimed. S2 remains in progress; S3–S14
 remain pending. Next: session eligibility and remaining crime rules.
 
 Tested implementation/test/provenance diff SHA-256: `21b2310ad3b76c12996f0b3349b4cb62d81c5c29ca613c79ae2724fb109b9b92`.
+
+### S2 pickpocket check scheduling
+
+Commit `2485ca0368` contains item eligibility. Added native take/place/exit
+check scheduling, keeping failed-roll detection suppression for knocked targets
+separate from successful rolls. Untouched exit skips its roll against a knocked
+target; taking still rolls. Transfer-click flag ordering is independently checked.
+
+Two new tests fail against the stub, then pass. All **1,784 component tests**
+and **140 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/pickpocket-session-01`). **20 original instruction cases** confirm the
+session branches. Runtime session, inventory and crime events remain integration
+gates. S2 remains in progress; S3–S14 remain pending. Next: remaining assault,
+murder, trespass and reporting rules.
+
+Tested implementation/test/provenance diff SHA-256: `524696b6666d4197a670bcc4d9fd874d084581efeb4f1b229885a3759c253a7e`.
