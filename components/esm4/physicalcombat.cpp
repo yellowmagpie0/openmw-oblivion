@@ -39,6 +39,19 @@ namespace ESM4
         }
     }
 
+    CombatConeResult combatHitCone(float facingRadians, float bearingRadians, float coneDegrees)
+    {
+        finite(facingRadians);
+        finite(bearingRadians);
+        nonnegative(coneDegrees);
+        const float difference = std::abs(rounded(double(facingRadians) - bearingRadians));
+        // Original conversion constant, not an independently recomputed 180/pi.
+        float degrees = rounded(double(difference) * 57.2957763671875);
+        if (degrees > 180)
+            degrees = std::abs(rounded(double(degrees) - 360));
+        return {degrees, coneDegrees > degrees};
+    }
+
     void validateMeleeReachSettings(const MeleeReachSettings& settings)
     {
         nonnegative(settings.mCombatDistance);

@@ -57,6 +57,14 @@ namespace ESM4
         };
     }
 
+    float buildCombatHitConeAngle(std::span<const GameSetting* const> settings)
+    {
+        const float value = Inputs(settings).number("fCombatHitConeAngle", 20.f);
+        if (!std::isfinite(value) || value < 0)
+            throw std::invalid_argument("invalid native combat hit cone angle");
+        return value;
+    }
+
     MeleeReachSettings buildMeleeReachSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

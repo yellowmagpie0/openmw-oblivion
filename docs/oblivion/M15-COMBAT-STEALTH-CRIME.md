@@ -1800,3 +1800,24 @@ S2 remains in progress; the all-content audit still exits 1 for its open
 rule/oracle gates. S3–S14 remain pending.
 
 Tested implementation/test diff SHA-256: `37007c78e8cb20d24bd75a5c60a3d4f94605b365e377e7b6e3da05c9662a8485`.
+
+
+### S2 contact-facing cone rule
+
+Commit `2c410847ea` extends the actor dependency audit. Added native contact
+cone arithmetic with the original conversion constant, intermediate rounding,
+one wrap, strict boundary, typed setting input and explicit invalid-input
+failures. The behavior test fails against the stub and then passes. All
+**1,760 component tests** and **116 focused ASan/UBSan tests** pass with exact
+inventories/no skips (`S2/hit-cone-01`). Fourteen supplied-angle original
+instruction cases independently confirm expected results.
+
+The installed cone angle is 35 degrees versus compiled 20; its live console
+setting probe remains pending in the catalog. The original block branch
+requires native process action 6 before its cone test. Animation timing,
+contact geometry and complete block posture eligibility remain integration
+work. No native runtime blocking acceptance is claimed. S2 remains in progress;
+S3–S14 remain pending, with selected actor policy explanations and remaining
+physical/crime rule families still open.
+
+Tested implementation/test/provenance diff SHA-256: `9e172cbbc71de1c78ee5afae65163fc132ea19473a11db170183506bcef6ecec`.

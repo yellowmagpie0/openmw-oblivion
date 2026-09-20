@@ -118,3 +118,23 @@ TEST(ESM4CombatSettings, ReachDefaultsAndTypedOverrides)
         }
     }
 }
+
+TEST(ESM4CombatSettings, HitConeAngleUsesNativeDefaultAndTypedOverride)
+{
+    EXPECT_EQ(ESM4::buildCombatHitConeAngle({}), 20);
+    ESM4::GameSetting value{};
+    value.mEditorId = "fCombatHitConeAngle";
+    const std::array<const ESM4::GameSetting*, 1> settings{&value};
+    for (float degrees : {0.f, 1.f, 35.f, 180.f, 360.f})
+    {
+        value.mData = degrees;
+        EXPECT_EQ(ESM4::buildCombatHitConeAngle(settings), degrees);
+    }
+    value.mData = std::int32_t{35};
+    EXPECT_THROW(ESM4::buildCombatHitConeAngle(settings), std::invalid_argument);
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        value.mData = invalid;
+        EXPECT_THROW(ESM4::buildCombatHitConeAngle(settings), std::invalid_argument);
+    }
+}

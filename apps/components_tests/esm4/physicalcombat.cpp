@@ -1145,3 +1145,30 @@ TEST(ESM4PhysicalCombat, NativeReachUsesWeaponFactorsCreatureDistancesAndActorSc
     EXPECT_THROW(ESM4::weaponMeleeReach(std::numeric_limits<float>::max(), 1, settings), std::invalid_argument);
     EXPECT_THROW(ESM4::creatureMeleeReach(255, 5, std::numeric_limits<float>::max(), settings), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, HitConeUsesRoundedAnglesStrictBoundaryAndOneWrap)
+{
+    struct Case { float facing; float bearing; float limit; float degrees; bool inside; };
+    constexpr float halfPi = 1.5707963267948966f;
+    for (const auto& c : {Case{0, 0, 20, 0, true}, {0, 0, 0, 0, false},
+             {halfPi, 0, 90, 90, false}, {halfPi, 0, std::nextafter(90.f, 0.f), 90, false},
+             {halfPi, 0, std::nextafter(90.f, 180.f), 90, true}, {-halfPi, 0, 90, 90, false},
+             {0, 6.283185307179586f, 20, 0, true}, {6.283185307179586f, 0, 20, 0, true},
+             {0, 3.141592653589793f, 180, 180, false}, {12.566370614359172f, 0, 20, 360, false},
+             {std::nextafter(halfPi, 0.f), 0, 90, 89.99999237060547f, true},
+             {std::nextafter(halfPi, 2.f), 0, 90, 90.00000762939453f, false},
+             {0, 5.497787143782138f, 46, 45.000030517578125f, true}})
+    {
+        const auto result = ESM4::combatHitCone(c.facing, c.bearing, c.limit);
+        EXPECT_EQ(result.mDegrees, c.degrees);
+        EXPECT_EQ(result.mInside, c.inside);
+    }
+    for (float invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::combatHitCone(invalid, 0, 20), std::invalid_argument);
+        EXPECT_THROW(ESM4::combatHitCone(0, invalid, 20), std::invalid_argument);
+        EXPECT_THROW(ESM4::combatHitCone(0, 0, invalid), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::combatHitCone(0, 0, -1), std::invalid_argument);
+    EXPECT_THROW(ESM4::combatHitCone(std::numeric_limits<float>::max(), 0, 20), std::invalid_argument);
+}

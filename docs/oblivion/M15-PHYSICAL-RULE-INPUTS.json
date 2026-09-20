@@ -1513,6 +1513,20 @@
         "value": 2.200000047683716
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-145"
+    },
+    {
+      "name": "fCombatHitConeAngle",
+      "value": 20.0,
+      "storage": "0xb36f28",
+      "constructor": "0x9e92af",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0287a3",
+        "type": "f",
+        "value": 35.0
+      },
+      "live_setting_probe": null,
+      "live_setting_status": "pending: original executable instruction oracle verifies arithmetic; no live console probe yet"
     }
   ]
 }

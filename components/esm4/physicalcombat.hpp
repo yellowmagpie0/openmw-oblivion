@@ -27,6 +27,14 @@ namespace ESM4
     void validateCombatMasterySettings(const CombatMasterySettings& settings);
     void validatePowerAttackSettings(const PowerAttackSettings& settings);
 
+    struct CombatConeResult
+    {
+        float mDegrees;
+        bool mInside;
+    };
+    // Bearing is the separately computed horizontal direction to the target.
+    CombatConeResult combatHitCone(float facingRadians, float bearingRadians, float coneDegrees);
+
     struct MeleeReachSettings
     {
         float mCombatDistance;

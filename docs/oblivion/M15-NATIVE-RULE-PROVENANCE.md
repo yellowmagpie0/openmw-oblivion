@@ -1246,3 +1246,28 @@ restored. No inventory-count/confiscation acceptance is claimed. Normal `qqq`
 was requested, the game process exited and pristine quicksave hash is unchanged,
 but the wrapper returned 143, retained as a failed whole-process exit gate.
 These reference results do not close native OpenMW jail gameplay acceptance.
+
+## Contact-facing cone arithmetic
+
+The block branch at `005FF83E` calls `006131D0` with the victim and physical
+source reference. That function reads their positions and obtains horizontal
+bearing from `00683CB0`, then reads victim Z rotation through virtual +1E0.
+`combatHitCone` accepts these already computed float angles. Its reviewed
+arithmetic is `R(abs(R(facing − bearing)) × 57.2957763671875)` degrees. The
+conversion constant is the original double at `00A30DC8`, not recomputed
+180/pi. If degrees >180, replace it with `abs(R(degrees − 360))` exactly once.
+Return true only when `fCombatHitConeAngle > degrees`; equality fails. Preserve
+out-of-normal-range results rather than adding an invented modulo operation.
+Nonfinite inputs and float overflow diagnose explicitly.
+
+The compiled cone setting is 20 degrees (`00B36F28`, initializer `009E92AF`);
+installed master override `0287A3` is 35 degrees. A live console lookup is still
+pending and is explicitly marked so in the setting inventory. Fourteen supplied-
+angle original-instruction cases independently establish strict boundaries,
+adjacent floats, the wrap and conversion rounding (`S2/oracle-emulator/hit-cone*`).
+This is a geometric predicate, not a chance-based block or timing window.
+The preceding victim query `005E5670` requires native process action 6;
+controller/animation timing and the complete posture/eligibility chain remain
+integration work. Block data and facing arithmetic alone do not prove a normal
+block works. Bearing construction and overlap/vertical contact remain caller
+geometry work; no duplicate detection service is introduced.
