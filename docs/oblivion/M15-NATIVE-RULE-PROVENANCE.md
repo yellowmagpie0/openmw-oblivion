@@ -1465,3 +1465,31 @@ and comparison instructions execute unchanged. Evidence:
 Three new component tests fail against the false stub, then exercise the
 reviewed policy. Trespass warning/report timing, witnesses, door activation and
 native save/restart remain separate gates.
+
+## Player trespass door-exit exemption
+
+Within native door permission helper `004B72C0`, the player branch
+`004B73F9–004B743C` queries current-cell trespass (actor virtual `+354`).
+When true, it requires both teleport data and lock data. Lock level **exactly
+100** rejects this exemption; there is no >=100 comparison. Otherwise it
+permits a missing destination cell, an exterior destination, or an interior
+with the Public bit (`20`). Original flag helpers are `004C97F0` (Interior)
+and `004C9830` (Public). HandChanged (`40`) alone does not satisfy this
+particular destination test, unlike cell trespass classification.
+
+`playerHasTrespassExitExemption` implements only this player branch. A false
+result is not a final denial: ownership, guard and follower permissions have
+other branches. A true result neither unlocks nor activates a door nor commits
+a crime. A missing destination cell represents the native query returning
+null; failed stable-reference resolution must still diagnose at the world
+boundary rather than masquerading as that input.
+
+Two tests fail against the false stub, then cover each required input, exact
+lock-level boundaries and destination masks. **266 independent original
+instruction cases** cover all destination flag bytes, levels 0/1/99/100/101/255,
+missing data and current trespass. Only the current-cell trespass query is a
+boundary stub; the native exit branch and cell flag helpers execute unchanged.
+Evidence: `S2/oracle-emulator/door-exit.py`, `door-exit-table.json`,
+`door-exit.log`, `S2/sources-01/door-access-exemption.txt` and
+`door-access-exemption-continuation.txt`. Normal door activation and arrest/
+trespass event ordering remain runtime acceptance work.

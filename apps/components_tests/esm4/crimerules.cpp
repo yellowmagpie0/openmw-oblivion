@@ -365,3 +365,40 @@ TEST(ESM4CrimeRules, CellTrespassRejectsInvalidOwnerAndInconsistentIdentityInput
     input.mMatchesActorBase = false; input.mActorIsGuard = true; input.mActorIsNpc = false;
     EXPECT_THROW(ESM4::cellTreatsActorAsTrespasser(input), std::invalid_argument);
 }
+
+TEST(ESM4CrimeRules, TrespassExitRequiresPlayerTrespassTeleportAndLockData)
+{
+    const ESM4::DoorTrespassExitInput allowed{true, true, true, 0, true, 0};
+    EXPECT_TRUE(ESM4::playerHasTrespassExitExemption(allowed));
+    auto changed = allowed; changed.mPlayerTrespassing = false;
+    EXPECT_FALSE(ESM4::playerHasTrespassExitExemption(changed));
+    changed = allowed; changed.mHasTeleport = false;
+    EXPECT_FALSE(ESM4::playerHasTrespassExitExemption(changed));
+    changed = allowed; changed.mHasLockData = false;
+    EXPECT_FALSE(ESM4::playerHasTrespassExitExemption(changed));
+}
+
+TEST(ESM4CrimeRules, TrespassExitRejectsExactlyLevelOneHundredAndPrivateInteriors)
+{
+    ESM4::DoorTrespassExitInput input{true, true, true, 100, true, 0};
+    EXPECT_FALSE(ESM4::playerHasTrespassExitExemption(input));
+    for (unsigned level : {0, 1, 99, 101, 255})
+    {
+        input.mLockLevel = level;
+        EXPECT_TRUE(ESM4::playerHasTrespassExitExemption(input));
+    }
+    input.mLockLevel = 0;
+    for (unsigned flags : {0, 0x20, 0x21, 0x40, 0x80, 0xff})
+    {
+        input.mDestinationFlags = flags;
+        EXPECT_TRUE(ESM4::playerHasTrespassExitExemption(input));
+    }
+    // HandChanged alone does not supply the Public flag in this query.
+    for (unsigned flags : {1, 0x41, 0x81, 0xc1})
+    {
+        input.mDestinationFlags = flags;
+        EXPECT_FALSE(ESM4::playerHasTrespassExitExemption(input));
+    }
+    input.mHasDestinationCell = false;
+    EXPECT_TRUE(ESM4::playerHasTrespassExitExemption(input));
+}

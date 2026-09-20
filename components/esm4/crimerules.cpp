@@ -52,6 +52,14 @@ namespace ESM4
         return result;
     }
 
+    bool playerHasTrespassExitExemption(const DoorTrespassExitInput& input)
+    {
+        if (!input.mPlayerTrespassing || !input.mHasTeleport || !input.mHasLockData || input.mLockLevel == 100)
+            return false;
+        return !input.mHasDestinationCell || !(input.mDestinationFlags & CELL_Interior)
+            || (input.mDestinationFlags & CELL_Public);
+    }
+
     bool cellTreatsActorAsTrespasser(const CellTrespassInput& input)
     {
         switch (input.mOwnerKind)

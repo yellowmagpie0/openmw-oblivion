@@ -1968,3 +1968,20 @@ progress; S3–S14 remain pending. Next: door/reference access and the remaining
 crime-policy rules.
 
 Tested implementation/test/provenance diff SHA-256: `62b95803a2e9be4ceaf9efdee7336c578d70d99cc8b39daf9c775cbb33e8035b`.
+
+### S2 player trespass exit exemption
+
+Commit `cb7250ddf0` contains cell trespass classification. Added the native
+player door-exit exemption requiring current trespass, teleport/lock data,
+lock level other than exactly 100, and an absent/exterior/public destination.
+HandChanged alone does not make the destination public for this branch.
+Actual unlock/activation and other door permissions remain separate.
+
+Two new tests fail against the stub, then pass. All **1,774 component tests**
+and **130 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/door-exit-01`). **266 original instruction cases** independently confirm
+all destination flag bytes, lock thresholds and missing-input branches.
+S2 remains in progress; S3–S14 remain pending. Next: compose the native
+reference off-limits policy and complete remaining crime rules.
+
+Tested implementation/test/provenance diff SHA-256: `21b58fac13c4b47f6a1c5b9ff0cebf52212549552e72715e4babd7ed92ec6460`.

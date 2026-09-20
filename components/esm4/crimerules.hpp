@@ -29,6 +29,19 @@ namespace ESM4
     ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers);
 
     enum class CrimeOwnerKind { None, Actor, Faction };
+    struct DoorTrespassExitInput
+    {
+        bool mPlayerTrespassing;
+        bool mHasTeleport;
+        bool mHasLockData;
+        std::uint8_t mLockLevel;
+        bool mHasDestinationCell;
+        std::uint8_t mDestinationFlags;
+    };
+    // Player-only exit exemption within native door permission policy. Ownership,
+    // guard/follower rights and actually opening/unlocking a door are separate.
+    bool playerHasTrespassExitExemption(const DoorTrespassExitInput& input);
+
     struct CellTrespassInput
     {
         CrimeOwnerKind mOwnerKind;
