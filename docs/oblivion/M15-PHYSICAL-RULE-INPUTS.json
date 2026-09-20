@@ -811,6 +811,64 @@
       "type": "float32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-81"
+    },
+    {
+      "name": "iPerkAttackDisarmChance",
+      "value": 5,
+      "storage": "0xb37228",
+      "constructor": "0x9ea317",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-82"
+    },
+    {
+      "name": "iPerkBlockDisarmChance",
+      "value": 5,
+      "storage": "0xb37230",
+      "constructor": "0x9ea337",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-83"
+    },
+    {
+      "name": "iPerkBlockStaggerChance",
+      "value": 5,
+      "storage": "0xb37238",
+      "constructor": "0x9ea357",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:089000",
+        "type": "i",
+        "value": 25
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-84"
+    },
+    {
+      "name": "iPerkMarksmanKnockdownChance",
+      "value": 5,
+      "storage": "0xb37240",
+      "constructor": "0x9ea377",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-85"
+    },
+    {
+      "name": "iPerkMarksmanParalyzeChance",
+      "value": 5,
+      "storage": "0xb37248",
+      "constructor": "0x9ea397",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-86"
+    },
+    {
+      "name": "iPerkHandToHandBlockRecoilChance",
+      "value": 25,
+      "storage": "0xb37250",
+      "constructor": "0x9ea3b7",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-87"
     }
   ]
 }

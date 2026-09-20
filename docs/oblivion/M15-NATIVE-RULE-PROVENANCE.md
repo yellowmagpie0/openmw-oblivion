@@ -720,3 +720,56 @@ all mastery thresholds (including negative values), integer overflow, fatigue
 zero fallback and a base value above float's exact integer range. Evidence:
 `S2/physical-rules-14`. These arithmetic tests do not establish world
 knockback, controller interruption, or mastery ability acceptance.
+
+## Mastery proc decisions
+
+`masteryrules.*` defines pure decisions with explicit `mConsumesDraw`; the
+caller must advance persistent RNG only at the corresponding original branch.
+These decisions do not themselves drop equipment, apply paralysis or change
+controllers. The ability matrix remains pending for those real consequences.
+
+- Contact `006002EA–006003A4` requires Expert in the attack's base skill and
+  target **base Speed > 0** before taking one `%100` draw. It takes that draw
+  even for an attack direction without a mastery effect. Arrow/backward-power
+  knockdown uses `draw < iPerkMarksmanKnockdownChance`. At Master,
+  arrow/forward-power paralysis uses the **same draw**, with strict `<
+  iPerkMarksmanParalyzeChance`, and clears the knockdown flag. The Marksman
+  setting names do not restrict these settings to arrows. Existing damage
+  knockdown remains unless paralysis supersedes it. Native attack group values
+  17/18/19/1A hex map to forward/back/left/right power in the pinned xOBSE
+  `NiNodes.h` enumeration and reviewed original dispatch.
+- Side power disarm `005FC090–005FC299` excludes creature attackers, needs
+  left/right power animation, a target weapon entry, and Journeyman attack
+  skill. The draw is **inclusive <= iPerkAttackDisarmChance**. Quest-weapon
+  and attacker-weapon-drawn guards follow the roll; they must not erase RNG
+  consumption. The item quest guard is TESForm virtual +78; drawn guard is
+  `005E0DA0 -> process +304` (GetWeaponOut in pinned GameProcess.h).
+- Defensive disarm `005FC2B0` excludes creature defenders and requires an
+  opponent weapon entry. With weapon/shield present it needs Master Block
+  **and a shield**; with neither it uses Master Hand to Hand. The inclusive
+  roll precedes quest-item and defender-drawn guards. Real drop implementation
+  is visible after `005FC3A1` and remains a native integration requirement.
+- Defensive stagger query `005F3C30–005F3CBA` uses Expert Block with shield
+  when a weapon/shield is present, otherwise Expert Hand to Hand. Its roll
+  is inclusive `<= iPerkBlockStaggerChance`. Thus the unarmed Expert branch
+  needs an additional ability-matrix row despite being absent from the
+  Hand-to-Hand SKIL rank message. Full caller/contact timing remains open.
+
+Compiled proc settings are disarm 5, defensive disarm 5, stagger 5,
+knockdown 5, paralysis 5, unarmed-block recoil 25. Installed stagger is **25**;
+original-15 read-only GMST-82–87 confirm all six values. The recoil setting
+is inventoried here; its complete contact eligibility is still to implement.
+Seven new tests fail against stubs, then pass, including skill/equipment
+permutations, exact roll/endpoints, shared-roll precedence, RNG-consumption
+guards, custom thresholds, all setting mappings, invalid enums/types/ranges,
+and fixed-seed distributions with predeclared bounds (`S2/mastery-rules-01`).
+
+Paralysis source trace: `00600355–006003A2` gets a default SpellItem through
+`0041B880` (global B335AC). Initializer `0041C7FC–0041C884` tries FormID
+000137, absent from the independently scanned master, then creates a fallback
+named DefaultMarksmanParalyzeSpell. Fallback `0041D590` constructs PARA and
+calls duration setter `004133E0` with **10 seconds** (`0041D62A`). EffectItem
++0C is duration, independently documented in pinned GameForms.h and confirmed
+by the setter. Content overrides and effect/controller resistance/lifecycle
+must still be implemented; the pure proc's boolean is not effect acceptance.
+Disassemblies and absent-record scan are retained under `S2/sources-01`.

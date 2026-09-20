@@ -243,6 +243,7 @@ add_component_dir (esm4
     combatsettings
     physicalcombat
     projectilerules
+    masteryrules
     loaddial
     loaddobj
     loaddoor

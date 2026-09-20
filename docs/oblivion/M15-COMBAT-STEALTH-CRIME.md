@@ -1458,3 +1458,32 @@ required fields and thresholds validated. Linked from the main case inventory.
 S2 remains in progress; S3–S14 pending. Next: trace and implement mastery proc
 and defense policies against these rows; preserve original prerequisite and
 shared-draw/precedence behavior rather than creating independent random rolls.
+
+### S2 mastery proc decisions
+
+Commit `4ce5797b1c` enumerates mastery requirements. Added a dedicated pure
+mastery module for shared-draw attack knockdown/paralysis, side-power disarm,
+and defensive stagger/disarm. Preserves native strict versus inclusive rolls,
+paralysis precedence, base-skill thresholds, equipment/quest-item/drawn guards,
+and whether each branch consumes RNG. No boolean proc is counted as real
+dropped equipment, paralysis, controller interruption or save acceptance.
+
+Seven new tests fail against stubs, then pass; expanded deterministic
+permutations, chance endpoints, custom thresholds, mapping/type validation,
+and fixed-seed distribution checks pass. All **1,723 component tests** and
+**75 focused ASan/UBSan tests** pass with exact inventories and no skips
+(`S2/mastery-rules-01`). Original-15 GMST-82–87 captured/inspected: installed
+defensive stagger chance is 25, compiled default 5. Catalog **83** facts;
+original setting observations **87**.
+
+Original code adds an Expert unarmed defensive-stagger query branch absent
+from the skill message; the ability inventory now has **41 pending rows**.
+Paralysis tracing identifies original fallback SpellItem 000137, PARA with
+10-second duration; all-content override and actual effect semantics remain
+open. Source traces and absent-master-record scan are retained under
+`S2/sources-01`. S2 remains in progress; S3–S14 pending. Original-15 remains
+running for read-only recovery/block probes; no installed files added.
+Next: complete defensive/recovery rules and their remaining caller semantics,
+then stealth/crime rule families and S2 actor-policy/audit gate.
+
+Tested staged implementation/test/provenance diff SHA-256: `fe3bd22b132eb2884e27cdc61d7505dfcc414edf36f4d006349e6143702192e1`.

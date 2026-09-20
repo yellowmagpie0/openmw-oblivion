@@ -311,6 +311,21 @@ namespace ESM4
         return result;
     }
 
+    MasteryProcSettings buildMasteryProcSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const MasteryProcSettings result{
+            inputs.number("iPerkAttackDisarmChance", std::int32_t{5}),
+            inputs.number("iPerkBlockDisarmChance", std::int32_t{5}),
+            inputs.number("iPerkBlockStaggerChance", std::int32_t{5}),
+            inputs.number("iPerkMarksmanKnockdownChance", std::int32_t{5}),
+            inputs.number("iPerkMarksmanParalyzeChance", std::int32_t{5}),
+            inputs.number("iPerkHandToHandBlockRecoilChance", std::int32_t{25}),
+        };
+        validateMasteryProcSettings(result);
+        return result;
+    }
+
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

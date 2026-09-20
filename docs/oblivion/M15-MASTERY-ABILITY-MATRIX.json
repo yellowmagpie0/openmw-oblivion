@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Reviewed ability inventory; execution and acceptance remain pending",
+  "scope": "Reviewed descriptions plus original execution branches; world acceptance remains pending",
   "source": "independently decoded installed Oblivion.esm SKIL rank descriptions; wording summarized, numeric behavior requires code/probes",
   "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "extracted_source": "build/oblivion-compat/m15/S2/sources-01/skill-mastery-descriptions.json",
@@ -57,11 +57,17 @@
       "normal_input": "hold attack while moving left or right",
       "prerequisites": [
         "matching melee weapon",
-        "valid contact with armed target"
+        "valid contact with armed target",
+        "attacker NPC (not creature)",
+        "attacker weapon drawn",
+        "target weapon is not a quest item"
       ],
       "consequence": "drop a real recoverable equipped item",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkAttackDisarmChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 inclusive <=; quest item/drawn checks occur after draw"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -71,7 +77,7 @@
         "consumed RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "sidePowerDisarm tested; inventory drop/recovery pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -104,7 +110,10 @@
       ],
       "consequence": "knockdown with controller interruption and recovery",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkMarksmanKnockdownChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 strict <; shared with paralysis; base target Speed must be positive"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -113,7 +122,7 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; world reaction/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -146,16 +155,23 @@
       ],
       "consequence": "real temporary paralysis with restoration",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkMarksmanParalyzeChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 strict <; shared draw; paralysis clears knockdown"
       },
-      "duration_seconds": null,
+      "duration_seconds": {
+        "compiled_fallback": 10,
+        "source": "original 0041D62A -> 004133E0, PARA effect duration; FormID 000137 absent in master",
+        "content_override_policy": "resolve winning SpellItem 000137 before using compiled fallback; all-plugin verification pending"
+      },
       "save_fields_required": [
         "paralysis source/remaining duration",
         "actor movement/action restrictions",
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; actual effect/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -222,11 +238,17 @@
       "normal_input": "hold attack while moving left or right",
       "prerequisites": [
         "matching melee weapon",
-        "valid contact with armed target"
+        "valid contact with armed target",
+        "attacker NPC (not creature)",
+        "attacker weapon drawn",
+        "target weapon is not a quest item"
       ],
       "consequence": "drop a real recoverable equipped item",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkAttackDisarmChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 inclusive <=; quest item/drawn checks occur after draw"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -236,7 +258,7 @@
         "consumed RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "sidePowerDisarm tested; inventory drop/recovery pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -269,7 +291,10 @@
       ],
       "consequence": "knockdown with controller interruption and recovery",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkMarksmanKnockdownChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 strict <; shared with paralysis; base target Speed must be positive"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -278,7 +303,7 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; world reaction/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -311,16 +336,23 @@
       ],
       "consequence": "real temporary paralysis with restoration",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkMarksmanParalyzeChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 strict <; shared draw; paralysis clears knockdown"
       },
-      "duration_seconds": null,
+      "duration_seconds": {
+        "compiled_fallback": 10,
+        "source": "original 0041D62A -> 004133E0, PARA effect duration; FormID 000137 absent in master",
+        "content_override_policy": "resolve winning SpellItem 000137 before using compiled fallback; all-plugin verification pending"
+      },
       "save_fields_required": [
         "paralysis source/remaining duration",
         "actor movement/action restrictions",
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; actual effect/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -387,11 +419,17 @@
       "normal_input": "hold attack while moving left or right",
       "prerequisites": [
         "unarmed",
-        "valid contact with armed target"
+        "valid contact with armed target",
+        "attacker NPC (not creature)",
+        "attacker weapon drawn",
+        "target weapon is not a quest item"
       ],
       "consequence": "drop a real recoverable equipped item",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkAttackDisarmChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 inclusive <=; quest item/drawn checks occur after draw"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -401,7 +439,7 @@
         "consumed RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "sidePowerDisarm tested; inventory drop/recovery pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -434,7 +472,10 @@
       ],
       "consequence": "knockdown with controller interruption and recovery",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkMarksmanKnockdownChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 strict <; shared with paralysis; base target Speed must be positive"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -443,7 +484,7 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; world reaction/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -476,16 +517,23 @@
       ],
       "consequence": "real temporary paralysis with restoration",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkMarksmanParalyzeChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 strict <; shared draw; paralysis clears knockdown"
       },
-      "duration_seconds": null,
+      "duration_seconds": {
+        "compiled_fallback": 10,
+        "source": "original 0041D62A -> 004133E0, PARA effect duration; FormID 000137 absent in master",
+        "content_override_policy": "resolve winning SpellItem 000137 before using compiled fallback; all-plugin verification pending"
+      },
       "save_fields_required": [
         "paralysis source/remaining duration",
         "actor movement/action restrictions",
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; actual effect/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -518,7 +566,10 @@
       ],
       "consequence": "drop a real recoverable opponent weapon",
       "probability_and_draw": {
-        "status": "unresolved"
+        "setting": "iPerkBlockDisarmChance",
+        "compiled": 5,
+        "installed": 5,
+        "draw": "0..99 inclusive <=; quest item/drawn checks occur after draw"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -527,7 +578,7 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "blockMasteryDisarm tested; actual drop and contact eligibility pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -682,7 +733,8 @@
       "probability_and_draw": {
         "setting": "iPerkBlockStaggerChance",
         "compiled": 5,
-        "draw": "unresolved"
+        "installed": 25,
+        "draw": "0..99 inclusive <="
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -691,7 +743,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "blockMasteryStagger query tested; caller/contact/reaction pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -727,7 +779,8 @@
       "probability_and_draw": {
         "setting": "iPerkBlockDisarmChance",
         "compiled": 5,
-        "draw": "unresolved"
+        "installed": 5,
+        "draw": "0..99 inclusive <=; quest item/drawn checks occur after draw"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -736,7 +789,7 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "blockMasteryDisarm tested; actual drop and contact eligibility pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -844,7 +897,8 @@
       "probability_and_draw": {
         "setting": "iPerkMarksmanKnockdownChance",
         "compiled": 5,
-        "draw": "0..99 strict < from 0060032B; full eligibility pending"
+        "installed": 5,
+        "draw": "0..99 strict <; shared with paralysis; base target Speed must be positive"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -853,7 +907,7 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; world reaction/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -888,16 +942,21 @@
       "probability_and_draw": {
         "setting": "iPerkMarksmanParalyzeChance",
         "compiled": 5,
-        "draw": "0..99 strict < from 0060034D; shared draw and precedence pending"
+        "installed": 5,
+        "draw": "0..99 strict <; shared draw; paralysis clears knockdown"
       },
-      "duration_seconds": null,
+      "duration_seconds": {
+        "compiled_fallback": 10,
+        "source": "original 0041D62A -> 004133E0, PARA effect duration; FormID 000137 absent in master",
+        "content_override_policy": "resolve winning SpellItem 000137 before using compiled fallback; all-plugin verification pending"
+      },
       "save_fields_required": [
         "projectile source/skill snapshot policy",
         "paralysis source/duration/restrictions",
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "attackMasteryReaction tested; actual effect/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1586,6 +1645,52 @@
         "native normal-input and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/acrobatics-02/"
+    },
+    {
+      "id": "M15-MASTERY-HANDTOHAND-06",
+      "skill": "HandToHand",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": null,
+      "source_field": null,
+      "ability": "unarmed defensive stagger",
+      "normal_input": "unarmed block; exact caller triggering window still to verify",
+      "prerequisites": [
+        "no equipped weapon or shield",
+        "Hand to Hand Expert"
+      ],
+      "consequence": "attacker stagger and knockback",
+      "probability_and_draw": {
+        "setting": "iPerkBlockStaggerChance",
+        "compiled": 5,
+        "installed": 25,
+        "draw": "0..99 inclusive <="
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "blockMasteryStagger query tested; caller/contact/reaction pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-06/",
+      "source_code": "005F3C30\u2013005F3CBA; explicit unarmed branch selects Hand to Hand Expert"
     }
   ]
 }

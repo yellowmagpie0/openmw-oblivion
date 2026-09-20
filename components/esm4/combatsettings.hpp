@@ -4,6 +4,7 @@
 #include "loadcsty.hpp"
 #include "physicalcombat.hpp"
 #include "projectilerules.hpp"
+#include "masteryrules.hpp"
 #include <span>
 
 namespace ESM4
@@ -24,6 +25,7 @@ namespace ESM4
     BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings);
     KnockdownSettings buildKnockdownSettings(std::span<const GameSetting* const> settings);
     KnockbackSettings buildKnockbackSettings(std::span<const GameSetting* const> settings);
+    MasteryProcSettings buildMasteryProcSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings);
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);
