@@ -27,6 +27,21 @@ namespace ESM4
     void validateCombatMasterySettings(const CombatMasterySettings& settings);
     void validatePowerAttackSettings(const PowerAttackSettings& settings);
 
+    struct MeleeReachSettings
+    {
+        float mCombatDistance;
+        float mHandMultiplier;
+        float mGiantMultiplier;
+    };
+    // Base reach is rounded before applying resolved actor scale (including NPC race
+    // height). Creature RNAM is already a distance; weapon reach is a
+    // combat-distance factor.
+    float weaponMeleeReach(float weaponReach, float scale, const MeleeReachSettings& settings);
+    float unarmedMeleeReach(float scale, const MeleeReachSettings& settings);
+    float creatureMeleeReach(std::uint8_t reach, std::uint8_t creatureType, float scale,
+        const MeleeReachSettings& settings);
+    void validateMeleeReachSettings(const MeleeReachSettings& settings);
+
     struct PhysicalCombatSettings
     {
         std::int32_t mLuckSkillBase;

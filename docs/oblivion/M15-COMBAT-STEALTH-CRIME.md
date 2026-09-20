@@ -1751,3 +1751,27 @@ failures and all 13 audit unit tests pass. The audit deliberately exits 1
 because rule/oracle stage gates remain open. This is a verified reference
 correction, not native OpenMW jail acceptance. The first timing failure and
 all unsuccessful normal-input attempts remain preserved in Original-16.
+
+
+### S2 native melee reach and second original jail course
+
+Commit `0dc2f417bb` corrects the verified Chorrol bed reference. Added native
+weapon, unarmed and creature reach rules, including separate creature distance
+semantics, giant multiplier, intermediate rounding and resolved actor scale.
+The new reach behavior test fails against the stub; the settings test already
+passes. All **1,758 component tests** and **114 focused ASan/UBSan tests** pass
+with exact inventories and no skips (`S2/reach-rule-01`). Fourteen independent
+original-instruction cases agree; the initial faulty emulator harness remains
+preserved. Installed GMST probes 143–145 confirm distance/hand/giant inputs.
+Contact geometry and controller timing remain subsequent gameplay work.
+
+Original-16 case 02 completes normal assault/arrest/bed service with bounty
+0→40→0, Hand to Hand 10→9 and 24.0002 hours elapsed within its predeclared
+±.01-hour tolerance. Case 01's stricter timing failure remains failed. Normal
+`qqq` removes the game process and the pristine quicksave is unchanged, but
+wrapper exit 143 is explicitly a failed whole-process exit gate. Confiscated
+inventory counts and native OpenMW runtime jail acceptance remain unverified.
+S2 remains in progress; selected actor policy explanations and remaining rule
+families are open. S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `3aec01ef210eaba45c1864ddf0ca0053229c812645ac5e06dba0b457b0fd860b`.

@@ -57,6 +57,15 @@ namespace ESM4
         };
     }
 
+    MeleeReachSettings buildMeleeReachSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        MeleeReachSettings result{inputs.number("fCombatDistance", 128.f),
+            inputs.number("fHandReachMult", .5f), inputs.number("fCombatGiantCreatureReachMult", 2.f)};
+        validateMeleeReachSettings(result);
+        return result;
+    }
+
     CombatStyleDefaults buildCombatStyleDefaults(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

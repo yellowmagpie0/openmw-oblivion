@@ -90,3 +90,31 @@ TEST(ESM4CombatSettings, AmbiguousOrMissingRecordsFailAndUnrelatedSettingsStaySe
     second.mData = std::string("native text");
     EXPECT_EQ(ESM4::buildCombatStyleDefaults(settings).mStandard.mIdle.mMaximum, 2);
 }
+
+TEST(ESM4CombatSettings, ReachDefaultsAndTypedOverrides)
+{
+    const auto defaults = ESM4::buildMeleeReachSettings({});
+    EXPECT_EQ(defaults.mCombatDistance, 128);
+    EXPECT_EQ(defaults.mHandMultiplier, .5f);
+    EXPECT_EQ(defaults.mGiantMultiplier, 2);
+    ESM4::GameSetting record{};
+    const std::array<const ESM4::GameSetting*, 1> settings{&record};
+    for (const auto* name : {"fCombatDistance", "fHandReachMult", "fCombatGiantCreatureReachMult"})
+    {
+        record.mEditorId = name;
+        for (float valid : {0.f, 1.f, .6f, 2.2f})
+        {
+            record.mData = valid;
+            const auto result = ESM4::buildMeleeReachSettings(settings);
+            EXPECT_EQ(std::string_view(name) == "fCombatDistance" ? result.mCombatDistance
+                : std::string_view(name) == "fHandReachMult" ? result.mHandMultiplier : result.mGiantMultiplier, valid);
+        }
+        record.mData = std::int32_t{1};
+        EXPECT_THROW(ESM4::buildMeleeReachSettings(settings), std::invalid_argument);
+        for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            record.mData = invalid;
+            EXPECT_THROW(ESM4::buildMeleeReachSettings(settings), std::invalid_argument);
+        }
+    }
+}

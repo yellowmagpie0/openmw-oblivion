@@ -1478,6 +1478,41 @@
         "value": 500
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-142"
+    },
+    {
+      "name": "fCombatDistance",
+      "value": 128.0,
+      "storage": "0xb36f20",
+      "constructor": "0x9e927f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-143"
+    },
+    {
+      "name": "fHandReachMult",
+      "value": 0.5,
+      "storage": "0xb36e90",
+      "constructor": "0x9e8f7f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0cc1e4",
+        "type": "f",
+        "value": 0.6000000238418579
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-144"
+    },
+    {
+      "name": "fCombatGiantCreatureReachMult",
+      "value": 2.0,
+      "storage": "0xb37268",
+      "constructor": "0x9ea42f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0699ff",
+        "type": "f",
+        "value": 2.200000047683716
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-145"
     }
   ]
 }

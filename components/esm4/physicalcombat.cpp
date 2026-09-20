@@ -39,6 +39,37 @@ namespace ESM4
         }
     }
 
+    void validateMeleeReachSettings(const MeleeReachSettings& settings)
+    {
+        nonnegative(settings.mCombatDistance);
+        nonnegative(settings.mHandMultiplier);
+        nonnegative(settings.mGiantMultiplier);
+    }
+
+    float weaponMeleeReach(float weaponReach, float scale, const MeleeReachSettings& settings)
+    {
+        validateMeleeReachSettings(settings);
+        nonnegative(weaponReach);
+        nonnegative(scale);
+        return rounded(double(rounded(double(settings.mCombatDistance) * weaponReach)) * scale);
+    }
+
+    float unarmedMeleeReach(float scale, const MeleeReachSettings& settings)
+    {
+        return weaponMeleeReach(settings.mHandMultiplier, scale, settings);
+    }
+
+    float creatureMeleeReach(std::uint8_t reach, std::uint8_t creatureType, float scale,
+        const MeleeReachSettings& settings)
+    {
+        validateMeleeReachSettings(settings);
+        nonnegative(scale);
+        if (creatureType > 5)
+            throw std::invalid_argument("invalid native creature reach type");
+        const float base = creatureType == 5 ? rounded(double(reach) * settings.mGiantMultiplier) : reach;
+        return rounded(double(base) * scale);
+    }
+
     void validateEssentialRecoverySettings(const EssentialRecoverySettings& settings)
     {
         nonnegative(settings.mDelay);

@@ -1115,3 +1115,33 @@ TEST(ESM4PhysicalCombat, ArmorMasteryValidatesInputsAndTypedSettingBindings)
     value.mData = 7.f;
     EXPECT_THROW(ESM4::buildArmorMasterySettings(values), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeReachUsesWeaponFactorsCreatureDistancesAndActorScale)
+{
+    const ESM4::MeleeReachSettings settings{128.f, .6f, 2.2f};
+    EXPECT_FLOAT_EQ(ESM4::weaponMeleeReach(1, 1, settings), 128);
+    EXPECT_FLOAT_EQ(ESM4::weaponMeleeReach(1.5f, 2, settings), 384);
+    EXPECT_FLOAT_EQ(ESM4::weaponMeleeReach(0, 1, settings), 0);
+    EXPECT_FLOAT_EQ(ESM4::weaponMeleeReach(1, 0, settings), 0);
+    EXPECT_EQ(ESM4::weaponMeleeReach(std::nextafter(1.f, 0.f), 1, settings), 127.99999237060547f);
+    EXPECT_EQ(ESM4::weaponMeleeReach(std::nextafter(1.f, 2.f), 1, settings), 128.00001525878906f);
+    EXPECT_EQ(ESM4::unarmedMeleeReach(1, settings), 76.80000305175781f);
+    EXPECT_EQ(ESM4::unarmedMeleeReach(2, settings), 153.60000610351562f);
+    for (std::uint8_t type = 0; type < 5; ++type)
+        for (std::uint8_t reach : {0, 1, 64, 255})
+            EXPECT_EQ(ESM4::creatureMeleeReach(reach, type, 2, settings), reach * 2.f);
+    EXPECT_EQ(ESM4::creatureMeleeReach(0, 5, 1, settings), 0);
+    EXPECT_EQ(ESM4::creatureMeleeReach(1, 5, 1, settings), 2.2f);
+    EXPECT_EQ(ESM4::creatureMeleeReach(64, 5, 2, settings), 281.6000061035156f);
+    EXPECT_EQ(ESM4::creatureMeleeReach(255, 5, 1, settings), 561.f);
+    EXPECT_THROW(ESM4::creatureMeleeReach(1, 6, 1, settings), std::invalid_argument);
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::weaponMeleeReach(invalid, 1, settings), std::invalid_argument);
+        EXPECT_THROW(ESM4::weaponMeleeReach(1, invalid, settings), std::invalid_argument);
+        EXPECT_THROW(ESM4::unarmedMeleeReach(invalid, settings), std::invalid_argument);
+        EXPECT_THROW(ESM4::creatureMeleeReach(1, 0, invalid, settings), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::weaponMeleeReach(std::numeric_limits<float>::max(), 1, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::creatureMeleeReach(255, 5, std::numeric_limits<float>::max(), settings), std::invalid_argument);
+}

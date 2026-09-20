@@ -1880,6 +1880,48 @@
       "input_log": "build/oblivion-compat/m15/S2/original-15/crime-settings-2-input-log.jsonl",
       "input_log_sha256": "f44a24f960acc5402809f88ca57a2db0bf7cabba894e000aa20a461b04592f11",
       "initialization": "original-15, normal Continue into prison, only master active, no actor/stat/quest changes"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-143",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fCombatDistance",
+      "observed": 128,
+      "display_decimal_places": 2,
+      "capture": "build/oblivion-compat/m15/S2/original-16/reach-settings.png",
+      "capture_sha256": "f3ad220dcbc0b19d3496c5179cc2eff196f103bb36a1c212409f08c1dffbc238",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-16/reach-settings-input-log.jsonl",
+      "input_log_sha256": "096b5e5d76e8f4b4a25c00c066c84e94f6cc68ecba313ce1526db5ccba81b7dd",
+      "initialization": "Original-16 master-only run; paused after normal sentence service. No setting modifications. Whole-process wrapper exit 143 is retained separately."
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-144",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fHandReachMult",
+      "observed": 0.6,
+      "display_decimal_places": 2,
+      "capture": "build/oblivion-compat/m15/S2/original-16/reach-settings.png",
+      "capture_sha256": "f3ad220dcbc0b19d3496c5179cc2eff196f103bb36a1c212409f08c1dffbc238",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-16/reach-settings-input-log.jsonl",
+      "input_log_sha256": "096b5e5d76e8f4b4a25c00c066c84e94f6cc68ecba313ce1526db5ccba81b7dd",
+      "initialization": "Original-16 master-only run; paused after normal sentence service. No setting modifications. Whole-process wrapper exit 143 is retained separately."
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-145",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fCombatGiantCreatureReachMult",
+      "observed": 2.2,
+      "display_decimal_places": 2,
+      "capture": "build/oblivion-compat/m15/S2/original-16/reach-settings.png",
+      "capture_sha256": "f3ad220dcbc0b19d3496c5179cc2eff196f103bb36a1c212409f08c1dffbc238",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-16/reach-settings-input-log.jsonl",
+      "input_log_sha256": "096b5e5d76e8f4b4a25c00c066c84e94f6cc68ecba313ce1526db5ccba81b7dd",
+      "initialization": "Original-16 master-only run; paused after normal sentence service. No setting modifications. Whole-process wrapper exit 143 is retained separately."
     }
   ],
   "display_precision": "Float console responses display two decimal places; these observations are not a binary float readback.",

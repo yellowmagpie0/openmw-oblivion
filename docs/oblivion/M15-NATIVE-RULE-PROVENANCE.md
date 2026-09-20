@@ -1199,3 +1199,50 @@ would incorrectly make it false. No stochastic test is invented for this
 nonrandom check. Source traces and call-site list are retained under
 `S2/sources-01/crime-*`, with `actor-disposition-rule.txt`; supplementary
 oracle artifacts are `S2/oracle-emulator/alarm-responsibility-*`.
+
+## Native melee reach
+
+Original `00547540` multiplies weapon reach by `fCombatDistance` and stores
+float32. NPC natural reach (`005E40A0`) supplies `fHandReachMult` to that
+helper. The contact caller `005FEF87–005FF017` chooses the equipped weapon's
+reach (`TESObjectWEAP+98`) or actor virtual +26C, stores the base reach, then
+multiplies by virtual +EC (`GetScale`) and stores float32 again. NPC `00611D00`
+includes the sex-specific race height in that scale; the helper accepts the
+resolved actor scale, not just the placed-reference scale. Thus scale
+must follow base rounding. Character/Player +26C resolves to `005E40A0`;
+Creature resolves to `00625220` (local `sources-01/reach-vtables.json`).
+
+Creature natural reach is the unsigned RNAM byte (`TESCreature+10A`), already
+a distance. Type 5 (Giant, independently identified by the pinned xOBSE enum)
+multiplies it by `fCombatGiantCreatureReachMult` before the base float store.
+Other types preserve RNAM unchanged. A missing creature base uses the NPC
+natural-reach helper; resolving such a base remains the caller's responsibility.
+No weapon/creature distance is silently substituted for invalid native data.
+
+Compiled settings are distance 128, hand multiplier .5, giant multiplier 2.
+Installed overrides are .6 and 2.2 respectively; original read-only GMST
+probes 143–145 confirm the displayed values. Fourteen actual-instruction
+cases in `S2/oracle-emulator/reach-table.json` confirm independent expectations
+for weapon/unarmed/creature reach, adjacent floats, zero and scale. The first
+emulator harness incorrectly popped ST0 before entering the caller and returned
+zeros; its source/log are retained separately, and it supplies no acceptance
+values. This is arithmetic evidence, not contact geometry or animation timing
+acceptance. `fObjectHitWeaponReach` belongs to a separate object-hit path and
+is deliberately not substituted for actor melee reach.
+
+## Original jail course repeat
+
+Original-16 case 02 was declared before a fresh normal F9 load. Confirmed
+normal assault contact changed guard health 127→125.71 and bounty 0→40.
+Normal arrest choice and jail bed activation produced release, bounty 0,
+Hand to Hand penalty message and base value 9 (pristine value 10). The paused
+clock observations are day 1/hour 6.6691 and day 2/hour 6.6693: **24.0002 hours**,
+within the predeclared ±.01-hour UI-transition budget. Case 01's stricter
+±.0002-hour timing assertion still fails at 24.0003 and is not relabeled.
+All observations, failed activation attempts and input logs remain under
+`S2/original-16`; screenshots were inspected. Lost X input focus explains the
+last ignored activation inputs; normal Space worked after window focus was
+restored. No inventory-count/confiscation acceptance is claimed. Normal `qqq`
+was requested, the game process exited and pristine quicksave hash is unchanged,
+but the wrapper returned 143, retained as a failed whole-process exit gate.
+These reference results do not close native OpenMW jail gameplay acceptance.

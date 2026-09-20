@@ -23,6 +23,7 @@ namespace ESM4
     // Input is the native winning setting inventory, never shared TES3 settings.
     // Known absent entries use independently verified original initializers.
     CombatStyleDefaults buildCombatStyleDefaults(std::span<const GameSetting* const> settings);
+    MeleeReachSettings buildMeleeReachSettings(std::span<const GameSetting* const> settings);
     PhysicalCombatSettings buildPhysicalCombatSettings(std::span<const GameSetting* const> settings);
     ProjectileSettings buildProjectileSettings(std::span<const GameSetting* const> settings);
     BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings);
