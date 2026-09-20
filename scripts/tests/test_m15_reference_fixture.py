@@ -61,6 +61,21 @@ class ReferenceFixtureTests(unittest.TestCase):
         bad = copy.deepcopy(self.recipe);bad['cell']['id'] = 0x800
         with self.assertRaises(ValueError):fixture.build(self.source, bad)
 
+    def test_room_does_not_clip_geometry_at_one_unit(self):
+        data, _ = fixture.build(self.source, self.recipe)
+        cell = next(payload for tag, _, payload in records(data) if tag == 'CELL')
+        lighting = next(s['payload'] for s in _subrecords(cell, 'fixture', 'CELL') if s['name'] == 'XCLL')
+        self.assertEqual(len(lighting), 36)
+        # TES4 offsets 28/32 are directional fade and fog clip distance,
+        # independently inspected in original prison/shop CELL records.
+        self.assertEqual(struct.unpack_from('<ff', lighting, 28), (1., 0.))
+
+    def test_room_uses_original_archive_path_separators(self):
+        data, _ = fixture.build(self.source, self.recipe)
+        room = next(payload for tag, _, payload in records(data) if tag == 'STAT')
+        model = next(s['payload'] for s in _subrecords(room, 'fixture', 'STAT') if s['name'] == 'MODL')
+        self.assertEqual(model, b'Architecture\\ImperialCity\\Interior\\ICGroundFloor01.NIF\0')
+
     def test_rejects_invalid_numeric_or_extensible_gameplay_payloads(self):
         for changes in ({'health':0}, {'health':-1}, {'health':2**32}, {'skill':256},
                         {'position':[float('nan'),0,0]}, {'script':'Kill player'}, {'essential':True}):

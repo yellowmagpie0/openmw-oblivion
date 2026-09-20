@@ -1094,3 +1094,30 @@ still requires hash-checked cleanup after the reference run. S2 is in progress;
 S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `83b0d27adc6cf4c66f6eb40b9ce83df820fb095c765220fd957cca40f55fcf77`.
+
+### S2 original-runtime fixture format corrections
+
+Commit `626a748410` contains melee fatigue arithmetic. Two new reference-writer
+regressions exposed incorrectly ordered XCLL directional-fade/fog-clip values
+and nonnative archive path separators. The writer now emits fade 1, fog clip 0
+and the original backslash model path. All 143 Python tests pass; native parse
+and graph reinspection pass with eight added keys and zero added unresolved
+references (`S2/reference-fixture-03`). Generated plugin SHA-256:
+`e3a91a255555297a4c538ffaaff96c2c360ff960783ac37fad1e43d1a70a76ea`.
+
+Fog correction alone (`reference-fixture-02`, original-10) did not resolve the
+black scene. Placing the existing master room in a disposable diagnostic scene
+showed that the asset was available. A clean run with the path correction
+(`original-11`) renders the authored room and stops the player's fall at its
+floor. These captures were opened and inspected; `runtime-notes.json` retains
+per-image observations and hashes. This is original model/room acceptance,
+not damage acceptance. The initial opponent placement is on stairs above the
+player, so flat-floor placement and normal weapon interaction are still being
+verified before an attack case. The diagnostic original-10 run used noclip and
+spawned room geometry; it was discarded without saving or attacking. Its exit
+143 and the original-09 wrong-working-directory exit 5 remain retained.
+
+S2 remains in progress. The corrected task-added plugin is still installed
+for original reference testing and requires hash-checked removal afterward.
+
+Tested writer/test diff SHA-256: `5413bfe22bb62f30094b86872f62838ca180edcfbda3ca0573f82ceac3738eaf`.

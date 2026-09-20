@@ -118,9 +118,10 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
                                    0, 0, weapon['condition'], weapon['weight'], weapon['damage']))
     bases = {'CSTY': record('CSTY', target['style'], string('EDID', 'M15ReferenceStyle') + sub('CSTD', style)),
              'NPC_': record('NPC_', target['id'], npc),
-             'STAT': record('STAT', room['id'], string('EDID', 'M15ReferenceRoom') + string('MODL', room['model'])),
+             'STAT': record('STAT', room['id'], string('EDID', 'M15ReferenceRoom')
+                            + string('MODL', room['model'].replace('/', '\\'))),
              'WEAP': record('WEAP', weapon['id'], item)}
-    lighting = bytes(cell['ambient'] + [0]) + bytes(8) + struct.pack('<ffii ff', 0, 10000, 0, 0, 0, 1)
+    lighting = bytes(cell['ambient'] + [0]) + bytes(8) + struct.pack('<ffii ff', 0, 10000, 0, 0, 1, 0)
     cell_record = record('CELL', cell['id'], string('EDID', cell['editor_id']) + string('FULL', cell['name'])
                          + sub('DATA', b'\x01') + sub('XCLL', lighting))
     floor = record('REFR', room['reference'], sub('NAME', struct.pack('<I', room['id'])) + sub('DATA', bytes(24)))
