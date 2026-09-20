@@ -1299,3 +1299,25 @@ and witness reporting are **not** implemented by this claim predicate. The
 outer `004DEBF0` off-limits query applies evil-owner and object/door checks
 separately. This helper neither changes inventory ownership nor creates a new
 inventory or crime authority.
+
+## Resolved combat-style audit projection
+
+The semantic audit now applies the reviewed DefaultCombatStyle getter mapping
+to typed winning GMSTs and the checked-in initializer catalog. It resolves all
+historical authored tails and documented zero sentinels without mutating the
+raw decoded records. Advanced CSAD applies only with the Advanced flag;
+missing required CSAD, incomplete defaults, bad types, ambiguous setting names,
+nonfinite values and invalid domains fail explicitly. The catalog hash is
+recorded alongside this projection; it is not a gameplay acceptance flag.
+
+`S2/audit-12` resolves **130 policies** (native default plus 129 authored styles)
+and **3,636 actor-to-policy links**. The 2,218 actors with no ZNAM are now
+explained as native default consumers; the reviewed `default_actors` count
+still counts them and does not change to zero. An independently compiled
+runner calls the actual C++ setting builder, binary CSTD/CSAD decoders and
+policy resolvers. All **7,540 fields** agree with the Python grouped-layout
+projection (`S2/policy-audit-01/comparison.json`), using source payloads whose
+per-style hashes match the fresh audit. This is data/rule agreement, not an
+executed opponent policy or magic effect. Equipment, spell, faction and actor
+flags remain separately preserved inputs; selected campaign behavior still
+requires its complete policy explanation and gameplay gates.

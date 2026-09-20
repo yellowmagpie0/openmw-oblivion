@@ -80,6 +80,143 @@ def combat_style(standard: bytes, advanced: bytes | None = None) -> dict[str, An
     return {'standard_size': len(standard), 'standard': values, 'advanced': extra}
 
 
+# Reviewed original DefaultCombatStyle getter-to-setting associations. This is
+# an independent audit projection, never a mutable gameplay authority.
+_STANDARD_DEFAULT_SETTINGS = {
+    'dodge_chance': 'iAIDefaultDodgeChance',
+    'left_right_chance': 'iAIDefaultDodgeLeftRightChance',
+    'block_chance': 'iAIDefaultBlockChance',
+    'attack_chance': 'iAIDefaultAttackChance',
+    'power_attack_chance': 'iAIDefaultPowerAttackChance',
+    'acrobatic_chance': 'iAIDefaultAcrobaticDodgeChance',
+    'rush_chance': 'iAIDefaultRushingAttackPercentChance',
+    'dodge_lr_min': 'fAIDefaultDodgeLeftRightMinTime',
+    'dodge_lr_max': 'fAIDefaultDodgeLeftRightMaxTime',
+    'dodge_forward_min': 'fAIDefaultDodgeForwardMinTime',
+    'dodge_forward_max': 'fAIDefaultDodgeForwardMaxTime',
+    'dodge_back_min': 'fAIDefaultDodgeBackwardMinTime',
+    'dodge_back_max': 'fAIDefaultDodgeBackwardMaxTime',
+    'idle_min': 'fAIDefaultIdleMinTime', 'idle_max': 'fAIDefaultIdleMaxTime',
+    'hold_min': 'fAIDefaultHoldMinTime', 'hold_max': 'fAIDefaultHoldMaxTime',
+    'attack_recoil_bonus': 'fAIDefaultAttackDuringRecoilStaggerBonus',
+    'attack_unconscious_bonus': 'fAIDefaultAttackDuringUnconsciousBonus',
+    'attack_unarmed_bonus': 'fAIDefaultAttackHandBonus',
+    'power_recoil_bonus': 'fAIDefaultPowerAttackRecoilStaggerBonus',
+    'power_unconscious_bonus': 'fAIDefaultPowerAttackUnconsciousBonus',
+    'power_normal': 'iAIDefaultPowerAttackNormalChance',
+    'power_forward': 'iAIDefaultPowerAttackForwardChance',
+    'power_back': 'iAIDefaultPowerAttackBackwardChance',
+    'power_left': 'iAIDefaultPowerAttackLeftChance',
+    'power_right': 'iAIDefaultPowerAttackRightChance',
+    'optimal_range_multiplier': 'fAIDefaultOptimalRangeMult',
+    'maximum_range_multiplier': 'fAIDefaultMaximumRangeMult',
+    'melee_switch_distance': 'fAIDefaultSwitchToMeleeDistance',
+    'ranged_switch_distance': 'fAIDefaultSwitchToRangedDistance',
+    'buff_standoff': 'fAIDefaultBuffStandoffDistance',
+    'ranged_standoff': 'fAIDefaultRangedStandoffDistance',
+    'group_standoff': 'fAIDefaultGroupStandoffDistance',
+    'rush_distance_multiplier': 'fAIDefaultRushingAttackDistanceMult',
+}
+_ADVANCED_DEFAULT_SETTINGS = dict(zip(_ADVANCED_NAMES, (
+    'fAIDefaultDodgeFatigueMult', 'fAIDefaultDodgeFatigueBase',
+    'fAIDefaultDodgeSpeedBase', 'fAIDefaultDodgeSpeedMult',
+    'fAIDefaultDodgeDuringAttackMult', 'fAIDefaultDodgeNoAttackMult',
+    'fAIDefaultDodgeBackDuringAttackMult', 'fAIDefaultDodgeBackNoAttackMult',
+    'fAIDefaultDodgeForwardWhileAttackingMult', 'fAIDefaultDodgeForwardNotAttackingMult',
+    'fAIDefaultBlockSkillMult', 'fAIDefaultBlockSkillBase',
+    'fAIDefaultBlockDuringAttackMult', 'fAIDefaultBlockNoAttackMult',
+    'fAIDefaultAttackSkillMult', 'fAIDefaultAttackSkillBase',
+    'fAIDefaultAttackDuringAttackMult', 'fAIDefaultAttackNoAttackMult',
+    'fAIDefaultAttackDuringBlockMult', 'fAIDefaultPowerAttackFatigueBase',
+    'fAIDefaultPowerAttackFatigueMult'), strict=True))
+_FLAG_DEFAULT_SETTINGS = {
+    4: 'iAIDefaultIgnoreAlliesInArea', 8: 'iAIDefaultYieldEnabled',
+    16: 'iAIDefaultRejectYield', 32: 'iAIDefaultFleeDisabled',
+    64: 'iAIDefaultPrefersRangedAttacks', 128: 'iAIDefaultMeleeAlertAllowed',
+}
+
+
+def policy_inventory(report: dict, catalog: dict) -> dict:
+    """Resolve reviewed data inputs without claiming a combat simulation ran."""
+    if catalog.get('schema_version') != 1 or catalog.get('game_version') != 'Oblivion 1.2.0416':
+        raise M15AuditError('unsupported native default-style catalog')
+    compiled = {}
+    for row in catalog['settings']:
+        name = row['name'].casefold()
+        if name in compiled:
+            raise M15AuditError('ambiguous compiled combat setting')
+        compiled[name] = row
+    winning = {}
+    for name, value in report['settings'].items():
+        if name.casefold() in winning:
+            raise M15AuditError('ambiguous winning combat setting')
+        winning[name.casefold()] = value
+
+    def number(name):
+        fallback = compiled.get(name.casefold())
+        if fallback is None or fallback.get('type') != ('int32' if name[0] == 'i' else 'float32'):
+            raise M15AuditError(f'missing/invalid compiled combat setting {name}')
+        row = winning.get(name.casefold())
+        if row is not None and row.get('type') != name[0]:
+            raise M15AuditError(f'incorrect winning combat setting type {name}')
+        value = (row if row is not None else fallback)['value']
+        if name[0] == 'i':
+            if type(value) is not int or not -2**31 <= value < 2**31:
+                raise M15AuditError(f'invalid integer combat setting {name}')
+        elif type(value) not in (int, float) or not math.isfinite(value):
+            raise M15AuditError(f'invalid floating combat setting {name}')
+        else:
+            try:
+                value = struct.unpack('<f', struct.pack('<f', value))[0]
+            except (OverflowError, struct.error) as error:
+                raise M15AuditError(f'floating combat setting overflow {name}') from error
+        return value
+
+    standard = {field: number(name) for field, name in _STANDARD_DEFAULT_SETTINGS.items()}
+    standard['flags'] = sum(bit for bit, name in _FLAG_DEFAULT_SETTINGS.items() if number(name) != 0)
+    standard['do_not_acquire'] = number('iAIDefaultDoNotAcquire') != 0
+    advanced = {field: number(name) for field, name in _ADVANCED_DEFAULT_SETTINGS.items()}
+
+    def checked(standard, advanced):
+        # Reuse the independent binary layout/domain checker to validate every
+        # field and timer, including resolved historical tails and signed CSAD.
+        try:
+            raw = _CORE.pack(*(standard[name] for name in _CORE_NAMES))
+            for _, layout, names in _TAILS:
+                raw += struct.pack(layout, *(standard[name] for name in names))
+            return combat_style(raw, struct.pack('<21f', *(advanced[name] for name in _ADVANCED_NAMES)))
+        except (KeyError, OverflowError, struct.error) as error:
+            raise M15AuditError(f'invalid resolved combat policy: {error}') from error
+
+    defaults = checked(standard, advanced)
+    policies = {'null': dict(defaults, source='native-default-getters-and-winning-GMSTs')}
+    failures = []
+    fallback_zero = {'melee_switch_distance', 'ranged_switch_distance', 'rush_chance', 'rush_distance_multiplier'}
+    for key, style in report['styles'].items():
+        try:
+            resolved = dict(style['standard'])
+            for name, value in resolved.items():
+                if value is None:
+                    resolved[name] = (1 if name in ('optimal_range_multiplier', 'maximum_range_multiplier')
+                                      else False if name == 'do_not_acquire' else standard[name])
+                elif name in fallback_zero and value == 0:
+                    resolved[name] = standard[name]
+            extra = style['advanced'] if resolved['flags'] & 1 else advanced
+            if extra is None:
+                raise M15AuditError('Advanced flag lacks CSAD')
+            policies[key] = dict(checked(resolved, extra), source='authored-style-with-native-tail-rules')
+        except (KeyError, M15AuditError) as error:
+            failures.append(f'{key}: {error}')
+    actors = {}
+    for key, actor in report['actors'].items():
+        if actor['style'] not in policies:
+            failures.append(f'{key}: unresolved combat policy {actor["style"]}')
+        else:
+            actors[key] = actor['style']
+    return {'scope': 'resolved data inputs only; runtime combat and magic remain separate gates',
+            'policies': policies, 'actor_policy_keys': actors, 'failures': failures, 'passed': not failures}
+
+
 def _one(subs: list[dict], name: str, required: bool = False) -> bytes | None:
     values = [s['payload'] for s in subs if s['name'] == name]
     if len(values) > 1 or (required and not values):

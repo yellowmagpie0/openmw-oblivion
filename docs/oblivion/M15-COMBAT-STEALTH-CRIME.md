@@ -14,7 +14,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | --- | --- | --- | --- |
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
-| S2 native data/rules | in-progress | Typed CSTY/CREA, locked audit, setting and actor adapters, first physical helpers below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
+| S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
 | S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
@@ -1854,3 +1854,28 @@ wrapper exit **0** and unchanged pristine quicksave. The trailing Return-key
 release failed because the isolated X display had already closed; its failure
 is retained in the input log and cleanup record. This closes that setting
 lookup only. S2 remains in progress, and native gameplay gates remain open.
+
+
+### S2 resolved style-policy semantic audit
+
+Commit `498c950b2f` records the original cone setting confirmation. Extended
+the audit to resolve native default and authored style inputs using the reviewed
+initializer catalog and winning typed settings. Raw records remain unchanged;
+historical tail defaults, selected zero sentinels and Advanced-flag behavior
+are explicit. Missing styles/advanced data and malformed defaults fail.
+
+Two new tests fail against the absent resolver, then pass; an additional
+review test covers signed advanced values and ambiguous settings. All **151
+Python tests** pass. Fresh all-official-content audit `S2/audit-12` has zero
+data failures and unchanged count lock. It resolves **130 policies** and all
+**3,636 actor links**, including **2,218 native-default consumers**. Independent
+C++ production decode/build/resolve calls agree on **7,540 fields** across all
+130 policies (`S2/policy-audit-01/comparison.json`), with matching source payload
+hashes and native runner exit 0.
+
+The audit still returns overall false/exit 1: resolved inputs do not execute
+combat AI, effects or gameplay. Full selected campaign policy explanations,
+remaining rules and original/gameplay gates remain open. S2 remains in progress;
+S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `9ed3f0794ad0769d15b04b869224a13ad16e915550eb7553b2d5bce24ce07da3`.

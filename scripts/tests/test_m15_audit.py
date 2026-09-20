@@ -1,4 +1,6 @@
 import math
+import json
+import copy
 import struct
 import sys
 import tempfile
@@ -131,6 +133,86 @@ class M15NativeAuditTests(unittest.TestCase):
                 with self.subTest(tag=tag):
                     path.write_bytes(plugin([record('NPC_', 0x800, core + sub(tag, data)), record('STAT', 0x801, b'')]))
                     self.assertFalse(audit.inventory([path])['data_passed'])
+
+    def test_policy_inventory_resolves_native_defaults_and_authored_zero_rules(self):
+        catalog = json.loads((Path(__file__).resolve().parents[2] /
+            'docs/oblivion/M15-COMBAT-STYLE-DEFAULTS.json').read_text())
+        authored = audit.combat_style(style(84))
+        report = {'settings': {'iAIDefaultDodgeChance': {'type': 'i', 'value': 42},
+            'fAIDefaultOptimalRangeMult': {'type': 'f', 'value': 3.0}},
+            'styles': {'style': authored}, 'actors': {'default': {'style': 'null'}, 'custom': {'style': 'style'}}}
+        result = audit.policy_inventory(report, catalog)
+        self.assertTrue(result['passed'], result['failures'])
+        default = result['policies']['null']
+        self.assertEqual(default['standard']['dodge_chance'], 42)
+        self.assertEqual(default['standard']['optimal_range_multiplier'], 3)
+        self.assertEqual(default['advanced']['dodge_fatigue_multiplier'], -20)
+        custom = result['policies']['style']
+        self.assertEqual(custom['standard']['dodge_chance'], 75)
+        self.assertEqual(custom['standard']['optimal_range_multiplier'], 1)
+        self.assertEqual(custom['standard']['melee_switch_distance'], 250)
+        self.assertEqual(custom['standard']['rush_chance'], 25)
+        self.assertFalse(custom['standard']['do_not_acquire'])
+        self.assertEqual(result['actor_policy_keys'], {'default': 'null', 'custom': 'style'})
+        self.assertIsNone(authored['standard']['optimal_range_multiplier'])
+        full = audit.combat_style(style())
+        full['standard'].update(melee_switch_distance=0, rush_chance=0, rush_distance_multiplier=0,
+                                buff_standoff=0, ranged_standoff=0)
+        report['styles']['style'] = full
+        resolved = audit.policy_inventory(report, catalog)['policies']['style']['standard']
+        self.assertEqual(resolved['melee_switch_distance'], 250)
+        self.assertEqual(resolved['rush_chance'], 25)
+        self.assertEqual(resolved['rush_distance_multiplier'], 1)
+        self.assertEqual(resolved['buff_standoff'], 0)
+        self.assertEqual(resolved['ranged_standoff'], 0)
+
+    def test_policy_inventory_rejects_bad_defaults_and_missing_advanced_data(self):
+        catalog = json.loads((Path(__file__).resolve().parents[2] /
+            'docs/oblivion/M15-COMBAT-STYLE-DEFAULTS.json').read_text())
+        report = {'settings': {}, 'styles': {}, 'actors': {}}
+        for value in [-1, 101, 42.0, True]:
+            report['settings'] = {'iAIDefaultDodgeChance': {'type': 'i', 'value': value}}
+            with self.subTest(value=value), self.assertRaises(audit.M15AuditError):
+                audit.policy_inventory(report, catalog)
+        report['settings'] = {'fAIDefaultIdleMaxTime': {'type': 'f', 'value': math.nan}}
+        with self.assertRaises(audit.M15AuditError):
+            audit.policy_inventory(report, catalog)
+        report['settings'] = {}
+        incomplete = copy.deepcopy(catalog);incomplete['settings'].pop()
+        with self.assertRaises(audit.M15AuditError):
+            audit.policy_inventory(report, incomplete)
+        authored = audit.combat_style(style());authored['standard']['flags'] = 1
+        report['styles'] = {'style': authored};report['actors'] = {'actor': {'style': 'style'}}
+        result = audit.policy_inventory(report, catalog)
+        self.assertFalse(result['passed'])
+        self.assertNotIn('actor', result['actor_policy_keys'])
+        report['styles'] = {}
+        self.assertFalse(audit.policy_inventory(report, catalog)['passed'])
+
+    def test_policy_inventory_keeps_advanced_signed_values_and_rejects_ambiguous_inputs(self):
+        catalog = json.loads((Path(__file__).resolve().parents[2] /
+            'docs/oblivion/M15-COMBAT-STYLE-DEFAULTS.json').read_text())
+        extra = struct.pack('<21f', -13, *([2] * 20))
+        authored = audit.combat_style(style(), extra);authored['standard']['flags'] = 1
+        report = {'settings': {}, 'styles': {'style': authored}, 'actors': {}}
+        resolved = audit.policy_inventory(report, catalog)['policies']['style']
+        self.assertEqual(resolved['advanced']['dodge_fatigue_multiplier'], -13)
+        self.assertEqual(resolved['advanced']['power_attack_fatigue_multiplier'], 2)
+        authored['standard']['flags'] = 0
+        self.assertEqual(audit.policy_inventory(report, catalog)['policies']['style']
+                         ['advanced']['power_attack_fatigue_multiplier'], -10)
+        report['settings'] = {'fAIDefaultIdleMinTime': {'type': 'f', 'value': 5}}
+        with self.assertRaises(audit.M15AuditError):
+            audit.policy_inventory(report, catalog)
+        report['settings'] = {'iAIDefaultYieldEnabled': {'type': 'i', 'value': -1}}
+        self.assertEqual(audit.policy_inventory(report, catalog)['policies']['null']['standard']['flags'], 8)
+        report['settings']['iaidefaultyieldenabled'] = {'type': 'i', 'value': 1}
+        with self.assertRaises(audit.M15AuditError):
+            audit.policy_inventory(report, catalog)
+        report['settings'] = {}
+        catalog['settings'].append(dict(catalog['settings'][0]))
+        with self.assertRaises(audit.M15AuditError):
+            audit.policy_inventory(report, catalog)
 
     def test_gmst_types_and_faction_crime_values_are_validated(self):
         with tempfile.TemporaryDirectory() as directory:

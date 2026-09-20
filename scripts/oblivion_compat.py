@@ -5436,6 +5436,17 @@ def main(argv: list[str] | None = None) -> int:
             case_inventory = json.loads((Path(__file__).resolve().parents[1] / "docs/oblivion/M15-CASE-INVENTORY.json").read_text())
             result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER],
                                               case_inventory["prisons"])
+            defaults_path = Path(__file__).resolve().parents[1] / "docs/oblivion/M15-COMBAT-STYLE-DEFAULTS.json"
+            defaults_bytes = defaults_path.read_bytes()
+            policies = tes4_m15_audit.policy_inventory(result, json.loads(defaults_bytes))
+            policies["catalog_sha256"] = hashlib.sha256(defaults_bytes).hexdigest()
+            result["policy_inventory"] = policies
+            result["failures"].extend(policies["failures"])
+            result["data_passed"] = result["data_passed"] and policies["passed"]
+            result["unresolved_default_actors"] = [key for key in result["unresolved_default_actors"]
+                                                     if key not in policies["actor_policy_keys"]]
+            result["open_gates"] = ["original-game combat policy gameplay verification",
+                                    "independent physical/crime rule matrix"]
             lock_path = Path(__file__).resolve().parent / "data/oblivion_compat/m15_count_lock.json"
             result["count_lock"] = tes4_m15_audit.check_count_lock(result, json.loads(lock_path.read_text()))
             result["data_passed"] = result["data_passed"] and result["count_lock"]["passed"]
