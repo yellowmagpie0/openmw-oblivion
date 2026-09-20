@@ -585,6 +585,69 @@
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-58",
       "consumer_note": "not read by reviewed armor-wear selection routine; shield uses remaining interval"
+    },
+    {
+      "name": "fArrowBowTimerBase",
+      "value": 0.25,
+      "storage": "0xb37080",
+      "constructor": "0x9e9aaf",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-59"
+    },
+    {
+      "name": "fArrowBowTimerMult",
+      "value": 0.4000000059604645,
+      "storage": "0xb37088",
+      "constructor": "0x9e9adf",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-60"
+    },
+    {
+      "name": "fArrowSpeedMult",
+      "value": 1500.0,
+      "storage": "0xb37040",
+      "constructor": "0x9e992f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-61"
+    },
+    {
+      "name": "fArrowWeakSpeed",
+      "value": 0.009999999776482582,
+      "storage": "0xb37090",
+      "constructor": "0x9e9b0f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-62"
+    },
+    {
+      "name": "fArrowGravityBase",
+      "value": 0.30000001192092896,
+      "storage": "0xb37068",
+      "constructor": "0x9e9a1f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-63"
+    },
+    {
+      "name": "fArrowGravityMult",
+      "value": 0.0020000000949949026,
+      "storage": "0xb37070",
+      "constructor": "0x9e9a4f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-64"
+    },
+    {
+      "name": "fArrowWeakGravity",
+      "value": 1.75,
+      "storage": "0xb37098",
+      "constructor": "0x9e9b3f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-65"
     }
   ]
 }

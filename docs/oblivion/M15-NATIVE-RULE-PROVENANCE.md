@@ -543,3 +543,52 @@ semantics, auto-calculated creature base stats and world hit acceptance remain
 open. Retained sources: `actor-physical-vtables.json`,
 `creature-natural-damage.txt`, `creature-damage-rule.txt`,
 `creature-base-damage.txt`, `creature-armor-rating.txt` under `S2/sources-01`.
+
+### Bow launch arithmetic
+
+Original release code `0x5fd278` reads the player's bow timer at `+0x640` and
+computes `min(1, R(timer * fArrowBowTimerMult + fArrowBowTimerBase))`; the
+nonplayer branch supplies full draw. The min helper is `0x4ac760`. Timer
+accumulation/release eligibility still need controller tracing and runtime
+acceptance; the pure helper takes the already resolved timer value.
+
+The projectile constructor at `0x60c940` stores launch damage at `+0x70`.
+At `0x60ca45`–`0x60ca76`, it calls the reviewed item damage function separately
+for bow and ammunition, adds their results with a float store, then multiplies
+by draw fraction with another float store. The ammunition branch of
+`0x484f80` uses Marksman, Luck, Agility, current fatigue, base ammunition damage
+and condition ratio 1. Bow uses its own condition. Both item calls add the
+actor's integer AttackBonus AV `0x2a` after base damage; the pure launch input
+exposes this caller-resolved value without executing an effect. Original
+impact reads stored damage (`0x4b9f60`) rather than rebuilding launch stats.
+
+Speed: `full = R(ammoSpeed * fArrowSpeedMult)`, then
+`R(full * (draw + (1-draw) * fArrowWeakSpeed))`. Gravity coefficient at
+`0x547700` uses the existing luck-adjusted skill, then
+`full = R(fArrowGravityBase - skill*fArrowGravityMult)`, followed by
+`max(0, R(full*draw + (1-draw)*fArrowWeakGravity))`. This function does not read
+`fArrowGravityMin`; world acceleration, trajectory integration and the other
+uses of that setting remain open. These are launch arithmetic contracts, not
+projectile runtime acceptance.
+
+Seven compiled defaults are .25/.4 (timer), 1500/.01 (speed), .3/.002/1.75
+(gravity). No installed overrides were found. Original-13 normal Continue
+into the prison with only Oblivion.esm active produced read-only setting
+observations 59–65 and exited cleanly with code 0. The final capture contains
+all seven lookups and was opened. **GravityMult displays 0.00**, so that lookup
+cannot verify .002 precisely; exact initializer bytes and absence of an
+override provide the exact-value provenance. The setting ledger records that
+precision limitation rather than treating displayed zero as the actual value.
+
+Six new tests failed against stubs. The first implemented run exposed a test
+expectation error: the first representable draw below .5 still rounds to
+.975f gravity, while the second smaller draw crosses the next float midpoint.
+Independent rational arithmetic from exact decoded operands established the
+plateau (`projectile-rules-01/gravity-boundary-independent.json`); the test was
+corrected and both failed full-suite/sanitizer attempts are retained with the
+`initial-` prefix. No production formula was changed for this correction.
+Final evidence is in `projectile-rules-01`; original source traces are
+`arrow-launch.txt`, `bow-draw-release.txt`, `arrow-gravity-rule.txt`,
+`arrow-impact-damage.txt`, and `weapon-rule-callers.txt` under `sources-01`.
+The earlier candidate `ai-weapon-valuation-rule.txt` was identified as AI
+weapon valuation, not bow damage, and is not used as a bow-rule oracle.

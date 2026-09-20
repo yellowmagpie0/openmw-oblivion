@@ -1304,3 +1304,34 @@ this clean exit. S2 remains in progress; S3–S14 pending. Next bounded task:
 bow/projectile damage inputs and remaining mastery/reaction rules.
 
 Tested implementation/test/provenance diff SHA-256: `18aef648bda8fc1f21f5a93052e59dc072605d4ac8d7d88bfae4a2230c100ac1`.
+
+### S2 bow launch rule arithmetic and engine regression
+
+Commit `2f6d6e1ce6` contains creature natural damage. Added a separate pure
+projectile rule module for draw fraction, separately scaled bow/ammo damage,
+launch speed and gravity coefficient, plus typed native settings. Six tests
+failed against stubs. An initially overstrict gravity boundary assertion
+failed in both builds; exact-rational review proved float rounding produces
+a plateau. Failed runs retained, expectation corrected, production unchanged.
+All **1,703 component cases** and **55 focused ASan/UBSan cases** pass with
+exact inventories/no skips (`S2/projectile-rules-01`). The sanitizer filter
+now also includes `ESM4ProjectileRules.*`; the inventory checker was updated
+accordingly. Both build logs/test XMLs inspected.
+
+The native engine, `openmw-tests`, and `esmtool` rebuild successfully; all
+**551 engine tests** pass with exact inventory (`S2/integration-03`). Original-13
+normal prison load verified seven formatted setting lookups; the combined
+capture was opened. GravityMult's 0.00 display does not independently verify
+.002, and that limitation is explicit. Original-13 exited normally with code
+0; no installed game files were added. Only its isolated load-order file was
+changed to master-only; the previous isolated file is retained as evidence.
+Physical setting facts: **61**; numeric lookup observations: **65**.
+
+Bow controller/timer accumulation, trajectory/collision/recovery, launch state
+persistence and first-hit original/native projectile gameplay remain open.
+S2 remains in progress; S3–S14 pending. Next bounded task: extend the editable
+reference fixture with bow/ammo for normal-input arrow observations, and
+finish remaining reaction/mastery/crime rule families.
+
+Tested tracked implementation/test/provenance diff plus three new source files
+(path followed by contents) SHA-256: `131272179df49067dbfaff5fd70f7590e68eb62c0c6706e07d8b5e51be8b2c57`.

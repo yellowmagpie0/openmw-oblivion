@@ -255,6 +255,22 @@ namespace ESM4
             throw std::invalid_argument("invalid native maximum armor rating");
         return result;
     }
+    ProjectileSettings buildProjectileSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        ProjectileSettings result{
+            inputs.number("fArrowBowTimerBase", .25f),
+            inputs.number("fArrowBowTimerMult", .4f),
+            inputs.number("fArrowSpeedMult", 1500.f),
+            inputs.number("fArrowWeakSpeed", .01f),
+            inputs.number("fArrowGravityBase", .3f),
+            inputs.number("fArrowGravityMult", .002f),
+            inputs.number("fArrowWeakGravity", 1.75f),
+        };
+        validateProjectileSettings(result);
+        return result;
+    }
+
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
