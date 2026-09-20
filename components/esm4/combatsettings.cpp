@@ -271,6 +271,17 @@ namespace ESM4
         return result;
     }
 
+    BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const BowFatigueSettings result{
+            inputs.number("fMarksmanFatigueBurnPerSecond", 15.f),
+            inputs.number("fMarksmanFatigueBurnPerShot", 5.f),
+        };
+        validateBowFatigueSettings(result);
+        return result;
+    }
+
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

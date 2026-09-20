@@ -221,6 +221,142 @@
       "evidence_report": "build/oblivion-compat/m15/S2/original-12/sword-observation.json",
       "evidence_report_sha256": "d0e806bff12b8d06291ffece957f5675ca03a7abb9a5a5834455510027c4131e",
       "run": "original-12-sword"
+    },
+    {
+      "case_id": "M15-S2-ORACLE-BOW-01",
+      "time_ns": 1789870085906914574,
+      "scope": "original first full-held arrow; failed predeclared health prediction",
+      "observed_before": 500,
+      "observed_after": 486.26,
+      "display_delta": 13.74,
+      "prediction": "build/oblivion-compat/m15/S2/original-14/bow-prediction.json",
+      "prediction_sha256": "fc30d5512404772996c0a630c717ba3b1088afaa3de6fff53dbe5fbb86106155",
+      "bounded_health_check_passed": false,
+      "native_gameplay_passed": false,
+      "failure": "Prediction assumed full fatigue persisted through hold; draw image shows fatigue loss. Release-time fatigue was not sampled. Do not infer a precise fatigue value from observed health and call it verification.",
+      "input_log": "build/oblivion-compat/m15/S2/original-14/bow-input-log.jsonl",
+      "input_log_sha256": "14468a405e4972c983b7cc2067706536f32f3136241eed2996dc651ef6c7da8d",
+      "captures": {
+        "build/oblivion-compat/m15/S2/original-14/bow-aim3.png": {
+          "sha256": "3c64e5e5820604eecd4e38676d9d37d5d1094967766b6ad7db5d38007f3a1d42",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/bow-equipped.png": {
+          "sha256": "4014adb7f69156e7c0049bd5421229a3e7d7ddafdf5651919b344e42c2391f45",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/ammo-aim.png": {
+          "sha256": "45d4186f5a1374d5cebb7fba999d5971acbf4557fffc4c8eb1db26fe052599b9",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/ammo-equipped.png": {
+          "sha256": "a6738ae50088ebd032c9261cc01ee058dd8ec28b2a809a08c57e37c7a1bdf7a6",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/player-stats.png": {
+          "sha256": "487543165a440eaf0c0ba5448c795b1e348c679fd29318b7419f74f3fd182cb9",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/target-before.png": {
+          "sha256": "2ee66b0c40d397038372022e981cdca8dc59434c21e248c1fc60a214f169b2e1",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/ready.png": {
+          "sha256": "57ea36b3be4bce147ea39edc1793aa3dbcc609a004351c30f80a618a8d5b7999",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/drawn.png": {
+          "sha256": "cfb20a6413ed40bf90111cfe96986d45c969ac5fb3458543eec70f52a7863a2d",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/impact.png": {
+          "sha256": "708b9e9ef2b62e2f12a1a2012b9de73ad939ea0e528f128b1a080fe0fd74ca18",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/target-after.png": {
+          "sha256": "fa8d7da5eba92bc757cc3d32c198fd8955bf11d7780fd8b24e8cde5adb754857",
+          "inspected": true
+        }
+      },
+      "process_exit": {
+        "run": "original-14",
+        "wrapper_exit": 143,
+        "normal_qqq_requested": true,
+        "whole_process_exit_passed": false,
+        "cleanup": "build/oblivion-compat/m15/S2/original-14/exit-cleanup.json"
+      }
+    },
+    {
+      "case_id": "M15-S2-ORACLE-BOW-02",
+      "time_ns": 1789870424275845172,
+      "scope": "fresh original first held arrow with paused pre-release fatigue sample; bounded health only",
+      "observed_before": 500,
+      "observed_after": 486.26,
+      "display_delta": 13.74,
+      "prediction": "build/oblivion-compat/m15/S2/original-14/second-bow-prediction.json",
+      "prediction_sha256": "059799553b20f319b266b8eb5a6ac0f0bec35c382ccee02b76a1d31012588214",
+      "expected_health": 486.23298928571427,
+      "tolerance": 0.05,
+      "bounded_health_check_passed": true,
+      "exact_release_fatigue_timing_passed": false,
+      "full_bow_rule_matrix_passed": false,
+      "native_gameplay_passed": false,
+      "note": "Paused hold sample 119.58, then immediate normal release. Expected health 486.23399 within predeclared .05 transition/readback tolerance. No health/stat mutation, draw0/partial/skill/condition matrix remains open.",
+      "input_log": "build/oblivion-compat/m15/S2/original-14/second-bow-input-log.jsonl",
+      "input_log_sha256": "1477dc17eb068e9f05f732cb92b979ebf07fa5e4c7699ab6aa203dc9dfb2adf4",
+      "captures": {
+        "build/oblivion-compat/m15/S2/original-14/reset-prison.png": {
+          "sha256": "daf3d0d43493b1ef95876e6516e42f2a4b141e2e07e1974c1446bd4b09c47c13",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-bow-aim.png": {
+          "sha256": "892c0f66b1ca49ba7252b370713c818e7efe4d402518d83e4104ee44712b015b",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-bow-equipped.png": {
+          "sha256": "8e626803b6436fb3d5f2645cd90620fab89c6b9bb8eb965da4c376d933167250",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-ammo-aim.png": {
+          "sha256": "86a2f059068876527e6032205d46fab8d3f62104bf1ecf8f68694f9516472cb0",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-ammo-equipped.png": {
+          "sha256": "3334fe0cc6268cd5baacde898c058f5a044808aa884c65a96724fc1bb0c9e1c7",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-inputs.png": {
+          "sha256": "8f2396c2a46efed6cdc3220f1a8207c00cc68187e2deff6086f79d09625dd786",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-ready.png": {
+          "sha256": "989c231d7c8115b882415056a25e32b9ebca0890a4b89812d394f710d202ecbf",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-drawn.png": {
+          "sha256": "872a71b447a4df6e69c62a5260a75a499f26fd5982d3f5dc37692dfcc7a89681",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-drawn-fatigue.png": {
+          "sha256": "272d80cd2acb0c95a618f9807ea90048cf7e7e2603be6ae874fd3c50b703b361",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-impact.png": {
+          "sha256": "b846bdbc3c0d76d33c738b8be98ebf1f49350478952a425267f2501d299d5bfb",
+          "inspected": true
+        },
+        "build/oblivion-compat/m15/S2/original-14/second-target-after.png": {
+          "sha256": "c69a99396c0e56f53c66a91203a1195e9c352f73fdb582fb00bf2b8bad636198",
+          "inspected": true
+        }
+      },
+      "process_exit": {
+        "run": "original-14",
+        "wrapper_exit": 143,
+        "normal_qqq_requested": true,
+        "whole_process_exit_passed": false,
+        "cleanup": "build/oblivion-compat/m15/S2/original-14/exit-cleanup.json"
+      }
     }
   ],
   "runs": {

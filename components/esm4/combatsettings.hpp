@@ -21,6 +21,7 @@ namespace ESM4
     CombatStyleDefaults buildCombatStyleDefaults(std::span<const GameSetting* const> settings);
     PhysicalCombatSettings buildPhysicalCombatSettings(std::span<const GameSetting* const> settings);
     ProjectileSettings buildProjectileSettings(std::span<const GameSetting* const> settings);
+    BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings);
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);

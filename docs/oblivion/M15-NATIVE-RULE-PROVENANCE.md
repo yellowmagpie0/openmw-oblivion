@@ -592,3 +592,48 @@ Final evidence is in `projectile-rules-01`; original source traces are
 `arrow-impact-damage.txt`, and `weapon-rule-callers.txt` under `sources-01`.
 The earlier candidate `ai-weapon-valuation-rule.txt` was identified as AI
 weapon valuation, not bow damage, and is not used as a bow-rule oracle.
+
+## Bow fatigue and launch sampling
+
+The first original bow prediction failed: with Marksman 5, Agility 30,
+Luck 50, initial Fatigue 140, bow damage 100 and ammunition damage 20,
+assuming full fatigue at release predicted 14.85 damage. The observed first
+shot reduced target health from 500 to 486.26. The draw capture visibly shows
+fatigue depletion. This is a retained failed prediction, not a verified
+release-time value inferred backwards from damage (`original-14`).
+
+Original `005FACC8–005FAD16` applies a hold debit only to the player, with
+process action 5 and Marksman (`AV 1C`) mastery rank zero. It multiplies
+`fMarksmanFatigueBurnPerSecond` (15) by the caller's frame duration, stores
+one float, negates it, and calls fatigue mutation `005E07D0`. The pure
+`bowHoldFatigue` models this positive debit; the controller must supply the
+actual hold action and duration. NPCs do not use this hold branch. The
+mastery check uses the established thresholds (default Apprentice 25), not
+`iMarksmanFatigueBurnPerSecondSkill` (20), for which only initializer and
+registration references were found.
+
+Original `005FD47C` constructs the projectile with launch damage before
+`005FD4B0–005FD4D1` applies `fMarksmanFatigueBurnPerShot` (5) to a novice
+archer. This latter branch does not exclude NPCs. It must not reduce the
+fatigue ratio used by the already-created projectile. Weapon wear follows
+at `005FD50C–005FD53C` using base bow damage and the established wear rule.
+Hold/shot settings have independent compiled constructor provenance and
+read-only original lookups GMST-66–68. GMST-69–70 also record regeneration
+settings; regeneration arithmetic and integration remain open.
+
+Three tests fail with unimplemented stubs, then pass: all mastery boundaries,
+custom thresholds, player/NPC/hold combinations, zero and fractional frame
+durations, invalid settings/types, and overflow. Full component and focused
+ASan/UBSan results are in `S2/projectile-rules-02`. Source disassembly is in
+`sources-01/bow-hold-fatigue.txt` and `bow-shot-fatigue.txt`. These helpers
+are not yet connected to a native bow controller or actor fatigue state.
+
+A fresh normal F9 reset and pickup/equip repeated the shot with fatigue sampled
+while paused at full draw: 119.58/140. A new prediction was recorded before
+release: target health 486.233989, with .05 tolerance for display precision
+and the hold-to-release transition. Normal release produced health 486.26
+and consumed one arrow. `M15-S2-ORACLE-BOW-02` passes only that bounded
+health comparison; it does not establish exact frame timing. An additional
+regression already agrees with the existing launch arithmetic and explicitly
+distinguishes full-fatigue and premature per-shot-debit alternatives.
+The initial failed prediction remains in the ledger alongside this repeat.

@@ -648,6 +648,62 @@
       "type": "float32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-65"
+    },
+    {
+      "name": "fMarksmanFatigueBurnPerSecond",
+      "value": 15.0,
+      "storage": "0xb37010",
+      "constructor": "0x9e981f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-66"
+    },
+    {
+      "name": "iMarksmanFatigueBurnPerSecondSkill",
+      "value": 20,
+      "storage": "0xb37018",
+      "constructor": "0x9e9847",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-67",
+      "note": "No code consumer found; reviewed hold routine uses Novice mastery rank, not this setting."
+    },
+    {
+      "name": "fMarksmanFatigueBurnPerShot",
+      "value": 5.0,
+      "storage": "0xb37020",
+      "constructor": "0x9e986f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-68"
+    },
+    {
+      "name": "fFatigueReturnBase",
+      "value": 10.0,
+      "storage": "0xb37540",
+      "constructor": "0x9eb45f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0274d8",
+        "type": "f",
+        "value": 10.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-69",
+      "note": "Lookup provenance only; regeneration arithmetic/integration remains open."
+    },
+    {
+      "name": "fFatigueReturnMult",
+      "value": 0.0,
+      "storage": "0xb37548",
+      "constructor": "0x9eb480",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02751d",
+        "type": "f",
+        "value": 0.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-70",
+      "note": "Lookup provenance only; regeneration arithmetic/integration remains open."
     }
   ]
 }

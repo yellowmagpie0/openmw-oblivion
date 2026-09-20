@@ -116,3 +116,74 @@ TEST(ESM4ProjectileRules, SettingsUseTypedNativeDefaultsAndOverrides)
     value.mData = std::int32_t{2000};
     EXPECT_THROW(ESM4::buildProjectileSettings(values), std::invalid_argument);
 }
+
+TEST(ESM4ProjectileRules, BowFatigueUsesNoviceRankAndPlayerHoldAction)
+{
+    const ESM4::BowFatigueSettings settings{15, 5};
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    for (int skill : {-1, 0, 5, 19, 20, 24, 25, 49, 50, 74, 75, 99, 100, 101})
+    {
+        SCOPED_TRACE(skill);
+        const bool novice = skill < 25;
+        EXPECT_EQ(ESM4::bowShotFatigue(skill, settings, mastery), novice ? 5 : 0);
+        for (bool player : {false, true})
+            for (bool holding : {false, true})
+                for (float duration : {0.f, .5f, 1.f, 4.f})
+                    EXPECT_EQ(ESM4::bowHoldFatigue(skill, player, holding, duration, settings, mastery),
+                        novice && player && holding ? 15 * duration : 0);
+    }
+    // Uses mastery thresholds, not the unused iMarksmanFatigueBurnPerSecondSkill (20).
+    const ESM4::CombatMasterySettings custom{{10, 30, 60, 90}};
+    EXPECT_EQ(ESM4::bowHoldFatigue(9, true, true, 2, settings, custom), 30);
+    EXPECT_EQ(ESM4::bowHoldFatigue(10, true, true, 2, settings, custom), 0);
+    EXPECT_EQ(ESM4::bowShotFatigue(9, settings, custom), 5);
+    EXPECT_EQ(ESM4::bowShotFatigue(10, settings, custom), 0);
+}
+
+TEST(ESM4ProjectileRules, BowFatigueRejectsInvalidInputsAndOverflow)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::bowHoldFatigue(0, true, true, bad, {15, 5}, mastery), std::invalid_argument);
+        for (const auto settings : {ESM4::BowFatigueSettings{bad, 5}, ESM4::BowFatigueSettings{15, bad}})
+        {
+            EXPECT_THROW(ESM4::validateBowFatigueSettings(settings), std::invalid_argument);
+            EXPECT_THROW(ESM4::bowShotFatigue(100, settings, mastery), std::invalid_argument);
+            EXPECT_THROW(ESM4::bowHoldFatigue(100, false, false, 0, settings, mastery), std::invalid_argument);
+        }
+    }
+    EXPECT_THROW(ESM4::bowHoldFatigue(0, true, true, std::numeric_limits<float>::max(), {15, 5}, mastery),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::bowShotFatigue(0, {15, 5}, {{25, 20, 75, 100}}), std::invalid_argument);
+    EXPECT_EQ(ESM4::bowShotFatigue(0, {0, 0}, mastery), 0);
+    EXPECT_EQ(ESM4::bowHoldFatigue(0, true, true, 1, {0, 0}, mastery), 0);
+}
+
+TEST(ESM4ProjectileRules, BowFatigueSettingsUseTypedDefaultsAndOverrides)
+{
+    const auto defaults = ESM4::buildBowFatigueSettings({});
+    EXPECT_EQ(defaults.mHoldPerSecond, 15);
+    EXPECT_EQ(defaults.mPerShot, 5);
+    ESM4::GameSetting value{};value.mEditorId = "fMarksmanFatigueBurnPerSecond";value.mData = 3.f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildBowFatigueSettings(values).mHoldPerSecond, 3);
+    value.mEditorId = "fMarksmanFatigueBurnPerShot";
+    EXPECT_EQ(ESM4::buildBowFatigueSettings(values).mPerShot, 3);
+    value.mData = std::int32_t{3};
+    EXPECT_THROW(ESM4::buildBowFatigueSettings(values), std::invalid_argument);
+}
+
+TEST(ESM4ProjectileRules, OriginalFirstArrowUsesFatigueAfterHold)
+{
+    // Original-14/BOW-02: default Imperial, normal pickup/equip, fresh target.
+    // Paused draw fatigue is 119.58/140, observed health 500 -> 486.26.
+    // The .05 bound was declared before release for readback/transition time;
+    // exact release fatigue and frame timing were not measured.
+    ESM4::ArrowDamageInput input{5, 50, 30, 100, 20, 1, 119.58f / 140.f, 1};
+    EXPECT_NEAR(500 - ESM4::arrowLaunchDamage(input, physical), 486.26f, .05f);
+    input.mFatigueRatio = 1;
+    EXPECT_GT(std::abs(500 - ESM4::arrowLaunchDamage(input, physical) - 486.26f), 1.f);
+    input.mFatigueRatio = (119.58f - 5) / 140.f;
+    EXPECT_GT(std::abs(500 - ESM4::arrowLaunchDamage(input, physical) - 486.26f), .2f);
+}

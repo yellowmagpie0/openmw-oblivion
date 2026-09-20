@@ -1357,3 +1357,36 @@ normal original bow/ammo pickup/equip and independently predicted first shot.
 
 Tested writer/test diff plus new recipe (path followed by contents) SHA-256:
 `7ec566567ca6d62a23a9fae25f99ba330f6b892f4f5aab60d6ec9cd4fe29db1e`.
+
+### S2 bow fatigue and first-arrow oracle
+
+Commit `d25003ae14` contains the editable bow/ammo fixture. Original-14
+normal pickup/equip and first held shot exposed a failed prediction: initial
+full fatigue did not persist through draw (500 -> 486.26 instead of 485.15).
+That failure is retained. Tracing established player-only novice hold debit
+15/second and novice shot debit 5 after launch damage capture. Added pure
+rules and strict native settings; three tests fail against stubs, then pass.
+A fourth regression characterizes the original repeat and already agrees
+with launch arithmetic; no fabricated baseline failure is claimed for it.
+
+Fresh normal quickload/pickup/equip, paused read-only draw fatigue 119.58/140,
+and a new prediction before release give expected health 486.234. Observed
+486.26 is within predeclared .05 display/transition tolerance. One arrow is
+consumed and a lodged arrow/hit reaction is visible. This is bounded original
+first-shot evidence, not exact frame timing or native runtime acceptance.
+Both observations/capture hashes/input logs are in the damage ledger.
+
+All **1,707 component tests** and **59 focused ASan/UBSan tests** pass with
+exact inventories and no skips (`S2/projectile-rules-02`). New setting
+facts bring the catalog to **66**, original setting lookups to **70**.
+Original-14 received normal `qqq`, but the Proton wrapper returned **143**;
+this unexplained whole-process exit remains a failed gate. The game process
+is absent. Both task-installed files were removed after exact hash checks.
+The unchanged prison quicksave and normal user configuration are preserved.
+
+S2 remains in progress; S3–S14 pending. Native controller/fatigue regeneration,
+release timing, trajectory/recovery and broader bow matrix remain open.
+Next bounded work: reaction and combat mastery rules, followed by the remaining
+S2 stealth/crime rule families and actor-policy resolution.
+
+Tested implementation/test/provenance diff SHA-256: `ecadb7b247d68726019e44a7f2cc0ad42606078ac05d7b6d82aa806c4dcb0436`.

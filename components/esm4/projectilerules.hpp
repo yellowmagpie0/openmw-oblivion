@@ -5,6 +5,19 @@
 
 namespace ESM4
 {
+    struct BowFatigueSettings
+    {
+        float mHoldPerSecond;
+        float mPerShot;
+    };
+    // Hold debit is player-only, during the bow-hold action. Shot debit also
+    // applies to NPC novices, after launch damage has been captured.
+    float bowHoldFatigue(std::int32_t marksman, bool player, bool holding, float duration,
+        const BowFatigueSettings& settings, const CombatMasterySettings& mastery);
+    float bowShotFatigue(std::int32_t marksman, const BowFatigueSettings& settings,
+        const CombatMasterySettings& mastery);
+    void validateBowFatigueSettings(const BowFatigueSettings& settings);
+
     struct ProjectileSettings
     {
         float mBowTimerBase;

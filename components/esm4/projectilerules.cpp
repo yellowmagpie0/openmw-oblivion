@@ -35,6 +35,29 @@ namespace ESM4
             nonnegative(value);
     }
 
+    void validateBowFatigueSettings(const BowFatigueSettings& settings)
+    {
+        nonnegative(settings.mHoldPerSecond);
+        nonnegative(settings.mPerShot);
+    }
+
+    float bowHoldFatigue(std::int32_t marksman, bool player, bool holding, float duration,
+        const BowFatigueSettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateBowFatigueSettings(settings);
+        nonnegative(duration);
+        const auto rank = combatMastery(marksman, mastery);
+        return player && holding && rank == CombatMastery::Novice
+            ? rounded(double(settings.mHoldPerSecond) * duration) : 0.f;
+    }
+
+    float bowShotFatigue(std::int32_t marksman, const BowFatigueSettings& settings,
+        const CombatMasterySettings& mastery)
+    {
+        validateBowFatigueSettings(settings);
+        return combatMastery(marksman, mastery) == CombatMastery::Novice ? settings.mPerShot : 0.f;
+    }
+
     float bowDrawFraction(float timer, const ProjectileSettings& settings)
     {
         validateProjectileSettings(settings);
