@@ -1173,3 +1173,32 @@ hash-checked cleanup after reference work. S2 remains in progress; S3–S14
 remain pending.
 
 Tested test/writer/recipe/provenance diff plus new probe ledger SHA-256: `7b39be8f41e9ad326c8b82378c743ebdae64d44f0a95e908e60094de0013797f`.
+
+### S2 original power first strike and fatigue ordering
+
+Commit `8ecbe18277` contains the normal-punch observation and corrected floor
+placements. A fresh first power punch now produces 500.00 -> 496.45 health,
+inside its prediction recorded before attack. The source probe ledger retains
+that successful bounded observation alongside the earlier failed engaged-target
+attempt. The exact contact frame was not captured; the sampled images show
+attack/recovery and numeric readback. Post-attack fatigue is 129.09.
+
+Independent original vtable/call-path inspection establishes that melee damage
+calculation precedes that attack's fatigue debit. The new observed-value test
+checks 3.55 damage and distinguishes a premature debit. All 1,680 component
+cases and 32 focused ASan/UBSan cases pass with exact inventory
+(`physical-rules-07`). This is a rule/order contract, not native controller
+acceptance. The new golden characterization already agrees with the pure
+helpers; the native ordering still requires implementation in S4.
+
+Original-12 remains active for a separate sword case. Normal F9 restored the
+unchanged prison quicksave (SHA-256
+`67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66`)
+between cases. The successful power case uses a frozen input-log prefix so
+later setup does not change its evidence. Read-only CRLF player batches work;
+unqualified/EDID target batches fail in the original console compiler and are
+retained as failures. Direct selected-reference readback verified target
+health/distance. The failed target batch was removed with a hash check; the
+plugin and player batch still require cleanup. S2 remains in progress.
+
+Tested test/provenance/probe-ledger diff SHA-256: `deeb0e5609c9f6591a5541ab20b6484c22c889cf9a35ea28f92f8a1356556b81`.

@@ -439,3 +439,19 @@ TEST(ESM4PhysicalCombat, OriginalFirstPunchHealthObservation)
     EXPECT_NEAR(depleted.mHealth, 1.4095f, .00001f);
     EXPECT_LE(depleted.mHealth, full.mHealth);
 }
+
+TEST(ESM4PhysicalCombat, OriginalFirstPowerPunchUsesPreDebitFatigue)
+{
+    // M15-S2-ORACLE-HAND-03: first held attack, 500.00 -> 496.45 health.
+    // Original player contact handler runs before this attack's fatigue debit.
+    const ESM4::HandToHandSettings hand{0, 1, 0, .75f, 1, 15, 1, .5f};
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    const ESM4::PowerAttackSettings power{2.5f, 3.f, 2.5f, 2.5f, 2.5f};
+    const auto damage = ESM4::handToHandDamage({10, 50, 40, 1.f}, hand, installed);
+    const float multiplier = ESM4::powerAttackMultiplier(10, ESM4::PowerAttackDirection::Standing, power, mastery);
+    EXPECT_NEAR(500.f - damage.mHealth * multiplier, 496.45f, .0051f);
+    EXPECT_FLOAT_EQ(ESM4::attackFatigueCost(0, true, {7, .1f, 5}), 35);
+    // A wrongly ordered debit produces a distinguishable health result.
+    const auto wrongOrder = ESM4::handToHandDamage({10, 50, 40, .75f}, hand, installed);
+    EXPECT_GT(500.f - wrongOrder.mHealth * multiplier, 496.57f);
+}

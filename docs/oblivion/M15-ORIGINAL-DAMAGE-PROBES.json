@@ -3,13 +3,6 @@
   "game_version": "Oblivion 1.2.0416",
   "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
   "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
-  "plugin_sha256": "e3a91a255555297a4c538ffaaff96c2c360ff960783ac37fad1e43d1a70a76ea",
-  "input_log": "build/oblivion-compat/m15/S2/original-11/input-log.jsonl",
-  "input_log_sha256": "fb1f38d85126f9381969287d23e1d5be641f1767dc0c73a6f5fb280787db2ff4",
-  "setup": "Continue original prison quicksave; COC reference room; move target to flat floor and position player before exercise; no health/stat/quest injections",
-  "exercise": "ordinary keyboard movement, draw fists, mouse attack; read-only console observations; setup/exercise markers retained",
-  "process_wrapper_exit": 143,
-  "whole_process_gate_passed": false,
   "full_damage_rule_matrix_passed": false,
   "observations": [
     {
@@ -61,7 +54,8 @@
         }
       },
       "evidence_report": "build/oblivion-compat/m15/S2/original-11/hand-first-hit-observation.json",
-      "evidence_report_sha256": "dad0246f7ac3c39415095700227e3eb46a830bf6a792528d92c86aeceb8a11f5"
+      "evidence_report_sha256": "dad0246f7ac3c39415095700227e3eb46a830bf6a792528d92c86aeceb8a11f5",
+      "run": "original-11"
     },
     {
       "case_id": "M15-S2-ORACLE-HAND-02",
@@ -103,7 +97,91 @@
         }
       },
       "evidence_report": "build/oblivion-compat/m15/S2/original-11/hand-power-observation.json",
-      "evidence_report_sha256": "81eb4ca197b7b3f1d66038096c0848626ae66bca5e0008e8f44d4a41f8fa5400"
+      "evidence_report_sha256": "81eb4ca197b7b3f1d66038096c0848626ae66bca5e0008e8f44d4a41f8fa5400",
+      "run": "original-11"
+    },
+    {
+      "case_id": "M15-S2-ORACLE-HAND-03",
+      "scope": "fresh first power punch, bounded displayed health check",
+      "observed_before": 500.0,
+      "observed_after": 496.45,
+      "display_delta": 3.55,
+      "prediction": "build/oblivion-compat/m15/S2/original-12/prediction.json",
+      "prediction_sha256": "36e5a05c04011472d2155f59938425c10564bd13f72a5f26cd9b0152af548461",
+      "bounded_health_check_passed": true,
+      "precise_contact_frame_captured": false,
+      "full_hand_rule_matrix_passed": false,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/power-input-log.jsonl",
+      "input_log_sha256": "a0c628ebefc52d59784c67881549c83e530d232acc726cf3380268dcc323e021",
+      "plugin_sha256": "e510e15cd5cf7cda97af21e4180621f40b26574cb34523df84cba67de703ee76",
+      "setup": "normal Continue from prison save, COC reference room, player placement and facing only; no target/health/stat mutation",
+      "captures": {
+        "build/oblivion-compat/m15/S2/original-12/ready.png": {
+          "sha256": "9527517fc519f15bca56621cdda4da19f53cad2eaf82cdf5ecdebbc7294f3374",
+          "inspected": true,
+          "observation": "Fresh target on flat floor, clear first-person view"
+        },
+        "build/oblivion-compat/m15/S2/original-12/player-before.png": {
+          "sha256": "155ea838db7592114ab5c73b8c91b62f506837b13fef4f4f13e98a97560b00ab",
+          "inspected": true,
+          "observation": "Hand 10, Blade 10, Strength 40, Luck 50, fatigue 140"
+        },
+        "build/oblivion-compat/m15/S2/original-12/target-before-direct.png": {
+          "sha256": "af298992a06682f14363a392479cd5b3983b4ecf1130d1934b6ecefee95a6b9e",
+          "inspected": true,
+          "observation": "Exact selected opponent health 500, distance 106.66"
+        },
+        "build/oblivion-compat/m15/S2/original-12/power-windup.png": {
+          "sha256": "6f331bb749ba77166b92169142487d248a1277872f234cec20d71131ff5831b6",
+          "inspected": true,
+          "observation": "Left arm crosses view during held attack; target still neutral in this frame"
+        },
+        "build/oblivion-compat/m15/S2/original-12/power-contact.png": {
+          "sha256": "0212b8361d6dbffd0f236b8b394907f05f140ae952cb79e6626d4a2b108a90d1",
+          "inspected": true,
+          "observation": "Target reaction/health arc visible; this sample is after contact, not exact impact timing"
+        },
+        "build/oblivion-compat/m15/S2/original-12/power-recovery.png": {
+          "sha256": "405ed88eaad35596a855b32c022a82ed475567b37cb6f70c450bb59384e9b62f",
+          "inspected": true,
+          "observation": "Fists ready and target still upright"
+        },
+        "build/oblivion-compat/m15/S2/original-12/health-after.png": {
+          "sha256": "7f328208a4e04de4bec18d2d4492493ffaa031aa5e7d7763f6d1b13ac9b336f7",
+          "inspected": true,
+          "observation": "Target health 496.45; displayed loss 3.55"
+        },
+        "build/oblivion-compat/m15/S2/original-12/player-after.png": {
+          "sha256": "ddafa02416e35931081fbe8ee6bd25c8cc32621363b716cb5748c2d03869d061",
+          "inspected": true,
+          "observation": "Player fatigue 129.09 at paused post-attack observation"
+        }
+      },
+      "evidence_report": "build/oblivion-compat/m15/S2/original-12/power-observation.json",
+      "evidence_report_sha256": "52c5c0917b181d38397f0805716455f451c0442e3c5f3d76a13d689d170d33f9",
+      "run": "original-12-power"
     }
-  ]
+  ],
+  "runs": {
+    "original-11": {
+      "plugin_sha256": "e3a91a255555297a4c538ffaaff96c2c360ff960783ac37fad1e43d1a70a76ea",
+      "input_log": "build/oblivion-compat/m15/S2/original-11/input-log.jsonl",
+      "input_log_sha256": "fb1f38d85126f9381969287d23e1d5be641f1767dc0c73a6f5fb280787db2ff4",
+      "setup": "Continue original prison quicksave; COC reference room; move target to flat floor and position player before exercise; no health/stat/quest injections",
+      "exercise": "ordinary keyboard movement, draw fists, mouse attack; read-only console observations; setup/exercise markers retained",
+      "process_wrapper_exit": 143,
+      "whole_process_gate_passed": false,
+      "evidence_root": "build/oblivion-compat/m15/S2/original-11"
+    },
+    "original-12-power": {
+      "evidence_root": "build/oblivion-compat/m15/S2/original-12",
+      "plugin_sha256": "e510e15cd5cf7cda97af21e4180621f40b26574cb34523df84cba67de703ee76",
+      "input_log": "build/oblivion-compat/m15/S2/original-12/power-input-log.jsonl",
+      "input_log_sha256": "a0c628ebefc52d59784c67881549c83e530d232acc726cf3380268dcc323e021",
+      "setup": "normal Continue from prison save, COC reference room, player placement and facing only; no target/health/stat mutation",
+      "exercise": "one held mouse attack, read-only queries; frozen input-log prefix retained",
+      "process_wrapper_exit": null,
+      "whole_process_gate_passed": false
+    }
+  }
 }

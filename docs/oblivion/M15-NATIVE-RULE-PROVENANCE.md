@@ -374,3 +374,31 @@ chance does not guarantee a passive actor once combat bonuses are considered.
 Future isolated damage measurements use a fresh first strike. All full rule
 matrices and native runtime combat integration remain open. The Proton wrapper
 returned 143 after normal console exit; no whole-process acceptance is claimed.
+
+## Melee damage is calculated before that attack's fatigue debit
+
+Fresh first-power-punch case `M15-S2-ORACLE-HAND-03` in original-12 changes
+500.00 -> 496.45 health at the same 10/40/50 skill/Strength/Luck inputs.
+The expected bounded range was recorded before attacking. Post-attack player
+fatigue reads 129.09, so a cost occurred, but the health result matches the
+full-fatigue product `1.42 * 2.5 = 3.55`. This is a bounded first-hit observation,
+not a complete directional/mastery or frame-timing gate.
+
+Further independent call-path inspection resolves the debit order. Original
+PlayerCharacter RTTI at `0xb080a4`, complete-object locator `0xac3d80`, main
+vtable `0xa73a0c`, slot `0xeb` resolves to contact handler `0x5febf0`. The
+attack update calls that handler at `0x5fcda4`, then debits attack fatigue via
+`0x5e4010` at `0x5fcdb5`. The handler contains the previously reviewed hand
+calculation at `0x5ff419` and power scaling at `0x5ff44d`. Thus that attack's
+cost must not be subtracted before evaluating its damage. The ratio helper
+`0x5f4880` supplies current fatigue / modified maximum, or one for a nonpositive
+maximum. Full actor-value/max derivation remains world-adapter work.
+
+Retained evidence: `player-attack-vtable.json`, `player-contact-handler.txt`,
+`attack-contact-debit-order.txt` and `contact-fatigue-ratio.txt` under
+`sources-01`. The new regression checks the independently observed 3.55 and
+shows that a prematurely applied 35-point debit would yield a distinguishable
+3.41875. Native controller execution of this ordering is still pending S4.
+The original wide predictions are retained unchanged; they preceded this
+ordering review. These observations replace the early working assumption that
+an attack necessarily depleted fatigue before contact.
