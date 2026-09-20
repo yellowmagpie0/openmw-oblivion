@@ -679,3 +679,54 @@ TEST(ESM4CrimeRules, TrespassWarningRejectsInvalidStateAndArithmeticOverflow)
     input.mTimer = std::numeric_limits<float>::max();
     EXPECT_THROW(ESM4::advanceTrespassWarning(input, {30}), std::invalid_argument);
 }
+
+TEST(ESM4CrimeRules, CrimeWitnessCandidatesUseDifferentOffenderAndWitnessLifeGates)
+{
+    ESM4::CrimeWitnessCandidateInput input;
+    input.mDetection = 1;
+    for (int offender = 0; offender <= 6; ++offender)
+        for (int candidate = 0; candidate <= 6; ++candidate)
+        {
+            input.mOffenderLifeState = offender; input.mCandidateLifeState = candidate;
+            EXPECT_EQ(ESM4::crimeWitnessCandidate(input), offender != 1 && offender != 2
+                && candidate != 1 && candidate != 2 && candidate != 3 && candidate != 6);
+        }
+    input.mOffenderLifeState = 2; input.mCandidateLifeState = 0; input.mOffenderPresent = false;
+    EXPECT_TRUE(ESM4::crimeWitnessCandidate(input));
+}
+
+TEST(ESM4CrimeRules, CrimeWitnessCandidateRequiresPositiveSignedDetectionAndEligibleIdentity)
+{
+    ESM4::CrimeWitnessCandidateInput input;
+    for (int detection : {std::numeric_limits<int>::min(), -100, -1, 0, 1, 100, std::numeric_limits<int>::max()})
+    {
+        input.mDetection = detection;
+        EXPECT_EQ(ESM4::crimeWitnessCandidate(input), detection > 0);
+    }
+    input.mDetection = 1;
+    input.mCandidateParalyzed = true;
+    EXPECT_FALSE(ESM4::crimeWitnessCandidate(input));
+    input.mCandidateParalyzed = false; input.mCandidateIsOffender = true;
+    EXPECT_FALSE(ESM4::crimeWitnessCandidate(input));
+    input.mCandidateIsOffender = false; input.mCandidateActor = false;
+    EXPECT_FALSE(ESM4::crimeWitnessCandidate(input));
+}
+
+TEST(ESM4CrimeRules, CrimeWitnessEnumerationUsesNativeDisabledAndDeletedFlagMasks)
+{
+    ESM4::CrimeWitnessCandidateInput input;
+    input.mDetection = 1;
+    for (std::uint32_t flags : {0u, 0x20u, 0x800u, 0x820u, 0x400u, 0xffffffffu})
+    {
+        input.mOffenderFlags = flags;
+        EXPECT_EQ(ESM4::crimeWitnessCandidate(input), (flags & 0x820u) == 0);
+        input.mOffenderPresent = false;
+        EXPECT_TRUE(ESM4::crimeWitnessCandidate(input));
+        input.mOffenderPresent = true; input.mOffenderFlags = 0;
+        input.mCandidateFlags = flags;
+        // The enumeration's candidate branch checks disabled only. The world
+        // collection supplies current candidates; do not invent another filter.
+        EXPECT_EQ(ESM4::crimeWitnessCandidate(input), (flags & 0x800u) == 0);
+        input.mCandidateFlags = 0;
+    }
+}

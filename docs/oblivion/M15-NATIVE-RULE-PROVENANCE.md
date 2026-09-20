@@ -1730,3 +1730,40 @@ Evidence: `S2/oracle-emulator/trespass-warning.py`,
 `trespass-package-constructor.txt`, its continuation, `trespass-warning-count.txt`
 and `trespass-warning-speech.txt`. Normal entry/warning/leave/escalation,
 real speech timing and save/restart remain runtime gates.
+
+## Crime witness candidate enumeration
+
+`0067A290` enumerates current actor candidates for an incident. A present
+offender with Disabled (`800`) or Deleted (`20`) reference flags, or native
+life state 1/2, prevents this enumeration. This offender check calls
+`005E33B0(1)`, which excludes states 1/2 but not essential-unconscious state 6.
+
+Each candidate must be an actor, differ from the offender, lack paralysis and
+Disabled, and have a signed detection score **strictly above zero** for the
+offender. Candidate life state 3 is excluded explicitly; `005E33B0(0)` excludes
+1/2/6. These are actor `+B0` states, not process knocked values. Candidate
+Deleted is not tested in this loop; the world collection must supply current
+references. Do not add guessed NPC-only, guard-only or responsibility filters
+at this stage. Willingness and report delivery occur elsewhere. Paralysis uses
+the previously reviewed `005E17E0` AV-30 predicate, not the external header's
+misleading HasFatigue label.
+
+`crimeWitnessCandidate` preserves the offender/candidate distinction over
+resolved inputs. Native state numbers remain explicit at this pure boundary;
+the future persistent lifecycle must validate its own state domain. Missing
+content/identity resolution cannot be disguised as an absent offender.
+Existing detection remains authoritative; a normalized awareness threshold or
+a new crime-specific detector would change this rule.
+
+Three tests fail against the false stub, then cover every pair of states 0..6,
+identity/paralysis controls, signed detection extremes, and asymmetric flag
+masks. **19,600 original instruction cases** execute the native offender and
+candidate filter branches, the real actor state/dead/paralysis queries, with
+only actor identity, paralysis value and existing detection as boundary stubs.
+Evidence: `S2/oracle-emulator/witness-candidate.py`,
+`witness-candidate-table.json`, `witness-candidate.log`,
+`S2/sources-01/crime-witness-selection.txt` and `crime-dead-query.txt`.
+The original list subsequently sorts by distance to the **player** using
+`00673B70`, independently of the offender identity; sorting and runtime event
+order are not implemented by this predicate. Witness hearing, reporting,
+incident idempotence and bounty remain integration gates.

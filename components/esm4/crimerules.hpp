@@ -154,6 +154,22 @@ namespace ESM4
         const TrespassWarningInput& input, const TrespassWarningSettings& settings);
     void validateTrespassWarningSettings(const TrespassWarningSettings& settings);
 
+    struct CrimeWitnessCandidateInput
+    {
+        bool mOffenderPresent = true;
+        std::uint32_t mOffenderFlags = 0;
+        std::int32_t mOffenderLifeState = 0; // Native actor +B0, not process knocked state.
+        bool mCandidateActor = true;
+        bool mCandidateIsOffender = false;
+        std::uint32_t mCandidateFlags = 0;
+        std::int32_t mCandidateLifeState = 0;
+        bool mCandidateParalyzed = false;
+        std::int32_t mDetection = 0; // Existing detector, candidate observing offender.
+    };
+    // Candidate filter within native crime witness enumeration. Does not decide
+    // willingness, event delivery, incident ordering or bounty reporting.
+    bool crimeWitnessCandidate(const CrimeWitnessCandidateInput& input);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;

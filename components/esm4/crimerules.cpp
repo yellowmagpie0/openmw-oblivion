@@ -10,6 +10,25 @@
 
 namespace ESM4
 {
+    bool crimeWitnessCandidate(const CrimeWitnessCandidateInput& input)
+    {
+        if (input.mOffenderPresent && ((input.mOffenderFlags & 0x820u) != 0
+                || input.mOffenderLifeState == 1 || input.mOffenderLifeState == 2))
+            return false;
+        if (!input.mCandidateActor || input.mCandidateIsOffender || input.mCandidateParalyzed
+            || (input.mCandidateFlags & 0x800u) != 0)
+            return false;
+        switch (input.mCandidateLifeState)
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 6:
+                return false;
+        }
+        return input.mDetection > 0;
+    }
+
     void validateTrespassWarningSettings(const TrespassWarningSettings& settings)
     {
         if (!std::isfinite(settings.mTimerLimit) || settings.mTimerLimit < 0)

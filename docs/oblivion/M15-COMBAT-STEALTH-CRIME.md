@@ -2084,3 +2084,18 @@ reporting, elapsed gameplay timing and restart remain open. S2 remains in
 progress; S3–S14 remain pending. Next: witness selection and reporting rules.
 
 Tested implementation/test/provenance diff SHA-256: `6bce82914c4072f25136a0bde8d9b990801f5e8bc1f709a5bf1f8404d5b34479`.
+
+### S2 crime witness candidate filtering
+
+Commit `106eac4fcf` contains trespass warning decisions. Added native candidate
+filtering with distinct offender/witness life-state checks, asymmetric reference
+flag masks, paralysis and identity gates, and strictly positive signed detection.
+
+Three new tests fail against the stub, then pass. All **1,796 component tests**
+and **152 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/witness-candidate-01`). **19,600 original instruction cases** verify the
+filter branches with real native life-state/dead/paralysis queries. Candidate
+selection alone does not report bounty. S2 remains in progress; S3–S14 remain
+pending. Next: crime alarm recipients, spatial reach and report delivery.
+
+Tested implementation/test/provenance diff SHA-256: `63d055b33500c5eba2bd1293a087de78bcda3858a2c64837ed6df904251406ed`.
