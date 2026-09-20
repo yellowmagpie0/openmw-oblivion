@@ -39,6 +39,17 @@ namespace ESM4
         }
     }
 
+    std::int32_t creatureNaturalDamage(std::uint16_t baseDamage, float fatigueRatio,
+        const PhysicalCombatSettings& settings)
+    {
+        validatePhysicalCombatSettings(settings);
+        const float damage = rounded(double(baseDamage) * fatigueValue(fatigueRatio, settings));
+        if (double(damage) < std::numeric_limits<std::int32_t>::min()
+            || double(damage) > std::numeric_limits<std::int32_t>::max())
+            throw std::invalid_argument("native creature damage integer overflow");
+        return static_cast<std::int32_t>(damage);
+    }
+
     void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings)
     {
         for (int value : {settings.mHeadChance, settings.mUpperBodyChance, settings.mLowerBodyChance,

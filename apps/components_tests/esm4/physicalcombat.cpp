@@ -725,3 +725,33 @@ TEST(ESM4PhysicalCombat, ArmorWearSelectionSettingsUseNativeDefaultsAndTypes)
     EXPECT_EQ(ESM4::selectArmorWearSlot(99, {true, true, true, true, true, true, true}, unchanged),
         ESM4::ArmorWearSlot::Shield);
 }
+
+TEST(ESM4PhysicalCombat, CreatureNaturalDamageUsesFatigueThenIntegerTruncation)
+{
+    struct Case { std::uint16_t base; float fatigue; std::int32_t expected; };
+    for (const auto& c : {Case{0, 1, 0}, {1, 1, 1}, {1, 0, 0}, {5, 1, 5}, {5, .95f, 4},
+             {10, .95f, 9}, {10, 0, 5}, {65535, 1, 65535}, {65535, .5f, 49151},
+             {10, 2, 15}, {10, -1, 0}, {10, -2, -5}})
+        EXPECT_EQ(ESM4::creatureNaturalDamage(c.base, c.fatigue, installed), c.expected);
+    // Final product is stored as float before integer truncation. A half-ULP
+    // fatigue step below full rounds its fatigue factor to 1, retaining 10.
+    EXPECT_EQ(ESM4::creatureNaturalDamage(10, std::nextafter(1.f, 0.f), installed), 10);
+    const float twoBelow = std::nextafter(std::nextafter(1.f, 0.f), 0.f);
+    EXPECT_EQ(ESM4::creatureNaturalDamage(10, twoBelow, installed), 9);
+    auto compiled = installed;compiled.mFatigueBase = 1.25f;
+    EXPECT_EQ(ESM4::creatureNaturalDamage(10, 1, compiled), 12);
+}
+
+TEST(ESM4PhysicalCombat, CreatureNaturalDamageRejectsNonfiniteAndIntegerOverflow)
+{
+    for (float invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::creatureNaturalDamage(1, invalid, installed), std::invalid_argument);
+    EXPECT_THROW(ESM4::creatureNaturalDamage(65535, 100000, installed), std::invalid_argument);
+    EXPECT_THROW(ESM4::creatureNaturalDamage(65535, -100000, installed), std::invalid_argument);
+    auto settings = installed;settings.mFatigueBase = -1;
+    EXPECT_THROW(ESM4::creatureNaturalDamage(1, 1, settings), std::invalid_argument);
+    settings = installed;settings.mFatigueBase = 2147483648.f;settings.mFatigueMultiplier = 0;
+    EXPECT_THROW(ESM4::creatureNaturalDamage(1, 1, settings), std::invalid_argument);
+    settings.mFatigueBase = std::nextafter(2147483648.f, 0.f);
+    EXPECT_EQ(ESM4::creatureNaturalDamage(1, 1, settings), 2147483520);
+}

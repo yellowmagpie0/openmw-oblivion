@@ -241,8 +241,10 @@
       "input_log_sha256": "a0c628ebefc52d59784c67881549c83e530d232acc726cf3380268dcc323e021",
       "setup": "normal Continue from prison save, COC reference room, player placement and facing only; no target/health/stat mutation",
       "exercise": "one held mouse attack, read-only queries; frozen input-log prefix retained",
-      "process_wrapper_exit": null,
-      "whole_process_gate_passed": false
+      "process_wrapper_exit": 0,
+      "whole_process_gate_passed": false,
+      "cleanup_report": "build/oblivion-compat/m15/S2/original-12/exit-cleanup.json",
+      "cleanup_report_sha256": "faf03c2e052e42800fc3976963fddf6ff673bc19861646376204282fe5c71bca"
     },
     "original-12-sword": {
       "evidence_root": "build/oblivion-compat/m15/S2/original-12",
@@ -251,8 +253,10 @@
       "input_log_sha256": "aaf3ecfdb527e614b3ac416ad26dd1da3d2babddcf41a250ef9935f57c9a4166",
       "setup": "F9 reload unchanged prison quicksave, COC reference room, player placement/facing, normal sword pickup/equip; no health/stat/target mutations",
       "exercise": "one ordinary mouse attack, read-only queries; frozen input log prefix",
-      "process_wrapper_exit": null,
-      "whole_process_gate_passed": false
+      "process_wrapper_exit": 0,
+      "whole_process_gate_passed": false,
+      "cleanup_report": "build/oblivion-compat/m15/S2/original-12/exit-cleanup.json",
+      "cleanup_report_sha256": "faf03c2e052e42800fc3976963fddf6ff673bc19861646376204282fe5c71bca"
     }
   }
 }

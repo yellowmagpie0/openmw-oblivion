@@ -520,3 +520,26 @@ Additional actor mastery query inspection (`actor-mastery-query.txt`) shows
 `0x5f23b0` obtains the skill via `0x5f1910`, then calls the reviewed threshold
 rule `0x56a300`. Native actor integration must preserve that value source;
 it must not substitute luck-adjusted damage skill.
+
+### Creature natural attack arithmetic
+
+Independent RTTI/vtable inspection identifies Creature RTTI `0xb10a1c`,
+locator `0xac3864`, vtable `0xa710f4`. Natural-damage slot `0x34c` points to
+`0x624f90`; armor slot `0x348` points to `0x5e0cd0`. The natural-damage method
+obtains unsigned 16-bit TESAttackDamageForm damage through `0x468a10`, obtains
+fatigue ratio through `0x5f4880`, calls `0x546b00`, then truncates the result via
+`0x9828c0`. `0x546b00` calls the reviewed fatigue multiplier and stores the
+base-damage product as float before that integer conversion. Thus the pure
+contract is `truncate(R(baseDamage * fatigueMultiplier))`, with signed output
+and no invented fatigue ratio clamp. The contact handler at `0x5ff3b1`–
+`0x5ff3c5` converts that integer back to floating damage for subsequent policy.
+It does not route this unarmed creature branch through NPC hand/skill math.
+
+Two tests first failed against stubs, then passed. Cases include base damage
+0/1/65535, fatigue zero/full/excess/negative, float-store boundaries, compiled
+versus installed fatigue settings, and checked signed-integer overflow.
+Creature armor's virtual method queries actor value `0x2b`; aggregation/effect
+semantics, auto-calculated creature base stats and world hit acceptance remain
+open. Retained sources: `actor-physical-vtables.json`,
+`creature-natural-damage.txt`, `creature-damage-rule.txt`,
+`creature-base-damage.txt`, `creature-armor-rating.txt` under `S2/sources-01`.

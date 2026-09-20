@@ -196,6 +196,10 @@ namespace ESM4
     float effectiveCombatSkill(std::int32_t skill, std::int32_t luck, const PhysicalCombatSettings& settings);
     float combatFatigueMultiplier(float ratio, const PhysicalCombatSettings& settings);
     float weaponDamage(const WeaponDamageInput& input, const PhysicalCombatSettings& settings);
+    // Creature natural attacks use base attack damage and fatigue, followed by
+    // truncation to signed integer in the original actor virtual method.
+    std::int32_t creatureNaturalDamage(std::uint16_t baseDamage, float fatigueRatio,
+        const PhysicalCombatSettings& settings);
     void validatePhysicalCombatSettings(const PhysicalCombatSettings& settings);
 }
 

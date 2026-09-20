@@ -1284,3 +1284,23 @@ Original-12 is paused in console; installed task files still pending cleanup.
 Next bounded task: creature damage and remaining mastery/reaction rules.
 
 Tested implementation/test/provenance diff SHA-256: `35920834e269d58900f933b451fb2a8f9c3aeecaa9927a91171140398685c493`.
+
+### S2 creature natural damage arithmetic
+
+Commit `defe2290e3` contains armor wear selection. Added creature natural
+attack damage from independently identified Creature vtable/caller: fatigue
+product, float store, signed integer truncation. Two new tests fail against
+stubs; all **1,697 component tests** and **49 focused ASan/UBSan tests** pass
+with exact inventories/no skips (`S2/physical-rules-12`, same commands as
+physical-rules-11). Both build logs and test results inspected. Creature actor
+stats, controller contact and runtime behavior still require implementation.
+
+Original-12 exited through normal `qqq` with wrapper exit **0**, unlike the
+retained earlier exit-143 runs. Both task-added installed files (reference
+plugin and read-only player batch) were removed only after matching expected
+SHA-256 hashes; `original-12/exit-cleanup.json` records cleanup. Frozen probe
+input prefixes remain unchanged. No whole-M15 acceptance is inferred from
+this clean exit. S2 remains in progress; S3–S14 pending. Next bounded task:
+bow/projectile damage inputs and remaining mastery/reaction rules.
+
+Tested implementation/test/provenance diff SHA-256: `18aef648bda8fc1f21f5a93052e59dc072605d4ac8d7d88bfae4a2230c100ac1`.
