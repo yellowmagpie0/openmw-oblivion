@@ -842,3 +842,42 @@ Two tests fail against the zero-return stub, then cover independent arithmetic
 values, signed current health, zero/base/over-base fractions, adjacent float
 boundaries, integer-to-float rounding, typed defaults/overrides, invalid types
 and overflow (`S2/physical-rules-16`). These tests establish arithmetic only.
+
+
+## Armor coverage, Master rating, and worn weight
+
+Original `0060E580` accumulates worn armor rating with duplicate base-form
+suppression across equipment slots, stores the item total, then checks base
+Light Armor mastery (`005F23B0` calls base-value query, then rank lookup).
+At Master, `0060E727–0060E74E` requires heavy coverage zero and light coverage
+at least `iPerkLightArmorMasterMinSum` (5). It multiplies item total by
+`fPerkLightArmorMasterRatingMult` (1.5), stores, adds Defense actor value 2B
+through `005E0CD0`, stores, then applies the previously documented maximum.
+`masteryArmorRating` provides this final nonnegative-rating arithmetic; the
+world still owns per-item aggregation, deduplication and cache invalidation.
+
+Coverage is **not a piece count**. `005E5C80–005E5EAF` checks head, hair,
+upper body, lower body, hands, feet and active shield. Matching armor weight
+class contributes the corresponding `iArmorDamage*Chance` value: head/hair
+both use Helm, then Cuirass, Greaves, Gauntlets, Boots and Shield. Unlike wear
+selection, this query really reads ShieldChance. It clamps the sum to 0–100.
+Our nonnegative validated settings use a wide sum to avoid signed overflow.
+It does not deduplicate occupied slots in this coverage query. Thus default
+single-slot light coverage can exceed minimum 5; inventing a five-piece
+requirement would change behavior. `004B4C70` reads armor's heavy flag.
+
+`00487FFA–00488099` applies equipped armor's weight reduction to one worn
+instance before adding remaining stack members at ordinary weight. Base
+Heavy Armor Expert uses `fPerkHeavyArmorExpertSpeedMult` (.5), Master uses
+`fPerkHeavyArmorMasterSpeedMult` (0); base Light Armor Expert and Master use
+`fPerkLightArmorExpertSpeedMult` (0). Despite the GMST names, these call sites
+multiply weight. The equipped-weight path at `00488342–00488390` agrees.
+`wornArmorWeight` computes the one-instance value, not stack totals or movement.
+Original-15 GMST-94–98 were captured, opened and inspected and match all five
+compiled settings. Files `armor-rating-aggregate.txt`, `armor-equipped-sum.txt`,
+`actor-mastery-query.txt`, `armor-weight-mastery.txt`,
+`armor-equipped-weight-mastery.txt` and `armor-additional-rating.txt` retain
+source traces. Four new tests fail against stubs, then cover all 128 coverage
+subsets, threshold/permutation/rank cases, stored arithmetic, overrides and
+malformed values (`S2/physical-rules-17`). Real armor mastery execution and
+restart remain pending in the ability matrix.

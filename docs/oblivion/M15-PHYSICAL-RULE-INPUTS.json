@@ -933,6 +933,51 @@
         "value": 0.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-93"
+    },
+    {
+      "name": "fPerkLightArmorMasterRatingMult",
+      "value": 1.5,
+      "storage": "0xb37258",
+      "constructor": "0x9ea3df",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-94"
+    },
+    {
+      "name": "iPerkLightArmorMasterMinSum",
+      "value": 5,
+      "storage": "0xb37260",
+      "constructor": "0x9ea407",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-95"
+    },
+    {
+      "name": "fPerkHeavyArmorExpertSpeedMult",
+      "value": 0.5,
+      "storage": "0xb374d8",
+      "constructor": "0x9eb20f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-96"
+    },
+    {
+      "name": "fPerkHeavyArmorMasterSpeedMult",
+      "value": 0.0,
+      "storage": "0xb374e0",
+      "constructor": "0x9eb230",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-97"
+    },
+    {
+      "name": "fPerkLightArmorExpertSpeedMult",
+      "value": 0.0,
+      "storage": "0xb374e8",
+      "constructor": "0x9eb260",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-98"
     }
   ]
 }

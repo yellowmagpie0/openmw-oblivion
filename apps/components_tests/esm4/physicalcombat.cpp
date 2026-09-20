@@ -1034,3 +1034,84 @@ TEST(ESM4PhysicalCombat, EssentialRecoveryValidatesAndResolvesNativeSettings)
     fraction.mData = std::int32_t{1};
     EXPECT_THROW(ESM4::buildEssentialRecoverySettings(values), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, ArmorCoverageUsesWeightedSlotsAndClampsSum)
+{
+    auto settings = ESM4::buildArmorMasterySettings({});
+    const std::array<int, 7> weights{10, 10, 25, 15, 10, 10, 30};
+    for (unsigned mask = 0; mask < 128; ++mask)
+    {
+        std::array<bool, 7> slots{};
+        int sum = 0;
+        for (unsigned i = 0; i < 7; ++i)
+            if ((slots[i] = (mask & (1u << i)) != 0)) sum += weights[i];
+        EXPECT_EQ(ESM4::armorCoverage(slots, settings), std::min(sum, 100));
+    }
+    settings.mCoverage.fill(std::numeric_limits<std::int32_t>::max());
+    EXPECT_EQ(ESM4::armorCoverage({true, true, true, true, true, true, true}, settings), 100);
+    settings.mCoverage.fill(0);
+    EXPECT_EQ(ESM4::armorCoverage({true, true, true, true, true, true, true}, settings), 0);
+}
+
+TEST(ESM4PhysicalCombat, LightMasterRatingRequiresCoverageWithoutHeavyArmorBeforeOtherRatingAndCap)
+{
+    const auto settings = ESM4::buildArmorMasterySettings({});
+    const auto mastery = ESM4::buildCombatMasterySettings({});
+    for (int skill : {0, 24, 25, 49, 50, 74, 75, 99, 100, 101})
+        for (int light : {0, 1, 4, 5, 6, 100})
+            for (int heavy : {0, 1, 100})
+                EXPECT_EQ(ESM4::masteryArmorRating(40, 10, skill, light, heavy, 85, settings, mastery),
+                    skill >= 100 && light >= 5 && heavy == 0 ? 70 : 50);
+    EXPECT_EQ(ESM4::masteryArmorRating(60, 10, 100, 5, 0, 85, settings, mastery), 85);
+    EXPECT_EQ(ESM4::masteryArmorRating(60, 10, 100, 5, 0, 0, settings, mastery), 100);
+    EXPECT_EQ(ESM4::masteryArmorRating(40, 10, 40, 5, 0, 85, settings, {{10,20,30,40}}), 70);
+    EXPECT_LT(ESM4::masteryArmorRating(std::nextafter(40.f, 0.f), 0, 100, 5, 0, 85, settings, mastery), 60);
+    EXPECT_GT(ESM4::masteryArmorRating(std::nextafter(40.f, 80.f), 0, 100, 5, 0, 85, settings, mastery), 60);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWeightMasteryAppliesOnlyToWornInstanceAndBaseSkill)
+{
+    const auto settings = ESM4::buildArmorMasterySettings({});
+    const auto mastery = ESM4::buildCombatMasterySettings({});
+    for (int skill : {0, 1, 24, 25, 49, 50, 74, 75, 76, 99, 100, 101})
+        for (bool heavy : {false, true})
+            for (bool worn : {false, true})
+            {
+                const float expected = !worn || skill < 75 ? 20 : !heavy || skill >= 100 ? 0 : 10;
+                EXPECT_EQ(ESM4::wornArmorWeight(20, heavy, skill, worn, settings, mastery), expected);
+            }
+    auto custom = settings; custom.mHeavyMasterWeightMultiplier = .25f;
+    custom.mLightExpertWeightMultiplier = .75f;
+    EXPECT_EQ(ESM4::wornArmorWeight(20, true, 100, true, custom, mastery), 5);
+    EXPECT_EQ(ESM4::wornArmorWeight(20, false, 100, true, custom, mastery), 15);
+    EXPECT_EQ(ESM4::wornArmorWeight(0, true, 0, true, settings, mastery), 0);
+}
+
+TEST(ESM4PhysicalCombat, ArmorMasteryValidatesInputsAndTypedSettingBindings)
+{
+    const auto settings = ESM4::buildArmorMasterySettings({});
+    const auto mastery = ESM4::buildCombatMasterySettings({});
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::wornArmorWeight(bad, true, 100, false, settings, mastery), std::invalid_argument);
+        EXPECT_THROW(ESM4::masteryArmorRating(bad, 0, 100, 5, 0, 85, settings, mastery), std::invalid_argument);
+        auto invalid = settings; invalid.mLightMasterRatingMultiplier = bad;
+        EXPECT_THROW(ESM4::armorCoverage({}, invalid), std::invalid_argument);
+    }
+    for (int bad : {-1, 101})
+    {
+        EXPECT_THROW(ESM4::masteryArmorRating(0, 0, 100, bad, 0, 85, settings, mastery), std::invalid_argument);
+        EXPECT_THROW(ESM4::masteryArmorRating(0, 0, 100, 5, bad, 85, settings, mastery), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::masteryArmorRating(std::numeric_limits<float>::max(), 0, 100, 5, 0, 85, settings, mastery), std::invalid_argument);
+    ESM4::GameSetting value{}; value.mEditorId = "iArmorDamageShieldChance"; value.mData = std::int32_t{7};
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildArmorMasterySettings(values).mCoverage[6], 7);
+    value.mEditorId = "iArmorDamageHelmChance";
+    const auto head = ESM4::buildArmorMasterySettings(values);
+    EXPECT_EQ(head.mCoverage[0], 7); EXPECT_EQ(head.mCoverage[1], 7);
+    value.mEditorId = "iPerkLightArmorMasterMinSum";
+    EXPECT_EQ(ESM4::buildArmorMasterySettings(values).mLightMasterMinimum, 7);
+    value.mData = 7.f;
+    EXPECT_THROW(ESM4::buildArmorMasterySettings(values), std::invalid_argument);
+}

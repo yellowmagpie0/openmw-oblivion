@@ -326,6 +326,27 @@ namespace ESM4
         return result;
     }
 
+    ArmorMasterySettings buildArmorMasterySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const auto head = inputs.number("iArmorDamageHelmChance", std::int32_t{10});
+        const ArmorMasterySettings result{
+            {head, head,
+                inputs.number("iArmorDamageCuirassChance", std::int32_t{25}),
+                inputs.number("iArmorDamageGreavesChance", std::int32_t{15}),
+                inputs.number("iArmorDamageGauntletsChance", std::int32_t{10}),
+                inputs.number("iArmorDamageBootsChance", std::int32_t{10}),
+                inputs.number("iArmorDamageShieldChance", std::int32_t{30})},
+            inputs.number("iPerkLightArmorMasterMinSum", std::int32_t{5}),
+            inputs.number("fPerkLightArmorMasterRatingMult", 1.5f),
+            inputs.number("fPerkHeavyArmorExpertSpeedMult", .5f),
+            inputs.number("fPerkHeavyArmorMasterSpeedMult", 0.f),
+            inputs.number("fPerkLightArmorExpertSpeedMult", 0.f),
+        };
+        validateArmorMasterySettings(result);
+        return result;
+    }
+
     EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

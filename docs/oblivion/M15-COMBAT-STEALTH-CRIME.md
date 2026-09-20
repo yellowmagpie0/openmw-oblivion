@@ -1535,3 +1535,24 @@ read-only queries with no task-installed files. Next: armor mastery aggregation
 and remaining stealth/crime rule families, then actor policy/audit closure.
 
 Tested implementation/test/provenance diff SHA-256: `1d3549e8bda66450924b4e8a707fb2f85113fba6db750747127c917778915298`.
+
+
+### S2 armor mastery arithmetic
+
+Commit `0186fb26a6` contains essential recovery health arithmetic. Added
+weighted armor coverage, Light Armor Master rating bonus before additive
+Defense/cap, and worn-instance armor weight reductions using base mastery.
+Coverage uses seven slot weights and clamps at 100; it is not a piece count.
+The real inventory caller still must supply correct active slots, deduplicate
+item-rating contributions, invalidate caches and apply one-instance weight.
+
+Four new tests fail against stubs, then pass. All **1,732 component tests**
+and **84 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/physical-rules-17`). Original-15 GMST-94–98 were opened/inspected and
+confirm five new defaults. Catalog **94** facts, setting observations **98**.
+Affected mastery rows retain pending native execution/restart gates.
+S2 remains in progress; S3–S14 pending. Original-15 remains running paused
+for read-only queries; no task-installed files. Next: sneak eligibility and
+multipliers, followed by remaining stealth/crime rules and actor-policy audit.
+
+Tested implementation/test/provenance diff SHA-256: `4ca51083b1027d277aa6414057250f6c8676641a734d398cc0db8f3b3526ba63`.

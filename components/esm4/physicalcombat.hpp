@@ -228,6 +228,26 @@ namespace ESM4
         BlockEquipment mEquipment;
     };
 
+    struct ArmorMasterySettings
+    {
+        // Head, hair, upper body, lower body, hands, feet, active shield.
+        std::array<std::int32_t, 7> mCoverage;
+        std::int32_t mLightMasterMinimum;
+        float mLightMasterRatingMultiplier;
+        float mHeavyExpertWeightMultiplier;
+        float mHeavyMasterWeightMultiplier;
+        float mLightExpertWeightMultiplier;
+    };
+    std::int32_t armorCoverage(const std::array<bool, 7>& matchingSlots,
+        const ArmorMasterySettings& settings);
+    float masteryArmorRating(float itemRating, float otherRating, std::int32_t baseLightArmor,
+        std::int32_t lightCoverage, std::int32_t heavyCoverage, float maximum,
+        const ArmorMasterySettings& settings, const CombatMasterySettings& mastery);
+    // Reduction applies to one worn instance, not other items in its stack.
+    float wornArmorWeight(float weight, bool heavy, std::int32_t baseSkill, bool worn,
+        const ArmorMasterySettings& settings, const CombatMasterySettings& mastery);
+    void validateArmorMasterySettings(const ArmorMasterySettings& settings);
+
     struct ArmorRatingSettings
     {
         float mSkillBase;

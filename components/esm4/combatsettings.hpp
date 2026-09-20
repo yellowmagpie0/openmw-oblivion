@@ -36,6 +36,7 @@ namespace ESM4
     PowerAttackSettings buildPowerAttackSettings(std::span<const GameSetting* const> settings);
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings);
     BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings);
+    ArmorMasterySettings buildArmorMasterySettings(std::span<const GameSetting* const> settings);
     ArmorRatingSettings buildArmorRatingSettings(std::span<const GameSetting* const> settings);
     float buildMaximumArmorRating(std::span<const GameSetting* const> settings);
     float buildDifficultyDamageMultiplier(std::span<const GameSetting* const> settings);

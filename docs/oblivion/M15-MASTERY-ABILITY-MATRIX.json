@@ -1219,7 +1219,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "wornArmorWeight tested; base mastery and per-worn-instance reduction; native movement/inventory integration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1229,8 +1229,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input, weight/movement integration and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-03/"
     },
@@ -1245,9 +1244,11 @@
       "ability": "all-light armor protection bonus",
       "normal_input": "equip all required light armor pieces",
       "prerequisites": [
-        "required qualifying slots and no disqualifying armor; exact set pending"
+        "Master base Light Armor rank",
+        "heavy weighted coverage zero",
+        "light weighted coverage at least iPerkLightArmorMasterMinSum (installed 5)"
       ],
-      "consequence": "armor rating multiplier from native setting",
+      "consequence": "multiply item rating by fPerkLightArmorMasterRatingMult (installed 1.5), then add actor defense rating and apply cap",
       "probability_and_draw": null,
       "duration_seconds": null,
       "save_fields_required": [
@@ -1256,7 +1257,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": "item armor arithmetic tested; aggregate perk pending",
+      "rule_implementation": "armorCoverage and masteryArmorRating tested; weighted coverage rather than count; native actor aggregation pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1266,8 +1267,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input, item-rating cache/inventory integration and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-04/"
     },
@@ -1367,7 +1367,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "wornArmorWeight tested; base mastery and per-worn-instance reduction; native movement/inventory integration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1377,8 +1377,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input, weight/movement integration and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-03/"
     },
@@ -1404,7 +1403,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "wornArmorWeight tested; base mastery and per-worn-instance reduction; native movement/inventory integration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1414,8 +1413,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input, weight/movement integration and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-04/"
     },

@@ -446,6 +446,59 @@ namespace ESM4
         const float factor = difficulty < 0.f ? rounded(1.0 / rounded(1.0 - scaled)) : rounded(1.0 + scaled);
         return role == PlayerDamageRole::Victim ? rounded(double(damage) * factor) : rounded(double(damage) / factor);
     }
+    void validateArmorMasterySettings(const ArmorMasterySettings& settings)
+    {
+        for (auto weight : settings.mCoverage)
+            if (weight < 0)
+                throw std::invalid_argument("negative native armor coverage weight");
+        if (settings.mLightMasterMinimum < 0)
+            throw std::invalid_argument("negative native armor mastery minimum");
+        for (float factor : {settings.mLightMasterRatingMultiplier, settings.mHeavyExpertWeightMultiplier,
+                 settings.mHeavyMasterWeightMultiplier, settings.mLightExpertWeightMultiplier})
+            nonnegative(factor);
+    }
+
+    std::int32_t armorCoverage(const std::array<bool, 7>& matchingSlots, const ArmorMasterySettings& settings)
+    {
+        validateArmorMasterySettings(settings);
+        std::int64_t sum = 0;
+        for (std::size_t i = 0; i < matchingSlots.size(); ++i)
+            if (matchingSlots[i])
+                sum += settings.mCoverage[i];
+        return static_cast<std::int32_t>(std::min<std::int64_t>(sum, 100));
+    }
+
+    float masteryArmorRating(float itemRating, float otherRating, std::int32_t baseLightArmor,
+        std::int32_t lightCoverage, std::int32_t heavyCoverage, float maximum,
+        const ArmorMasterySettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateArmorMasterySettings(settings);
+        nonnegative(itemRating);
+        nonnegative(otherRating);
+        nonnegative(maximum);
+        for (auto coverage : {lightCoverage, heavyCoverage})
+            if (coverage < 0 || coverage > 100)
+                throw std::invalid_argument("invalid native armor coverage sum");
+        const auto rank = combatMastery(baseLightArmor, mastery);
+        if (rank == CombatMastery::Master && heavyCoverage == 0 && lightCoverage >= settings.mLightMasterMinimum)
+            itemRating = rounded(double(itemRating) * settings.mLightMasterRatingMultiplier);
+        return capArmorRating(rounded(double(itemRating) + otherRating), maximum);
+    }
+
+    float wornArmorWeight(float weight, bool heavy, std::int32_t baseSkill, bool worn,
+        const ArmorMasterySettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateArmorMasterySettings(settings);
+        nonnegative(weight);
+        const auto rank = combatMastery(baseSkill, mastery);
+        if (!worn || rank < CombatMastery::Expert)
+            return weight;
+        const float multiplier = !heavy ? settings.mLightExpertWeightMultiplier
+            : rank == CombatMastery::Expert ? settings.mHeavyExpertWeightMultiplier
+                                           : settings.mHeavyMasterWeightMultiplier;
+        return rounded(double(weight) * multiplier);
+    }
+
     void validateArmorRatingSettings(const ArmorRatingSettings& settings)
     {
         for (float value : { settings.mSkillBase, settings.mSkillMaximum,
