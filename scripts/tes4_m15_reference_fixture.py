@@ -43,8 +43,10 @@ def _transform(item):
 
 
 def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
-    _fields(recipe, 'version purpose source_sha256 master npc_template weapon_template cell room target weapon')
-    if recipe['version'] != 1 or hashlib.sha256(source).hexdigest() != recipe['source_sha256']:
+    version = _integer(recipe.get('version') if isinstance(recipe, dict) else None, 1, 2)
+    _fields(recipe, 'version purpose source_sha256 master npc_template weapon_template cell room target weapon'
+            + (' ammo_template ammo' if version == 2 else ''))
+    if hashlib.sha256(source).hexdigest() != recipe['source_sha256']:
         raise ValueError('reference fixture source revision differs from recipe')
     if recipe['master'] != 'Oblivion.esm':
         raise ValueError('reference fixture supports the reviewed Oblivion master only')
@@ -52,14 +54,21 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     _fields(cell, 'id editor_id name ambient')
     _fields(room, 'id reference model')
     _fields(target, 'id reference editor_id name health fatigue skill attribute position rotation style')
-    _fields(weapon, 'id reference editor_id name damage condition speed reach weight position rotation')
+    _fields(weapon, 'id reference editor_id name damage condition speed reach weight position rotation'
+            + (' type' if version == 2 else ''))
+    weapon_type = _integer(weapon['type'], 0, 5) if version == 2 else 0
+    ammo = recipe.get('ammo')
+    if version == 2:
+        _fields(ammo, 'id reference editor_id name damage speed weight count position rotation')
     ids = [cell['id'], room['id'], room['reference'], target['id'], target['reference'],
            target['style'], weapon['id'], weapon['reference']]
+    if ammo is not None:
+        ids.extend((ammo['id'], ammo['reference']))
     for value in ids:
         _integer(value, 0x01000800, 0x01ffffff)
     if len(set(ids)) != len(ids):
         raise ValueError('reference fixture identity collision')
-    for item in (cell, target, weapon):
+    for item in (cell, target, weapon, *([ammo] if ammo is not None else [])):
         if not isinstance(item['editor_id'], str) or not item['editor_id'].isascii() or not item['editor_id'].isalnum():
             raise ValueError('reference fixture editor ID must be an ASCII identifier')
         if not isinstance(item['name'], str) or not item['name'] or '\0' in item['name']:
@@ -78,8 +87,16 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     _number(weapon['reach'], .01, 10)
     _number(weapon['weight'], 0, 10000)
     transforms = {k: _transform(recipe[k]) for k in ('target', 'weapon')}
+    if ammo is not None:
+        _integer(ammo['damage'], 0, 65535)
+        _integer(ammo['count'], 1, 2**31-1)
+        _number(ammo['speed'], .01, 10)
+        _number(ammo['weight'], 0, 10000)
+        transforms['ammo'] = _transform(ammo)
     templates = {('NPC_', _integer(recipe['npc_template'], 1, 0xffffff)): None,
                  ('WEAP', _integer(recipe['weapon_template'], 1, 0xffffff)): None}
+    if ammo is not None:
+        templates['AMMO', _integer(recipe['ammo_template'], 1, 0xffffff)] = None
     for tag, ident, payload in records(source):
         if (tag, ident) in templates:
             if templates[tag, ident] is not None:
@@ -115,13 +132,25 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     struct.pack_into('<f', style, 116, 1)
     item = string('EDID', weapon['editor_id']) + string('FULL', weapon['name'])
     item += b''.join(sub(s['name'], s['payload']) for s in weapon_source if s['name'] in {'MODL', 'MODB', 'MODT', 'ICON'})
-    item += sub('DATA', struct.pack('<B3xffIIIfH', 0, weapon['speed'], weapon['reach'],
+    item += sub('DATA', struct.pack('<B3xffIIIfH', weapon_type, weapon['speed'], weapon['reach'],
                                    0, 0, weapon['condition'], weapon['weight'], weapon['damage']))
     bases = {'CSTY': record('CSTY', target['style'], string('EDID', 'M15ReferenceStyle') + sub('CSTD', style)),
              'NPC_': record('NPC_', target['id'], npc),
              'STAT': record('STAT', room['id'], string('EDID', 'M15ReferenceRoom')
                             + string('MODL', room['model'].replace('/', '\\'))),
              'WEAP': record('WEAP', weapon['id'], item)}
+    placed_ammo = b''
+    if ammo is not None:
+        ammo_source = templates['AMMO', recipe['ammo_template']]
+        if not any(s['name'] == 'MODL' for s in ammo_source):
+            raise ValueError('ammunition template lacks model')
+        item = string('EDID', ammo['editor_id']) + string('FULL', ammo['name'])
+        item += b''.join(sub(s['name'], s['payload']) for s in ammo_source
+                         if s['name'] in {'MODL', 'MODB', 'MODT', 'ICON'})
+        item += sub('DATA', struct.pack('<fB3xIfH', ammo['speed'], 0, 0, ammo['weight'], ammo['damage']))
+        bases['AMMO'] = record('AMMO', ammo['id'], item)
+        placed_ammo = record('REFR', ammo['reference'], sub('NAME', struct.pack('<I', ammo['id']))
+                             + sub('XCNT', struct.pack('<i', ammo['count'])) + sub('DATA', transforms['ammo']))
     lighting = bytes(cell['ambient'] + [0]) + bytes(8) + struct.pack('<ffii ff', 0, 10000, 0, 0, 1, 0)
     cell_record = record('CELL', cell['id'], string('EDID', cell['editor_id']) + string('FULL', cell['name'])
                          + sub('DATA', b'\x01') + sub('XCLL', lighting))
@@ -131,19 +160,20 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     placed_target = record('ACHR', target['reference'], string('EDID', 'M15ReferenceOpponent')
                            + sub('NAME', struct.pack('<I', target['id'])) + sub('DATA', transforms['target']), 0x400)
     label = struct.pack('<I', cell['id'])
-    children = group(label, 6, group(label, 8, placed_target) + group(label, 9, floor + placed_weapon))
+    children = group(label, 6, group(label, 8, placed_target) + group(label, 9, floor + placed_weapon + placed_ammo))
     # Official interior groups use local FormID decimal units/tens, not the file index.
     local = cell['id'] & 0xffffff
     cells = group(struct.pack('<I', local % 10), 2,
                   group(struct.pack('<I', local // 10 % 10), 3, cell_record + children))
-    header = sub('HEDR', struct.pack('<fII', 1, 8, (max(ids) & 0xffffff) + 1))
+    record_count = len(ids)
+    header = sub('HEDR', struct.pack('<fII', 1, record_count, (max(ids) & 0xffffff) + 1))
     header += string('CNAM', 'OpenMW M15 isolated reference fixture')
     header += string('MAST', recipe['master']) + sub('DATA', struct.pack('<Q', len(source)))
     output = record('TES4', 0, header) + b''.join(group(tag.encode('ascii'), 0, value) for tag, value in sorted(bases.items()))
     output += group(b'CELL', 0, cells)
-    if len(list(records(output))) != 9:
+    if len(list(records(output))) != record_count + 1:
         raise ValueError('reference fixture readback count mismatch')
-    return output, {'kind': 'isolated-reference-fixture', 'record_count': 8, 'script_count': 0, 'quest_count': 0,
+    return output, {'kind': 'isolated-reference-fixture', 'record_count': record_count, 'script_count': 0, 'quest_count': 0,
                     'source_sha256': recipe['source_sha256'], 'sha256': hashlib.sha256(output).hexdigest(),
                     'runtime_accepted': False}
 

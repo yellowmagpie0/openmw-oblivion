@@ -1,0 +1,87 @@
+{
+  "version": 2,
+  "purpose": "Isolated original-game bow launch measurements; not official campaign acceptance",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc_template": 7,
+  "weapon_template": 152113,
+  "cell": {
+    "id": 16779520,
+    "editor_id": "M15BowReference",
+    "name": "M15 bow reference room",
+    "ambient": [
+      150,
+      150,
+      150
+    ]
+  },
+  "room": {
+    "id": 16779521,
+    "reference": 16779536,
+    "model": "Architecture/ImperialCity/Interior/ICGroundFloor01.NIF"
+  },
+  "target": {
+    "id": 16779552,
+    "reference": 16779553,
+    "editor_id": "M15DamageTarget",
+    "name": "M15 reference opponent",
+    "health": 500,
+    "fatigue": 200,
+    "skill": 5,
+    "attribute": 50,
+    "position": [
+      256,
+      160,
+      -280
+    ],
+    "rotation": [
+      0,
+      0,
+      3.1415927
+    ],
+    "style": 16779554
+  },
+  "weapon": {
+    "id": 16779568,
+    "reference": 16779569,
+    "editor_id": "M15ReferenceBow",
+    "name": "M15 reference bow",
+    "damage": 100,
+    "condition": 1000,
+    "speed": 1,
+    "reach": 1,
+    "weight": 0,
+    "position": [
+      200,
+      40,
+      -280
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "type": 5
+  },
+  "ammo_template": 96297,
+  "ammo": {
+    "id": 16779584,
+    "reference": 16779585,
+    "editor_id": "M15ReferenceArrow",
+    "name": "M15 reference arrow",
+    "damage": 20,
+    "speed": 1,
+    "weight": 0,
+    "count": 20,
+    "position": [
+      300,
+      40,
+      -280
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ]
+  }
+}

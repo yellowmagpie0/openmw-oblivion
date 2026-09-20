@@ -1335,3 +1335,25 @@ finish remaining reaction/mastery/crime rule families.
 
 Tested tracked implementation/test/provenance diff plus three new source files
 (path followed by contents) SHA-256: `131272179df49067dbfaff5fd70f7590e68eb62c0c6706e07d8b5e51be8b2c57`.
+
+### S2 editable bow/ammo reference fixture
+
+Commit `b8bd1ef434` contains bow launch arithmetic. Extended the isolated
+reference writer with strict version-2 weapon type and ammunition recipe fields.
+The new editable bow recipe clones only reviewed model/icon payloads from
+Iron Bow `025231` and Iron Arrow `017829`, creates a nonenchanted bow and
+20-arrow pickup stack, and retains the proven room/target geometry. The
+version-1 sword fixture remains byte-for-byte reproducible; a prior-output
+hash regression verifies this. New version-2 positive test fails before writer
+support, then passes. All **146 Python tests** pass (`reference-fixture-05`).
+
+Generated plugin SHA-256:
+`c7b0663bfd6ec0c5b530f8e9ebd840bd4db2908426610bdcc76cfe0cbdd73776`.
+Native `esmtool --quiet dump` parses it; native graph adds **10 keys**, has no
+new unresolved references, preserves all 3,665 known master findings, and is
+restart/reorder stable. These are structural/semantic checks; original/runtime
+acceptance is still false. S2 remains in progress; S3–S14 pending. Next task:
+normal original bow/ammo pickup/equip and independently predicted first shot.
+
+Tested writer/test diff plus new recipe (path followed by contents) SHA-256:
+`7ec566567ca6d62a23a9fae25f99ba330f6b892f4f5aab60d6ec9cd4fe29db1e`.
