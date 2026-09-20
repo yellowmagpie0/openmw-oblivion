@@ -1629,3 +1629,53 @@ native flag combinations, and each with ranks -128/-1/0/127. Evidence:
 `faction-policy.log`, `S2/sources-01/crime-faction-flag-queries.txt` and
 `crime-actor-offenses.txt`. This establishes the predicates, not live assault,
 Arena legality or crime reporting acceptance.
+
+## NPC attack-crime alarm entry
+
+`00610930` (assault) and `00610EB0` (murder) are entered on the NPC victim,
+with the offender argument. Do not use the external header's misleading
+OnAlarmAttack argument description. Native incident constructor `006070B0`
+stores the victim in `+08` and offender in `+0C`; assault increments the player
+Assaults statistic (`+6D4`) only when the incident's `+0C` is the player.
+Higher-level hit/self-defense selection occurs before these methods.
+
+`attackCrimeAlarmEligible` preserves their common and differing entry gates:
+
+- The victim must have a playable race, or be a class-flag guard.
+- A player offender with positive jail days is exempt when native player
+  combat/pursuer query `006605A0(0)` is false. Days are `Player+608`, assigned
+  by jail sentencing and cleared on release; `0065DA50` tests strictly >0.
+  The query is supplied after native list pruning, not guessed from bounty.
+- Assault rejects a **trespassing victim** (`006109D8`); murder rejects a
+  **trespassing offender** (`00610F59`). Preserve this actor distinction.
+- The offender must be an NPC with a playable race, and must not be a guard.
+- If both actors have special-combat status, no incident is created by these
+  paths. They need not share a faction.
+- A non-player offender with current integer Sneak **exactly 100** and native
+  sneaking posture is exempt. 99 and 101 are not 100. The player is excluded
+  from this exemption. Posture query `005E0550` requires movement bit `400`
+  and absence of swimming bit `800`.
+
+The race query `005E32F0` resolves NPC base `+E8` and reads race `+70` bit 0;
+it is not an actor crime-enable flag. This helper is scoped to these NPC-victim
+alarm entries, not creature harm, full legal combat classification, witness
+eligibility or bounty commitment. Invalid offense kinds diagnose before any
+exemption. Runtime actor capture must resolve the explicit inputs correctly.
+
+Three component tests first fail against a false stub, then cover victim/
+offender asymmetries, race/guard/special-combat combinations, jail and exact
+skill boundaries, player exclusions and invalid offenses. **8,752 independent
+original instruction cases** cover every combination of twelve boolean inputs
+for both paths plus signed integer boundaries. Record/race/guard/faction/AV/
+pursuer queries are boundary stubs; original entry branches, jail query and
+sneak-posture query execute unchanged. The first harness attempt omitted the
+offender pointer in EAX before `00610995` and faulted; that setup failure is
+retained in `attack-alarm-harness-failed.log`, not counted as evidence.
+
+Evidence: `S2/oracle-emulator/attack-alarm.py`, `attack-alarm-table.json`,
+`attack-alarm.log`, and `S2/sources-01/crime-actor-offenses.txt`,
+`crime-incident-constructor.txt`, `crime-player-context-a.txt`,
+`crime-player-context-b.txt`, `crime-sneaking-query.txt`,
+`crime-actor-base-query.txt` (the race query), and existing jail-sentence traces.
+Native attack/death callbacks, witnesses, reporting, Arena and jail gameplay
+remain integration and runtime acceptance gates.

@@ -536,3 +536,76 @@ TEST(ESM4CrimeRules, FactionPolicyPreservesIndependentFlagsAndOwnerAccessConsequ
     item.mOwnerEvil = ESM4::actorFactionCrimePolicy(evilOwner).mEvil;
     EXPECT_FALSE(ESM4::playerReferenceIsOffLimits(item));
 }
+
+TEST(ESM4CrimeRules, AttackAlarmChecksRaceGuardAndSpecialCombatForDistinctActors)
+{
+    for (auto offense : {ESM4::CrimeOffense::Assault, ESM4::CrimeOffense::Murder})
+    {
+        ESM4::AttackCrimeAlarmInput input;
+        input.mOffense = offense;
+        EXPECT_TRUE(ESM4::attackCrimeAlarmEligible(input));
+        input.mVictimPlayableRace = false;
+        EXPECT_FALSE(ESM4::attackCrimeAlarmEligible(input));
+        input.mVictimGuard = true;
+        EXPECT_TRUE(ESM4::attackCrimeAlarmEligible(input));
+        input.mOffenderPlayableRace = false;
+        EXPECT_FALSE(ESM4::attackCrimeAlarmEligible(input));
+        input.mOffenderPlayableRace = true; input.mOffenderGuard = true;
+        EXPECT_FALSE(ESM4::attackCrimeAlarmEligible(input));
+        input.mOffenderGuard = false; input.mOffenderNpc = false;
+        EXPECT_FALSE(ESM4::attackCrimeAlarmEligible(input));
+        input.mOffenderNpc = true;
+        for (bool victim : {false, true})
+            for (bool offender : {false, true})
+            {
+                input.mVictimSpecialCombat = victim; input.mOffenderSpecialCombat = offender;
+                EXPECT_EQ(ESM4::attackCrimeAlarmEligible(input), !(victim && offender));
+            }
+    }
+}
+
+TEST(ESM4CrimeRules, AttackAlarmTrespassUsesVictimForAssaultAndOffenderForMurder)
+{
+    ESM4::AttackCrimeAlarmInput input;
+    for (bool victim : {false, true})
+        for (bool offender : {false, true})
+        {
+            input.mVictimTrespassing = victim; input.mOffenderTrespassing = offender;
+            input.mOffense = ESM4::CrimeOffense::Assault;
+            EXPECT_EQ(ESM4::attackCrimeAlarmEligible(input), !victim);
+            input.mOffense = ESM4::CrimeOffense::Murder;
+            EXPECT_EQ(ESM4::attackCrimeAlarmEligible(input), !offender);
+        }
+}
+
+TEST(ESM4CrimeRules, AttackAlarmJailAndExactSneakExemptionsPreservePlayerDistinction)
+{
+    for (auto offense : {ESM4::CrimeOffense::Assault, ESM4::CrimeOffense::Murder})
+        for (bool player : {false, true})
+        {
+            ESM4::AttackCrimeAlarmInput input;
+            input.mOffense = offense; input.mOffenderPlayer = player;
+            for (int days : {-1, 0, 1, std::numeric_limits<int>::max()})
+                for (bool pursuit : {false, true})
+                {
+                    input.mPlayerJailDays = days; input.mPlayerHasCombatOrPursuit = pursuit;
+                    EXPECT_EQ(ESM4::attackCrimeAlarmEligible(input), !(player && days > 0 && !pursuit));
+                }
+            input.mPlayerJailDays = 0;
+            for (int sneak : {-1, 0, 99, 100, 101, std::numeric_limits<int>::max()})
+                for (bool sneaking : {false, true})
+                {
+                    input.mOffenderSneak = sneak; input.mOffenderSneaking = sneaking;
+                    EXPECT_EQ(ESM4::attackCrimeAlarmEligible(input), player || sneak != 100 || !sneaking);
+                }
+        }
+    ESM4::AttackCrimeAlarmInput input;
+    input.mVictimPlayableRace = false;
+    for (auto offense : {ESM4::CrimeOffense::Theft, ESM4::CrimeOffense::Pickpocket,
+             ESM4::CrimeOffense::Trespass, ESM4::CrimeOffense::HorseTheft, ESM4::CrimeOffense::JailBreak,
+             static_cast<ESM4::CrimeOffense>(-1)})
+    {
+        input.mOffense = offense;
+        EXPECT_THROW(ESM4::attackCrimeAlarmEligible(input), std::invalid_argument);
+    }
+}

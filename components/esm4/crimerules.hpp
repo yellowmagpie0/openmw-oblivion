@@ -107,6 +107,28 @@ namespace ESM4
     bool hasOwnershipClaim(const OwnershipClaimInput& input);
 
     enum class CrimeOffense { Theft, Pickpocket, Trespass, Assault, Murder, HorseTheft, JailBreak };
+    struct AttackCrimeAlarmInput
+    {
+        CrimeOffense mOffense = CrimeOffense::Assault;
+        bool mVictimPlayableRace = true;
+        bool mVictimGuard = false;
+        bool mVictimTrespassing = false;
+        bool mVictimSpecialCombat = false;
+        bool mOffenderNpc = true;
+        bool mOffenderPlayableRace = true;
+        bool mOffenderGuard = false;
+        bool mOffenderTrespassing = false;
+        bool mOffenderSpecialCombat = false;
+        bool mOffenderPlayer = false;
+        bool mOffenderSneaking = false; // Native sneak posture excludes swimming.
+        std::int32_t mOffenderSneak = 0; // Current integer AV, not mastery/base skill.
+        std::int32_t mPlayerJailDays = 0;
+        bool mPlayerHasCombatOrPursuit = false; // Resolved native active-pursuer query.
+    };
+    // NPC-victim assault/murder alarm-entry gates only. Callers still own
+    // self-defense/hostility selection, witnesses and incident reporting.
+    bool attackCrimeAlarmEligible(const AttackCrimeAlarmInput& input);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;

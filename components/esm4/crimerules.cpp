@@ -10,6 +10,23 @@
 
 namespace ESM4
 {
+    bool attackCrimeAlarmEligible(const AttackCrimeAlarmInput& input)
+    {
+        if (input.mOffense != CrimeOffense::Assault && input.mOffense != CrimeOffense::Murder)
+            throw std::invalid_argument("invalid native attack crime alarm offense");
+        if (!input.mVictimPlayableRace && !input.mVictimGuard)
+            return false;
+        if (input.mOffenderPlayer && input.mPlayerJailDays > 0 && !input.mPlayerHasCombatOrPursuit)
+            return false;
+        if (input.mOffense == CrimeOffense::Assault ? input.mVictimTrespassing : input.mOffenderTrespassing)
+            return false;
+        if (!input.mOffenderNpc || !input.mOffenderPlayableRace || input.mOffenderGuard)
+            return false;
+        if (input.mVictimSpecialCombat && input.mOffenderSpecialCombat)
+            return false;
+        return input.mOffenderPlayer || input.mOffenderSneak != 100 || !input.mOffenderSneaking;
+    }
+
     ActorFactionCrimePolicy actorFactionCrimePolicy(std::span<const std::uint8_t> factionFlags)
     {
         ActorFactionCrimePolicy result{!factionFlags.empty(), false};

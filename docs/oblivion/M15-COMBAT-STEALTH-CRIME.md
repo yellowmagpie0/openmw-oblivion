@@ -2051,3 +2051,19 @@ remain pending. Assault/murder legality, witness reporting and actual Arena
 acceptance remain open.
 
 Tested implementation/test/provenance diff SHA-256: `f3baf9b48aca12050c19610153620803bafaf63161358ab3fcc6ff943d4d3ed3`.
+
+### S2 NPC assault/murder alarm-entry rules
+
+Commit `91306ad7a7` contains actor faction predicates. Added native NPC-victim
+assault/murder entry gates, preserving victim/offender identity, their different
+trespass checks, playable-race and guard policy, jail/pursuit and special-combat
+exemptions, and the non-player exact Sneak-100 posture exemption.
+
+Three new tests fail against the stub, then pass. All **1,789 component tests**
+and **145 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/attack-alarm-01`). **8,752 original instruction cases** pass after correcting
+a recorded harness register-setup failure. These entry predicates do not replace
+higher-level self-defense, witness selection or reported bounty. S2 remains in
+progress; S3–S14 remain pending. Next: trespass warning/report and witness rules.
+
+Tested implementation/test/provenance diff SHA-256: `b20d76e758a02c4c89e95bfafa306a120fec4e50a822844fea660b0a811a0b0d`.
