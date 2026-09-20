@@ -10,6 +10,35 @@
 
 namespace ESM4
 {
+    void validateTrespassWarningSettings(const TrespassWarningSettings& settings)
+    {
+        if (!std::isfinite(settings.mTimerLimit) || settings.mTimerLimit < 0)
+            throw std::invalid_argument("invalid native trespass warning timer setting");
+    }
+
+    TrespassWarningResult advanceTrespassWarning(
+        const TrespassWarningInput& input, const TrespassWarningSettings& settings)
+    {
+        validateTrespassWarningSettings(settings);
+        if (input.mWarningCount < 0 || !std::isfinite(input.mTimer) || input.mTimer < 0
+            || !std::isfinite(input.mFrameDuration) || input.mFrameDuration < 0)
+            throw std::invalid_argument("invalid native trespass warning state");
+        if (!input.mTargetTrespassing)
+            return {TrespassWarningAction::Leave, input.mTimer};
+        if (input.mCellOffLimits || (input.mWarningCount > 1 && input.mTimer <= 0))
+            return {TrespassWarningAction::Escalate, input.mTimer};
+        if (input.mTimer <= 0)
+            return {TrespassWarningAction::Warn, input.mTimer};
+        const auto stored = [](double value) {
+            if (value > std::numeric_limits<float>::max())
+                throw std::invalid_argument("native trespass warning timer overflow");
+            return static_cast<float>(value);
+        };
+        const float doubledStep = stored(double(input.mFrameDuration) * 2);
+        const float timer = stored(double(input.mTimer) + doubledStep);
+        return {TrespassWarningAction::Wait, timer > settings.mTimerLimit ? 0.f : timer};
+    }
+
     bool attackCrimeAlarmEligible(const AttackCrimeAlarmInput& input)
     {
         if (input.mOffense != CrimeOffense::Assault && input.mOffense != CrimeOffense::Murder)

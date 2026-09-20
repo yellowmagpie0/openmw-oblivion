@@ -2067,3 +2067,20 @@ higher-level self-defense, witness selection or reported bounty. S2 remains in
 progress; S3–S14 remain pending. Next: trespass warning/report and witness rules.
 
 Tested implementation/test/provenance diff SHA-256: `b20d76e758a02c4c89e95bfafa306a120fec4e50a822844fea660b0a811a0b0d`.
+
+### S2 trespass warning decisions and timer
+
+Commit `3f1e72ee4d` contains attack-alarm entry gates. Added warning/leave/
+escalation decisions, Off Limits bypass, strict timer expiry, stored float
+rounding and the typed warning-timer GMST (compiled 10, installed 30).
+
+Three policy tests fail against the stub; four new tests pass after correcting
+an independently disproved >= expiry expectation. All **1,793 component tests**,
+**149 focused ASan/UBSan tests** and **151 Python tests** pass, with exact C++
+inventories/no skips (`S2/trespass-warning-01`). **1,920 original instruction
+cases** confirm the corrected policy. Harness setup and boundary-expectation
+failures are retained. Actual warning speech/count callbacks, admission,
+reporting, elapsed gameplay timing and restart remain open. S2 remains in
+progress; S3–S14 remain pending. Next: witness selection and reporting rules.
+
+Tested implementation/test/provenance diff SHA-256: `6bce82914c4072f25136a0bde8d9b990801f5e8bc1f709a5bf1f8404d5b34479`.

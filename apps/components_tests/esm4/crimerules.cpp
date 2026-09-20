@@ -609,3 +609,73 @@ TEST(ESM4CrimeRules, AttackAlarmJailAndExactSneakExemptionsPreservePlayerDistinc
         EXPECT_THROW(ESM4::attackCrimeAlarmEligible(input), std::invalid_argument);
     }
 }
+
+TEST(ESM4CrimeRules, TrespassWarningsRequireCountAndTimerBeforeEscalation)
+{
+    using Action = ESM4::TrespassWarningAction;
+    const ESM4::TrespassWarningSettings settings{30};
+    for (int count : {0, 1, 2, std::numeric_limits<int>::max()})
+        for (float timer : {0.f, -0.f, std::numeric_limits<float>::denorm_min(), 1.f})
+        {
+            ESM4::TrespassWarningInput input{true, false, count, timer, 0};
+            const auto result = ESM4::advanceTrespassWarning(input, settings);
+            EXPECT_EQ(result.mAction, timer > 0 ? Action::Wait : count > 1 ? Action::Escalate : Action::Warn);
+            input.mCellOffLimits = true;
+            EXPECT_EQ(ESM4::advanceTrespassWarning(input, settings).mAction, Action::Escalate);
+            input.mTargetTrespassing = false;
+            EXPECT_EQ(ESM4::advanceTrespassWarning(input, settings).mAction, Action::Leave);
+        }
+}
+
+TEST(ESM4CrimeRules, TrespassTimerUsesDoubleFrameStepAndDefersExpiryAction)
+{
+    using Action = ESM4::TrespassWarningAction;
+    const ESM4::TrespassWarningSettings settings{30};
+    ESM4::TrespassWarningInput input{true, false, 2, 29, .5f};
+    auto result = ESM4::advanceTrespassWarning(input, settings);
+    EXPECT_EQ(result.mAction, Action::Wait);
+    EXPECT_EQ(result.mTimer, 30); // Equality does not expire the native timer.
+    input.mTimer = result.mTimer;
+    result = ESM4::advanceTrespassWarning(input, settings);
+    EXPECT_EQ(result.mAction, Action::Wait);
+    EXPECT_EQ(result.mTimer, 0);
+    input.mTimer = result.mTimer;
+    EXPECT_EQ(ESM4::advanceTrespassWarning(input, settings).mAction, Action::Escalate);
+    input.mWarningCount = 1;
+    EXPECT_EQ(ESM4::advanceTrespassWarning(input, settings).mAction, Action::Warn);
+    input.mTimer = 1; input.mFrameDuration = .25f;
+    EXPECT_EQ(ESM4::advanceTrespassWarning(input, settings).mTimer, 1.5f);
+    input.mFrameDuration = 0;
+    for (float limit : {0.f, std::numeric_limits<float>::denorm_min(), 1.f, 10.f, 30.f})
+    {
+        input.mTimer = std::nextafter(limit, std::numeric_limits<float>::infinity());
+        EXPECT_EQ(ESM4::advanceTrespassWarning(input, {limit}).mTimer, 0);
+        if (limit > 0)
+        {
+            input.mTimer = limit;
+            EXPECT_EQ(ESM4::advanceTrespassWarning(input, {limit}).mTimer, limit);
+            input.mTimer = std::nextafter(limit, 0.f);
+            EXPECT_EQ(ESM4::advanceTrespassWarning(input, {limit}).mTimer, input.mTimer);
+        }
+    }
+}
+
+TEST(ESM4CrimeRules, TrespassWarningRejectsInvalidStateAndArithmeticOverflow)
+{
+    ESM4::TrespassWarningInput input{true, false, 0, 1, .1f};
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto bad = input; bad.mTimer = invalid;
+        EXPECT_THROW(ESM4::advanceTrespassWarning(bad, {30}), std::invalid_argument);
+        bad = input; bad.mFrameDuration = invalid;
+        EXPECT_THROW(ESM4::advanceTrespassWarning(bad, {30}), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceTrespassWarning(input, {invalid}), std::invalid_argument);
+    }
+    input.mWarningCount = -1;
+    EXPECT_THROW(ESM4::advanceTrespassWarning(input, {30}), std::invalid_argument);
+    input.mWarningCount = 0; input.mFrameDuration = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::advanceTrespassWarning(input, {30}), std::invalid_argument);
+    input.mFrameDuration = std::numeric_limits<float>::max() / 2;
+    input.mTimer = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::advanceTrespassWarning(input, {30}), std::invalid_argument);
+}

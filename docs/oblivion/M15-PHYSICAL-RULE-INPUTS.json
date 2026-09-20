@@ -1526,6 +1526,19 @@
         "value": 35.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-146"
+    },
+    {
+      "name": "fAITrespassWarningTimer",
+      "value": 10.0,
+      "storage": "0xb36b30",
+      "constructor": "0x9e7c0f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:005682",
+        "type": "f",
+        "value": 30.0
+      },
+      "provenance": "Original static initializer and installed winning GMST; timer instructions independently executed in S2/oracle-emulator/trespass-warning.py. No live-setting probe claimed."
     }
   ]
 }

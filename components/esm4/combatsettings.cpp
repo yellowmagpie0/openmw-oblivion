@@ -391,6 +391,14 @@ namespace ESM4
         return result;
     }
 
+    TrespassWarningSettings buildTrespassWarningSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const TrespassWarningSettings result{inputs.number("fAITrespassWarningTimer", 10.f)};
+        validateTrespassWarningSettings(result);
+        return result;
+    }
+
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

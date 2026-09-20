@@ -44,6 +44,7 @@ namespace ESM4
     NativeDetectionSettings buildNativeDetectionSettings(std::span<const GameSetting* const> settings);
     CrimeFineSettings buildCrimeFineSettings(std::span<const GameSetting* const> settings);
     CrimeReportingSettings buildCrimeReportingSettings(std::span<const GameSetting* const> settings);
+    TrespassWarningSettings buildTrespassWarningSettings(std::span<const GameSetting* const> settings);
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings);
     PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings);
     SneakAttackSettings buildSneakAttackSettings(std::span<const GameSetting* const> settings);

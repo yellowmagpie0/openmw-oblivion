@@ -1679,3 +1679,54 @@ Evidence: `S2/oracle-emulator/attack-alarm.py`, `attack-alarm-table.json`,
 `crime-actor-base-query.txt` (the race query), and existing jail-sentence traces.
 Native attack/death callbacks, witnesses, reporting, Arena and jail gameplay
 remain integration and runtime acceptance gates.
+
+## Trespass warning decisions and timer
+
+Native package installation `00641E09` sets warning threshold 1, or 0 when
+cell helper `004CA690` reads the record-header Off Limits flag `00020000`.
+This is not the CELL DATA Public/HandChanged mask. Trespass-package constructor
+`0067D3A0` stores that threshold at `+50`, initializes warning count `+40` and
+timer `+3C` to zero, and sets incident id `+4C` to -1. Warning/count callbacks
+are separate from the update decision: `0062A2BB` adds one frame duration to
+the timer and increments count through `0067D330`; another dialogue path at
+`0062FFF6` adds zero to the count and adds a small timer increment. Do not
+invent warning completion events from an elapsed-time estimate.
+
+For an existing package with a resolved actor target, `0064D1D1` first leaves
+when the actor no longer trespasses. Threshold 0 escalates immediately.
+Otherwise, count **greater than 1** and a nonpositive timer escalates. At a
+nonpositive timer with remaining warnings, it requests the warning procedure.
+A positive timer advances by `R(timer + R(2 * frameDuration))`. It resets to
+zero only when the stored result is **strictly greater than**
+`fAITrespassWarningTimer`; equality keeps waiting. The update remains in its
+wait/continuation branch even when it resets the timer: warning/escalation
+happens on the following update, not in that same tick.
+
+The executable initializes this GMST to 10 (`009E7C0F`, storage `00B36B30`);
+installed Oblivion.esm `005682` overrides it to 30. The typed settings adapter
+preserves both. No live-setting read is claimed for this new row. Frame duration
+is the native `B33E9C` input; this alone does not establish wall-clock delay or
+scheduler cadence. `advanceTrespassWarning` implements the decision and timer,
+not package admission, dialogue playback, count callbacks, guard reporting or
+non-guard combat dispatch. Supported persistent inputs are nonnegative finite
+timers/durations/counts; arithmetic overflow diagnoses before storing invalid
+state. Leaving or immediate escalation does not perform timer arithmetic.
+
+Three policy tests first fail against the waiting stub. A fourth settings test
+covers the default, winning override, zero and malformed values. **1,920 original
+instruction cases** cover leave/off-limits/count/timer branches, signed zero,
+subnormal timers, limits 0/10/30 and adjacent floats. Only target trespass is a
+boundary stub; original branches and float instructions execute unchanged.
+The first harness reused translated stub code incorrectly; its failure is
+retained. The corrected harness then disproved an initial >= expiry expectation
+at timer 10/limit 10; implementation/tests now require strict >, and that failed
+expectation is also retained rather than hidden.
+
+Evidence: `S2/oracle-emulator/trespass-warning.py`,
+`trespass-warning-table.json`, `trespass-warning.log`,
+`trespass-warning-harness-failed.log`, `trespass-warning-boundary-failed.log`;
+`S2/sources-01/trespass-warning-update.txt`, `trespass-warning-prologue.txt`,
+`trespass-warning-count-policy.txt`, `trespass-package-install.txt`,
+`trespass-package-constructor.txt`, its continuation, `trespass-warning-count.txt`
+and `trespass-warning-speech.txt`. Normal entry/warning/leave/escalation,
+real speech timing and save/restart remain runtime gates.

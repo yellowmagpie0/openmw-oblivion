@@ -138,3 +138,22 @@ TEST(ESM4CombatSettings, HitConeAngleUsesNativeDefaultAndTypedOverride)
         EXPECT_THROW(ESM4::buildCombatHitConeAngle(settings), std::invalid_argument);
     }
 }
+
+TEST(ESM4CombatSettings, TrespassTimerUsesNativeDefaultAndTypedWinningOverride)
+{
+    EXPECT_EQ(ESM4::buildTrespassWarningSettings({}).mTimerLimit, 10);
+    ESM4::GameSetting setting;
+    setting.mEditorId = "fAITrespassWarningTimer";
+    setting.mData = 30.f; // Installed Oblivion.esm:005682.
+    const std::array<const ESM4::GameSetting*, 1> settings{&setting};
+    EXPECT_EQ(ESM4::buildTrespassWarningSettings(settings).mTimerLimit, 30);
+    setting.mData = 0.f;
+    EXPECT_EQ(ESM4::buildTrespassWarningSettings(settings).mTimerLimit, 0);
+    setting.mData = std::int32_t{30};
+    EXPECT_THROW(ESM4::buildTrespassWarningSettings(settings), std::invalid_argument);
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        setting.mData = invalid;
+        EXPECT_THROW(ESM4::buildTrespassWarningSettings(settings), std::invalid_argument);
+    }
+}

@@ -129,6 +129,31 @@ namespace ESM4
     // self-defense/hostility selection, witnesses and incident reporting.
     bool attackCrimeAlarmEligible(const AttackCrimeAlarmInput& input);
 
+    struct TrespassWarningSettings
+    {
+        float mTimerLimit;
+    };
+    enum class TrespassWarningAction { Leave, Warn, Wait, Escalate };
+    struct TrespassWarningInput
+    {
+        bool mTargetTrespassing;
+        bool mCellOffLimits; // CELL record-header bit 0x20000, not DATA flags.
+        std::int32_t mWarningCount;
+        float mTimer;
+        float mFrameDuration;
+    };
+    struct TrespassWarningResult
+    {
+        TrespassWarningAction mAction;
+        float mTimer;
+    };
+    // Update for an existing native trespass package with a resolved actor
+    // target. Admission, speech/count changes and guard/non-guard escalation
+    // dispatch are caller-owned. Expiry takes effect on the following update.
+    TrespassWarningResult advanceTrespassWarning(
+        const TrespassWarningInput& input, const TrespassWarningSettings& settings);
+    void validateTrespassWarningSettings(const TrespassWarningSettings& settings);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;
