@@ -39,6 +39,42 @@ namespace ESM4
         }
     }
 
+    void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings)
+    {
+        for (int value : {settings.mHeadChance, settings.mUpperBodyChance, settings.mLowerBodyChance,
+                 settings.mHandsChance, settings.mFeetChance})
+            if (value < 0 || value > 100)
+                throw std::invalid_argument("invalid native armor wear selection percentage");
+    }
+
+    std::optional<ArmorWearSlot> selectArmorWearSlot(unsigned draw,
+        const std::array<bool, 7>& available, const ArmorWearSelectionSettings& settings)
+    {
+        validateArmorWearSelectionSettings(settings);
+        if (draw >= 100)
+            throw std::invalid_argument("invalid native armor wear selection draw");
+        const auto has = [&](ArmorWearSlot slot) { return available[static_cast<unsigned>(slot)]; };
+        unsigned threshold = settings.mHeadChance;
+        if (draw < threshold)
+        {
+            if (has(ArmorWearSlot::Head))
+                return ArmorWearSlot::Head;
+            if (has(ArmorWearSlot::Hair))
+                return ArmorWearSlot::Hair;
+        }
+        for (const auto& [chance, slot] : {std::pair{settings.mUpperBodyChance, ArmorWearSlot::UpperBody},
+                 {settings.mLowerBodyChance, ArmorWearSlot::LowerBody}, {settings.mHandsChance, ArmorWearSlot::Hands}})
+        {
+            threshold += chance;
+            if (draw < threshold && has(slot))
+                return slot;
+        }
+        threshold += settings.mFeetChance;
+        if (draw < threshold)
+            return has(ArmorWearSlot::Feet) ? std::optional{ArmorWearSlot::Feet} : std::nullopt;
+        return has(ArmorWearSlot::Shield) ? std::optional{ArmorWearSlot::Shield} : std::nullopt;
+    }
+
     void validateArmorWearMasterySettings(const ArmorWearMasterySettings& settings)
     {
         for (float value : {settings.mLightNoviceMultiplier, settings.mHeavyNoviceMultiplier,

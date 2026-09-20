@@ -1265,3 +1265,22 @@ S3–S14 pending. Original-12 is paused in inventory, task-added files still
 pending cleanup. Next bounded task: armor wear selection and mastery matrix.
 
 Tested implementation/test/provenance diff SHA-256: `87690083785aadb5a9e6ffd5d8f04ec71bb47235bbf7633f1d2645c38be9d3fe`.
+
+### S2 armor wear slot selection
+
+Commit `01cc2731ef` contains mitigation/mastery/condition rules. Added native
+single-attempt armor wear selection with verified missing-slot fallthrough,
+head/hair preference and shield complement behavior. Five new cases failed
+against stubs; all **1,695 component tests** and **47 focused ASan/UBSan tests**
+pass with exact inventories/no skips (`S2/physical-rules-11`, same commands as
+physical-rules-10). Distribution coverage includes exhaustive draw boundaries
+and a fixed-seed 100,000-draw check with predeclared tolerance. All six original
+numeric captures opened. Catalog: **54** reviewed physical setting facts
+(including explicitly unused shield chance); live ledger: **58** observations.
+
+Equipment candidate resolution, up-to-seven RNG attempts, mutation and restore
+remain native integration tasks. S2 remains in progress, S3–S14 pending.
+Original-12 is paused in console; installed task files still pending cleanup.
+Next bounded task: creature damage and remaining mastery/reaction rules.
+
+Tested implementation/test/provenance diff SHA-256: `35920834e269d58900f933b451fb2a8f9c3aeecaa9927a91171140398685c493`.

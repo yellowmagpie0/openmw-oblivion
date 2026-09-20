@@ -255,6 +255,20 @@ namespace ESM4
             throw std::invalid_argument("invalid native maximum armor rating");
         return result;
     }
+    ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        ArmorWearSelectionSettings result{
+            inputs.number("iArmorDamageHelmChance", std::int32_t{10}),
+            inputs.number("iArmorDamageCuirassChance", std::int32_t{25}),
+            inputs.number("iArmorDamageGreavesChance", std::int32_t{15}),
+            inputs.number("iArmorDamageGauntletsChance", std::int32_t{10}),
+            inputs.number("iArmorDamageBootsChance", std::int32_t{10}),
+        };
+        validateArmorWearSelectionSettings(result);
+        return result;
+    }
+
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

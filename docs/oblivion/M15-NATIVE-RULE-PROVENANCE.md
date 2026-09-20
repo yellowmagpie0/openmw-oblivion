@@ -490,3 +490,33 @@ shows condition 99 after the first sword hit (before: 100). This is consistent
 with 6 wear leaving 994/1000, but integer UI precision does not prove exact wear
 and the wear prediction was not recorded before that hit. Its diagnostic
 record explicitly leaves acceptance false; it is not a new completed gate.
+
+### Armor wear slot selection
+
+Original `0x5e5a00` uses a random integer modulo 100 and at most seven attempts.
+Within one attempt it tries head (then hair), upper body, lower body, hands,
+feet using cumulative native chance thresholds. A missing candidate falls
+forward if the same draw is below the next threshold. **Missing feet do not
+fall through to shield**: that path retries. Shield is the complement interval
+at/above the sum of the five thresholds. Despite its name,
+`iArmorDamageShieldChance` is not read anywhere in this routine. A selected
+candidate ends selection immediately; cached missing lookups do not eliminate
+retry draws. `0x486790` queries biped slots 0–5; the last branch queries the
+process's equipped shield slot `0xf8`. Caller equipment eligibility remains
+separate from this pure availability/selection helper.
+
+The five threshold defaults and original live lookups are 10/25/15/10/10;
+shield's independently looked-up setting is 30 but deliberately is not an input
+to this routine. Tests exhaust all 100 draws, each missing-piece fallthrough,
+head/hair preference, no backward wrapping, absent gear, zero/100 settings,
+invalid draws/types/ranges, and a fixed-seed 100,000-draw distribution with
+predeclared 700-count tolerance. All five tests failed against stubs before
+implementation. The world must still implement up-to-seven RNG draws and
+candidate ownership/lifetime; this helper represents one attempt, not a world
+transaction. Evidence: `sources-01/armor-wear-selection.txt`, original-12
+GMST captures 53–58, and `physical-rules-11`.
+
+Additional actor mastery query inspection (`actor-mastery-query.txt`) shows
+`0x5f23b0` obtains the skill via `0x5f1910`, then calls the reviewed threshold
+rule `0x56a300`. Native actor integration must preserve that value source;
+it must not substitute luck-adjusted damage skill.

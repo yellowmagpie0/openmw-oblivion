@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <array>
+#include <optional>
 
 namespace ESM4
 {
@@ -109,6 +110,23 @@ namespace ESM4
     // Total rating already includes the actor's aggregation/mastery/cap policy.
     // The caller resolves armor bypass eligibility; this helper only applies it.
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass);
+
+    enum class ArmorWearSlot { Head, Hair, UpperBody, LowerBody, Hands, Feet, Shield };
+    struct ArmorWearSelectionSettings
+    {
+        std::int32_t mHeadChance;
+        std::int32_t mUpperBodyChance;
+        std::int32_t mLowerBodyChance;
+        std::int32_t mHandsChance;
+        std::int32_t mFeetChance;
+    };
+    // One original selection attempt, using a supplied [0,99] draw. Missing
+    // candidates fall forward through thresholds; feet do not fall to shield.
+    // The world retries at most seven draws, stopping on the first selection.
+    inline constexpr unsigned ArmorWearSelectionAttempts = 7;
+    std::optional<ArmorWearSlot> selectArmorWearSlot(unsigned draw,
+        const std::array<bool, 7>& available, const ArmorWearSelectionSettings& settings);
+    void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings);
 
     struct HandToHandInput
     {

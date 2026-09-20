@@ -530,6 +530,61 @@
       "type": "float32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-52"
+    },
+    {
+      "name": "iArmorDamageHelmChance",
+      "value": 10,
+      "storage": "0xb36ec8",
+      "constructor": "0x9e90a7",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-53"
+    },
+    {
+      "name": "iArmorDamageCuirassChance",
+      "value": 25,
+      "storage": "0xb36eb8",
+      "constructor": "0x9e9067",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-54"
+    },
+    {
+      "name": "iArmorDamageGreavesChance",
+      "value": 15,
+      "storage": "0xb36ec0",
+      "constructor": "0x9e9087",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-55"
+    },
+    {
+      "name": "iArmorDamageGauntletsChance",
+      "value": 10,
+      "storage": "0xb36ed0",
+      "constructor": "0x9e90c7",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-56"
+    },
+    {
+      "name": "iArmorDamageBootsChance",
+      "value": 10,
+      "storage": "0xb36ed8",
+      "constructor": "0x9e90e7",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-57"
+    },
+    {
+      "name": "iArmorDamageShieldChance",
+      "value": 30,
+      "storage": "0xb36ee0",
+      "constructor": "0x9e9107",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-58",
+      "consumer_note": "not read by reviewed armor-wear selection routine; shield uses remaining interval"
     }
   ]
 }

@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <cmath>
 #include <limits>
+#include <random>
 
 namespace
 {
@@ -617,4 +618,110 @@ TEST(ESM4PhysicalCombat, ArmorWearMasterySettingsUseTypedNativeValues)
     EXPECT_THROW(ESM4::buildArmorWearMasterySettings(values), std::invalid_argument);
     setting.mData = -.1f;
     EXPECT_THROW(ESM4::buildArmorWearMasterySettings(values), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearSelectionUsesOrderedThresholds)
+{
+    const ESM4::ArmorWearSelectionSettings settings{10, 25, 15, 10, 10};
+    const std::array<bool, 7> all{true, true, true, true, true, true, true};
+    using Slot = ESM4::ArmorWearSlot;
+    std::array<unsigned, 7> counts{};
+    for (unsigned draw = 0; draw < 100; ++draw)
+    {
+        const auto slot = ESM4::selectArmorWearSlot(draw, all, settings);
+        ASSERT_TRUE(slot);
+        ++counts[static_cast<unsigned>(*slot)];
+        EXPECT_EQ(*slot, draw < 10 ? Slot::Head : draw < 35 ? Slot::UpperBody
+            : draw < 50 ? Slot::LowerBody : draw < 60 ? Slot::Hands
+            : draw < 70 ? Slot::Feet : Slot::Shield);
+    }
+    EXPECT_EQ(counts, (std::array<unsigned, 7>{10, 0, 25, 15, 10, 10, 30}));
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, all, {0, 0, 0, 0, 0}), Slot::Shield);
+    EXPECT_EQ(ESM4::selectArmorWearSlot(99, all, {100, 100, 100, 100, 100}), Slot::Head);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearSelectionFallsThroughMissingPieces)
+{
+    const ESM4::ArmorWearSelectionSettings settings{10, 25, 15, 10, 10};
+    std::array<bool, 7> available{true, true, true, true, true, true, true};
+    using Slot = ESM4::ArmorWearSlot;
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, available, settings), Slot::Head);
+    available[0] = false;
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, available, settings), Slot::Hair);
+    available[1] = false;
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, available, settings), Slot::UpperBody);
+    available[2] = false;
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, available, settings), Slot::LowerBody);
+    available[3] = false;
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, available, settings), Slot::Hands);
+    available[4] = false;
+    EXPECT_EQ(ESM4::selectArmorWearSlot(0, available, settings), Slot::Feet);
+    available[5] = false;
+    EXPECT_FALSE(ESM4::selectArmorWearSlot(0, available, settings));
+    EXPECT_FALSE(ESM4::selectArmorWearSlot(69, available, settings));
+    EXPECT_EQ(ESM4::selectArmorWearSlot(70, available, settings), Slot::Shield);
+    available[6] = false;
+    for (unsigned draw = 0; draw < 100; ++draw)
+        EXPECT_FALSE(ESM4::selectArmorWearSlot(draw, available, settings));
+    available[0] = true;
+    EXPECT_FALSE(ESM4::selectArmorWearSlot(10, available, settings)); // Never wrap backward.
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearSelectionFixedSeedDistribution)
+{
+    // Independent uniform samples; predeclared 700-count tolerance for 100k
+    // draws (more than six standard deviations for the largest bucket).
+    std::mt19937 random(0x15a4u);
+    const ESM4::ArmorWearSelectionSettings settings{10, 25, 15, 10, 10};
+    const std::array<bool, 7> all{true, true, true, true, true, true, true};
+    std::array<unsigned, 7> counts{};
+    for (unsigned i = 0; i < 100000; ++i)
+    {
+        const auto slot = ESM4::selectArmorWearSlot(random() % 100, all, settings);
+        ASSERT_TRUE(slot);
+        ++counts[static_cast<unsigned>(*slot)];
+    }
+    const std::array<unsigned, 7> expected{10000, 0, 25000, 15000, 10000, 10000, 30000};
+    for (unsigned i = 0; i < counts.size(); ++i)
+        EXPECT_NEAR(counts[i], expected[i], i == 1 ? 0 : 700);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearSelectionRejectsInvalidDrawsAndSettings)
+{
+    const ESM4::ArmorWearSelectionSettings settings{10, 25, 15, 10, 10};
+    const std::array<bool, 7> none{};
+    EXPECT_THROW(ESM4::selectArmorWearSlot(100, none, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::selectArmorWearSlot(std::numeric_limits<unsigned>::max(), none, settings), std::invalid_argument);
+    for (std::int32_t ESM4::ArmorWearSelectionSettings::* member : {&ESM4::ArmorWearSelectionSettings::mHeadChance,
+             &ESM4::ArmorWearSelectionSettings::mUpperBodyChance, &ESM4::ArmorWearSelectionSettings::mLowerBodyChance,
+             &ESM4::ArmorWearSelectionSettings::mHandsChance, &ESM4::ArmorWearSelectionSettings::mFeetChance})
+        for (int bad : {-1, 101, std::numeric_limits<int>::max()})
+        {
+            auto invalid = settings;invalid.*member = bad;
+            EXPECT_THROW(ESM4::selectArmorWearSlot(0, none, invalid), std::invalid_argument);
+        }
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearSelectionSettingsUseNativeDefaultsAndTypes)
+{
+    const auto defaults = ESM4::buildArmorWearSelectionSettings({});
+    EXPECT_EQ(defaults.mHeadChance, 10);
+    EXPECT_EQ(defaults.mUpperBodyChance, 25);
+    EXPECT_EQ(defaults.mLowerBodyChance, 15);
+    EXPECT_EQ(defaults.mHandsChance, 10);
+    EXPECT_EQ(defaults.mFeetChance, 10);
+    ESM4::GameSetting setting{};
+    setting.mEditorId = "iArmorDamageHelmChance";setting.mData = std::int32_t{20};
+    const std::array<const ESM4::GameSetting*, 1> values{&setting};
+    EXPECT_EQ(ESM4::buildArmorWearSelectionSettings(values).mHeadChance, 20);
+    setting.mData = 20.f;
+    EXPECT_THROW(ESM4::buildArmorWearSelectionSettings(values), std::invalid_argument);
+    setting.mData = std::int32_t{-1};
+    EXPECT_THROW(ESM4::buildArmorWearSelectionSettings(values), std::invalid_argument);
+    // The original routine uses the remaining interval for shield; this
+    // similarly named setting is not read by the selection routine.
+    setting.mEditorId = "iArmorDamageShieldChance";setting.mData = std::int32_t{0};
+    const auto unchanged = ESM4::buildArmorWearSelectionSettings(values);
+    EXPECT_EQ(ESM4::selectArmorWearSlot(99, {true, true, true, true, true, true, true}, unchanged),
+        ESM4::ArmorWearSlot::Shield);
 }
