@@ -299,3 +299,50 @@ TEST(ESM4PhysicalCombat, ArmorSettingsAreTypedAndInvalidInputsFail)
     }
     EXPECT_THROW(ESM4::armorRating({65535, 100, 50, std::numeric_limits<float>::max()}, settings, installed), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, AttackFatigueUsesWeightAndPowerMultiplier)
+{
+    const ESM4::AttackFatigueSettings settings{7.f, .1f, 5.f};
+    // Original 0x547560: R(base + weight*mult), then R(cost*power).
+    for (const auto& pair : {std::pair{0.f, 7.f}, {1.f, 7.1f}, {20.f, 9.f}, {100.f, 17.f}, {10000.f, 1007.f}})
+    {
+        EXPECT_FLOAT_EQ(ESM4::attackFatigueCost(pair.first, false, settings), pair.second);
+        EXPECT_FLOAT_EQ(ESM4::attackFatigueCost(pair.first, true, settings), pair.second * 5.f);
+    }
+    EXPECT_EQ(ESM4::attackFatigueCost(std::nextafter(0.f, 1.f), false, settings), 7.f);
+    // A float store occurs before power scaling: halfway above 1 rounds to 1.
+    const ESM4::AttackFatigueSettings rounding{1.f, .5f, 2.f};
+    EXPECT_EQ(ESM4::attackFatigueCost(std::ldexp(1.f, -23), true, rounding), 2.f);
+    EXPECT_EQ(ESM4::attackFatigueCost(100.f, true, {0.f, 0.f, 0.f}), 0.f);
+}
+
+TEST(ESM4PhysicalCombat, AttackFatigueRejectsInvalidFactorsAndOverflow)
+{
+    const ESM4::AttackFatigueSettings settings{7.f, .1f, 5.f};
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::attackFatigueCost(invalid, false, settings), std::invalid_argument);
+        EXPECT_THROW(ESM4::attackFatigueCost(1.f, false, {invalid, .1f, 5.f}), std::invalid_argument);
+        EXPECT_THROW(ESM4::attackFatigueCost(1.f, false, {7.f, invalid, 5.f}), std::invalid_argument);
+        EXPECT_THROW(ESM4::attackFatigueCost(1.f, false, {7.f, .1f, invalid}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::attackFatigueCost(std::numeric_limits<float>::max(), true, {1.f, 1.f, 5.f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::attackFatigueCost(std::numeric_limits<float>::max(), false, {1.f, 5.f, 1.f}), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, AttackFatigueSettingsUseTypedNativeOverrides)
+{
+    const auto defaults = ESM4::buildAttackFatigueSettings({});
+    EXPECT_FLOAT_EQ(defaults.mBase, 8.f);
+    EXPECT_FLOAT_EQ(defaults.mWeightMultiplier, .1f);
+    EXPECT_FLOAT_EQ(defaults.mPowerMultiplier, 5.f);
+    ESM4::GameSetting base{};
+    base.mEditorId = "fFatigueAttackWeaponBase";
+    base.mData = 7.f;
+    const std::array<const ESM4::GameSetting*, 1> values{&base};
+    EXPECT_FLOAT_EQ(ESM4::buildAttackFatigueSettings(values).mBase, 7.f);
+    base.mData = std::int32_t{7};
+    EXPECT_THROW(ESM4::buildAttackFatigueSettings(values), std::invalid_argument);
+    base.mData = -1.f;
+    EXPECT_THROW(ESM4::buildAttackFatigueSettings(values), std::invalid_argument);
+}

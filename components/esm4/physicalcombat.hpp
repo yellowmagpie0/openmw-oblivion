@@ -44,6 +44,16 @@ namespace ESM4
         float mFatigueMultiplier;
     };
 
+    struct AttackFatigueSettings
+    {
+        float mBase;
+        float mWeightMultiplier;
+        float mPowerMultiplier;
+    };
+    // Caller excludes staff/bow actions and supplies zero weight for unarmed.
+    float attackFatigueCost(float weaponWeight, bool powerAttack, const AttackFatigueSettings& settings);
+    void validateAttackFatigueSettings(const AttackFatigueSettings& settings);
+
     struct HandToHandInput
     {
         std::int32_t mSkill;

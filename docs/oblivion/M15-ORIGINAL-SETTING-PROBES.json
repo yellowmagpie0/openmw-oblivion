@@ -400,6 +400,42 @@
       "initialization": "normal Continue from original-04 prison quicksave",
       "inspected": true,
       "passed": true
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-35",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fFatigueAttackWeaponBase",
+      "observed": 7,
+      "capture": "build/oblivion-compat/m15/S2/original-08/fatigue-settings.png",
+      "capture_sha256": "5065d5e37e23f5afbcce4b9339abc1bd79aafa78b3cf14ae3d9dce6b63f8027a",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-08/input-log.jsonl",
+      "initialization": "isolated reference plugin; room placement diagnosis only, no attack or health outcome injection"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-36",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fFatigueAttackWeaponMult",
+      "observed": 0.1,
+      "capture": "build/oblivion-compat/m15/S2/original-08/fatigue-settings.png",
+      "capture_sha256": "5065d5e37e23f5afbcce4b9339abc1bd79aafa78b3cf14ae3d9dce6b63f8027a",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-08/input-log.jsonl",
+      "initialization": "isolated reference plugin; room placement diagnosis only, no attack or health outcome injection"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-37",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fPowerAttackFatiguePenalty",
+      "observed": 5,
+      "capture": "build/oblivion-compat/m15/S2/original-08/fatigue-settings.png",
+      "capture_sha256": "5065d5e37e23f5afbcce4b9339abc1bd79aafa78b3cf14ae3d9dce6b63f8027a",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-08/input-log.jsonl",
+      "initialization": "isolated reference plugin; room placement diagnosis only, no attack or health outcome injection"
     }
   ],
   "display_precision": "Float console responses display two decimal places; these observations are not a binary float readback.",

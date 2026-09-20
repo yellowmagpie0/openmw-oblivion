@@ -159,6 +159,18 @@ namespace ESM4
         return result;
     }
 
+    AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        AttackFatigueSettings result{
+            inputs.number("fFatigueAttackWeaponBase", 8.f),
+            inputs.number("fFatigueAttackWeaponMult", .1f),
+            inputs.number("fPowerAttackFatiguePenalty", 5.f),
+        };
+        validateAttackFatigueSettings(result);
+        return result;
+    }
+
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

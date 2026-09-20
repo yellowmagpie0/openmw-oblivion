@@ -328,6 +328,45 @@
         "value": 85.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-26"
+    },
+    {
+      "name": "fFatigueAttackWeaponBase",
+      "value": 8.0,
+      "storage": "0xb36fd8",
+      "constructor": "0x9e96cf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02751b",
+        "type": "f",
+        "value": 7.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-35"
+    },
+    {
+      "name": "fFatigueAttackWeaponMult",
+      "value": 0.10000000149011612,
+      "storage": "0xb36fe0",
+      "constructor": "0x9e96ff",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02751c",
+        "type": "f",
+        "value": 0.10000000149011612
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-36"
+    },
+    {
+      "name": "fPowerAttackFatiguePenalty",
+      "value": 5.0,
+      "storage": "0xb36fe8",
+      "constructor": "0x9e972f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02a0cb",
+        "type": "f",
+        "value": 5.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-37"
     }
   ]
 }

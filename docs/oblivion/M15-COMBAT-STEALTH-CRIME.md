@@ -1071,3 +1071,26 @@ uses the installed executable and isolated prefix, with only the generated
 plugin temporarily added to Data. The tracked launch provenance requires its
 hash-checked cleanup. Structural write/reinspection success is not yet runtime
 acceptance, and no damage measurement has passed.
+
+### S2 melee attack fatigue cost
+
+Commit `ed8b08da7c` contains the first reference-fixture writer. The pure melee
+fatigue helper and typed native settings builder now follow the independently
+inspected original weight/power arithmetic. Three new tests first failed
+against stubs. All 1,674 component cases pass with exact inventory; all 26
+physical/settings/style cases pass under ASan/UBSan (`S2/physical-rules-04`).
+Live read-only observations 35–37 confirm all three inputs, including installed
+base cost 7 overriding compiled 8. Controller debit timing is still pending.
+
+The original startup failures in `original-06/07` coincided with the normal
+Linux Steam client no longer running; they do not establish an executable-copy
+restriction. Restarting Steam allowed `original-08` to reach gameplay. The
+first reference room appeared black and the player fell below its floor.
+Diagnosis found a one-unit fog clip distance in the fixture's XCLL payload;
+correcting and retesting the fixture is the next bounded task. The opponent
+resolved with its authored 500 health. No hit or damage measurement has passed,
+and the fixture's runtime gate remains open. The temporary installed plugin
+still requires hash-checked cleanup after the reference run. S2 is in progress;
+S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `83b0d27adc6cf4c66f6eb40b9ce83df820fb095c765220fd957cca40f55fcf77`.

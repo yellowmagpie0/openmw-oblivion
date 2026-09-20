@@ -48,6 +48,21 @@ namespace ESM4
             nonnegative(value);
     }
 
+    void validateAttackFatigueSettings(const AttackFatigueSettings& settings)
+    {
+        nonnegative(settings.mBase);
+        nonnegative(settings.mWeightMultiplier);
+        nonnegative(settings.mPowerMultiplier);
+    }
+
+    float attackFatigueCost(float weaponWeight, bool powerAttack, const AttackFatigueSettings& settings)
+    {
+        validateAttackFatigueSettings(settings);
+        nonnegative(weaponWeight);
+        const float cost = rounded(settings.mBase + double(weaponWeight) * settings.mWeightMultiplier);
+        return powerAttack ? rounded(double(cost) * settings.mPowerMultiplier) : cost;
+    }
+
     float effectiveCombatSkill(std::int32_t skill, std::int32_t luck, const PhysicalCombatSettings& settings)
     {
         validatePhysicalCombatSettings(settings);

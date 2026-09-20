@@ -284,3 +284,29 @@ padding change was discarded before commit, and the regression fixture uses
 100,000 health. Retained investigation and the rejected patch/test are in
 `S2/npc-inputs-01`; this was a corrected investigation, not a preexisting
 32-bit-health defect.
+
+## Melee attack fatigue arithmetic
+
+Original `0x547560` computes `cost = R(base + weaponWeight * weightMult)`,
+then, for a power attack, `R(cost * powerMultiplier)`. Caller `0x5e4010`
+selects equipped weapon weight, uses zero for unarmed, and excludes weapon
+categories 4 (staff) and 5 (bow) from this debit path. It negates the cost for
+its fatigue mutation. Controller timing and bow draw fatigue remain separate
+work. The pure helper takes explicit nonnegative finite weight/settings and
+rejects arithmetic overflow; it does not mutate an actor or infer equipment.
+
+| Input | Compiled | Installed and live original lookup |
+| --- | ---: | ---: |
+| fFatigueAttackWeaponBase | 8 | 7 |
+| fFatigueAttackWeaponMult | 0.1 | 0.1 |
+| fPowerAttackFatiguePenalty | 5 | 5 |
+
+Disassembly is retained as `S2/sources-01/attack-fatigue-{rule,caller}.txt`.
+`original-08/fatigue-settings.png` was opened and inspected; observations
+35–37 extend the setting ledger. This run uses the synthetic reference plugin
+and includes placement diagnostics, so its initialization differs from the
+first prison-only lookups. No damage measurement is claimed. Independent
+arithmetic expectations include weight 0/1/20/100/10000 -> cost
+7/7.1/9/17/1007, the fivefold power branch, and a halfway rounding case that
+requires the intermediate float store. All three new tests failed against
+unimplemented stubs before the implementation.
