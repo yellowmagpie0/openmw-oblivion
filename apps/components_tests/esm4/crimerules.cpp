@@ -176,3 +176,43 @@ TEST(ESM4CrimeRules, JailPenaltyChecksTruncatedModifiedSkillBeforeNativeByteMuta
              -std::numeric_limits<float>::max()})
         EXPECT_THROW(ESM4::jailSkillBaseAfterPenalty(5, invalid), std::invalid_argument);
 }
+
+
+TEST(ESM4CrimeRules, AlarmResponsibilityUsesStrictDispositionComparisonWithoutRandomDraw)
+{
+    const ESM4::CrimeReportingSettings installed{2.f};
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(0, 0, installed));
+    EXPECT_TRUE(ESM4::responsibilityAllowsAlarm(-1, 0, installed));
+    EXPECT_TRUE(ESM4::responsibilityAllowsAlarm(79, 40, installed));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(80, 40, installed));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(81, 40, installed));
+    EXPECT_TRUE(ESM4::responsibilityAllowsAlarm(100, 100, installed));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(100, 50, installed));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(0, -1, installed));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(1, 1, {1.f}));
+    EXPECT_TRUE(ESM4::responsibilityAllowsAlarm(1, 1, {std::nextafter(1.f, 2.f)}));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(1, 1, {std::nextafter(1.f, 0.f)}));
+    // Original compares the extended product directly; no intermediate float store.
+    EXPECT_TRUE(ESM4::responsibilityAllowsAlarm(170, 100, {1.7f}));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(171, 100, {1.7f}));
+    EXPECT_TRUE(ESM4::responsibilityAllowsAlarm(INT32_MAX, INT32_MAX, {std::numeric_limits<float>::max()}));
+    EXPECT_FALSE(ESM4::responsibilityAllowsAlarm(0, 100, {0.f}));
+    for (float invalid : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::responsibilityAllowsAlarm(50, 100, {invalid}), std::invalid_argument);
+}
+
+TEST(ESM4CrimeRules, AlarmResponsibilityResolvesTypedNativeSetting)
+{
+    EXPECT_EQ(ESM4::buildCrimeReportingSettings({}).mResponsibilityMultiplier, 1.7f);
+    ESM4::GameSetting setting{};
+    setting.mEditorId = "fCrimeAlarmRespMult";
+    const std::array<const ESM4::GameSetting*,1> input{&setting};
+    setting.mData = 2.f;
+    EXPECT_EQ(ESM4::buildCrimeReportingSettings(input).mResponsibilityMultiplier, 2.f);
+    setting.mData = 0.f;
+    EXPECT_EQ(ESM4::buildCrimeReportingSettings(input).mResponsibilityMultiplier, 0.f);
+    setting.mData = std::int32_t{2};
+    EXPECT_THROW(ESM4::buildCrimeReportingSettings(input), std::invalid_argument);
+    setting.mData = -1.f;
+    EXPECT_THROW(ESM4::buildCrimeReportingSettings(input), std::invalid_argument);
+}

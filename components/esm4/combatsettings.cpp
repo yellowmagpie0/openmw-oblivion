@@ -366,6 +366,14 @@ namespace ESM4
         return result;
     }
 
+    CrimeReportingSettings buildCrimeReportingSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const CrimeReportingSettings result{inputs.number("fCrimeAlarmRespMult", 1.7f)};
+        validateCrimeReportingSettings(result);
+        return result;
+    }
+
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

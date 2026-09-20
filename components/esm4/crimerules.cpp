@@ -44,6 +44,19 @@ namespace ESM4
                 throw std::invalid_argument("negative native crime fine setting");
     }
 
+    void validateCrimeReportingSettings(const CrimeReportingSettings& settings)
+    {
+        nonnegative(settings.mResponsibilityMultiplier);
+    }
+
+    bool responsibilityAllowsAlarm(std::int32_t disposition, std::int32_t responsibility,
+        const CrimeReportingSettings& settings)
+    {
+        validateCrimeReportingSettings(settings);
+        // No float store or random draw occurs before the original comparison.
+        return double(responsibility) * settings.mResponsibilityMultiplier > disposition;
+    }
+
     void validateJailSettings(const JailSettings& settings)
     {
         if (settings.mGoldPerDay <= 0)

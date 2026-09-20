@@ -18,6 +18,14 @@ namespace ESM4
         std::int32_t mHorseTheft;
         std::int32_t mJailBreak;
     };
+    struct CrimeReportingSettings
+    {
+        float mResponsibilityMultiplier;
+    };
+    // A willingness check only; caller owns witness eligibility and reporting.
+    bool responsibilityAllowsAlarm(std::int32_t disposition, std::int32_t responsibility,
+        const CrimeReportingSettings& settings);
+    void validateCrimeReportingSettings(const CrimeReportingSettings& settings);
     struct JailSettings
     {
         std::int32_t mGoldPerDay;

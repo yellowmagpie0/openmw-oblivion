@@ -1169,3 +1169,33 @@ threshold and byte-wrap outcomes. This is not buffed-actor gameplay acceptance.
 Artifacts: `S2/oracle-emulator/jail-*`, source traces `random-integer-rule.txt`,
 `jail-base-value-getter.txt`, `npc-base-value-setter.txt` and
 `npc-skill-setter-vtables.json`. Raw executable data stays outside Git.
+
+## Responsibility and disposition alarm check
+
+`responsibilityAllowsAlarm` is the narrow `00546700` predicate:
+`double(responsibility) * fCrimeAlarmRespMult > disposition`. Equality is
+false; there is **no RNG call and no float store** before comparison. The
+compiled multiplier is 1.7f; installed is 2.0 (already captured in Original-15
+GMST-141). The typed factory validates finite, nonnegative factors; integer
+inputs remain signed and unclamped. Other caller eligibility can still prevent
+an alarm. This helper alone never creates a witness, report or bounty.
+
+The first argument is now identified rather than guessed. Crime caller
+`0060FF15–0060FF2A` queries the candidate witness's actor virtual `+224` toward
+the offender, then supplies that result and the witness to `00605E20`.
+`00605E20` queries integer Responsibility (actor value 36) on its actor argument
+and invokes the predicate. Actor vtable `00A73A0C` slot `+224` is `005EA800`,
+the disposition query also identified by pinned xOBSE's Actor virtual slot 89.
+The AI detection path `0064127E–006412B4` similarly stores this disposition
+query, subsequently supplied to the same predicate at `006417FC`. Actor
+identity selection in that larger AI path is not new witness policy here.
+
+Fifteen supplied-input original-instruction oracle cases execute `00546700`
+under the original 53-bit control setting. They independently confirm strict
+thresholds, neighboring float multipliers, signed inputs and the important
+compiled-default case: responsibility 100 against disposition 170 is **true**
+for 1.7f's actual stored binary value. Prematurely storing the product as float
+would incorrectly make it false. No stochastic test is invented for this
+nonrandom check. Source traces and call-site list are retained under
+`S2/sources-01/crime-*`, with `actor-disposition-rule.txt`; supplementary
+oracle artifacts are `S2/oracle-emulator/alarm-responsibility-*`.

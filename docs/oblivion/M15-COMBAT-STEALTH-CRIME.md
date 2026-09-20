@@ -1710,3 +1710,30 @@ is claimed. RNG/state persistence and skill mutation notifications remain
 controller work. S2 in progress; S3–S14 pending.
 
 Tested implementation/test/provenance diff SHA-256: `0a04d9073d0a9a89c9d3fbcf87cb67188bffd68460faaf5a25b24e181d1cba9a`.
+
+
+### S2 responsibility/disposition alarm arithmetic
+
+Commit `b20539db9b` contains jail selection and penalty arithmetic. Traced
+the previously unidentified alarm predicate argument to disposition toward
+the offender. Added the strict Responsibility × typed multiplier comparison,
+without a random draw or premature float rounding. Witness eligibility and
+report/bounty commitment remain separate, unimplemented controller work.
+
+The behavior test fails against a stub; the typed-settings test already passes.
+All **1,756 component tests** and **112 focused ASan/UBSan tests** pass with
+exact inventories/no skips (`S2/alarm-rule-01`). Fifteen supplied-input
+original-instruction cases independently confirm signed inputs and thresholds.
+Installed/compiled multiplier provenance was already captured as GMST-141.
+
+Original-16's first normal jail course has now observed release, bounty
+40→0 and exactly one base skill change: Heavy Armor 15→14; all other 20 skills
+are unchanged. Clock passage 24.0003 hours exceeds its predeclared ±0.0002
+hour budget, so that timing assertion **fails and is retained**. A fresh
+quicksave trial has been predeclared with a UI-transition budget before its
+actions. The actually activated Chorrol jail bed is `067c47`, distinct from
+the earlier unverified `02b05a` candidate; inventory correction follows the
+probe. Neither original observations nor pure tests close native gameplay.
+S2 in progress; S3–S14 pending.
+
+Tested implementation/test/provenance diff SHA-256: `abdebe58e857a8c9db41eae5402d7d230f7136e4e422b94683d5ee7cad0ab2e8`.
