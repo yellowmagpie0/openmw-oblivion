@@ -784,3 +784,50 @@ TEST(ESM4CrimeRules, AlarmRadiusPreservesIntegerPrecisionAndRejectsMalformedInpu
         EXPECT_THROW(ESM4::crimeAlarmReachesLocation(location, location, 0, doors, {1}), std::invalid_argument);
     }
 }
+
+TEST(ESM4CrimeRules, AlarmResponseSkipsExistingAlarmCombatAndSleepingButNotSleepTransitions)
+{
+    ESM4::CrimeAlarmRecipientInput input;
+    input.mFightScore = 1;
+    EXPECT_TRUE(ESM4::crimeAlarmRecipientResponds(input));
+    for (unsigned state = 0; state <= 255; ++state)
+    {
+        input.mSitSleepState = static_cast<std::uint8_t>(state);
+        EXPECT_EQ(ESM4::crimeAlarmRecipientResponds(input), state != 9);
+    }
+    input.mSitSleepState = 0;
+    input.mActor = false;
+    EXPECT_FALSE(ESM4::crimeAlarmRecipientResponds(input));
+    input.mActor = true;
+    input.mHasAlarmPackage = true;
+    EXPECT_FALSE(ESM4::crimeAlarmRecipientResponds(input));
+    input.mHasAlarmPackage = false;
+    input.mInCombat = true;
+    EXPECT_FALSE(ESM4::crimeAlarmRecipientResponds(input));
+}
+
+TEST(ESM4CrimeRules, AlarmResponseDistinguishesGuardsFromOtherRecipients)
+{
+    ESM4::CrimeAlarmRecipientInput input;
+    for (bool guard : {false, true})
+        for (bool suppressed : {false, true})
+            for (bool evil : {false, true})
+                for (std::int32_t score : {std::numeric_limits<std::int32_t>::min(), -1, 0, 1, 100,
+                         std::numeric_limits<std::int32_t>::max()})
+                {
+                    input.mGuard = guard;
+                    input.mIncidentSuppressesGuards = suppressed;
+                    input.mEmitterEvil = evil;
+                    input.mFightScore = score;
+                    EXPECT_EQ(ESM4::crimeAlarmRecipientResponds(input), guard ? !suppressed && !evil : score > 0);
+                }
+    input.mGuard = true;
+    input.mIncidentSuppressesGuards = false;
+    input.mEmitterEvil = false;
+    input.mFightScore = -1;
+    input.mHasAlarmPackage = true;
+    EXPECT_FALSE(ESM4::crimeAlarmRecipientResponds(input));
+    input.mHasAlarmPackage = false;
+    input.mSitSleepState = 9;
+    EXPECT_FALSE(ESM4::crimeAlarmRecipientResponds(input));
+}

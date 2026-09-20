@@ -1856,3 +1856,40 @@ The corpus includes 5,400 compiled/installed boundary combinations, 1,024
 fixed-seed generated inputs/settings, and two explicit float-store boundaries.
 C++ results are compared directly with the original-instruction expected
 values. This evidence does not establish normal-input AI or alarm acceptance.
+
+## Alarm recipient delivery gate
+
+After collection/spatial filtering, `0062F970` skips non-actors, actors whose
+current process package is type 0x0f, sleeping actors (native sit/sleep state
+**9**, not entering/leaving sleep), and actors for which `IsInCombat(true)` is
+true. Guards also skip an incident whose byte +2c suppresses further guard
+response. Remaining guards respond only when the **emitting actor's** base is
+not evil. Non-guards instead require a strictly positive native fight score;
+they do not use either guard-only exemption.
+
+`crimeAlarmRecipientResponds` expresses that gate over resolved inputs. It does
+not dispatch packages or report bounty. The emitter is the first parameter of
+`0062F810`, passed from `0060F76F`; the offender and incident are the next two
+parameters. The friend disposition used in the non-guard score comes from the
+incident's actor victim (+8), while the target disposition/distance come from
+the offender (+0c). The call enables the friend term, disables responsibility
+gating, and supplies Responsibility 100. The emitter must not be silently
+substituted with the victim when checking evil factions.
+
+`005E6BA0` checks process +8 package byte +20 against 0x0f. `005E0F30` calls
+process virtual +36c, which resolves to `0064B090` on HighProcess and reads the
+sit/sleep byte +11d. The explicit comparison is 9. Older local evidence filenames
+`crime-recipient-flee-query.txt` and `crime-recipient-creature-query.txt` are
+misleading preliminary labels; neither query tests those properties.
+
+Two tests first fail against the false stub, then cover all byte sleep states,
+guard/non-guard combinations, signed score extremes and exclusions. **2,816
+original instruction cases** execute the delivery branches and real package/
+sleep queries; class guard, evil-base, combat, disposition/AV/distance and
+resolved fight score are boundary stubs. Evidence:
+`S2/oracle-emulator/alarm-response.py`, `alarm-response-table.json`,
+`alarm-response.log`; `S2/sources-01/crime-alarm-recipient-delivery.txt`,
+`crime-alarm-recipient-caller.txt`, `crime-alarm-emitter-dispatch.txt`,
+`crime-recipient-sleep-state.txt` and the two query files above. The original
+branches after `0062FA4B` choose process delivery versus immediate reporting;
+those effects and their idempotence remain integration work.

@@ -2142,3 +2142,18 @@ selection, alarm response and combat dispatch remain open. S2 remains in
 progress; S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `1e19f6fde1db807b0221c404cbbc5dc3c02a009ea79d70f22f05d1b5f9bdb626`.
+
+### S2 alarm recipient response eligibility
+
+Commit `253459f566` contains the native fight score. Added delivery eligibility
+for guards and other recipients, including sleeping state 9, existing alarm
+packages, active combat, incident guard suppression and emitter evil policy.
+
+All **1,807 component tests** and **163 focused ASan/UBSan tests** pass with
+exact inventories/no skips (`S2/alarm-response-01`). Two policy tests first
+fail against the stub; **2,816 original instruction cases** independently
+verify delivery branches and real package/sleep queries. Process dispatch,
+reporting and bounty commitment remain open. S2 remains in progress;
+S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `42fe15f52eaa18a652871da395391580ac164b9051070c5b10b30b3fa0c6eaf7`.

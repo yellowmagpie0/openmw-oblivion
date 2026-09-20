@@ -10,6 +10,15 @@
 
 namespace ESM4
 {
+    bool crimeAlarmRecipientResponds(const CrimeAlarmRecipientInput& input)
+    {
+        if (!input.mActor || input.mHasAlarmPackage || input.mSitSleepState == 9 || input.mInCombat)
+            return false;
+        if (input.mGuard)
+            return !input.mIncidentSuppressesGuards && !input.mEmitterEvil;
+        return input.mFightScore > 0;
+    }
+
     void validateCrimeAlarmSettings(const CrimeAlarmSettings& settings)
     {
         if (settings.mRecipientDistance < 0)

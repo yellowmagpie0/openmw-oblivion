@@ -192,6 +192,21 @@ namespace ESM4
         float distanceToOffender, std::span<const CrimeAlarmDoorDestination> doors, const CrimeAlarmSettings& settings);
     void validateCrimeAlarmSettings(const CrimeAlarmSettings& settings);
 
+    struct CrimeAlarmRecipientInput
+    {
+        bool mActor = true;
+        bool mHasAlarmPackage = false; // Current process package type 0x0f.
+        std::uint8_t mSitSleepState = 0; // Native state 9 is sleeping; transitions differ.
+        bool mInCombat = false; // Native IsInCombat(true) query.
+        bool mGuard = false;
+        bool mIncidentSuppressesGuards = false; // Incident +2c, separate from reported +11.
+        bool mEmitterEvil = false; // Alarm emitter base, not necessarily the victim.
+        std::int32_t mFightScore = 0; // Non-guards only; native fightScore with friend enabled.
+    };
+    // Delivery gate after collection/spatial eligibility, before process dispatch
+    // or immediate reporting. The emitter is the actor propagating the alarm.
+    bool crimeAlarmRecipientResponds(const CrimeAlarmRecipientInput& input);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;
