@@ -1202,3 +1202,26 @@ health/distance. The failed target batch was removed with a hash check; the
 plugin and player batch still require cleanup. S2 remains in progress.
 
 Tested test/provenance/probe-ledger diff SHA-256: `deeb0e5609c9f6591a5541ab20b6484c22c889cf9a35ea28f92f8a1356556b81`.
+
+### S2 original first sword strike
+
+Commit `f32caad6b4` contains the power-hit observation and fatigue ordering
+contract. The next first-hit probe used normal sword pickup/equip and a fresh
+opponent after F9 reload. Original health 500.00 -> 483.38 matches the
+predeclared 16.625 damage prediction. All eight referenced captures were
+opened; inventory damage 17 is presentation rounding. The independent golden
+already agrees with the pure helper, so no synthetic red-test claim is made.
+All **1,681 component tests** and **33 focused ASan/UBSan tests** pass with
+exact inventories and no skips (`S2/physical-rules-08`). Commands: CMake
+`components-tests` builds in `build` and `build/m15-sanitize`; full normal
+suite and sanitizer filter `ESM4PhysicalCombat.*:ESM4CombatSettings.*:ESM4CombatStylePolicy.*`;
+`check-physical-inventory.py` verifies both XML inventories.
+
+The reference fixture now has observed original rendering, grounding, normal
+pickup/equip and first-strike interactions. This is bounded runtime evidence,
+not full native combat or whole-process acceptance. Original-12 remains
+paused for read-only rule setting observations; task-added plugin and player
+batch still require hash-checked cleanup. S2 remains in progress, S3–S14
+pending. Next bounded task: independently trace durability/mitigation rules.
+
+Tested test/provenance/probe-ledger diff SHA-256: `651d369177c77047db9da126e7aa12194a6e5a4bd3d3c309ca982636d84b3951`.

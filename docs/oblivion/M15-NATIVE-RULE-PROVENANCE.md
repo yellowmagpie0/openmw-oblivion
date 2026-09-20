@@ -402,3 +402,19 @@ shows that a prematurely applied 35-point debit would yield a distinguishable
 The original wide predictions are retained unchanged; they preceded this
 ordering review. These observations replace the early working assumption that
 an attack necessarily depleted fatigue before contact.
+
+### Original first ordinary sword strike
+
+`M15-S2-ORACLE-WEAPON-01` independently checks a first ordinary sword strike
+in original-12 after an unchanged prison quicksave reload. Normal pickup and
+inventory equip show damage 17 and condition 100; the player has Blade 10,
+Strength 40, Luck 50 and fatigue 140. The authored weapon has base damage 100,
+health 1000, weight zero and no enchantment. The fresh naked opponent has
+health 500 and no armor/spells. Before attacking, the recorded prediction was
+`100*.5*1*(.2+.1*1.5)*(.75+.4*.5) = 16.625`. One ordinary mouse attack produces
+console health **483.38**, consistent with 483.375 rounded for display. The
+component characterization checks this independently observed result and
+rejects premature fatigue debit. Captures show equip, windup and recovery,
+not an exact impact frame. Durability, block and the remaining weapon matrix
+are not established by this bounded observation. See the damage probe ledger
+and `S2/original-12/sword-observation.json` for hashes and frozen inputs.

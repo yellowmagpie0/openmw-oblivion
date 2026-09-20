@@ -455,3 +455,15 @@ TEST(ESM4PhysicalCombat, OriginalFirstPowerPunchUsesPreDebitFatigue)
     const auto wrongOrder = ESM4::handToHandDamage({10, 50, 40, .75f}, hand, installed);
     EXPECT_GT(500.f - wrongOrder.mHealth * multiplier, 496.57f);
 }
+
+TEST(ESM4PhysicalCombat, OriginalFirstSwordHealthObservation)
+{
+    // M15-S2-ORACLE-WEAPON-01: normal inventory pickup/equip, first ordinary
+    // swing, naked victim, neutral difficulty. Original health 500 -> 483.38.
+    // Independently predicted 100*.5*1*(.2+.1*1.5)*(.75+.4*.5) = 16.625.
+    ESM4::WeaponDamageInput input{10, 50, 40, 100, 1.f, 1.f};
+    EXPECT_NEAR(ESM4::weaponDamage(input, installed), 16.625f, .00001f);
+    EXPECT_NEAR(500.f - ESM4::weaponDamage(input, installed), 483.38f, .0051f);
+    input.mFatigueRatio = .95f; // Incorrectly debit seven fatigue before contact.
+    EXPECT_GT(500.f - ESM4::weaponDamage(input, installed), 483.78f);
+}

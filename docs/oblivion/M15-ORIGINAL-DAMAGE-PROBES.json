@@ -160,6 +160,67 @@
       "evidence_report": "build/oblivion-compat/m15/S2/original-12/power-observation.json",
       "evidence_report_sha256": "52c5c0917b181d38397f0805716455f451c0442e3c5f3d76a13d689d170d33f9",
       "run": "original-12-power"
+    },
+    {
+      "case_id": "M15-S2-ORACLE-WEAPON-01",
+      "scope": "fresh first ordinary sword hit, bounded displayed health check",
+      "observed_before": 500.0,
+      "observed_after": 483.38,
+      "display_delta": 16.62,
+      "prediction": "build/oblivion-compat/m15/S2/original-12/sword-prediction.json",
+      "prediction_sha256": "99e1f749e817ca087d9369be3cc7a18fa17b215e9073949e514cb2d08ffe389d",
+      "bounded_health_check_passed": true,
+      "precise_contact_frame_captured": false,
+      "full_weapon_rule_matrix_passed": false,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/sword-input-log.jsonl",
+      "input_log_sha256": "aaf3ecfdb527e614b3ac416ad26dd1da3d2babddcf41a250ef9935f57c9a4166",
+      "plugin_sha256": "e510e15cd5cf7cda97af21e4180621f40b26574cb34523df84cba67de703ee76",
+      "setup": "F9 reload unchanged prison quicksave, COC reference room, player placement/facing, normal sword pickup/equip; no health/stat/target mutations",
+      "captures": {
+        "build/oblivion-compat/m15/S2/original-12/weapon-inventory2.png": {
+          "sha256": "fcd4e0894c1163b7eeb7a71eecc1c32b0d9ff53c358a136bbec2623df543c606",
+          "inspected": true,
+          "observation": "Sword in inventory, damage 17 and condition 100"
+        },
+        "build/oblivion-compat/m15/S2/original-12/weapon-equipped.png": {
+          "sha256": "1dcf6c6f89b29b8e2207c998d338d460d858cd507d72e20cab86983e07bcfc6b",
+          "inspected": true,
+          "observation": "Normal menu equip; sword held in preview"
+        },
+        "build/oblivion-compat/m15/S2/original-12/sword-player-before.png": {
+          "sha256": "cf3cdc5279acde3b085d7d3cd3ea10dccf441e57aa030e85d917a6076a3b5199",
+          "inspected": true,
+          "observation": "Blade 10, Strength 40, Luck 50, fatigue 140"
+        },
+        "build/oblivion-compat/m15/S2/original-12/sword-target-before.png": {
+          "sha256": "0a6a6969d18ef94f032b6b91a1b4f50eda1c2c365ed2a5fd55b31ab14e0f3dce",
+          "inspected": true,
+          "observation": "Exact target health 500, distance 110"
+        },
+        "build/oblivion-compat/m15/S2/original-12/sword-ready.png": {
+          "sha256": "120087848fd9990b5b2dc734d90b439010854788e6a378c9162bb53191388c29",
+          "inspected": true,
+          "observation": "Clear first-person sword and neutral opponent"
+        },
+        "build/oblivion-compat/m15/S2/original-12/sword-swing.png": {
+          "sha256": "fbc345533cf360ca18136ea6e38ae846605c8b3d894c783dc21c99d1fa78ae04",
+          "inspected": true,
+          "observation": "Swing windup; exact contact frame not sampled"
+        },
+        "build/oblivion-compat/m15/S2/original-12/sword-recovery.png": {
+          "sha256": "143050242a9f066e1c53aceb402c1144e870a5c5976a9d8c2b1866b4a8243ad6",
+          "inspected": true,
+          "observation": "Sword ready again, target health arc visible"
+        },
+        "build/oblivion-compat/m15/S2/original-12/sword-health-after.png": {
+          "sha256": "80afee8a7956393da0d97a395658886538cfb0cfb5561a2f12e377b4a95b06b6",
+          "inspected": true,
+          "observation": "Exact target health 483.38"
+        }
+      },
+      "evidence_report": "build/oblivion-compat/m15/S2/original-12/sword-observation.json",
+      "evidence_report_sha256": "d0e806bff12b8d06291ffece957f5675ca03a7abb9a5a5834455510027c4131e",
+      "run": "original-12-sword"
     }
   ],
   "runs": {
@@ -180,6 +241,16 @@
       "input_log_sha256": "a0c628ebefc52d59784c67881549c83e530d232acc726cf3380268dcc323e021",
       "setup": "normal Continue from prison save, COC reference room, player placement and facing only; no target/health/stat mutation",
       "exercise": "one held mouse attack, read-only queries; frozen input-log prefix retained",
+      "process_wrapper_exit": null,
+      "whole_process_gate_passed": false
+    },
+    "original-12-sword": {
+      "evidence_root": "build/oblivion-compat/m15/S2/original-12",
+      "plugin_sha256": "e510e15cd5cf7cda97af21e4180621f40b26574cb34523df84cba67de703ee76",
+      "input_log": "build/oblivion-compat/m15/S2/original-12/sword-input-log.jsonl",
+      "input_log_sha256": "aaf3ecfdb527e614b3ac416ad26dd1da3d2babddcf41a250ef9935f57c9a4166",
+      "setup": "F9 reload unchanged prison quicksave, COC reference room, player placement/facing, normal sword pickup/equip; no health/stat/target mutations",
+      "exercise": "one ordinary mouse attack, read-only queries; frozen input log prefix",
       "process_wrapper_exit": null,
       "whole_process_gate_passed": false
     }
