@@ -869,6 +869,70 @@
       "type": "int32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-87"
+    },
+    {
+      "name": "fEssentialDeathTime",
+      "value": 10.0,
+      "storage": "0xb37d08",
+      "constructor": "0x9edecf",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-88",
+      "note": "Original lookup and constructor/override provenance; recovery integration remains pending."
+    },
+    {
+      "name": "fEssentialHealthPercentReGain",
+      "value": 0.30000001192092896,
+      "storage": "0xb37d10",
+      "constructor": "0x9edeff",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-89",
+      "note": "Original lookup and constructor/override provenance; recovery integration remains pending."
+    },
+    {
+      "name": "fFatigueBlockBase",
+      "value": 0.0,
+      "storage": "0xb36ff0",
+      "constructor": "0x9e9750",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-90"
+    },
+    {
+      "name": "fFatigueBlockMult",
+      "value": 1.0,
+      "storage": "0xb36ff8",
+      "constructor": "0x9e9780",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-91"
+    },
+    {
+      "name": "fFatigueBlockSkillBase",
+      "value": 5.0,
+      "storage": "0xb37000",
+      "constructor": "0x9e97bf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:027f9d",
+        "type": "f",
+        "value": 20.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-92"
+    },
+    {
+      "name": "fFatigueBlockSkillMult",
+      "value": -0.03999999910593033,
+      "storage": "0xb37008",
+      "constructor": "0x9e97ef",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:027f9e",
+        "type": "f",
+        "value": 0.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-93"
     }
   ]
 }

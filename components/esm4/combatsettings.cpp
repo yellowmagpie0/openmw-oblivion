@@ -326,6 +326,19 @@ namespace ESM4
         return result;
     }
 
+    BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const BlockCostSettings result{
+            inputs.number("fFatigueBlockBase", 0.f),
+            inputs.number("fFatigueBlockMult", 1.f),
+            inputs.number("fFatigueBlockSkillBase", 5.f),
+            inputs.number("fFatigueBlockSkillMult", -.04f),
+        };
+        validateBlockCostSettings(result);
+        return result;
+    }
+
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

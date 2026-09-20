@@ -926,3 +926,67 @@ TEST(ESM4PhysicalCombat, FatigueRatioUsesRoundedBaseAndZeroFallbackWithoutClampi
     EXPECT_THROW(ESM4::combatFatigueRatio(std::numeric_limits<float>::infinity(), 140), std::invalid_argument);
     EXPECT_THROW(ESM4::combatFatigueRatio(std::numeric_limits<float>::quiet_NaN(), 0), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, BlockCostsSeparateBaseMasteryFromCurrentSkill)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    const ESM4::BlockCostSettings native{0, 1, 20, 0};
+    for (int base : {-1, 0, 1, 24, 25, 26, 49, 50, 51, 74, 75, 99, 100, 101})
+        for (bool item : {false, true})
+            for (float fraction : {0.f, .25f, .5f, 1.f})
+            {
+                const auto c = ESM4::blockContactCosts(base, 100, 100, fraction, item, native, mastery);
+                EXPECT_EQ(c.mFatigueDebit, base < 25 ? 20 + fraction : 0);
+                EXPECT_EQ(c.mBlockingItemWear, base < 50 && item ? 100 * fraction : 0);
+            }
+    const ESM4::BlockCostSettings compiled{0, 1, 5, -.04f};
+    const auto c = ESM4::blockContactCosts(24, 100, 10, .25f, true, compiled, mastery);
+    EXPECT_NEAR(c.mFatigueDebit, 1.25f, .000001f); // current skill affects cost but cannot unlock
+    EXPECT_EQ(c.mBlockingItemWear, 2.5f);
+    const auto unlocked = ESM4::blockContactCosts(25, 0, 10, .25f, true, compiled, mastery);
+    EXPECT_EQ(unlocked.mFatigueDebit, 0);EXPECT_EQ(unlocked.mBlockingItemWear, 2.5f);
+    const ESM4::CombatMasterySettings custom{{10, 20, 30, 40}};
+    EXPECT_EQ(ESM4::blockContactCosts(10, 0, 100, 1, true, native, custom).mFatigueDebit, 0);
+    EXPECT_EQ(ESM4::blockContactCosts(20, 0, 100, 1, true, native, custom).mBlockingItemWear, 0);
+}
+
+TEST(ESM4PhysicalCombat, BlockCostsUseFractionNotDamageInFatigueAndPreserveSignedResult)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    const ESM4::BlockCostSettings native{0, 1, 20, 0};
+    for (float damage : {0.f, 1.f, 100.f, 100000.f})
+        EXPECT_EQ(ESM4::blockContactCosts(0, 0, damage, .5f, true, native, mastery).mFatigueDebit, 20.5f);
+    const auto below = ESM4::blockContactCosts(0, 0, 100, std::nextafter(1.f, 0.f), true, native, mastery);
+    EXPECT_LT(below.mBlockingItemWear, 100);
+    const ESM4::BlockCostSettings signedSettings{-2, 1, -3, -1};
+    EXPECT_EQ(ESM4::blockContactCosts(0, 1, 0, 1, false, signedSettings, mastery).mFatigueDebit, -5);
+}
+
+TEST(ESM4PhysicalCombat, BlockCostsValidateInputsAndTypedNativeDefaults)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    const auto defaults = ESM4::buildBlockCostSettings({});
+    EXPECT_EQ(defaults.mBase, 0);EXPECT_EQ(defaults.mMultiplier, 1);
+    EXPECT_EQ(defaults.mSkillBase, 5);EXPECT_EQ(defaults.mSkillMultiplier, -.04f);
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::blockContactCosts(0, 0, bad, 0, true, defaults, mastery), std::invalid_argument);
+        EXPECT_THROW(ESM4::blockContactCosts(0, 0, 0, bad, true, defaults, mastery), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::blockContactCosts(0, 0, 0, std::nextafter(1.f, 2.f), true, defaults, mastery), std::invalid_argument);
+    for (float ESM4::BlockCostSettings::* member : {&ESM4::BlockCostSettings::mBase, &ESM4::BlockCostSettings::mMultiplier,
+             &ESM4::BlockCostSettings::mSkillBase, &ESM4::BlockCostSettings::mSkillMultiplier})
+    {
+        auto invalid = defaults;invalid.*member = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(ESM4::validateBlockCostSettings(invalid), std::invalid_argument);
+    }
+    auto huge = defaults;huge.mSkillMultiplier = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::blockContactCosts(0, 100, 0, 0, true, huge, mastery), std::invalid_argument);
+    ESM4::GameSetting value{};value.mEditorId = "fFatigueBlockSkillBase";value.mData = 20.f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildBlockCostSettings(values).mSkillBase, 20);
+    value.mEditorId = "fFatigueBlockSkillMult";value.mData = 0.f;
+    EXPECT_EQ(ESM4::buildBlockCostSettings(values).mSkillMultiplier, 0);
+    value.mData = std::int32_t{0};
+    EXPECT_THROW(ESM4::buildBlockCostSettings(values), std::invalid_argument);
+}

@@ -773,3 +773,40 @@ calls duration setter `004133E0` with **10 seconds** (`0041D62A`). EffectItem
 by the setter. Content overrides and effect/controller resistance/lifecycle
 must still be implemented; the pure proc's boolean is not effect acceptance.
 Disassemblies and absent-record scan are retained under `S2/sources-01`.
+
+## Blocking fatigue and blocking-item wear
+
+Original `00547590` receives current integer Block, incoming damage, and
+absorbed fraction, but its arithmetic **does not read the damage argument**.
+It stores `currentBlock * fFatigueBlockSkillMult + fFatigueBlockSkillBase`,
+then stores `fFatigueBlockMult * absorbedFraction + fFatigueBlockBase`, then
+stores their sum. Caller `005F5B70` (actor vtable +3B4, reached at `005FF8D9`)
+selects a shield first, otherwise a weapon. It uses **base** Block mastery:
+Novice applies the signed fatigue debit; Apprentice skips fatigue; Journeyman
+and higher also skip blocking-item wear. The wear amount is the stored product
+of incoming damage and absorbed fraction and passes directly to the item's
+condition mutation (with any armor mastery behavior there). Do not multiply
+it by the separate generic armor-damage GMST again.
+
+`blockContactCosts` returns these two amounts without mutating inventory or
+fatigue. It separates base and current skill, preserves finite signed fatigue
+settings/results, and validates damage/fraction/range/overflow. The original
+Novice branch is not conditioned on an equipped blocking item; the item only
+controls whether a wear mutation exists. Normal block/contact eligibility and
+controller timing still belong to the integration caller.
+
+Compiled cost factors are base 0, mult 1, skill base 5 and skill mult -.04.
+Installed skill base/mult are 20/0. Original-15 GMST-90–93 confirm these values.
+The same inspected capture has essential recovery settings GMST-88–89; those
+are provenance for the next recovery task, not implemented recovery behavior.
+Three new tests fail against stubs, then pass, checking below/at/above mastery,
+current-vs-base skill, item absence, zero/one/fractional absorbed damage,
+signed settings, damage independence, custom thresholds, typed overrides and
+invalid inputs. Evidence: `S2/physical-rules-15`; source traces
+`block-fatigue-rule.txt`, `block-fatigue-caller.txt` and contact continuation.
+
+Additional defensive sequencing trace at `00600528–00600565`: ranged contacts
+skip the stagger query; a successful stagger skips the subsequent block disarm
+query. These decisions require ordered RNG advancement, not parallel rolls.
+The pure proc helpers remain individually usable, but the future contact
+controller must preserve this order (`defensive-proc-caller.txt`).

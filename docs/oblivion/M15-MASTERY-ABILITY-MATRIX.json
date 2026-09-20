@@ -618,7 +618,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "blockContactCosts base/current skill, fatigue and raw item-wear amounts tested; world contact/inventory/state pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -656,7 +656,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "blockContactCosts base/current skill, fatigue and raw item-wear amounts tested; world contact/inventory/state pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",

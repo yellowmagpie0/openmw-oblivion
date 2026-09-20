@@ -75,6 +75,25 @@ namespace ESM4
     std::int32_t combatBaseValue(float value);
     float combatFatigueRatio(float current, std::int32_t base);
 
+    struct BlockCostSettings
+    {
+        float mBase;
+        float mMultiplier;
+        float mSkillBase;
+        float mSkillMultiplier;
+    };
+    struct BlockContactCosts
+    {
+        float mFatigueDebit;
+        float mBlockingItemWear;
+    };
+    // Current integer Block enters fatigue arithmetic; base Block selects
+    // mastery. Item wear still passes through the item condition mutation.
+    BlockContactCosts blockContactCosts(std::int32_t baseBlock, std::int32_t currentBlock,
+        float damage, float absorbedFraction, bool hasBlockingItem,
+        const BlockCostSettings& settings, const CombatMasterySettings& mastery);
+    void validateBlockCostSettings(const BlockCostSettings& settings);
+
     struct WeaponDamageInput
     {
         std::int32_t mSkill;

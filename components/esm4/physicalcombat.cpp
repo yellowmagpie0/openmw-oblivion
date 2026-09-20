@@ -97,6 +97,34 @@ namespace ESM4
         return base == 0 ? 1.f : rounded(double(current) / static_cast<float>(base));
     }
 
+    void validateBlockCostSettings(const BlockCostSettings& settings)
+    {
+        for (float value : {settings.mBase, settings.mMultiplier, settings.mSkillBase, settings.mSkillMultiplier})
+            finite(value);
+    }
+
+    BlockContactCosts blockContactCosts(std::int32_t baseBlock, std::int32_t currentBlock,
+        float damage, float absorbedFraction, bool hasBlockingItem,
+        const BlockCostSettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateBlockCostSettings(settings);
+        nonnegative(damage);
+        nonnegative(absorbedFraction);
+        if (absorbedFraction > 1)
+            throw std::invalid_argument("invalid native block absorbed fraction");
+        const auto rank = combatMastery(baseBlock, mastery);
+        BlockContactCosts result{};
+        if (rank == CombatMastery::Novice)
+        {
+            const float skill = rounded(double(currentBlock) * settings.mSkillMultiplier + settings.mSkillBase);
+            const float block = rounded(double(settings.mMultiplier) * absorbedFraction + settings.mBase);
+            result.mFatigueDebit = rounded(double(skill) + block);
+        }
+        if (rank <= CombatMastery::Apprentice && hasBlockingItem)
+            result.mBlockingItemWear = rounded(double(damage) * absorbedFraction);
+        return result;
+    }
+
     bool damageKnockdown(std::int32_t agility, std::int32_t luck, float fatigueRatio,
         std::int32_t damage, unsigned draw, const KnockdownSettings& settings,
         const PhysicalCombatSettings& physical)

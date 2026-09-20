@@ -1487,3 +1487,30 @@ Next: complete defensive/recovery rules and their remaining caller semantics,
 then stealth/crime rule families and S2 actor-policy/audit gate.
 
 Tested staged implementation/test/provenance diff SHA-256: `fe3bd22b132eb2884e27cdc61d7505dfcc414edf36f4d006349e6143702192e1`.
+
+### S2 block contact costs and integration build
+
+Commit `3f2498c29b` contains mastery proc decisions. Added block fatigue and
+blocking-item wear amounts with original base-skill mastery gating, separate
+current-skill arithmetic, and absorbed-fraction input (incoming damage is not
+used by the fatigue formula). Preserves signed factors and validates ranges.
+Three new tests fail against stubs, then pass; all **1,726 component tests**
+and **78 focused ASan/UBSan tests** pass with exact inventories/no skips
+(`S2/physical-rules-15`). Original-15 lookup GMST-88–93 adds recovery setting
+provenance and confirms block costs. Catalog **89** facts, lookup count **93**.
+Actual contact/state/inventory mutation remains open; ability rows stay pending.
+
+Integration build at `3f2498c29b` rebuilt `openmw`, `openmw-tests`, `esmtool`;
+its first wrapper returned **143** despite all three targets reaching Built.
+That failed exit is retained. A separate incremental verification exits **0**;
+all **551 engine tests** pass, with exact inventory/no skips (`integration-04`).
+These checks do not count as native combat gameplay acceptance.
+
+Additional caller trace requires defensive stagger before disarm: successful
+stagger suppresses the disarm roll, and ranged contacts skip stagger. This
+ordered RNG requirement is documented for the native contact controller.
+S2 remains in progress; S3–S14 pending. Original-15 is still paused for
+read-only queries; no installed files added. Next: essential recovery and
+remaining armor/stealth/crime rules, then actor policy/audit closure.
+
+Tested staged implementation/test/provenance diff SHA-256: `18a0953668bca8983d5985b2425b914509c053b7877a8804ef4ca910ec144af0`.
