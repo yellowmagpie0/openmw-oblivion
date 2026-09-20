@@ -350,3 +350,27 @@ Original live read-only observations 38–46 confirm these nine inputs in
 and inspected. The setting ledger now has 46 observations, including all 42
 physical-input facts. Live lookup does not establish the mastery consequences
 or the full power-attack outcome matrix.
+
+## First original hand-to-hand health observation
+
+[The damage probe ledger](M15-ORIGINAL-DAMAGE-PROBES.json) now retains both
+original-11 attempts, including the failed power measurement. The successful
+ordinary first punch used Hand to Hand 10, Strength 40, Luck 50, full fatigue
+140, default difficulty zero and an unequipped/spell-free target at 500 health.
+The expected range was recorded before attacking. At full contact fatigue,
+`1 + 14 * (.1 * .3) = 1.42`; with all seven attack fatigue points still missing,
+`1 + 14 * (.1 * .3 * .975) = 1.4095`. The original display changed
+500.00 -> 498.58. Normal mouse input and inspected contact/recovery captures
+support this bounded observation; precise contact fatigue was not measured.
+A new regression test checks this independently observed health value and the
+hand-derived depleted bound. Existing arithmetic already agreed with this
+new characterization, so there was no newly failing production case.
+
+The next held attack, after the opponent engaged, left target health unchanged.
+The opponent attacked during that sequence; player contact/interruption timing
+was not established. That attempt fails its recorded expected-health check
+and is not discarded or relabeled as a formula pass. Authored zero CSTY attack
+chance does not guarantee a passive actor once combat bonuses are considered.
+Future isolated damage measurements use a fresh first strike. All full rule
+matrices and native runtime combat integration remain open. The Proton wrapper
+returned 143 after normal console exit; no whole-process acceptance is claimed.

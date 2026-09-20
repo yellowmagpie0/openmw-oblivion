@@ -25,7 +25,7 @@
     "fatigue": 200,
     "skill": 5,
     "attribute": 50,
-    "position": [0, 160, 0],
+    "position": [256, 160, -280],
     "rotation": [0, 0, 3.1415927],
     "style": 16779298
   },
@@ -39,7 +39,7 @@
     "speed": 1,
     "reach": 1,
     "weight": 0,
-    "position": [-96, 0, 16],
+    "position": [200, 40, -280],
     "rotation": [0, 0, 0]
   }
 }

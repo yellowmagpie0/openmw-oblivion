@@ -424,3 +424,18 @@ TEST(ESM4PhysicalCombat, MasteryAndPowerSettingsUseNativeTypesAndFallbacks)
     multiplier.mData = std::int32_t{3};
     EXPECT_THROW(ESM4::buildPowerAttackSettings(values), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, OriginalFirstPunchHealthObservation)
+{
+    // Original 1.2.0416, M15-S2-ORACLE-HAND-01: ordinary first punch, no
+    // equipment/spells on the victim, default difficulty. Console displays
+    // victim health 500.00 -> 498.58. Exact contact fatigue was not captured.
+    const ESM4::HandToHandSettings hand{0, 1, 0, .75f, 1, 15, 1, .5f};
+    const auto full = ESM4::handToHandDamage({10, 50, 40, 1.f}, hand, installed);
+    EXPECT_NEAR(500.f - full.mHealth, 498.58f, .0051f);
+    // Independently derived lower damage bound if all seven attack fatigue
+    // points were still missing at contact: 1 + 14*(.1*.3*.975) = 1.4095.
+    const auto depleted = ESM4::handToHandDamage({10, 50, 40, .95f}, hand, installed);
+    EXPECT_NEAR(depleted.mHealth, 1.4095f, .00001f);
+    EXPECT_LE(depleted.mHealth, full.mHealth);
+}

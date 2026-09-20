@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "game_version": "Oblivion 1.2.0416",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "plugin_sha256": "e3a91a255555297a4c538ffaaff96c2c360ff960783ac37fad1e43d1a70a76ea",
+  "input_log": "build/oblivion-compat/m15/S2/original-11/input-log.jsonl",
+  "input_log_sha256": "fb1f38d85126f9381969287d23e1d5be641f1767dc0c73a6f5fb280787db2ff4",
+  "setup": "Continue original prison quicksave; COC reference room; move target to flat floor and position player before exercise; no health/stat/quest injections",
+  "exercise": "ordinary keyboard movement, draw fists, mouse attack; read-only console observations; setup/exercise markers retained",
+  "process_wrapper_exit": 143,
+  "whole_process_gate_passed": false,
+  "full_damage_rule_matrix_passed": false,
+  "observations": [
+    {
+      "case_id": "M15-S2-ORACLE-HAND-01",
+      "scope": "single original normal-input hit, bounded displayed health check only",
+      "observed_before": 500.0,
+      "observed_after": 498.58,
+      "display_delta": 1.42,
+      "prediction": "hand-first-hit-prediction.json",
+      "prediction_sha256": "82409e12e716a53c47d46d4920110a16c19640ae11dd045a6c6238d619ca9a19",
+      "bounded_health_check_passed": true,
+      "precise_fatigue_timing_passed": false,
+      "full_hand_rule_matrix_passed": false,
+      "captures": {
+        "build/oblivion-compat/m15/S2/original-11/player-inputs.png": {
+          "sha256": "b262f61abe93858408dd1dc0ff04ed8784071907eed780577b1a57e36f6c43a3",
+          "inspected": true,
+          "observation": "Hand 10, Strength 40, Luck 50, full Fatigue 140"
+        },
+        "build/oblivion-compat/m15/S2/original-11/target-before.png": {
+          "sha256": "0302d3da6a038a1b32cb2baaaecc6ebcafacf2725705839de846f800741ec941",
+          "inspected": true,
+          "observation": "Target health 500, fatigue 200, initial distance 158.67"
+        },
+        "build/oblivion-compat/m15/S2/original-11/attack-ready.png": {
+          "sha256": "5896bd3abecb6fc2763429eeef6edf5705694eb4657b4d6e23ce613577de54b1",
+          "inspected": true,
+          "observation": "Ordinary forward movement brings target into punch range; unobstructed first-person view"
+        },
+        "build/oblivion-compat/m15/S2/original-11/hand-windup.png": {
+          "sha256": "f830316c8276e8324a3eff2ae2ba78f162b66e3f21d6abc5cacc2187c49dc0d1",
+          "inspected": true,
+          "observation": "Early input frame, fists still near ready pose; not proof of windup timing"
+        },
+        "build/oblivion-compat/m15/S2/original-11/hand-contact.png": {
+          "sha256": "8cadcdd9e37e9c613685c48904140da1b9fb76d5e5e2e9fe3e677f51b2a1b89e",
+          "inspected": true,
+          "observation": "Extended right fist intersects target face"
+        },
+        "build/oblivion-compat/m15/S2/original-11/hand-recovery.png": {
+          "sha256": "6c4b945584ac945e53c6c2e8e0d38cc11de2419053daeb157a54fe809b05e3eb",
+          "inspected": true,
+          "observation": "Fists return to ready, victim facial reaction and health arc"
+        },
+        "build/oblivion-compat/m15/S2/original-11/hand-health-after.png": {
+          "sha256": "3b9de508f94c8bec2c78a905f08556ef9c4c43426ad651dbe84909b081b953ba",
+          "inspected": true,
+          "observation": "Selected exact target 01000821 health now 498.58"
+        }
+      },
+      "evidence_report": "build/oblivion-compat/m15/S2/original-11/hand-first-hit-observation.json",
+      "evidence_report_sha256": "dad0246f7ac3c39415095700227e3eb46a830bf6a792528d92c86aeceb8a11f5"
+    },
+    {
+      "case_id": "M15-S2-ORACLE-HAND-02",
+      "scope": "attempted held power attack after first normal hit",
+      "observed_before": 498.58,
+      "observed_after": 498.58,
+      "expected_after_range": [
+        495.02,
+        495.18
+      ],
+      "passed": false,
+      "classification": "no measured player power hit; active opponent attacked during sequence; interruption suspected but exact event timing unproven",
+      "prediction": "hand-power-prediction.json",
+      "captures": {
+        "build/oblivion-compat/m15/S2/original-11/power-before.png": {
+          "sha256": "32254160501157461ec197b6bcedf45403d7ba3ec1c7692c012e53a5be086968",
+          "inspected": true,
+          "observation": "Health 498.58, player fatigue 140, hand skill 10; opponent combat-ready, distance 80.39"
+        },
+        "build/oblivion-compat/m15/S2/original-11/power-windup.png": {
+          "sha256": "f0773445485c3109b997b2acfc49853bf583020fadb22d1d37b1500f5a05e3c5",
+          "inspected": true,
+          "observation": "Opponent attacking while player hands leave ready pose"
+        },
+        "build/oblivion-compat/m15/S2/original-11/power-contact.png": {
+          "sha256": "2fc327001af491b6a1701b524f265690a4ad1e71a435411eb2cd24d4bcfdb439",
+          "inspected": true,
+          "observation": "No visible player contact; opponent close and player health bar decreased"
+        },
+        "build/oblivion-compat/m15/S2/original-11/power-recovery.png": {
+          "sha256": "9aa87c405fb7eb42b5c5089a289c4c5440c4c62a1d9047389cde3cec787655c7",
+          "inspected": true,
+          "observation": "Opponent remains active, player blood marks visible; no confirmed power impact"
+        },
+        "build/oblivion-compat/m15/S2/original-11/power-health-after.png": {
+          "sha256": "ca7b4f2b0d1ea2cebb40c4144f61f6a00fa3a1d2dfe22bf98ef6377877d942ea",
+          "inspected": true,
+          "observation": "Exact selected target health unchanged at 498.58"
+        }
+      },
+      "evidence_report": "build/oblivion-compat/m15/S2/original-11/hand-power-observation.json",
+      "evidence_report_sha256": "81eb4ca197b7b3f1d66038096c0848626ae66bca5e0008e8f44d4a41f8fa5400"
+    }
+  ]
+}

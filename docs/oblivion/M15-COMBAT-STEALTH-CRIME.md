@@ -1140,3 +1140,36 @@ three inspected captures. The fact catalogue now has 42 physical inputs and
 the live setting ledger has 46 observations. S2 remains in progress.
 
 Tested implementation/test/provenance diff SHA-256: `c3d275022fdd9f1aadc68787897721597aa70ee69ce5cfcc5f3445ab5777f814`.
+
+### S2 first normal-input original hand-hit measurement
+
+Commit `b8cf35f46c` contains mastery/power multiplier selection. The original
+first-punch observation now has a source-controlled numeric/evidence ledger
+and a component regression against the independently displayed 500.00 ->
+498.58 health change. Its expected range was recorded before normal movement
+and attack. All required captures for this bounded observation were opened:
+clear first-person target, extended punch, recovery/hit reaction, exact target
+health readback. Exact contact fatigue and the full hand rule matrix remain
+open. The subsequent power attempt was interrupted or otherwise failed to
+land while the active opponent attacked; unchanged target health fails that
+attempt's prediction. Both attempts and the wrapper's exit 143 are retained.
+
+The editable recipe now places opponent and sword off the stairs. Original-12
+freshly renders the opponent on the flat floor from that recipe; normal sword
+pickup is still pending. The writer comment no longer promises a passive
+opponent from zero authored chance. All 143 Python tests and native parsing/
+graph checks pass (`reference-fixture-04`, eight added keys, no added unresolved
+references). Generated plugin SHA-256:
+`e510e15cd5cf7cda97af21e4180621f40b26574cb34523df84cba67de703ee76`.
+All 1,679 component cases and 31 focused ASan/UBSan cases pass with exact
+inventories (`physical-rules-06`). The new observed-value regression already
+agreed with the implementation; it is not described as a newly fixed failure.
+
+Original-12 is running for a fresh power first-strike probe. Its read-only
+console batch initially failed because original parsing concatenated LF-only
+lines; the CRLF retry is retained separately. This diagnostic did not mutate
+actor/quest state. The task-added plugin and root `M15Read.txt` require
+hash-checked cleanup after reference work. S2 remains in progress; S3–S14
+remain pending.
+
+Tested test/writer/recipe/provenance diff plus new probe ledger SHA-256: `7b39be8f41e9ad326c8b82378c743ebdae64d44f0a95e908e60094de0013797f`.

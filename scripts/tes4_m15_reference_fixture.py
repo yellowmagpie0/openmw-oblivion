@@ -103,7 +103,8 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     if not any(s['name'] == 'FNAM' for s in npc_source):
         npc += sub('FNAM', bytes(2))
     style = bytearray(124)
-    # An authored nonattacking/nonblocking style isolates the first incoming hit.
+    # Zero authored attack/block chances reduce activity, but original AI still
+    # has situational bonuses: measure the first hit before retaliation.
     # The target is mortal and collision/AI processing are not disabled.
     style[80] = 2 | 32
     struct.pack_into('<ff', style, 28, .5, 1)
