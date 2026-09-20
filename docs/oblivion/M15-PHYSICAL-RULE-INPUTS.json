@@ -1552,6 +1552,78 @@
         "value": 4000
       },
       "provenance": "Original static initializer and installed winning GMST; spatial/radius instructions independently executed in S2/oracle-emulator/alarm-reach.py. No live-setting probe claimed."
+    },
+    {
+      "name": "fFightDispBase",
+      "value": 50.0,
+      "storage": "0xb36840",
+      "constructor": "0x9e6b1f",
+      "installed_override": null,
+      "type": "float32"
+    },
+    {
+      "name": "fFightDispMult",
+      "value": -1.0,
+      "storage": "0xb36848",
+      "constructor": "0x9e6b4f",
+      "installed_override": null,
+      "type": "float32"
+    },
+    {
+      "name": "fFightAggrBase",
+      "value": -80.0,
+      "storage": "0xb36850",
+      "constructor": "0x9e6b7f",
+      "installed_override": {
+        "key": "content:oblivion.esm:016595",
+        "type": "f",
+        "value": -55.0
+      },
+      "type": "float32"
+    },
+    {
+      "name": "fFightDistanceMult",
+      "value": -0.004999999888241291,
+      "storage": "0xb36868",
+      "constructor": "0x9e6c0f",
+      "installed_override": null,
+      "type": "float32"
+    },
+    {
+      "name": "fFightFriendDispBase",
+      "value": -50.0,
+      "storage": "0xb36870",
+      "constructor": "0x9e6c3f",
+      "installed_override": {
+        "key": "content:oblivion.esm:068dc7",
+        "type": "f",
+        "value": -25.0
+      },
+      "type": "float32"
+    },
+    {
+      "name": "fFightAggrMult",
+      "value": 1.0,
+      "storage": "0xb36858",
+      "constructor": "0x9e6ba0",
+      "installed_override": null,
+      "type": "float32"
+    },
+    {
+      "name": "fFightDistanceBase",
+      "value": 1.0,
+      "storage": "0xb36860",
+      "constructor": "0x9e6bd0",
+      "installed_override": null,
+      "type": "float32"
+    },
+    {
+      "name": "fFightFriendDispMult",
+      "value": 1.0,
+      "storage": "0xb36878",
+      "constructor": "0x9e6c60",
+      "installed_override": null,
+      "type": "float32"
     }
   ]
 }

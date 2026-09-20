@@ -173,3 +173,33 @@ TEST(ESM4CombatSettings, AlarmRecipientDistanceUsesNativeIntegerDefaultAndOverri
     setting.mData = std::int32_t{-1};
     EXPECT_THROW(ESM4::buildCrimeAlarmSettings(settings), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, FightScoreUsesTypedNativeDefaultsAndWinningOverrides)
+{
+    const auto compiled = ESM4::buildFightScoreSettings({});
+    EXPECT_EQ(compiled.mDispositionBase, 50);
+    EXPECT_EQ(compiled.mDispositionMultiplier, -1);
+    EXPECT_EQ(compiled.mAggressionBase, -80);
+    EXPECT_EQ(compiled.mAggressionMultiplier, 1);
+    EXPECT_EQ(compiled.mDistanceBase, 1);
+    EXPECT_EQ(compiled.mDistanceMultiplier, -.005f);
+    EXPECT_EQ(compiled.mFriendDispositionBase, -50);
+    EXPECT_EQ(compiled.mFriendDispositionMultiplier, 1);
+    EXPECT_EQ(compiled.mResponsibilityMultiplier, 1.7f);
+    ESM4::GameSetting aggression, friendBase, responsibility;
+    aggression.mEditorId = "fFightAggrBase";
+    aggression.mData = -55.f;
+    friendBase.mEditorId = "fFightFriendDispBase";
+    friendBase.mData = -25.f;
+    responsibility.mEditorId = "fCrimeAlarmRespMult";
+    responsibility.mData = 2.f;
+    const std::array<const ESM4::GameSetting*, 3> settings{&aggression, &friendBase, &responsibility};
+    const auto installed = ESM4::buildFightScoreSettings(settings);
+    EXPECT_EQ(installed.mAggressionBase, -55);
+    EXPECT_EQ(installed.mFriendDispositionBase, -25);
+    EXPECT_EQ(installed.mResponsibilityMultiplier, 2);
+    aggression.mData = std::int32_t{-55};
+    EXPECT_THROW(ESM4::buildFightScoreSettings(settings), std::invalid_argument);
+    aggression.mData = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::buildFightScoreSettings(settings), std::invalid_argument);
+}

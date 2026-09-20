@@ -1814,3 +1814,45 @@ cell/worldspace queries are boundary stubs. Evidence:
 `crime-reference-worldspace.txt` and `crime-cell-worldspace.txt`.
 Ordinary alarm propagation through actual load doors and save/restart remain
 runtime acceptance gates.
+
+## Fight score for AI and alarm response
+
+Original `00546190` accepts target disposition, friend disposition, current
+integer Aggression, distance, friend-enable, an unused argument, responsibility-
+gate enable and current integer Responsibility. Aggression <= 0 returns zero.
+Each disposition/aggression/distance term is stored as float after multiplying
+by its GMST and adding its base. The distance term is **min(0, term)**: positive
+near-distance terms are discarded, negative distance penalties remain.
+
+The friend term applies only when enabled, target disposition < friend
+disposition, and either the responsibility gate is disabled or the unrounded
+Responsibility × `fCrimeAlarmRespMult` is **strictly less than** friend
+disposition. This is different from the reporting-willingness predicate.
+Equality excludes the term. Its float-stored value is friend disposition ×
+`fFightFriendDispMult` + `fFightFriendDispBase`. The original adds aggression,
+disposition, distance and friend terms on x87 without a final float store,
+truncates to integer, then caps at 100. Negative scores are preserved.
+
+`FightScoreInput`, `FightScoreSettings` and `fightScore` implement this pure
+rule. The typed settings adapter preserves compiled defaults and the installed
+Aggression base (-55 instead of -80), friend base (-25 instead of -50) and
+responsibility multiplier (2 instead of 1.7f). Eight additional setting rows
+record native initializer provenance; no live GMST probe is claimed. Finite
+settings, nonnegative finite distance, float-term and integer-conversion
+bounds are checked. Actor resolution, disposition calculation, incident
+eligibility, AI target choice and combat dispatch remain caller responsibilities.
+
+Four policy tests fail against the zero stub before implementation; one
+additional test covers typed settings. Original instruction execution exposed
+two incorrect preliminary expectations: the distance clamp direction and the
+responsibility comparison direction. Both failures are retained in
+`fight-score-boundary-failed.log` and `fight-score-responsibility-failed.log`.
+The corrected oracle runs the complete original helper and its integer
+conversion without function stubs, with both x87 precision controls 0x27f and
+0x37f. Evidence: `S2/sources-01/actor-aggression-rule.txt` (only `00546190` through
+`00546253`), `S2/oracle-emulator/fight-score.py`, `fight-score-table.json`,
+`fight-score.log`, `fight-score-driver.cpp`, `fight-score-cpp-comparison.json`.
+The corpus includes 5,400 compiled/installed boundary combinations, 1,024
+fixed-seed generated inputs/settings, and two explicit float-store boundaries.
+C++ results are compared directly with the original-instruction expected
+values. This evidence does not establish normal-input AI or alarm acceptance.

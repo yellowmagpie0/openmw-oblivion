@@ -2124,3 +2124,21 @@ collection, alarm delivery, recipients' reactions and bounty remain open.
 S2 remains in progress; S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `91cd3e5f1e6a952416eff209ea26d066fc405231f00822577c6da24b3a369264`.
+
+### S2 native fight score
+
+Commit `df6963c2f6` contains alarm recipient spatial reach. Added immutable
+fight-score inputs/settings, the typed GMST adapter, strict friend and
+responsibility comparisons, negative distance penalties and native float
+rounding/integer conversion order.
+
+All **1,805 component tests**, **161 focused ASan/UBSan tests** and **151 Python
+tests** pass, with exact C++ inventories/no skips (`S2/fight-score-01`). Four
+policy tests first fail against the zero stub. **6,426 original instruction
+cases** pass in both x87 precision modes; all match the compiled C++ helper.
+Two preliminary comparison-direction errors were found by the independent
+oracle, corrected and retained as failed evidence. Normal-input AI target
+selection, alarm response and combat dispatch remain open. S2 remains in
+progress; S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `1e19f6fde1db807b0221c404cbbc5dc3c02a009ea79d70f22f05d1b5f9bdb626`.

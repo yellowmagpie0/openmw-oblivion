@@ -8,6 +8,7 @@
 #include "stealthrules.hpp"
 #include "detection.hpp"
 #include "crimerules.hpp"
+#include "combatairules.hpp"
 #include <span>
 
 namespace ESM4
@@ -45,6 +46,7 @@ namespace ESM4
     CrimeFineSettings buildCrimeFineSettings(std::span<const GameSetting* const> settings);
     CrimeReportingSettings buildCrimeReportingSettings(std::span<const GameSetting* const> settings);
     TrespassWarningSettings buildTrespassWarningSettings(std::span<const GameSetting* const> settings);
+    FightScoreSettings buildFightScoreSettings(std::span<const GameSetting* const> settings);
     CrimeAlarmSettings buildCrimeAlarmSettings(std::span<const GameSetting* const> settings);
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings);
     PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings);

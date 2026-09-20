@@ -399,6 +399,20 @@ namespace ESM4
         return result;
     }
 
+    FightScoreSettings buildFightScoreSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const FightScoreSettings result{
+            inputs.number("fFightDispBase", 50.f), inputs.number("fFightDispMult", -1.f),
+            inputs.number("fFightAggrBase", -80.f), inputs.number("fFightAggrMult", 1.f),
+            inputs.number("fFightDistanceBase", 1.f), inputs.number("fFightDistanceMult", -.005f),
+            inputs.number("fFightFriendDispBase", -50.f), inputs.number("fFightFriendDispMult", 1.f),
+            inputs.number("fCrimeAlarmRespMult", 1.7f),
+        };
+        validateFightScoreSettings(result);
+        return result;
+    }
+
     CrimeAlarmSettings buildCrimeAlarmSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
