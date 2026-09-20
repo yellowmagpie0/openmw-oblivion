@@ -1525,8 +1525,7 @@
         "type": "f",
         "value": 35.0
       },
-      "live_setting_probe": null,
-      "live_setting_status": "pending: original executable instruction oracle verifies arithmetic; no live console probe yet"
+      "live_setting_probe": "M15-S2-ORACLE-GMST-146"
     }
   ]
 }

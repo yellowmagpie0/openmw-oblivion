@@ -1922,6 +1922,20 @@
       "input_log": "build/oblivion-compat/m15/S2/original-16/reach-settings-input-log.jsonl",
       "input_log_sha256": "096b5e5d76e8f4b4a25c00c066c84e94f6cc68ecba313ce1526db5ccba81b7dd",
       "initialization": "Original-16 master-only run; paused after normal sentence service. No setting modifications. Whole-process wrapper exit 143 is retained separately."
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-146",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fCombatHitConeAngle",
+      "observed": 35,
+      "display_decimal_places": 2,
+      "capture": "build/oblivion-compat/m15/S2/original-17/hit-cone-setting.png",
+      "capture_sha256": "e6db7c0895e1e2fae44d68e36cbee0ef8b80ef46f511d1a1ab2edbf900bd78db",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-17/hit-cone-setting-input-log.jsonl",
+      "input_log_sha256": "3b7096a85a1ede8b1863b8159fadef3c9863ba1c8ee76892b6f3f00be57c4f02",
+      "initialization": "Original-17 master-only isolated prefix; normal Continue into pristine prison; read-only query."
     }
   ],
   "display_precision": "Float console responses display two decimal places; these observations are not a binary float readback.",

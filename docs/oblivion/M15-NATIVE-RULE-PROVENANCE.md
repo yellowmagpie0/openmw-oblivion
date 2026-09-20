@@ -1261,8 +1261,8 @@ out-of-normal-range results rather than adding an invented modulo operation.
 Nonfinite inputs and float overflow diagnose explicitly.
 
 The compiled cone setting is 20 degrees (`00B36F28`, initializer `009E92AF`);
-installed master override `0287A3` is 35 degrees. A live console lookup is still
-pending and is explicitly marked so in the setting inventory. Fourteen supplied-
+installed master override `0287A3` is 35 degrees. Original-17 live read-only
+probe GMST-146 confirms 35.00 after normal Continue into the pristine prison. Fourteen supplied-
 angle original-instruction cases independently establish strict boundaries,
 adjacent floats, the wrap and conversion rounding (`S2/oracle-emulator/hit-cone*`).
 This is a geometric predicate, not a chance-based block or timing window.

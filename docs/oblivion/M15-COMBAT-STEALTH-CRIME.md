@@ -1841,3 +1841,16 @@ open. Original-17 is conducting the pending read-only cone setting probe.
 S2 remains in progress; S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `463bf494909c0b40c3620bc885439b3971ace02250740e985a9e4fe4d6487faa`.
+
+
+### S2 original cone setting confirmation
+
+Commit `e4251f2c10` contains the ownership claim predicate. Original-17
+read-only probe GMST-146 confirms the installed cone angle **35.00**, matching
+the declared prediction and master override. Only Oblivion.esm was active;
+normal Continue loaded the pristine prison. Capture and query inputs exited
+zero and the screenshot was inspected. Normal `qqq` ended the game with
+wrapper exit **0** and unchanged pristine quicksave. The trailing Return-key
+release failed because the isolated X display had already closed; its failure
+is retained in the input log and cleanup record. This closes that setting
+lookup only. S2 remains in progress, and native gameplay gates remain open.
