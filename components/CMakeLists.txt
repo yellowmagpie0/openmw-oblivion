@@ -239,6 +239,7 @@ add_component_dir (esm4
     loadcont
     loadcrea
     loadcsty
+    loadfact
     combatstylepolicy
     combatsettings
     physicalcombat

@@ -1091,3 +1091,35 @@ actor-value candidates are 12–20, despite later Security/Sneak (30/31) increme
 branches. Do not replace this with uniform selection of 21 skills or claim the
 unreachable branches occur naturally. Required original gameplay observations
 and the narrow skill mutation/state/RNG implementation remain open.
+
+## TES4 faction data
+
+`loadfact` now exposes DATA's one-byte Hidden/Evil/Special Combat bits,
+CNAM's optional finite nonnegative float, and ordered XNAM pairs of resolved
+faction FormKey plus signed int32 reaction. Unknown bits, wrong lengths and
+duplicate singleton fields diagnose; rank strings/indices and unknown fields
+remain in the lossless logical payload. Only TES4 0.8/1.0 layouts are typed;
+later games retain the existing raw fallback. Deleted records need not carry
+DATA. Winning stores and relationship resolution use the actual master order,
+including overrides and empty tombstones.
+
+The pinned xEdit FACT definition and xOBSE TESFaction declaration agree on
+these fields and flags. The installed census and independent `esmtool` typed
+read agree on all **495 winning factions** across eleven hashed official
+plugins, including signed relationship lists and **129 absent CNAM fields**
+(`S2/faction-data-01/installed-comparison.json`). The parser retains absence.
+For runtime resolution, the original TESFaction constructor's `fld1` at
+`0051F876`, vtable `00A53524`, and store to `+38` at `0051F894` establish the
+missing CNAM multiplier **1.0**. RTTI descriptor `00B05374` independently
+identifies that vtable as TESFaction. CNAM loading at `0051F99C–0051F9AD`
+writes the same `+38`; getter `0051F0A0` reads it. Original executable hash
+remains the locked 1.2.0416 hash. Trace `S2/sources-01/faction-native-record.txt`.
+DATA is structurally required by the reviewed format; the constructor default
+is not permission to silently accept malformed nondeleted records.
+
+Three parser tests fail against the stub, then pass, exercising compressed
+records, lossless unknown/rank payloads, signed reactions, all invalid flag
+values, malformed lengths, nonfinite/negative multipliers, duplicates,
+truncation and version rejection. Full component/sanitizer and store results
+are recorded with the chunk report. Typed data availability does not establish
+crime reporting, faction combat legality or gameplay acceptance.

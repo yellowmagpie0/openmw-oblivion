@@ -109,6 +109,56 @@ TEST(MWWorldStoreTest, tes4CombatStylesUseWinningMasterKeysAndDeletionTombstones
     EXPECT_NE(store.search<ESM4::CombatStyle>(other), nullptr);
 }
 
+TEST(MWWorldStoreTest, tes4FactionsResolveRelationshipsThroughWinningMasterKeysAndDeletion)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{ { "base.esm", 0 }, { "other.esm", 1 }, { "patch.esp", 2 } };
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t form, float multiplier, bool deleted) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{ 1 }) + bytes(std::uint32_t{ 0x900 }));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0') + sub(ESM::fourCC("DATA"), std::string(8, '\0'));
+        const auto payload = deleted ? std::string{} : sub(ESM::fourCC("DATA"), std::string(1, '\x04'))
+            + sub(ESM::fourCC("CNAM"), bytes(multiplier))
+            + sub(ESM::fourCC("XNAM"), bytes(std::uint32_t{0x800}) + bytes(std::int32_t{-25}));
+        auto stream = std::make_unique<std::stringstream>(record(ESM4::REC_TES4, 0, 1, header)
+            + record(ESM4::REC_FACT, form, deleted ? static_cast<std::uint32_t>(ESM4::Rec_Deleted) : 0u, payload), std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), name, nullptr, nullptr, true);
+        reader.setModIndex(indices.at(name));
+        reader.updateModIndices(indices);
+        store.loadESM4(reader, &dummyListener);
+    };
+    load("base.esm", {}, 0x800, 1.f, false);
+    load("other.esm", {}, 0x800, 2.f, false);
+    const auto base = ESM::FormKey::content("base.esm", 0x800);
+    const auto other = ESM::FormKey::content("other.esm", 0x800);
+    ASSERT_NE(store.search<ESM4::Faction>(base), nullptr);
+    ASSERT_NE(store.search<ESM4::Faction>(other), nullptr);
+    EXPECT_EQ(store.search<ESM4::Faction>(base)->mCrimeMultiplier.value(), 1.f);
+    // The file's master order differs from global load order.
+    load("patch.esp", { "other.esm", "base.esm" }, 0x01000800, 3.f, false);
+    EXPECT_EQ(store.search<ESM4::Faction>(base)->mCrimeMultiplier.value(), 3.f);
+    EXPECT_EQ(store.search<ESM4::Faction>(other)->mCrimeMultiplier.value(), 2.f);
+    const auto& relations = store.search<ESM4::Faction>(base)->mRelationships;
+    ASSERT_EQ(relations.size(), 1);
+    EXPECT_EQ(relations[0].mFaction, other);
+    EXPECT_EQ(relations[0].mModifier, -25);
+    EXPECT_TRUE(store.search<ESM4::Faction>(base)->has(ESM4::FactionFlag::SpecialCombat));
+    load("patch.esp", { "other.esm", "base.esm" }, 0x01000800, 0, true);
+    EXPECT_EQ(store.search<ESM4::Faction>(base), nullptr);
+    EXPECT_NE(store.search<ESM4::Faction>(other), nullptr);
+}
+
 TEST(MWWorldStoreTest, tes4TypedStoreMaintainsStableAndRuntimeIdentityTogether)
 {
     MWWorld::Store<ESM4::Static> store;

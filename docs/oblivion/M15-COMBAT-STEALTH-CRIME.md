@@ -1661,3 +1661,29 @@ progress; S3–S14 pending. Next: remaining jail/witness rules, faction data and
 selected actor policy audit, followed by native service integration.
 
 Tested implementation/test/provenance diff SHA-256: `12c519e0ab92ceeef2ae4e44e9b1da81fa848f4ad97e9da9858dfcdb12dd66f7`.
+
+
+### S2 typed faction crime and relationship data
+
+Commit `6f38e4e07a` contains crime fine/sentence arithmetic. Added a TES4-only
+faction decoder, winning store, stable relationship FormKeys and semantic
+`esmtool` output. All **495 winning factions** across eleven hash-checked
+official plugins agree with the independent raw census, including **129
+missing CNAM fields**. Original constructor/loader traces establish 1.0 as
+the missing-field runtime default; the decoder preserves explicit absence.
+Raw rank/unknown payloads remain available; later-game records stay raw.
+
+Three parser tests fail against the stub, then pass. All **1,751 component
+tests**, **107 focused ASan/UBSan tests**, and **552 engine tests** pass with
+exact inventories/no skips (`S2/faction-data-01`). The engine test covers
+reordered masters, distinct same-ID factions, winning overrides, relationship
+resolution and deletion. `openmw`, `openmw-tests`, and `esmtool` build. The
+first engine build wrapper returned 143 despite completed targets; the retained
+retry returns 0. Existing compiler warnings are retained in build logs.
+
+S2 remains in progress; no new runtime crime or jail acceptance is claimed.
+Original-16 is conducting a master-only normal-input crime/jail reference
+probe. Native rule coverage, selected actor policy explanations and subsequent
+service/persistence/gameplay stages remain mandatory.
+
+Tested implementation/test/provenance diff SHA-256: `a6d7c8ab4719b6e5fdca5e8e697f9d937333aea162519f94b4fadc78b7a9c434`.

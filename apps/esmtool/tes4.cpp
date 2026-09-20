@@ -208,6 +208,16 @@ namespace EsmTool
                 std::cout << "\n  BaseObj: " << value.mBaseObj;
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
+            if constexpr (std::is_same_v<T, ESM4::Faction>)
+            {
+                if (value.mFactionFlags)
+                    std::cout << "\n  Faction: flags=" << unsigned(*value.mFactionFlags);
+                if (value.mCrimeMultiplier)
+                    std::cout << " crimeMultiplier=" << *value.mCrimeMultiplier;
+                for (const auto& relation : value.mRelationships)
+                    std::cout << "\n  Relationship: " << relation.mFaction.serialize()
+                              << " modifier=" << relation.mModifier;
+            }
             if constexpr (std::is_same_v<T, ESM4::CombatStyle>)
             {
                 if (value.mStandard)
@@ -530,7 +540,10 @@ namespace EsmTool
                     readTypedRecord<ESM4::Eyes>(params, reader);
                     return true;
                 case ESM4::REC_FACT:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::Faction>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_FLOR:
                     readTypedRecord<ESM4::Flora>(params, reader);
