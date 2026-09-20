@@ -1737,3 +1737,17 @@ probe. Neither original observations nor pure tests close native gameplay.
 S2 in progress; S3–S14 pending.
 
 Tested implementation/test/provenance diff SHA-256: `abdebe58e857a8c9db41eae5402d7d230f7136e4e422b94683d5ee7cad0ab2e8`.
+
+### S2 verified Chorrol sentence bed
+
+Commit `a0539ec3d3` contains the responsibility/disposition alarm rule.
+Corrected the case inventory's Chorrol bed to `067c47`, which Original-16
+identified by read-only console selection and activated normally to serve
+its first sentence. Retained `02b05a` as the previous unverified candidate.
+The fresh all-official-content audit (`S2/audit-08`) resolves `067c47` to
+Bedroll `01d5bf`, player owner `000007`, and prison cell `02898e`.
+All reviewed inventory counts and content hashes remain unchanged; zero data
+failures and all 13 audit unit tests pass. The audit deliberately exits 1
+because rule/oracle stage gates remain open. This is a verified reference
+correction, not native OpenMW jail acceptance. The first timing failure and
+all unsuccessful normal-input attempts remain preserved in Original-16.

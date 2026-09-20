@@ -622,7 +622,13 @@
       "release_marker": "content:oblivion.esm:028ce6",
       "cell_door": "content:oblivion.esm:09502f",
       "evidence": "content:oblivion.esm:02b7b2",
-      "bed_candidate": "content:oblivion.esm:02b05a",
+      "bed_candidate": "content:oblivion.esm:067c47",
+      "bed_verification": {
+        "status": "original-game-normal-activation-verified",
+        "evidence": "build/oblivion-compat/m15/S2/original-16/",
+        "previous_unverified_candidate": "content:oblivion.esm:02b05a",
+        "scope": "Normal jail sentence service; native OpenMW runtime acceptance pending"
+      },
       "guards": [
         "content:oblivion.esm:028c8a",
         "content:oblivion.esm:028c8c"
