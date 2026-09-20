@@ -1,0 +1,1591 @@
+{
+  "schema_version": 1,
+  "scope": "Reviewed ability inventory; execution and acceptance remain pending",
+  "source": "independently decoded installed Oblivion.esm SKIL rank descriptions; wording summarized, numeric behavior requires code/probes",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "extracted_source": "build/oblivion-compat/m15/S2/sources-01/skill-mastery-descriptions.json",
+  "extracted_source_sha256": "2fdc333e65ff37725e252f87c7e5f902f7cd1c918e87a5d687b29b5bd6b4a94e",
+  "mastery_thresholds_reference": "M15-NATIVE-RULE-PROVENANCE.md",
+  "abilities": [
+    {
+      "id": "M15-MASTERY-BLADE-01",
+      "skill": "Blade",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003f",
+      "source_field": "ANAM",
+      "ability": "standing power damage",
+      "normal_input": "hold attack without movement",
+      "prerequisites": [
+        "matching melee weapon",
+        "grounded valid attack"
+      ],
+      "consequence": "standing power multiplier",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "powerAttackMultiplier; arithmetic tested, controller pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blade-01/"
+    },
+    {
+      "id": "M15-MASTERY-BLADE-02",
+      "skill": "Blade",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003f",
+      "source_field": "JNAM",
+      "ability": "sidestep disarm",
+      "normal_input": "hold attack while moving left or right",
+      "prerequisites": [
+        "matching melee weapon",
+        "valid contact with armed target"
+      ],
+      "consequence": "drop a real recoverable equipped item",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "attacker action/draw state",
+        "target equipment stack",
+        "dropped reference identity/position/ownership",
+        "consumed RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blade-02/"
+    },
+    {
+      "id": "M15-MASTERY-BLADE-03",
+      "skill": "Blade",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003f",
+      "source_field": "ENAM",
+      "ability": "backward power knockdown",
+      "normal_input": "hold attack while moving backward",
+      "prerequisites": [
+        "matching melee weapon",
+        "valid contact"
+      ],
+      "consequence": "knockdown with controller interruption and recovery",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "reaction type/start/remaining duration",
+        "controller action",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blade-03/"
+    },
+    {
+      "id": "M15-MASTERY-BLADE-04",
+      "skill": "Blade",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003f",
+      "source_field": "MNAM",
+      "ability": "forward power paralysis",
+      "normal_input": "hold attack while moving forward",
+      "prerequisites": [
+        "matching melee weapon",
+        "valid susceptible target"
+      ],
+      "consequence": "real temporary paralysis with restoration",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "paralysis source/remaining duration",
+        "actor movement/action restrictions",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blade-04/"
+    },
+    {
+      "id": "M15-MASTERY-BLUNT-01",
+      "skill": "Blunt",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000041",
+      "source_field": "ANAM",
+      "ability": "standing power damage",
+      "normal_input": "hold attack without movement",
+      "prerequisites": [
+        "matching melee weapon",
+        "grounded valid attack"
+      ],
+      "consequence": "standing power multiplier",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "powerAttackMultiplier; arithmetic tested, controller pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blunt-01/"
+    },
+    {
+      "id": "M15-MASTERY-BLUNT-02",
+      "skill": "Blunt",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000041",
+      "source_field": "JNAM",
+      "ability": "sidestep disarm",
+      "normal_input": "hold attack while moving left or right",
+      "prerequisites": [
+        "matching melee weapon",
+        "valid contact with armed target"
+      ],
+      "consequence": "drop a real recoverable equipped item",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "attacker action/draw state",
+        "target equipment stack",
+        "dropped reference identity/position/ownership",
+        "consumed RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blunt-02/"
+    },
+    {
+      "id": "M15-MASTERY-BLUNT-03",
+      "skill": "Blunt",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000041",
+      "source_field": "ENAM",
+      "ability": "backward power knockdown",
+      "normal_input": "hold attack while moving backward",
+      "prerequisites": [
+        "matching melee weapon",
+        "valid contact"
+      ],
+      "consequence": "knockdown with controller interruption and recovery",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "reaction type/start/remaining duration",
+        "controller action",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blunt-03/"
+    },
+    {
+      "id": "M15-MASTERY-BLUNT-04",
+      "skill": "Blunt",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000041",
+      "source_field": "MNAM",
+      "ability": "forward power paralysis",
+      "normal_input": "hold attack while moving forward",
+      "prerequisites": [
+        "matching melee weapon",
+        "valid susceptible target"
+      ],
+      "consequence": "real temporary paralysis with restoration",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "paralysis source/remaining duration",
+        "actor movement/action restrictions",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/blunt-04/"
+    },
+    {
+      "id": "M15-MASTERY-HANDTOHAND-01",
+      "skill": "HandToHand",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000042",
+      "source_field": "ANAM",
+      "ability": "standing power damage",
+      "normal_input": "hold attack without movement",
+      "prerequisites": [
+        "unarmed",
+        "grounded valid attack"
+      ],
+      "consequence": "standing power multiplier",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "powerAttackMultiplier; arithmetic tested, controller pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-01/"
+    },
+    {
+      "id": "M15-MASTERY-HANDTOHAND-02",
+      "skill": "HandToHand",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000042",
+      "source_field": "JNAM",
+      "ability": "sidestep disarm",
+      "normal_input": "hold attack while moving left or right",
+      "prerequisites": [
+        "unarmed",
+        "valid contact with armed target"
+      ],
+      "consequence": "drop a real recoverable equipped item",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "attacker action/draw state",
+        "target equipment stack",
+        "dropped reference identity/position/ownership",
+        "consumed RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-02/"
+    },
+    {
+      "id": "M15-MASTERY-HANDTOHAND-03",
+      "skill": "HandToHand",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000042",
+      "source_field": "ENAM",
+      "ability": "backward power knockdown",
+      "normal_input": "hold attack while moving backward",
+      "prerequisites": [
+        "unarmed",
+        "valid contact"
+      ],
+      "consequence": "knockdown with controller interruption and recovery",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "reaction type/start/remaining duration",
+        "controller action",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-03/"
+    },
+    {
+      "id": "M15-MASTERY-HANDTOHAND-04",
+      "skill": "HandToHand",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000042",
+      "source_field": "MNAM",
+      "ability": "forward power paralysis",
+      "normal_input": "hold attack while moving forward",
+      "prerequisites": [
+        "unarmed",
+        "valid susceptible target"
+      ],
+      "consequence": "real temporary paralysis with restoration",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "paralysis source/remaining duration",
+        "actor movement/action restrictions",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-04/"
+    },
+    {
+      "id": "M15-MASTERY-HANDTOHAND-05",
+      "skill": "HandToHand",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000042",
+      "source_field": "MNAM",
+      "ability": "unarmed block disarm",
+      "normal_input": "hold block through incoming melee",
+      "prerequisites": [
+        "unarmed",
+        "eligible incoming weapon"
+      ],
+      "consequence": "drop a real recoverable opponent weapon",
+      "probability_and_draw": {
+        "status": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "opponent equipment stack",
+        "dropped reference identity/ownership",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-05/"
+    },
+    {
+      "id": "M15-MASTERY-BLOCK-01",
+      "skill": "Block",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000040",
+      "source_field": "ANAM",
+      "ability": "no block fatigue debit",
+      "normal_input": "hold block through incoming melee",
+      "prerequisites": [
+        "weapon or shield",
+        "valid block angle/timing"
+      ],
+      "consequence": "block does not debit fatigue",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/block-01/"
+    },
+    {
+      "id": "M15-MASTERY-BLOCK-02",
+      "skill": "Block",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000040",
+      "source_field": "JNAM",
+      "ability": "no block equipment wear",
+      "normal_input": "hold block through incoming melee",
+      "prerequisites": [
+        "weapon or shield",
+        "valid block"
+      ],
+      "consequence": "blocked contact does not wear blocking weapon/shield",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/block-02/"
+    },
+    {
+      "id": "M15-MASTERY-BLOCK-03",
+      "skill": "Block",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000040",
+      "source_field": "JNAM",
+      "ability": "unarmed recoil",
+      "normal_input": "hold unarmed block through incoming melee",
+      "prerequisites": [
+        "unarmed",
+        "valid block"
+      ],
+      "consequence": "opponent recoil; original damage policy separately verified",
+      "probability_and_draw": {
+        "setting": "iPerkHandToHandBlockRecoilChance",
+        "compiled": 25,
+        "draw": "0..99 inclusive <= from 005FFF31; full eligibility pending"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/block-03/"
+    },
+    {
+      "id": "M15-MASTERY-BLOCK-04",
+      "skill": "Block",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000040",
+      "source_field": "ENAM",
+      "ability": "shield stagger",
+      "normal_input": "hold shield block through incoming melee",
+      "prerequisites": [
+        "shield equipped",
+        "valid block"
+      ],
+      "consequence": "attacker stagger and knockback",
+      "probability_and_draw": {
+        "setting": "iPerkBlockStaggerChance",
+        "compiled": 5,
+        "draw": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/block-04/"
+    },
+    {
+      "id": "M15-MASTERY-BLOCK-05",
+      "skill": "Block",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000040",
+      "source_field": "MNAM",
+      "ability": "shield disarm",
+      "normal_input": "hold shield block through incoming melee",
+      "prerequisites": [
+        "shield equipped",
+        "valid block",
+        "attacker armed"
+      ],
+      "consequence": "drop a real recoverable opponent weapon",
+      "probability_and_draw": {
+        "setting": "iPerkBlockDisarmChance",
+        "compiled": 5,
+        "draw": "unresolved"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "opponent equipment stack",
+        "dropped reference identity/ownership",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/block-05/"
+    },
+    {
+      "id": "M15-MASTERY-MARKSMAN-01",
+      "skill": "Marksman",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004d",
+      "source_field": "ANAM",
+      "ability": "no bow fatigue debit",
+      "normal_input": "hold then release a nocked arrow",
+      "prerequisites": [
+        "bow and ammunition equipped"
+      ],
+      "consequence": "no novice hold or shot fatigue debit",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "bowHoldFatigue/bowShotFatigue tested; controller pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/marksman-01/"
+    },
+    {
+      "id": "M15-MASTERY-MARKSMAN-02",
+      "skill": "Marksman",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004d",
+      "source_field": "JNAM",
+      "ability": "aim zoom",
+      "normal_input": "hold block while arrow is nocked",
+      "prerequisites": [
+        "bow drawn with ammunition"
+      ],
+      "consequence": "camera zoom while aiming",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill",
+        "bow controller draw state",
+        "camera restoration policy"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/marksman-02/"
+    },
+    {
+      "id": "M15-MASTERY-MARKSMAN-03",
+      "skill": "Marksman",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004d",
+      "source_field": "ENAM",
+      "ability": "arrow knockdown",
+      "normal_input": "draw and release at target",
+      "prerequisites": [
+        "eligible arrow hit"
+      ],
+      "consequence": "knockdown",
+      "probability_and_draw": {
+        "setting": "iPerkMarksmanKnockdownChance",
+        "compiled": 5,
+        "draw": "0..99 strict < from 0060032B; full eligibility pending"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "projectile source/skill snapshot policy",
+        "reaction state/time",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/marksman-03/"
+    },
+    {
+      "id": "M15-MASTERY-MARKSMAN-04",
+      "skill": "Marksman",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004d",
+      "source_field": "MNAM",
+      "ability": "arrow paralysis",
+      "normal_input": "draw and release at target",
+      "prerequisites": [
+        "eligible arrow hit",
+        "susceptible target"
+      ],
+      "consequence": "temporary paralysis",
+      "probability_and_draw": {
+        "setting": "iPerkMarksmanParalyzeChance",
+        "compiled": 5,
+        "draw": "0..99 strict < from 0060034D; shared draw and precedence pending"
+      },
+      "duration_seconds": null,
+      "save_fields_required": [
+        "projectile source/skill snapshot policy",
+        "paralysis source/duration/restrictions",
+        "RNG state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence",
+        "forced proc/non-proc and exact probability boundary",
+        "fixed-seed distribution with predeclared tolerance"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/marksman-04/"
+    },
+    {
+      "id": "M15-MASTERY-SNEAK-01",
+      "skill": "Sneak",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000050",
+      "source_field": "ANAM",
+      "ability": "sneak damage multiplier",
+      "normal_input": "attack while sneaking",
+      "prerequisites": [
+        "target does not detect attacker",
+        "eligible melee/bow type"
+      ],
+      "consequence": "higher sneak damage multiplier",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-01/"
+    },
+    {
+      "id": "M15-MASTERY-SNEAK-02",
+      "skill": "Sneak",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000050",
+      "source_field": "JNAM",
+      "ability": "ignore boot weight in detection",
+      "normal_input": "move while sneaking",
+      "prerequisites": [
+        "footwear equipped"
+      ],
+      "consequence": "existing M14 detector ignores boot weight term",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill",
+        "equipment",
+        "detector awareness inputs"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-02/"
+    },
+    {
+      "id": "M15-MASTERY-SNEAK-03",
+      "skill": "Sneak",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000050",
+      "source_field": "ENAM",
+      "ability": "ignore walk/run distinction in detection",
+      "normal_input": "walk and run while sneaking",
+      "prerequisites": [
+        "native sneaking posture"
+      ],
+      "consequence": "existing M14 detector ignores movement-mode noise penalty",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill",
+        "movement/posture",
+        "detector awareness inputs"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-03/"
+    },
+    {
+      "id": "M15-MASTERY-SNEAK-04",
+      "skill": "Sneak",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000050",
+      "source_field": "MNAM",
+      "ability": "sneak armor bypass",
+      "normal_input": "attack while sneaking",
+      "prerequisites": [
+        "target does not detect attacker",
+        "eligible sneak hit"
+      ],
+      "consequence": "ignore armor in damage mitigation",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "mitigateArmor supports caller bypass; eligibility pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-04/"
+    },
+    {
+      "id": "M15-MASTERY-LIGHTARMOR-01",
+      "skill": "LightArmor",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004c",
+      "source_field": "ANAM",
+      "ability": "remove novice wear penalty",
+      "normal_input": "receive normal incoming contact",
+      "prerequisites": [
+        "matching armor type selected for wear"
+      ],
+      "consequence": "wear factor changes from novice to apprentice",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "armorWearMasteryMultiplier tested; actor inventory integration pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-01/"
+    },
+    {
+      "id": "M15-MASTERY-LIGHTARMOR-02",
+      "skill": "LightArmor",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004c",
+      "source_field": "JNAM",
+      "ability": "reduced armor wear",
+      "normal_input": "receive normal incoming contact",
+      "prerequisites": [
+        "matching armor type selected for wear"
+      ],
+      "consequence": "journeyman wear factor",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "armorWearMasteryMultiplier tested; actor inventory integration pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-02/"
+    },
+    {
+      "id": "M15-MASTERY-LIGHTARMOR-03",
+      "skill": "LightArmor",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004c",
+      "source_field": "ENAM",
+      "ability": "reduced equipped armor burden",
+      "normal_input": "run and swim with armor equipped",
+      "prerequisites": [
+        "matching equipped armor"
+      ],
+      "consequence": "light armor no burden; heavy armor reduced burden",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-03/"
+    },
+    {
+      "id": "M15-MASTERY-LIGHTARMOR-04",
+      "skill": "LightArmor",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004c",
+      "source_field": "MNAM",
+      "ability": "all-light armor protection bonus",
+      "normal_input": "equip all required light armor pieces",
+      "prerequisites": [
+        "required qualifying slots and no disqualifying armor; exact set pending"
+      ],
+      "consequence": "armor rating multiplier from native setting",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "item armor arithmetic tested; aggregate perk pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-04/"
+    },
+    {
+      "id": "M15-MASTERY-HEAVYARMOR-01",
+      "skill": "HeavyArmor",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000043",
+      "source_field": "ANAM",
+      "ability": "remove novice wear penalty",
+      "normal_input": "receive normal incoming contact",
+      "prerequisites": [
+        "matching armor type selected for wear"
+      ],
+      "consequence": "wear factor changes from novice to apprentice",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "armorWearMasteryMultiplier tested; actor inventory integration pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-01/"
+    },
+    {
+      "id": "M15-MASTERY-HEAVYARMOR-02",
+      "skill": "HeavyArmor",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000043",
+      "source_field": "JNAM",
+      "ability": "reduced armor wear",
+      "normal_input": "receive normal incoming contact",
+      "prerequisites": [
+        "matching armor type selected for wear"
+      ],
+      "consequence": "journeyman wear factor",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": "armorWearMasteryMultiplier tested; actor inventory integration pending",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-02/"
+    },
+    {
+      "id": "M15-MASTERY-HEAVYARMOR-03",
+      "skill": "HeavyArmor",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000043",
+      "source_field": "ENAM",
+      "ability": "reduced equipped armor burden",
+      "normal_input": "run and swim with armor equipped",
+      "prerequisites": [
+        "matching equipped armor"
+      ],
+      "consequence": "light armor no burden; heavy armor reduced burden",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-03/"
+    },
+    {
+      "id": "M15-MASTERY-HEAVYARMOR-04",
+      "skill": "HeavyArmor",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:000043",
+      "source_field": "MNAM",
+      "ability": "remove equipped heavy armor burden",
+      "normal_input": "run and swim with heavy armor",
+      "prerequisites": [
+        "heavy armor equipped"
+      ],
+      "consequence": "remove heavy armor burden from movement",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-04/"
+    },
+    {
+      "id": "M15-MASTERY-ARMORER-01",
+      "skill": "Armorer",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003d",
+      "source_field": "ANAM",
+      "ability": "repair hammer endurance",
+      "normal_input": "use normal repair interface",
+      "prerequisites": [
+        "repair hammer",
+        "eligible damaged item"
+      ],
+      "consequence": "hammer wear reduced",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "M13 reuse with S4 combat condition regression",
+      "rule_implementation": "existing M13 repair/inventory mechanics; M15 integration regression required",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/armorer-01/"
+    },
+    {
+      "id": "M15-MASTERY-ARMORER-02",
+      "skill": "Armorer",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003d",
+      "source_field": "JNAM",
+      "ability": "repair enchanted items",
+      "normal_input": "use normal repair interface",
+      "prerequisites": [
+        "repair hammer",
+        "eligible damaged item"
+      ],
+      "consequence": "enchanted weapon/armor repair allowed",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "M13 reuse with S4 combat condition regression",
+      "rule_implementation": "existing M13 repair/inventory mechanics; M15 integration regression required",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/armorer-02/"
+    },
+    {
+      "id": "M15-MASTERY-ARMORER-03",
+      "skill": "Armorer",
+      "rank": "Expert",
+      "default_base_skill_threshold": 75,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003d",
+      "source_field": "ENAM",
+      "ability": "repair beyond normal condition",
+      "normal_input": "use normal repair interface",
+      "prerequisites": [
+        "repair hammer",
+        "eligible damaged item"
+      ],
+      "consequence": "condition up to 125%; combat uses repaired condition",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "M13 reuse with S4 combat condition regression",
+      "rule_implementation": "existing M13 repair/inventory mechanics; M15 integration regression required",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/armorer-03/"
+    },
+    {
+      "id": "M15-MASTERY-ARMORER-04",
+      "skill": "Armorer",
+      "rank": "Master",
+      "default_base_skill_threshold": 100,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00003d",
+      "source_field": "MNAM",
+      "ability": "repair without consuming hammer durability",
+      "normal_input": "use normal repair interface",
+      "prerequisites": [
+        "repair hammer",
+        "eligible damaged item"
+      ],
+      "consequence": "hammer remains usable",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "M13 reuse with S4 combat condition regression",
+      "rule_implementation": "existing M13 repair/inventory mechanics; M15 integration regression required",
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/armorer-04/"
+    },
+    {
+      "id": "M15-MASTERY-ACROBATICS-01",
+      "skill": "Acrobatics",
+      "rank": "Apprentice",
+      "default_base_skill_threshold": 25,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004b",
+      "source_field": "ANAM",
+      "ability": "normal attacks in air",
+      "normal_input": "normal attack while jumping/falling",
+      "prerequisites": [
+        "airborne",
+        "normal attack only"
+      ],
+      "consequence": "normal attack allowed; power attack remains restricted",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2/S4 narrow attack posture prerequisite",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/acrobatics-01/"
+    },
+    {
+      "id": "M15-MASTERY-ACROBATICS-02",
+      "skill": "Acrobatics",
+      "rank": "Journeyman",
+      "default_base_skill_threshold": 50,
+      "threshold_policy": "native mastery GMSTs; floor base skill before rank lookup",
+      "source_record": "content:oblivion.esm:00004b",
+      "source_field": "JNAM",
+      "ability": "blocking dodge",
+      "normal_input": "block and jump with movement direction",
+      "prerequisites": [
+        "eligible grounded dodge start"
+      ],
+      "consequence": "directional dodge animation/movement and attack avoidance",
+      "probability_and_draw": null,
+      "duration_seconds": null,
+      "save_fields_required": [
+        "base skill and modifiers",
+        "equipment/condition",
+        "active controller action and interruption state"
+      ],
+      "implementation_owner": "S2/S4/M14 movement integration prerequisite",
+      "rule_implementation": null,
+      "verification_status": "pending",
+      "required_cases": [
+        "base skill threshold -1 / at / +1",
+        "modified skill crosses threshold without changing base",
+        "valid and invalid prerequisites",
+        "normal input causal result",
+        "save/restart before and after consequence"
+      ],
+      "open_questions": [
+        "trace original execution prerequisites and numeric consequences",
+        "native normal-input and restart evidence missing"
+      ],
+      "evidence": "build/oblivion-compat/m15/S2/mastery/acrobatics-02/"
+    }
+  ]
+}

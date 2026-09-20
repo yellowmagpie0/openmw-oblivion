@@ -1439,3 +1439,22 @@ were added. Next bounded task: enumerate and implement the remaining mastery
 abilities, including probabilities, eligibility and narrow paralysis state.
 
 Tested implementation/test/provenance diff SHA-256: `36a01ed74e63278b630b4fc58b48bc36501447d703b99caf03cb4bf385e4c17e`.
+
+### S2 mastery ability inventory
+
+Commit `565c99787c` contains knockback and actor-value normalization.
+Added `M15-MASTERY-ABILITY-MATRIX.json` with **40 separately identified rows**
+from independently decoded original SKIL rank descriptions. Covers Blade,
+Blunt, Hand to Hand, Block, Marksman, Sneak, light/heavy armor, four existing
+M13 Armorer regression connections, and two narrow Acrobatics attack/dodge
+prerequisites. Each row names threshold, input, equipment/posture, consequence,
+probability/duration status, save requirements, implementation owner and cases.
+Original text remains only under `S2/sources-01`; tracked rows summarize it.
+
+All rows remain **pending** until their real execution and restart tests pass.
+Existing pure arithmetic is identified without claiming whole abilities pass.
+Unknown execution semantics remain explicit. JSON, unique IDs, all 40 rows,
+required fields and thresholds validated. Linked from the main case inventory.
+S2 remains in progress; S3–S14 pending. Next: trace and implement mastery proc
+and defense policies against these rows; preserve original prerequisite and
+shared-draw/precedence behavior rather than creating independent random rolls.
