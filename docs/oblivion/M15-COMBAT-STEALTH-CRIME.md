@@ -1390,3 +1390,29 @@ Next bounded work: reaction and combat mastery rules, followed by the remaining
 S2 stealth/crime rule families and actor-policy resolution.
 
 Tested implementation/test/provenance diff SHA-256: `ecadb7b247d68726019e44a7f2cc0ad42606078ac05d7b6d82aa806c4dcb0436`.
+
+### S2 damage knockdown rule
+
+Commit `93d84f3ff0` contains bow fatigue and the retained first-arrow oracle.
+Added pure original damage-knockdown selection, explicit inclusive percentile
+comparison, float storage/cap order, signed compiled factors, zero-denominator
+outcomes, typed setting defaults and overrides. Caller trace establishes
+truncated pre-armor contact damage and victim Agility/Luck/fatigue inputs.
+World eligibility, mastery/unconsciousness, RNG persistence and reaction
+execution remain separate and open.
+
+Four new tests fail against stubs, then pass; all **1,711 component tests**
+and **63 focused ASan/UBSan tests** pass with exact inventories and no skips
+(`S2/physical-rules-13`). Boundary cases include all 100 draws, next float
+below the cap, negative factors, 0/0, typed malformed settings and fixed-seed
+100,000-draw sampling with a predeclared tolerance.
+
+Original-15 normal Continue/master-only prison run confirms GMST-71–75,
+including installed .3 damage multiplier and chance. All values are visible
+in the inspected capture; this is setting lookup, not knockdown gameplay
+acceptance. Catalog **71** facts; original setting observations **75**.
+Original-15 remains running for the next bounded reaction-setting probes;
+no installed game files were added. S2 in progress; S3–S14 pending.
+Next task: remaining reaction/mastery arithmetic and semantic matrices.
+
+Tested implementation/test/provenance diff SHA-256: `50dceae01c6bc9aeeaa8e6d2d6a82fabda04fa81db7b5afae7270862965551c4`.

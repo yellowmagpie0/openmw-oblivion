@@ -755,3 +755,86 @@ TEST(ESM4PhysicalCombat, CreatureNaturalDamageRejectsNonfiniteAndIntegerOverflow
     settings.mFatigueBase = std::nextafter(2147483648.f, 0.f);
     EXPECT_EQ(ESM4::creatureNaturalDamage(1, 1, settings), 2147483520);
 }
+
+TEST(ESM4PhysicalCombat, KnockdownUsesInclusivePercentileAndFloatThreshold)
+{
+    const ESM4::KnockdownSettings settings{0, 1, 0, 1, 1};
+    struct Case { int agility; int luck; float fatigue; int successes; };
+    for (const auto& c : {Case{40, 50, 1, 26}, {40, 50, 0, 51}, {40, 100, 1, 17},
+             {100, 50, 1, 11}, {200, 50, 1, 11}, {0, 50, 1, 100}})
+    {
+        SCOPED_TRACE(c.agility);
+        for (unsigned draw = 0; draw != 100; ++draw)
+            EXPECT_EQ(ESM4::damageKnockdown(c.agility, c.luck, c.fatigue, 10, draw, settings, installed),
+                draw < static_cast<unsigned>(c.successes));
+    }
+    auto capped = settings;capped.mMaximumChance = .25f;
+    EXPECT_TRUE(ESM4::damageKnockdown(1, 50, 1, 100, 25, capped, installed));
+    EXPECT_FALSE(ESM4::damageKnockdown(1, 50, 1, 100, 26, capped, installed));
+    capped.mMaximumChance = std::nextafter(.25f, 0.f);
+    EXPECT_FALSE(ESM4::damageKnockdown(1, 50, 1, 100, 25, capped, installed));
+    // Installed .3 * 10 stores exactly 3, then 3/50 rounds below .06.
+    const ESM4::KnockdownSettings native{0, 1, 0, .3f, .3f};
+    EXPECT_TRUE(ESM4::damageKnockdown(50, 50, 1, 10, 5, native, installed));
+    EXPECT_FALSE(ESM4::damageKnockdown(50, 50, 1, 10, 6, native, installed));
+}
+
+TEST(ESM4PhysicalCombat, KnockdownPreservesSignedFactorsAndZeroDenominator)
+{
+    ESM4::KnockdownSettings settings{0, 1, 0, -3, .25f};
+    EXPECT_FALSE(ESM4::damageKnockdown(50, 50, 1, 10, 0, settings, installed));
+    EXPECT_TRUE(ESM4::damageKnockdown(50, 50, 1, -10, 25, settings, installed));
+    settings.mDamageMultiplier = 1;
+    EXPECT_TRUE(ESM4::damageKnockdown(0, 50, 1, 10, 25, settings, installed));
+    EXPECT_FALSE(ESM4::damageKnockdown(0, 50, 1, 0, 0, settings, installed)); // unordered 0/0
+    EXPECT_FALSE(ESM4::damageKnockdown(0, 50, 1, -10, 0, settings, installed));
+    EXPECT_TRUE(ESM4::damageKnockdown(50, 50, 1, 0, 0, settings, installed)); // draw <= 0
+    EXPECT_FALSE(ESM4::damageKnockdown(50, 50, 1, 0, 1, settings, installed));
+    settings.mAgilityBase = 10;settings.mAgilityMultiplier = 0;settings.mDamageBase = 2.5f;
+    EXPECT_TRUE(ESM4::damageKnockdown(0, 0, 0, 0, 25, settings, installed));
+    EXPECT_FALSE(ESM4::damageKnockdown(0, 0, 0, 0, 26, settings, installed));
+}
+
+TEST(ESM4PhysicalCombat, KnockdownSettingsAndInputsAreValidated)
+{
+    const ESM4::KnockdownSettings settings{0, 1, 0, .3f, .3f};
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::damageKnockdown(50, 50, bad, 10, 0, settings, installed), std::invalid_argument);
+        for (float ESM4::KnockdownSettings::* member : {&ESM4::KnockdownSettings::mAgilityBase,
+                 &ESM4::KnockdownSettings::mAgilityMultiplier, &ESM4::KnockdownSettings::mDamageBase,
+                 &ESM4::KnockdownSettings::mDamageMultiplier, &ESM4::KnockdownSettings::mMaximumChance})
+        {
+            auto invalid = settings;invalid.*member = bad;
+            EXPECT_THROW(ESM4::validateKnockdownSettings(invalid), std::invalid_argument);
+        }
+    }
+    for (float bad : {-1.f, std::nextafter(1.f, 2.f)})
+    {
+        auto invalid = settings;invalid.mMaximumChance = bad;
+        EXPECT_THROW(ESM4::damageKnockdown(50, 50, 1, 10, 0, invalid, installed), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::damageKnockdown(50, 50, 1, 10, 100, settings, installed), std::invalid_argument);
+    auto huge = settings;huge.mDamageMultiplier = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::damageKnockdown(50, 50, 1, 10, 0, huge, installed), std::invalid_argument);
+    const auto defaults = ESM4::buildKnockdownSettings({});
+    EXPECT_EQ(defaults.mAgilityBase, 0);EXPECT_EQ(defaults.mAgilityMultiplier, 1);
+    EXPECT_EQ(defaults.mDamageBase, 0);EXPECT_EQ(defaults.mDamageMultiplier, -3);
+    EXPECT_EQ(defaults.mMaximumChance, .25f);
+    ESM4::GameSetting value{};value.mEditorId = "fKnockdownDamageMult";value.mData = .3f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildKnockdownSettings(values).mDamageMultiplier, .3f);
+    value.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildKnockdownSettings(values), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, KnockdownFixedSeedDistributionMatchesInclusiveDraws)
+{
+    std::mt19937 random(0x4d1531);
+    const ESM4::KnockdownSettings settings{0, 1, 0, 1, .25f};
+    unsigned successes = 0;
+    for (unsigned i = 0; i < 100000; ++i)
+        successes += ESM4::damageKnockdown(1, 50, 1, 100, random() % 100, settings, installed);
+    // Inclusive 0..25, independently declared 26%, conservative fixed tolerance.
+    EXPECT_NEAR(successes, 26000, 700);
+}

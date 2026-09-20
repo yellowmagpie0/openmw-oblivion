@@ -704,6 +704,59 @@
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-70",
       "note": "Lookup provenance only; regeneration arithmetic/integration remains open."
+    },
+    {
+      "name": "fKnockdownAgilBase",
+      "value": 0.0,
+      "storage": "0xb36f80",
+      "constructor": "0x9e94b0",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-71"
+    },
+    {
+      "name": "fKnockdownAgilMult",
+      "value": 1.0,
+      "storage": "0xb36f88",
+      "constructor": "0x9e94e0",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-72"
+    },
+    {
+      "name": "fKnockdownDamageBase",
+      "value": 0.0,
+      "storage": "0xb36f90",
+      "constructor": "0x9e9510",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-73"
+    },
+    {
+      "name": "fKnockdownDamageMult",
+      "value": -3.0,
+      "storage": "0xb36f98",
+      "constructor": "0x9e954f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:02b576",
+        "type": "f",
+        "value": 0.30000001192092896
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-74"
+    },
+    {
+      "name": "fKnockdownChance",
+      "value": 0.25,
+      "storage": "0xb36fa0",
+      "constructor": "0x9e957f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:027f9c",
+        "type": "f",
+        "value": 0.30000001192092896
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-75"
     }
   ]
 }

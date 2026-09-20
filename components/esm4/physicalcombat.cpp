@@ -50,6 +50,46 @@ namespace ESM4
         return static_cast<std::int32_t>(damage);
     }
 
+    void validateKnockdownSettings(const KnockdownSettings& settings)
+    {
+        for (float value : {settings.mAgilityBase, settings.mAgilityMultiplier,
+                 settings.mDamageBase, settings.mDamageMultiplier, settings.mMaximumChance})
+            finite(value);
+        if (settings.mMaximumChance < 0 || settings.mMaximumChance > 1)
+            throw std::invalid_argument("invalid native knockdown chance");
+    }
+
+    bool damageKnockdown(std::int32_t agility, std::int32_t luck, float fatigueRatio,
+        std::int32_t damage, unsigned draw, const KnockdownSettings& settings,
+        const PhysicalCombatSettings& physical)
+    {
+        validateKnockdownSettings(settings);
+        validatePhysicalCombatSettings(physical);
+        if (draw >= 100)
+            throw std::invalid_argument("invalid native knockdown percentile");
+        const float adjusted = rounded(double(skillValue(agility, luck, physical)) * fatigueValue(fatigueRatio, physical));
+        const float numerator = rounded(double(damage) * settings.mDamageMultiplier + settings.mDamageBase);
+        const float denominator = rounded(double(settings.mAgilityMultiplier) * adjusted + settings.mAgilityBase);
+        float threshold = settings.mMaximumChance;
+        if (denominator == 0)
+        {
+            // Original unordered 0/0 comparison fails; positive infinity is
+            // capped, negative infinity cannot beat any nonnegative draw.
+            if (numerator == 0 || std::signbit(numerator) != std::signbit(denominator))
+                return false;
+        }
+        else
+        {
+            const double ratio = double(numerator) / denominator;
+            if (ratio < -std::numeric_limits<float>::max())
+                return false;
+            if (ratio <= std::numeric_limits<float>::max())
+                threshold = std::min(rounded(ratio), settings.mMaximumChance);
+        }
+        // Original divides the integer remainder by double 100 and uses <=.
+        return double(draw) / 100.0 <= threshold;
+    }
+
     void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings)
     {
         for (int value : {settings.mHeadChance, settings.mUpperBodyChance, settings.mLowerBodyChance,

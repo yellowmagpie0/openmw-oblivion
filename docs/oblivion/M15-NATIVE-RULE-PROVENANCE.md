@@ -637,3 +637,41 @@ health comparison; it does not establish exact frame timing. An additional
 regression already agrees with the existing launch arithmetic and explicitly
 distinguishes full-fatigue and premature per-shot-debit alternatives.
 The initial failed prediction remains in the ledger alongside this repeat.
+
+## Damage knockdown roll
+
+Original `005475D0` takes victim Agility, Luck, fatigue ratio, and integer
+contact damage. Caller `0060024F–00600282` truncates the contact's saved
+pre-armor damage (`005FF5A2`), queries fatigue and integer AVs 7/3, and passes
+them to this rule. Unconsciousness and mastery knockdown are separate caller
+branches; this helper does not decide those policies.
+
+With R denoting a stored float, adjusted agility is
+`R(effectiveCombatSkill(agility,luck) * fatigueMultiplier)`. Numerator is
+`R(damage * fKnockdownDamageMult + fKnockdownDamageBase)`; denominator is
+`R(fKnockdownAgilMult * adjustedAgility + fKnockdownAgilBase)`. The ratio is
+stored as a float and capped at `fKnockdownChance`. Original signed integer
+RNG remainder `%100` is divided by double 100, and succeeds when **less than
+or equal to** this threshold. Exactly .25 therefore accepts 26 draws; a
+stored ratio just below .06 rejects draw 6. The rule does not clamp negative
+ratios up to zero. A zero numerator with positive denominator accepts draw
+0; original unordered 0/0 rejects all draws, positive infinity is capped,
+and negative infinity rejects all draws. The native pure helper handles
+these zero-denominator outcomes explicitly without propagating NaNs.
+
+Compiled factors are agility base 0, agility multiplier 1, damage base 0,
+damage multiplier **-3**, cap .25. Installed Oblivion.esm overrides the last
+two to .3/.3. The negative compiled multiplier is intentional provenance,
+not a transcription error to silently replace with an installed value.
+All four arithmetic coefficients accept finite signed settings; maximum
+chance must be finite in [0,1]. Inputs and intermediate arithmetic overflow
+are checked. World reaction eligibility, RNG state, animation and physics
+remain outside this helper.
+
+Four tests fail against stubs and pass after implementation. Cases exhaust
+all 100 draws for multiple agility/luck/fatigue combinations, check exact
+float/inclusive boundaries, zero denominators, signed factors, typed native
+defaults/overrides, malformed inputs and a fixed-seed 100,000-roll sample
+with predeclared 26% +/-700 tolerance. Source traces: `knockdown-rule.txt`,
+`contact-reactions.txt` and `contact-damage-continuation.txt` in
+`S2/sources-01`. Test evidence: `S2/physical-rules-13`.

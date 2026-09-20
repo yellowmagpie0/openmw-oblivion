@@ -42,6 +42,21 @@ namespace ESM4
         float mAttributeMultiplier;
     };
 
+    struct KnockdownSettings
+    {
+        float mAgilityBase;
+        float mAgilityMultiplier;
+        float mDamageBase;
+        float mDamageMultiplier;
+        float mMaximumChance;
+    };
+    // Caller supplies truncated pre-armor contact damage and a draw in [0,99].
+    // This is the random damage rule, not unconsciousness or mastery policy.
+    bool damageKnockdown(std::int32_t agility, std::int32_t luck, float fatigueRatio,
+        std::int32_t damage, unsigned draw, const KnockdownSettings& settings,
+        const PhysicalCombatSettings& physical);
+    void validateKnockdownSettings(const KnockdownSettings& settings);
+
     struct WeaponDamageInput
     {
         std::int32_t mSkill;
