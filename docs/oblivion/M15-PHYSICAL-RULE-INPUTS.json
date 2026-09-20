@@ -1097,6 +1097,189 @@
       "type": "int32",
       "installed_override": null,
       "live_setting_probe": "M15-S2-ORACLE-GMST-109"
+    },
+    {
+      "name": "fSneakTargetAttackBonus",
+      "value": 100.0,
+      "storage": "0xb366e0",
+      "constructor": "0x9e631f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:03c395",
+        "type": "f",
+        "value": 100.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-110"
+    },
+    {
+      "name": "fSneakTargetInCombatBonus",
+      "value": 25.0,
+      "storage": "0xb366e8",
+      "constructor": "0x9e634f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:047989",
+        "type": "f",
+        "value": 25.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-111"
+    },
+    {
+      "name": "fSneakBootWeightBase",
+      "value": 7.0,
+      "storage": "0xb366f0",
+      "constructor": "0x9e637f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:03c175",
+        "type": "f",
+        "value": 14.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-112"
+    },
+    {
+      "name": "fSneakBootWeightMult",
+      "value": 1.0,
+      "storage": "0xb366f8",
+      "constructor": "0x9e63a0",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:03c176",
+        "type": "f",
+        "value": 1.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-113"
+    },
+    {
+      "name": "fSneakBaseValue",
+      "value": -25.0,
+      "storage": "0xb36700",
+      "constructor": "0x9e63df",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:04ce36",
+        "type": "f",
+        "value": -25.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-114"
+    },
+    {
+      "name": "fSneakMaxDistance",
+      "value": 1500.0,
+      "storage": "0xb36708",
+      "constructor": "0x9e640f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:04cad4",
+        "type": "f",
+        "value": 1500.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-115"
+    },
+    {
+      "name": "fSneakSkillMult",
+      "value": 0.75,
+      "storage": "0xb36710",
+      "constructor": "0x9e643f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:04ce38",
+        "type": "f",
+        "value": 0.5
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-116"
+    },
+    {
+      "name": "fSneakSoundLosMult",
+      "value": 0.5,
+      "storage": "0xb36718",
+      "constructor": "0x9e646f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:04ce37",
+        "type": "f",
+        "value": 1.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-117"
+    },
+    {
+      "name": "fSneakRunningMult",
+      "value": 1.5,
+      "storage": "0xb36720",
+      "constructor": "0x9e649f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c89ab",
+        "type": "f",
+        "value": 1.2999999523162842
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-118"
+    },
+    {
+      "name": "fSneakSleepBonus",
+      "value": -25.0,
+      "storage": "0xb36728",
+      "constructor": "0x9e64cf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:007e8b",
+        "type": "f",
+        "value": -10.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-119"
+    },
+    {
+      "name": "fSneakSwimmingLightMult",
+      "value": 0.5,
+      "storage": "0xb36730",
+      "constructor": "0x9e64ff",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-120"
+    },
+    {
+      "name": "fSneakLightMult",
+      "value": 1.2000000476837158,
+      "storage": "0xb36738",
+      "constructor": "0x9e652f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:09f902",
+        "type": "f",
+        "value": 1.399999976158142
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-121"
+    },
+    {
+      "name": "fSneakSoundsMult",
+      "value": 1.600000023841858,
+      "storage": "0xb36740",
+      "constructor": "0x9e655f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-122"
+    },
+    {
+      "name": "fSneakExteriorDistanceMult",
+      "value": 2.0,
+      "storage": "0xb36748",
+      "constructor": "0x9e658f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-123"
+    },
+    {
+      "name": "fDetectionSneakLightMod",
+      "value": 0.0,
+      "storage": "0xb36cb8",
+      "constructor": "0x9e84b0",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:00aa64",
+        "type": "f",
+        "value": -5.0
+      },
+      "live_setting_probe": "M15-S2-ORACLE-GMST-124"
     }
   ]
 }

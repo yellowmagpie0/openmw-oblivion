@@ -326,6 +326,30 @@ namespace ESM4
         return result;
     }
 
+    NativeDetectionSettings buildNativeDetectionSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const NativeDetectionSettings result{
+            inputs.number("fSneakMaxDistance", 1500.f),
+            inputs.number("fSneakExteriorDistanceMult", 2.f),
+            inputs.number("fSneakBootWeightBase", 7.f),
+            inputs.number("fSneakBootWeightMult", 1.f),
+            inputs.number("fSneakTargetInCombatBonus", 25.f),
+            inputs.number("fSneakRunningMult", 1.5f),
+            inputs.number("fSneakSoundLosMult", .5f),
+            inputs.number("fSneakSoundsMult", 1.6f),
+            inputs.number("fDetectionSneakLightMod", 0.f),
+            inputs.number("fSneakLightMult", 1.2f),
+            inputs.number("fSneakSkillMult", .75f),
+            inputs.number("fSneakTargetAttackBonus", 100.f),
+            inputs.number("fSneakSwimmingLightMult", .5f),
+            inputs.number("fSneakSleepBonus", -25.f),
+            inputs.number("fSneakBaseValue", -25.f),
+        };
+        validateNativeDetectionSettings(result);
+        return result;
+    }
+
     SneakAttackSettings buildSneakAttackSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

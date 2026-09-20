@@ -1022,9 +1022,10 @@
       "ability": "ignore boot weight in detection",
       "normal_input": "move while sneaking",
       "prerequisites": [
-        "footwear equipped"
+        "target is sneaking (not swimming)",
+        "base Sneak mastery threshold met"
       ],
-      "consequence": "existing M14 detector ignores boot weight term",
+      "consequence": "zero boot-weight input; movement still adds fSneakBootWeightBase",
       "probability_and_draw": null,
       "duration_seconds": null,
       "save_fields_required": [
@@ -1033,7 +1034,7 @@
         "detector awareness inputs"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "sneakDetectionNoise pure input adjustment tested; existing detector world wiring and signed save migration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1043,8 +1044,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native detector input/state integration and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-02/"
     },
@@ -1059,9 +1059,10 @@
       "ability": "ignore walk/run distinction in detection",
       "normal_input": "walk and run while sneaking",
       "prerequisites": [
-        "native sneaking posture"
+        "target is sneaking (not swimming)",
+        "base Sneak mastery threshold met"
       ],
-      "consequence": "existing M14 detector ignores movement-mode noise penalty",
+      "consequence": "clear moving and running noise inputs while sneaking",
       "probability_and_draw": null,
       "duration_seconds": null,
       "save_fields_required": [
@@ -1070,7 +1071,7 @@
         "detector awareness inputs"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "sneakDetectionNoise pure input adjustment tested; existing detector world wiring and signed save migration pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1080,8 +1081,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native detector input/state integration and restart evidence missing"
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/sneak-03/"
     },

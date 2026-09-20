@@ -11,6 +11,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <stdexcept>
 
 namespace ESM4
 {
@@ -37,6 +39,79 @@ namespace ESM4
                 && std::isfinite(input.mEffectWeight) && std::isfinite(input.mThreshold)
                 && std::isfinite(input.mRandomSample);
         }
+    }
+
+    void validateNativeDetectionSettings(const NativeDetectionSettings& settings)
+    {
+        for (float value : {settings.mMaximumDistance, settings.mExteriorDistanceMultiplier,
+                 settings.mBootWeightBase, settings.mBootWeightMultiplier, settings.mTargetCombatBonus,
+                 settings.mRunningMultiplier, settings.mSoundWithoutLosMultiplier, settings.mSoundMultiplier,
+                 settings.mLightOffset, settings.mLightMultiplier, settings.mSkillMultiplier,
+                 settings.mTargetAttackBonus, settings.mSwimmingLightMultiplier, settings.mSleepBonus, settings.mBase})
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite native detection setting");
+        if (settings.mMaximumDistance <= 0 || settings.mExteriorDistanceMultiplier <= 0)
+            throw std::invalid_argument("invalid native detection distance divisor");
+    }
+
+    std::int32_t nativeDetectionAwareness(const NativeDetectionInput& input, const NativeDetectionSettings& settings)
+    {
+        validateNativeDetectionSettings(settings);
+        if (!std::isfinite(input.mDistance) || input.mDistance < 0 || input.mBootWeight < 0
+            || input.mObserverBlindness < 0 || input.mTargetChameleon < 0 || input.mTargetChameleon > 100)
+            throw std::invalid_argument("invalid native detection input");
+        const auto stored = [](double value) {
+            if (!std::isfinite(value) || std::abs(value) > std::numeric_limits<float>::max())
+                throw std::invalid_argument("native detection arithmetic overflow");
+            return static_cast<float>(value);
+        };
+        const float maximum = input.mExterior
+            ? stored(double(settings.mMaximumDistance) * settings.mExteriorDistanceMultiplier)
+            : settings.mMaximumDistance;
+        if (maximum <= 0)
+            throw std::invalid_argument("native detection distance underflow");
+        if (input.mDistance > maximum && !input.mTargetAttacking)
+            return 0;
+        const float distance = stored((double(maximum) - input.mDistance) / maximum);
+        const float boots = input.mTargetMoving
+            ? stored(double(input.mBootWeight) * settings.mBootWeightMultiplier + settings.mBootWeightBase) : 0.f;
+        const float running = input.mTargetRunning ? settings.mRunningMultiplier : 1.f;
+        const float combat = input.mTargetInCombat ? settings.mTargetCombatBonus : 0.f;
+        const float soundLos = input.mLineOfSight ? 1.f : settings.mSoundWithoutLosMultiplier;
+        float sound = std::max(0.f,
+            stored((double(running) * boots + combat) * distance * soundLos * settings.mSoundMultiplier));
+        float light = std::max(0.f, stored((double(input.mTargetLight) + settings.mLightOffset)
+            * (input.mLineOfSight ? double(distance) : 0.0)
+            * (100.0 - input.mObserverBlindness) / 100.0
+            * ((100.0 - input.mTargetChameleon) / 100.0) * settings.mLightMultiplier));
+        const float skill = stored((double(std::min(input.mObserverSneak, 100)) * distance
+            - (input.mTargetSneaking ? double(std::min(input.mTargetSneak, 100)) : 0.0)) * settings.mSkillMultiplier);
+        const float attack = input.mTargetAttacking ? settings.mTargetAttackBonus : 0.f;
+        if (input.mObserverUnderwater)
+        {
+            sound = 0;
+            light = stored(double(settings.mSwimmingLightMultiplier) * light);
+        }
+        if (input.mObserverSleeping)
+            light = settings.mSleepBonus;
+        const float total = stored(double(settings.mBase) + sound + light + attack + skill);
+        if (double(total) < std::numeric_limits<std::int32_t>::min()
+            || double(total) > std::numeric_limits<std::int32_t>::max())
+            throw std::invalid_argument("native detection score integer overflow");
+        return total > 0 && total < 1 ? 1 : static_cast<std::int32_t>(total);
+    }
+
+    SneakDetectionNoise sneakDetectionNoise(std::int32_t baseSneak, bool sneaking,
+        std::int32_t bootWeight, bool moving, bool running, const CombatMasterySettings& mastery)
+    {
+        if (bootWeight < 0)
+            throw std::invalid_argument("negative native detection boot weight");
+        const auto rank = combatMastery(baseSneak, mastery);
+        if (sneaking && rank >= CombatMastery::Journeyman)
+            bootWeight = 0;
+        if (sneaking && rank >= CombatMastery::Expert)
+            moving = running = false;
+        return {bootWeight, moving, running};
     }
 
     DetectionResult calculateDetection(const DetectionInput& input)

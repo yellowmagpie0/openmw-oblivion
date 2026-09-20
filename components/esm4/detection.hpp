@@ -11,9 +11,61 @@
 #define OPENMW_COMPONENTS_ESM4_DETECTION_H
 
 #include <cstdint>
+#include "physicalcombat.hpp"
 
 namespace ESM4
 {
+    struct NativeDetectionSettings
+    {
+        float mMaximumDistance;
+        float mExteriorDistanceMultiplier;
+        float mBootWeightBase;
+        float mBootWeightMultiplier;
+        float mTargetCombatBonus;
+        float mRunningMultiplier;
+        float mSoundWithoutLosMultiplier;
+        float mSoundMultiplier;
+        float mLightOffset;
+        float mLightMultiplier;
+        float mSkillMultiplier;
+        float mTargetAttackBonus;
+        float mSwimmingLightMultiplier;
+        float mSleepBonus;
+        float mBase;
+    };
+    struct NativeDetectionInput
+    {
+        std::int32_t mObserverSneak; // Luck-adjusted integer skill.
+        std::int32_t mTargetSneak;
+        bool mLineOfSight;
+        float mDistance;
+        std::int32_t mObserverBlindness;
+        std::int32_t mTargetLight; // Native light amount, not normalized RGB.
+        std::int32_t mTargetChameleon;
+        std::int32_t mBootWeight;
+        bool mTargetMoving;
+        bool mTargetSneaking;
+        bool mTargetAttacking;
+        bool mTargetInCombat;
+        bool mTargetRunning;
+        bool mObserverUnderwater;
+        bool mObserverSleeping;
+        bool mExterior;
+    };
+    struct SneakDetectionNoise
+    {
+        std::int32_t mBootWeight;
+        bool mMoving;
+        bool mRunning;
+    };
+    // Scalar subroutine for the existing detector. It does not own actor-pair
+    // history, LOS rays, action noise, detection state transitions or RNG.
+    std::int32_t nativeDetectionAwareness(const NativeDetectionInput& input,
+        const NativeDetectionSettings& settings);
+    SneakDetectionNoise sneakDetectionNoise(std::int32_t baseSneak, bool sneaking,
+        std::int32_t bootWeight, bool moving, bool running, const CombatMasterySettings& mastery);
+    void validateNativeDetectionSettings(const NativeDetectionSettings& settings);
+
     // Inputs are deliberately scalar and side-effect free. World code supplies
     // the raycast/light/noise observations; this component never reaches into
     // a world singleton and never consumes a random generator.

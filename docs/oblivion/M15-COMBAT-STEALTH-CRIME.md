@@ -1582,3 +1582,32 @@ master-only, no installed files. Next: complete native perception rules and
 remaining stealth/crime data/rules, then S2 actor-policy/audit closure.
 
 Tested staged implementation/test/provenance diff SHA-256: `742eda6220bfa28d0af35f4085edc31f72590428bff2220ef69f63352e177f49`.
+
+
+### S2 signed awareness arithmetic and noise mastery
+
+Commit `29543031f2` contains sneak contact rules. Added the reviewed native
+signed-awareness scalar calculation and Sneak footwear/movement mastery
+adjustment in the existing detection component. Added 15 typed native factors;
+Original-15 GMST-110–124 captures are inspected. Catalog **120**, observations
+**124**. Legacy normalized detection remains an explicitly incomplete runtime
+adapter until inputs, detection history and save version migrate together.
+
+Four new tests fail against stubs, then pass. All **1,740 component tests**
+and **96 focused ASan/UBSan tests** pass with exact inventories and no skips
+(`S2/detection-rules-01`), preserving the four existing M14 characterization
+tests. Independently emulated original instructions supply 20 named expected
+cases plus **1,024** differential cases (512 complete boolean combinations,
+512 numeric vectors, seed 5051870), zero mismatches under both 53/64-bit x87
+controls (`S2/oracle-emulator`). This supplementary instruction-level oracle
+does not replace required original-game behavior or OpenMW gameplay.
+
+Engine integration at `29543031f2` rebuilt `openmw`, `openmw-tests`, `esmtool`
+with exit 0; all **551 engine tests** pass with exact inventory/no skips
+(`S2/integration-05`). Detection helper changes are newer than that integration
+build. S2 remains in progress; S3–S14 pending. Original-15 remains paused,
+master-only, no task-installed files. Next: pickpocket/crime rule semantics,
+remaining reaction/data requirements and actor-policy audit; native detector
+integration/migration remains a mandatory open item.
+
+Tested implementation/test/provenance diff SHA-256: `d41ec27b118fb615e6d4844cabaed69f7016b61c9ee5940a0d744c4ccc19431f`.

@@ -924,3 +924,67 @@ or create a second detector to make these pure tests look integrated.
 Sources: `sneak-attack-multipliers.txt`, `sneak-attack-caller.txt`,
 `sneak-posture-query.txt`, `combat-target-list-query.txt`,
 `sneak-victim-detection-query.txt` and contact continuation under sources-01.
+
+
+## Signed native detection arithmetic and Sneak noise mastery
+
+Original `005463F0–005465FB`, called at `005F68DB`, computes a signed integer
+awareness score. Let R denote a float32 storage boundary:
+
+- Maximum = exterior ? R(maxDistance * exteriorMultiplier) : maxDistance.
+  Distance beyond maximum returns zero unless the target is attacking.
+  Distance factor = R((maximum - distance) / maximum); attacking targets can
+  therefore have a negative factor beyond range.
+- Boots = moving ? R(bootWeight * bootMultiplier + bootBase) : 0.
+  Sound = max(0, R((runningMultiplier * boots + targetCombatBonus) * distance
+  factor * soundLOSFactor * soundMultiplier)), with running/combat factors
+  enabled only for their corresponding target states. SoundLOSFactor is 1
+  with LOS and the setting without LOS; absence of LOS is not a hearing gate.
+- Light = max(0, R((targetLight + lightOffset) * (LOS ? distanceFactor : 0)
+  * (100 - observerBlindness) / 100 * ((100 - targetChameleon) / 100)
+  * lightMultiplier)). The input is integer native light amount, not RGB.
+- Skill = R((min(observerAdjustedSneak,100) * distanceFactor
+  - (targetSneaking ? min(targetAdjustedSneak,100) : 0)) * skillMultiplier).
+  Caller adjusts both current skills by luck before truncating them to integer.
+- Underwater **observer** sets sound to zero and stores light times the swim
+  multiplier. Sleeping **observer** replaces light with sleepBonus. It does
+  not simply add that bonus to ordinary light.
+- Total = R(base + sound + light + (targetAttacking ? attackBonus : 0) + skill).
+  Truncate toward zero, except strictly positive totals below one return 1.
+  There is no [0,100] normalization or random roll in this helper.
+
+Original caller `005F6695–005F6734` gets target boot weight, then zeroes it
+while sneaking at Journeyman base Sneak. At Expert it also clears moving and
+running inputs. Boot base noise remains at Journeyman; multiplying all footwear
+noise by zero would be wrong. Sneaking query excludes swimming. Invisibility
+or Chameleon >=100 is separately handled by the caller (score -100), as are
+LOS, light sampling/night-eye, action noise, cached awareness and detection
+state transitions. These do not become implemented merely from this scalar
+subroutine. Source files `detection-rule.txt`, `detection-rule-caller.txt` and
+`float-to-int-runtime.txt` retain the reviewed instructions.
+
+`nativeDetectionAwareness` and `sneakDetectionNoise` are scalar subroutines in
+the **existing** detection component, with typed settings from winning GMSTs.
+The legacy normalized public adapter remains active until its caller, state
+history and save schema are migrated together; the new helpers are not a
+second actor-pair detector or gameplay acceptance. Current runtime-state
+validation also enforces [0,100] and requires deliberate version migration.
+
+Original-15 GMST-110–124 captures were opened and inspected: 15 native factors,
+including installed differences from compiled defaults. A supplementary local
+Unicorn oracle executes the actual original `005463F0` bytes and original
+integer-conversion helper, with PE constants and audited installed settings.
+It is independent of production arithmetic and generates expected test values,
+but is **not original-game runtime acceptance**. Twenty named cases agree under
+both x87 control words 027F and 037F; direct captures remain the live-setting
+oracle. Emulator scripts, version, hashes and results are under
+`S2/oracle-emulator`; no proprietary bytes are tracked. Four new tests fail
+against stubs before implementation; existing four M14 characterization tests
+remain intact. New cases cover signed results, light/sound separation, posture,
+mastery boundaries, distance edges, integer conversion and invalid inputs.
+
+The supplementary comparison also passes **1,024** cases: all 512 combinations
+of nine boolean inputs and 512 seeded numeric vectors (seed 5051870), with
+zero C++/original-instruction differences and zero differences between the
+two original x87 precision controls. `detection-comparison.json` and the full
+input/expected corpus are retained; no mismatches or retries were discarded.
