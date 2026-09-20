@@ -1245,3 +1245,23 @@ still pending hash-checked cleanup. S2 remains in progress; S3–S14 pending.
 Next bounded task: armor mitigation and condition application contracts.
 
 Tested implementation/test/provenance diff SHA-256: `3a896a12534be7a1e995ffe5685a590e66e3cab042560d68acd67fa6ddeb20e6`.
+
+### S2 armor mitigation and condition arithmetic
+
+Commit `5bb0643eb7` contains wear amount rules. Added independent original
+armor mitigation, Novice/Journeyman armor wear selection, and condition-after-
+wear rules, including the below-one break boundary. Five tests failed against
+stubs; all **1,690 component tests** and **42 focused ASan/UBSan tests** now pass
+with exact inventories/no skips (`S2/physical-rules-10`). Same build/test and
+inventory commands as physical-rules-09. Both build logs/test results inspected.
+Four new original setting captures opened; the catalog now has **48** physical
+inputs and numeric lookup ledger **52** observations. A post-hit inventory
+capture shows sword condition 99; retained as exploratory diagnostic because
+of integer display precision and no pre-hit wear prediction.
+
+The native world still needs aggregation, bypass eligibility, equipped-item
+mutation, breakage/events and persistence integration. S2 remains in progress;
+S3–S14 pending. Original-12 is paused in inventory, task-added files still
+pending cleanup. Next bounded task: armor wear selection and mastery matrix.
+
+Tested implementation/test/provenance diff SHA-256: `87690083785aadb5a9e6ffd5d8f04ec71bb47235bbf7633f1d2645c38be9d3fe`.

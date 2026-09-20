@@ -448,3 +448,45 @@ original evidence: `sources-01/durability-rules.txt`,
 `durability-initializers.txt`, `contact-damage-continuation.txt`. The newly
 captured `armor-wear-selection.txt` is follow-up evidence, not yet a completed
 selection implementation.
+
+### Armor mitigation, wear mastery and condition boundary
+
+Original contact `0x5ff71e` calls the victim's armor-rating slot `0x348`;
+PlayerCharacter's reviewed vtable maps it to `0x60e580` (the previously
+reviewed rating aggregation/cap function). Constants at `0xa309f0` and
+`0xa2fe7c` both decode to 100. Rating is limited to 100, divided by 100 and
+stored as float at `0x5ff759`, then limited by `fArmorRatingMax` (storage
+`0xb36ea0`, already catalogued). The caller's bypass branch substitutes zero.
+Health damage is `R(damage * (1 - storedFraction))` at `0x5ff7a9`–`0x5ff7b9`.
+The new helper accepts already aggregated rating and caller-resolved bypass;
+it does not establish mastery/sneak bypass eligibility or block ordering.
+
+Player condition slot `0x2c4` maps to `0x65ff10`, forwarding to `0x5f3870`
+when the player cheat guard permits. The latter skips nonpositive wear, applies
+armor mastery unless its bypass argument is set, then subtracts wear from
+current item health with a float store. Remaining condition **below one** is
+snapped to zero (`0x5f3940`–`0x5f3953`), not merely clamped at zero. A zero-wear
+call leaves even fractional condition unchanged. Repaired excess is not capped.
+Breakage/unequip/events and the original player cheat guard remain world policy.
+
+For armor, `0x4b4c70` decodes BMDT heavy bit 7; heavy uses skill AV `0x12`,
+light uses `0x1b`. `0x5f3870` selects Novice factor at rank zero, unity at
+Apprentice, Journeyman factor at rank >= 2. Four native settings have compiled
+and live values 1.5 (both Novice) and .5 (both Journeyman); no installed
+overrides. Original probes 49–52 independently display those values. The
+factory uses the native settings inventory and verified fallbacks. These two
+mastery effects now have pure amount selection; actual equipped-item wear and
+persistence still need native integration and runtime acceptance.
+
+Five tests first failed against stubs, then passed: mitigation/cap/bypass,
+one-point break boundary with adjacent floats, mastery threshold minus/at/plus
+one for both armor classes, typed defaults/override, and invalid inputs. Full
+results: `S2/physical-rules-10`. Disassembly: `condition-mutation.txt`,
+`player-condition-mutation.txt`, `armor-weight-class.txt`, and
+`contact-damage-continuation.txt` under `sources-01`.
+
+Exploratory original inventory capture `original-12/sword-condition-after.png`
+shows condition 99 after the first sword hit (before: 100). This is consistent
+with 6 wear leaving 994/1000, but integer UI precision does not prove exact wear
+and the wear prediction was not recorded before that hit. Its diagnostic
+record explicitly leaves acceptance false; it is not a new completed gate.

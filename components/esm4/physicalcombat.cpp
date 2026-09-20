@@ -39,6 +39,49 @@ namespace ESM4
         }
     }
 
+    void validateArmorWearMasterySettings(const ArmorWearMasterySettings& settings)
+    {
+        for (float value : {settings.mLightNoviceMultiplier, settings.mHeavyNoviceMultiplier,
+                 settings.mLightJourneymanMultiplier, settings.mHeavyJourneymanMultiplier})
+            nonnegative(value);
+    }
+
+    float armorWearMasteryMultiplier(std::int32_t skill, ArmorWeight weight,
+        const ArmorWearMasterySettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateArmorWearMasterySettings(settings);
+        const auto rank = combatMastery(skill, mastery);
+        switch (weight)
+        {
+            case ArmorWeight::Light:
+                return rank >= CombatMastery::Journeyman ? settings.mLightJourneymanMultiplier
+                    : rank == CombatMastery::Novice ? settings.mLightNoviceMultiplier : 1.f;
+            case ArmorWeight::Heavy:
+                return rank >= CombatMastery::Journeyman ? settings.mHeavyJourneymanMultiplier
+                    : rank == CombatMastery::Novice ? settings.mHeavyNoviceMultiplier : 1.f;
+        }
+        throw std::invalid_argument("invalid native armor weight class");
+    }
+
+    float conditionAfterWear(float current, float wear)
+    {
+        nonnegative(current);
+        nonnegative(wear);
+        if (wear == 0.f)
+            return current;
+        const float remaining = rounded(double(current) - wear);
+        return remaining < 1.f ? 0.f : remaining;
+    }
+
+    ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass)
+    {
+        nonnegative(damage);
+        nonnegative(rating);
+        nonnegative(maximumFraction);
+        const float fraction = bypass ? 0.f : std::min(rounded(std::min(double(rating), 100.0) / 100.0), maximumFraction);
+        return {rounded(double(damage) * (1.0 - fraction)), fraction};
+    }
+
     void validateDurabilitySettings(const DurabilitySettings& settings)
     {
         nonnegative(settings.mWeaponDamageMultiplier);

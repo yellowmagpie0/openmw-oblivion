@@ -527,3 +527,94 @@ TEST(ESM4PhysicalCombat, DurabilitySettingsUseNativeTypesAndDefaults)
     weapon.mData = -.01f;
     EXPECT_THROW(ESM4::buildDurabilitySettings(values), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, ArmorMitigationUsesFractionStoreAndBypass)
+{
+    for (const auto& c : {std::pair{0.f, 100.f}, {1.f, 99.f}, {50.f, 50.f}, {85.f, 15.f},
+             {99.f, 1.f}, {100.f, 0.f}, {101.f, 0.f}, {10000.f, 0.f}})
+    {
+        const auto result = ESM4::mitigateArmor(100, c.first, 1, false);
+        EXPECT_NEAR(result.mHealthDamage, c.second, .00001f);
+        EXPECT_NEAR(result.mAbsorbedFraction, (100.f - c.second) / 100.f, .000001f);
+        EXPECT_EQ(ESM4::mitigateArmor(100, c.first, 1, true).mHealthDamage, 100);
+    }
+    EXPECT_EQ(ESM4::mitigateArmor(0, 85, 1, false).mHealthDamage, 0);
+    EXPECT_NEAR(ESM4::mitigateArmor(1, 85, 1, false).mHealthDamage, .15f, .000001f);
+    EXPECT_EQ(ESM4::mitigateArmor(100, 85, .5f, false).mHealthDamage, 50);
+    EXPECT_EQ(ESM4::mitigateArmor(100, 85, 0, false).mHealthDamage, 100);
+    EXPECT_EQ(ESM4::mitigateArmor(100, 101, 2, false).mHealthDamage, 0);
+    EXPECT_GT(ESM4::mitigateArmor(100, std::nextafter(100.f, 0.f), 1, false).mHealthDamage, 0);
+    EXPECT_EQ(ESM4::mitigateArmor(100, std::nextafter(100.f, 101.f), 1, false).mHealthDamage, 0);
+}
+
+TEST(ESM4PhysicalCombat, PositiveWearSnapsConditionBelowOne)
+{
+    EXPECT_EQ(ESM4::conditionAfterWear(1000, 6), 994);
+    EXPECT_EQ(ESM4::conditionAfterWear(1250, 6), 1244); // Above normal repair preserved.
+    EXPECT_EQ(ESM4::conditionAfterWear(0, 0), 0);
+    EXPECT_EQ(ESM4::conditionAfterWear(1, 0), 1);
+    EXPECT_EQ(ESM4::conditionAfterWear(.5f, 0), .5f); // Original no-wear early return.
+    EXPECT_EQ(ESM4::conditionAfterWear(.5f, .01f), 0);
+    EXPECT_EQ(ESM4::conditionAfterWear(2, 1), 1);
+    EXPECT_GT(ESM4::conditionAfterWear(std::nextafter(2.f, 3.f), 1), 1);
+    EXPECT_EQ(ESM4::conditionAfterWear(std::nextafter(2.f, 1.f), 1), 0);
+    EXPECT_EQ(ESM4::conditionAfterWear(1, 2), 0);
+    EXPECT_EQ(ESM4::conditionAfterWear(1, std::numeric_limits<float>::max()), 0);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearMasteryUsesNoviceAndJourneymanBranches)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    // Distinct factors prove class selection; installed factors share values.
+    const ESM4::ArmorWearMasterySettings settings{1.5f, 2.f, .5f, .25f};
+    for (int skill : {-1, 0, 1, 24, 25, 26, 49, 50, 51, 74, 75, 76, 99, 100, 101})
+    {
+        EXPECT_EQ(ESM4::armorWearMasteryMultiplier(skill, ESM4::ArmorWeight::Light, settings, mastery),
+            skill < 25 ? 1.5f : skill < 50 ? 1.f : .5f);
+        EXPECT_EQ(ESM4::armorWearMasteryMultiplier(skill, ESM4::ArmorWeight::Heavy, settings, mastery),
+            skill < 25 ? 2.f : skill < 50 ? 1.f : .25f);
+    }
+    EXPECT_EQ(ESM4::armorWearMasteryMultiplier(20, ESM4::ArmorWeight::Light, settings, {{10, 20, 30, 40}}), .5f);
+}
+
+TEST(ESM4PhysicalCombat, ArmorMutationArithmeticRejectsInvalidDomains)
+{
+    const ESM4::ArmorWearMasterySettings settings{1.5f, 1.5f, .5f, .5f};
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::conditionAfterWear(bad, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::conditionAfterWear(1, bad), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateArmor(bad, 50, 1, false), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, false), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateArmor(1, 50, bad, false), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, true), std::invalid_argument);
+        for (float ESM4::ArmorWearMasterySettings::* member : {&ESM4::ArmorWearMasterySettings::mLightNoviceMultiplier,
+                 &ESM4::ArmorWearMasterySettings::mHeavyNoviceMultiplier,
+                 &ESM4::ArmorWearMasterySettings::mLightJourneymanMultiplier,
+                 &ESM4::ArmorWearMasterySettings::mHeavyJourneymanMultiplier})
+        {
+            auto invalid = settings;invalid.*member = bad;
+            EXPECT_THROW(ESM4::armorWearMasteryMultiplier(50, ESM4::ArmorWeight::Light, invalid, mastery), std::invalid_argument);
+        }
+    }
+    EXPECT_THROW(ESM4::armorWearMasteryMultiplier(50, static_cast<ESM4::ArmorWeight>(99), settings, mastery), std::invalid_argument);
+    EXPECT_THROW(ESM4::armorWearMasteryMultiplier(50, ESM4::ArmorWeight::Light, settings, {{25, 24, 75, 100}}), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, ArmorWearMasterySettingsUseTypedNativeValues)
+{
+    const auto defaults = ESM4::buildArmorWearMasterySettings({});
+    EXPECT_EQ(defaults.mLightNoviceMultiplier, 1.5f);
+    EXPECT_EQ(defaults.mHeavyNoviceMultiplier, 1.5f);
+    EXPECT_EQ(defaults.mLightJourneymanMultiplier, .5f);
+    EXPECT_EQ(defaults.mHeavyJourneymanMultiplier, .5f);
+    ESM4::GameSetting setting{};
+    setting.mEditorId = "fPerkLightArmorJourneymanDamageMult";setting.mData = .25f;
+    const std::array<const ESM4::GameSetting*, 1> values{&setting};
+    EXPECT_EQ(ESM4::buildArmorWearMasterySettings(values).mLightJourneymanMultiplier, .25f);
+    setting.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildArmorWearMasterySettings(values), std::invalid_argument);
+    setting.mData = -.1f;
+    EXPECT_THROW(ESM4::buildArmorWearMasterySettings(values), std::invalid_argument);
+}

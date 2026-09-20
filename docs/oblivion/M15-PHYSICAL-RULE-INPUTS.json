@@ -494,6 +494,42 @@
         "value": 9.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-48"
+    },
+    {
+      "name": "fPerkLightArmorNoviceDamageMult",
+      "value": 1.5,
+      "storage": "0xb374f0",
+      "constructor": "0x9eb29f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-49"
+    },
+    {
+      "name": "fPerkHeavyArmorNoviceDamageMult",
+      "value": 1.5,
+      "storage": "0xb374f8",
+      "constructor": "0x9eb2cf",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-50"
+    },
+    {
+      "name": "fPerkHeavyArmorJourneymanDamageMult",
+      "value": 0.5,
+      "storage": "0xb37500",
+      "constructor": "0x9eb2ff",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-51"
+    },
+    {
+      "name": "fPerkLightArmorJourneymanDamageMult",
+      "value": 0.5,
+      "storage": "0xb37508",
+      "constructor": "0x9eb32f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": "M15-S2-ORACLE-GMST-52"
     }
   ]
 }

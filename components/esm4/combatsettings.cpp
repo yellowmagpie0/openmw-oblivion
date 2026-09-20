@@ -255,6 +255,19 @@ namespace ESM4
             throw std::invalid_argument("invalid native maximum armor rating");
         return result;
     }
+    ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        ArmorWearMasterySettings result{
+            inputs.number("fPerkLightArmorNoviceDamageMult", 1.5f),
+            inputs.number("fPerkHeavyArmorNoviceDamageMult", 1.5f),
+            inputs.number("fPerkLightArmorJourneymanDamageMult", .5f),
+            inputs.number("fPerkHeavyArmorJourneymanDamageMult", .5f),
+        };
+        validateArmorWearMasterySettings(result);
+        return result;
+    }
+
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

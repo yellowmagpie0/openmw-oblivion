@@ -570,6 +570,58 @@
       "input_log": "build/oblivion-compat/m15/S2/original-12/durability-settings-input-log.jsonl",
       "input_log_sha256": "bd05c8f2c8ca049fa9c565ae9328c074f0c663ba48313aefe241b34294d353d5",
       "initialization": "original-12, after first sword observation; read-only lookup while paused"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-49",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fPerkLightArmorNoviceDamageMult",
+      "observed": 1.5,
+      "capture": "build/oblivion-compat/m15/S2/original-12/fPerkLightArmorNoviceDamageMult.png",
+      "capture_sha256": "ecffa99041f4955a57e3c56d88d10330ff5e7a33afc0aee45fe069caf871827b",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/armor-mastery-settings-input-log.jsonl",
+      "input_log_sha256": "8b96e990749e078cb513e722709e7845d268368f8ecbc8f0c2fb5bd38435bb0f",
+      "initialization": "original-12, after first sword observation; read-only lookup while paused"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-50",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fPerkHeavyArmorNoviceDamageMult",
+      "observed": 1.5,
+      "capture": "build/oblivion-compat/m15/S2/original-12/fPerkHeavyArmorNoviceDamageMult.png",
+      "capture_sha256": "88f40257c6d8cc24c16397b9ba3ed5cac9ebf4fd4947a3f725aa93ef9ae72ee6",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/armor-mastery-settings-input-log.jsonl",
+      "input_log_sha256": "8b96e990749e078cb513e722709e7845d268368f8ecbc8f0c2fb5bd38435bb0f",
+      "initialization": "original-12, after first sword observation; read-only lookup while paused"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-51",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fPerkHeavyArmorJourneymanDamageMult",
+      "observed": 0.5,
+      "capture": "build/oblivion-compat/m15/S2/original-12/fPerkHeavyArmorJourneymanDamageMult.png",
+      "capture_sha256": "fdf7f1711240cd09aa89ca7d72199a03d819de261c8b26268330d10f310590b4",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/armor-mastery-settings-input-log.jsonl",
+      "input_log_sha256": "8b96e990749e078cb513e722709e7845d268368f8ecbc8f0c2fb5bd38435bb0f",
+      "initialization": "original-12, after first sword observation; read-only lookup while paused"
+    },
+    {
+      "id": "M15-S2-ORACLE-GMST-52",
+      "level": "L5 original executable, read-only console lookup",
+      "input": "getgs fPerkLightArmorJourneymanDamageMult",
+      "observed": 0.5,
+      "capture": "build/oblivion-compat/m15/S2/original-12/fPerkLightArmorJourneymanDamageMult.png",
+      "capture_sha256": "225d65d8bb6959979429999349ac1e7c52daa37acad17e5e0e414197451a1f96",
+      "inspected": true,
+      "passed": true,
+      "input_log": "build/oblivion-compat/m15/S2/original-12/armor-mastery-settings-input-log.jsonl",
+      "input_log_sha256": "8b96e990749e078cb513e722709e7845d268368f8ecbc8f0c2fb5bd38435bb0f",
+      "initialization": "original-12, after first sword observation; read-only lookup while paused"
     }
   ],
   "display_precision": "Float console responses display two decimal places; these observations are not a binary float readback.",

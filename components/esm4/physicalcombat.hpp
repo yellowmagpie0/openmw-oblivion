@@ -86,6 +86,30 @@ namespace ESM4
     float armorWear(float incomingDamage, float absorbedFraction, const DurabilitySettings& settings);
     void validateDurabilitySettings(const DurabilitySettings& settings);
 
+    enum class ArmorWeight { Light, Heavy };
+    struct ArmorWearMasterySettings
+    {
+        float mLightNoviceMultiplier;
+        float mHeavyNoviceMultiplier;
+        float mLightJourneymanMultiplier;
+        float mHeavyJourneymanMultiplier;
+    };
+    float armorWearMasteryMultiplier(std::int32_t skill, ArmorWeight weight,
+        const ArmorWearMasterySettings& settings, const CombatMasterySettings& mastery);
+    void validateArmorWearMasterySettings(const ArmorWearMasterySettings& settings);
+    // Caller supplies final wear after mastery/block policy. Positive wear
+    // snaps remaining condition below one to zero; repaired excess is retained.
+    float conditionAfterWear(float current, float wear);
+
+    struct ArmorMitigation
+    {
+        float mHealthDamage;
+        float mAbsorbedFraction;
+    };
+    // Total rating already includes the actor's aggregation/mastery/cap policy.
+    // The caller resolves armor bypass eligibility; this helper only applies it.
+    ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass);
+
     struct HandToHandInput
     {
         std::int32_t mSkill;
