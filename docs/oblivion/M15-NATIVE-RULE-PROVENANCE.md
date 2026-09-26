@@ -2531,3 +2531,33 @@ The High-process AV48 float getter `006289F0` returns a cached integer query,
 not ordinary float composition; Encumbrance AV11 also has inventory/cache
 behavior. The new NPC scalar service explicitly rejects these two queries
 until their additional state is integrated. They are not silently approximated.
+
+### Actor-value command dispatch and ForceAV delta
+
+For original executable SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+the script command table at `00B0C8C0` identifies SetAV handler `005016D0`,
+ModAV `005017E0`, and ForceAV `00501890`. Set forwards integer arguments to
+actor virtual `290`; Mod forwards integer arguments to `2A0` in script mode
+or `2A8` in console mode (`00B361AC`). Force queries current float through
+virtual `288`, subtracts that value from the exact int32 request, stores the
+delta once as float, and forwards it to `29C` (script) or `2A4` (console).
+The mutation slots correspond to the previously identified Script/Damage
+wrappers; callback source is null for these commands. In particular, casting
+request 16,777,217 to float before subtracting current 16,777,216 would lose the
+original delta of 1. The same issue occurs at signed int32 extremes.
+
+`S2/oracle-emulator/actor-value-script-commands.py` executes **10,230** original
+handler paths, with both x87 modes, script/console modes, six AV IDs, integer
+boundaries and seeded fractional current values, plus failed extraction and
+non-actor returns. Argument extraction supplies already typed integers;
+dynamic_cast, actor getter and actor mutation are explicit stub boundaries.
+This does not establish textual decimal coercion, base setter fields, god-mode
+eligibility, death or callbacks. All **3,408 Force delta cases** match optimized
+`forceActorValueDelta` C++ bits (`force-actor-value-comparison.json`).
+
+The result is a modifier delta, not a promised final current AV: the ordinary
+NPC Magicka outer scale runs again after applying the delta to Script storage.
+Actual class/service tests retain this behavior (68.625 current, request100,
+delta31.375 produces115.6875 with scale1.5), and player health force changes
+current without replacing maximum. Automatic script routing remains open.

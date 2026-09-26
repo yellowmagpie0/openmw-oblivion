@@ -303,6 +303,10 @@ namespace
         EXPECT_THROW(service.getPlayerValue(11), std::invalid_argument);
         EXPECT_THROW(service.getPlayerIntegerValue(72), std::invalid_argument);
         const auto first = *service.findActorValues(values.mActor);
+        service.changePlayerValue(player, 8, ESM4::ActorValueModifier::Script,
+            ESM4::forceActorValueDelta(100, service.getPlayerValue(8)), settings);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 100);
+        EXPECT_EQ(stats.getHealth().getModified(), 95.5f); // Force does not replace maximum.
         service.publishPlayerValues(player, first, settings);
         EXPECT_EQ(*service.findActorValues(values.mActor), first);
         service.changePlayerValue(player, 5, ESM4::ActorValueModifier::Script, 1, settings);
@@ -409,6 +413,14 @@ namespace
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getModified(), 110.5f);
         EXPECT_EQ(service.getNonPlayerValue(ptr, 9), 68.625f);
         EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 9), 67);
+        const auto beforeForce = *service.findActorValues(values.mActor);
+        service.changeNonPlayerValue(ptr, 9, ESM4::ActorValueModifier::Script,
+            ESM4::forceActorValueDelta(100, service.getNonPlayerValue(ptr, 9)));
+        // Native Force computes delta before the NPC outer multiplier. It does
+        // not solve an inverse scaling equation to guarantee the requested AV.
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 9), 115.6875f);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getModified(), 55);
+        service.publishNonPlayerValues(ptr, beforeForce);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 68.625f);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getModified(), 55);
         EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Athletics), 31.5f);

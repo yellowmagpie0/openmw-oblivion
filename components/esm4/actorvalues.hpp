@@ -37,6 +37,11 @@ namespace ESM4
     ActorValueState changeActorValueModifier(
         const ActorValueState& state, ActorValueOwner owner, ActorValueModifier modifier, float delta);
 
+    // Original ForceAV command: exact integer request minus the current float
+    // query, then one float store. The caller selects Script or console Damage
+    // and applies eligibility; this does not promise a final current value.
+    float forceActorValueDelta(std::int32_t requested, float current);
+
     enum class DynamicActorValue : std::uint8_t { Health = 8, Magicka = 9, Fatigue = 10, Encumbrance = 11 };
 
     struct PlayerDynamicBaseSettings

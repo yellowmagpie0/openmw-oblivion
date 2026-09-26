@@ -203,3 +203,14 @@ TEST(ESM4ActorValues, NpcMagickaScalesDistinctFloatAndIntegerProcessResults)
     EXPECT_THROW(ESM4::scaleNpcMagicka(std::numeric_limits<float>::max(), 20), std::invalid_argument);
     EXPECT_THROW(ESM4::scaleNpcIntegerMagicka(std::numeric_limits<std::int32_t>::max(), 20), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, ForceCommandRetainsExactIntegerRequestUntilDeltaStore)
+{
+    EXPECT_EQ(ESM4::forceActorValueDelta(100, 90.75f), 9.25f);
+    EXPECT_EQ(ESM4::forceActorValueDelta(16777217, 16777216.f), 1.f);
+    EXPECT_EQ(ESM4::forceActorValueDelta(-16777217, -16777216.f), -1.f);
+    EXPECT_EQ(ESM4::forceActorValueDelta(std::numeric_limits<std::int32_t>::max(), 2147483648.f), -1.f);
+    EXPECT_EQ(ESM4::forceActorValueDelta(std::numeric_limits<std::int32_t>::min(), -2147483648.f), 0.f);
+    EXPECT_THROW(ESM4::forceActorValueDelta(0, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+    EXPECT_THROW(ESM4::forceActorValueDelta(0, std::numeric_limits<float>::infinity()), std::invalid_argument);
+}

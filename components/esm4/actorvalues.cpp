@@ -92,6 +92,13 @@ namespace ESM4
         return process == ActorValueProcess::Low ? low : truncated(double(low) + maximum);
     }
 
+    float forceActorValueDelta(std::int32_t requested, float current)
+    {
+        if (!std::isfinite(current))
+            throw std::invalid_argument("nonfinite native ForceAV current value");
+        return stored(double(requested) - current);
+    }
+
     float actorMagickaScale(float multiplier)
     {
         if (!std::isfinite(multiplier))

@@ -2753,3 +2753,16 @@ a native override changes Magicka 1 -> 2, and removes the override to recover
 the .5 compiled default. Raw player form contributions remain unchanged across
 these derived recalculations. No save format or automatically activated gameplay
 path changed; preceding runtime evidence is not claimed as an active-stat test.
+
+### S2/S3 ForceAV command delta
+
+The original command handlers now have 10,230 independent instruction cases;
+3,408 Force deltas match the C++ helper bit for bit. It preserves the exact
+int32 request until subtraction and the final float store. Actual player/NPC
+fixtures apply the delta through existing owned Script storage and shared
+projections, checking unchanged maximum and NPC Magicka's outer-scale behavior.
+`S3/force-actor-value-01` passes **1,884 component /362 ASan+UBSan ESM4 /576
+engine tests**, with all three binaries rebuilt. No schema or automatic script
+activation changed. Native SetAV base ownership, command eligibility/events,
+and complete World/script writer routing remain open; the handler oracle stops
+at actor virtual mutation calls and does not establish those later transitions.
