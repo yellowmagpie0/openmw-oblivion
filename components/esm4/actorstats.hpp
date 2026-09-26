@@ -13,6 +13,10 @@ namespace ESM4
     // Stores the sum as float before the optional nonpositive clamp. Caller
     // selects the modifier category and handles notifications/derived values.
     float addActorValueModifier(float current, float delta, bool allowPositive);
+    // NPC sparse storage distinguishes an absent entry from a stored zero.
+    // A new nonzero entry takes delta directly; only existing entries clamp.
+    std::optional<float> addSparseActorValueModifier(
+        std::optional<float> current, float delta, bool allowPositive);
 
     // Pure native ACBS lookup. The optional player level represents its resolved
     // base-record field. Fixed levels bypass offset clamps. The returned signed

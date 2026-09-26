@@ -353,3 +353,23 @@ TEST(ESM4ActorStats, ModifierAdditionDiagnosesNonfiniteInputsAndOverflow)
     EXPECT_THROW(ESM4::addActorValueModifier(largest, largest, false), std::invalid_argument);
     EXPECT_THROW(ESM4::addActorValueModifier(-largest, -largest, true), std::invalid_argument);
 }
+
+TEST(ESM4ActorStats, SparseModifiersPreserveNativeAbsentEntrySemantics)
+{
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(std::nullopt, 5, false), 5);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(0, 5, false), std::nullopt);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(-2, 5, false), std::nullopt);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(-2, 5, true), 3);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(std::nullopt, -5, false), -5);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(-5, 2, false), -3);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(-5, 5, true), std::nullopt);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(std::nullopt, -0.f, false), std::nullopt);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(-0.f, -0.f, true), std::nullopt);
+    // Removal matters: the next addition follows the absent-entry branch.
+    const auto removed = ESM4::addSparseActorValueModifier(-5, 6, false);
+    EXPECT_EQ(ESM4::addSparseActorValueModifier(removed, 1, false), 1);
+    EXPECT_THROW(ESM4::addSparseActorValueModifier(std::nullopt,
+        std::numeric_limits<float>::quiet_NaN(), false), std::invalid_argument);
+    EXPECT_THROW(ESM4::addSparseActorValueModifier(std::numeric_limits<float>::infinity(),
+        0, true), std::invalid_argument);
+}

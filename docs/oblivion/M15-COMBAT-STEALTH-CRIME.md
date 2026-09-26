@@ -2412,3 +2412,12 @@ component tests** and **333 ASan/UBSan ESM4 tests** pass
 matching compiled production C++. This preserves float-store order, optional
 nonpositive clamping and signed zero. Full actor mutation and persistence are
 still pending; this helper does not close S3.
+
+### S2 sparse NPC modifier arithmetic
+
+Commit `136faf0d86` contains scalar modifier addition. Added the NPC sparse-map
+variant preserving absent-entry behavior and zero removal. All **1,856 component
+tests** and **334 ASan/UBSan ESM4 tests** pass (`S2/actor-sparse-modifier-01`);
+**2,312 original cases** match production bits and entry presence exactly.
+This identifies a required persistence distinction before S3 integration.
+S2 remains in progress; S3–S14 remain pending.

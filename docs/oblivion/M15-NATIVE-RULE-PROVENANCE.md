@@ -2366,3 +2366,23 @@ ESM4 suites pass in `S2/actor-modifier-add-01`.
 NPC process mutation requires separate verification: `65CA60` uses a sparse
 map and its absent-entry branch is not identical to this scalar helper.
 Player/NPC composition order, caps, side effects and persistence remain open.
+
+### Sparse NPC modifier presence semantics
+
+`0065CA60` looks up a modifier entry before arithmetic. An absent entry with
+nonzero delta is created directly, even when the clamp argument is false.
+An existing entry adds/stores the float sum, optionally caps positive results
+at zero, and removes zero-valued entries. Therefore absent and stored zero
+are observably different inputs. `addSparseActorValueModifier` represents this
+with an optional float and validates finite arithmetic. A persistence adapter
+must retain absence; replacing every missing NPC modifier with dense zero
+would change later restoration behavior.
+
+**2,312 original cases** match production result bits and presence exactly,
+including removal followed by a new addition. The original complete function
+executes with only lookup/allocation/insertion/removal boundaries stubbed.
+Both x87 modes, both clamp modes, absent/present entries, rounding boundaries
+and subnormals are covered. Evidence: `S2/oracle-emulator/actor-sparse-modifier-*`
+and `S2/sources-01/actor-value-map-add.txt`. Full components and ASan/UBSan ESM4
+suites pass (`S2/actor-sparse-modifier-01`). Actual controller mutation remains
+open; this is storage arithmetic, not a restoration or combat acceptance case.

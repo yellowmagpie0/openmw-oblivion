@@ -18,6 +18,15 @@ namespace ESM4
         return !allowPositive && result > 0.f ? 0.f : result;
     }
 
+    std::optional<float> addSparseActorValueModifier(
+        std::optional<float> current, float delta, bool allowPositive)
+    {
+        if (!std::isfinite(delta))
+            throw std::invalid_argument("nonfinite native sparse actor-value modifier");
+        const float result = current ? addActorValueModifier(*current, delta, allowPositive) : delta;
+        return result == 0.f ? std::nullopt : std::optional<float>(result);
+    }
+
     void validateCreatureBaseStatsSettings(const CreatureBaseStatsSettings& settings)
     {
         for (float value : {settings.mCombatMultiplier, settings.mMagicMultiplier,
