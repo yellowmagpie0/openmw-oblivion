@@ -137,3 +137,42 @@ TEST(ESM4ActorValues, PlayerDynamicBasesRejectInvalidQueriesSettingsAndOverflow)
     input.mMagickaMultiplier = std::numeric_limits<float>::max();
     EXPECT_THROW(ESM4::calculatePlayerDynamicBaseValue(input, {2, 1, 5}), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, IntegerQueriesHaveIndependentPlayerAndNpcTruncationBoundaries)
+{
+    const ESM4::ActorValueModifiers modifiers{.75f, .75f, 0};
+    EXPECT_EQ(ESM4::composeIntegerActorValue(1, modifiers, Owner::Player, Process::Active), 2);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(1, modifiers, Owner::NonPlayer, Process::Active), 1);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(1, modifiers, Owner::NonPlayer, Process::Low), 1);
+    EXPECT_EQ(ESM4::composeActorValue({1, modifiers}, Owner::NonPlayer, Process::Active), 2.5f);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(100, {.5f, -.5f, 0}, Owner::Player, Process::Active), 100);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(100, {.5f, -.5f, 0}, Owner::NonPlayer, Process::Active), 99);
+}
+
+TEST(ESM4ActorValues, IntegerQueriesTruncateTowardZeroWithoutAnExtraFloatStore)
+{
+    EXPECT_EQ(ESM4::composeIntegerActorValue(-1, {0, -.75f, 0}, Owner::Player, Process::Active), -1);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(-1, {0, -.75f, 0}, Owner::NonPlayer, Process::Low), -1);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(16'777'217, {.5f, 0, 0}, Owner::Player, Process::Active),
+        16'777'217);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(16'777'217, {.5f, 0, 0}, Owner::NonPlayer, Process::Active),
+        16'777'217);
+    EXPECT_EQ(ESM4::composeIntegerActorValue(std::numeric_limits<std::int32_t>::max(), {},
+        Owner::Player, Process::Active), std::numeric_limits<std::int32_t>::max());
+    EXPECT_EQ(ESM4::composeIntegerActorValue(std::numeric_limits<std::int32_t>::min(), {},
+        Owner::NonPlayer, Process::Active), std::numeric_limits<std::int32_t>::min());
+}
+
+TEST(ESM4ActorValues, IntegerQueriesRejectInvalidEnumsModifiersAndOverflow)
+{
+    EXPECT_THROW(ESM4::composeIntegerActorValue(0, {}, static_cast<Owner>(255), Process::Low),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::composeIntegerActorValue(0, {}, Owner::Player, static_cast<Process>(255)),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::composeIntegerActorValue(0, {0, std::numeric_limits<float>::infinity(), 0},
+        Owner::Player, Process::Active), std::invalid_argument);
+    EXPECT_THROW(ESM4::composeIntegerActorValue(std::numeric_limits<std::int32_t>::max(), {1, 0, 0},
+        Owner::Player, Process::Active), std::invalid_argument);
+    EXPECT_THROW(ESM4::composeIntegerActorValue(std::numeric_limits<std::int32_t>::min(), {0, -1, 0},
+        Owner::NonPlayer, Process::Low), std::invalid_argument);
+}

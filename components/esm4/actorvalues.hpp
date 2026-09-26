@@ -10,13 +10,14 @@ namespace ESM4
     enum class ActorValueOwner : std::uint8_t { Player, NonPlayer };
     enum class ActorValueProcess : std::uint8_t { Low, Active };
     enum class ActorValueModifier : std::uint8_t { Maximum, Script, Damage };
+    using ActorValueModifiers = std::array<std::optional<float>, 3>;
 
     // Native scalar storage. Sparse-entry presence must survive serialization:
     // an absent NPC modifier does not behave like a stored zero when mutated.
     struct ActorValueState
     {
         float mBase = 0;
-        std::array<std::optional<float>, 3> mModifiers{};
+        ActorValueModifiers mModifiers{};
 
         friend bool operator==(const ActorValueState&, const ActorValueState&) = default;
     };
@@ -26,6 +27,10 @@ namespace ESM4
     // Ordinary scalar composition only. Base lookup, creature AV aliases,
     // magicka/encumbrance special handling and integer queries are separate.
     float composeActorValue(const ActorValueState& state, ActorValueOwner owner, ActorValueProcess process);
+    // Integer AV queries have their own truncation boundaries. The caller
+    // supplies the resolved integer base (player base floor or NPC form query).
+    std::int32_t composeIntegerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
+        ActorValueOwner owner, ActorValueProcess process);
 
     // Immutable storage update after the caller's eligibility/delta adjustment.
     // Does not trigger death, derived-stat updates, notifications or effects.

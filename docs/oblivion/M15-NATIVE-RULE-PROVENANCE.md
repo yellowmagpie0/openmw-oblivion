@@ -2461,3 +2461,30 @@ records supply Magicka **1** (`Oblivion.esm:09E62F`) and encumbrance **5**
 These inputs are recorded in `M15-PHYSICAL-RULE-INPUTS.json`; the .5 compiled
 default must not replace the installed Magicka multiplier. Live actor authority
 and modifier-driven derived updates remain open.
+
+### Integer actor-value composition is a separate query
+
+Player current integer getter `0065E030` obtains the resolved integer base via
+`005F1910`, then truncates `base + maximum + script + damage` without a float
+store before conversion. The base query itself floors its base float, as
+documented earlier; current-value composition does **not** floor the final sum.
+LowProcess integer getter `00643340` truncates `base + script + damage`.
+MiddleLow/MiddleHigh `00658790` then truncate `lowInteger + maximum`; HighProcess
+`00628940` delegates ordinary AVs to this path. This differs from casting the
+float current query: base 100, maximum .5 and script -.5 yield player integer
+100, active NPC integer 99, but active NPC float 100.
+
+`composeIntegerActorValue` takes an explicitly resolved integer base and the
+three retained modifier categories. Invalid enums, nonfinite modifiers and
+integer overflow diagnose. It does not resolve base forms, aliases, missing
+processes, inventory Encumbrance or the outer NPC Magicka scale.
+
+**8,280 original instruction cases** match compiled production integers exactly
+across player/low/middle/high, AV0/8/10/12/28, both x87 modes, signed fractional
+modifiers, integer endpoints and values above float's exact integer range.
+Only resolved integer-base, valid player-base presence and sparse-map lookups
+are stubbed; original composition and `009828C0` conversion execute. Evidence:
+`S2/oracle-emulator/actor-integer-composition*`, hash-bound
+`S2/sources-01/process-integer-av-vtables.json` and corresponding traces.
+All **1,875 component** and **353 ASan/UBSan ESM4 tests** pass
+(`S2/actor-integer-composition-01`). Actor bridge integration remains open.

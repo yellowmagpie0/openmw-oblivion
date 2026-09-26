@@ -24,6 +24,15 @@ namespace ESM4
                 throw std::invalid_argument("native actor-value composition overflow");
             return result;
         }
+
+        std::int32_t truncated(double value)
+        {
+            value = std::trunc(value);
+            if (!std::isfinite(value) || value < std::numeric_limits<std::int32_t>::min()
+                || value > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("native actor-value integer overflow");
+            return static_cast<std::int32_t>(value);
+        }
     }
 
     void validateActorValueState(const ActorValueState& state)
@@ -67,6 +76,22 @@ namespace ESM4
         return result;
     }
 
+    std::int32_t composeIntegerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
+        ActorValueOwner owner, ActorValueProcess process)
+    {
+        validateActorValueState({0, modifiers});
+        validateOwner(owner);
+        if (process != ActorValueProcess::Low && process != ActorValueProcess::Active)
+            throw std::invalid_argument("invalid native actor-value process");
+        const double maximum = modifiers[0].value_or(0.f);
+        const double script = modifiers[1].value_or(0.f);
+        const double damage = modifiers[2].value_or(0.f);
+        if (owner == ActorValueOwner::Player)
+            return truncated(double(base) + maximum + script + damage);
+        const auto low = truncated(double(base) + script + damage);
+        return process == ActorValueProcess::Low ? low : truncated(double(low) + maximum);
+    }
+
     float actorMagickaScale(float multiplier)
     {
         if (!std::isfinite(multiplier))
@@ -82,13 +107,7 @@ namespace ESM4
                  settings.mStrengthEncumbranceMultiplier, input.mMagickaMultiplier})
             if (!std::isfinite(value))
                 throw std::invalid_argument("nonfinite native player dynamic base input");
-        const auto integerAdjustment = [](double value) {
-            value = std::trunc(value);
-            if (!std::isfinite(value) || value < std::numeric_limits<std::int32_t>::min()
-                || value > std::numeric_limits<std::int32_t>::max())
-                throw std::invalid_argument("native player dynamic base integer overflow");
-            return static_cast<float>(static_cast<std::int32_t>(value));
-        };
+        const auto integerAdjustment = [](double value) { return static_cast<float>(truncated(value)); };
         const auto& attributes = input.mCurrentAttributes;
         float adjustment;
         float scale = 1.f;

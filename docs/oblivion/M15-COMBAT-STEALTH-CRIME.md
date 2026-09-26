@@ -2546,3 +2546,13 @@ All **1,872 component tests** and **350 ASan/UBSan ESM4 tests** pass
 (`S2/player-dynamic-base-01`), and **2,536 original instruction cases** match
 production bits exactly. Added compiled/winning GMST provenance. These helpers
 are not yet wired to live actor updates; S2/S3 remain in progress.
+
+### S2 current integer actor-value query
+
+Commit `7a58176cc2` contains player derived-base rules. Added current integer
+composition with native player/NPC truncation boundaries, rather than casting
+the float query or flooring its result. All **1,875 component tests** and
+**353 ASan/UBSan ESM4 tests** pass (`S2/actor-integer-composition-01`), with
+**8,280 independent original cases** matching production exactly. These are
+necessary inputs to derived-stat authority; runtime query integration remains
+S3 work.
