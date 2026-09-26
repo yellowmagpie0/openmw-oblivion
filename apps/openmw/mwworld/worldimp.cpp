@@ -99,6 +99,7 @@
 #include "../mwmechanics/aiavoiddoor.hpp" //Used to tell actors to avoid doors
 #include "../mwmechanics/combat.hpp"
 #include "../mwmechanics/creaturestats.hpp"
+#include "oblivionactorstats.hpp"
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
@@ -1217,6 +1218,19 @@ namespace MWWorld
             normalizeNativeInventory(reference.mInventory);
         state.validate();
         return state;
+    }
+
+    bool World::regenerateOblivionFatigue(const Ptr& actor, float duration)
+    {
+        if (!mOblivionCombat)
+            return false;
+        const auto settings = resolveOblivionFatigueRegenerationSettings(mStore);
+        if (actor == getPlayerPtr())
+            mOblivionCombat->regeneratePlayerFatigue(*mPlayer, duration, settings,
+                resolveOblivionPlayerDynamicBaseSettings(mStore));
+        else
+            mOblivionCombat->regenerateNonPlayerFatigue(actor, duration, settings);
+        return true;
     }
 
     float World::getOblivionPlayerInventoryWeight() const

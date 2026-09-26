@@ -942,6 +942,13 @@ namespace MWMechanics
 
         MWMechanics::CreatureStats& stats = ptr.getClass().getCreatureStats(ptr);
 
+        if (stats.getFatigue().isNativeProjection())
+        {
+            if (!MWBase::Environment::get().getWorld()->regenerateOblivionFatigue(ptr, duration))
+                throw std::logic_error("native fatigue projection has no owning world authority");
+            return;
+        }
+
         // Current fatigue can be above base value due to a fortify effect.
         // In that case stop here and don't try to restore.
         DynamicStat<float> fatigue = stats.getFatigue();

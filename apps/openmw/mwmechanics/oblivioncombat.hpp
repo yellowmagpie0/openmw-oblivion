@@ -3,6 +3,7 @@
 
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/actorvalues.hpp>
+#include <components/esm4/physicalcombat.hpp>
 #include <components/esm/refid.hpp>
 
 #include "stat.hpp"
@@ -103,6 +104,12 @@ namespace MWMechanics
             const ESM4::PlayerDynamicBaseSettings& settings);
         void changePlayerValue(MWWorld::Player& player, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings);
+        // Regeneration restores the native Damage channel. It must not clamp
+        // the result through a TES3 DynamicStat or discard sparse presence.
+        void regenerateNonPlayerFatigue(const MWWorld::Ptr& actor, float duration,
+            const ESM4::FatigueRegenerationSettings& settings);
+        void regeneratePlayerFatigue(MWWorld::Player& player, float duration,
+            const ESM4::FatigueRegenerationSettings& settings, const ESM4::PlayerDynamicBaseSettings& baseSettings);
         float getPlayerValue(std::uint8_t value) const;
         std::int32_t getPlayerIntegerValue(std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;

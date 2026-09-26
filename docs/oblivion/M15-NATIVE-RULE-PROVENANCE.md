@@ -2105,7 +2105,8 @@ The updater floors current fatigue, obtains floored base fatigue through
 This is not a direct comparison of current and base floats: for base 10.5,
 modifier 0 and current 10, there is no restoration; with modifier .5, the
 restoration path runs even at current 10.5. The separate AV mutation authority
-still owns the final maximum clamp.
+owns Damage-channel mutation; the combined wrapper verification below corrects
+the earlier assumption of a final clamp to the displayed maximum.
 
 Rate helper `00547F20` computes `R(fFatigueReturnBase + currentIntegerEndurance
 * fFatigueReturnMult)`. The caller then stores `R(rate * duration)` and invokes
@@ -2561,3 +2562,32 @@ NPC Magicka outer scale runs again after applying the delta to Script storage.
 Actual class/service tests retain this behavior (68.625 current, request100,
 delta31.375 produces115.6875 with scale1.5), and player health force changes
 current without replacing maximum. Automatic script routing remains open.
+
+### Fatigue regeneration through native mutation wrappers
+
+The same hash-identified original executable now executes updater `005F2720`
+through Player DamageFloat `0065E530` and category-2 update `0065D310`, or
+common actor DamageFloat `005E2BE0` and process virtual +288. Low dispatches
+`006434F0`, MiddleLow/MiddleHigh `006588A0`, and High `00628CA0`. All NPC fatigue
+paths reach sparse modifier add `0065CA60` with allow-positive false. Player
+fatigue uses fixed field +44C and scalar add `0065BC70` with that flag false.
+High's additional cache invalidation concerns Encumbrance/Paralysis, not fatigue.
+
+These wrappers do not clamp current fatigue to its displayed maximum. They
+clamp an existing Damage modifier's positive sum to zero; an absent NPC entry
+instead inserts a nonzero positive delta directly. Thus base 40, Script -1,
+absent Damage and restoration 12 produce NPC current 51, but player current 39.
+With an existing zero NPC Damage entry, that first restoration removes the
+entry and leaves current 39. Sparse presence must survive both mutation and
+save/reload. Low-process regeneration excludes the Maximum modifier; Player
+includes it independently of the service's process classification.
+
+`S2/oracle-emulator/fatigue-authority.py` and `fatigue-authority-table.json`
+retain **2,700 combined original-instruction cases**, including both x87
+precision modes, five owner/process paths, fractional bases and thresholds,
+negative fatigue, absent/zero/negative Damage entries, and zero/short/long
+updates. Original updater, rate helper, wrapper dispatch, channel arithmetic
+and branch decisions execute. AV current/base/Endurance reads, NPC maximum
+lookup, sparse collection allocation/lookup/insert/remove, and notifications
+are explicit boundary stubs. Notification counts are checked, but actual UI,
+event delivery and waking from negative fatigue are not established here.

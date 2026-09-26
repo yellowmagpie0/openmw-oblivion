@@ -134,6 +134,7 @@ namespace MWBase
         virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
         virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
+        virtual bool regenerateOblivionFatigue(const MWWorld::Ptr& actor, float duration) { return false; }
         ///< \param seed The seed used when starting a new game.
 
         virtual void startNewGame(bool bypass) = 0;

@@ -375,6 +375,143 @@ namespace
         EXPECT_THROW(restored.publishPlayerValues(fresh, legacy, settings), std::invalid_argument);
     }
 
+    TEST_F(OblivionActorStatsTest, nativeFatigueSettingsUseCurrentWinningTypedRecords)
+    {
+        ESM::GameSetting shared{};
+        shared.mId = ESM::RefId::stringRefId("fFatigueReturnBase");
+        shared.mValue.setType(ESM::VT_Float);
+        shared.mValue.setFloat(999);
+        mStore.getWritable<ESM::GameSetting>().insertStatic(shared);
+        auto settings = MWWorld::resolveOblivionFatigueRegenerationSettings(mStore);
+        EXPECT_EQ(settings.mBase, 10);
+        EXPECT_EQ(settings.mEnduranceMultiplier, 0);
+        ESM4::GameSetting native{};
+        native.mId = {0x980, 3};
+        native.mEditorId = "FFATIGUERETURNBASE";
+        native.mData = 2.f;
+        const auto key = ESM::FormKey::content("actors.esm", 0x980);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+        EXPECT_EQ(MWWorld::resolveOblivionFatigueRegenerationSettings(mStore).mBase, 2);
+        native.mData = -3.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+        EXPECT_EQ(MWWorld::resolveOblivionFatigueRegenerationSettings(mStore).mBase, -3);
+        native.mData = std::int32_t{2};
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+        EXPECT_THROW(MWWorld::resolveOblivionFatigueRegenerationSettings(mStore), std::invalid_argument);
+        ASSERT_TRUE(mStore.getWritable<ESM4::GameSetting>().eraseStatic(key));
+        EXPECT_EQ(MWWorld::resolveOblivionFatigueRegenerationSettings(mStore).mBase, 10);
+    }
+
+    TEST_F(OblivionActorStatsTest, nativeFatigueRegenerationPreservesChannelsAndProcessRules)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{};
+        playerBase.blank();
+        playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(playerBase);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWClass::ESM4Npc::registerSelf();
+        MWWorld::Player player(playerRecord);
+        const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x901);
+        reference.mId = {0x901, 3};
+        reference.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr npcPtr(&live);
+        const auto baseSettings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
+        struct Case
+        {
+            ESM4::ActorValueProcess mProcess;
+            ESM4::ActorValueModifiers mModifiers;
+            float mDuration;
+            float mPlayerCurrent;
+            float mNpcCurrent;
+            std::optional<float> mPlayerDamage;
+            std::optional<float> mNpcDamage;
+        };
+        using Process = ESM4::ActorValueProcess;
+        // Base fatigue 40; current Endurance 20.75 but the regeneration query
+        // is integer 20. Rate 2 + 20 * .5 = 12, independent of encumbrance.
+        const Case cases[] = {
+            {Process::Active, {2.f, -1.f, -2.f}, .125f, 40.5f, 40.5f, -.5f, -.5f},
+            {Process::Low, {2.f, -1.f, -2.f}, .125f, 40.5f, 38.5f, -.5f, -.5f},
+            {Process::Active, {2.f, std::nullopt, -1.f}, 1.f, 42.f, 42.f, 0.f, std::nullopt},
+            {Process::Low, {2.f, std::nullopt, std::nullopt}, 1.f, 42.f, 40.f, std::nullopt, std::nullopt},
+            {Process::Active, {std::nullopt, -1.f, std::nullopt}, 1.f, 39.f, 51.f, 0.f, 12.f},
+            {Process::Active, {std::nullopt, -1.f, 0.f}, 1.f, 39.f, 39.f, 0.f, std::nullopt},
+            {Process::Active, {std::nullopt, std::nullopt, -.25f}, 0.f, 39.75f, 39.75f, -.25f, -.25f},
+            {Process::Active, {std::nullopt, .75f, std::nullopt}, 1.f, 40.75f, 40.75f, std::nullopt, std::nullopt},
+            {Process::Active, {-.5f, std::nullopt, -.25f}, 1.f, 39.5f, 39.5f, 0.f, std::nullopt},
+            {Process::Active, {std::nullopt, std::nullopt, -100.f}, 1.f, -48.f, -48.f, -88.f, -88.f},
+        };
+        for (const bool isPlayer : {false, true})
+        {
+            const auto ptr = isPlayer ? playerPtr : npcPtr;
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues values;
+            values.mActor = isPlayer ? ESM::FormKey::dynamic("player", 1) : reference.mFormKey;
+            values.mBase = isPlayer ? ESM::FormKey::dynamic("player-base", 1) : mActorKey;
+            values.mOwner = isPlayer ? ESM4::ActorValueOwner::Player : ESM4::ActorValueOwner::NonPlayer;
+            if (isPlayer)
+                values.mPlayerFormValues = {{0, 0, 20, 0}};
+            values.mValues[5] = {20, {.75f, {}, {}}};
+            values.mValues[8].mBase = 100;
+            values.mValues[10].mBase = 40;
+            const auto publish = [&] {
+                if (isPlayer)
+                    service.publishPlayerValues(player, values, baseSettings);
+                else
+                    service.publishNonPlayerValues(ptr, values);
+            };
+            const auto regenerate = [&](float duration, ESM4::FatigueRegenerationSettings settings) {
+                if (isPlayer)
+                    service.regeneratePlayerFatigue(player, duration, settings, baseSettings);
+                else
+                    service.regenerateNonPlayerFatigue(ptr, duration, settings);
+            };
+            for (std::size_t i = 0; i < std::size(cases); ++i)
+            {
+                SCOPED_TRACE(testing::Message() << "player=" << isPlayer << " case=" << i);
+                const auto& test = cases[i];
+                values.mProcess = test.mProcess;
+                values.mValues[10].mModifiers = test.mModifiers;
+                publish();
+                regenerate(test.mDuration, {2, .5f});
+                const auto* result = service.findActorValues(values.mActor);
+                ASSERT_NE(result, nullptr);
+                EXPECT_EQ(result->mValues[10].mModifiers[0], test.mModifiers[0]);
+                EXPECT_EQ(result->mValues[10].mModifiers[1], test.mModifiers[1]);
+                EXPECT_EQ(result->mValues[10].mModifiers[2], isPlayer ? test.mPlayerDamage : test.mNpcDamage);
+                EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(),
+                    isPlayer ? test.mPlayerCurrent : test.mNpcCurrent);
+                EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
+            }
+            const auto before = *service.findActorValues(values.mActor);
+            const auto sharedBefore = ptr.getClass().getCreatureStats(ptr).getFatigue();
+            EXPECT_THROW(regenerate(-1, {2, .5f}), std::invalid_argument);
+            EXPECT_THROW(regenerate(std::numeric_limits<float>::infinity(), {2, .5f}), std::invalid_argument);
+            EXPECT_THROW(regenerate(1, {std::numeric_limits<float>::quiet_NaN(), .5f}), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), before);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue(), sharedBefore);
+            regenerate(1, {-100, 0});
+            EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, nativeServiceOwnsNpcValuesAcrossMutationAndReload)
     {
         autoNpc();
@@ -605,6 +742,13 @@ namespace
         for (auto id : ids)
             EXPECT_EQ(newPtr.getClass().getSkill(newPtr, id), ptr.getClass().getSkill(ptr, id));
         EXPECT_EQ(newLive.mData.getCustomData()->asESM4CreatureCustomData().mNativeDamage, 20);
+        restored.changeNonPlayerValue(newPtr, 10, ESM4::ActorValueModifier::Damage, -2.5f);
+        restored.regenerateNonPlayerFatigue(newPtr, .125f, {10, 0});
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getFatigue().getCurrent(), 16.75f);
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mValues[10].mModifiers[2], -1.25f);
+        restored.regenerateNonPlayerFatigue(newPtr, 1.f, {10, 0});
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getFatigue().getCurrent(), 18);
+        EXPECT_FALSE(restored.findActorValues(values.mActor)->mValues[10].mModifiers[2]);
     }
 
     TEST_F(OblivionActorStatsTest, nativeInitializationValidatesBeforeChangingSharedStats)

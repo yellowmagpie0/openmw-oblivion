@@ -186,7 +186,7 @@ namespace ESM4
         float mDuration;
     };
     // Requested positive restoration only. The actor-value mutation authority
-    // owns clamping to maximum and applying the change once.
+    // owns Damage-channel mutation and applying the change once.
     float fatigueRegeneration(const FatigueRegenerationInput& input, const FatigueRegenerationSettings& settings);
     void validateFatigueRegenerationSettings(const FatigueRegenerationSettings& settings);
 

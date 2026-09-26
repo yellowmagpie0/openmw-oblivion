@@ -128,6 +128,20 @@ namespace MWMechanics
                 throw std::invalid_argument("native player scalar query excludes inventory Encumbrance");
         }
 
+        float fatigueRestoration(const ESM4::RuntimeActorValues& values, float duration,
+            const ESM4::FatigueRegenerationSettings& settings)
+        {
+            const auto& fatigue = values.mValues[10];
+            const auto& endurance = values.mValues[5];
+            const float maximumModifier = values.mOwner == ESM4::ActorValueOwner::Player
+                || values.mProcess == ESM4::ActorValueProcess::Active
+                ? fatigue.mModifiers[0].value_or(0.f) : 0.f;
+            return ESM4::fatigueRegeneration({
+                ESM4::composeActorValue(fatigue, values.mOwner, values.mProcess), fatigue.mBase, maximumModifier,
+                ESM4::composeIntegerActorValue(ESM4::combatBaseValue(endurance.mBase), endurance.mModifiers,
+                    values.mOwner, values.mProcess), duration}, settings);
+        }
+
         OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values)
         {
             OblivionActorProjectionInput input;
@@ -394,6 +408,29 @@ namespace MWMechanics
         candidate.mValues[value] = ESM4::changeActorValueModifier(
             candidate.mValues[value], candidate.mOwner, modifier, delta);
         publishPlayerValues(player, std::move(candidate), settings);
+    }
+
+    void OblivionCombatService::regenerateNonPlayerFatigue(const MWWorld::Ptr& actor, float duration,
+        const ESM4::FatigueRegenerationSettings& settings)
+    {
+        const auto& values = nonPlayerValues(actor);
+        if (actor.getClass().getCreatureStats(actor).isDead())
+            return;
+        const float delta = fatigueRestoration(values, duration, settings);
+        if (delta > 0)
+            changeNonPlayerValue(actor, 10, ESM4::ActorValueModifier::Damage, delta);
+    }
+
+    void OblivionCombatService::regeneratePlayerFatigue(MWWorld::Player& player, float duration,
+        const ESM4::FatigueRegenerationSettings& settings, const ESM4::PlayerDynamicBaseSettings& baseSettings)
+    {
+        const auto& values = playerValues();
+        const auto ptr = player.getPlayer();
+        if (ptr.getClass().getCreatureStats(ptr).isDead())
+            return;
+        const float delta = fatigueRestoration(values, duration, settings);
+        if (delta > 0)
+            changePlayerValue(player, 10, ESM4::ActorValueModifier::Damage, delta, baseSettings);
     }
 
     float OblivionCombatService::getPlayerValue(std::uint8_t value) const

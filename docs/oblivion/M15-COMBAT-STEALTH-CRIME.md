@@ -2805,3 +2805,44 @@ valid save/quit/fresh-load/resave course with full live/binary agreement; its
 inspected image shows the textured fixture/HUD. Runtime executable SHA-256:
 `3900cf21985f6797dcf63739ab15e0d7c98cd34f322d0b245edc2e1029976bc3`.
 These silent tests do not establish automatic actor activation or combat.
+
+### S3 native fatigue regeneration writer
+
+Commit `0355d154d8` contains unloaded reads/content-aware restore preflight.
+Explicitly published native player/NPC/creature fatigue now regenerates through
+its owned Damage channel and republishes shared views atomically. The ordinary
+actor restoration update recognizes a native projection and dispatches through
+the World-owned service before any TES3 maximum check or write. A missing owner
+is an error. Dead actors do not regenerate. Unpublished shared actors retain
+existing behavior until the remaining activation/migration work is complete.
+
+The request uses current integer Endurance, native winning fatigue settings,
+current/base flooring and the eligible Maximum modifier. The mutation preserves
+sparse presence and does not impose a displayed-maximum clamp. Combined original
+updater/wrapper execution passes 2,700 cases; provenance records the fixed player
+Damage field, Low/Middle/High process dispatch and explicit oracle stubs. It
+corrects the earlier provisional wording about a final maximum clamp.
+
+Actual Player/NPC tests cover process-dependent maxima, fractional Endurance,
+negative fatigue, zero duration, negative rates, absent/zero/negative Damage
+entries, overshoot, unchanged Maximum/Script channels and invalid-input rollback.
+The restored actual-creature fixture regenerates its persisted Damage channel.
+The native store adapter ignores TES3 aliases, uses current winning overrides
+and rejects wrong setting types. The adapter currently resolves winning GMSTs
+on each call; automatic-activation performance remains an open gate.
+
+`S3/fatigue-authority-01` passes **579 engine tests** with exact inventory
+agreement and no failures/skips, rebuilding openmw/openmw-tests/esmtool.
+Tested source fingerprint:
+`2928e9cd16a44a3398bb7189aeb69a1123d03d8107cea706408d50a441c9c07c`.
+The first preflight found an ambiguous optional-array test initializer; explicit
+`std::nullopt` entries fixed it. Both build logs and the passing 15-test focused
+preflight remain in `S3/fatigue-authority-preflight*`. The broad preflight rebuild
+also reports GCC warnings in existing sol3 getter/AnimationQueueEntry code.
+No component arithmetic or save encoding changed; prior component/sanitizer/
+Python evidence is not relabeled as coverage of these engine methods.
+
+Automatic publication, other native writers,
+legacy migration/reconciliation, negative-fatigue recovery and active gameplay
+acceptance remain open. Next bounded work: continue the movement/rest/script
+writer audit before activating native shared views during normal gameplay.

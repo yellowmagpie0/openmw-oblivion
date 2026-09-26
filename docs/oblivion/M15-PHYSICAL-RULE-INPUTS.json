@@ -689,7 +689,7 @@
         "value": 10.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-69",
-      "note": "Native regeneration arithmetic independently instruction-tested; live restoration/clamping and persistence integration remain open."
+      "note": "Native regeneration and Damage-channel wrappers independently instruction-tested; explicit actor authority is integrated, automatic gameplay activation remains open."
     },
     {
       "name": "fFatigueReturnMult",
@@ -703,7 +703,7 @@
         "value": 0.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-70",
-      "note": "Native regeneration arithmetic independently instruction-tested; live restoration/clamping and persistence integration remain open."
+      "note": "Native regeneration and Damage-channel wrappers independently instruction-tested; explicit actor authority is integrated, automatic gameplay activation remains open."
     },
     {
       "name": "fKnockdownAgilBase",

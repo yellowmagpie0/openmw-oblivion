@@ -236,6 +236,7 @@ namespace MWWorld
         ESM4::ObservationStream* getOblivionObservation() const override { return mOblivionObservation.get(); }
         void observeOblivionState(std::string_view event, const std::filesystem::path& save) const override;
         float getOblivionPlayerInventoryWeight() const override;
+        bool regenerateOblivionFatigue(const Ptr& actor, float duration) override;
 
         // Bounded native interaction surface for the M5 prison slice.
         void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});

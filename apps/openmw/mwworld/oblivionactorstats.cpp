@@ -130,6 +130,11 @@ namespace MWWorld
         }
     }
 
+    ESM4::FatigueRegenerationSettings resolveOblivionFatigueRegenerationSettings(const ESMStore& store)
+    {
+        return ESM4::buildFatigueRegenerationSettings(winningRecords<ESM4::GameSetting>(store));
+    }
+
     ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store)
     {
         return ESM4::buildPlayerDynamicBaseSettings(winningRecords<ESM4::GameSetting>(store));
