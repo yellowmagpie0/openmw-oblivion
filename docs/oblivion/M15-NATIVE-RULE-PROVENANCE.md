@@ -2135,3 +2135,37 @@ the player maximum-modifier reader executes original instructions. Evidence:
 `actor-base-av.txt`, `player-av-modifier.txt`, `process-av-modifier.txt` and
 `fatigue-return-base-547f2c.txt`. The initial 32,400-case run is retained in
 `fatigue-regeneration.log`.
+
+### Actor base level and player-level offsets
+
+Original `004677F0` reads ACBS level/offset as a 16-bit word. Without flag 0x80,
+it returns that word directly: minimum, maximum and the minimum-one fallback
+are not applied. With flag 0x80, it adds the resolved player's base-record level
+in **16-bit arithmetic**; a missing player base leaves the offset unchanged.
+It then interprets the result as signed for bounds comparisons.
+
+The minimum check runs first. A nonzero minimum greater than the result is
+returned immediately. Otherwise a nonzero maximum less than the result is
+returned immediately. Only after those checks does a remaining value below 1
+become 1. Zero means no bound. Inverted bounds are not sorted: minimum 20,
+maximum 10 returns 20 for candidate 10, but 10 for candidate 20. Bounds are
+unsigned words for comparison; their returned low word is interpreted as signed
+by the NPC stat caller. `005222D0` explicitly sign-extends this return and
+subtracts one before computing growth. That caller's full auto-calculation
+remains a separate rule task.
+
+`resolveActorLevel` preserves this raw ACBS lookup, using explicit unsigned word
+addition and bit-casting to avoid C++ signed overflow or implementation-defined
+narrowing. It intentionally does not repair raw fixed levels or bad bounds;
+the future actor-construction adapter must diagnose unsupported effective
+configurations rather than silently manufacture level 1. This pure helper does
+not mutate shared base records or implement level-change propagation.
+
+Three new tests fail against the stub. **3,528 original cases**, all matching a
+separately compiled C++ driver exactly, execute the
+complete level helper, with only the player's base-record lookup stubbed.
+They include missing player base, fixed/scaled modes, signed-word wrapping,
+zero/inverted/wide bounds and exact thresholds. Evidence:
+`S2/oracle-emulator/actor-level.py`, `actor-level-table.json`, `actor-level.log`,
+`S2/sources-01/actor-base-level.txt` and `npc-calc-stats.txt`. Live NPC/creature
+initialization, auto-calculated stats and save authority remain open.

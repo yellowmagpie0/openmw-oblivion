@@ -2280,3 +2280,19 @@ suite 552 at the prior cleanup checkpoint; neither was rerun for this pure
 C++ rule chunk. S2 remains in progress; S3–S14 remain pending.
 
 Tested source fingerprint: `3c7ab9516029ef2008779e6a07f0142151054d5b1cd2015276a36df7be633f40`.
+
+### S2 native actor level lookup
+
+Commit `bcbab64b8a` contains fatigue regeneration. Added a pure raw ACBS level
+lookup preserving fixed-level behavior, player-offset word arithmetic, minimum/
+maximum order, zero-bound sentinels and the final minimum-one fallback.
+
+All **1,834 component tests** and **312 ASan/UBSan ESM4 tests** pass with exact
+inventories/no skips (`S2/actor-level-02`). Three new tests first fail against
+the stub (`actor-level-01`). **3,528 complete original-helper cases** pass and
+match a separately compiled C++ driver exactly. Actor construction still uses
+the old fixed-level adapter; replacing it, auto-calculated stats and their
+persistence remain open. S2 remains in progress; S3–S14 remain pending.
+Next: NPC auto-calculation and the winning skill-definition input gap.
+
+Tested source fingerprint: `2ce0167770005c35ac8a84b4dd8812319161d3947d9cb73ba1f7cf90ea41aee2`.

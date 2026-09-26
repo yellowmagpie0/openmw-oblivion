@@ -243,6 +243,7 @@ add_component_dir (esm4
     combatstylepolicy
     combatsettings
     physicalcombat
+    actorstats
     projectilerules
     masteryrules
     stealthrules
