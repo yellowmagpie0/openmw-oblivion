@@ -2262,3 +2262,21 @@ collection/removal and save/restart resource bounds remain open. S2 remains
 in progress; S3–S14 remain pending. Next: native fatigue regeneration.
 
 Tested source fingerprint: `176ea643f66b10929a7305421fc8ada40c672fc6911fdd1941e74e4ed487e912`.
+
+### S2 fatigue regeneration
+
+Commit `24c958dfd0` contains arrow cleanup and the accumulated engine rebuild.
+Added native fatigue-regeneration eligibility, floored actor-value comparison,
+maximum modifiers, separate rate/duration rounding and positive-only restoration
+requests, with typed compiled/installed setting inputs.
+
+All **1,831 component tests** and **309 ASan/UBSan ESM4 tests** pass with exact
+inventories/no skips (`S2/fatigue-regeneration-02`). Three policy tests first
+fail against the stub (`fatigue-regeneration-01`). **32,404 original instruction
+cases** pass in both x87 modes and match a separately compiled C++ driver
+exactly. Live AV mutation/clamping and gameplay recovery remain integration
+requirements. The latest unchanged Python suite remains 151 tests and engine
+suite 552 at the prior cleanup checkpoint; neither was rerun for this pure
+C++ rule chunk. S2 remains in progress; S3–S14 remain pending.
+
+Tested source fingerprint: `3c7ab9516029ef2008779e6a07f0142151054d5b1cd2015276a36df7be633f40`.

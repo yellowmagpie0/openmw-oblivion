@@ -45,6 +45,25 @@ namespace ESM4
         return currentFatigue < 0 || paralyzed || essentialUnconscious;
     }
 
+    void validateFatigueRegenerationSettings(const FatigueRegenerationSettings& settings)
+    {
+        finite(settings.mBase);
+        finite(settings.mEnduranceMultiplier);
+    }
+
+    float fatigueRegeneration(const FatigueRegenerationInput& input, const FatigueRegenerationSettings& settings)
+    {
+        validateFatigueRegenerationSettings(settings);
+        const auto current = combatBaseValue(input.mCurrent);
+        const auto base = combatBaseValue(input.mBase);
+        finite(input.mMaximumModifier);
+        nonnegative(input.mDuration);
+        if (double(current) >= double(base) + input.mMaximumModifier)
+            return 0;
+        const float rate = rounded(settings.mBase + double(input.mEndurance) * settings.mEnduranceMultiplier);
+        return std::max(0.f, rounded(double(rate) * input.mDuration));
+    }
+
     CombatConeResult combatHitCone(float facingRadians, float bearingRadians, float coneDegrees)
     {
         finite(facingRadians);

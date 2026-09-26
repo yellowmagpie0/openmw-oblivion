@@ -16,6 +16,106 @@ namespace
     const ESM4::PhysicalCombatSettings installed{ -20, .4f, 1.f, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f };
 }
 
+TEST(ESM4PhysicalCombat, FatigueRegenerationUsesFlooredValuesAndMaximumModifier)
+{
+    const ESM4::FatigueRegenerationSettings settings{10, 0};
+    ESM4::FatigueRegenerationInput input{9.5f, 10.5f, 0, 50, 1};
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+    input.mCurrent = 10;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 0);
+    input.mMaximumModifier = .5f;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+    input.mCurrent = 10.5f;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+    input.mCurrent = 11;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 0);
+    input = {std::nextafter(10.f, 0.f), 10, 0, 50, 1};
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+    input.mCurrent = std::nextafter(10.f, 20.f);
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 0);
+    input = {-.5f, 0, 0, 50, 1};
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+    input.mCurrent = 0;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 0);
+    input.mMaximumModifier = std::numeric_limits<float>::denorm_min();
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+    input = {0, 10, -10, 50, 1};
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 0);
+    // The native maximum sum has no final float store before comparison.
+    input = {16777216, 16777215, std::nextafter(1.f, 2.f), 50, 1};
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, settings), 10);
+}
+
+TEST(ESM4PhysicalCombat, FatigueRegenerationRoundsRateThenDurationAndDispatchesOnlyPositive)
+{
+    ESM4::FatigueRegenerationInput input{0, 100, 0, 50, .5f};
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, .5f}), 17.5f);
+    input.mEndurance = -1;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, .5f}), 4.75f);
+    input.mEndurance = -20;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, .5f}), 0);
+    input.mEndurance = -21;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, .5f}), 0);
+    input = {99.5f, 100, 0, 50, 1};
+    // The native restore call receives 10; the AV writer clamps it later.
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, 0}), 10);
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {-10, .5f}), 15);
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, -.5f}), 0);
+    input.mDuration = 0;
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {10, 0}), 0);
+    input = {0, 100, 0, 1, 3};
+    // R(16777216 + 1) * 3 = 50331648, not R((16777216 + 1) * 3).
+    EXPECT_EQ(ESM4::fatigueRegeneration(input, {16777216, 1}), 50331648);
+}
+
+TEST(ESM4PhysicalCombat, FatigueRegenerationRejectsMalformedInputsAndOverflow)
+{
+    const ESM4::FatigueRegenerationInput valid{0, 100, 0, 50, 1};
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        for (auto member : {&ESM4::FatigueRegenerationInput::mCurrent, &ESM4::FatigueRegenerationInput::mBase,
+                 &ESM4::FatigueRegenerationInput::mMaximumModifier, &ESM4::FatigueRegenerationInput::mDuration})
+        {
+            auto input = valid;
+            input.*member = bad;
+            EXPECT_THROW(ESM4::fatigueRegeneration(input, {10, 0}), std::invalid_argument);
+        }
+        EXPECT_THROW(ESM4::fatigueRegeneration(valid, {bad, 0}), std::invalid_argument);
+        EXPECT_THROW(ESM4::fatigueRegeneration(valid, {10, bad}), std::invalid_argument);
+    }
+    auto input = valid;
+    input.mDuration = -1;
+    EXPECT_THROW(ESM4::fatigueRegeneration(input, {10, 0}), std::invalid_argument);
+    input = valid;
+    input.mBase = 2147483648.f;
+    EXPECT_THROW(ESM4::fatigueRegeneration(input, {10, 0}), std::invalid_argument);
+    input = valid;
+    input.mCurrent = 2147483648.f;
+    EXPECT_THROW(ESM4::fatigueRegeneration(input, {10, 0}), std::invalid_argument);
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::fatigueRegeneration(valid, {0, maximum}), std::invalid_argument);
+    input = valid;
+    input.mDuration = maximum;
+    EXPECT_THROW(ESM4::fatigueRegeneration(input, {10, 0}), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, FatigueRegenerationSettingsUseTypedDefaultsAndOverrides)
+{
+    const auto defaults = ESM4::buildFatigueRegenerationSettings({});
+    EXPECT_EQ(defaults.mBase, 10);
+    EXPECT_EQ(defaults.mEnduranceMultiplier, 0);
+    ESM4::GameSetting value{};
+    value.mEditorId = "fFatigueReturnBase";
+    value.mData = 15.f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildFatigueRegenerationSettings(values).mBase, 15);
+    value.mEditorId = "fFatigueReturnMult";
+    value.mData = -.5f;
+    EXPECT_EQ(ESM4::buildFatigueRegenerationSettings(values).mEnduranceMultiplier, -.5f);
+    value.mData = std::int32_t{0};
+    EXPECT_THROW(ESM4::buildFatigueRegenerationSettings(values), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, LuckAdjustedSkillClampsAfterAdjustment)
 {
     struct Case { int skill; int luck; float expected; };

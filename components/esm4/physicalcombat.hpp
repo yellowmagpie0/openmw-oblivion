@@ -172,6 +172,24 @@ namespace ESM4
     float attackFatigueCost(float weaponWeight, bool powerAttack, const AttackFatigueSettings& settings);
     void validateAttackFatigueSettings(const AttackFatigueSettings& settings);
 
+    struct FatigueRegenerationSettings
+    {
+        float mBase;
+        float mEnduranceMultiplier;
+    };
+    struct FatigueRegenerationInput
+    {
+        float mCurrent;
+        float mBase;
+        float mMaximumModifier; // Native maximum modifier, excluding script/damage modifiers.
+        std::int32_t mEndurance; // Current integer Endurance AV, not luck-adjusted.
+        float mDuration;
+    };
+    // Requested positive restoration only. The actor-value mutation authority
+    // owns clamping to maximum and applying the change once.
+    float fatigueRegeneration(const FatigueRegenerationInput& input, const FatigueRegenerationSettings& settings);
+    void validateFatigueRegenerationSettings(const FatigueRegenerationSettings& settings);
+
     struct DurabilitySettings
     {
         float mWeaponDamageMultiplier;

@@ -176,6 +176,15 @@ namespace ESM4
         return result;
     }
 
+    FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const FatigueRegenerationSettings result{
+            inputs.number("fFatigueReturnBase", 10.f), inputs.number("fFatigueReturnMult", 0.f)};
+        validateFatigueRegenerationSettings(result);
+        return result;
+    }
+
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

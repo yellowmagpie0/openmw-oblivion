@@ -2089,3 +2089,49 @@ Evidence: `S2/oracle-emulator/arrow-cleanup.py`, `arrow-cleanup-table.json`,
 `arrow-count-increment.txt`, `mobile-process-list-query.txt` and
 `process-list-head.txt`. Live collection, fade/deletion bookkeeping and
 save/restart resource bounds remain projectile-service acceptance requirements.
+
+### Fatigue regeneration request
+
+Original actor update `005F2720` reads the maximum fatigue modifier from player
+modifier category 0 through `0065D270`, or the actor process virtual +468.
+An actor without that process contributes zero. The original player reader
+accesses the category-0 array at +204; the process override `00658870` reads
+the maximum-modifier collection at +94. Script/damage modifiers are not added
+to this maximum term.
+
+The updater floors current fatigue, obtains floored base fatigue through
+`005F1910`, and requests regeneration only when `floor(current) < floor(base)
++ maximumModifier`. The sum is compared on x87 without a final float store.
+This is not a direct comparison of current and base floats: for base 10.5,
+modifier 0 and current 10, there is no restoration; with modifier .5, the
+restoration path runs even at current 10.5. The separate AV mutation authority
+still owns the final maximum clamp.
+
+Rate helper `00547F20` computes `R(fFatigueReturnBase + currentIntegerEndurance
+* fFatigueReturnMult)`. The caller then stores `R(rate * duration)` and invokes
+fatigue AV 10's restore operation (virtual +2A4, final argument 0) only for a
+strictly positive amount. Compiled and installed settings are 10 and 0; their
+existing GMST-69/70 probes and input-table rows already record provenance.
+There is no luck adjustment or TES3 encumbrance factor in this rule. Signed
+Endurance/settings retain their arithmetic; a nonpositive result dispatches
+no restore.
+
+`fatigueRegeneration` returns that positive requested delta or zero, without
+mutating actor values or pre-clamping to a remaining deficit. It validates
+finite inputs/settings, nonnegative elapsed time, floor-to-int32 bounds and
+float overflow. For an otherwise valid already-full actor, the unused rate
+arithmetic is not evaluated. Mutation, processing eligibility and gameplay
+recovery from negative fatigue remain integration responsibilities.
+
+Three policy tests first fail against the stub. The independent original
+updater, base/current flooring, actual rate helper and positive-delta dispatch
+pass **32,404 cases in both x87 modes**, all matching a separately compiled C++
+driver exactly, including subnormal thresholds, the
+unrounded maximum sum and separate rate/duration rounding. Actor AV reads,
+NPC maximum-modifier access and mutation notifications are boundary stubs;
+the player maximum-modifier reader executes original instructions. Evidence:
+`S2/oracle-emulator/fatigue-regeneration.py`, `fatigue-regeneration-table.json`,
+`fatigue-regeneration-02.log`; `S2/sources-01/fatigue-regeneration.txt`,
+`actor-base-av.txt`, `player-av-modifier.txt`, `process-av-modifier.txt` and
+`fatigue-return-base-547f2c.txt`. The initial 32,400-case run is retained in
+`fatigue-regeneration.log`.

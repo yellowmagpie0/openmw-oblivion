@@ -38,6 +38,7 @@ namespace ESM4
     EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings);
     BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
+    FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings);
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings);
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings);
