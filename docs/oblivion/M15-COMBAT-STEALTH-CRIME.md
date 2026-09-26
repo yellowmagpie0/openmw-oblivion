@@ -2392,3 +2392,13 @@ no unreviewed errors. This is construction/AI regression evidence, not M15
 combat or fresh-process stat persistence acceptance. The inspected screenshot
 shows nearby dungeon geometry and does not establish actor visual quality.
 S2 remains in progress; S3–S14 remain pending.
+
+### S2 runtime creature Marksman correction
+
+Commit `cbc118ce5a` contains live construction. Subsequent original runtime
+wrapper inspection found Marksman aliases Combat on creatures, despite its
+base-record Stealth grouping. Corrected the live class query and its regression
+expectation. All **560 engine tests** pass with rebuilt binaries
+(`S2/creature-actor-av-01`); **1,776 independent original forwarding cases**
+verify the getter/setter/modifier aliases and argument preservation. S2 remains
+in progress; actor-value mutation/persistence investigation continues for S3.

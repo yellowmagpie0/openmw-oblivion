@@ -379,7 +379,10 @@ namespace MWClass
             const auto found = std::find(ids.begin(), ids.end(), id);
             if (found == ids.end())
                 throw std::invalid_argument("unsupported skill on a native creature");
-            return (*data.mNativeSkills)[std::distance(ids.begin(), found)];
+            // The live Creature AV wrappers remap Marksman (AV28) to
+            // combat (AV12), unlike the base-form getter's seven-skill groups.
+            const auto index = id == ESM::Skill::Marksman ? 0 : std::distance(ids.begin(), found);
+            return (*data.mNativeSkills)[index];
         }
         const ESM::Skill* skill = MWBase::Environment::get().getESMStore()->get<ESM::Skill>().search(id);
         if (skill == nullptr)

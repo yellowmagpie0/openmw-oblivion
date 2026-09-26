@@ -2321,3 +2321,26 @@ overflow are diagnosed, not assigned invented native results.
 
 `S2/creature-base-stats-01` passes full components and ASan/UBSan ESM4 suites.
 These are construction rules, not evidence of live combat integration.
+
+### Creature runtime actor-value aliases differ from base-form getters
+
+RTTI-verified Creature vtable `A710F4` slots A1..AC select wrappers
+`6253C0..6257E0`. Both current-value getters and all ten setter/modifier
+wrappers map skills 12..18 **and Marksman (28)** to Combat AV12, skills 19..25
+to Magic AV19, and the remaining 26..32 to Stealth AV26. Other AVs pass through.
+This additional runtime layer was missed by the earlier base-form-only
+`51D540` dispatch corpus. Base-record Marksman remains in the stealth group;
+the live creature class now reads Combat for Marksman.
+
+`S2/oracle-emulator/creature-actor-av-dispatch.py` executes **1,776 original
+forwarding cases** (12 wrappers, AV0..72 plus UINT_MAX, both x87 modes). It
+stops explicitly at the common parent method, verifying forwarded AV, actor
+pointer and every remaining argument. It does not claim to test the parent's
+mutation arithmetic. Hash-bound RTTI/function mapping and traces are under
+`S2/sources-01/actor-value-mutation-*`. That mapping also identifies `A73A0C`
+as **PlayerCharacter**, not generic Actor; Character is `A6FC9C`.
+
+The live creature regression now checks distinct base/live Marksman values
+and all 21 skill reads. All 560 engine tests pass with rebuilt binaries in
+`S2/creature-actor-av-01`. Earlier construction and NPC escort results remain
+valid within their recorded scopes; they did not verify this runtime alias.

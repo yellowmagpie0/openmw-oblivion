@@ -249,7 +249,10 @@ namespace
         EXPECT_EQ(stats.getFatigue().getBase(), 18);
         const auto& ids = MWWorld::oblivionSkillIds();
         for (std::size_t i = 0; i < ids.size(); ++i)
-            EXPECT_EQ(ptr.getClass().getSkill(ptr, ids[i]), i < 7 ? 21 : i < 14 ? 22 : 23);
+            EXPECT_EQ(ptr.getClass().getSkill(ptr, ids[i]), i < 7 || i == 16 ? 21 : i < 14 ? 22 : 23);
+        // Base-record Marksman remains Stealth; the live getter aliases Combat.
+        EXPECT_EQ((*live.mData.getCustomData()->asESM4CreatureCustomData().mNativeSkills)[16], 23);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 21);
         EXPECT_EQ(live.mData.getCustomData()->asESM4CreatureCustomData().mNativeDamage, 20);
         EXPECT_THROW(ptr.getClass().getSkill(ptr, ESM::Skill::Spear), std::invalid_argument);
     }
