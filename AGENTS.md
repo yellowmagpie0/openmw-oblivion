@@ -14,3 +14,11 @@ known limitations.
 - The imported MCP implementation currently targets TES3/Morrowind records.
   Do not imply that it supports Oblivion/TES4 data until that support is
   implemented and verified in this fork.
+
+Reusable workflows for this fork are versioned under `.codex/skills/`:
+
+- `openmw-build-test`: builds, sanitizer checks, exact test inventories and evidence recording.
+- `oblivion-native-oracle`: independent original-executable rule checks and isolated game probes.
+
+Read the relevant `SKILL.md` when using these workflows. The personal skill
+installation may link here; pass the actual checkout path to helper scripts.

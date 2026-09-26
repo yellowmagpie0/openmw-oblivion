@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenMW Build and Test"
+  short_description: "Run OpenMW builds and verify exact test inventories"
+  default_prompt: "Use $openmw-build-test to build this change and record verified test evidence."

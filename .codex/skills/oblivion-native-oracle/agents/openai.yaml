@@ -1,0 +1,4 @@
+interface:
+  display_name: "Oblivion Native Oracle"
+  short_description: "Verify TES4 rules against original engine evidence"
+  default_prompt: "Use $oblivion-native-oracle to independently verify the native rule and its boundaries."

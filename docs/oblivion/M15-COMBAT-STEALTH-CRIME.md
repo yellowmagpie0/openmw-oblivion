@@ -2174,3 +2174,25 @@ Atomic world reporting, alternate bounty routing, statistics and persistence
 remain open. S2 remains in progress; S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `d1ba2d7bd868bb0d8816c7efa403ac10e6c98ded487de7839158971456b3ee35`.
+
+### Reusable build/test and original-oracle skills
+
+Commit `53e28f6e61` contains report gates and infamy accumulation. Added versioned
+skills under `.codex/skills/openmw-build-test` and
+`.codex/skills/oblivion-native-oracle`, with personal-directory symlinks to their
+source. They preserve build configurations, exact-inventory verification,
+source/binary evidence fingerprints, original PE identity/section inspection,
+emulator pitfalls and isolated live/restart probe procedures.
+
+Both skill manifests validate. **17 helper tests** pass, including rejected
+missing/skipped/duplicate results, source drift, inherited GoogleTest filtering/
+sharding, build/command failures, timeout and existing-output preservation.
+Original PE metadata agrees with the prior section map; wrong hash and output
+overwrite attempts fail. A real runner pass builds and verifies **1,812 component
+tests**, **290 ASan/UBSan ESM4 tests** and **151 Python tests**, with no skips and
+exact C++ inventories (`build/oblivion-compat/skill-validation-02/checks`). The
+sanitizer filter now covers all `ESM4*` suites, including future additions.
+The prior stale SDL2 link failure is retained under `skill-validation-01`;
+refreshing both existing CMake configurations resolved it without changing
+project options. This improves verification tooling; M15 runtime gates remain
+unchanged.
