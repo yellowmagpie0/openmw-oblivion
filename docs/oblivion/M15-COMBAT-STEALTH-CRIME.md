@@ -2736,3 +2736,20 @@ Inspected images show the textured native fixture/HUD and the existing
 terrain-facing Morrowind view. These silent idle scenarios have empty native
 actor vectors; they establish schema migration/isolation, not active player
 combat, audio, or full Morrowind gameplay acceptance. S3 remains in progress.
+
+### S3 winning player dynamic settings
+
+Commit `ed674532eb` contains player publication/schema 10. Native player settings
+now have a typed builder and an ESMStore adapter that resolves current winning
+TES4 records rather than shared TES3 aliases. Defaults remain the independently
+verified health 2, Magicka .5, capacity 5; installed Magicka 1 overrides .5.
+Finite negative/zero overrides retain native arithmetic; wrong types, nonfinite
+values and ambiguous case-insensitive names fail explicitly.
+
+`S3/player-settings-01` passes **1,883 component /361 ASan+UBSan ESM4 /576
+engine tests**, rebuilding openmw/openmw-tests/esmtool. The actual-player fixture
+uses the store adapter, ignores a conflicting TES3 setting, republishes after
+a native override changes Magicka 1 -> 2, and removes the override to recover
+the .5 compiled default. Raw player form contributions remain unchanged across
+these derived recalculations. No save format or automatically activated gameplay
+path changed; preceding runtime evidence is not claimed as an active-stat test.

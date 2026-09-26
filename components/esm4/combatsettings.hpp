@@ -10,6 +10,7 @@
 #include "crimerules.hpp"
 #include "combatairules.hpp"
 #include "actorstats.hpp"
+#include "actorvalues.hpp"
 #include <span>
 
 namespace ESM4
@@ -40,6 +41,7 @@ namespace ESM4
     BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
     FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings);
+    PlayerDynamicBaseSettings buildPlayerDynamicBaseSettings(std::span<const GameSetting* const> settings);
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings);
     CreatureBaseStatsSettings buildCreatureBaseStatsSettings(std::span<const GameSetting* const> settings);
     NpcAutoStatsSettings buildNpcAutoStatsSettings(std::span<const GameSetting* const> settings);

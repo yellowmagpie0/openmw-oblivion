@@ -271,7 +271,20 @@ namespace
         values.mValues[40].mBase = 15;
         values.mValues[48] = {1.25f, {std::nullopt, .5f, std::nullopt}};
         values.mValues[28] = {20.5f, {2.f, .25f, -1.f}};
-        const ESM4::PlayerDynamicBaseSettings settings{2, 1, 5};
+        ESM::GameSetting sharedSetting{};
+        sharedSetting.mId = ESM::RefId::stringRefId("fPCBaseHealthMult");
+        sharedSetting.mValue.setType(ESM::VT_Float);
+        sharedSetting.mValue.setFloat(999.f);
+        mStore.getWritable<ESM::GameSetting>().insertStatic(sharedSetting);
+        ESM4::GameSetting nativeSetting{};
+        nativeSetting.mId = {0x9e62f, 0};
+        const auto settingKey = ESM::FormKey::content("oblivion.esm", 0x9e62f);
+        nativeSetting.mEditorId = "fPCBaseMagickaMult";
+        nativeSetting.mData = 1.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(nativeSetting, settingKey);
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
+        EXPECT_EQ(settings.mHealthMultiplier, 2); // TES3 aliases do not supply the native settings.
+        EXPECT_EQ(settings.mMagickaMultiplier, 1);
         service.publishPlayerValues(player, values, settings);
         EXPECT_EQ(service.getPlayerValue(0), 50.5f);
         EXPECT_EQ(service.getPlayerIntegerValue(0), 49);
@@ -335,6 +348,17 @@ namespace
         restored.changePlayerValue(fresh, 40, ESM4::ActorValueModifier::Script, -5, settings);
         EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getBase(), 94.5f);
         EXPECT_EQ(stats.getMagicka().getBase(), 126); // Fresh instance owns fresh views.
+        nativeSetting.mData = 2.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(nativeSetting, settingKey);
+        restored.publishPlayerValues(fresh, *restored.findActorValues(values.mActor),
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore));
+        EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getBase(), 139.5f);
+        EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getCurrent(), 135.25f);
+        ASSERT_TRUE(mStore.getWritable<ESM4::GameSetting>().eraseStatic(settingKey));
+        restored.publishPlayerValues(fresh, *restored.findActorValues(values.mActor),
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore));
+        EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getBase(), 72);
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mPlayerFormValues, values.mPlayerFormValues);
         auto legacy = before;
         legacy.mPlayerFormValues.reset();
         saved.mNativeActorValues = {legacy};

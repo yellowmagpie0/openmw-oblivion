@@ -130,6 +130,11 @@ namespace MWWorld
         }
     }
 
+    ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store)
+    {
+        return ESM4::buildPlayerDynamicBaseSettings(winningRecords<ESM4::GameSetting>(store));
+    }
+
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,
         const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel)
     {

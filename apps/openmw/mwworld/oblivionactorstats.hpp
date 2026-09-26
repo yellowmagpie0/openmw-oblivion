@@ -3,6 +3,7 @@
 
 #include <components/esm/formkey.hpp>
 #include <components/esm/refid.hpp>
+#include <components/esm4/actorvalues.hpp>
 
 #include <array>
 #include <cstdint>
@@ -24,6 +25,9 @@ namespace MWWorld
     };
 
     const std::array<ESM::RefId, 21>& oblivionSkillIds();
+    // Resolve native winning GMSTs at the publication boundary. Shared TES3
+    // aliases and previously cached settings cannot supply player formulas.
+    ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store);
     // Uses the live player's base level only for PCLevelOffset actors.
     OblivionActorBaseStats resolveOblivionActorConstructionStats(const ESMStore& store,
         ESM::FormId actorBase, bool scaled);

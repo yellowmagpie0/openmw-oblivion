@@ -221,6 +221,43 @@ TEST(ESM4CombatSettings, CrimeInfamyThresholdUsesCompiledDefaultAndTypedOverride
     }
 }
 
+TEST(ESM4CombatSettings, PlayerDynamicSettingsUseNativeTypedOverridesWithoutClamping)
+{
+    const auto defaults = ESM4::buildPlayerDynamicBaseSettings({});
+    EXPECT_EQ(defaults.mHealthMultiplier, 2);
+    EXPECT_EQ(defaults.mMagickaMultiplier, .5f);
+    EXPECT_EQ(defaults.mStrengthEncumbranceMultiplier, 5);
+    ESM4::GameSetting health{}, magicka{}, capacity{};
+    health.mEditorId = "fPCBaseHealthMult";
+    health.mData = -2.f;
+    magicka.mEditorId = "FPCBASEMAGICKAMULT";
+    magicka.mData = 1.f; // Winning installed TES4 value, not compiled .5.
+    capacity.mEditorId = "fActorStrengthEncumbranceMult";
+    capacity.mData = 0.f;
+    const std::array<const ESM4::GameSetting*, 3> inputs{&health, &magicka, &capacity};
+    const auto custom = ESM4::buildPlayerDynamicBaseSettings(inputs);
+    EXPECT_EQ(custom.mHealthMultiplier, -2);
+    EXPECT_EQ(custom.mMagickaMultiplier, 1);
+    EXPECT_EQ(custom.mStrengthEncumbranceMultiplier, 0);
+    for (auto* setting : {&health, &magicka, &capacity})
+    {
+        const auto value = setting->mData;
+        setting->mData = std::int32_t{1};
+        EXPECT_THROW(ESM4::buildPlayerDynamicBaseSettings(inputs), std::invalid_argument);
+        setting->mData = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(ESM4::buildPlayerDynamicBaseSettings(inputs), std::invalid_argument);
+        setting->mData = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(ESM4::buildPlayerDynamicBaseSettings(inputs), std::invalid_argument);
+        setting->mData = value;
+    }
+    ESM4::GameSetting duplicate = magicka;
+    duplicate.mEditorId = "fPCBaseMagickaMult";
+    const std::array<const ESM4::GameSetting*, 2> ambiguous{&magicka, &duplicate};
+    EXPECT_THROW(ESM4::buildPlayerDynamicBaseSettings(ambiguous), std::invalid_argument);
+    const std::array<const ESM4::GameSetting*, 1> missing{nullptr};
+    EXPECT_THROW(ESM4::buildPlayerDynamicBaseSettings(missing), std::invalid_argument);
+}
+
 TEST(ESM4CombatSettings, NpcDynamicStatsUseTypedCompiledDefaultsAndInstalledOverrides)
 {
     const auto compiled = ESM4::buildNpcDynamicStatsSettings({});

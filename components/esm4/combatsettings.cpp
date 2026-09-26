@@ -195,6 +195,18 @@ namespace ESM4
         return result;
     }
 
+    PlayerDynamicBaseSettings buildPlayerDynamicBaseSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const PlayerDynamicBaseSettings result{inputs.number("fPCBaseHealthMult", 2.f),
+            inputs.number("fPCBaseMagickaMult", .5f), inputs.number("fActorStrengthEncumbranceMult", 5.f)};
+        for (const float value : {result.mHealthMultiplier, result.mMagickaMultiplier,
+                 result.mStrengthEncumbranceMultiplier})
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite native player dynamic base setting");
+        return result;
+    }
+
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
