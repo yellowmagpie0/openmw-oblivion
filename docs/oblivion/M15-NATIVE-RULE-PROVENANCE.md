@@ -2050,3 +2050,42 @@ base/count/extra arguments and the real insertion marker. Evidence:
 `arrow-recovery-summary.json`, `arrow-recovery.log`, and
 `S2/sources-01/arrow-recovery.txt`. This is independent branch evidence, not
 normal-input projectile acceptance.
+
+### Arrow reference-count cleanup selection
+
+Original creation tail `0060CD25` increments live arrow count `00B3B7D0` and
+calls cleanup only when the resulting count is strictly greater than
+`iArrowMaxRefCount` (`00B370D0`, compiled 15, constructor `009E9C67`, no installed
+override in audit-12). Cleanup `00608120` traverses process-list query 1 first
+(manager +0), then query 0 (manager +68) only if the first traversal found no
+candidate. The actual getter `00673A50` and list-head helper `007616D0` establish
+these pools; cached external structure labels are not used to rename them.
+
+After the reference-eligibility virtual query and arrow RTTI cast, only native
+state **2** qualifies. The chosen age must be strictly greater than the current
+best age, initialized to zero. Thus zero-age arrows do not qualify, equal-age
+ties preserve traversal order, and an older fallback-pool arrow does not replace
+a qualifying preferred-pool arrow. No eligible settled arrow means no selection:
+this is not a hard cap that deletes flying arrows. The creation call requests
+fading rather than immediate deletion; cleanup writes selected state **3**.
+It does not decrement the live global count. Its returned count-minus-one is
+unused by this caller; removal/destruction still owns actual count changes.
+
+`selectArrowForCleanup` returns the selected input index without mutating it.
+The caller supplies resolved eligible arrows, preserves each pool's traversal
+order, maps the index back to stable identity and starts fading once. Finite
+nonnegative ages/counts and a nonnegative signed-int setting are required;
+malformed input diagnoses even when the count is below the threshold.
+
+Three tests fail against the stub. **6,586 original instruction cases** pass
+in both x87 precision modes and match a separately compiled C++ driver exactly,
+executing the original count gate, both native
+list queries/traversals, age/state selection and fade write. The reference
+eligibility virtual and RTTI cast are boundary stubs. Cases cover empty eligible
+sets, all combinations of flying/settled/fading states and zero/equal/older ages,
+priority/fallback behavior, exact/above count thresholds and int32 maximum.
+Evidence: `S2/oracle-emulator/arrow-cleanup.py`, `arrow-cleanup-table.json`,
+`arrow-cleanup.log`; `S2/sources-01/arrow-cleanup.txt`,
+`arrow-count-increment.txt`, `mobile-process-list-query.txt` and
+`process-list-head.txt`. Live collection, fade/deletion bookkeeping and
+save/restart resource bounds remain projectile-service acceptance requirements.

@@ -28,6 +28,41 @@ namespace ESM4
         }
     }
 
+    void validateArrowCleanupSettings(const ArrowCleanupSettings& settings)
+    {
+        if (settings.mMaximumReferences < 0)
+            throw std::invalid_argument("invalid native arrow reference limit");
+    }
+
+    std::optional<std::size_t> selectArrowForCleanup(std::int32_t referenceCount,
+        std::span<const ArrowCleanupCandidate> candidates, const ArrowCleanupSettings& settings)
+    {
+        validateArrowCleanupSettings(settings);
+        if (referenceCount < 0)
+            throw std::invalid_argument("invalid native arrow reference count");
+        for (const auto& candidate : candidates)
+            nonnegative(candidate.mAge);
+        if (referenceCount <= settings.mMaximumReferences)
+            return std::nullopt;
+        for (bool preferred : {true, false})
+        {
+            std::optional<std::size_t> selected;
+            float oldest = 0;
+            for (std::size_t i = 0; i < candidates.size(); ++i)
+            {
+                const auto& candidate = candidates[i];
+                if (candidate.mPreferredPool == preferred && candidate.mSettled && candidate.mAge > oldest)
+                {
+                    selected = i;
+                    oldest = candidate.mAge;
+                }
+            }
+            if (selected)
+                return selected;
+        }
+        return std::nullopt;
+    }
+
     void validateArrowRecoverySettings(const ArrowRecoverySettings& settings)
     {
         if (settings.mInventoryChance < 0 || settings.mInventoryChance > 100)

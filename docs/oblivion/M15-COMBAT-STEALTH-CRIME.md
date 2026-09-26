@@ -2244,3 +2244,21 @@ eligibility, real inventory insertion, collisions and save/restart remain open.
 S2 remains in progress; S3–S14 remain pending.
 
 Tested source fingerprint: `ba2a546aec0ec97dcd289df1bf6eb6df1429fa8a6d4554c2f021484f9c6fc178`.
+
+### S2 arrow reference-count cleanup
+
+Commit `53aaa6d1c6` contains the final arrow inventory-recovery roll. Added
+strict post-creation count gating, preferred/fallback pool selection, oldest
+positive-age settled-arrow selection and stable equal-age ties. Cleanup selects
+one arrow to start fading; it does not impose a hard cap on flying arrows.
+
+All **1,827 component tests**, **305 ASan/UBSan ESM4 tests**, **151 Python
+tests** and **552 engine tests** pass with exact C++ inventories/no skips
+(`S2/arrow-cleanup-02`). `openmw`, `openmw-tests` and `esmtool` rebuilt
+successfully. Three policy tests first fail against the stub
+(`arrow-cleanup-01`). **6,586 original instruction cases** pass in both x87
+precision modes and match a separately compiled C++ driver exactly. Runtime
+collection/removal and save/restart resource bounds remain open. S2 remains
+in progress; S3–S14 remain pending. Next: native fatigue regeneration.
+
+Tested source fingerprint: `176ea643f66b10929a7305421fc8ada40c672fc6911fdd1941e74e4ed487e912`.

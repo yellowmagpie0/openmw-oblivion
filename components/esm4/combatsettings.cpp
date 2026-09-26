@@ -288,6 +288,14 @@ namespace ESM4
         return result;
     }
 
+    ArrowCleanupSettings buildArrowCleanupSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const ArrowCleanupSettings result{inputs.number("iArrowMaxRefCount", std::int32_t{15})};
+        validateArrowCleanupSettings(result);
+        return result;
+    }
+
     ArrowRecoverySettings buildArrowRecoverySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

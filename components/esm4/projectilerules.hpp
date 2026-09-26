@@ -3,8 +3,30 @@
 
 #include "physicalcombat.hpp"
 
+#include <optional>
+#include <span>
+
 namespace ESM4
 {
+    struct ArrowCleanupSettings
+    {
+        std::int32_t mMaximumReferences;
+    };
+
+    struct ArrowCleanupCandidate
+    {
+        float mAge;
+        bool mSettled; // Original arrow state 2; flying/impact/fading states do not qualify.
+        bool mPreferredPool; // Native process-list query 1; fallback is query 0.
+    };
+
+    // Count is after creating the new arrow. Preserve traversal order within
+    // each pool. Caller supplies only resolved, eligible arrow references and
+    // starts fading the returned one; this is not a hard cap on flying arrows.
+    std::optional<std::size_t> selectArrowForCleanup(std::int32_t referenceCount,
+        std::span<const ArrowCleanupCandidate> candidates, const ArrowCleanupSettings& settings);
+    void validateArrowCleanupSettings(const ArrowCleanupSettings& settings);
+
     struct ArrowRecoverySettings
     {
         std::int32_t mInventoryChance;

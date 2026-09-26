@@ -1653,6 +1653,14 @@
       "constructor": "0x9e9c47",
       "type": "int32",
       "installed_override": null
+    },
+    {
+      "name": "iArrowMaxRefCount",
+      "value": 15,
+      "storage": "0xb370d0",
+      "constructor": "0x9e9c67",
+      "type": "int32",
+      "installed_override": null
     }
   ]
 }

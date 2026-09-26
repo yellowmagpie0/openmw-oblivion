@@ -149,6 +149,63 @@ TEST(ESM4ProjectileRules, InventoryRecoverySettingsUseTypedDefaultAndOverrides)
     EXPECT_THROW(ESM4::buildArrowRecoverySettings(values), std::invalid_argument);
 }
 
+TEST(ESM4ProjectileRules, CleanupStartsAboveLimitAndPrefersFirstPoolOverOlderFallback)
+{
+    const std::array candidates{ESM4::ArrowCleanupCandidate{80, true, false},
+        ESM4::ArrowCleanupCandidate{1, true, true}, ESM4::ArrowCleanupCandidate{90, false, true}};
+    for (int count : {0, 1, 14, 15})
+        EXPECT_FALSE(ESM4::selectArrowForCleanup(count, candidates, {15}));
+    EXPECT_EQ(ESM4::selectArrowForCleanup(16, candidates, {15}), 1u);
+    EXPECT_EQ(ESM4::selectArrowForCleanup(100, candidates, {15}), 1u);
+    EXPECT_FALSE(ESM4::selectArrowForCleanup(0, candidates, {0}));
+    EXPECT_EQ(ESM4::selectArrowForCleanup(1, candidates, {0}), 1u);
+    EXPECT_FALSE(ESM4::selectArrowForCleanup(100, {}, {15}));
+}
+
+TEST(ESM4ProjectileRules, CleanupSelectsOldestPositiveAgeSettledArrowWithStableTies)
+{
+    std::array candidates{ESM4::ArrowCleanupCandidate{50, false, true},
+        ESM4::ArrowCleanupCandidate{0, true, true}, ESM4::ArrowCleanupCandidate{2, true, false},
+        ESM4::ArrowCleanupCandidate{3, true, false}, ESM4::ArrowCleanupCandidate{3, true, false}};
+    EXPECT_EQ(ESM4::selectArrowForCleanup(16, candidates, {15}), 3u);
+    candidates[4].mAge = std::nextafter(3.f, 4.f);
+    EXPECT_EQ(ESM4::selectArrowForCleanup(16, candidates, {15}), 4u);
+    candidates[1].mAge = std::numeric_limits<float>::denorm_min();
+    EXPECT_EQ(ESM4::selectArrowForCleanup(16, candidates, {15}), 1u);
+    candidates[0].mSettled = true;
+    EXPECT_EQ(ESM4::selectArrowForCleanup(16, candidates, {15}), 0u);
+    for (auto& candidate : candidates)
+        candidate.mSettled = false;
+    EXPECT_FALSE(ESM4::selectArrowForCleanup(100, candidates, {15}));
+}
+
+TEST(ESM4ProjectileRules, CleanupRejectsMalformedCountsAndAges)
+{
+    EXPECT_THROW(ESM4::selectArrowForCleanup(-1, {}, {15}), std::invalid_argument);
+    EXPECT_THROW(ESM4::selectArrowForCleanup(0, {}, {-1}), std::invalid_argument);
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        const std::array candidates{ESM4::ArrowCleanupCandidate{bad, false, false}};
+        EXPECT_THROW(ESM4::selectArrowForCleanup(0, candidates, {15}), std::invalid_argument);
+    }
+}
+
+TEST(ESM4ProjectileRules, CleanupSettingsUseTypedDefaultAndOverrides)
+{
+    EXPECT_EQ(ESM4::buildArrowCleanupSettings({}).mMaximumReferences, 15);
+    ESM4::GameSetting value{};
+    value.mEditorId = "iArrowMaxRefCount";
+    value.mData = std::int32_t{0};
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildArrowCleanupSettings(values).mMaximumReferences, 0);
+    value.mData = std::numeric_limits<std::int32_t>::max();
+    EXPECT_EQ(ESM4::buildArrowCleanupSettings(values).mMaximumReferences, std::numeric_limits<std::int32_t>::max());
+    value.mData = 15.f;
+    EXPECT_THROW(ESM4::buildArrowCleanupSettings(values), std::invalid_argument);
+    value.mData = std::int32_t{-1};
+    EXPECT_THROW(ESM4::buildArrowCleanupSettings(values), std::invalid_argument);
+}
+
 TEST(ESM4ProjectileRules, DrawUsesPlayerTimerAndCapsAtFull)
 {
     for (const auto& c : {std::pair{0.f, .25f}, {1.f, .65f}, {1.875f, 1.f}, {2.f, 1.f}, {1000.f, 1.f}})
