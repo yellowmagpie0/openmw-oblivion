@@ -56,3 +56,7 @@ different layers. None alone closes gameplay/restart gates. Follow the current
 implementation plan's gates, not old counts or status remembered by the skill.
 For real engine save/restart fixtures, consult
 [references/runtime-checks.md](references/runtime-checks.md).
+
+When adding or changing a typed TES4 record, read
+[references/native-records.md](references/native-records.md) for engine registration
+and independent record validation requirements.
