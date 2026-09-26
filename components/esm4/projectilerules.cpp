@@ -28,6 +28,23 @@ namespace ESM4
         }
     }
 
+    void validateArrowRecoverySettings(const ArrowRecoverySettings& settings)
+    {
+        if (settings.mInventoryChance < 0 || settings.mInventoryChance > 100)
+            throw std::invalid_argument("invalid native arrow recovery percentage");
+    }
+
+    ArrowInventoryRecoveryResult arrowInventoryRecovery(bool arrowEnchanted, unsigned draw,
+        const ArrowRecoverySettings& settings)
+    {
+        validateArrowRecoverySettings(settings);
+        if (draw >= 100)
+            throw std::invalid_argument("invalid native arrow recovery draw");
+        if (arrowEnchanted)
+            return {};
+        return {true, draw < static_cast<unsigned>(settings.mInventoryChance)};
+    }
+
     void validateArrowLifetimeSettings(const ArrowLifetimeSettings& settings)
     {
         nonnegative(settings.mMaximumAge);

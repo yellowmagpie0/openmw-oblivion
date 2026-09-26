@@ -1645,6 +1645,14 @@
       "constructor": "0x9e995f",
       "type": "float32",
       "installed_override": null
+    },
+    {
+      "name": "iArrowInventoryChance",
+      "value": 50,
+      "storage": "0xb370c8",
+      "constructor": "0x9e9c47",
+      "type": "int32",
+      "installed_override": null
     }
   ]
 }

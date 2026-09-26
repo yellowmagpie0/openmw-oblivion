@@ -94,6 +94,61 @@ TEST(ESM4ProjectileRules, LifetimeSettingsUseTypedDefaultAndOverrides)
     EXPECT_THROW(ESM4::buildArrowLifetimeSettings(values), std::invalid_argument);
 }
 
+TEST(ESM4ProjectileRules, InventoryRecoveryRollIsStrictAndArrowEnchantmentSuppressesDraw)
+{
+    for (int chance : {0, 1, 49, 50, 99, 100})
+        for (unsigned draw = 0; draw < 100; ++draw)
+            for (bool enchanted : {false, true})
+            {
+                SCOPED_TRACE(chance);
+                SCOPED_TRACE(draw);
+                SCOPED_TRACE(enchanted);
+                const auto result = ESM4::arrowInventoryRecovery(enchanted, draw, {chance});
+                EXPECT_EQ(result.mConsumesDraw, !enchanted);
+                EXPECT_EQ(result.mRecover, !enchanted && draw < static_cast<unsigned>(chance));
+            }
+}
+
+TEST(ESM4ProjectileRules, InventoryRecoveryRejectsInvalidProbabilityAndDraw)
+{
+    for (int chance : {-1, 101, std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()})
+        for (bool enchanted : {false, true})
+            EXPECT_THROW(ESM4::arrowInventoryRecovery(enchanted, 0, {chance}), std::invalid_argument);
+    for (unsigned draw : {100u, std::numeric_limits<unsigned>::max()})
+        for (bool enchanted : {false, true})
+            EXPECT_THROW(ESM4::arrowInventoryRecovery(enchanted, draw, {50}), std::invalid_argument);
+}
+
+TEST(ESM4ProjectileRules, InventoryRecoveryFixedSeedDistribution)
+{
+    // Predeclared 100,000 draws, native 15-bit samples modulo 100, seed 0x4d15a3.
+    // Allow +/-600 around nominal 50%; deterministic boundaries are tested above.
+    std::uint32_t random = 0x4d15a3;
+    unsigned recovered = 0;
+    for (unsigned i = 0; i < 100000; ++i)
+    {
+        random = random * 0x343FDu + 0x269EC3u;
+        const unsigned draw = ((random >> 16) & 0x7fff) % 100;
+        recovered += ESM4::arrowInventoryRecovery(false, draw, {50}).mRecover;
+    }
+    EXPECT_GE(recovered, 49400u);
+    EXPECT_LE(recovered, 50600u);
+}
+
+TEST(ESM4ProjectileRules, InventoryRecoverySettingsUseTypedDefaultAndOverrides)
+{
+    EXPECT_EQ(ESM4::buildArrowRecoverySettings({}).mInventoryChance, 50);
+    ESM4::GameSetting value{};
+    value.mEditorId = "iArrowInventoryChance";
+    value.mData = std::int32_t{25};
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildArrowRecoverySettings(values).mInventoryChance, 25);
+    value.mData = 25.f;
+    EXPECT_THROW(ESM4::buildArrowRecoverySettings(values), std::invalid_argument);
+    value.mData = std::int32_t{101};
+    EXPECT_THROW(ESM4::buildArrowRecoverySettings(values), std::invalid_argument);
+}
+
 TEST(ESM4ProjectileRules, DrawUsesPlayerTimerAndCapsAtFull)
 {
     for (const auto& c : {std::pair{0.f, .25f}, {1.f, .65f}, {1.875f, 1.f}, {2.f, 1.f}, {1000.f, 1.f}})

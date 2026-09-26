@@ -2228,3 +2228,19 @@ visual fading/removal and fresh-process persistence remain open. S2 remains
 in progress; S3–S14 remain pending.
 
 Tested source fingerprint: `9da6a065b5d3a38c9a8a5e9011f23e2d87275b2329c71e2a42ac4103ae94dd69`.
+
+### S2 final arrow inventory-recovery roll
+
+Commit `e3a4748ba6` contains native arrow lifetime/fading. Added the final
+actor-inventory recovery rule, arrow-enchantment draw suppression, strict
+percentage comparison and typed native setting adapter.
+
+All **1,823 component tests**, **301 ASan/UBSan ESM4 tests**, and **151 Python
+tests** pass with exact C++ inventories/no skips (`S2/arrow-recovery-02`). Three
+new tests first fail against the stub (`arrow-recovery-01`). **1,200 original
+instruction boundary cases** pass; a predeclared 100,000-sample original branch
+run recovers 49,870 arrows within its fixed tolerance. Earlier impact/creature
+eligibility, real inventory insertion, collisions and save/restart remain open.
+S2 remains in progress; S3–S14 remain pending.
+
+Tested source fingerprint: `ba2a546aec0ec97dcd289df1bf6eb6df1429fa8a6d4554c2f021484f9c6fc178`.

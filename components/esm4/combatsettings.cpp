@@ -288,6 +288,14 @@ namespace ESM4
         return result;
     }
 
+    ArrowRecoverySettings buildArrowRecoverySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const ArrowRecoverySettings result{inputs.number("iArrowInventoryChance", std::int32_t{50})};
+        validateArrowRecoverySettings(result);
+        return result;
+    }
+
     ArrowLifetimeSettings buildArrowLifetimeSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

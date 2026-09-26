@@ -2017,3 +2017,36 @@ Evidence: `S2/oracle-emulator/arrow-lifetime.py`, `arrow-lifetime-table.json`,
 `arrow-lifetime.log`; `S2/sources-01/arrow-update.txt` and
 `arrow-update-tail.txt`. Runtime ticking, visual fading/removal, normal-input
 flight/impact and save/restart acceptance remain open.
+
+### Final arrow inventory-recovery roll
+
+After actor-impact eligibility and attachment handling, original `0060B08D`
+checks arrow enchantment +7C. A non-null enchantment skips the random draw and
+inventory insertion. This is the arrow enchantment; bow enchantment +80 is
+separate. An unenchanted arrow always consumes a draw, even at 0% or 100%.
+`0047DF80(0)` supplies the nonnegative random sample, which is reduced modulo
+100 and compared with **strict less-than** against `iArrowInventoryChance`
+(`00B370C8`, compiled 50, constructor `009E9C47`, no installed override in
+audit-12). On success the original invokes the impacted actor's inventory
+insertion with the arrow base, null extra data and count 1, then sets arrow
+byte +95 to 1. Failed rolls do neither.
+
+`arrowInventoryRecovery` represents that final roll, including whether a draw
+is consumed. Its caller must first establish impact eligibility, and must not
+consume a draw for enchanted ammo. Probability outside [0,100] and draws outside
+[0,99] diagnose, consistently with the existing supported mastery percentages.
+This does not establish the earlier creature +104 eligibility flag's meaning,
+world-surface recovery, collision/bounce choice, actual inventory insertion,
+spent-projectile deduplication or save/load behavior.
+
+Three new policy/distribution tests fail against the stub. **1,200 original
+instruction cases** cover every draw at chances 0/1/49/50/99/100 with and without
+arrow enchantment. A separately predeclared **100,000-sample** run using seed
+`0x4d15a3`, native 15-bit samples and the original modulo/branch code recovers
+**49,870** arrows, within the declared 49,400–50,600 interval. Boundary stubs
+supply RNG/base queries and observe inventory insertion; the latter verifies
+base/count/extra arguments and the real insertion marker. Evidence:
+`S2/oracle-emulator/arrow-recovery.py`, `arrow-recovery-table.json`,
+`arrow-recovery-summary.json`, `arrow-recovery.log`, and
+`S2/sources-01/arrow-recovery.txt`. This is independent branch evidence, not
+normal-input projectile acceptance.

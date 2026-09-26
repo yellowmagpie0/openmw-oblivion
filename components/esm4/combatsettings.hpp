@@ -29,6 +29,7 @@ namespace ESM4
     PhysicalCombatSettings buildPhysicalCombatSettings(std::span<const GameSetting* const> settings);
     ProjectileSettings buildProjectileSettings(std::span<const GameSetting* const> settings);
     ArrowLifetimeSettings buildArrowLifetimeSettings(std::span<const GameSetting* const> settings);
+    ArrowRecoverySettings buildArrowRecoverySettings(std::span<const GameSetting* const> settings);
     BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings);
     KnockdownSettings buildKnockdownSettings(std::span<const GameSetting* const> settings);
     KnockbackSettings buildKnockbackSettings(std::span<const GameSetting* const> settings);

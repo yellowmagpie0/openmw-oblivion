@@ -5,6 +5,24 @@
 
 namespace ESM4
 {
+    struct ArrowRecoverySettings
+    {
+        std::int32_t mInventoryChance;
+    };
+
+    struct ArrowInventoryRecoveryResult
+    {
+        bool mConsumesDraw = false;
+        bool mRecover = false;
+    };
+
+    // Final inventory-recovery roll after the actor-impact eligibility path.
+    // This tests the arrow's enchantment, independently of a bow enchantment.
+    // The caller draws only for an unenchanted arrow; draw is in [0,99].
+    ArrowInventoryRecoveryResult arrowInventoryRecovery(bool arrowEnchanted, unsigned draw,
+        const ArrowRecoverySettings& settings);
+    void validateArrowRecoverySettings(const ArrowRecoverySettings& settings);
+
     struct ArrowLifetimeSettings
     {
         float mMaximumAge;
