@@ -181,7 +181,8 @@ namespace MWClass
             data->mCreatureStats.initializeOblivionBaseStats(calculated.mAttributes,
                 {float(calculated.mHealth), float(calculated.mMagicka), float(calculated.mFatigue)},
                 calculated.mLevel);
-            data->mNativeSkills = calculated.mSkills;
+            data->mNativeSkills.emplace();
+            std::copy(calculated.mSkills.begin(), calculated.mSkills.end(), data->mNativeSkills->begin());
             data->mNativeDamage = calculated.mNaturalDamage;
         }
         else

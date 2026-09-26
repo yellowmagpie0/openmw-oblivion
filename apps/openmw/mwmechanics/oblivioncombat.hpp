@@ -37,12 +37,14 @@ namespace MWMechanics
     class OblivionActorProjection
     {
         CreatureStats& mTarget;
-        NpcStats* mNpc;
-        std::map<ESM::RefId, AttributeValue> mAttributes;
-        std::map<ESM::RefId, SkillValue> mSkills;
+        std::array<AttributeValue, 8> mAttributes;
+        std::array<AttributeValue*, 8> mAttributeTargets{};
+        std::array<AttributeValue, 21> mSkills;
+        std::array<AttributeValue*, 21> mSkillTargets{};
         std::array<DynamicStat<float>, 3> mDynamic;
         bool mCommitted = false;
 
+        static void replaceAttribute(AttributeValue& target, const AttributeValue& value) noexcept;
         OblivionActorProjection(CreatureStats& target, NpcStats* npc,
             const OblivionActorProjectionInput& input);
 
@@ -61,7 +63,7 @@ namespace MWMechanics
     {
         ESM4::ActionLedger mActions;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
-        const ESM4::RuntimeActorValues& npcValues(const MWWorld::Ptr& actor) const;
+        const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
 
     public:
         void clear();
@@ -71,15 +73,15 @@ namespace MWMechanics
         // Internal completion/cancellation boundary. Call only with the
         // corresponding gameplay transition committed, before event callbacks.
         bool consumeAction(std::uint64_t id);
-        // Explicit construction/load publication. Only TES4 nonplayer NPCs
+        // Explicit construction/load publication. TES4 NPCs and creatures
         // are supported here; automatic gameplay activation is wired separately.
-        void publishNpcValues(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values);
+        void publishNonPlayerValues(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values);
         // Caller applies eligibility, event and death policy before/after this
         // scalar transition. This method cannot run callbacks between commits.
-        void changeNpcValue(const MWWorld::Ptr& actor, std::uint8_t value,
+        void changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta);
-        float getNpcValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
-        std::int32_t getNpcIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+        float getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+        std::int32_t getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);

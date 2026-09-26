@@ -2655,3 +2655,31 @@ is **not automatically enabled by actor updates or scripts yet**. Creature and
 player authority, live writer routing, legacy reconciliation and gameplay
 continuation remain S3 work. The prior idle schema 9 runtime evidence does not
 establish live NPC combat acceptance for this change.
+
+### S3 creature authority and stable prepared stat views
+
+Commit `54f6b48852` contains NPC publication. The explicit service interface is
+now `publish/change/getNonPlayerValues` (singular `Value` for changes/queries),
+supporting both native NPC and creature references with typed/version/base
+identity checks. Creature skill reads and modifier mutations use the original
+runtime group aliases established by the earlier 1,776 forwarding oracle cases:
+AV12–18 plus Marksman28 -> Combat12, AV19–25 -> Magic19, remaining AV26–32 ->
+Stealth26. NPC skills remain independent. Creature skill projections now retain
+float values and expose only const access outside construction and the service.
+
+Prepared attribute/skill updates use fixed arrays and validated target pointers
+instead of allocating/copying/replacing maps. The synchronous commit writes only
+prepared scalar fields, preserves skill progress and existing stat references,
+and still cannot replay. Creature skill-cache replacement is part of the same
+callback-free, nonthrowing commit after native state publication.
+
+All **575 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
+(`S3/creature-value-authority-01`). Expanded actual-class fixtures cover all 21
+creature skills, fractional group modifiers, Marksman read/write aliasing,
+unchanged raw base records, low/active transitions, failed publication and binary
+restore into a fresh creature instance. NPC Marksman remains independent, and
+prepared views retain existing attribute/skill addresses and progress.
+These are service/class integration checks; automatic world/script activation,
+player authority, migration reconciliation, death/eligibility policy and the
+remaining S3–S14 gates are still open. No runtime performance budget is claimed
+from eliminating map copies alone.

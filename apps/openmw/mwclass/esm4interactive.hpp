@@ -23,6 +23,11 @@
 #include "../mwclass/actor.hpp"
 #include "esm4base.hpp"
 
+namespace MWMechanics
+{
+    class OblivionCombatService;
+}
+
 namespace MWClass
 {
     template <class Derived, class Record>
@@ -183,9 +188,13 @@ namespace MWClass
 
     class ESM4CreatureCustomData final : public MWWorld::TypedCustomData<ESM4CreatureCustomData>
     {
+        friend class ESM4Creature;
+        friend class MWMechanics::OblivionCombatService;
+        std::optional<std::array<float, 21>> mNativeSkills;
+
     public:
+        const std::optional<std::array<float, 21>>& getNativeSkills() const { return mNativeSkills; }
         MWMechanics::CreatureStats mCreatureStats;
-        std::optional<std::array<std::uint8_t, 21>> mNativeSkills;
         std::optional<std::uint16_t> mNativeDamage;
         MWMechanics::Movement mMovement;
         MWWorld::InventoryStore mInventoryStore;

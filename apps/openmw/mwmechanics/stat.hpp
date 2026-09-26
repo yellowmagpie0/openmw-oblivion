@@ -117,6 +117,7 @@ namespace MWMechanics
 
     class AttributeValue
     {
+        friend class OblivionActorProjection;
         float mBase;
         float mModifier;
         float mDamage; // needs to be float to allow continuous damage

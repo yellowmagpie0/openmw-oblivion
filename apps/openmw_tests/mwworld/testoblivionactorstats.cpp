@@ -149,6 +149,7 @@ namespace
     {
         ESM4::Creature creature{};
         creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
         creature.mAttackReach = 64;
         creature.mBaseConfig.tes4.flags = ESM4::Creature::TES4_PCLevelOffset;
         creature.mBaseConfig.tes4.levelOrOffset = -1;
@@ -250,7 +251,7 @@ namespace
         MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
         MWWorld::Ptr ptr(&live);
         MWMechanics::OblivionCombatService service;
-        EXPECT_THROW(service.getNpcValue(ptr, 8), std::invalid_argument);
+        EXPECT_THROW(service.getNonPlayerValue(ptr, 8), std::invalid_argument);
         ESM4::RuntimeActorValues values;
         values.mActor = reference.mFormKey;
         values.mBase = mActorKey;
@@ -263,44 +264,47 @@ namespace
         values.mValues[40].mBase = 15;
         for (std::size_t i = 12; i <= 32; ++i)
             values.mValues[i] = {30, {2, 0.5f, -1}};
-        service.publishNpcValues(ptr, values);
-        EXPECT_EQ(service.getNpcValue(ptr, 0), 100);
-        EXPECT_EQ(service.getNpcIntegerValue(ptr, 0), 99);
+        service.publishNonPlayerValues(ptr, values);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 0), 100);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 0), 99);
         EXPECT_EQ(ptr.getClass().getCapacity(ptr), 500);
-        EXPECT_EQ(service.getNpcValue(ptr, 8), 105.75f);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 8), 105.75f);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 105.75f);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getModified(), 110.5f);
-        EXPECT_EQ(service.getNpcValue(ptr, 9), 68.625f);
-        EXPECT_EQ(service.getNpcIntegerValue(ptr, 9), 67);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 9), 68.625f);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 9), 67);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 68.625f);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getModified(), 55);
         EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Athletics), 31.5f);
-        service.changeNpcValue(ptr, 9, ESM4::ActorValueModifier::Maximum, 5);
+        service.changeNonPlayerValue(ptr, 28, ESM4::ActorValueModifier::Script, 2);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 33.5f);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Athletics), 31.5f);
+        service.changeNonPlayerValue(ptr, 9, ESM4::ActorValueModifier::Maximum, 5);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 76.125f);
-        service.changeNpcValue(ptr, 40, ESM4::ActorValueModifier::Script, 5);
+        service.changeNonPlayerValue(ptr, 40, ESM4::ActorValueModifier::Script, 5);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 101.5f);
-        service.changeNpcValue(ptr, 8, ESM4::ActorValueModifier::Damage, -200);
+        service.changeNonPlayerValue(ptr, 8, ESM4::ActorValueModifier::Damage, -200);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), -94.25f);
         EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
         const auto before = *service.findActorValues(reference.mFormKey);
         auto invalid = before;
         invalid.mBase = ESM::FormKey::content("actors.esm", 0x999);
-        EXPECT_THROW(service.publishNpcValues(ptr, invalid), std::invalid_argument);
+        EXPECT_THROW(service.publishNonPlayerValues(ptr, invalid), std::invalid_argument);
         invalid = before;
         invalid.mValues[71].mBase = std::numeric_limits<float>::quiet_NaN();
-        EXPECT_THROW(service.publishNpcValues(ptr, invalid), std::runtime_error);
+        EXPECT_THROW(service.publishNonPlayerValues(ptr, invalid), std::runtime_error);
         invalid = before;
         invalid.mValues[9] = {50, {3e38f, std::nullopt, std::nullopt}};
         // All stored values and ordinary composition are finite; the outer
         // Magicka scale overflows only while preparing complete shared views.
         EXPECT_NO_THROW(invalid.validate());
-        EXPECT_THROW(service.publishNpcValues(ptr, invalid), std::invalid_argument);
-        EXPECT_THROW(service.changeNpcValue(ptr, 8, ESM4::ActorValueModifier::Damage,
+        EXPECT_THROW(service.publishNonPlayerValues(ptr, invalid), std::invalid_argument);
+        EXPECT_THROW(service.changeNonPlayerValue(ptr, 8, ESM4::ActorValueModifier::Damage,
             std::numeric_limits<float>::infinity()), std::invalid_argument);
-        EXPECT_THROW(service.getNpcValue(ptr, 11), std::invalid_argument);
-        EXPECT_THROW(service.getNpcValue(ptr, 48), std::invalid_argument);
-        EXPECT_THROW(service.getNpcIntegerValue(ptr, 255), std::invalid_argument);
-        EXPECT_THROW(service.publishNpcValues(MWWorld::Ptr{}, before), std::invalid_argument);
+        EXPECT_THROW(service.getNonPlayerValue(ptr, 11), std::invalid_argument);
+        EXPECT_THROW(service.getNonPlayerValue(ptr, 48), std::invalid_argument);
+        EXPECT_THROW(service.getNonPlayerIntegerValue(ptr, 255), std::invalid_argument);
+        EXPECT_THROW(service.publishNonPlayerValues(MWWorld::Ptr{}, before), std::invalid_argument);
         EXPECT_EQ(*service.findActorValues(reference.mFormKey), before);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), -94.25f);
         EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
@@ -320,8 +324,8 @@ namespace
         restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
         MWWorld::LiveCellRef<ESM4::Npc> newLive(reference, mStore.search<ESM4::Npc>(mActorKey));
         MWWorld::Ptr newPtr(&newLive);
-        restored.publishNpcValues(newPtr, *restored.findActorValues(reference.mFormKey));
-        EXPECT_EQ(restored.getNpcValue(newPtr, 8), service.getNpcValue(ptr, 8));
+        restored.publishNonPlayerValues(newPtr, *restored.findActorValues(reference.mFormKey));
+        EXPECT_EQ(restored.getNonPlayerValue(newPtr, 8), service.getNonPlayerValue(ptr, 8));
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getHealth().getCurrent(), -94.25f);
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getCurrent(), 101.5f);
         EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Athletics), 31.5f);
@@ -329,8 +333,8 @@ namespace
             std::logic_error);
         auto low = *restored.findActorValues(reference.mFormKey);
         low.mProcess = ESM4::ActorValueProcess::Low;
-        restored.publishNpcValues(newPtr, low);
-        EXPECT_EQ(restored.getNpcValue(newPtr, 9), 81.5f);
+        restored.publishNonPlayerValues(newPtr, low);
+        EXPECT_EQ(restored.getNonPlayerValue(newPtr, 9), 81.5f);
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getModified(), 50);
     }
 
@@ -339,6 +343,7 @@ namespace
         sharedStats();
         ESM4::Creature creature{};
         creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
         creature.mAttackReach = 64;
         creature.mBaseConfig.tes4.levelOrOffset = 4;
         creature.mBaseConfig.tes4.baseSpell = 17;
@@ -370,10 +375,72 @@ namespace
         for (std::size_t i = 0; i < ids.size(); ++i)
             EXPECT_EQ(ptr.getClass().getSkill(ptr, ids[i]), i < 7 || i == 16 ? 21 : i < 14 ? 22 : 23);
         // Base-record Marksman remains Stealth; the live getter aliases Combat.
-        EXPECT_EQ((*live.mData.getCustomData()->asESM4CreatureCustomData().mNativeSkills)[16], 23);
+        EXPECT_EQ((*live.mData.getCustomData()->asESM4CreatureCustomData().getNativeSkills())[16], 23);
         EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 21);
         EXPECT_EQ(live.mData.getCustomData()->asESM4CreatureCustomData().mNativeDamage, 20);
         EXPECT_THROW(ptr.getClass().getSkill(ptr, ESM::Skill::Spear), std::invalid_argument);
+
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        for (std::size_t i = 0; i < 8; ++i)
+            values.mValues[i].mBase = stats.getAttribute(ESM::Attribute::indexToRefId(i)).getBase();
+        for (std::size_t i = 0; i < 21; ++i)
+            values.mValues[12 + i].mBase = i < 7 ? 21 : i < 14 ? 22 : 23;
+        values.mValues[8].mBase = 19;
+        values.mValues[9].mBase = 17;
+        values.mValues[10].mBase = 18;
+        MWMechanics::OblivionCombatService service;
+        service.publishNonPlayerValues(ptr, values);
+        service.changeNonPlayerValue(ptr, 28, ESM4::ActorValueModifier::Script, 0.75f);
+        service.changeNonPlayerValue(ptr, 22, ESM4::ActorValueModifier::Damage, -1.25f);
+        service.changeNonPlayerValue(ptr, 31, ESM4::ActorValueModifier::Maximum, 2.5f);
+        for (std::size_t i = 0; i < ids.size(); ++i)
+        {
+            const float expected = i < 7 || i == 16 ? 21.75f : i < 14 ? 20.75f : 25.5f;
+            EXPECT_EQ(ptr.getClass().getSkill(ptr, ids[i]), expected);
+            EXPECT_EQ(service.getNonPlayerValue(ptr, static_cast<std::uint8_t>(12 + i)), expected);
+        }
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 28), 21);
+        const auto& stored = *service.findActorValues(reference.mFormKey);
+        EXPECT_EQ(stored.mValues[12].mModifiers[1], 0.75f);
+        EXPECT_EQ(stored.mValues[19].mModifiers[2], -1.25f);
+        EXPECT_EQ(stored.mValues[26].mModifiers[0], 2.5f);
+        EXPECT_FALSE(stored.mValues[28].mModifiers[1]);
+        EXPECT_EQ(stored.mValues[28].mBase, 23);
+        EXPECT_EQ(mStore.search<ESM4::Creature>(mActorKey)->mData.combat, 21);
+        const auto before = stored;
+        auto invalid = before;
+        invalid.mValues[12].mModifiers[1] = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(service.publishNonPlayerValues(ptr, invalid), std::runtime_error);
+        EXPECT_EQ(*service.findActorValues(reference.mFormKey), before);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 21.75f);
+        auto low = before;
+        low.mProcess = ESM4::ActorValueProcess::Low;
+        service.publishNonPlayerValues(ptr, low);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Sneak), 23);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 21.75f);
+        service.publishNonPlayerValues(ptr, before);
+
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = values.mActor;
+        savedActor.mBase = values.mBase;
+        savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        MWWorld::LiveCellRef<ESM4::Creature> newLive(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr newPtr(&newLive);
+        restored.publishNonPlayerValues(newPtr, *restored.findActorValues(reference.mFormKey));
+        for (auto id : ids)
+            EXPECT_EQ(newPtr.getClass().getSkill(newPtr, id), ptr.getClass().getSkill(ptr, id));
+        EXPECT_EQ(newLive.mData.getCustomData()->asESM4CreatureCustomData().mNativeDamage, 20);
     }
 
     TEST_F(OblivionActorStatsTest, nativeInitializationValidatesBeforeChangingSharedStats)
@@ -406,6 +473,8 @@ namespace
         input.mAttributes.fill({40, {10, 5, -2}});
         input.mSkills.fill({30, {2, 1, -4}});
         input.mDynamic = {{{100, 120, -5}, {50, 75, 25}, {42, 60, -10}}};
+        const auto* strengthView = &stats.getAttribute(ESM::Attribute::Strength);
+        const auto* athleticsView = &stats.getSkill(ESM::Skill::Athletics);
         MWMechanics::OblivionActorProjection prepared(stats, input);
         EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 1);
         EXPECT_EQ(stats.getHealth().getCurrent(), 100);
@@ -415,6 +484,10 @@ namespace
         for (auto id : MWWorld::oblivionSkillIds())
             EXPECT_EQ(stats.getSkill(id).getModified(), 29);
         EXPECT_EQ(stats.getSkill(ESM::Skill::Athletics).getProgress(), 0.375f);
+        EXPECT_EQ(strengthView, &stats.getAttribute(ESM::Attribute::Strength));
+        EXPECT_EQ(athleticsView, &stats.getSkill(ESM::Skill::Athletics));
+        EXPECT_EQ(strengthView->getModified(), 53);
+        EXPECT_EQ(athleticsView->getModified(), 29);
         EXPECT_EQ(stats.getHealth().getCurrent(), -5);
         EXPECT_EQ(stats.getMagicka().getModified(), 75);
         EXPECT_EQ(stats.getFatigue().getCurrent(), -10);
