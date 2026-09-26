@@ -2386,3 +2386,32 @@ and subnormals are covered. Evidence: `S2/oracle-emulator/actor-sparse-modifier-
 and `S2/sources-01/actor-value-map-add.txt`. Full components and ASan/UBSan ESM4
 suites pass (`S2/actor-sparse-modifier-01`). Actual controller mutation remains
 open; this is storage arithmetic, not a restoration or combat acceptance case.
+
+### Native scalar state and composition order
+
+`ActorValueState` retains base plus distinct optional maximum, script and
+damage modifiers. Immutable category updates select player dense arithmetic
+or NPC sparse arithmetic; the caller still owns delta eligibility, base-field
+conversion, derived values and side effects. Invalid enums, nonfinite fields
+and arithmetic overflow diagnose before producing a new state.
+
+Original PlayerCharacter float getter `65E110` composes
+`R(base + maximum + script + damage)`, with only the final float store.
+LowProcess getter `6433E0` composes `R(base + script + damage)`. MiddleLow
+`6587E0` adds maximum after that stored result: `R(low + maximum)`. MiddleHigh
+shares this path; HighProcess `6289F0` delegates ordinary AVs to it. These
+getters do not clamp negative current values to zero. With base 1, maximum -1,
+script 2^-24 and damage 0, player output is 2^-24, active NPC output 0, and
+low-process NPC output 1. Low-process reads do not erase retained modifiers.
+
+**6,200 original instruction cases** match production composition bit-for-bit
+across player/low/middle/high paths, both x87 modes and AV0/8/10/12/28. Only
+base-value and sparse-map lookups are stubbed; original composition, calls and
+stores execute. The corpus includes cancellation boundaries and deterministic
+mixed values. Evidence: `S2/oracle-emulator/actor-value-composition*`; RTTI-bound
+process mappings/traces: `S2/sources-01/process-av-*`.
+
+This core intentionally does not model outer magicka/encumbrance special
+queries, null-process base-only fallback, integer actor-value getters or
+life/death transitions. Those remain engine-adapter work. Full components and
+ASan/UBSan ESM4 suites pass (`S2/actor-value-state-01`).

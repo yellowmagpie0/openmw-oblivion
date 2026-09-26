@@ -2421,3 +2421,15 @@ tests** and **334 ASan/UBSan ESM4 tests** pass (`S2/actor-sparse-modifier-01`);
 **2,312 original cases** match production bits and entry presence exactly.
 This identifies a required persistence distinction before S3 integration.
 S2 remains in progress; S3–S14 remain pending.
+
+### S2 native scalar actor-value state
+
+Commit `ae37102c59` contains sparse modifier arithmetic. Added a native scalar
+state core retaining three separate modifier categories and entry presence,
+with explicit player/NPC and low/active composition semantics. All **1,860
+component tests** and **338 ASan/UBSan ESM4 tests** pass
+(`S2/actor-value-state-01`); **6,200 original composition cases** match
+production output bits exactly. Immutable mutation and corruption tests cover
+category isolation and invalid state. This core is not yet the engine's live
+stat authority or save representation. S2 remains in progress; S3 integration
+and S4–S14 remain pending.

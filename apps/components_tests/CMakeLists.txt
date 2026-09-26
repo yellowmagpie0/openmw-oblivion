@@ -88,6 +88,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/pathgriddata.cpp
     esm4/physicalcombat.cpp
     esm4/actorstats.cpp
+    esm4/actorvalues.cpp
     esm4/projectilerules.cpp
     esm4/masteryrules.cpp
     esm4/stealthrules.cpp
