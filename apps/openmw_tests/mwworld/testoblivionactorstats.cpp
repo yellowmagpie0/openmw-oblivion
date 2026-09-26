@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <limits>
+#include <utility>
 
 #include <components/esm/records.hpp>
 #include <components/esm4/actorvalues.hpp>
@@ -278,6 +279,40 @@ namespace
         EXPECT_EQ(stats.getFatigue().getCurrent(), 3);
     }
 
+    TEST_F(OblivionActorStatsTest, nativeViewsCannotEnterLegacyActorSetters)
+    {
+        sharedStats();
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        MWMechanics::NpcStats stats;
+        stats.initializeOblivionBaseStats({1, 2, 3, 4, 5, 6, 7, 8}, {100, 50, 42}, 1);
+        MWMechanics::AttributeValue attribute;
+        attribute.setNativeProjection({90, {}}, ESM4::ActorValueOwner::NonPlayer,
+            ESM4::ActorValueProcess::Active);
+        EXPECT_THROW(stats.setAttribute(ESM::Attribute::Intelligence, attribute), std::logic_error);
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Intelligence).getBase(), 2);
+        EXPECT_EQ(stats.getMagicka().getCurrent(), 50);
+        EXPECT_EQ(stats.getFatigue().getCurrent(), 42);
+        MWMechanics::DynamicStat<float> health;
+        health.setNativeProjection(100, 100, -1);
+        EXPECT_THROW(stats.setHealth(health), std::logic_error);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 100);
+        EXPECT_FALSE(stats.isDead());
+        MWMechanics::SkillValue skill;
+        skill.setNativeProjection({90, {}}, ESM4::ActorValueOwner::NonPlayer,
+            ESM4::ActorValueProcess::Active);
+        EXPECT_THROW(stats.setSkill(ESM::Skill::Athletics, skill), std::logic_error);
+        EXPECT_EQ(stats.getSkill(ESM::Skill::Athletics).getBase(), 0);
+        // The explicit native projection entry point can establish a view;
+        // ordinary assignment through the historical mutable reference cannot
+        // subsequently replace it with an independently writable value.
+        auto& liveSkill = stats.getSkill(ESM::Skill::Athletics);
+        liveSkill.setNativeProjection({90, {}}, ESM4::ActorValueOwner::NonPlayer,
+            ESM4::ActorValueProcess::Active);
+        EXPECT_THROW(liveSkill = MWMechanics::SkillValue{}, std::logic_error);
+        EXPECT_THROW(stats.setSkill(ESM::Skill::Athletics, MWMechanics::SkillValue{}), std::logic_error);
+        EXPECT_EQ(stats.getSkill(ESM::Skill::Athletics).getModified(), 90);
+    }
 }
 
 TEST(OblivionStatProjection, NativeCurrentPreservesRoundingAndNegativeValues)
@@ -395,4 +430,39 @@ TEST(OblivionStatProjection, DynamicLegacyClampsAndSerializationRemainUnchanged)
     restored.readState(state);
     EXPECT_EQ(restored, legacy);
     EXPECT_FALSE(restored.isNativeProjection());
+}
+
+TEST(OblivionStatProjection, WholeValueAssignmentCannotReplaceNativeViews)
+{
+    MWMechanics::AttributeValue attribute;
+    attribute.setNativeProjection({40, {10, 5, -2}}, ESM4::ActorValueOwner::Player,
+        ESM4::ActorValueProcess::Active);
+    const auto beforeAttribute = attribute;
+    MWMechanics::AttributeValue replacement;
+    replacement.setBase(200);
+    EXPECT_THROW(attribute = replacement, std::logic_error);
+    EXPECT_THROW(attribute = std::move(replacement), std::logic_error);
+    EXPECT_EQ(attribute, beforeAttribute);
+    auto& sameAttribute = attribute;
+    EXPECT_NO_THROW(attribute = sameAttribute);
+    replacement = beforeAttribute; // Copying a view into a new value preserves its mode.
+    EXPECT_TRUE(replacement.isNativeProjection());
+    EXPECT_THROW(replacement.setBase(30), std::logic_error);
+
+    MWMechanics::DynamicStat<float> dynamic;
+    dynamic.setNativeProjection(100, 120, -5);
+    const auto beforeDynamic = dynamic;
+    MWMechanics::DynamicStat<float> other(200);
+    EXPECT_THROW(dynamic = other, std::logic_error);
+    EXPECT_THROW(dynamic = std::move(other), std::logic_error);
+    EXPECT_EQ(dynamic, beforeDynamic);
+    auto& sameDynamic = dynamic;
+    EXPECT_NO_THROW(dynamic = sameDynamic);
+    other = beforeDynamic;
+    EXPECT_TRUE(other.isNativeProjection());
+    EXPECT_THROW(other.setCurrent(10), std::logic_error);
+    MWMechanics::DynamicStat<float> legacy(20);
+    legacy = MWMechanics::DynamicStat<float>(30);
+    EXPECT_EQ(legacy.getCurrent(), 30);
+    EXPECT_FALSE(legacy.isNativeProjection());
 }

@@ -154,6 +154,9 @@ namespace MWMechanics
     {
         const AttributeValue& currentValue = mAttributes.at(id);
 
+        if (currentValue.isNativeProjection() || value.isNativeProjection())
+            throw std::logic_error("native attributes require the native actor authority");
+
         if (value != currentValue)
         {
             mAttributes[id] = value;
@@ -195,6 +198,9 @@ namespace MWMechanics
     {
         if (index < 0 || index > 2)
             throw std::runtime_error("dynamic stat index is out of range");
+
+        if (mDynamic[index].isNativeProjection() || value.isNativeProjection())
+            throw std::logic_error("native dynamic stats require the native actor authority");
 
         mDynamic[index] = value;
 

@@ -71,6 +71,19 @@ namespace MWMechanics
     }
 
     template <typename T>
+    DynamicStat<T>& DynamicStat<T>::operator=(const DynamicStat& other)
+    {
+        if (this != &other)
+        {
+            requireWritable();
+            mStatic = other.mStatic;
+            mCurrent = other.mCurrent;
+            mNativeModified = other.mNativeModified;
+        }
+        return *this;
+    }
+
+    template <typename T>
     void DynamicStat<T>::requireWritable() const
     {
         if (mNativeModified)
@@ -153,6 +166,19 @@ namespace MWMechanics
     {
         if (mNativeCurrent)
             throw std::logic_error("native stat views must be changed through native actor authority");
+    }
+
+    AttributeValue& AttributeValue::operator=(const AttributeValue& other)
+    {
+        if (this != &other)
+        {
+            requireWritable();
+            mBase = other.mBase;
+            mModifier = other.mModifier;
+            mDamage = other.mDamage;
+            mNativeCurrent = other.mNativeCurrent;
+        }
+        return *this;
     }
 
     void AttributeValue::setNativeProjection(const ESM4::ActorValueState& state,

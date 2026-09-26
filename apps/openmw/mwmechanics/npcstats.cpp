@@ -80,6 +80,8 @@ void MWMechanics::NpcStats::setSkill(ESM::RefId id, const MWMechanics::SkillValu
     auto it = mSkills.find(id);
     if (it == mSkills.end())
         throw std::runtime_error("skill not found");
+    if (it->second.isNativeProjection() || value.isNativeProjection())
+        throw std::logic_error("native skills require the native actor authority");
     it->second = value;
 }
 

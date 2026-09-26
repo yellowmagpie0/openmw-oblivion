@@ -2518,3 +2518,18 @@ Morrowind camera near terrain. They establish no combat/death visual acceptance
 or playable Balmora course. All runs are silent. S3 remains in progress:
 actor authority, transaction/event/RNG state and active-gameplay persistence
 remain required; S4–S14 gates remain open.
+
+### S3 whole-value write guards
+
+Commit `bee12809b7` contains the v8 service/save integration. Closed a bypass
+in the stat-view foundation: assigning a replacement attribute, skill or
+dynamic stat cannot overwrite a native view. Copies preserve native mode.
+Shared actor setters reject native values before legacy derived-stat/death
+side effects; mutable skill references cannot replace an existing view.
+Explicit native projection methods remain the intended service entry points.
+
+All **570 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
+(`S3/stat-authority-guards-01`). New cases check rejected copy/rvalue assignment,
+unchanged health/death/magicka/fatigue/skill state on failure, and retained legacy
+assignment behavior. Native gameplay views remain disabled until actor authority
+and its writers/save representation are fully integrated.

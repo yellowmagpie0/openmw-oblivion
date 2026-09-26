@@ -69,6 +69,8 @@ namespace MWMechanics
         typedef T Type;
 
         DynamicStat();
+        DynamicStat(const DynamicStat&) = default;
+        DynamicStat& operator=(const DynamicStat& other);
         DynamicStat(T base);
         DynamicStat(T base, T modified, T current);
         DynamicStat(const Stat<T>& stat, T current);
@@ -123,6 +125,8 @@ namespace MWMechanics
 
     public:
         AttributeValue();
+        AttributeValue(const AttributeValue&) = default;
+        AttributeValue& operator=(const AttributeValue& other);
 
         // A read-only view of native authority. Legacy mutations must not
         // silently collapse native modifier categories or apply TES3 clamps.
