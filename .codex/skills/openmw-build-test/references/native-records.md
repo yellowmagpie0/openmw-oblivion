@@ -36,3 +36,13 @@ Avoid starting a broad revision-locked runner while still planning source edits.
 When a broad run is already active, prepare subsequent work in ignored scratch
 files and apply it only after the runner ends. Do not treat draft-only checks as
 verification of the committed production source.
+
+For live native actor tests, reuse the fixtures in
+`apps/openmw_tests/mwworld/testoblivionactorstats.cpp`: create an `Environment`,
+set its real `ESMStore` and `WorldModel` (with `ReadersCache`), and populate the
+shared Attribute/Skill definitions before constructing actor custom data.
+`InventoryStore` uses `SafePtr`, which requires that WorldModel even with empty
+inventory. Fixed-level actors can be tested without a World implementation;
+scaled construction needs the actual player. Query through `Ptr.getClass()`
+to exercise the shared gameplay readers. Keep these results distinct from
+normal-input gameplay and fresh-process persistence tests.
