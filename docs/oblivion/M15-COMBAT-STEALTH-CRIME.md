@@ -2309,3 +2309,16 @@ one incorrect hand-transcribed test expectation, corrected from original output.
 Actor construction and full attribute/skill auto-calculation remain open.
 S2 remains in progress; S3–S14 remain pending. Unchanged Python/engine suites
 were not rerun for this pure C++ chunk.
+
+### S2 NPC attribute and skill auto-calculation
+
+Commit `2d5dfd1395` contains dynamic base-stat calculation. Added immutable NPC
+attribute/skill rules with winning-definition inputs, authored Personality,
+nearest-even rounding, major/minor growth, favored/specialization bonuses and
+ordered signed racial bonuses. All **1,843 component tests** and **321
+ASan/UBSan ESM4 tests** pass with exact inventories/no skips
+(`S2/npc-auto-stats-01`). **384 original full auto-calculation cases** match
+all 32 resulting stat fields in compiled C++, across both race sexes and x87
+modes. Original notification boundaries are stubbed, not arithmetic or lookup.
+Next: preserve and resolve the missing native record inputs. S2 remains in
+progress; S3–S14 remain pending.

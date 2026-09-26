@@ -247,3 +247,23 @@ TEST(ESM4CombatSettings, NpcDynamicStatsUseTypedCompiledDefaultsAndInstalledOver
     health.mData = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::buildNpcDynamicStatsSettings(inputs), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, NpcAttributeBonusesUseTypedDefaultsAndOverrides)
+{
+    const auto compiled = ESM4::buildNpcAutoStatsSettings({});
+    EXPECT_EQ(compiled.mPrimaryAttributeBonus, 5);
+    EXPECT_EQ(compiled.mSecondaryAttributeBonus, 5);
+    ESM4::GameSetting first, second;
+    first.mEditorId = "fAttributeClassPrimaryBonus";
+    first.mData = 5.5f;
+    second.mEditorId = "fAttributeClassSecondaryBonus";
+    second.mData = -2.f;
+    const std::array<const ESM4::GameSetting*, 2> inputs{&first, &second};
+    const auto modified = ESM4::buildNpcAutoStatsSettings(inputs);
+    EXPECT_EQ(modified.mPrimaryAttributeBonus, 5.5f);
+    EXPECT_EQ(modified.mSecondaryAttributeBonus, -2);
+    first.mData = std::int32_t{5};
+    EXPECT_THROW(ESM4::buildNpcAutoStatsSettings(inputs), std::invalid_argument);
+    first.mData = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::buildNpcAutoStatsSettings(inputs), std::invalid_argument);
+}

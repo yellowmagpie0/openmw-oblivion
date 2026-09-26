@@ -41,6 +41,7 @@ namespace ESM4
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
     FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings);
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings);
+    NpcAutoStatsSettings buildNpcAutoStatsSettings(std::span<const GameSetting* const> settings);
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings);
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings);

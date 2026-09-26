@@ -176,6 +176,15 @@ namespace ESM4
         return result;
     }
 
+    NpcAutoStatsSettings buildNpcAutoStatsSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const NpcAutoStatsSettings result{inputs.number("fAttributeClassPrimaryBonus", 5.f),
+            inputs.number("fAttributeClassSecondaryBonus", 5.f)};
+        validateNpcAutoStatsSettings(result);
+        return result;
+    }
+
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

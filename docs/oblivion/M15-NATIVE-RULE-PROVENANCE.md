@@ -2214,3 +2214,44 @@ stubbed; the original integer conversion executes. Evidence under
 The first component attempt retains a mistyped maximum-level test expectation;
 the oracle confirms 196851 and the corrected run passes. Actor construction,
 attribute/skill auto-calculation and runtime persistence remain open.
+
+### NPC attributes and skills
+
+Original `005222D0–00522706` computes NPC attributes and skills from resolved
+race/sex attributes, class favored attributes/major skills/specialization and
+winning SKIL governing attributes/specializations. Its player-specific branch
+is outside this API. NPC Personality (native AV 6) retains the authored byte;
+other attributes start from the appropriate race sex. The first favored
+attribute gets `fAttributeClassPrimaryBonus`, otherwise the second gets
+`fAttributeClassSecondaryBonus`. Both compile to 5 (`009E3C2F`/`009E3C5F`,
+storage `00B362E4`/`00B362EC`); a repeated favored attribute gets only the first.
+For each of the 21 skills in native AV order, if its governing attribute matches,
+add `level - 1` for a class major or `(level - 1) * double(.2f)` for a minor,
+storing float32 after each addition. Cap above 100 and round to nearest-even
+with `FISTP`, then store the resulting byte. Personality bypasses that cap.
+
+Skills start at `R(gained + 25)` for majors, otherwise
+`R(gained * double(.1f) + 5)`. Matching specialization applies
+`R(R(skill + 5) + gained * .5)`. Each matching one of seven ordered racial
+pairs adds its **signed** byte bonus with a float store; duplicate matches add
+repeatedly. Then apply the upper 100 cap, nearest-even conversion and byte
+storage. Negative results wrap in the byte; there is no lower clamp. The pure
+API preserves this and unused skill sentinel -1, diagnoses invalid native AVs,
+levels/specializations and nonfinite/overflowing arithmetic. It does not depend
+on the host rounding-mode setting for nearest-even conversion.
+
+**384 original instruction cases** cover both x87 precision modes and both
+race sex branches across levels 1..32767, varied class/skill definitions,
+fractional favored bonuses and duplicate signed race bonuses. Every attribute,
+skill, health, magicka and fatigue output matches a separately compiled C++
+driver exactly. Original loops, class/race readers, skill-store lookup, AV
+mapping, byte/dynamic setters and dynamic formulas all execute. Only change
+notification and its RTTI boundary are stubbed; execution stops before class
+service assignment at `00522706`. This is not runtime actor construction.
+Evidence: `S2/oracle-emulator/npc-auto-stats*`, `S2/sources-01/npc-calc-stats.txt`.
+Initial harness attempts are retained: the skill lookup and AV mapper accept
+byte indices, so provisional full-dword stubs were incorrect. The successful
+harness executes those original helpers instead.
+
+The runtime input adapter still needs typed winning SKIL definitions and seven
+ordered signed RACE bonus pairs; the existing unsigned map loses duplicates.

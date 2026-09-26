@@ -4,6 +4,7 @@
 #include "actor.hpp"
 
 #include <cstdint>
+#include <array>
 #include <optional>
 
 namespace ESM4
@@ -47,6 +48,47 @@ namespace ESM4
     // Reject unsupported levels, specialization and overflowing base storage.
     NpcDynamicStats calculateNpcDynamicStats(
         const NpcDynamicStatsInput& input, const NpcDynamicStatsSettings& settings);
+
+    struct NpcAutoStatsSettings
+    {
+        float mPrimaryAttributeBonus;
+        float mSecondaryAttributeBonus;
+    };
+
+    struct NpcSkillDefinition
+    {
+        std::uint32_t mGoverningAttribute;
+        std::uint32_t mSpecialization;
+    };
+
+    struct NpcRaceSkillBonus
+    {
+        std::int8_t mSkill = -1; // Native AV 12..32, -1 for an unused pair.
+        std::int8_t mBonus = 0;
+    };
+
+    struct NpcAutoStatsInput
+    {
+        std::int16_t mLevel;
+        std::array<std::uint8_t, 8> mRaceAttributes; // Resolved actor sex.
+        std::uint8_t mAuthoredPersonality;
+        std::array<std::uint32_t, 2> mFavoredAttributes;
+        std::array<std::uint32_t, 7> mMajorSkills; // Native AVs 12..32.
+        std::uint32_t mSpecialization;
+        std::array<NpcSkillDefinition, 21> mSkills; // Winning SKILs in AV order.
+        std::array<NpcRaceSkillBonus, 7> mRaceBonuses; // Ordered, signed, duplicates retained.
+    };
+
+    struct NpcAutoStats
+    {
+        std::array<std::uint8_t, 8> mAttributes;
+        std::array<std::uint8_t, 21> mSkills;
+    };
+
+    void validateNpcAutoStatsSettings(const NpcAutoStatsSettings& settings);
+    // NPC-only base auto-calculation. Personality retains its authored value.
+    // Native byte storage wraps negative rounded values; no lower clamp exists.
+    NpcAutoStats calculateNpcAutoStats(const NpcAutoStatsInput& input, const NpcAutoStatsSettings& settings);
 }
 
 #endif
