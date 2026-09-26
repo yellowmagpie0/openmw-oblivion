@@ -69,3 +69,17 @@ For profile isolation, the existing `morrowind_m14_regression.json` scenario
 quicksaves and rejects GPRO/T4VR/T4ST/OMW4STATE/native-state markers. It requires
 `morrowind_data` in addition to openmw/resources. Its terrain-facing screenshot
 and short idle run do not establish full Morrowind gameplay regression coverage.
+
+Schema 9 reuses this workflow. A proven v8 input is
+`build/oblivion-compat/m15/S3/action-service-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `7a071b415a1acbbf96d0ffd9e32471e43f4d2647213c83ad1e43f4d55fc5286c`).
+For v8-to-v9 migration additionally require `native_actor_values == []` and
+preservation of the input action ledger. The passed example is
+`S3/native-actor-values-legacy-01/migration-verification.json`. Empty native
+entries prove only idle schema migration, not live actor-authority recovery.
+
+When testing promotion from pre-character-generation/AI schemas, build a
+complete current fixture or use the actual migration helper. Changing only the
+version omits required name/race/class and nonzero AI RNG defaults. Run the
+focused Python fixture before starting a broad build; do not start the runner
+unconditionally after a failed preflight. Preserve failed evidence directories.

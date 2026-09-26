@@ -443,6 +443,21 @@ namespace ESM4
         }
     }
 
+    void RuntimeActorValues::validate() const
+    {
+        if (mActor.isNull() || mBase.isNull())
+            throw std::runtime_error("Invalid TES4 native actor-value identity");
+        try
+        {
+            for (const auto& value : mValues)
+                composeActorValue(value, mOwner, mProcess);
+        }
+        catch (const std::invalid_argument& error)
+        {
+            throw std::runtime_error(std::string("Invalid TES4 native actor values: ") + error.what());
+        }
+    }
+
     void RuntimeState::validate() const
     {
         if (mVersion < 1 || mVersion > CurrentRuntimeStateVersion)
@@ -472,6 +487,28 @@ namespace ESM4
         checkSize(mDetectionVectors.size(), "detection vector list");
         checkSize(mPendingPackageDone.size(), "pending package completion list");
         checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
+        checkSize(mNativeActorValues.size(), "native actor-value list");
+        if (mVersion < 9 && !mNativeActorValues.empty())
+            throw std::runtime_error("TES4 runtime-state versions before 9 cannot contain native actor values");
+        std::map<ESM::FormKey, ESM::FormKey> actorBases;
+        for (const auto& reference : mReferences)
+            actorBases.emplace(reference.mKey, reference.mBase);
+        std::set<ESM::FormKey> nativeActors;
+        for (const auto& actor : mNativeActorValues)
+        {
+            actor.validate();
+            if (!nativeActors.insert(actor.mActor).second)
+                throw std::runtime_error("Duplicate TES4 native actor-value identity");
+            const bool player = actor.mActor == mPlayer.mReference;
+            if ((actor.mOwner == ActorValueOwner::Player) != player)
+                throw std::runtime_error("TES4 native actor-value player identity mismatch");
+            if (!player)
+            {
+                const auto reference = actorBases.find(actor.mActor);
+                if (reference == actorBases.end() || reference->second != actor.mBase)
+                    throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
+            }
+        }
         if (mVersion < 8 && mPhysicalActions != ActionLedgerState{})
             throw std::runtime_error("TES4 runtime-state versions before 8 cannot contain physical actions");
         try
@@ -1028,6 +1065,31 @@ namespace ESM4
             for (const auto id : pending)
                 writer.integer(id);
         }
+        if (mVersion >= 9)
+        {
+            auto actors = mNativeActorValues;
+            std::sort(actors.begin(), actors.end(), [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actors.size()));
+            for (const auto& actor : actors)
+            {
+                writeKey(writer, actor.mActor);
+                writeKey(writer, actor.mBase);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mOwner));
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(actor.mProcess));
+                for (const auto& value : actor.mValues)
+                {
+                    writer.floating(value.mBase);
+                    std::uint8_t mask = 0;
+                    for (std::size_t i = 0; i < value.mModifiers.size(); ++i)
+                        if (value.mModifiers[i])
+                            mask |= 1 << i;
+                    writer.integer(mask);
+                    for (const auto& modifier : value.mModifiers)
+                        if (modifier)
+                            writer.floating(*modifier);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1327,6 +1389,42 @@ namespace ESM4
             result.mPhysicalActions.mPending.reserve(count);
             for (std::uint32_t i = 0; i < count; ++i)
                 result.mPhysicalActions.mPending.push_back(reader.integer<std::uint64_t>());
+        }
+        if (result.mVersion >= 9)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                RuntimeActorValues actor;
+                const auto nativeKey = [&reader]() {
+                    const auto text = reader.string();
+                    try
+                    {
+                        const auto key = ESM::FormKey::deserialize(text);
+                        if (!key.isNull() && key.serialize() == text)
+                            return key;
+                    }
+                    catch (const std::invalid_argument&)
+                    {
+                    }
+                    throw std::runtime_error("Invalid or noncanonical TES4 native actor-value identity");
+                };
+                actor.mActor = nativeKey();
+                actor.mBase = nativeKey();
+                actor.mOwner = static_cast<ActorValueOwner>(reader.integer<std::uint8_t>());
+                actor.mProcess = static_cast<ActorValueProcess>(reader.integer<std::uint8_t>());
+                for (auto& value : actor.mValues)
+                {
+                    value.mBase = reader.float32();
+                    const auto mask = reader.integer<std::uint8_t>();
+                    if (mask > 7)
+                        throw std::runtime_error("Invalid TES4 native actor-value modifier mask");
+                    for (std::size_t j = 0; j < value.mModifiers.size(); ++j)
+                        if (mask & (1 << j))
+                            value.mModifiers[j] = reader.float32();
+                }
+                result.mNativeActorValues.push_back(std::move(actor));
+            }
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -1667,6 +1765,40 @@ namespace ESM4
                 stream << pending[i];
             }
             stream << "]}";
+        }
+        if (mVersion >= 9)
+        {
+            stream << ",\"native_actor_values\":[";
+            auto actors = mNativeActorValues;
+            std::sort(actors.begin(), actors.end(), [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+            for (std::size_t i = 0; i < actors.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                const auto& actor = actors[i];
+                stream << "{\"actor\":\"" << escapeJson(actor.mActor.serialize())
+                       << "\",\"base\":\"" << escapeJson(actor.mBase.serialize())
+                       << "\",\"owner\":" << static_cast<unsigned>(actor.mOwner)
+                       << ",\"process\":" << static_cast<unsigned>(actor.mProcess) << ",\"values\":[";
+                for (std::size_t j = 0; j < actor.mValues.size(); ++j)
+                {
+                    if (j)
+                        stream << ',';
+                    const auto& value = actor.mValues[j];
+                    stream << '[' << value.mBase;
+                    for (const auto& modifier : value.mModifiers)
+                    {
+                        stream << ',';
+                        if (modifier)
+                            stream << *modifier;
+                        else
+                            stream << "null";
+                    }
+                    stream << ']';
+                }
+                stream << "]}";
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();

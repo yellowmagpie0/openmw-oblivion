@@ -2577,3 +2577,51 @@ The underlying NPC record remains unchanged. This is the shared-view commit
 bridge, not yet persistent actor authority or gameplay activation. Creature
 skill authority, native writers, save representation and S3 acceptance remain
 open; no combat/runtime gate is claimed from these tests.
+
+### S3 native actor-value save representation
+
+Commit `ab2b38e0a7` contains the prepared projection bridge. Schema **9** adds
+`native_actor_values`: stable actor/base identities, player/nonplayer owner,
+low/active process, and 72 native AV entries with resolved base and three
+independently optional modifiers. Wire entries use a float32 base, a three-bit
+presence mask, then present float32 maximum/script/damage values. Actor records
+sort by FormKey; JSON uses `[base, maximum-or-null, script-or-null, damage-or-null]`.
+Stored positive/negative zero remains distinct from absence in the binary.
+Versions 1–8 have no native entries; they do not invent modifier categories from
+legacy combined UI values. Actual legacy actor initialization/reconciliation is
+still part of the pending live-authority integration.
+
+C++ and Python validate canonical identities, actor/reference/base agreement,
+player ownership, duplicate actors, exact AV/category shape, enum domains,
+finite values/composition, masks, size limits, truncation and schema gates.
+The World-owned service retains these records without pointers, provides const
+lookup, captures them, clears them on teardown, and prepares actor/action state
+together before restoring either. This does not yet activate native gameplay
+stat writes or reconstruct live projections on load.
+
+Verification: **1,879 component /357 ASan+UBSan ESM4 tests** pass in
+`S3/native-actor-values-save-02`; **159 Python /574 engine tests** pass in
+`S3/native-actor-values-save-03`, with rebuilt openmw/openmw-tests/esmtool.
+Attempts `-01` and `-02` retain failed Python migration fixtures (missing
+character-generation/name and AI defaults), corrected before `-03`. New checks
+cover exact sparse wire bytes, signed zero, all eight legacy versions, malformed
+payloads, canonical ordering and atomic service restore. Existing inventory
+initializer warnings remain.
+
+Real runtime evidence under `build/oblivion-compat/m15/S3/`:
+
+- `native-actor-values-restart-01`: unchanged S1 save/quit/fresh-load/resave
+  passes with full live-C++ versus decoded-binary agreement in schema 9.
+- `native-actor-values-legacy-01`: copied v8 save migrated to v9 with empty native
+  values and unchanged action ledger; original/pristine hashes are unchanged.
+  Independent `migration-verification.json` passed. Input SHA-256:
+  `7a071b415a1acbbf96d0ffd9e32471e43f4d2647213c83ad1e43f4d55fc5286c`.
+- `native-actor-values-morrowind-01`: unchanged profile-isolation scenario passes;
+  actual Morrowind save has no native TES4 state markers.
+
+Runtime executable SHA-256:
+`df92c78e8cd93bc54832fa42e90370000dbf067915de6d2df6dc11c9bd7705d6`.
+Inspected images show the textured native fixture/HUD and Morrowind terrain;
+all scenarios are silent. These are idle-service persistence checks, not combat,
+active native actor continuation, audio, or full Morrowind gameplay acceptance.
+S3 remains open, as do S4–S14.

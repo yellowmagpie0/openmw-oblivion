@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+import copy
+import math
 import struct
 import tempfile
 from pathlib import Path
@@ -324,6 +326,96 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         invalid["player"]["inventory"][1]["equipped_slots"] = 0
         with self.assertRaisesRegex(state_io.RuntimeStateError, "Duplicate"):
             state_io.encode_payload(invalid)
+
+    def test_native_values_match_cpp_sparse_wire_layout_and_reject_corruption(self) -> None:
+        state = make_state()
+        state["schema_version"] = 9
+        state["ai_rng_state"] = 1
+        empty = state_io.encode_payload(state)
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 1, "values": [[0.0, None, None, None] for _ in range(72)]}
+        actor["values"][-1] = [1.25, 0.0, None, -0.0]
+        state["native_actor_values"] = [actor]
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload[-13:], bytes([0, 0, 160, 63, 5, 0, 0, 0, 0, 0, 0, 0, 128]))
+        restored = state_io.decode_payload(payload)
+        value = restored["native_actor_values"][0]["values"][-1]
+        self.assertEqual(value, actor["values"][-1])
+        self.assertEqual(math.copysign(1, value[1]), 1)
+        self.assertEqual(math.copysign(1, value[3]), -1)
+        self.assertEqual(state_io.encode_payload(restored), payload)
+        for removed in range(1, 361):
+            with self.subTest(removed=removed), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-removed])
+        corrupt = bytearray(payload)
+        corrupt[-9] = 8
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(corrupt))
+        offset = len(empty) - 4
+        corrupt = bytearray(payload)
+        corrupt[offset:offset + 4] = b"\xff" * 4
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(corrupt))
+        duplicate = bytearray(payload)
+        duplicate[offset] = 2
+        duplicate.extend(payload[offset + 4:])
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(duplicate))
+
+    def test_native_values_validate_identity_shape_enums_and_numeric_domain(self) -> None:
+        state = make_state()
+        state["schema_version"] = 9
+        state["ai_rng_state"] = 1
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 1, "values": [[0.0, None, None, None] for _ in range(72)]}
+        cases = []
+        for key, value in (("actor", "null"), ("base", ""), ("base", "broken"), ("base", "content:oblivion.esm:000000"), ("owner", 1), ("owner", 2),
+                           ("owner", False), ("process", 2), ("process", 1.0), ("values", [])):
+            invalid = copy.deepcopy(actor)
+            invalid[key] = value
+            cases.append([invalid])
+        for value in ([None, None, None, None], [True, None, None, None],
+                      [1, None, None], [1, 0, float("nan"), 0], [1e100, None, None, None],
+                      [3e38, 3e38, None, None]):
+            invalid = copy.deepcopy(actor)
+            invalid["values"][-1] = value
+            cases.append([invalid])
+        cases.append([actor, actor])
+        invalid = copy.deepcopy(actor)
+        invalid["actor"] = "content:oblivion.esm:000100"
+        invalid["owner"] = 1
+        cases.append([invalid])
+        for actors in cases:
+            state["native_actor_values"] = actors
+            with self.subTest(actors=actors), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        state["native_actor_values"] = [actor]
+        state["schema_version"] = 8
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_all_legacy_schemas_have_no_native_modifier_categories(self) -> None:
+        for version in range(1, 9):
+            state = make_state()
+            state["schema_version"] = version
+            state["ai_rng_state"] = 1
+            state["player"]["inventory"] = []
+            if version < 3:
+                for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(key)
+            if version < 2:
+                state["script_event_sequence"] = 0
+                state["script_instances"] = []
+                state["quests"] = []
+            restored = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("native_actor_values", restored)
+            restored["schema_version"] = 9
+            restored["ai_rng_state"] = 1
+            restored["player"].setdefault("name", "")
+            restored["player"]["race"] = state_io.DEFAULT_MIGRATION_RACE
+            restored["player"]["class"] = state_io.DEFAULT_MIGRATION_CLASS
+            promoted = state_io.decode_payload(state_io.encode_payload(restored))
+            self.assertEqual(promoted["native_actor_values"], [])
 
     def test_version_eight_physical_actions_have_canonical_cpp_wire_layout(self) -> None:
         state = make_state()

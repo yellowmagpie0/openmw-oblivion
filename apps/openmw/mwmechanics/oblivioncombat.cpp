@@ -64,6 +64,7 @@ namespace MWMechanics
     void OblivionCombatService::clear()
     {
         mActions = {};
+        mActorValues.clear();
     }
 
     std::uint64_t OblivionCombatService::allocateAction()
@@ -86,17 +87,37 @@ namespace MWMechanics
         return mActions.consume(id);
     }
 
+    const ESM4::RuntimeActorValues* OblivionCombatService::findActorValues(const ESM::FormKey& actor) const
+    {
+        const auto found = mActorValues.find(actor);
+        return found == mActorValues.end() ? nullptr : &found->second;
+    }
+
     void OblivionCombatService::capture(ESM4::RuntimeState& state) const
     {
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
-        state.mPhysicalActions = mActions.capture();
+        if (state.mVersion < 9 && !mActorValues.empty())
+            throw std::invalid_argument("native actor values require an Oblivion v9+ save");
+        std::vector<ESM4::RuntimeActorValues> actors;
+        actors.reserve(mActorValues.size());
+        for (const auto& [key, actor] : mActorValues)
+            actors.push_back(actor);
+        auto actions = mActions.capture();
+        state.mNativeActorValues.swap(actors);
+        state.mPhysicalActions = std::move(actions);
     }
 
     void OblivionCombatService::restore(const ESM4::RuntimeState& state)
     {
         state.validate();
-        mActions.restore(state.mPhysicalActions);
+        ESM4::ActionLedger actions;
+        actions.restore(state.mPhysicalActions);
+        std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
+        for (const auto& actor : state.mNativeActorValues)
+            actors.emplace(actor.mActor, actor);
+        mActions = std::move(actions);
+        mActorValues.swap(actors);
     }
 }

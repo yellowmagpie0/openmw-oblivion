@@ -1,7 +1,7 @@
 #ifndef OPENMW_MWMECHANICS_OBLIVIONCOMBAT_H
 #define OPENMW_MWMECHANICS_OBLIVIONCOMBAT_H
 
-#include <components/esm4/actionledger.hpp>
+#include <components/esm4/runtimestate.hpp>
 #include <components/esm4/actorvalues.hpp>
 #include <components/esm/refid.hpp>
 
@@ -60,6 +60,7 @@ namespace MWMechanics
     class OblivionCombatService
     {
         ESM4::ActionLedger mActions;
+        std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
 
     public:
         void clear();
@@ -69,6 +70,7 @@ namespace MWMechanics
         // Internal completion/cancellation boundary. Call only with the
         // corresponding gameplay transition committed, before event callbacks.
         bool consumeAction(std::uint64_t id);
+        const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);
     };

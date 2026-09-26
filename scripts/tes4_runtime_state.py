@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 8
+CURRENT_VERSION = 9
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -648,6 +648,65 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if not valid:
                     raise RuntimeStateError("Invalid TES4 scripted Look target")
 
+    native_actors = check_collection(state.get("native_actor_values", []), "native actor-value list")
+    if version < 9 and native_actors:
+        raise RuntimeStateError("TES4 runtime-state versions before 9 cannot contain native actor values")
+    native_keys: set[str] = set()
+    bases = {reference["key"]: reference["base"] for reference in references}
+
+    def native_float(value: Any) -> float:
+        if type(value) not in (int, float):
+            raise RuntimeStateError("Invalid TES4 native actor-value number")
+        try:
+            result = struct.unpack("<f", struct.pack("<f", value))[0]
+        except (OverflowError, struct.error) as error:
+            raise RuntimeStateError("TES4 native actor-value overflow") from error
+        if not math.isfinite(result):
+            raise RuntimeStateError("Nonfinite TES4 native actor value")
+        return result
+
+    for actor in native_actors:
+        if not isinstance(actor, dict):
+            raise RuntimeStateError("Invalid TES4 native actor values")
+        key, base = actor.get("actor"), actor.get("base")
+        for identity in (key, base):
+            parts = identity.split(":") if isinstance(identity, str) else []
+            valid = len(parts) == 3 and parts[0] in ("content", "dynamic") and bool(parts[1])
+            if valid:
+                kind, namespace, number = parts
+                valid = len(number) == (6 if kind == "content" else 16) and all(
+                    char in "0123456789abcdef" for char in number
+                ) and int(number, 16) != 0
+                if kind == "content":
+                    valid = valid and "/" not in namespace and not any("A" <= c <= "Z" for c in namespace)
+            if not valid:
+                raise RuntimeStateError("Invalid TES4 native actor-value identity")
+        if key in native_keys:
+            raise RuntimeStateError("Duplicate TES4 native actor-value identity")
+        native_keys.add(key)
+        owner, process = actor.get("owner"), actor.get("process")
+        if any(type(v) is not int or v not in (0, 1) for v in (owner, process)):
+            raise RuntimeStateError("Invalid TES4 native actor-value owner/process")
+        is_player = key == player["reference"]
+        if (owner == 0) != is_player:
+            raise RuntimeStateError("TES4 native actor-value player identity mismatch")
+        if not is_player and bases.get(key) != base:
+            raise RuntimeStateError("Dangling or mismatched TES4 native actor-value reference")
+        values = actor.get("values")
+        if not isinstance(values, list) or len(values) != 72:
+            raise RuntimeStateError("TES4 native actor values require 72 entries")
+        for value in values:
+            if not isinstance(value, list) or len(value) != 4:
+                raise RuntimeStateError("Invalid TES4 native actor-value categories")
+            base_value = native_float(value[0])
+            maximum, script, damage = [0.0 if v is None else native_float(v) for v in value[1:]]
+            if owner == 0:
+                native_float(base_value + maximum + script + damage)
+            else:
+                low = native_float(base_value + script + damage)
+                if process == 1:
+                    native_float(low + maximum)
+
     scripts = check_collection(state.get("script_instances", []), "script instance list")
     quests = check_collection(state.get("quests", []), "quest list")
     if version < 2 and (state.get("script_event_sequence", 0) != 0 or scripts or quests):
@@ -970,6 +1029,18 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             "next": reader.unpack("<Q"),
             "pending": [reader.unpack("<Q") for _ in range(reader.count())],
         }
+    if version >= 9:
+        result["native_actor_values"] = []
+        for _ in range(reader.count()):
+            actor = {"actor": reader.string(), "base": reader.string(),
+                     "owner": reader.unpack("<B"), "process": reader.unpack("<B"), "values": []}
+            for _ in range(72):
+                base = reader.unpack("<f")
+                mask = reader.unpack("<B")
+                if mask > 7:
+                    raise RuntimeStateError("Invalid TES4 native actor-value modifier mask")
+                actor["values"].append([base] + [reader.unpack("<f") if mask & (1 << i) else None for i in range(3)])
+            result["native_actor_values"].append(actor)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1128,6 +1199,20 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         writer.pack("<I", len(actions["pending"]))
         for action in sorted(actions["pending"]):
             writer.pack("<Q", action)
+    if version >= 9:
+        actors = sorted(state.get("native_actor_values", []), key=lambda actor: actor["actor"])
+        writer.pack("<I", len(actors))
+        for actor in actors:
+            writer.string(actor["actor"])
+            writer.string(actor["base"])
+            writer.pack("<B", actor["owner"])
+            writer.pack("<B", actor["process"])
+            for value in actor["values"]:
+                writer.pack("<f", value[0])
+                writer.pack("<B", sum(1 << i for i, modifier in enumerate(value[1:]) if modifier is not None))
+                for modifier in value[1:]:
+                    if modifier is not None:
+                        writer.pack("<f", modifier)
     return writer.finish()
 
 
@@ -1200,6 +1285,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("detection_vectors", [])
     state.setdefault("pending_package_done", [])
     state.setdefault("physical_actions", {"next": 1, "pending": []})
+    state.setdefault("native_actor_values", [])
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
@@ -1229,6 +1315,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("detection_vectors", [])
     result.setdefault("pending_package_done", [])
     result.setdefault("physical_actions", {"next": 1, "pending": []})
+    result.setdefault("native_actor_values", [])
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])

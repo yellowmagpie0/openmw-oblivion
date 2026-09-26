@@ -16,6 +16,7 @@
 
 #include "aiphase.hpp"
 #include "actionledger.hpp"
+#include "actorvalues.hpp"
 
 namespace ESM
 {
@@ -25,7 +26,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 8;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 9;
 
     struct RuntimeContentIdentity
     {
@@ -235,6 +236,20 @@ namespace ESM4
         friend bool operator==(const RuntimePackageDoneEvent&, const RuntimePackageDoneEvent&) = default;
     };
 
+    struct RuntimeActorValues
+    {
+        ESM::FormKey mActor;
+        ESM::FormKey mBase;
+        ActorValueOwner mOwner = ActorValueOwner::NonPlayer;
+        ActorValueProcess mProcess = ActorValueProcess::Active;
+        // TES4 AV0..71. Preserve each modifier's presence independently from
+        // its value. Bases are resolved native values, never shared UI views.
+        std::array<ActorValueState, 72> mValues{};
+
+        void validate() const;
+        friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;
+    };
+
     // Versioned, load-order-independent state owned by the Oblivion profile.
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
@@ -265,6 +280,8 @@ namespace ESM4
         // v8: M15 action identity ownership. Older versions start a new ledger;
         // script/AI event IDs belong to separate namespaces and are not reused.
         ActionLedgerState mPhysicalActions;
+        // v9: native actor-value authority, including retained unloaded actors.
+        std::vector<RuntimeActorValues> mNativeActorValues;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

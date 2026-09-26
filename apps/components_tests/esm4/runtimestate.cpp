@@ -417,9 +417,141 @@ namespace
         EXPECT_EQ(json, makeState().canonicalJson());
     }
 
+    TEST(ESM4RuntimeState, nativeActorValuesPreserveSparsePresenceAndSignedZero)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        actor.mValues.back() = {1.25f, {0.f, std::nullopt, -0.f}};
+        state.mNativeActorValues.push_back(actor);
+        const auto bytes = state.serializeBinary();
+        const std::vector<std::uint8_t> suffix{0, 0, 160, 63, 5, 0, 0, 0, 0, 0, 0, 0, 128};
+        ASSERT_GE(bytes.size(), suffix.size());
+        EXPECT_TRUE(std::equal(suffix.begin(), suffix.end(), bytes.end() - suffix.size()));
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        ASSERT_EQ(restored.mNativeActorValues.size(), 1);
+        const auto& value = restored.mNativeActorValues[0].mValues.back();
+        EXPECT_EQ(value, actor.mValues.back());
+        EXPECT_FALSE(value.mModifiers[1].has_value());
+        ASSERT_TRUE(value.mModifiers[0].has_value());
+        ASSERT_TRUE(value.mModifiers[2].has_value());
+        EXPECT_FALSE(std::signbit(*value.mModifiers[0]));
+        EXPECT_TRUE(std::signbit(*value.mModifiers[2]));
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(restored.canonicalJson().find("[1.25,0,null,-0]"), std::string::npos);
+        for (std::size_t remove = 1; remove <= 360; ++remove)
+        {
+            auto truncated = bytes;
+            truncated.resize(bytes.size() - remove);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        auto corrupt = bytes;
+        corrupt[corrupt.size() - 9] = 8;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        state.mNativeActorValues.clear();
+        const auto countOffset = state.serializeBinary().size() - 4;
+        corrupt = bytes;
+        corrupt[countOffset + 8] = 'X'; // invalid actor key kind
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        corrupt = bytes;
+        std::fill_n(corrupt.begin() + countOffset, 4, 0xff);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        corrupt = bytes;
+        corrupt[countOffset] = 2;
+        corrupt.insert(corrupt.end(), bytes.begin() + countOffset + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, nativeActorValuesRejectInvalidAndDanglingAuthority)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences[0].mKey;
+        actor.mBase = state.mReferences[0].mBase;
+        state.mNativeActorValues = {actor};
+        EXPECT_NO_THROW(state.validate());
+        const auto reject = [&](const ESM4::RuntimeActorValues& invalid) {
+            state.mNativeActorValues = {invalid};
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+            EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+        };
+        auto invalid = actor;
+        invalid.mActor = ESM::FormKey::content("oblivion.esm", 0x123);
+        reject(invalid);
+        invalid = actor;
+        invalid.mBase = ESM::FormKey::content("oblivion.esm", 0x123);
+        reject(invalid);
+        invalid = actor;
+        invalid.mOwner = ESM4::ActorValueOwner::Player;
+        reject(invalid);
+        invalid = actor;
+        invalid.mOwner = static_cast<ESM4::ActorValueOwner>(2);
+        reject(invalid);
+        invalid = actor;
+        invalid.mProcess = static_cast<ESM4::ActorValueProcess>(2);
+        reject(invalid);
+        invalid = actor;
+        invalid.mValues[71].mModifiers[2] = std::numeric_limits<float>::quiet_NaN();
+        reject(invalid);
+        invalid = actor;
+        invalid.mValues[8] = {std::numeric_limits<float>::max(), {std::numeric_limits<float>::max(), {}, {}}};
+        reject(invalid);
+        state.mNativeActorValues = {actor, actor};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        state.mNativeActorValues = {actor};
+        state.mVersion = 8;
+        EXPECT_THROW(state.validate(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, nativeActorValuesCanonicalizeActorOrder)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues player;
+        player.mActor = state.mPlayer.mReference;
+        player.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        player.mOwner = ESM4::ActorValueOwner::Player;
+        ESM4::RuntimeActorValues npc;
+        npc.mActor = state.mReferences[0].mKey;
+        npc.mBase = state.mReferences[0].mBase;
+        state.mNativeActorValues = {player, npc};
+        const auto bytes = state.serializeBinary();
+        const auto json = state.canonicalJson();
+        std::reverse(state.mNativeActorValues.begin(), state.mNativeActorValues.end());
+        EXPECT_EQ(state.serializeBinary(), bytes);
+        EXPECT_EQ(state.canonicalJson(), json);
+    }
+
+    TEST(ESM4RuntimeState, everyLegacySchemaMigratesWithoutInventingNativeModifiers)
+    {
+        for (std::uint32_t version = 1; version < 9; ++version)
+        {
+            SCOPED_TRACE(version);
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("oblivion.esm", 1);
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("oblivion.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("oblivion.esm", 3);
+            }
+            auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_TRUE(restored.mNativeActorValues.empty());
+            EXPECT_EQ(restored.canonicalJson().find("native_actor_values"), std::string::npos);
+            restored.mVersion = 9;
+            restored.mPlayer.mRace = ESM::FormKey::content("oblivion.esm", 2);
+            restored.mPlayer.mClass = ESM::FormKey::content("oblivion.esm", 3);
+            EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(restored.serializeBinary()).mNativeActorValues.empty());
+        }
+    }
+
     TEST(ESM4RuntimeState, versionEightPersistsCanonicalPhysicalActions)
     {
         auto state = makeState();
+        state.mVersion = 8;
         state.mPhysicalActions = {5, {3, 1}};
         const auto bytes = state.serializeBinary();
         const std::vector<std::uint8_t> suffix{
@@ -445,6 +577,7 @@ namespace
     TEST(ESM4RuntimeState, versionEightRejectsCorruptTruncatedAndOversizedActionLists)
     {
         auto state = makeState();
+        state.mVersion = 8;
         for (const auto& invalid : std::vector<ESM4::ActionLedgerState>{
             {0, {}}, {2, {0}}, {2, {2}}, {2, {1, 1}}})
         {
