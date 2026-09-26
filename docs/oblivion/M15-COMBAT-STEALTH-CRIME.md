@@ -2556,3 +2556,24 @@ the float query or flooring its result. All **1,875 component tests** and
 **8,280 independent original cases** matching production exactly. These are
 necessary inputs to derived-stat authority; runtime query integration remains
 S3 work.
+
+### S3 prepared actor projection transaction
+
+Commit `67263300f1` contains the integer AV composition rules. Added
+`OblivionActorProjection`, which prepares attribute, NPC skill and dynamic
+views without changing the actor. Preparation validates complete input and
+preserves skill progress; its one-shot, nonthrowing commit performs no
+allocation, callbacks, TES3 derived-stat recalculation or implicit death.
+A repeated commit cannot restore stale views. The synchronous target must
+outlive preparation/commit; the native authority must commit its candidate
+state and these views without intervening callbacks.
+
+All **573 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
+(`S3/actor-projection-transaction-02`). Coverage includes late validation
+failure, abandoned preparation, updating existing native views, low-process
+composition, creature dynamic views, write guards and a real native NPC whose
+class skill/health/attribute/capacity getters immediately see the transaction.
+The underlying NPC record remains unchanged. This is the shared-view commit
+bridge, not yet persistent actor authority or gameplay activation. Creature
+skill authority, native writers, save representation and S3 acceptance remain
+open; no combat/runtime gate is claimed from these tests.

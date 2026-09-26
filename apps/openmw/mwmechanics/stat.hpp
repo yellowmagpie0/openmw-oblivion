@@ -59,6 +59,7 @@ namespace MWMechanics
     template <typename T>
     class DynamicStat
     {
+        friend class OblivionActorProjection;
         Stat<T> mStatic;
         T mCurrent;
         std::optional<T> mNativeModified;

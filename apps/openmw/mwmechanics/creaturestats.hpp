@@ -40,6 +40,7 @@ namespace MWMechanics
     ///
     class CreatureStats
     {
+        friend class OblivionActorProjection;
         std::map<ESM::RefId, AttributeValue> mAttributes;
         DynamicStat<float> mDynamic[3]; // health, magicka, fatigue
         DrawState mDrawState = DrawState::Nothing;

@@ -22,6 +22,7 @@ namespace MWMechanics
 
     class NpcStats : public CreatureStats
     {
+        friend class OblivionActorProjection;
         int mDisposition;
         int mCrimeDispositionModifier;
         std::map<ESM::RefId, SkillValue> mSkills; // SkillValue.mProgress used by the player only

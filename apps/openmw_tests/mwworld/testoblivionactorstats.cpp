@@ -3,6 +3,7 @@
 #include <utility>
 
 #include <components/esm/records.hpp>
+#include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include <components/esm4/actorvalues.hpp>
 #include <components/esm3/statstate.hpp>
 #include <components/esm3/readerscache.hpp>
@@ -217,6 +218,17 @@ namespace
         EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
         EXPECT_THROW(stats.initializeOblivionBaseStats({}, {1, 2, 3}, 1), std::invalid_argument);
         EXPECT_EQ(stats.getHealth().getCurrent(), 30);
+        MWMechanics::OblivionActorProjectionInput projection;
+        projection.mAttributes.fill({40, {10, 5, -2}});
+        projection.mSkills.fill({30, {2, 1, -4}});
+        projection.mDynamic = {{{30, 45, 12}, {70, 80, 50}, {258, 280, -5}}};
+        MWMechanics::OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), projection);
+        ASSERT_TRUE(prepared.commit());
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Athletics), 29);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 12);
+        EXPECT_EQ(ptr.getClass().getNpcStats(ptr).getAttribute(ESM::Attribute::Strength).getModified(), 53);
+        EXPECT_EQ(ptr.getClass().getCapacity(ptr), 265);
+        EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
     }
 
     TEST_F(OblivionActorStatsTest, liveCreatureClassUsesCanonicalNativeSkillGroups)
@@ -277,6 +289,97 @@ namespace
         EXPECT_EQ(stats.getHealth().getCurrent(), 1);
         EXPECT_EQ(stats.getMagicka().getCurrent(), 2);
         EXPECT_EQ(stats.getFatigue().getCurrent(), 3);
+    }
+
+    TEST_F(OblivionActorStatsTest, preparedNativeViewsCommitTogetherAndCannotReplay)
+    {
+        sharedStats();
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        MWMechanics::NpcStats stats;
+        stats.initializeOblivionBaseStats({1, 2, 3, 4, 5, 6, 7, 8}, {100, 50, 42}, 1);
+        stats.getSkill(ESM::Skill::Athletics).setProgress(0.375f);
+        MWMechanics::OblivionActorProjectionInput input;
+        input.mAttributes.fill({40, {10, 5, -2}});
+        input.mSkills.fill({30, {2, 1, -4}});
+        input.mDynamic = {{{100, 120, -5}, {50, 75, 25}, {42, 60, -10}}};
+        MWMechanics::OblivionActorProjection prepared(stats, input);
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 1);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 100);
+        EXPECT_TRUE(prepared.commit());
+        for (int i = 0; i < 8; ++i)
+            EXPECT_EQ(stats.getAttribute(ESM::Attribute::indexToRefId(i)).getModified(), 53);
+        for (auto id : MWWorld::oblivionSkillIds())
+            EXPECT_EQ(stats.getSkill(id).getModified(), 29);
+        EXPECT_EQ(stats.getSkill(ESM::Skill::Athletics).getProgress(), 0.375f);
+        EXPECT_EQ(stats.getHealth().getCurrent(), -5);
+        EXPECT_EQ(stats.getMagicka().getModified(), 75);
+        EXPECT_EQ(stats.getFatigue().getCurrent(), -10);
+        EXPECT_FALSE(stats.isDead()); // Death is a separate native transition.
+        EXPECT_EQ(stats.getLevel(), 1);
+        EXPECT_FALSE(prepared.commit());
+        EXPECT_EQ(stats.getHealth().getCurrent(), -5);
+        EXPECT_THROW(stats.setHealth(MWMechanics::DynamicStat<float>(200)), std::logic_error);
+        EXPECT_THROW(stats.getSkill(ESM::Skill::Athletics).setBase(200), std::logic_error);
+        input.mProcess = ESM4::ActorValueProcess::Low;
+        input.mDynamic[0][2] = 90;
+        MWMechanics::OblivionActorProjection refresh(stats, input);
+        EXPECT_TRUE(refresh.commit());
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 43);
+        EXPECT_EQ(stats.getSkill(ESM::Skill::Athletics).getModified(), 27);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 90);
+        EXPECT_FALSE(prepared.commit()); // Cannot roll back a later transaction.
+        EXPECT_EQ(stats.getHealth().getCurrent(), 90);
+    }
+
+    TEST_F(OblivionActorStatsTest, failedOrAbandonedPreparationLeavesAllNativeViewsIntact)
+    {
+        sharedStats();
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        MWMechanics::NpcStats stats;
+        MWMechanics::OblivionActorProjectionInput input;
+        input.mAttributes.fill({40, {}});
+        input.mSkills.fill({30, {}});
+        input.mDynamic = {{{100, 120, 90}, {50, 75, 25}, {42, 60, -10}}};
+        MWMechanics::OblivionActorProjection initial(stats, input);
+        ASSERT_TRUE(initial.commit());
+        const auto attributes = stats.getAttributes();
+        const auto skills = stats.getSkills();
+        const auto health = stats.getHealth();
+        const auto magicka = stats.getMagicka();
+        const auto fatigue = stats.getFatigue();
+        input.mAttributes[0].mBase = 200;
+        {
+            MWMechanics::OblivionActorProjection abandoned(stats, input);
+        }
+        input.mSkills.back().mModifiers[2] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW((MWMechanics::OblivionActorProjection(stats, input)), std::invalid_argument);
+        input.mSkills.back().mModifiers[2].reset();
+        input.mDynamic.back()[2] = std::numeric_limits<float>::infinity();
+        EXPECT_THROW((MWMechanics::OblivionActorProjection(stats, input)), std::invalid_argument);
+        EXPECT_EQ(stats.getAttributes(), attributes);
+        EXPECT_EQ(stats.getSkills(), skills);
+        EXPECT_EQ(stats.getHealth(), health);
+        EXPECT_EQ(stats.getMagicka(), magicka);
+        EXPECT_EQ(stats.getFatigue(), fatigue);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureProjectionNeedsNoNpcSkillStorage)
+    {
+        sharedStats();
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        MWMechanics::CreatureStats stats;
+        MWMechanics::OblivionActorProjectionInput input;
+        input.mAttributes.fill({12, {1, 2, -3}});
+        input.mDynamic = {{{10, 20, 9}, {15, 18, 12}, {30, 40, -5}}};
+        MWMechanics::OblivionActorProjection prepared(stats, input);
+        ASSERT_TRUE(prepared.commit());
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 12);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 9);
+        EXPECT_EQ(stats.getFatigue().getCurrent(), -5);
+        EXPECT_FALSE(stats.isDead());
     }
 
     TEST_F(OblivionActorStatsTest, nativeViewsCannotEnterLegacyActorSetters)
