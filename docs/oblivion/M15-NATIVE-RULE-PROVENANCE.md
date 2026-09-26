@@ -1938,3 +1938,45 @@ Evidence: `S2/oracle-emulator/report-infamy.py`, `report-infamy-table.json`,
 `crime-bounty-update.txt`, `crime-infamy-accumulator.txt`,
 `crime-offender-npc-query.txt` and `crime-class-guard-query.txt`.
 These are rule checks, not committed/restarted world-crime acceptance.
+
+## Bounty storage, query rounding and player realm routing
+
+`0060FBC0` reads normal ExtraCrimeGold through `0041FC90`, except when the actor
+is the player and player byte +116 is set: then it uses player float +700.
+The command handler `0050EA30` writes +116 from its boolean argument and prints
+that the player is/is not in the SE world. This establishes explicit Shivering
+Isles routing, not a Gray Cowl identity or an inferred cell-name jurisdiction.
+Both paths expose a stored value strictly between 0 and 1 as **1**, without
+changing its underlying fraction. Zero, values >= 1, and negative alternate
+values retain their value.
+
+`0060FC20` adds an increment directly to alternate storage and returns; this
+path neither clamps negative values nor updates normal player statistics.
+Otherwise `004269E0` adds to ExtraCrimeGold, stores as float, and removes the
+extra record if the result is <= 0. The absent normal record reads as zero.
+Normal player statistics are updated only for increments strictly >1;
+non-player actors always use normal storage and do not update those player
+statistics. The separate `advanceCrimeInfamy` rule covers infamy; largest bounty
+and mutation notifications remain integration responsibilities.
+
+`CrimeBountyState`, `queryCrimeBounty` and `modifyCrimeBounty` preserve the two
+storage paths, fractions, float rounding and statistics-dispatch condition.
+They return an immutable result. Both input buckets must be finite, normal
+storage must be nonnegative, and finite arithmetic overflow diagnoses before
+returning a change. The native negative alternate value is explicitly retained;
+a future persistent validator must not erase it under a generic bounty clamp.
+The realm flag is supplied from resolved player state, not guessed geography.
+
+Three tests fail against stubs, then cover realm/actor routing, adjacent one
+boundaries, subnormal fractions, negative reductions, stored-float precision,
+statistics dispatch and invalid inputs. **512 original mutation cases**, each
+with before/after original bounty queries, pass in both x87 precision modes.
+The actual extra-data update arithmetic, getter, realm branch and infamy helper
+execute. Extra lookup/removal and change notification are boundary stubs;
+allocation for an absent extra is represented by an existing zero-valued node.
+Evidence: `S2/oracle-emulator/bounty-storage.py`, `bounty-storage-table.json`,
+`bounty-storage.log`; `S2/sources-01/crime-bounty-query.txt`,
+`crime-bounty-update.txt`, `crime-bounty-extra-update.txt`,
+`crime-bounty-extra-query.txt`, `crime-player-seworld-setter.txt` and
+`player-bounty-mode-references.txt`. Runtime storage, script flag/query adapters,
+identity-specific exceptions and fresh-process persistence remain open.

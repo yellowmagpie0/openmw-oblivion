@@ -2196,3 +2196,19 @@ The prior stale SDL2 link failure is retained under `skill-validation-01`;
 refreshing both existing CMake configurations resolved it without changing
 project options. This improves verification tooling; M15 runtime gates remain
 unchanged.
+
+### S2 bounty storage and realm routing
+
+Commit `3bdc1d5581` adds the reusable verification skills. Added normal versus
+player Shivering Isles bounty storage/query/update rules, preserving stored
+fractions, minimum positive exposed bounty, normal-only zero clamping and
+normal-player statistics dispatch.
+
+All **1,815 component tests** and **293 ASan/UBSan ESM4 tests** pass with exact
+inventories/no skips through the new runner (`S2/bounty-storage-02`). Three
+policy tests first fail against stubs; **512 original mutation cases**, each
+with before/after queries, pass in both x87 precision modes. Runtime bucket
+storage, player realm flag/script adapters and atomic crime/save integration
+remain open. S2 remains in progress; S3–S14 remain pending.
+
+Tested source fingerprint: `c07d337e14c5a00dc35308005fd034c019db1970551afaabaa773968ed63e599`.

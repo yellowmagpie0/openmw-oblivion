@@ -235,6 +235,23 @@ namespace ESM4
         const CrimeInfamyState& state, float bountyIncrement, const CrimeInfamySettings& settings);
     void validateCrimeInfamySettings(const CrimeInfamySettings& settings);
 
+    struct CrimeBountyState
+    {
+        float mNormal = 0;
+        float mShiveringIsles = 0; // Player-only alternate storage; native permits negative values here.
+    };
+    struct CrimeBountyChange
+    {
+        CrimeBountyState mState;
+        bool mUpdatePlayerStatistics; // Normal player path and increment > 1, for infamy/largest bounty.
+    };
+    // The realm flag is the explicit player flag, not inferred from cell names.
+    // Non-player actors always use normal storage. A positive fraction below
+    // one is exposed as one without changing the underlying stored amount.
+    float queryCrimeBounty(const CrimeBountyState& state, bool player, bool playerInShiveringIsles);
+    CrimeBountyChange modifyCrimeBounty(
+        const CrimeBountyState& state, float increment, bool player, bool playerInShiveringIsles);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;

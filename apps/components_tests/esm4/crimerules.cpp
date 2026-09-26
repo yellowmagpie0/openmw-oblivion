@@ -899,3 +899,62 @@ TEST(ESM4CrimeRules, InfamyRejectsMalformedStateSettingsAndIntegerOverflow)
     EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 2147483647}, 2, {500}), std::overflow_error);
     EXPECT_THROW(ESM4::advanceCrimeInfamy({2147483647, 499}, 2, {500}), std::overflow_error);
 }
+
+TEST(ESM4CrimeRules, BountyQuerySelectsPlayerRealmAndExposesSmallPositiveFractionsAsOne)
+{
+    const ESM4::CrimeBountyState state{40, 250};
+    EXPECT_EQ(ESM4::queryCrimeBounty(state, true, false), 40);
+    EXPECT_EQ(ESM4::queryCrimeBounty(state, true, true), 250);
+    EXPECT_EQ(ESM4::queryCrimeBounty(state, false, true), 40);
+    for (float value : {std::numeric_limits<float>::denorm_min(), .5f, std::nextafter(1.f, 0.f), 1.f})
+    {
+        EXPECT_EQ(ESM4::queryCrimeBounty({value, 0}, true, false), 1);
+        EXPECT_EQ(ESM4::queryCrimeBounty({0, value}, true, true), 1);
+    }
+    EXPECT_EQ(ESM4::queryCrimeBounty({0, 0}, true, false), 0);
+    EXPECT_EQ(ESM4::queryCrimeBounty({0, -10}, true, true), -10);
+    const float above = std::nextafter(1.f, 2.f);
+    EXPECT_EQ(ESM4::queryCrimeBounty({above, 0}, false, false), above);
+}
+
+TEST(ESM4CrimeRules, BountyMutationClampsOnlyNormalStorageAndSelectsStatisticsByIncrement)
+{
+    const ESM4::CrimeBountyState state{40, 250};
+    auto changed = ESM4::modifyCrimeBounty(state, -300, true, false);
+    EXPECT_EQ(changed.mState.mNormal, 0);
+    EXPECT_EQ(changed.mState.mShiveringIsles, 250);
+    EXPECT_FALSE(changed.mUpdatePlayerStatistics);
+    changed = ESM4::modifyCrimeBounty(state, -300, true, true);
+    EXPECT_EQ(changed.mState.mNormal, 40);
+    EXPECT_EQ(changed.mState.mShiveringIsles, -50);
+    EXPECT_FALSE(changed.mUpdatePlayerStatistics);
+    for (bool player : {false, true})
+        for (bool realm : {false, true})
+            for (float delta : {.5f, 1.f, std::nextafter(1.f, 2.f), 40.f})
+            {
+                changed = ESM4::modifyCrimeBounty(state, delta, player, realm);
+                EXPECT_EQ(changed.mUpdatePlayerStatistics, player && !realm && delta > 1);
+                EXPECT_EQ(changed.mState.mNormal, player && realm ? 40.f : static_cast<float>(40. + delta));
+                EXPECT_EQ(changed.mState.mShiveringIsles, player && realm ? static_cast<float>(250. + delta) : 250.f);
+            }
+    // Storage retains fractions and float rounding; no rounding to whole gold on update.
+    changed = ESM4::modifyCrimeBounty({}, .25f, true, false);
+    EXPECT_EQ(changed.mState.mNormal, .25f);
+    EXPECT_EQ(ESM4::queryCrimeBounty(changed.mState, true, false), 1);
+    changed = ESM4::modifyCrimeBounty({16777216, 0}, 1, true, false);
+    EXPECT_EQ(changed.mState.mNormal, 16777216);
+}
+
+TEST(ESM4CrimeRules, BountyRejectsInvalidStateAndOverflowBeforeReturningAChange)
+{
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::queryCrimeBounty({value, 0}, true, false), std::invalid_argument);
+        EXPECT_THROW(ESM4::queryCrimeBounty({0, value}, false, false), std::invalid_argument);
+        EXPECT_THROW(ESM4::modifyCrimeBounty({}, value, true, false), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::queryCrimeBounty({-1, 0}, true, true), std::invalid_argument);
+    const float limit = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::modifyCrimeBounty({limit, 0}, limit, true, false), std::overflow_error);
+    EXPECT_THROW(ESM4::modifyCrimeBounty({0, -limit}, -limit, true, true), std::overflow_error);
+}

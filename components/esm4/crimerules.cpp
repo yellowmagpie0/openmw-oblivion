@@ -10,6 +10,40 @@
 
 namespace ESM4
 {
+    namespace
+    {
+        void validateBountyState(const CrimeBountyState& state)
+        {
+            if (!std::isfinite(state.mNormal) || state.mNormal < 0 || !std::isfinite(state.mShiveringIsles))
+                throw std::invalid_argument("invalid native bounty storage");
+        }
+    }
+
+    float queryCrimeBounty(const CrimeBountyState& state, bool player, bool playerInShiveringIsles)
+    {
+        validateBountyState(state);
+        const float stored = player && playerInShiveringIsles ? state.mShiveringIsles : state.mNormal;
+        return stored > 0 && stored < 1 ? 1.f : stored;
+    }
+
+    CrimeBountyChange modifyCrimeBounty(
+        const CrimeBountyState& state, float increment, bool player, bool playerInShiveringIsles)
+    {
+        validateBountyState(state);
+        if (!std::isfinite(increment))
+            throw std::invalid_argument("nonfinite native bounty increment");
+        const bool alternate = player && playerInShiveringIsles;
+        CrimeBountyChange result{state, player && !alternate && increment > 1};
+        float& stored = alternate ? result.mState.mShiveringIsles : result.mState.mNormal;
+        const double sum = static_cast<double>(stored) + increment;
+        if (std::abs(sum) > std::numeric_limits<float>::max())
+            throw std::overflow_error("native bounty storage overflow");
+        stored = static_cast<float>(sum);
+        if (!alternate && stored <= 0)
+            stored = 0; // Native removes ExtraCrimeGold at zero/negative, and absent reads as zero.
+        return result;
+    }
+
     bool crimeReportEligible(const CrimeReportInput& input)
     {
         return input.mIncidentPresent && input.mOffenderNpc && !input.mAlreadyReported
