@@ -2591,3 +2591,54 @@ and branch decisions execute. AV current/base/Endurance reads, NPC maximum
 lookup, sparse collection allocation/lookup/insert/remove, and notifications
 are explicit boundary stubs. Notification counts are checked, but actual UI,
 event delivery and waking from negative fatigue are not established here.
+
+### Running and jumping fatigue expenditure
+
+The hash-identified original run block `005FABB7–005FACC8` requires process
+movement flags 0x200 and at least one direction bit 0x0F. It reads current float
+Strength and current integer Encumbrance. Capacity helper `00547ED0` stores
+`R(Strength * fActorStrengthEncumbranceMult)` and clamps negative results to
+zero. Weight is loaded as an exact int32, divided by that capacity, then stored
+as float; the ratio is not clamped to one. Helper `00547F40` stores
+`R(fFatigueRunBase + ratio * fFatigueRunMult)`. The caller stores the product
+with elapsed time, then multiplies/stores the Athletics mastery multiplier.
+Base Athletics comes through `005F1910`; tier resolver `0056A300` uses the four
+native skill thresholds. The five fatigue multipliers default to 1/.75/.5/.25/0.
+
+The accepted jump block `00672AEF–00672B8F` gets the same integer weight and
+float-Strength capacity (through `005E0D20`), stores their ratio, and invokes
+`00547F60` for `R(fFatigueJumpBase + ratio * fFatigueJumpMult)`. Base Acrobatics
+mastery through `005F23B0`/`005F1910`/`0056A300` selects the Expert multiplier
+`fPerkJumpFatigueExpertMult` for tiers Expert and Master. That multiplier defaults
+to .5. The compiled jump defaults are 4 and 4; installed Oblivion.esm overrides
+06EE20/06EE21 are 30 and 0. Run defaults and installed 0274D9/0274DA are 8 and 0.
+Ten setting rows append to the physical input table, bringing it to 180 rows;
+capacity and mastery thresholds were already recorded. No new live console
+setting probes are claimed for these rows.
+
+Positive costs are negated into expenditure wrapper `005E07D0`. It rejects
+nonnegative requests, a false actor virtual +278 result, and current fatigue
+at/below zero. It limits a negative request to minus current fatigue before
+calling DamageFloat +2A4. This differs from direct fatigue damage, which may
+cause negative fatigue. The predicate alone passes 396 original-instruction
+cases in both x87 modes, including adjacent-to-zero values.
+
+Zero capacity is a legitimate native arithmetic branch. Zero weight produces
+NaN ratio and no positive-cost dispatch. Positive weight produces +Inf ratio;
+a zero rate multiplier produces NaN/no dispatch, whereas positive infinite cost
+is limited to current fatigue. An infinite run subtotal times Master multiplier
+zero also produces NaN/no dispatch. The C++ rule reproduces these transient
+results explicitly and returns only a finite nonnegative debit. Nonfinite
+external inputs/settings, negative inventory weight and negative elapsed time
+are rejected; finite signed setting overrides preserve native arithmetic.
+
+`S2/oracle-emulator/movement-fatigue{,-installed}.py` executes the actual run/
+jump arithmetic, capacity/rate helpers, mastery resolver and expenditure wrapper
+for 38,880 cases, all bit-matching a separately compiled C++ driver in
+`movement-fatigue-comparison-02.json`. A separate two-case int32-weight boundary
+executes both x87 modes with weight 16777217 and capacity 16777218, yielding the
+float immediately below one. Time/input acceptance, actor AV reads, jump state,
+expenditure eligibility and final AV mutation are boundary fixtures/stubs;
+these are not normal-input gameplay or animation tests. Initial movement unit
+preflight retained one incorrect halfway-rounding expectation; the corrected
+non-halfway discriminator agrees with original execution.

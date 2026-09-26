@@ -2846,3 +2846,26 @@ Automatic publication, other native writers,
 legacy migration/reconciliation, negative-fatigue recovery and active gameplay
 acceptance remain open. Next bounded work: continue the movement/rest/script
 writer audit before activating native shared views during normal gameplay.
+
+### S2 movement expenditure rules for the remaining writers
+
+Commit `5ddad32b43` contains native regeneration routing. Running/jumping now
+have typed native setting builders and immutable debit rules that use exact
+integer encumbrance, float-Strength capacity, base-skill mastery, native float
+stores and the expenditure wrapper's zero-fatigue limit. Zero-capacity NaN/Inf
+intermediates follow the original branch behavior without entering actor state.
+Installed jump settings are 30/0, overriding compiled 4/4; Expert/Master use
+the native .5 multiplier. These rules do not yet activate the movement writers.
+
+Independent original execution passes 38,880 run/jump cases matching C++ bits,
+396 expenditure-wrapper cases, and two exact-int weight boundary cases. The
+initial focused test caught an incorrect halfway rounding expectation; its
+replacement distinguishes exact integer division from premature float rounding
+and passes both original x87 modes. Failed and corrected preflight logs remain
+in `S3/movement-fatigue-preflight*`. `S3/movement-fatigue-rules-01` passes **1,887 component /365 ASan+UBSan ESM4
+/160 Python tests**, with exact C++ inventory agreement and no skips/failures.
+Tested source fingerprint:
+`aad8bef45ebc4747fced79e550464efd401d20251c7bea8fb3c6d81d5ae0bbb9`.
+Sanitizer coverage is component rules, not the engine, and leak checks remain
+disabled. Next bounded work is the accepted-jump physics boundary and running
+writer, including actor expenditure eligibility and shared view publication.

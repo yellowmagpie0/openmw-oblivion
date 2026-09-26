@@ -45,6 +45,75 @@ namespace ESM4
         return currentFatigue < 0 || paralyzed || essentialUnconscious;
     }
 
+    namespace
+    {
+        // The original movement path can produce a transient NaN/Inf at zero
+        // capacity. Its positive-cost test and expenditure cap consume these
+        // before writing an actor value. Avoid an out-of-range float conversion.
+        float movementRounded(double value)
+        {
+            if (std::isnan(value))
+                return std::numeric_limits<float>::quiet_NaN();
+            if (std::abs(value) > std::numeric_limits<float>::max())
+                return std::copysign(std::numeric_limits<float>::infinity(), value);
+            return static_cast<float>(value);
+        }
+
+        float movementEncumbrance(const MovementFatigueInput& input, const MovementFatigueSettings& settings)
+        {
+            finite(input.mCurrentFatigue);
+            finite(input.mCurrentStrength);
+            if (input.mCurrentEncumbrance < 0)
+                throw std::invalid_argument("negative native inventory encumbrance");
+            const float capacity = std::max(0.f,
+                movementRounded(double(input.mCurrentStrength) * settings.mStrengthCapacityMultiplier));
+            if (capacity == 0)
+                return input.mCurrentEncumbrance == 0 ? std::numeric_limits<float>::quiet_NaN()
+                                                     : std::numeric_limits<float>::infinity();
+            return movementRounded(double(input.mCurrentEncumbrance) / capacity);
+        }
+
+        float movementDebit(float current, float cost)
+        {
+            // This comparison deliberately rejects an unordered (NaN) cost.
+            return current > 0 && cost > 0 ? std::min(current, cost) : 0.f;
+        }
+    }
+
+    void validateMovementFatigueSettings(const MovementFatigueSettings& settings)
+    {
+        for (float value : {settings.mStrengthCapacityMultiplier, settings.mRunBase, settings.mRunMultiplier,
+                 settings.mJumpBase, settings.mJumpMultiplier, settings.mExpertJumpMultiplier})
+            finite(value);
+        for (float value : settings.mAthleticsMultipliers)
+            finite(value);
+    }
+
+    float runningFatigueDebit(const MovementFatigueInput& input, float duration,
+        const MovementFatigueSettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateMovementFatigueSettings(settings);
+        nonnegative(duration);
+        const auto rank = combatMastery(input.mBaseSkill, mastery);
+        const float ratio = movementEncumbrance(input, settings);
+        const float rate = movementRounded(settings.mRunBase + double(ratio) * settings.mRunMultiplier);
+        const float elapsedCost = movementRounded(double(rate) * duration);
+        const float cost = movementRounded(double(elapsedCost) * settings.mAthleticsMultipliers[static_cast<int>(rank)]);
+        return movementDebit(input.mCurrentFatigue, cost);
+    }
+
+    float jumpingFatigueDebit(const MovementFatigueInput& input,
+        const MovementFatigueSettings& settings, const CombatMasterySettings& mastery)
+    {
+        validateMovementFatigueSettings(settings);
+        const auto rank = combatMastery(input.mBaseSkill, mastery);
+        const float ratio = movementEncumbrance(input, settings);
+        float cost = movementRounded(settings.mJumpBase + double(ratio) * settings.mJumpMultiplier);
+        if (rank >= CombatMastery::Expert)
+            cost = movementRounded(double(cost) * settings.mExpertJumpMultiplier);
+        return movementDebit(input.mCurrentFatigue, cost);
+    }
+
     void validateFatigueRegenerationSettings(const FatigueRegenerationSettings& settings)
     {
         finite(settings.mBase);

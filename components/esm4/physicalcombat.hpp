@@ -172,6 +172,32 @@ namespace ESM4
     float attackFatigueCost(float weaponWeight, bool powerAttack, const AttackFatigueSettings& settings);
     void validateAttackFatigueSettings(const AttackFatigueSettings& settings);
 
+    struct MovementFatigueSettings
+    {
+        float mStrengthCapacityMultiplier;
+        float mRunBase;
+        float mRunMultiplier;
+        std::array<float, 5> mAthleticsMultipliers;
+        float mJumpBase;
+        float mJumpMultiplier;
+        float mExpertJumpMultiplier;
+    };
+    struct MovementFatigueInput
+    {
+        float mCurrentFatigue;
+        float mCurrentStrength;
+        std::int32_t mCurrentEncumbrance;
+        std::int32_t mBaseSkill; // Athletics for running, Acrobatics for jumping.
+    };
+    // Positive debit, limited to positive current fatigue. The caller owns
+    // movement acceptance, actor expenditure eligibility, god mode and mutation.
+    // Zero capacity follows native transient IEEE arithmetic; no NaN/Inf escapes.
+    float runningFatigueDebit(const MovementFatigueInput& input, float duration,
+        const MovementFatigueSettings& settings, const CombatMasterySettings& mastery);
+    float jumpingFatigueDebit(const MovementFatigueInput& input,
+        const MovementFatigueSettings& settings, const CombatMasterySettings& mastery);
+    void validateMovementFatigueSettings(const MovementFatigueSettings& settings);
+
     struct FatigueRegenerationSettings
     {
         float mBase;

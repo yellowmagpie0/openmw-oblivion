@@ -116,6 +116,114 @@ TEST(ESM4PhysicalCombat, FatigueRegenerationSettingsUseTypedDefaultsAndOverrides
     EXPECT_THROW(ESM4::buildFatigueRegenerationSettings(values), std::invalid_argument);
 }
 
+TEST(ESM4PhysicalCombat, MovementFatigueUsesBaseMasteryAndSeparateRounding)
+{
+    const ESM4::MovementFatigueSettings settings{5, 8, 0, {1, .75f, .5f, .25f, 0}, 4, 4, .5f};
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    struct Case { int skill; float run; float jump; };
+    for (const auto test : {Case{-1, 8, 5.6f}, {24, 8, 5.6f}, {25, 6, 5.6f},
+             {49, 6, 5.6f}, {50, 4, 5.6f}, {74, 4, 5.6f}, {75, 2, 2.8f},
+             {99, 2, 2.8f}, {100, 0, 2.8f}, {101, 0, 2.8f}})
+    {
+        const ESM4::MovementFatigueInput input{40, 50, 100, test.skill};
+        EXPECT_EQ(ESM4::runningFatigueDebit(input, 1, settings, mastery), test.run);
+        EXPECT_EQ(ESM4::runningFatigueDebit(input, .125f, settings, mastery), test.run / 8);
+        EXPECT_EQ(ESM4::jumpingFatigueDebit(input, settings, mastery), test.jump);
+    }
+    // No normalized-encumbrance clamp at one and no pre-rounding of int32 weight.
+    EXPECT_EQ(ESM4::jumpingFatigueDebit({40, 50, 500, 0}, settings, mastery), 12);
+    auto precise = settings;
+    precise.mStrengthCapacityMultiplier = 1;
+    precise.mJumpBase = 0;
+    precise.mJumpMultiplier = 1;
+    EXPECT_EQ(ESM4::jumpingFatigueDebit({40, 16777218.f, 16777217, 0}, precise, mastery),
+        std::nextafter(1.f, 0.f));
+}
+
+TEST(ESM4PhysicalCombat, MovementExpenditureStopsAtZeroAndHandlesZeroCapacity)
+{
+    const ESM4::MovementFatigueSettings settings{5, 8, 0, {1, .75f, .5f, .25f, 0}, 4, 4, .5f};
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    for (float fatigue : {-40.f, -1.f, -std::numeric_limits<float>::denorm_min(), 0.f, .25f, 40.f})
+    {
+        const ESM4::MovementFatigueInput input{fatigue, 50, 0, 0};
+        EXPECT_EQ(ESM4::runningFatigueDebit(input, 1, settings, mastery), std::clamp(fatigue, 0.f, 8.f));
+        EXPECT_EQ(ESM4::jumpingFatigueDebit(input, settings, mastery), std::clamp(fatigue, 0.f, 4.f));
+    }
+    for (float strength : {-1.f, 0.f})
+    {
+        // Native ratio 0/0 is unordered: no positive debit dispatch.
+        EXPECT_EQ(ESM4::runningFatigueDebit({40, strength, 0, 0}, 1, settings, mastery), 0);
+        EXPECT_EQ(ESM4::jumpingFatigueDebit({40, strength, 0, 0}, settings, mastery), 0);
+        // Positive weight/zero capacity: RunMult 0 produces NaN; JumpMult 4
+        // produces +Inf, then the expenditure wrapper limits it to current 40.
+        EXPECT_EQ(ESM4::runningFatigueDebit({40, strength, 1, 0}, 1, settings, mastery), 0);
+        EXPECT_EQ(ESM4::jumpingFatigueDebit({40, strength, 1, 0}, settings, mastery), 40);
+    }
+    auto extreme = settings;
+    extreme.mRunBase = std::numeric_limits<float>::max();
+    EXPECT_EQ(ESM4::runningFatigueDebit({40, 50, 0, 0}, 2, extreme, mastery), 40);
+    EXPECT_EQ(ESM4::runningFatigueDebit({40, 50, 0, 100}, 2, extreme, mastery), 0);
+    extreme.mRunBase = -8;
+    EXPECT_EQ(ESM4::runningFatigueDebit({40, 50, 0, 0}, 1, extreme, mastery), 0);
+    extreme.mAthleticsMultipliers[0] = -1;
+    EXPECT_EQ(ESM4::runningFatigueDebit({40, 50, 0, 0}, 1, extreme, mastery), 8);
+}
+
+TEST(ESM4PhysicalCombat, MovementFatigueSettingsAndInputValidation)
+{
+    const auto defaults = ESM4::buildMovementFatigueSettings({});
+    EXPECT_EQ(defaults.mStrengthCapacityMultiplier, 5);
+    EXPECT_EQ(defaults.mRunBase, 8);
+    EXPECT_EQ(defaults.mRunMultiplier, 0);
+    EXPECT_EQ(defaults.mAthleticsMultipliers, (std::array<float, 5>{1, .75f, .5f, .25f, 0}));
+    EXPECT_EQ(defaults.mJumpBase, 4);
+    EXPECT_EQ(defaults.mJumpMultiplier, 4);
+    EXPECT_EQ(defaults.mExpertJumpMultiplier, .5f);
+    ESM4::GameSetting setting{};
+    setting.mEditorId = "fPerkJumpFatigueExpertMult";
+    setting.mData = .75f;
+    const std::array<const ESM4::GameSetting*, 1> overrides{&setting};
+    EXPECT_EQ(ESM4::buildMovementFatigueSettings(overrides).mExpertJumpMultiplier, .75f);
+    setting.mEditorId = "fFatigueJumpBase";
+    setting.mData = 30.f;
+    EXPECT_EQ(ESM4::buildMovementFatigueSettings(overrides).mJumpBase, 30);
+    setting.mEditorId = "fFatigueJumpMult";
+    setting.mData = 0.f;
+    EXPECT_EQ(ESM4::buildMovementFatigueSettings(overrides).mJumpMultiplier, 0);
+    setting.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildMovementFatigueSettings(overrides), std::invalid_argument);
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    const ESM4::MovementFatigueInput input{40, 50, 100, 0};
+    EXPECT_THROW(ESM4::runningFatigueDebit(input, -1, defaults, mastery), std::invalid_argument);
+    auto invalid = input;
+    invalid.mCurrentEncumbrance = -1;
+    EXPECT_THROW(ESM4::jumpingFatigueDebit(invalid, defaults, mastery), std::invalid_argument);
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        invalid = input;
+        invalid.mCurrentFatigue = value;
+        EXPECT_THROW(ESM4::jumpingFatigueDebit(invalid, defaults, mastery), std::invalid_argument);
+        invalid = input;
+        invalid.mCurrentStrength = value;
+        EXPECT_THROW(ESM4::runningFatigueDebit(invalid, 1, defaults, mastery), std::invalid_argument);
+        for (auto member : {&ESM4::MovementFatigueSettings::mRunBase, &ESM4::MovementFatigueSettings::mRunMultiplier,
+                 &ESM4::MovementFatigueSettings::mStrengthCapacityMultiplier, &ESM4::MovementFatigueSettings::mJumpBase,
+                 &ESM4::MovementFatigueSettings::mJumpMultiplier, &ESM4::MovementFatigueSettings::mExpertJumpMultiplier})
+        {
+            auto badSettings = defaults;
+            badSettings.*member = value;
+            EXPECT_THROW(ESM4::runningFatigueDebit(input, 1, badSettings, mastery), std::invalid_argument);
+        }
+        for (std::size_t i = 0; i < 5; ++i)
+        {
+            auto badSettings = defaults;
+            badSettings.mAthleticsMultipliers[i] = value;
+            EXPECT_THROW(ESM4::jumpingFatigueDebit(input, badSettings, mastery), std::invalid_argument);
+        }
+    }
+}
+
 TEST(ESM4PhysicalCombat, LuckAdjustedSkillClampsAfterAdjustment)
 {
     struct Case { int skill; int luck; float expected; };

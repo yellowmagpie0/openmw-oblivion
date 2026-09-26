@@ -218,6 +218,22 @@ namespace ESM4
         return result;
     }
 
+    MovementFatigueSettings buildMovementFatigueSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const MovementFatigueSettings result{inputs.number("fActorStrengthEncumbranceMult", 5.f),
+            inputs.number("fFatigueRunBase", 8.f), inputs.number("fFatigueRunMult", 0.f),
+            {inputs.number("fPerkAthleticsNoviceFatigueMult", 1.f),
+                inputs.number("fPerkAthleticsApprenticeFatigueMult", .75f),
+                inputs.number("fPerkAthleticsJourneymanFatigueMult", .5f),
+                inputs.number("fPerkAthleticsExpertFatigueMult", .25f),
+                inputs.number("fPerkAthleticsMasterFatigueMult", 0.f)},
+            inputs.number("fFatigueJumpBase", 4.f), inputs.number("fFatigueJumpMult", 4.f),
+            inputs.number("fPerkJumpFatigueExpertMult", .5f)};
+        validateMovementFatigueSettings(result);
+        return result;
+    }
+
     FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

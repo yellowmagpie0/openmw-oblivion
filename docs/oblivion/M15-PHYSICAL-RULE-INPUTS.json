@@ -1815,6 +1815,112 @@
         "value": 5.0
       },
       "note": "Player derived-base arithmetic independently instruction-tested. Current actor/effect resolution and authority integration remain open."
+    },
+    {
+      "name": "fFatigueRunBase",
+      "value": 8.0,
+      "storage": "0xb37550",
+      "constructor": "0x9eb4bf",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0274d9",
+        "type": "f",
+        "value": 8.0
+      },
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fFatigueRunMult",
+      "value": 0.0,
+      "storage": "0xb37558",
+      "constructor": "0x9eb4e0",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0274da",
+        "type": "f",
+        "value": 0.0
+      },
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fFatigueJumpBase",
+      "value": 4.0,
+      "storage": "0xb37560",
+      "constructor": "0x9eb51f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:06ee20",
+        "type": "f",
+        "value": 30.0
+      },
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fFatigueJumpMult",
+      "value": 4.0,
+      "storage": "0xb37568",
+      "constructor": "0x9eb54f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:06ee21",
+        "type": "f",
+        "value": 0.0
+      },
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fPerkAthleticsNoviceFatigueMult",
+      "value": 1.0,
+      "storage": "0xb375f0",
+      "constructor": "0x9eb850",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fPerkAthleticsApprenticeFatigueMult",
+      "value": 0.75,
+      "storage": "0xb375f8",
+      "constructor": "0x9eb88f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fPerkAthleticsJourneymanFatigueMult",
+      "value": 0.5,
+      "storage": "0xb37600",
+      "constructor": "0x9eb8bf",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fPerkAthleticsExpertFatigueMult",
+      "value": 0.25,
+      "storage": "0xb37608",
+      "constructor": "0x9eb8ef",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fPerkAthleticsMasterFatigueMult",
+      "value": 0.0,
+      "storage": "0xb37610",
+      "constructor": "0x9eb910",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fPerkJumpFatigueExpertMult",
+      "value": 0.5,
+      "storage": "0xb37510",
+      "constructor": "0x9eb35f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
     }
   ]
 }

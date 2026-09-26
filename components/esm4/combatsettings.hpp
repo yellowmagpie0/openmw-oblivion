@@ -40,6 +40,7 @@ namespace ESM4
     EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings);
     BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
+    MovementFatigueSettings buildMovementFatigueSettings(std::span<const GameSetting* const> settings);
     FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings);
     PlayerDynamicBaseSettings buildPlayerDynamicBaseSettings(std::span<const GameSetting* const> settings);
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings);
