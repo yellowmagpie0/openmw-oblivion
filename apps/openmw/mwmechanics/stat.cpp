@@ -1,5 +1,8 @@
 #include "stat.hpp"
 
+#include <components/esm4/actorvalues.hpp>
+#include <stdexcept>
+
 #include <algorithm>
 
 #include <components/esm3/statstate.hpp>
@@ -123,8 +126,28 @@ namespace MWMechanics
     {
     }
 
+    void AttributeValue::requireWritable() const
+    {
+        if (mNativeCurrent)
+            throw std::logic_error("native stat views must be changed through native actor authority");
+    }
+
+    void AttributeValue::setNativeProjection(const ESM4::ActorValueState& state,
+        ESM4::ActorValueOwner owner, ESM4::ActorValueProcess process)
+    {
+        const float current = ESM4::composeActorValue(state, owner, process);
+        mBase = state.mBase;
+        // These legacy accessors expose maximum and damage components only.
+        // Script modifiers are included in the exact native current value.
+        mModifier = state.mModifiers[0].value_or(0.f);
+        mDamage = -state.mModifiers[2].value_or(0.f);
+        mNativeCurrent = current;
+    }
+
     float AttributeValue::getModified() const
     {
+        if (mNativeCurrent)
+            return *mNativeCurrent;
         return std::max(0.f, mBase - mDamage + mModifier);
     }
     float AttributeValue::getBase() const
@@ -138,6 +161,7 @@ namespace MWMechanics
 
     void AttributeValue::setBase(float base, bool clearModifier)
     {
+        requireWritable();
         mBase = base;
         if (clearModifier)
         {
@@ -148,6 +172,7 @@ namespace MWMechanics
 
     void AttributeValue::setModifier(float mod)
     {
+        requireWritable();
         if (mod < 0)
         {
             mModifier = 0.f;
@@ -159,10 +184,12 @@ namespace MWMechanics
 
     void AttributeValue::damage(float damage)
     {
+        requireWritable();
         mDamage += damage;
     }
     void AttributeValue::restore(float amount)
     {
+        requireWritable();
         if (mDamage <= 0)
             return;
 
@@ -183,6 +210,7 @@ namespace MWMechanics
 
     void AttributeValue::readState(const ESM::StatState<float>& state)
     {
+        requireWritable();
         mBase = state.mBase;
         mModifier = state.mMod;
         mDamage = state.mDamage;

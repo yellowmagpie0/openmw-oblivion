@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
+#include <limits>
 
 #include <components/esm/records.hpp>
+#include <components/esm4/actorvalues.hpp>
+#include <components/esm3/statstate.hpp>
 #include <components/esm3/readerscache.hpp>
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwclass/esm4npc.hpp"
@@ -275,4 +278,55 @@ namespace
         EXPECT_EQ(stats.getFatigue().getCurrent(), 3);
     }
 
+}
+
+TEST(OblivionStatProjection, NativeCurrentPreservesRoundingAndNegativeValues)
+{
+    using Owner = ESM4::ActorValueOwner;
+    using Process = ESM4::ActorValueProcess;
+    MWMechanics::AttributeValue npc;
+    MWMechanics::AttributeValue player;
+    const ESM4::ActorValueState state{1, {-1, 0x1p-24f, 0}};
+    npc.setNativeProjection(state, Owner::NonPlayer, Process::Active);
+    player.setNativeProjection(state, Owner::Player, Process::Active);
+    EXPECT_EQ(npc.getModified(), 0);
+    EXPECT_EQ(player.getModified(), 0x1p-24f);
+    EXPECT_NE(npc, player);
+    npc.setNativeProjection({1, {0, 0, -10}}, Owner::NonPlayer, Process::Active);
+    EXPECT_EQ(npc.getModified(), -9);
+    EXPECT_EQ(npc.getBase(), 1);
+    EXPECT_EQ(npc.getDamage(), 10);
+    const auto before = npc;
+    EXPECT_THROW(npc.setNativeProjection({std::numeric_limits<float>::infinity(), {}},
+        Owner::NonPlayer, Process::Active), std::invalid_argument);
+    EXPECT_EQ(npc, before);
+}
+
+TEST(OblivionStatProjection, LegacyMutationsCannotOverwriteNativeViews)
+{
+    MWMechanics::SkillValue native;
+    native.setNativeProjection({40, {10, 5, -2}}, ESM4::ActorValueOwner::NonPlayer,
+        ESM4::ActorValueProcess::Active);
+    const auto before = native;
+    EXPECT_THROW(native.setBase(100), std::logic_error);
+    EXPECT_THROW(native.setModifier(20), std::logic_error);
+    EXPECT_THROW(native.damage(10), std::logic_error);
+    EXPECT_THROW(native.restore(10), std::logic_error);
+    ESM::StatState<float> serialized{};
+    EXPECT_THROW(native.readState(serialized), std::logic_error);
+    EXPECT_EQ(native, before);
+    EXPECT_EQ(native.getModified(), 53);
+    auto differentScript = native;
+    differentScript.setNativeProjection({40, {10, 6, -2}}, ESM4::ActorValueOwner::NonPlayer,
+        ESM4::ActorValueProcess::Active);
+    EXPECT_NE(native, differentScript);
+    MWMechanics::AttributeValue legacy;
+    legacy.setBase(40);
+    legacy.setModifier(-10);
+    EXPECT_FALSE(legacy.isNativeProjection());
+    EXPECT_EQ(legacy.getModified(), 30);
+    legacy.restore(5);
+    EXPECT_EQ(legacy.getModified(), 35);
+    legacy.damage(100);
+    EXPECT_EQ(legacy.getModified(), 0);
 }

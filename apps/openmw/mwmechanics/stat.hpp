@@ -1,6 +1,16 @@
 #ifndef GAME_MWMECHANICS_STAT_H
 #define GAME_MWMECHANICS_STAT_H
 
+#include <cstdint>
+#include <optional>
+
+namespace ESM4
+{
+    struct ActorValueState;
+    enum class ActorValueOwner : std::uint8_t;
+    enum class ActorValueProcess : std::uint8_t;
+}
+
 namespace ESM
 {
     template <typename T>
@@ -95,9 +105,18 @@ namespace MWMechanics
         float mBase;
         float mModifier;
         float mDamage; // needs to be float to allow continuous damage
+        std::optional<float> mNativeCurrent;
+
+        void requireWritable() const;
 
     public:
         AttributeValue();
+
+        // A read-only view of native authority. Legacy mutations must not
+        // silently collapse native modifier categories or apply TES3 clamps.
+        void setNativeProjection(const ESM4::ActorValueState& state,
+            ESM4::ActorValueOwner owner, ESM4::ActorValueProcess process);
+        bool isNativeProjection() const { return mNativeCurrent.has_value(); }
 
         float getModified() const;
         float getBase() const;
@@ -136,7 +155,8 @@ namespace MWMechanics
     inline bool operator==(const AttributeValue& left, const AttributeValue& right)
     {
         return left.getBase() == right.getBase() && left.getModifier() == right.getModifier()
-            && left.getDamage() == right.getDamage();
+            && left.getDamage() == right.getDamage() && left.isNativeProjection() == right.isNativeProjection()
+            && (!left.isNativeProjection() || left.getModified() == right.getModified());
     }
     inline bool operator!=(const AttributeValue& left, const AttributeValue& right)
     {
@@ -145,8 +165,8 @@ namespace MWMechanics
 
     inline bool operator==(const SkillValue& left, const SkillValue& right)
     {
-        return left.getBase() == right.getBase() && left.getModifier() == right.getModifier()
-            && left.getDamage() == right.getDamage() && left.getProgress() == right.getProgress();
+        return static_cast<const AttributeValue&>(left) == static_cast<const AttributeValue&>(right)
+            && left.getProgress() == right.getProgress();
     }
     inline bool operator!=(const SkillValue& left, const SkillValue& right)
     {

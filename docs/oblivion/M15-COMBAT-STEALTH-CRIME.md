@@ -2433,3 +2433,19 @@ production output bits exactly. Immutable mutation and corruption tests cover
 category isolation and invalid state. This core is not yet the engine's live
 stat authority or save representation. S2 remains in progress; S3 integration
 and S4–S14 remain pending.
+
+### S3 shared stat projection foundation
+
+Commit `8f69a81ac0` contains the scalar state core. Attribute and skill views
+can now expose its exact native current value, including negative values and
+player/NPC rounding differences. Legacy mutations reject a native view rather
+than silently destroying modifier categories. Failed projection validation
+leaves the previous view unchanged. This mode is not yet enabled on gameplay
+actors; service mutation, dynamic views and persistence must be integrated first.
+
+All **562 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
+(`S3/stat-projection-01`, source fingerprint
+`9d3ef1fe2ae1f1c5278d4f3d5a54d5335a4462e386620f34b7f20d4c259c85aa`).
+New cases cover exact composition, negative current, rejected legacy writes,
+atomic validation, comparison and preserved legacy behavior. S3 is in progress;
+its live-authority and save/restart gate remains open.
