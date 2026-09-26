@@ -10,6 +10,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testduration.cpp
     mwworld/testoblivionactorstats.cpp
     mwworld/testoblivioncombatdata.cpp
+    mwworld/testoblivioncombat.cpp
     mwworld/testoblivionai.cpp
     mwworld/testoblivionprofileservices.cpp
     mwworld/testtimestamp.cpp

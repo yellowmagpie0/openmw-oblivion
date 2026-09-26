@@ -102,6 +102,7 @@
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 #include <components/esm4/observation.hpp>
 #include "../mwmechanics/spellcasting.hpp"
 #include "../mwmechanics/spellutil.hpp"
@@ -333,6 +334,7 @@ namespace MWWorld
         if (mGameProfile == ESM::GameProfile::Oblivion)
         {
             mOblivionAi = std::make_unique<MWMechanics::OblivionAiService>(*this);
+            mOblivionCombat = std::make_unique<MWMechanics::OblivionCombatService>();
             mOblivionObservation = ESM4::ObservationStream::fromEnvironment();
             mOblivionScriptManager = std::make_unique<OblivionScriptManager>(*this, mStore, mContentFiles);
         }
@@ -377,6 +379,8 @@ namespace MWWorld
 
     void World::startNewGame(bool bypass)
     {
+        if (mOblivionCombat)
+            mOblivionCombat->clear();
         if (mOblivionScriptManager)
         {
             if (bypass)
@@ -696,6 +700,8 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        if (mOblivionCombat)
+            mOblivionCombat->clear();
         if (mOblivionAi)
             mOblivionAi->clear();
         mNextOblivionDynamicSerial = 1;
@@ -1196,6 +1202,8 @@ namespace MWWorld
             mOblivionScriptManager->capture(state);
         if (mOblivionAi)
             mOblivionAi->capture(state);
+        if (mOblivionCombat)
+            mOblivionCombat->capture(state);
         const auto normalizeNativeInventory = [](std::vector<ESM4::RuntimeInventoryItem>& inventory) {
             for (ESM4::RuntimeInventoryItem& item : inventory)
                 if (item.mCount < 0)
@@ -1634,6 +1642,8 @@ namespace MWWorld
             mOblivionScriptManager->restore(state);
         if (mOblivionAi)
             mOblivionAi->restore(state);
+        if (mOblivionCombat)
+            mOblivionCombat->restore(state);
     }
 
     void World::runOblivionScripts(double secondsPassed)

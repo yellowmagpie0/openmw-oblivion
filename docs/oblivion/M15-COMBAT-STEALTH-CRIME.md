@@ -2480,3 +2480,41 @@ action, deterministic randomized completion/restoration against a separate
 full-history model, malformed IDs and exhaustion. Service transactions and
 versioned save integration remain pending; this ledger alone is not a hit
 transaction or runtime acceptance.
+
+### S3 profile-owned action service and runtime schema v8
+
+Commit `d7a16da355` contains the bounded ledger. World now constructs the native
+combat service only for Oblivion, clears it on new game/world clear (including
+failed-load cleanup), and captures/restores its owned ledger. Runtime schema
+**8** adds canonical physical action state to binary/JSON/Python readers.
+Versions 1–7 deliberately start an empty action namespace without borrowing
+AI/script identities. Invalid restoration leaves live service state unchanged.
+The service has no gameplay hit producers or actor-stat authority yet.
+
+`S3/action-service-save-01` passes **1,868 component**, **346 ASan/UBSan ESM4**,
+**156 Python**, and **568 engine tests**, with rebuilt openmw/openmw-tests/esmtool.
+Coverage includes canonical wire bytes, corrupt/truncated/oversized action lists,
+all seven legacy versions, foreign profiles, out-of-order replay rejection and
+service clear/restore. Existing inventory initializer warnings remain.
+
+Actual runtime evidence under `build/oblivion-compat/m15/S3/`:
+
+- `action-service-restart-01`: unchanged observation/continuation manifests pass
+  two distinct processes, exact input-save receipt, live-vs-disk canonical
+  agreement, movement and resave. Both carry v8 idle physical action state.
+- `action-service-legacy-01`: the editable
+  `oblivion_m15_legacy_action_service.json` loads a copied S1 v7 save and resaves
+  v8 with `{next:1,pending:[]}`. `migration-verification.json` records the source,
+  output and binary hashes; the original and pristine input remain byte-identical.
+  Source: `S1/ticks-restart-01/first/snapshots/after.omwsave`, SHA-256
+  `ceccf09c066272636aa4e8a49e0d34f2825202cf0dd258622ca2685a4af0b439`.
+- `action-service-morrowind-01`: unchanged M14 Morrowind isolation scenario passes;
+  actual save contains no GPRO/T4VR/T4ST/OMW4STATE/native-state markers.
+
+These runs used openmw SHA-256
+`ada1dafbbe59ec94ee586632901563d8c31b11ca5bde18ce7d08df4d10c2dc5f`.
+Inspected screenshots show the textured native fixture with shared HUD and a
+Morrowind camera near terrain. They establish no combat/death visual acceptance
+or playable Balmora course. All runs are silent. S3 remains in progress:
+actor authority, transaction/event/RNG state and active-gameplay persistence
+remain required; S4–S14 gates remain open.

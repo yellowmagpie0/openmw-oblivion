@@ -88,6 +88,7 @@ namespace MWPhysics
 namespace MWMechanics
 {
     class OblivionAiService;
+    class OblivionCombatService;
 }
 
 namespace MWWorld
@@ -123,6 +124,7 @@ namespace MWWorld
         std::uint64_t mNextOblivionDynamicSerial = 1;
         std::unique_ptr<OblivionScriptManager> mOblivionScriptManager;
         std::unique_ptr<MWMechanics::OblivionAiService> mOblivionAi;
+        std::unique_ptr<MWMechanics::OblivionCombatService> mOblivionCombat;
         std::unique_ptr<ESM4::ObservationStream> mOblivionObservation;
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
@@ -242,6 +244,8 @@ namespace MWWorld
         bool dispatchOblivionActivation(const Ptr& ptr, const Ptr& actor);
         void runOblivionScripts(double secondsPassed);
         MWMechanics::OblivionAiService* getOblivionAiService() { return mOblivionAi.get(); }
+        MWMechanics::OblivionCombatService* getOblivionCombatService() { return mOblivionCombat.get(); }
+        const MWMechanics::OblivionCombatService* getOblivionCombatService() const { return mOblivionCombat.get(); }
         const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
         OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }
         const OblivionScriptManager* getOblivionScriptManager() const { return mOblivionScriptManager.get(); }

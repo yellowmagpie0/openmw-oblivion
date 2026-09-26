@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import unittest
+import struct
+import tempfile
+from pathlib import Path
 
 from scripts import tes4_runtime_state as state_io
 
@@ -321,6 +324,74 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         invalid["player"]["inventory"][1]["equipped_slots"] = 0
         with self.assertRaisesRegex(state_io.RuntimeStateError, "Duplicate"):
             state_io.encode_payload(invalid)
+
+    def test_version_eight_physical_actions_have_canonical_cpp_wire_layout(self) -> None:
+        state = make_state()
+        state["schema_version"] = 8
+        state["ai_rng_state"] = 1
+        state["physical_actions"] = {"next": 5, "pending": [3, 1]}
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload[-28:], bytes([
+            5, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
+            1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0]))
+        restored = state_io.decode_payload(payload)
+        self.assertEqual(restored["physical_actions"], {"next": 5, "pending": [1, 3]})
+        self.assertEqual(state_io.encode_payload(restored), payload)
+        for removed in range(1, 29):
+            with self.subTest(removed=removed), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-removed])
+        for offset, value in ((-28, 0), (-8, 1), (-20, 255)):
+            corrupt = bytearray(payload)
+            corrupt[offset] = value
+            with self.subTest(offset=offset), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(bytes(corrupt))
+
+    def test_version_eight_rejects_invalid_or_legacy_physical_actions(self) -> None:
+        state = make_state()
+        state["schema_version"] = 8
+        state["ai_rng_state"] = 1
+        for invalid in (
+            None, {}, {"next": 0, "pending": []}, {"next": True, "pending": []},
+            {"next": 2**64, "pending": []}, {"next": 5, "pending": [1, 1]},
+            {"next": 5, "pending": [0]}, {"next": 5, "pending": [5]},
+            {"next": 5, "pending": [True]}, {"next": 5, "pending": [1.0]},
+            {"next": 5, "pending": "1"},
+        ):
+            state["physical_actions"] = invalid
+            with self.subTest(invalid=invalid), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        state["physical_actions"] = {"next": 2**64 - 1, "pending": [2**64 - 2]}
+        restored = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(restored["physical_actions"], state["physical_actions"])
+        state["schema_version"] = 7
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_all_legacy_versions_promote_without_importing_ai_or_script_ids(self) -> None:
+        for version in range(1, 8):
+            with self.subTest(version=version):
+                state = make_state()
+                state["schema_version"] = version
+                state["ai_rng_state"] = 1
+                state["player"]["inventory"] = []
+                if version < 3:
+                    for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                        state["player"].pop(key)
+                if version < 2:
+                    for key in ("script_event_sequence", "script_instances", "quests"):
+                        state.pop(key)
+                restored = state_io.decode_payload(state_io.encode_payload(state))
+                self.assertNotIn("physical_actions", restored)
+                payload = state_io.encode_payload(state)
+                body = (struct.pack("<4sII", b"VERS", 4, version)
+                        + struct.pack("<4sI", b"DATA", len(payload)) + payload)
+                with tempfile.TemporaryDirectory() as directory:
+                    source = Path(directory) / "old.omwsave"
+                    target = Path(directory) / "new.omwsave"
+                    source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
+                    state_io.write_save(source, target, restored)
+                    promoted = state_io.load_save(target)
+                self.assertEqual(promoted["physical_actions"], {"next": 1, "pending": []})
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@
 #include <components/esm/position.hpp>
 
 #include "aiphase.hpp"
+#include "actionledger.hpp"
 
 namespace ESM
 {
@@ -24,7 +25,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 7;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 8;
 
     struct RuntimeContentIdentity
     {
@@ -261,6 +262,9 @@ namespace ESM4
         // FIFO, not sorted: callbacks can affect subsequent callbacks. A save
         // inside one callback must retain the rest without replaying that one.
         std::vector<RuntimePackageDoneEvent> mPendingPackageDone;
+        // v8: M15 action identity ownership. Older versions start a new ledger;
+        // script/AI event IDs belong to separate namespaces and are not reused.
+        ActionLedgerState mPhysicalActions;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

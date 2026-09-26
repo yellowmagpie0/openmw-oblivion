@@ -471,6 +471,17 @@ namespace ESM4
         checkSize(mMounts.size(), "mount relation list");
         checkSize(mDetectionVectors.size(), "detection vector list");
         checkSize(mPendingPackageDone.size(), "pending package completion list");
+        checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
+        if (mVersion < 8 && mPhysicalActions != ActionLedgerState{})
+            throw std::runtime_error("TES4 runtime-state versions before 8 cannot contain physical actions");
+        try
+        {
+            ActionLedger{}.restore(mPhysicalActions);
+        }
+        catch (const std::invalid_argument& error)
+        {
+            throw std::runtime_error(std::string("Invalid TES4 physical actions: ") + error.what());
+        }
         if (mVersion < 6 && !mPendingPackageDone.empty())
             throw std::runtime_error("TES4 runtime-state versions before 6 cannot contain pending package events");
         for (const RuntimePackageDoneEvent& event : mPendingPackageDone)
@@ -1008,6 +1019,15 @@ namespace ESM4
                 writeKey(writer, event.mPackage);
             }
         }
+        if (mVersion >= 8)
+        {
+            writer.integer(mPhysicalActions.mNext);
+            auto pending = mPhysicalActions.mPending;
+            std::sort(pending.begin(), pending.end());
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pending.size()));
+            for (const auto id : pending)
+                writer.integer(id);
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1299,6 +1319,14 @@ namespace ESM4
             result.mPendingPackageDone.reserve(count);
             for (std::uint32_t i = 0; i < count; ++i)
                 result.mPendingPackageDone.push_back({ readKey(reader), readKey(reader) });
+        }
+        if (result.mVersion >= 8)
+        {
+            result.mPhysicalActions.mNext = reader.integer<std::uint64_t>();
+            const auto count = reader.count();
+            result.mPhysicalActions.mPending.reserve(count);
+            for (std::uint32_t i = 0; i < count; ++i)
+                result.mPhysicalActions.mPending.push_back(reader.integer<std::uint64_t>());
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -1626,6 +1654,19 @@ namespace ESM4
                        << "\",\"package\":\"" << escapeJson(event.mPackage.serialize()) << "\"}";
             }
             stream << "]";
+        }
+        if (mVersion >= 8)
+        {
+            stream << ",\"physical_actions\":{\"next\":" << mPhysicalActions.mNext << ",\"pending\":[";
+            auto pending = mPhysicalActions.mPending;
+            std::sort(pending.begin(), pending.end());
+            for (std::size_t i = 0; i < pending.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                stream << pending[i];
+            }
+            stream << "]}";
         }
         stream << "}";
         return stream.str();

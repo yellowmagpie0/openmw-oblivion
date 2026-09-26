@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 7
+CURRENT_VERSION = 8
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -538,6 +538,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         return value
 
     pending = check_collection(state.get("pending_package_done", []), "pending package completion list")
+    actions = state.get("physical_actions", {"next": 1, "pending": []})
+    if not isinstance(actions, dict):
+        raise RuntimeStateError("Invalid TES4 physical action ledger")
+    next_action = actions.get("next")
+    if type(next_action) is not int or not 1 <= next_action <= 0xFFFFFFFFFFFFFFFF:
+        raise RuntimeStateError("Invalid TES4 next physical action identity")
+    action_ids = check_collection(actions.get("pending"), "pending physical action list")
+    seen_actions: set[int] = set()
+    for action in action_ids:
+        if type(action) is not int or not 0 < action < next_action or action in seen_actions:
+            raise RuntimeStateError("Invalid or duplicate TES4 pending physical action identity")
+        seen_actions.add(action)
+    if version < 8 and (next_action != 1 or action_ids):
+        raise RuntimeStateError("TES4 runtime-state versions before 8 cannot contain physical actions")
     if version < 6 and pending:
         raise RuntimeStateError("TES4 runtime-state versions before 6 cannot contain pending package events")
     for event in pending:
@@ -951,6 +965,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["pending_package_done"] = [
             {"actor": reader.string(), "package": reader.string()} for _ in range(reader.count())
         ]
+    if version >= 8:
+        result["physical_actions"] = {
+            "next": reader.unpack("<Q"),
+            "pending": [reader.unpack("<Q") for _ in range(reader.count())],
+        }
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1103,6 +1122,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for event in pending:
             writer.string(event["actor"])
             writer.string(event["package"])
+    if version >= 8:
+        actions = state.get("physical_actions", {"next": 1, "pending": []})
+        writer.pack("<Q", actions["next"])
+        writer.pack("<I", len(actions["pending"]))
+        for action in sorted(actions["pending"]):
+            writer.pack("<Q", action)
     return writer.finish()
 
 
@@ -1174,6 +1199,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("mounts", [])
     state.setdefault("detection_vectors", [])
     state.setdefault("pending_package_done", [])
+    state.setdefault("physical_actions", {"next": 1, "pending": []})
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
@@ -1202,6 +1228,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("mounts", [])
     result.setdefault("detection_vectors", [])
     result.setdefault("pending_package_done", [])
+    result.setdefault("physical_actions", {"next": 1, "pending": []})
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])

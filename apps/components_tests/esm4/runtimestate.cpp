@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -402,7 +403,8 @@ namespace
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
-        EXPECT_NE(json.find("\"schema_version\":7"), std::string::npos);
+        EXPECT_NE(json.find("\"schema_version\":" + std::to_string(ESM4::CurrentRuntimeStateVersion)),
+            std::string::npos);
         EXPECT_NE(json.find("content:oblivion.esm:01650f"), std::string::npos);
         EXPECT_NE(json.find("dynamic:save-1:0000000000000001"), std::string::npos);
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"
@@ -413,6 +415,85 @@ namespace
         EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
         EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
         EXPECT_EQ(json, makeState().canonicalJson());
+    }
+
+    TEST(ESM4RuntimeState, versionEightPersistsCanonicalPhysicalActions)
+    {
+        auto state = makeState();
+        state.mPhysicalActions = {5, {3, 1}};
+        const auto bytes = state.serializeBinary();
+        const std::vector<std::uint8_t> suffix{
+            5, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
+            1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0};
+        ASSERT_GE(bytes.size(), suffix.size());
+        EXPECT_TRUE(std::equal(suffix.begin(), suffix.end(), bytes.end() - suffix.size()));
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mPhysicalActions, (ESM4::ActionLedgerState{5, {1, 3}}));
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(restored.canonicalJson().find("\"physical_actions\":{\"next\":5,\"pending\":[1,3]}"),
+            std::string::npos);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        ESM4::ActionLedger actions;
+        actions.restore(restored.mPhysicalActions);
+        EXPECT_TRUE(actions.isConsumed(2));
+        EXPECT_TRUE(actions.consume(1));
+        EXPECT_FALSE(actions.consume(2));
+        state.mVersion = 7;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, versionEightRejectsCorruptTruncatedAndOversizedActionLists)
+    {
+        auto state = makeState();
+        for (const auto& invalid : std::vector<ESM4::ActionLedgerState>{
+            {0, {}}, {2, {0}}, {2, {2}}, {2, {1, 1}}})
+        {
+            state.mPhysicalActions = invalid;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+            EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+        }
+        state.mPhysicalActions = {5, {1, 3}};
+        const auto bytes = state.serializeBinary();
+        for (std::size_t remove = 1; remove <= 28; ++remove)
+        {
+            auto truncated = bytes;
+            truncated.resize(bytes.size() - remove);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        auto corrupt = bytes;
+        corrupt[bytes.size() - 28] = 0; // next ID zero
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        corrupt = bytes;
+        corrupt[bytes.size() - 8] = 1; // duplicate pending ID
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        corrupt = bytes;
+        std::fill(corrupt.end() - 20, corrupt.end() - 16, 0xff); // oversized count
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, allLegacyVersionsStartWithAnEmptyPhysicalActionNamespace)
+    {
+        for (std::uint32_t version = 1; version < 8; ++version)
+        {
+            SCOPED_TRACE(version);
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("oblivion.esm", 1);
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("oblivion.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("oblivion.esm", 3);
+            }
+            auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_EQ(restored.mPhysicalActions, ESM4::ActionLedgerState{});
+            EXPECT_EQ(restored.canonicalJson().find("physical_actions"), std::string::npos);
+            restored.mVersion = 8;
+            restored.mPlayer.mRace = ESM::FormKey::content("oblivion.esm", 2);
+            restored.mPlayer.mClass = ESM::FormKey::content("oblivion.esm", 3);
+            EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(restored.serializeBinary()).mPhysicalActions,
+                ESM4::ActionLedgerState{});
+        }
     }
 
     TEST(ESM4RuntimeState, versionOnePayloadMigratesWithEmptyScriptState)
