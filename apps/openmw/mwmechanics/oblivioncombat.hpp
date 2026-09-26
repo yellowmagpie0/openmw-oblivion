@@ -10,9 +10,9 @@
 #include <array>
 #include <map>
 
-namespace ESM4
+namespace MWWorld
 {
-    struct RuntimeState;
+    class Ptr;
 }
 
 namespace MWMechanics
@@ -55,12 +55,13 @@ namespace MWMechanics
         bool commit() noexcept;
     };
 
-    // Profile-owned native physical action authority. Actor state and contact
-    // transitions are integrated separately; issuing an ID is not a hit.
+    // Profile-owned native action and actor-value authority. Live activation
+    // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
     {
         ESM4::ActionLedger mActions;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
+        const ESM4::RuntimeActorValues& npcValues(const MWWorld::Ptr& actor) const;
 
     public:
         void clear();
@@ -70,6 +71,15 @@ namespace MWMechanics
         // Internal completion/cancellation boundary. Call only with the
         // corresponding gameplay transition committed, before event callbacks.
         bool consumeAction(std::uint64_t id);
+        // Explicit construction/load publication. Only TES4 nonplayer NPCs
+        // are supported here; automatic gameplay activation is wired separately.
+        void publishNpcValues(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values);
+        // Caller applies eligibility, event and death policy before/after this
+        // scalar transition. This method cannot run callbacks between commits.
+        void changeNpcValue(const MWWorld::Ptr& actor, std::uint8_t value,
+            ESM4::ActorValueModifier modifier, float delta);
+        float getNpcValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+        std::int32_t getNpcIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);

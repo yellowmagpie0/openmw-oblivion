@@ -100,6 +100,30 @@ namespace ESM4
         return scale == 0.f ? 1.f : scale;
     }
 
+    float scaleNpcMagicka(float processValue, float multiplier)
+    {
+        if (!std::isfinite(processValue))
+            throw std::invalid_argument("nonfinite native process magicka");
+        return stored(double(processValue) * actorMagickaScale(multiplier));
+    }
+
+    std::int32_t scaleNpcIntegerMagicka(std::int32_t processValue, float multiplier)
+    {
+        return truncated(double(processValue) * actorMagickaScale(multiplier));
+    }
+
+    float dynamicActorValueMaximum(std::int32_t base, float maximumModifier,
+        ActorValueOwner owner, ActorValueProcess process)
+    {
+        validateOwner(owner);
+        if (process != ActorValueProcess::Low && process != ActorValueProcess::Active)
+            throw std::invalid_argument("invalid native actor-value process");
+        if (!std::isfinite(maximumModifier))
+            throw std::invalid_argument("nonfinite native maximum modifier");
+        const bool useMaximum = owner == ActorValueOwner::Player || process == ActorValueProcess::Active;
+        return stored(double(base) + (useMaximum ? maximumModifier : 0.f));
+    }
+
     float calculatePlayerDynamicBaseValue(
         const PlayerDynamicBaseInput& input, const PlayerDynamicBaseSettings& settings)
     {

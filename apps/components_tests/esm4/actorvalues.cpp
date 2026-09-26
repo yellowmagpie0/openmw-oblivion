@@ -176,3 +176,30 @@ TEST(ESM4ActorValues, IntegerQueriesRejectInvalidEnumsModifiersAndOverflow)
     EXPECT_THROW(ESM4::composeIntegerActorValue(std::numeric_limits<std::int32_t>::min(), {0, -1, 0},
         Owner::NonPlayer, Process::Low), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, DynamicMaximumUsesIntegerBaseAndOnlyEligibleMaximumModifier)
+{
+    EXPECT_EQ(ESM4::dynamicActorValueMaximum(100, 10.5f, Owner::Player, Process::Low), 110.5f);
+    EXPECT_EQ(ESM4::dynamicActorValueMaximum(100, 10.5f, Owner::NonPlayer, Process::Low), 100.f);
+    EXPECT_EQ(ESM4::dynamicActorValueMaximum(100, 10.5f, Owner::NonPlayer, Process::Active), 110.5f);
+    EXPECT_EQ(ESM4::dynamicActorValueMaximum(-100, 10.5f, Owner::Player, Process::Active), -89.5f);
+    EXPECT_EQ(ESM4::dynamicActorValueMaximum(16777217, 1.f, Owner::Player, Process::Active), 16777218.f);
+    EXPECT_THROW(ESM4::dynamicActorValueMaximum(1, 0, static_cast<Owner>(2), Process::Active), std::invalid_argument);
+    EXPECT_THROW(ESM4::dynamicActorValueMaximum(1, 0, Owner::Player, static_cast<Process>(2)), std::invalid_argument);
+    EXPECT_THROW(ESM4::dynamicActorValueMaximum(1, std::numeric_limits<float>::infinity(), Owner::NonPlayer,
+        Process::Low), std::invalid_argument);
+}
+
+TEST(ESM4ActorValues, NpcMagickaScalesDistinctFloatAndIntegerProcessResults)
+{
+    EXPECT_EQ(ESM4::scaleNpcMagicka(10.75f, 5.f), 5.375f);
+    EXPECT_EQ(ESM4::scaleNpcIntegerMagicka(10, 5.f), 5);
+    EXPECT_EQ(ESM4::scaleNpcIntegerMagicka(-11, 5.f), -5);
+    EXPECT_EQ(ESM4::scaleNpcMagicka(10.75f, 0.f), 10.75f);
+    EXPECT_EQ(ESM4::scaleNpcIntegerMagicka(16777217, 10.f), 16777217);
+    EXPECT_EQ(ESM4::scaleNpcIntegerMagicka(11, -10.f), -11);
+    EXPECT_THROW(ESM4::scaleNpcMagicka(std::numeric_limits<float>::infinity(), 10), std::invalid_argument);
+    EXPECT_THROW(ESM4::scaleNpcMagicka(1, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+    EXPECT_THROW(ESM4::scaleNpcMagicka(std::numeric_limits<float>::max(), 20), std::invalid_argument);
+    EXPECT_THROW(ESM4::scaleNpcIntegerMagicka(std::numeric_limits<std::int32_t>::max(), 20), std::invalid_argument);
+}

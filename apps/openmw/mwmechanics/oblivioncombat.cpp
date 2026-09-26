@@ -2,7 +2,14 @@
 
 #include <components/esm4/runtimestate.hpp>
 
+#include <algorithm>
 #include <stdexcept>
+#include <type_traits>
+
+#include <components/esm4/physicalcombat.hpp>
+#include <components/esm4/loadnpc.hpp>
+#include "../mwworld/class.hpp"
+#include "../mwworld/ptr.hpp"
 
 #include "creaturestats.hpp"
 #include "npcstats.hpp"
@@ -10,6 +17,55 @@
 
 namespace MWMechanics
 {
+    namespace
+    {
+        void validateNpcIdentity(const MWWorld::Ptr& ptr, const ESM4::RuntimeActorValues& values)
+        {
+            if (ptr.isEmpty() || ptr.getType() != ESM::REC_NPC_4)
+                throw std::invalid_argument("native NPC values require a TES4 NPC reference");
+            const auto* base = ptr.get<ESM4::Npc>()->mBase;
+            if (!base || !base->mIsTES4 || values.mOwner != ESM4::ActorValueOwner::NonPlayer
+                || values.mActor != ptr.getCellRef().getFormKey() || values.mBase != base->mFormKey)
+                throw std::invalid_argument("native NPC actor-value identity mismatch");
+        }
+
+        void validateNpcQuery(std::uint8_t value)
+        {
+            // Inventory Encumbrance and High-process Paralysis use additional
+            // native state. Do not silently treat either as an ordinary scalar.
+            if (value >= 72 || value == 11 || value == 48)
+                throw std::invalid_argument("native NPC scalar query excludes inventory Encumbrance and process Paralysis");
+        }
+
+        float npcFloat(const ESM4::RuntimeActorValues& values, std::uint8_t value)
+        {
+            validateNpcQuery(value);
+            const auto current = ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
+            if (value != 9)
+                return current;
+            const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
+            return ESM4::scaleNpcMagicka(current, multiplier);
+        }
+
+        OblivionActorProjectionInput npcProjection(const ESM4::RuntimeActorValues& values)
+        {
+            OblivionActorProjectionInput input;
+            input.mOwner = values.mOwner;
+            input.mProcess = values.mProcess;
+            std::copy_n(values.mValues.begin(), 8, input.mAttributes.begin());
+            std::copy_n(values.mValues.begin() + 12, 21, input.mSkills.begin());
+            for (std::size_t i = 0; i < input.mDynamic.size(); ++i)
+            {
+                const auto& value = values.mValues[8 + i];
+                input.mDynamic[i] = {value.mBase,
+                    ESM4::dynamicActorValueMaximum(ESM4::combatBaseValue(value.mBase),
+                        value.mModifiers[0].value_or(0.f), values.mOwner, values.mProcess),
+                    npcFloat(values, static_cast<std::uint8_t>(8 + i))};
+            }
+            return input;
+        }
+    }
+
     OblivionActorProjection::OblivionActorProjection(
         CreatureStats& target, const OblivionActorProjectionInput& input)
         : OblivionActorProjection(target, nullptr, input)
@@ -85,6 +141,66 @@ namespace MWMechanics
     bool OblivionCombatService::consumeAction(std::uint64_t id)
     {
         return mActions.consume(id);
+    }
+
+    const ESM4::RuntimeActorValues& OblivionCombatService::npcValues(const MWWorld::Ptr& actor) const
+    {
+        if (actor.isEmpty())
+            throw std::invalid_argument("native NPC actor-value lookup has no actor");
+        const auto* values = findActorValues(actor.getCellRef().getFormKey());
+        if (!values)
+            throw std::invalid_argument("native NPC actor values have not been initialized");
+        validateNpcIdentity(actor, *values);
+        return *values;
+    }
+
+    void OblivionCombatService::publishNpcValues(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values)
+    {
+        values.validate();
+        validateNpcIdentity(actor, values);
+        const auto projection = npcProjection(values);
+        OblivionActorProjection prepared(actor.getClass().getNpcStats(actor), projection);
+        const auto found = mActorValues.find(values.mActor);
+        if (found == mActorValues.end())
+        {
+            // Allocation can fail, but no views have changed yet.
+            const auto key = values.mActor;
+            mActorValues.emplace(key, std::move(values));
+        }
+        else
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+            std::swap(found->second, values);
+        }
+        prepared.commit();
+    }
+
+    void OblivionCombatService::changeNpcValue(const MWWorld::Ptr& actor, std::uint8_t value,
+        ESM4::ActorValueModifier modifier, float delta)
+    {
+        validateNpcQuery(value);
+        auto candidate = npcValues(actor);
+        candidate.mValues[value] = ESM4::changeActorValueModifier(
+            candidate.mValues[value], candidate.mOwner, modifier, delta);
+        publishNpcValues(actor, std::move(candidate));
+    }
+
+    float OblivionCombatService::getNpcValue(const MWWorld::Ptr& actor, std::uint8_t value) const
+    {
+        return npcFloat(npcValues(actor), value);
+    }
+
+    std::int32_t OblivionCombatService::getNpcIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const
+    {
+        validateNpcQuery(value);
+        const auto& values = npcValues(actor);
+        const auto& state = values.mValues[value];
+        const auto current = ESM4::composeIntegerActorValue(
+            ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
+        if (value != 9)
+            return current;
+        const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
+        return ESM4::scaleNpcIntegerMagicka(current, multiplier);
     }
 
     const ESM4::RuntimeActorValues* OblivionCombatService::findActorValues(const ESM::FormKey& actor) const

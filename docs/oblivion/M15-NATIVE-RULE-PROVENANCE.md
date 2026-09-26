@@ -2488,3 +2488,46 @@ are stubbed; original composition and `009828C0` conversion execute. Evidence:
 `S2/sources-01/process-integer-av-vtables.json` and corresponding traces.
 All **1,875 component** and **353 ASan/UBSan ESM4 tests** pass
 (`S2/actor-integer-composition-01`). Actor bridge integration remains open.
+
+### Dynamic maximum and nonplayer outer Magicka queries
+
+Original executable SHA-256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+The health restoration path `005F2530` constructs its unclamped maximum as
+`R(integerBase + eligibleMaximumModifier)`. The base integer is supplied by
+`005F1910`; Player maximum lookup is `0065D270(category=0, AV=8)`, while a
+nonplayer process uses virtual `0x468`. LowProcess implementation `0060D0B0`
+returns zero; MiddleLow/MiddleHigh/High `00658870` reads their maximum map.
+No-process also contributes zero. The prepared dynamic view uses this integer
+base boundary, not the raw float base or current minus damage.
+
+**2,352 original executions** captured maximum bits from the complete health
+restoration routine across player/active/low/no-process and both x87 modes.
+Only base integer, modifier lookup, current float and the final damage-modifier
+callback are stubbed; arguments/return stack are checked. The actual Low getter
+executes. Production `dynamicActorValueMaximum` matches every captured maximum.
+This does not claim complete restoration/death/event behavior from the helper.
+
+Nonplayer outer getters `005F1A60` (float) and `005F1970` (integer) query current
+float AV40, store `R(AV40 / 10)`, substitute one for stored zero, and scale their
+respective process result. Float returns `R(processFloat * scale)`. Integer
+returns `trunc(processInteger * scale)` without converting that integer to float
+first. **992 original getter paths** match `scaleNpcMagicka` and
+`scaleNpcIntegerMagicka`, including signed/fractional input, zero/underflow
+fallback and integers beyond exact float representation. The original base
+accessor, outer arithmetic and integer conversion execute; only current AV40
+and process AV9 lookups are stubbed.
+
+Ignored evidence: `S2/oracle-emulator/dynamic-maximum-health-restore*`,
+`npc-magicka-outer*`, `actor-projection-rules-driver*` and
+`actor-projection-rules-comparison.json`; hash-bound process lookup metadata is
+`S2/sources-01/process-maximum-modifier-vtables.json`. The comparison records
+production source/driver hashes. An initial emulator stop-address/cache setup
+failure is documented separately; no production arithmetic was changed for it.
+All **1,881 component /359 ASan+UBSan ESM4 tests** pass
+(`S3/npc-value-authority-01`).
+
+The High-process AV48 float getter `006289F0` returns a cached integer query,
+not ordinary float composition; Encumbrance AV11 also has inventory/cache
+behavior. The new NPC scalar service explicitly rejects these two queries
+until their additional state is integrated. They are not silently approximated.

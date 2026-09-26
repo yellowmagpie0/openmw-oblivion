@@ -2625,3 +2625,33 @@ Inspected images show the textured native fixture/HUD and Morrowind terrain;
 all scenarios are silent. These are idle-service persistence checks, not combat,
 active native actor continuation, audio, or full Morrowind gameplay acceptance.
 S3 remains open, as do S4–S14.
+
+### S3 native NPC value publication and mutation
+
+Commit `971cc456fa` contains schema 9. The native service can now publish a
+validated TES4 NPC value record to the actual class's shared views, read float
+and integer values, and apply a modifier-category transition against its owned
+state. It validates the live reference/base identities and TES4 record version.
+It prepares all views before updating the owned record, then commits without
+callbacks or throwing operations. No base content record is changed. Magicka
+uses the verified nonplayer outer scale; dynamic maximum uses integer base plus
+eligible maximum modifier. Encumbrance and process Paralysis explicitly remain
+unsupported scalar queries. Death/eligibility/event policy is not inferred by
+this scalar transition.
+
+**1,881 component /359 ASan+UBSan tests** pass (`S3/npc-value-authority-01`),
+**575 engine tests** pass with all three binaries rebuilt
+(`S3/npc-value-authority-04`), and **3,344 original-executable maximum/Magicka
+cases** match production. The real native NPC integration fixture checks class
+and service readers, distinct integer rounding, modifier changes, low-process
+views, binary save/restore into a fresh actor instance, unchanged base records,
+legacy write rejection and atomic failure (including finite stored values whose
+outer Magicka projection overflows). Preserved attempts include a missing
+record-header build failure and a synthetic base record missing its FormKey;
+production identity validation was not relaxed to accommodate that fixture.
+
+This service path is explicitly callable and tested on actual native NPCs but
+is **not automatically enabled by actor updates or scripts yet**. Creature and
+player authority, live writer routing, legacy reconciliation and gameplay
+continuation remain S3 work. The prior idle schema 9 runtime evidence does not
+establish live NPC combat acceptance for this change.

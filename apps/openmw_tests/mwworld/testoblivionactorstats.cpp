@@ -231,6 +231,109 @@ namespace
         EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
     }
 
+    TEST_F(OblivionActorStatsTest, nativeServiceOwnsNpcValuesAcrossMutationAndReload)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        MWMechanics::OblivionCombatService service;
+        EXPECT_THROW(service.getNpcValue(ptr, 8), std::invalid_argument);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        ASSERT_EQ(ptr.getCellRef().getFormKey(), values.mActor);
+        ASSERT_EQ(ptr.get<ESM4::Npc>()->mBase->mFormKey, values.mBase);
+        values.mValues[0] = {100, {0.5f, -0.5f, std::nullopt}};
+        values.mValues[8] = {100.75f, {10.5f, -0.5f, -5.f}};
+        values.mValues[9] = {50, {5, 0.75f, -10}};
+        values.mValues[10] = {40, {2, -1, -2}};
+        values.mValues[40].mBase = 15;
+        for (std::size_t i = 12; i <= 32; ++i)
+            values.mValues[i] = {30, {2, 0.5f, -1}};
+        service.publishNpcValues(ptr, values);
+        EXPECT_EQ(service.getNpcValue(ptr, 0), 100);
+        EXPECT_EQ(service.getNpcIntegerValue(ptr, 0), 99);
+        EXPECT_EQ(ptr.getClass().getCapacity(ptr), 500);
+        EXPECT_EQ(service.getNpcValue(ptr, 8), 105.75f);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 105.75f);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getModified(), 110.5f);
+        EXPECT_EQ(service.getNpcValue(ptr, 9), 68.625f);
+        EXPECT_EQ(service.getNpcIntegerValue(ptr, 9), 67);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 68.625f);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getModified(), 55);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Athletics), 31.5f);
+        service.changeNpcValue(ptr, 9, ESM4::ActorValueModifier::Maximum, 5);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 76.125f);
+        service.changeNpcValue(ptr, 40, ESM4::ActorValueModifier::Script, 5);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 101.5f);
+        service.changeNpcValue(ptr, 8, ESM4::ActorValueModifier::Damage, -200);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), -94.25f);
+        EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
+        const auto before = *service.findActorValues(reference.mFormKey);
+        auto invalid = before;
+        invalid.mBase = ESM::FormKey::content("actors.esm", 0x999);
+        EXPECT_THROW(service.publishNpcValues(ptr, invalid), std::invalid_argument);
+        invalid = before;
+        invalid.mValues[71].mBase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(service.publishNpcValues(ptr, invalid), std::runtime_error);
+        invalid = before;
+        invalid.mValues[9] = {50, {3e38f, std::nullopt, std::nullopt}};
+        // All stored values and ordinary composition are finite; the outer
+        // Magicka scale overflows only while preparing complete shared views.
+        EXPECT_NO_THROW(invalid.validate());
+        EXPECT_THROW(service.publishNpcValues(ptr, invalid), std::invalid_argument);
+        EXPECT_THROW(service.changeNpcValue(ptr, 8, ESM4::ActorValueModifier::Damage,
+            std::numeric_limits<float>::infinity()), std::invalid_argument);
+        EXPECT_THROW(service.getNpcValue(ptr, 11), std::invalid_argument);
+        EXPECT_THROW(service.getNpcValue(ptr, 48), std::invalid_argument);
+        EXPECT_THROW(service.getNpcIntegerValue(ptr, 255), std::invalid_argument);
+        EXPECT_THROW(service.publishNpcValues(MWWorld::Ptr{}, before), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(reference.mFormKey), before);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), -94.25f);
+        EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
+
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = values.mActor;
+        savedActor.mBase = values.mBase;
+        savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        MWWorld::LiveCellRef<ESM4::Npc> newLive(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr newPtr(&newLive);
+        restored.publishNpcValues(newPtr, *restored.findActorValues(reference.mFormKey));
+        EXPECT_EQ(restored.getNpcValue(newPtr, 8), service.getNpcValue(ptr, 8));
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getHealth().getCurrent(), -94.25f);
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getCurrent(), 101.5f);
+        EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Athletics), 31.5f);
+        EXPECT_THROW(newPtr.getClass().getNpcStats(newPtr).getSkill(ESM::Skill::Athletics).setBase(200),
+            std::logic_error);
+        auto low = *restored.findActorValues(reference.mFormKey);
+        low.mProcess = ESM4::ActorValueProcess::Low;
+        restored.publishNpcValues(newPtr, low);
+        EXPECT_EQ(restored.getNpcValue(newPtr, 9), 81.5f);
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getModified(), 50);
+    }
+
     TEST_F(OblivionActorStatsTest, liveCreatureClassUsesCanonicalNativeSkillGroups)
     {
         sharedStats();

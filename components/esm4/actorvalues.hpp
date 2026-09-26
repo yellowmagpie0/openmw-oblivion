@@ -57,6 +57,12 @@ namespace ESM4
 
     // Native AV40 is divided by TEN, stored as float, with zero selecting one.
     float actorMagickaScale(float multiplier);
+    float scaleNpcMagicka(float processValue, float multiplier);
+    std::int32_t scaleNpcIntegerMagicka(std::int32_t processValue, float multiplier);
+    // Native dynamic maximum uses the integer base query, then one float
+    // store after adding the eligible maximum modifier. It is not clamped.
+    float dynamicActorValueMaximum(std::int32_t base, float maximumModifier,
+        ActorValueOwner owner, ActorValueProcess process);
     // Base-form contribution plus player-specific dynamic adjustment. Base
     // Encumbrance is capacity; the current Encumbrance query uses inventory.
     float calculatePlayerDynamicBaseValue(

@@ -46,3 +46,10 @@ inventory. Fixed-level actors can be tested without a World implementation;
 scaled construction needs the actual player. Query through `Ptr.getClass()`
 to exercise the shared gameplay readers. Keep these results distinct from
 normal-input gameplay and fresh-process persistence tests.
+
+When testing authority bindings, set the synthetic record's `mFormKey` as well
+as passing its key to `insertStatic`. The latter indexes the store but does not
+fill an otherwise empty embedded identity. Real record loading supplies both.
+Set the reference's own FormKey separately and assert both identities before
+publication; do not weaken production identity validation for an incomplete
+fixture. Include the concrete native record header in code using `Ptr.get<T>()`.
