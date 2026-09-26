@@ -2415,3 +2415,49 @@ This core intentionally does not model outer magicka/encumbrance special
 queries, null-process base-only fallback, integer actor-value getters or
 life/death transitions. Those remain engine-adapter work. Full components and
 ASan/UBSan ESM4 suites pass (`S2/actor-value-state-01`).
+
+### Player dynamic base contributions and native Magicka scale
+
+Common base getter `005EAD00` applies `005E2210` only to the player for
+AV8–11. It adds a derived contribution to the base-form integer value, then
+multiplies, storing once at the end. The contribution itself is stored as float:
+
+- Health: `R(trunc(currentIntegerEndurance * fPCBaseHealthMult))`.
+  Helper `00548020` ignores its Strength argument.
+- Magicka: `R(trunc(currentIntegerIntelligence * fPCBaseMagickaMult
+  + currentIntegerIntelligence))`, helper `005482B0`.
+- Fatigue: `R(wrapSigned32(Strength + Willpower + Agility + Endurance))`,
+  using current integer AV queries and original integer additions (`005479D0`).
+- Base Encumbrance: `max(0, R(R(currentIntegerStrength)
+  * fActorStrengthEncumbranceMult))`, helper `00547ED0`. This base query
+  supplies capacity; current Encumbrance uses inventory, a separate path.
+
+Magicka alone uses `scale = R(currentAV40 / 10)`, replacing stored zero with
+one. The divisor is **10**, the verified double at `00A3F3E8`; an earlier
+uncommitted `/100` inference failed **544/2,368** original cases. The final
+base result is `R((integerFormValue + storedContribution) * scale)` without an
+extra float store before multiplication. NPC outer getter `005F1A60` references
+the same divisor; it scales its already composed process value separately.
+
+`calculatePlayerDynamicBaseValue` and `actorMagickaScale` implement these
+read-only arithmetic boundaries, with finite/overflow diagnostics. They do not
+resolve actors/effects, modify base records, infer bar maxima or change saves.
+`PlayerDynamicBaseInput` takes current integer attributes, not mastery/base
+attributes, and retains the separate form contribution for later authority.
+
+**2,536 original instruction cases** match optimized production C++ bits
+exactly with both x87 modes, signed/zero inputs, custom multipliers, float-store
+boundaries and 32-bit fatigue wrapping. Only current AV and base-form AV lookups
+are stubbed; original getter, dispatch, helpers and `009828C0` conversion run.
+Evidence: `S2/oracle-emulator/player-dynamic-base*`, including the retained
+incorrect-divisor comparison; `S2/sources-01/player-base-av-adjustments.txt`,
+`player-health-adjustment.txt`, `player-magicka-adjustment.txt` and
+`actor-capacity-adjustment.txt`. Full **1,872 component** and **350 ASan/UBSan
+ESM4 tests** pass (`S2/player-dynamic-base-01`).
+
+Compiled defaults are health 2, Magicka .5 and encumbrance 5. Winning installed
+records supply Magicka **1** (`Oblivion.esm:09E62F`) and encumbrance **5**
+(`Oblivion.esm:010554`); there is no installed health override in audit-13.
+These inputs are recorded in `M15-PHYSICAL-RULE-INPUTS.json`; the .5 compiled
+default must not replace the installed Magicka multiplier. Live actor authority
+and modifier-driven derived updates remain open.

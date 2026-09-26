@@ -2533,3 +2533,16 @@ All **570 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
 unchanged health/death/magicka/fatigue/skill state on failure, and retained legacy
 assignment behavior. Native gameplay views remain disabled until actor authority
 and its writers/save representation are fully integrated.
+
+### S2 player derived-base arithmetic for S3 authority
+
+Commit `eaed0929d3` contains the stat write guards. Added native player dynamic
+base contribution rules and the verified AV40 Magicka scale. Separate form
+contributions and current-attribute adjustments prevent double-counting in the
+planned authority. An assumed Magicka divisor of 100 was rejected by original
+instruction execution; the verified divisor is 10.
+
+All **1,872 component tests** and **350 ASan/UBSan ESM4 tests** pass
+(`S2/player-dynamic-base-01`), and **2,536 original instruction cases** match
+production bits exactly. Added compiled/winning GMST provenance. These helpers
+are not yet wired to live actor updates; S2/S3 remain in progress.

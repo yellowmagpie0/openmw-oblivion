@@ -77,3 +77,63 @@ TEST(ESM4ActorValues, RejectsCorruptStateEnumsAndArithmeticWithoutChangingInput)
     EXPECT_THROW(ESM4::composeActorValue({largest, {largest, 0, 0}}, Owner::Player, Process::Active),
         std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, PlayerDynamicBasesUseCurrentAttributesAndRetainFormContribution)
+{
+    const ESM4::PlayerDynamicBaseSettings settings{2, .5f, 5};
+    ESM4::PlayerDynamicBaseInput input{ESM4::DynamicActorValue::Health, 37,
+        {1, 49, 3, 4, 5, 6, 7, 8}, 15};
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 49);
+    input.mCurrentAttributes[0] = 100;
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 49); // Strength is ignored for health.
+    input.mValue = ESM4::DynamicActorValue::Magicka;
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 165); // trunc(49*1.5), then scale1.5
+    input.mMagickaMultiplier = 0;
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 110);
+    input.mValue = ESM4::DynamicActorValue::Fatigue;
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 150);
+    input.mValue = ESM4::DynamicActorValue::Encumbrance;
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 537);
+    input.mCurrentAttributes[0] = -10;
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, settings), 37);
+}
+
+TEST(ESM4ActorValues, MagickaScaleUsesTenthsAndZeroAfterFloatStorage)
+{
+    EXPECT_EQ(ESM4::actorMagickaScale(0), 1);
+    EXPECT_EQ(ESM4::actorMagickaScale(-0.f), 1);
+    EXPECT_EQ(ESM4::actorMagickaScale(std::numeric_limits<float>::denorm_min()), 1);
+    EXPECT_EQ(ESM4::actorMagickaScale(10), 1);
+    EXPECT_EQ(ESM4::actorMagickaScale(15), 1.5f);
+    EXPECT_EQ(ESM4::actorMagickaScale(-10), -1);
+    EXPECT_THROW(ESM4::actorMagickaScale(std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+}
+
+TEST(ESM4ActorValues, PlayerDynamicBasesPreserveIntegerThenFloatStorageAndFatigueWrap)
+{
+    ESM4::PlayerDynamicBaseInput input{ESM4::DynamicActorValue::Magicka, 1,
+        {0, 16'777'217, 0, 0, 0, 0, 0, 0}, 10};
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, {2, 0, 5}), 16'777'216.f);
+    input.mValue = ESM4::DynamicActorValue::Fatigue;
+    input.mCurrentAttributes.fill(std::numeric_limits<std::int32_t>::max());
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, {2, 0, 5}), -3);
+    input.mCurrentAttributes.fill(-1);
+    EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(input, {2, 0, 5}), -3);
+}
+
+TEST(ESM4ActorValues, PlayerDynamicBasesRejectInvalidQueriesSettingsAndOverflow)
+{
+    ESM4::PlayerDynamicBaseInput input{ESM4::DynamicActorValue::Health, 0,
+        {1, 2, 3, 4, 5, 6, 7, 8}, 0};
+    const auto invalid = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::calculatePlayerDynamicBaseValue(input, {invalid, 1, 5}), std::invalid_argument);
+    input.mValue = static_cast<ESM4::DynamicActorValue>(255);
+    EXPECT_THROW(ESM4::calculatePlayerDynamicBaseValue(input, {2, 1, 5}), std::invalid_argument);
+    input.mValue = ESM4::DynamicActorValue::Health;
+    input.mCurrentAttributes[5] = std::numeric_limits<std::int32_t>::max();
+    EXPECT_THROW(ESM4::calculatePlayerDynamicBaseValue(input, {2, 1, 5}), std::invalid_argument);
+    input.mValue = ESM4::DynamicActorValue::Magicka;
+    input.mFormValue = std::numeric_limits<std::int32_t>::max();
+    input.mMagickaMultiplier = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::calculatePlayerDynamicBaseValue(input, {2, 1, 5}), std::invalid_argument);
+}

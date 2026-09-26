@@ -2,6 +2,9 @@
 #include "actorstats.hpp"
 
 #include <cmath>
+#include <algorithm>
+#include <bit>
+#include <limits>
 #include <stdexcept>
 
 namespace ESM4
@@ -62,5 +65,57 @@ namespace ESM4
         else
             result.mModifiers[index] = addSparseActorValueModifier(state.mModifiers[index], delta, allowPositive);
         return result;
+    }
+
+    float actorMagickaScale(float multiplier)
+    {
+        if (!std::isfinite(multiplier))
+            throw std::invalid_argument("nonfinite native magicka multiplier");
+        const float scale = stored(double(multiplier) / 10.0);
+        return scale == 0.f ? 1.f : scale;
+    }
+
+    float calculatePlayerDynamicBaseValue(
+        const PlayerDynamicBaseInput& input, const PlayerDynamicBaseSettings& settings)
+    {
+        for (const float value : {settings.mHealthMultiplier, settings.mMagickaMultiplier,
+                 settings.mStrengthEncumbranceMultiplier, input.mMagickaMultiplier})
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite native player dynamic base input");
+        const auto integerAdjustment = [](double value) {
+            value = std::trunc(value);
+            if (!std::isfinite(value) || value < std::numeric_limits<std::int32_t>::min()
+                || value > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("native player dynamic base integer overflow");
+            return static_cast<float>(static_cast<std::int32_t>(value));
+        };
+        const auto& attributes = input.mCurrentAttributes;
+        float adjustment;
+        float scale = 1.f;
+        switch (input.mValue)
+        {
+            case DynamicActorValue::Health:
+                adjustment = integerAdjustment(double(attributes[5]) * settings.mHealthMultiplier);
+                break;
+            case DynamicActorValue::Magicka:
+                adjustment = integerAdjustment(double(attributes[1]) * settings.mMagickaMultiplier + attributes[1]);
+                scale = actorMagickaScale(input.mMagickaMultiplier);
+                break;
+            case DynamicActorValue::Fatigue:
+            {
+                // Original ADD instructions wrap before FILD and the float store.
+                const std::uint32_t sum = std::uint32_t(attributes[0]) + std::uint32_t(attributes[2])
+                    + std::uint32_t(attributes[3]) + std::uint32_t(attributes[5]);
+                adjustment = static_cast<float>(std::bit_cast<std::int32_t>(sum));
+                break;
+            }
+            case DynamicActorValue::Encumbrance:
+                adjustment = std::max(0.f, stored(double(static_cast<float>(attributes[0]))
+                    * settings.mStrengthEncumbranceMultiplier));
+                break;
+            default:
+                throw std::invalid_argument("unsupported native player dynamic base actor value");
+        }
+        return stored((double(input.mFormValue) + adjustment) * scale);
     }
 }

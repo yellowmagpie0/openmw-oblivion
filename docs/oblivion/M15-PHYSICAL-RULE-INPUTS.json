@@ -1780,6 +1780,41 @@
       "type": "float32",
       "installed_override": null,
       "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fPCBaseHealthMult",
+      "value": 2.0,
+      "storage": "0xb37720",
+      "constructor": "0x9ebe5f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Player derived-base arithmetic independently instruction-tested. Current actor/effect resolution and authority integration remain open."
+    },
+    {
+      "name": "fPCBaseMagickaMult",
+      "value": 0.5,
+      "storage": "0xb37710",
+      "constructor": "0x9ebdff",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:09e62f",
+        "type": "f",
+        "value": 1.0
+      },
+      "note": "Player derived-base arithmetic independently instruction-tested. Current actor/effect resolution and authority integration remain open."
+    },
+    {
+      "name": "fActorStrengthEncumbranceMult",
+      "value": 5.0,
+      "storage": "0xb37570",
+      "constructor": "0x9eb57f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:010554",
+        "type": "f",
+        "value": 5.0
+      },
+      "note": "Player derived-base arithmetic independently instruction-tested. Current actor/effect resolution and authority integration remain open."
     }
   ]
 }

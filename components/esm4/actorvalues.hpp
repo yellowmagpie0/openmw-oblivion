@@ -31,6 +31,31 @@ namespace ESM4
     // Does not trigger death, derived-stat updates, notifications or effects.
     ActorValueState changeActorValueModifier(
         const ActorValueState& state, ActorValueOwner owner, ActorValueModifier modifier, float delta);
+
+    enum class DynamicActorValue : std::uint8_t { Health = 8, Magicka = 9, Fatigue = 10, Encumbrance = 11 };
+
+    struct PlayerDynamicBaseSettings
+    {
+        float mHealthMultiplier;
+        float mMagickaMultiplier;
+        float mStrengthEncumbranceMultiplier;
+    };
+
+    struct PlayerDynamicBaseInput
+    {
+        DynamicActorValue mValue;
+        std::int32_t mFormValue;
+        // These are current integer AV queries, not base/mastery attributes.
+        std::array<std::int32_t, 8> mCurrentAttributes;
+        float mMagickaMultiplier;
+    };
+
+    // Native AV40 is divided by TEN, stored as float, with zero selecting one.
+    float actorMagickaScale(float multiplier);
+    // Base-form contribution plus player-specific dynamic adjustment. Base
+    // Encumbrance is capacity; the current Encumbrance query uses inventory.
+    float calculatePlayerDynamicBaseValue(
+        const PlayerDynamicBaseInput& input, const PlayerDynamicBaseSettings& settings);
 }
 
 #endif
