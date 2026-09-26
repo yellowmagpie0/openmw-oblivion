@@ -2449,3 +2449,18 @@ All **562 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
 New cases cover exact composition, negative current, rejected legacy writes,
 atomic validation, comparison and preserved legacy behavior. S3 is in progress;
 its live-authority and save/restart gate remains open.
+
+### S3 dynamic stat projection foundation
+
+Commit `9546faabc5` contains attribute/skill projections. Dynamic stat views
+now accept validated native base, maximum and current values without shared
+clamping or reconstructing the maximum through a rounded modifier. Legacy
+writes reject these views; validation failures leave the view unchanged.
+The native service will supply AV-specific formulas; this adapter does not
+guess them. Gameplay activation still awaits service and save integration.
+
+All **565 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
+(`S3/dynamic-projection-01`). Tests cover negative and above-maximum current,
+small exact maxima lost by subtraction/addition, zero ratios, corrupt inputs,
+integer overflow, write rejection and unchanged legacy serialization/clamps.
+S3's live-authority and persistence gate remains open.

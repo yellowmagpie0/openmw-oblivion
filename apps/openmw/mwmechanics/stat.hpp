@@ -61,6 +61,9 @@ namespace MWMechanics
     {
         Stat<T> mStatic;
         T mCurrent;
+        std::optional<T> mNativeModified;
+
+        void requireWritable() const;
 
     public:
         typedef T Type;
@@ -71,17 +74,25 @@ namespace MWMechanics
         DynamicStat(const Stat<T>& stat, T current);
 
         const T& getBase() const { return mStatic.getBase(); }
-        T getModified(bool capped = true) const { return mStatic.getModified(capped); }
+        T getModified(bool capped = true) const
+        {
+            return mNativeModified ? *mNativeModified : mStatic.getModified(capped);
+        }
         const T& getCurrent() const { return mCurrent; }
         T getRatio(bool nanIsZero = true) const;
 
         /// Set base and adjust current accordingly.
-        void setBase(const T& value) { mStatic.setBase(value); }
+        void setBase(const T& value) { requireWritable(); mStatic.setBase(value); }
 
         void setCurrent(const T& value, bool allowDecreaseBelowZero = false, bool allowIncreaseAboveModified = false);
 
         T getModifier() const { return mStatic.getModifier(); }
-        void setModifier(T value) { mStatic.setModifier(value); }
+        void setModifier(T value) { requireWritable(); mStatic.setModifier(value); }
+
+        // Values are prepared by native authority, including any AV-specific
+        // maximum/current semantics. This adapter performs no native formulas.
+        void setNativeProjection(T base, T modified, T current);
+        bool isNativeProjection() const { return mNativeModified.has_value(); }
 
         void writeState(ESM::StatState<T>& state) const;
         void readState(const ESM::StatState<T>& state);
@@ -91,7 +102,8 @@ namespace MWMechanics
     inline bool operator==(const DynamicStat<T>& left, const DynamicStat<T>& right)
     {
         return left.getBase() == right.getBase() && left.getModifier() == right.getModifier()
-            && left.getCurrent() == right.getCurrent();
+            && left.getCurrent() == right.getCurrent() && left.isNativeProjection() == right.isNativeProjection()
+            && (!left.isNativeProjection() || left.getModified() == right.getModified());
     }
 
     template <typename T>

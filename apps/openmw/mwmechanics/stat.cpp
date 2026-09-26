@@ -4,6 +4,8 @@
 #include <stdexcept>
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
 
 #include <components/esm3/statstate.hpp>
 
@@ -69,8 +71,28 @@ namespace MWMechanics
     }
 
     template <typename T>
+    void DynamicStat<T>::requireWritable() const
+    {
+        if (mNativeModified)
+            throw std::logic_error("native stat views must be changed through native actor authority");
+    }
+
+    template <typename T>
+    void DynamicStat<T>::setNativeProjection(T base, T modified, T current)
+    {
+        const double modifier = static_cast<double>(modified) - static_cast<double>(base);
+        if (!std::isfinite(base) || !std::isfinite(modified) || !std::isfinite(current)
+            || modifier < std::numeric_limits<T>::lowest() || modifier > std::numeric_limits<T>::max())
+            throw std::invalid_argument("invalid native dynamic stat projection");
+        mStatic = Stat<T>(base, static_cast<T>(modifier));
+        mCurrent = current;
+        mNativeModified = modified;
+    }
+
+    template <typename T>
     void DynamicStat<T>::setCurrent(const T& value, bool allowDecreaseBelowZero, bool allowIncreaseAboveModified)
     {
+        requireWritable();
         if (value > mCurrent)
         {
             // increase
@@ -115,6 +137,7 @@ namespace MWMechanics
     template <typename T>
     void DynamicStat<T>::readState(const ESM::StatState<T>& state)
     {
+        requireWritable();
         mStatic.readState(state);
         mCurrent = state.mCurrent;
     }

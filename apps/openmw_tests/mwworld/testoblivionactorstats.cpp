@@ -330,3 +330,69 @@ TEST(OblivionStatProjection, LegacyMutationsCannotOverwriteNativeViews)
     legacy.damage(100);
     EXPECT_EQ(legacy.getModified(), 0);
 }
+
+TEST(OblivionStatProjection, DynamicViewsPreserveExactMaximumAndCurrent)
+{
+    MWMechanics::DynamicStat<float> view;
+    // Computing a modifier and adding it back would round this maximum away.
+    view.setNativeProjection(1.f, 0x1p-25f, -3.f);
+    EXPECT_EQ(view.getBase(), 1.f);
+    EXPECT_EQ(view.getModified(), 0x1p-25f);
+    EXPECT_EQ(view.getModified(false), 0x1p-25f);
+    EXPECT_EQ(view.getCurrent(), -3.f);
+    EXPECT_EQ(view.getRatio(), -0x1.8p26f);
+    auto copy = view;
+    EXPECT_EQ(copy, view);
+    copy.setNativeProjection(1.f, 0x1p-26f, -3.f);
+    EXPECT_NE(copy, view);
+    view.setNativeProjection(1.f, -2.f, 10.f);
+    EXPECT_EQ(view.getModified(), -2.f);
+    EXPECT_EQ(view.getCurrent(), 10.f);
+    view.setNativeProjection(1.f, 0.f, -3.f);
+    EXPECT_EQ(view.getRatio(), 0.f);
+    EXPECT_EQ(view.getRatio(false), 1.f);
+}
+
+TEST(OblivionStatProjection, DynamicViewsRejectInvalidProjectionAndLegacyWrites)
+{
+    MWMechanics::DynamicStat<float> view;
+    view.setNativeProjection(10.f, 12.f, -1.f);
+    const auto before = view;
+    EXPECT_THROW(view.setBase(20), std::logic_error);
+    EXPECT_THROW(view.setModifier(20), std::logic_error);
+    EXPECT_THROW(view.setCurrent(20, true, true), std::logic_error);
+    ESM::StatState<float> state{};
+    EXPECT_THROW(view.readState(state), std::logic_error);
+    const float invalid = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(view.setNativeProjection(invalid, 12, -1), std::invalid_argument);
+    EXPECT_THROW(view.setNativeProjection(10, invalid, -1), std::invalid_argument);
+    EXPECT_THROW(view.setNativeProjection(10, 12, invalid), std::invalid_argument);
+    EXPECT_THROW(view.setNativeProjection(-std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(), 0), std::invalid_argument);
+    EXPECT_EQ(view, before);
+    MWMechanics::DynamicStat<int> integer;
+    EXPECT_THROW(integer.setNativeProjection(std::numeric_limits<int>::min(),
+        std::numeric_limits<int>::max(), 0), std::invalid_argument);
+    EXPECT_FALSE(integer.isNativeProjection());
+}
+
+TEST(OblivionStatProjection, DynamicLegacyClampsAndSerializationRemainUnchanged)
+{
+    MWMechanics::DynamicStat<float> legacy(10);
+    EXPECT_FALSE(legacy.isNativeProjection());
+    legacy.setCurrent(20);
+    EXPECT_EQ(legacy.getCurrent(), 10);
+    legacy.setCurrent(-5);
+    EXPECT_EQ(legacy.getCurrent(), 0);
+    legacy.setCurrent(-5, true);
+    EXPECT_EQ(legacy.getCurrent(), -5);
+    legacy.setModifier(-20);
+    EXPECT_EQ(legacy.getModified(), 0);
+    EXPECT_EQ(legacy.getModified(false), -10);
+    ESM::StatState<float> state{};
+    legacy.writeState(state);
+    MWMechanics::DynamicStat<float> restored;
+    restored.readState(state);
+    EXPECT_EQ(restored, legacy);
+    EXPECT_FALSE(restored.isNativeProjection());
+}
