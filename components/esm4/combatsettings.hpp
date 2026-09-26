@@ -43,6 +43,7 @@ namespace ESM4
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings);
     BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings);
     NativeDetectionSettings buildNativeDetectionSettings(std::span<const GameSetting* const> settings);
+    CrimeInfamySettings buildCrimeInfamySettings(std::span<const GameSetting* const> settings);
     CrimeFineSettings buildCrimeFineSettings(std::span<const GameSetting* const> settings);
     CrimeReportingSettings buildCrimeReportingSettings(std::span<const GameSetting* const> settings);
     TrespassWarningSettings buildTrespassWarningSettings(std::span<const GameSetting* const> settings);

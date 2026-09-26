@@ -1893,3 +1893,48 @@ resolved fight score are boundary stubs. Evidence:
 `crime-recipient-sleep-state.txt` and the two query files above. The original
 branches after `0062FA4B` choose process delivery versus immediate reporting;
 those effects and their idempotence remain integration work.
+
+## Report eligibility and bounty-driven infamy
+
+The shared report gate in four `0060F250` alarm-handler branches requires a
+present incident, NPC offender, an unset incident reported byte +11, and either
+reporter Responsibility >= 100 or a guard class. `005E32D0` tests offender base
+record type 0x23; it is **not a player-only test**. `0051BEF0` tests class flag
+bit 1. `crimeReportEligible` implements only these common conditions, after the
+handler's admission/context gates. Reporting uses the reporter's faction fine
+multiplier, calls the offender's bounty mutation, then marks +11. Neither the
+witness willingness comparison nor the alarm fight score replaces this gate.
+The eventual service must commit bounty and the reported state atomically.
+
+The normal player bounty mutation `0060FC20` adds float bounty via ExtraCrimeGold
+and calls `00660710` only when the **increment is strictly greater than 1**.
+That call truncates the increment to integer and adds it to the existing signed
+integer accumulator. It stores that accumulator to float before comparing with
+`fInfamyBountyMod`. At or above the threshold it increments infamy **once**, then
+truncates float-stored-accumulator minus threshold back to integer. It does not
+loop, preserve a fractional increment, or process the accumulator for an
+increment of 1 or less. A 1500-gold increment at threshold 500 awards one point
+and leaves 1000 accumulated; a later 2-gold increment awards another and leaves
+502. Bounty reductions do not reverse this accumulation through this path.
+
+`advanceCrimeInfamy` returns an immutable next state for that normal player
+path. Nonfinite inputs, negative counters, nonpositive thresholds and signed
+counter/conversion overflow diagnose explicitly. Compiled threshold 2000
+(`009E779F`, storage `00B36A68`) is overridden by Oblivion.esm `06C64B` to 500.
+Alternate player bounty routing, largest-bounty statistics, other infamy
+sources and the authoritative world mutation are separate integration work.
+
+Four policy tests fail against stubs before implementation; a fifth covers
+settings. **480 original infamy instruction cases** run in both x87 precision
+modes using the actual conversion helper, including rounding near one, the
+threshold and integer-to-float precision boundaries. **384 original report
+gate cases** cover all four handler branches, real NPC-type and guard-class
+flag checks, and boundary stubs for resolved base/class identity and the
+Responsibility value. One harness failure omitted the null-incident exit stop;
+it is retained and corrected without changing expected policy.
+Evidence: `S2/oracle-emulator/report-infamy.py`, `report-infamy-table.json`,
+`report-infamy.log`, `report-infamy-harness-failed.log`,
+`S2/sources-01/crime-alarm-handler-reporting.txt`, `crime-fine-caller.txt`,
+`crime-bounty-update.txt`, `crime-infamy-accumulator.txt`,
+`crime-offender-npc-query.txt` and `crime-class-guard-query.txt`.
+These are rule checks, not committed/restarted world-crime acceptance.

@@ -207,6 +207,34 @@ namespace ESM4
     // or immediate reporting. The emitter is the actor propagating the alarm.
     bool crimeAlarmRecipientResponds(const CrimeAlarmRecipientInput& input);
 
+    struct CrimeReportInput
+    {
+        bool mIncidentPresent;
+        bool mOffenderNpc; // Includes player; native base record type 0x23.
+        bool mAlreadyReported;
+        std::int32_t mReporterResponsibility;
+        bool mReporterGuard;
+    };
+    // Common report gate inside an admitted alarm handler. Other handler gates
+    // (process/package/incident context) and the atomic reported flag commit
+    // remain caller-owned. Creature offenders do not take this branch.
+    bool crimeReportEligible(const CrimeReportInput& input);
+
+    struct CrimeInfamySettings
+    {
+        float mBountyThreshold;
+    };
+    struct CrimeInfamyState
+    {
+        std::int32_t mInfamy;
+        std::int32_t mAccumulatedBounty;
+    };
+    // Normal player bounty-increment path only; alternate identity routing is
+    // resolved before this rule. A single increment can add at most one infamy.
+    CrimeInfamyState advanceCrimeInfamy(
+        const CrimeInfamyState& state, float bountyIncrement, const CrimeInfamySettings& settings);
+    void validateCrimeInfamySettings(const CrimeInfamySettings& settings);
+
     struct CrimeFineSettings
     {
         float mTheftMultiplier;

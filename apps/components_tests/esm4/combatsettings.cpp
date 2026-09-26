@@ -203,3 +203,20 @@ TEST(ESM4CombatSettings, FightScoreUsesTypedNativeDefaultsAndWinningOverrides)
     aggression.mData = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::buildFightScoreSettings(settings), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, CrimeInfamyThresholdUsesCompiledDefaultAndTypedOverride)
+{
+    EXPECT_EQ(ESM4::buildCrimeInfamySettings({}).mBountyThreshold, 2000);
+    ESM4::GameSetting setting;
+    setting.mEditorId = "fInfamyBountyMod";
+    setting.mData = 500.f; // Oblivion.esm:06c64b.
+    const std::array<const ESM4::GameSetting*, 1> settings{&setting};
+    EXPECT_EQ(ESM4::buildCrimeInfamySettings(settings).mBountyThreshold, 500);
+    setting.mData = std::int32_t{500};
+    EXPECT_THROW(ESM4::buildCrimeInfamySettings(settings), std::invalid_argument);
+    for (float value : {0.f, -1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        setting.mData = value;
+        EXPECT_THROW(ESM4::buildCrimeInfamySettings(settings), std::invalid_argument);
+    }
+}

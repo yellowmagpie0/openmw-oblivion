@@ -2157,3 +2157,20 @@ reporting and bounty commitment remain open. S2 remains in progress;
 S3–S14 remain pending.
 
 Tested implementation/test/provenance diff SHA-256: `42fe15f52eaa18a652871da395391580ac164b9051070c5b10b30b3fa0c6eaf7`.
+
+### S2 common report gates and bounty-driven infamy
+
+Commit `dad9edb200` contains alarm recipient response eligibility. Added the
+shared NPC-offender/report-idempotence/responsibility gate, and the normal
+player infamy accumulator with strict increment >1, integer/float rounding,
+and at most one threshold subtraction per increment.
+
+All **1,812 component tests**, **168 focused ASan/UBSan tests**, and **151 Python
+tests** pass, with exact C++ inventories/no skips (`S2/report-infamy-01`). Four
+policy tests first fail against stubs; **384 original report-gate cases** and
+**480 original infamy cases** verify the rules. The infamy cases pass in both
+x87 precision modes. The recorded null-incident harness-stop failure is fixed.
+Atomic world reporting, alternate bounty routing, statistics and persistence
+remain open. S2 remains in progress; S3–S14 remain pending.
+
+Tested implementation/test/provenance diff SHA-256: `d1ba2d7bd868bb0d8816c7efa403ac10e6c98ded487de7839158971456b3ee35`.

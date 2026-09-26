@@ -831,3 +831,71 @@ TEST(ESM4CrimeRules, AlarmResponseDistinguishesGuardsFromOtherRecipients)
     input.mSitSleepState = 9;
     EXPECT_FALSE(ESM4::crimeAlarmRecipientResponds(input));
 }
+
+TEST(ESM4CrimeRules, AdmittedReportsRequireNpcOffenderUnreportedIncidentAndResponsibleOrGuardReporter)
+{
+    for (bool present : {false, true})
+        for (bool npc : {false, true})
+            for (bool reported : {false, true})
+                for (bool guard : {false, true})
+                    for (std::int32_t responsibility : {std::numeric_limits<std::int32_t>::min(), 0, 99, 100, 101,
+                             std::numeric_limits<std::int32_t>::max()})
+                        EXPECT_EQ(ESM4::crimeReportEligible({present, npc, reported, responsibility, guard}),
+                            present && npc && !reported && (guard || responsibility >= 100));
+}
+
+TEST(ESM4CrimeRules, InfamyUsesStrictIncrementGateAndSingleThresholdSubtraction)
+{
+    const ESM4::CrimeInfamySettings settings{500};
+    ESM4::CrimeInfamyState state{3, 499};
+    for (float delta : {-100.f, 0.f, std::nextafter(1.f, 0.f), 1.f})
+    {
+        const auto next = ESM4::advanceCrimeInfamy(state, delta, settings);
+        EXPECT_EQ(next.mInfamy, 3);
+        EXPECT_EQ(next.mAccumulatedBounty, 499);
+    }
+    auto next = ESM4::advanceCrimeInfamy(state, std::nextafter(1.f, 2.f), settings);
+    EXPECT_EQ(next.mInfamy, 4);
+    EXPECT_EQ(next.mAccumulatedBounty, 0);
+    next = ESM4::advanceCrimeInfamy({0, 0}, 1500, settings);
+    EXPECT_EQ(next.mInfamy, 1); // No loop awarding three points.
+    EXPECT_EQ(next.mAccumulatedBounty, 1000);
+    next = ESM4::advanceCrimeInfamy(next, 1, settings);
+    EXPECT_EQ(next.mInfamy, 1);
+    EXPECT_EQ(next.mAccumulatedBounty, 1000);
+    next = ESM4::advanceCrimeInfamy(next, 2, settings);
+    EXPECT_EQ(next.mInfamy, 2);
+    EXPECT_EQ(next.mAccumulatedBounty, 502);
+}
+
+TEST(ESM4CrimeRules, InfamyThresholdStoresIntegerAccumulatorAsFloatBeforeComparison)
+{
+    const auto below = ESM4::advanceCrimeInfamy({0, 497}, std::nextafter(3.f, 0.f), {500});
+    EXPECT_EQ(below.mInfamy, 0);
+    EXPECT_EQ(below.mAccumulatedBounty, 499);
+    const auto equal = ESM4::advanceCrimeInfamy({0, 497}, 3, {500});
+    EXPECT_EQ(equal.mInfamy, 1);
+    EXPECT_EQ(equal.mAccumulatedBounty, 0);
+    const auto fractional = ESM4::advanceCrimeInfamy({0, 497}, 4, {500.5f});
+    EXPECT_EQ(fractional.mInfamy, 1);
+    EXPECT_EQ(fractional.mAccumulatedBounty, 0); // Remainder truncates.
+    const auto rounded = ESM4::advanceCrimeInfamy({0, 16777213}, 6, {16777220});
+    EXPECT_EQ(rounded.mInfamy, 1); // Integer 16777219 stores as float 16777220.
+    EXPECT_EQ(rounded.mAccumulatedBounty, 0);
+}
+
+TEST(ESM4CrimeRules, InfamyRejectsMalformedStateSettingsAndIntegerOverflow)
+{
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({-1, 0}, 2, {500}), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({0, -1}, 2, {500}), std::invalid_argument);
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 0}, value, {500}), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 0}, 2, {value}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 0}, 2, {0}), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 0}, 2, {-1}), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 0}, 2147483648.f, {500}), std::overflow_error);
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({0, 2147483647}, 2, {500}), std::overflow_error);
+    EXPECT_THROW(ESM4::advanceCrimeInfamy({2147483647, 499}, 2, {500}), std::overflow_error);
+}

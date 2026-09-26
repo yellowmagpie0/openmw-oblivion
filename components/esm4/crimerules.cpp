@@ -10,6 +10,50 @@
 
 namespace ESM4
 {
+    bool crimeReportEligible(const CrimeReportInput& input)
+    {
+        return input.mIncidentPresent && input.mOffenderNpc && !input.mAlreadyReported
+            && (input.mReporterGuard || input.mReporterResponsibility >= 100);
+    }
+
+    void validateCrimeInfamySettings(const CrimeInfamySettings& settings)
+    {
+        if (!std::isfinite(settings.mBountyThreshold) || settings.mBountyThreshold <= 0)
+            throw std::invalid_argument("invalid native infamy bounty threshold");
+    }
+
+    CrimeInfamyState advanceCrimeInfamy(
+        const CrimeInfamyState& state, float bountyIncrement, const CrimeInfamySettings& settings)
+    {
+        validateCrimeInfamySettings(settings);
+        if (state.mInfamy < 0 || state.mAccumulatedBounty < 0 || !std::isfinite(bountyIncrement))
+            throw std::invalid_argument("invalid native infamy state or bounty increment");
+        if (bountyIncrement <= 1)
+            return state;
+        const double increment = std::trunc(static_cast<double>(bountyIncrement));
+        if (increment > std::numeric_limits<std::int32_t>::max())
+            throw std::overflow_error("native infamy bounty increment overflow");
+        const std::int64_t accumulated = static_cast<std::int64_t>(state.mAccumulatedBounty)
+            + static_cast<std::int32_t>(increment);
+        if (accumulated > std::numeric_limits<std::int32_t>::max())
+            throw std::overflow_error("native infamy accumulator overflow");
+        CrimeInfamyState result{state.mInfamy, static_cast<std::int32_t>(accumulated)};
+        // The native integer accumulator is stored to float before comparison
+        // and subtraction; only one threshold is consumed per bounty update.
+        const float rounded = static_cast<float>(result.mAccumulatedBounty);
+        if (rounded >= settings.mBountyThreshold)
+        {
+            if (result.mInfamy == std::numeric_limits<std::int32_t>::max())
+                throw std::overflow_error("native infamy counter overflow");
+            const double remainder = std::trunc(static_cast<double>(rounded) - settings.mBountyThreshold);
+            if (remainder > std::numeric_limits<std::int32_t>::max())
+                throw std::overflow_error("native infamy remainder overflow");
+            ++result.mInfamy;
+            result.mAccumulatedBounty = static_cast<std::int32_t>(remainder);
+        }
+        return result;
+    }
+
     bool crimeAlarmRecipientResponds(const CrimeAlarmRecipientInput& input)
     {
         if (!input.mActor || input.mHasAlarmPackage || input.mSitSleepState == 9 || input.mInCombat)

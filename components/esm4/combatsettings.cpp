@@ -367,6 +367,14 @@ namespace ESM4
         return result;
     }
 
+    CrimeInfamySettings buildCrimeInfamySettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const CrimeInfamySettings result{inputs.number("fInfamyBountyMod", 2000.f)};
+        validateCrimeInfamySettings(result);
+        return result;
+    }
+
     CrimeFineSettings buildCrimeFineSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

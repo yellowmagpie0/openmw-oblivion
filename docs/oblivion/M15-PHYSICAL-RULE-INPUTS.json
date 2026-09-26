@@ -1624,6 +1624,19 @@
       "constructor": "0x9e6c60",
       "installed_override": null,
       "type": "float32"
+    },
+    {
+      "name": "fInfamyBountyMod",
+      "value": 2000.0,
+      "storage": "0xb36a68",
+      "constructor": "0x9e779f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:06c64b",
+        "type": "f",
+        "value": 500.0
+      },
+      "provenance": "Native initializer and installed winning GMST; original infamy instructions independently executed. No live-setting probe claimed."
     }
   ]
 }
