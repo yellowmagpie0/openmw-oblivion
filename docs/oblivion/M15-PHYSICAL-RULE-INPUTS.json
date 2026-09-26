@@ -1637,6 +1637,14 @@
         "value": 500.0
       },
       "provenance": "Native initializer and installed winning GMST; original infamy instructions independently executed. No live-setting probe claimed."
+    },
+    {
+      "name": "fArrowAgeMax",
+      "value": 90.0,
+      "storage": "0xb37048",
+      "constructor": "0x9e995f",
+      "type": "float32",
+      "installed_override": null
     }
   ]
 }

@@ -28,6 +28,30 @@ namespace ESM4
         }
     }
 
+    void validateArrowLifetimeSettings(const ArrowLifetimeSettings& settings)
+    {
+        nonnegative(settings.mMaximumAge);
+    }
+
+    ArrowLifetimeChange advanceArrowLifetime(const ArrowLifetimeState& state, float duration,
+        const ArrowLifetimeSettings& settings)
+    {
+        validateArrowLifetimeSettings(settings);
+        nonnegative(state.mAge);
+        fraction(state.mOpacity);
+        nonnegative(duration);
+        ArrowLifetimeChange result{state, false};
+        result.mState.mAge = rounded(double(state.mAge) + duration);
+        result.mState.mFading = state.mFading || result.mState.mAge > settings.mMaximumAge;
+        if (result.mState.mFading)
+        {
+            // The original fade divisor is a double constant, not a GMST.
+            result.mState.mOpacity = std::max(0.f, rounded(state.mOpacity - double(duration) / 3.0));
+            result.mRemove = result.mState.mOpacity == 0;
+        }
+        return result;
+    }
+
     void validateProjectileSettings(const ProjectileSettings& settings)
     {
         for (float value : {settings.mBowTimerBase, settings.mBowTimerMultiplier, settings.mSpeedMultiplier,

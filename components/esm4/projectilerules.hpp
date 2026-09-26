@@ -5,6 +5,30 @@
 
 namespace ESM4
 {
+    struct ArrowLifetimeSettings
+    {
+        float mMaximumAge;
+    };
+
+    struct ArrowLifetimeState
+    {
+        float mAge = 0;
+        float mOpacity = 1;
+        bool mFading = false;
+    };
+
+    struct ArrowLifetimeChange
+    {
+        ArrowLifetimeState mState;
+        bool mRemove;
+    };
+
+    // Applies to a live, non-deleted arrow. Collision/count-budget decisions may
+    // begin fading earlier. The world owns removal and must not tick it again.
+    ArrowLifetimeChange advanceArrowLifetime(const ArrowLifetimeState& state, float duration,
+        const ArrowLifetimeSettings& settings);
+    void validateArrowLifetimeSettings(const ArrowLifetimeSettings& settings);
+
     struct BowFatigueSettings
     {
         float mHoldPerSecond;

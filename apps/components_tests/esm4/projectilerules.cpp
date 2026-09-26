@@ -13,6 +13,87 @@ namespace
     const ESM4::PhysicalCombatSettings physical{-20, .4f, 1, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f};
 }
 
+TEST(ESM4ProjectileRules, LifetimeStartsFadingStrictlyAfterMaximumStoredAge)
+{
+    const ESM4::ArrowLifetimeSettings settings{90};
+    const auto exact = ESM4::advanceArrowLifetime({89, 1, false}, 1, settings);
+    EXPECT_EQ(exact.mState.mAge, 90);
+    EXPECT_EQ(exact.mState.mOpacity, 1);
+    EXPECT_FALSE(exact.mState.mFading);
+    EXPECT_FALSE(exact.mRemove);
+    // Age is stored before comparison: an increment below half a float step
+    // does not start fading. The full crossing tick also advances the fade.
+    const auto plateau = ESM4::advanceArrowLifetime(exact.mState, 0.000001f, settings);
+    EXPECT_EQ(plateau.mState.mAge, 90);
+    EXPECT_FALSE(plateau.mState.mFading);
+    const auto crossed = ESM4::advanceArrowLifetime(exact.mState, .75f, settings);
+    EXPECT_EQ(crossed.mState.mAge, 90.75f);
+    EXPECT_EQ(crossed.mState.mOpacity, .75f);
+    EXPECT_TRUE(crossed.mState.mFading);
+    EXPECT_FALSE(crossed.mRemove);
+    const auto adjacent = ESM4::advanceArrowLifetime({std::nextafter(90.f, 100.f), 1, false}, 0, settings);
+    EXPECT_TRUE(adjacent.mState.mFading);
+    EXPECT_EQ(adjacent.mState.mOpacity, 1);
+    EXPECT_FALSE(ESM4::advanceArrowLifetime({std::nextafter(90.f, 0.f), 1, false}, 0, settings).mState.mFading);
+    EXPECT_FALSE(ESM4::advanceArrowLifetime({}, 0, {0}).mState.mFading);
+    EXPECT_TRUE(ESM4::advanceArrowLifetime({}, 1, {0}).mState.mFading);
+}
+
+TEST(ESM4ProjectileRules, LifetimeFadeTakesThreeSecondsAndRemovesAtZero)
+{
+    const auto early = ESM4::advanceArrowLifetime({1, 1, true}, .75f, {90});
+    EXPECT_EQ(early.mState.mAge, 1.75f);
+    EXPECT_EQ(early.mState.mOpacity, .75f);
+    EXPECT_TRUE(early.mState.mFading);
+    EXPECT_FALSE(early.mRemove);
+    for (float duration : {2.25f, std::nextafter(2.25f, 3.f), 1000.f})
+    {
+        const auto removed = ESM4::advanceArrowLifetime(early.mState, duration, {90});
+        EXPECT_EQ(removed.mState.mOpacity, 0);
+        EXPECT_TRUE(removed.mState.mFading);
+        EXPECT_TRUE(removed.mRemove);
+    }
+    const auto before = ESM4::advanceArrowLifetime(early.mState, std::nextafter(2.25f, 0.f), {90});
+    EXPECT_GT(before.mState.mOpacity, 0);
+    EXPECT_FALSE(before.mRemove);
+    // Opacity alone does not put a live arrow into the fading lifecycle.
+    EXPECT_FALSE(ESM4::advanceArrowLifetime({0, 0, false}, 0, {90}).mRemove);
+    EXPECT_TRUE(ESM4::advanceArrowLifetime({0, 0, true}, 0, {90}).mRemove);
+    const auto longTick = ESM4::advanceArrowLifetime({89, 1, false}, 3, {90});
+    EXPECT_TRUE(longTick.mRemove);
+    EXPECT_EQ(longTick.mState.mOpacity, 0);
+}
+
+TEST(ESM4ProjectileRules, LifetimeRejectsInvalidInputsBeforeReturningChange)
+{
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::advanceArrowLifetime({bad, 1, false}, 0, {90}), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceArrowLifetime({0, bad, false}, 0, {90}), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceArrowLifetime({}, bad, {90}), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceArrowLifetime({}, 0, {bad}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::advanceArrowLifetime({0, std::nextafter(1.f, 2.f), false}, 0, {90}), std::invalid_argument);
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::advanceArrowLifetime({maximum, 1, false}, maximum, {maximum}), std::invalid_argument);
+}
+
+TEST(ESM4ProjectileRules, LifetimeSettingsUseTypedDefaultAndOverrides)
+{
+    EXPECT_EQ(ESM4::buildArrowLifetimeSettings({}).mMaximumAge, 90);
+    ESM4::GameSetting value{};
+    value.mEditorId = "fArrowAgeMax";
+    value.mData = 30.f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildArrowLifetimeSettings(values).mMaximumAge, 30);
+    value.mData = 0.f;
+    EXPECT_EQ(ESM4::buildArrowLifetimeSettings(values).mMaximumAge, 0);
+    value.mData = std::int32_t{30};
+    EXPECT_THROW(ESM4::buildArrowLifetimeSettings(values), std::invalid_argument);
+    value.mData = -1.f;
+    EXPECT_THROW(ESM4::buildArrowLifetimeSettings(values), std::invalid_argument);
+}
+
 TEST(ESM4ProjectileRules, DrawUsesPlayerTimerAndCapsAtFull)
 {
     for (const auto& c : {std::pair{0.f, .25f}, {1.f, .65f}, {1.875f, 1.f}, {2.f, 1.f}, {1000.f, 1.f}})

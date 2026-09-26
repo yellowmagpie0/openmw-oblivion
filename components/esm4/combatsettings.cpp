@@ -288,6 +288,14 @@ namespace ESM4
         return result;
     }
 
+    ArrowLifetimeSettings buildArrowLifetimeSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const ArrowLifetimeSettings result{inputs.number("fArrowAgeMax", 90.f)};
+        validateArrowLifetimeSettings(result);
+        return result;
+    }
+
     BowFatigueSettings buildBowFatigueSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

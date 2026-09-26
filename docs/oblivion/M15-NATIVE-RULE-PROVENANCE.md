@@ -1980,3 +1980,40 @@ Evidence: `S2/oracle-emulator/bounty-storage.py`, `bounty-storage-table.json`,
 `crime-bounty-extra-query.txt`, `crime-player-seworld-setter.txt` and
 `player-bounty-mode-references.txt`. Runtime storage, script flag/query adapters,
 identity-specific exceptions and fresh-process persistence remain open.
+
+### Arrow age expiry and fade
+
+Original update `0060C170` stores `R(age + duration)` at arrow +68, then
+changes state +60 to 3 only when that stored age is **strictly greater** than
+`fArrowAgeMax` (`00B37048`, compiled 90 seconds, constructor `009E995F`, no
+installed override in audit-12). Equality survives; sub-float-step increments
+can leave age unchanged. This limit is independent of the AI shooting-distance
+setting `fArrowMaxDistance`; it is not a 2000-unit flight-distance cutoff.
+
+The state-3 branch `0060C52C` advances opacity +64 on the same tick using
+`R(opacity - duration / 3.0)`, with double constant 3 at `00A30E48`. At zero
+or below, it stores zero and requests reference deletion. Thus the whole tick
+that crosses the age limit contributes to fading, not just its over-limit
+remainder. Already-fading arrows continue even below the age limit. Opacity
+alone does not enter the fade state. This pure rule takes a live non-deleted
+arrow; collision, reference-budget selection, attachment transforms, actual
+deletion and exclusion of deleted arrows from future updates belong to the
+projectile authority.
+
+`ArrowLifetimeState` and `advanceArrowLifetime` return an immutable age/fade/
+removal change. Supported simulation durations and ages must be finite and
+nonnegative; opacity must be finite in [0,1]; invalid settings and age overflow
+diagnose before returning a change. The original negative-duration update
+branch skips its lifetime work; negative engine simulation steps are outside
+this API's supported domain.
+
+Three policy tests fail against the stub before implementation. **2,016 original
+instruction cases** pass in both x87 precision modes, covering all four native
+states, zero/adjacent/exact age thresholds, opacity boundaries and fade completion.
+All cases also match a separately compiled C++ driver exactly.
+The full original update entry executes with null scene/process query and
+deletion-notification boundary stubs; collision and rendering are excluded.
+Evidence: `S2/oracle-emulator/arrow-lifetime.py`, `arrow-lifetime-table.json`,
+`arrow-lifetime.log`; `S2/sources-01/arrow-update.txt` and
+`arrow-update-tail.txt`. Runtime ticking, visual fading/removal, normal-input
+flight/impact and save/restart acceptance remain open.

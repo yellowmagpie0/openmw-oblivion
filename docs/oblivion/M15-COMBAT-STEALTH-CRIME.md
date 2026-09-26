@@ -2212,3 +2212,19 @@ storage, player realm flag/script adapters and atomic crime/save integration
 remain open. S2 remains in progress; S3–S14 remain pending.
 
 Tested source fingerprint: `c07d337e14c5a00dc35308005fd034c019db1970551afaabaa773968ed63e599`.
+
+### S2 arrow age expiry and fade
+
+Commit `efcf9f32d1` contains bounty storage and realm routing. Added immutable
+arrow age/opacity advancement, strict stored-age expiry, three-second fading,
+zero-opacity removal, and a typed native maximum-age setting adapter.
+
+All **1,819 component tests**, **297 ASan/UBSan ESM4 tests**, and **151 Python
+tests** pass with exact C++ inventories/no skips (`S2/arrow-lifetime-02`). Three
+policy tests first fail against a stub (`arrow-lifetime-01`). **2,016 original
+instruction cases** pass in both x87 precision modes and match a separately
+compiled C++ driver exactly. Runtime projectile authority, collision/recovery,
+visual fading/removal and fresh-process persistence remain open. S2 remains
+in progress; S3–S14 remain pending.
+
+Tested source fingerprint: `9da6a065b5d3a38c9a8a5e9011f23e2d87275b2329c71e2a42ac4103ae94dd69`.
