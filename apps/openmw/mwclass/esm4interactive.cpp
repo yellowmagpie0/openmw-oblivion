@@ -34,6 +34,7 @@
 #include "../mwworld/failedaction.hpp"
 #include "../mwworld/manualref.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/worldimp.hpp"
 
@@ -172,24 +173,37 @@ namespace MWClass
 
         auto data = std::make_unique<ESM4CreatureCustomData>();
         const ESM4::Creature* base = ptr.get<ESM4::Creature>()->mBase;
-        const auto attributes = std::array<std::uint8_t, 8>{ base->mData.attribs.strength,
-            base->mData.attribs.intelligence, base->mData.attribs.willpower, base->mData.attribs.agility,
-            base->mData.attribs.speed, base->mData.attribs.endurance, base->mData.attribs.personality,
-            base->mData.attribs.luck };
-        for (std::size_t i = 0; i < attributes.size(); ++i)
-            data->mCreatureStats.setAttribute(ESM::Attribute::indexToRefId(static_cast<int>(i)), attributes[i]);
-        data->mCreatureStats.setHealth(MWMechanics::DynamicStat<float>(static_cast<float>(base->mData.health)));
-        data->mCreatureStats.setMagicka(
-            MWMechanics::DynamicStat<float>(static_cast<float>(base->mBaseConfig.tes4.baseSpell)));
-        data->mCreatureStats.setFatigue(
-            MWMechanics::DynamicStat<float>(static_cast<float>(base->mBaseConfig.tes4.fatigue)));
-        data->mCreatureStats.setLevel(std::max(1, static_cast<int>(base->mBaseConfig.tes4.levelOrOffset)));
+        const MWWorld::ESMStore* store = MWBase::Environment::get().getESMStore();
+        if (base->mAttackReach)
+        {
+            const auto calculated = MWWorld::resolveOblivionActorConstructionStats(*store, base->mId,
+                base->mBaseConfig.tes4.flags & ESM4::Creature::TES4_PCLevelOffset);
+            data->mCreatureStats.initializeOblivionBaseStats(calculated.mAttributes,
+                {float(calculated.mHealth), float(calculated.mMagicka), float(calculated.mFatigue)},
+                calculated.mLevel);
+            data->mNativeSkills = calculated.mSkills;
+            data->mNativeDamage = calculated.mNaturalDamage;
+        }
+        else
+        {
+            const auto attributes = std::array<std::uint8_t, 8>{ base->mData.attribs.strength,
+                base->mData.attribs.intelligence, base->mData.attribs.willpower, base->mData.attribs.agility,
+                base->mData.attribs.speed, base->mData.attribs.endurance, base->mData.attribs.personality,
+                base->mData.attribs.luck };
+            for (std::size_t i = 0; i < attributes.size(); ++i)
+                data->mCreatureStats.setAttribute(ESM::Attribute::indexToRefId(static_cast<int>(i)), attributes[i]);
+            data->mCreatureStats.setHealth(MWMechanics::DynamicStat<float>(static_cast<float>(base->mData.health)));
+            data->mCreatureStats.setMagicka(
+                MWMechanics::DynamicStat<float>(static_cast<float>(base->mBaseConfig.tes4.baseSpell)));
+            data->mCreatureStats.setFatigue(
+                MWMechanics::DynamicStat<float>(static_cast<float>(base->mBaseConfig.tes4.fatigue)));
+            data->mCreatureStats.setLevel(std::max(1, static_cast<int>(base->mBaseConfig.tes4.levelOrOffset)));
+        }
         data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Hello, base->mAIData.energyLevel);
         data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Fight, base->mAIData.aggression);
         data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Flee, base->mAIData.confidence);
         data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Alarm, base->mAIData.responsibility);
         data->mInventoryStore.setPtr(ptr);
-        const MWWorld::ESMStore* store = MWBase::Environment::get().getESMStore();
         fillCreatureInventory(*data, base->mInventory, *store);
         // Adding projected inventory stacks can advance the WorldModel pointer
         // registry. Refresh the owner SafePtr before native equipment
@@ -357,6 +371,16 @@ namespace MWClass
 
     float ESM4Creature::getSkill(const MWWorld::Ptr& ptr, ESM::RefId id) const
     {
+        ensureCustomData(ptr);
+        const auto& data = ptr.getRefData().getCustomData()->asESM4CreatureCustomData();
+        if (data.mNativeSkills)
+        {
+            const auto& ids = MWWorld::oblivionSkillIds();
+            const auto found = std::find(ids.begin(), ids.end(), id);
+            if (found == ids.end())
+                throw std::invalid_argument("unsupported skill on a native creature");
+            return (*data.mNativeSkills)[std::distance(ids.begin(), found)];
+        }
         const ESM::Skill* skill = MWBase::Environment::get().getESMStore()->get<ESM::Skill>().search(id);
         if (skill == nullptr)
             return 0.f;

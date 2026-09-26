@@ -29,6 +29,7 @@
 #include "../mwworld/customdata.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
 
 #include "esm4base.hpp"
 
@@ -76,21 +77,6 @@ namespace MWClass
 
     namespace
     {
-        const std::array<ESM::RefId, 21>& skillIds()
-        {
-            // ESM::Skill IDs are dynamically initialized in loadskil.cpp.
-            // Keep this table function-local so it cannot copy those IDs
-            // during static initialization before their backing strings
-            // exist.
-            static const std::array<ESM::RefId, 21> ids = { ESM::Skill::Armorer, ESM::Skill::Athletics,
-                ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
-                ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
-                ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
-                ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
-                ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
-            return ids;
-        }
-
         std::array<std::uint8_t, 8> attributes(const ESM4::AttributeValues& value)
         {
             return { value.strength, value.intelligence, value.willpower, value.agility, value.speed,
@@ -211,30 +197,44 @@ namespace MWClass
 
         if (statsRecord != nullptr)
         {
-            const auto attrs = attributes(statsRecord->mData.attribs);
-            for (std::size_t i = 0; i < attrs.size(); ++i)
-                data->mNpcStats.setAttribute(ESM::Attribute::indexToRefId(static_cast<int>(i)), attrs[i]);
-            const std::array<std::uint8_t, 21> skills = { statsRecord->mData.skills.armorer,
-                statsRecord->mData.skills.athletics, statsRecord->mData.skills.blade, statsRecord->mData.skills.block,
-                statsRecord->mData.skills.blunt, statsRecord->mData.skills.handToHand,
-                statsRecord->mData.skills.heavyArmor, statsRecord->mData.skills.alchemy,
-                statsRecord->mData.skills.alteration, statsRecord->mData.skills.conjuration,
-                statsRecord->mData.skills.destruction, statsRecord->mData.skills.illusion,
-                statsRecord->mData.skills.mysticism, statsRecord->mData.skills.restoration,
-                statsRecord->mData.skills.acrobatics, statsRecord->mData.skills.lightArmor,
-                statsRecord->mData.skills.marksman, statsRecord->mData.skills.mercantile,
-                statsRecord->mData.skills.security, statsRecord->mData.skills.sneak,
-                statsRecord->mData.skills.speechcraft };
-            const auto& ids = skillIds();
-            for (std::size_t i = 0; i < skills.size(); ++i)
-                data->mNpcStats.getSkill(ids[i]).setBase(skills[i]);
+            if (statsRecord->mIsTES4)
+            {
+                const auto calculated = MWWorld::resolveOblivionActorConstructionStats(*store, statsRecord->mId,
+                    statsRecord->mBaseConfig.tes4.flags & ESM4::Npc::TES4_PCLevelOffset);
+                data->mNpcStats.initializeOblivionBaseStats(calculated.mAttributes,
+                    {float(calculated.mHealth), float(calculated.mMagicka), float(calculated.mFatigue)},
+                    calculated.mLevel);
+                const auto& ids = MWWorld::oblivionSkillIds();
+                for (std::size_t i = 0; i < ids.size(); ++i)
+                    data->mNpcStats.getSkill(ids[i]).setBase(calculated.mSkills[i]);
+            }
+            else
+            {
+                const auto attrs = attributes(statsRecord->mData.attribs);
+                for (std::size_t i = 0; i < attrs.size(); ++i)
+                    data->mNpcStats.setAttribute(ESM::Attribute::indexToRefId(static_cast<int>(i)), attrs[i]);
+                const std::array<std::uint8_t, 21> skills = { statsRecord->mData.skills.armorer,
+                    statsRecord->mData.skills.athletics, statsRecord->mData.skills.blade, statsRecord->mData.skills.block,
+                    statsRecord->mData.skills.blunt, statsRecord->mData.skills.handToHand,
+                    statsRecord->mData.skills.heavyArmor, statsRecord->mData.skills.alchemy,
+                    statsRecord->mData.skills.alteration, statsRecord->mData.skills.conjuration,
+                    statsRecord->mData.skills.destruction, statsRecord->mData.skills.illusion,
+                    statsRecord->mData.skills.mysticism, statsRecord->mData.skills.restoration,
+                    statsRecord->mData.skills.acrobatics, statsRecord->mData.skills.lightArmor,
+                    statsRecord->mData.skills.marksman, statsRecord->mData.skills.mercantile,
+                    statsRecord->mData.skills.security, statsRecord->mData.skills.sneak,
+                    statsRecord->mData.skills.speechcraft };
+                const auto& ids = MWWorld::oblivionSkillIds();
+                for (std::size_t i = 0; i < skills.size(); ++i)
+                    data->mNpcStats.getSkill(ids[i]).setBase(skills[i]);
 
-            data->mNpcStats.setHealth(MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mData.health)));
-            data->mNpcStats.setMagicka(
-                MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mBaseConfig.tes4.baseSpell)));
-            data->mNpcStats.setFatigue(
-                MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mBaseConfig.tes4.fatigue)));
-            data->mNpcStats.setLevel(std::max(1, static_cast<int>(statsRecord->mBaseConfig.tes4.levelOrOffset)));
+                data->mNpcStats.setHealth(MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mData.health)));
+                data->mNpcStats.setMagicka(
+                    MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mBaseConfig.tes4.baseSpell)));
+                data->mNpcStats.setFatigue(
+                    MWMechanics::DynamicStat<float>(static_cast<float>(statsRecord->mBaseConfig.tes4.fatigue)));
+                data->mNpcStats.setLevel(std::max(1, static_cast<int>(statsRecord->mBaseConfig.tes4.levelOrOffset)));
+            }
             data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Hello, statsRecord->mAIData.energyLevel);
             data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Fight, statsRecord->mAIData.aggression);
             data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Flee, statsRecord->mAIData.confidence);

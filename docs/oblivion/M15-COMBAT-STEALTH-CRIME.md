@@ -2365,3 +2365,30 @@ values, skill override/deletion, fixed NPCs, scaled creatures and invalid
 inputs. Pure rule suites passed in the preceding chunk and were not rerun.
 The resolver is not yet called by live actor construction; that integration
 and S3 state authority remain next. S2 remains in progress; S3–S14 pending.
+
+### S2 live native actor construction
+
+Commit `e37c66685b` contains the winning-store resolver. Native NPC and creature
+classes now use it at construction, including the live player base level for
+scaled actors. A construction-only shared-stat initializer installs native
+values without invoking TES3 derived-stat or gameplay death transitions.
+Creature class skill reads use the canonical 21 native AV mappings rather than
+TES3 skill specialization; natural damage is retained with its native inputs.
+Later-game construction keeps its prior path. Runtime mutations, level-change
+refresh and save authority remain S3 work.
+
+All **560 engine tests** pass, with successful openmw/openmw-tests/esmtool builds
+(`S2/live-actor-stats-01`). New tests construct actual native actor instances
+and query class health, fatigue, magicka, attributes and skills, including
+canonical creature grouping despite deliberately conflicting shared skill
+metadata. Initialization rejects invalid/repeated writes before changing stats.
+The existing animation-state compiler warning remains. A subsequent whitespace
+cleanup changes no compiled behavior.
+
+The unchanged official M14 tutorial escort scenario passes in
+`S2/live-actor-tutorial-01`: stage progression, all four escort route/door
+requirements, inventory/AI save checkpoints and in-process reload pass with
+no unreviewed errors. This is construction/AI regression evidence, not M15
+combat or fresh-process stat persistence acceptance. The inspected screenshot
+shows nearby dungeon geometry and does not establish actor visual quality.
+S2 remains in progress; S3–S14 remain pending.

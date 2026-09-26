@@ -1,6 +1,8 @@
 #ifndef GAME_MWCLASS_ESM4INTERACTIVE_H
 #define GAME_MWCLASS_ESM4INTERACTIVE_H
 
+#include <array>
+#include <optional>
 #include <type_traits>
 
 #include <components/esm4/loadacti.hpp>
@@ -183,6 +185,8 @@ namespace MWClass
     {
     public:
         MWMechanics::CreatureStats mCreatureStats;
+        std::optional<std::array<std::uint8_t, 21>> mNativeSkills;
+        std::optional<std::uint16_t> mNativeDamage;
         MWMechanics::Movement mMovement;
         MWWorld::InventoryStore mInventoryStore;
 

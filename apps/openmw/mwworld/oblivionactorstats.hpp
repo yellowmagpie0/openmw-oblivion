@@ -2,6 +2,7 @@
 #define OPENMW_MWWORLD_OBLIVIONACTORSTATS_H
 
 #include <components/esm/formkey.hpp>
+#include <components/esm/refid.hpp>
 
 #include <array>
 #include <cstdint>
@@ -21,6 +22,11 @@ namespace MWWorld
         std::uint16_t mFatigue;
         std::optional<std::uint16_t> mNaturalDamage;
     };
+
+    const std::array<ESM::RefId, 21>& oblivionSkillIds();
+    // Uses the live player's base level only for PCLevelOffset actors.
+    OblivionActorBaseStats resolveOblivionActorConstructionStats(const ESMStore& store,
+        ESM::FormId actorBase, bool scaled);
 
     // Read-only construction inputs from native winning records. Runtime
     // modifiers/current values and persisted changes belong to actor authority.

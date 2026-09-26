@@ -1,16 +1,58 @@
 #include "oblivionactorstats.hpp"
 
 #include "esmstore.hpp"
+#include "class.hpp"
+#include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
+#include "../mwmechanics/creaturestats.hpp"
 
 #include <components/esm/records.hpp>
 #include <components/esm4/combatsettings.hpp>
 
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <vector>
 
 namespace MWWorld
 {
+    const std::array<ESM::RefId, 21>& oblivionSkillIds()
+    {
+        // ESM::Skill IDs are dynamically initialized in loadskil.cpp.
+        // Keep this table function-local so it cannot copy those IDs
+        // during static initialization before their backing strings
+        // exist.
+        static const std::array<ESM::RefId, 21> ids = { ESM::Skill::Armorer, ESM::Skill::Athletics,
+            ESM::Skill::LongBlade, ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand,
+            ESM::Skill::HeavyArmor, ESM::Skill::Alchemy, ESM::Skill::Alteration, ESM::Skill::Conjuration,
+            ESM::Skill::Destruction, ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration,
+            ESM::Skill::Acrobatics, ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile,
+            ESM::Skill::Security, ESM::Skill::Sneak, ESM::Skill::Speechcraft };
+        return ids;
+    }
+
+    OblivionActorBaseStats resolveOblivionActorConstructionStats(const ESMStore& store,
+        ESM::FormId actorBase, bool scaled)
+    {
+        auto key = store.get<ESM4::Npc>().findFormKey(ESM::RefId(actorBase));
+        if (!key)
+            key = store.get<ESM4::Creature>().findFormKey(ESM::RefId(actorBase));
+        if (!key)
+            throw std::runtime_error("Native actor construction lacks a stable base identity");
+        std::optional<std::uint16_t> playerLevel;
+        if (scaled)
+        {
+            const auto player = MWBase::Environment::get().getWorld()->getPlayerPtr();
+            if (player.isEmpty())
+                throw std::runtime_error("Native scaled actor construction requires the player");
+            const int level = player.getClass().getCreatureStats(player).getLevel();
+            if (level < 1 || level > std::numeric_limits<std::uint16_t>::max())
+                throw std::runtime_error("Native actor construction has invalid player base level");
+            playerLevel = static_cast<std::uint16_t>(level);
+        }
+        return resolveOblivionActorBaseStats(store, *key, playerLevel);
+    }
+
     namespace
     {
         template <typename T> std::vector<const T*> winningRecords(const ESMStore& store)

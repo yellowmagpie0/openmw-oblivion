@@ -1,6 +1,7 @@
 #include "creaturestats.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <type_traits>
 
 #include <components/esm3/actoridconverter.hpp>
@@ -24,6 +25,27 @@ namespace MWMechanics
         {
             mAttributes.emplace(attribute.mId, AttributeValue{});
         }
+    }
+
+    void CreatureStats::initializeOblivionBaseStats(const std::array<std::uint8_t, 8>& attributes,
+        const std::array<float, 3>& dynamic, int level)
+    {
+        if (mLevel != 0 || level < 1)
+            throw std::invalid_argument("native base stats require an uninitialized actor and positive level");
+        for (float value : dynamic)
+            if (!std::isfinite(value) || value < 0)
+                throw std::invalid_argument("invalid native dynamic base stat");
+        auto initialized = mAttributes;
+        for (std::size_t i = 0; i < attributes.size(); ++i)
+        {
+            AttributeValue value;
+            value.setBase(attributes[i]);
+            initialized.at(ESM::Attribute::indexToRefId(i)) = value;
+        }
+        mAttributes.swap(initialized);
+        for (std::size_t i = 0; i < dynamic.size(); ++i)
+            mDynamic[i] = DynamicStat<float>(dynamic[i]);
+        mLevel = level;
     }
 
     const AiSequence& CreatureStats::getAiSequence() const

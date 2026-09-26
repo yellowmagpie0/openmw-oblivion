@@ -1,6 +1,8 @@
 #ifndef GAME_MWMECHANICS_CREATURESTATS_H
 #define GAME_MWMECHANICS_CREATURESTATS_H
 
+#include <array>
+#include <cstdint>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -100,6 +102,11 @@ namespace MWMechanics
 
     public:
         CreatureStats();
+
+        // Construction only: install already calculated native values without
+        // TES3 derived-stat recalculation or a gameplay death transition.
+        void initializeOblivionBaseStats(const std::array<std::uint8_t, 8>& attributes,
+            const std::array<float, 3>& dynamic, int level);
 
         DrawState getDrawState() const;
         void setDrawState(DrawState state);
