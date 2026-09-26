@@ -2464,3 +2464,19 @@ All **565 engine tests** pass with rebuilt openmw/openmw-tests/esmtool
 small exact maxima lost by subtraction/addition, zero ratios, corrupt inputs,
 integer overflow, write rejection and unchanged legacy serialization/clamps.
 S3's live-authority and persistence gate remains open.
+
+### S3 bounded action identity ledger
+
+Commit `2b15069932` contains dynamic projections. Added the action identity
+ledger: monotonically allocate IDs and retain only unfinished actions. Every
+issued ID absent from that set is consumed. This permits an old projectile to
+resolve after later attacks, rejects replay after restoration, and bounds
+history by unfinished work. Cancellation consumes an ID; exhaustion never
+wraps or reuses one. Restore validates a replacement before changing state.
+
+All **1,865 component tests** and **343 ASan/UBSan ESM4 tests** pass
+(`S3/action-ledger-01`). Cases include 100,000 completions with one old pending
+action, deterministic randomized completion/restoration against a separate
+full-history model, malformed IDs and exhaustion. Service transactions and
+versioned save integration remain pending; this ledger alone is not a hit
+transaction or runtime acceptance.
