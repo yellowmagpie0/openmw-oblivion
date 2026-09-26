@@ -14,6 +14,8 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/player.hpp"
+#include "../mwworld/esmstore.hpp"
+#include <components/esm4/loadachr.hpp>
 
 #include "creaturestats.hpp"
 #include "npcstats.hpp"
@@ -45,6 +47,28 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer actor-value identity mismatch");
         }
 
+        bool nonPlayerContentIsCreature(const ESM4::RuntimeActorValues& values, const MWWorld::ESMStore& store)
+        {
+            if (values.mOwner != ESM4::ActorValueOwner::NonPlayer)
+                throw std::invalid_argument("native nonplayer content lookup has player ownership");
+            const auto* npc = store.search<ESM4::Npc>(values.mBase);
+            const auto* creature = store.search<ESM4::Creature>(values.mBase);
+            if ((!npc && !creature) || (npc && creature)
+                || (npc && (!npc->mIsTES4 || npc->mFormKey != values.mBase))
+                || (creature && (!creature->mAttackReach || creature->mFormKey != values.mBase)))
+                throw std::invalid_argument("missing, ambiguous or unsupported native actor base: " + values.mBase.serialize());
+            if (values.mActor.isContent())
+            {
+                const auto* characterRef = store.search<ESM4::ActorCharacter>(values.mActor);
+                const auto* creatureRef = store.search<ESM4::ActorCreature>(values.mActor);
+                const ESM4::ActorCharacter* reference = creature ? creatureRef : characterRef;
+                if (!reference || (characterRef && creatureRef) || reference->mFormKey != values.mActor
+                    || reference->mBaseKey != values.mBase)
+                    throw std::invalid_argument("missing or mismatched native actor reference: " + values.mActor.serialize());
+            }
+            return creature != nullptr;
+        }
+
         void validateNonPlayerQuery(std::uint8_t value)
         {
             // Inventory Encumbrance and High-process Paralysis use additional
@@ -53,10 +77,10 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer scalar query excludes inventory Encumbrance and process Paralysis");
         }
 
-        std::uint8_t nonPlayerValueIndex(const MWWorld::Ptr& ptr, std::uint8_t value)
+        std::uint8_t nonPlayerValueIndex(bool creature, std::uint8_t value)
         {
             validateNonPlayerQuery(value);
-            if (ptr.getType() != ESM::REC_CREA4)
+            if (!creature)
                 return value;
             // Original Creature runtime getter AND modifier wrappers alias
             // Marksman to Combat, unlike the base-form skill-group lookup.
@@ -75,6 +99,18 @@ namespace MWMechanics
                 return current;
             const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
             return ESM4::scaleNpcMagicka(current, multiplier);
+        }
+
+        std::int32_t nonPlayerInteger(const ESM4::RuntimeActorValues& values, std::uint8_t value)
+        {
+            validateNonPlayerQuery(value);
+            const auto& state = values.mValues[value];
+            const auto current = ESM4::composeIntegerActorValue(
+                ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
+            if (value != 9)
+                return current;
+            const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
+            return ESM4::scaleNpcIntegerMagicka(current, multiplier);
         }
 
         void validatePlayerIdentity(const ESM4::RuntimeActorValues& values)
@@ -227,7 +263,7 @@ namespace MWMechanics
         {
             for (std::size_t i = 0; i < preparedSkills.size(); ++i)
                 preparedSkills[i] = nonPlayerFloat(values,
-                    nonPlayerValueIndex(actor, static_cast<std::uint8_t>(12 + i)));
+                    nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, static_cast<std::uint8_t>(12 + i)));
             prepared.emplace(actor.getClass().getCreatureStats(actor), projection);
             auto& data = actor.getRefData().getCustomData()->asESM4CreatureCustomData();
             if (!data.mNativeSkills)
@@ -256,7 +292,7 @@ namespace MWMechanics
     {
         validateNonPlayerQuery(value);
         auto candidate = nonPlayerValues(actor);
-        value = nonPlayerValueIndex(actor, value);
+        value = nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value);
         candidate.mValues[value] = ESM4::changeActorValueModifier(
             candidate.mValues[value], candidate.mOwner, modifier, delta);
         publishNonPlayerValues(actor, std::move(candidate));
@@ -265,21 +301,52 @@ namespace MWMechanics
     float OblivionCombatService::getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const
     {
         const auto& values = nonPlayerValues(actor);
-        return nonPlayerFloat(values, nonPlayerValueIndex(actor, value));
+        return nonPlayerFloat(values, nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value));
     }
 
     std::int32_t OblivionCombatService::getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const
     {
-        validateNonPlayerQuery(value);
         const auto& values = nonPlayerValues(actor);
-        value = nonPlayerValueIndex(actor, value);
-        const auto& state = values.mValues[value];
-        const auto current = ESM4::composeIntegerActorValue(
-            ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
-        if (value != 9)
-            return current;
-        const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
-        return ESM4::scaleNpcIntegerMagicka(current, multiplier);
+        return nonPlayerInteger(values, nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value));
+    }
+
+    const ESM4::RuntimeActorValues& OblivionCombatService::nonPlayerValues(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        if (!values || values->mOwner != ESM4::ActorValueOwner::NonPlayer)
+            throw std::invalid_argument("native nonplayer values have not been initialized");
+        return *values;
+    }
+
+    float OblivionCombatService::getNonPlayerValue(
+        const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const
+    {
+        const auto& values = nonPlayerValues(actor);
+        return nonPlayerFloat(values, nonPlayerValueIndex(nonPlayerContentIsCreature(values, store), value));
+    }
+
+    std::int32_t OblivionCombatService::getNonPlayerIntegerValue(
+        const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const
+    {
+        const auto& values = nonPlayerValues(actor);
+        return nonPlayerInteger(values, nonPlayerValueIndex(nonPlayerContentIsCreature(values, store), value));
+    }
+
+    std::int32_t OblivionCombatService::getNonPlayerBaseValue(
+        const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const
+    {
+        if (value >= 72)
+            throw std::invalid_argument("invalid native base actor-value query");
+        const auto& values = nonPlayerValues(actor);
+        nonPlayerContentIsCreature(values, store);
+        return ESM4::combatBaseValue(values.mValues[value].mBase);
+    }
+
+    std::int32_t OblivionCombatService::getPlayerBaseValue(std::uint8_t value) const
+    {
+        if (value >= 72)
+            throw std::invalid_argument("invalid native base actor-value query");
+        return ESM4::combatBaseValue(playerValues().mValues[value].mBase);
     }
 
     const ESM4::RuntimeActorValues& OblivionCombatService::playerValues() const
@@ -369,6 +436,15 @@ namespace MWMechanics
         auto actions = mActions.capture();
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
+    }
+
+    void OblivionCombatService::restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store)
+    {
+        state.validate();
+        for (const auto& actor : state.mNativeActorValues)
+            if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
+                nonPlayerContentIsCreature(actor, store);
+        restore(state);
     }
 
     void OblivionCombatService::restore(const ESM4::RuntimeState& state)

@@ -293,6 +293,9 @@ namespace
         EXPECT_EQ(stats.getHealth().getModified(), 95.5f);
         EXPECT_EQ(stats.getHealth().getCurrent(), 90.75f);
         EXPECT_EQ(stats.getMagicka().getBase(), 94.5f);
+        EXPECT_EQ(service.getPlayerBaseValue(9), 94);
+        EXPECT_EQ(service.getPlayerBaseValue(11), 242);
+        EXPECT_THROW(service.getPlayerBaseValue(72), std::invalid_argument);
         EXPECT_EQ(stats.getMagicka().getModified(), 99.5f);
         EXPECT_EQ(stats.getMagicka().getCurrent(), 90.25f);
         EXPECT_EQ(service.getPlayerIntegerValue(9), 89);
@@ -388,6 +391,9 @@ namespace
         MWClass::ESM4Npc::registerSelf();
         ESM4::ActorCharacter reference{};
         reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
         MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
         MWWorld::Ptr ptr(&live);
         MWMechanics::OblivionCombatService service;
@@ -469,7 +475,11 @@ namespace
         saved.mReferences.push_back(savedActor);
         service.capture(saved);
         MWMechanics::OblivionCombatService restored;
-        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        EXPECT_EQ(restored.getNonPlayerValue(values.mActor, 9, mStore), 101.5f);
+        EXPECT_EQ(restored.getNonPlayerIntegerValue(values.mActor, 9, mStore), 100);
+        EXPECT_EQ(restored.getNonPlayerBaseValue(values.mActor, 8, mStore), 100);
+        EXPECT_EQ(restored.getNonPlayerBaseValue(values.mActor, 9, mStore), 50);
         MWWorld::LiveCellRef<ESM4::Npc> newLive(reference, mStore.search<ESM4::Npc>(mActorKey));
         MWWorld::Ptr newPtr(&newLive);
         restored.publishNonPlayerValues(newPtr, *restored.findActorValues(reference.mFormKey));
@@ -509,8 +519,11 @@ namespace
         MWWorld::WorldModel model(mStore, readers);
         environment.setWorldModel(model);
         MWClass::ESM4Creature::registerSelf();
-        ESM4::ActorCharacter reference{};
+        ESM4::ActorCreature reference{};
         reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
         MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
         MWWorld::Ptr ptr(&live);
         auto& stats = ptr.getClass().getCreatureStats(ptr);
@@ -582,7 +595,10 @@ namespace
         saved.mReferences.push_back(savedActor);
         service.capture(saved);
         MWMechanics::OblivionCombatService restored;
-        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        EXPECT_EQ(restored.getNonPlayerValue(values.mActor, 28, mStore), 21.75f);
+        EXPECT_EQ(restored.getNonPlayerIntegerValue(values.mActor, 28, mStore), 21);
+        EXPECT_EQ(restored.getNonPlayerBaseValue(values.mActor, 28, mStore), 23);
         MWWorld::LiveCellRef<ESM4::Creature> newLive(reference, mStore.search<ESM4::Creature>(mActorKey));
         MWWorld::Ptr newPtr(&newLive);
         restored.publishNonPlayerValues(newPtr, *restored.findActorValues(reference.mFormKey));

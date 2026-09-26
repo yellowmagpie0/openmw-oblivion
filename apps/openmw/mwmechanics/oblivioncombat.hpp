@@ -14,6 +14,7 @@ namespace MWWorld
 {
     class Ptr;
     class Player;
+    class ESMStore;
 }
 
 namespace MWMechanics
@@ -66,6 +67,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
+        const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
 
     public:
         void clear();
@@ -84,6 +86,16 @@ namespace MWMechanics
             ESM4::ActorValueModifier modifier, float delta);
         float getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         std::int32_t getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+        // Read saved actors without constructing/loading their live references.
+        // Content references must still name a matching winning ACHR/ACRE.
+        float getNonPlayerValue(const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const;
+        std::int32_t getNonPlayerIntegerValue(
+            const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const;
+        // Native GetBaseAV returns the integer base query. Creature base skill
+        // groups differ from runtime aliases; Encumbrance here is capacity.
+        std::int32_t getNonPlayerBaseValue(
+            const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const;
+        std::int32_t getPlayerBaseValue(std::uint8_t value) const;
         // Raw player form contributions must be present. Settings are winning
         // runtime inputs, not save-owned values. Recompute derived bases before
         // preparing all shared views; never feed resolved bases back as inputs.
@@ -96,6 +108,9 @@ namespace MWMechanics
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);
+        // World load preflight: validate winning native actor bindings before
+        // replacing either action ownership or actor values.
+        void restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store);
     };
 }
 

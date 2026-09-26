@@ -1,3 +1,7 @@
+#include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loadachr.hpp>
+#include "apps/openmw/mwworld/esmstore.hpp"
 #include <apps/openmw/mwmechanics/oblivioncombat.hpp>
 #include <components/esm4/runtimestate.hpp>
 
@@ -124,4 +128,76 @@ TEST(OblivionCombatService, NativeValuesAndActionsRestoreTogetherOrRemainUnchang
     service.capture(captured);
     EXPECT_TRUE(captured.mNativeActorValues.empty());
     EXPECT_EQ(captured.mPhysicalActions, ESM4::ActionLedgerState{});
+}
+
+TEST(OblivionCombatService, SavedActorQueriesValidateWinningContentWithoutAWorld)
+{
+    auto state = savedState();
+    MWWorld::ESMStore store;
+    ESM4::Npc npc{};
+    npc.mId = {0x800, 2};
+    npc.mFormKey = ESM::FormKey::content("actors.esm", 0x800);
+    npc.mIsTES4 = true;
+    store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+    ESM4::ActorCharacter reference{};
+    reference.mId = {0x900, 2};
+    reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+    reference.mBaseKey = npc.mFormKey;
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+    ESM4::RuntimeReferenceState savedRef;
+    savedRef.mKey = reference.mFormKey;
+    savedRef.mBase = npc.mFormKey;
+    savedRef.mCell = state.mPlayer.mCell;
+    state.mReferences = {savedRef};
+    ESM4::RuntimeActorValues values;
+    values.mActor = reference.mFormKey;
+    values.mBase = npc.mFormKey;
+    values.mValues[0] = {100.75f, {.5f, -.5f, std::nullopt}};
+    values.mValues[11].mBase = 12.75f;
+    state.mNativeActorValues = {values};
+    state.mPhysicalActions = {3, {1}};
+    MWMechanics::OblivionCombatService service;
+    service.restore(state, store); // No Environment, World, CellStore or live Ptr.
+    EXPECT_EQ(service.getNonPlayerValue(values.mActor, 0, store), 100.75f);
+    EXPECT_EQ(service.getNonPlayerIntegerValue(values.mActor, 0, store), 99);
+    EXPECT_EQ(service.getNonPlayerBaseValue(values.mActor, 0, store), 100);
+    EXPECT_EQ(service.getNonPlayerBaseValue(values.mActor, 11, store), 12);
+    EXPECT_THROW(service.getNonPlayerValue(values.mActor, 11, store), std::invalid_argument);
+    EXPECT_THROW(service.getNonPlayerIntegerValue(values.mActor, 48, store), std::invalid_argument);
+    EXPECT_THROW(service.getNonPlayerBaseValue(values.mActor, 72, store), std::invalid_argument);
+    EXPECT_THROW(service.getNonPlayerValue(state.mPlayer.mReference, 0, store), std::invalid_argument);
+    auto replacement = state;
+    replacement.mPhysicalActions = {100, {99}};
+    const auto reject = [&](const MWWorld::ESMStore& invalidStore) {
+        EXPECT_THROW(service.restore(replacement, invalidStore), std::invalid_argument);
+        EXPECT_THROW(service.getNonPlayerValue(values.mActor, 0, invalidStore), std::invalid_argument);
+        EXPECT_TRUE(service.isActionPending(1));
+        EXPECT_FALSE(service.isActionPending(99));
+        EXPECT_EQ(*service.findActorValues(values.mActor), values);
+    };
+    MWWorld::ESMStore missing;
+    reject(missing);
+    ASSERT_TRUE(store.getWritable<ESM4::ActorCharacter>().eraseStatic(reference.mFormKey));
+    reject(store);
+    auto mismatch = reference;
+    mismatch.mBaseKey = ESM::FormKey::content("actors.esm", 0x801);
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(mismatch, reference.mFormKey);
+    reject(store);
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+    ESM4::Creature ambiguous{};
+    ambiguous.mId = npc.mId;
+    ambiguous.mFormKey = npc.mFormKey;
+    ambiguous.mAttackReach = 64;
+    store.getWritable<ESM4::Creature>().insertStatic(ambiguous, npc.mFormKey);
+    reject(store);
+    ASSERT_TRUE(store.getWritable<ESM4::Creature>().eraseStatic(npc.mFormKey));
+    npc.mIsTES4 = false;
+    store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+    reject(store);
+    npc.mIsTES4 = true;
+    store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+    state.mNativeActorValues[0].mActor = ESM::FormKey::dynamic("spawned", 5);
+    state.mReferences[0].mKey = state.mNativeActorValues[0].mActor;
+    service.restore(state, store); // Dynamic references have no content ACHR.
+    EXPECT_EQ(service.getNonPlayerValue(state.mReferences[0].mKey, 0, store), 100.75f);
 }

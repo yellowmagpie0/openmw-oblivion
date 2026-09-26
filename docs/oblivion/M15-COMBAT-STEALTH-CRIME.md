@@ -2766,3 +2766,42 @@ engine tests**, with all three binaries rebuilt. No schema or automatic script
 activation changed. Native SetAV base ownership, command eligibility/events,
 and complete World/script writer routing remain open; the handler oracle stops
 at actor virtual mutation calls and does not establish those later transitions.
+
+### S3 unloaded reads and native restore preflight
+
+Commit `eb96e91298` contains ForceAV delta arithmetic. The service now reads
+saved nonplayer float/integer/base values by stable key against winning content,
+without loading a cell or constructing a live actor. Content actors require the
+matching ACHR/ACRE and base key; dynamic actors require a valid native base but
+no content placement record. Missing, ambiguous, mismatched and later-game
+bases/references are rejected. Creature runtime Marksman still aliases Combat,
+while its integer base query remains Stealth. Player integer base queries expose
+floored derived values, including base Encumbrance capacity.
+
+World load prepares a separate native service and validates its content bindings
+before changing runtime serials, globals, inventories or projected player stats.
+The prepared maps and action ledger replace the existing service with a verified
+nonthrowing move after the other restore work. Existing file fingerprint checks
+still reject missing/changed content before application. This is native-service
+preflight, not yet a fully staged transaction for all legacy/AI/script state.
+
+`S3/unloaded-actors-01` passes **577 engine tests**, rebuilding all three engine
+binaries. The new no-World fixture exercises unloaded reads and rejection while
+preserving prior values/action ownership. Actual NPC/creature fixtures check
+content-aware restore, different base/current rounding and creature skill aliases.
+No component rules or save encoding changed; their preceding passing evidence
+remains applicable.
+
+`S3/unloaded-actors-reject-01` passes a real loader negative control using the
+editable `oblivion_m15_native_actor_binding_fault.json` and
+`oblivion_m15_reject_native_actor_binding.json` sources. The copied save is
+structurally decodable but falsely assigns native actor state to the static
+fixture object. The loader reports the exact invalid-base error before the
+runtime-state applied boundary; no save is written, and source/mutated input
+hashes remain unchanged. Independent checks are in
+`binding-rejection-verification.json`. The inspected screenshot shows the
+specific rejection dialog. `S3/unloaded-actors-restart-01` passes the unchanged
+valid save/quit/fresh-load/resave course with full live/binary agreement; its
+inspected image shows the textured fixture/HUD. Runtime executable SHA-256:
+`3900cf21985f6797dcf63739ab15e0d7c98cd34f322d0b245edc2e1029976bc3`.
+These silent tests do not establish automatic actor activation or combat.

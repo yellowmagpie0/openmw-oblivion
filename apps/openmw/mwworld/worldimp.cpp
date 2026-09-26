@@ -1238,6 +1238,16 @@ namespace MWWorld
         if (!mOblivionRuntimeState)
             return;
         const ESM4::RuntimeState& state = *mOblivionRuntimeState;
+        // Native actor bindings and service allocation must fail before any
+        // globals, inventories, serials or projected player stats are changed.
+        std::optional<MWMechanics::OblivionCombatService> preparedCombat;
+        if (mOblivionCombat)
+        {
+            preparedCombat.emplace();
+            preparedCombat->restore(state, mStore);
+        }
+        else
+            state.validate();
         const ESM::FormKeyResolver resolver(mContentFiles);
         mNextOblivionDynamicSerial = state.mNextDynamicSerial;
 
@@ -1642,8 +1652,11 @@ namespace MWWorld
             mOblivionScriptManager->restore(state);
         if (mOblivionAi)
             mOblivionAi->restore(state);
-        if (mOblivionCombat)
-            mOblivionCombat->restore(state);
+        if (preparedCombat)
+        {
+            static_assert(std::is_nothrow_move_assignable_v<MWMechanics::OblivionCombatService>);
+            *mOblivionCombat = std::move(*preparedCombat);
+        }
     }
 
     void World::runOblivionScripts(double secondsPassed)

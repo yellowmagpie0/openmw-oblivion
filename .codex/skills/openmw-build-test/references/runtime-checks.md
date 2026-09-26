@@ -92,3 +92,25 @@ and pristine hashes. Passed example:
 `S3/player-value-legacy-01/migration-verification.json`. Populated v9 player
 entries migrate without raw form inputs; the explicit player publication API
 rejects their activation until those inputs are deliberately initialized.
+
+## Rejecting structurally valid but non-actor bindings
+
+`oblivion_m15_reject_native_actor_binding.json` is a real-loader negative case.
+Prepare `OUTPUT/userdata/saves/M15Rejected/Quicksave.omwsave` from a **copy** of
+an S1 fixture save. Use the existing state helpers and editable fault source:
+
+```python
+state = load_save(source)
+fault = json.loads(Path("scripts/data/oblivion_compat/oblivion_m15_native_actor_binding_fault.json").read_text())
+state.update(fault)
+write_save(source, slot, state)  # source and slot MUST be different paths
+assert load_save(slot)["native_actor_values"] == fault["native_actor_values"]
+```
+
+Record source/fault/mutated-input hashes before running the scenario with the
+usual fixture variables. Afterwards require the exact native invalid-base error,
+no `Applied TES4 runtime state:` or save-write boundary, and unchanged source and
+mutated-input hashes. The error must come from content binding validation, not
+binary/schema parsing. Passed example:
+`S3/unloaded-actors-reject-01/binding-rejection-verification.json`.
+Inspect the rejection dialog and pair the negative case with a valid restart.
