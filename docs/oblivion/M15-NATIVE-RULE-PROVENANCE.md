@@ -2344,3 +2344,25 @@ The live creature regression now checks distinct base/live Marksman values
 and all 21 skill reads. All 560 engine tests pass with rebuilt binaries in
 `S2/creature-actor-av-01`. Earlier construction and NPC escort results remain
 valid within their recorded scopes; they did not verify this runtime alias.
+
+### Scalar actor-value modifier addition
+
+`0065BC70` adds two floats, explicitly stores the sum as float, and—when its
+third argument is zero—replaces strictly positive results with positive zero.
+Negative and signed-zero results survive. Player modifier dispatch `65D310`
+uses this helper for maximum, script and damage arrays; caller policy chooses
+the clamp. `addActorValueModifier` implements this narrow arithmetic, with
+finite-input and finite-result diagnostics. It is not a complete modifier
+mutation or permission to combine the three stored categories.
+
+**1,156 complete original helper cases** match production C++ bit-for-bit:
+17 by 17 signed, fractional, adjacent float, subnormal and large exact values,
+both clamp modes and both x87 modes. No original helper is stubbed; a final
+fixture instruction only stores ST0 for comparison. Evidence:
+`S2/oracle-emulator/actor-modifier-add*`, source
+`S2/sources-01/actor-value-modifier-add.txt`. Full components and ASan/UBSan
+ESM4 suites pass in `S2/actor-modifier-add-01`.
+
+NPC process mutation requires separate verification: `65CA60` uses a sparse
+map and its absent-entry branch is not identical to this scalar helper.
+Player/NPC composition order, caps, side effects and persistence remain open.

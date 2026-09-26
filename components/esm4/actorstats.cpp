@@ -8,6 +8,16 @@
 
 namespace ESM4
 {
+    float addActorValueModifier(float current, float delta, bool allowPositive)
+    {
+        if (!std::isfinite(current) || !std::isfinite(delta))
+            throw std::invalid_argument("nonfinite native actor-value modifier");
+        const float result = static_cast<float>(double(current) + double(delta));
+        if (!std::isfinite(result))
+            throw std::invalid_argument("native actor-value modifier overflow");
+        return !allowPositive && result > 0.f ? 0.f : result;
+    }
+
     void validateCreatureBaseStatsSettings(const CreatureBaseStatsSettings& settings)
     {
         for (float value : {settings.mCombatMultiplier, settings.mMagicMultiplier,

@@ -9,6 +9,11 @@
 
 namespace ESM4
 {
+    // Scalar native modifier arithmetic, not a complete actor-value mutation.
+    // Stores the sum as float before the optional nonpositive clamp. Caller
+    // selects the modifier category and handles notifications/derived values.
+    float addActorValueModifier(float current, float delta, bool allowPositive);
+
     // Pure native ACBS lookup. The optional player level represents its resolved
     // base-record field. Fixed levels bypass offset clamps. The returned signed
     // word preserves native wrapping and bounds order, including malformed raw

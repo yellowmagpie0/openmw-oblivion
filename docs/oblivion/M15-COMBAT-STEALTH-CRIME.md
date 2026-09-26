@@ -2402,3 +2402,13 @@ expectation. All **560 engine tests** pass with rebuilt binaries
 (`S2/creature-actor-av-01`); **1,776 independent original forwarding cases**
 verify the getter/setter/modifier aliases and argument preservation. S2 remains
 in progress; actor-value mutation/persistence investigation continues for S3.
+
+### S2 scalar actor-value modifier arithmetic
+
+Commit `d64619730f` contains the creature runtime alias correction. Added the
+verified scalar modifier-add rule needed by native stat authority. All **1,855
+component tests** and **333 ASan/UBSan ESM4 tests** pass
+(`S2/actor-modifier-add-01`), with **1,156 bit-exact original helper cases**
+matching compiled production C++. This preserves float-store order, optional
+nonpositive clamping and signed zero. Full actor mutation and persistence are
+still pending; this helper does not close S3.

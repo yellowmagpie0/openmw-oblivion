@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <limits>
+#include <cmath>
 #include <array>
 #include <stdexcept>
 
@@ -321,4 +322,34 @@ TEST(ESM4ActorStats, CreatureSettingsAndArithmeticRejectNonfiniteAndIntegerOverf
         std::invalid_argument);
     // Largest signed native conversion result is still valid before word storage.
     EXPECT_EQ(ESM4::calculateCreatureBaseStats(input, {2, 2, 2, 65536}).mDamage, 65535);
+}
+
+TEST(ESM4ActorStats, ModifierAdditionStoresFloatBeforeOptionalNonpositiveClamp)
+{
+    EXPECT_EQ(ESM4::addActorValueModifier(-10, 3, false), -7);
+    EXPECT_EQ(ESM4::addActorValueModifier(-10, 10, false), 0);
+    EXPECT_EQ(ESM4::addActorValueModifier(-10, 15, false), 0);
+    EXPECT_EQ(ESM4::addActorValueModifier(-10, 15, true), 5);
+    EXPECT_EQ(ESM4::addActorValueModifier(10, -3, false), 0);
+    EXPECT_EQ(ESM4::addActorValueModifier(10, -3, true), 7);
+    EXPECT_EQ(ESM4::addActorValueModifier(16777216.f, 1.f, true), 16777216.f);
+    EXPECT_EQ(ESM4::addActorValueModifier(-16777216.f, -1.f, false), -16777216.f);
+    EXPECT_EQ(ESM4::addActorValueModifier(1.f, 0x1p-24f, true), 1.f);
+    const auto tiny = std::numeric_limits<float>::denorm_min();
+    EXPECT_EQ(ESM4::addActorValueModifier(-tiny, -tiny, false), -2 * tiny);
+    EXPECT_EQ(ESM4::addActorValueModifier(0.f, tiny, false), 0.f);
+    EXPECT_TRUE(std::signbit(ESM4::addActorValueModifier(-0.f, -0.f, false)));
+}
+
+TEST(ESM4ActorStats, ModifierAdditionDiagnosesNonfiniteInputsAndOverflow)
+{
+    for (float value : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::addActorValueModifier(value, 1, true), std::invalid_argument);
+        EXPECT_THROW(ESM4::addActorValueModifier(1, value, false), std::invalid_argument);
+    }
+    const float largest = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::addActorValueModifier(largest, largest, false), std::invalid_argument);
+    EXPECT_THROW(ESM4::addActorValueModifier(-largest, -largest, true), std::invalid_argument);
 }
