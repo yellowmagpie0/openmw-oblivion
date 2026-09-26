@@ -267,3 +267,21 @@ TEST(ESM4CombatSettings, NpcAttributeBonusesUseTypedDefaultsAndOverrides)
     first.mData = std::numeric_limits<float>::infinity();
     EXPECT_THROW(ESM4::buildNpcAutoStatsSettings(inputs), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, CreatureScalingUsesVerifiedDefaultsAndTypedWinningOverrides)
+{
+    const auto compiled = ESM4::buildCreatureBaseStatsSettings({});
+    EXPECT_EQ(compiled.mCombatMultiplier, 2);
+    EXPECT_EQ(compiled.mMagicMultiplier, 2);
+    EXPECT_EQ(compiled.mStealthMultiplier, 2);
+    EXPECT_EQ(compiled.mDamageMultiplier, 1);
+    ESM4::GameSetting setting;
+    setting.mEditorId = "fCreatureCalcDamage";
+    setting.mData = -1.25f;
+    const std::array<const ESM4::GameSetting*, 1> inputs{&setting};
+    EXPECT_EQ(ESM4::buildCreatureBaseStatsSettings(inputs).mDamageMultiplier, -1.25f);
+    setting.mData = std::int32_t{2};
+    EXPECT_THROW(ESM4::buildCreatureBaseStatsSettings(inputs), std::invalid_argument);
+    setting.mData = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::buildCreatureBaseStatsSettings(inputs), std::invalid_argument);
+}

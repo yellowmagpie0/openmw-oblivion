@@ -176,6 +176,16 @@ namespace ESM4
         return result;
     }
 
+    CreatureBaseStatsSettings buildCreatureBaseStatsSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const CreatureBaseStatsSettings result{inputs.number("fCreatureCalcCombat", 2.f),
+            inputs.number("fCreatureCalcMagic", 2.f), inputs.number("fCreatureCalcStealth", 2.f),
+            inputs.number("fCreatureCalcDamage", 1.f)};
+        validateCreatureBaseStatsSettings(result);
+        return result;
+    }
+
     NpcAutoStatsSettings buildNpcAutoStatsSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

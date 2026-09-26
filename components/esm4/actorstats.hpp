@@ -89,6 +89,43 @@ namespace ESM4
     // NPC-only base auto-calculation. Personality retains its authored value.
     // Native byte storage wraps negative rounded values; no lower clamp exists.
     NpcAutoStats calculateNpcAutoStats(const NpcAutoStatsInput& input, const NpcAutoStatsSettings& settings);
+    struct CreatureBaseStatsSettings
+    {
+        float mCombatMultiplier;
+        float mMagicMultiplier;
+        float mStealthMultiplier;
+        float mDamageMultiplier;
+    };
+
+    struct CreatureBaseStatsInput
+    {
+        bool mPlayerLevelOffset;
+        std::int16_t mResolvedLevel;
+        std::uint8_t mCombat;
+        std::uint8_t mMagic;
+        std::uint8_t mStealth;
+        std::uint16_t mHealth;
+        std::uint16_t mMagicka;
+        std::uint16_t mFatigue;
+        std::uint16_t mDamage;
+    };
+
+    struct CreatureBaseStats
+    {
+        std::uint8_t mCombat;
+        std::uint8_t mMagic;
+        std::uint8_t mStealth;
+        std::uint16_t mHealth;
+        std::uint16_t mMagicka;
+        std::uint16_t mFatigue;
+        std::uint16_t mDamage;
+    };
+
+    void validateCreatureBaseStatsSettings(const CreatureBaseStatsSettings& settings);
+    // Native CREA getters scale only PC-level-offset records. Attributes stay
+    // authored. Skill/damage conversion truncates then wraps byte/word storage.
+    CreatureBaseStats calculateCreatureBaseStats(
+        const CreatureBaseStatsInput& input, const CreatureBaseStatsSettings& settings);
 }
 
 #endif

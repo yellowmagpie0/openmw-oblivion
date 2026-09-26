@@ -254,3 +254,71 @@ TEST(ESM4ActorStats, NpcAutoCalculationRejectsUnresolvedDefinitionsAndOverflow)
     EXPECT_THROW(ESM4::calculateNpcAutoStats(valid, {-std::numeric_limits<float>::max(), 5}),
         std::invalid_argument);
 }
+
+TEST(ESM4ActorStats, CreatureScalingUsesResolvedLevelAndDistinctSkillGroups)
+{
+    ESM4::CreatureBaseStatsInput input{true, 10, 10, 20, 30, 5, 6, 7, 40};
+    const ESM4::CreatureBaseStatsSettings settings{2, 3, 4, 1};
+    auto result = ESM4::calculateCreatureBaseStats(input, settings);
+    EXPECT_EQ(result.mCombat, 30);
+    EXPECT_EQ(result.mMagic, 50);
+    EXPECT_EQ(result.mStealth, 70);
+    EXPECT_EQ(result.mHealth, 50);
+    EXPECT_EQ(result.mMagicka, 60);
+    EXPECT_EQ(result.mFatigue, 70);
+    EXPECT_EQ(result.mDamage, 50);
+    input.mResolvedLevel = -5; // These native getters apply their own floor.
+    result = ESM4::calculateCreatureBaseStats(input, settings);
+    EXPECT_EQ(result.mCombat, 12);
+    EXPECT_EQ(result.mMagic, 23);
+    EXPECT_EQ(result.mStealth, 34);
+    EXPECT_EQ(result.mHealth, 5);
+    EXPECT_EQ(result.mDamage, 41);
+    input.mPlayerLevelOffset = false;
+    input.mResolvedLevel = 32767;
+    result = ESM4::calculateCreatureBaseStats(input, settings);
+    EXPECT_EQ(result.mCombat, 10);
+    EXPECT_EQ(result.mMagic, 20);
+    EXPECT_EQ(result.mStealth, 30);
+    EXPECT_EQ(result.mHealth, 5);
+    EXPECT_EQ(result.mMagicka, 6);
+    EXPECT_EQ(result.mFatigue, 7);
+    EXPECT_EQ(result.mDamage, 40);
+}
+
+TEST(ESM4ActorStats, CreatureGettersTruncateThenWrapNativeByteAndWordResults)
+{
+    ESM4::CreatureBaseStatsInput input{true, 2, 255, 250, 0, 65535, 32768, 0, 65535};
+    auto result = ESM4::calculateCreatureBaseStats(input, {2, 2, .9f, 1});
+    EXPECT_EQ(result.mCombat, 3);
+    EXPECT_EQ(result.mMagic, 254);
+    EXPECT_EQ(result.mStealth, 1); // Truncate 1.8, do not round to nearest.
+    EXPECT_EQ(result.mHealth, 65534);
+    EXPECT_EQ(result.mMagicka, 0);
+    EXPECT_EQ(result.mFatigue, 0);
+    EXPECT_EQ(result.mDamage, 1);
+    input = {true, 1, 0, 0, 0, 0, 0, 0, 0};
+    result = ESM4::calculateCreatureBaseStats(input, {-1.25f, -.9f, 1.9f, -1.25f});
+    EXPECT_EQ(result.mCombat, 255);
+    EXPECT_EQ(result.mMagic, 0);
+    EXPECT_EQ(result.mStealth, 1);
+    EXPECT_EQ(result.mDamage, 65535);
+}
+
+TEST(ESM4ActorStats, CreatureSettingsAndArithmeticRejectNonfiniteAndIntegerOverflow)
+{
+    const ESM4::CreatureBaseStatsInput input{true, 32767, 255, 255, 255, 65535, 65535, 65535, 65535};
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::calculateCreatureBaseStats(input, {value, 2, 2, 1}), std::invalid_argument);
+        EXPECT_THROW(ESM4::calculateCreatureBaseStats(input, {2, value, 2, 1}), std::invalid_argument);
+        EXPECT_THROW(ESM4::calculateCreatureBaseStats(input, {2, 2, value, 1}), std::invalid_argument);
+        EXPECT_THROW(ESM4::calculateCreatureBaseStats(input, {2, 2, 2, value}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::calculateCreatureBaseStats(input, {std::numeric_limits<float>::max(), 2, 2, 1}),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::calculateCreatureBaseStats(input, {2, 2, 2, -std::numeric_limits<float>::max()}),
+        std::invalid_argument);
+    // Largest signed native conversion result is still valid before word storage.
+    EXPECT_EQ(ESM4::calculateCreatureBaseStats(input, {2, 2, 2, 65536}).mDamage, 65535);
+}

@@ -2295,3 +2295,29 @@ attempt exposes a missing store-header include; attempt `-02` exposes the
 required explicit `TypedDynamicStore<Skill>` instantiation at link time.
 Both failures are retained. Corrected `-03` builds openmw/openmw-tests/esmtool
 and passes all engine tests, including the actual-store loader fixture.
+
+### Native creature base-stat scaling
+
+Original executable helpers `51CC00/51CB80/51CB00` calculate combat, magic and
+stealth skills; `51C980` calculates damage, `51CA10` health, and `51CAA0/51CAD0`
+magicka/fatigue. Only PCLevelOffset creatures scale. Each uses resolved level
+floored at one (not levels gained). Skills/damage add level times their GMST,
+truncate without an intermediate float store, then store a byte/word. Dynamic
+base values multiply their authored word by level and wrap to a word. Attributes
+stay authored. Full base-AV dispatch `51D540` maps the three groups to AV12..18,
+19..25 and 26..32. There is no skill cap of 100 in these getters.
+
+The independently hashed executable corpus has **2,880 cases**, both x87 modes,
+fixed/scaled flags, signed levels, fractional/negative multipliers and byte/word
+wrap boundaries. All match compiled production C++ exactly. An additional
+**420 original dispatch cases** verify group mapping. Only the player-level
+query is stubbed; the original getters, level logic and integer conversion run.
+Evidence is in `S2/oracle-emulator/creature-base-stats-*` and
+`creature-skill-dispatch-*`; disassembly/GMST initialization provenance is under
+`S2/sources-01/creature-*`. Defaults are combat/magic/stealth 2 and damage 1,
+with no installed overrides. The input manifest now includes these and the
+verified NPC auto-calculation settings. Nonfinite inputs and signed-conversion
+overflow are diagnosed, not assigned invented native results.
+
+`S2/creature-base-stats-01` passes full components and ASan/UBSan ESM4 suites.
+These are construction rules, not evidence of live combat integration.

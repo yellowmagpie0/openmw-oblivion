@@ -2338,3 +2338,14 @@ official plugins parse, and 21 typed SKIL definitions agree with independent
 raw decoding (`native-stat-record-dumps-01`). `audit-13` passes the expanded
 content count lock with zero data failures. S2 remains in progress; S3–S14
 remain pending. Next: creature base-stat scaling and actor construction inputs.
+
+### S2 creature base stats
+
+Commit `48fa6de6ce` contains the native record integration. Added creature
+skill-group, natural damage and dynamic base-stat scaling, preserving native
+truncation and byte/word wrapping. All **1,853 component tests** and **331
+ASan/UBSan ESM4 tests** pass (`S2/creature-base-stats-01`). Production C++
+matches **2,880 original-executable cases** exactly; **420 original dispatch
+cases** independently verify skill-group mapping. Updated the native setting
+manifest with verified NPC and creature inputs. S2 remains in progress;
+S3–S14 remain pending. Next: winning-store actor construction inputs.

@@ -8,6 +8,39 @@
 
 namespace ESM4
 {
+    void validateCreatureBaseStatsSettings(const CreatureBaseStatsSettings& settings)
+    {
+        for (float value : {settings.mCombatMultiplier, settings.mMagicMultiplier,
+                 settings.mStealthMultiplier, settings.mDamageMultiplier})
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite native creature stat multiplier");
+    }
+
+    CreatureBaseStats calculateCreatureBaseStats(
+        const CreatureBaseStatsInput& input, const CreatureBaseStatsSettings& settings)
+    {
+        validateCreatureBaseStatsSettings(settings);
+        if (!input.mPlayerLevelOffset)
+            return {input.mCombat, input.mMagic, input.mStealth, input.mHealth,
+                input.mMagicka, input.mFatigue, input.mDamage};
+        const int level = std::max<int>(1, input.mResolvedLevel);
+        const auto addLevel = [level](unsigned base, float multiplier) {
+            const double result = std::trunc(double(base) + level * double(multiplier));
+            if (!std::isfinite(result) || result < std::numeric_limits<std::int32_t>::min()
+                || result > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("native creature stat integer overflow");
+            return static_cast<std::int32_t>(result);
+        };
+        const auto multiplyLevel = [level](std::uint16_t base) {
+            return static_cast<std::uint16_t>(std::uint32_t(base) * level);
+        };
+        return {static_cast<std::uint8_t>(addLevel(input.mCombat, settings.mCombatMultiplier)),
+            static_cast<std::uint8_t>(addLevel(input.mMagic, settings.mMagicMultiplier)),
+            static_cast<std::uint8_t>(addLevel(input.mStealth, settings.mStealthMultiplier)),
+            multiplyLevel(input.mHealth), multiplyLevel(input.mMagicka), multiplyLevel(input.mFatigue),
+            static_cast<std::uint16_t>(addLevel(input.mDamage, settings.mDamageMultiplier))};
+    }
+
     void validateNpcAutoStatsSettings(const NpcAutoStatsSettings& settings)
     {
         if (!std::isfinite(settings.mPrimaryAttributeBonus) || !std::isfinite(settings.mSecondaryAttributeBonus))

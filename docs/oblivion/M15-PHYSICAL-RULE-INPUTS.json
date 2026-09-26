@@ -689,7 +689,7 @@
         "value": 10.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-69",
-      "note": "Lookup provenance only; regeneration arithmetic/integration remains open."
+      "note": "Native regeneration arithmetic independently instruction-tested; live restoration/clamping and persistence integration remain open."
     },
     {
       "name": "fFatigueReturnMult",
@@ -703,7 +703,7 @@
         "value": 0.0
       },
       "live_setting_probe": "M15-S2-ORACLE-GMST-70",
-      "note": "Lookup provenance only; regeneration arithmetic/integration remains open."
+      "note": "Native regeneration arithmetic independently instruction-tested; live restoration/clamping and persistence integration remain open."
     },
     {
       "name": "fKnockdownAgilBase",
@@ -1661,6 +1661,125 @@
       "constructor": "0x9e9c67",
       "type": "int32",
       "installed_override": null
+    },
+    {
+      "name": "fNPCAttributeHealthMult",
+      "value": 0.5,
+      "storage": "0xb37be8",
+      "constructor": "0x9ed98f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:094042",
+        "type": "f",
+        "value": 0.5
+      },
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "iNPCBasePerLevelHealthMult",
+      "value": 4,
+      "storage": "0xb37be0",
+      "constructor": "0x9ed967",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c7911",
+        "type": "i",
+        "value": 4
+      },
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "iLowLevelNPCMaxLevel",
+      "value": 3,
+      "storage": "0xb37bd8",
+      "constructor": "0x9ed947",
+      "type": "int32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c7912",
+        "type": "i",
+        "value": 4
+      },
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fLowLevelNPCBaseHealthMult",
+      "value": 0.25,
+      "storage": "0xb37bd0",
+      "constructor": "0x9ed91f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0c7913",
+        "type": "f",
+        "value": 0.4000000059604645
+      },
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fNPCBaseMagickaMult",
+      "value": 0.20000000298023224,
+      "storage": "0xb37718",
+      "constructor": "0x9ebe2f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:09e642",
+        "type": "f",
+        "value": 1.5
+      },
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fAttributeClassPrimaryBonus",
+      "value": 5.0,
+      "storage": "0xb362e4",
+      "constructor": "0x9e3c2f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fAttributeClassSecondaryBonus",
+      "value": 5.0,
+      "storage": "0xb362ec",
+      "constructor": "0x9e3c5f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fCreatureCalcCombat",
+      "value": 2.0,
+      "storage": "0xb362a4",
+      "constructor": "0x9e3b4f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fCreatureCalcMagic",
+      "value": 2.0,
+      "storage": "0xb362ac",
+      "constructor": "0x9e3b7f",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fCreatureCalcStealth",
+      "value": 2.0,
+      "storage": "0xb362b4",
+      "constructor": "0x9e3baf",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
+    },
+    {
+      "name": "fCreatureCalcDamage",
+      "value": 1.0,
+      "storage": "0xb3629c",
+      "constructor": "0x9e3b10",
+      "type": "float32",
+      "installed_override": null,
+      "note": "Native base-stat arithmetic independently instruction-tested; actor construction and persistence integration remain open."
     }
   ]
 }
