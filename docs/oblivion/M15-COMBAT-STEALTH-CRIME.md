@@ -2349,3 +2349,19 @@ matches **2,880 original-executable cases** exactly; **420 original dispatch
 cases** independently verify skill-group mapping. Updated the native setting
 manifest with verified NPC and creature inputs. S2 remains in progress;
 S3–S14 remain pending. Next: winning-store actor construction inputs.
+
+### S2 winning-store actor stat resolver
+
+Commit `6591e83b5f` contains creature scaling. Added a read-only engine resolver
+for native NPC/creature construction inputs: stable actor keys, winning race,
+class, SKIL and GMST records, effective levels, signed racial bonuses and native
+base-stat rules. Fixed actors retain authored fields; the player base explicitly
+requires the separate M12 path. Diagnostics identify missing or unsupported
+inputs instead of using TES3 definitions. Base records are never mutated.
+
+All **557 engine tests** pass and openmw/openmw-tests/esmtool build successfully
+(`S2/actor-stat-store-01`). New actual-store tests cover original NPC expected
+values, skill override/deletion, fixed NPCs, scaled creatures and invalid
+inputs. Pure rule suites passed in the preceding chunk and were not rerun.
+The resolver is not yet called by live actor construction; that integration
+and S3 state authority remain next. S2 remains in progress; S3–S14 pending.
