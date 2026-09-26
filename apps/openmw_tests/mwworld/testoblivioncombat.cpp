@@ -90,6 +90,7 @@ TEST(OblivionCombatService, NativeValuesAndActionsRestoreTogetherOrRemainUnchang
     actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
     actor.mOwner = ESM4::ActorValueOwner::Player;
     actor.mValues[8] = {100, {10, 5, -20}};
+    actor.mPlayerFormValues = {{-1, 2, 3, 4}};
     state.mNativeActorValues = {actor};
     state.mPhysicalActions = {3, {1}};
     MWMechanics::OblivionCombatService service;
@@ -108,6 +109,10 @@ TEST(OblivionCombatService, NativeValuesAndActionsRestoreTogetherOrRemainUnchang
     service.capture(captured);
     EXPECT_EQ(captured.mNativeActorValues, state.mNativeActorValues);
     EXPECT_EQ(captured.mPhysicalActions, state.mPhysicalActions);
+    auto v9 = savedState(9);
+    EXPECT_THROW(service.capture(v9), std::invalid_argument);
+    EXPECT_TRUE(v9.mNativeActorValues.empty());
+    EXPECT_EQ(v9.mPhysicalActions, ESM4::ActionLedgerState{});
     auto old = savedState(8);
     EXPECT_THROW(service.capture(old), std::invalid_argument);
     EXPECT_TRUE(old.mNativeActorValues.empty());

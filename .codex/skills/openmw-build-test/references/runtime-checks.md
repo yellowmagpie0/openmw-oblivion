@@ -83,3 +83,12 @@ complete current fixture or use the actual migration helper. Changing only the
 version omits required name/race/class and nonzero AI RNG defaults. Run the
 focused Python fixture before starting a broad build; do not start the runner
 unconditionally after a failed preflight. Preserve failed evidence directories.
+
+Schema 10 uses the same idle checks. A proven v9 input is
+`build/oblivion-compat/m15/S3/native-actor-values-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `3f81fc4e94500d2fc2c1a49e31a37fbe08c159f6a7dd07607b0e706bbdd25e69`).
+Require the current schema, preserved ledger/native entries and unchanged source
+and pristine hashes. Passed example:
+`S3/player-value-legacy-01/migration-verification.json`. Populated v9 player
+entries migrate without raw form inputs; the explicit player publication API
+rejects their activation until those inputs are deliberately initialized.

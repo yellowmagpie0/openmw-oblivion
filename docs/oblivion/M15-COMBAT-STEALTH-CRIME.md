@@ -15,7 +15,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
-| S3 services/persistence | pending | No implementation/evidence | Native authorities and version migration |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -2683,3 +2683,56 @@ These are service/class integration checks; automatic world/script activation,
 player authority, migration reconciliation, death/eligibility policy and the
 remaining S3–S14 gates are still open. No runtime performance budget is claimed
 from eliminating map copies alone.
+
+### S3 player raw inputs and derived-value authority
+
+Commit `be764789de` contains the preceding creature chunk. Schema 10 adds an
+optional four-int32 `player_form_values` field to each native actor entry,
+after its 72 scalar states in binary (strict presence byte, then AV8–11 inputs).
+Only player entries may contain it. Resolved bases remain distinct; old v9
+entries preserve their values and migrate with absent raw inputs, never guessed
+zeroes. Downgrading populated inputs fails before service capture changes its
+target. C++ and Python retain equivalent wire/JSON validation.
+
+The service can explicitly publish/mutate the actual projected `MWWorld::Player`
+using the existing player/player-base aliases. Publication requires raw inputs,
+resolves current integer attributes and float AV40, recomputes all four derived
+bases using the previously verified original rules and caller-supplied winning
+settings, then prepares and commits all shared views atomically. Player Magicka
+is not scaled a second time by the NPC outer-query rule. Player Paralysis remains
+an ordinary scalar; current Encumbrance requires the separate inventory path.
+Negative health is preserved without inferring death policy.
+
+The actual-player fixture uses the real NPC class, custom data, ESMStore and
+WorldModel. It exercises fractional versus integer attributes, derived changes,
+repeated publication, retained raw inputs, overflow/missing-input rejection,
+read-only shared views, binary restore into a fresh Player and a further
+modifier change after restore. The initial preflight build failure was two
+ambiguous optional initializers in the test, corrected before the passing
+five-test player/service preflight; logs remain under `S3/player-preflight-*`.
+
+This is explicit service authority, not automatic gameplay activation. Winning
+base-input initialization, legacy reconciliation, World writer routing and
+active gameplay acceptance remain open. Verification results follow below.
+
+Verification `S3/player-value-authority-01` passes **1,882 component /360
+ASan+UBSan ESM4 /160 Python /576 engine tests**, with all three engine binaries
+rebuilt. Source fingerprint:
+`9187d1f78e5cabecfd3027251baa314cfbb3be9eedb979424704ecbfc3a8fb4e`.
+The additional Python nonplayer rejection fixture initially indexed an empty
+reference list; it was corrected to construct a real reference before the
+passing preflight and recorded full run. Existing inventory initializer warnings
+remain; sanitizer coverage is components only, with leak checks disabled.
+
+Real-engine `S3/player-value-restart-01` passes save/quit/fresh-load/resave and
+full live/binary comparison in schema 10. `S3/player-value-legacy-01` passes
+actual v9 load/resave, independent schema/ledger/native-state checks and unchanged
+source/pristine hashes. Input SHA-256:
+`3f81fc4e94500d2fc2c1a49e31a37fbe08c159f6a7dd07607b0e706bbdd25e69`.
+`S3/player-value-morrowind-01` passes unchanged profile-isolation checks, including
+absence of native markers in the actual Morrowind save. Runtime executable
+SHA-256: `5920032ea33c4ea071adabe24cda96e47e12d02a56ae71cf2c9918e5ceab2eac`.
+Inspected images show the textured native fixture/HUD and the existing
+terrain-facing Morrowind view. These silent idle scenarios have empty native
+actor vectors; they establish schema migration/isolation, not active player
+combat, audio, or full Morrowind gameplay acceptance. S3 remains in progress.

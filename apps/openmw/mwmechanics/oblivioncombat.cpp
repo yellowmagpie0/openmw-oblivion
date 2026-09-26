@@ -13,6 +13,7 @@
 #include <components/esm4/loadnpc.hpp>
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
+#include "../mwworld/player.hpp"
 
 #include "creaturestats.hpp"
 #include "npcstats.hpp"
@@ -76,7 +77,22 @@ namespace MWMechanics
             return ESM4::scaleNpcMagicka(current, multiplier);
         }
 
-        OblivionActorProjectionInput nonPlayerProjection(const ESM4::RuntimeActorValues& values)
+        void validatePlayerIdentity(const ESM4::RuntimeActorValues& values)
+        {
+            if (values.mOwner != ESM4::ActorValueOwner::Player
+                || values.mActor != ESM::FormKey::dynamic("player", 1)
+                || values.mBase != ESM::FormKey::dynamic("player-base", 1)
+                || !values.mPlayerFormValues)
+                throw std::invalid_argument("native player values require player aliases and raw form inputs");
+        }
+
+        void validatePlayerQuery(std::uint8_t value)
+        {
+            if (value >= 72 || value == 11)
+                throw std::invalid_argument("native player scalar query excludes inventory Encumbrance");
+        }
+
+        OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values)
         {
             OblivionActorProjectionInput input;
             input.mOwner = values.mOwner;
@@ -89,7 +105,9 @@ namespace MWMechanics
                 input.mDynamic[i] = {value.mBase,
                     ESM4::dynamicActorValueMaximum(ESM4::combatBaseValue(value.mBase),
                         value.mModifiers[0].value_or(0.f), values.mOwner, values.mProcess),
-                    nonPlayerFloat(values, static_cast<std::uint8_t>(8 + i))};
+                    values.mOwner == ESM4::ActorValueOwner::Player
+                        ? ESM4::composeActorValue(value, values.mOwner, values.mProcess)
+                        : nonPlayerFloat(values, static_cast<std::uint8_t>(8 + i))};
             }
             return input;
         }
@@ -199,7 +217,7 @@ namespace MWMechanics
     {
         values.validate();
         validateNonPlayerIdentity(actor, values);
-        const auto projection = nonPlayerProjection(values);
+        const auto projection = actorProjection(values);
         std::optional<OblivionActorProjection> prepared;
         std::array<float, 21> preparedSkills{};
         std::array<float, 21>* creatureSkills = nullptr;
@@ -264,6 +282,69 @@ namespace MWMechanics
         return ESM4::scaleNpcIntegerMagicka(current, multiplier);
     }
 
+    const ESM4::RuntimeActorValues& OblivionCombatService::playerValues() const
+    {
+        const auto* values = findActorValues(ESM::FormKey::dynamic("player", 1));
+        if (!values)
+            throw std::invalid_argument("native player values have not been initialized");
+        validatePlayerIdentity(*values);
+        return *values;
+    }
+
+    void OblivionCombatService::publishPlayerValues(MWWorld::Player& player, ESM4::RuntimeActorValues values,
+        const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        values.validate();
+        validatePlayerIdentity(values);
+        std::array<std::int32_t, 8> attributes;
+        for (std::size_t i = 0; i < attributes.size(); ++i)
+            attributes[i] = ESM4::composeIntegerActorValue(ESM4::combatBaseValue(values.mValues[i].mBase),
+                values.mValues[i].mModifiers, values.mOwner, values.mProcess);
+        const auto magickaMultiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
+        for (std::size_t i = 0; i < values.mPlayerFormValues->size(); ++i)
+            values.mValues[8 + i].mBase = ESM4::calculatePlayerDynamicBaseValue(
+                {static_cast<ESM4::DynamicActorValue>(8 + i), (*values.mPlayerFormValues)[i],
+                    attributes, magickaMultiplier}, settings);
+        values.validate();
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values));
+        const auto found = mActorValues.find(values.mActor);
+        if (found == mActorValues.end())
+        {
+            const auto key = values.mActor;
+            mActorValues.emplace(key, std::move(values));
+        }
+        else
+            std::swap(found->second, values);
+        prepared.commit();
+    }
+
+    void OblivionCombatService::changePlayerValue(MWWorld::Player& player, std::uint8_t value,
+        ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        validatePlayerQuery(value);
+        auto candidate = playerValues();
+        candidate.mValues[value] = ESM4::changeActorValueModifier(
+            candidate.mValues[value], candidate.mOwner, modifier, delta);
+        publishPlayerValues(player, std::move(candidate), settings);
+    }
+
+    float OblivionCombatService::getPlayerValue(std::uint8_t value) const
+    {
+        validatePlayerQuery(value);
+        const auto& values = playerValues();
+        return ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
+    }
+
+    std::int32_t OblivionCombatService::getPlayerIntegerValue(std::uint8_t value) const
+    {
+        validatePlayerQuery(value);
+        const auto& values = playerValues();
+        const auto& state = values.mValues[value];
+        return ESM4::composeIntegerActorValue(
+            ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
+    }
+
     const ESM4::RuntimeActorValues* OblivionCombatService::findActorValues(const ESM::FormKey& actor) const
     {
         const auto found = mActorValues.find(actor);
@@ -280,7 +361,11 @@ namespace MWMechanics
         std::vector<ESM4::RuntimeActorValues> actors;
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
+        {
+            if (state.mVersion < 10 && actor.mPlayerFormValues)
+                throw std::invalid_argument("native player form values require an Oblivion v10+ save");
             actors.push_back(actor);
+        }
         auto actions = mActions.capture();
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);

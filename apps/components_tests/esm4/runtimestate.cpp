@@ -420,6 +420,7 @@ namespace
     TEST(ESM4RuntimeState, nativeActorValuesPreserveSparsePresenceAndSignedZero)
     {
         auto state = makeState();
+        state.mVersion = 9;
         ESM4::RuntimeActorValues actor;
         actor.mActor = state.mPlayer.mReference;
         actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
@@ -463,6 +464,56 @@ namespace
         corrupt[countOffset] = 2;
         corrupt.insert(corrupt.end(), bytes.begin() + countOffset + 4, bytes.end());
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, playerFormInputsHaveIndependentVersionTenWireStorage)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        actor.mValues[8].mBase = 123.f; // Resolved cache must not replace raw input.
+        actor.mPlayerFormValues = {{-1, 0, std::numeric_limits<std::int32_t>::min(),
+            std::numeric_limits<std::int32_t>::max()}};
+        state.mNativeActorValues = {actor};
+        const auto bytes = state.serializeBinary();
+        const std::vector<std::uint8_t> suffix{1, 255, 255, 255, 255, 0, 0, 0, 0,
+            0, 0, 0, 128, 255, 255, 255, 127};
+        ASSERT_GE(bytes.size(), suffix.size());
+        EXPECT_TRUE(std::equal(suffix.begin(), suffix.end(), bytes.end() - suffix.size()));
+        auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(state.canonicalJson().find("\"player_form_values\":[-1,0,-2147483648,2147483647]"),
+            std::string::npos);
+        for (std::size_t remove = 1; remove <= suffix.size(); ++remove)
+        {
+            auto truncated = bytes;
+            truncated.resize(bytes.size() - remove);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        auto corrupt = bytes;
+        corrupt[bytes.size() - suffix.size()] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        state.mVersion = 9;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+        state.mVersion = 10;
+        state.mNativeActorValues[0].mOwner = ESM4::ActorValueOwner::NonPlayer;
+        EXPECT_THROW(state.mNativeActorValues[0].validate(), std::runtime_error);
+        state.mNativeActorValues[0] = actor;
+        state.mNativeActorValues[0].mPlayerFormValues.reset();
+        state.mVersion = 9;
+        const auto legacy = state.serializeBinary();
+        restored = ESM4::RuntimeState::deserializeBinary(legacy);
+        EXPECT_FALSE(restored.mNativeActorValues[0].mPlayerFormValues);
+        EXPECT_EQ(restored.mNativeActorValues[0].mValues[8].mBase, 123.f);
+        EXPECT_EQ(restored.canonicalJson().find("player_form_values"), std::string::npos);
+        restored.mVersion = 10;
+        const auto migrated = ESM4::RuntimeState::deserializeBinary(restored.serializeBinary());
+        EXPECT_EQ(migrated.mNativeActorValues, restored.mNativeActorValues);
+        EXPECT_NE(migrated.canonicalJson().find("\"player_form_values\":null"), std::string::npos);
     }
 
     TEST(ESM4RuntimeState, nativeActorValuesRejectInvalidAndDanglingAuthority)

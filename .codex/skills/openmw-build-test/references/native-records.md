@@ -53,3 +53,14 @@ fill an otherwise empty embedded identity. Real record loading supplies both.
 Set the reference's own FormKey separately and assert both identities before
 publication; do not weaken production identity validation for an incomplete
 fixture. Include the concrete native record header in code using `Ptr.get<T>()`.
+
+The Oblivion player is a projected `ESM::NPC` owned by `MWWorld::Player`, not a
+native `ESM4::Npc`. The actual-player authority fixture in the same test file
+constructs Player from a static NPC inserted through `ESMStore::insertStatic`
+(so the generic record index is populated). Register `MWClass::Npc`, construct
+an empty `ESM::NpcState`, call `blank()`, and load it through the class's
+`readAdditionalState`. This creates the real private NpcCustomData without
+requiring a large World fake for inventory filling/PRNG. Keep `mMissingACDT`
+and `mRecalcDynamicStats` false; populate shared attributes/skills first. Empty
+spell/inventory state avoids unrelated World callbacks. This tests the actual
+projected class, not full World activation or normal gameplay.

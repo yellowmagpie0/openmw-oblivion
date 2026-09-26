@@ -6,6 +6,9 @@
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include <components/esm4/actorvalues.hpp>
 #include <components/esm3/statstate.hpp>
+#include <components/esm3/npcstate.hpp>
+#include "apps/openmw/mwclass/npc.hpp"
+#include "apps/openmw/mwworld/player.hpp"
 #include <components/esm3/readerscache.hpp>
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwclass/esm4npc.hpp"
@@ -230,6 +233,115 @@ namespace
         EXPECT_EQ(ptr.getClass().getNpcStats(ptr).getAttribute(ESM::Attribute::Strength).getModified(), 53);
         EXPECT_EQ(ptr.getClass().getCapacity(ptr), 265);
         EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
+    }
+
+    TEST_F(OblivionActorStatsTest, nativePlayerRecomputesFromRawInputsAndRestoresIntoActualPlayer)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto& stats = ptr.getClass().getNpcStats(ptr);
+        MWMechanics::OblivionCombatService service;
+        EXPECT_THROW(service.getPlayerValue(8), std::invalid_argument);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{7, 3, 9, -3}};
+        values.mValues[0] = {50.75f, {.5f, -.25f, -.5f}};
+        values.mValues[1] = {30, {.5f, .25f, {}}};
+        values.mValues[2].mBase = 20;
+        values.mValues[3].mBase = 10;
+        values.mValues[5] = {40.75f, {std::nullopt, -.5f, std::nullopt}};
+        values.mValues[8] = {999, {10.5f, .25f, -5.f}};
+        values.mValues[9] = {999, {5.5f, .25f, -10.f}};
+        values.mValues[40].mBase = 15;
+        values.mValues[48] = {1.25f, {std::nullopt, .5f, std::nullopt}};
+        values.mValues[28] = {20.5f, {2.f, .25f, -1.f}};
+        const ESM4::PlayerDynamicBaseSettings settings{2, 1, 5};
+        service.publishPlayerValues(player, values, settings);
+        EXPECT_EQ(service.getPlayerValue(0), 50.5f);
+        EXPECT_EQ(service.getPlayerIntegerValue(0), 49);
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 50.5f);
+        EXPECT_EQ(stats.getHealth().getBase(), 85);
+        EXPECT_EQ(stats.getHealth().getModified(), 95.5f);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 90.75f);
+        EXPECT_EQ(stats.getMagicka().getBase(), 94.5f);
+        EXPECT_EQ(stats.getMagicka().getModified(), 99.5f);
+        EXPECT_EQ(stats.getMagicka().getCurrent(), 90.25f);
+        EXPECT_EQ(service.getPlayerIntegerValue(9), 89);
+        EXPECT_EQ(stats.getFatigue().getBase(), 127);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[11].mBase, 242);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 21.75f);
+        EXPECT_EQ(service.getPlayerValue(48), 1.75f); // Player has no High-process cache branch.
+        EXPECT_THROW(service.getPlayerValue(11), std::invalid_argument);
+        EXPECT_THROW(service.getPlayerIntegerValue(72), std::invalid_argument);
+        const auto first = *service.findActorValues(values.mActor);
+        service.publishPlayerValues(player, first, settings);
+        EXPECT_EQ(*service.findActorValues(values.mActor), first);
+        service.changePlayerValue(player, 5, ESM4::ActorValueModifier::Script, 1, settings);
+        EXPECT_EQ(stats.getHealth().getBase(), 87);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 92.75f);
+        EXPECT_EQ(stats.getFatigue().getBase(), 128);
+        service.changePlayerValue(player, 40, ESM4::ActorValueModifier::Script, 5, settings);
+        EXPECT_EQ(stats.getMagicka().getBase(), 126);
+        EXPECT_EQ(stats.getMagicka().getCurrent(), 121.75f);
+        service.changePlayerValue(player, 8, ESM4::ActorValueModifier::Damage, -1000, settings);
+        EXPECT_EQ(stats.getHealth().getCurrent(), -907.25f);
+        EXPECT_FALSE(stats.isDead()); // The scalar transaction does not own death policy.
+        const auto before = *service.findActorValues(values.mActor);
+        EXPECT_EQ(before.mPlayerFormValues, values.mPlayerFormValues);
+        auto invalid = before;
+        invalid.mPlayerFormValues.reset();
+        EXPECT_THROW(service.publishPlayerValues(player, invalid, settings), std::invalid_argument);
+        invalid = before;
+        invalid.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        EXPECT_THROW(service.publishPlayerValues(player, invalid, settings), std::invalid_argument);
+        EXPECT_THROW(service.changePlayerValue(player, 40, ESM4::ActorValueModifier::Script,
+            std::numeric_limits<float>::max(), settings), std::invalid_argument);
+        EXPECT_THROW(service.publishPlayerValues(player, before,
+            {std::numeric_limits<float>::infinity(), 1, 5}), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_EQ(stats.getHealth().getCurrent(), -907.25f);
+        EXPECT_EQ(stats.getMagicka().getCurrent(), 121.75f);
+        EXPECT_THROW(stats.getSkill(ESM::Skill::Marksman).setBase(99), std::logic_error);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = values.mActor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        MWWorld::Player fresh(record);
+        const auto freshPtr = fresh.getPlayer();
+        freshPtr.getClass().readAdditionalState(freshPtr, initial);
+        restored.publishPlayerValues(fresh, *restored.findActorValues(values.mActor), settings);
+        EXPECT_EQ(*restored.findActorValues(values.mActor), before);
+        EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getCurrent(), 121.75f);
+        restored.changePlayerValue(fresh, 40, ESM4::ActorValueModifier::Script, -5, settings);
+        EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getBase(), 94.5f);
+        EXPECT_EQ(stats.getMagicka().getBase(), 126); // Fresh instance owns fresh views.
+        auto legacy = before;
+        legacy.mPlayerFormValues.reset();
+        saved.mNativeActorValues = {legacy};
+        saved.mVersion = 9;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        EXPECT_THROW(restored.getPlayerValue(8), std::invalid_argument);
+        EXPECT_THROW(restored.publishPlayerValues(fresh, legacy, settings), std::invalid_argument);
     }
 
     TEST_F(OblivionActorStatsTest, nativeServiceOwnsNpcValuesAcrossMutationAndReload)

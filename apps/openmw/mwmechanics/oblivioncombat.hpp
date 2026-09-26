@@ -13,6 +13,7 @@
 namespace MWWorld
 {
     class Ptr;
+    class Player;
 }
 
 namespace MWMechanics
@@ -63,6 +64,7 @@ namespace MWMechanics
     {
         ESM4::ActionLedger mActions;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
+        const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
 
     public:
@@ -82,6 +84,15 @@ namespace MWMechanics
             ESM4::ActorValueModifier modifier, float delta);
         float getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         std::int32_t getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+        // Raw player form contributions must be present. Settings are winning
+        // runtime inputs, not save-owned values. Recompute derived bases before
+        // preparing all shared views; never feed resolved bases back as inputs.
+        void publishPlayerValues(MWWorld::Player& player, ESM4::RuntimeActorValues values,
+            const ESM4::PlayerDynamicBaseSettings& settings);
+        void changePlayerValue(MWWorld::Player& player, std::uint8_t value,
+            ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings);
+        float getPlayerValue(std::uint8_t value) const;
+        std::int32_t getPlayerIntegerValue(std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);

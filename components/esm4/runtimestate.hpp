@@ -26,7 +26,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 9;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 10;
 
     struct RuntimeContentIdentity
     {
@@ -245,6 +245,10 @@ namespace ESM4
         // TES4 AV0..71. Preserve each modifier's presence independently from
         // its value. Bases are resolved native values, never shared UI views.
         std::array<ActorValueState, 72> mValues{};
+        // v10: raw integer base-form contributions for player AV8..11.
+        // Never infer these from the resolved dynamic bases above. Absence
+        // denotes legacy/uninitialized player authority, not four zeroes.
+        std::optional<std::array<std::int32_t, 4>> mPlayerFormValues;
 
         void validate() const;
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;

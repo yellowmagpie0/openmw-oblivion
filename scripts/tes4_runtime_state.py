@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 9
+CURRENT_VERSION = 10
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -692,6 +692,14 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("TES4 native actor-value player identity mismatch")
         if not is_player and bases.get(key) != base:
             raise RuntimeStateError("Dangling or mismatched TES4 native actor-value reference")
+        form_values = actor.get("player_form_values")
+        if form_values is not None:
+            if version < 10 or owner != 0:
+                raise RuntimeStateError("TES4 player form values require player ownership and version 10")
+            if not isinstance(form_values, list) or len(form_values) != 4 or any(
+                type(value) is not int or not -(1 << 31) <= value < (1 << 31) for value in form_values
+            ):
+                raise RuntimeStateError("Invalid TES4 player form values")
         values = actor.get("values")
         if not isinstance(values, list) or len(values) != 72:
             raise RuntimeStateError("TES4 native actor values require 72 entries")
@@ -1040,6 +1048,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if mask > 7:
                     raise RuntimeStateError("Invalid TES4 native actor-value modifier mask")
                 actor["values"].append([base] + [reader.unpack("<f") if mask & (1 << i) else None for i in range(3)])
+            if version >= 10:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 player form-value presence")
+                actor["player_form_values"] = [reader.unpack("<i") for _ in range(4)] if present else None
             result["native_actor_values"].append(actor)
     _validate_basic_state(result)
     if reader.offset != len(payload):
@@ -1213,6 +1226,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for modifier in value[1:]:
                     if modifier is not None:
                         writer.pack("<f", modifier)
+            if version >= 10:
+                form_values = actor.get("player_form_values")
+                writer.pack("<B", form_values is not None)
+                if form_values is not None:
+                    for value in form_values:
+                        writer.pack("<i", value)
     return writer.finish()
 
 

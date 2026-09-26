@@ -362,6 +362,54 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.decode_payload(bytes(duplicate))
 
+    def test_player_form_values_match_cpp_version_ten_wire_and_preserve_legacy_absence(self) -> None:
+        state = make_state()
+        state["schema_version"] = 10
+        state["ai_rng_state"] = 1
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 1, "values": [[0.0, None, None, None] for _ in range(72)],
+                 "player_form_values": [-1, 0, -(1 << 31), (1 << 31) - 1]}
+        actor["values"][8][0] = 123.0
+        state["native_actor_values"] = [actor]
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload[-17:], bytes([1, 255, 255, 255, 255, 0, 0, 0, 0,
+                                              0, 0, 0, 128, 255, 255, 255, 127]))
+        self.assertEqual(state_io.decode_payload(payload)["native_actor_values"], [actor])
+        nonplayer = copy.deepcopy(state)
+        nonplayer_actor = nonplayer["native_actor_values"][0]
+        nonplayer["references"] = [{
+            "key": "content:oblivion.esm:000001", "base": "content:oblivion.esm:000002",
+            "cell": state["player"]["cell"], "position": [0.0] * 6, "enabled": True,
+            "deleted": False, "owner": None, "lock_level": 0, "inventory": [], "custom_state": {},
+        }]
+        nonplayer_actor.update(owner=1, actor=nonplayer["references"][0]["key"],
+                               base=nonplayer["references"][0]["base"])
+        with self.assertRaisesRegex(state_io.RuntimeStateError, "player ownership"):
+            state_io.encode_payload(nonplayer)
+        for removed in range(1, 18):
+            with self.subTest(removed=removed), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-removed])
+        corrupt = bytearray(payload)
+        corrupt[-17] = 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(corrupt))
+        for value in ([], [0] * 3, [0] * 5, [True, 0, 0, 0], [1.0, 0, 0, 0],
+                      [1 << 31, 0, 0, 0], [-(1 << 31) - 1, 0, 0, 0], "0000"):
+            actor["player_form_values"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        actor["player_form_values"] = [0] * 4
+        state["schema_version"] = 9
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        del actor["player_form_values"]
+        legacy = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("player_form_values", legacy["native_actor_values"][0])
+        legacy["schema_version"] = 10
+        migrated = state_io.decode_payload(state_io.encode_payload(legacy))
+        self.assertIsNone(migrated["native_actor_values"][0]["player_form_values"])
+        self.assertEqual(migrated["native_actor_values"][0]["values"][8][0], 123.0)
+
     def test_native_values_validate_identity_shape_enums_and_numeric_domain(self) -> None:
         state = make_state()
         state["schema_version"] = 9

@@ -447,6 +447,8 @@ namespace ESM4
     {
         if (mActor.isNull() || mBase.isNull())
             throw std::runtime_error("Invalid TES4 native actor-value identity");
+        if (mPlayerFormValues && mOwner != ActorValueOwner::Player)
+            throw std::runtime_error("TES4 player form values require player ownership");
         try
         {
             for (const auto& value : mValues)
@@ -497,6 +499,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 10 && actor.mPlayerFormValues)
+                throw std::runtime_error("TES4 player form values require runtime-state version 10");
             if (!nativeActors.insert(actor.mActor).second)
                 throw std::runtime_error("Duplicate TES4 native actor-value identity");
             const bool player = actor.mActor == mPlayer.mReference;
@@ -1088,6 +1092,13 @@ namespace ESM4
                         if (modifier)
                             writer.floating(*modifier);
                 }
+                if (mVersion >= 10)
+                {
+                    writer.integer<std::uint8_t>(actor.mPlayerFormValues.has_value());
+                    if (actor.mPlayerFormValues)
+                        for (const auto value : *actor.mPlayerFormValues)
+                            writer.integer(value);
+                }
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -1422,6 +1433,18 @@ namespace ESM4
                     for (std::size_t j = 0; j < value.mModifiers.size(); ++j)
                         if (mask & (1 << j))
                             value.mModifiers[j] = reader.float32();
+                }
+                if (result.mVersion >= 10)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 player form-value presence");
+                    if (present)
+                    {
+                        actor.mPlayerFormValues.emplace();
+                        for (auto& value : *actor.mPlayerFormValues)
+                            value = reader.integer<std::int32_t>();
+                    }
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -1796,7 +1819,25 @@ namespace ESM4
                     }
                     stream << ']';
                 }
-                stream << "]}";
+                stream << ']';
+                if (mVersion >= 10)
+                {
+                    stream << ",\"player_form_values\":";
+                    if (actor.mPlayerFormValues)
+                    {
+                        stream << '[';
+                        for (std::size_t j = 0; j < actor.mPlayerFormValues->size(); ++j)
+                        {
+                            if (j)
+                                stream << ',';
+                            stream << (*actor.mPlayerFormValues)[j];
+                        }
+                        stream << ']';
+                    }
+                    else
+                        stream << "null";
+                }
+                stream << '}';
             }
             stream << ']';
         }
