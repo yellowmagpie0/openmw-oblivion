@@ -220,3 +220,30 @@ TEST(ESM4CombatSettings, CrimeInfamyThresholdUsesCompiledDefaultAndTypedOverride
         EXPECT_THROW(ESM4::buildCrimeInfamySettings(settings), std::invalid_argument);
     }
 }
+
+TEST(ESM4CombatSettings, NpcDynamicStatsUseTypedCompiledDefaultsAndInstalledOverrides)
+{
+    const auto compiled = ESM4::buildNpcDynamicStatsSettings({});
+    EXPECT_EQ(compiled.mAttributeHealthMultiplier, .5f);
+    EXPECT_EQ(compiled.mPerLevelHealthMultiplier, 4);
+    EXPECT_EQ(compiled.mLowLevelMaximum, 3);
+    EXPECT_EQ(compiled.mLowLevelHealthMultiplier, .25f);
+    EXPECT_EQ(compiled.mMagickaMultiplier, .2f);
+    ESM4::GameSetting lowLevel, health, magicka;
+    lowLevel.mEditorId = "iLowLevelNPCMaxLevel";
+    lowLevel.mData = std::int32_t{4};
+    health.mEditorId = "fLowLevelNPCBaseHealthMult";
+    health.mData = .4f;
+    magicka.mEditorId = "fNPCBaseMagickaMult";
+    magicka.mData = 1.5f;
+    const std::array<const ESM4::GameSetting*, 3> inputs{&lowLevel, &health, &magicka};
+    const auto installed = ESM4::buildNpcDynamicStatsSettings(inputs);
+    EXPECT_EQ(installed.mLowLevelMaximum, 4);
+    EXPECT_EQ(installed.mLowLevelHealthMultiplier, .4f);
+    EXPECT_EQ(installed.mMagickaMultiplier, 1.5f);
+    lowLevel.mData = 4.f;
+    EXPECT_THROW(ESM4::buildNpcDynamicStatsSettings(inputs), std::invalid_argument);
+    lowLevel.mData = std::int32_t{4};
+    health.mData = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::buildNpcDynamicStatsSettings(inputs), std::invalid_argument);
+}

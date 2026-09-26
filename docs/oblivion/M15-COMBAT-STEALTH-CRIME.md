@@ -2296,3 +2296,16 @@ persistence remain open. S2 remains in progress; S3–S14 remain pending.
 Next: NPC auto-calculation and the winning skill-definition input gap.
 
 Tested source fingerprint: `2ce0167770005c35ac8a84b4dd8812319161d3947d9cb73ba1f7cf90ea41aee2`.
+
+### S2 NPC dynamic base-stat calculation
+
+Commit `6c1b26a075` contains native actor-level lookup. Added NPC base health,
+magicka and fatigue calculations with typed native GMST inputs, levels-gained
+semantics, low-level scaling, favored Endurance and specialization adjustments.
+All **1,838 component tests** and **316 ASan/UBSan ESM4 tests** pass with exact
+inventories/no skips (`S2/npc-dynamic-stats-02`). **6,300 original helper cases**
+match compiled C++ exactly in both x87 precision modes. Attempt `-01` retains
+one incorrect hand-transcribed test expectation, corrected from original output.
+Actor construction and full attribute/skill auto-calculation remain open.
+S2 remains in progress; S3–S14 remain pending. Unchanged Python/engine suites
+were not rerun for this pure C++ chunk.

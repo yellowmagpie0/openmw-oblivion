@@ -2169,3 +2169,48 @@ zero/inverted/wide bounds and exact thresholds. Evidence:
 `S2/oracle-emulator/actor-level.py`, `actor-level-table.json`, `actor-level.log`,
 `S2/sources-01/actor-base-level.txt` and `npc-calc-stats.txt`. Live NPC/creature
 initialization, auto-calculated stats and save authority remain open.
+
+### NPC auto-calculated dynamic base values
+
+Original image SHA-256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+NPC calculation `005222D0` subtracts one from its resolved signed level before
+calling health helper `00547F80`. Let `g = level - 1`. Attribute health is
+`trunc((Strength + Endurance) * fNPCAttributeHealthMult)`. Per-level health is
+`iNPCBasePerLevelHealthMult`, plus one for favored Endurance and plus one for
+Combat specialization, minus one for Magic, unchanged for Stealth. Add
+`perLevel * g` using integer arithmetic. If `g < iLowLevelNPCMaxLevel`, multiply
+by `R(base + R(R(g / maximum) * (1 - base)))`, where `base` is
+`fLowLevelNPCBaseHealthMult`; otherwise multiply by one. Truncate the result;
+there is no final float store before integer conversion. `R` denotes a float32
+store. A zero low-level maximum disables scaling for supported positive levels.
+
+NPC magicka helper `005482B0` returns
+`trunc(Intelligence * fNPCBaseMagickaMult + Intelligence)`, with no intermediate
+float store. Fatigue helper `005479D0` adds Strength, Endurance, Agility and
+Willpower. NPC setters store health as a dword and magicka/fatigue as words.
+This is base auto-calculation, before race spells, abilities and runtime AV
+modifiers; it is not the player health formula or a level-up health increment.
+
+Compiled GMST constructors: attribute multiplier `.5` (`009ED98F`, storage
+`00B37BE8`), per-level multiplier `4` (`009ED967`, `00B37BE0`), low-level maximum
+`3` (`009ED947`, `00B37BD8`), low-level base `.25` (`009ED91F`, `00B37BD0`),
+NPC magicka multiplier `.2` (`009EBE2F`, `00B37718`). Installed Oblivion.esm
+changes maximum to `4` (`0C7912`), low-level base to `.4` (`0C7913`), magicka
+multiplier to `1.5` (`09E642`); attribute/per-level overrides retain `.5`/`4`.
+The typed builder uses compiled fallbacks and validates winning override types.
+
+The supported pure API requires level >= 1, specialization 0..2, nonnegative
+finite attribute/magicka multipliers, per-level multiplier >= 1, nonnegative
+low-level maximum and low-level factor in [0,1]. It rejects integer arithmetic
+and magicka-storage overflow instead of reproducing malformed wraparound.
+These are explicit supported-domain restrictions, not claims of native clamps.
+
+**6,300 original complete health/magicka helper cases**, in both x87 modes,
+match a separately compiled production C++ driver exactly. No helper calls are
+stubbed; the original integer conversion executes. Evidence under
+`S2/oracle-emulator/npc-dynamic-stats*` and
+`S2/sources-01/{npc-health-formula,npc-health-caller-52267c,npc-magicka-fatigue-formulas,actor-base-fatigue}.txt`.
+The first component attempt retains a mistyped maximum-level test expectation;
+the oracle confirms 196851 and the corrected run passes. Actor construction,
+attribute/skill auto-calculation and runtime persistence remain open.

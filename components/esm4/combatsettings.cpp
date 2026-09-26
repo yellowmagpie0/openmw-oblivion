@@ -176,6 +176,17 @@ namespace ESM4
         return result;
     }
 
+    NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const NpcDynamicStatsSettings result{inputs.number("fNPCAttributeHealthMult", .5f),
+            inputs.number("iNPCBasePerLevelHealthMult", std::int32_t(4)),
+            inputs.number("iLowLevelNPCMaxLevel", std::int32_t(3)),
+            inputs.number("fLowLevelNPCBaseHealthMult", .25f), inputs.number("fNPCBaseMagickaMult", .2f)};
+        validateNpcDynamicStatsSettings(result);
+        return result;
+    }
+
     FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
