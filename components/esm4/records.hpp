@@ -74,6 +74,7 @@
 #include <components/esm4/loadscpt.hpp>
 #include <components/esm4/loadscrl.hpp>
 #include <components/esm4/loadsgst.hpp>
+#include <components/esm4/loadskil.hpp>
 #include <components/esm4/loadslgm.hpp>
 #include <components/esm4/loadsndr.hpp>
 #include <components/esm4/loadsoun.hpp>

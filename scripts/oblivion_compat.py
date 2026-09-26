@@ -5436,6 +5436,9 @@ def main(argv: list[str] | None = None) -> int:
             case_inventory = json.loads((Path(__file__).resolve().parents[1] / "docs/oblivion/M15-CASE-INVENTORY.json").read_text())
             result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER],
                                               case_inventory["prisons"])
+            if not result["skill_inventory_complete"]:
+                result["failures"].append("official native SKIL inventory is incomplete or ambiguous")
+                result["data_passed"] = False
             defaults_path = Path(__file__).resolve().parents[1] / "docs/oblivion/M15-COMBAT-STYLE-DEFAULTS.json"
             defaults_bytes = defaults_path.read_bytes()
             policies = tes4_m15_audit.policy_inventory(result, json.loads(defaults_bytes))

@@ -32,6 +32,37 @@ def plugin(records, masters=()):
 
 
 class M15NativeAuditTests(unittest.TestCase):
+    def test_native_skill_layout_domains_and_mismatched_index(self):
+        index = struct.pack('<I', 19)
+        data = struct.pack('<III2f', 19, 1, 1, 5, .5)
+        self.assertEqual(audit.skill_definition(index, data),
+                         dict(actor_value=19, governing_attribute=1, specialization=1, use_values=[5, .5]))
+        for bad in (data[:-1], data + b'\0', struct.pack('<III2f', 18, 1, 1, 5, .5),
+                    struct.pack('<III2f', 19, 8, 1, 5, .5), struct.pack('<III2f', 19, 1, 3, 5, .5),
+                    struct.pack('<III2f', 19, 1, 1, math.nan, .5)):
+            with self.assertRaises(audit.M15AuditError):
+                audit.skill_definition(index, bad)
+
+    def test_skill_winners_overrides_deletions_and_duplicate_actor_values(self):
+        def skill(ident, av, attribute):
+            return record('SKIL', ident, sub('INDX', struct.pack('<I', av))
+                          + sub('DATA', struct.pack('<III2f', av, attribute, 0, 1, 2)))
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory) / 'base.esm'
+            patch = Path(directory) / 'patch.esp'
+            base.write_bytes(plugin([skill(i + 100, i + 12, 0) for i in range(21)]))
+            patch.write_bytes(plugin([skill(100, 12, 5)], ['base.esm']))
+            result = audit.inventory([base, patch])
+            self.assertTrue(result['data_passed'])
+            self.assertTrue(result['skill_inventory_complete'])
+            self.assertEqual(result['skills']['content:base.esm:000064']['governing_attribute'], 5)
+            patch.write_bytes(plugin([record('SKIL', 100, b'', 0x20)], ['base.esm']))
+            self.assertFalse(audit.inventory([base, patch])['skill_inventory_complete'])
+            patch.write_bytes(plugin([skill(0x01000100, 12, 5)], ['base.esm']))
+            result = audit.inventory([base, patch])
+            self.assertFalse(result['data_passed'])
+            self.assertFalse(result['skill_inventory_complete'])
+
     def test_independent_grouped_layout_preserves_every_optional_tail(self):
         for size in (84, 92, 104, 112, 120, 124):
             with self.subTest(size=size):

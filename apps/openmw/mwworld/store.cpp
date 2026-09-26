@@ -1413,6 +1413,7 @@ template class MWWorld::TypedDynamicStore<ESM4::Music>;
 template class MWWorld::TypedDynamicStore<ESM4::Npc>;
 template class MWWorld::TypedDynamicStore<ESM4::AIPackage>;
 template class MWWorld::TypedDynamicStore<ESM4::CombatStyle>;
+template class MWWorld::TypedDynamicStore<ESM4::Skill>;
 template class MWWorld::TypedDynamicStore<ESM4::Pathgrid>;
 template class MWWorld::TypedDynamicStore<ESM4::IdleAnimation>;
 template class MWWorld::TypedDynamicStore<ESM4::Outfit>;

@@ -1064,3 +1064,48 @@ namespace
         EXPECT_THAT(dialogue->mInfo, ElementsAre(HasIdEqualTo("info0"), HasIdEqualTo("info2")));
     }
 }
+
+TEST(MWWorldStoreTest, tes4SkillsUseWinningStableKeysAcrossMasterReorderingAndDeletion)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{{"base.esm", 0}, {"other.esm", 1}, {"patch.esp", 2}};
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t form, std::uint32_t skill, std::uint32_t attribute, bool deleted) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x900}));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0') + sub(ESM::fourCC("DATA"), std::string(8, '\0'));
+        const auto payload = deleted ? std::string{} : sub(ESM::fourCC("INDX"), bytes(skill))
+            + sub(ESM::fourCC("DATA"), bytes(skill) + bytes(attribute) + bytes(std::uint32_t{0}) + bytes(1.f) + bytes(2.f));
+        auto stream = std::make_unique<std::stringstream>(record(ESM4::REC_TES4, 0, 1, header)
+            + record(ESM4::REC_SKIL, form, deleted ? static_cast<std::uint32_t>(ESM4::Rec_Deleted) : 0u, payload),
+            std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), name, nullptr, nullptr, true);
+        reader.setModIndex(indices.at(name));
+        reader.updateModIndices(indices);
+        store.loadESM4(reader, &dummyListener);
+    };
+    load("base.esm", {}, 0x800, 12, 0, false);
+    load("other.esm", {}, 0x800, 13, 1, false);
+    const auto base = ESM::FormKey::content("base.esm", 0x800);
+    const auto other = ESM::FormKey::content("other.esm", 0x800);
+    ASSERT_NE(store.search<ESM4::Skill>(base), nullptr);
+    ASSERT_NE(store.search<ESM4::Skill>(other), nullptr);
+    EXPECT_EQ(store.search<ESM4::Skill>(base)->mData->mActorValue, 12);
+    load("patch.esp", {"other.esm", "base.esm"}, 0x01000800, 12, 5, false);
+    EXPECT_EQ(store.search<ESM4::Skill>(base)->mData->mGoverningAttribute, 5);
+    EXPECT_EQ(store.search<ESM4::Skill>(other)->mData->mActorValue, 13);
+    EXPECT_EQ(store.search<ESM4::Skill>(other)->mData->mGoverningAttribute, 1);
+    load("patch.esp", {"other.esm", "base.esm"}, 0x01000800, 12, 0, true);
+    EXPECT_EQ(store.search<ESM4::Skill>(base), nullptr);
+    EXPECT_NE(store.search<ESM4::Skill>(other), nullptr);
+}

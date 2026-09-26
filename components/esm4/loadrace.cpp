@@ -48,6 +48,9 @@ void ESM4::Race::load(ESM4::Reader& reader)
 {
     mId = reader.getFormIdFromHeader();
     mFlags = reader.hdr().record.flags;
+    mTES4SkillBonuses.reset();
+    mTES4SkillBonusPadding = 0;
+    mSkillBonus.clear();
 
     std::uint32_t esmVer = reader.esmVersion();
     bool isTES4 = (esmVer == ESM::VER_080 || esmVer == ESM::VER_100) && !reader.hasFormVersion();
@@ -104,6 +107,8 @@ void ESM4::Race::load(ESM4::Reader& reader)
                 break;
             case ESM::fourCC("DATA"): // ?? different length for TES5
             {
+                if (isTES4 && subHdr.dataSize != 36)
+                    reader.fail("TES4 RACE DATA requires exactly 36 bytes");
 // DATA:size 128
 // 0f 0f ff 00 ff 00 ff 00 ff 00 ff 00 ff 00 00 00
 // 9a 99 99 3f 00 00 80 3f 00 00 80 3f 00 00 80 3f
@@ -139,11 +144,28 @@ void ESM4::Race::load(ESM4::Reader& reader)
 
                     std::uint8_t skill;
                     std::uint8_t bonus;
-                    for (unsigned int i = 0; i < 8; ++i)
+                    if (isTES4)
                     {
-                        reader.get(skill);
-                        reader.get(bonus);
-                        mSkillBonus[static_cast<SkillIndex>(skill)] = bonus;
+                        if (mTES4SkillBonuses)
+                            reader.fail("TES4 RACE has duplicate DATA");
+                        mTES4SkillBonuses.emplace();
+                        for (auto& entry : *mTES4SkillBonuses)
+                        {
+                            reader.get(entry.mSkill);
+                            reader.get(entry.mBonus);
+                            mSkillBonus[static_cast<SkillIndex>(static_cast<std::uint8_t>(entry.mSkill))]
+                                = static_cast<std::uint8_t>(entry.mBonus);
+                        }
+                        reader.get(mTES4SkillBonusPadding);
+                    }
+                    else
+                    {
+                        for (unsigned int i = 0; i < 8; ++i)
+                        {
+                            reader.get(skill);
+                            reader.get(bonus);
+                            mSkillBonus[static_cast<SkillIndex>(skill)] = bonus;
+                        }
                     }
                     reader.get(mHeightMale);
                     reader.get(mHeightFemale);

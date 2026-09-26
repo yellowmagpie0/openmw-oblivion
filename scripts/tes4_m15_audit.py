@@ -20,6 +20,18 @@ class M15AuditError(ValueError):
     pass
 
 
+def skill_definition(index: bytes, data: bytes) -> dict[str, Any]:
+    if len(index) != 4 or len(data) != 20:
+        raise M15AuditError('SKIL requires four-byte INDX and 20-byte DATA')
+    actor_value, attribute, specialization, use0, use1 = struct.unpack('<III2f', data)
+    if (struct.unpack('<I', index)[0] != actor_value or not 12 <= actor_value <= 32
+            or not 0 <= attribute <= 7 or not 0 <= specialization <= 2
+            or not math.isfinite(use0) or not math.isfinite(use1)):
+        raise M15AuditError('invalid or inconsistent native SKIL definition')
+    return {'actor_value': actor_value, 'governing_attribute': attribute,
+            'specialization': specialization, 'use_values': [use0, use1]}
+
+
 # Struct grouping is independent of the C++ decoder's explicit byte offsets.
 _CORE = struct.Struct('<2B2x8f2B2x3fB3x2f5B3x2f2B2x')
 _CORE_NAMES = ('dodge_chance', 'left_right_chance', 'dodge_lr_min', 'dodge_lr_max',
@@ -246,7 +258,7 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     if len(set(masters)) != len(masters):
         raise M15AuditError(f'{path.name}: duplicate masters')
     records = []
-    wanted = {'CSTY', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
+    wanted = {'CSTY', 'SKIL', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
 
     def walk(start: int, end: int, cell: str | None = None, depth: int = 0):
         if depth > 64:
@@ -384,6 +396,7 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             winners[key] = record
     styles, actors, settings, factions, equipment = {}, {}, {}, {}, {}
     ownership, references = {}, {}
+    skills = {}
     failures = []
     for key, record in winners.items():
         if record['deleted'] or 'subrecords' not in record:
@@ -409,6 +422,9 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
                         if any(not math.isfinite(v) for v in values[1:]):
                             raise M15AuditError('nonfinite door destination')
                         references[key]['destination'] = _stable_key(record['plugin'], values[0], record['masters'])
+            elif record['type'] == 'SKIL':
+                skills[key] = dict(skill_definition(_one(subs, 'INDX', True), _one(subs, 'DATA', True)),
+                                   editor_id=edid)
             elif record['type'] == 'CSTY':
                 style = combat_style(_one(subs, 'CSTD', True), _one(subs, 'CSAD'))
                 style['editor_id'] = edid
@@ -548,13 +564,17 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
                 continue
             report['guards'].append(dict(reference, key=key))
         prison_reports.append(report)
+    skill_counts = collections.Counter(skill['actor_value'] for skill in skills.values())
+    if any(count != 1 for count in skill_counts.values()):
+        failures.append('ambiguous winning SKIL actor values')
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
-        'settings': settings, 'factions': factions, 'equipment': equipment,
+        'settings': settings, 'skills': skills, 'factions': factions, 'equipment': equipment,
         'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures, 'data_passed': not failures,
+        'skill_inventory_complete': skill_counts == collections.Counter(range(12, 33)),
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],
-        'summary': {'styles': len(styles), 'actors': len(actors), 'settings': len(settings),
+        'summary': {'styles': len(styles), 'skills': len(skills), 'actors': len(actors), 'settings': len(settings),
                     'factions': len(factions), 'equipment': len(equipment), 'owned_forms': len(ownership), 'references': len(references), 'prisons': len(prison_reports), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.

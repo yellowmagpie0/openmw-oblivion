@@ -30,6 +30,7 @@
 #include <array>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <vector>
 
 #include "actor.hpp" // AttributeValues, BodyTemplate
@@ -122,6 +123,15 @@ namespace ESM4
         AttributeValues mAttribMale;
         AttributeValues mAttribFemale;
         std::map<SkillIndex, std::uint8_t> mSkillBonus;
+        struct SkillBonus
+        {
+            std::int8_t mSkill;
+            std::int8_t mBonus;
+        };
+        // TES4 DATA has seven signed pairs and two padding bytes. The legacy
+        // map above cannot represent repeated skills or signed adjustments.
+        std::optional<std::array<SkillBonus, 7>> mTES4SkillBonuses;
+        std::uint16_t mTES4SkillBonusPadding = 0;
 
         // DATA
         float mHeightMale = 1.0f;

@@ -2255,3 +2255,43 @@ harness executes those original helpers instead.
 
 The runtime input adapter still needs typed winning SKIL definitions and seven
 ordered signed RACE bonus pairs; the existing unsigned map loses duplicates.
+
+### Native skill definitions and ordered racial bonuses
+
+The installed eleven-plugin raw inventory contains 21 SKIL records and 15 RACE
+records (`S2/sources-01/skill-race-inventory.{py,json,log}`, with source hashes).
+SKIL INDX is a native skill AV (12..32), independent of its FormId; DATA has
+exactly 20 bytes: the same AV, governing attribute, specialization and two use
+floats. The independently reviewed runtime layout places those five fields at
+`+2C..+3C`, consistent with the original NPC auto-calculation's reads at `+30`
+and `+34`. The typed reader checks lengths, required/duplicate fields, AV
+agreement, enum domains and finite use values while retaining descriptions,
+mastery text and other raw subrecords. Progression semantics remain M17-owned.
+A complete winning-skill resolver rejects missing, deleted and duplicate-AV
+records rather than substituting TES3 definitions.
+
+TES4 RACE DATA has seven signed skill/bonus byte pairs, two padding bytes,
+four height/weight floats and race flags, totaling 36 bytes. The old parser
+mistook padding for an eighth pair. The native-only path now keeps the seven
+ordered signed pairs and padding separately, preserving duplicates and negative
+bonuses for NPC calculation. The existing map remains for legacy consumers.
+Later-game layouts use their existing paths. All fifteen installed records
+have zero padding and valid unique skill IDs; synthetic tests exercise nonzero
+padding, negative/duplicate entries, truncation, compression and version split.
+
+SKIL is registered in the native record catalog, store tuple, explicit dynamic
+store instantiation, loader and esmtool; later-game dispatch stays raw. Real
+ESMStore binary-load tests cover differing master order, overrides, stable
+identities and empty deletion. The independent Python audit now validates SKIL
+fields, duplicate AVs and inventory completeness, with a reviewed count of 21.
+`S2/audit-13` has zero data failures and a passing content count lock; gameplay
+and rule gates remain open. `S2/native-stat-record-dumps-01` parses all eleven
+plugins successfully and compares all 21 typed skill definitions against raw
+payload decoding (core integer fields exact; printed use floats within declared
+relative 5e-6 / absolute 1e-7 text precision tolerance).
+
+Component/sanitizer/Python checks pass in `S2/npc-stat-records-01`. Its engine
+attempt exposes a missing store-header include; attempt `-02` exposes the
+required explicit `TypedDynamicStore<Skill>` instantiation at link time.
+Both failures are retained. Corrected `-03` builds openmw/openmw-tests/esmtool
+and passes all engine tests, including the actual-store loader fixture.

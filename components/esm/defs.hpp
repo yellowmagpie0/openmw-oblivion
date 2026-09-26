@@ -177,6 +177,7 @@ namespace ESM
         REC_CPTH4 = esm4Recname(ESM4::REC_CPTH), // Camera Path
         REC_CREA4 = esm4Recname(ESM4::REC_CREA), // Creature
         REC_CSTY4 = esm4Recname(ESM4::REC_CSTY), // Combat Style
+        REC_SKIL4 = esm4Recname(ESM4::REC_SKIL), // Native skill definition
         REC_DEBR4 = esm4Recname(ESM4::REC_DEBR), // Debris
         REC_DIAL4 = esm4Recname(ESM4::REC_DIAL), // Dialog Topic
         REC_DLBR4 = esm4Recname(ESM4::REC_DLBR), // Dialog Branch

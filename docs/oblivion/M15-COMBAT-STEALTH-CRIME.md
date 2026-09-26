@@ -2322,3 +2322,19 @@ all 32 resulting stat fields in compiled C++, across both race sexes and x87
 modes. Original notification boundaries are stubbed, not arithmetic or lookup.
 Next: preserve and resolve the missing native record inputs. S2 remains in
 progress; S3–S14 remain pending.
+
+### S2 winning SKIL records and lossless TES4 race bonuses
+
+Commit `c8ab840857` contains NPC attribute/skill calculation. Added typed TES4
+SKIL parsing, complete winning-definition resolution, engine store/loader and
+esmtool registration, plus independent Python auditing. TES4 RACE now preserves
+seven ordered signed skill bonuses and separates padding from the bonus list.
+
+All **1,849 component tests**, **327 ASan/UBSan ESM4 tests**, and **153 Python
+tests** pass (`S2/npc-stat-records-01`). Engine-only registration fixes then
+pass **553 engine tests** and rebuild openmw/openmw-tests/esmtool
+(`npc-stat-records-03`); the two failed build attempts are retained. All eleven
+official plugins parse, and 21 typed SKIL definitions agree with independent
+raw decoding (`native-stat-record-dumps-01`). `audit-13` passes the expanded
+content count lock with zero data failures. S2 remains in progress; S3–S14
+remain pending. Next: creature base-stat scaling and actor construction inputs.

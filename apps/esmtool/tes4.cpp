@@ -208,6 +208,15 @@ namespace EsmTool
                 std::cout << "\n  BaseObj: " << value.mBaseObj;
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
+            if constexpr (std::is_same_v<T, ESM4::Skill>)
+            {
+                if (value.mData)
+                    std::cout << "\n  Skill: actorValue=" << value.mData->mActorValue
+                              << " governingAttribute=" << value.mData->mGoverningAttribute
+                              << " specialization=" << value.mData->mSpecialization
+                              << " use0=" << value.mData->mUseValues[0]
+                              << " use1=" << value.mData->mUseValues[1];
+            }
             if constexpr (std::is_same_v<T, ESM4::Faction>)
             {
                 if (value.mFactionFlags)
@@ -756,7 +765,10 @@ namespace EsmTool
                     readTypedRecord<ESM4::Sound>(params, reader);
                     return true;
                 case ESM4::REC_SKIL:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::Skill>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_SPEL:
                     readTypedRecord<ESM4::RawRecord>(params, reader);
