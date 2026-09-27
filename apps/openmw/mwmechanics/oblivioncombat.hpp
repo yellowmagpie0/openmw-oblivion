@@ -138,6 +138,8 @@ namespace MWMechanics
         std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
         std::map<ESM::FormKey, std::uint16_t> mDeathCounts;
         std::map<ESM::FormKey, float> mActorBreath;
+        float mActorManagerTime = 0;
+        std::map<ESM::FormKey, float> mActorUpdateTimes;
         std::map<ESM::FormKey, std::set<ESM::FormKey>> mCombatOpponents;
         struct PreparedLifeTransition
         {

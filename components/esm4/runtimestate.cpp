@@ -562,6 +562,14 @@ namespace ESM4
                     throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
             }
         }
+        checkSize(mNativeActorUpdateTimes.size(), "native actor update time map");
+        if (mVersion < 16 && (mNativeActorManagerTime != 0.f || !mNativeActorUpdateTimes.empty()))
+            throw std::runtime_error("TES4 native actor clocks require runtime-state version 16");
+        if (!std::isfinite(mNativeActorManagerTime) || mNativeActorManagerTime > 100000.f)
+            throw std::runtime_error("Invalid TES4 native actor manager time");
+        for (const auto& [actor, time] : mNativeActorUpdateTimes)
+            if (!nativeActors.contains(actor) || !std::isfinite(time) || time > 100000.f)
+                throw std::runtime_error("Invalid or dangling TES4 native actor update time");
         checkSize(mNativeActorBreath.size(), "native actor breath map");
         if (mVersion < 14 && !mNativeActorBreath.empty())
             throw std::runtime_error("TES4 native actor breath requires runtime-state version 14");
@@ -1286,6 +1294,16 @@ namespace ESM4
                 writeKey(writer, second);
             }
         }
+        if (mVersion >= 16)
+        {
+            writer.floating(mNativeActorManagerTime);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorUpdateTimes.size()));
+            for (const auto& [actor, time] : mNativeActorUpdateTimes)
+            {
+                writeKey(writer, actor);
+                writer.floating(time);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1753,6 +1771,24 @@ namespace ESM4
                 auto second = actorKey();
                 if (!result.mNativeCombatEngagements.emplace(std::move(first), std::move(second)).second)
                     throw std::runtime_error("Duplicate TES4 combat engagement");
+            }
+        }
+        if (result.mVersion >= 16)
+        {
+            result.mNativeActorManagerTime = reader.float32();
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                ESM::FormKey actor;
+                try { actor = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&)
+                { throw std::runtime_error("Invalid TES4 actor clock owner"); }
+                if (actor.isNull() || actor.serialize() != text)
+                    throw std::runtime_error("Invalid or noncanonical TES4 actor clock owner");
+                const float time = reader.float32();
+                if (!result.mNativeActorUpdateTimes.emplace(std::move(actor), time).second)
+                    throw std::runtime_error("Duplicate TES4 actor clock owner");
             }
         }
         if (!reader.eof())
@@ -2235,6 +2271,22 @@ namespace ESM4
                        << "\",\"second\":\"" << escapeJson(second.serialize()) << "\"}";
             }
             stream << ']';
+        }
+        if (mVersion >= 16)
+        {
+            // JSON readers commonly parse "-0" as an integer and lose its
+            // sign. Keep these binary32 clock values explicitly fractional.
+            stream << ",\"native_actor_manager_time\":" << std::showpoint << std::setprecision(17) << mNativeActorManagerTime
+                   << ",\"native_actor_update_times\":[";
+            bool first = true;
+            for (const auto& [actor, time] : mNativeActorUpdateTimes)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                       << "\",\"time\":" << std::setprecision(17) << time << '}';
+            }
+            stream << ']' << std::noshowpoint;
         }
         stream << "}";
         return stream.str();

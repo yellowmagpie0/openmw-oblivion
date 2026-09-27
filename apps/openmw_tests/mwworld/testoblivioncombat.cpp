@@ -573,3 +573,38 @@ TEST(OblivionCombatService, InvalidEngagementAndRestoreLeaveExistingOpponentsUnt
     EXPECT_FALSE(service.isInCombat(a));
     EXPECT_TRUE(service.combatOpponents(b).empty());
 }
+
+TEST(OblivionCombatService, NativeActorClockCaptureRestoreIsAtomicAndClearResetsIt)
+{
+    auto state = savedState();
+    ESM4::RuntimeActorValues values;
+    values.mActor = state.mPlayer.mReference;
+    values.mBase = ESM::FormKey::dynamic("player-base", 1);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues.push_back(values);
+    state.mNativeActorManagerTime = .125f;
+    state.mNativeActorUpdateTimes = {{values.mActor, 100000.f}};
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    auto captured = savedState();
+    service.capture(captured);
+    EXPECT_EQ(captured, state);
+    auto invalid = state;
+    invalid.mNativeActorUpdateTimes.emplace(ESM::FormKey::dynamic("missing", 1), 0.f);
+    EXPECT_THROW(service.restore(invalid), std::runtime_error);
+    service.capture(captured);
+    EXPECT_EQ(captured, state);
+    auto old = savedState(15);
+    const auto before = old;
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    EXPECT_EQ(old, before);
+    service.clear();
+    service.capture(captured);
+    EXPECT_EQ(captured.mNativeActorManagerTime, 0);
+    EXPECT_TRUE(captured.mNativeActorUpdateTimes.empty());
+    service.restore(state);
+    service.restore(before);
+    service.capture(captured);
+    EXPECT_EQ(captured.mNativeActorManagerTime, 0);
+    EXPECT_TRUE(captured.mNativeActorUpdateTimes.empty());
+}

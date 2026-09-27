@@ -854,6 +854,85 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             loaded = state_io.decode_payload(state_io.encode_payload(state))
             self.assertNotIn("native_combat_engagements", loaded)
 
+    @staticmethod
+    def clock_state():
+        state = make_state()
+        state["schema_version"] = 16
+        state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": actor,
+            "base": "dynamic:player-base:0000000000000001", "owner": 0, "process": 1,
+            "values": [[0, None, None, None] for _ in range(72)]}]
+        state["native_actor_manager_time"] = .125
+        state["native_actor_update_times"] = [{"actor": actor, "time": 100000.0}]
+        return state
+
+    def test_native_clock_round_trip_and_invalid_state(self):
+        state = self.clock_state()
+        for value in (0.0, -0.0, -.125, .125, 100000, -3.4028234663852886e38):
+            state["native_actor_manager_time"] = value
+            state["native_actor_update_times"][0]["time"] = value
+            payload = state_io.encode_payload(state)
+            restored = state_io.decode_payload(payload)
+            self.assertEqual(restored["native_actor_manager_time"], value)
+            self.assertEqual(math.copysign(1, restored["native_actor_manager_time"]), math.copysign(1, value))
+            self.assertEqual(restored["native_actor_update_times"], state["native_actor_update_times"])
+            self.assertEqual(state_io.encode_payload(restored), payload)
+        for invalid in (100000.0078125, float("inf"), -float("inf"), float("nan"), 1e100, True, "0", None):
+            broken = self.clock_state()
+            broken["native_actor_manager_time"] = invalid
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+            broken = self.clock_state()
+            broken["native_actor_update_times"][0]["time"] = invalid
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        for entries in ([{"actor": "dynamic:missing:0000000000000001", "time": 0}],
+                        state["native_actor_update_times"] * 2, [{"actor": state["player"]["reference"]}]):
+            broken = self.clock_state()
+            broken["native_actor_update_times"] = entries
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        state = self.clock_state()
+        state["schema_version"] = 15
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_native_clock_wire_negative_cases(self):
+        state = self.clock_state()
+        payload = state_io.encode_payload(state)
+        entry = state["native_actor_update_times"][0]
+        wire_entry = struct.pack("<I", len(entry["actor"])) + entry["actor"].encode() + struct.pack("<f", entry["time"])
+        suffix = struct.pack("<fI", .125, 1) + wire_entry
+        self.assertEqual(payload[-len(suffix):], suffix)
+        prefix = payload[:-len(suffix)]
+        for tail in (struct.pack("<fI", .125, 2) + wire_entry * 2,
+                     struct.pack("<fI", .125, 0xffffffff),
+                     struct.pack("<fI", float("inf"), 1) + wire_entry,
+                     suffix[:-4] + struct.pack("<f", float("nan")),
+                     suffix.replace(b"dynamic:", b"Dynamic:", 1)):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(prefix + tail)
+        for cut in range(1, len(suffix) + 1):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-cut])
+
+    def test_legacy_versions_do_not_invent_actor_clocks(self):
+        for version in range(1, 16):
+            state = make_state()
+            state["schema_version"] = version
+            state["ai_rng_state"] = 1
+            state["player"]["inventory"] = []
+            if version < 3:
+                for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(key)
+            if version < 2:
+                for key in ("script_event_sequence", "script_instances", "quests"):
+                    state.pop(key)
+            loaded = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("native_actor_manager_time", loaded)
+            self.assertNotIn("native_actor_update_times", loaded)
+
 
 if __name__ == "__main__":
     unittest.main()

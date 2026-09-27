@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 15
+CURRENT_VERSION = 16
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -753,6 +753,23 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if process == 1:
                     native_float(low + maximum)
 
+    manager_time = native_float(state.get("native_actor_manager_time", 0))
+    update_times = check_collection(state.get("native_actor_update_times", []), "native actor update time list")
+    if version < 16 and (manager_time != 0 or update_times):
+        raise RuntimeStateError("TES4 native actor clocks require version 16")
+    if manager_time > 100000:
+        raise RuntimeStateError("Invalid TES4 native actor manager time")
+    clock_keys = set()
+    for entry in update_times:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "time"}:
+            raise RuntimeStateError("Invalid TES4 native actor update time")
+        native_key(entry["actor"])
+        if entry["actor"] not in native_keys or entry["actor"] in clock_keys:
+            raise RuntimeStateError("Duplicate or dangling TES4 native actor update time")
+        if native_float(entry["time"]) > 100000:
+            raise RuntimeStateError("Invalid TES4 native actor update time")
+        clock_keys.add(entry["actor"])
+
     breath = check_collection(state.get("native_actor_breath", []), "native actor breath list")
     if version < 14 and breath:
         raise RuntimeStateError("TES4 native actor breath requires version 14")
@@ -1219,6 +1236,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_combat_engagements"] = [
             {"first": reader.string(), "second": reader.string()} for _ in range(reader.count())
         ]
+    if version >= 16:
+        result["native_actor_manager_time"] = reader.unpack("<f")
+        result["native_actor_update_times"] = [
+            {"actor": reader.string(), "time": reader.unpack("<f")} for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1442,6 +1464,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in engagements:
             writer.string(entry["first"])
             writer.string(entry["second"])
+    if version >= 16:
+        writer.pack("<f", state.get("native_actor_manager_time", 0))
+        times = sorted(state.get("native_actor_update_times", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(times))
+        for entry in times:
+            writer.string(entry["actor"])
+            writer.pack("<f", entry["time"])
     return writer.finish()
 
 
@@ -1520,6 +1549,8 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("native_death_counts", [])
     state.setdefault("native_actor_breath", [])
     state.setdefault("native_combat_engagements", [])
+    state.setdefault("native_actor_manager_time", 0)
+    state.setdefault("native_actor_update_times", [])
     state.setdefault("next_death_event", 1)
     state.setdefault("pending_death_events", [])
     _upgrade_inventory(state["player"]["inventory"])
@@ -1557,6 +1588,8 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("native_death_counts", [])
     result.setdefault("native_actor_breath", [])
     result.setdefault("native_combat_engagements", [])
+    result.setdefault("native_actor_manager_time", 0)
+    result.setdefault("native_actor_update_times", [])
     result.setdefault("next_death_event", 1)
     result.setdefault("pending_death_events", [])
     _upgrade_inventory(result["player"]["inventory"])

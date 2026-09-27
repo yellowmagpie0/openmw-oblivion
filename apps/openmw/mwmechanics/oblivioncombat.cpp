@@ -498,6 +498,8 @@ namespace MWMechanics
         mPendingDeathEvents.clear();
         mDeathCounts.clear();
         mActorBreath.clear();
+        mActorManagerTime = 0;
+        mActorUpdateTimes.clear();
         mCombatOpponents.clear();
     }
 
@@ -1793,12 +1795,15 @@ namespace MWMechanics
             throw std::invalid_argument("native actor breath requires an Oblivion v14+ save");
         if (state.mVersion < 15 && !mCombatOpponents.empty())
             throw std::invalid_argument("native combat engagements require an Oblivion v15+ save");
+        if (state.mVersion < 16 && (mActorManagerTime != 0.f || !mActorUpdateTimes.empty()))
+            throw std::invalid_argument("native actor clocks require an Oblivion v16+ save");
         decltype(state.mNativeCombatEngagements) engagements;
         for (const auto& [actor, opponents] : mCombatOpponents)
             for (const auto& opponent : opponents)
                 if (actor < opponent)
                     engagements.emplace(actor, opponent);
         auto breath = mActorBreath;
+        auto updateTimes = mActorUpdateTimes;
         auto deathCounts = mDeathCounts;
         std::vector<ESM4::RuntimeActorLife> lives;
         lives.reserve(mActorLife.size());
@@ -1824,6 +1829,8 @@ namespace MWMechanics
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
+        state.mNativeActorManagerTime = mActorManagerTime;
+        state.mNativeActorUpdateTimes.swap(updateTimes);
         state.mNativeCombatEngagements.swap(engagements);
         state.mPendingDeathEvents.swap(events);
         state.mNextDeathEvent = mNextDeathEvent;
@@ -1903,6 +1910,7 @@ namespace MWMechanics
         }
         auto deathCounts = state.mNativeDeathCounts;
         auto breath = state.mNativeActorBreath;
+        auto updateTimes = state.mNativeActorUpdateTimes;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> lives;
         for (const auto& life : state.mNativeActorLife)
             lives.emplace(life.mActor, life);
@@ -1913,6 +1921,8 @@ namespace MWMechanics
         mActorLife.swap(lives);
         mDeathCounts.swap(deathCounts);
         mActorBreath.swap(breath);
+        mActorManagerTime = state.mNativeActorManagerTime;
+        mActorUpdateTimes.swap(updateTimes);
         mCombatOpponents.swap(opponents);
         mPendingDeathEvents.swap(events);
         mNextDeathEvent = state.mNextDeathEvent;

@@ -28,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 15;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 16;
 
     struct RuntimeContentIdentity
     {
@@ -340,6 +340,11 @@ namespace ESM4
         // Attack targets, phases and legal hit context are separate contracts.
         // Both endpoints require native values/life and may not be terminal.
         std::set<std::pair<ESM::FormKey, ESM::FormKey>> mNativeCombatEngagements;
+
+        // v16: manager seconds and the last completed common update per actor.
+        // An absent actor timestamp denotes an uninitialized clock, not time0.
+        float mNativeActorManagerTime = 0;
+        std::map<ESM::FormKey, float> mNativeActorUpdateTimes;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

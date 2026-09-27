@@ -5309,3 +5309,55 @@ ASan leak detection and halting UBSan. Source fingerprint
 `f8d69b0074d45bd14a47004e34f5365e4b023b03b7954e1f2ec41403bb4b3d81`
 on parent `5977e7ce71`. This is the verified arithmetic prerequisite; world clock
 advancement, actor scheduling and persistent timestamps remain to be integrated.
+
+### S3 native actor clock persistence (v16)
+
+T4ST v16 stores the manager's binary32 time and a stable-key map of each actor's
+last completed common update. C++, canonical JSON and the independent Python
+reader/writer agree. Service capture/restore/clear retain/reset these fields;
+failed restore and unsupported downgrade leave the prior service/target intact.
+Versions1–15 retain manager0 and an empty timestamp map. Validation rejects
+nonfinite times, times above the native100000 limit, duplicate/noncanonical keys,
+unregistered actors, oversize collections and truncation. Finite negative times
+remain valid, matching the original setter.
+
+Three new component cases, one service case and three Python cases cover this
+contract. Final `S3/actor-clock-state-02` passes1943 component,637 engine and183
+Python cases; `actor-clock-state-sanitized-02` passes1943 component and637 engine
+cases with ASan leak checks and halting UBSan. All inventories/XML match, no
+skips. Source fingerprint
+`4a5e4551397ffb3167cad0536b5047221c0cf0d7b91b73ee76c2fd50d54f45b1`
+on parent `146a4b4639`. The01 runs also passed before JSON zero-sign refinement
+and fixture promotion; their fingerprint is
+`4c3c50aa2423afacc209fd83f89e7a52fee80d98a8788d309b7e29c65696ce06`.
+
+Actual engine courses retain independent input/output decoding:
+
+- `actor-clock-{regular,sanitized}-{load,continuation}-01` preserve manager.125,
+  NPC timestamp-1 and Player timestamp100000 through save/restart (01 binaries).
+- `actor-clock-regular-zero-red-load-01` retains a genuine failed check: binary
+  -0.0 survived, but JSON `-0` parsed as integer0. The exporter now emits an
+  explicit fractional representation; the regression assertion checks that.
+- `actor-clock-{regular,sanitized}-zero-{load,continuation}-01` on final binaries
+  preserve exact clock bits in both binary and parsed engine JSON, including
+  negative zero, through two processes.
+- `actor-clock-regular-migration-load-01` loads the unmodified accepted v15 Lua
+  save and writes v16 without inventing actor timestamps.
+- `actor-clock-{regular,sanitized}-final-reject-01` reject a dangling clock owner
+  before native application, leave input bytes unchanged and perform no writes.
+  Earlier01 rejection courses also passed.
+
+Positive courses preserve all72 AVs per actor, lifecycle/actions and NPC Lua
+companion data. Both actors restore once with no queued/committed writes. All22
+accepted captures were directly reviewed: fixture room/Player bars for positive
+runs and explicit load errors for rejection; NPC offscreen and audio disabled.
+Final runtime executable hashes: regular
+`21ee181c6e4c4b858cf90061b8477a838b0283e972cd2eb855990784b67df128`, instrumented
+`9f03251e91ef1a7127e5e11e99fb6855a97208c7b73b3da31c978ee6541afab1`.
+Graphical sanitizer leak checks are off, UBSan halts. The promoted input recipe
+reproduces both valid fixtures exactly; the rejection manifest matches the
+executed draft. Build/test skill instructions cover setup and bitwise checks.
+
+This closes persistence of the clock fields. Advancing the manager, applying
+per-actor elapsed time, native scheduling and hourly-rest integration remain
+open, along with the other S3 and later M15 gates.

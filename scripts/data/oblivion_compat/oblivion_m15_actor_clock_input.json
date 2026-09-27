@@ -1,0 +1,27 @@
+{
+  "source_sha256": "7d84b4f8469657d49eced80eb4ae55d198e921c5b4d69bd83f534d15d56dcb60",
+  "source_course": "lua-stat-regular-script-02 actual saved output",
+  "schema_version": 16,
+  "native_actor_manager_time": 0.125,
+  "native_actor_update_times": [
+    {
+      "actor": "content:m15-lifecycle.esm:900101",
+      "time": -1.0
+    },
+    {
+      "actor": "dynamic:player:0000000000000001",
+      "time": 100000.0
+    }
+  ],
+  "negative_zero_variant": {
+    "native_actor_manager_time": -0.0,
+    "npc_update_time": -0.0
+  },
+  "invalid_owner_variant": {
+    "section": "native_actor_update_times",
+    "replace": "content:m15-lifecycle.esm:900101",
+    "with": "content:m15-lifecycle.esm:9001ff"
+  },
+  "scenario": "oblivion_m15_lua_stat_modifiers_continuation.json",
+  "acceptance": "Normal engine save and fresh-process resave; clocks are not advanced in this save-contract-only course."
+}

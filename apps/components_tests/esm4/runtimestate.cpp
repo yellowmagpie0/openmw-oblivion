@@ -1144,7 +1144,8 @@ namespace
 
     TEST(ESM4RuntimeState, combatEngagementWireRejectsDuplicatesOversizeAndTruncation)
     {
-        const auto state = engagedState();
+        auto state = engagedState();
+        state.mVersion = 15; // This test mutates the v15 trailing engagement section.
         const auto bytes = state.serializeBinary();
         const auto [first, second] = *state.mNativeCombatEngagements.begin();
         const auto size = 8 + first.serialize().size() + second.serialize().size();
@@ -1183,6 +1184,102 @@ namespace
             const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
             EXPECT_TRUE(restored.mNativeCombatEngagements.empty());
             EXPECT_EQ(restored.canonicalJson().find("native_combat_engagements"), std::string::npos);
+        }
+    }
+
+    TEST(ESM4RuntimeState, nativeActorClocksPreserveExactBitsAndRejectInvalidState)
+    {
+        auto state = engagedState();
+        const auto actor = state.mNativeActorValues.front().mActor;
+        for (const float time : {0.f, -0.f, -1.f, .125f, 100000.f, -std::numeric_limits<float>::max()})
+        {
+            state.mNativeActorManagerTime = time;
+            state.mNativeActorUpdateTimes = {{actor, time}};
+            const auto bytes = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+            EXPECT_EQ(restored, state);
+            EXPECT_EQ(restored.serializeBinary(), bytes);
+            EXPECT_EQ(std::signbit(restored.mNativeActorManagerTime), std::signbit(time));
+            EXPECT_EQ(std::signbit(restored.mNativeActorUpdateTimes.at(actor)), std::signbit(time));
+            EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+            if (time == 0.f && std::signbit(time))
+            {
+                EXPECT_NE(restored.canonicalJson().find("\"native_actor_manager_time\":-0."), std::string::npos);
+                EXPECT_NE(restored.canonicalJson().find("\"time\":-0."), std::string::npos);
+            }
+        }
+        for (const float time : {std::nextafter(100000.f, 100001.f), std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            auto invalid = state;
+            invalid.mNativeActorManagerTime = time;
+            EXPECT_THROW(invalid.validate(), std::runtime_error);
+            invalid = state;
+            invalid.mNativeActorUpdateTimes[actor] = time;
+            EXPECT_THROW(invalid.validate(), std::runtime_error);
+        }
+        state.mNativeActorUpdateTimes = {{ESM::FormKey::dynamic("missing", 1), 0}};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        state.mNativeActorUpdateTimes.clear();
+        state.mVersion = 15;
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        state.mNativeActorManagerTime = 0;
+        state.mNativeActorUpdateTimes = {{actor, 0}};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, actorClockWireRejectsDuplicateNoncanonicalOversizedAndTruncatedData)
+    {
+        auto state = engagedState();
+        const auto actor = state.mNativeActorValues.front().mActor;
+        state.mNativeActorManagerTime = 99999.5f;
+        state.mNativeActorUpdateTimes = {{actor, 99999.f}};
+        const auto bytes = state.serializeBinary();
+        const auto entrySize = 8 + actor.serialize().size();
+        const auto countOffset = bytes.size() - entrySize - 4;
+        auto invalid = bytes;
+        invalid[countOffset] = 2;
+        invalid.insert(invalid.end(), bytes.begin() + countOffset + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        invalid = bytes;
+        std::fill_n(invalid.begin() + countOffset, 4, 0xff);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        invalid = bytes;
+        invalid[countOffset + 8] = 'C';
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        for (const auto offset : {bytes.size() - 4, countOffset - 4})
+        {
+            invalid = bytes;
+            const std::array<std::uint8_t, 4> infinity{0, 0, 0x80, 0x7f};
+            std::copy(infinity.begin(), infinity.end(), invalid.begin() + offset);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        }
+        for (std::size_t cut = 1; cut <= entrySize + 8; ++cut)
+        {
+            SCOPED_TRACE(cut);
+            invalid.assign(bytes.begin(), bytes.end() - cut);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        }
+    }
+
+    TEST(ESM4RuntimeState, olderVersionsLeaveActorClocksUninitialized)
+    {
+        for (std::uint32_t version = 1; version < 16; ++version)
+        {
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            }
+            const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_EQ(restored.mNativeActorManagerTime, 0);
+            EXPECT_TRUE(restored.mNativeActorUpdateTimes.empty());
+            EXPECT_EQ(restored.canonicalJson().find("native_actor_manager_time"), std::string::npos);
+            EXPECT_EQ(restored.canonicalJson().find("native_actor_update_times"), std::string::npos);
         }
     }
 

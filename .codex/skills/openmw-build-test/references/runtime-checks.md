@@ -631,3 +631,43 @@ for placed-reference overrides as well as original references. An ungrouped
 CELL throws at grp(); a reference with no current CELL fails preprocessing.
 The test covers reordered masters, deletion and missing bases. Its passing
 store assertions do not establish actual AI door traversal or gameplay.
+
+## Native actor clock save contract
+
+T4ST v16 appends a binary32 manager time and a counted, sorted actor-key/time
+map. Read fields `native_actor_manager_time` and `native_actor_update_times`.
+Older versions have no timestamps, not a fabricated timestamp per actor.
+Use `oblivion_m15_actor_clock_input.json` with the actual saved output from
+`S3/lua-stat-regular-script-02`; verify its declared source hash before editing.
+Load with `scripts.tes4_runtime_state.load_save`, assign the two declared fields,
+and write a separate input via `write_save`. The negative-zero variant sets
+manager time and the NPC timestamp to -0.0; Player remains100000. Use the existing
+`oblivion_m15_lua_stat_modifiers_continuation.json` in fresh private save slots.
+
+These recipes were reproduced byte-for-byte:
+
+- Nonzero input: `64cffa90240be82c4ad883a0f05fd9d2d97fb78a5bbfed27fccacc0178035c37`.
+- Signed-zero input: `4ab5cd33192c77312a7a69ada6899d0660022731f7b494102c66098bca00ef04`.
+
+Check normal F5 output and fresh-process output independently. Compare float
+bits with `struct.pack('<f', value)`, including the engine's `script-report.json`
+`runtime_state` fields; numeric equality alone misses a lost zero sign. The
+retained `actor-clock-regular-zero-red-load-01` demonstrates this: binary -0.0
+survived while JSON `-0` parsed as integer0. The fixed exporter uses a decimal
+representation. Require Lua restored once per actor with no writes, unchanged
+NPC companion data, all actor-value channels/lifecycle/actions preserved, and
+inspect the actual captures. The ordinary v15 source also loads and resaves as
+v16 with manager0 and no actor timestamps (`actor-clock-regular-migration-load-01`).
+
+For owner rejection, alter only the final clock-map entry's key from900101 to
+9001ff inside the concatenated T4ST DATA payload, preserving subrecord lengths
+and every other save record. Python encoding intentionally rejects this state,
+so mutation must happen after valid serialization. Use
+`oblivion_m15_actor_clock_reject.json`, require the exact invalid/dangling actor
+update-time error, no native application/Lua writes, and unchanged input bytes.
+Do not treat this as preservation of a previously running world.
+
+The above courses close the save contract while clock advancement is still
+unwired. Once scheduler integration lands, replace constant-time expectations
+with independently derived advancement/reset expectations; retained intermediate
+courses are not proof of a running native clock.
