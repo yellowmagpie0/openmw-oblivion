@@ -4078,3 +4078,37 @@ and activation, including rest/drowning and queued Lua writes, plus canonical
 player-base identity. The original drowning arithmetic/caller audit started
 while the sanitizer build ran is retained under `S3/authority-draft/` and
 `S2/oracle-emulator/drowning-rules.py`; it is not an implemented gameplay feature.
+
+### S3 floating Health writes preserve the lifecycle transaction
+
+After `45ead0fbfd`, the native service accepts fractional Damage-channel Health
+writes without the integer command conversion path. Negative deltas prepare
+Health, lifecycle, source attribution, shared views and death history/events
+together. Positive/zero writes retain the current lifecycle; healing does not
+resurrect. Player god mode suppresses negative finite deltas, while malformed
+nonfinite input is rejected before suppression. Source actor validity remains
+the caller's responsibility; no automatic actor registration is enabled.
+
+Three actual NPC/Creature/Player tests cover fractional damage/healing, the
+strict current-Health-below-one threshold and adjacent float rounding, killer
+attribution, essential recovery, repeated writes without duplicate events,
+binary round trips, missing lifecycle, invalid inputs/settings, god mode and
+exhausted-event rollback of persistent state and shared projections. The stub
+baseline `S3/native-floating-health-red-01` fails all three new cases. Its test
+fixture narrowing warning was corrected before the passing runs.
+
+`S3/native-floating-health-01` and `S3/native-floating-health-sanitized-01` pass
+**all 614 engine tests**, matching exact inventories with zero skips/failures.
+The latter enables ASan, UBSan and leak detection and reports no findings.
+Tested implementation fingerprint:
+`1054a9f543bac85c41910c1af621282617e3daac028a73afd1ec2de18b3cfbe2`.
+Regular test binary: `88df9db078412fbc7e38f7271ec6cee5592ca829a4dbcc03988e6b1b9b06c9cc`.
+Sanitized test binary: `61c4bcdee2541e94c94a1ec5e91c275bac2522025980ca3797e0232858751b16`.
+These are service/engine-suite checks, not rendered drowning acceptance.
+
+Next: native drowning settings, float stores, timer and gameplay caller.
+The independent `S2/oracle-emulator/drowning-timer.py` probe adds 1,620 original
+timer arithmetic/branch paths: damage starts strictly below zero; nonzero
+integer WaterBreathing replenishes the timer, capped by the breath maximum.
+Water/controller predicates, AI and full damage dispatch remain outside that
+probe. S2/S3 and S4–S14 remain open.

@@ -3005,6 +3005,137 @@ namespace
         }
     }
 
+    void verifyFloatingHealthTransactions(MWMechanics::OblivionCombatService& service,
+        const MWWorld::Ptr& ptr, ESM4::RuntimeActorValues values, MWWorld::Player* player = nullptr)
+    {
+        using Phase = ESM4::ActorLifePhase;
+        const auto source = ESM::FormKey::dynamic("player", 1);
+        const auto change = [&](float delta, bool essential = false,
+                                ESM4::EssentialRecoverySettings settings = {3, .5f}, bool godMode = false) {
+            return player ? service.changePlayerHealth(*player, delta, source, essential, settings, {}, godMode)
+                          : service.changeNonPlayerHealth(ptr, delta, source, essential, settings);
+        };
+        const auto health = [&]() { return player ? service.getPlayerValue(8) : service.getNonPlayerValue(ptr, 8); };
+        const auto initial = [&](std::int32_t base = 2) {
+            service.clear();
+            values.mValues[8].mBase = base;
+            if (player)
+            {
+                values.mPlayerFormValues = {{base, 30, 40, 0}};
+                service.publishPlayerValues(*player, values, {});
+                service.publishPlayerLife(*player, {values.mActor, values.mBase, Phase::Alive, 0, {}});
+            }
+            else
+            {
+                service.publishNonPlayerValues(ptr, values);
+                service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, Phase::Alive, 0, {}});
+            }
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = source;
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            if (!player)
+            {
+                ESM4::RuntimeReferenceState reference;
+                reference.mKey = values.mActor;
+                reference.mBase = values.mBase;
+                reference.mCell = saved.mPlayer.mCell;
+                saved.mReferences.push_back(reference);
+            }
+            service.capture(saved);
+            return saved;
+        };
+        auto saved = initial();
+        ASSERT_TRUE(change(-.5f));
+        EXPECT_FLOAT_EQ(health(), 1.5f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Alive);
+        EXPECT_TRUE(service.findActorLife(values.mActor)->mKiller.isNull());
+        ASSERT_TRUE(change(.25f));
+        EXPECT_FLOAT_EQ(health(), 1.75f);
+        ASSERT_TRUE(change(-1.f));
+        EXPECT_FLOAT_EQ(health(), .75f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Dead);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mKiller, source);
+        EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
+        service.capture(saved);
+        ASSERT_EQ(saved.mPendingDeathEvents.size(), 1u);
+        EXPECT_EQ(saved.mNextDeathEvent, 2u);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), saved);
+        const auto events = saved.mPendingDeathEvents;
+        ASSERT_TRUE(change(1.f));
+        ASSERT_TRUE(change(0.f));
+        ASSERT_TRUE(change(-1.f));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Dead);
+        service.capture(saved);
+        EXPECT_EQ(saved.mPendingDeathEvents, events);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
+
+        initial();
+        ASSERT_TRUE(change(-1.25f, true));
+        EXPECT_FLOAT_EQ(health(), 1.f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::EssentialUnconscious);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mKiller, source);
+        EXPECT_FLOAT_EQ(service.findActorLife(values.mActor)->mRecoveryRemaining, 3.f);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 0);
+        service.capture(saved);
+        EXPECT_TRUE(saved.mPendingDeathEvents.empty());
+
+        for (bool essential : {false, true})
+        {
+            auto before = initial();
+            before.mNextDeathEvent = std::numeric_limits<std::uint64_t>::max();
+            service.restore(before);
+            if (essential)
+                EXPECT_THROW(change(-1.25f, true, {std::numeric_limits<float>::infinity(), .5f}),
+                    std::invalid_argument);
+            else
+                EXPECT_THROW(change(-1.25f), std::overflow_error);
+            auto after = before;
+            service.capture(after);
+            EXPECT_EQ(after, before);
+            EXPECT_FLOAT_EQ(health(), 2.f);
+            EXPECT_FLOAT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 2.f);
+            EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
+        }
+        auto before = initial();
+        for (float invalid : {std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            EXPECT_THROW(change(invalid, false, {}, true), std::invalid_argument);
+            auto after = before;
+            service.capture(after);
+            EXPECT_EQ(after, before);
+        }
+        before.mNativeActorLife.clear();
+        service.restore(before);
+        EXPECT_THROW(change(-.25f), std::invalid_argument);
+        auto after = before;
+        service.capture(after);
+        EXPECT_EQ(after, before);
+
+        initial(1.f);
+        ASSERT_TRUE(change(-0x1p-25f));
+        EXPECT_FLOAT_EQ(health(), 1.f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Alive);
+        initial(1.f);
+        ASSERT_TRUE(change(-0x1p-24f));
+        EXPECT_LT(health(), 1.f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Dead);
+        if (player)
+        {
+            before = initial();
+            EXPECT_FALSE(change(-1.25f, false, {}, true));
+            after = before;
+            service.capture(after);
+            EXPECT_EQ(after, before);
+            ASSERT_TRUE(change(-.5f));
+            ASSERT_TRUE(change(.25f, false, {}, true));
+            EXPECT_FLOAT_EQ(health(), 1.75f);
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, nativeHealthCommandsCommitValuesLifeAndEventsTogether)
     {
         autoNpc();
@@ -3100,5 +3231,102 @@ namespace
         MWMechanics::OblivionCombatService service;
         verifyHealthCommandTransactions(service, ptr, values, &player);
     }
+
+    TEST_F(OblivionActorStatsTest, nativeFloatingHealthTransactions)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        verifyFloatingHealthTransactions(service, ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureFloatingHealthTransactions)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 4;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        verifyFloatingHealthTransactions(service, ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerFloatingHealthTransactions)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initialState{};
+        initialState.blank();
+        ptr.getClass().readAdditionalState(ptr, initialState);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 30, 40, 0}};
+        MWMechanics::OblivionCombatService service;
+        verifyFloatingHealthTransactions(service, ptr, values, &player);
+    }
+
 
 }

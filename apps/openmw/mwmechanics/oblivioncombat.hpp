@@ -133,7 +133,8 @@ namespace MWMechanics
         void preparePlayerValues(ESM4::RuntimeActorValues& values,
             const ESM4::PlayerDynamicBaseSettings& settings) const;
         void publishHealthChange(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values,
-            bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode);
+            bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode,
+            const ESM::FormKey& source = {});
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -153,6 +154,15 @@ namespace MWMechanics
         // scalar transition. This method cannot run callbacks between commits.
         void changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta);
+        // Native float Damage-channel writes, including fractional frame costs.
+        // Negative deltas commit their lifecycle reaction and source attribution
+        // atomically; positive/zero writes preserve life. False means god mode
+        // suppressed a Player debit. The caller validates the source actor.
+        bool changeNonPlayerHealth(const MWWorld::Ptr& actor, float delta, const ESM::FormKey& source,
+            bool essential, const ESM4::EssentialRecoverySettings& settings);
+        bool changePlayerHealth(MWWorld::Player& player, float delta, const ESM::FormKey& source,
+            bool essential, const ESM4::EssentialRecoverySettings& settings,
+            const ESM4::PlayerDynamicBaseSettings& baseSettings, bool godMode = false);
         // Shared base-record transaction. The caller supplies every resident,
         // published reference of this base, including actor. Unloaded saved
         // actors change too; newly published references inherit the override.

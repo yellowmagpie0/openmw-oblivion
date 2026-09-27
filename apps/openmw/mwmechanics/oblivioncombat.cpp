@@ -3,6 +3,7 @@
 #include <components/esm4/runtimestate.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 #include <type_traits>
 #include <optional>
@@ -602,6 +603,40 @@ namespace MWMechanics
         publishNonPlayerValues(actor, std::move(candidate));
     }
 
+    bool OblivionCombatService::changeNonPlayerHealth(const MWWorld::Ptr& actor, float delta,
+        const ESM::FormKey& source, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        auto candidate = nonPlayerValues(actor);
+        candidate.mValues[8] = ESM4::changeActorValueModifier(
+            candidate.mValues[8], candidate.mOwner, 8, ESM4::ActorValueModifier::Damage, delta);
+        if (delta < 0.f)
+            publishHealthChange(actor, std::move(candidate), essential, settings, false, source);
+        else
+            publishNonPlayerValues(actor, std::move(candidate));
+        return true;
+    }
+
+    bool OblivionCombatService::changePlayerHealth(MWWorld::Player& player, float delta,
+        const ESM::FormKey& source, bool essential, const ESM4::EssentialRecoverySettings& settings,
+        const ESM4::PlayerDynamicBaseSettings& baseSettings, bool godMode)
+    {
+        auto candidate = playerValues();
+        if (!std::isfinite(delta))
+            throw std::invalid_argument("native Health delta must be finite");
+        if (godMode && delta < 0.f)
+            return false;
+        candidate.mValues[8] = ESM4::changeActorValueModifier(
+            candidate.mValues[8], candidate.mOwner, 8, ESM4::ActorValueModifier::Damage, delta);
+        if (delta < 0.f)
+        {
+            preparePlayerValues(candidate, baseSettings);
+            publishHealthChange(player.getPlayer(), std::move(candidate), essential, settings, godMode, source);
+        }
+        else
+            publishPlayerValues(player, std::move(candidate), baseSettings);
+        return true;
+    }
+
     OblivionActorValueCommandResult OblivionCombatService::executeNonPlayerValueCommand(
         const MWWorld::Ptr& actor, std::uint8_t value, ESM4::ActorValueCommand command,
         ESM4::ActorValueCommandSource source, std::int32_t requested,
@@ -982,7 +1017,7 @@ namespace MWMechanics
 
     void OblivionCombatService::publishHealthChange(const MWWorld::Ptr& actor,
         ESM4::RuntimeActorValues values, bool essential,
-        const ESM4::EssentialRecoverySettings& settings, bool godMode)
+        const ESM4::EssentialRecoverySettings& settings, bool godMode, const ESM::FormKey& source)
     {
         const auto found = mActorLife.find(values.mActor);
         if (found == mActorLife.end())
@@ -995,7 +1030,7 @@ namespace MWMechanics
         auto life = found->second;
         if (life.mPhase == ESM4::ActorLifePhase::Alive && current < 1.f)
         {
-            life.mKiller = {}; // Native stat commands supply no attacker.
+            life.mKiller = source;
             life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
             if (essential)
             {
