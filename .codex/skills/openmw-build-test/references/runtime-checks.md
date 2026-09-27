@@ -170,3 +170,28 @@ Inspect each capture. These fixtures inject an unpublished authority snapshot;
 they prove script reads and persistence, not normal actor initialization or
 live gameplay publication. Scheduled acceptance commands log returned values;
 ordinary production GetAV calls do not produce this diagnostic traffic.
+
+## Lifecycle fields and death-event FIFO (schema 12)
+
+`oblivion_m15_native_life_roundtrip.json` is the editable injected lifecycle/
+queue overlay for the private-slot load/resave course. The actor is alive and
+the two events are historical queued notifications; a callback may execute
+after resurrection. Compare `native_actor_life`, `next_death_event` and
+`pending_death_events` exactly, including FIFO order, across fresh processes.
+Current examples `S3/native-lifecycle-{populated,continuation}-01` retain events
+because automatic dispatch is not yet wired. Do not call this a death test.
+The structurally valid static-object binding fault is
+`oblivion_m15_native_life_binding_fault.json`; use
+`oblivion_m15_reject_native_life_binding.json` and require rejection before
+Applied/save boundaries with unchanged inputs.
+
+A v11 migration source is
+`S3/native-script-query-continuation-01/userdata/saves/M15Legacy/Quicksave.omwsave`
+(SHA-256 `f95667daf6a5757a9f7ec659e1413bdce9ba38df6d3a83e349f2a5aa69dd6039`).
+Copy it, do not rewrite the source. Expected v12 lifecycle defaults are empty
+actor/event lists and next_death_event1; never derive death from negative Health.
+Legacy-only obscript.dead remains untouched until its live adapters are wired;
+coexisting typed/legacy fields must agree. Pin any tail-offset wire test to its
+actual schema version when appending fields, retaining current-schema combined
+coverage. Python reference fixtures must include `owner` and `lock_level`, even
+when those fields are unrelated to the behavior being tested.

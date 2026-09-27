@@ -10,6 +10,7 @@
 
 #include <array>
 #include <map>
+#include <deque>
 #include <span>
 
 namespace MWWorld
@@ -107,6 +108,9 @@ namespace MWMechanics
         ESM4::ActionLedger mActions;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
+        std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
+        std::uint64_t mNextDeathEvent = 1;
+        std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
         const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
@@ -195,6 +199,10 @@ namespace MWMechanics
         float getPlayerValue(std::uint8_t value) const;
         std::int32_t getPlayerIntegerValue(std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
+        const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
+        // Pop before invoking the callback. Callback-triggered saves retain
+        // remaining FIFO work and never replay the event being dispatched.
+        std::optional<ESM4::RuntimeActorDeathEvent> takeNextDeathEvent();
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);
         // World load preflight: validate winning native actor bindings before

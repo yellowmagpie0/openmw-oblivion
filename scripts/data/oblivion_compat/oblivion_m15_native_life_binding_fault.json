@@ -1,0 +1,13 @@
+{
+  "native_actor_life": [
+    {
+      "actor": "content:m15-fixture.esm:900010",
+      "base": "content:m15-fixture.esm:900001",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "null"
+    }
+  ],
+  "next_death_event": 1,
+  "pending_death_events": []
+}

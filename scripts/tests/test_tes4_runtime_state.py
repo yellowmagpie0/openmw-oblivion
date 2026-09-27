@@ -590,6 +590,89 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                     promoted = state_io.load_save(target)
                 self.assertEqual(promoted["physical_actions"], {"next": 1, "pending": []})
 
+    def test_lifecycle_preserves_fifo_and_fractional_timer(self) -> None:
+        state = make_state()
+        state["schema_version"] = 12
+        state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_life"] = [{"actor": actor, "base": "dynamic:player-base:0000000000000001",
+                                       "phase": 2, "recovery_remaining": 3.125, "killer": "null"}]
+        state["next_death_event"] = 9
+        state["pending_death_events"] = [{"id": 2, "actor": actor, "killer": "null"},
+                                          {"id": 8, "actor": actor, "killer": actor}]
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        for key in ("native_actor_life", "next_death_event", "pending_death_events"):
+            self.assertEqual(loaded[key], state[key])
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        for remove in range(1, 60):
+            with self.subTest(remove=remove), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-remove])
+        for field, value in (("phase", True), ("phase", 3), ("recovery_remaining", -1),
+                             ("recovery_remaining", math.inf), ("recovery_remaining", True),
+                             ("killer", "content:missing.esm:000001"), ("actor", actor.upper()), ("base", "null")):
+            broken = copy.deepcopy(state)
+            broken["native_actor_life"][0][field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        for events in (list(reversed(state["pending_death_events"])), [state["pending_death_events"][0]] * 2,
+                       [{"id": 0, "actor": actor, "killer": "null"}],
+                       [{"id": 9, "actor": actor, "killer": "null"}],
+                       [{"id": True, "actor": actor, "killer": "null"}],
+                       [{"id": 2, "actor": "null", "killer": "null"}]):
+            broken = copy.deepcopy(state)
+            broken["pending_death_events"] = events
+            with self.subTest(events=events), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        for identity in (0, True, 2**64):
+            broken = copy.deepcopy(state)
+            broken["next_death_event"] = identity
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        state["schema_version"] = 11
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_lifecycle_rejects_legacy_dead_conflict(self) -> None:
+        state = make_state()
+        state["schema_version"] = 12
+        state["ai_rng_state"] = 1
+        key, base = "content:oblivion.esm:000100", "content:oblivion.esm:000200"
+        state["references"] = [{"key": key, "base": base, "cell": state["player"]["cell"],
+                                "enabled": True, "deleted": False, "position": [0] * 6, "inventory": [],
+                                "owner": None, "lock_level": 0, "custom_state": {"obscript.dead": True}}]
+        state["native_actor_life"] = [{"actor": key, "base": base, "phase": 1,
+                                       "recovery_remaining": 0, "killer": "null"}]
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_actor_life"],
+                         state["native_actor_life"])
+        for dead in (False, 1, "true"):
+            state["references"][0]["custom_state"]["obscript.dead"] = dead
+            with self.subTest(dead=dead), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        state["references"][0]["custom_state"]["obscript.dead"] = False
+        state["native_actor_life"][0]["phase"] = 2
+        state["native_actor_life"][0]["recovery_remaining"] = .125
+        state_io.encode_payload(state)
+
+    def test_legacy_lifecycle_defaults_do_not_infer_death_from_health(self) -> None:
+        for version in range(1, 12):
+            state = make_state()
+            state["schema_version"] = version
+            state["ai_rng_state"] = 1
+            state["player"]["inventory"] = []
+            state["player"]["actor_values"]["health.current"] = -10
+            if version < 3:
+                for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(key)
+            if version < 2:
+                state["script_event_sequence"] = 0
+                state["script_instances"] = []
+                state["quests"] = []
+            loaded = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("native_actor_life", loaded)
+            self.assertNotIn("pending_death_events", loaded)
+            self.assertNotIn("next_death_event", loaded)
+
 
 if __name__ == "__main__":
     unittest.main()

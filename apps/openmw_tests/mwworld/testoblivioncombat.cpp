@@ -337,3 +337,92 @@ TEST(OblivionCombatService, ScriptQueriesDistinguishLiveFloatDisabledFormAndFloo
     EXPECT_EQ(after.mNativeActorValues, state.mNativeActorValues);
     EXPECT_EQ(after.mNativeActorBases, state.mNativeActorBases);
 }
+
+TEST(OblivionCombatService, LifeAndDeathQueueRestoreAtomicallyAndConsumeBeforeCallbackSave)
+{
+    auto saved = savedState();
+    const auto player = saved.mPlayer.mReference;
+    saved.mNativeActorLife = {{player, ESM::FormKey::dynamic("player-base", 1), ESM4::ActorLifePhase::Dead, 0, {}}};
+    saved.mNextDeathEvent = 7;
+    saved.mPendingDeathEvents = {{2, player, {}}, {6, player, player}};
+    saved.mPhysicalActions = {3, {1}};
+    MWMechanics::OblivionCombatService service;
+    MWWorld::ESMStore store;
+    service.restore(saved, store);
+    ASSERT_NE(service.findActorLife(player), nullptr);
+    EXPECT_EQ(service.findActorLife(player)->mPhase, ESM4::ActorLifePhase::Dead);
+    auto invalid = saved;
+    invalid.mNativeActorLife[0].mRecoveryRemaining = 1;
+    EXPECT_THROW(service.restore(invalid, store), std::runtime_error);
+    auto check = savedState();
+    service.capture(check);
+    EXPECT_EQ(check, saved);
+    const auto first = service.takeNextDeathEvent();
+    ASSERT_TRUE(first);
+    EXPECT_EQ(first->mId, 2);
+    // This capture is the state a callback-triggered save must observe.
+    service.capture(check);
+    EXPECT_EQ(check.mPendingDeathEvents, (std::vector<ESM4::RuntimeActorDeathEvent>{{6, player, player}}));
+    EXPECT_EQ(check.mNextDeathEvent, 7);
+    MWMechanics::OblivionCombatService restarted;
+    restarted.restore(ESM4::RuntimeState::deserializeBinary(check.serializeBinary()), store);
+    const auto second = restarted.takeNextDeathEvent();
+    ASSERT_TRUE(second);
+    EXPECT_EQ(second->mId, 6);
+    EXPECT_EQ(second->mKiller, player);
+    EXPECT_FALSE(restarted.takeNextDeathEvent());
+    auto legacy = savedState(11);
+    const auto original = legacy;
+    EXPECT_THROW(restarted.capture(legacy), std::invalid_argument);
+    EXPECT_EQ(legacy, original);
+    restarted.capture(check);
+    EXPECT_TRUE(check.mPendingDeathEvents.empty());
+    EXPECT_EQ(check.mNextDeathEvent, 7); // Never recycle a consumed event ID.
+    restarted.clear();
+    restarted.capture(check);
+    EXPECT_TRUE(check.mNativeActorLife.empty());
+    EXPECT_EQ(check.mNextDeathEvent, 1);
+    EXPECT_FALSE(restarted.findActorLife(player));
+}
+
+TEST(OblivionCombatService, LifeContentPreflightRejectsMissingActorsAndNonActorKillersBeforeCommit)
+{
+    auto saved = savedState();
+    const auto actor = ESM::FormKey::content("actors.esm", 0x100);
+    const auto base = ESM::FormKey::content("actors.esm", 0x200);
+    ESM4::RuntimeReferenceState reference;
+    reference.mKey = actor;
+    reference.mBase = base;
+    reference.mCell = saved.mPlayer.mCell;
+    saved.mReferences.push_back(reference);
+    saved.mNativeActorLife = {{actor, base, ESM4::ActorLifePhase::EssentialUnconscious, 4.5f, saved.mPlayer.mReference}};
+    MWWorld::ESMStore store;
+    ESM4::Npc npc{};
+    npc.mFormKey = base;
+    npc.mIsTES4 = true;
+    store.getWritable<ESM4::Npc>().insertStatic(npc, base);
+    ESM4::ActorCharacter placed{};
+    placed.mFormKey = actor;
+    placed.mBaseKey = base;
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, actor);
+    MWMechanics::OblivionCombatService service;
+    service.restore(saved, store);
+    EXPECT_EQ(service.findActorLife(actor)->mRecoveryRemaining, 4.5f);
+    const auto action = service.allocateAction();
+    auto before = saved;
+    service.capture(before);
+    MWWorld::ESMStore missing;
+    EXPECT_THROW(service.restore(saved, missing), std::invalid_argument);
+    auto invalid = saved;
+    ESM4::RuntimeReferenceState source = reference;
+    source.mKey = ESM::FormKey::content("actors.esm", 0x300);
+    source.mBase = ESM::FormKey::content("actors.esm", 0x400);
+    invalid.mReferences.push_back(source);
+    invalid.mNativeActorLife[0].mKiller = source.mKey;
+    EXPECT_NO_THROW(invalid.validate());
+    EXPECT_THROW(service.restore(invalid, store), std::invalid_argument);
+    auto after = saved;
+    service.capture(after);
+    EXPECT_EQ(after, before);
+    EXPECT_TRUE(service.isActionPending(action));
+}

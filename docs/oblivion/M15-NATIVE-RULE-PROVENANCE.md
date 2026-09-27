@@ -2854,3 +2854,25 @@ callback indicators match optimized C++ `prepareActorValueModifierCommand`
 and negated float input as current; the independent 3,408 handler comparisons
 above separately cover exact request-minus-current computation. This does not
 resolve arbitrary out-of-range float conversion or implement callback effects.
+
+### Negative-Health callback and script GetDead gates
+
+Player vtable `00A73A0C` slot +3B8 points to `0065D6F0`; Character `00A6FC9C`
+and Creature `00A710F4` use `006034B0`. The common callback first executes
+state query `005E33B0(false)`, which excludes states 1, 2 and 6. Otherwise it
+queries current Health and invokes transition `006005F0` only when Health is
+**below 1** (constant `00A2F948` is float 1). Player adds a second state query
+after the common callback. The script GetDead helper `004F4890`, reached by
+`00502870`, instead calls `005E33B0(true)`: states 1/2 return true, essential
+state6 returns false. This is independent of the Disabled flag used by GetAV.
+
+`S2/oracle-emulator/health-reaction-gate.py` executes **1,024** original callback
+paths across Player/common actor dispatch, states0..7, signed/zero/fractional/
+adjacent-one Health values, both x87 modes, null/non-null attribution and two
+negative deltas. Original state queries and gating execute; current Health is
+a boundary getter and the death/essential transition is captured, not executed.
+An additional **16** original GetDead helper paths execute the state query with
+only actor-type identity stubbed. Logs: `S3/authority-draft/health-reaction-gate-02.log`;
+corpora `health-reaction-gate-table.json` and `script-dead-query-table.json`.
+The fork's persisted Alive/Dead/EssentialUnconscious enum describes logical
+phases; it does not claim to reproduce all original animation-state numbers.

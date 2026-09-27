@@ -3215,3 +3215,59 @@ This chunk exposes service transactions, not automatic script/console writer
 activation or normal-input command acceptance. The next integration boundary
 is world callbacks and actor lifecycle; cache-only values and native activation
 also remain open. S2/S3 are in progress and S4–S14 remain pending.
+
+## S3 lifecycle storage and death-event queue contract (schema 12)
+
+Schema12 adds stable actor/base lifecycle entries with logical Alive, Dead and
+EssentialUnconscious phases, fractional recovery countdown and attribution,
+plus a separate monotonic death-event namespace and FIFO queue. Binary,
+canonical JSON and Python agree. Validation rejects invalid phases/timers,
+unknown sources, duplicate/dangling actors, actor-value/base disagreements,
+noncanonical wire keys, zero/duplicate/out-of-order/out-of-range event IDs and
+version loss. Coexisting legacy `obscript.dead` must be a bool matching terminal
+dead status; essential unconsciousness is not GetDead. Older schemas decode to
+empty lifecycle state and event namespace1 without inferring death from Health.
+Legacy-only markers remain intact: automatic conversion and live activation
+are intentionally not introduced before their writer/view adapters.
+
+The service owns these maps and queue through clear/capture/restore. Content
+preflight validates winning actor/base and attribution bindings before replacing
+any action/value/lifecycle state. `takeNextDeathEvent` removes the front event
+before the caller dispatches it. The service test captures at that boundary,
+serializes/reloads, and consumes only the remaining event; exhausted IDs are
+retained. This establishes the queue/save boundary, not actual script dispatch
+from a live death. Live lifecycle projection, transitions, legacy marker
+conversion, callbacks, corpse/essential behavior and command routing remain
+next; no normal-input death acceptance is claimed.
+
+`S3/native-lifecycle-state-01` passes **1,902 components /380 ASan+UBSan ESM4 /
+165 Python /591 engine tests**, exact C++ inventories and no skips. Fingerprint:
+`3002823d201d1b9e1a682f330fa3a7643a5b8f53c132a199b3e46ee2bd89d7bb`.
+Engine SHA-256:
+`72bd156808201a698b3f530b576ec70798e6c7efb7440ac22c324c5f08957318`.
+The initial Python fixture lacked required reference owner metadata; it was
+corrected. A pre-existing base wire test assumed the current schema ended at
+base overrides; its explicit v11 offsets are now pinned to version11, with new
+v12 combined base/value/lifecycle coverage. Failures and corrected preflights
+are retained under `S3/authority-draft/lifecycle-*`.
+
+Actual engine evidence (all under `S3/`):
+
+- `native-lifecycle-populated-01` and `native-lifecycle-continuation-01` preserve
+  injected lifecycle fields and the two ordered pending events through separate
+  load/resave processes. No consumer dispatch or live publication is claimed.
+- `native-lifecycle-legacy-01` upgrades the accepted v11 query continuation to
+  v12, preserving native values/bases and adding empty lifecycle/event defaults.
+- `native-lifecycle-reject-01` rejects a structurally valid static-object actor
+  binding before Applied/save boundaries; pristine and private input hashes
+  remain unchanged.
+- `native-lifecycle-restart-01` passes the normal idle-service new-save -> quit
+  -> fresh-load -> resave course, including v12 snapshot/default checks.
+- `native-lifecycle-morrowind-01` saves without GPRO/T4VR/T4ST/OMW4STATE markers.
+  Its terrain-facing Balmora spawn is the existing short isolation case, not a
+  town gameplay regression suite.
+
+All seven required captures were inspected: observation rooms/HUDs, readable
+binding-error dialog and the terrain-facing Morrowind scene. Runs are silent.
+Verification JSON records input preservation, state vectors and binary identity.
+S2/S3 remain in progress, S4–S14 pending.

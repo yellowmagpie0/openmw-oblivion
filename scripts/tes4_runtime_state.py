@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 11
+CURRENT_VERSION = 12
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -753,6 +753,57 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if process == 1:
                     native_float(low + maximum)
 
+    lives = check_collection(state.get("native_actor_life", []), "native actor life list")
+    death_events = check_collection(state.get("pending_death_events", []), "pending death event list")
+    next_death = state.get("next_death_event", 1)
+    if version < 12 and (lives or death_events or next_death != 1):
+        raise RuntimeStateError("TES4 native actor lifecycle requires version 12")
+    if type(next_death) is not int or not 1 <= next_death < 1 << 64:
+        raise RuntimeStateError("Invalid TES4 next death event identity")
+    value_bases = {actor["actor"]: actor["base"] for actor in native_actors}
+    legacy_refs = {reference["key"]: reference for reference in references}
+    life_keys: set[str] = set()
+
+    def life_source(key: Any) -> None:
+        if key == "null":
+            return
+        native_key(key)
+        if key != player["reference"] and key not in bases:
+            raise RuntimeStateError("Dangling TES4 native life source")
+
+    for life in lives:
+        if not isinstance(life, dict):
+            raise RuntimeStateError("Invalid TES4 native actor life state")
+        key, base = life.get("actor"), life.get("base")
+        native_key(key)
+        native_key(base)
+        if key in life_keys:
+            raise RuntimeStateError("Duplicate TES4 native actor life identity")
+        life_keys.add(key)
+        if (key != player["reference"] and bases.get(key) != base) or value_bases.get(key, base) != base:
+            raise RuntimeStateError("Dangling or mismatched TES4 native actor life reference")
+        phase, remaining, killer = life.get("phase"), life.get("recovery_remaining"), life.get("killer")
+        life_source(killer)
+        if type(phase) is not int or phase not in (0, 1, 2):
+            raise RuntimeStateError("Invalid TES4 native actor life phase")
+        remaining = native_float(remaining)
+        if remaining < 0 or (phase != 2 and remaining != 0) or (phase == 0 and killer != "null"):
+            raise RuntimeStateError("Invalid TES4 native actor life timer or killer")
+        custom = legacy_refs.get(key, {}).get("custom_state", {})
+        if "obscript.dead" in custom:
+            old = custom["obscript.dead"]
+            if type(old) is not bool or old != (phase == 1):
+                raise RuntimeStateError("TES4 native actor life conflicts with legacy obscript.dead")
+    previous = 0
+    for event in death_events:
+        if not isinstance(event, dict):
+            raise RuntimeStateError("Invalid TES4 pending death event")
+        identity, actor = event.get("id"), event.get("actor")
+        if type(identity) is not int or not previous < identity < next_death or actor not in life_keys:
+            raise RuntimeStateError("Invalid TES4 pending death event identity, order or reference")
+        life_source(event.get("killer"))
+        previous = identity
+
     scripts = check_collection(state.get("script_instances", []), "script instance list")
     quests = check_collection(state.get("quests", []), "quest list")
     if version < 2 and (state.get("script_event_sequence", 0) != 0 or scripts or quests):
@@ -1105,6 +1156,16 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     raise RuntimeStateError("Invalid TES4 native actor base storage type")
                 base["values"].append([av, storage, reader.unpack("<i" if storage == 0 else "<f")])
             result["native_actor_bases"].append(base)
+    if version >= 12:
+        result["native_actor_life"] = [
+            {"actor": reader.string(), "base": reader.string(), "phase": reader.unpack("<B"),
+             "recovery_remaining": reader.unpack("<f"), "killer": reader.string()} for _ in range(reader.count())
+        ]
+        result["next_death_event"] = reader.unpack("<Q")
+        result["pending_death_events"] = [
+            {"id": reader.unpack("<Q"), "actor": reader.string(), "killer": reader.string()}
+            for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1294,6 +1355,22 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", av)
                 writer.pack("<B", storage)
                 writer.pack("<i" if storage == 0 else "<f", value)
+    if version >= 12:
+        lives = sorted(state.get("native_actor_life", []), key=lambda life: life["actor"])
+        writer.pack("<I", len(lives))
+        for life in lives:
+            writer.string(life["actor"])
+            writer.string(life["base"])
+            writer.pack("<B", life["phase"])
+            writer.pack("<f", life["recovery_remaining"])
+            writer.string(life["killer"])
+        writer.pack("<Q", state.get("next_death_event", 1))
+        events = state.get("pending_death_events", [])
+        writer.pack("<I", len(events))
+        for event in events:
+            writer.pack("<Q", event["id"])
+            writer.string(event["actor"])
+            writer.string(event["killer"])
     return writer.finish()
 
 
@@ -1368,6 +1445,9 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("physical_actions", {"next": 1, "pending": []})
     state.setdefault("native_actor_values", [])
     state.setdefault("native_actor_bases", [])
+    state.setdefault("native_actor_life", [])
+    state.setdefault("next_death_event", 1)
+    state.setdefault("pending_death_events", [])
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
@@ -1399,6 +1479,9 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("physical_actions", {"next": 1, "pending": []})
     result.setdefault("native_actor_values", [])
     result.setdefault("native_actor_bases", [])
+    result.setdefault("native_actor_life", [])
+    result.setdefault("next_death_event", 1)
+    result.setdefault("pending_death_events", [])
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])

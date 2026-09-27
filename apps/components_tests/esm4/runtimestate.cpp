@@ -469,6 +469,7 @@ namespace
     TEST(ESM4RuntimeState, sharedBaseOverridesPreserveTypedValuesAndCanonicalOrder)
     {
         auto state = makeState();
+        state.mVersion = 11; // The suffix offsets in this case describe the v11 wire format.
         ESM4::RuntimeActorBaseOverride npc{ESM::FormKey::content("oblivion.esm", 7), ESM4::ActorBaseKind::Npc,
             {{8, std::int32_t{16777217}}, {9, std::int32_t{65535}}, {40, 2147483648.f}}};
         ESM4::RuntimeActorBaseOverride creature{ESM::FormKey::content("oblivion.esm", 8), ESM4::ActorBaseKind::Creature,
@@ -841,4 +842,109 @@ namespace
         EXPECT_TRUE(loaded.mPlayer.mInventory[0].mOwner.isNull());
         EXPECT_EQ(loaded.mPlayer.mInventory[0].mRemainingUsageTime, -1.f);
     }
+    TEST(ESM4RuntimeState, nativeLifeRoundTripKeepsEssentialTimerAndDeathCallbackOrder)
+    {
+        auto state = makeState();
+        const auto& reference = state.mReferences.front();
+        state.mNativeActorLife = {
+            {reference.mKey, reference.mBase, ESM4::ActorLifePhase::EssentialUnconscious, 3.125f, state.mPlayer.mReference},
+            {state.mPlayer.mReference, ESM::FormKey::dynamic("player-base", 1), ESM4::ActorLifePhase::Dead, 0, reference.mKey}};
+        state.mNativeActorBases = {{reference.mBase, ESM4::ActorBaseKind::Npc, {{8, std::int32_t{100}}}}};
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mKey;
+        values.mBase = reference.mBase;
+        values.mValues[8].mBase = 100;
+        state.mNativeActorValues = {values};
+        state.mNextDeathEvent = 10;
+        // The actor may have been resurrected before a queued callback executes.
+        state.mPendingDeathEvents = {{4, state.mPlayer.mReference, reference.mKey}, {9, reference.mKey, {}}};
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mNativeActorLife, state.mNativeActorLife);
+        EXPECT_EQ(restored.mPendingDeathEvents, state.mPendingDeathEvents);
+        EXPECT_EQ(restored.mNextDeathEvent, 10);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        EXPECT_NE(restored.canonicalJson().find("\"recovery_remaining\":3.125"), std::string::npos);
+        EXPECT_NE(restored.canonicalJson().find("\"next_death_event\":10"), std::string::npos);
+        for (std::size_t remove = 1; remove < 60; ++remove)
+        {
+            auto truncated = bytes;
+            truncated.resize(bytes.size() - remove);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        auto reordered = state;
+        std::reverse(reordered.mNativeActorLife.begin(), reordered.mNativeActorLife.end());
+        EXPECT_EQ(reordered.serializeBinary(), bytes);
+        std::reverse(reordered.mPendingDeathEvents.begin(), reordered.mPendingDeathEvents.end());
+        EXPECT_THROW(reordered.serializeBinary(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, nativeLifeRejectsInvalidPhasesBindingsTimersEventsAndLegacyConflicts)
+    {
+        auto valid = makeState();
+        const auto& reference = valid.mReferences.front();
+        valid.mNativeActorLife = {{reference.mKey, reference.mBase, ESM4::ActorLifePhase::Dead, 0, {}}};
+        valid.mNextDeathEvent = 3;
+        valid.mPendingDeathEvents = {{2, reference.mKey, valid.mPlayer.mReference}};
+        valid.validate();
+        const auto reject = [&](auto edit) {
+            auto state = valid;
+            edit(state);
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        };
+        reject([](auto& state) { state.mNativeActorLife.push_back(state.mNativeActorLife[0]); });
+        reject([](auto& state) { state.mNativeActorLife[0].mActor = {}; });
+        reject([](auto& state) { state.mNativeActorLife[0].mBase = {}; });
+        reject([](auto& state) { state.mNativeActorLife[0].mPhase = static_cast<ESM4::ActorLifePhase>(255); });
+        reject([](auto& state) { state.mNativeActorLife[0].mRecoveryRemaining = 1; });
+        reject([](auto& state) { state.mNativeActorLife[0].mRecoveryRemaining = -1; });
+        reject([](auto& state) { state.mNativeActorLife[0].mRecoveryRemaining = std::numeric_limits<float>::infinity(); });
+        reject([](auto& state) { state.mNativeActorLife[0].mKiller = ESM::FormKey::content("missing.esm", 1); });
+        reject([](auto& state) { state.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::Alive;
+            state.mNativeActorLife[0].mKiller = state.mPlayer.mReference; });
+        reject([](auto& state) { state.mReferences[0].mCustomState["obscript.dead"] = false; });
+        reject([](auto& state) { state.mReferences[0].mCustomState["obscript.dead"] = 1.0; });
+        reject([](auto& state) { state.mNextDeathEvent = 0; });
+        reject([](auto& state) { state.mPendingDeathEvents[0].mId = 0; });
+        reject([](auto& state) { state.mPendingDeathEvents[0].mId = 3; });
+        reject([](auto& state) { state.mPendingDeathEvents[0].mActor = {}; });
+        reject([](auto& state) { state.mPendingDeathEvents[0].mKiller = ESM::FormKey::content("missing.esm", 1); });
+        reject([](auto& state) { state.mPendingDeathEvents.push_back(state.mPendingDeathEvents[0]); });
+        reject([](auto& state) { state.mVersion = 11; });
+        valid.mReferences[0].mCustomState["obscript.dead"] = true;
+        EXPECT_NO_THROW(valid.validate());
+        valid.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::EssentialUnconscious;
+        valid.mNativeActorLife[0].mRecoveryRemaining = .5f;
+        valid.mReferences[0].mCustomState["obscript.dead"] = false;
+        EXPECT_NO_THROW(valid.validate());
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mKey;
+        values.mBase = ESM::FormKey::content("other.esm", 1);
+        valid.mNativeActorValues.push_back(values);
+        EXPECT_THROW(valid.validate(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, legacyVersionsDoNotInventLifeOrDeathEventsFromHealth)
+    {
+        for (std::uint32_t version = 1; version < 12; ++version)
+        {
+            SCOPED_TRACE(version);
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("oblivion.esm", 1);
+            state.mPlayer.mActorValues["health.current"] = -10;
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("oblivion.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("oblivion.esm", 3);
+            }
+            const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_TRUE(restored.mNativeActorLife.empty());
+            EXPECT_TRUE(restored.mPendingDeathEvents.empty());
+            EXPECT_EQ(restored.mNextDeathEvent, 1);
+            EXPECT_EQ(restored.canonicalJson().find("native_actor_life"), std::string::npos);
+        }
+    }
+
 }

@@ -26,7 +26,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 11;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 12;
 
     struct RuntimeContentIdentity
     {
@@ -265,6 +265,30 @@ namespace ESM4
     };
 
     // Versioned, load-order-independent state owned by the Oblivion profile.
+    // Logical lifecycle phases, not the original executable's animation-state
+    // numbers. A terminal actor is dead while its death animation may continue.
+    enum class ActorLifePhase : std::uint8_t { Alive, Dead, EssentialUnconscious };
+    struct RuntimeActorLife
+    {
+        ESM::FormKey mActor;
+        ESM::FormKey mBase;
+        ActorLifePhase mPhase = ActorLifePhase::Alive;
+        float mRecoveryRemaining = 0;
+        ESM::FormKey mKiller;
+
+        void validate() const;
+        friend bool operator==(const RuntimeActorLife&, const RuntimeActorLife&) = default;
+    };
+
+    struct RuntimeActorDeathEvent
+    {
+        std::uint64_t mId = 0;
+        ESM::FormKey mActor;
+        ESM::FormKey mKiller;
+
+        friend bool operator==(const RuntimeActorDeathEvent&, const RuntimeActorDeathEvent&) = default;
+    };
+
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
     struct RuntimeState
@@ -298,6 +322,12 @@ namespace ESM4
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.
         std::vector<RuntimeActorBaseOverride> mNativeActorBases;
+
+        // v12: native life authority and FIFO death callbacks. Remove a callback
+        // before dispatch; a save in that callback retains only remaining work.
+        std::vector<RuntimeActorLife> mNativeActorLife;
+        std::uint64_t mNextDeathEvent = 1;
+        std::vector<RuntimeActorDeathEvent> mPendingDeathEvents;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

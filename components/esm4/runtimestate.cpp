@@ -488,6 +488,17 @@ namespace ESM4
         }
     }
 
+    void RuntimeActorLife::validate() const
+    {
+        if (mActor.isNull() || mBase.isNull()
+            || (mPhase != ActorLifePhase::Alive && mPhase != ActorLifePhase::Dead
+                && mPhase != ActorLifePhase::EssentialUnconscious)
+            || !std::isfinite(mRecoveryRemaining) || mRecoveryRemaining < 0
+            || (mPhase != ActorLifePhase::EssentialUnconscious && mRecoveryRemaining != 0)
+            || (mPhase == ActorLifePhase::Alive && !mKiller.isNull()))
+            throw std::runtime_error("Invalid TES4 native actor life state");
+    }
+
     void RuntimeState::validate() const
     {
         if (mVersion < 1 || mVersion > CurrentRuntimeStateVersion)
@@ -533,13 +544,13 @@ namespace ESM4
         std::map<ESM::FormKey, ESM::FormKey> actorBases;
         for (const auto& reference : mReferences)
             actorBases.emplace(reference.mKey, reference.mBase);
-        std::set<ESM::FormKey> nativeActors;
+        std::map<ESM::FormKey, ESM::FormKey> nativeActors;
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
             if (mVersion < 10 && actor.mPlayerFormValues)
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
-            if (!nativeActors.insert(actor.mActor).second)
+            if (!nativeActors.emplace(actor.mActor, actor.mBase).second)
                 throw std::runtime_error("Duplicate TES4 native actor-value identity");
             const bool player = actor.mActor == mPlayer.mReference;
             if ((actor.mOwner == ActorValueOwner::Player) != player)
@@ -550,6 +561,45 @@ namespace ESM4
                 if (reference == actorBases.end() || reference->second != actor.mBase)
                     throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
             }
+        }
+        checkSize(mNativeActorLife.size(), "native actor life list");
+        checkSize(mPendingDeathEvents.size(), "pending death event list");
+        if (mVersion < 12 && (!mNativeActorLife.empty() || !mPendingDeathEvents.empty() || mNextDeathEvent != 1))
+            throw std::runtime_error("TES4 native actor lifecycle requires runtime-state version 12");
+        if (mNextDeathEvent == 0)
+            throw std::runtime_error("Invalid TES4 next death event identity");
+        const auto knownSource = [&](const ESM::FormKey& source) {
+            return source.isNull() || source == mPlayer.mReference || actorBases.contains(source);
+        };
+        std::map<ESM::FormKey, const RuntimeActorLife*> lives;
+        for (const auto& life : mNativeActorLife)
+        {
+            life.validate();
+            if (!lives.emplace(life.mActor, &life).second)
+                throw std::runtime_error("Duplicate TES4 native actor life identity");
+            const auto reference = actorBases.find(life.mActor);
+            if ((life.mActor != mPlayer.mReference && (reference == actorBases.end() || reference->second != life.mBase))
+                || !knownSource(life.mKiller))
+                throw std::runtime_error("Dangling or mismatched TES4 native actor life reference");
+            const auto values = nativeActors.find(life.mActor);
+            if (values != nativeActors.end() && values->second != life.mBase)
+                throw std::runtime_error("TES4 native actor life and value base conflict");
+        }
+        for (const auto& reference : mReferences)
+            if (const auto life = lives.find(reference.mKey); life != lives.end())
+                if (const auto old = reference.mCustomState.find("obscript.dead"); old != reference.mCustomState.end())
+                {
+                    const auto* dead = std::get_if<bool>(&old->second);
+                    if (!dead || *dead != (life->second->mPhase == ActorLifePhase::Dead))
+                        throw std::runtime_error("TES4 native actor life conflicts with legacy obscript.dead");
+                }
+        std::uint64_t previousEvent = 0;
+        for (const auto& event : mPendingDeathEvents)
+        {
+            if (event.mId <= previousEvent || event.mId >= mNextDeathEvent || !lives.contains(event.mActor)
+                || !knownSource(event.mKiller))
+                throw std::runtime_error("Invalid TES4 pending death event identity, order or reference");
+            previousEvent = event.mId;
         }
         if (mVersion < 8 && mPhysicalActions != ActionLedgerState{})
             throw std::runtime_error("TES4 runtime-state versions before 8 cannot contain physical actions");
@@ -1162,6 +1212,28 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 12)
+        {
+            auto lives = mNativeActorLife;
+            std::sort(lives.begin(), lives.end(), [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(lives.size()));
+            for (const auto& life : lives)
+            {
+                writeKey(writer, life.mActor);
+                writeKey(writer, life.mBase);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(life.mPhase));
+                writer.floating(life.mRecoveryRemaining);
+                writeKey(writer, life.mKiller);
+            }
+            writer.integer(mNextDeathEvent);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPendingDeathEvents.size()));
+            for (const auto& event : mPendingDeathEvents)
+            {
+                writer.integer(event.mId);
+                writeKey(writer, event.mActor);
+                writeKey(writer, event.mKiller);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1546,6 +1618,35 @@ namespace ESM4
                 }
                 result.mNativeActorBases.push_back(std::move(base));
             }
+        }
+        if (result.mVersion >= 12)
+        {
+            const auto nativeKey = [&reader](bool nullable = false) {
+                const auto text = reader.string();
+                try
+                {
+                    const auto key = ESM::FormKey::deserialize(text);
+                    if ((nullable || !key.isNull()) && key.serialize() == text)
+                        return key;
+                }
+                catch (const std::invalid_argument&) {}
+                throw std::runtime_error("Invalid or noncanonical TES4 actor lifecycle identity");
+            };
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                RuntimeActorLife life;
+                life.mActor = nativeKey();
+                life.mBase = nativeKey();
+                life.mPhase = static_cast<ActorLifePhase>(reader.integer<std::uint8_t>());
+                life.mRecoveryRemaining = reader.float32();
+                life.mKiller = nativeKey(true);
+                result.mNativeActorLife.push_back(std::move(life));
+            }
+            result.mNextDeathEvent = reader.integer<std::uint64_t>();
+            const auto events = reader.count();
+            for (std::uint32_t i = 0; i < events; ++i)
+                result.mPendingDeathEvents.push_back({reader.integer<std::uint64_t>(), nativeKey(), nativeKey(true)});
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -1963,6 +2064,30 @@ namespace ESM4
                     stream << ']';
                 }
                 stream << "]}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 12)
+        {
+            stream << ",\"native_actor_life\":[";
+            auto lives = mNativeActorLife;
+            std::sort(lives.begin(), lives.end(), [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+            for (std::size_t i = 0; i < lives.size(); ++i)
+            {
+                const auto& life = lives[i];
+                if (i) stream << ',';
+                stream << "{\"actor\":\"" << escapeJson(life.mActor.serialize()) << "\",\"base\":\""
+                       << escapeJson(life.mBase.serialize()) << "\",\"phase\":" << static_cast<unsigned>(life.mPhase)
+                       << ",\"recovery_remaining\":" << std::setprecision(17) << life.mRecoveryRemaining
+                       << ",\"killer\":\"" << escapeJson(life.mKiller.serialize()) << "\"}";
+            }
+            stream << "],\"next_death_event\":" << mNextDeathEvent << ",\"pending_death_events\":[";
+            for (std::size_t i = 0; i < mPendingDeathEvents.size(); ++i)
+            {
+                const auto& event = mPendingDeathEvents[i];
+                if (i) stream << ',';
+                stream << "{\"id\":" << event.mId << ",\"actor\":\"" << escapeJson(event.mActor.serialize())
+                       << "\",\"killer\":\"" << escapeJson(event.mKiller.serialize()) << "\"}";
             }
             stream << ']';
         }
