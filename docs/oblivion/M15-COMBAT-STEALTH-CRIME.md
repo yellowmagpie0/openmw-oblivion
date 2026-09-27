@@ -2869,3 +2869,56 @@ Tested source fingerprint:
 Sanitizer coverage is component rules, not the engine, and leak checks remain
 disabled. Next bounded work is the accepted-jump physics boundary and running
 writer, including actor expenditure eligibility and shared view publication.
+
+### S3 running/regeneration transaction and accepted player jump
+
+Commit `1a3f809a94` contains the verified movement arithmetic. The service now
+prepares running expenditure followed by regeneration as one candidate, then
+publishes authority and shared views once. The actor update supplies the
+controller's effective running state; CharacterController bypasses its TES3
+running/swimming/sneaking fatigue writer for native projections. Regeneration
+continues when expenditure is suppressed. Dead actors are unchanged.
+
+The physics accepted-jump boundary dispatches published player fatigue through
+the World-owned service. Original call-site inspection identifies the rate
+consumer in PlayerCharacter's +228 update, so native nonplayer jumps bypass
+the TES3 debit without receiving a player-only cost. Player god mode suppresses
+expenditure; the common running route uses true eligibility for Character and
+the independently verified initial false Creature flag. Mutable creature-flag
+lifecycle remains open, and automatic publication is still disabled.
+
+The actual Player/NPC fixtures test expenditure-before-regeneration, base mastery
+with a conflicting modified skill, zero duration, expenditure suppression,
+rollback after a valid debit followed by invalid regeneration, immediate shared
+views, and mutation after binary capture/restore. Player jump tests cover
+Expert reduction, limiting to zero, repeated zero-fatigue requests, and a dead
+actual Player control. `S3/movement-authority-01` initially passed 580 engine
+tests. A subsequent original negative-zero probe exposed a capacity-sign edge
+case omitted from the earlier matrix; the preserved failure led to a correction
+and expanded 62,208-case bit-exact comparison.
+`S3/movement-authority-02` passes **1,887 component /365 ASan+UBSan ESM4 /580
+engine tests**, rebuilding all three binaries, with exact inventory agreement
+and no skips/failures. Tested source fingerprint:
+`3c6c631630913139cbff337e22bfe59c5758f97514c6aea443d40a39bb550670`.
+Sanitizers cover components only, with leak checks disabled. The unchanged
+Python layer retains its preceding 160-test pass.
+Winning settings are resolved
+at the World boundary; per-update GMST resolution performance, remaining
+rest/script/magic writers, activation and full runtime acceptance remain open.
+
+
+`S3/movement-authority-jump-01` passes the unchanged M12 keyboard/gamepad
+course. Both input sources reach physics and debit shared fatigue (145 -> 115
+and 136.392 -> 106.392). The inspected capture shows the textured Imperial
+Dungeon and HUD. This silent course exercises the unpublished legacy bridge,
+not automatically activated native authority or jump-height/audio acceptance.
+Its pre-signed-zero-fix executable SHA-256 is
+`08c637b46ded3ebbc5bb168e9dc87eb0f249769fb5fea045c32b378685c578a0`.
+
+`S3/movement-authority-jump-02` repeats the unchanged keyboard/gamepad course
+successfully on the corrected executable:
+`4e17fd436cc4f535fce0fd1dc34da4e8251de86250582619b8e914fa650cceff`.
+Both input sources reach the physics jump boundary, with no forbidden or
+unreviewed errors. The inspected screenshot again shows the dungeon/HUD.
+This remains unpublished-bridge regression coverage; native activation and the
+full normal-input combat/movement campaigns are still open.

@@ -142,6 +142,56 @@ namespace MWMechanics
                     values.mOwner, values.mProcess), duration}, settings);
         }
 
+        ESM4::MovementFatigueInput movementFatigueInput(const ESM4::RuntimeActorValues& values,
+            std::int32_t encumbrance, std::uint8_t skill)
+        {
+            return {ESM4::composeActorValue(values.mValues[10], values.mOwner, values.mProcess),
+                ESM4::composeActorValue(values.mValues[0], values.mOwner, values.mProcess), encumbrance,
+                ESM4::combatBaseValue(values.mValues[skill].mBase)};
+        }
+
+        void changeFatigueDamage(ESM4::RuntimeActorValues& values, float delta)
+        {
+            values.mValues[10] = ESM4::changeActorValueModifier(
+                values.mValues[10], values.mOwner, ESM4::ActorValueModifier::Damage, delta);
+        }
+
+        bool updateFatigue(ESM4::RuntimeActorValues& values, const OblivionFatigueUpdate& input,
+            const OblivionFatigueSettings& settings)
+        {
+            bool changed = false;
+            if (input.mRunning && input.mCanSpend)
+            {
+                const float debit = ESM4::runningFatigueDebit(movementFatigueInput(values, input.mEncumbrance, 13),
+                    input.mDuration, settings.mMovement, settings.mMastery);
+                if (debit > 0)
+                {
+                    changeFatigueDamage(values, -debit);
+                    changed = true;
+                }
+            }
+            const float restoration = fatigueRestoration(values, input.mDuration, settings.mRegeneration);
+            if (restoration > 0)
+            {
+                changeFatigueDamage(values, restoration);
+                changed = true;
+            }
+            return changed;
+        }
+
+        bool spendJumpFatigue(ESM4::RuntimeActorValues& values, std::int32_t encumbrance, bool canSpend,
+            const OblivionFatigueSettings& settings)
+        {
+            if (!canSpend)
+                return false;
+            const float debit = ESM4::jumpingFatigueDebit(movementFatigueInput(values, encumbrance, 26),
+                settings.mMovement, settings.mMastery);
+            if (debit <= 0)
+                return false;
+            changeFatigueDamage(values, -debit);
+            return true;
+        }
+
         OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values)
         {
             OblivionActorProjectionInput input;
@@ -431,6 +481,32 @@ namespace MWMechanics
         const float delta = fatigueRestoration(values, duration, settings);
         if (delta > 0)
             changePlayerValue(player, 10, ESM4::ActorValueModifier::Damage, delta, baseSettings);
+    }
+
+    void OblivionCombatService::updateNonPlayerFatigue(const MWWorld::Ptr& actor,
+        const OblivionFatigueUpdate& input, const OblivionFatigueSettings& settings)
+    {
+        auto candidate = nonPlayerValues(actor);
+        if (!actor.getClass().getCreatureStats(actor).isDead() && updateFatigue(candidate, input, settings))
+            publishNonPlayerValues(actor, std::move(candidate));
+    }
+
+    void OblivionCombatService::updatePlayerFatigue(MWWorld::Player& player,
+        const OblivionFatigueUpdate& input, const OblivionFatigueSettings& settings)
+    {
+        auto candidate = playerValues();
+        const auto ptr = player.getPlayer();
+        if (!ptr.getClass().getCreatureStats(ptr).isDead() && updateFatigue(candidate, input, settings))
+            publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
+    }
+
+    void OblivionCombatService::spendPlayerJumpFatigue(MWWorld::Player& player,
+        std::int32_t encumbrance, bool canSpend, const OblivionFatigueSettings& settings)
+    {
+        auto candidate = playerValues();
+        const auto ptr = player.getPlayer();
+        if (!ptr.getClass().getCreatureStats(ptr).isDead() && spendJumpFatigue(candidate, encumbrance, canSpend, settings))
+            publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
     }
 
     float OblivionCombatService::getPlayerValue(std::uint8_t value) const

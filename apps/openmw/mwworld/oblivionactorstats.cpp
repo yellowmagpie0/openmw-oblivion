@@ -1,5 +1,7 @@
 #include "oblivionactorstats.hpp"
 
+#include "../mwmechanics/oblivioncombat.hpp"
+
 #include "esmstore.hpp"
 #include "class.hpp"
 #include "../mwbase/environment.hpp"
@@ -128,6 +130,13 @@ namespace MWWorld
             result.mFatigue = dynamic.mFatigue;
             return result;
         }
+    }
+
+    MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store)
+    {
+        const auto settings = winningRecords<ESM4::GameSetting>(store);
+        return {ESM4::buildMovementFatigueSettings(settings), ESM4::buildFatigueRegenerationSettings(settings),
+            ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings)};
     }
 
     ESM4::FatigueRegenerationSettings resolveOblivionFatigueRegenerationSettings(const ESMStore& store)

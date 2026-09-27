@@ -10,6 +10,11 @@
 #include <cstdint>
 #include <optional>
 
+namespace MWMechanics
+{
+    struct OblivionFatigueSettings;
+}
+
 namespace MWWorld
 {
     class ESMStore;
@@ -30,6 +35,7 @@ namespace MWWorld
     // aliases and previously cached settings cannot supply player formulas.
     ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store);
     ESM4::FatigueRegenerationSettings resolveOblivionFatigueRegenerationSettings(const ESMStore& store);
+    MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store);
     // Uses the live player's base level only for PCLevelOffset actors.
     OblivionActorBaseStats resolveOblivionActorConstructionStats(const ESMStore& store,
         ESM::FormId actorBase, bool scaled);

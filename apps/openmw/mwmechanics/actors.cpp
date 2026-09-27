@@ -944,7 +944,7 @@ namespace MWMechanics
 
         if (stats.getFatigue().isNativeProjection())
         {
-            if (!MWBase::Environment::get().getWorld()->regenerateOblivionFatigue(ptr, duration))
+            if (!MWBase::Environment::get().getWorld()->updateOblivionFatigue(ptr, duration, isRunning(ptr)))
                 throw std::logic_error("native fatigue projection has no owning world authority");
             return;
         }

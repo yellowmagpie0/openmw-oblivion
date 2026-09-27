@@ -392,6 +392,10 @@ namespace
         const auto key = ESM::FormKey::content("actors.esm", 0x980);
         mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
         EXPECT_EQ(MWWorld::resolveOblivionFatigueRegenerationSettings(mStore).mBase, 2);
+        const auto combined = MWWorld::resolveOblivionFatigueSettings(mStore);
+        EXPECT_EQ(combined.mRegeneration.mBase, 2);
+        EXPECT_EQ(combined.mMovement.mRunBase, 8);
+        EXPECT_EQ(combined.mMastery.mMinimumSkill, (std::array<std::int32_t, 4>{25, 50, 75, 100}));
         native.mData = -3.f;
         mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
         EXPECT_EQ(MWWorld::resolveOblivionFatigueRegenerationSettings(mStore).mBase, -3);
@@ -509,7 +513,138 @@ namespace
             EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue(), sharedBefore);
             regenerate(1, {-100, 0});
             EXPECT_EQ(*service.findActorValues(values.mActor), before);
+
+            auto movementSettings = MWWorld::resolveOblivionFatigueSettings(mStore);
+            movementSettings.mMovement.mJumpBase = 30;
+            movementSettings.mMovement.mJumpMultiplier = 0;
+            values.mProcess = Process::Active;
+            values.mValues[0].mBase = 50;
+            if (isPlayer)
+                values.mPlayerFormValues = {{0, 0, -30, 0}}; // 50 Strength + 20 Endurance - 30 = 40.
+            values.mValues[10].mModifiers = {};
+            const auto update = [&](MWMechanics::OblivionFatigueUpdate input,
+                                    const MWMechanics::OblivionFatigueSettings& settings) {
+                if (isPlayer)
+                    service.updatePlayerFatigue(player, input, settings);
+                else
+                    service.updateNonPlayerFatigue(ptr, input, settings);
+            };
+            const auto jump = [&](bool canSpend) {
+                service.spendPlayerJumpFatigue(player, 100, canSpend, movementSettings);
+            };
+            const auto current = [&] { return ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(); };
+            publish();
+            update({1, 100, true, true}, movementSettings);
+            EXPECT_EQ(current(), 40); // Spend 8, then restore 10; opposite order would leave 32.
+            values.mValues[10].mModifiers[2] = -20;
+            publish();
+            update({1, 100, true, true}, movementSettings);
+            EXPECT_EQ(current(), 22);
+            EXPECT_EQ(service.findActorValues(values.mActor)->mValues[10].mModifiers[2], -18);
+            values.mValues[13] = {100, {std::nullopt, -100.f, std::nullopt}};
+            publish();
+            update({1, 100, true, true}, movementSettings);
+            EXPECT_EQ(current(), 30); // Base Master Athletics, despite current skill zero.
+            values.mValues[13] = {};
+            publish();
+            update({1, 100, true, false}, movementSettings);
+            EXPECT_EQ(current(), 30); // Expenditure suppression does not suppress regeneration.
+            publish();
+            const auto stable = *service.findActorValues(values.mActor);
+            auto invalidSettings = movementSettings;
+            invalidSettings.mRegeneration.mBase = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(update({1, 100, true, true}, invalidSettings), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), stable); // No partial running debit.
+            EXPECT_EQ(current(), 20);
+            update({0, 100, true, true}, movementSettings);
+            EXPECT_EQ(*service.findActorValues(values.mActor), stable);
+            values.mValues[10].mModifiers = {};
+            publish();
+            if (isPlayer)
+            {
+                jump(false);
+                EXPECT_EQ(current(), 40);
+                jump(true);
+                EXPECT_EQ(current(), 10);
+                jump(true);
+                EXPECT_EQ(current(), 0); // Movement cannot knock an actor out by crossing below zero.
+                const auto emptyFatigue = *service.findActorValues(values.mActor);
+                jump(true);
+                EXPECT_EQ(*service.findActorValues(values.mActor), emptyFatigue);
+                values.mValues[26] = {75, {std::nullopt, -75.f, std::nullopt}};
+                publish();
+                jump(true);
+                EXPECT_EQ(current(), 25); // Base Expert Acrobatics, despite current skill zero.
+            }
+            else
+            {
+                service.changeNonPlayerValue(ptr, 10, ESM4::ActorValueModifier::Damage, -15);
+                EXPECT_EQ(current(), 25);
+            }
+
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            if (!isPlayer)
+            {
+                ESM4::RuntimeReferenceState actor;
+                actor.mKey = values.mActor;
+                actor.mBase = values.mBase;
+                actor.mCell = saved.mPlayer.mCell;
+                saved.mReferences.push_back(actor);
+            }
+            service.capture(saved);
+            MWMechanics::OblivionCombatService restored;
+            restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            EXPECT_EQ(*restored.findActorValues(values.mActor), *service.findActorValues(values.mActor));
+            if (isPlayer)
+                restored.spendPlayerJumpFatigue(player, 100, true, movementSettings);
+            else
+                restored.updateNonPlayerFatigue(ptr, {1, 100, true, true}, movementSettings);
+            EXPECT_EQ(current(), isPlayer ? 10 : 27);
         }
+    }
+
+    TEST_F(OblivionActorStatsTest, nativeFatigueWritersLeaveDeadPlayerUnchanged)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        initial.mCreatureStats.mDead = true;
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto& stats = ptr.getClass().getCreatureStats(ptr);
+        ASSERT_TRUE(stats.isDead());
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 0, 20, 0}};
+        values.mValues[10].mModifiers[2] = -5;
+        const auto settings = MWWorld::resolveOblivionFatigueSettings(mStore);
+        MWMechanics::OblivionCombatService service;
+        service.publishPlayerValues(player, values, settings.mPlayerBase);
+        const auto before = *service.findActorValues(values.mActor);
+        EXPECT_EQ(stats.getFatigue().getCurrent(), 15);
+        service.regeneratePlayerFatigue(player, 1, settings.mRegeneration, settings.mPlayerBase);
+        service.updatePlayerFatigue(player, {1, 100, true, true}, settings);
+        service.spendPlayerJumpFatigue(player, 100, true, settings);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_EQ(stats.getFatigue().getCurrent(), 15);
+        EXPECT_TRUE(stats.isDead());
     }
 
     TEST_F(OblivionActorStatsTest, nativeServiceOwnsNpcValuesAcrossMutationAndReload)

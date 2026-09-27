@@ -1220,16 +1220,38 @@ namespace MWWorld
         return state;
     }
 
-    bool World::regenerateOblivionFatigue(const Ptr& actor, float duration)
+    bool World::updateOblivionFatigue(const Ptr& actor, float duration, bool running)
     {
         if (!mOblivionCombat)
             return false;
-        const auto settings = resolveOblivionFatigueRegenerationSettings(mStore);
-        if (actor == getPlayerPtr())
-            mOblivionCombat->regeneratePlayerFatigue(*mPlayer, duration, settings,
-                resolveOblivionPlayerDynamicBaseSettings(mStore));
+        const auto settings = resolveOblivionFatigueSettings(mStore);
+        const bool player = actor == getPlayerPtr();
+        // Original Character/Player virtual +278 returns true. The Creature
+        // constructor initializes its separate expenditure flag to false.
+        const bool canSpend = actor.getType() != ESM::REC_CREA4 && (!player || !getGodModeState());
+        const MWMechanics::OblivionFatigueUpdate input{duration,
+            ESM4::combatBaseValue(actor.getClass().getEncumbrance(actor)), running, canSpend};
+        if (player)
+            mOblivionCombat->updatePlayerFatigue(*mPlayer, input, settings);
         else
-            mOblivionCombat->regenerateNonPlayerFatigue(actor, duration, settings);
+            mOblivionCombat->updateNonPlayerFatigue(actor, input, settings);
+        return true;
+    }
+
+    bool World::spendOblivionJumpFatigue(const Ptr& actor)
+    {
+        if (!mOblivionCombat)
+            return false;
+        // Original jump expenditure is in PlayerCharacter update +228, not
+        // the common actor update. Native nonplayers must bypass the TES3 debit.
+        if (actor != getPlayerPtr())
+        {
+            mOblivionCombat->getNonPlayerValue(actor, 10); // Validate native ownership.
+            return true;
+        }
+        const auto settings = resolveOblivionFatigueSettings(mStore);
+        const auto encumbrance = ESM4::combatBaseValue(actor.getClass().getEncumbrance(actor));
+        mOblivionCombat->spendPlayerJumpFatigue(*mPlayer, encumbrance, !getGodModeState(), settings);
         return true;
     }
 

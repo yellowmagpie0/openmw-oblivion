@@ -2150,8 +2150,10 @@ namespace MWMechanics
                     }
                 }
 
-                if (!godmode)
+                if (!godmode && !stats.getFatigue().isNativeProjection())
                 {
+                    // Native running expenditure is committed with regeneration
+                    // in the actor update. This is the legacy movement writer.
                     // reduce fatigue
                     float fatigueLoss = 0.f;
                     static const float fFatigueRunBase = gmst.find("fFatigueRunBase")->mValue.getFloat();

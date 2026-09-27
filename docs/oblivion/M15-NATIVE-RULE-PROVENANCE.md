@@ -2642,3 +2642,31 @@ expenditure eligibility and final AV mutation are boundary fixtures/stubs;
 these are not normal-input gameplay or animation tests. Initial movement unit
 preflight retained one incorrect halfway-rounding expectation; the corrected
 non-halfway discriminator agrees with original execution.
+
+The enclosing jump method is `00671620`, found in PlayerCharacter vtable
+`00A73A0C` at +228; it accesses the player-specific +7FC/+800 fields. The only
+jump-rate helper/GMST consumer is its accepted-jump branch. The live bridge
+therefore applies the jump debit to the player, while native nonplayer jumps
+bypass the shared TES3 fatigue writer. The running block remains in the common
+actor update and precedes regeneration at `005FAD25`.
+
+Expenditure predicate +278 resolves to constant-true `00977C50` for the reviewed
+PlayerCharacter/Character vtables. Creature vtable `00A710F4` selects `006250F0`,
+which reads byte +104; setter +274 selects `006250E0`. Creature constructor
+`00625100` sets that byte to zero. Four constructor initial-byte cases, eight
+setter/getter cases and two player/NPC getter cases execute unchanged original
+instructions in `S2/oracle-emulator/fatigue-eligibility.py` and `fatigue-eligibility-table.json` (the base
+Actor constructor is stubbed). The live bridge uses the native default false
+for creatures; full mutable eligibility-flag lifecycle/migration remains open.
+
+Signed-zero follow-up falsified the initial `max(0, capacity)` model: native
+`00547ED0` retains -0 because its comparison clamps only values strictly below
+zero. Positive weight / -0 yields -Inf; positive jump multipliers then dispatch
+no cost, while a negative multiplier can yield a positive capped cost. The
+retained failing oracle log is `S3/movement-fatigue-negative-zero-01.log`.
+The C++ capacity/zero-division handling now preserves the sign. An additional
+23,328 original negative-zero cases join the preceding 38,880 cases, giving
+**62,208 bit-exact C++ comparisons** in `movement-fatigue-comparison-03.json`.
+Four additional original cases cover a negative capacity setting and both
+signed-zero Strength values. Component tests cover both signs and multipliers;
+no nonfinite value is published to actor authority.

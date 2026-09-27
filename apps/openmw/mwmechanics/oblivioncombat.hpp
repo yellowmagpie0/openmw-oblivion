@@ -60,6 +60,22 @@ namespace MWMechanics
         bool commit() noexcept;
     };
 
+    struct OblivionFatigueSettings
+    {
+        ESM4::MovementFatigueSettings mMovement;
+        ESM4::FatigueRegenerationSettings mRegeneration;
+        ESM4::CombatMasterySettings mMastery;
+        ESM4::PlayerDynamicBaseSettings mPlayerBase;
+    };
+
+    struct OblivionFatigueUpdate
+    {
+        float mDuration;
+        std::int32_t mEncumbrance;
+        bool mRunning;
+        bool mCanSpend;
+    };
+
     // Profile-owned native action and actor-value authority. Live activation
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
@@ -110,6 +126,14 @@ namespace MWMechanics
             const ESM4::FatigueRegenerationSettings& settings);
         void regeneratePlayerFatigue(MWWorld::Player& player, float duration,
             const ESM4::FatigueRegenerationSettings& settings, const ESM4::PlayerDynamicBaseSettings& baseSettings);
+        // Running expenditure precedes regeneration; prepare and publish both
+        // as one transition so failure cannot leave a partially updated actor.
+        void updateNonPlayerFatigue(const MWWorld::Ptr& actor, const OblivionFatigueUpdate& input,
+            const OblivionFatigueSettings& settings);
+        void updatePlayerFatigue(MWWorld::Player& player, const OblivionFatigueUpdate& input,
+            const OblivionFatigueSettings& settings);
+        void spendPlayerJumpFatigue(MWWorld::Player& player, std::int32_t encumbrance, bool canSpend,
+            const OblivionFatigueSettings& settings);
         float getPlayerValue(std::uint8_t value) const;
         std::int32_t getPlayerIntegerValue(std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;

@@ -79,17 +79,28 @@ namespace
         // Decrease fatigue
         if (!isPlayer || !MWBase::Environment::get().getWorld()->getGodModeState())
         {
-            const MWWorld::Store<ESM::GameSetting>& gmst
-                = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
-            const float fFatigueJumpBase = gmst.find("fFatigueJumpBase")->mValue.getFloat();
-            const float fFatigueJumpMult = gmst.find("fFatigueJumpMult")->mValue.getFloat();
-            const float normalizedEncumbrance = std::min(1.f, ptr.getClass().getNormalizedEncumbrance(ptr));
-            const float fatigueDecrease = fFatigueJumpBase + normalizedEncumbrance * fFatigueJumpMult;
-            MWMechanics::DynamicStat<float> fatigue = ptr.getClass().getCreatureStats(ptr).getFatigue();
-            fatigueBefore = fatigue.getCurrent();
-            fatigue.setCurrent(fatigue.getCurrent() - fatigueDecrease);
-            fatigueAfter = fatigue.getCurrent();
-            ptr.getClass().getCreatureStats(ptr).setFatigue(fatigue);
+            const auto& stats = ptr.getClass().getCreatureStats(ptr);
+            if (stats.getFatigue().isNativeProjection())
+            {
+                fatigueBefore = stats.getFatigue().getCurrent();
+                if (!MWBase::Environment::get().getWorld()->spendOblivionJumpFatigue(ptr))
+                    throw std::logic_error("native jump fatigue has no owning world authority");
+                fatigueAfter = stats.getFatigue().getCurrent();
+            }
+            else
+            {
+                const MWWorld::Store<ESM::GameSetting>& gmst
+                    = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
+                const float fFatigueJumpBase = gmst.find("fFatigueJumpBase")->mValue.getFloat();
+                const float fFatigueJumpMult = gmst.find("fFatigueJumpMult")->mValue.getFloat();
+                const float normalizedEncumbrance = std::min(1.f, ptr.getClass().getNormalizedEncumbrance(ptr));
+                const float fatigueDecrease = fFatigueJumpBase + normalizedEncumbrance * fFatigueJumpMult;
+                MWMechanics::DynamicStat<float> fatigue = ptr.getClass().getCreatureStats(ptr).getFatigue();
+                fatigueBefore = fatigue.getCurrent();
+                fatigue.setCurrent(fatigue.getCurrent() - fatigueDecrease);
+                fatigueAfter = fatigue.getCurrent();
+                ptr.getClass().getCreatureStats(ptr).setFatigue(fatigue);
+            }
         }
         if (isPlayer
             && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)

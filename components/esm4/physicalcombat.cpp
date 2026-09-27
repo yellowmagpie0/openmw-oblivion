@@ -65,11 +65,14 @@ namespace ESM4
             finite(input.mCurrentStrength);
             if (input.mCurrentEncumbrance < 0)
                 throw std::invalid_argument("negative native inventory encumbrance");
-            const float capacity = std::max(0.f,
-                movementRounded(double(input.mCurrentStrength) * settings.mStrengthCapacityMultiplier));
+            float capacity = movementRounded(double(input.mCurrentStrength) * settings.mStrengthCapacityMultiplier);
+            // Native comparison preserves -0: unlike max(0, capacity), this
+            // matters when positive weight divided by capacity becomes -Inf.
+            if (capacity < 0)
+                capacity = 0;
             if (capacity == 0)
                 return input.mCurrentEncumbrance == 0 ? std::numeric_limits<float>::quiet_NaN()
-                                                     : std::numeric_limits<float>::infinity();
+                    : std::copysign(std::numeric_limits<float>::infinity(), capacity);
             return movementRounded(double(input.mCurrentEncumbrance) / capacity);
         }
 

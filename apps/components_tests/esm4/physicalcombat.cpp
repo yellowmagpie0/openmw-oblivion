@@ -160,6 +160,15 @@ TEST(ESM4PhysicalCombat, MovementExpenditureStopsAtZeroAndHandlesZeroCapacity)
         EXPECT_EQ(ESM4::runningFatigueDebit({40, strength, 1, 0}, 1, settings, mastery), 0);
         EXPECT_EQ(ESM4::jumpingFatigueDebit({40, strength, 1, 0}, settings, mastery), 40);
     }
+    // Native capacity preserves negative zero. Positive weight / -0 becomes
+    // -Inf, so positive jump multiplier does not dispatch a debit.
+    EXPECT_EQ(ESM4::jumpingFatigueDebit({40, -0.f, 1, 0}, settings, mastery), 0);
+    auto signedSettings = settings;
+    signedSettings.mJumpMultiplier = -4;
+    EXPECT_EQ(ESM4::jumpingFatigueDebit({40, -0.f, 1, 0}, signedSettings, mastery), 40);
+    EXPECT_EQ(ESM4::jumpingFatigueDebit({40, 0.f, 1, 0}, signedSettings, mastery), 0);
+    signedSettings.mStrengthCapacityMultiplier = -5;
+    EXPECT_EQ(ESM4::jumpingFatigueDebit({40, 0.f, 1, 0}, signedSettings, mastery), 40);
     auto extreme = settings;
     extreme.mRunBase = std::numeric_limits<float>::max();
     EXPECT_EQ(ESM4::runningFatigueDebit({40, 50, 0, 0}, 2, extreme, mastery), 40);
