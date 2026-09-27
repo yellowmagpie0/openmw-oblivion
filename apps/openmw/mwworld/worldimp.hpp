@@ -248,6 +248,10 @@ namespace MWWorld
         MWMechanics::OblivionAiService* getOblivionAiService() { return mOblivionAi.get(); }
         MWMechanics::OblivionCombatService* getOblivionCombatService() { return mOblivionCombat.get(); }
         const MWMechanics::OblivionCombatService* getOblivionCombatService() const { return mOblivionCombat.get(); }
+        // nullopt only while this actor has not entered native AV authority.
+        // Reads resident or saved references without loading a cell.
+        std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
+
         const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
         OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }
         const OblivionScriptManager* getOblivionScriptManager() const { return mOblivionScriptManager.get(); }

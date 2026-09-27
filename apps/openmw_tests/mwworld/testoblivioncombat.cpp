@@ -275,3 +275,65 @@ TEST(OblivionCombatService, SharedBaseContentPreflightIsAtomicAndRequiresCorrect
     replacement.mNativeActorBases[0].mKind = ESM4::ActorBaseKind::Npc;
     EXPECT_NO_THROW(service.restore(replacement, store));
 }
+
+TEST(OblivionCombatService, ScriptQueriesDistinguishLiveFloatDisabledFormAndFlooredBase)
+{
+    auto state = savedState();
+    MWWorld::ESMStore store;
+    ESM4::Creature creature{};
+    creature.mId = {0x800, 2};
+    creature.mFormKey = ESM::FormKey::content("actors.esm", 0x800);
+    creature.mAttackReach = 1;
+    store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+    ESM4::RuntimeActorValues npc;
+    npc.mActor = ESM::FormKey::dynamic("query-creature", 1);
+    npc.mBase = creature.mFormKey;
+    npc.mValues[8] = {16777216.f, {0, .5f, 0}};
+    npc.mValues[11].mBase = 17.75f;
+    npc.mValues[12] = {21, {0, .75f, 0}};
+    npc.mValues[28].mBase = 23;
+    npc.mValues[37].mBase = 500;
+    npc.mValues[48].mBase = 2;
+    ESM4::RuntimeReferenceState reference;
+    reference.mKey = npc.mActor;
+    reference.mBase = npc.mBase;
+    reference.mCell = state.mPlayer.mCell;
+    state.mReferences.push_back(reference);
+    ESM4::RuntimeActorValues player;
+    player.mOwner = ESM4::ActorValueOwner::Player;
+    player.mActor = ESM::FormKey::dynamic("player", 1);
+    player.mBase = ESM::FormKey::dynamic("player-base", 1);
+    player.mPlayerFormValues = {{7, 3, 9, -3}};
+    player.mValues[8] = {87, {10, .5f, -2}};
+    player.mValues[9] = {100, {20, 0, 0}};
+    player.mValues[11].mBase = 247;
+    state.mNativeActorValues = {player, npc};
+    state.mNativeActorBases = {{npc.mBase, ESM4::ActorBaseKind::Creature, {{8, std::int32_t{16777217}}}}};
+    MWMechanics::OblivionCombatService service;
+    service.restore(state, store);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 8, false, false, store), 16777218.);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 8, true, false, store), 16777216.);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 8, false, true, store), 16777217.);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 8, true, true, store), 16777216.);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 28, false, false, store), 21.75);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 28, false, true, store), 23);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 11, false, true, store), 17);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 37, false, true, store), 0);
+    EXPECT_EQ(service.getScriptActorValue(npc.mActor, 48, false, true, store), 2);
+    EXPECT_THROW(service.getScriptActorValue(npc.mActor, 48, false, false, store), std::invalid_argument);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 8, false, false, store), 95.5);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 8, true, false, store), 87);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 8, false, true, store), 7);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 8, true, true, store), 87);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 9, false, true, store), 3);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 11, false, true, store), -3);
+    EXPECT_EQ(service.getScriptActorValue(player.mActor, 11, true, true, store), 247);
+    EXPECT_THROW(service.getScriptActorValue(player.mActor, 11, false, false, store), std::invalid_argument);
+    EXPECT_THROW(service.getScriptActorValue(player.mActor, 255, false, false, store), std::invalid_argument);
+    MWWorld::ESMStore missing;
+    EXPECT_THROW(service.getScriptActorValue(npc.mActor, 8, false, true, missing), std::invalid_argument);
+    auto after = savedState();
+    service.capture(after);
+    EXPECT_EQ(after.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(after.mNativeActorBases, state.mNativeActorBases);
+}

@@ -301,3 +301,15 @@ TEST(ESM4ActorValues, BaseFloatStorageQueriesTruncateBeforeActorComposition)
     EXPECT_THROW(ESM4::actorBaseValueInteger({40, 2147483648.f}), std::invalid_argument);
     EXPECT_THROW(ESM4::actorBaseValueInteger({40, std::numeric_limits<float>::quiet_NaN()}), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, ScriptNamesUseVanillaIndicesAndAsciiCaseFolding)
+{
+    const std::array<std::pair<std::string_view, std::uint8_t>, 16> cases{{
+        {"Strength", 0}, {"LUCK", 7}, {"Health", 8}, {"Encumbrance", 11}, {"Armorer", 12}, {"HandToHand", 17},
+        {"Marksman", 28}, {"Speechcraft", 32}, {"Aggression", 33}, {"Bounty", 37}, {"MagickaMultiplier", 40},
+        {"Paralysis", 48}, {"StuntedMagicka", 57}, {"ResistMagic", 64}, {"Vampirism", 69}, {"resistWATERdamage", 71}}};
+    for (const auto& [name, index] : cases)
+        EXPECT_EQ(ESM4::actorValueIndex(name), index) << name;
+    for (const auto name : {"", " Strength", "Strength ", "CarryWeight", "Level", "LongBlade", "Spear", "ResistWaterDamageX"})
+        EXPECT_FALSE(ESM4::actorValueIndex(name)) << name;
+}

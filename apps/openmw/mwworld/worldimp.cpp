@@ -48,6 +48,7 @@
 #include <components/esm4/loadwrld.hpp>
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/runtimereferences.hpp>
 
 #include <components/misc/constants.hpp>
 #include <components/misc/convert.hpp>
@@ -1218,6 +1219,40 @@ namespace MWWorld
             normalizeNativeInventory(reference.mInventory);
         state.validate();
         return state;
+    }
+
+    std::optional<double> World::getOblivionScriptActorValue(const ESM::FormKey& actor,
+        std::uint8_t value, bool base)
+    {
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        if (!mOblivionCombat || !mOblivionCombat->findActorValues(key))
+            return std::nullopt;
+        Ptr resident;
+        if (key == ESM::FormKey::dynamic("player", 1))
+            resident = getPlayerPtr();
+        else if (const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key))
+            resident = mWorldModel.getPtr(*id);
+        bool disabled = false;
+        if (!resident.isEmpty())
+            disabled = !resident.getRefData().isEnabled();
+        else
+        {
+            const ESM4::RuntimeReferenceState* saved = nullptr;
+            if (mOblivionRuntimeState)
+            {
+                const auto reference = std::find_if(mOblivionRuntimeState->mReferences.begin(),
+                    mOblivionRuntimeState->mReferences.end(), [&](const auto& ref) { return ref.mKey == key; });
+                if (reference != mOblivionRuntimeState->mReferences.end())
+                    saved = &*reference;
+            }
+            if (saved)
+                disabled = !saved->mEnabled;
+            else if (const auto* reference = mStore.search<ESM4::ActorCharacter>(key))
+                disabled = (reference->mFlags & ESM4::Rec_Disabled) != 0;
+            else if (const auto* reference = mStore.search<ESM4::ActorCreature>(key))
+                disabled = (reference->mFlags & ESM4::Rec_Disabled) != 0;
+        }
+        return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
     bool World::updateOblivionFatigue(const Ptr& actor, float duration, bool running)

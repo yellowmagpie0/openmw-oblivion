@@ -611,6 +611,28 @@ namespace MWMechanics
         return ESM4::combatBaseValue(playerValues().mValues[value].mBase);
     }
 
+    double OblivionCombatService::getScriptActorValue(const ESM::FormKey& actor, std::uint8_t value,
+        bool base, bool disabled, const MWWorld::ESMStore& store) const
+    {
+        if (value >= 72)
+            throw std::invalid_argument("invalid native script actor-value query");
+        const bool player = actor == ESM::FormKey::dynamic("player", 1);
+        if (base)
+            return player ? getPlayerBaseValue(value) : getNonPlayerBaseValue(actor, value, store);
+        if (!disabled)
+            return player ? getPlayerValue(value) : getNonPlayerValue(actor, value, store);
+        const auto& values = player ? playerValues() : nonPlayerValues(actor);
+        if (!player)
+            nonPlayerContentIsCreature(values, store);
+        if (value >= 37 && value <= 39)
+            return 0; // These are reference queries, not base-form fields.
+        if (player && value >= 8 && value <= 11)
+            return (*values.mPlayerFormValues)[value - 8];
+        if (const auto raw = integerBaseOverride(findActorBase(values.mBase), value))
+            return *raw;
+        return ESM4::actorBaseValueInteger({value, values.mValues[value].mBase});
+    }
+
     const ESM4::RuntimeActorValues& OblivionCombatService::playerValues() const
     {
         const auto* values = findActorValues(ESM::FormKey::dynamic("player", 1));

@@ -3141,3 +3141,42 @@ crosshair/resource HUD; the negative capture is the readable expected conflict
 dialog. These silent courses test persistence/preflight, not automatic native
 publication, normal-input commands or audio. Automatic activation stays off;
 script routing, remaining writers and the S3/S4–S14 gameplay gates remain open.
+
+## S3 native script and condition queries
+
+Registered native actors now answer GetAV/GetActorValue and GetBaseAV/
+GetBaseActorValue through the service, including both AI condition adapters.
+The canonical 72-name resolver is ASCII case-insensitive and rejects unsupported
+aliases. Invalid native script queries yield OBSV115; conditions return typed
+unsupported. Actors without registered native state still use the compatibility
+bridge. Queries do not load cells. Disabled references use the independently
+verified raw form path; GetBaseAV retains its distinct floored resolved base.
+The initial interpretation of the disabled bit as death was corrected before
+commit and runtime acceptance (see provenance); no death custom-state marker
+participates in this adapter.
+
+`S3/native-script-query-01` passes **1,898 components /376 ASan+UBSan ESM4**,
+with exact inventories and no skips. Its engine result was superseded by the
+flag interpretation correction; unchanged component sources retain those checks.
+`S3/native-script-query-02` builds the corrected engine and passes **586 engine
+tests**, no skips, fingerprint
+`a58b2c9f57162f0277e0f3326a047658079eacd6af406cb23db48b59cf7282bc`.
+Engine SHA-256:
+`ae1c48188a6524bb1e37eed833bbb49c78bb6c47d4223181a99c4ad32e40d016`.
+The service test covers enabled/base/disabled values, exact raw Health, Creature
+aliases, Player derived versus raw inputs, invalid queries and read immutability.
+Independent original-instruction coverage adds 96 queries, eight disabled flag
+cases and 438 canonical name comparisons. The first missing-include build and
+initial oracle attempts remain under `S3/authority-draft/native-query-*`.
+
+Real engine `S3/native-script-query-runtime-01` returns all eight expected
+fractional/current/base results and resaves identical native vectors.
+`native-script-query-continuation-01` repeats this from that save in a fresh
+process. `native-script-query-negative-01` completes all actions but the harness
+exits 1 solely because the deliberately wrong 96.5 result is absent (actual
+95.5). Each verification checks source/pristine hashes and resaved state.
+All three captures were inspected: rendered observation room, HUD/crosshair,
+no error dialog. These silent cases inject unpublished native authority;
+they are not normal-input stat construction, publication, death or combat
+acceptance. Script/console writers, process cache semantics and automatic
+activation remain open; S2/S3 continue in progress, S4–S14 pending.

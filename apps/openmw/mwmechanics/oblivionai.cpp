@@ -827,6 +827,18 @@ namespace MWMechanics
             const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(subjectLocation->mBase);
             const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(subjectLocation->mBase);
             const auto actorValue = [&]() -> ESM4::ConditionValue {
+                if (parameter.mNumber < 0 || parameter.mNumber >= 72)
+                    return ESM4::ConditionValue::unsupported();
+                try
+                {
+                    if (const auto native = mWorld.getOblivionScriptActorValue(
+                            subjectKey, static_cast<std::uint8_t>(parameter.mNumber), false))
+                        return value(*native);
+                }
+                catch (const std::invalid_argument&)
+                {
+                    return ESM4::ConditionValue::unsupported();
+                }
                 const auto attribute = [](const ESM4::AttributeValues& values, std::int32_t index) {
                     switch (index)
                     {
@@ -1549,6 +1561,18 @@ namespace MWMechanics
                     : nullptr;
             };
             const auto actorValue = [&]() -> ESM4::ConditionValue {
+                if (parameter.mNumber < 0 || parameter.mNumber >= 72)
+                    return ESM4::ConditionValue::unsupported();
+                try
+                {
+                    if (const auto native = mWorld.getOblivionScriptActorValue(
+                            actorKey(subjectPtr), static_cast<std::uint8_t>(parameter.mNumber), false))
+                        return value(*native);
+                }
+                catch (const std::invalid_argument&)
+                {
+                    return ESM4::ConditionValue::unsupported();
+                }
                 const std::int32_t index = parameter.mNumber;
                 if (index >= 0 && index < ESM::Attribute::Length)
                     return value(nativeStats().getAttribute(ESM::Attribute::indexToRefId(index)).getModified());

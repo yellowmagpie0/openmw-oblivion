@@ -4,10 +4,15 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <string_view>
 #include <variant>
 
 namespace ESM4
 {
+    // Canonical vanilla script names, ASCII case-insensitive. UI aliases such
+    // as CarryWeight and TES3-only skills are not native actor-value names.
+    std::optional<std::uint8_t> actorValueIndex(std::string_view name);
+
     enum class ActorValueOwner : std::uint8_t { Player, NonPlayer };
     enum class ActorValueProcess : std::uint8_t { Low, Active };
     enum class ActorValueModifier : std::uint8_t { Maximum, Script, Damage };

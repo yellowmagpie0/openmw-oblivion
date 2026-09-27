@@ -139,6 +139,12 @@ namespace MWMechanics
         std::int32_t getNonPlayerBaseValue(
             const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const;
         std::int32_t getPlayerBaseValue(std::uint8_t value) const;
+        // Script/condition GetAV differs on a disabled reference: the original
+        // queries the raw base form, bypassing process and player derivation.
+        // GetBaseAV always uses its separate floored resolved-base query.
+        // The caller supplies reference enablement, independently of Health.
+        double getScriptActorValue(const ESM::FormKey& actor, std::uint8_t value,
+            bool base, bool disabled, const MWWorld::ESMStore& store) const;
         // Raw player form contributions must be present. Settings are winning
         // runtime inputs, not save-owned values. Recompute derived bases before
         // preparing all shared views; never feed resolved bases back as inputs.

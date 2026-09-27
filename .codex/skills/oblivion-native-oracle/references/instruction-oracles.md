@@ -67,3 +67,12 @@ falsified rule. Avoid shipping an oracle script that imports production logic.
 - Original `009828C0` has CPU-dependent overflow behavior. Its non-SSE path
   uses FISTP int64 and returns low bits; do not assume CVTTSD2SI's int32 sentinel.
   Keep unsupported conversion domains explicit until both paths are modeled.
+
+GetAV helper `004F6060` branches on actor flags +8 bit **0x800 Disabled**, not
+Dead. Verify flag meaning against the independent GetDisabled `004F60E0` and
+GetDead `00502870` paths before assigning names. GetDisabled also checks an
+enable-parent predicate; GetAV only checks the direct bit. Its disabled form
+getter can retain exact int32 precision through a double result store, unlike
+GetBaseAV's float-store/floor path. Use `actor-value-script-queries.py` and
+`script-disabled-flag.py` in the ignored M15 oracle directory as the known
+examples; do not conflate command return type with the underlying float getter.

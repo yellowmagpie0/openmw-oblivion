@@ -1886,9 +1886,20 @@ namespace MWWorld
             return std::int64_t(formId != nullptr && mResolver.toFormKey(*formId) == *world);
         }
 
-        if (name == "getav" || name == "getbaseav")
+        if (name == "getav" || name == "getactorvalue" || name == "getbaseav" || name == "getbaseactorvalue")
         {
             const std::string attribute = lower(ObScript::valueString(argument(0)));
+            const bool base = name == "getbaseav" || name == "getbaseactorvalue";
+            try
+            {
+                const auto index = ESM4::actorValueIndex(attribute);
+                if (const auto native = mWorld.getOblivionScriptActorValue(objectKey(), index.value_or(255), base))
+                    return *native;
+            }
+            catch (const std::invalid_argument& error)
+            {
+                throw ObScript::RuntimeError("OBSV115", error.what(), name);
+            }
             if (objectKey() == ESM::FormKey::dynamic("player", 1))
             {
                 const Ptr player = mWorld.getPlayerPtr();
@@ -1901,7 +1912,7 @@ namespace MWWorld
                     {
                         const MWMechanics::AttributeValue& value
                             = stats.getAttribute(ESM::Attribute::indexToRefId(i));
-                        return name == "getbaseav" ? double(value.getBase()) : double(value.getModified());
+                        return base ? double(value.getBase()) : double(value.getModified());
                     }
                 static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt",
                     "handtohand", "heavyarmor", "alchemy", "alteration", "conjuration", "destruction",
@@ -1917,10 +1928,10 @@ namespace MWWorld
                     if (attribute == skillNames[i])
                     {
                         const MWMechanics::SkillValue& value = npcStats.getSkill(ESM::RefId(skillIds[i]));
-                        return name == "getbaseav" ? double(value.getBase()) : double(value.getModified());
+                        return base ? double(value.getBase()) : double(value.getModified());
                     }
                 const auto dynamic = [&](const MWMechanics::DynamicStat<float>& value) {
-                    return name == "getbaseav" ? double(value.getBase()) : double(value.getCurrent());
+                    return base ? double(value.getBase()) : double(value.getCurrent());
                 };
                 if (attribute == "health") return dynamic(stats.getHealth());
                 if (attribute == "magicka") return dynamic(stats.getMagicka());
@@ -2339,8 +2350,10 @@ namespace MWWorld
             context.mInstance = targetKey;
             context.mEvent = "acceptance";
             context.mSequence = ++mSequence;
-            call(event.mWords[2], ObScript::Value(ObScript::ReferenceValue{ targetKey, event.mWords[1] }), arguments,
-                context, {});
+            const auto result = call(event.mWords[2],
+                ObScript::Value(ObScript::ReferenceValue{ targetKey, event.mWords[1] }), arguments, context, {});
+            trace("acceptance-command actor=" + targetKey.serialize() + " name=" + event.mWords[2]
+                + " result=" + ObScript::valueString(result));
         }
         else
             throw std::runtime_error("Invalid M7 scheduled event command " + kind);

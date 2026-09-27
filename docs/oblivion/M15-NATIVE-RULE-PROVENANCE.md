@@ -2790,3 +2790,36 @@ The first direct harness incorrectly expected AV11 to reach generic extra
 storage; its retained failure led to decoding the jump table and the no-write
 cases above. Logs: `S3/authority-draft/base-value-set-oracle-01.log`, corrected
 `base-value-set-oracle-02.log` and `actor-base-value-set-oracle-01.log`.
+
+### Script GetAV/GetBaseAV enabled-state dispatch
+
+Against the hash-identified 1.2.0416 executable above, GetActorValue handler
+`00501670` calls `004F6060`; GetBaseActorValue `00501A00` calls `004F45D0`.
+GetAV tests **reference flags +8 bit 0x800 (Disabled)**: enabled actors use
+current-value virtual +288; disabled actors resolve the base through
+`005E02E0(false)` and call form virtual +12C. The latter returns an integer
+promoted to x87 without a float store for NPC Health. The command writes a
+**double**, preserving disabled raw Health 16,777,217. GetBaseAV always uses
+`005F1910`, including its float store and floor-to-integer path. Disabled
+Creature Marksman consequently reads form Stealth rather than runtime Combat.
+Player disabled resources read raw form values, without derived contributions.
+
+The first draft incorrectly called bit 0x800 a death flag. Before committing or
+running the engine scenarios, this was corrected by independently executing
+GetDisabled `004F60E0` over eight flag combinations; its direct test is 0x800.
+GetDead `00502870` is a separate virtual query. GetDisabled additionally calls
+an enable-parent predicate, stubbed false in that test; GetAV itself only tests
+the direct bit. The runtime adapter reads resident/saved/authored enabled state,
+not a death marker, and does not load cells to answer a query.
+
+`S2/oracle-emulator/actor-value-script-queries.py` executes **96** enabled/
+disabled, base/current cases with six signed/boundary Health inputs, two modifier
+patterns and both x87 modes. Original form/current/base arithmetic and result
+stores execute; actor identity, base lookup and sparse lookups are boundary
+stubs. `script-disabled-flag.py` independently checks the eight flag cases.
+The original 72-name table at `00B0A1A8` supplies **438** exact/lower/upper-case
+and rejection comparisons against the C++ name resolver. Logs and retained
+initial draft are in `S3/authority-draft/native-query-*`; the corrected oracle
+log is `native-query-oracle-02.log`. These establish query dispatch only;
+process-cache completeness, command writes and normal-input activation remain
+separate gates.

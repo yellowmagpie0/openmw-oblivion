@@ -1,0 +1,8 @@
+at 1 command player getav Health
+at 1 command player getactorvalue Health
+at 1 command player getbaseav Health
+at 1 command player getbaseactorvalue Health
+at 1 command player getav Chameleon
+at 1 command player getbaseav Chameleon
+at 1 command player getav Strength
+at 1 command player getbaseav Strength

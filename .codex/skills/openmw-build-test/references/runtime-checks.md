@@ -153,3 +153,20 @@ message before Applied/save boundaries. Passed examples are
 `S3/shared-base-writer-populated-01` and `S3/shared-base-writer-conflict-01`.
 Verify both native vectors, input preservation and scenario status independently.
 `load_save` takes a `pathlib.Path`, and its version key is `schema_version`.
+
+## Native script query positive/negative/restart pair
+
+Merge `oblivion_m15_native_query_input.json` into a private copied S1 state,
+write the current save and run `oblivion_m15_native_query.json`. The event file
+exercises short/long current/base aliases and fractional Script/Damage values.
+Require all eight returned values, exact native vectors after resave and
+unchanged pristine input. `oblivion_m15_native_query_negative.json` deliberately
+requires 96.5 where the actual result is 95.5: require harness exit 1, all actions
+complete, and exactly that missing expected line with no other error. This is a
+successful negative control, not a passing scenario. Copy the positive resave
+to another private slot and run the positive manifest in a fresh process.
+Examples: `S3/native-script-query-{runtime,negative,continuation}-01`.
+Inspect each capture. These fixtures inject an unpublished authority snapshot;
+they prove script reads and persistence, not normal actor initialization or
+live gameplay publication. Scheduled acceptance commands log returned values;
+ordinary production GetAV calls do not produce this diagnostic traffic.

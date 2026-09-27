@@ -35,6 +35,28 @@ namespace ESM4
         }
     }
 
+    std::optional<std::uint8_t> actorValueIndex(std::string_view name)
+    {
+        static constexpr std::array<std::string_view, 72> names{
+            "strength", "intelligence", "willpower", "agility", "speed", "endurance", "personality", "luck",
+            "health", "magicka", "fatigue", "encumbrance", "armorer", "athletics", "blade", "block", "blunt",
+            "handtohand", "heavyarmor", "alchemy", "alteration", "conjuration", "destruction", "illusion",
+            "mysticism", "restoration", "acrobatics", "lightarmor", "marksman", "mercantile", "security", "sneak",
+            "speechcraft", "aggression", "confidence", "energy", "responsibility", "bounty", "fame", "infamy",
+            "magickamultiplier", "nighteyebonus", "attackbonus", "defendbonus", "castingpenalty", "blindness",
+            "chameleon", "invisibility", "paralysis", "silence", "confusion", "detectitemrange", "spellabsorbchance",
+            "spellreflectchance", "swimspeedmultiplier", "waterbreathing", "waterwalking", "stuntedmagicka",
+            "detectliferange", "reflectdamage", "telekinesis", "resistfire", "resistfrost", "resistdisease",
+            "resistmagic", "resistnormalweapons", "resistparalysis", "resistpoison", "resistshock", "vampirism",
+            "darkness", "resistwaterdamage"};
+        for (std::uint8_t i = 0; i < names.size(); ++i)
+            if (std::equal(name.begin(), name.end(), names[i].begin(), names[i].end(), [](char a, char b) {
+                    return (a >= 'A' && a <= 'Z' ? static_cast<char>(a - 'A' + 'a') : a) == b;
+                }))
+                return i;
+        return std::nullopt;
+    }
+
     void validateActorValueState(const ActorValueState& state)
     {
         if (!std::isfinite(state.mBase))
