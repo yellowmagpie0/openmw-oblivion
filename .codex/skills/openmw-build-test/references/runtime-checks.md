@@ -620,3 +620,14 @@ were inspected. Graphical sanitizer leak detection is off; unit suites enable it
 These requests use the existing native float delta writer; native rounding and
 sparse Damage clamping still apply. Attribute/skill base writes, dynamic-stat
 modifiers and skill-progress semantics are separate unfinished adapter work.
+
+## TES4 pathgrid object classification regression
+
+`MWWorldPathgridStoreTest.*` loads binary CELL/PGRD and object records through
+ESMStore before inspecting classified links. FormRecordMetadata.mRecordType is
+a raw ESM4 signature; do not compare it with internal ESM::REC_*4 dispatch IDs.
+The reader fixture must group CELL records and provide the owning CELL context
+for placed-reference overrides as well as original references. An ungrouped
+CELL throws at grp(); a reference with no current CELL fails preprocessing.
+The test covers reordered masters, deletion and missing bases. Its passing
+store assertions do not establish actual AI door traversal or gameplay.

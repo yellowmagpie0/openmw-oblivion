@@ -5266,3 +5266,28 @@ comparison scope and fixture pitfall.
 This closes this pair of Lua property adapters. Base writes, dynamic-stat
 modifiers, skill-progress semantics, automatic publication, broader lifecycle
 adoption, load transactions and the remaining M15 gates stay open.
+
+### S3/M14 regression: classify native pathgrid object links
+
+The store's PGRL classifier compared raw TES4 FormKey metadata signatures with
+OpenMW's internal record IDs. Direct DOOR/FURN links and placed REFR/ACHR/ACRE
+links consequently fell through to Other. Native AI's foreign-edge door lookup
+requires Door, so it could miss the connection's door before checking access.
+The seven comparisons now use ESM4 raw signatures; typed-store dispatch keeps
+its internal IDs.
+
+A new engine test loads synthetic TES4 bytes through the real reader, stable-key
+index, winning typed stores and ESMStore::setUp. It checks15 links: direct and
+placed door/furniture, other objects, null/missing bases, missing objects,
+deleted bases/references, actor references, independent-master local-ID collision
+and a placed-reference override whose master order differs from load order.
+The pre-fix test reproduces10 wrong classifications in
+`S3/authority-draft/pathgrid-store-red-test-03.log`. Earlier attempts retained
+there had fixture/API errors and are not defect reproductions.
+
+`S3/pathgrid-object-kinds-01` and `pathgrid-object-kinds-sanitized-01` each pass
+all636 engine cases, no skips, matching inventory/XML. Sanitizers use leak
+detection and halting UBSan. Both record source fingerprint
+`40f085f253cdd641fe8f6822c5aac0fcf9a74aacd868df1b03e7a0c7780ee03d`
+on parent `c76fc15dc2`. This verifies load-order classification, not actual
+pursuit/door traversal; those remain part of S7's gameplay gate.

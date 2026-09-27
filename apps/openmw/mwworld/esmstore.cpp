@@ -645,6 +645,8 @@ namespace MWWorld
         // present.  A missing/ambiguous endpoint remains typed as such and is
         // never converted into a wall-crossing fallback.
         mOblivionPathgrids.resolveForeignLinks(128.0f);
+        // FormKey metadata retains on-disk TES4 signatures, not the internal
+        // ESM::esm4Recname IDs used to dispatch typed stores/classes.
         mOblivionPathgrids.classifyObjectLinks([this](const ESM::FormKey& object) {
             const auto classifyBase = [this](const ESM::FormKey& base) {
                 if (base.isNull())
@@ -654,9 +656,9 @@ namespace MWWorld
                     return ESM4::PathgridObjectKind::Missing;
                 if (winner->mDeleted)
                     return ESM4::PathgridObjectKind::Deleted;
-                if (winner->mRecordType == ESM::REC_DOOR4)
+                if (winner->mRecordType == ESM4::REC_DOOR)
                     return ESM4::PathgridObjectKind::Door;
-                if (winner->mRecordType == ESM::REC_FURN4)
+                if (winner->mRecordType == ESM4::REC_FURN)
                     return ESM4::PathgridObjectKind::Furniture;
                 return ESM4::PathgridObjectKind::Other;
             };
@@ -669,23 +671,23 @@ namespace MWWorld
             // Accept the direct-base representation used by some TES4
             // writers, while treating the native PGRL representation as a
             // placed reference whose NAME selects the base object.
-            if (winner->mRecordType == ESM::REC_DOOR4)
+            if (winner->mRecordType == ESM4::REC_DOOR)
                 return ESM4::PathgridObjectKind::Door;
-            if (winner->mRecordType == ESM::REC_FURN4)
+            if (winner->mRecordType == ESM4::REC_FURN)
                 return ESM4::PathgridObjectKind::Furniture;
-            if (winner->mRecordType == ESM::REC_REFR4)
+            if (winner->mRecordType == ESM4::REC_REFR)
             {
                 const ESM4::Reference* reference = get<ESM4::Reference>().search(object);
                 return reference == nullptr ? ESM4::PathgridObjectKind::Missing
                                              : classifyBase(reference->mBaseKey);
             }
-            if (winner->mRecordType == ESM::REC_ACHR4)
+            if (winner->mRecordType == ESM4::REC_ACHR)
             {
                 const ESM4::ActorCharacter* reference = get<ESM4::ActorCharacter>().search(object);
                 return reference == nullptr ? ESM4::PathgridObjectKind::Missing
                                              : classifyBase(reference->mBaseKey);
             }
-            if (winner->mRecordType == ESM::REC_ACRE4)
+            if (winner->mRecordType == ESM4::REC_ACRE)
             {
                 const ESM4::ActorCreature* reference = get<ESM4::ActorCreature>().search(object);
                 return reference == nullptr ? ESM4::PathgridObjectKind::Missing
