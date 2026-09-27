@@ -5008,3 +5008,24 @@ before restart acceptance. Editable current/continuation manifests are
 `oblivion_m15_lua_resource_continuation.json`; the latter remains a failing
 regression course until local Lua persistence is implemented. This chunk does
 not close S3, Lua writer coverage, or the remaining M15 gates.
+
+### S3 native local Lua save codec
+
+Added a version1 optional native local-script companion section for LUAM, keyed
+by stable reference FormKeys. It preserves binary Lua state, both named timer
+clocks and binary callback names/arguments, including empty strings and past
+deadlines. Explicit owner terminators, canonical nonnull/nonplayer keys, unique
+nonnegative script IDs, exact timer sizes/types, finite deadlines and aggregate
+owner/script/timer/byte limits prevent ambiguous or unbounded reads. Save preflight
+validates the complete section before emitting it; load returns temporary state.
+Legacy LUAM without the section remains empty. The codec is not yet called by
+LuaManager in this chunk; the retained NPC continuation still fails until wiring.
+
+`S3/local-lua-codec-01` passes the initial8 focused cases. The final
+`local-lua-codec-02` passes all1932 component tests and409 selected ESM4 sanitizer
+cases (ASan leak checks off, UBSan halting), including9 native Lua codec cases.
+Coverage includes binary round trips, empty/legacy state, unknown versions,
+duplicate/noncanonical owners and script IDs, malformed timers/terminators,
+every byte truncation inside a populated section and aggregate limits.
+Tested source on parent6b070911b7:
+`8ac7daf56d893e78c2ba368b7b265423120df8c71654cba7a32688236eea651a`.

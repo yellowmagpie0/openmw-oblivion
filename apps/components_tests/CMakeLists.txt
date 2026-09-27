@@ -84,6 +84,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/rawrecord.cpp
     esm4/reference.cpp
     esm4/runtimestate.cpp
+    esm4/localluascripts.cpp
     esm4/playermechanics.cpp
     esm4/pathgriddata.cpp
     esm4/physicalcombat.cpp

@@ -218,6 +218,7 @@ add_component_dir (esm4
     grouptype
     inventory
     lighting
+    localluascripts
     loadachr
     loadacti
     loadalch
