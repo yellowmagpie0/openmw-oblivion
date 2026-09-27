@@ -210,6 +210,25 @@ namespace ESM4
         const MovementFatigueSettings& settings, const CombatMasterySettings& mastery);
     void validateMovementFatigueSettings(const MovementFatigueSettings& settings);
 
+    struct SwimBreathSettings
+    {
+        float mBase;
+        float mEnduranceMultiplier;
+        float mDamageMultiplier;
+    };
+    struct SwimBreathUpdate
+    {
+        float mRemaining;
+        bool mDrowning;
+    };
+    // Caller supplies native integer Endurance/base Health and owns water,
+    // process and actor eligibility. Damage has separate rate/frame float stores.
+    float swimBreathMaximum(std::int32_t endurance, const SwimBreathSettings& settings);
+    float drowningDamage(std::int32_t baseHealth, float duration, const SwimBreathSettings& settings);
+    SwimBreathUpdate updateSwimBreath(float remaining, float maximum, float duration,
+        std::int32_t waterBreathing);
+    void validateSwimBreathSettings(const SwimBreathSettings& settings);
+
     struct FatigueRegenerationSettings
     {
         float mBase;

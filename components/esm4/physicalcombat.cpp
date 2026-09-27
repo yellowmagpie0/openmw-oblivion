@@ -39,6 +39,40 @@ namespace ESM4
         }
     }
 
+    void validateSwimBreathSettings(const SwimBreathSettings& settings)
+    {
+        finite(settings.mBase);
+        finite(settings.mEnduranceMultiplier);
+        finite(settings.mDamageMultiplier);
+    }
+
+    float swimBreathMaximum(std::int32_t endurance, const SwimBreathSettings& settings)
+    {
+        validateSwimBreathSettings(settings);
+        return rounded(double(endurance) * settings.mEnduranceMultiplier + settings.mBase);
+    }
+
+    float drowningDamage(std::int32_t baseHealth, float duration, const SwimBreathSettings& settings)
+    {
+        validateSwimBreathSettings(settings);
+        nonnegative(duration);
+        const float rate = rounded(double(baseHealth) * settings.mDamageMultiplier);
+        const float damage = rounded(double(rate) * duration);
+        return damage > 0.f ? damage : 0.f;
+    }
+
+    SwimBreathUpdate updateSwimBreath(float remaining, float maximum, float duration,
+        std::int32_t waterBreathing)
+    {
+        finite(remaining);
+        finite(maximum);
+        nonnegative(duration);
+        const float updated = rounded(double(remaining) + (waterBreathing != 0 ? duration : -double(duration)));
+        if (updated < 0.f)
+            return {0.f, true};
+        return {std::min(updated, maximum), false};
+    }
+
     bool requiresIncapacitation(float currentFatigue, bool paralyzed, bool essentialUnconscious)
     {
         finite(currentFatigue);

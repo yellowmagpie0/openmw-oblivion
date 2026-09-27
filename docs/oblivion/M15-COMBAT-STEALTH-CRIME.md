@@ -4112,3 +4112,31 @@ timer arithmetic/branch paths: damage starts strictly below zero; nonzero
 integer WaterBreathing replenishes the timer, capped by the breath maximum.
 Water/controller predicates, AI and full damage dispatch remain outside that
 probe. S2/S3 and S4–S14 remain open.
+
+### S2/S3 native drowning arithmetic and settings
+
+After `5ea35f35e4`, pure native rules provide integer-Endurance breath maximum,
+integer-base-Health drowning damage with separate rate/frame stores, and the
+strict-negative timer transition with incremental WaterBreathing restoration.
+Typed settings distinguish compiled defaults from winning records. Negative
+finite modded settings follow the original arithmetic; nonfinite input,
+negative duration and persistent arithmetic overflow are rejected.
+
+`S2/native-drowning-rules-02` passes **all 1,914 component tests** and **392 ESM4
+component tests under ASan/UBSan**, exact inventories and no skips/findings.
+This component sanitizer mode disables leak detection. Fingerprint:
+`1ef3dbc781d184c5a9074154c658e0f4410959ab7c7fc647e1ac4b9c8349eb89`.
+Test binary hashes (regular / sanitized):
+`e5e8608b2a6bf54cc59a10f3dc4847f105e8e6555f51cd0eaba6aecbc335f74d` /
+`e7cc85fb17f4770aea5710c3114c0aa6ea3f90325960361fbef918739ad36885`.
+The retained `-01` run fails one overly rounded expected literal; the original
+helper independently confirms the corrected exact value. Four new test cases
+cover arithmetic, timer/gate boundaries, typed defaults/overrides and malformed
+inputs. Original-instruction comparisons match **13,180** helper/timer/frame
+rows; details and boundary declarations are in the provenance document.
+
+The gameplay caller still needs integration. Read-only follow-up identifies
+three native water-height probes (.01, .7, .875 of actor height), swimming-state
+and aquatic-creature branches, and a Player god-mode breath reset. The current
+TES3 submerged/knockout predicate must not be silently reused as equivalent.
+S2/S3 and all later acceptance gates remain open.

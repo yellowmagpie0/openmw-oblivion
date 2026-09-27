@@ -595,6 +595,18 @@ namespace ESM4
         return result;
     }
 
+    SwimBreathSettings buildSwimBreathSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const SwimBreathSettings result{
+            inputs.number("fActorSwimBreathBase", 10.f),
+            inputs.number("fActorSwimBreathMult", .5f),
+            inputs.number("fActorSwimBreathDamage", .2f),
+        };
+        validateSwimBreathSettings(result);
+        return result;
+    }
+
     EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

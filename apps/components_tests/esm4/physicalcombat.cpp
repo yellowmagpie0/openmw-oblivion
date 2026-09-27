@@ -16,6 +16,105 @@ namespace
     const ESM4::PhysicalCombatSettings installed{ -20, .4f, 1.f, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f };
 }
 
+TEST(ESM4PhysicalCombat, SwimBreathUsesExactIntegerAndSingleFinalStore)
+{
+    const ESM4::SwimBreathSettings installed{4, .3f, .2f};
+    EXPECT_EQ(ESM4::swimBreathMaximum(50, installed), 19.f);
+    EXPECT_EQ(ESM4::swimBreathMaximum(-50, installed), -11.00000095367431640625f);
+    EXPECT_EQ(ESM4::swimBreathMaximum(16777217, {0, 1, .2f}), 16777216.f);
+    EXPECT_EQ(ESM4::swimBreathMaximum(16777217, {1, 1, .2f}), 16777218.f);
+    EXPECT_EQ(ESM4::swimBreathMaximum(0, installed), 4.f);
+    EXPECT_EQ(ESM4::drowningDamage(100, .25f, installed), 5.f);
+    EXPECT_EQ(ESM4::drowningDamage(100, 0, installed), 0.f);
+    EXPECT_EQ(ESM4::drowningDamage(-100, 1, installed), 0.f);
+    EXPECT_EQ(ESM4::drowningDamage(-100, 1, {4, .3f, -.2f}), 20.f);
+    // Original rate is stored to float before multiplication by frame duration.
+    EXPECT_EQ(ESM4::drowningDamage(101, .3f, installed), 6.06000041961669921875f);
+    EXPECT_EQ(ESM4::drowningDamage(13, .3f, installed), .78000009059906005859375f);
+}
+
+TEST(ESM4PhysicalCombat, SwimBreathTimerUsesStrictNegativeGateAndNonzeroWaterBreathing)
+{
+    auto update = ESM4::updateSwimBreath(.25f, 4, .25f, 0);
+    EXPECT_EQ(update.mRemaining, 0.f);
+    EXPECT_FALSE(update.mDrowning);
+    update = ESM4::updateSwimBreath(0, 4, .25f, 0);
+    EXPECT_EQ(update.mRemaining, 0.f);
+    EXPECT_TRUE(update.mDrowning);
+    update = ESM4::updateSwimBreath(0, 4, 0, 0);
+    EXPECT_EQ(update.mRemaining, 0.f);
+    EXPECT_FALSE(update.mDrowning);
+    for (int waterBreathing : {-1, 1, std::numeric_limits<int>::max()})
+    {
+        update = ESM4::updateSwimBreath(1, 4, .25f, waterBreathing);
+        EXPECT_EQ(update.mRemaining, 1.25f);
+        EXPECT_FALSE(update.mDrowning);
+        update = ESM4::updateSwimBreath(3.875f, 4, .25f, waterBreathing);
+        EXPECT_EQ(update.mRemaining, 4.f);
+        EXPECT_FALSE(update.mDrowning);
+    }
+    update = ESM4::updateSwimBreath(-1, 4, 0, 1);
+    EXPECT_EQ(update.mRemaining, 0.f);
+    EXPECT_TRUE(update.mDrowning);
+    update = ESM4::updateSwimBreath(1, -1, 0, 0);
+    EXPECT_EQ(update.mRemaining, -1.f);
+    EXPECT_FALSE(update.mDrowning); // Maximum clamp follows the negative test.
+    update = ESM4::updateSwimBreath(1, 4, 0x1p-25f, 0);
+    EXPECT_EQ(update.mRemaining, 1.f);
+}
+
+TEST(ESM4PhysicalCombat, SwimBreathRejectsNonfiniteInputsAndArithmeticOverflow)
+{
+    const ESM4::SwimBreathSettings valid{4, .3f, .2f};
+    for (float bad : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        for (auto member : {&ESM4::SwimBreathSettings::mBase,
+                 &ESM4::SwimBreathSettings::mEnduranceMultiplier, &ESM4::SwimBreathSettings::mDamageMultiplier})
+        {
+            auto settings = valid;
+            settings.*member = bad;
+            EXPECT_THROW(ESM4::swimBreathMaximum(50, settings), std::invalid_argument);
+            EXPECT_THROW(ESM4::drowningDamage(100, 1, settings), std::invalid_argument);
+        }
+        EXPECT_THROW(ESM4::drowningDamage(100, bad, valid), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateSwimBreath(bad, 4, 1, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateSwimBreath(1, bad, 1, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateSwimBreath(1, 4, bad, 0), std::invalid_argument);
+    }
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::swimBreathMaximum(2, {0, maximum, .2f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::drowningDamage(2, 1, {0, .3f, maximum}), std::invalid_argument);
+    EXPECT_THROW(ESM4::drowningDamage(100, maximum, valid), std::invalid_argument);
+    EXPECT_THROW(ESM4::drowningDamage(100, -1, valid), std::invalid_argument);
+    EXPECT_THROW(ESM4::updateSwimBreath(maximum, maximum, maximum, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::updateSwimBreath(1, 4, -1, 0), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, SwimBreathSettingsResolveCompiledDefaultsAndTypedOverrides)
+{
+    const auto defaults = ESM4::buildSwimBreathSettings({});
+    EXPECT_EQ(defaults.mBase, 10.f);
+    EXPECT_EQ(defaults.mEnduranceMultiplier, .5f);
+    EXPECT_EQ(defaults.mDamageMultiplier, .2f);
+    ESM4::GameSetting base{}, multiplier{}, damage{};
+    base.mEditorId = "fActorSwimBreathBase";
+    base.mData = 4.f;
+    multiplier.mEditorId = "fActorSwimBreathMult";
+    multiplier.mData = .3f;
+    damage.mEditorId = "fActorSwimBreathDamage";
+    damage.mData = -.5f;
+    const std::array<const ESM4::GameSetting*, 3> values{&base, &multiplier, &damage};
+    const auto overrides = ESM4::buildSwimBreathSettings(values);
+    EXPECT_EQ(overrides.mBase, 4.f);
+    EXPECT_EQ(overrides.mEnduranceMultiplier, .3f);
+    EXPECT_EQ(overrides.mDamageMultiplier, -.5f);
+    damage.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildSwimBreathSettings(values), std::invalid_argument);
+    damage.mData = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::buildSwimBreathSettings(values), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, HealthRestorationRequestsFullRoundedMaximumGap)
 {
     EXPECT_EQ(ESM4::healthRestoration(9.5f, 10, .5f), 1);

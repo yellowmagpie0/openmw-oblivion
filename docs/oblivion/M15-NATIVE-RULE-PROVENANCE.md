@@ -2876,3 +2876,39 @@ only actor-type identity stubbed. Logs: `S3/authority-draft/health-reaction-gate
 corpora `health-reaction-gate-table.json` and `script-dead-query-table.json`.
 The fork's persisted Alive/Dead/EssentialUnconscious enum describes logical
 phases; it does not claim to reproduce all original animation-state numbers.
+
+### Native breath timer and drowning arithmetic
+
+Pinned EXE SHA-256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Complete helpers `00548960` and `00548980` use FILD int32 Endurance/base Health,
+respectively. Breath multiplies by live `00B37580`, adds `00B37578`, then stores
+float. Damage rate multiplies by `00B37588` and stores float; caller `00604657`
+through `0060467B` multiplies the rate by frame duration with another float store.
+The underlying base query is `005F1910`/`005EAD00`, not current Health or
+base-plus-Maximum. The null-source sink `005E58F0` does not apply difficulty
+and only forwards positive damage to the float Damage-channel Health writer.
+
+Compiled settings are `fActorSwimBreathBase=10`, `fActorSwimBreathMult=.5`,
+`fActorSwimBreathDamage=.2`; winning installed Oblivion.esm overrides Base=4,
+Mult=.3, with no Damage override in the full GMST audit. Typed native settings
+must resolve the winning values; shared TES3 suffocation damage is unrelated.
+
+`S2/oracle-emulator/drowning-rules.py` executes **11,280** complete helper paths,
+including signed integer extremes and both x87 control words. `drowning-timer.py`
+executes **1,620** arithmetic/branch paths from `00604619` to `00604644` or
+`006046D9`: nonzero integer WaterBreathing adds frame duration, zero subtracts;
+the stored result strictly below zero enters drowning. Otherwise the maximum
+clamp follows the negative test. The drowning branch later sets the timer to0.
+`drowning-frame.py` executes **280** actual caller/helper paths with synthetic
+base getter and captured damage sink. C++ comparisons match all **13,180**
+rows exactly, with positive-only damage and post-drowning timer-zero transforms
+explicitly distinguished from helper output. A separate original -50 Endurance
+case returns `-11.000000953674316`, explaining the corrected initial test literal.
+Base Health13, duration.3, multiplier.2 produces `.7800000905990601`; combining
+rate/frame multiplication without its intermediate store produces a different bit.
+
+These probes establish arithmetic and timer branches. They do not execute the
+full water/controller predicates, AI resurfacing, audio, native process save
+storage, or ordinary gameplay. Their synthetic boundary declarations, complete
+results and comparison binaries remain in the ignored oracle directory.
