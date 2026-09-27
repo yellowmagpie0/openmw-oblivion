@@ -4003,3 +4003,27 @@ Its manifest, preparation script, source/pristine hashes and decoded state are
 retained under `S3/authority-draft/health-command-atomic-*` and the run directory.
 Next: prepare command Health storage and lifecycle reaction together, then
 continue the remaining S3 adapters/activation gates. S2/S3 and S4–S14 remain open.
+
+### S3 complete engine sanitizer checkpoint
+
+Commit `bc38bce7a0` passes **all 608 engine tests** under ASan, UBSan and leak
+detection in `S3/native-inventory-sanitized-engine-02`, with exact inventory and
+zero skips/failures. This includes prepared inventory/registry publication and
+native Lua projections. The clean test process exits without sanitizer or leak
+findings. It is not an instrumented rendered-game acceptance run.
+
+Configuration: GCC, Debug `-O1 -g`,
+`-fsanitize=address,undefined -fno-omit-frame-pointer`, bundled double Bullet;
+engine/tests enabled, four build jobs. The exact runner environment is retained
+in `sanitizer-environment.json`: `ASAN_OPTIONS=detect_leaks=1:halt_on_error=1`,
+`UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`. The first full compilation
+has a long `teststore.cpp` tail; GCC reports a debug-variable-tracking limit and
+retries without assignment tracking. That compiler note is retained.
+
+Source fingerprint:
+`c9beceb90e332468e4e11ea80b325aea1878f461f8ee9f531e1a93a6496f63d8`.
+Sanitized `openmw-tests` SHA-256:
+`3d0eee1fb63c7e8984e8f233cc38da460d3424ae6c01907584a037f39d6e1671`.
+The reusable build skill now records the tested engine-sanitizer invocation and
+its distinction from the component-only sanitizer mode. Next: the already
+reproduced Health-command transaction failure, then remaining S3 gates.

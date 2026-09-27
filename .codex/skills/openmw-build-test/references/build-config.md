@@ -9,7 +9,8 @@ reconfiguring; preserve unrelated user options.
 - `build/m15-sanitize`: Debug with `CMAKE_CXX_FLAGS_DEBUG=-O1 -g`,
   `CMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer`,
   `CMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined`,
-  `BUILD_COMPONENTS_TESTS=ON`, `BUILD_ESMTOOL=ON`, engine/editor/tests off.
+  `BUILD_COMPONENTS_TESTS=ON`, `BUILD_ESMTOOL=ON`, `BUILD_OPENMW=ON`,
+  `BUILD_OPENMW_TESTS=ON`; editor off.
 - Both use `OPENMW_USE_SYSTEM_BULLET=OFF`, the fetched double-precision Bullet
   dependency. System single-precision Bullet is not interchangeable. Check
   actual options and link inputs, not merely the presence of system libraries
@@ -19,6 +20,28 @@ reconfiguring; preserve unrelated user options.
   fresh checkout. Follow the repo dependency/bootstrap configuration first.
 - Six build jobs have worked on this machine (about 31 GiB RAM). Adapt to actual
   resources, especially when compiling main and sanitizer builds concurrently.
+
+For sanitizer coverage of world/service/registry code, use the engine mode with
+the sanitizer build directory. This completed successfully with four build jobs:
+
+```bash
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
+UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+python3 SKILL/scripts/run_checks.py --repo REPO --output FRESH \
+  --mode engine --build-dir build/m15-sanitize --jobs 4 --timeout 14400
+```
+
+This mode inherits the explicit sanitizer environment. The separate `sanitize`
+mode disables leak detection and selects ESM4 component tests by default; it
+does not cover engine code. Record the actual sanitizer options with evidence.
+The engine suite passed with leak detection enabled; that is test-process
+coverage, not proof that a rendered game session is leak-free.
+
+On a first full GCC16 sanitizer build, `teststore.cpp` can take more than ten
+minutes after Make displays 100%. GCC may report a variable-tracking size limit
+and retry without `-fvar-tracking-assignments`; this is a debug-info fallback,
+not a test failure. Check compiler CPU/memory and logs before treating the build
+as hung. Incremental runs reuse that object when its dependencies are unchanged.
 
 Useful queries:
 

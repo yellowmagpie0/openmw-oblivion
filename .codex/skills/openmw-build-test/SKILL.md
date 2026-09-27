@@ -26,6 +26,8 @@ follow progress in its logs and keep the user updated during long builds.
   suites by default so newly added native suites are not silently omitted.
   ASan leak checks are disabled; UBSan halts on errors. This is not leak coverage.
 - `engine`: builds `openmw`, `openmw-tests`, `esmtool`; runs engine tests.
+  For an instrumented engine run, use `--build-dir build/m15-sanitize` with the
+  explicit sanitizer environment in [references/build-config.md](references/build-config.md).
 - `python`: `python -m unittest discover -s scripts/tests`, requiring a nonempty,
   clean result without skips.
 - `--filter 'Suite.*:Other.*'` deliberately narrows C++ selection. The report
