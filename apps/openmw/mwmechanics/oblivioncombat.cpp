@@ -484,6 +484,62 @@ namespace MWMechanics
         mPendingDeathEvents.clear();
         mDeathCounts.clear();
         mActorBreath.clear();
+        mCombatOpponents.clear();
+    }
+
+    bool OblivionCombatService::engage(const ESM::FormKey& actor, const ESM::FormKey& opponent)
+    {
+        if (actor == opponent)
+            throw std::invalid_argument("native actor cannot engage itself");
+        for (const auto* key : {&actor, &opponent})
+        {
+            const auto* life = findActorLife(*key);
+            const auto* values = findActorValues(*key);
+            if (!life || !values || life->mBase != values->mBase || life->mPhase == ESM4::ActorLifePhase::Dead)
+                throw std::invalid_argument("native combat engagement requires initialized nonterminal actors");
+        }
+        if (isInCombatWith(actor, opponent))
+            return false;
+        auto prepared = mCombatOpponents;
+        prepared[actor].insert(opponent);
+        prepared[opponent].insert(actor);
+        mCombatOpponents.swap(prepared);
+        return true;
+    }
+
+    bool OblivionCombatService::stopCombat(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mCombatOpponents.find(actor);
+        if (found == mCombatOpponents.end())
+            return false;
+        for (const auto& opponent : found->second)
+        {
+            const auto other = mCombatOpponents.find(opponent);
+            other->second.erase(actor);
+            if (other->second.empty())
+                mCombatOpponents.erase(other);
+        }
+        mCombatOpponents.erase(found);
+        return true;
+    }
+
+    bool OblivionCombatService::isInCombat(const ESM::FormKey& actor) const
+    {
+        return mCombatOpponents.contains(actor);
+    }
+
+    bool OblivionCombatService::isInCombatWith(const ESM::FormKey& actor, const ESM::FormKey& opponent) const
+    {
+        const auto found = mCombatOpponents.find(actor);
+        return found != mCombatOpponents.end() && found->second.contains(opponent);
+    }
+
+    std::vector<ESM::FormKey> OblivionCombatService::combatOpponents(const ESM::FormKey& actor) const
+    {
+        const auto found = mCombatOpponents.find(actor);
+        if (found == mCombatOpponents.end())
+            return {};
+        return {found->second.begin(), found->second.end()};
     }
 
     std::uint64_t OblivionCombatService::allocateAction()
@@ -1100,6 +1156,7 @@ namespace MWMechanics
     {
         const auto& values = nonPlayerValues(actor);
         PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
+        const bool terminal = life.mPhase == ESM4::ActorLifePhase::Dead;
         const auto found = mActorLife.find(life.mActor);
         if (found == mActorLife.end())
         {
@@ -1112,6 +1169,8 @@ namespace MWMechanics
             std::swap(found->second, life);
         }
         prepared.commit();
+        if (terminal)
+            stopCombat(values.mActor);
     }
 
     void OblivionCombatService::publishPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life)
@@ -1119,6 +1178,7 @@ namespace MWMechanics
         const auto& values = playerValues();
         const auto ptr = player.getPlayer();
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
+        const bool terminal = life.mPhase == ESM4::ActorLifePhase::Dead;
         const auto found = mActorLife.find(life.mActor);
         if (found == mActorLife.end())
         {
@@ -1128,6 +1188,8 @@ namespace MWMechanics
         else
             std::swap(found->second, life);
         prepared.commit();
+        if (terminal)
+            stopCombat(values.mActor);
     }
 
     std::optional<OblivionCombatService::PreparedLifeTransition> OblivionCombatService::prepareLifeTransition(
@@ -1231,6 +1293,8 @@ namespace MWMechanics
             playerView->commit();
         else
             actorView->commit();
+        if (terminal)
+            stopCombat(found->first);
         if (transition)
         {
             mPendingDeathEvents.swap(transition->mEvents);
@@ -1392,6 +1456,7 @@ namespace MWMechanics
         stats.setDeathAnimationFinished(false);
         if (terminal)
         {
+            stopCombat(found->first);
             mPendingDeathEvents.swap(terminal->mEvents);
             mDeathCounts.swap(terminal->mCounts);
             ++mNextDeathEvent;
@@ -1459,6 +1524,7 @@ namespace MWMechanics
         prepared.commit();
         if (terminal)
         {
+            stopCombat(found->first);
             mPendingDeathEvents.swap(terminal->mEvents);
             mDeathCounts.swap(terminal->mCounts);
             ++mNextDeathEvent;
@@ -1491,6 +1557,7 @@ namespace MWMechanics
         prepared.commit();
         if (terminal)
         {
+            stopCombat(found->first);
             mPendingDeathEvents.swap(terminal->mEvents);
             mDeathCounts.swap(terminal->mCounts);
             ++mNextDeathEvent;
@@ -1544,6 +1611,13 @@ namespace MWMechanics
             throw std::invalid_argument("native death counts require an Oblivion v13+ save");
         if (state.mVersion < 14 && !mActorBreath.empty())
             throw std::invalid_argument("native actor breath requires an Oblivion v14+ save");
+        if (state.mVersion < 15 && !mCombatOpponents.empty())
+            throw std::invalid_argument("native combat engagements require an Oblivion v15+ save");
+        decltype(state.mNativeCombatEngagements) engagements;
+        for (const auto& [actor, opponents] : mCombatOpponents)
+            for (const auto& opponent : opponents)
+                if (actor < opponent)
+                    engagements.emplace(actor, opponent);
         auto breath = mActorBreath;
         auto deathCounts = mDeathCounts;
         std::vector<ESM4::RuntimeActorLife> lives;
@@ -1570,6 +1644,7 @@ namespace MWMechanics
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
+        state.mNativeCombatEngagements.swap(engagements);
         state.mPendingDeathEvents.swap(events);
         state.mNextDeathEvent = mNextDeathEvent;
     }
@@ -1640,6 +1715,12 @@ namespace MWMechanics
             if (resolved != actor)
                 throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
         }
+        decltype(mCombatOpponents) opponents;
+        for (const auto& [first, second] : state.mNativeCombatEngagements)
+        {
+            opponents[first].insert(second);
+            opponents[second].insert(first);
+        }
         auto deathCounts = state.mNativeDeathCounts;
         auto breath = state.mNativeActorBreath;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> lives;
@@ -1652,6 +1733,7 @@ namespace MWMechanics
         mActorLife.swap(lives);
         mDeathCounts.swap(deathCounts);
         mActorBreath.swap(breath);
+        mCombatOpponents.swap(opponents);
         mPendingDeathEvents.swap(events);
         mNextDeathEvent = state.mNextDeathEvent;
     }

@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 14
+CURRENT_VERSION = 15
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -819,6 +819,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             old = custom["obscript.dead"]
             if type(old) is not bool or old != (phase == 1):
                 raise RuntimeStateError("TES4 native actor life conflicts with legacy obscript.dead")
+    engagements = check_collection(state.get("native_combat_engagements", []), "native combat engagement list")
+    if version < 15 and engagements:
+        raise RuntimeStateError("TES4 native combat engagements require version 15")
+    phases = {life["actor"]: life["phase"] for life in lives}
+    seen_engagements: set[tuple[str, str]] = set()
+    for engagement in engagements:
+        if not isinstance(engagement, dict) or set(engagement) != {"first", "second"}:
+            raise RuntimeStateError("Invalid TES4 combat engagement")
+        first, second = engagement["first"], engagement["second"]
+        native_key(first)
+        native_key(second)
+        pair = (first, second)
+        if (first >= second or pair in seen_engagements or
+                any(actor not in native_keys or actor not in phases or phases[actor] == 1 for actor in pair)):
+            raise RuntimeStateError("Invalid, duplicate, dangling or terminal TES4 combat engagement")
+        seen_engagements.add(pair)
     previous = 0
     for event in death_events:
         if not isinstance(event, dict):
@@ -1199,6 +1215,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_actor_breath"] = [
             {"actor": reader.string(), "remaining": reader.unpack("<f")} for _ in range(reader.count())
         ]
+    if version >= 15:
+        result["native_combat_engagements"] = [
+            {"first": reader.string(), "second": reader.string()} for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1416,6 +1436,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in breath:
             writer.string(entry["actor"])
             writer.pack("<f", entry["remaining"])
+    if version >= 15:
+        engagements = sorted(state.get("native_combat_engagements", []), key=lambda item: (item["first"], item["second"]))
+        writer.pack("<I", len(engagements))
+        for entry in engagements:
+            writer.string(entry["first"])
+            writer.string(entry["second"])
     return writer.finish()
 
 
@@ -1493,6 +1519,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("native_actor_life", [])
     state.setdefault("native_death_counts", [])
     state.setdefault("native_actor_breath", [])
+    state.setdefault("native_combat_engagements", [])
     state.setdefault("next_death_event", 1)
     state.setdefault("pending_death_events", [])
     _upgrade_inventory(state["player"]["inventory"])
@@ -1529,6 +1556,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("native_actor_life", [])
     result.setdefault("native_death_counts", [])
     result.setdefault("native_actor_breath", [])
+    result.setdefault("native_combat_engagements", [])
     result.setdefault("next_death_event", 1)
     result.setdefault("pending_death_events", [])
     _upgrade_inventory(result["player"]["inventory"])

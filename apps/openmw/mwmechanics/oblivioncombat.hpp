@@ -12,6 +12,7 @@
 #include <map>
 #include <deque>
 #include <span>
+#include <set>
 
 namespace MWWorld
 {
@@ -131,6 +132,7 @@ namespace MWMechanics
         std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
         std::map<ESM::FormKey, std::uint16_t> mDeathCounts;
         std::map<ESM::FormKey, float> mActorBreath;
+        std::map<ESM::FormKey, std::set<ESM::FormKey>> mCombatOpponents;
         struct PreparedLifeTransition
         {
             std::deque<ESM4::RuntimeActorDeathEvent> mEvents;
@@ -162,6 +164,14 @@ namespace MWMechanics
 
     public:
         void clear();
+        // Membership authority only: callers own attack/AI/legal eligibility.
+        // Endpoints require native values and nonterminal lifecycle. Repeated
+        // engagement is idempotent; stop/death removes both sides without events.
+        bool engage(const ESM::FormKey& actor, const ESM::FormKey& opponent);
+        bool stopCombat(const ESM::FormKey& actor) noexcept;
+        bool isInCombat(const ESM::FormKey& actor) const;
+        bool isInCombatWith(const ESM::FormKey& actor, const ESM::FormKey& opponent) const;
+        std::vector<ESM::FormKey> combatOpponents(const ESM::FormKey& actor) const;
         std::uint64_t allocateAction();
         bool isActionPending(std::uint64_t id) const;
         bool isActionConsumed(std::uint64_t id) const;

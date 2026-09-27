@@ -4544,3 +4544,60 @@ save SHA `37b1aad202a16cdb8b554f545f38a5810673e7680b4c5324cc8d34d9a860d128`.
 Capture inspected: dry fixture wall, normal HUD, no breath meter. The inherited
 capture filename contains “water” but the fixture is dry. This silent course
 proves loading and persistence, not visual combat or audio acceptance.
+
+### Native combat membership persists with lifecycle cleanup
+
+Runtime schema15 stores symmetric combat membership once per canonical actor
+pair. Both endpoints require native values and nonterminal lifecycle state.
+Validation rejects self/reversed/duplicate/noncanonical/dangling/dead endpoints,
+oversized counts and truncation. Versions1–14 deliberately migrate to empty
+membership. C++, canonical JSON and Python binary readers/writers agree.
+The service exposes engage/stop/query/opponent enumeration; prepare-and-swap
+restoration and engagement preserve prior authority on failure. Stopping one
+actor preserves unrelated pairs. Death removes membership before callback-time
+capture; essential knockout keeps it, and revival does not invent new pairs.
+Membership does not represent selected attack targets, attack phases or legal
+eligibility; its callers must supply those policies in later chunks.
+
+Three new component, three engine and three Python cases cover these contracts,
+including actual Player health publication, rollback and callback-time saves.
+`S3/native-engagement-contract-01` passes1,922 components,629 engine and180 Python
+cases, exact inventories/no skips; fingerprint
+`781b606960e2840a9a0cfcb5445dd8a26ba5e8cdca607f8c70a99efb9337d6db`.
+The later full regular/sanitizer runs and NIF repair are recorded above.
+Python fixture-development failures remain in `authority-draft/engagement-python-
+preflight-01.log` and `-02.log`; corrected focused run `-03.log` passes31 cases.
+
+Actual regular engine SHA:
+`0691db736410b01024768692ce2da757618aacca3c75cc5585a70c9e16635252`.
+The dry lifecycle fixture SHA is
+`8c47f944cfdd75bcd558e7ebf5ed74983a71c2aa4800a37cfea1506c4aba52b1`.
+Starting from the retained v14 dry save, the setup injects only one NPC/player
+pair; paired pristine SHA:
+`704992b54dbb1db54b40146f7b011b01da26d085a2aa548c036ae2f48628ad3e`.
+All course directories are under S3 and contain input/state verification:
+
+- `native-engagement-runtime-01`: exact pair survives initial load/resave;
+  saveSHA `c2e8c061c9d3f243efcd234148a96846c539315c965105ad235439fd310d7268`.
+- `native-engagement-continuation-01`: unchanged prior save starts a fresh
+  process; saveSHA `dcd6a013f0029b2988fea0ce50c1f1aa30daa195cf84fb4009a68d572ab20a8f`.
+- `native-engagement-legacy14-01`: actual v14 load/resave becomes15 with empty
+  membership; saveSHA `8d0a3d94582a9d9bdce7189ae9aebc374939bfeca964ddfb5d2b6183ec611ee9`.
+- `native-engagement-reject-01`: changing only the serialized first endpoint
+  to a missing actor rejects before application; no save is written and input
+  bytes remain unchanged. CorruptSHA
+  `cb636c31eb60f0906e3e9e9c0b23909ec79a11cbb4f2d5a66d2fbba335c2be4d`.
+  Editable manifest: `oblivion_m15_native_engagement_reject.json`.
+- `native-engagement-morrowind-01`: normal Morrowind startup/save passes with
+  no native markers; saveSHA
+  `28375621d725266074ec57032ed3f8c00ff915f8c5a1c59a1e5e99352088da33`.
+- `native-engagement-runtime-sanitized-02`: exact paired persistence under the
+  repaired sanitizer engine, hashes and limitations recorded above.
+
+Captures inspected: native dry wall/HUD, explicit invalid-save error dialog,
+and Morrowind startup rocks/HUD. No audio or combat initiation is proved.
+Automatic publication remains off; existing fixture ModAV Health0 commands
+explicitly adopt actors. Native public-query integration remains next:
+`native-combat-query-red-01` retains the actual failure where IsInCombat returns0
+for both paired actors and the original player-reference alias. Whole-world
+failed-load preservation, rest, Lua writers and S2/S3/later stage gates remain open.

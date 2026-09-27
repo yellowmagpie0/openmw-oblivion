@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <set>
+#include <utility>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -26,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 14;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 15;
 
     struct RuntimeContentIdentity
     {
@@ -334,6 +336,10 @@ namespace ESM4
         // v14: native process breath timer, retained for unloaded actors too.
         // Missing older-save entries remain absent until native process adoption.
         std::map<ESM::FormKey, float> mNativeActorBreath;
+        // v15: symmetric opponent membership, stored once per canonical pair.
+        // Attack targets, phases and legal hit context are separate contracts.
+        // Both endpoints require native values/life and may not be terminal.
+        std::set<std::pair<ESM::FormKey, ESM::FormKey>> mNativeCombatEngagements;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

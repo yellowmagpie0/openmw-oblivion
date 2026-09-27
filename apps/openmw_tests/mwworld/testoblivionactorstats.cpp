@@ -3989,4 +3989,81 @@ namespace
     }
 
 
+
+    TEST_F(OblivionActorStatsTest, terminalHealthCommitRemovesCombatMembershipBeforeCallbackCapture)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::RuntimeState state;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        state.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        state.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        state.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeActorValues values;
+        values.mActor = state.mPlayer.mReference;
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 100, 200, 0}};
+        MWMechanics::OblivionCombatService service;
+        service.publishPlayerValues(player, values, {});
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        service.capture(state);
+        for (std::uint32_t i : {10, 11})
+        {
+            ESM4::RuntimeReferenceState ref;
+            ref.mKey = ESM::FormKey::content("actors.esm", i);
+            ref.mBase = ESM::FormKey::content("actors.esm", i + 100);
+            ref.mCell = state.mPlayer.mCell;
+            state.mReferences.push_back(ref);
+            ESM4::RuntimeActorValues opponent;
+            opponent.mActor = ref.mKey;
+            opponent.mBase = ref.mBase;
+            state.mNativeActorValues.push_back(opponent);
+            state.mNativeActorLife.push_back({ref.mKey, ref.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        }
+        service.restore(state);
+        const auto a = state.mReferences[0].mKey, b = state.mReferences[1].mKey;
+        ASSERT_TRUE(service.engage(values.mActor, a));
+        ASSERT_TRUE(service.engage(a, b));
+        service.publishPlayerLife(player,
+            {values.mActor, values.mBase, ESM4::ActorLifePhase::EssentialUnconscious, 1, a});
+        EXPECT_TRUE(service.isInCombatWith(values.mActor, a));
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        ESM4::EssentialRecoverySettings invalid{};
+        invalid.mDelay = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(service.changePlayerHealth(player, -101, a, true, invalid, {}), std::invalid_argument);
+        EXPECT_TRUE(service.isInCombatWith(values.mActor, a));
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
+        EXPECT_TRUE(service.changePlayerHealth(player, -101, a, false, {}, {}));
+        EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
+        EXPECT_FALSE(service.isInCombat(values.mActor));
+        EXPECT_TRUE(service.isInCombatWith(a, b));
+        const auto event = service.takeNextDeathEvent();
+        ASSERT_TRUE(event);
+        service.capture(state); // A save inside the callback must already see cleanup.
+        EXPECT_EQ(state.mNativeCombatEngagements,
+            (std::set<std::pair<ESM::FormKey, ESM::FormKey>>{{a, b}}));
+        EXPECT_NO_THROW(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        EXPECT_FALSE(service.isInCombat(values.mActor)); // Revival cannot recreate old opponents.
+        ASSERT_TRUE(service.engage(values.mActor, a));
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Dead, 0, a});
+        EXPECT_FALSE(service.isInCombat(values.mActor));
+        EXPECT_EQ(service.combatOpponents(a), (std::vector<ESM::FormKey>{b}));
+    }
+
 }

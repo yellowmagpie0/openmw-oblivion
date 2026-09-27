@@ -597,6 +597,19 @@ namespace ESM4
             if (values != nativeActors.end() && values->second != life.mBase)
                 throw std::runtime_error("TES4 native actor life and value base conflict");
         }
+        checkSize(mNativeCombatEngagements.size(), "native combat engagement set");
+        if (mVersion < 15 && !mNativeCombatEngagements.empty())
+            throw std::runtime_error("TES4 native combat engagements require runtime-state version 15");
+        for (const auto& [first, second] : mNativeCombatEngagements)
+        {
+            const auto activeActor = [&](const ESM::FormKey& actor) {
+                const auto life = lives.find(actor);
+                return nativeActors.contains(actor) && life != lives.end()
+                    && life->second->mPhase != ActorLifePhase::Dead;
+            };
+            if (!(first < second) || !activeActor(first) || !activeActor(second))
+                throw std::runtime_error("Invalid, dangling or terminal TES4 combat engagement");
+        }
         for (const auto& reference : mReferences)
             if (const auto life = lives.find(reference.mKey); life != lives.end())
                 if (const auto old = reference.mCustomState.find("obscript.dead"); old != reference.mCustomState.end())
@@ -1264,6 +1277,15 @@ namespace ESM4
                 writer.floating(remaining);
             }
         }
+        if (mVersion >= 15)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeCombatEngagements.size()));
+            for (const auto& [first, second] : mNativeCombatEngagements)
+            {
+                writeKey(writer, first);
+                writeKey(writer, second);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1710,6 +1732,27 @@ namespace ESM4
                 const float remaining = reader.float32();
                 if (!result.mNativeActorBreath.emplace(std::move(actor), remaining).second)
                     throw std::runtime_error("Duplicate TES4 native breath actor");
+            }
+        }
+        if (result.mVersion >= 15)
+        {
+            const auto count = reader.count();
+            const auto actorKey = [&]() {
+                const auto text = reader.string();
+                ESM::FormKey key;
+                try { key = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&)
+                { throw std::runtime_error("Invalid TES4 combat actor"); }
+                if (key.isNull() || key.serialize() != text)
+                    throw std::runtime_error("Invalid or noncanonical TES4 combat actor");
+                return key;
+            };
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto first = actorKey();
+                auto second = actorKey();
+                if (!result.mNativeCombatEngagements.emplace(std::move(first), std::move(second)).second)
+                    throw std::runtime_error("Duplicate TES4 combat engagement");
             }
         }
         if (!reader.eof())
@@ -2177,6 +2220,19 @@ namespace ESM4
                 first = false;
                 stream << "{\"actor\":\"" << escapeJson(actor.serialize())
                        << "\",\"remaining\":" << std::setprecision(17) << remaining << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 15)
+        {
+            stream << ",\"native_combat_engagements\":[";
+            bool firstEntry = true;
+            for (const auto& [first, second] : mNativeCombatEngagements)
+            {
+                if (!firstEntry) stream << ',';
+                firstEntry = false;
+                stream << "{\"first\":\"" << escapeJson(first.serialize())
+                       << "\",\"second\":\"" << escapeJson(second.serialize()) << "\"}";
             }
             stream << ']';
         }

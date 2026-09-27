@@ -782,5 +782,78 @@ class Tes4RuntimeStateTests(unittest.TestCase):
 
 
 
+    def engagement_state(self):
+        state = make_state()
+        state["schema_version"] = 15
+        state["ai_rng_state"] = 1
+        actor, base = "content:actors.esm:000001", "content:actors.esm:000002"
+        state["references"] = [{"key": actor, "base": base, "cell": state["player"]["cell"],
+                                "position": [0.0] * 6, "enabled": True, "deleted": False,
+                                "inventory": [], "custom_state": {}, "owner": None, "lock_level": 0}]
+        player = state["player"]["reference"]
+        state["native_actor_values"] = [
+            {"actor": key, "base": record, "owner": owner, "process": 1,
+             "values": [[0, None, None, None] for _ in range(72)]}
+            for key, record, owner in [(actor, base, 1), (player, "dynamic:player-base:0000000000000001", 0)]]
+        state["native_actor_life"] = [
+            {"actor": value["actor"], "base": value["base"], "phase": 0, "recovery_remaining": 0, "killer": "null"}
+            for value in state["native_actor_values"]]
+        state["native_combat_engagements"] = [{"first": actor, "second": player}]
+        return state
+
+    def test_native_combat_engagement_roundtrip_and_validation(self):
+        state = self.engagement_state()
+        restored = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(restored["native_combat_engagements"], state["native_combat_engagements"])
+        first, second = state["native_combat_engagements"][0].values()
+        for entries in ([{"first": first, "second": first}], [{"first": second, "second": first}],
+                        [{"first": "null", "second": second}], [{"first": first}],
+                        [{"first": first, "second": second, "extra": 1}],
+                        state["native_combat_engagements"] * 2):
+            invalid = copy.deepcopy(state)
+            invalid["native_combat_engagements"] = entries
+            with self.subTest(entries=entries), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(invalid)
+        for change in (lambda s: s.update(schema_version=14), lambda s: s["native_actor_values"].pop(),
+                       lambda s: s["native_actor_life"].pop(),
+                       lambda s: s["native_actor_life"][0].update(phase=1)):
+            invalid = copy.deepcopy(state)
+            change(invalid)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(invalid)
+        state["native_actor_life"][0]["phase"] = 2
+        state_io.encode_payload(state)
+
+    def test_native_combat_engagement_corrupt_wire_tail(self):
+        state = self.engagement_state()
+        payload = state_io.encode_payload(state)
+        pair = state["native_combat_engagements"][0]
+        entry = b"".join(struct.pack("<I", len(key)) + key.encode() for key in pair.values())
+        self.assertEqual(payload[-len(entry)-4:], struct.pack("<I", 1) + entry)
+        prefix = payload[:-len(entry)-4]
+        for tail in (struct.pack("<I", 2) + entry * 2, struct.pack("<I", 0xffffffff),
+                     struct.pack("<I", 1) + entry.replace(b"content:", b"Content:")):
+            with self.subTest(tail=tail), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(prefix + tail)
+        for cut in range(1, len(entry) + 5):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-cut])
+
+    def test_legacy_versions_do_not_invent_combat_membership(self):
+        for version in range(1, 15):
+            state = make_state()
+            state["schema_version"] = version
+            state["ai_rng_state"] = 1
+            state["player"]["inventory"] = []
+            if version < 3:
+                for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(key)
+            if version < 2:
+                for key in ("script_event_sequence", "script_instances", "quests"):
+                    state.pop(key)
+            loaded = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("native_combat_engagements", loaded)
+
+
 if __name__ == "__main__":
     unittest.main()

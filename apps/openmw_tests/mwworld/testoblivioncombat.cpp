@@ -494,3 +494,82 @@ TEST(OblivionCombatService, NativeBreathCaptureRestoreRejectAndClear)
     service.restore(before);
     EXPECT_FALSE(service.findActorBreath(values.mActor));
 }
+
+
+namespace
+{
+    ESM4::RuntimeState combatMembershipState()
+    {
+        auto state = savedState();
+        for (std::uint32_t i = 1; i <= 3; ++i)
+        {
+            ESM4::RuntimeReferenceState ref;
+            ref.mKey = ESM::FormKey::content("actors.esm", i);
+            ref.mBase = ESM::FormKey::content("actors.esm", 100 + i);
+            ref.mCell = state.mPlayer.mCell;
+            state.mReferences.push_back(ref);
+            ESM4::RuntimeActorValues values;
+            values.mActor = ref.mKey;
+            values.mBase = ref.mBase;
+            state.mNativeActorValues.push_back(values);
+            state.mNativeActorLife.push_back({ref.mKey, ref.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        }
+        return state;
+    }
+}
+
+TEST(OblivionCombatService, OpponentsAreSymmetricIdempotentAndPersistAcrossReload)
+{
+    auto state = combatMembershipState();
+    const auto a = state.mReferences[0].mKey, b = state.mReferences[1].mKey, c = state.mReferences[2].mKey;
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    EXPECT_FALSE(service.isInCombat(a));
+    EXPECT_TRUE(service.engage(a, b));
+    EXPECT_FALSE(service.engage(b, a));
+    EXPECT_TRUE(service.engage(c, b));
+    EXPECT_TRUE(service.isInCombat(a));
+    EXPECT_TRUE(service.isInCombatWith(b, a));
+    EXPECT_FALSE(service.isInCombatWith(a, c));
+    EXPECT_EQ(service.combatOpponents(b), (std::vector<ESM::FormKey>{a, c}));
+    service.capture(state);
+    EXPECT_EQ(state.mNativeCombatEngagements,
+        (std::set<std::pair<ESM::FormKey, ESM::FormKey>>{{a, b}, {b, c}}));
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    EXPECT_EQ(restored.combatOpponents(b), service.combatOpponents(b));
+    EXPECT_TRUE(restored.stopCombat(a));
+    EXPECT_FALSE(restored.stopCombat(a));
+    EXPECT_FALSE(restored.isInCombat(a));
+    EXPECT_EQ(restored.combatOpponents(b), (std::vector<ESM::FormKey>{c}));
+    EXPECT_TRUE(restored.isInCombat(c));
+    restored.clear();
+    EXPECT_FALSE(restored.isInCombat(b));
+    EXPECT_TRUE(restored.combatOpponents(c).empty());
+    restored.capture(state);
+    EXPECT_TRUE(state.mNativeCombatEngagements.empty());
+}
+
+TEST(OblivionCombatService, InvalidEngagementAndRestoreLeaveExistingOpponentsUntouched)
+{
+    auto state = combatMembershipState();
+    const auto a = state.mReferences[0].mKey, b = state.mReferences[1].mKey, c = state.mReferences[2].mKey;
+    state.mNativeActorLife[2].mPhase = ESM4::ActorLifePhase::Dead;
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    ASSERT_TRUE(service.engage(a, b));
+    for (const auto& bad : {a, c, ESM::FormKey{}, ESM::FormKey::dynamic("missing", 1)})
+        EXPECT_THROW(service.engage(a, bad), std::invalid_argument);
+    auto invalid = state;
+    invalid.mNativeCombatEngagements.emplace(a, c);
+    EXPECT_THROW(service.restore(invalid), std::runtime_error);
+    EXPECT_TRUE(service.isInCombatWith(a, b));
+    EXPECT_FALSE(service.isInCombat(c));
+    auto old = savedState(14);
+    const auto before = old;
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    EXPECT_EQ(old, before); // A downgrade cannot partially replace the destination.
+    service.restore(savedState(14));
+    EXPECT_FALSE(service.isInCombat(a));
+    EXPECT_TRUE(service.combatOpponents(b).empty());
+}

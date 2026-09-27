@@ -1049,6 +1049,7 @@ namespace
     TEST(ESM4RuntimeState, nativeBreathBinaryRejectsDuplicateNoncanonicalAndOversizedEntries)
     {
         auto state = makeState();
+        state.mVersion = 14;
         const auto& reference = state.mReferences.front();
         ESM4::RuntimeActorValues values;
         values.mActor = reference.mKey;
@@ -1092,5 +1093,97 @@ namespace
         }
     }
 
+
+
+    ESM4::RuntimeState engagedState()
+    {
+        auto state = makeState();
+        const auto& reference = state.mReferences.front();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = reference.mKey;
+        actor.mBase = reference.mBase;
+        state.mNativeActorValues.push_back(actor);
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::dynamic("player-base", 1);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues.push_back(actor);
+        for (const auto& value : state.mNativeActorValues)
+            state.mNativeActorLife.push_back({value.mActor, value.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        state.mNativeCombatEngagements.emplace(reference.mKey, state.mPlayer.mReference);
+        return state;
+    }
+
+    TEST(ESM4RuntimeState, combatEngagementRoundTripAndEndpointValidation)
+    {
+        const auto state = engagedState();
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), state);
+        EXPECT_NE(state.canonicalJson().find("native_combat_engagements"), std::string::npos);
+        auto invalid = state;
+        invalid.mVersion = 14;
+        EXPECT_THROW(invalid.validate(), std::runtime_error);
+        invalid = state;
+        invalid.mNativeActorValues.pop_back();
+        EXPECT_THROW(invalid.validate(), std::runtime_error);
+        invalid = state;
+        invalid.mNativeActorLife.pop_back();
+        EXPECT_THROW(invalid.validate(), std::runtime_error);
+        invalid = state;
+        invalid.mNativeActorLife.front().mPhase = ESM4::ActorLifePhase::Dead;
+        EXPECT_THROW(invalid.validate(), std::runtime_error);
+        invalid.mNativeActorLife.front().mPhase = ESM4::ActorLifePhase::EssentialUnconscious;
+        EXPECT_NO_THROW(invalid.validate()); // Membership survives a recoverable knockout.
+        const auto [first, second] = *state.mNativeCombatEngagements.begin();
+        for (const auto& pair : {std::pair{first, first}, std::pair{second, first},
+                 std::pair{ESM::FormKey{}, second}, std::pair{first, ESM::FormKey::dynamic("missing", 1)}})
+        {
+            invalid = state;
+            invalid.mNativeCombatEngagements = {pair};
+            EXPECT_THROW(invalid.validate(), std::runtime_error);
+        }
+    }
+
+    TEST(ESM4RuntimeState, combatEngagementWireRejectsDuplicatesOversizeAndTruncation)
+    {
+        const auto state = engagedState();
+        const auto bytes = state.serializeBinary();
+        const auto [first, second] = *state.mNativeCombatEngagements.begin();
+        const auto size = 8 + first.serialize().size() + second.serialize().size();
+        const auto offset = bytes.size() - size - 4;
+        auto invalid = bytes;
+        invalid[offset] = 2;
+        invalid.insert(invalid.end(), bytes.begin() + offset + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        invalid = bytes;
+        std::fill_n(invalid.begin() + offset, 4, 0xff);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        invalid = bytes;
+        invalid[offset + 8] = 'C'; // Noncanonical key spelling.
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        for (std::size_t cut = 1; cut <= size + 4; ++cut)
+        {
+            SCOPED_TRACE(cut);
+            invalid.assign(bytes.begin(), bytes.end() - cut);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        }
+    }
+
+    TEST(ESM4RuntimeState, versionsOneThroughFourteenDoNotInventCombatEngagements)
+    {
+        for (std::uint32_t version = 1; version < 15; ++version)
+        {
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            }
+            const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_TRUE(restored.mNativeCombatEngagements.empty());
+            EXPECT_EQ(restored.canonicalJson().find("native_combat_engagements"), std::string::npos);
+        }
+    }
 
 }
