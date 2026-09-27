@@ -49,7 +49,7 @@
       "minimum_entropy": 0.02
     },
     {
-      "type": "key",
+      "type": "key_held",
       "value": "t"
     },
     {
@@ -62,8 +62,12 @@
       "minimum_entropy": 0.02
     },
     {
-      "type": "key",
+      "type": "key_held",
       "value": "Up"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
     },
     {
       "type": "screenshot",
@@ -71,7 +75,7 @@
       "minimum_entropy": 0.02
     },
     {
-      "type": "key",
+      "type": "key_held",
       "value": "Escape"
     },
     {
@@ -79,7 +83,7 @@
       "seconds": 1
     },
     {
-      "type": "key",
+      "type": "key_held",
       "value": "F5"
     },
     {

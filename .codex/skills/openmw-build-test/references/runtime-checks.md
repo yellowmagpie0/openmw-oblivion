@@ -369,3 +369,21 @@ verify the saved selected package identity. With a previously idle fixture,
 explicit EvaluatePackage is appropriate to test the condition adapter, but is
 not proof of autonomous AI scheduling. Keep generated assets outside Git and
 promote reusable recipes/builders after the experiment is established.
+
+### Fixed-hour wait menu
+
+`oblivion_m15_native_wait_dialog.json` uses injured registered input from
+`S3/native-rest-dialog-red-02/pristine.omwsave`, opens T, advances the slider to
+2 hours, cancels with Escape, then saves. Inspect both singular/plural captures
+and assert that less than .1 ordinary game hour elapsed: cancellation must not
+restore resources or advance the selected duration. Use `key_held` and a short
+rendering pause before screenshots. The first sanitized attempt with a brief
+`key` Up returned success but its screenshot still showed1 hour; input delivery
+success is not gameplay acceptance.
+
+Pair binaries with their own build's resources directory. After different Git
+revisions have configured regular and sanitizer builds, sharing
+`build/resources` can produce a resource-version mismatch in the sanitizer
+engine. Keep that failure and rerun using `build/m15-sanitize/resources`;
+do not whitelist the warning. Examples: `native-wait-dialog-sanitized-01`
+(resource mismatch), `-02` (missed slider input), `-03` (corrected course).

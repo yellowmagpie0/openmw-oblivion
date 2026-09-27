@@ -3025,3 +3025,29 @@ sleeping versus waiting; there is no Until Healed action. Prompt/hour text
 comes from menus/strings.xml traits _restquestion/_waitquestion/_hour/_s.
 This is structural original-asset evidence, not acceptance of this fork's
 currently incomplete rest dialog. Extracted licensed XML stays ignored.
+
+### Expanded rest dispatcher eligibility and simulation clock
+
+`S3/authority-draft/rest-high-eligibility.py` executes5,120 original instruction
+cases from `00677F30` through `0067804E`, including early exits at678331/678364.
+Actor flags bits21/5/11, process absence and nonzero process tier reject the
+special restoration path. With a high-process actor and remaining Player hours
+positive, H/M/F each receive2 seconds, even when predicate5F1330 selected the
+optimized branch that bypasses the normal actor +1C0 update. Both x87 precisions,
+null/present processes, all four tiers, actor/nonactor predicates, both optimizer
+branches and auxiliary virtual outcomes are covered; stack balance asserted.
+List membership, process-tier getter, distance, actor/special predicates,
+auxiliary/normal updates and resource callees are explicit boundary stubs.
+This expands eligibility evidence but does not emulate the optimizer itself.
+
+`rest-clock-dispatch.py` executes70 cases over original65F78B..65F7C3 and the
+actor elapsed prefix5FAAE0..5FAB4A. The Player hourly caller first advances the
+actor-manager clock by float-stored `3600 / TimeScale`. Setter673B10 stores the
+new float clock, resets values strictly above100000 to zero, and sanitizes NaN/
+nonfinite inputs. Probe inputs are finite: only the TimeScale getter and CRT
+NaN/finite predicates are stubbed. At TimeScale30, ordinary elapsed actor time
+is120 seconds (at tested clocks0/.1/.3/1/1000), and wraps produce0 at clocks99900/
+100000. Actor elapsed outputs are recorded from original instructions; no C++
+implementation comparison or low-process gameplay acceptance is claimed.
+The normal actor update at605B58..605B81 calls +368 with that manager clock;
+therefore the special2-second call cannot represent total NPC rest regeneration.

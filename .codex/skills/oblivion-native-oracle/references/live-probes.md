@@ -50,3 +50,17 @@ A post-shutdown key-up failure can differ from game failure; document it rather
 than treating any available screenshot as acceptance. Keep captures/extracted
 content under ignored build evidence, and preserve editable fixture manifests
 and reproducible writers in Git.
+
+If launch produces `Application load error P:0000065432`, first check whether
+the normal Linux Steam client is running. In this session, starting the normal
+client on its own Xvfb display restored original-game startup. Retain the failed
+launch and dismiss its error dialog before retrying. Do not alter executable
+bytes or infer a copy restriction from this startup error.
+
+Prepare evidence and backups from the repository cwd, then launch from the game
+cwd using **absolute** evidence/prefix paths. Combining relative setup paths
+with the game workdir has twice failed before launch. At the main menu, F9 does
+not start a game; use Continue/Load, inspect the confirmation, and hold mouse
+down/up long enough for actual polling. Pause briefly after moving the pointer
+before clicking. Re-focus after loading, disable autorepeat only on the isolated
+X display, and inspect the screen before a console command batch.

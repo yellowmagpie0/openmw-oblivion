@@ -4713,3 +4713,21 @@ captures are not audio acceptance.
 Native hourly restoration remains the next failing writer. This UI commit does
 not close that case, bed activation, native rest refusal text, level-up integration,
 automatic actor publication or any S2/S3/later gate.
+
+The fixed-hour menu change is committed as `2930f7a9d0`.
+`S3/native-rest-ui-sanitized-01` subsequently builds the instrumented engine and
+passes all629 tests with ASan leak detection and UBSan halting enabled.
+Actual graphical `native-wait-dialog-sanitized-03` passes with leak detection off
+and UBSan/ASan halting enabled. All four captures inspected, including2 hours;
+cancellation preserves life, engagements, actions and death counts with no rest
+hour advanced. Executable SHA256
+`34ac62ca32d1ee50d9102258fc7f269646e6b91fcada2a4b0db96e725f29ad5b`, resave
+`fcdcf2ccb96ef7379cd47f1c0c5a2b6128d03193444a8d562a048bb8d5d7a377`.
+The retained `-01` failed on resource revision mismatch (regular resources with
+sanitizer binary); `-02` had a nominal harness pass but screenshot showed the
+brief Up press was missed. The fixture now uses held keys and a rendering pause.
+This is a fixture correction, not a waiver of screenshot review.
+The corrected held-key fixture also passes regular `native-wait-dialog-03`;
+all four captures inspected (1 hour,2 hours,cancel). Reusable build/oracle skill
+references now document matching resources, held input, Steam initialization
+and absolute launch paths; both skill validators pass.
