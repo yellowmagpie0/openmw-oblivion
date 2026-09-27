@@ -114,3 +114,21 @@ healing from an isolated later load. The 27,648-case table and C++ comparison
 cover both x87 words; actual Damage application and frame-time production are
 boundary fixtures, not proved by this probe. Native raw knocked states are not
 interchangeable with the existing TES3 animation-state enum.
+
+## Permanent Magicka/Fatigue slots and resurrection
+
+Do not apply the generic sparse-add probe to all native AVs. ActorValues
+constructor `65BE10` allocates permanent AV9/10 nodes (+8/+C); actual lookup
+`65C010` and zero-removal `65C9B0` keep them at +0. The generic sparse probe
+stubbed those boundaries and missed this distinction. Use
+`actor-dedicated-modifier-add.py` (2,312 exact-bit cases, no hooked game functions)
+and `actor-container-reset.py` (432 all-AV checks) in the ignored oracle folder.
+Container clear `65C6A0` preserves AV9/10 while clearing other slots.
+
+`resurrection-reset.py` covers 3,840 common/NPC reset and keep-state branches;
+its second boolean is false and visual/base/inventory/Health application remains
+at declared boundaries. The preserve branch needs all body/cell/attached gates.
+`player-resurrection-reset.py` covers 192 Player paths: only AV8–10 Damage zeros;
+other Player modifier arrays survive. Common actor Script-container ownership
+is not the Player's separate Script array. Consult each probe's boundary list
+before using these results for a world resurrection implementation.

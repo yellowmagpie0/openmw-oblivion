@@ -92,10 +92,13 @@ namespace ESM4
     }
 
     ActorValueState changeActorValueModifier(
-        const ActorValueState& state, ActorValueOwner owner, ActorValueModifier modifier, float delta)
+        const ActorValueState& state, ActorValueOwner owner, std::uint8_t actorValue,
+        ActorValueModifier modifier, float delta)
     {
         validateActorValueState(state);
         validateOwner(owner);
+        if (actorValue >= 72)
+            throw std::invalid_argument("invalid native actor-value index");
         const auto index = static_cast<unsigned>(modifier);
         if (index >= state.mModifiers.size())
             throw std::invalid_argument("invalid native actor-value modifier category");
@@ -103,6 +106,14 @@ namespace ESM4
         const bool allowPositive = modifier != ActorValueModifier::Damage;
         if (owner == ActorValueOwner::Player)
             result.mModifiers[index] = addActorValueModifier(state.mModifiers[index].value_or(0.f), delta, allowPositive);
+        else if (actorValue == 9 || actorValue == 10)
+        {
+            // Native ActorValues owns permanent Magicka/Fatigue nodes. Its
+            // remove-zero path writes +0 into them instead of freeing them.
+            // Missing entries in staged old saves represent constructor zero.
+            const float updated = addActorValueModifier(state.mModifiers[index].value_or(0.f), delta, allowPositive);
+            result.mModifiers[index] = updated == 0.f ? 0.f : updated;
+        }
         else
             result.mModifiers[index] = addSparseActorValueModifier(state.mModifiers[index], delta, allowPositive);
         return result;

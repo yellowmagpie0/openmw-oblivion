@@ -1,0 +1,11 @@
+at 1 command content:m15-lifecycle.esm:900101 getav Magicka
+at 1 command content:m15-lifecycle.esm:900101 modav Magicka 5
+at 1 command content:m15-lifecycle.esm:900101 getav Magicka
+at 1 command content:m15-lifecycle.esm:900101 modav Magicka -5
+at 1 command content:m15-lifecycle.esm:900101 getav Magicka
+at 1 command content:m15-lifecycle.esm:900101 modav Fatigue 7
+at 1 command content:m15-lifecycle.esm:900101 getav Fatigue
+at 1 command content:m15-lifecycle.esm:900101 modav Fatigue -7
+at 1 command content:m15-lifecycle.esm:900101 getav Fatigue
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1 command content:m15-lifecycle.esm:900101 getav Strength

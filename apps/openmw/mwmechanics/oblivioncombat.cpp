@@ -190,7 +190,7 @@ namespace MWMechanics
                 if (delta > 0)
                 {
                     values.mValues[av] = ESM4::changeActorValueModifier(
-                        values.mValues[av], values.mOwner, ESM4::ActorValueModifier::Damage, delta);
+                        values.mValues[av], values.mOwner, av, ESM4::ActorValueModifier::Damage, delta);
                     changed = true;
                 }
             };
@@ -213,7 +213,7 @@ namespace MWMechanics
         void changeFatigueDamage(ESM4::RuntimeActorValues& values, float delta)
         {
             values.mValues[10] = ESM4::changeActorValueModifier(
-                values.mValues[10], values.mOwner, ESM4::ActorValueModifier::Damage, delta);
+                values.mValues[10], values.mOwner, 10, ESM4::ActorValueModifier::Damage, delta);
         }
 
         bool updateFatigue(ESM4::RuntimeActorValues& values, const OblivionFatigueUpdate& input,
@@ -585,7 +585,7 @@ namespace MWMechanics
         auto candidate = nonPlayerValues(actor);
         value = nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value);
         candidate.mValues[value] = ESM4::changeActorValueModifier(
-            candidate.mValues[value], candidate.mOwner, modifier, delta);
+            candidate.mValues[value], candidate.mOwner, value, modifier, delta);
         publishNonPlayerValues(actor, std::move(candidate));
     }
 
@@ -757,7 +757,7 @@ namespace MWMechanics
         validatePlayerQuery(value);
         auto candidate = playerValues();
         candidate.mValues[value] = ESM4::changeActorValueModifier(
-            candidate.mValues[value], candidate.mOwner, modifier, delta);
+            candidate.mValues[value], candidate.mOwner, value, modifier, delta);
         publishPlayerValues(player, std::move(candidate), settings);
     }
 
@@ -959,7 +959,7 @@ namespace MWMechanics
         const auto recovery = ESM4::essentialRecoveryHealth(
             ESM4::combatBaseValue(candidate.mValues[8].mBase), current, settings);
         life.mRecoveryRemaining = settings.mDelay;
-        candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+        candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
             ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
         candidate.validate();
         PreparedNonPlayerView prepared(actor, candidate, base, &life);
@@ -988,7 +988,7 @@ namespace MWMechanics
             ESM4::combatBaseValue(candidate.mValues[8].mBase), current, settings);
         life.mRecoveryRemaining = settings.mDelay;
         if (!godMode || recovery.mAdjustment >= 0.f)
-            candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+            candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
                 ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
         candidate.validate();
         const auto ptr = player.getPlayer();
@@ -1037,7 +1037,7 @@ namespace MWMechanics
                 ESM4::combatBaseValue(values.mValues[8].mBase), current(), settings);
             if (player && godMode && recovery.mAdjustment < 0.f)
                 return false;
-            values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner,
+            values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner, 8,
                 ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
             return recovery.mAdjustment < 0.f;
         };

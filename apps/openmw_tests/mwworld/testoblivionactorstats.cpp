@@ -799,6 +799,18 @@ namespace
             }
         }
         EXPECT_FALSE(after->mValues[8].mModifiers[2]); // Native nonplayer zero removes the sparse entry.
+        // Dedicated Magicka/Fatigue slots clamp positive Damage even when
+        // an old staged snapshot omitted the constructor's zero entries.
+        for (std::uint8_t av : {9, 10})
+        {
+            service.changeNonPlayerValue(ptr, av, ESM4::ActorValueModifier::Damage, 5);
+            EXPECT_EQ(service.findActorValues(values.mActor)->mValues[av].mModifiers[2], 0);
+            service.changeNonPlayerValue(ptr, av, ESM4::ActorValueModifier::Damage, -5);
+            service.changeNonPlayerValue(ptr, av, ESM4::ActorValueModifier::Damage, 5);
+            EXPECT_EQ(service.findActorValues(values.mActor)->mValues[av].mModifiers[2], 0);
+        }
+        EXPECT_EQ(stats.getMagicka().getCurrent(), 17);
+        EXPECT_EQ(stats.getFatigue().getCurrent(), 18);
         EXPECT_EQ(service.getDeadCount(values.mBase), 0);
         EXPECT_FALSE(service.takeNextDeathEvent());
     }
@@ -901,13 +913,13 @@ namespace
         const Case cases[] = {
             {Process::Active, {2.f, -1.f, -2.f}, .125f, 40.5f, 40.5f, -.5f, -.5f},
             {Process::Low, {2.f, -1.f, -2.f}, .125f, 40.5f, 38.5f, -.5f, -.5f},
-            {Process::Active, {2.f, std::nullopt, -1.f}, 1.f, 42.f, 42.f, 0.f, std::nullopt},
+            {Process::Active, {2.f, std::nullopt, -1.f}, 1.f, 42.f, 42.f, 0.f, 0.f},
             {Process::Low, {2.f, std::nullopt, std::nullopt}, 1.f, 42.f, 40.f, std::nullopt, std::nullopt},
-            {Process::Active, {std::nullopt, -1.f, std::nullopt}, 1.f, 39.f, 51.f, 0.f, 12.f},
-            {Process::Active, {std::nullopt, -1.f, 0.f}, 1.f, 39.f, 39.f, 0.f, std::nullopt},
+            {Process::Active, {std::nullopt, -1.f, std::nullopt}, 1.f, 39.f, 39.f, 0.f, 0.f},
+            {Process::Active, {std::nullopt, -1.f, 0.f}, 1.f, 39.f, 39.f, 0.f, 0.f},
             {Process::Active, {std::nullopt, std::nullopt, -.25f}, 0.f, 39.75f, 39.75f, -.25f, -.25f},
             {Process::Active, {std::nullopt, .75f, std::nullopt}, 1.f, 40.75f, 40.75f, std::nullopt, std::nullopt},
-            {Process::Active, {-.5f, std::nullopt, -.25f}, 1.f, 39.5f, 39.5f, 0.f, std::nullopt},
+            {Process::Active, {-.5f, std::nullopt, -.25f}, 1.f, 39.5f, 39.5f, 0.f, 0.f},
             {Process::Active, {std::nullopt, std::nullopt, -100.f}, 1.f, -48.f, -48.f, -88.f, -88.f},
         };
         for (const bool isPlayer : {false, true})
@@ -1174,7 +1186,7 @@ namespace
             EXPECT_THROW(restore({-1, true, false}, settings), std::invalid_argument);
             EXPECT_EQ(*service.findActorValues(values.mActor), before);
 
-            // Native sparse storage distinguishes absent Damage from a stored zero.
+            // Health uses sparse Damage; Magicka/Fatigue have permanent zero slots.
             for (auto damage : {std::optional<float>{}, std::optional<float>{0}})
             {
                 for (int av : {8, 9, 10})
@@ -1183,8 +1195,8 @@ namespace
                 restore({1, true, false}, settings);
                 const bool insertsPositive = !isPlayer && !damage;
                 EXPECT_EQ(stats.getHealth().getCurrent(), insertsPositive ? 102 : 101);
-                EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), insertsPositive ? 102.02f : 101.f);
-                EXPECT_EQ(stats.getFatigue().getCurrent(), insertsPositive ? 43 : 41);
+                EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), 101.f);
+                EXPECT_EQ(stats.getFatigue().getCurrent(), 41);
             }
             for (int av : {8, 9, 10})
                 values.mValues[av].mModifiers[2] = -10;
@@ -1710,7 +1722,7 @@ namespace
         EXPECT_FALSE(run(10, Command::Mod, Source::Console, -1, false).mAccepted);
         EXPECT_EQ(*service.findActorValues(values.mActor), before);
         EXPECT_TRUE(run(10, Command::Mod, Source::Console, 1, false).mAccepted);
-        EXPECT_EQ(service.getNonPlayerValue(ptr, 10), 41); // Absent sparse Damage accepts positive insertion.
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 10), 40); // Permanent Fatigue Damage clamps positive writes.
         const auto health = run(8, Command::Force, Source::Console, 100);
         EXPECT_EQ(health.mHealthReactionDelta, -7);
         EXPECT_EQ(service.getNonPlayerValue(ptr, 8), 100);
@@ -1989,7 +2001,7 @@ namespace
         EXPECT_EQ(restored.findActorValues(values.mActor)->mValues[10].mModifiers[2], -1.25f);
         restored.regenerateNonPlayerFatigue(newPtr, 1.f, {10, 0});
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getFatigue().getCurrent(), 18);
-        EXPECT_FALSE(restored.findActorValues(values.mActor)->mValues[10].mModifiers[2]);
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mValues[10].mModifiers[2], 0);
         for (std::uint8_t av : {8, 9, 10})
             restored.changeNonPlayerValue(newPtr, av, ESM4::ActorValueModifier::Damage, -2);
         restored.restoreNonPlayerResources(newPtr, {1, true, false},

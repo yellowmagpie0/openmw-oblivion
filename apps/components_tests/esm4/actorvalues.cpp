@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <limits>
+#include <cmath>
 #include <stdexcept>
 
 namespace
@@ -36,21 +37,21 @@ TEST(ESM4ActorValues, ProcessCompositionRetainsSeparateModifiersAndNegativeCurre
 TEST(ESM4ActorValues, ChannelMutationPreservesOtherChannelsAndOwnerStorageSemantics)
 {
     const ESM4::ActorValueState initial{100, {20, -10, std::nullopt}};
-    const auto player = ESM4::changeActorValueModifier(initial, Owner::Player, Modifier::Damage, 5);
-    const auto npc = ESM4::changeActorValueModifier(initial, Owner::NonPlayer, Modifier::Damage, 5);
+    const auto player = ESM4::changeActorValueModifier(initial, Owner::Player, 8, Modifier::Damage, 5);
+    const auto npc = ESM4::changeActorValueModifier(initial, Owner::NonPlayer, 8, Modifier::Damage, 5);
     EXPECT_EQ(player.mModifiers[2], 0);
     EXPECT_EQ(npc.mModifiers[2], 5);
     EXPECT_EQ(player.mModifiers[0], 20);
     EXPECT_EQ(npc.mModifiers[1], -10);
     EXPECT_EQ(player.mBase, 100);
     EXPECT_FALSE(initial.mModifiers[2]);
-    const auto script = ESM4::changeActorValueModifier(npc, Owner::NonPlayer, Modifier::Script, 30);
+    const auto script = ESM4::changeActorValueModifier(npc, Owner::NonPlayer, 8, Modifier::Script, 30);
     EXPECT_EQ(script.mModifiers[1], 20);
     EXPECT_EQ(script.mModifiers[2], 5);
-    const auto maximum = ESM4::changeActorValueModifier(script, Owner::NonPlayer, Modifier::Maximum, -30);
+    const auto maximum = ESM4::changeActorValueModifier(script, Owner::NonPlayer, 8, Modifier::Maximum, -30);
     EXPECT_EQ(maximum.mModifiers[0], -10);
     EXPECT_EQ(maximum.mModifiers[1], 20);
-    const auto removed = ESM4::changeActorValueModifier(maximum, Owner::NonPlayer, Modifier::Damage, -5);
+    const auto removed = ESM4::changeActorValueModifier(maximum, Owner::NonPlayer, 8, Modifier::Damage, -5);
     EXPECT_FALSE(removed.mModifiers[2]);
     EXPECT_EQ(ESM4::composeActorValue(removed, Owner::NonPlayer, Process::Active), 110);
 }
@@ -61,11 +62,11 @@ TEST(ESM4ActorValues, RejectsCorruptStateEnumsAndArithmeticWithoutChangingInput)
     const auto original = state;
     EXPECT_THROW(ESM4::composeActorValue(state, static_cast<Owner>(255), Process::Active), std::invalid_argument);
     EXPECT_THROW(ESM4::composeActorValue(state, Owner::Player, static_cast<Process>(255)), std::invalid_argument);
-    EXPECT_THROW(ESM4::changeActorValueModifier(state, Owner::Player, static_cast<Modifier>(255), 1),
+    EXPECT_THROW(ESM4::changeActorValueModifier(state, Owner::Player, 8, static_cast<Modifier>(255), 1),
         std::invalid_argument);
-    EXPECT_THROW(ESM4::changeActorValueModifier(state, static_cast<Owner>(255), Modifier::Script, 1),
+    EXPECT_THROW(ESM4::changeActorValueModifier(state, static_cast<Owner>(255), 8, Modifier::Script, 1),
         std::invalid_argument);
-    EXPECT_THROW(ESM4::changeActorValueModifier(state, Owner::NonPlayer, Modifier::Damage,
+    EXPECT_THROW(ESM4::changeActorValueModifier(state, Owner::NonPlayer, 8, Modifier::Damage,
         std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
     EXPECT_EQ(state, original);
     state.mBase = std::numeric_limits<float>::infinity();
@@ -356,4 +357,49 @@ TEST(ESM4ActorValues, ModifierCommandsPreserveOriginEligibilityAndIntegerBoundar
         std::invalid_argument);
     EXPECT_THROW(prepare(Owner::Player, 8, Command::Force, Source::Script, 1,
         std::numeric_limits<float>::infinity(), false, true), std::invalid_argument);
+}
+
+TEST(ESM4ActorValues, MagickaAndFatigueModifierSlotsRemainAllocatedAtZero)
+{
+    for (std::uint8_t av : {9, 10})
+    {
+        for (auto modifier : {Modifier::Maximum, Modifier::Script, Modifier::Damage})
+        {
+            const auto index = static_cast<std::size_t>(modifier);
+            ESM4::ActorValueState initial{100, {11, 12, -13}};
+            initial.mModifiers[index] = -5;
+            const auto zero = ESM4::changeActorValueModifier(initial, Owner::NonPlayer, av, modifier, 5);
+            EXPECT_EQ(zero.mModifiers[index], 0);
+            EXPECT_EQ(zero.mBase, 100);
+            for (std::size_t other = 0; other < initial.mModifiers.size(); ++other)
+            {
+                if (other != index)
+                {
+                    EXPECT_EQ(zero.mModifiers[other], initial.mModifiers[other]);
+                }
+            }
+            // Older staged snapshots can omit these slots. A missing entry
+            // denotes the native constructor's permanent zero, not allocation
+            // of a new sparse slot on the first positive Damage write.
+            initial.mModifiers[index].reset();
+            const auto added = ESM4::changeActorValueModifier(initial, Owner::NonPlayer, av, modifier, 5);
+            EXPECT_EQ(added.mModifiers[index], modifier == Modifier::Damage ? 0 : 5);
+            const auto unchanged = ESM4::changeActorValueModifier(initial, Owner::NonPlayer, av, modifier, 0);
+            EXPECT_EQ(unchanged.mModifiers[index], 0);
+            initial.mModifiers[index] = -0.f;
+            const auto positiveZero = ESM4::changeActorValueModifier(initial, Owner::NonPlayer, av, modifier, -0.f);
+            ASSERT_TRUE(positiveZero.mModifiers[index]);
+            EXPECT_FALSE(std::signbit(*positiveZero.mModifiers[index]));
+        }
+    }
+}
+
+TEST(ESM4ActorValues, ModifierMutationRequiresCanonicalActorValueIndex)
+{
+    for (auto owner : {Owner::Player, Owner::NonPlayer})
+        for (unsigned av = 72; av < 256; ++av)
+        {
+            EXPECT_THROW(ESM4::changeActorValueModifier({}, owner,
+                static_cast<std::uint8_t>(av), Modifier::Damage, 0), std::invalid_argument);
+        }
 }

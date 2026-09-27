@@ -3707,3 +3707,79 @@ normal-input/fresh-process recovery remain open. No automatic registration or
 new runtime timer call is enabled by this chunk. S2/S3 and later gameplay gates
 remain open. Next bounded work is the original knocked-state/controller and
 resurrection reset mapping needed by the lifecycle adapters.
+
+### S2/S3 permanent nonplayer Magicka/Fatigue modifier slots
+
+Commit `bcfffd5828` contains essential recovery service preparation. Further
+resurrection tracing found a missing distinction in the scalar mutation adapter.
+Native ActorValues constructor `65BE10` allocates permanent Magicka/Fatigue nodes
+at +8/+C. Lookup `65C010` returns these even at zero. The zero-removal branches
+of `65C9B0` write +0 into those nodes rather than freeing them. Consequently,
+positive Damage never inserts a new positive modifier into either slot. The
+previous sparse-add oracle stubbed lookup/removal and established only ordinary
+sparse-entry arithmetic; extending its result to AV9/10 was incorrect.
+
+The immutable mutation API now requires canonical actor-value identity. NPC/
+Creature AV9/10 use the permanent-slot rule, including positive-zero storage;
+Player scalar and other nonplayer sparse behavior remain separate. Every live
+service writer supplies the actual AV index. Omitted AV9/10 entries in staged
+old saves denote the constructor's zero when mutated. All preexisting values
+remain readable; the save schema does not change. Regression coverage includes
+Script/Maximum/Damage channels, missing/zero inputs, untouched channels, invalid
+indices, actual Creature publication and existing NPC command/resource writers.
+
+`S2/oracle-emulator/actor-dedicated-modifier-add.py` executes **2,312 cases**
+through the actual lookup, arithmetic and zero-removal instructions without
+hooking game functions. The C++ driver matches every result bit, including zero
+sign; driver SHA-256 `2d6813d556db6f6bf2006ff29c90ecaafd05d908233eb32660526cc22ec8c731`.
+The two new component tests first fail against the old behavior. Check 01 passes
+**1,909 components** and **387 ASan/UBSan** tests, then fails four engine cases
+whose old expectations encoded the same sparse-slot assumption. These include
+an incorrect positive regeneration overshoot and removed-zero assertions.
+Corrected expectations use the independent original-code result; no assertions
+or cases were removed. Check 02 passes all **598 engine tests**.
+Evidence: `S3/native-dedicated-modifier-slots-{01,02}`; final source fingerprint:
+`5a6115668100c6b601f685d01a03f49d9b1dac66ce022a39a2f8296ef8b141f4`.
+
+Real-engine `S3/native-dedicated-slots-{runtime,negative,continuation}-01` exercises
+registered NPC script ModAV round trips, exact 100/105/107 queries, explicit
+zero Script entries in saves and fresh-process continuation. Independent saved
+vectors preserve every other AV, shared bases, Alive state, empty death queue/
+history and namespace 1. The negative completes all actions and fails solely
+its deliberately wrong expected 108. Pristine input hashes and all three
+captures are checked in `S3/authority-draft/dedicated-slots-verify.py`; captures
+show the textured observation-room wall and HUD, without visible combat.
+These silent script-adapter courses do not close gameplay/audio gates.
+Actual `openmw` SHA-256: `7005bc1158db8b173e30bc306be43b6564b800c2dfa0ce8ad858f5eb04713411`.
+`openmw-tests` SHA-256: `0620b8f45b90cf0958d500e6c3ff99d096715386a155a83936c7355c955bb9b2`.
+The build helper's `engine.binary_sha256` identifies `openmw-tests`, not the
+runtime executable; interpret older entries copied from that field accordingly.
+
+### Original resurrection reset preparation (implementation still open)
+
+Pinned original-code probes now distinguish reset ownership before implementing
+the remaining lifecycle adapter. `resurrection-reset.py` executes **3,840 NPC
+paths** through `5F6020`: the keep-state branch requires its third boolean, body,
+cell and attached-cell predicates; it changes life to 0 and issues Health Damage
+`R(integer base-current)` with null source, then sets knocked-state 3. The full
+branch clears the actor's Script container via `65C6A0`, replaces its process
+with an actual constructed LowProcess and conditionally requests base reset.
+The probe supplies allocator/free, body/cell/base/current getters and captures
+base/visual/manager/Health side effects. Its second boolean is false, so it does
+not establish cell-reload behavior. Attempts 01/02 lacked required allocation/
+process-selection fixtures; corrected attempt 03 passes.
+
+Crucially, Script-container clear preserves its permanent AV9/10 values.
+`actor-container-reset.py` performs **432 all-AV checks** through real constructor,
+all 72 insertion/lookups and clear instructions; only allocation/free are
+fixtures. `player-resurrection-reset.py` performs **192 Player cases** through
+`664A80` and the common reset: only Health/Magicka/Fatigue Damage is zeroed;
+other Maximum/Script/Damage arrays persist. The Player wrapper passes three
+zeros to the common reset regardless of its own arguments. HighProcess setup,
+copy/destruction, notifications and 3D rebuilding are boundary fixtures; the
+LowProcess constructor and common lifecycle setter execute.
+
+These results guide the next reset implementation. They do not establish
+inventory/base regeneration, script-local resets, visual acceptance, original
+normal-input resurrection or the currently guarded native script adapter.
+Controller mapping and all remaining S2/S3–S14 requirements remain open.

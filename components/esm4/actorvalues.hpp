@@ -43,9 +43,12 @@ namespace ESM4
         ActorValueOwner owner, ActorValueProcess process);
 
     // Immutable storage update after the caller's eligibility/delta adjustment.
+    // Actor-value identity is required: nonplayer Magicka/Fatigue slots retain
+    // zero and start allocated, unlike the other nonplayer sparse modifiers.
     // Does not trigger death, derived-stat updates, notifications or effects.
     ActorValueState changeActorValueModifier(
-        const ActorValueState& state, ActorValueOwner owner, ActorValueModifier modifier, float delta);
+        const ActorValueState& state, ActorValueOwner owner, std::uint8_t actorValue,
+        ActorValueModifier modifier, float delta);
 
     // Original ForceAV command: exact integer request minus the current float
     // query, then one float store. The caller selects Script or console Damage

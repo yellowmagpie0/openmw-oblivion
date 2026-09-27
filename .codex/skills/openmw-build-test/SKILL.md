@@ -50,6 +50,8 @@ in their original evidence directory; rerun a corrected change in a new one.
 Use `git diff --check`, inspect/stage only the intended files, and commit when
 authorized. Do not push. Record the commit or tested dirty-source fingerprint,
 selection, counts and evidence path in the milestone document where relevant.
+The `engine` result's `binary_sha256` hashes `openmw-tests`; hash `openmw`
+separately when recording the executable used in runtime courses.
 
 Build, parser/unit, independent-oracle and normal-input runtime evidence are
 different layers. None alone closes gameplay/restart gates. Follow the current
