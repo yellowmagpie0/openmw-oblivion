@@ -809,6 +809,46 @@ namespace MWMechanics
         return update;
     }
 
+    bool OblivionCombatService::requestNonPlayerResourceCurrent(const MWWorld::Ptr& actor,
+        std::uint8_t value, float requested, const ESM4::ActorValueCommandPolicy& policy,
+        bool essential, const ESM4::EssentialRecoverySettings& recovery)
+    {
+        if (value < 8 || value > 10 || !std::isfinite(requested))
+            throw std::invalid_argument("native resource request requires a finite Health/Magicka/Fatigue value");
+        const auto& values = nonPlayerValues(actor);
+        const float scale = value == 9
+            ? ESM4::actorMagickaScale(ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess)) : 1.f;
+        const float delta = static_cast<float>((double(requested) - getNonPlayerValue(actor, value)) / scale);
+        if (!std::isfinite(delta))
+            throw std::invalid_argument("native resource request delta overflow");
+        if (value == 10 && delta < 0.f && !policy.mCanSpendFatigue)
+            return false;
+        if (value == 8)
+            return changeNonPlayerHealth(actor, delta, {}, essential, recovery);
+        changeNonPlayerValue(actor, value, ESM4::ActorValueModifier::Damage, delta);
+        return true;
+    }
+
+    bool OblivionCombatService::requestPlayerResourceCurrent(MWWorld::Player& player,
+        std::uint8_t value, float requested, bool godMode, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        if (value < 8 || value > 10 || !std::isfinite(requested))
+            throw std::invalid_argument("native resource request requires a finite Health/Magicka/Fatigue value");
+        auto values = playerValues();
+        preparePlayerValues(values, settings);
+        const float current = ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
+        const float delta = static_cast<float>(double(requested) - current);
+        if (!std::isfinite(delta))
+            throw std::invalid_argument("native resource request delta overflow");
+        if (godMode && delta < 0.f)
+            return false;
+        if (value == 8)
+            return changePlayerHealth(player, delta, {}, essential, recovery, settings, godMode);
+        changePlayerValue(player, value, ESM4::ActorValueModifier::Damage, delta, settings);
+        return true;
+    }
+
     OblivionActorValueCommandResult OblivionCombatService::executeNonPlayerValueCommand(
         const MWWorld::Ptr& actor, std::uint8_t value, ESM4::ActorValueCommand command,
         ESM4::ActorValueCommandSource source, std::int32_t requested,

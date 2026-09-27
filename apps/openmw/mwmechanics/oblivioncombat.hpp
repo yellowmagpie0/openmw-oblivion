@@ -202,6 +202,16 @@ namespace MWMechanics
         bool changePlayerHealth(MWWorld::Player& player, float delta, const ESM::FormKey& source,
             bool essential, const ESM4::EssentialRecoverySettings& settings,
             const ESM4::PlayerDynamicBaseSettings& baseSettings, bool godMode = false);
+        // Resource-current requests (including Lua) debit/restore Damage without
+        // replacing Maximum or Script. Native Damage clamps still apply; a
+        // request above the recoverable pool need not equal the resulting value.
+        // NPC Magicka requests are expressed in the scaled public units.
+        bool requestNonPlayerResourceCurrent(const MWWorld::Ptr& actor, std::uint8_t value,
+            float requested, const ESM4::ActorValueCommandPolicy& policy, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery);
+        bool requestPlayerResourceCurrent(MWWorld::Player& player, std::uint8_t value,
+            float requested, bool godMode, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery, const ESM4::PlayerDynamicBaseSettings& settings);
         // Water/controller eligibility is caller-owned. Timer and resulting
         // Health/lifecycle effects commit together. Dead actors return nullopt.
         std::optional<OblivionBreathUpdateResult> updateNonPlayerBreath(const MWWorld::Ptr& actor,

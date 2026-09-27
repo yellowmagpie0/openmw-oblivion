@@ -1399,6 +1399,113 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, resourceCurrentRequestsPreserveChannelsScalingAndHealthTransactions)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{};
+        playerBase.blank();
+        playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(playerBase);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWClass::ESM4Npc::registerSelf();
+        MWWorld::Player player(playerRecord);
+        const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x902);
+        reference.mId = {0x902, 3};
+        reference.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr npc(&live);
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[8] = {100, {10.f, 5.f, -75.f}};
+        values.mValues[9] = {100, {10.f, 5.f, -75.f}};
+        values.mValues[10] = {100, {10.f, 5.f, -75.f}};
+        values.mValues[40].mBase = 15;
+        service.publishNonPlayerValues(npc, values);
+        service.publishNonPlayerLife(npc, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto npcKey = values.mActor;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 100, 100, 0}};
+        service.publishPlayerValues(player, values, settings);
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto playerKey = values.mActor;
+        for (bool isPlayer : {false, true})
+        {
+            SCOPED_TRACE(isPlayer);
+            const auto key = isPlayer ? playerKey : npcKey;
+            const auto ptr = isPlayer ? playerPtr : npc;
+            const auto request = [&](std::uint8_t av, float wanted, bool blocked = false, bool essential = false) {
+                return isPlayer
+                    ? service.requestPlayerResourceCurrent(player, av, wanted, blocked, essential, {10, .3f}, settings)
+                    : service.requestNonPlayerResourceCurrent(npc, av, wanted, {true, !blocked}, essential, {10, .3f});
+            };
+            const auto current = [&](int index) { return ptr.getClass().getCreatureStats(ptr).getDynamic(index).getCurrent(); };
+            EXPECT_FLOAT_EQ(current(0), 40);
+            // Player scales the raw100 base first:150+10+5-75=90.
+            // NPC scales the completed process value:(100+10+5-75)*1.5=60.
+            EXPECT_FLOAT_EQ(current(1), isPlayer ? 90 : 60);
+            const auto beforeInvalid = *service.findActorValues(key);
+            for (float bad : {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(),
+                     -std::numeric_limits<float>::infinity()})
+                EXPECT_THROW(request(8, bad), std::invalid_argument);
+            EXPECT_THROW(request(11, 1), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(key), beforeInvalid);
+            EXPECT_TRUE(request(8, 25));
+            EXPECT_FLOAT_EQ(current(0), 25);
+            EXPECT_EQ(service.findActorValues(key)->mValues[8].mModifiers, (ESM4::ActorValueModifiers{10, 5, -90}));
+            EXPECT_TRUE(request(8, 500)); // Native restoration cannot create positive Damage here.
+            EXPECT_FLOAT_EQ(current(0), 115);
+            EXPECT_EQ(service.findActorValues(key)->mValues[8].mModifiers, (ESM4::ActorValueModifiers{10, 5, isPlayer ? std::optional<float>{0} : std::nullopt}));
+            EXPECT_TRUE(request(9, 30));
+            EXPECT_FLOAT_EQ(current(1), 30);
+            EXPECT_EQ(service.findActorValues(key)->mValues[9].mModifiers,
+                (ESM4::ActorValueModifiers{10, 5, isPlayer ? -135.f : -95.f}));
+            EXPECT_TRUE(request(10, 5));
+            EXPECT_FLOAT_EQ(current(2), 5);
+            EXPECT_FALSE(request(10, 0, true));
+            EXPECT_FLOAT_EQ(current(2), 5);
+            if (isPlayer)
+            {
+                EXPECT_FALSE(request(8, 0, true));
+                EXPECT_FALSE(request(9, 0, true));
+                EXPECT_FLOAT_EQ(current(0), 115);
+                EXPECT_FLOAT_EQ(current(1), 30);
+            }
+            EXPECT_TRUE(request(8, 0, false, !isPlayer));
+            EXPECT_EQ(service.findActorLife(key)->mPhase, isPlayer
+                ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::EssentialUnconscious);
+            EXPECT_FLOAT_EQ(current(0), isPlayer ? 0 : 30);
+            EXPECT_EQ(service.findActorLife(key)->mRecoveryRemaining, isPlayer ? 0 : 10);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).isDead(), isPlayer);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getKnockedDown(), !isPlayer);
+            EXPECT_EQ(service.findActorValues(key)->mValues[8].mModifiers[0], 10);
+            EXPECT_EQ(service.findActorValues(key)->mValues[8].mModifiers[1], 5);
+        }
+        EXPECT_EQ(service.getDeadCount(mActorKey), 0);
+        EXPECT_EQ(service.getDeadCount(ESM::FormKey::dynamic("player-base", 1)), 1);
+        ASSERT_TRUE(service.takeNextDeathEvent());
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
     TEST_F(OblivionActorStatsTest, resourceBatchRestoresResidentPlayerAndUnloadedActorsAtomically)
     {
         autoNpc();

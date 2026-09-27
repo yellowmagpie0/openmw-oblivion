@@ -242,6 +242,7 @@ namespace MWWorld
         float getOblivionPlayerInventoryWeight() const override;
         bool updateOblivionBreath(const Ptr& actor, float duration) override;
         std::optional<std::pair<float, float>> getOblivionBreath(const Ptr& actor) const override;
+        bool requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested) override;
         bool updateOblivionFrameResources(const Ptr& actor, float duration, bool running) override;
         bool spendOblivionJumpFatigue(const Ptr& actor) override;
         std::optional<bool> isOblivionInCombat(const Ptr& actor) const override;

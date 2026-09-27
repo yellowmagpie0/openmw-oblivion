@@ -1455,6 +1455,32 @@ namespace MWWorld
             ESM4::swimBreathMaximum(endurance, resolveOblivionSwimBreathSettings(mStore))};
     }
 
+    bool World::requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->findActorValues(key))
+            return false;
+        if (value < 8 || value > 10 || !std::isfinite(requested))
+            throw std::invalid_argument("native resource request requires a finite Health/Magicka/Fatigue value");
+        const auto settings = resolveOblivionPlayerDynamicBaseSettings(mStore);
+        const bool essential = actor.getClass().isEssential(actor);
+        const auto recovery = value == 8 && essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        auto* reference = adoptOblivionActorLife(actor);
+        if (player)
+            mOblivionCombat->requestPlayerResourceCurrent(*mPlayer, value, requested, getGodModeState(),
+                essential, recovery, settings);
+        else
+            mOblivionCombat->requestNonPlayerResourceCurrent(actor, value, requested,
+                {false, actor.getType() != ESM::REC_CREA4}, essential, recovery);
+        if (reference)
+            reference->mCustomState.erase("obscript.dead");
+        return true;
+    }
+
     bool World::updateOblivionFrameResources(const Ptr& actor, float duration, bool running)
     {
         if (!mOblivionCombat)

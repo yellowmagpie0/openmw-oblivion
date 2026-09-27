@@ -18,6 +18,7 @@
 #include "luamanagerimp.hpp"
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwworld/class.hpp"
@@ -253,6 +254,13 @@ namespace MWLua
                 auto& stats = ptr.getClass().getCreatureStats(ptr);
                 auto stat = stats.getDynamic(index);
                 float floatValue = LuaUtil::cast<float>(value);
+                if (prop == "current" && stat.isNativeProjection())
+                {
+                    if (!MWBase::Environment::get().getWorld()->requestOblivionResourceCurrent(
+                            ptr, static_cast<std::uint8_t>(8 + index), floatValue))
+                        throw std::logic_error("native resource view has no registered actor authority");
+                    return;
+                }
                 if (prop == "base")
                     stat.setBase(floatValue);
                 else if (prop == "current")

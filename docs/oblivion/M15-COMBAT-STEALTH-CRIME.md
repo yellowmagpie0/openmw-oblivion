@@ -4960,3 +4960,51 @@ and `oblivion_m15_disabled_value_continuation.json` under
 never launch against the historical source save. The build/test skill now
 records this setup and exact expectations. Remaining S2/S3 and S4-S14 gates stay
 open, including native Lua writers, lifecycle adoption/activation and clock wrap.
+
+### S3 Lua resource-current authority bridge
+
+Lua dynamic Health/Magicka/Fatigue `current` requests on registered native
+projections now route through the combat service. The service converts public
+current units to a Damage-channel delta (including NPC Magicka scaling), keeps
+base/Maximum/Script unchanged, and applies native healing caps, fatigue policy,
+god mode and atomic health/lifecycle transitions. Requests above the recoverable
+pool may clamp; reads after the delayed Lua write flush return the applied value.
+Lua base/modifier/attribute/skill writers remain guarded; automatic native actor
+publication remains off.
+
+`S3/resource-current-02` passes632 engine and180 Python cases.
+`resource-current-sanitized-01` passes632 engine cases under ASan with leak
+checks enabled and UBSan halting. Tested dirty source on parent6f249dcdbf:
+`a7b8a7d31dce0e44f5c2663c7701b55e878741bb64c1270bf931ed17c6d8a07b`.
+The retained first attempt failed three fixture expectations for sparse Health
+and Player Magicka scaling; those expectations were corrected against the
+existing native provenance, without changing implementation to fit them.
+
+Actual Lua `lua-resource-runtime-01` and `lua-resource-sanitized-runtime-01`
+pass all six writes/readbacks and independent saved-state checks: NPC Health35.5,
+Magicka22.5 (raw Damage-85 at1.5 scale), Fatigue100; Player Health40.25,
+Magicka17.5, Fatigue200. Maximum/Script and unrelated values/lifecycle/actions
+are preserved. The old-binary negative control `lua-resource-runtime-red-01`
+rejects both queued writers at the native projection guard. It intentionally
+fails the scenario; the independent negative-control report checks the exact
+failure and preserved Health/Magicka. A failed marker wait does not prevent
+later scenario F5, so this is not an unchanged-private-save assertion.
+
+Both accepted runs have directly inspected before/after-save captures showing
+the Player bars and readable room. The NPC is offscreen. Graphical sanitizer
+leak checks are disabled, UBSan halts, and audio is disabled.
+
+Regular runtime executable SHA256:
+`969182824f41fec8b31fc957b04fd400f68ed8326063ca66b3ac15d030642c39`.
+Sanitizer runtime executable SHA256:
+`382bfa8b028c69aef399312570da77f3b965c8a2dd0a410f1185e2de0c435d5b`.
+
+The fresh-process `lua-resource-continuation-01` correctly **fails**: Player
+Lua onSave state restores, but native NPC local Lua state is lost and its custom
+script queues the writes again. Equal final resource values cannot hide that
+replay. This exposes a native-reference Lua persistence gap, which must be fixed
+before restart acceptance. Editable current/continuation manifests are
+`oblivion_m15_lua_resource_current.json` and
+`oblivion_m15_lua_resource_continuation.json`; the latter remains a failing
+regression course until local Lua persistence is implemented. This chunk does
+not close S3, Lua writer coverage, or the remaining M15 gates.
