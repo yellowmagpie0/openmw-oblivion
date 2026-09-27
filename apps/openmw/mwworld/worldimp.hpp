@@ -11,6 +11,7 @@
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <components/esm/gameprofile.hpp>
+#include <components/esm4/actorvalues.hpp>
 #include <components/misc/rng.hpp>
 #include <components/settings/settings.hpp>
 #include <components/vfs/pathutil.hpp>
@@ -251,6 +252,9 @@ namespace MWWorld
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
+        // False only for actors not yet registered with native value authority.
+        bool executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
+            ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested);
 
         const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
         OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }

@@ -3418,3 +3418,46 @@ zero failures/skips. Component formulas are unchanged from the preceding
 component/sanitizer run. The handler corpus and log remain ignored under
 `S2/oracle-emulator/lifecycle-script-handlers-table.json` and
 `S3/authority-draft/lifecycle-script-handlers-01.log`.
+
+## S3 script actor-value writer routing
+
+Registered native actors now route SetAV/ModAV/ForceAV and their long aliases
+through the native service. Unknown AV names and out-of-domain numeric inputs
+produce OBSV115 instead of mutating a legacy field. Shared nonplayer base writes
+collect registered resident references; Player writes use current winning native
+GMSTs. Negative-Health callbacks use the native lifecycle transaction. Initial
+lifecycle adoption prefers an explicit boolean legacy marker, otherwise retains
+the shared saved death flag; it never infers death from current Health. A
+successful writer removes the superseded marker. Typed lifecycle already
+present remains authoritative. Automatic registration/publication on general
+construction/load, unloaded writer adapters, full migration conflict courses,
+console routing, Kill/Resurrect/GetDeadCount and queued callback delivery remain
+open. This does not close S3 or enable every native gameplay writer.
+
+Both `S3/native-script-writer-01` and final `-02` pass all **594 engine tests**.
+Final fingerprint:
+`d6398b96690c8ab5d7d8808aea238c206e7e63c1fb469ccb15fb9a1d2f49dd8e`.
+Final engine SHA-256:
+`edcab3cc23d81aea99b16e08a7bc5958b8bfaa8d43b2b95d0a51375ddc24ea1a`.
+The winning essential GMST resolver has replacement/default/invalid-value tests.
+Component and sanitizer code are unchanged from the Health-reaction checks.
+
+Final actual engine courses `S3/native-script-writer-{runtime,continuation,
+negative}-02` pass their independent verification. Long/short aliases publish
+actual Player views and save Strength `[40,.5,20.5,-1]` and Health
+`[87,10,5,-2]`, with the intended shared base overrides. A fresh-process
+continuation sets base Health negative (current -7, base -20), observes GetDead0,
+and restores its raw base contribution without erasing modifiers. Lifecycle
+remains Alive and the event namespace remains unused. The negative control
+completes every action and fails only for its deliberate expected61 versus
+actual60. All input hashes remain intact and all three captures were inspected.
+These are silent scheduled-command courses starting from injected registered
+values; they demonstrate live writer publication, not normal actor activation,
+physical death or essential recovery. Matching earlier `-01` runs were retained
+before tightening the shared saved-death fallback.
+
+`native-script-writer-morrowind-01` passes the existing idle Morrowind isolation
+save course with no GPRO/T4VR/T4ST/OMW4STATE records. Its inspected terrain-facing
+Balmora capture and binary identity are recorded in verification.json. It ran
+before the final Oblivion-only adoption fallback change and is not a full TES3
+combat/gameplay regression suite.

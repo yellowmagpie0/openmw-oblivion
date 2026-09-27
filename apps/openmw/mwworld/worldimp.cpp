@@ -1255,6 +1255,81 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
+    bool World::executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
+        ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(key);
+        if (!values)
+            return false;
+        const auto playerSettings = resolveOblivionPlayerDynamicBaseSettings(mStore);
+        const bool essential = actor.getClass().isEssential(actor);
+        const auto recoverySettings = value == 8 && essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        std::vector<Ptr> residents;
+        if (!player && command == ESM4::ActorValueCommand::Set)
+        {
+            for (const auto& [refNum, resident] : mWorldModel.getPtrRegistryView())
+            {
+                if (resident.isEmpty() || resident == getPlayerPtr())
+                    continue;
+                const auto* native = mOblivionCombat->findActorValues(resident.getCellRef().getFormKey());
+                if (native && native->mBase == values->mBase)
+                    residents.push_back(resident);
+            }
+            if (std::find(residents.begin(), residents.end(), actor) == residents.end())
+                residents.push_back(actor);
+        }
+        // Adopt a legacy marker only when this actor first enters a native
+        // writer. Older saves without lifecycle state remain loadable.
+        ESM4::RuntimeReferenceState* reference = nullptr;
+        if (mOblivionRuntimeState)
+            for (auto& saved : mOblivionRuntimeState->mReferences)
+                if (saved.mKey == key)
+                {
+                    reference = &saved;
+                    break;
+                }
+        if (!mOblivionCombat->findActorLife(key))
+        {
+            ESM4::RuntimeActorLife life;
+            life.mActor = key;
+            life.mBase = values->mBase;
+            life.mPhase = actor.getClass().getCreatureStats(actor).isDead()
+                ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive;
+            if (reference)
+                if (const auto marker = reference->mCustomState.find("obscript.dead");
+                    marker != reference->mCustomState.end())
+                {
+                    const auto* dead = std::get_if<bool>(&marker->second);
+                    if (!dead)
+                        throw std::invalid_argument("invalid legacy native death marker");
+                    life.mPhase = *dead ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive;
+                }
+            if (player)
+                mOblivionCombat->publishPlayerLife(*mPlayer, std::move(life));
+            else
+                mOblivionCombat->publishNonPlayerLife(actor, std::move(life));
+        }
+        const ESM4::ActorValueCommandPolicy policy{player && getGodModeState(), actor.getType() != ESM::REC_CREA4};
+        const auto result = player
+            ? mOblivionCombat->executePlayerValueCommand(*mPlayer, value, command, source, requested, policy, playerSettings)
+            : mOblivionCombat->executeNonPlayerValueCommand(actor, value, command, source, requested, policy, residents);
+        if (result.mHealthReactionDelta)
+        {
+            if (player)
+                mOblivionCombat->reactPlayerHealth(*mPlayer, {}, essential, recoverySettings);
+            else
+                mOblivionCombat->reactNonPlayerHealth(actor, {}, essential, recoverySettings);
+        }
+        if (reference)
+            reference->mCustomState.erase("obscript.dead");
+        return true;
+    }
+
     bool World::updateOblivionFatigue(const Ptr& actor, float duration, bool running)
     {
         if (!mOblivionCombat)

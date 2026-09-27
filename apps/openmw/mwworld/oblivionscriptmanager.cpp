@@ -1954,10 +1954,35 @@ namespace MWWorld
             }
             return double(0);
         }
-        if (name == "setav" || name == "forceav" || name == "modav")
+        if (name == "setav" || name == "setactorvalue" || name == "forceav" || name == "forceactorvalue"
+            || name == "modav" || name == "modactorvalue")
         {
             const std::string attribute = lower(ObScript::valueString(argument(0)));
             const double value = ObScript::asNumber(argument(1));
+            const bool mod = name == "modav" || name == "modactorvalue";
+            const auto key = ESM4::runtimeReferenceKey(objectKey());
+            if (const auto* combat = mWorld.getOblivionCombatService(); combat && combat->findActorValues(key))
+            {
+                try
+                {
+                    const auto index = ESM4::actorValueIndex(attribute);
+                    const auto requested = ObScript::asInteger(argument(1));
+                    if (!index || !std::isfinite(value) || requested < std::numeric_limits<std::int32_t>::min()
+                        || requested > std::numeric_limits<std::int32_t>::max())
+                        throw std::invalid_argument("native actor-value command requires a known value and int32 argument");
+                    const auto command = mod ? ESM4::ActorValueCommand::Mod
+                        : name == "setav" || name == "setactorvalue" ? ESM4::ActorValueCommand::Set
+                        : ESM4::ActorValueCommand::Force;
+                    if (!mWorld.executeOblivionActorValueCommand(objectPtr(), *index, command,
+                            ESM4::ActorValueCommandSource::Script, static_cast<std::int32_t>(requested)))
+                        throw std::invalid_argument("native actor-value command requires a resident actor");
+                    return std::int64_t(0);
+                }
+                catch (const std::exception& error)
+                {
+                    throw ObScript::RuntimeError("OBSV115", error.what(), name);
+                }
+            }
             if (objectKey() == ESM::FormKey::dynamic("player", 1))
             {
                 const Ptr player = mWorld.getPlayerPtr();
@@ -1970,8 +1995,8 @@ namespace MWWorld
                     if (attribute == attributeNames[i])
                     {
                         MWMechanics::AttributeValue actorValue = stats.getAttribute(ESM::Attribute::indexToRefId(i));
-                        actorValue.setBase(static_cast<float>(name == "modav" ? actorValue.getBase() + value : value),
-                            name != "modav");
+                        actorValue.setBase(static_cast<float>(mod ? actorValue.getBase() + value : value),
+                            !mod);
                         stats.setAttribute(ESM::Attribute::indexToRefId(i), actorValue);
                         applied = true;
                     }
@@ -1989,12 +2014,12 @@ namespace MWWorld
                     if (attribute == skillNames[i])
                     {
                         MWMechanics::SkillValue& actorValue = npcStats.getSkill(ESM::RefId(skillIds[i]));
-                        actorValue.setBase(static_cast<float>(name == "modav" ? actorValue.getBase() + value : value),
-                            name != "modav");
+                        actorValue.setBase(static_cast<float>(mod ? actorValue.getBase() + value : value),
+                            !mod);
                         applied = true;
                     }
                 const auto setDynamic = [&](MWMechanics::DynamicStat<float> actorValue, auto setter) {
-                    if (name == "modav")
+                    if (mod)
                         actorValue.setCurrent(actorValue.getCurrent() + static_cast<float>(value), true, true);
                     else
                     {
@@ -2011,7 +2036,7 @@ namespace MWWorld
                     setDynamic(stats.getFatigue(), &MWMechanics::CreatureStats::setFatigue);
                 else if (attribute == "level")
                 {
-                    stats.setLevel(static_cast<int>(name == "modav" ? stats.getLevel() + value : value));
+                    stats.setLevel(static_cast<int>(mod ? stats.getLevel() + value : value));
                     applied = true;
                 }
                 if (applied)
@@ -2024,7 +2049,7 @@ namespace MWWorld
                 double current = 0;
                 if (const double* number = std::get_if<double>(&saved))
                     current = *number;
-                saved = name == "modav" ? current + value : value;
+                saved = mod ? current + value : value;
             }
             return std::int64_t(0);
         }

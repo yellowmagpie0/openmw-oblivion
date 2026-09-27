@@ -531,6 +531,26 @@ namespace
         EXPECT_EQ(after, saved);
     }
 
+    TEST_F(OblivionActorStatsTest, essentialRecoverySettingsFollowCurrentWinningNativeRecords)
+    {
+        auto settings = MWWorld::resolveOblivionEssentialRecoverySettings(mStore);
+        EXPECT_EQ(settings.mDelay, 10);
+        EXPECT_EQ(settings.mHealthFraction, .3f);
+        ESM4::GameSetting delay{};
+        delay.mId = {0x981, 3};
+        delay.mEditorId = "fEssentialDeathTime";
+        delay.mData = 3.125f;
+        const auto key = ESM::FormKey::content("actors.esm", 0x981);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(delay, key);
+        EXPECT_EQ(MWWorld::resolveOblivionEssentialRecoverySettings(mStore).mDelay, 3.125f);
+        delay.mData = 5.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(delay, key);
+        EXPECT_EQ(MWWorld::resolveOblivionEssentialRecoverySettings(mStore).mDelay, 5);
+        delay.mData = -1.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(delay, key);
+        EXPECT_THROW(MWWorld::resolveOblivionEssentialRecoverySettings(mStore), std::invalid_argument);
+    }
+
     TEST_F(OblivionActorStatsTest, nativeFatigueSettingsUseCurrentWinningTypedRecords)
     {
         ESM::GameSetting shared{};

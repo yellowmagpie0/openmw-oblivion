@@ -207,3 +207,19 @@ Require exactly that missing line, scenario exit1 and no other error. Examples:
 and `native-life-query-negative-01`. Inspect every capture and compare native
 life, queue, value and base vectors plus pristine hashes. This is script-query
 and persistence evidence; injected lifecycle remains unpublished to gameplay.
+
+## Registered native script writer course
+
+Start `oblivion_m15_native_writer.json` from a private v12 save containing the
+`oblivion_m15_native_query_input.json` overlay. It publishes actual Player views
+through Set/Mod/Force short/long aliases. Expected saved Strength is
+`[40,.5,20.5,-1]`, Health `[87,10,5,-2]`, raw player inputs `[7,3,0,0]`, one
+Strength40 base override, Alive lifecycle and no death events. Copy that resave
+into a fresh slot for `oblivion_m15_native_writer_continuation.json`. Its negative
+base Health write must produce current -7/base -20 with GetDead0, then restore
+Health7; final base overrides additionally contain raw Health7. The negative
+control uses the original injected input and deliberately expects61 instead of60.
+Require only that missing log line and all actions complete. Examples:
+`S3/native-script-writer-{runtime,continuation,negative}-02`. Preserve all source
+hashes and inspect every capture. This exercises live writer publication from
+registered authority, not automatic actor registration or all legacy adapters.

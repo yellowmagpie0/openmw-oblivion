@@ -1,0 +1,14 @@
+at 1 command player getav Strength
+at 1 command player setactorvalue Strength 40
+at 1 command player getbaseav Strength
+at 1 command player getav Strength
+at 1 command player modactorvalue Strength 5
+at 1 command player getav Strength
+at 1 command player forceactorvalue Strength 60
+at 1 command player getav Strength
+at 1 command player getbaseav Strength
+at 1 command player modav Health -1
+at 1 command player getav Health
+at 1 command player forceav Health 100
+at 1 command player getav Health
+at 1 command player getdead

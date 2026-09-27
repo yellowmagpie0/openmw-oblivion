@@ -1,0 +1,12 @@
+at 1 command player getav Strength
+at 1 command player getbaseav Strength
+at 1 command player getav Health
+at 1 command player getbaseav Health
+at 1 command player setav Health -100
+at 1 command player getav Health
+at 1 command player getbaseav Health
+at 1 command player getdead
+at 1 command player setav Health 7
+at 1 command player getav Health
+at 1 command player getbaseav Health
+at 1 command player getdead
