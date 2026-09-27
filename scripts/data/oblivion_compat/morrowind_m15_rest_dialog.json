@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "name": "morrowind-m15-rest-dialog",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs-mw\"\ndata=\"{morrowind_data}\"\nfallback-archive=Morrowind.bsa\ncontent=Morrowind.esm\nstart=Balmora\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/player/Quicksave.omwsave"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "sleep",
+      "seconds": 8
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "t"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "rest-dialog.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 180,
+  "expected_exit": 0,
+  "expected_log": [
+    "Loading cell Balmora"
+  ],
+  "forbidden_log": [
+    "Selected game profile: oblivion",
+    "Installed Oblivion profile services",
+    "M14 native",
+    "TES4 runtime-state",
+    "Failed to save game",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "M16 native magic",
+    "Unknown command",
+    "cannot find spell",
+    "Error executing",
+    "Failed to compile"
+  ],
+  "reviewed_error_log": [
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ]
+}

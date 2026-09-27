@@ -5,6 +5,7 @@
 #include <MyGUI_ScrollBar.h>
 
 #include <components/misc/rng.hpp>
+#include <components/l10n/manager.hpp>
 
 #include <components/esm3/loadregn.hpp>
 #include <components/misc/strings/format.hpp>
@@ -106,7 +107,9 @@ namespace MWGui
             return;
         }
 
-        const bool canSleep = !ptr.isEmpty() || (restFlags & MWBase::World::Rest_CanSleep) != 0;
+        // Native sleeping requires a bed; the keyboard action only waits.
+        const bool native = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        const bool canSleep = !ptr.isEmpty() || (!native && (restFlags & MWBase::World::Rest_CanSleep) != 0);
         setCanRest(canSleep);
 
         if (mUntilHealedButton->getVisible())
@@ -176,6 +179,8 @@ namespace MWGui
 
     void WaitDialog::onUntilHealedButtonClicked(MyGUI::Widget* /*sender*/)
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return; // Native sleep/wait has no automatic healing-duration action.
         int autoHours = MWBase::Environment::get().getMechanicsManager()->getHoursToRest();
 
         startWaiting(autoHours);
@@ -238,7 +243,13 @@ namespace MWGui
 
     void WaitDialog::onHourSliderChangedPosition(MyGUI::ScrollBar* sender, size_t position)
     {
-        mHourText->setCaptionWithReplacing(MyGUI::utility::toString(position + 1) + " #{sRestMenu2}");
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto l10n = MWBase::Environment::get().getL10nManager()->getContext("Interface");
+            mHourText->setCaption(l10n->formatMessage("RestHours", { "hours" }, { static_cast<int>(position + 1) }));
+        }
+        else
+            mHourText->setCaptionWithReplacing(MyGUI::utility::toString(position + 1) + " #{sRestMenu2}");
         mManualHours = static_cast<int>(position + 1);
         MWBase::Environment::get().getWindowManager()->setKeyFocusWidget(mWaitButton);
     }
@@ -291,17 +302,26 @@ namespace MWGui
 
     void WaitDialog::setCanRest(bool canRest)
     {
-        MWWorld::Ptr player = MWMechanics::getPlayer();
-        MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
-        bool full = (stats.getHealth().getCurrent() >= stats.getHealth().getModified())
-            && (stats.getMagicka().getCurrent() >= stats.getMagicka().getModified());
-        MWMechanics::NpcStats& npcstats = player.getClass().getNpcStats(player);
-        bool werewolf = npcstats.isWerewolf();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            mUntilHealedButton->setVisible(false);
+            mWaitButton->setCaptionWithReplacing(canRest ? "#{Interface:Rest}" : "#{Interface:Wait}");
+            mRestText->setCaptionWithReplacing(canRest ? "#{Interface:RestPrompt}" : "#{Interface:WaitPrompt}");
+        }
+        else
+        {
+            MWWorld::Ptr player = MWMechanics::getPlayer();
+            MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+            bool full = (stats.getHealth().getCurrent() >= stats.getHealth().getModified())
+                && (stats.getMagicka().getCurrent() >= stats.getMagicka().getModified());
+            MWMechanics::NpcStats& npcstats = player.getClass().getNpcStats(player);
+            bool werewolf = npcstats.isWerewolf();
 
-        mUntilHealedButton->setVisible(canRest && !full);
-        mWaitButton->setCaptionWithReplacing(canRest ? "#{sRest}" : "#{sWait}");
-        mRestText->setCaptionWithReplacing(
-            canRest ? "#{sRestMenu3}" : (werewolf ? "#{sWerewolfRestMessage}" : "#{sRestIllegal}"));
+            mUntilHealedButton->setVisible(canRest && !full);
+            mWaitButton->setCaptionWithReplacing(canRest ? "#{sRest}" : "#{sWait}");
+            mRestText->setCaptionWithReplacing(
+                canRest ? "#{sRestMenu3}" : (werewolf ? "#{sWerewolfRestMessage}" : "#{sRestIllegal}"));
+        }
 
         mSleeping = canRest;
 

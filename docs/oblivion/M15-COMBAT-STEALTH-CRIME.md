@@ -4679,3 +4679,37 @@ sRestMenu2/3 captions. The pinned original sleep_wait_menu.xml has Rest/Wait and
 Cancel buttons, no Until Healed action; its asset provenance is recorded in the
 native-rule document. Next: native rest UI/caller policy and resource dispatch,
 then remaining Lua writers/activation and the other open stage gates.
+
+### S3 native fixed-hour wait presentation
+
+The next bounded UI change follows the pinned original `menus/sleep_wait_menu.xml`
+(SHA256 `563583496adc3ca916b1f3dd03481a2e311b417518f752de9ae98d7230348b4b`,
+from Misc BSA `a84290011a4ed5a1ca8d8cff3822eda67bbacd47c750744b7d786cc0a5527ca5`).
+That menu has fixed-hour Rest/Wait and Cancel actions, no Until Healed action.
+Native keyboard rest now opens Wait; sleeping requires a supplied bed. Native
+captions use engine-authored Interface localization and proper hour pluralization;
+this is functional shared presentation, not implementation of the original XML UI.
+The hidden automatic-duration callback also rejects native invocation.
+
+`S3/native-rest-ui-01` builds openmw/openmw-tests/esmtool and passes all629 engine
+tests, no skips. Tested source fingerprint is
+`122c416fbd45180e7269d5e3f5e7dea0782910ee864503e146d894700534edc2`.
+The actual graphical binary SHA256 is
+`929d37afb53c0493e0acb7d9222914b4ff8ac03077fd45c82ea2cea899049ab3`.
+`native-wait-dialog-02` uses the tracked native wait-dialog manifest, injured
+registered Player/NPC input (pristine SHA256
+`ffc9345176fef60e1b0c3eccf4aa2e5c238aaf1cc5cd358b6aeb09e46fec6f91`), normal T,
+Up and Escape input. All four captures inspected: readable Wait prompt, 1 hour,
+2 hours, no Until Healed, closed dialog after cancellation. The actual resave
+`97f25911e36fdee917d452c9ac0ab3101de2f9d1d36c31d9c55b5e200e4ece62` preserves life,
+combat membership, physical actions and death counts; clock advances only ordinary
+frames, not a rest hour. `-01` is the passing single-hour precursor.
+`native-wait-morrowind-01` loads the prior injured Balmora magic-course save and
+opens/cancels the legacy Wait UI; its inspected capture retains the legacy illegal
+rest prompt and captions. This does not exercise Morrowind Until Healed or actual
+hourly restoration. All courses have no unreviewed/forbidden errors; silent Xvfb
+captures are not audio acceptance.
+
+Native hourly restoration remains the next failing writer. This UI commit does
+not close that case, bed activation, native rest refusal text, level-up integration,
+automatic actor publication or any S2/S3/later gate.

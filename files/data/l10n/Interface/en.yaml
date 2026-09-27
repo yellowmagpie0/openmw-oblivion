@@ -49,6 +49,13 @@ Prev: "Prev"
 Repair: "Repair"
 Reset: "Reset"
 Rest: "Rest"
+RestPrompt: "How long would you like to rest?"
+WaitPrompt: "How long would you like to wait?"
+RestHours: |-
+  {hours, plural,
+    one{{hours} hour}
+    other{{hours} hours}
+  }
 ScrollDown: "Scroll Down"
 ScrollUp: "Scroll Up"
 Select: "Select"
