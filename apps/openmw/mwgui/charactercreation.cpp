@@ -105,7 +105,8 @@ namespace MWGui
 
     void CharacterCreation::setAttribute(ESM::RefId id, const MWMechanics::AttributeValue& value)
     {
-        mPlayerAttributes[id] = value;
+        mPlayerAttributes.erase(id);
+        mPlayerAttributes.emplace(id, value);
         if (mReviewDialog)
             mReviewDialog->setAttribute(id, value);
     }
@@ -131,7 +132,8 @@ namespace MWGui
 
     void CharacterCreation::setValue(ESM::RefId id, const MWMechanics::SkillValue& value)
     {
-        mPlayerSkillValues[id] = value;
+        mPlayerSkillValues.erase(id);
+        mPlayerSkillValues.emplace(id, value);
         if (mReviewDialog)
             mReviewDialog->setSkillValue(id, value);
     }

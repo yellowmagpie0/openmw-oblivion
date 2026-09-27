@@ -232,7 +232,8 @@ namespace MWGui
 
     void ReviewDialog::setSkillValue(ESM::RefId id, const MWMechanics::SkillValue& value)
     {
-        mSkillValues[id] = value;
+        mSkillValues.erase(id);
+        mSkillValues.emplace(id, value);
         MyGUI::TextBox* widget = mSkillWidgetMap[id];
         if (widget)
         {

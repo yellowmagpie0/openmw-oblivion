@@ -1,0 +1,24 @@
+at 1 command content:m15-lifecycle.esm:900101 modav Health 0
+at 1 command dynamic:player:0000000000000001 modav Health 0
+at 1 command content:m15-lifecycle.esm:900101 getav Health
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1.25 command dynamic:player:0000000000000001 modav Health -2
+at 1.25 command dynamic:player:0000000000000001 modav Magicka -10
+at 1.25 command dynamic:player:0000000000000001 modav Fatigue -50
+at 1.25 command dynamic:player:0000000000000001 modav Strength -3
+at 1.25 command dynamic:player:0000000000000001 modav Blade -4
+at 1.75 command dynamic:player:0000000000000001 modav Health 2
+at 1.75 command dynamic:player:0000000000000001 modav Magicka 10
+at 1.75 command dynamic:player:0000000000000001 modav Fatigue 50
+at 1.75 command dynamic:player:0000000000000001 modav Strength 3
+at 1.75 command dynamic:player:0000000000000001 modav Blade 4
+at 2.25 command dynamic:player:0000000000000001 modav Health -2
+at 2.25 command dynamic:player:0000000000000001 modav Magicka -10
+at 2.25 command dynamic:player:0000000000000001 modav Fatigue -50
+at 2.25 command dynamic:player:0000000000000001 modav Strength -3
+at 2.25 command dynamic:player:0000000000000001 modav Blade -4
+at 2.75 command dynamic:player:0000000000000001 modav Health 2
+at 2.75 command dynamic:player:0000000000000001 modav Magicka 10
+at 2.75 command dynamic:player:0000000000000001 modav Fatigue 50
+at 2.75 command dynamic:player:0000000000000001 modav Strength 3
+at 2.75 command dynamic:player:0000000000000001 modav Blade 4

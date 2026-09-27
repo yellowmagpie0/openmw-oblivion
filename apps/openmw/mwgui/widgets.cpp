@@ -121,7 +121,7 @@ namespace MWGui::Widgets
 
     void MWAttribute::setAttributeValue(const AttributeValue& value)
     {
-        mValue = value;
+        mValue.emplace(value);
         updateWidgets();
     }
 
@@ -147,8 +147,8 @@ namespace MWGui::Widgets
         }
         if (mAttributeValueWidget)
         {
-            float modified = mValue.getModified();
-            float base = mValue.getBase();
+            float modified = mValue->getModified();
+            float base = mValue->getBase();
             mAttributeValueWidget->setCaption(MyGUI::utility::toString(static_cast<int>(modified)));
             if (modified > base)
                 mAttributeValueWidget->_setWidgetState("increased");

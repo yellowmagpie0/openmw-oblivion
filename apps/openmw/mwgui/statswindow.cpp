@@ -252,7 +252,8 @@ namespace MWGui
 
     void StatsWindow::setValue(ESM::RefId id, const MWMechanics::SkillValue& value)
     {
-        mSkillValues[id] = value;
+        mSkillValues.erase(id);
+        mSkillValues.emplace(id, value);
         std::pair<MyGUI::TextBox*, MyGUI::TextBox*> widgets = mSkillWidgetMap[id];
         MyGUI::TextBox* valueWidget = widgets.second;
         MyGUI::TextBox* nameWidget = widgets.first;

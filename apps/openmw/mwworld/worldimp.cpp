@@ -44,6 +44,7 @@
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadstat.hpp>
+#include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadwrld.hpp>
 #include <components/esm4/inventorymechanics.hpp>
@@ -1356,6 +1357,57 @@ namespace MWWorld
         if (reference)
             reference->mCustomState.erase("obscript.dead");
         return true;
+    }
+
+    bool World::updateOblivionBreath(const Ptr& actor, float duration)
+    {
+        if (!mOblivionCombat)
+            return false;
+        // Native high-process breath runs only for physically resident actors.
+        if (!actor.isInCell() || !mPhysics->getActor(actor))
+            return true;
+        const auto* cell = actor.getCell();
+        const float height = 2.f * mPhysics->getRenderingHalfExtents(actor).z();
+        const bool deep = cell->getCell()->hasWater()
+            && ESM4::actorWaterProbe(actor.getRefData().getPosition().pos[2], height, .875f, cell->getWaterLevel());
+        // The shared character controller uses this same swimming predicate.
+        const bool needsAir = ESM4::actorNeedsAir(actor.getClass().isPureWaterCreature(actor), deep, isSwimming(actor));
+        const bool player = actor == getPlayerPtr();
+        const bool essential = actor.getClass().isEssential(actor);
+        const auto recovery = essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        const auto settings = resolveOblivionSwimBreathSettings(mStore);
+        adoptOblivionActorLife(actor);
+        const auto update = player
+            ? mOblivionCombat->updatePlayerBreath(*mPlayer, duration, needsAir, essential, settings,
+                recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState())
+            : mOblivionCombat->updateNonPlayerBreath(actor, duration, needsAir, essential, settings, recovery);
+        if (update && update->mDamage > 0.f)
+        {
+            const auto sound = MWBase::Environment::get().getSoundManager();
+            if (const auto key = mStore.findEsm4FormKey("NPCHumanDrowning"))
+                if (const auto* record = mStore.search<ESM4::Sound>(*key))
+                    if (!sound->getSoundPlaying(actor, record->mId))
+                        sound->playSound3D(actor, record->mId, 1.f, 1.f);
+            if (player)
+                MWBase::Environment::get().getWindowManager()->activateHitOverlay(false);
+        }
+        return true;
+    }
+
+    std::optional<std::pair<float, float>> World::getOblivionBreath(const Ptr& actor) const
+    {
+        if (!mOblivionCombat)
+            return std::nullopt;
+        const bool player = actor == mPlayer->getPlayer();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto remaining = mOblivionCombat->findActorBreath(key);
+        if (!remaining)
+            return std::nullopt;
+        const auto endurance = player ? mOblivionCombat->getPlayerIntegerValue(5)
+            : mOblivionCombat->getNonPlayerIntegerValue(actor, 5);
+        return std::pair{*remaining,
+            ESM4::swimBreathMaximum(endurance, resolveOblivionSwimBreathSettings(mStore))};
     }
 
     bool World::updateOblivionFatigue(const Ptr& actor, float duration, bool running)

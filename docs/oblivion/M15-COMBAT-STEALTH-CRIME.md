@@ -4237,3 +4237,72 @@ errors. These are retained failures, not gameplay acceptance. The dry baseline
 likewise proves map persistence only. Next: native frame/UI integration and
 independently decoded underwater/dry/restart outcomes. Automatic registration
 and publication remain off; S2/S3 and S4–S14 remain open.
+
+### S3 native drowning frame and UI integration
+
+After `004d897dd8`, physically resident native projections route breath updates
+through World and the transactional service, including creatures. Winning
+native GMSTs, .875 height comparison, creature capabilities, controller swimming,
+Player god mode and essential recovery feed the update. Native drowning resolves
+`NPCHumanDrowning` when present and activates the Player hit overlay. The HUD reads
+native remaining/maximum directly; missing/nonpositive maxima hide the bar and
+negative native timers are not confused with the legacy initialization sentinel.
+Unregistered actors retain their existing path while automatic activation is off.
+
+The longer runtime course exposed a second integration defect: UI stat caches
+assigned over protected native views. Dynamic/attribute/skill snapshots now
+copy-construct replacements in StatsWatcher, character creation, stats/review
+windows and attribute widgets. Actor-authority write guards remain enforced.
+The actual UI course performs22 native writes, including two decrease/restore
+cycles for Player Health, Magicka, Fatigue, Strength and Blade, then independently
+checks final values and absence of frame errors.
+
+`S3/native-breath-frame-01` passes **all1,919 component tests**, then fails the
+engine build because the sound manager returns a nonnull wrapper rather than
+an `auto*`. That compiler failure is retained. The corrected `-02` passes177
+Python/all619 engine tests; `-03`, after the UI snapshot fix, again passes
+**177 Python/all619 engine tests**, exact inventory, no skips/failures.
+Final implementation fingerprint:
+`9eb7a06b2f936ab41098dee4f473239bbcde8d986bd239772887aa028c8c571a`;
+engine-test SHA `5a72c6a186a986445df26e3df33e9e724f79044af3cccceb60a7eb267913a570`.
+`S3/native-water-rules-sanitized-01` passes **397 ESM4 component tests** under
+ASan/UBSan (leaks disabled), including the two new water/eligibility tests.
+This does not yet sanitize the new World/UI paths. Original-water comparisons
+match864 paths; geometry/controller limits are recorded in provenance.
+
+Current actual-engine evidence uses executable SHA
+`583024621b56fe0885f20b21acafb286faa2417954152265b03381f4117d6c14`:
+
+- `S3/native-breath-water-frame-02`: NPC timer0/Health78.7744026, Player timer
+  4.9491277/Health100, both Alive, no events. Damage matches independently measured
+  Player timer consumption within the predeclared five-Health crossing tolerance.
+- `S3/native-breath-dry-frame-02`: both Endurance50 timers19, Health100 unchanged.
+- `S3/native-breath-water-death-02`: NPC native Health.6396561 crosses the strict
+  below1 death threshold; exactly one count/callback, null killer and consumed
+  queue. Player timer0/Health77.6447601 agrees with its shared saved view.
+- `S3/native-breath-water-death-continuation-01`: fresh load of actual callback
+  Autosave retains NPC Health/life/count1/local counter1, next event2/empty queue,
+  with no callback replay/new Autosave. Player breath continues.
+- `S3/native-ui-snapshots-01`:22 writes, restored values, timers19 and no deaths.
+
+All listed scenarios and independent state checks pass. Source/pristine hashes,
+commands, configs and saves are retained per run. Inspected captures show dry
+hidden/underwater visible breath bars and updated Player Health after damage;
+they face the room wall and do not prove NPC corpse pose. Runs are silent and
+the minimal fixture has no drowning SOUN; audio acceptance remains open.
+The earlier death-01 run is retained as the UI-cache failure. Earlier short
+water/dry/continuation-01 runs used the pre-cache-fix executable and are historical.
+The committed bounded water builder/recipe reproduces the pinned generated
+plugin byte for byte, with structural and semantic readback and malformed-input
+checks; this is not general TES4 MCP authoring support.
+
+Next: full engine sanitizer coverage of frame/UI changes, then remaining native
+Magicka/rest/Lua writer and activation work. Creature/surface-transition gameplay,
+full physical resurrection/ragdolls, normal campaign setup and later gates remain
+open. S2/S3 and S4–S14 are not accepted by these focused courses.
+
+The final binary also passes `S3/native-breath-water-continuation-02`: fresh
+load of frame-02 Quicksave gives NPC Health67.8345718/timer0 and Player
+Health100/timer4.4021368, with no deaths or errors and matching timer/damage
+rate. Capture inspected. `S3/native-breath-manifests-01` reruns all177 Python
+tests after the final editable continuation/death/UI manifests are installed.

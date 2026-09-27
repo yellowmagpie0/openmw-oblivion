@@ -210,6 +210,11 @@ namespace ESM4
         const MovementFatigueSettings& settings, const CombatMasterySettings& mastery);
     void validateMovementFatigueSettings(const MovementFatigueSettings& settings);
 
+    // Original water probe stores height*ratio to float, then compares the
+    // unrounded position+offset sum strictly below the water plane.
+    bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel);
+    bool actorNeedsAir(bool pureAquatic, bool deeplySubmerged, bool swimming);
+
     struct SwimBreathSettings
     {
         float mBase;

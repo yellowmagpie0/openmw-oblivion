@@ -16,6 +16,37 @@ namespace
     const ESM4::PhysicalCombatSettings installed{ -20, .4f, 1.f, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f };
 }
 
+TEST(ESM4PhysicalCombat, WaterProbePreservesNativeFloatStoreAndStrictDoubleComparison)
+{
+    EXPECT_FALSE(ESM4::actorWaterProbe(0, 128, .875f, 112));
+    EXPECT_TRUE(ESM4::actorWaterProbe(0, 128, .875f, std::nextafter(112.f, 113.f)));
+    EXPECT_FALSE(ESM4::actorWaterProbe(0, 128, .875f, std::nextafter(112.f, 111.f)));
+    // Rounding the final position to float would incorrectly return false.
+    EXPECT_TRUE(ESM4::actorWaterProbe(16777216.f, 2, .875f, 16777218.f));
+    EXPECT_TRUE(ESM4::actorWaterProbe(-100, 100, .875f, 0));
+    EXPECT_FALSE(ESM4::actorWaterProbe(0, 0, .875f, 0));
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::actorWaterProbe(bad, 128, .875f, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::actorWaterProbe(0, bad, .875f, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::actorWaterProbe(0, 128, bad, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::actorWaterProbe(0, 128, .875f, bad), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::actorWaterProbe(0, std::numeric_limits<float>::max(), 2, 0), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, AquaticAndOrdinaryBreathEligibility)
+{
+    for (bool swimming : {false, true})
+    {
+        EXPECT_TRUE(ESM4::actorNeedsAir(true, false, swimming));
+        EXPECT_FALSE(ESM4::actorNeedsAir(true, true, swimming));
+        EXPECT_FALSE(ESM4::actorNeedsAir(false, false, swimming));
+    }
+    EXPECT_FALSE(ESM4::actorNeedsAir(false, true, false));
+    EXPECT_TRUE(ESM4::actorNeedsAir(false, true, true));
+}
+
 TEST(ESM4PhysicalCombat, SwimBreathUsesExactIntegerAndSingleFinalStore)
 {
     const ESM4::SwimBreathSettings installed{4, .3f, .2f};

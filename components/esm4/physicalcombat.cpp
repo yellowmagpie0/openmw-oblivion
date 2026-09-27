@@ -39,6 +39,21 @@ namespace ESM4
         }
     }
 
+    bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)
+    {
+        finite(positionZ);
+        finite(height);
+        finite(ratio);
+        finite(waterLevel);
+        const float offset = rounded(double(height) * ratio);
+        return double(waterLevel) > double(positionZ) + offset;
+    }
+
+    bool actorNeedsAir(bool pureAquatic, bool deeplySubmerged, bool swimming)
+    {
+        return pureAquatic ? !deeplySubmerged : deeplySubmerged && swimming;
+    }
+
     void validateSwimBreathSettings(const SwimBreathSettings& settings)
     {
         finite(settings.mBase);

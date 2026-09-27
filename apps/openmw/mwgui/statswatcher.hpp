@@ -2,6 +2,7 @@
 #define MWGUI_STATSWATCHER_H
 
 #include <map>
+#include <optional>
 #include <set>
 
 #include <components/esm/attr.hpp>
@@ -34,9 +35,9 @@ namespace MWGui
         std::map<ESM::RefId, MWMechanics::AttributeValue> mWatchedAttributes;
         std::map<ESM::RefId, MWMechanics::SkillValue> mWatchedSkills;
 
-        MWMechanics::DynamicStat<float> mWatchedHealth;
-        MWMechanics::DynamicStat<float> mWatchedMagicka;
-        MWMechanics::DynamicStat<float> mWatchedFatigue;
+        std::optional<MWMechanics::DynamicStat<float>> mWatchedHealth;
+        std::optional<MWMechanics::DynamicStat<float>> mWatchedMagicka;
+        std::optional<MWMechanics::DynamicStat<float>> mWatchedFatigue;
 
         std::string mWatchedName;
         ESM::RefId mWatchedRace;

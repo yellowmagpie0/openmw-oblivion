@@ -281,3 +281,45 @@ counts from current death flags. Reject a counter bound to the room STAT before
 runtime application. Preparation/verification lives in
 `S3/authority-draft/native-death-count-{prepare,verify}.py`; evidence is
 runtime/negative/signed/wrap/continuation/binding-reject-01, legacy/morrowind-02.
+
+## Native breath frame courses
+
+Saved native AV maps alone do **not** activate shared stat projections while
+M15 automatic publication is gated. A read-only GetAV persistence run cannot
+prove frame ownership. Use explicit native `ModAV Health 0` for both actors,
+as in `m15_native_breath_frame_events.txt`, before testing frame adapters.
+The retained `S3/native-breath-water-red-03` demonstrates the legacy writer
+failure; earlier red01/02 omitted publication and only observed stale maps.
+
+Build the pinned lifecycle fixture, then `tes4_m15_water_fixture.py SOURCE
+OUTPUT` with `m15_water_fixture.json`. It changes only CELL water flag/height,
+validates source SHA and reopens the result. The generated plugin SHA is
+538bc636a2a2f42b6844e10a56bf2cc6c1d28a4c28994dbe33e6cdbe57902502.
+A fresh initial save must have this content hash; never reuse dry content
+fingerprints as though they describe the flooded plugin.
+
+`oblivion_m15_native_breath_frame.json` starts from native NPC Health100,
+Endurance0/breath2 and Player Health100, Endurance50/breath8. Keep Alive life
+records, empty death history and pristine saves. Compare native and projected
+Health, NPC timer0, decreasing positive Player timer and absent deaths/errors.
+Player timer consumption measures simulation duration; at base Health100,
+NPC damage is20/second after timer exhaustion. Whole-frame damage on the
+crossing frame permits the predeclared five-Health tolerance. The continuation
+manifest uses the actual Quicksave in a fresh process with no state injection.
+The dry variant uses its own correctly fingerprinted source and requires both
+Endurance50 timers19, unchanged Health and a hidden bar. Examples and independent
+checks live in `S3/native-breath-{water-frame,water-continuation,dry-frame}-01`
+and `S3/authority-draft/verify-water-frame.py`. Inspect captures separately from
+save-state checks; these silent runs do not prove sound or normal campaign setup.
+
+The refreshed final UI implementation uses short water/dry `-02` evidence.
+`oblivion_m15_native_breath_death.json` waits9 seconds so both NPC terminal damage
+and Player continuous damage occur before Quicksave. Require NPC Health<1/Dead,
+count1/local callback counter1, next event2/empty queue, Player Alive/Health<100,
+and both timers0. Restart the actual callback Autosave using the death-continuation
+manifest; retain its filename, require no replay/new Autosave and unchanged NPC
+Health/counts. Final examples are death-02/death-continuation-01.
+`native-breath-water-death-01` exposed UI cache assignment over native views;
+`oblivion_m15_native_ui_snapshots.json` now covers22 writes and repeated updates
+to all dynamic stats plus Strength/Blade. Read-only caches must copy-construct
+new snapshots; do not loosen native actor write guards to fix a UI cache.

@@ -3,6 +3,8 @@
 
 #include "../mwmechanics/stat.hpp"
 
+#include <optional>
+
 #include <MyGUI_Delegate.h>
 #include <MyGUI_TextBox.h>
 #include <MyGUI_Widget.h>
@@ -120,7 +122,7 @@ namespace MWGui
             void setAttributeValue(const AttributeValue& value);
 
             ESM::RefId getAttributeId() const { return mId; }
-            const AttributeValue& getAttributeValue() const { return mValue; }
+            const AttributeValue& getAttributeValue() const { return *mValue; }
 
             // Events
             typedef MyGUI::delegates::MultiDelegate<MWAttribute*> EventHandle_AttributeVoid;
@@ -143,7 +145,7 @@ namespace MWGui
             void updateWidgets();
 
             ESM::RefId mId;
-            AttributeValue mValue;
+            std::optional<AttributeValue> mValue{std::in_place};
             MyGUI::TextBox* mAttributeNameWidget;
             MyGUI::TextBox* mAttributeValueWidget;
         };

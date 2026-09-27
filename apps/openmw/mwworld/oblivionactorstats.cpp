@@ -144,6 +144,11 @@ namespace MWWorld
         return ESM4::buildFatigueRegenerationSettings(winningRecords<ESM4::GameSetting>(store));
     }
 
+    ESM4::SwimBreathSettings resolveOblivionSwimBreathSettings(const ESMStore& store)
+    {
+        return ESM4::buildSwimBreathSettings(winningRecords<ESM4::GameSetting>(store));
+    }
+
     ESM4::EssentialRecoverySettings resolveOblivionEssentialRecoverySettings(const ESMStore& store)
     {
         return ESM4::buildEssentialRecoverySettings(winningRecords<ESM4::GameSetting>(store));

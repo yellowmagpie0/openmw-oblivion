@@ -995,6 +995,12 @@ namespace MWMechanics
     static void updateDrowning(const MWWorld::Ptr& ptr, float duration, bool isKnockedOut, bool isPlayer)
     {
         const auto& actorClass = ptr.getClass();
+        if (actorClass.getCreatureStats(ptr).getHealth().isNativeProjection())
+        {
+            if (!MWBase::Environment::get().getWorld()->updateOblivionBreath(ptr, duration))
+                throw std::logic_error("native breath authority unavailable");
+            return;
+        }
         NpcStats& stats = actorClass.getNpcStats(ptr);
 
         // When npc stats are just initialized, mTimeToStartDrowning == -1 and we should get value from GMST
@@ -1782,7 +1788,8 @@ namespace MWMechanics
                         stats.getAiSequence().execute(actor.getPtr(), ctrl, duration, /*outOfRange*/ true);
                     }
 
-                    if (inProcessingRange && actor.getPtr().getClass().isNpc())
+                    if (inProcessingRange && (actor.getPtr().getClass().isNpc()
+                            || actor.getPtr().getClass().getCreatureStats(actor.getPtr()).getHealth().isNativeProjection()))
                     {
                         // We can not update drowning state for actors outside of AI distance - they can not resurface
                         // to breathe

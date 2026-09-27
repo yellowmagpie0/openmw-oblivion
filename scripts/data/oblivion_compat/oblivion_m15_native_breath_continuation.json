@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ncontent=m15-lifecycle.esm\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=oblivion",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
+  ],
+  "xvfb": true,
+  "name": "m15-native-breath-water-continuation",
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Loading cell M15Observation",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: acceptance-command actor=content:m15-lifecycle.esm:900101 name=getdead result=0",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/Quicksave.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": [
+        "T4ST",
+        "OMW4STATE"
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "native-breath-water.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "timeout_seconds": 180,
+  "terminate_after_actions": true,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Writing saved game 'Quicksave'",
+    "M7 ObScript: acceptance-command actor=content:m15-lifecycle.esm:900101 name=getdead result=0"
+  ],
+  "forbidden_log": [
+    "Failed to load saved game",
+    "Failed to save game",
+    "Error in frame",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Unsupported ObScript command"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{source}/scripts/data/oblivion_compat/m15_native_breath_frame_events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  },
+  "reviewed_error_log": []
+}

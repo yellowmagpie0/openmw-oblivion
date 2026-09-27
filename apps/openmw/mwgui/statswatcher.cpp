@@ -5,6 +5,9 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
+
+#include <algorithm>
 
 #include "../mwmechanics/npcstats.hpp"
 
@@ -42,30 +45,41 @@ namespace MWGui
             const auto& value = stats.getAttribute(attribute.mId);
             if (value != mWatchedAttributes[attribute.mId] || mWatchedStatsEmpty)
             {
-                mWatchedAttributes[attribute.mId] = value;
+                mWatchedAttributes.erase(attribute.mId);
+                mWatchedAttributes.emplace(attribute.mId, value);
                 setAttribute(attribute.mId, value);
             }
         }
 
+        // Snapshots copy-construct native read-only views; assignment would
+        // be a forbidden mutation once a cached view became native.
         if (stats.getHealth() != mWatchedHealth || mWatchedStatsEmpty)
         {
-            mWatchedHealth = stats.getHealth();
+            mWatchedHealth.emplace(stats.getHealth());
             setValue("HBar", stats.getHealth());
         }
         if (stats.getMagicka() != mWatchedMagicka || mWatchedStatsEmpty)
         {
-            mWatchedMagicka = stats.getMagicka();
+            mWatchedMagicka.emplace(stats.getMagicka());
             setValue("MBar", stats.getMagicka());
         }
         if (stats.getFatigue() != mWatchedFatigue || mWatchedStatsEmpty)
         {
-            mWatchedFatigue = stats.getFatigue();
+            mWatchedFatigue.emplace(stats.getFatigue());
             setValue("FBar", stats.getFatigue());
         }
 
         float timeToDrown = stats.getTimeToStartDrowning();
 
-        if (timeToDrown != mWatchedTimeToStartDrowning)
+        if (stats.getHealth().isNativeProjection())
+        {
+            const auto breath = MWBase::Environment::get().getWorld()->getOblivionBreath(mWatched);
+            const bool visible = breath && breath->second > 0.f && breath->first < breath->second;
+            winMgr->setDrowningBarVisibility(visible);
+            if (visible)
+                winMgr->setDrowningTimeLeft(std::max(0.f, breath->first), breath->second);
+        }
+        else if (timeToDrown != mWatchedTimeToStartDrowning || mWatchedStatsEmpty)
         {
             static const float fHoldBreathTime = MWBase::Environment::get()
                                                      .getESMStore()
@@ -89,7 +103,8 @@ namespace MWGui
             const auto& value = stats.getSkill(skill.mId);
             if (value != mWatchedSkills[skill.mId] || mWatchedStatsEmpty)
             {
-                mWatchedSkills[skill.mId] = value;
+                mWatchedSkills.erase(skill.mId);
+                mWatchedSkills.emplace(skill.mId, value);
                 setValue(skill.mId, value);
             }
         }

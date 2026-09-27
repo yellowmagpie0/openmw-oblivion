@@ -2936,3 +2936,25 @@ and storesfloat. Water predicate5E06C0 stores(height*ratio) asfloat, then adds
 positionZ into a double temporary before comparing with water height. Actor
 update ratios are .01,.7,.875; the latter feeds breath eligibility. Shared TES3
 submerged thresholds and its final float position store are not equivalent.
+
+### Native water-plane comparison
+
+For the same pinned 1.2.0416 executable, `005E06C0` stores actor height times
+probe ratio to float, adds positionZ without a final float store, and compares
+water height strictly greater than that sum. Original callers use .01/.7/.875;
+.875 supplies the breath predicate. `actorWaterProbe` retains that ordering.
+At position16777216, height2, ratio.875 and water16777218 the result is true;
+rounding the final position to float would incorrectly return false.
+
+`S2/oracle-emulator/drowning-water.py` executes **864** complete predicate paths
+in both x87 modes, with explicit return-value stubs for height `005E0660` and
+cell water `004CACE0`. `compare-water-result.json` compares all864 C++ results
+exactly, including the missing-cell guard in the adapter. A retained failed
+comparison swapped the table's height/position columns; correcting only that
+harness mapping produces the match. Geometry, cell-water lookup and controller
+scheduling remain outside this instruction probe. The World adapter maps
+height to twice the physics rendering half-extent, uses native .875 arithmetic,
+and takes swimming state from the same predicate as the shared character
+controller. The deep flooded-room course exercises frame/authority wiring;
+normal surface crossing and varied model/controller geometry remain separate
+campaign acceptance cases.
