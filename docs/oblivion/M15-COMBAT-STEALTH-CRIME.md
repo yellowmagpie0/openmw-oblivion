@@ -3301,3 +3301,35 @@ check. Attempts 01–04 retain fixture failures: a legacy death setter requiring
 world clock, uninitialized spell lists in standalone stats save/read, and a v9
 fixture retaining newly added v12 lifecycle data. Corrected tests initialize the
 real dependencies and construct a valid old-format case; validators are intact.
+
+## S3 lifecycle/event transaction boundary
+
+Explicit player and nonplayer lifecycle transitions now require initialized,
+matching authority. A phase change publishes shared views and appends its death
+event as one transaction, with all throwing preparation before publication.
+Same-phase requests preserve the original attribution and recovery timer.
+Essential transitions issue no death event. Reviving does not discard already
+pending callbacks; dying again issues a new monotonic ID. Namespace exhaustion
+rejects the change before either views or authority change. Eligibility, health,
+source binding, physical realization and actual event dispatch remain callers'
+responsibility; this does not implement script Kill or normal combat yet.
+
+`S3/native-life-transactions-01` passes **593 engine tests**, exact inventory,
+zero failures/skips. Fingerprint:
+`8df3cb06d8589e8f690406707b738dc4e8d20a79fd5c356499330690756754a4`.
+The new test consumes a death event, simulates callback-induced revival/death,
+saves and restarts, then consumes only the successor. It also checks essential
+entry without an event, same-phase idempotence and exhausted-ID rollback.
+
+An independent **3,840-case** original-instruction probe of `006005F0` confirms
+its guarded essential entry, including original state setter `005E6680`:
+already dead/essential states 1/2/6 return; enabled essential actors in other
+ordinary states set the timer, enter state6, then request a Damage Health
+adjustment `R(R(R(baseHealth)*fraction)-currentHealth)`. States3/5 request that
+adjustment without resetting timer/state; their gameplay meanings are not yet
+established. The probe captures the Damage writer rather than applying it,
+stubs cleanup/notifications and process/settings getters, and stops before UI,
+tail bookkeeping or terminal-death branches. No full physical transition is
+claimed. Hash identity is the original executable recorded above. Ignored
+script/corpus: `S2/oracle-emulator/essential-entry-transition.py` and its table;
+log: `S3/authority-draft/essential-entry-transition-01.log`.

@@ -389,6 +389,96 @@ namespace
         EXPECT_THROW(restored.publishPlayerValues(fresh, legacy, settings), std::invalid_argument);
     }
 
+    TEST_F(OblivionActorStatsTest, playerLifeTransitionsOwnEventsAcrossCallbacksRestartAndExhaustion)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto& stats = ptr.getClass().getCreatureStats(ptr);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{10, 10, 10, 0}};
+        service.publishPlayerValues(player, values, {});
+        ESM4::RuntimeActorLife alive;
+        alive.mActor = values.mActor;
+        alive.mBase = values.mBase;
+        auto dead = alive;
+        dead.mPhase = ESM4::ActorLifePhase::Dead;
+        dead.mKiller = values.mActor;
+        EXPECT_THROW(service.transitionPlayerLife(player, dead), std::invalid_argument);
+        service.publishPlayerLife(player, alive);
+        EXPECT_FALSE(service.transitionPlayerLife(player, alive));
+        EXPECT_TRUE(service.transitionPlayerLife(player, dead));
+        EXPECT_TRUE(stats.isDead());
+        EXPECT_EQ(stats.getHealth().getCurrent(), 10); // Policy owns Health changes separately.
+        auto repeated = dead;
+        repeated.mKiller = {};
+        EXPECT_FALSE(service.transitionPlayerLife(player, repeated));
+        EXPECT_EQ(*service.findActorLife(values.mActor), dead);
+        const auto first = service.takeNextDeathEvent();
+        ASSERT_TRUE(first);
+        EXPECT_EQ(first->mId, 1);
+        EXPECT_EQ(first->mKiller, values.mActor);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        // A callback can revive and kill again, then save: the consumed event
+        // stays consumed while its newly issued successor remains pending.
+        EXPECT_TRUE(service.transitionPlayerLife(player, alive));
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_TRUE(service.transitionPlayerLife(player, dead));
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = values.mActor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        service.capture(saved);
+        EXPECT_EQ(saved.mNextDeathEvent, 3);
+        ASSERT_EQ(saved.mPendingDeathEvents.size(), 1);
+        EXPECT_EQ(saved.mPendingDeathEvents.front().mId, 2);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        EXPECT_EQ(restored.takeNextDeathEvent()->mId, 2);
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+        EXPECT_TRUE(restored.transitionPlayerLife(player, alive));
+        auto essential = alive;
+        essential.mPhase = ESM4::ActorLifePhase::EssentialUnconscious;
+        essential.mRecoveryRemaining = 10;
+        EXPECT_TRUE(restored.transitionPlayerLife(player, essential));
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_TRUE(stats.getKnockedDown());
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+        repeated = essential;
+        repeated.mRecoveryRemaining = 20;
+        EXPECT_FALSE(restored.transitionPlayerLife(player, repeated));
+        EXPECT_EQ(restored.findActorLife(values.mActor)->mRecoveryRemaining, 10);
+        EXPECT_TRUE(restored.transitionPlayerLife(player, alive));
+        restored.capture(saved);
+        saved.mNextDeathEvent = std::numeric_limits<std::uint64_t>::max();
+        restored.restore(saved);
+        EXPECT_THROW(restored.transitionPlayerLife(player, dead), std::overflow_error);
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_EQ(*restored.findActorLife(values.mActor), alive);
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+        auto after = saved;
+        restored.capture(after);
+        EXPECT_EQ(after, saved);
+    }
+
     TEST_F(OblivionActorStatsTest, nativeFatigueSettingsUseCurrentWinningTypedRecords)
     {
         ESM::GameSetting shared{};
@@ -936,6 +1026,16 @@ namespace
         EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
         EXPECT_EQ(service.getNonPlayerValue(ptr, 8), -94.25f);
         EXPECT_FALSE(service.takeNextDeathEvent()); // Loading a view does not dispatch death.
+        auto aliveLife = life;
+        aliveLife.mPhase = ESM4::ActorLifePhase::Alive;
+        EXPECT_TRUE(service.transitionNonPlayerLife(ptr, aliveLife));
+        EXPECT_TRUE(service.transitionNonPlayerLife(ptr, life));
+        EXPECT_FALSE(service.transitionNonPlayerLife(ptr, life));
+        const auto deathEvent = service.takeNextDeathEvent();
+        ASSERT_TRUE(deathEvent);
+        EXPECT_EQ(deathEvent->mId, 1);
+        EXPECT_EQ(deathEvent->mActor, values.mActor);
+        EXPECT_FALSE(service.takeNextDeathEvent());
         auto invalidLife = life;
         invalidLife.mBase = ESM::FormKey::content("actors.esm", 0x999);
         EXPECT_THROW(service.publishNonPlayerLife(ptr, invalidLife), std::invalid_argument);

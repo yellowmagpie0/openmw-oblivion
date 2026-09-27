@@ -116,6 +116,8 @@ namespace MWMechanics
         std::uint64_t mNextDeathEvent = 1;
         std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
         const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
+        std::optional<std::deque<ESM4::RuntimeActorDeathEvent>> prepareLifeTransition(
+            const ESM4::RuntimeActorLife& life) const;
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -208,6 +210,11 @@ namespace MWMechanics
         // Normal health/death/resurrection transitions have separate policy.
         void publishNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life);
         void publishPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life);
+        // Caller resolves eligibility, essential policy and source identity.
+        // Requires an initialized life entry. A phase change and its death
+        // event commit together; same-phase requests preserve the first cause.
+        bool transitionNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life);
+        bool transitionPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain
         // remaining FIFO work and never replay the event being dispatched.

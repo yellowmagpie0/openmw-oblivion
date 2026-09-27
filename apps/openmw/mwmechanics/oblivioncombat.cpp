@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <optional>
 #include <list>
+#include <limits>
 #include <set>
 
 #include "../mwclass/esm4interactive.hpp"
@@ -880,6 +881,58 @@ namespace MWMechanics
         else
             std::swap(found->second, life);
         prepared.commit();
+    }
+
+    std::optional<std::deque<ESM4::RuntimeActorDeathEvent>> OblivionCombatService::prepareLifeTransition(
+        const ESM4::RuntimeActorLife& life) const
+    {
+        life.validate();
+        const auto* previous = findActorLife(life.mActor);
+        if (!previous || previous->mBase != life.mBase)
+            throw std::invalid_argument("native lifecycle transition requires initialized matching authority");
+        if (previous->mPhase == life.mPhase)
+            return std::nullopt;
+        auto events = mPendingDeathEvents;
+        if (life.mPhase == ESM4::ActorLifePhase::Dead)
+        {
+            if (mNextDeathEvent == std::numeric_limits<std::uint64_t>::max())
+                throw std::overflow_error("native death event namespace exhausted");
+            events.push_back({mNextDeathEvent, life.mActor, life.mKiller});
+        }
+        return events;
+    }
+
+    bool OblivionCombatService::transitionNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life)
+    {
+        const auto& values = nonPlayerValues(actor);
+        if (values.mActor != life.mActor || values.mBase != life.mBase)
+            throw std::invalid_argument("native lifecycle transition identity mismatch");
+        auto events = prepareLifeTransition(life);
+        if (!events)
+            return false;
+        const bool death = life.mPhase == ESM4::ActorLifePhase::Dead;
+        publishNonPlayerLife(actor, std::move(life));
+        // All potentially throwing preparation is finished before publication.
+        mPendingDeathEvents.swap(*events);
+        if (death)
+            ++mNextDeathEvent;
+        return true;
+    }
+
+    bool OblivionCombatService::transitionPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life)
+    {
+        const auto& values = playerValues();
+        if (values.mActor != life.mActor || values.mBase != life.mBase)
+            throw std::invalid_argument("native lifecycle transition identity mismatch");
+        auto events = prepareLifeTransition(life);
+        if (!events)
+            return false;
+        const bool death = life.mPhase == ESM4::ActorLifePhase::Dead;
+        publishPlayerLife(player, std::move(life));
+        mPendingDeathEvents.swap(*events);
+        if (death)
+            ++mNextDeathEvent;
+        return true;
     }
 
     const ESM4::RuntimeActorLife* OblivionCombatService::findActorLife(const ESM::FormKey& actor) const
