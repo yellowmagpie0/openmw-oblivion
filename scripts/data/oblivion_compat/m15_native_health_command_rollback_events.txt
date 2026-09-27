@@ -1,0 +1,3 @@
+at 1 command content:m15-lifecycle.esm:900101 modav Health -200
+at 1 command content:m15-lifecycle.esm:900101 getav Health
+at 1 command content:m15-lifecycle.esm:900101 getdead

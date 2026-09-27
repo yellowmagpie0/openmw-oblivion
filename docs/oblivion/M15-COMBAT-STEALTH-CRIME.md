@@ -4027,3 +4027,54 @@ Sanitized `openmw-tests` SHA-256:
 The reusable build skill now records the tested engine-sanitizer invocation and
 its distinction from the component-only sanitizer mode. Next: the already
 reproduced Health-command transaction failure, then remaining S3 gates.
+
+### S3 native command Health and lifecycle commit together
+
+After sanitizer checkpoint `c1c226fc90`, negative-Health Mod/Force commands now
+prepare value storage, terminal/essential reaction, shared projections, and
+history/event allocation before publishing any of them. The world no longer
+commits a stat change followed by a separately fallible death reaction. Player
+base preparation is shared with the existing publisher; command eligibility,
+Script versus console Damage storage, native sparse slots and god-mode integer
+conversion order are preserved. Returned Health-delta metadata describes an
+already committed reaction. Negative-Health commands require initialized life;
+world legacy-marker adoption remains the existing separate initialization step.
+
+The focused prior-code reproduction `S3/authority-draft/health-command-atomic-red02`
+fails both full-state equality and shared Health100 (actual -100) after event-ID
+exhaustion. The first scratch attempt lacked a required reference fixture and
+was rejected before the assertion; it is retained separately. Actual engine
+baselines `S3/health-command-atomic-red-{01,02}` confirm the persisted partial
+write with legacy-only and already initialized lifecycle inputs respectively.
+
+Three actual Player/NPC/Creature tests cover **144 combinations** of prior life,
+essential status, script/console origin, Mod/Force, and absent/existing zero
+Damage slots. They also cover repeated commands without duplicate deaths,
+binary round trips, invalid recovery settings and exhausted-event rollback,
+missing-life rejection, and Player god-mode eligibility before integer overflow.
+`S3/native-health-command-atomic-01` and
+`S3/native-health-command-atomic-sanitized-01` both pass **all 611 engine tests**,
+exact inventories and no skips. The latter enables ASan, UBSan and leak detection;
+no findings occur. Shared tested implementation fingerprint:
+`1d3cd4bbede25d0c486bbce49a337b2e5bef52262e5e0b448c6829d734cb8185`.
+Regular/sanitized `openmw-tests` hashes:
+`8b5b937488ab1ed15f9159f8f884ef63c0ef7aa8ef1f107ec597efa6822a269b` /
+`42b1e498f078ca8984367e2622b35d8682c63c7973866dd2ccee08ea662814e9`.
+
+All four actual-engine courses pass:
+`S3/health-command-atomic-{runtime,continuation}-01` preserves Health100 and all
+native value/base/life/event/count fields after rejection and fresh-process
+load/resave. `S3/health-command-death-{runtime,continuation}-01` commits Health-100,
+Dead, historical count1 and one callback. Both the callback's Autosave and F5
+Quicksave agree; restarting the callback Autosave preserves script local1,
+consumed event state and the input Autosave bytes without firing another event.
+Per-run state verification and pristine hashes are retained. Actual `openmw`:
+`6606594a313e027c724f16f8063e9dc5f98bdc9a61a5ff7068306490e369f049`.
+All captures were directly inspected: rendered room/HUD, no error dialog. These
+silent command-adapter courses do not prove corpse pose, combat or audio.
+
+No S2/S3 or later stage gate closes here. Next: remaining native write adapters
+and activation, including rest/drowning and queued Lua writes, plus canonical
+player-base identity. The original drowning arithmetic/caller audit started
+while the sanitizer build ran is retained under `S3/authority-draft/` and
+`S2/oracle-emulator/drowning-rules.py`; it is not an implemented gameplay feature.

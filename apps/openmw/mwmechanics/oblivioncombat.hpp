@@ -100,7 +100,7 @@ namespace MWMechanics
     {
         // False means eligibility suppressed both storage and notifications.
         bool mAccepted;
-        // Caller dispatches the negative-Health callback after this transaction.
+        // Negative-Health reaction has committed with storage; this is notification metadata.
         std::optional<float> mHealthReactionDelta;
     };
 
@@ -130,6 +130,10 @@ namespace MWMechanics
             const ESM4::EssentialRecoverySettings& settings, bool healthGate, bool godMode);
         void prepareEssentialWake(ESM4::RuntimeActorValues& values, ESM4::RuntimeActorLife& life,
             bool essential, bool godMode, const ESM4::EssentialRecoverySettings& settings) const;
+        void preparePlayerValues(ESM4::RuntimeActorValues& values,
+            const ESM4::PlayerDynamicBaseSettings& settings) const;
+        void publishHealthChange(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values,
+            bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode);
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -159,16 +163,19 @@ namespace MWMechanics
             std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings);
         // Typed command writers. Set shares a base transaction; Mod and Force
         // select Script/console Damage storage and preserve native eligibility.
-        // No callback can observe partially published state. The caller owns
-        // notifications, health reactions and process-cache policy.
+        // Negative Health storage and its lifecycle reaction commit together.
+        // Health reactions require initialized lifecycle authority. The caller
+        // owns external notifications and process-cache policy.
         OblivionActorValueCommandResult executeNonPlayerValueCommand(const MWWorld::Ptr& actor,
             std::uint8_t value, ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source,
             std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,
-            std::span<const MWWorld::Ptr> residents);
+            std::span<const MWWorld::Ptr> residents, bool essential = false,
+            const ESM4::EssentialRecoverySettings& recoverySettings = {});
         OblivionActorValueCommandResult executePlayerValueCommand(MWWorld::Player& player,
             std::uint8_t value, ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source,
             std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,
-            const ESM4::PlayerDynamicBaseSettings& settings);
+            const ESM4::PlayerDynamicBaseSettings& settings, bool essential = false,
+            const ESM4::EssentialRecoverySettings& recoverySettings = {});
         float getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         std::int32_t getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         // Read saved actors without constructing/loading their live references.

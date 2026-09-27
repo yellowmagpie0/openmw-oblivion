@@ -605,7 +605,8 @@ namespace MWMechanics
     OblivionActorValueCommandResult OblivionCombatService::executeNonPlayerValueCommand(
         const MWWorld::Ptr& actor, std::uint8_t value, ESM4::ActorValueCommand command,
         ESM4::ActorValueCommandSource source, std::int32_t requested,
-        const ESM4::ActorValueCommandPolicy& policy, std::span<const MWWorld::Ptr> residents)
+        const ESM4::ActorValueCommandPolicy& policy, std::span<const MWWorld::Ptr> residents,
+        bool essential, const ESM4::EssentialRecoverySettings& recoverySettings)
     {
         validateNonPlayerQuery(value);
         nonPlayerValues(actor);
@@ -621,14 +622,23 @@ namespace MWMechanics
             command == ESM4::ActorValueCommand::Force ? getNonPlayerValue(actor, value) : 0.f, policy);
         if (!change)
             return {false, std::nullopt};
-        changeNonPlayerValue(actor, value, change->mModifier, change->mDelta);
+        if (change->mHealthReaction)
+        {
+            auto candidate = nonPlayerValues(actor);
+            candidate.mValues[8] = ESM4::changeActorValueModifier(
+                candidate.mValues[8], candidate.mOwner, 8, change->mModifier, change->mDelta);
+            publishHealthChange(actor, std::move(candidate), essential, recoverySettings, false);
+        }
+        else
+            changeNonPlayerValue(actor, value, change->mModifier, change->mDelta);
         return {true, change->mHealthReaction ? std::optional(change->mDelta) : std::nullopt};
     }
 
     OblivionActorValueCommandResult OblivionCombatService::executePlayerValueCommand(
         MWWorld::Player& player, std::uint8_t value, ESM4::ActorValueCommand command,
         ESM4::ActorValueCommandSource source, std::int32_t requested,
-        const ESM4::ActorValueCommandPolicy& policy, const ESM4::PlayerDynamicBaseSettings& settings)
+        const ESM4::ActorValueCommandPolicy& policy, const ESM4::PlayerDynamicBaseSettings& settings,
+        bool essential, const ESM4::EssentialRecoverySettings& recoverySettings)
     {
         validatePlayerQuery(value);
         playerValues();
@@ -644,7 +654,16 @@ namespace MWMechanics
             command == ESM4::ActorValueCommand::Force ? getPlayerValue(value) : 0.f, policy);
         if (!change)
             return {false, std::nullopt};
-        changePlayerValue(player, value, change->mModifier, change->mDelta, settings);
+        if (change->mHealthReaction)
+        {
+            auto candidate = playerValues();
+            candidate.mValues[8] = ESM4::changeActorValueModifier(
+                candidate.mValues[8], candidate.mOwner, 8, change->mModifier, change->mDelta);
+            preparePlayerValues(candidate, settings);
+            publishHealthChange(player.getPlayer(), std::move(candidate), essential, recoverySettings, policy.mGodMode);
+        }
+        else
+            changePlayerValue(player, value, change->mModifier, change->mDelta, settings);
         return {true, change->mHealthReaction ? std::optional(change->mDelta) : std::nullopt};
     }
 
@@ -734,8 +753,8 @@ namespace MWMechanics
         return *values;
     }
 
-    void OblivionCombatService::publishPlayerValues(MWWorld::Player& player, ESM4::RuntimeActorValues values,
-        const ESM4::PlayerDynamicBaseSettings& settings)
+    void OblivionCombatService::preparePlayerValues(ESM4::RuntimeActorValues& values,
+        const ESM4::PlayerDynamicBaseSettings& settings) const
     {
         values.validate();
         validatePlayerIdentity(values);
@@ -750,6 +769,12 @@ namespace MWMechanics
                 {static_cast<ESM4::DynamicActorValue>(8 + i), (*values.mPlayerFormValues)[i],
                     attributes, magickaMultiplier}, settings);
         values.validate();
+    }
+
+    void OblivionCombatService::publishPlayerValues(MWWorld::Player& player, ESM4::RuntimeActorValues values,
+        const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        preparePlayerValues(values, settings);
         const auto ptr = player.getPlayer();
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr),
             actorProjection(values, nullptr, findActorLife(values.mActor)));
@@ -953,6 +978,58 @@ namespace MWMechanics
         if (death)
             ++mNextDeathEvent;
         return true;
+    }
+
+    void OblivionCombatService::publishHealthChange(const MWWorld::Ptr& actor,
+        ESM4::RuntimeActorValues values, bool essential,
+        const ESM4::EssentialRecoverySettings& settings, bool godMode)
+    {
+        const auto found = mActorLife.find(values.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native Health reaction requires initialized lifecycle");
+        const bool player = values.mOwner == ESM4::ActorValueOwner::Player;
+        const auto* base = findActorBase(values.mBase);
+        const float current = player
+            ? ESM4::composeActorValue(values.mValues[8], values.mOwner, values.mProcess)
+            : nonPlayerFloat(values, 8, base);
+        auto life = found->second;
+        if (life.mPhase == ESM4::ActorLifePhase::Alive && current < 1.f)
+        {
+            life.mKiller = {}; // Native stat commands supply no attacker.
+            life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+            if (essential)
+            {
+                const auto recovery = ESM4::essentialRecoveryHealth(
+                    ESM4::combatBaseValue(values.mValues[8].mBase), current, settings);
+                life.mRecoveryRemaining = settings.mDelay;
+                if (!player || !godMode || recovery.mAdjustment >= 0.f)
+                    values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner, 8,
+                        ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
+            }
+        }
+        values.validate();
+        life.validate();
+        auto transition = prepareLifeTransition(life);
+        std::optional<OblivionActorProjection> playerView;
+        std::optional<PreparedNonPlayerView> actorView;
+        if (player)
+            playerView.emplace(actor.getClass().getNpcStats(actor), actorProjection(values, nullptr, &life));
+        else
+            actorView.emplace(actor, values, base, &life);
+        const bool terminal = life.mPhase == ESM4::ActorLifePhase::Dead;
+        std::swap(mActorValues.at(values.mActor), values);
+        std::swap(found->second, life);
+        if (playerView)
+            playerView->commit();
+        else
+            actorView->commit();
+        if (transition)
+        {
+            mPendingDeathEvents.swap(transition->mEvents);
+            mDeathCounts.swap(transition->mCounts);
+            if (terminal)
+                ++mNextDeathEvent;
+        }
     }
 
     bool OblivionCombatService::enterNonPlayerDeath(const MWWorld::Ptr& actor,

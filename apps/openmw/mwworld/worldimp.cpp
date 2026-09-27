@@ -1347,16 +1347,12 @@ namespace MWWorld
         }
         auto* reference = adoptOblivionActorLife(actor);
         const ESM4::ActorValueCommandPolicy policy{player && getGodModeState(), actor.getType() != ESM::REC_CREA4};
-        const auto result = player
-            ? mOblivionCombat->executePlayerValueCommand(*mPlayer, value, command, source, requested, policy, playerSettings)
-            : mOblivionCombat->executeNonPlayerValueCommand(actor, value, command, source, requested, policy, residents);
-        if (result.mHealthReactionDelta)
-        {
-            if (player)
-                mOblivionCombat->reactPlayerHealth(*mPlayer, {}, essential, recoverySettings, getGodModeState());
-            else
-                mOblivionCombat->reactNonPlayerHealth(actor, {}, essential, recoverySettings);
-        }
+        if (player)
+            mOblivionCombat->executePlayerValueCommand(*mPlayer, value, command, source, requested, policy,
+                playerSettings, essential, recoverySettings);
+        else
+            mOblivionCombat->executeNonPlayerValueCommand(actor, value, command, source, requested, policy,
+                residents, essential, recoverySettings);
         if (reference)
             reference->mCustomState.erase("obscript.dead");
         return true;
