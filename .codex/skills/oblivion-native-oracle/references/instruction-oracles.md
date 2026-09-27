@@ -149,3 +149,13 @@ uses2 seconds when an actor was selected and Player remaining-hours is positive.
 hours predicate; restoration callees are stubs. Eligibility/effect advancement
 precede that slice, and other process tiers remain separate. This proves a
 specific dispatch, not a full rest implementation or an NPC hourly-rate policy.
+
+For IsInCombat, do not use Player's virtual+334 (006FE080, always false) as
+its script result. Command00505FC0 and condition004F8F30 share dispatch, then
+replace the Player result using006605A0(false). NPC/Creature005E6110 checks
+process package0C/0D and has an additional true-argument gate. The8,422-case
+`S3/authority-draft/combat-query-dispatch.py` probe supplies actor/process gate
+returns and the Player list result; it does not prove list/pursuit maintenance.
+Use native archive menus to check UI actions before adapting shared dialogs:
+original sleep_wait_menu.xml has Rest/Wait and Cancel, no Until Healed button.
+Its prompt/hour traits come from menus/strings.xml, not TES3 sRestMenu GMSTs.

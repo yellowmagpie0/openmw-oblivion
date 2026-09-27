@@ -352,3 +352,20 @@ Magicka cost and no native markers. PLAY contains42 STBA entries:27 skills,
 8 attributes,3 dynamic stats,4 integer AI fields; dynamics are indices35:38,
 not the final three entries. Passing regular/sanitized examples are
 `S3/native-resource-morrowind-magic-01` and `-sanitized-01`.
+
+### Combat query fixtures
+
+Use the tracked `oblivion_m15_native_combat_query_{paired,unpaired,terminal}.json`
+courses for script query wiring. Check source preconditions before reusing a
+pristine: `native-engagement-runtime-01/pristine.omwsave` intentionally inherits
+next_death_event=UINT64_MAX. Death must reject on that source. The successful
+terminal course resets only that counter to1, with empty counts/event queue;
+it does not pre-apply death. Preserve both the rejection and success evidence.
+
+Changing a fixture plugin requires a deliberately rebound synthetic save
+fingerprint; do not weaken the production content check. Record this setup
+explicitly. An AI package query returning false does not prove fallback selection:
+verify the saved selected package identity. With a previously idle fixture,
+explicit EvaluatePackage is appropriate to test the condition adapter, but is
+not proof of autonomous AI scheduling. Keep generated assets outside Git and
+promote reusable recipes/builders after the experiment is established.
