@@ -82,6 +82,12 @@ namespace MWMechanics
         bool mCanSpend;
     };
 
+    struct OblivionFrameSettings
+    {
+        OblivionFatigueSettings mFatigue;
+        ESM4::MagickaRegenerationSettings mMagicka;
+    };
+
     struct OblivionRestorationSettings
     {
         ESM4::MagickaRegenerationSettings mMagicka;
@@ -260,6 +266,11 @@ namespace MWMechanics
             const OblivionFatigueSettings& settings);
         void updatePlayerFatigue(MWWorld::Player& player, const OblivionFatigueUpdate& input,
             const OblivionFatigueSettings& settings);
+        // A frame prepares Magicka and movement/Fatigue before publishing either.
+        void updateNonPlayerFrameResources(const MWWorld::Ptr& actor, const OblivionFatigueUpdate& input,
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings);
+        void updatePlayerFrameResources(MWWorld::Player& player, const OblivionFatigueUpdate& input,
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings);
         void spendPlayerJumpFatigue(MWWorld::Player& player, std::int32_t encumbrance, bool canSpend,
             const OblivionFatigueSettings& settings);
         float getPlayerValue(std::uint8_t value) const;

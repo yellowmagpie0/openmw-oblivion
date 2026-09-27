@@ -13,6 +13,7 @@
 namespace MWMechanics
 {
     struct OblivionFatigueSettings;
+    struct OblivionFrameSettings;
 }
 
 namespace MWWorld
@@ -35,6 +36,7 @@ namespace MWWorld
     // aliases and previously cached settings cannot supply player formulas.
     ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store);
     ESM4::FatigueRegenerationSettings resolveOblivionFatigueRegenerationSettings(const ESMStore& store);
+    MWMechanics::OblivionFrameSettings resolveOblivionFrameSettings(const ESMStore& store);
     MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store);
     ESM4::SwimBreathSettings resolveOblivionSwimBreathSettings(const ESMStore& store);
     ESM4::EssentialRecoverySettings resolveOblivionEssentialRecoverySettings(const ESMStore& store);

@@ -254,6 +254,18 @@ namespace MWMechanics
             return changed;
         }
 
+        bool updateFrameResources(ESM4::RuntimeActorValues& values, const OblivionFatigueUpdate& input,
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings,
+            const ESM4::RuntimeActorBaseOverride* base = nullptr)
+        {
+            const float magicka = magickaRestoration(values, input.mDuration, hasActiveMagicItem, settings.mMagicka, base);
+            if (magicka > 0)
+                values.mValues[9] = ESM4::changeActorValueModifier(
+                    values.mValues[9], values.mOwner, 9, ESM4::ActorValueModifier::Damage, magicka);
+            // Evaluate Fatigue even when Magicka changed; both remain staged on failure.
+            return updateFatigue(values, input, settings.mFatigue) || magicka > 0;
+        }
+
         bool spendJumpFatigue(ESM4::RuntimeActorValues& values, std::int32_t encumbrance, bool canSpend,
             const OblivionFatigueSettings& settings)
         {
@@ -1014,6 +1026,27 @@ namespace MWMechanics
         const auto ptr = player.getPlayer();
         if (!ptr.getClass().getCreatureStats(ptr).isDead() && updateFatigue(candidate, input, settings))
             publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
+    }
+
+    void OblivionCombatService::updateNonPlayerFrameResources(const MWWorld::Ptr& actor,
+        const OblivionFatigueUpdate& input, bool hasActiveMagicItem, const OblivionFrameSettings& settings)
+    {
+        auto candidate = nonPlayerValues(actor);
+        if (!actor.getClass().getCreatureStats(actor).isDead()
+            && updateFrameResources(candidate, input, hasActiveMagicItem, settings, findActorBase(candidate.mBase)))
+            publishNonPlayerValues(actor, std::move(candidate));
+    }
+
+    void OblivionCombatService::updatePlayerFrameResources(MWWorld::Player& player,
+        const OblivionFatigueUpdate& input, bool hasActiveMagicItem, const OblivionFrameSettings& settings)
+    {
+        auto candidate = playerValues();
+        const auto ptr = player.getPlayer();
+        if (ptr.getClass().getCreatureStats(ptr).isDead())
+            return;
+        preparePlayerValues(candidate, settings.mFatigue.mPlayerBase);
+        if (updateFrameResources(candidate, input, hasActiveMagicItem, settings))
+            publishPlayerValues(player, std::move(candidate), settings.mFatigue.mPlayerBase);
     }
 
     void OblivionCombatService::spendPlayerJumpFatigue(MWWorld::Player& player,

@@ -132,6 +132,14 @@ namespace MWWorld
         }
     }
 
+    MWMechanics::OblivionFrameSettings resolveOblivionFrameSettings(const ESMStore& store)
+    {
+        const auto settings = winningRecords<ESM4::GameSetting>(store);
+        return {{ESM4::buildMovementFatigueSettings(settings), ESM4::buildFatigueRegenerationSettings(settings),
+                    ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings)},
+            ESM4::buildMagickaRegenerationSettings(settings)};
+    }
+
     MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store)
     {
         const auto settings = winningRecords<ESM4::GameSetting>(store);

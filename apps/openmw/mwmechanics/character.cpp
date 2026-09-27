@@ -1547,11 +1547,17 @@ namespace MWMechanics
                     // Play hand VFX and allow castSpell use (assuming an animation is going to be played) if
                     // spellcasting is successful. Scripted spellcasting bypasses restrictions.
                     MWWorld::SpellCastState spellCastResult = MWWorld::SpellCastState::Success;
-                    if (!mCastingScriptedSpell)
+                    if (!mCastingScriptedSpell || world->getGameProfile() == ESM::GameProfile::Oblivion)
                         spellCastResult = world->startSpellCast(mPtr);
                     mCanCast = spellCastResult == MWWorld::SpellCastState::Success;
 
-                    if (spellid.empty())
+                    if (spellCastResult == MWWorld::SpellCastState::Unsupported)
+                    {
+                        spellid = {};
+                        mCastingScriptedSpell = false;
+                    }
+
+                    if (spellid.empty() && spellCastResult != MWWorld::SpellCastState::Unsupported)
                     {
                         const MWWorld::ContainerStore& inv = cls.getContainerStore(mPtr);
                         if (inv.getSelectedEnchantItem() != inv.end())

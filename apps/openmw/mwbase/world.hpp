@@ -136,7 +136,7 @@ namespace MWBase
         virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
         virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
-        virtual bool updateOblivionFatigue(const MWWorld::Ptr& actor, float duration, bool running) { return false; }
+        virtual bool updateOblivionFrameResources(const MWWorld::Ptr& actor, float duration, bool running) { return false; }
         virtual bool updateOblivionBreath(const MWWorld::Ptr& actor, float duration) { return false; }
         // Remaining and maximum native breath; absent before process adoption.
         virtual std::optional<std::pair<float, float>> getOblivionBreath(const MWWorld::Ptr& actor) const

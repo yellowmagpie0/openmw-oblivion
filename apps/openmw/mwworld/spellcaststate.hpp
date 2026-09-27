@@ -7,7 +7,8 @@ namespace MWWorld
     {
         Success = 0,
         InsufficientMagicka = 1,
-        PowerAlreadyUsed = 2
+        PowerAlreadyUsed = 2,
+        Unsupported = 3
     };
 }
 

@@ -1410,21 +1410,24 @@ namespace MWWorld
             ESM4::swimBreathMaximum(endurance, resolveOblivionSwimBreathSettings(mStore))};
     }
 
-    bool World::updateOblivionFatigue(const Ptr& actor, float duration, bool running)
+    bool World::updateOblivionFrameResources(const Ptr& actor, float duration, bool running)
     {
         if (!mOblivionCombat)
             return false;
-        const auto settings = resolveOblivionFatigueSettings(mStore);
+        const auto settings = resolveOblivionFrameSettings(mStore);
         const bool player = actor == getPlayerPtr();
         // Original Character/Player virtual +278 returns true. The Creature
         // constructor initializes its separate expenditure flag to false.
         const bool canSpend = actor.getType() != ESM::REC_CREA4 && (!player || !getGodModeState());
         const MWMechanics::OblivionFatigueUpdate input{duration,
             ESM4::combatBaseValue(actor.getClass().getEncumbrance(actor)), running, canSpend};
+        // Native spell/enchantment execution is an explicit M16 boundary below.
+        // No native active casting item exists yet. M16 must wire its actual
+        // item lifetime here; selected spell and animation flags are not that state.
         if (player)
-            mOblivionCombat->updatePlayerFatigue(*mPlayer, input, settings);
+            mOblivionCombat->updatePlayerFrameResources(*mPlayer, input, false, settings);
         else
-            mOblivionCombat->updateNonPlayerFatigue(actor, input, settings);
+            mOblivionCombat->updateNonPlayerFrameResources(actor, input, false, settings);
         return true;
     }
 
@@ -4456,6 +4459,12 @@ namespace MWWorld
 
     MWWorld::SpellCastState World::startSpellCast(const Ptr& actor)
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            Log(Debug::Warning) << "M16 native magic: spell execution is unsupported";
+            return MWWorld::SpellCastState::Unsupported;
+        }
+
         MWMechanics::CreatureStats& stats = actor.getClass().getCreatureStats(actor);
 
         std::string_view message;
@@ -4514,6 +4523,12 @@ namespace MWWorld
 
     void World::castSpell(const Ptr& actor, bool scriptedSpell)
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            Log(Debug::Warning) << "M16 native magic: spell execution is unsupported";
+            return;
+        }
+
         MWMechanics::CreatureStats& stats = actor.getClass().getCreatureStats(actor);
 
         const bool casterIsPlayer = actor == MWMechanics::getPlayer();

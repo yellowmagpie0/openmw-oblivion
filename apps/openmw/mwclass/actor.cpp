@@ -11,6 +11,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/magiceffects.hpp"
 #include "../mwmechanics/movement.hpp"
+#include "../mwmechanics/spellcasting.hpp"
 
 #include "../mwphysics/physicssystem.hpp"
 
@@ -78,6 +79,9 @@ namespace MWClass
 
     bool Actor::consume(const MWWorld::Ptr& consumable, const MWWorld::Ptr& actor) const
     {
+        if (MWMechanics::rejectUnsupportedNativeMagic(actor))
+            return false;
+
         MWMechanics::CastSpell cast(actor, actor);
         const ESM::RefId& recordId = consumable.getCellRef().getRefId();
         MWBase::Environment::get().getWorldModel()->registerPtr(consumable);

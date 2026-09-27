@@ -20,6 +20,10 @@ namespace MWMechanics
 {
     struct EffectKey;
 
+    // Reject M16-owned execution before costs, inventory removal or effects.
+    // Actual native actors also reject without requiring an installed World.
+    bool rejectUnsupportedNativeMagic(const MWWorld::Ptr& caster, const MWWorld::Ptr& target = {});
+
     class CastSpell
     {
     private:

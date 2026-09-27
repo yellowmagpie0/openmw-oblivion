@@ -4397,3 +4397,64 @@ values agree, only Damage changes and no death is introduced. Save SHA:
 `50c042e8625d1ffabe86f1e0c0ec5be45184bb6799b5530070c66cc1052e83ac`.
 The inspected capture shows the underwater fixture wall, breath bar and updated
 Magicka HUD. This silent focused course is not campaign/audio acceptance.
+
+### Native frame Magicka and explicit M16 casting boundary
+
+World now resolves winning native Magicka/Fatigue settings in one record pass
+and submits one frame transaction. Magicka and movement/Fatigue are prepared
+before either is published; a later invalid Fatigue input rolls back Magicka.
+Player derived bases are prepared first. Actual Player/NPC/Creature tests cover
+fractional simultaneous restoration, casting suppression of Magicka alone and
+rollback. The new settings test rejects wrong native types and ignores TES3
+GMSTs. Service tests also reject spell/effect/consumable calls on actual native
+actors before legacy lookup, notifications, inventory removal or state changes.
+
+Full spell/effect/enchantment execution belongs to M16 in the plan. Native World
+and CastSpell entry points now report unsupported execution before TES3 costs
+or effects; the controller avoids casting/enchantment fallback for that result.
+Consequently the current native frame has no active casting item. M16 must wire
+its actual item lifetime, not selected-spell or animation flags, into the existing
+explicit service input. This boundary is not claimed as a magic implementation.
+
+`S3/native-resource-frame-01` passes623 engine tests; `-02` retains a compilation
+failure from a record-constant spelling, corrected in `-03` (all623 pass).
+`native-resource-frame-sanitized-01` passes all623 under ASan/UBSan with leak
+checks. Final pre-UI-repair fingerprint:
+`21e1e9494af8b9c6f99e76e9de7e01d16788965607c921f8940fb74af7347347`.
+The UI repair above subsequently rechecks all623 against the combined final
+source. `native-resource-manifests-01` passes all177 Python tests, no skips.
+
+Actual regular runtime checks (all state verifiers pass, captures inspected):
+
+- `native-magicka-frame-01`: both Magicka25.4053497 against25.4053524 expected,
+  measured3.0887728 seconds; source Magicka20/base100/Willpower50. Engine SHA
+  `ceba731f7730b0ee2cfc734b993e06ba04260e6c83d6db66b8295bfd9599d73d`.
+- `native-magicka-continuation-01`: fresh process using the actual prior save,
+  both26.3776627 against26.3776542 expected, no reinjection or deaths.
+- `native-magicka-stunted-frame-01`: Stunted1 keeps both Magicka20 while Fatigue
+  rises from150 to180.6454926 against180.6454802 expected. Shared Player agrees.
+  The latter two use engine SHA
+  `f2ef16aa9ef3a40b81f885ab29f2579a4bea32264e906222356d7d9fcd8725cb`.
+
+Inputs, source/pristine/save hashes, independent.05 tolerances and verification
+results remain under each evidence directory. These cases explicitly publish
+actors with ModAV Health0; automatic registration remains off. Captures face the
+fixture wall and show HUD/breath changes; silent runs do not prove audio.
+The actual sanitized native replay and its retained GUI failure are described
+in the preceding section.
+
+The editable `morrowind_m15_magic_regression.json` course sets up Hearth Heal,
+saves before casting, then uses normal R/mouse input and saves afterward.
+Independent installed-record audit finds Restore Health20–80 for one second,
+cost13. `native-resource-morrowind-magic-01` passes: Health25->73.0628967 and
+Magicka100->87, unchanged maxima and no native save markers. The same course
+under the repaired ASan/UBSan engine passes in
+`native-resource-morrowind-magic-sanitized-01`: Health25->70.0952454, Magicka87,
+no sanitizer findings (graphical leak checks disabled). Before/after save SHAs:
+`71bdacebbed711f5e4b439a682e7d03083b9c9e245bffc83e33d5a5a3268f98e` /
+`5f7bc9aaff95c9ff9cddba60524c8b573403b7cf39085cef370015471d1fd292`.
+Its engine SHA is the same `efaea276...` identified above. Both captures were
+inspected: Balmora startup rocks, raised casting hands and changed Health/Magicka
+HUD. Existing reviewed missing-asset allowances remain; this is not full-route,
+asset or audio acceptance. Lua writers, rest, automatic registration, complete
+S2/S3 acceptance and S4–S14 remain open.

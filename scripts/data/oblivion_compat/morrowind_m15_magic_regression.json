@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "name": "morrowind-m15-native-boundary-magic-regression",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{resources}/vfs-mw\"\ndata=\"{morrowind_data}\"\nfallback-archive=Morrowind.bsa\ncontent=Morrowind.esm\nstart=Balmora\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "sleep",
+      "seconds": 22
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "grave"
+    },
+    {
+      "type": "type",
+      "value": "player->SetRestoration 100",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->SetWillpower 100",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->SetLuck 100",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->AddSpell \"hearth heal\"",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "key_held",
+      "value": "grave"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key_held",
+      "value": "grave"
+    },
+    {
+      "type": "type",
+      "value": "player->SetHealth 100",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->SetMagicka 100",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->SetFatigue 200",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->ModCurrentHealth -75",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "type",
+      "value": "player->Cast \"hearth heal\" player",
+      "delay_ms": 2
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.25
+    },
+    {
+      "type": "key_held",
+      "value": "grave"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "command",
+      "command": [
+        "python3",
+        "-c",
+        "from pathlib import Path; import shutil; p=list(Path('userdata/saves').glob('*/*.omwsave')); assert len(p)==1; shutil.copyfile(p[0],'before-cast.omwsave')"
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "before-cast.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_held",
+      "value": "r"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "after-cast.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/*.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "forbidden_ascii": [
+        "GPRO",
+        "T4VR",
+        "T4ST",
+        "OMW4STATE"
+      ]
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 180,
+  "expected_exit": 0,
+  "expected_log": [
+    "Loading content file Morrowind.esm",
+    "Selected game profile: morrowind",
+    "Starting a new game",
+    "Loading cell Balmora",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Selected game profile: oblivion",
+    "Installed Oblivion profile services",
+    "M14 native",
+    "TES4 runtime-state",
+    "Failed to save game",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "M16 native magic",
+    "Unknown command",
+    "cannot find spell",
+    "Error executing",
+    "Failed to compile"
+  ],
+  "reviewed_error_log": [
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ]
+}

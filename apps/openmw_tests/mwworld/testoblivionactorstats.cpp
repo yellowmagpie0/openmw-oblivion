@@ -4,6 +4,7 @@
 
 #include <components/esm/records.hpp>
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
+#include "apps/openmw/mwmechanics/spellcasting.hpp"
 #include <components/esm4/actorvalues.hpp>
 #include <components/esm3/statstate.hpp>
 #include <components/esm3/npcstate.hpp>
@@ -3640,6 +3641,30 @@ namespace
         verifyBreathTransactions(service, ptr, values, &player);
     }
 
+    TEST_F(OblivionActorStatsTest, nativeFrameSettingsUseWinningNativeRecords)
+    {
+        const auto defaults = MWWorld::resolveOblivionFrameSettings(mStore);
+        EXPECT_EQ(defaults.mMagicka.mBase, .75f);
+        EXPECT_EQ(defaults.mMagicka.mWillpowerMultiplier, .02f);
+        EXPECT_EQ(defaults.mFatigue.mRegeneration.mBase, 10.f);
+        ESM::GameSetting shared{};
+        shared.mId = ESM::RefId::stringRefId("fMagickaReturnBase");
+        shared.mValue.setType(ESM::VT_Float);
+        shared.mValue.setFloat(999);
+        mStore.getWritable<ESM::GameSetting>().insertStatic(shared);
+        EXPECT_EQ(MWWorld::resolveOblivionFrameSettings(mStore).mMagicka.mBase, .75f);
+        ESM4::GameSetting native{};
+        native.mId = {0x980, 3};
+        native.mEditorId = "FMAGICKARETURNBASE";
+        native.mData = 2.f;
+        const auto key = ESM::FormKey::content("actors.esm", 0x980);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+        EXPECT_EQ(MWWorld::resolveOblivionFrameSettings(mStore).mMagicka.mBase, 2.f);
+        native.mData = std::int32_t{2};
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+        EXPECT_THROW(MWWorld::resolveOblivionFrameSettings(mStore), std::invalid_argument);
+    }
+
     void verifyMagickaFrameTransactions(MWMechanics::OblivionCombatService& service,
         const MWWorld::Ptr& ptr, ESM4::RuntimeActorValues values, MWWorld::Player* player = nullptr)
     {
@@ -3671,6 +3696,49 @@ namespace
                 service.regenerateNonPlayerMagicka(ptr, duration, casting, config);
         };
         const auto current = [&] { return ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(); };
+        publish();
+        // No World/Lua/effect subsystem is installed. Native rejection must occur
+        // before legacy record lookup, item removal, notifications or effects.
+        const auto beforeMagic = *service.findActorValues(values.mActor);
+        MWMechanics::CastSpell cast(ptr, ptr);
+        EXPECT_FALSE(cast.cast(ESM::RefId::stringRefId("not-a-tes3-spell")));
+        EXPECT_FALSE(cast.cast(static_cast<const ESM::Spell*>(nullptr)));
+        EXPECT_FALSE(cast.cast(static_cast<const ESM::Potion*>(nullptr)));
+        EXPECT_FALSE(cast.cast(static_cast<const ESM::Ingredient*>(nullptr)));
+        EXPECT_FALSE(cast.cast(MWWorld::Ptr{}));
+        EXPECT_NO_THROW(cast.inflict(ptr, {}, ESM::RT_Self));
+        EXPECT_FALSE(ptr.getClass().consume({}, ptr));
+        EXPECT_EQ(*service.findActorValues(values.mActor), beforeMagic);
+        auto frameSettings = MWWorld::resolveOblivionFrameSettings(*MWBase::Environment::get().getESMStore());
+        frameSettings.mFatigue.mRegeneration = {2, 0};
+        frameSettings.mFatigue.mPlayerBase = {};
+        const auto frame = [&](bool casting, const MWMechanics::OblivionFrameSettings& config) {
+            const MWMechanics::OblivionFatigueUpdate input{.5f, 0, false, false};
+            if (player)
+                service.updatePlayerFrameResources(*player, input, casting, config);
+            else
+                service.updateNonPlayerFrameResources(ptr, input, casting, config);
+        };
+        const auto initialFatigue = ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent();
+        const auto initialHealth = ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent();
+        frame(false, frameSettings);
+        EXPECT_FLOAT_EQ(current(), 20.875f);
+        EXPECT_FLOAT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), initialFatigue + 1);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), initialHealth);
+        frame(true, frameSettings);
+        EXPECT_FLOAT_EQ(current(), 20.875f);
+        EXPECT_FLOAT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), initialFatigue + 2);
+        const auto beforeInvalidFrame = *service.findActorValues(values.mActor);
+        auto badFrame = frameSettings;
+        badFrame.mFatigue.mRegeneration.mBase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(frame(false, badFrame), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), beforeInvalidFrame);
+        EXPECT_FLOAT_EQ(current(), 20.875f);
+        EXPECT_FLOAT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), initialFatigue + 2);
+        badFrame = frameSettings;
+        badFrame.mMagicka.mBase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(frame(false, badFrame), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), beforeInvalidFrame);
         publish();
         const auto before = *service.findActorValues(values.mActor);
         update(.5f);

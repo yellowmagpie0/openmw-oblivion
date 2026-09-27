@@ -242,7 +242,7 @@ namespace MWWorld
         float getOblivionPlayerInventoryWeight() const override;
         bool updateOblivionBreath(const Ptr& actor, float duration) override;
         std::optional<std::pair<float, float>> getOblivionBreath(const Ptr& actor) const override;
-        bool updateOblivionFatigue(const Ptr& actor, float duration, bool running) override;
+        bool updateOblivionFrameResources(const Ptr& actor, float duration, bool running) override;
         bool spendOblivionJumpFatigue(const Ptr& actor) override;
 
         // Bounded native interaction surface for the M5 prison slice.

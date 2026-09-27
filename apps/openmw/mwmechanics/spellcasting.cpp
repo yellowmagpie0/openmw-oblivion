@@ -1,5 +1,7 @@
 #include "spellcasting.hpp"
 
+#include <components/debug/debuglog.hpp>
+#include <components/esm/records.hpp>
 #include <components/esm3/loadench.hpp>
 #include <components/esm3/loadmgef.hpp>
 #include <components/esm3/loadstat.hpp>
@@ -29,6 +31,23 @@
 
 namespace MWMechanics
 {
+    bool rejectUnsupportedNativeMagic(const MWWorld::Ptr& caster, const MWWorld::Ptr& target)
+    {
+        const auto nativeActor = [](const MWWorld::Ptr& actor) {
+            if (actor.isEmpty())
+                return false;
+            if (actor.getType() == ESM::REC_NPC_4 || actor.getType() == ESM::REC_CREA4)
+                return true;
+            return actor.getClass().isActor()
+                && actor.getClass().getCreatureStats(actor).getMagicka().isNativeProjection();
+        };
+        if (!nativeActor(caster) && !nativeActor(target)
+            && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+            return false;
+        Log(Debug::Warning) << "M16 native magic: spell/effect execution is unsupported";
+        return true;
+    }
+
     CastSpell::CastSpell(
         const MWWorld::Ptr& caster, const MWWorld::Ptr& target, const bool fromProjectile, const bool scriptedSpell)
         : mCaster(caster)
@@ -143,6 +162,9 @@ namespace MWMechanics
     void CastSpell::inflict(
         const MWWorld::Ptr& target, const ESM::EffectList& effects, ESM::RangeType range, bool exploded) const
     {
+        if (rejectUnsupportedNativeMagic(mCaster, target))
+            return;
+
         const bool targetIsActor = !target.isEmpty() && target.getClass().isActor();
 
         // If none of the effects need to apply, we can early-out
@@ -205,6 +227,9 @@ namespace MWMechanics
 
     bool CastSpell::cast(const ESM::RefId& id)
     {
+        if (rejectUnsupportedNativeMagic(mCaster, mTarget))
+            return false;
+
         const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
         if (const auto spell = store.get<ESM::Spell>().search(id))
             return cast(spell);
@@ -220,6 +245,9 @@ namespace MWMechanics
 
     bool CastSpell::cast(const MWWorld::Ptr& item, bool launchProjectile)
     {
+        if (rejectUnsupportedNativeMagic(mCaster, mTarget))
+            return false;
+
         const ESM::RefId& enchantmentName = item.getClass().getEnchantment(item);
         if (enchantmentName.empty())
             throw std::runtime_error("can't cast an item without an enchantment");
@@ -314,6 +342,9 @@ namespace MWMechanics
 
     bool CastSpell::cast(const ESM::Potion* potion)
     {
+        if (rejectUnsupportedNativeMagic(mCaster, mTarget))
+            return false;
+
         mSourceName = potion->mName;
         mId = potion->mId;
         mFlags = static_cast<ESM::ActiveSpells::Flags>(
@@ -329,6 +360,9 @@ namespace MWMechanics
 
     bool CastSpell::cast(const ESM::Spell* spell)
     {
+        if (rejectUnsupportedNativeMagic(mCaster, mTarget))
+            return false;
+
         mSourceName = spell->mName;
         mId = spell->mId;
 
@@ -390,6 +424,9 @@ namespace MWMechanics
 
     bool CastSpell::cast(const ESM::Ingredient* ingredient)
     {
+        if (rejectUnsupportedNativeMagic(mCaster, mTarget))
+            return false;
+
         mId = ingredient->mId;
         mFlags = static_cast<ESM::ActiveSpells::Flags>(
             ESM::ActiveSpells::Flag_Temporary | ESM::ActiveSpells::Flag_Stackable);
