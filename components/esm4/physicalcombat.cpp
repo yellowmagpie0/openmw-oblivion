@@ -224,6 +224,17 @@ namespace ESM4
         return {target, rounded(double(target) - currentHealth)};
     }
 
+    EssentialRecoveryTick advanceEssentialRecovery(float remaining, float frameSeconds,
+        bool essentialUnconscious, std::int8_t knockedState)
+    {
+        finite(remaining);
+        nonnegative(frameSeconds);
+        if (!essentialUnconscious || (knockedState != 1 && knockedState != 3))
+            return {remaining, false};
+        const float next = rounded(double(remaining) - frameSeconds);
+        return {next, next <= 0.f};
+    }
+
     std::int32_t creatureNaturalDamage(std::uint16_t baseDamage, float fatigueRatio,
         const PhysicalCombatSettings& settings)
     {

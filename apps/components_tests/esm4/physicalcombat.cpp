@@ -1341,6 +1341,39 @@ TEST(ESM4PhysicalCombat, EssentialRecoveryValidatesAndResolvesNativeSettings)
     EXPECT_THROW(ESM4::buildEssentialRecoverySettings(values), std::invalid_argument);
 }
 
+TEST(ESM4PhysicalCombat, EssentialRecoveryTimerUsesNativeKnockedStatesAndFloatStores)
+{
+    for (int state = -128; state <= 127; ++state)
+    {
+        SCOPED_TRACE(state);
+        const auto tick = ESM4::advanceEssentialRecovery(.125f, .25f, true, static_cast<std::int8_t>(state));
+        const bool eligible = state == 1 || state == 3;
+        EXPECT_EQ(tick.mRemaining, eligible ? -.125f : .125f);
+        EXPECT_EQ(tick.mRecover, eligible);
+        const auto ordinary = ESM4::advanceEssentialRecovery(.125f, .25f, false, static_cast<std::int8_t>(state));
+        EXPECT_EQ(ordinary.mRemaining, .125f);
+        EXPECT_FALSE(ordinary.mRecover);
+    }
+    EXPECT_EQ(ESM4::advanceEssentialRecovery(.3f, .1f, true, 1).mRemaining, 0x1.99999cp-3f);
+    EXPECT_FALSE(ESM4::advanceEssentialRecovery(.125f, .0625f, true, 3).mRecover);
+    EXPECT_TRUE(ESM4::advanceEssentialRecovery(.125f, .125f, true, 3).mRecover);
+    EXPECT_TRUE(ESM4::advanceEssentialRecovery(0.f, 0.f, true, 1).mRecover);
+    EXPECT_TRUE(ESM4::advanceEssentialRecovery(-.125f, 0.f, true, 3).mRecover);
+    EXPECT_FALSE(ESM4::advanceEssentialRecovery(0.f, 0.f, true, 0).mRecover);
+}
+
+TEST(ESM4PhysicalCombat, EssentialRecoveryTimerRejectsUnrepresentableUpdates)
+{
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::advanceEssentialRecovery(bad, 1.f, true, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceEssentialRecovery(1.f, bad, true, 1), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::advanceEssentialRecovery(1.f, -1.f, true, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceEssentialRecovery(-std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(), true, 3), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, ArmorCoverageUsesWeightedSlotsAndClampsSum)
 {
     auto settings = ESM4::buildArmorMasterySettings({});

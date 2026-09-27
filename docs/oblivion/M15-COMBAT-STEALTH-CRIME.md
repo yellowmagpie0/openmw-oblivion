@@ -3636,3 +3636,38 @@ Successful native views face the observation-room wall; rejection shows its
 load-error dialog; Morrowind faces Balmora terrain. All are silent and do not
 establish normal combat, corpse pose or full gameplay regression. S2/S3 remain
 open and later gates are not closed by these checks.
+
+### S2 essential recovery timer and wake gate (partial)
+
+The original common actor update at `603E97..603F5D` only advances an essential
+raw state 6 when process knocked-state is 1 or 3. Virtual +98 (`6439C0`) subtracts
+the float at `B33E9C` from process+88 and stores one float; +9C (`629290`) reads
+it. Recovery proceeds at <=0, setting actor state 0 through `5E6680`, then
+issuing the same fraction-based Health Damage adjustment as essential entry.
+High/MiddleHigh use `64B080` to sign-extend the process+11C knocked-state byte;
+Low/MiddleLow supply zero. The xOBSE TimeInfo declaration identifies B33E9C as
+frame seconds; the probe supplies that global and does not emulate its producer.
+Original negative timer overshoot is retained by the pure tick rule. Persisted
+lifecycle countdown clearing belongs to the later adapter.
+
+`S2/oracle-emulator/essential-wake.py` executes **27,648 original cases** spanning
+raw actor/knocked states, timers/deltas, base/current Health, fractions and both
+x87 control words. Timer/getter/state-setter instructions execute; base/current/
+GMST inputs and Damage application are boundary fixtures. The standalone C++
+driver matches every remaining-time bit, recovery decision and captured Health
+adjustment; driver SHA-256
+`52434cea57d323718192b48974b451d08759d91c78f936591c2c5d70143e42da`.
+Retained probe attempts 01/02 lacked actor-base virtual boundary stubs. Attempt
+03 had an incorrect manual expectation: the temporary ESP shift at `603F2A`
+means the fraction product overwrites the same stack slot subsequently read as
+target. Attempt 04 executes and verifies the fraction-based result, rather than
+mistaking that slot for untouched base Health.
+
+`S2/essential-recovery-tick-01` passes **1,907 component** and **385 ASan/UBSan**
+tests, with source fingerprint
+`17d6892d5644271d403603120186f396d759da9ef9adc68e1242b06ac8fd3d4d`.
+All 256 signed knocked-state bytes, frozen/nonessential paths, exact expiration,
+overshoot, float rounding and invalid/nonrepresentable inputs are tested.
+This is a pure rule. Service countdown publication, live controller mapping,
+recovery Health callbacks (including reentry), God Mode, save continuation and
+normal essential recovery remain open; no S3/S6 gameplay gate closes here.

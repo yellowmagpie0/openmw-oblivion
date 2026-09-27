@@ -100,3 +100,17 @@ cover all 65,536 increments, 131,074 signed/null/missing queries, and 32 new-ent
 insertions. Only allocation supplies synthetic fresh 8-byte objects; actual
 list insertion and queries execute. Do not replace this historical counter
 with a scan of resident dead actors or invent old-save history from life flags.
+
+## Essential wake timer
+
+The retained `essential-wake.py` probe starts at `603E97` and stops at `603F5D`:
+state 6 and knocked byte 1/3 gate subtraction. Process virtual +98 is `6439C0`
+(float process+88 minus global B33E9C); +9C is `629290`. High/MiddleHigh knocked
+getter +2E4 is `64B080` (signed process+11C); Low/MiddleLow return zero. On <=0,
+state changes to 0 and the entry fraction-based Health adjustment is issued.
+Track ESP carefully: `603F2A` pushes before the product store, so differently
+spelled stack offsets refer to the same target slot. Do not infer full-base
+healing from an isolated later load. The 27,648-case table and C++ comparison
+cover both x87 words; actual Damage application and frame-time production are
+boundary fixtures, not proved by this probe. Native raw knocked states are not
+interchangeable with the existing TES3 animation-state enum.

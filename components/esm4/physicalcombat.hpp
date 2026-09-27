@@ -81,6 +81,18 @@ namespace ESM4
         const EssentialRecoverySettings& settings);
     void validateEssentialRecoverySettings(const EssentialRecoverySettings& settings);
 
+    struct EssentialRecoveryTick
+    {
+        float mRemaining;
+        bool mRecover;
+    };
+    // Native process knocked-state byte, not TES3 hit-animation state. Only
+    // raw states 1/3 advance an already-unconscious essential actor's timer.
+    // The original timer may overshoot below zero; the lifecycle adapter owns
+    // clearing its persisted countdown when committing recovery.
+    EssentialRecoveryTick advanceEssentialRecovery(float remaining, float frameSeconds,
+        bool essentialUnconscious, std::int8_t knockedState);
+
     // Sustained incapacitation requirement, not a random hit knockdown or an
     // animation-completion signal. Essential means already unconscious, not
     // simply flagged essential. Recovery may begin when this becomes false.
