@@ -935,8 +935,8 @@ namespace MWMechanics
         return true;
     }
 
-    bool OblivionCombatService::reactNonPlayerHealth(const MWWorld::Ptr& actor,
-        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    bool OblivionCombatService::enterNonPlayerDeath(const MWWorld::Ptr& actor,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool healthGate)
     {
         auto candidate = nonPlayerValues(actor);
         const auto found = mActorLife.find(candidate.mActor);
@@ -944,7 +944,7 @@ namespace MWMechanics
             throw std::invalid_argument("native Health reaction requires initialized lifecycle");
         const auto* base = findActorBase(candidate.mBase);
         const float current = nonPlayerFloat(candidate, 8, base);
-        if (found->second.mPhase != ESM4::ActorLifePhase::Alive || current >= 1.f)
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive || (healthGate && current >= 1.f))
             return false;
         auto life = found->second;
         life.mKiller = killer;
@@ -964,15 +964,15 @@ namespace MWMechanics
         return true;
     }
 
-    bool OblivionCombatService::reactPlayerHealth(MWWorld::Player& player,
-        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    bool OblivionCombatService::enterPlayerDeath(MWWorld::Player& player,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool healthGate)
     {
         auto candidate = playerValues();
         const auto found = mActorLife.find(candidate.mActor);
         if (found == mActorLife.end())
             throw std::invalid_argument("native Health reaction requires initialized lifecycle");
         const float current = ESM4::composeActorValue(candidate.mValues[8], candidate.mOwner, candidate.mProcess);
-        if (found->second.mPhase != ESM4::ActorLifePhase::Alive || current >= 1.f)
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive || (healthGate && current >= 1.f))
             return false;
         auto life = found->second;
         life.mKiller = killer;
@@ -991,6 +991,30 @@ namespace MWMechanics
         std::swap(found->second, life);
         prepared.commit();
         return true;
+    }
+
+    bool OblivionCombatService::reactNonPlayerHealth(const MWWorld::Ptr& actor,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        return enterNonPlayerDeath(actor, killer, essential, settings, true);
+    }
+
+    bool OblivionCombatService::reactPlayerHealth(MWWorld::Player& player,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        return enterPlayerDeath(player, killer, essential, settings, true);
+    }
+
+    bool OblivionCombatService::killNonPlayer(const MWWorld::Ptr& actor,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        return enterNonPlayerDeath(actor, killer, essential, settings, false);
+    }
+
+    bool OblivionCombatService::killPlayer(MWWorld::Player& player,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        return enterPlayerDeath(player, killer, essential, settings, false);
     }
 
     const ESM4::RuntimeActorLife* OblivionCombatService::findActorLife(const ESM::FormKey& actor) const

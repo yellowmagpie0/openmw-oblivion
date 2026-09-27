@@ -118,6 +118,10 @@ namespace MWMechanics
         const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
         std::optional<std::deque<ESM4::RuntimeActorDeathEvent>> prepareLifeTransition(
             const ESM4::RuntimeActorLife& life) const;
+        bool enterNonPlayerDeath(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
+            const ESM4::EssentialRecoverySettings& settings, bool healthGate);
+        bool enterPlayerDeath(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
+            const ESM4::EssentialRecoverySettings& settings, bool healthGate);
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -222,6 +226,12 @@ namespace MWMechanics
         bool reactNonPlayerHealth(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings);
         bool reactPlayerHealth(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
+            const ESM4::EssentialRecoverySettings& settings);
+        // Script Kill calls the same death entry without testing current Health.
+        // Source validation and physical/script aftermath remain caller-owned.
+        bool killNonPlayer(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
+            const ESM4::EssentialRecoverySettings& settings);
+        bool killPlayer(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain

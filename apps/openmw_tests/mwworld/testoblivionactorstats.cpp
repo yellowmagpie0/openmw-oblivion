@@ -424,12 +424,12 @@ namespace
         EXPECT_THROW(service.transitionPlayerLife(player, dead), std::invalid_argument);
         service.publishPlayerLife(player, alive);
         EXPECT_FALSE(service.transitionPlayerLife(player, alive));
-        EXPECT_TRUE(service.transitionPlayerLife(player, dead));
+        EXPECT_TRUE(service.killPlayer(player, dead.mKiller, false, {}));
         EXPECT_TRUE(stats.isDead());
         EXPECT_EQ(stats.getHealth().getCurrent(), 10); // Policy owns Health changes separately.
         auto repeated = dead;
         repeated.mKiller = {};
-        EXPECT_FALSE(service.transitionPlayerLife(player, repeated));
+        EXPECT_FALSE(service.killPlayer(player, {}, false, {}));
         EXPECT_EQ(*service.findActorLife(values.mActor), dead);
         const auto first = service.takeNextDeathEvent();
         ASSERT_TRUE(first);
@@ -507,6 +507,15 @@ namespace
         EXPECT_EQ(stats.getHealth().getCurrent(), -19);
         EXPECT_TRUE(stats.getKnockedDown());
         EXPECT_FALSE(stats.isDead());
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        EXPECT_TRUE(service.transitionPlayerLife(player, alive));
+        service.publishPlayerValues(player, saved.mNativeActorValues.front(), {});
+        EXPECT_EQ(stats.getHealth().getCurrent(), 1);
+        EXPECT_TRUE(service.killPlayer(player, {}, true, {4, .3f}));
+        EXPECT_FLOAT_EQ(stats.getHealth().getCurrent(), .3f);
+        EXPECT_TRUE(stats.getKnockedDown());
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_EQ(service.findActorLife(values.mActor)->mRecoveryRemaining, 4);
         EXPECT_FALSE(service.takeNextDeathEvent());
         // Return the shared view to the saved alive state before the exhausted
         // namespace rollback check on the independent restored authority.
@@ -1072,7 +1081,7 @@ namespace
         auto aliveLife = life;
         aliveLife.mPhase = ESM4::ActorLifePhase::Alive;
         EXPECT_TRUE(service.transitionNonPlayerLife(ptr, aliveLife));
-        EXPECT_TRUE(service.transitionNonPlayerLife(ptr, life));
+        EXPECT_TRUE(service.killNonPlayer(ptr, {}, false, {}));
         EXPECT_FALSE(service.transitionNonPlayerLife(ptr, life));
         const auto deathEvent = service.takeNextDeathEvent();
         ASSERT_TRUE(deathEvent);

@@ -3391,3 +3391,30 @@ completes every action but exits1 solely for its deliberately wrong expected
 GetDead1 against essential GetDead0. All five captures were inspected and show
 the observation room/HUD without errors. These are silent injected unpublished
 state query courses, not physical death/recovery acceptance.
+
+## S3 direct scripted death entry
+
+Native service Kill entry points share the validated lifecycle/essential
+transaction but bypass the negative-Health callback's below-one gate. Tests
+cover positive-Health death, positive-Health essential entry, repeated requests
+and first-cause preservation. This is the service entry; script/world routing
+and physical aftermath remain pending. It does not impose a zero-Health write
+as an invented prerequisite for entering death.
+
+The original Kill handler `00501960` calls `006005F0` directly with its optional
+killer and zero float magnitude. Original Resurrect `00510150` invokes virtual
+`+20C` with `(true, actorCell != nullptr, argument == 1)`; bool arguments must be
+read from their low bytes because SETcc preserves the rest of the register.
+The independent ignored `lifecycle-script-handlers.py` probe passes **160**
+argument-extraction/cast/dispatch combinations. Extraction/casts and final
+transition virtuals are boundary fixtures, not full resurrection execution.
+Actual +20C targets are Player `00664A80`, Character/Creature `005F6020`.
+The original GetDeadCount helper `004F5010` reads a separate signed16 counter via
+`00440F70`, not a scan of current dead references; its counter integration is
+still open. Do not extend the old marker scan as though it established parity.
+
+`S3/native-script-death-entry-01` passes all **593 engine tests**, exact inventory,
+zero failures/skips. Component formulas are unchanged from the preceding
+component/sanitizer run. The handler corpus and log remain ignored under
+`S2/oracle-emulator/lifecycle-script-handlers-table.json` and
+`S3/authority-draft/lifecycle-script-handlers-01.log`.
