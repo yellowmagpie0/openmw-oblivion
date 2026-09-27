@@ -18,6 +18,11 @@
 #include "../mwmechanics/damagesourcetype.hpp"
 #include "../mwrender/animationpriority.hpp"
 
+namespace ESM4
+{
+    struct RuntimeState;
+}
+
 namespace MWWorld
 {
     class CellStore;
@@ -172,6 +177,9 @@ namespace MWBase
 
         // Must be called before save, otherwise the world can be saved in an inconsistent state.
         virtual void applyDelayedActions() = 0;
+
+        // Check companion owners before native world state is applied.
+        virtual void validateNativeState(const ESM4::RuntimeState&) const {}
 
         // Loading from a save
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;

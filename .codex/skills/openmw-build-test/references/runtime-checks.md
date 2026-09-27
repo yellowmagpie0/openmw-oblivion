@@ -520,3 +520,61 @@ reference enabled flag, both restoration markers, no repeated resource writes,
 and preserved Lua data/timers. An Enable acknowledgement alone is insufficient:
 disabled references in loaded cells may be absent from the Ptr registry and must
 be resolved through the resident-cell lookup before updating actual RefData.
+
+Native local Lua owners must also exist in the saved T4ST reference vector,
+including dynamic owners. A winning content reference alone is insufficient;
+a save containing native local Lua owners without T4ST is inconsistent. Exercise
+both faults with `oblivion_m15_lua_reject_malformed.json`, preserving a pristine
+input and checking the exact missing-owner error before native application or
+Lua restoration/writes. The owner check does not prove preservation of a prior
+running world: StateManager's cleanup-before-load boundary is a separate gate.
+
+Reproduce the two binary faults from a private copy of a saved resource course
+using this structural recipe (OpenMW save record headers are16 bytes; subrecord
+headers are8). `source`, `destination` and `fault` are Python variables; fault is
+`dynamic-owner` or `missing-state`. Never overwrite the source:
+
+```python
+import struct
+from pathlib import Path
+assert source.resolve() != destination.resolve()
+raw = source.read_bytes()
+records, offset, changed = [], 0, 0
+while offset < len(raw):
+    assert offset + 16 <= len(raw)
+    end = offset + 16 + struct.unpack_from('<I', raw, offset + 4)[0]
+    assert end <= len(raw)
+    record = raw[offset:end]
+    if fault == 'missing-state' and record[:4] == b'T4ST':
+        changed += 1
+    elif fault == 'dynamic-owner' and record[:4] == b'LUAM':
+        subs, cursor, owner = [], 16, False
+        while cursor < len(record):
+            assert cursor + 8 <= len(record)
+            tag = record[cursor:cursor + 4]
+            size = struct.unpack_from('<I', record, cursor + 4)[0]
+            stop = cursor + 8 + size
+            assert stop <= len(record)
+            data = record[cursor + 8:stop]
+            if tag == b'NLSK' and not owner:
+                data = b'dynamic:missing:000000000000002a'
+                owner, changed = True, changed + 1
+            subs.append(tag + struct.pack('<I', len(data)) + data)
+            cursor = stop
+        payload = b''.join(subs)
+        records.append(record[:4] + struct.pack('<I', len(payload)) + record[8:16] + payload)
+    else:
+        records.append(record)
+    offset = end
+assert changed == 1
+with destination.open('xb') as output:
+    output.write(b''.join(records))
+```
+
+Retained red inputs in `S3/lua-persistence-reject-{dynamic,missing-state}-red-01`
+loaded on the old engine: the first replayed NPC writes; the second emitted NPC
+Lua assertion failures. `S3/lua-owner-{regular,sanitized}-{dynamic,missing-state}-02`
+rejects those exact files. Pair with the corresponding `writes-02` and
+`continuation-02` courses to check absent-section compatibility and real fresh
+process preservation. Unit sanitizer runs enable leak detection; graphical
+courses explicitly disable it and retain halting UBSan.

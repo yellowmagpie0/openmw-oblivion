@@ -812,6 +812,11 @@ namespace MWLua
         writer.endRecord(ESM::REC_LUAM);
     }
 
+    void LuaManager::validateNativeState(const ESM4::RuntimeState& state) const
+    {
+        ESM4::validateLocalLuaScriptOwners(mPendingNativeScripts, state);
+    }
+
     void LuaManager::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
         if (type != ESM::REC_LUAM)

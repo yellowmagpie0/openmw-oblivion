@@ -5156,3 +5156,55 @@ All six captures were directly inspected: rendered room and Player bars, no
 error dialog; NPC offscreen and audio disabled. The editable pending-continuation
 manifest retains the no-Enable/no-replay restart check. This closes the bounded
 resident Enable defect; the S3 and later milestone gates above remain open.
+
+### S3 continuation: bind native Lua owners to saved references
+
+Native local Lua companions now require every owner, including dynamic owners,
+to exist in T4ST's reference vector. World invokes the Lua validation hook before
+applying native state or preparing inventory replacements. A missing T4ST record
+is treated as an empty owner set, preserving old saves without native scripts
+while rejecting orphaned companions. Disabled/deleted references may retain
+scripts without materialized pointers. Empty companions avoid indexing the
+reference vector. Component coverage checks both missing owner kinds, valid
+inactive owners and absent/empty companions.
+
+The old executable genuinely accepted two inconsistent saves:
+`S3/lua-persistence-reject-dynamic-red-01` replayed NPC resource initialization
+for a nonexistent dynamic owner, and `lua-persistence-reject-missing-state-red-01`
+loaded without T4ST then emitted NPC Lua assertions. Input SHA256s respectively:
+`f4c1b96b0861e15f24cee6217be833a41e5ff37538de7557673220859bb697f0` and
+`08f4167acc8fbe1ade0db69bcff2df65cbbbacb03800e34e05b856cc115d04b5`.
+Neither is counted as a passing rejection.
+
+Final `lua-owner-binding-02` and `lua-owner-binding-sanitized-02` each pass
+all1937 component and632 engine tests without skipped/missing cases. Tested
+source fingerprint `1c95bca87d16c39a6b117ec4f3063e4ba1a0989060f1a6769fd3af0c7b27cf3b`
+(parent `bd6eb3c4e7`). ASan leak detection and halting UBSan are enabled for the
+instrumented unit suites. The earlier binding01 runs also pass both suites, but
+do not include the missing-T4ST guard; their evidence remains distinct.
+
+`lua-owner-{regular,sanitized}-{dynamic,missing-state}-02` rejects the exact
+retained inputs with the corresponding `Missing native local Lua owner` error,
+before native application, script restoration or resource writes. Inputs remain
+unchanged. The paired `writes-02` courses load an old absent-companion save,
+perform the six expected Lua resource writes and save through the engine.
+`continuation-02` fresh processes restore both actors without writes/replay and
+preserve the NPC Lua companion exactly. Independent state checks preserve all
+other actor channels, lifecycle and action state. The earlier
+`lua-owner-binding-enable-01` also proves pending disabled activation and
+script-ID remapping on the initial owner-validation build.
+
+Final runtime executable SHA256: regular
+`177ec033f69944284b762ee2d8bdcfb12a25d078afc63d10efa44f206458d17e`, instrumented
+`f59a9ec9006e07996eb652a366af7fda4e69e399acf8d012a6c5c7e4a270bfb1`.
+Graphical ASan leak detection is explicitly off, UBSan halts. All12 final
+captures were directly inspected: exact rejection dialogs or rendered room and
+Player bars; NPC offscreen, audio disabled. Existing editable rejection/current/
+continuation manifests drive these courses. The build/test skill now includes
+structural fault recipes, verified byte-for-byte against both retained inputs,
+and passes skill validation.
+
+This closes the companion owner-binding defect, not the complete failed-load
+transaction requirement: StateManager still clears the previous world before
+loading. Automatic native actor publication, remaining S3 lifecycle/adapters,
+and S4-S14 remain open.

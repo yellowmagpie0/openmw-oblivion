@@ -1,5 +1,6 @@
 #include <components/esm4/localluascripts.hpp>
 #include <components/esm4/common.hpp>
+#include <components/esm4/runtimestate.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 
@@ -227,4 +228,30 @@ namespace
         index.apply(record);
         EXPECT_THROW(ESM4::validateLocalLuaScriptContent(state, index), std::exception);
     }
+    TEST(ESM4LocalLuaScripts, requiresContentAndDynamicOwnersInSavedWorld)
+    {
+        const auto scripts = sample();
+        ESM4::RuntimeState state;
+        EXPECT_THROW(ESM4::validateLocalLuaScriptOwners(scripts, state), std::runtime_error);
+        for (const auto& [key, data] : scripts)
+        {
+            ESM4::RuntimeReferenceState reference;
+            reference.mKey = key;
+            // Disabled/deleted owners may retain scripts without a live Ptr.
+            reference.mEnabled = false;
+            reference.mDeleted = true;
+            state.mReferences.push_back(reference);
+        }
+        EXPECT_NO_THROW(ESM4::validateLocalLuaScriptOwners(scripts, state));
+        for (std::size_t i = 0; i < state.mReferences.size(); ++i)
+        {
+            auto missing = state;
+            missing.mReferences.erase(missing.mReferences.begin() + i);
+            EXPECT_THROW(ESM4::validateLocalLuaScriptOwners(scripts, missing), std::runtime_error);
+        }
+        // References without local scripts and legacy sections remain valid.
+        EXPECT_NO_THROW(ESM4::validateLocalLuaScriptOwners({}, state));
+        EXPECT_NO_THROW(ESM4::validateLocalLuaScriptOwners({}, {}));
+    }
+
 }

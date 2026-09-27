@@ -1560,7 +1560,12 @@ namespace MWWorld
     void World::applyOblivionRuntimeState()
     {
         if (!mOblivionRuntimeState)
+        {
+            // A legacy save may omit T4ST, but cannot then declare owners in
+            // the native Lua companion. Do not silently orphan those scripts.
+            MWBase::Environment::get().getLuaManager()->validateNativeState({});
             return;
+        }
         const ESM4::RuntimeState& state = *mOblivionRuntimeState;
         // Native actor bindings and service allocation must fail before any
         // globals, inventories, serials or projected player stats are changed.
@@ -1572,6 +1577,7 @@ namespace MWWorld
         }
         else
             state.validate();
+        MWBase::Environment::get().getLuaManager()->validateNativeState(state);
         const ESM::FormKeyResolver resolver(mContentFiles);
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not

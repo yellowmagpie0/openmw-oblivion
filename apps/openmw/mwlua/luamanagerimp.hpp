@@ -149,6 +149,8 @@ namespace MWLua
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) override;
         void saveLocalScripts(const MWWorld::Ptr& ptr, ESM::LuaScripts& data) override;
 
+        void validateNativeState(const ESM4::RuntimeState& state) const override;
+
         // Loading from a save
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
         void loadLocalScripts(const MWWorld::Ptr& ptr, const ESM::LuaScripts& data) override;

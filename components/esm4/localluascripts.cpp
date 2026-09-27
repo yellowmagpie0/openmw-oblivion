@@ -1,5 +1,6 @@
 #include "localluascripts.hpp"
 #include "common.hpp"
+#include "runtimestate.hpp"
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
@@ -168,6 +169,18 @@ namespace ESM4
             }
             writer.writeHNT("NLSE", std::uint32_t{ 0 });
         }
+    }
+
+    void validateLocalLuaScriptOwners(const LocalLuaScripts& scripts, const RuntimeState& state)
+    {
+        if (scripts.empty())
+            return;
+        std::set<ESM::FormKey> references;
+        for (const auto& reference : state.mReferences)
+            references.insert(reference.mKey);
+        for (const auto& [key, data] : scripts)
+            if (!references.contains(key))
+                throw std::runtime_error("Missing native local Lua owner: " + key.serialize());
     }
 
     void validateLocalLuaScriptContent(const LocalLuaScripts& scripts, const ESM::FormKeyIndex& index)
