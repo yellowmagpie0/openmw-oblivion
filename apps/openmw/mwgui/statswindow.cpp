@@ -250,8 +250,11 @@ namespace MWGui
         w->setUserString("RangePosition_SkillProgress", MyGUI::utility::toString(progressPercent));
     }
 
-    void StatsWindow::setValue(ESM::RefId id, const MWMechanics::SkillValue& value)
+    void StatsWindow::setValue(ESM::RefId id, const MWMechanics::SkillValue& inputValue)
     {
+        // A refresh can pass our own cached value back into this setter.
+        // Keep a snapshot alive across replacement and all widget updates.
+        const MWMechanics::SkillValue value(inputValue);
         mSkillValues.erase(id);
         mSkillValues.emplace(id, value);
         std::pair<MyGUI::TextBox*, MyGUI::TextBox*> widgets = mSkillWidgetMap[id];

@@ -121,7 +121,8 @@ namespace MWGui::Widgets
 
     void MWAttribute::setAttributeValue(const AttributeValue& value)
     {
-        mValue.emplace(value);
+        // value may alias getAttributeValue(); copy before emplace destroys it.
+        mValue.emplace(AttributeValue(value));
         updateWidgets();
     }
 

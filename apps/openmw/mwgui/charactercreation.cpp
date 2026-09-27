@@ -103,8 +103,11 @@ namespace MWGui
             mPlayerSkillValues.emplace(skill.mId, MWMechanics::SkillValue());
     }
 
-    void CharacterCreation::setAttribute(ESM::RefId id, const MWMechanics::AttributeValue& value)
+    void CharacterCreation::setAttribute(ESM::RefId id, const MWMechanics::AttributeValue& inputValue)
     {
+        // A refresh can pass our own cached value back into this setter.
+        // Keep a snapshot alive across replacement and all widget updates.
+        const MWMechanics::AttributeValue value(inputValue);
         mPlayerAttributes.erase(id);
         mPlayerAttributes.emplace(id, value);
         if (mReviewDialog)
@@ -130,8 +133,11 @@ namespace MWGui
         }
     }
 
-    void CharacterCreation::setValue(ESM::RefId id, const MWMechanics::SkillValue& value)
+    void CharacterCreation::setValue(ESM::RefId id, const MWMechanics::SkillValue& inputValue)
     {
+        // A refresh can pass our own cached value back into this setter.
+        // Keep a snapshot alive across replacement and all widget updates.
+        const MWMechanics::SkillValue value(inputValue);
         mPlayerSkillValues.erase(id);
         mPlayerSkillValues.emplace(id, value);
         if (mReviewDialog)

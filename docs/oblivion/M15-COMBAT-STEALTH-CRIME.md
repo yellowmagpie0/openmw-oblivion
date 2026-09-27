@@ -4365,3 +4365,35 @@ failures or sanitizer findings. Tested source fingerprint:
 `81af5e048a9804d6e477fea875e1284457fd6ea4a57b4f6d3de6b59eda02f7e9`;
 regular engine-test SHA `79b2edb745530b9ef3e08fca7326ec1b6117e2519eb1cb7f3f57bbe8ee62a197`;
 sanitized engine-test SHA `d5593715b333593241082bf40ac4ed95e08cd44f310d35d7dfa6a14dc0c0b248`.
+
+### UI snapshot self-alias lifetime repair
+
+The actual ASan graphical course `S3/native-magicka-frame-sanitized-01`
+exposed a heap-use-after-free during initial `StatsWindow::addSkills`:
+`setValue` received a reference to its own map entry, erased that entry, then
+copied and displayed the dangling value. The earlier complete623 sanitized
+engine unit tests did not exercise this GUI path. The failing process log and
+original pristine save are retained; the failure is not suppressed.
+
+StatsWindow, ReviewDialog and CharacterCreation now copy the input before
+replacing cached entries and updating widgets. MWAttribute likewise constructs
+its copy before replacing its optional value. Native actor write guards remain
+intact. `S3/native-ui-alias-01` and `native-ui-alias-sanitized-01` each pass all623
+engine cases, exact inventory/no skips; the latter enables ASan leak checks and
+UBSan halt-on-error. Both test the same dirty source fingerprint, including the
+pending frame integration:
+`fa75145887adcbcda287e31687d2c819ebec8cba8528fcad88b95f28a112433c`.
+Their engine-test binary SHAs are respectively
+`4a5818e5614dda9e92d2e198a09f098592369976dd92ae86411610ddc6ba4777` and
+`901276ac2180b28e7c4d01d6a92de1b1d2876f45db89bed3b536f803842fd69a`.
+
+`S3/native-magicka-frame-sanitized-02` repeats the exact failed pristine input
+and passes actual runtime/save checks without ASan/UBSan findings. Graphical
+runtime leak detection is disabled (unlike the unit run). Actual engine SHA:
+`efaea276b2da69b3cab49e0fa921934627e4e3693f350cc282c05316bddc7027`.
+Both actors reach Magicka25.3187714 against independent expectation25.3188025
+at elapsed3.0393157, within the predeclared.05 tolerance; native/shared Player
+values agree, only Damage changes and no death is introduced. Save SHA:
+`50c042e8625d1ffabe86f1e0c0ec5be45184bb6799b5530070c66cc1052e83ac`.
+The inspected capture shows the underwater fixture wall, breath bar and updated
+Magicka HUD. This silent focused course is not campaign/audio acceptance.

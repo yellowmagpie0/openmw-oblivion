@@ -230,8 +230,11 @@ namespace MWGui
         }
     }
 
-    void ReviewDialog::setSkillValue(ESM::RefId id, const MWMechanics::SkillValue& value)
+    void ReviewDialog::setSkillValue(ESM::RefId id, const MWMechanics::SkillValue& inputValue)
     {
+        // A refresh can pass our own cached value back into this setter.
+        // Keep a snapshot alive across replacement and all widget updates.
+        const MWMechanics::SkillValue value(inputValue);
         mSkillValues.erase(id);
         mSkillValues.emplace(id, value);
         MyGUI::TextBox* widget = mSkillWidgetMap[id];
