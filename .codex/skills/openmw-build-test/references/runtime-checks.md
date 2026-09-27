@@ -249,3 +249,14 @@ A copied save retains its internal description: an Autosave renamed Quicksave
 is still an Autosave slot and a later Quicksave may acquire a numeric suffix.
 Keep its real filename and assert both files. Captures face the room wall and
 cannot establish NPC pose; these are injected-history callback tests.
+
+Native script Kill uses the lifecycle NPC fixture plus injected registered AVs
+and no initial life. `oblivion_m15_native_kill_{runtime,negative,continuation}`
+checks positive-Health Kill, duplicate suppression, first killer retention and
+callback-save restart. The optional resurrection migration-guard course checks
+explicit failure without changing typed state; it is not resurrection support.
+Passing evidence: `S3/native-script-kill-{runtime,negative}-02`, continuation-01,
+and `native-script-resurrect-guard-01`; preparation/verification scripts are in
+`S3/authority-draft/native-kill-{prepare,verify}.py`. Acceptance command argument
+strings are not compiled ObScript builtins: use the canonical dynamic Player
+key as killer, rather than the string `player` (which can resolve the NPC base).

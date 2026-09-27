@@ -1636,6 +1636,37 @@ namespace MWWorld
         }
         if (name == "kill" || name == "resurrect")
         {
+            const auto nativeKey = ESM4::runtimeReferenceKey(objectKey());
+            if (const auto* combat = mWorld.getOblivionCombatService(); combat
+                && (combat->findActorValues(nativeKey) || combat->findActorLife(nativeKey)))
+            {
+                try
+                {
+                    if (name == "resurrect")
+                        throw std::invalid_argument("native resurrection reset is not implemented");
+                    ESM::FormKey killer;
+                    if (!arguments.empty())
+                    {
+                        const auto source = keyFromValue(argument(0));
+                        if (!source)
+                            throw std::invalid_argument("native Kill requires an optional actor reference");
+                        killer = ESM4::runtimeReferenceKey(*source);
+                        if (!killer.isNull())
+                        {
+                            const Ptr sourceActor = ptrFor(killer);
+                            if (sourceActor.isEmpty() || !sourceActor.getClass().isActor())
+                                throw std::invalid_argument("native Kill source must be an actor");
+                        }
+                    }
+                    if (!mWorld.killOblivionActor(objectPtr(), killer))
+                        throw std::invalid_argument("native Kill requires a registered resident actor");
+                    return std::int64_t(0);
+                }
+                catch (const std::exception& error)
+                {
+                    throw ObScript::RuntimeError("OBSV116", error.what(), name);
+                }
+            }
             if (ESM4::RuntimeReferenceState* state = referenceState(objectKey()))
                 state->mCustomState["obscript.dead"] = name == "kill";
             if (name == "kill")

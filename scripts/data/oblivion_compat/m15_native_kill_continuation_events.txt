@@ -1,0 +1,4 @@
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1 command content:m15-lifecycle.esm:900101 kill
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1 command content:m15-lifecycle.esm:900101 getav Health

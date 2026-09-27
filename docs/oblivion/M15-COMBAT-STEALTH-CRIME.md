@@ -3519,3 +3519,39 @@ preserves the Autosave filename and expects both that input and the newly writte
 Quicksave. Every capture was inspected: silent room-wall/HUD views, NPC outside
 the camera. This demonstrates callback persistence, not physical death, corpse
 appearance, audio, native Kill routing or complete S3/S6 acceptance.
+
+### S3 native resident script Kill adapter (partial)
+
+Script Kill for registered resident actors now invokes the native lifecycle
+transaction with its optional killer reference. The World adapter resolves
+essential settings and adopts legacy lifecycle through the same helper as AV
+writers. Repeat Kill does not duplicate an event or replace its first killer;
+the script update drains the queue after the command. Unregistered actors still
+use the previous migration path. Native-owned Resurrect now explicitly reports
+OBSV116 until its original reset semantics are implemented, rather than changing
+a legacy marker that disagrees with typed lifecycle. This guard is not completed
+resurrection support. Automatic registration, unloaded commands, original death
+side effects, GetDeadCount and S3/S6 completion remain open.
+
+`S3/native-script-kill-02` passes **594 engine tests**, with source fingerprint
+`6dd693f6fd609075e04eca34f84014269ea14ea0258c3cb90b1c67adbac6c998` and engine
+SHA-256 `704c9fb6f3dbdf3eff597c3fcc5f9d18b0267a19d495174849c1757631d71f4e`.
+Attempt 01 retains a missing-forward-declaration build failure. No component or
+Python implementation changed in this chunk.
+
+Actual engine courses `native-script-kill-runtime-02` and `-negative-02` start
+with injected registered NPC values but no native lifecycle. Two Kill commands
+produce one event ID 1, one actual observer callback, terminal life with Player
+attribution, next ID 2, and unchanged current Health 100. No legacy death marker
+is emitted. Callback Autosave and final Quicksave agree. The negative completes
+all actions and fails only for absent ID 2. `native-script-kill-continuation-01`
+restarts callback Autosave, observes GetDead1/Health100 and repeats Kill without
+replay. `native-script-resurrect-guard-01` verifies the explicit error leaves the
+life, killer, event namespace, local count and values intact. Pristine hashes
+and complete native vectors are checked by
+`S3/authority-draft/native-kill-verify.py`; every capture was inspected (silent
+room-wall/HUD, no corpse-pose claim). Runtime/negative attempts 01 are retained:
+the acceptance driver's string argument `player` resolved a base EditorID;
+canonical runtime Player identity fixes the fixture. Compiled ObScript resolves
+the Player builtin separately. The native handler's original direct entry at
+positive Health is covered by the previously documented 160 original cases.

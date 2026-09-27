@@ -59,6 +59,7 @@ namespace ESM
 namespace ESM4
 {
     struct RuntimeInventoryItem;
+    struct RuntimeReferenceState;
     struct RuntimeState;
     class ObservationStream;
 }
@@ -108,6 +109,7 @@ namespace MWWorld
         friend class OblivionScriptManager;
         friend class MWMechanics::OblivionAiService;
     private:
+        ESM4::RuntimeReferenceState* adoptOblivionActorLife(const Ptr& actor);
         Resource::ResourceSystem* mResourceSystem;
 
         ESM::ReadersCache mReaders;
@@ -254,6 +256,7 @@ namespace MWWorld
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
         // False only for actors not yet registered with native value authority.
+        bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
         bool executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
             ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested);
 

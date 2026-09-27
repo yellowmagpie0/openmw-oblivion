@@ -1255,34 +1255,13 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
-    bool World::executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
-        ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested)
+    ESM4::RuntimeReferenceState* World::adoptOblivionActorLife(const Ptr& actor)
     {
-        if (!mOblivionCombat || actor.isEmpty())
-            return false;
         const bool player = actor == getPlayerPtr();
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         const auto* values = mOblivionCombat->findActorValues(key);
         if (!values)
-            return false;
-        const auto playerSettings = resolveOblivionPlayerDynamicBaseSettings(mStore);
-        const bool essential = actor.getClass().isEssential(actor);
-        const auto recoverySettings = value == 8 && essential
-            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
-        std::vector<Ptr> residents;
-        if (!player && command == ESM4::ActorValueCommand::Set)
-        {
-            for (const auto& [refNum, resident] : mWorldModel.getPtrRegistryView())
-            {
-                if (resident.isEmpty() || resident == getPlayerPtr())
-                    continue;
-                const auto* native = mOblivionCombat->findActorValues(resident.getCellRef().getFormKey());
-                if (native && native->mBase == values->mBase)
-                    residents.push_back(resident);
-            }
-            if (std::find(residents.begin(), residents.end(), actor) == residents.end())
-                residents.push_back(actor);
-        }
+            throw std::invalid_argument("native lifecycle requires registered actor values");
         // Adopt a legacy marker only when this actor first enters a native
         // writer. Older saves without lifecycle state remain loadable.
         ESM4::RuntimeReferenceState* reference = nullptr;
@@ -1314,6 +1293,59 @@ namespace MWWorld
             else
                 mOblivionCombat->publishNonPlayerLife(actor, std::move(life));
         }
+        return reference;
+    }
+
+    bool World::killOblivionActor(const Ptr& actor, const ESM::FormKey& killer)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->findActorValues(key))
+            return false;
+        const bool essential = actor.getClass().isEssential(actor);
+        const auto settings = essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        auto* reference = adoptOblivionActorLife(actor);
+        if (player)
+            mOblivionCombat->killPlayer(*mPlayer, killer, essential, settings);
+        else
+            mOblivionCombat->killNonPlayer(actor, killer, essential, settings);
+        if (reference)
+            reference->mCustomState.erase("obscript.dead");
+        return true;
+    }
+
+    bool World::executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
+        ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(key);
+        if (!values)
+            return false;
+        const auto playerSettings = resolveOblivionPlayerDynamicBaseSettings(mStore);
+        const bool essential = actor.getClass().isEssential(actor);
+        const auto recoverySettings = value == 8 && essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        std::vector<Ptr> residents;
+        if (!player && command == ESM4::ActorValueCommand::Set)
+        {
+            for (const auto& [refNum, resident] : mWorldModel.getPtrRegistryView())
+            {
+                if (resident.isEmpty() || resident == getPlayerPtr())
+                    continue;
+                const auto* native = mOblivionCombat->findActorValues(resident.getCellRef().getFormKey());
+                if (native && native->mBase == values->mBase)
+                    residents.push_back(resident);
+            }
+            if (std::find(residents.begin(), residents.end(), actor) == residents.end())
+                residents.push_back(actor);
+        }
+        auto* reference = adoptOblivionActorLife(actor);
         const ESM4::ActorValueCommandPolicy policy{player && getGodModeState(), actor.getType() != ESM::REC_CREA4};
         const auto result = player
             ? mOblivionCombat->executePlayerValueCommand(*mPlayer, value, command, source, requested, policy, playerSettings)
