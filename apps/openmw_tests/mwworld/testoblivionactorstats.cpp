@@ -1399,6 +1399,167 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, resourceBatchRestoresResidentPlayerAndUnloadedActorsAtomically)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{};
+        playerBase.blank();
+        playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(playerBase);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWClass::ESM4Npc::registerSelf();
+        MWWorld::Player player(playerRecord);
+        const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x902);
+        reference.mId = {0x902, 3};
+        reference.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr npc(&live);
+        const std::array residents{npc};
+        const MWMechanics::OblivionRestorationSettings settings{
+            {.1f, 0}, {2, 0}, MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore)};
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[8] = {100, {std::nullopt, std::nullopt, -75.f}};
+        values.mValues[9] = {1000, {std::nullopt, std::nullopt, -900.f}};
+        values.mValues[10] = {100, {std::nullopt, std::nullopt, -90.f}};
+        service.publishNonPlayerValues(npc, values);
+        service.publishNonPlayerLife(npc, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto npcKey = values.mActor;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 1000, 100, 0}};
+        service.publishPlayerValues(player, values, settings.mPlayerBase);
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto playerKey = values.mActor;
+        ESM4::RuntimeState before;
+        before.mProfile = ESM::GameProfile::Oblivion;
+        service.capture(before);
+        const auto unloadedKey = ESM::FormKey::content("actors.esm", 0x903);
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, npcKey);
+        auto unloadedReference = reference;
+        unloadedReference.mId = {0x903, 3};
+        unloadedReference.mFormKey = unloadedKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(unloadedReference, unloadedKey);
+        values = *service.findActorValues(npcKey);
+        values.mActor = unloadedKey;
+        values.mProcess = ESM4::ActorValueProcess::Low;
+        before.mNativeActorValues.push_back(values);
+        before.mNativeActorLife.push_back({values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        before.mPlayer.mReference = playerKey;
+        before.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        before.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        before.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        for (const auto& key : {npcKey, unloadedKey})
+        {
+            ESM4::RuntimeReferenceState referenceState;
+            referenceState.mKey = key;
+            referenceState.mBase = mActorKey;
+            referenceState.mCell = before.mPlayer.mCell;
+            before.mReferences.push_back(referenceState);
+        }
+        service.restore(before);
+        service.capture(before); // Canonical identity order.
+
+        const std::vector<MWMechanics::OblivionActorRestoration> updates{
+            {npcKey, {{120, false, false}, {2, true, false}}},
+            {unloadedKey, {{120, false, false}}},
+            {playerKey, {{3600, true, false}}}};
+        service.restoreResourceBatch(player, updates, residents, settings);
+        EXPECT_FLOAT_EQ(service.getNonPlayerValue(npc, 8), 100);
+        EXPECT_FLOAT_EQ(service.getNonPlayerValue(npc, 9), 222);
+        EXPECT_FLOAT_EQ(service.getNonPlayerValue(unloadedKey, 8, mStore), 25);
+        EXPECT_FLOAT_EQ(service.getNonPlayerValue(unloadedKey, 9, mStore), 220);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(8), 100);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(9), 1000);
+        EXPECT_FLOAT_EQ(npc.getClass().getCreatureStats(npc).getMagicka().getCurrent(), 222);
+        EXPECT_FLOAT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getMagicka().getCurrent(), 1000);
+        auto after = before;
+        after.mProfile = ESM::GameProfile::Oblivion;
+        service.capture(after);
+        EXPECT_EQ(after.mNativeActorLife, before.mNativeActorLife);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(after);
+        EXPECT_FLOAT_EQ(restored.getNonPlayerValue(unloadedKey, 9, mStore), 220);
+
+        // Fail after earlier candidates have already been computed. Neither the
+        // owned state nor any resident projection may expose partial restoration.
+        for (int failure = 0; failure != 6; ++failure)
+        {
+            SCOPED_TRACE(failure);
+            auto invalid = updates;
+            auto invalidResidents = std::vector<MWWorld::Ptr>{npc};
+            if (failure == 0)
+                invalid.back().mUpdates.back().mDuration = std::numeric_limits<float>::quiet_NaN();
+            else if (failure == 1)
+                invalid.push_back(updates.front());
+            else if (failure == 2)
+                invalid.back().mActor = ESM::FormKey::content("actors.esm", 0x999);
+            else if (failure == 3)
+                invalidResidents.push_back(npc);
+            else if (failure == 4)
+                invalidResidents.push_back(MWWorld::Ptr{});
+            else
+                invalid.front().mUpdates.clear();
+            EXPECT_THROW(service.restoreResourceBatch(player, invalid, invalidResidents, settings), std::exception);
+            auto result = after;
+            result.mProfile = ESM::GameProfile::Oblivion;
+            service.capture(result);
+            EXPECT_EQ(result.mNativeActorValues, after.mNativeActorValues);
+            EXPECT_EQ(result.mNativeActorLife, after.mNativeActorLife);
+            EXPECT_FLOAT_EQ(npc.getClass().getCreatureStats(npc).getMagicka().getCurrent(), 222);
+            EXPECT_FLOAT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getMagicka().getCurrent(), 1000);
+        }
+        // Retain separate float stores: two 0.00003 increments each round
+        // away at Damage=-900; one combined 0.00006 increment would not.
+        service.restore(before);
+        service.publishNonPlayerValues(npc, *service.findActorValues(npcKey));
+        const std::array tinyUpdates{MWMechanics::OblivionActorRestoration{
+            npcKey, {{.00003f, false, false}, {.00003f, false, false}}}};
+        service.restoreResourceBatch(player, tinyUpdates, residents, settings);
+        EXPECT_EQ(service.findActorValues(npcKey)->mValues[9].mModifiers[2], -900.f);
+        EXPECT_FLOAT_EQ(npc.getClass().getCreatureStats(npc).getMagicka().getCurrent(), 100);
+
+        // Terminal lifecycle suppresses restoration even with positive stored
+        // Health. No HP-based inference may resurrect an unloaded actor.
+        auto terminal = before;
+        for (auto& life : terminal.mNativeActorLife)
+            life.mPhase = ESM4::ActorLifePhase::Dead;
+        service.restore(terminal);
+        service.restoreResourceBatch(player, updates, residents, settings);
+        auto terminalResult = terminal;
+        service.capture(terminalResult);
+        EXPECT_EQ(terminalResult.mNativeActorValues, terminal.mNativeActorValues);
+        EXPECT_EQ(terminalResult.mNativeActorLife, terminal.mNativeActorLife);
+        EXPECT_TRUE(npc.getClass().getCreatureStats(npc).isDead());
+        EXPECT_TRUE(playerPtr.getClass().getCreatureStats(playerPtr).isDead());
+
+        auto missingLife = before;
+        missingLife.mNativeActorLife.clear();
+        service.restore(missingLife);
+        EXPECT_THROW(service.restoreResourceBatch(player, updates, residents, settings), std::invalid_argument);
+        auto missingResult = missingLife;
+        service.capture(missingResult);
+        EXPECT_EQ(missingResult, missingLife);
+    }
+
     TEST_F(OblivionActorStatsTest, nativeResourceRestorationCommitsAllChannelsTogether)
     {
         autoNpc();

@@ -1074,6 +1074,62 @@ namespace MWMechanics
             publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
     }
 
+    void OblivionCombatService::restoreResourceBatch(MWWorld::Player& player,
+        std::span<const OblivionActorRestoration> updates, std::span<const MWWorld::Ptr> residents,
+        const OblivionRestorationSettings& settings)
+    {
+        ESM4::validateMagickaRegenerationSettings(settings.mMagicka);
+        ESM4::validateFatigueRegenerationSettings(settings.mFatigue);
+        auto candidates = mActorValues;
+        std::set<ESM::FormKey> affected;
+        std::optional<OblivionActorProjection> playerView;
+        for (const auto& update : updates)
+        {
+            if (!affected.insert(update.mActor).second || update.mUpdates.empty())
+                throw std::invalid_argument("duplicate or empty native resource update");
+            const auto found = candidates.find(update.mActor);
+            if (found == candidates.end())
+                throw std::invalid_argument("native resource update requires registered actor values");
+            auto& values = found->second;
+            const auto* life = findActorLife(update.mActor);
+            if (!life)
+                throw std::invalid_argument("native resource update requires initialized lifecycle");
+            for (const auto& step : update.mUpdates)
+                if (!std::isfinite(step.mDuration) || step.mDuration < 0.f)
+                    throw std::invalid_argument("invalid native resource update duration");
+            const bool isPlayer = values.mOwner == ESM4::ActorValueOwner::Player;
+            const auto* base = isPlayer ? nullptr : findActorBase(values.mBase);
+            if (life->mPhase != ESM4::ActorLifePhase::Dead)
+            {
+                if (isPlayer)
+                    preparePlayerValues(values, settings.mPlayerBase);
+                // Preserve each native call's float store and sparse modifier
+                // semantics; summing durations is not generally equivalent.
+                for (const auto& step : update.mUpdates)
+                    restoreResources(values, step, settings, base);
+            }
+            values.validate();
+            const auto projection = actorProjection(values, base, life);
+            if (isPlayer)
+                playerView.emplace(player.getPlayer().getClass().getNpcStats(player.getPlayer()), projection);
+        }
+        std::set<ESM::FormKey> identities;
+        std::list<PreparedNonPlayerView> prepared;
+        for (const auto& ptr : residents)
+        {
+            const auto& old = nonPlayerValues(ptr);
+            if (!affected.contains(old.mActor) || !identities.insert(old.mActor).second)
+                throw std::invalid_argument("unaffected or duplicate native resource resident");
+            prepared.emplace_back(ptr, candidates.at(old.mActor), findActorBase(old.mBase), findActorLife(old.mActor));
+        }
+        // All fallible work precedes the authority/projection publication.
+        mActorValues.swap(candidates);
+        if (playerView)
+            playerView->commit();
+        for (auto& view : prepared)
+            view.commit();
+    }
+
     void OblivionCombatService::updateNonPlayerFatigue(const MWWorld::Ptr& actor,
         const OblivionFatigueUpdate& input, const OblivionFatigueSettings& settings)
     {

@@ -103,6 +103,12 @@ namespace MWMechanics
         bool mHasActiveMagicItem;
     };
 
+    struct OblivionActorRestoration
+    {
+        ESM::FormKey mActor;
+        std::vector<OblivionRestorationUpdate> mUpdates;
+    };
+
     struct OblivionActorValueCommandResult
     {
         // False means eligibility suppressed both storage and notifications.
@@ -270,6 +276,12 @@ namespace MWMechanics
             const OblivionRestorationSettings& settings);
         void restorePlayerResources(MWWorld::Player& player, const OblivionRestorationUpdate& input,
             const OblivionRestorationSettings& settings);
+        // Atomic ordered resource updates across resident and unloaded actors.
+        // Caller supplies every affected resident nonplayer; no pointers survive.
+        // All actors require initialized lifecycle. Dead actors remain unchanged.
+        // Caller owns hourly clock, processing eligibility and effect advancement.
+        void restoreResourceBatch(MWWorld::Player& player, std::span<const OblivionActorRestoration> updates,
+            std::span<const MWWorld::Ptr> residents, const OblivionRestorationSettings& settings);
         // Running expenditure precedes regeneration; prepare and publish both
         // as one transition so failure cannot leave a partially updated actor.
         void updateNonPlayerFatigue(const MWWorld::Ptr& actor, const OblivionFatigueUpdate& input,

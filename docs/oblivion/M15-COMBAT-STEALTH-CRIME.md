@@ -4774,3 +4774,34 @@ The retained state verification records all actor values and clock. Next is
 native hourly resource dispatch with unloaded authority and resident projections
 committed together, followed by real Wait and fresh-process verification.
 S2/S3 and all later gates remain open; automatic actor publication remains off.
+
+
+### S3 atomic multi-actor resource restoration
+
+`OblivionCombatService::restoreResourceBatch` prepares ordered resource updates
+for Player, resident NPCs/creatures and unloaded owned actors before publishing
+any values or projections. It requires initialized lifecycle, leaves terminal
+actors unchanged, validates every duration and rejects missing/duplicate actors,
+empty actor requests, and invalid/duplicate/unaffected residents. Processing,
+clock, effects and rest/jail eligibility remain caller-owned; no pointer persists.
+Separate updates retain their individual float stores instead of merging elapsed
+durations. The caller must supply every affected resident nonplayer projection.
+
+The new engine case exercises the independently observed120+2 versus120-second
+NPC restoration, Player3600-second restoration, immediate resident stat agreement,
+unloaded capture/restore, six late transaction failures with rollback, separate
+float-store rounding, dead actors with positive stored Health, and missing life.
+`S3/resource-batch-red-01/tests-corrected.log` proves the unimplemented API fails.
+Retained earlier fixture failures include a scaled-NPC setup crash without a
+world (GDB identified the construction lookup), initializer/query compilation
+errors, and `resource-batch-01` missing the unloaded content reference. Those
+fixtures were corrected explicitly, not treated as implementation acceptance.
+
+`S3/resource-batch-02` and `resource-batch-sanitized-02` each build
+openmw/openmw-tests/esmtool and pass all630 engine tests, no skips. ASan leak
+detection and UBSan halting are enabled in the sanitizer run. Both use source
+fingerprint `a8083f139ac119c9c681119aa1ae1ff82b75d5eb2c6e24b36cf27046501c0ba6`
+on parent `5a0e2e6d4d`. `resource-batch-sanitized-01` was stopped after the regular
+fixture failure so it could not validate outdated sources. This is service
+coverage; hourly GUI integration and actual Wait/restart remain the next task.
+No stage gate or automatic publication policy changes.
