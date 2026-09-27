@@ -8,10 +8,18 @@
 #include <components/esm/refid.hpp>
 #include <components/esm4/inventorymechanics.hpp>
 
+#include "manualref.hpp"
+
 namespace MWWorld
 {
     class ESMStore;
     class InventoryStore;
+
+    struct PreparedOblivionInventoryItem
+    {
+        ManualRef mReference;
+        std::optional<int> mEquipmentSlot;
+    };
 
     struct OblivionProfileInstallReport
     {
@@ -35,6 +43,12 @@ namespace MWWorld
         static ESM::RefId sharedItemId(const ESMStore& store, const ESM::RefId& nativeId);
         static ESM::RefId nativeItemId(const ESMStore& store, const ESM::RefId& sharedId);
         static int sharedItemType(const ESMStore& store, const ESM::RefId& sharedId);
+
+        // Resolve and construct the entire replacement before a caller clears
+        // a live inventory. These references are detached and unregistered.
+        // Publication/registration and equipment callbacks remain caller-owned.
+        static std::vector<PreparedOblivionInventoryItem> prepareActorInventory(const ESMStore& store,
+            const ESM::FormKeyResolver& resolver, const std::vector<ESM4::RuntimeInventoryItem>& items);
 
         // Populate the shared equipment slots from a projected native actor
         // inventory.  This is deliberately separate from InventoryStore's

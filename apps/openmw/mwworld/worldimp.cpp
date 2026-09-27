@@ -1427,6 +1427,35 @@ namespace MWWorld
         else
             state.validate();
         const ESM::FormKeyResolver resolver(mContentFiles);
+        // Construct detached replacement items before changing globals, player
+        // identity or live inventories. Content/owner/projection errors must not
+        // leave an earlier inventory cleared or only partly reconstructed.
+        const auto preparedPlayerInventory = OblivionProfileServices::prepareActorInventory(
+            mStore, resolver, state.mPlayer.mInventory);
+        std::map<ESM::FormKey, std::vector<PreparedOblivionInventoryItem>> preparedActorInventories;
+        for (const auto& reference : state.mReferences)
+        {
+            const auto base = resolver.toFormId(reference.mBase);
+            if (base && (mStore.get<ESM4::Npc>().search(ESM::RefId(*base))
+                || mStore.get<ESM4::Creature>().search(ESM::RefId(*base))))
+                preparedActorInventories.emplace(reference.mKey,
+                    OblivionProfileServices::prepareActorInventory(mStore, resolver, reference.mInventory));
+        }
+        const auto applyPreparedInventory = [](InventoryStore& inventory,
+                                               const std::vector<PreparedOblivionInventoryItem>& prepared) {
+            std::vector<std::pair<ContainerStoreIterator, int>> equipped;
+            equipped.reserve(prepared.size());
+            inventory.clear();
+            for (const auto& item : prepared)
+            {
+                const Ptr ptr = item.mReference.getPtr();
+                const auto added = inventory.add(ptr, ptr.getCellRef().getCount(false), false);
+                if (item.mEquipmentSlot)
+                    equipped.emplace_back(added, *item.mEquipmentSlot);
+            }
+            for (const auto& [item, slot] : equipped)
+                inventory.equip(slot, item);
+        };
         mNextOblivionDynamicSerial = state.mNextDynamicSerial;
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
@@ -1529,48 +1558,7 @@ namespace MWWorld
         mPlayer->setCell(&playerCell);
         const Ptr player = getPlayerPtr();
         InventoryStore& playerInventory = player.getClass().getInventoryStore(player);
-        playerInventory.clear();
-        std::vector<std::pair<ContainerStoreIterator, std::uint32_t>> equippedItems;
-        for (const ESM4::RuntimeInventoryItem& saved : state.mPlayer.mInventory)
-        {
-            const std::optional<ESM::FormId> itemId = resolver.toFormId(saved.mBase);
-            if (!itemId || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*itemId)))
-                throw std::runtime_error("TES4 runtime-state player item cannot be resolved: "
-                    + saved.mBase.serialize());
-            const ESM::RefId sharedId
-                = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*itemId));
-            ManualRef source(mStore, sharedId, saved.mCount);
-            Ptr item = source.getPtr();
-            if (saved.mCondition >= 0)
-                item.getCellRef().setCharge(saved.mCondition);
-            if (saved.mCharge >= 0.f)
-                item.getCellRef().setEnchantmentCharge(saved.mCharge);
-            if (saved.mRemainingUsageTime >= 0.f)
-                item.getClass().setRemainingUsageTime(item, saved.mRemainingUsageTime);
-            if (!saved.mOwner.isNull())
-            {
-                const std::optional<ESM::FormId> owner = resolver.toFormId(saved.mOwner);
-                if (!owner)
-                    throw std::runtime_error("TES4 runtime-state item owner cannot be resolved: "
-                        + saved.mOwner.serialize());
-                item.getCellRef().setOwner(ESM::RefId(*owner));
-            }
-            ContainerStoreIterator added
-                = static_cast<ContainerStore&>(playerInventory).add(item, saved.mCount, false);
-            if (saved.mEquippedSlots != 0)
-                equippedItems.emplace_back(added, saved.mEquippedSlots);
-        }
-        for (const auto& [item, nativeSlots] : equippedItems)
-        {
-            const std::vector<int> slots = (*item).getClass().getEquipmentSlots(*item).first;
-            if (slots.empty())
-                continue;
-            int selected = slots.front();
-            if ((nativeSlots & ESM4::Armor::TES4_LeftRing) != 0
-                && std::ranges::find(slots, InventoryStore::Slot_LeftRing) != slots.end())
-                selected = InventoryStore::Slot_LeftRing;
-            playerInventory.equip(selected, item);
-        }
+        applyPreparedInventory(playerInventory, preparedPlayerInventory);
         player.getRefData().setPosition(state.mPlayer.mPosition);
         MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
         const auto applyDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& current) {
@@ -1657,54 +1645,6 @@ namespace MWWorld
                 true);
         });
 
-        const auto applyNativeActorInventory = [&](const Ptr& owner,
-                                                   const std::vector<ESM4::RuntimeInventoryItem>& saved) {
-            if (owner.isEmpty() || (owner.getClass().getType() != ESM::REC_NPC_4
-                    && owner.getClass().getType() != ESM::REC_CREA4))
-                return;
-            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
-            inventory.clear();
-            std::vector<std::pair<ContainerStoreIterator, std::uint32_t>> actorEquippedItems;
-            for (const ESM4::RuntimeInventoryItem& item : saved)
-            {
-                const std::optional<ESM::FormId> itemId = resolver.toFormId(item.mBase);
-                if (!itemId || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*itemId)))
-                    throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
-                        + item.mBase.serialize());
-                const ESM::RefId sharedId
-                    = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*itemId));
-                ManualRef source(mStore, sharedId, item.mCount);
-                Ptr itemPtr = source.getPtr();
-                if (item.mCondition >= 0)
-                    itemPtr.getCellRef().setCharge(item.mCondition);
-                if (item.mCharge >= 0.f)
-                    itemPtr.getCellRef().setEnchantmentCharge(item.mCharge);
-                if (item.mRemainingUsageTime >= 0.f)
-                    itemPtr.getClass().setRemainingUsageTime(itemPtr, item.mRemainingUsageTime);
-                if (!item.mOwner.isNull())
-                {
-                    const std::optional<ESM::FormId> ownerId = resolver.toFormId(item.mOwner);
-                    if (!ownerId)
-                        throw std::runtime_error("TES4 runtime-state actor item owner cannot be resolved: "
-                            + item.mOwner.serialize());
-                    itemPtr.getCellRef().setOwner(ESM::RefId(*ownerId));
-                }
-                ContainerStoreIterator added = inventory.add(itemPtr, item.mCount, false);
-                if (item.mEquippedSlots != 0)
-                    actorEquippedItems.emplace_back(added, item.mEquippedSlots);
-            }
-            for (const auto& [item, nativeSlots] : actorEquippedItems)
-            {
-                const std::vector<int> slots = (*item).getClass().getEquipmentSlots(*item).first;
-                if (slots.empty())
-                    continue;
-                int selected = slots.front();
-                if ((nativeSlots & ESM4::Armor::TES4_LeftRing) != 0
-                    && std::ranges::find(slots, InventoryStore::Slot_LeftRing) != slots.end())
-                    selected = InventoryStore::Slot_LeftRing;
-                inventory.equip(selected, item);
-            }
-        };
         for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
         {
             const auto found = references.find(reference.mKey);
@@ -1767,7 +1707,9 @@ namespace MWWorld
                 if (const auto* number = std::get_if<double>(&scale->second))
                     ptr.getCellRef().setScale(static_cast<float>(*number));
 
-            applyNativeActorInventory(ptr, reference.mInventory);
+            if (ptr.getClass().getType() == ESM::REC_NPC_4 || ptr.getClass().getType() == ESM::REC_CREA4)
+                applyPreparedInventory(ptr.getClass().getInventoryStore(ptr),
+                    preparedActorInventories.at(reference.mKey));
 
             const auto animationGroup = reference.mCustomState.find("obscript.animation_group");
             const auto animationProgress = reference.mCustomState.find("obscript.animation_progress");

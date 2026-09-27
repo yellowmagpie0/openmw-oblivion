@@ -3847,3 +3847,50 @@ resurrection acceptance. Body/cell eligibility, native knocked-state 3, base/
 inventory reset, controller/3D rebuilding and script routing remain open.
 Native Resurrect remains guarded until those operations are implemented.
 S2/S3 and S4–S14 remain incomplete. Next: world/controller reset integration.
+
+### S3 inventory reset prerequisite: detached content preflight
+
+Commit `851b6e3ac5` adds preserve-state resurrection AV/lifecycle transactions.
+Review of the remaining world reset found that native inventory restoration
+cleared live inventory before resolving later items and owners. The shared
+native preparation helper now constructs all Player/NPC/Creature replacement
+item references, condition, charge, light usage, ownership and equipment-slot
+selection before `applyOblivionRuntimeState` changes globals, serials, player
+identity or inventories. Prepared items remain detached and unregistered.
+The two former item-construction loops use that one prepared representation.
+
+The new engine regression checks real projected weapon/ring references, left
+ring selection, condition/charge/owner preservation, movement of the prepared
+vector, and unchanged live inventory, pointer registry and generated serials
+on success, destruction, missing plugin, missing item and missing owner.
+Attempt 01 fails to compile due to incorrect fixture assumptions about record
+FormKey members and a protected insertion helper; corrected attempt 02 fails
+against the empty preparation stub as intended.
+`S3/native-inventory-preparation-03` passes **602 engine tests**, no skips,
+exact inventory. Tested source fingerprint:
+`97aa9ba254e7777a6ab700af607c46d76c14a308864c2c98b455ba587df92667`.
+`openmw-tests` SHA-256:
+`739783223a9baffa15cf90192b4d8e1514c66fa8cd07f73a7a18771a8a787131`.
+
+Real content courses `S3/inventory-preflight-{runtime,reject,continuation}-01`
+all pass. The input is the preserved S0 M13 item-course save, SHA-256
+`a3de683eb63a20c722d6f30bca95ec8da09b16e1935afaf2a534c1aa816f2ea6`.
+Independent decoded-save verification preserves player inventory contents and
+equipment and all **37,036** original references' item contents. One active
+NPC (`026be1`) equips its existing torch (`02cf9f`, light slot 262144), matching
+the unchanged `updateEquippedLight` path. Fresh continuation preserves all
+**37,162** references' contents and equipment without additional differences.
+Comparisons aggregate otherwise-identical stacks while checking equipment
+separately; they do not mistake restacking for item loss. A structurally valid
+save with an unresolved final player item rejects with the exact content error,
+without apply/save success, and all pristine/input hashes remain unchanged.
+All three captures were directly inspected: two Imperial Prison room/HUD views
+and the precise failed-load dialog. No combat or audio acceptance is implied.
+Verification: `S3/authority-draft/inventory-preflight-verify.py` and
+`S3/inventory-preflight-verification.json`. Runtime `openmw` SHA-256:
+`0d5e82a9aa8ddeb76a4e897be9bf57b6b9d54c6f15a2c33dafea523c1bc78105`.
+
+This closes content preflight only. Final inventory insertion/registration,
+equipment callbacks, whole-world restore rollback, resurrection base reset
+and controller/3D operations remain open. No S2/S3 or later gate is closed.
+Next: prepare inventory publication and native world resurrection continuation.

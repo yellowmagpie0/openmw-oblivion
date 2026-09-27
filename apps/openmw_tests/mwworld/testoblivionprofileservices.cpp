@@ -1,12 +1,111 @@
 #include <gtest/gtest.h>
 
 #include <components/esm/records.hpp>
+#include <components/esm3/readerscache.hpp>
+#include "apps/openmw/mwbase/environment.hpp"
+#include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwclass/clothing.hpp"
+#include "apps/openmw/mwworld/inventorystore.hpp"
+#include "apps/openmw/mwworld/worldmodel.hpp"
 
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionprofileservices.hpp"
 
 namespace
 {
+    TEST(OblivionProfileServicesTest, preparesDetachedInventoryBeforeAnyLiveReplacement)
+    {
+        MWWorld::ESMStore store;
+        MWClass::Weapon::registerSelf();
+        MWClass::Clothing::registerSelf();
+        ESM4::Weapon weapon{};
+        weapon.mId = {0x100, 0};
+        const auto weaponKey = ESM::FormKey::content("items.esm", 0x100);
+        store.getWritable<ESM4::Weapon>().insertStatic(weapon, weaponKey);
+        ESM::Weapon sharedWeapon;
+        sharedWeapon.blank();
+        sharedWeapon.mId = ESM::RefId(weapon.mId);
+        sharedWeapon.mData.mType = ESM::Weapon::LongBladeOneHand;
+        store.insertStatic(sharedWeapon);
+        ESM4::Clothing ring{};
+        ring.mId = {0x101, 0};
+        const auto ringKey = ESM::FormKey::content("items.esm", 0x101);
+        ring.mClothingFlags = ESM4::Armor::TES4_LeftRing | ESM4::Armor::TES4_RightRing;
+        store.getWritable<ESM4::Clothing>().insertStatic(ring, ringKey);
+        ESM::Clothing sharedRing;
+        sharedRing.blank();
+        sharedRing.mId = ESM::RefId(ring.mId);
+        sharedRing.mData.mType = ESM::Clothing::Ring;
+        store.insertStatic(sharedRing);
+        MWBase::Environment environment;
+        environment.setESMStore(store);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(store, readers);
+        environment.setWorldModel(model);
+        struct TestInventory : MWWorld::InventoryStore
+        {
+            using ContainerStore::addNewStack;
+        } live;
+        MWWorld::ManualRef original(store, sharedWeapon.mId, 3);
+        const auto originalItem = live.addNewStack(original.getPtr(), 3);
+        model.registerPtr(*originalItem);
+        const auto originalRef = originalItem->getCellRef().getRefNum();
+        const auto revision = model.getPtrRegistryRevision();
+        const auto lastGenerated = model.getLastGeneratedRefNum();
+        const ESM::FormKeyResolver resolver({"items.esm", "owners.esm"});
+        ESM4::RuntimeInventoryItem savedWeapon;
+        savedWeapon.mBase = weaponKey;
+        savedWeapon.mCount = 2;
+        savedWeapon.mCondition = 31;
+        savedWeapon.mCharge = 7.5f;
+        savedWeapon.mOwner = ESM::FormKey::content("owners.esm", 0x200);
+        savedWeapon.mEquippedSlots = ESM4::InventorySlotWeapon;
+        ESM4::RuntimeInventoryItem savedRing;
+        savedRing.mBase = ringKey;
+        savedRing.mCount = 1;
+        savedRing.mEquippedSlots = ESM4::Armor::TES4_LeftRing;
+        const auto checkUntouched = [&]() {
+            EXPECT_EQ(live.count(sharedWeapon.mId), 3);
+            EXPECT_EQ(model.getPtr(originalRef), *originalItem);
+            EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+            EXPECT_EQ(model.getLastGeneratedRefNum(), lastGenerated);
+        };
+        {
+            auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, resolver, {savedWeapon, savedRing});
+            ASSERT_EQ(prepared.size(), 2);
+            const auto ptr = prepared[0].mReference.getPtr();
+            EXPECT_EQ(ptr.getCellRef().getCount(), 2);
+            EXPECT_EQ(ptr.getCellRef().getCharge(), 31);
+            EXPECT_EQ(ptr.getCellRef().getEnchantmentCharge(), 7.5f);
+            EXPECT_EQ(ptr.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x200, 1}));
+            EXPECT_FALSE(ptr.getCellRef().getRefNum().isSet());
+            EXPECT_EQ(prepared[0].mEquipmentSlot, MWWorld::InventoryStore::Slot_CarriedRight);
+            EXPECT_EQ(prepared[1].mEquipmentSlot, MWWorld::InventoryStore::Slot_LeftRing);
+            checkUntouched();
+            // Prepared references retain their identity across owning-vector moves.
+            auto moved = std::move(prepared);
+            EXPECT_EQ(moved[0].mReference.getPtr(), ptr);
+            EXPECT_EQ(moved[0].mReference.getPtr().getCellRef().getCount(), 2);
+        }
+        checkUntouched();
+        for (int invalid = 0; invalid < 3; ++invalid)
+        {
+            SCOPED_TRACE(invalid);
+            auto bad = savedRing;
+            if (invalid == 0)
+                bad.mBase = ESM::FormKey::content("missing.esm", 0x101);
+            else if (invalid == 1)
+                bad.mBase = ESM::FormKey::content("items.esm", 0x999);
+            else
+                bad.mOwner = ESM::FormKey::content("missing.esm", 0x200);
+            EXPECT_THROW(MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, resolver, {savedWeapon, bad}), std::runtime_error);
+            checkUntouched();
+        }
+        EXPECT_TRUE(MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {}).empty());
+    }
+
     TEST(OblivionProfileServicesTest, adaptsNativeBootRecordsWithoutACatchAll)
     {
         MWWorld::ESMStore store;

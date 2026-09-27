@@ -737,6 +737,51 @@ namespace
 
 namespace MWWorld
 {
+    std::vector<PreparedOblivionInventoryItem> OblivionProfileServices::prepareActorInventory(
+        const ESMStore& store, const ESM::FormKeyResolver& resolver,
+        const std::vector<ESM4::RuntimeInventoryItem>& items)
+    {
+        std::vector<PreparedOblivionInventoryItem> result;
+        result.reserve(items.size());
+        for (const auto& item : items)
+        {
+            const auto itemId = resolver.toFormId(item.mBase);
+            if (!itemId || !itemDefinition(store, ESM::RefId(*itemId)))
+                throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
+                    + item.mBase.serialize());
+            ManualRef source(store, sharedItemId(store, ESM::RefId(*itemId)), item.mCount);
+            const Ptr ptr = source.getPtr();
+            if (item.mCondition >= 0)
+                ptr.getCellRef().setCharge(item.mCondition);
+            if (item.mCharge >= 0.f)
+                ptr.getCellRef().setEnchantmentCharge(item.mCharge);
+            if (item.mRemainingUsageTime >= 0.f)
+                ptr.getClass().setRemainingUsageTime(ptr, item.mRemainingUsageTime);
+            if (!item.mOwner.isNull())
+            {
+                const auto ownerId = resolver.toFormId(item.mOwner);
+                if (!ownerId)
+                    throw std::runtime_error("TES4 runtime-state actor item owner cannot be resolved: "
+                        + item.mOwner.serialize());
+                ptr.getCellRef().setOwner(ESM::RefId(*ownerId));
+            }
+            std::optional<int> slot;
+            if (item.mEquippedSlots != 0)
+            {
+                const auto slots = ptr.getClass().getEquipmentSlots(ptr).first;
+                if (!slots.empty())
+                {
+                    slot = slots.front();
+                    if ((item.mEquippedSlots & ESM4::Armor::TES4_LeftRing) != 0
+                        && std::ranges::find(slots, InventoryStore::Slot_LeftRing) != slots.end())
+                        slot = InventoryStore::Slot_LeftRing;
+                }
+            }
+            result.push_back({std::move(source), slot});
+        }
+        return result;
+    }
+
     ESM::RefId OblivionProfileServices::sharedItemId(const ESMStore& store, const ESM::RefId& nativeId)
     {
         if (const ESM4::MiscItem* item = store.get<ESM4::MiscItem>().search(nativeId);
