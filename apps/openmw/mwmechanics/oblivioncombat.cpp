@@ -442,6 +442,7 @@ namespace MWMechanics
         mActorLife.clear();
         mNextDeathEvent = 1;
         mPendingDeathEvents.clear();
+        mDeathCounts.clear();
     }
 
     std::uint64_t OblivionCombatService::allocateAction()
@@ -883,7 +884,7 @@ namespace MWMechanics
         prepared.commit();
     }
 
-    std::optional<std::deque<ESM4::RuntimeActorDeathEvent>> OblivionCombatService::prepareLifeTransition(
+    std::optional<OblivionCombatService::PreparedLifeTransition> OblivionCombatService::prepareLifeTransition(
         const ESM4::RuntimeActorLife& life) const
     {
         life.validate();
@@ -892,14 +893,16 @@ namespace MWMechanics
             throw std::invalid_argument("native lifecycle transition requires initialized matching authority");
         if (previous->mPhase == life.mPhase)
             return std::nullopt;
-        auto events = mPendingDeathEvents;
+        PreparedLifeTransition prepared{mPendingDeathEvents, mDeathCounts};
         if (life.mPhase == ESM4::ActorLifePhase::Dead)
         {
             if (mNextDeathEvent == std::numeric_limits<std::uint64_t>::max())
                 throw std::overflow_error("native death event namespace exhausted");
-            events.push_back({mNextDeathEvent, life.mActor, life.mKiller});
+            prepared.mEvents.push_back({mNextDeathEvent, life.mActor, life.mKiller});
+            auto& count = prepared.mCounts[life.mBase];
+            count = static_cast<std::uint16_t>(static_cast<std::uint32_t>(count) + 1);
         }
-        return events;
+        return prepared;
     }
 
     bool OblivionCombatService::transitionNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life)
@@ -913,7 +916,8 @@ namespace MWMechanics
         const bool death = life.mPhase == ESM4::ActorLifePhase::Dead;
         publishNonPlayerLife(actor, std::move(life));
         // All potentially throwing preparation is finished before publication.
-        mPendingDeathEvents.swap(*events);
+        mPendingDeathEvents.swap(events->mEvents);
+        mDeathCounts.swap(events->mCounts);
         if (death)
             ++mNextDeathEvent;
         return true;
@@ -929,7 +933,8 @@ namespace MWMechanics
             return false;
         const bool death = life.mPhase == ESM4::ActorLifePhase::Dead;
         publishPlayerLife(player, std::move(life));
-        mPendingDeathEvents.swap(*events);
+        mPendingDeathEvents.swap(events->mEvents);
+        mDeathCounts.swap(events->mCounts);
         if (death)
             ++mNextDeathEvent;
         return true;
@@ -1023,6 +1028,15 @@ namespace MWMechanics
         return found == mActorLife.end() ? nullptr : &found->second;
     }
 
+    std::int32_t OblivionCombatService::getDeadCount(const ESM::FormKey& base) const
+    {
+        const auto found = mDeathCounts.find(base);
+        if (found == mDeathCounts.end())
+            return 0;
+        const std::int32_t count = found->second;
+        return count >= 32768 ? count - 65536 : count;
+    }
+
     std::optional<ESM4::RuntimeActorDeathEvent> OblivionCombatService::takeNextDeathEvent()
     {
         if (mPendingDeathEvents.empty())
@@ -1044,6 +1058,9 @@ namespace MWMechanics
             throw std::invalid_argument("native actor base overrides require an Oblivion v11+ save");
         if (state.mVersion < 12 && (!mActorLife.empty() || !mPendingDeathEvents.empty() || mNextDeathEvent != 1))
             throw std::invalid_argument("native actor lifecycle requires an Oblivion v12+ save");
+        if (state.mVersion < 13 && !mDeathCounts.empty())
+            throw std::invalid_argument("native death counts require an Oblivion v13+ save");
+        auto deathCounts = mDeathCounts;
         std::vector<ESM4::RuntimeActorLife> lives;
         lives.reserve(mActorLife.size());
         for (const auto& [key, life] : mActorLife)
@@ -1066,6 +1083,7 @@ namespace MWMechanics
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
         state.mNativeActorLife.swap(lives);
+        state.mNativeDeathCounts.swap(deathCounts);
         state.mPendingDeathEvents.swap(events);
         state.mNextDeathEvent = mNextDeathEvent;
     }
@@ -1083,6 +1101,9 @@ namespace MWMechanics
             if (creature != (base.mKind == ESM4::ActorBaseKind::Creature))
                 throw std::invalid_argument("native actor base override kind mismatch: " + base.mBase.serialize());
         }
+        for (const auto& [base, count] : state.mNativeDeathCounts)
+            if (base != ESM::FormKey::dynamic("player-base", 1))
+                nativeBaseIsCreature(base, store); // Requires an actual winning NPC/creature base.
         const auto validateLifeIdentity = [&](const ESM::FormKey& actor, const ESM::FormKey& base) {
             if (actor == state.mPlayer.mReference)
             {
@@ -1133,6 +1154,7 @@ namespace MWMechanics
             if (resolved != actor)
                 throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
         }
+        auto deathCounts = state.mNativeDeathCounts;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> lives;
         for (const auto& life : state.mNativeActorLife)
             lives.emplace(life.mActor, life);
@@ -1141,6 +1163,7 @@ namespace MWMechanics
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);
+        mDeathCounts.swap(deathCounts);
         mPendingDeathEvents.swap(events);
         mNextDeathEvent = state.mNextDeathEvent;
     }

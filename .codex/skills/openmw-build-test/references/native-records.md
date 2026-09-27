@@ -87,3 +87,9 @@ require an initialized spell list: insert an actual NPC base and call
 `stats.getSpells().setSpells(base.mId)` for every standalone stats instance.
 When extending a fixture that later tests an older schema, inspect its entire
 body and remove newer fields when constructing that older-format state.
+
+Synthetic NPC base records used by combat content preflight must also set
+`mIsTES4 = true`; a key and store insertion alone do not identify native TES4
+construction semantics. The death-count preflight fixture failure in
+`S3/native-death-counts-02` records this omission; corrected engine evidence is
+`-03`.

@@ -86,3 +86,17 @@ both agree for typed int32 command inputs. This does not establish arbitrary
 out-of-range float conversion behavior. The Unicorn virtualenv does not include
 Capstone; use the installed `objdump -d -M intel --start-address=... --stop-address=...`
 for bounded disassembly, without adding a dependency just for instruction reads.
+
+## Native death-count storage and queries
+
+For the pinned 1.2.0416 executable, use the retained
+`S2/oracle-emulator/dead-count.py` / `dead-count-insert.py` probes. `440FA0`
+updates a per-base uint16 entry; `440F70` reads it; script helper `4F5010`
+sign-extends before producing a double. `600C95` increments by one on terminal
+entry, using base returned by +170 (`4D9B40`, actor+1C) when +190 (`977C50`)
+returns true. Those targets match Player/Character/Creature vtables.
+The other direct updater call at `4413BA` restores saved counters. The probes
+cover all 65,536 increments, 131,074 signed/null/missing queries, and 32 new-entry
+insertions. Only allocation supplies synthetic fresh 8-byte objects; actual
+list insertion and queries execute. Do not replace this historical counter
+with a scan of resident dead actors or invent old-save history from life flags.

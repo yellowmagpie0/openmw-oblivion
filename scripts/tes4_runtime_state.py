@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 12
+CURRENT_VERSION = 13
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -753,6 +753,18 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if process == 1:
                     native_float(low + maximum)
 
+    death_counts = check_collection(state.get("native_death_counts", []), "native death count list")
+    if version < 13 and death_counts:
+        raise RuntimeStateError("TES4 native death counts require version 13")
+    counted_bases = set()
+    for entry in death_counts:
+        if not isinstance(entry, dict) or set(entry) != {"base", "count"}:
+            raise RuntimeStateError("Invalid TES4 native death count")
+        native_key(entry["base"])
+        if entry["base"] in counted_bases or type(entry["count"]) is not int or not 0 <= entry["count"] <= 65535:
+            raise RuntimeStateError("Invalid or duplicate TES4 native death count")
+        counted_bases.add(entry["base"])
+
     lives = check_collection(state.get("native_actor_life", []), "native actor life list")
     death_events = check_collection(state.get("pending_death_events", []), "pending death event list")
     next_death = state.get("next_death_event", 1)
@@ -1166,6 +1178,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             {"id": reader.unpack("<Q"), "actor": reader.string(), "killer": reader.string()}
             for _ in range(reader.count())
         ]
+    if version >= 13:
+        result["native_death_counts"] = [
+            {"base": reader.string(), "count": reader.unpack("<H")} for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1371,6 +1387,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<Q", event["id"])
             writer.string(event["actor"])
             writer.string(event["killer"])
+    if version >= 13:
+        counts = sorted(state.get("native_death_counts", []), key=lambda item: item["base"])
+        writer.pack("<I", len(counts))
+        for entry in counts:
+            writer.string(entry["base"])
+            writer.pack("<H", entry["count"])
     return writer.finish()
 
 
@@ -1446,6 +1468,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("native_actor_values", [])
     state.setdefault("native_actor_bases", [])
     state.setdefault("native_actor_life", [])
+    state.setdefault("native_death_counts", [])
     state.setdefault("next_death_event", 1)
     state.setdefault("pending_death_events", [])
     _upgrade_inventory(state["player"]["inventory"])
@@ -1480,6 +1503,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("native_actor_values", [])
     result.setdefault("native_actor_bases", [])
     result.setdefault("native_actor_life", [])
+    result.setdefault("native_death_counts", [])
     result.setdefault("next_death_event", 1)
     result.setdefault("pending_death_events", [])
     _upgrade_inventory(result["player"]["inventory"])

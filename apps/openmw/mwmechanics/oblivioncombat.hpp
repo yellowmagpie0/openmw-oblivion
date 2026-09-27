@@ -115,8 +115,14 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
         std::uint64_t mNextDeathEvent = 1;
         std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
+        std::map<ESM::FormKey, std::uint16_t> mDeathCounts;
+        struct PreparedLifeTransition
+        {
+            std::deque<ESM4::RuntimeActorDeathEvent> mEvents;
+            std::map<ESM::FormKey, std::uint16_t> mCounts;
+        };
         const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
-        std::optional<std::deque<ESM4::RuntimeActorDeathEvent>> prepareLifeTransition(
+        std::optional<PreparedLifeTransition> prepareLifeTransition(
             const ESM4::RuntimeActorLife& life) const;
         bool enterNonPlayerDeath(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings, bool healthGate);
@@ -237,6 +243,7 @@ namespace MWMechanics
         // Pop before invoking the callback. Callback-triggered saves retain
         // remaining FIFO work and never replay the event being dispatched.
         std::optional<ESM4::RuntimeActorDeathEvent> takeNextDeathEvent();
+        std::int32_t getDeadCount(const ESM::FormKey& base) const;
         void capture(ESM4::RuntimeState& state) const;
         void restore(const ESM4::RuntimeState& state);
         // World load preflight: validate winning native actor bindings before

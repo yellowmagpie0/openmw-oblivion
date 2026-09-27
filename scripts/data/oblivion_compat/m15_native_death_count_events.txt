@@ -1,0 +1,8 @@
+at 1 command content:m15-lifecycle.esm:900101 getdeadcount M15LifecycleActor
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1 command content:m15-lifecycle.esm:900101 getav Health
+at 1 command content:m15-lifecycle.esm:900101 kill dynamic:player:0000000000000001
+at 1 command content:m15-lifecycle.esm:900101 kill
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1 command content:m15-lifecycle.esm:900101 getav Health
+at 1 command content:m15-lifecycle.esm:900101 getdeadcount M15LifecycleActor

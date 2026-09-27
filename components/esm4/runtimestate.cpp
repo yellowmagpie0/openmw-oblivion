@@ -562,6 +562,12 @@ namespace ESM4
                     throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
             }
         }
+        checkSize(mNativeDeathCounts.size(), "native death count map");
+        if (mVersion < 13 && !mNativeDeathCounts.empty())
+            throw std::runtime_error("TES4 native death counts require runtime-state version 13");
+        for (const auto& [base, count] : mNativeDeathCounts)
+            if (base.isNull())
+                throw std::runtime_error("Invalid TES4 native death count base");
         checkSize(mNativeActorLife.size(), "native actor life list");
         checkSize(mPendingDeathEvents.size(), "pending death event list");
         if (mVersion < 12 && (!mNativeActorLife.empty() || !mPendingDeathEvents.empty() || mNextDeathEvent != 1))
@@ -1234,6 +1240,15 @@ namespace ESM4
                 writeKey(writer, event.mKiller);
             }
         }
+        if (mVersion >= 13)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeDeathCounts.size()));
+            for (const auto& [base, count] : mNativeDeathCounts)
+            {
+                writeKey(writer, base);
+                writer.integer(count);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1647,6 +1662,23 @@ namespace ESM4
             const auto events = reader.count();
             for (std::uint32_t i = 0; i < events; ++i)
                 result.mPendingDeathEvents.push_back({reader.integer<std::uint64_t>(), nativeKey(), nativeKey(true)});
+        }
+        if (result.mVersion >= 13)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                ESM::FormKey base;
+                try { base = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&)
+                { throw std::runtime_error("Invalid TES4 native death count base"); }
+                if (base.isNull() || base.serialize() != text)
+                    throw std::runtime_error("Invalid or noncanonical TES4 native death count base");
+                const auto value = reader.integer<std::uint16_t>();
+                if (!result.mNativeDeathCounts.emplace(std::move(base), value).second)
+                    throw std::runtime_error("Duplicate TES4 native death count base");
+            }
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -2088,6 +2120,18 @@ namespace ESM4
                 if (i) stream << ',';
                 stream << "{\"id\":" << event.mId << ",\"actor\":\"" << escapeJson(event.mActor.serialize())
                        << "\",\"killer\":\"" << escapeJson(event.mKiller.serialize()) << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 13)
+        {
+            stream << ",\"native_death_counts\":[";
+            bool first = true;
+            for (const auto& [base, count] : mNativeDeathCounts)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"base\":\"" << escapeJson(base.serialize()) << "\",\"count\":" << count << '}';
             }
             stream << ']';
         }

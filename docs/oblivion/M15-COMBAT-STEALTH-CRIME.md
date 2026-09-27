@@ -3577,3 +3577,62 @@ starts eight real servers concurrently, verifies eight unique usable displays,
 and confirms four remain usable after their peers terminate. Both affected
 actual engine courses pass on independent displays as `-02`, with their own
 correct profile captures inspected. This is test isolation, not a gameplay gate.
+
+### S2/S3 native per-base death counters (partial)
+
+Original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+stores a separate base-keyed 16-bit counter. `440FA0` adds the low 16 bits to an
+existing entry, or inserts that value into a new entry; `440F70` reads it.
+`4F5010` sign-extends the result before writing the script double. Terminal
+entry calls the updater with +1 at `600C95`. Player/Character/Creature virtual
++170 all resolve `4D9B40` (base at actor+1C), and +190 resolves `977C50` (true),
+so the counter key there is the actor base. The other direct updater caller,
+`4413BA`, is in the saved-counter restoration loop. This is not a count of
+currently dead resident references.
+
+Ignored original-code probes `S2/oracle-emulator/dead-count.py` and
+`dead-count-insert.py` execute all **65,536 existing-entry increments**, **131,074
+signed/null/missing queries**, and **32 new-entry/list-insertion cases**. Both
+x87 control words are covered. Allocation in the insertion probe supplies fresh
+8-byte mapped objects; actual native list insertion, update and lookup execute.
+Console output is disabled. These probes establish counter storage/query rules,
+not every terminal-death or resurrection side effect.
+
+Runtime schema **13** appends canonical base-keyed uint16 counters in C++, JSON
+and Python. Duplicates, null/noncanonical identities, truncation, excessive
+collections, invalid JSON widths and old-version writes with new fields fail.
+Content preflight requires actual winning NPC/creature bases, even when no
+resident reference exists. Versions 1–12 start with empty counters: historical
+deaths cannot be reconstructed from their current life flags. New terminal
+transitions prepare counter, lifecycle and event changes together before shared
+view publication; revival, essential entry, repeat Kill and event consumption
+do not decrement/increment the counter. Namespace exhaustion rolls everything
+back. Clear and content-failure restore checks preserve their existing atomicity.
+GetDeadCount now queries this authority by base rather than scanning markers.
+Automatic actor registration and remaining script argument/Player-base aliases
+are still open; unregistered legacy marker deaths cannot populate this history.
+
+Checks: `S3/native-death-counts-01` passes **1,905 components** and **383
+ASan/UBSan** tests. Attempt 02 passes **169 Python** tests after adding the
+required AI RNG seed to new fixtures. Attempt 03 passes all **595 engine** tests
+after setting the test NPC's TES4 flag. Failed attempts remain intact; production
+component/sanitizer code was unchanged by those fixture fixes. The subsequent
+harness-isolation check passes all **172 Python** tests. Final engine source
+fingerprint: `17909f5b83cd3a2014f6a7a6c316eb1a01f8ff2b91126ce3c3975a50f11ebe35`.
+Engine SHA-256: `7bb20e15e387dc89f63f57371aa0a8cae1d074999c31ce19dbeb1e470848e5b6`.
+
+Real engine `S3/native-death-count-{runtime,negative,signed,wrap}-01` verifies
+0→1, 32767→-32768 and -1→0 queries, unchanged AVs and one callback for duplicate
+Kill. Callback Autosave and final Quicksave preserve exact uint16 storage.
+Continuation-01 restarts the signed callback save without replay/increment.
+Legacy-02 loads an actual v12 dead-actor save, defaults history to zero, and
+resaves v13 without inventing a count. Binding-reject-01 refuses a counter bound
+to the room STAT before runtime application. Morrowind-02 passes idle save
+isolation with no GPRO/T4VR/T4ST/OMW4STATE. The negative completes every action
+and fails only the deliberately wrong expected count 2. All pristine hashes and
+saved vectors are independently checked in
+`S3/authority-draft/native-death-count-verify.py`; all eight captures inspected.
+Successful native views face the observation-room wall; rejection shows its
+load-error dialog; Morrowind faces Balmora terrain. All are silent and do not
+establish normal combat, corpse pose or full gameplay regression. S2/S3 remain
+open and later gates are not closed by these checks.

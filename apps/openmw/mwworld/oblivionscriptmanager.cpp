@@ -1620,19 +1620,11 @@ namespace MWWorld
         if (name == "getdeadcount")
         {
             const auto base = keyFromValue(argument(0));
-            if (!base || !mWorld.mOblivionRuntimeState)
+            if (!base)
                 return std::int64_t(0);
-            std::int64_t count = 0;
-            for (const ESM4::RuntimeReferenceState& state : mWorld.mOblivionRuntimeState->mReferences)
-            {
-                if (state.mBase != *base)
-                    continue;
-                const auto dead = state.mCustomState.find("obscript.dead");
-                if (dead != state.mCustomState.end())
-                    if (const bool* value = std::get_if<bool>(&dead->second); value != nullptr && *value)
-                        ++count;
-            }
-            return count;
+            if (const auto* combat = mWorld.getOblivionCombatService())
+                return std::int64_t(combat->getDeadCount(*base));
+            return std::int64_t(0);
         }
         if (name == "kill" || name == "resurrect")
         {

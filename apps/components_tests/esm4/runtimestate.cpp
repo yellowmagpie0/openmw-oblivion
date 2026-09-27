@@ -947,4 +947,67 @@ namespace
         }
     }
 
+    TEST(ESM4RuntimeState, deathCountsRoundTripIndependentOfResidentLife)
+    {
+        auto state = makeState();
+        const auto base = ESM::FormKey::content("actors.esm", 0x123);
+        state.mNativeDeathCounts = {{base, 65535}, {ESM::FormKey::dynamic("player-base", 1), 32768}};
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored, state);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(restored.canonicalJson().find("\"count\":65535"), std::string::npos);
+        EXPECT_TRUE(restored.mNativeActorLife.empty());
+        auto truncated = bytes;
+        truncated.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        state.mVersion = 12;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mVersion = 13;
+        state.mNativeDeathCounts[{}] = 0;
+        EXPECT_THROW(state.validate(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, deathCountsRejectDuplicateAndNoncanonicalBinaryBases)
+    {
+        auto state = makeState();
+        const auto base = ESM::FormKey::content("actors.esm", 0x123);
+        state.mNativeDeathCounts = {{base, 1}};
+        const auto bytes = state.serializeBinary();
+        const auto entrySize = 4 + base.serialize().size() + 2;
+        const auto offset = bytes.size() - entrySize - 4;
+        auto duplicate = bytes;
+        duplicate[offset] = 2;
+        duplicate.insert(duplicate.end(), bytes.begin() + offset + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(duplicate), std::runtime_error);
+        auto noncanonical = bytes;
+        noncanonical[offset + 8 + 8] = 'A'; // Uppercase first plugin character.
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(noncanonical), std::runtime_error);
+        auto oversized = bytes;
+        oversized[offset] = 0xff;
+        oversized[offset + 1] = 0xff;
+        oversized[offset + 2] = 0xff;
+        oversized[offset + 3] = 0x7f;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(oversized), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, legacyVersionsDoNotInventHistoricalDeathCounts)
+    {
+        for (std::uint32_t version = 1; version < 13; ++version)
+        {
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            }
+            const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_TRUE(restored.mNativeDeathCounts.empty());
+            EXPECT_EQ(restored.canonicalJson().find("native_death_counts"), std::string::npos);
+        }
+    }
+
 }

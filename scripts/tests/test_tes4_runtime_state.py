@@ -673,6 +673,41 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             self.assertNotIn("pending_death_events", loaded)
             self.assertNotIn("next_death_event", loaded)
 
+    def test_native_death_counter_storage_and_rejection(self):
+        state = make_state()
+        state["ai_rng_state"] = 1
+        state["schema_version"] = 13
+        state["native_death_counts"] = [{"base": "content:actors.esm:000123", "count": 65535},
+                                         {"base": "dynamic:player-base:0000000000000001", "count": 32768}]
+        encoded = state_io.encode_payload(state)
+        self.assertEqual(state_io.decode_payload(encoded)["native_death_counts"], state["native_death_counts"])
+        for count in [-1, 65536, True, 1.5]:
+            broken = copy.deepcopy(state)
+            broken["native_death_counts"][0]["count"] = count
+            with self.subTest(count=count), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        for base in ["null", "content:Actors.esm:000123", "bad"]:
+            broken = copy.deepcopy(state)
+            broken["native_death_counts"][0]["base"] = base
+            with self.subTest(base=base), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        broken = copy.deepcopy(state)
+        broken["native_death_counts"].append(broken["native_death_counts"][0])
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(broken)
+        state["schema_version"] = 12
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(encoded[:-1])
+
+    def test_old_payload_does_not_invent_death_counts(self):
+        state = make_state()
+        state["ai_rng_state"] = 1
+        for version in range(4, 13):
+            state["schema_version"] = version
+            self.assertNotIn("native_death_counts", state_io.decode_payload(state_io.encode_payload(state)))
+
 
 if __name__ == "__main__":
     unittest.main()

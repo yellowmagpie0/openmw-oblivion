@@ -425,12 +425,14 @@ namespace
         service.publishPlayerLife(player, alive);
         EXPECT_FALSE(service.transitionPlayerLife(player, alive));
         EXPECT_TRUE(service.killPlayer(player, dead.mKiller, false, {}));
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
         EXPECT_TRUE(stats.isDead());
         EXPECT_EQ(stats.getHealth().getCurrent(), 10); // Policy owns Health changes separately.
         auto repeated = dead;
         repeated.mKiller = {};
         EXPECT_FALSE(service.killPlayer(player, {}, false, {}));
         EXPECT_EQ(*service.findActorLife(values.mActor), dead);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
         const auto first = service.takeNextDeathEvent();
         ASSERT_TRUE(first);
         EXPECT_EQ(first->mId, 1);
@@ -448,6 +450,7 @@ namespace
         saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
         service.capture(saved);
         EXPECT_EQ(saved.mNextDeathEvent, 3);
+        EXPECT_EQ(saved.mNativeDeathCounts.at(values.mBase), 2);
         ASSERT_EQ(saved.mPendingDeathEvents.size(), 1);
         EXPECT_EQ(saved.mPendingDeathEvents.front().mId, 2);
         MWMechanics::OblivionCombatService restored;
@@ -459,6 +462,7 @@ namespace
         essential.mPhase = ESM4::ActorLifePhase::EssentialUnconscious;
         essential.mRecoveryRemaining = 10;
         EXPECT_TRUE(restored.transitionPlayerLife(player, essential));
+        EXPECT_EQ(restored.getDeadCount(values.mBase), 2);
         EXPECT_FALSE(stats.isDead());
         EXPECT_TRUE(stats.getKnockedDown());
         EXPECT_FALSE(restored.takeNextDeathEvent());
@@ -529,6 +533,19 @@ namespace
         auto after = saved;
         restored.capture(after);
         EXPECT_EQ(after, saved);
+        for (const auto count : {32767u, 65535u})
+        {
+            saved.mNextDeathEvent = 1;
+            saved.mNativeDeathCounts[values.mBase] = count;
+            restored.restore(saved);
+            EXPECT_TRUE(restored.transitionPlayerLife(player, dead));
+            EXPECT_EQ(restored.getDeadCount(values.mBase), count == 32767 ? -32768 : 0);
+            auto wrapped = saved;
+            restored.capture(wrapped);
+            EXPECT_EQ(wrapped.mNativeDeathCounts.at(values.mBase), count == 32767 ? 32768 : 0);
+            EXPECT_EQ(wrapped.mNextDeathEvent, 2);
+        }
+
     }
 
     TEST_F(OblivionActorStatsTest, essentialRecoverySettingsFollowCurrentWinningNativeRecords)
@@ -1102,6 +1119,7 @@ namespace
         aliveLife.mPhase = ESM4::ActorLifePhase::Alive;
         EXPECT_TRUE(service.transitionNonPlayerLife(ptr, aliveLife));
         EXPECT_TRUE(service.killNonPlayer(ptr, {}, false, {}));
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
         EXPECT_FALSE(service.transitionNonPlayerLife(ptr, life));
         const auto deathEvent = service.takeNextDeathEvent();
         ASSERT_TRUE(deathEvent);

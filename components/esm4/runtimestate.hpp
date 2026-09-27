@@ -26,7 +26,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 12;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 13;
 
     struct RuntimeContentIdentity
     {
@@ -328,6 +328,8 @@ namespace ESM4
         std::vector<RuntimeActorLife> mNativeActorLife;
         std::uint64_t mNextDeathEvent = 1;
         std::vector<RuntimeActorDeathEvent> mPendingDeathEvents;
+        // Original storage is a wrapping 16-bit per-base counter, queried as signed.
+        std::map<ESM::FormKey, std::uint16_t> mNativeDeathCounts;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

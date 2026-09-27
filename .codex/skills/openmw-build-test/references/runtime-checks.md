@@ -270,3 +270,14 @@ reported unique usable displays. Inspect xvfb.log as well as engine logs, and
 retain/rerun contaminated courses. The affected historical runs are
 `S3/native-death-count-{legacy,morrowind}-01`, superseded by `-02`. The audit of
 all other retained S3 logs found no other conflicting-server errors.
+
+Schema 13 death counters use `oblivion_m15_native_death_count_*` manifests and
+the lifecycle observer fixture. Inject counters 0/32767/65535, then run duplicate
+Kill and require query results 1/-32768/0 with exactly one callback. Compare
+callback Autosave and final Quicksave uint16 storage, all AVs, first killer and
+namespace. Restart the signed callback Autosave; no replay or increment is
+allowed. An actual v12 dead-actor save must migrate to empty history, not infer
+counts from current death flags. Reject a counter bound to the room STAT before
+runtime application. Preparation/verification lives in
+`S3/authority-draft/native-death-count-{prepare,verify}.py`; evidence is
+runtime/negative/signed/wrap/continuation/binding-reject-01, legacy/morrowind-02.

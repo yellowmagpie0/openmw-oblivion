@@ -426,3 +426,37 @@ TEST(OblivionCombatService, LifeContentPreflightRejectsMissingActorsAndNonActorK
     EXPECT_EQ(after, before);
     EXPECT_TRUE(service.isActionPending(action));
 }
+
+TEST(OblivionCombat, deathCountsRequireWinningActorBasesAndClearWithoutInferringLife)
+{
+    ESM4::RuntimeState saved;
+    saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+    saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+    saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+    saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+    const auto base = ESM::FormKey::content("actors.esm", 4);
+    saved.mNativeDeathCounts[base] = 65535;
+    MWWorld::ESMStore store;
+    ESM4::Npc npc{};
+    npc.mFormKey = base;
+    npc.mIsTES4 = true;
+    store.getWritable<ESM4::Npc>().insertStatic(npc, base);
+    MWMechanics::OblivionCombatService service;
+    service.restore(saved, store);
+    EXPECT_EQ(service.getDeadCount(base), -1);
+    EXPECT_EQ(service.getDeadCount({}), 0);
+    auto invalid = saved;
+    invalid.mNativeDeathCounts[ESM::FormKey::content("actors.esm", 5)] = 1;
+    EXPECT_THROW(service.restore(invalid, store), std::invalid_argument);
+    auto after = saved;
+    service.capture(after);
+    EXPECT_EQ(after, saved);
+    after.mVersion = 12;
+    EXPECT_THROW(service.capture(after), std::invalid_argument);
+    EXPECT_EQ(service.getDeadCount(base), -1);
+    service.clear();
+    EXPECT_EQ(service.getDeadCount(base), 0);
+    after = saved;
+    service.capture(after);
+    EXPECT_TRUE(after.mNativeDeathCounts.empty());
+}
