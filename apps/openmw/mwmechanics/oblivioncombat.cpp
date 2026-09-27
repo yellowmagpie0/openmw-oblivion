@@ -970,7 +970,7 @@ namespace MWMechanics
     }
 
     bool OblivionCombatService::enterPlayerDeath(MWWorld::Player& player,
-        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool healthGate)
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool healthGate, bool godMode)
     {
         auto candidate = playerValues();
         const auto found = mActorLife.find(candidate.mActor);
@@ -987,8 +987,9 @@ namespace MWMechanics
         const auto recovery = ESM4::essentialRecoveryHealth(
             ESM4::combatBaseValue(candidate.mValues[8].mBase), current, settings);
         life.mRecoveryRemaining = settings.mDelay;
-        candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
-            ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
+        if (!godMode || recovery.mAdjustment >= 0.f)
+            candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+                ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
         candidate.validate();
         const auto ptr = player.getPlayer();
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(candidate, nullptr, &life));
@@ -1005,9 +1006,9 @@ namespace MWMechanics
     }
 
     bool OblivionCombatService::reactPlayerHealth(MWWorld::Player& player,
-        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode)
     {
-        return enterPlayerDeath(player, killer, essential, settings, true);
+        return enterPlayerDeath(player, killer, essential, settings, true, godMode);
     }
 
     bool OblivionCombatService::killNonPlayer(const MWWorld::Ptr& actor,
@@ -1017,9 +1018,109 @@ namespace MWMechanics
     }
 
     bool OblivionCombatService::killPlayer(MWWorld::Player& player,
-        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode)
     {
-        return enterPlayerDeath(player, killer, essential, settings, false);
+        return enterPlayerDeath(player, killer, essential, settings, false, godMode);
+    }
+
+    void OblivionCombatService::prepareEssentialWake(ESM4::RuntimeActorValues& values,
+        ESM4::RuntimeActorLife& life, bool essential, bool godMode,
+        const ESM4::EssentialRecoverySettings& settings) const
+    {
+        const bool player = values.mOwner == ESM4::ActorValueOwner::Player;
+        const auto current = [&]() {
+            return player ? ESM4::composeActorValue(values.mValues[8], values.mOwner, values.mProcess)
+                : nonPlayerFloat(values, 8, findActorBase(values.mBase));
+        };
+        const auto restoreHealth = [&]() {
+            const auto recovery = ESM4::essentialRecoveryHealth(
+                ESM4::combatBaseValue(values.mValues[8].mBase), current(), settings);
+            if (player && godMode && recovery.mAdjustment < 0.f)
+                return false;
+            values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner,
+                ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
+            return recovery.mAdjustment < 0.f;
+        };
+        // Original wake changes life to Alive before its Damage-channel write.
+        // A negative write can immediately enter death again; prepare the whole
+        // result before exposing any intermediate life/value state to readers.
+        life.mPhase = ESM4::ActorLifePhase::Alive;
+        life.mRecoveryRemaining = 0;
+        life.mKiller = {};
+        if (restoreHealth() && current() < 1.f)
+        {
+            life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+            if (essential)
+            {
+                life.mRecoveryRemaining = settings.mDelay;
+                restoreHealth(); // The new unconscious phase suppresses another health reaction.
+            }
+        }
+        values.validate();
+        life.validate();
+    }
+
+    bool OblivionCombatService::advanceNonPlayerEssentialRecovery(const MWWorld::Ptr& actor,
+        float frameSeconds, std::int8_t knockedState, bool essential,
+        const ESM4::EssentialRecoverySettings& settings)
+    {
+        auto values = nonPlayerValues(actor);
+        const auto found = mActorLife.find(values.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native essential recovery requires initialized lifecycle");
+        const auto tick = ESM4::advanceEssentialRecovery(found->second.mRecoveryRemaining, frameSeconds,
+            found->second.mPhase == ESM4::ActorLifePhase::EssentialUnconscious, knockedState);
+        if (!tick.mRecover)
+        {
+            found->second.mRecoveryRemaining = tick.mRemaining;
+            return false;
+        }
+        auto life = found->second;
+        prepareEssentialWake(values, life, essential, false, settings);
+        auto terminal = life.mPhase == ESM4::ActorLifePhase::Dead ? prepareLifeTransition(life) : std::nullopt;
+        PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
+        std::swap(mActorValues.at(values.mActor), values);
+        std::swap(found->second, life);
+        prepared.commit();
+        if (terminal)
+        {
+            mPendingDeathEvents.swap(terminal->mEvents);
+            mDeathCounts.swap(terminal->mCounts);
+            ++mNextDeathEvent;
+        }
+        return true;
+    }
+
+    bool OblivionCombatService::advancePlayerEssentialRecovery(MWWorld::Player& player,
+        float frameSeconds, std::int8_t knockedState, bool essential,
+        const ESM4::EssentialRecoverySettings& settings, bool godMode)
+    {
+        auto values = playerValues();
+        const auto found = mActorLife.find(values.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native essential recovery requires initialized lifecycle");
+        const auto tick = ESM4::advanceEssentialRecovery(found->second.mRecoveryRemaining, frameSeconds,
+            found->second.mPhase == ESM4::ActorLifePhase::EssentialUnconscious, knockedState);
+        if (!tick.mRecover)
+        {
+            found->second.mRecoveryRemaining = tick.mRemaining;
+            return false;
+        }
+        auto life = found->second;
+        prepareEssentialWake(values, life, essential, godMode, settings);
+        auto terminal = life.mPhase == ESM4::ActorLifePhase::Dead ? prepareLifeTransition(life) : std::nullopt;
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
+        std::swap(mActorValues.at(values.mActor), values);
+        std::swap(found->second, life);
+        prepared.commit();
+        if (terminal)
+        {
+            mPendingDeathEvents.swap(terminal->mEvents);
+            mDeathCounts.swap(terminal->mCounts);
+            ++mNextDeathEvent;
+        }
+        return true;
     }
 
     const ESM4::RuntimeActorLife* OblivionCombatService::findActorLife(const ESM::FormKey& actor) const

@@ -1309,7 +1309,7 @@ namespace MWWorld
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
         auto* reference = adoptOblivionActorLife(actor);
         if (player)
-            mOblivionCombat->killPlayer(*mPlayer, killer, essential, settings);
+            mOblivionCombat->killPlayer(*mPlayer, killer, essential, settings, getGodModeState());
         else
             mOblivionCombat->killNonPlayer(actor, killer, essential, settings);
         if (reference)
@@ -1353,7 +1353,7 @@ namespace MWWorld
         if (result.mHealthReactionDelta)
         {
             if (player)
-                mOblivionCombat->reactPlayerHealth(*mPlayer, {}, essential, recoverySettings);
+                mOblivionCombat->reactPlayerHealth(*mPlayer, {}, essential, recoverySettings, getGodModeState());
             else
                 mOblivionCombat->reactNonPlayerHealth(actor, {}, essential, recoverySettings);
         }

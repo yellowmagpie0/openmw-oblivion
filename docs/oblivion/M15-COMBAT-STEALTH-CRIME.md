@@ -3671,3 +3671,39 @@ overshoot, float rounding and invalid/nonrepresentable inputs are tested.
 This is a pure rule. Service countdown publication, live controller mapping,
 recovery Health callbacks (including reentry), God Mode, save continuation and
 normal essential recovery remain open; no S3/S6 gameplay gate closes here.
+
+### S3 essential recovery service and atomic Health reaction (partial)
+
+Commit `d6381cf4e3` contains the independently checked timer rule. The service
+now advances owned countdowns and prepares recovery Health/life/publication as
+one transaction. It clears the previous killer on waking. A negative recovery
+write below one Health reenters essential state, or commits terminal death with
+one event/counter increment if the essential flag was removed. Invalid values
+and exhausted event IDs preserve the countdown, AVs, life, queue and counter.
+The wake ordering combines the original wake probe with the previously checked
+negative-Health wrapper/common death gate; the wake probe itself captures the
+Damage call rather than executing the complete nested writer.
+
+Player essential entry and recovery now honor God Mode's negative Damage-write
+suppression. Explicit Kill still enters the essential phase; God Mode does not
+turn that command into a Health-gated action. World entry adapters supply the
+actual God Mode state. Real-instance Player/NPC/Creature tests cover waiting,
+raw knocked-state eligibility, changed settings, overshoot, recovery and
+immediate reentry, positive sub-one healing, repeat Kill, sparse-entry removal,
+untouched non-Health values, binary save/restore and fresh NPC publication.
+These are engine-instance/service tests, not a normal-input recovery course.
+
+`S3/native-essential-recovery-01` passes 597 engine tests. Adding the Creature
+case exposed an incorrect test expectation in attempt 02: native nonplayer
+zero Damage removes its sparse entry rather than retaining stored zero.
+Attempts 03/04 pass all **598 engine tests**, with the final attempt also
+removing new test-macro warnings. No existing case is skipped. Final source
+fingerprint: `8521633e668708faa6030b93d216671ece1bd749c0d46e55ffd482811d6b97d7`.
+Engine-test binary SHA-256:
+`e312f6c6a79c51264e91aa04bad021b1c37defb59e1ff015ac26b3aaa39e7f44`.
+
+Live controller tick/knocked-state mapping, physical essential collapse and
+normal-input/fresh-process recovery remain open. No automatic registration or
+new runtime timer call is enabled by this chunk. S2/S3 and later gameplay gates
+remain open. Next bounded work is the original knocked-state/controller and
+resurrection reset mapping needed by the lifecycle adapters.

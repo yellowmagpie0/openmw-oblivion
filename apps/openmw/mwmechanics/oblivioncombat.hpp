@@ -127,7 +127,9 @@ namespace MWMechanics
         bool enterNonPlayerDeath(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings, bool healthGate);
         bool enterPlayerDeath(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
-            const ESM4::EssentialRecoverySettings& settings, bool healthGate);
+            const ESM4::EssentialRecoverySettings& settings, bool healthGate, bool godMode);
+        void prepareEssentialWake(ESM4::RuntimeActorValues& values, ESM4::RuntimeActorLife& life,
+            bool essential, bool godMode, const ESM4::EssentialRecoverySettings& settings) const;
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -232,13 +234,21 @@ namespace MWMechanics
         bool reactNonPlayerHealth(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings);
         bool reactPlayerHealth(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
-            const ESM4::EssentialRecoverySettings& settings);
+            const ESM4::EssentialRecoverySettings& settings, bool godMode = false);
         // Script Kill calls the same death entry without testing current Health.
         // Source validation and physical/script aftermath remain caller-owned.
         bool killNonPlayer(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings);
         bool killPlayer(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
-            const ESM4::EssentialRecoverySettings& settings);
+            const ESM4::EssentialRecoverySettings& settings, bool godMode = false);
+        // Returns true when an eligible expired timer is processed, including
+        // immediate reentry/death caused by the recovery Health callback.
+        // Caller supplies the native process knocked-state byte and frame delta.
+        bool advanceNonPlayerEssentialRecovery(const MWWorld::Ptr& actor, float frameSeconds,
+            std::int8_t knockedState, bool essential, const ESM4::EssentialRecoverySettings& settings);
+        bool advancePlayerEssentialRecovery(MWWorld::Player& player, float frameSeconds,
+            std::int8_t knockedState, bool essential, const ESM4::EssentialRecoverySettings& settings,
+            bool godMode = false);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain
         // remaining FIFO work and never replay the event being dispatched.
