@@ -5208,3 +5208,61 @@ This closes the companion owner-binding defect, not the complete failed-load
 transaction requirement: StateManager still clears the previous world before
 loading. Automatic native actor publication, remaining S3 lifecycle/adapters,
 and S4-S14 remain open.
+
+### S3 continuation: native Lua attribute/skill modifier adapters
+
+Lua attribute/skill `modifier` and `damage` writes now request Maximum and signed
+Damage changes through the combat authority. Base and Script remain separate;
+all native float-delta rounding and sparse-storage behavior remains in the
+existing writer. Player writes refresh derived pools through the existing
+publication transaction. Resources and Script-channel requests are rejected by
+this narrow API. Creature attributes are supported; NPC-only skill requests
+cannot silently select a creature skill-group alias.
+
+The read-only attribute/skill projection now retains native Script/owner/process
+composition inputs as well as its current value. Queued Lua `modified` reads
+substitute cached channels into native composition, retaining the Player versus
+NPC float-store distinction and low-process exclusion of Maximum. Legacy reads
+keep their existing zero clamp. The projection remains ephemeral; authoritative
+save fields and schema are unchanged.
+
+Three new engine cases cover all29 attribute/skill indices for Player/NPC and
+both process levels, preservation/clearing of channels, invalid categories,
+nonfinite requests, legacy/native queued reads, the 2^24 rounding distinction,
+creature attributes, rejected NPC skill aliases and a finite subtraction overflow
+that leaves authority and projection intact. Final `S3/lua-stat-modifiers-02`
+passes635 engine and180 Python cases; `lua-stat-modifiers-sanitized-02` passes635
+engine cases with ASan leak detection and halting UBSan. Tested source fingerprint
+`3ba73d7ceb8f50ddd641a7de271465e2f0fffb6f57d5904cdb7724eedecda0aa`
+on parent `01130cf3c9`. Earlier modifier01 runs pass634 cases before the
+additional creature/overflow test and manifest promotion.
+
+`lua-stat-modifier-red-01` reproduces the old guard failure for both actors.
+The first new runtime `lua-stat-regular-zero-script-01` passes Lua assertions
+but fails independent state comparison: the original fixture started with
+injured Fatigue, which regenerated, and bootstrap materialized the zero Player
+Health Script entry. That failure is retained. The corrected editable setup
+fills Fatigue and predeclares the bootstrap zero; engine code was unchanged.
+
+`lua-stat-regular-zero-script-02` and `lua-stat-{regular,sanitized}-script-02`
+pass actual queued-read and committed-write assertions. The latter preserve
+Speed Script7.25 and Blade Script-1.25 while writing Maximum2.5/3.5 and
+Damage-1.25/-1.5. Independently decoded saves confirm only those four channels
+per actor changed; resource channels, other AVs, lifecycle, actions and death
+counts remain exact. `lua-stat-{regular,sanitized}-continuation-02` fresh
+processes restore once per actor without writes/replay and retain the native
+NPC Lua companion exactly. All10 accepted captures were directly inspected:
+rendered fixture and Player bars, NPC offscreen, audio disabled.
+
+Runtime executable SHA256: regular
+`198ac908b5a91f15c2b84a2be1a0486418410017059cbefad58b137898129145`, instrumented
+`e0177b826790c6b1a2c1452eeeefff948c90ac4df12bc4b5c70d1a90bbb039d9`.
+Both were hashed before launch and verified unchanged after the test-only
+addition. Graphical leak detection is off, UBSan halts. Three promoted manifests
+are byte-identical to their executed drafts; the explicit setup recipe reproduces
+both inputs byte-for-byte. The build/test skill records the recipe, values,
+comparison scope and fixture pitfall.
+
+This closes this pair of Lua property adapters. Base writes, dynamic-stat
+modifiers, skill-progress semantics, automatic publication, broader lifecycle
+adoption, load transactions and the remaining M15 gates stay open.

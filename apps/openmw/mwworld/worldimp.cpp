@@ -1481,6 +1481,25 @@ namespace MWWorld
         return true;
     }
 
+    bool World::requestOblivionStatModifier(const Ptr& actor, std::uint8_t value, bool damage, float requested)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->findActorValues(key))
+            return false;
+        const auto modifier = damage ? ESM4::ActorValueModifier::Damage : ESM4::ActorValueModifier::Maximum;
+        // Lua damage is a positive debit; the native Damage channel is signed.
+        const float target = damage ? -requested : requested;
+        if (player)
+            mOblivionCombat->requestPlayerStatModifier(*mPlayer, value, modifier, target,
+                resolveOblivionPlayerDynamicBaseSettings(mStore));
+        else
+            mOblivionCombat->requestNonPlayerStatModifier(actor, value, modifier, target);
+        return true;
+    }
+
     bool World::updateOblivionFrameResources(const Ptr& actor, float duration, bool running)
     {
         if (!mOblivionCombat)

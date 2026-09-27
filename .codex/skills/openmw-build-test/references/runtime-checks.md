@@ -578,3 +578,45 @@ rejects those exact files. Pair with the corresponding `writes-02` and
 `continuation-02` courses to check absent-section compatibility and real fresh
 process preservation. Unit sanitizer runs enable leak detection; graphical
 courses explicitly disable it and retain halting UBSan.
+
+## Native Lua attribute/skill modifier requests
+
+`oblivion_m15_lua_stat_modifiers.json` and its `_continuation.json` sibling
+exercise Speed and Blade Maximum/Damage requests on Player and NPC while
+preserving nonzero Script modifiers. Lua's existing Blade accessor is
+`types.NPC.stats.skills.longblade`; native AV index14 remains Blade. The
+`_zero_script.json` course is the simpler control. These are explicit actor
+bootstrap courses, not proof of automatic publication or physical combat.
+
+Use `oblivion_m15_lua_stat_modifiers_input.json` as the editable setup recipe.
+The source is `S3/lua-resource-runtime-01/pristine.omwsave`; check its recipe
+SHA256 before copying. Load it with `scripts.tes4_runtime_state.load_save`.
+For each `native_actor_values` row, apply `all_actor_updates`; also apply
+`player_updates` for actor key `dynamic:player:0000000000000001`. Apply
+`nonzero_script_updates` unless running the zero-script control. Recipe AV keys
+are decimal indices; channel indices in each values tuple are Maximum1,
+Script2, Damage3 (Base0). Write a separate save with `write_save` and prepare a
+private M15Legacy slot. Verified setup hashes:
+
+- Zero Script: `e83cf857383f4341408b7ec8da3fffec1626815e3c4adb758c8b0f221c3d2194`.
+- Nonzero Script: `4eacfd36ac0dda0135f8b78fefcc98b11ac1a8c3b5fdba8fae41331981ffe80c`.
+
+Full Fatigue avoids unrelated regeneration; the zero Player Health Script entry
+matches the required ModAV0 bootstrap. The retained `lua-stat-regular-zero-script-01`
+passed Lua checks but failed the independent unchanged-resource assertion because
+its original depleted Fatigue regenerated and bootstrap materialized that zero.
+Do not weaken the comparison or change engine regeneration to fit that fixture.
+
+After actual save, independently require Speed Maximum2.5/Damage-1.25 and Blade
+Maximum3.5/Damage-1.5 for both actors. Preserve Base/Script, every other AV channel,
+life, actions and event counts. Nonzero-Script modified values are Speed58.5,
+NPC Blade5.75 and Player Blade30.75. Assertions execute both immediately after
+queuing and after the deferred writes. Require exactly one queued/committed
+marker per actor. Fresh-process continuation must restore once per actor with
+no queued/committed markers and identical NPC Lua companion data. Examples are
+`S3/lua-stat-{regular,sanitized}-{script,continuation}-02`; all accepted captures
+were inspected. Graphical sanitizer leak detection is off; unit suites enable it.
+
+These requests use the existing native float delta writer; native rounding and
+sparse Damage clamping still apply. Attribute/skill base writes, dynamic-stat
+modifiers and skill-progress semantics are separate unfinished adapter work.

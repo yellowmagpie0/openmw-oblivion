@@ -23,6 +23,7 @@
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
 
 #include "objectvariant.hpp"
 #include "recordstore.hpp"
@@ -296,14 +297,11 @@ namespace MWLua
             {
                 const auto ptr = mObject.ptr();
                 const auto& value = ptr.getClass().getCreatureStats(ptr).getAttribute(mId);
-                // Native composition includes Script and process-specific Maximum modifiers.
-                if (value.isNativeProjection())
-                    return value.getModified();
                 auto base = LuaUtil::cast<float>(get(context, "base", &MWMechanics::AttributeValue::getBase));
                 auto damage = LuaUtil::cast<float>(get(context, "damage", &MWMechanics::AttributeValue::getDamage));
                 auto modifier
                     = LuaUtil::cast<float>(get(context, "modifier", &MWMechanics::AttributeValue::getModifier));
-                return std::max(0.f, base - damage + modifier); // Should match AttributeValue::getModified
+                return value.getModifiedWithOverrides(base, modifier, damage);
             }
 
             static std::optional<AttributeStat> create(ObjectVariant object, Index i)
@@ -327,6 +325,16 @@ namespace MWLua
                 auto& stats = ptr.getClass().getCreatureStats(ptr);
                 auto stat = stats.getAttribute(id);
                 float floatValue = LuaUtil::cast<float>(value);
+                if (stat.isNativeProjection() && (prop == "modifier" || prop == "damage"))
+                {
+                    const int av = ESM::Attribute::refIdToIndex(id);
+                    if (av < 0 || av >= 8)
+                        throw std::invalid_argument("unknown native attribute");
+                    if (!MWBase::Environment::get().getWorld()->requestOblivionStatModifier(
+                            ptr, static_cast<std::uint8_t>(av), prop == "damage", floatValue))
+                        throw std::logic_error("native stat view has no registered actor authority");
+                    return;
+                }
                 if (prop == "base")
                     stat.setBase(floatValue);
                 else if (prop == "damage")
@@ -380,12 +388,10 @@ namespace MWLua
             {
                 const auto ptr = mObject.ptr();
                 const auto& value = ptr.getClass().getNpcStats(ptr).getSkill(mId);
-                if (value.isNativeProjection())
-                    return value.getModified();
                 auto base = LuaUtil::cast<float>(get(context, "base", &MWMechanics::SkillValue::getBase));
                 auto damage = LuaUtil::cast<float>(get(context, "damage", &MWMechanics::SkillValue::getDamage));
                 auto modifier = LuaUtil::cast<float>(get(context, "modifier", &MWMechanics::SkillValue::getModifier));
-                return std::max(0.f, base - damage + modifier); // Should match SkillValue::getModified
+                return value.getModifiedWithOverrides(base, modifier, damage);
             }
 
             sol::object getProgress(const Context& context) const
@@ -416,6 +422,18 @@ namespace MWLua
                 auto& stats = ptr.getClass().getNpcStats(ptr);
                 auto stat = stats.getSkill(id);
                 float floatValue = LuaUtil::cast<float>(value);
+                if (stat.isNativeProjection() && (prop == "modifier" || prop == "damage"))
+                {
+                    const auto& ids = MWWorld::oblivionSkillIds();
+                    const auto found = std::find(ids.begin(), ids.end(), id);
+                    if (found == ids.end())
+                        throw std::invalid_argument("unknown native skill");
+                    const int av = 12 + static_cast<int>(found - ids.begin());
+                    if (!MWBase::Environment::get().getWorld()->requestOblivionStatModifier(
+                            ptr, static_cast<std::uint8_t>(av), prop == "damage", floatValue))
+                        throw std::logic_error("native stat view has no registered actor authority");
+                    return;
+                }
                 if (prop == "base")
                     stat.setBase(floatValue);
                 else if (prop == "damage")

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ndata=\"{output}/test-data\"\ncontent=m15-lifecycle.esm\ncontent=m15-lua-current.omwscripts\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    },
+    {
+      "path": "test-data/m15-lua-current.omwscripts",
+      "content": "GLOBAL: scripts/m15_resource_attach.lua\nPLAYER,CUSTOM: scripts/m15_resource_current.lua\n"
+    },
+    {
+      "path": "test-data/scripts/m15_resource_current.lua",
+      "content": "local self = require('openmw.self')\nlocal types = require('openmw.types')\nlocal player = types.Player.objectIsInstance(self)\nlocal name = player and 'player' or 'npc'\nlocal elapsed, queued, done, reported = 0, false, false, false\nlocal function update(dt)\n    elapsed = elapsed + dt\n    local speed = types.Actor.stats.attributes.speed(self)\n    local blade = types.NPC.stats.skills.longblade(self)\n    if done or queued then\n        assert(speed.modifier == 2.5 and speed.damage == 1.25)\n        assert(blade.modifier == 3.5 and blade.damage == 1.5)\n        assert(speed.modified == speed.base + 1.25)\n        assert(blade.modified == blade.base + 2)\n        if not reported then\n            print('M15 Lua modifier ' .. (done and 'restored ' or 'committed ') .. name)\n            done, reported = true, true\n        end\n    elseif elapsed >= 2 then\n        speed.modifier, speed.damage = 2.5, 1.25\n        blade.modifier, blade.damage = 3.5, 1.5\n        assert(speed.modified == speed.base + 1.25)\n        assert(blade.modified == blade.base + 2)\n        print('M15 Lua modifier queued ' .. name)\n        queued = true\n    end\nend\nreturn {{engineHandlers={{onUpdate=update,onSave=function() return {{done=done}} end,\n    onLoad=function(data) done=data and data.done or false end}}}}\n"
+    },
+    {
+      "path": "test-data/scripts/m15_resource_attach.lua",
+      "content": "local world = require('openmw.world')\nlocal types = require('openmw.types')\nlocal attached = false\nlocal function update()\n    if attached then return end\n    for _, actor in pairs(world.activeActors) do\n        if types.ESM4NPC.objectIsInstance(actor) then\n            if not actor:hasScript('scripts/m15_resource_current.lua') then\n                actor:addScript('scripts/m15_resource_current.lua')\n            end\n            attached = true\n            print('M15 Lua NPC attached')\n            return\n        end\n    end\nend\nreturn {{engineHandlers = {{onUpdate=update}}}}\n"
+    },
+    {
+      "path": "bootstrap-events.txt",
+      "content": "at 0 command content:m15-lifecycle.esm:900101 modav Health 0\nat 0 command dynamic:player:0000000000000001 modav Health 0\nat 0 command content:m15-lifecycle.esm:900101 getav Health\nat 0 command content:m15-lifecycle.esm:900101 getdead\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=oblivion",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
+  ],
+  "xvfb": true,
+  "name": "m15-native-lua-stat-modifiers",
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 60
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Lua modifier committed player",
+      "timeout_seconds": 60
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Lua modifier committed npc",
+      "timeout_seconds": 60
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "name": "after-writes.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "after-save.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "timeout_seconds": 180,
+  "terminate_after_actions": true,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "M15 Lua modifier queued player",
+    "M15 Lua modifier committed player",
+    "M15 Lua modifier queued npc",
+    "M15 Lua modifier committed npc",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Failed to load saved game",
+    "Failed to save game",
+    "Error in frame",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Unsupported ObScript command",
+    "Lua.*error",
+    "native dynamic stats require",
+    "native actor lifecycle requires"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/bootstrap-events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  },
+  "reviewed_error_log": []
+}

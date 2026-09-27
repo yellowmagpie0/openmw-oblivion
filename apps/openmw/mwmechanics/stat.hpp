@@ -121,7 +121,14 @@ namespace MWMechanics
         float mBase;
         float mModifier;
         float mDamage; // needs to be float to allow continuous damage
-        std::optional<float> mNativeCurrent;
+        struct NativeValue
+        {
+            float mCurrent;
+            float mScript;
+            ESM4::ActorValueOwner mOwner;
+            ESM4::ActorValueProcess mProcess;
+        };
+        std::optional<NativeValue> mNativeCurrent;
 
         void requireWritable() const;
 
@@ -137,6 +144,8 @@ namespace MWMechanics
         bool isNativeProjection() const { return mNativeCurrent.has_value(); }
 
         float getModified() const;
+        // Read a queued Lua view without changing the projection/authority.
+        float getModifiedWithOverrides(float base, float modifier, float damage) const;
         float getBase() const;
         float getModifier() const;
 

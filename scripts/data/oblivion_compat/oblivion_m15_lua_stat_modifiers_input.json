@@ -1,0 +1,31 @@
+{
+  "source_sha256": "d7321e0b5aea9dbd36701b3d57265b6b3a1a49909698e1c9ddace022e7676b19",
+  "all_actor_updates": {
+    "10": {
+      "damage": 0
+    }
+  },
+  "player_updates": {
+    "8": {
+      "script": 0
+    }
+  },
+  "nonzero_script_updates": {
+    "4": {
+      "script": 7.25
+    },
+    "14": {
+      "script": -1.25
+    }
+  },
+  "expected_requests": {
+    "4": {
+      "maximum": 2.5,
+      "damage": -1.25
+    },
+    "14": {
+      "maximum": 3.5,
+      "damage": -1.5
+    }
+  }
+}

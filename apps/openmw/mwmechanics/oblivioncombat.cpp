@@ -79,6 +79,20 @@ namespace MWMechanics
             return creature;
         }
 
+        float statModifierDelta(const ESM4::RuntimeActorValues& values, std::uint8_t value,
+            ESM4::ActorValueModifier modifier, float requested)
+        {
+            if (!(value < 8 || (value >= 12 && value <= 32))
+                || (modifier != ESM4::ActorValueModifier::Maximum && modifier != ESM4::ActorValueModifier::Damage)
+                || !std::isfinite(requested))
+                throw std::invalid_argument("native stat modifier request requires an attribute or skill channel");
+            const float old = values.mValues[value].mModifiers[static_cast<unsigned>(modifier)].value_or(0.f);
+            const float delta = static_cast<float>(double(requested) - old);
+            if (!std::isfinite(delta))
+                throw std::invalid_argument("native stat modifier request delta overflow");
+            return delta;
+        }
+
         void validateNonPlayerQuery(std::uint8_t value)
         {
             // Inventory Encumbrance and High-process Paralysis use additional
@@ -693,6 +707,23 @@ namespace MWMechanics
         candidate.mValues[value] = ESM4::changeActorValueModifier(
             candidate.mValues[value], candidate.mOwner, value, modifier, delta);
         publishNonPlayerValues(actor, std::move(candidate));
+    }
+
+    void OblivionCombatService::requestNonPlayerStatModifier(const MWWorld::Ptr& actor, std::uint8_t value,
+        ESM4::ActorValueModifier modifier, float requested)
+    {
+        const auto& values = nonPlayerValues(actor);
+        // Lua exposes skills only on NPCs. Do not turn one creature group
+        // request into a different visible skill through runtime aliases.
+        if (value >= 12 && actor.getType() != ESM::REC_NPC_4)
+            throw std::invalid_argument("native Lua skill modifier requires an NPC");
+        changeNonPlayerValue(actor, value, modifier, statModifierDelta(values, value, modifier, requested));
+    }
+
+    void OblivionCombatService::requestPlayerStatModifier(MWWorld::Player& player, std::uint8_t value,
+        ESM4::ActorValueModifier modifier, float requested, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        changePlayerValue(player, value, modifier, statModifierDelta(playerValues(), value, modifier, requested), settings);
     }
 
     bool OblivionCombatService::changeNonPlayerHealth(const MWWorld::Ptr& actor, float delta,

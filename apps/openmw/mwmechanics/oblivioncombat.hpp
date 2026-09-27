@@ -193,6 +193,13 @@ namespace MWMechanics
         // scalar transition. This method cannot run callbacks between commits.
         void changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta);
+        // Lua attribute/skill requests select one native modifier channel;
+        // they preserve Base/Script and use the native float delta writer.
+        void requestNonPlayerStatModifier(const MWWorld::Ptr& actor, std::uint8_t value,
+            ESM4::ActorValueModifier modifier, float requested);
+        void requestPlayerStatModifier(MWWorld::Player& player, std::uint8_t value,
+            ESM4::ActorValueModifier modifier, float requested,
+            const ESM4::PlayerDynamicBaseSettings& settings);
         // Native float Damage-channel writes, including fractional frame costs.
         // Negative deltas commit their lifecycle reaction and source attribution
         // atomically; positive/zero writes preserve life. False means god mode

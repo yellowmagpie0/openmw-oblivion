@@ -190,15 +190,23 @@ namespace MWMechanics
         // Script modifiers are included in the exact native current value.
         mModifier = state.mModifiers[0].value_or(0.f);
         mDamage = -state.mModifiers[2].value_or(0.f);
-        mNativeCurrent = current;
+        mNativeCurrent = NativeValue{current, state.mModifiers[1].value_or(0.f), owner, process};
     }
 
     float AttributeValue::getModified() const
     {
         if (mNativeCurrent)
-            return *mNativeCurrent;
+            return mNativeCurrent->mCurrent;
         return std::max(0.f, mBase - mDamage + mModifier);
     }
+    float AttributeValue::getModifiedWithOverrides(float base, float modifier, float damage) const
+    {
+        if (mNativeCurrent)
+            return ESM4::composeActorValue({base, {modifier, mNativeCurrent->mScript, -damage}},
+                mNativeCurrent->mOwner, mNativeCurrent->mProcess);
+        return std::max(0.f, base - damage + modifier);
+    }
+
     float AttributeValue::getBase() const
     {
         return mBase;

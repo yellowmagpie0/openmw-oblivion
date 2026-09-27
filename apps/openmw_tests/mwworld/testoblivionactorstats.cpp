@@ -1399,6 +1399,203 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, statModifierRequestsPreserveAuthorityChannelsAndRejectInvalidWrites)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{};
+        playerBase.blank();
+        playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(playerBase);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWClass::ESM4Npc::registerSelf();
+        MWWorld::Player player(playerRecord);
+        const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x902);
+        reference.mId = {0x902, 3};
+        reference.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr npc(&live);
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[8] = {100, {10.f, 5.f, -75.f}};
+        values.mValues[9] = {100, {10.f, 5.f, -75.f}};
+        values.mValues[10] = {100, {10.f, 5.f, -75.f}};
+        values.mValues[40].mBase = 15;
+        service.publishNonPlayerValues(npc, values);
+        service.publishNonPlayerLife(npc, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto npcKey = values.mActor;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 100, 100, 0}};
+        service.publishPlayerValues(player, values, settings);
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto playerKey = values.mActor;
+        for (bool isPlayer : {false, true})
+        {
+            const auto key = isPlayer ? playerKey : npcKey;
+            const auto ptr = isPlayer ? playerPtr : npc;
+            const auto request = [&](std::uint8_t av, ESM4::ActorValueModifier modifier, float wanted) {
+                if (isPlayer)
+                    service.requestPlayerStatModifier(player, av, modifier, wanted, settings);
+                else
+                    service.requestNonPlayerStatModifier(npc, av, modifier, wanted);
+            };
+            for (auto process : {ESM4::ActorValueProcess::Active, ESM4::ActorValueProcess::Low})
+                for (std::uint8_t av = 0; av <= 32; ++av)
+                {
+                    if (av >= 8 && av < 12)
+                        continue;
+                    SCOPED_TRACE(static_cast<int>(av));
+                    SCOPED_TRACE(isPlayer);
+                    SCOPED_TRACE(static_cast<int>(process));
+                    auto baseline = *service.findActorValues(key);
+                    baseline.mProcess = process;
+                    baseline.mValues[av] = {50, {3.f, 1.25f, -1.f}};
+                    if (isPlayer)
+                        service.publishPlayerValues(player, baseline, settings);
+                    else
+                        service.publishNonPlayerValues(npc, baseline);
+                    request(av, ESM4::ActorValueModifier::Maximum, 7.5f);
+                    request(av, ESM4::ActorValueModifier::Damage, -2.25f);
+                    const auto& result = service.findActorValues(key)->mValues[av];
+                    EXPECT_EQ(result.mBase, 50);
+                    EXPECT_EQ(result.mModifiers, (ESM4::ActorValueModifiers{7.5f, 1.25f, -2.25f}));
+                    const auto& stats = ptr.getClass().getNpcStats(ptr);
+                    const MWMechanics::AttributeValue& view = av < 8
+                        ? stats.getAttribute(ESM::Attribute::indexToRefId(av))
+                        : stats.getSkill(MWWorld::oblivionSkillIds()[av - 12]);
+                    EXPECT_EQ(view.getModifier(), 7.5f);
+                    EXPECT_EQ(view.getDamage(), 2.25f);
+                    EXPECT_EQ(view.getModified(), !isPlayer && process == ESM4::ActorValueProcess::Low ? 49.f : 56.5f);
+                    request(av, ESM4::ActorValueModifier::Damage, 0.f);
+                    request(av, ESM4::ActorValueModifier::Maximum, 0.f);
+                    const auto& cleared = service.findActorValues(key)->mValues[av];
+                    EXPECT_EQ(cleared.mModifiers[1], 1.25f);
+                    EXPECT_EQ(cleared.mModifiers[0], isPlayer ? std::optional<float>(0.f) : std::nullopt);
+                    EXPECT_EQ(cleared.mModifiers[2], isPlayer ? std::optional<float>(0.f) : std::nullopt);
+                }
+            const auto before = *service.findActorValues(key);
+            const auto life = *service.findActorLife(key);
+            for (std::uint8_t invalid : {8, 9, 10, 11, 33, 71, 72, 255})
+                EXPECT_THROW(request(invalid, ESM4::ActorValueModifier::Maximum, 2.f), std::invalid_argument);
+            EXPECT_THROW(request(4, ESM4::ActorValueModifier::Script, 2.f), std::invalid_argument);
+            EXPECT_THROW(request(4, ESM4::ActorValueModifier::Maximum,
+                std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+            EXPECT_THROW(request(4, ESM4::ActorValueModifier::Damage,
+                std::numeric_limits<float>::infinity()), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(key), before);
+            EXPECT_EQ(*service.findActorLife(key), life);
+        }
+    }
+
+    TEST_F(OblivionActorStatsTest, queuedStatReadsRetainNativeScriptProcessAndFloatStores)
+    {
+        MWMechanics::AttributeValue legacy;
+        EXPECT_EQ(legacy.getModifiedWithOverrides(1, 2, 5), 0);
+        for (auto owner : {ESM4::ActorValueOwner::Player, ESM4::ActorValueOwner::NonPlayer})
+            for (auto process : {ESM4::ActorValueProcess::Active, ESM4::ActorValueProcess::Low})
+            {
+                MWMechanics::AttributeValue view;
+                view.setNativeProjection({40, {10.f, 5.f, -2.f}}, owner, process);
+                EXPECT_EQ(view.getModifiedWithOverrides(40, 3.5f, 1.25f),
+                    owner == ESM4::ActorValueOwner::NonPlayer && process == ESM4::ActorValueProcess::Low ? 43.75f : 47.25f);
+                EXPECT_EQ(view.getModifier(), 10);
+                EXPECT_EQ(view.getDamage(), 2);
+                MWMechanics::AttributeValue copied(view);
+                EXPECT_EQ(copied.getModifiedWithOverrides(1, 2, 10),
+                    owner == ESM4::ActorValueOwner::NonPlayer && process == ESM4::ActorValueProcess::Low ? -4.f : -2.f);
+            }
+        MWMechanics::AttributeValue player, npc;
+        player.setNativeProjection({16777216, {0.f, 1.f, 0.f}},
+            ESM4::ActorValueOwner::Player, ESM4::ActorValueProcess::Active);
+        npc.setNativeProjection({16777216, {0.f, 1.f, 0.f}},
+            ESM4::ActorValueOwner::NonPlayer, ESM4::ActorValueProcess::Active);
+        EXPECT_EQ(player.getModifiedWithOverrides(16777216, -16777216, 0), 1);
+        EXPECT_EQ(npc.getModifiedWithOverrides(16777216, -16777216, 0), 0);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureAttributeModifierRequestsRejectNpcSkillAliases)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 4;
+        creature.mBaseConfig.tes4.baseSpell = 17;
+        creature.mBaseConfig.tes4.fatigue = 18;
+        creature.mData.health = 19;
+        creature.mData.damage = 20;
+        creature.mData.combat = 21;
+        creature.mData.magic = 22;
+        creature.mData.stealth = 23;
+        creature.mData.attribs.intelligence = 24;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        auto& stats = ptr.getClass().getCreatureStats(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[8].mBase = 19;
+        values.mValues[9].mBase = 17;
+        values.mValues[10].mBase = 18;
+        values.mValues[12] = {21, {2, 3, -1}};
+        MWMechanics::OblivionCombatService service;
+        service.publishNonPlayerValues(ptr, values);
+        ESM4::RuntimeActorLife life{values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}};
+        service.publishNonPlayerLife(ptr, life);
+        for (std::uint8_t av = 0; av < 8; ++av)
+        {
+            service.requestNonPlayerStatModifier(ptr, av, ESM4::ActorValueModifier::Maximum, 7.5f);
+            service.requestNonPlayerStatModifier(ptr, av, ESM4::ActorValueModifier::Damage, -1.25f);
+            const auto& view = stats.getAttribute(ESM::Attribute::indexToRefId(av));
+            EXPECT_EQ(view.getModifier(), 7.5f);
+            EXPECT_EQ(view.getDamage(), 1.25f);
+            EXPECT_EQ(view.getModified(), values.mValues[av].mBase + 6.25f);
+        }
+        auto before = *service.findActorValues(values.mActor);
+        EXPECT_THROW(service.requestNonPlayerStatModifier(ptr, 14, ESM4::ActorValueModifier::Maximum, 2.f),
+            std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_EQ(*service.findActorLife(values.mActor), life);
+        before.mValues[4].mModifiers[0] = 3e38f;
+        service.publishNonPlayerValues(ptr, before);
+        EXPECT_THROW(service.requestNonPlayerStatModifier(ptr, 4, ESM4::ActorValueModifier::Maximum, -3e38f),
+            std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Speed).getModifier(), 3e38f);
+    }
+
     TEST_F(OblivionActorStatsTest, resourceCurrentRequestsPreserveChannelsScalingAndHealthTransactions)
     {
         autoNpc();
