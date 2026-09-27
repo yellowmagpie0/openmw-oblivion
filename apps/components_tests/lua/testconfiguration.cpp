@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <fstream>
+#include <sstream>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
@@ -17,6 +18,43 @@ namespace
 
     using testing::ElementsAre;
     using testing::Pair;
+
+    TEST(LuaConfigurationTest, RemovedMappingsDoNotBecomeIdentityMappings)
+    {
+        ESM::LuaScriptsCfg oldCfg, newCfg;
+        LuaUtil::parseOMWScripts(oldCfg, "CUSTOM: old.lua");
+        LuaUtil::parseOMWScripts(newCfg, "CUSTOM: new.lua");
+        LuaUtil::ScriptsConfiguration conf;
+        conf.init(oldCfg, false);
+        EXPECT_EQ(conf.mapId(0), 0);
+        EXPECT_FALSE(conf.mapId(-1));
+        EXPECT_FALSE(conf.mapId(1));
+        conf.init(newCfg, true);
+        EXPECT_TRUE(conf.isValidSavedId(0));
+        EXPECT_FALSE(conf.isValidSavedId(1));
+        EXPECT_FALSE(conf.mapId(0));
+        conf.init(newCfg, false);
+        EXPECT_EQ(conf.mapId(0), 0);
+
+        auto stream = std::make_unique<std::stringstream>();
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(*stream);
+        writer.startRecord(ESM::REC_LUAM);
+        writer.writeHNString("LUAP", "old.lua");
+        writer.endRecord(ESM::REC_LUAM);
+        writer.close();
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "removed-script-mapping");
+        ASSERT_EQ(reader.getRecName(), ESM::REC_LUAM);
+        reader.getRecHeader();
+        conf.read(reader);
+        EXPECT_TRUE(conf.isValidSavedId(0));
+        EXPECT_FALSE(conf.isValidSavedId(-1));
+        EXPECT_FALSE(conf.isValidSavedId(1));
+        EXPECT_FALSE(conf.mapId(0));
+        EXPECT_FALSE(conf.mapId(1));
+    }
 
     std::vector<std::pair<int, std::string>> asVector(const LuaUtil::ScriptIdsWithInitializationData& d)
     {

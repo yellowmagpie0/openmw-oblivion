@@ -457,6 +457,28 @@ CUSTOM: customdata.lua
         }
     }
 
+    TEST_F(LuaScriptsContainerTest, AlreadyMappedPendingStateIsNotRemappedTwice)
+    {
+        const int oldId = getId(test1Path);
+        ESM::LuaScriptsCfg reordered;
+        LuaUtil::parseOMWScripts(reordered, "CUSTOM: test2.lua\nCUSTOM: test1.lua");
+        mCfg.init(std::move(reordered), true);
+        ASSERT_EQ(mCfg.mapId(oldId), 1);
+        ASSERT_FALSE(mCfg.mapId(1)); // The old slot1 was incorrect.lua, now removed.
+        ESM::LuaScripts state;
+        state.mScripts.push_back({ 1, "", {} });
+        LuaUtil::ScriptsContainer scripts(&mLua, "Pending");
+        testing::internal::CaptureStdout();
+        scripts.load(state, true);
+        EXPECT_TRUE(scripts.hasScript(1));
+        scripts.receiveEvent("Print", "");
+        EXPECT_EQ(internal::GetCapturedStdout(), "Pending[test1.lua]:\tload\nPending[test1.lua]:\tprint\n");
+        ESM::LuaScripts saved;
+        scripts.save(saved);
+        ASSERT_EQ(saved.mScripts.size(), 1);
+        EXPECT_EQ(saved.mScripts[0].mScriptId, 1);
+    }
+
     TEST_F(LuaScriptsContainerTest, Timers)
     {
         using TimerType = LuaUtil::ScriptsContainer::TimerType;

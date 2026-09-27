@@ -8,6 +8,7 @@
 #include <osg/Stats>
 
 #include <components/lua/inputactions.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/lua/luastate.hpp>
 #include <components/lua/scripttracker.hpp>
 #include <components/lua/storage.hpp>
@@ -192,12 +193,17 @@ namespace MWLua
 
         bool isSynchronizedUpdateRunning() const { return mRunningSynchronizedUpdates; }
 
+        // Restores pending native state lazily, before hasScript/add/remove or
+        // auto-start can mistake an unloaded script for an unattached script.
+        LocalScripts* getLocalScripts(const MWWorld::Ptr& ptr);
+
     private:
         void initConfiguration(bool reload);
         LocalScripts* createLocalScripts(const MWWorld::Ptr& ptr,
             std::optional<LuaUtil::ScriptIdsWithInitializationData> autoStartConf = std::nullopt);
         void reloadAllScriptsImpl();
         void synchronizedUpdateUnsafe();
+        void normalizeNativeScripts(std::map<ESM::FormKey, ESM::LuaScripts>& scripts, bool savedContentIds);
 
         bool mInitialized = false;
         bool mGlobalScriptsStarted = false;
@@ -217,6 +223,7 @@ namespace MWLua
         GlobalScripts mGlobalScripts{ &mLua };
         std::set<LuaUtil::ScriptsContainerWeakPtr, std::less<>> mActiveLocalScripts;
         std::vector<LuaUtil::ScriptsContainerWeakPtr> mQueuedAutoStartedScripts;
+        std::map<ESM::FormKey, ESM::LuaScripts> mPendingNativeScripts;
         ObjectLists mObjectLists;
 
         MWWorld::Ptr mPlayer;

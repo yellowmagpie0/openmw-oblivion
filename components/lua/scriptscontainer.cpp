@@ -458,7 +458,7 @@ namespace LuaUtil
         }
     }
 
-    void ScriptsContainer::load(const ESM::LuaScripts& data)
+    void ScriptsContainer::load(const ESM::LuaScripts& data, bool alreadyMappedIds)
     {
         removeAllScripts();
         const ScriptsConfiguration& cfg = mLua.getConfiguration();
@@ -468,8 +468,8 @@ namespace LuaUtil
             scripts[scriptId] = { initData, nullptr };
         for (const ESM::LuaScript& s : data.mScripts)
         {
-            std::optional<int> scriptId = cfg.mapId(s.mScriptId);
-            if (!scriptId)
+            std::optional<int> scriptId = alreadyMappedIds ? std::optional<int>(s.mScriptId) : cfg.mapId(s.mScriptId);
+            if (!scriptId || *scriptId < 0 || static_cast<std::size_t>(*scriptId) >= cfg.size())
             {
                 Log(Debug::Verbose) << "Ignoring " << mNamePrefix << "[" << s.mScriptId << "]; script not registered";
                 continue;

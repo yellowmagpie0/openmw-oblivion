@@ -28,6 +28,11 @@ namespace LuaUtil
 
         std::optional<int> findId(VFS::Path::NormalizedView path) const;
         std::optional<int> mapId(int savedId) const;
+        bool isValidSavedId(int savedId) const
+        {
+            return savedId >= 0 && static_cast<std::size_t>(savedId)
+                < (mHasScriptIdMapping ? mSavedScriptCount : mScripts.size());
+        }
 
         bool isCustomScript(int id) const { return mScripts[id].mFlags & ESM::LuaScriptCfg::sCustom; }
 
@@ -57,6 +62,8 @@ namespace LuaUtil
         std::map<ESM::RefId, std::vector<DetailedConf>, std::less<>> mScriptsPerRecordId;
         std::map<ESM::RefNum, std::vector<DetailedConf>> mScriptsPerRefNum;
         std::map<int, int> mScriptIdMapping;
+        bool mHasScriptIdMapping = false;
+        std::size_t mSavedScriptCount = 0;
     };
 
     // Parse ESM::LuaScriptsCfg from text and add to `cfg`.

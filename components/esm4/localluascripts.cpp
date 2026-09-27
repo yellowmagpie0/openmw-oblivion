@@ -1,4 +1,5 @@
 #include "localluascripts.hpp"
+#include "common.hpp"
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
@@ -166,6 +167,21 @@ namespace ESM4
                 }
             }
             writer.writeHNT("NLSE", std::uint32_t{ 0 });
+        }
+    }
+
+    void validateLocalLuaScriptContent(const LocalLuaScripts& scripts, const ESM::FormKeyIndex& index)
+    {
+        for (const auto& [key, data] : scripts)
+        {
+            if (!key.isContent())
+                continue;
+            const auto* reference = index.resolve(key);
+            // Metadata stores the on-disk TES4 FourCC, without OpenMW's
+            // internal flag used to distinguish TES3 and TES4 class types.
+            if (!reference || (reference->mRecordType != ESM4::REC_REFR
+                    && reference->mRecordType != ESM4::REC_ACHR && reference->mRecordType != ESM4::REC_ACRE))
+                throw std::runtime_error("Invalid native local Lua reference: " + key.serialize());
         }
     }
 }

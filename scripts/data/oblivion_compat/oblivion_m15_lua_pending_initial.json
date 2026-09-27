@@ -4,7 +4,7 @@
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ndata=\"{output}/test-data\"\ncontent=m15-lifecycle.esm\ncontent=m15-lua-current.omwscripts\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ndata=\"{output}/test-data\"\ncontent=m15-lifecycle.esm\ncontent=m15-lua-current.omwscripts\ncontent=m15-extra-global.omwscripts\ncontent=m15-extra-local.omwscripts\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
     },
     {
       "path": "config/settings.cfg",
@@ -25,6 +25,14 @@
     {
       "path": "bootstrap-events.txt",
       "content": "at 0 command content:m15-lifecycle.esm:900101 modav Health 0\nat 0 command dynamic:player:0000000000000001 modav Health 0\nat 0 command content:m15-lifecycle.esm:900101 getav Health\nat 0 command content:m15-lifecycle.esm:900101 getdead\n"
+    },
+    {
+      "path": "test-data/m15-extra-global.omwscripts",
+      "content": "GLOBAL: scripts/m15_resource_attach.lua\n"
+    },
+    {
+      "path": "test-data/m15-extra-local.omwscripts",
+      "content": "PLAYER,CUSTOM: scripts/m15_resource_current.lua\n"
     }
   ],
   "command": [
@@ -38,7 +46,7 @@
     "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
   ],
   "xvfb": true,
-  "name": "m15-lua-native-resource-continuation",
+  "name": "m15-native-lua-split-initial",
   "actions": [
     {
       "type": "wait_log",
@@ -47,12 +55,12 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M15 Lua current restored player",
+      "pattern": "M15 Lua current committed player",
       "timeout_seconds": 60
     },
     {
       "type": "wait_log",
-      "pattern": "M15 Lua current restored npc",
+      "pattern": "M15 Lua current committed npc",
       "timeout_seconds": 60
     },
     {
@@ -92,8 +100,10 @@
   "expected_exit": 0,
   "expected_log": [
     "Applied TES4 runtime state:",
-    "M15 Lua current restored player",
-    "M15 Lua current restored npc",
+    "M15 Lua current queued player",
+    "M15 Lua current committed player",
+    "M15 Lua current queued npc",
+    "M15 Lua current committed npc",
     "Writing saved game 'Quicksave'"
   ],
   "forbidden_log": [
@@ -106,9 +116,7 @@
     "Unsupported ObScript command",
     "Lua.*error",
     "native dynamic stats require",
-    "native actor lifecycle requires",
-    "M15 Lua current queued",
-    "M15 Lua current committed"
+    "native actor lifecycle requires"
   ],
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/bootstrap-events.txt",

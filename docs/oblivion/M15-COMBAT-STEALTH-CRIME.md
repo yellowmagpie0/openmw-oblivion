@@ -5029,3 +5029,104 @@ duplicate/noncanonical owners and script IDs, malformed timers/terminators,
 every byte truncation inside a populated section and aggregate limits.
 Tested source on parent6b070911b7:
 `8ac7daf56d893e78c2ba368b7b265423120df8c71654cba7a32688236eea651a`.
+
+### S3 native local Lua persistence and remapping
+
+LuaManager now owns native reference-local Lua persistence through the version1
+LUAM companion. Its real save path calls local onSave handlers; diagnostic T4ST
+capture does not. The Player retains its existing save path. Read validates a
+temporary map and winning content-reference types, rejects foreign-profile state
+and corrupt serialized Lua data, and normalizes script IDs and object userdata
+before holding pending references. Scene activation and custom add/has/remove
+operations restore pending containers before deciding whether scripts are absent.
+Unconsumed state survives resave without running the NPC script. Clear drops the
+pending map; Lua reload remaps it against the new script configuration.
+
+The shared script configuration now distinguishes an absent mapping from a
+mapping whose scripts were all removed. Removed scripts cannot inherit unrelated
+scripts' numeric IDs. Saved-ID bounds are checked separately from intentional
+removal. A container can load already-normalized IDs without mapping them twice.
+
+`S3/local-lua-persistence-03` passes all1936 component,632 engine and180 Python
+tests. `local-lua-persistence-sanitized-01` passes all1936 component and632 engine
+tests with ASan leak detection enabled and UBSan halting. Both tested source
+fingerprint `76e0ff2debf598a34ee67638d1460f0d21a95b0b30b67d1a0d9522f73e4597f9`
+on parent `c6686c0eac`. The earlier01/02 builds passed their inventories but real
+restart exposed two integration errors: consuming NLSV with isNextSub before its
+reader, then comparing raw TES4 metadata to internally flagged class types.
+Both failures remain as `lua-persistence-continuation-01/02`, with independent
+proof of rejection before native application and unchanged inputs. The fixes use
+peekNextSub and raw ESM4 FourCC validation, with additional component coverage.
+
+Regular actual-runtime evidence:
+
+- `lua-persistence-runtime-01` writes all six resource values and a native NPC Lua
+  state blob. `lua-persistence-continuation-03` loads it in a fresh process: both
+  actors restore exactly once, with no queued/committed resource writes, preserving
+  all actor channels, lifecycle, actions and counters. Publication setup is now
+  explicitly at time0, before restored onUpdate reads; automatic publication is
+  still gated off.
+- `lua-persistence-split-runtime-01` and `lua-persistence-disabled-02` reverse two
+  unchanged omwscripts configuration files. The disabled NPC never activates;
+  its pending script ID changes30->29 while its path/data/timers remain exact.
+  The first disabled attempt edited a configuration file and correctly hit the
+  content fingerprint guard; `disabled-01` is retained, not accepted.
+- `lua-persistence-timers-01`, `timers-continuation-01` and `timers-no-replay-01`
+  save two named timers per actor, then reverse two independent native masters.
+  Both clock callbacks fire exactly once, and saved object userdata still equals
+  the actual owner. Each actual save invokes onSave once per actor; persisted
+  counters advance1->2->3. The second save has zero pending NPC timers; a third
+  process restores both fired flags and delivers no timers or resource writes.
+- Reordering the first master selected a new Bendu_Olo save directory. The initial
+  continuation verifier accidentally read the unchanged M15Legacy input, with
+  elapsed time0. Those superseded reports are retained as `*-wrong-slot.json`.
+  Correct verification requires exactly one changed Quicksave, positive elapsed
+  time and the actual saved Lua section. The verified timer continuation output
+  SHA256 is `00d7879ef1cbbc3551ab49dd0ae6011163e7fecf01b3fb9ff462b1abbf5c2568`.
+- `lua-persistence-reject-{script-id,binary-data,base-owner,duplicate-owner}-01`
+  rejects each intended malformed input for the exact expected reason before
+  native application, without writes/replay and with source/private hashes intact.
+- `lua-persistence-morrowind-01` performs ordinary Wait and save: clock advances
+  1.077969 hours, injured Health25 stays25, and neither native runtime records nor
+  an NLSV subrecord appear. `lua-persistence-reject-foreign-02` rejects an empty
+  native Lua section inserted into TES3 LUAM. Its first attempt retained the
+  intended rejection but failed because the draft dropped the established
+  missing-weather-model baseline classification; the corrected course preserves
+  those existing patterns and the exact expected load error.
+
+`lua-persistence-sanitized-timers-01` and
+`lua-persistence-sanitized-timers-continuation-01` repeat actual writes/save,
+content reordering, userdata restoration and both timer deliveries using the
+instrumented engine with its matching resources. They pass independent resource,
+native-Lua and callback-count checks. Graphical leak detection is off; UBSan
+halts. Final regular runtime executable SHA256:
+`a9f44acb9a30e9631c6f8106b7a3aa112ccdf57a8854d55b754f71c3a471b964`.
+Sanitizer executable SHA256:
+`57e5c9f5f244e748311c126e503a4641a4779257d17574e38f9eef9c83e6a0a2`.
+Both were identified before their launches. Accepted captures were inspected
+directly: room and Player bars, rejection dialogs, or the limited Morrowind Wait
+view. The NPC is offscreen and audio is disabled.
+
+Editable manifests now cover resource current/restart, pending inactive state,
+timers/replay and malformed/foreign cases. The empty independent master has a
+hash-pinned editable recipe `m15_lua_order_fixture.json`; the build/test skill
+records reproduction, setup, expected values, save selection and loader pitfalls.
+The promoted pending-enable course intentionally still catches a separate bug:
+`lua-persistence-enable-01` acknowledges Enable but leaves the loaded NPC disabled.
+Its pending Lua data survives and maps29->30, but the NPC never receives onLoad.
+The script adapter misses disabled references outside the Ptr registry; fixing
+that lookup and rerunning activation is the next bounded change.
+
+This does not close S3 or M15. Dangling dynamic Lua owner validation, broader
+native construction/lifecycle adoption and other Lua stat writers remain open,
+as do prior-world preservation on failed load, the remaining resource/rest gates,
+and S4-S14. A disabled reference in a loaded cell is not a travel/unloaded-cell
+acceptance test. These explicit-script courses do not establish automatic native
+publication or complete Morrowind/profile-teardown regression coverage.
+
+The initial serializer-only runtime01 used executable SHA256
+`d19736fbce4b37223deb6b353999cea67be8da3cc4e51cd6067914bb95fc9dae`; its valid output was subsequently loaded by the
+corrected continuation03 binary above. After promotion, `local-lua-manifests-01`
+passes180 Python tests and independently confirms that all10 editable manifests
+expand identically to their executed drafts. The updated build/test skill passes
+the skill-creator validator.

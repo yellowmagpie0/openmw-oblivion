@@ -1,4 +1,5 @@
 #include <components/esm4/localluascripts.hpp>
+#include <components/esm4/common.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 
@@ -78,6 +79,16 @@ namespace
     {
         EXPECT_TRUE(decode(record([](auto&) {})).empty());
         EXPECT_TRUE(decode(encode({})).empty());
+    }
+
+    TEST(ESM4LocalLuaScripts, callerCanCheckProfileWithoutConsumingSection)
+    {
+        ESM::ESMReader reader;
+        reader.open(std::make_unique<std::istringstream>(encode(sample())), "native-local-lua-peek");
+        ASSERT_EQ(reader.getRecName(), ESM::REC_LUAM);
+        reader.getRecHeader();
+        EXPECT_TRUE(reader.peekNextSub("NLSV"));
+        EXPECT_EQ(encode(ESM4::loadLocalLuaScripts(reader)), encode(sample()));
     }
 
     TEST(ESM4LocalLuaScripts, rejectsUnknownVersionExcessiveOwnersAndTrailingSection)
@@ -191,5 +202,29 @@ namespace
         for (unsigned i = 0; i < 4; ++i)
             bytes[sizeOffset + i] = static_cast<char>(excessive >> (8 * i));
         EXPECT_THROW(decode(bytes), std::exception);
+    }
+
+    TEST(ESM4LocalLuaScripts, validatesRawWinningReferenceTypesAndRejectsBasesAndTombstones)
+    {
+        const State state = sample();
+        const auto key = ESM::FormKey::content("example.esm", 123);
+        ESM::FormKeyIndex index;
+        EXPECT_THROW(ESM4::validateLocalLuaScriptContent(state, index), std::exception);
+        ESM::FormRecordMetadata record;
+        record.mKey = key;
+        record.mWinningPlugin = "example.esm";
+        for (auto type : { ESM4::REC_ACHR, ESM4::REC_ACRE, ESM4::REC_REFR })
+        {
+            record.mRecordType = type;
+            index.apply(record);
+            EXPECT_NO_THROW(ESM4::validateLocalLuaScriptContent(state, index));
+        }
+        record.mRecordType = ESM4::REC_NPC_;
+        index.apply(record);
+        EXPECT_THROW(ESM4::validateLocalLuaScriptContent(state, index), std::exception);
+        record.mRecordType = ESM4::REC_ACHR;
+        record.mDeleted = true;
+        index.apply(record);
+        EXPECT_THROW(ESM4::validateLocalLuaScriptContent(state, index), std::exception);
     }
 }

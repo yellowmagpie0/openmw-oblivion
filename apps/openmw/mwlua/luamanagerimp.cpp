@@ -12,6 +12,7 @@
 #include <components/debug/debuglog.hpp>
 
 #include <components/esm/luascripts.hpp>
+#include <components/esm4/localluascripts.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 
@@ -388,6 +389,7 @@ namespace MWLua
         mUiResourceManager.clear();
         MWBase::Environment::get().getWorld()->getPostProcessor()->disableDynamicShaders();
         mActiveLocalScripts.clear();
+        mPendingNativeScripts.clear();
         mLuaEvents.clear();
         mEngineEvents.clear();
         mInputEvents.clear();
@@ -686,7 +688,7 @@ namespace MWLua
         mObjectLists.objectAddedToScene(ptr); // assigns generated RefNum if it is not set yet.
         mEngineEvents.addToQueue(EngineEvents::OnActive{ getId(ptr) });
 
-        LocalScripts* localScripts = ptr.getRefData().getLuaScripts();
+        LocalScripts* localScripts = getLocalScripts(ptr);
         if (!localScripts)
         {
             LuaUtil::ScriptIdsWithInitializationData autoStartConf
@@ -736,7 +738,7 @@ namespace MWLua
 
     void LuaManager::addCustomLocalScript(const MWWorld::Ptr& ptr, int scriptId, std::string_view initData)
     {
-        LocalScripts* localScripts = ptr.getRefData().getLuaScripts();
+        LocalScripts* localScripts = getLocalScripts(ptr);
         if (!localScripts)
         {
             localScripts = createLocalScripts(ptr);
@@ -793,6 +795,20 @@ namespace MWLua
         globalScripts.save(writer);
         mLuaEvents.save(writer);
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            auto nativeScripts = mPendingNativeScripts;
+            // Snapshot the registry before calling user onSave handlers.
+            std::vector<MWWorld::Ptr> references;
+            for (const auto& [id, ptr] : MWBase::Environment::get().getWorldModel()->getPtrRegistryView())
+                if (ptr != mPlayer && !ptr.getCellRef().getFormKey().isNull())
+                    references.push_back(ptr);
+            for (const auto& ptr : references)
+                if (auto* scripts = ptr.getRefData().getLuaScripts())
+                    scripts->save(nativeScripts[ptr.getCellRef().getFormKey()]);
+            ESM4::saveLocalLuaScripts(writer, nativeScripts);
+        }
+
         writer.endRecord(ESM::REC_LUAM);
     }
 
@@ -821,9 +837,62 @@ namespace MWLua
             mLuaEvents.load(view.sol(), reader, mContentFileMapping, mGlobalLoader.get());
         });
 
+        if (reader.peekNextSub("NLSV")
+            && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+            throw std::runtime_error("Native local Lua state in a non-Oblivion save");
+        auto nativeScripts = ESM4::loadLocalLuaScripts(reader);
+        ESM4::validateLocalLuaScriptContent(
+            nativeScripts, MWBase::Environment::get().getWorld()->getStore().getFormKeyIndex());
+        normalizeNativeScripts(nativeScripts, true);
+        mPendingNativeScripts.swap(nativeScripts);
+
         mGlobalScripts.setSavedDataDeserializer(mGlobalLoader.get());
         mGlobalScripts.load(globalScripts);
         mGlobalScriptsStarted = true;
+    }
+
+    void LuaManager::normalizeNativeScripts(ESM4::LocalLuaScripts& scripts, bool savedContentIds)
+    {
+        // Pending references may be saved again before activation. Normalize
+        // script IDs and serialized object IDs now, not when onLoad finally runs.
+        mLua.protectedCall([&](LuaUtil::LuaView& view) {
+            for (auto& [key, data] : scripts)
+            {
+                std::erase_if(data.mScripts, [&](ESM::LuaScript& script) {
+                    if (!mConfiguration.isValidSavedId(script.mScriptId))
+                        throw std::runtime_error("Invalid native local Lua saved script ID");
+                    const auto id = mConfiguration.mapId(script.mScriptId);
+                    if (!id)
+                        return true; // A deliberately removed script.
+                    if (*id < 0 || static_cast<std::size_t>(*id) >= mConfiguration.size())
+                        throw std::runtime_error("Invalid native local Lua script ID");
+                    script.mScriptId = *id;
+                    const auto relocate = [&](std::string& bytes) {
+                        if (!bytes.empty())
+                            bytes = LuaUtil::serialize(LuaUtil::deserialize(view.sol(), bytes,
+                                savedContentIds ? mLocalLoader.get() : mLocalSerializer.get()), mLocalSerializer.get());
+                    };
+                    relocate(script.mData);
+                    for (auto& timer : script.mTimers)
+                        relocate(timer.mCallbackArgument);
+                    return false;
+                });
+            }
+        });
+    }
+
+    LocalScripts* LuaManager::getLocalScripts(const MWWorld::Ptr& ptr)
+    {
+        if (auto* scripts = ptr.getRefData().getLuaScripts())
+            return scripts;
+        const auto pending = mPendingNativeScripts.find(ptr.getCellRef().getFormKey());
+        if (pending == mPendingNativeScripts.end())
+            return nullptr;
+        auto* scripts = createLocalScripts(ptr);
+        scripts->setSavedDataDeserializer(mLocalSerializer.get());
+        scripts->load(pending->second, true);
+        mPendingNativeScripts.erase(pending);
+        return scripts;
     }
 
     void LuaManager::saveLocalScripts(const MWWorld::Ptr& ptr, ESM::LuaScripts& data)
@@ -888,6 +957,7 @@ namespace MWLua
         }
 
         initConfiguration(true);
+        normalizeNativeScripts(mPendingNativeScripts, false);
 
         mMenuScripts.removeAllScripts();
 

@@ -52,6 +52,9 @@ namespace LuaUtil
 
     void ScriptsConfiguration::init(ESM::LuaScriptsCfg cfg, bool remap)
     {
+        mScriptIdMapping.clear();
+        mHasScriptIdMapping = remap;
+        mSavedScriptCount = mScripts.size();
         std::vector<VFS::Path::Normalized> oldPaths;
         if (remap)
         {
@@ -195,14 +198,17 @@ namespace LuaUtil
     {
         reader.mScriptsConfiguration = this;
         mScriptIdMapping.clear();
+        mHasScriptIdMapping = false;
         int index = 0;
         while (reader.isNextSub("LUAP"))
         {
+            mHasScriptIdMapping = true;
             VFS::Path::Normalized path(reader.getHString());
             if (std::optional<int> id = findId(path))
                 mScriptIdMapping[index] = *id;
             ++index;
         }
+        mSavedScriptCount = index;
     }
 
     void ScriptsConfiguration::write(ESM::ESMWriter& writer) const
@@ -213,10 +219,10 @@ namespace LuaUtil
 
     std::optional<int> ScriptsConfiguration::mapId(int savedId) const
     {
-        if (mScriptIdMapping.empty())
+        if (!isValidSavedId(savedId))
+            return {};
+        if (!mHasScriptIdMapping)
         {
-            if (savedId == -1)
-                return {};
             return savedId;
         }
         auto it = mScriptIdMapping.find(savedId);

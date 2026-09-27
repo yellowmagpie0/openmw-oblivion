@@ -167,7 +167,9 @@ namespace LuaUtil
 
         // Removes all scripts; starts scripts according to `autoStartMode` and
         // loads the savedScripts. Runs "onLoad" for each script.
-        void load(const ESM::LuaScripts& savedScripts);
+        // alreadyMappedIds is for state normalized to the current configuration
+        // before a reference was materialized. Its deserializer must also match.
+        void load(const ESM::LuaScripts& savedScripts, bool alreadyMappedIds = false);
 
         // Callbacks for serializable timers should be registered in advance.
         // The script with the given path should already present in the container.

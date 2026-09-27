@@ -1,0 +1,8 @@
+{
+  "purpose": "Empty independent TES4 master to change native Lua userdata content indices without changing any game records",
+  "hedr_version": 1.0,
+  "record_count": 0,
+  "next_id": 4096,
+  "flags": 1,
+  "sha256": "867e3694d0ae025229267aa0dc9a7c06226f8b9598ad4f0ecf7fe9831898896a"
+}

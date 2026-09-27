@@ -413,25 +413,25 @@ namespace MWLua
                         context.mLuaManager->addCustomLocalScript(
                             object.ptr(), *scriptId, cfg[*scriptId].mInitializationData);
                 };
-                objectT["hasScript"] = [lua = context.mLua](const GObject& object, std::string_view path) {
+                objectT["hasScript"] = [lua = context.mLua, manager = context.mLuaManager](const GObject& object, std::string_view path) {
                     const LuaUtil::ScriptsConfiguration& cfg = lua->getConfiguration();
                     std::optional<int> scriptId = cfg.findId(VFS::Path::Normalized(path));
                     if (!scriptId)
                         return false;
                     MWWorld::Ptr ptr = object.ptr();
-                    LocalScripts* localScripts = ptr.getRefData().getLuaScripts();
+                    LocalScripts* localScripts = manager->getLocalScripts(ptr);
                     if (localScripts)
                         return localScripts->hasScript(*scriptId);
                     else
                         return false;
                 };
-                objectT["removeScript"] = [lua = context.mLua](const GObject& object, std::string_view path) {
+                objectT["removeScript"] = [lua = context.mLua, manager = context.mLuaManager](const GObject& object, std::string_view path) {
                     const LuaUtil::ScriptsConfiguration& cfg = lua->getConfiguration();
                     std::optional<int> scriptId = cfg.findId(VFS::Path::Normalized(path));
                     if (!scriptId)
                         throw std::runtime_error("Unknown script: " + std::string(path));
                     MWWorld::Ptr ptr = object.ptr();
-                    LocalScripts* localScripts = ptr.getRefData().getLuaScripts();
+                    LocalScripts* localScripts = manager->getLocalScripts(ptr);
                     if (!localScripts || !localScripts->hasScript(*scriptId))
                         throw std::runtime_error("There is no script " + std::string(path) + " on " + ptr.toString());
                     if (localScripts->getAutoStartConf().count(*scriptId) > 0)

@@ -12,6 +12,7 @@ namespace ESM4
 
     LocalLuaScripts loadLocalLuaScripts(ESM::ESMReader& reader);
     void saveLocalLuaScripts(ESM::ESMWriter& writer, const LocalLuaScripts& scripts);
+    void validateLocalLuaScriptContent(const LocalLuaScripts& scripts, const ESM::FormKeyIndex& index);
 }
 
 #endif

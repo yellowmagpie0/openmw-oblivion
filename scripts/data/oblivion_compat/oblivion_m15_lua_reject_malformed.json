@@ -38,26 +38,12 @@
     "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
   ],
   "xvfb": true,
-  "name": "m15-lua-native-resource-continuation",
+  "name": "m15-native-lua-reject-malformed",
   "actions": [
     {
       "type": "wait_log",
-      "pattern": "Applied TES4 runtime state:",
-      "timeout_seconds": 60
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M15 Lua current restored player",
-      "timeout_seconds": 60
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M15 Lua current restored npc",
-      "timeout_seconds": 60
-    },
-    {
-      "type": "focus_window",
-      "name": "OpenMW"
+      "pattern": "Failed to load saved game:",
+      "timeout_seconds": 45
     },
     {
       "type": "sleep",
@@ -65,54 +51,28 @@
     },
     {
       "type": "screenshot",
-      "name": "after-writes.png",
-      "minimum_entropy": 0.02
-    },
-    {
-      "type": "key_held",
-      "value": "F5"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 30
-    },
-    {
-      "type": "sleep",
-      "seconds": 2
-    },
-    {
-      "type": "screenshot",
-      "name": "after-save.png",
+      "name": "rejected.png",
       "minimum_entropy": 0.02
     }
   ],
-  "timeout_seconds": 180,
+  "timeout_seconds": 75,
   "terminate_after_actions": true,
   "expected_exit": 0,
   "expected_log": [
-    "Applied TES4 runtime state:",
-    "M15 Lua current restored player",
-    "M15 Lua current restored npc",
-    "Writing saved game 'Quicksave'"
+    "Failed to load saved game:"
   ],
   "forbidden_log": [
-    "Failed to load saved game",
-    "Failed to save game",
-    "Error in frame",
-    "Segmentation fault",
-    "Assertion.*failed",
-    "Aborted",
-    "Unsupported ObScript command",
-    "Lua.*error",
-    "native dynamic stats require",
-    "native actor lifecycle requires",
+    "Applied TES4 runtime state:",
+    "Writing saved game",
     "M15 Lua current queued",
-    "M15 Lua current committed"
+    "M15 Lua current committed",
+    "M15 Lua current restored"
   ],
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/bootstrap-events.txt",
     "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
   },
-  "reviewed_error_log": []
+  "reviewed_error_log": [
+    "Failed to load saved game:"
+  ]
 }

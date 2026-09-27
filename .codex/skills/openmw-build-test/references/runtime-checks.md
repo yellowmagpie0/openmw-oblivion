@@ -440,3 +440,75 @@ Player Health becomes100. A fresh process must preserve all channels and the
 shared base override. The continuation intentionally runs only zero writes and
 queries, never repeats the modifying command sequence. Old unloaded entries
 without initialized lifecycle still need explicit migration work.
+
+## Native local Lua state and timer restart
+
+The Lua resource fixtures are `oblivion_m15_lua_resource_{current,continuation}.json`.
+Their private starting save is `S3/lua-resource-runtime-01/pristine.omwsave`, SHA256
+`d7321e0b5aea9dbd36701b3d57265b6b3a1a49909698e1c9ddace022e7676b19`.
+It uses the pinned lifecycle plugin above, with NPC Magicka multiplier15 and
+Stunted Magicka. It is synthetic setup, not automatic native actor registration.
+The manifests publish registered views with zero Health writes at time0; waiting
+until time1 is too late for a restored local script's first onUpdate read.
+Expected public currents: Player Health40.25/Magicka17.5/Fatigue200; NPC
+Health35.5/Magicka22.5/Fatigue100. NPC raw Magicka Damage is-85 at scale1.5.
+A continuation must emit exactly one restored marker per actor and no queued or
+committed writes. Identical absolute resource values can hide a replay.
+
+`oblivion_m15_lua_pending_{initial,disabled,enable}.json` reverses two unchanged
+`.omwscripts` files to test pending script-ID remapping. Start the initial course
+from the same private input. For disabled setup copy its actual result, change
+only NPC reference `enabled` to false with `tes4_runtime_state.write_save`, and
+preserve Lua records and all actor channels. Disabled resave must not activate the
+NPC script; it changes saved script ID30->29 while preserving the script path,
+Lua data and timers. The enable course reverses order again and must restore the
+NPC once without replay. An acknowledged Enable command alone is not proof of
+activation; check saved enabled state and the actual local script marker.
+Editing an existing omwscripts file instead of reordering unchanged files rightly
+fails the native content fingerprint guard. Do not weaken that guard for fixtures.
+
+`oblivion_m15_lua_timers_{initial,continuation,no_replay}.json` adds named timers
+on both clocks and object userdata in both script state and callback arguments.
+Timer delay is30 simulation seconds/900 game seconds. The first save has two
+pending NPC timers and onSave counter1. Restart reverses two independent native
+masters, asserts userdata still refers to self, and fires each clock once per
+actor. The resave has zero timers and counter2. A third process must restore both
+fired flags, deliver no timers/writes, and save counter3. Pass `lua_order_data`
+in addition to the usual lifecycle variables. Reproduce its empty master from
+the editable recipe (no licensed records, scripts or gameplay changes):
+
+```bash
+python3 - scripts/data/oblivion_compat/m15_lua_order_fixture.json build/m15-lua-order <<'PY'
+from pathlib import Path
+import hashlib, json, struct, sys
+recipe = json.loads(Path(sys.argv[1]).read_text())
+payload = b'HEDR' + struct.pack('<HfII', 12, recipe['hedr_version'],
+    recipe['record_count'], recipe['next_id'])
+data = struct.pack('<4sIIII', b'TES4', len(payload), recipe['flags'], 0, 0) + payload
+assert hashlib.sha256(data).hexdigest() == recipe['sha256']
+output = Path(sys.argv[2]); output.mkdir(parents=True, exist_ok=True)
+(output / 'm15-lua-order.esm').write_bytes(data)
+PY
+```
+
+**Choose the actual output save.** Reordering the first master can select a new
+character directory: `lua-persistence-timers-continuation-01` wrote
+`userdata/saves/Bendu_Olo/Quicksave.omwsave` while the copied M15Legacy input stayed
+unchanged. Require exactly one candidate Quicksave whose hash differs from the
+pristine input, a real save boundary and positive elapsed time. Never use the
+first glob result or assume the output slot is the input slot. Preserve the
+wrong-slot report if a verifier made that mistake, then verify the actual result.
+
+Lua data lives in the versioned NLSV companion inside LUAM, not in diagnostic
+T4ST snapshots. Read owner/script/timer subrecords structurally and map script IDs
+through that save's LUAP paths. Check callback delivery independently from the
+binary snapshot. The actual acceptance helpers and historical independent
+reports are retained in `S3/authority-draft` and `S3/lua-persistence-*`.
+
+Codec/integration lessons: `ESMReader::isNextSub` consumes a matching tag;
+`peekNextSub` is required when checking a profile and handing the tag to another
+reader. `FormRecordMetadata::mRecordType` contains raw `ESM4::REC_*` FourCC values,
+not OpenMW's internally flagged `ESM::REC_*4` class identifiers. Test both at the
+real-loader boundary. Keep known Morrowind baseline reviewed-error patterns when
+building a negative manifest; adding an intended rejection must not accidentally
+discard the existing missing-weather-asset classification.

@@ -4,7 +4,7 @@
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ndata=\"{output}/test-data\"\ncontent=m15-lifecycle.esm\ncontent=m15-lua-current.omwscripts\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ndata=\"{output}/test-data\"\ndata=\"{lua_order_data}\"\ncontent=m15-lifecycle.esm\ncontent=m15-lua-order.esm\ncontent=m15-lua-current.omwscripts\nfallback-archive=Oblivion - Meshes.bsa\nfallback-archive=Oblivion - Textures - Compressed.bsa\nfallback-archive=Oblivion - Misc.bsa\nstart=M15Observation::ref=0x900010::side=north\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
     },
     {
       "path": "config/settings.cfg",
@@ -16,7 +16,7 @@
     },
     {
       "path": "test-data/scripts/m15_resource_current.lua",
-      "content": "local self = require('openmw.self')\nlocal types = require('openmw.types')\nlocal elapsed, queued, done, reported = 0, false, false, false\nlocal player = types.Player.objectIsInstance(self)\nlocal name = player and 'player' or 'npc'\nlocal health = player and 40.25 or 35.5\nlocal magicka = player and 17.5 or 22.5\nlocal fatigue = player and 200 or 100\nlocal function update(dt)\n    elapsed = elapsed + dt\n    if done then\n        if not reported then\n            assert(types.Actor.stats.dynamic.health(self).current == health)\n            assert(types.Actor.stats.dynamic.magicka(self).current == magicka)\n        assert(types.Actor.stats.dynamic.fatigue(self).current == fatigue)\n            print('M15 Lua current restored ' .. name)\n            reported = true\n        end\n        return\n    end\n    if queued then\n        assert(types.Actor.stats.dynamic.health(self).current == health)\n        assert(types.Actor.stats.dynamic.magicka(self).current == magicka)\n        assert(types.Actor.stats.dynamic.fatigue(self).current == fatigue)\n        print('M15 Lua current committed ' .. name)\n        done, reported = true, true\n    elseif elapsed >= 2 then\n        types.Actor.stats.dynamic.health(self).current = health\n        types.Actor.stats.dynamic.magicka(self).current = magicka\n        types.Actor.stats.dynamic.fatigue(self).current = 500\n        print('M15 Lua current queued ' .. name)\n        queued = true\n    end\nend\nreturn {{engineHandlers = {{onUpdate = update, onSave = function() return {{done=done}} end,\n    onLoad = function(data) done = data and data.done or false end}}}}\n"
+      "content": "local self = require('openmw.self')\nlocal types = require('openmw.types')\nlocal async = require('openmw.async')\nlocal fired = {{}}\nlocal saves = 0\nlocal elapsed, queued, done, reported = 0, false, false, false\nlocal player = types.Player.objectIsInstance(self)\nlocal name = player and 'player' or 'npc'\nlocal health = player and 40.25 or 35.5\nlocal magicka = player and 17.5 or 22.5\nlocal fatigue = player and 200 or 100\nlocal function timer(arg)\n    assert(arg.owner == self.object)\n    assert(not fired[arg.kind], 'timer replay')\n    fired[arg.kind] = true\n    print('M15 Lua timer ' .. arg.kind .. ' ' .. name)\nend\nlocal callback = async:registerTimerCallback('m15-native-timer', timer)\nlocal function update(dt)\n    elapsed = elapsed + dt\n    if done then\n        if not reported then\n            assert(types.Actor.stats.dynamic.health(self).current == health)\n            assert(types.Actor.stats.dynamic.magicka(self).current == magicka)\n        assert(types.Actor.stats.dynamic.fatigue(self).current == fatigue)\n            print('M15 Lua current restored ' .. name)\n            reported = true\n        end\n        return\n    end\n    if queued then\n        assert(types.Actor.stats.dynamic.health(self).current == health)\n        assert(types.Actor.stats.dynamic.magicka(self).current == magicka)\n        assert(types.Actor.stats.dynamic.fatigue(self).current == fatigue)\n        print('M15 Lua current committed ' .. name)\n        done, reported = true, true\n    elseif elapsed >= 2 then\n        types.Actor.stats.dynamic.health(self).current = health\n        types.Actor.stats.dynamic.magicka(self).current = magicka\n        types.Actor.stats.dynamic.fatigue(self).current = 500\n        print('M15 Lua current queued ' .. name)\n        async:newSimulationTimer(30, callback, {{owner=self.object, kind='simulation'}})\n        async:newGameTimer(900, callback, {{owner=self.object, kind='game'}})\n        queued = true\n    end\nend\nreturn {{engineHandlers = {{onUpdate = update, onSave = function() saves=saves+1; print('M15 Lua save ' .. name .. ' count' .. tostring(saves)); return {{done=done, owner=self.object, fired=fired, saves=saves}} end,\n    onLoad = function(data)\n        done = data and data.done or false\n        if data and data.owner then assert(data.owner == self.object) end\n        fired = data and data.fired or {{}}\n        saves = data and data.saves or 0\n        local count = (fired.simulation and 1 or 0) + (fired.game and 1 or 0)\n        print('M15 Lua timers restored ' .. name .. ' count' .. tostring(count))\n    end}}}}\n"
     },
     {
       "path": "test-data/scripts/m15_resource_attach.lua",
@@ -38,7 +38,7 @@
     "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
   ],
   "xvfb": true,
-  "name": "m15-lua-native-resource-current",
+  "name": "m15-native-lua-timers-initial",
   "actions": [
     {
       "type": "wait_log",
@@ -108,7 +108,8 @@
     "Unsupported ObScript command",
     "Lua.*error",
     "native dynamic stats require",
-    "native actor lifecycle requires"
+    "native actor lifecycle requires",
+    "M15 Lua timer (simulation|game) "
   ],
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/bootstrap-events.txt",
