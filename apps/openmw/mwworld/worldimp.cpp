@@ -1807,8 +1807,35 @@ namespace MWWorld
 
     void World::runOblivionScripts(double secondsPassed)
     {
-        if (mGameProfile == ESM::GameProfile::Oblivion && mOblivionScriptManager)
-            mOblivionScriptManager->update(secondsPassed);
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionScriptManager)
+            return;
+        mOblivionScriptManager->update(secondsPassed);
+        if (mDispatchingOblivionDeathEvents)
+            return;
+        mDispatchingOblivionDeathEvents = true;
+        try
+        {
+            while (mOblivionCombat && mOblivionScriptManager)
+            {
+                const auto event = mOblivionCombat->takeNextDeathEvent();
+                if (!event)
+                    break;
+                // Consumption precedes callback execution. Callback-created
+                // deaths append behind existing work; callback saves cannot
+                // replay this event after a restart.
+                const bool handled = mOblivionScriptManager->dispatchObjectEvent(
+                    event->mActor, "ondeath", event->mKiller);
+                Log(Debug::Info) << "M15 native death callback: id=" << event->mId
+                    << " actor=" << event->mActor.serialize() << " killer=" << event->mKiller.serialize()
+                    << " handled=" << (handled ? "true" : "false");
+            }
+        }
+        catch (...)
+        {
+            mDispatchingOblivionDeathEvents = false;
+            throw;
+        }
+        mDispatchingOblivionDeathEvents = false;
     }
 
     bool World::dispatchOblivionActivation(const Ptr& ptr, const Ptr& actor)

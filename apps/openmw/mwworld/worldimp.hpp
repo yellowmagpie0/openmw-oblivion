@@ -129,6 +129,7 @@ namespace MWWorld
         std::unique_ptr<ESM4::ObservationStream> mOblivionObservation;
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
+        bool mDispatchingOblivionDeathEvents = false;
 
         std::string mCurrentWorldSpace;
 

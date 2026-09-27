@@ -3461,3 +3461,29 @@ save course with no GPRO/T4VR/T4ST/OMW4STATE records. Its inspected terrain-faci
 Balmora capture and binary identity are recorded in verification.json. It ran
 before the final Oblivion-only adoption fallback change and is not a full TES3
 combat/gameplay regression suite.
+
+### S3 queued death-event delivery (partial)
+
+The World script update now drains native death events in FIFO order, consuming
+an event before invoking its OnDeath handler. A reentrancy guard prevents a
+nested script update from draining the same queue; callback-created events join
+the tail. Historical events remain deliverable after revival. Missing handlers
+consume their events. This does not establish original callback ordering,
+physical death, or successful execution of an authored callback body.
+
+`S3/native-death-dispatch-02` passes all **594 engine tests**, with source
+fingerprint `aec49b43e9c2a588a40132fac012c4cb61a101254c063730e0df78bb856cc503`
+and engine SHA-256
+`3deb312ef67d3a16d9c7b582d4b232baffc6d09c503c55fe9495cfd313ac4a35`.
+The earlier `-01` also passed; `-02` removes a script-writer shadow warning.
+Components and Python implementations are unchanged.
+
+`S3/native-death-dispatch-runtime-01` delivers saved IDs 4 then 9 (both without
+an attached handler), saves an empty queue with next ID 10, and preserves life,
+actor values and base overrides. `native-death-dispatch-continuation-01` starts a
+fresh process from that save and observes no replay. The negative course
+`native-death-dispatch-negative-01` completes every action but fails solely for
+its deliberately nonexistent expected ID 5. Independent verification confirms
+all source/pristine hashes and saved vectors; all three silent observation-room
+captures were inspected. Actual callback-body execution and saving from inside
+OnDeath remain the next test, not a passed claim here. S3 remains open.

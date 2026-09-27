@@ -223,3 +223,15 @@ Require only that missing log line and all actions complete. Examples:
 `S3/native-script-writer-{runtime,continuation,negative}-02`. Preserve all source
 hashes and inspect every capture. This exercises live writer publication from
 registered authority, not automatic actor registration or all legacy adapters.
+
+
+Native death queue delivery uses `oblivion_m15_native_death_events.json`, its
+continuation and negative manifests. Prepare private inputs as in
+`S3/authority-draft/death-dispatch-prepare.py`; retain pristine hashes. Verify
+ordered IDs 4/9, saved empty queue/next ID 10, unchanged native vectors, and no
+fresh-process replay. The negative expects absent ID 5 and must fail only that
+assertion after all actions complete. Evidence lives in
+`S3/native-death-dispatch-{runtime,continuation,negative}-01`. Older lifecycle
+persistence binaries intentionally retained the queue before this consumer
+existed; those are historical evidence, not current delivery expectations.
+These fixtures have no attached OnDeath body and do not prove callback saves.

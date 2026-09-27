@@ -1970,10 +1970,10 @@ namespace MWWorld
                     if (!index || !std::isfinite(value) || requested < std::numeric_limits<std::int32_t>::min()
                         || requested > std::numeric_limits<std::int32_t>::max())
                         throw std::invalid_argument("native actor-value command requires a known value and int32 argument");
-                    const auto command = mod ? ESM4::ActorValueCommand::Mod
+                    const auto nativeCommand = mod ? ESM4::ActorValueCommand::Mod
                         : name == "setav" || name == "setactorvalue" ? ESM4::ActorValueCommand::Set
                         : ESM4::ActorValueCommand::Force;
-                    if (!mWorld.executeOblivionActorValueCommand(objectPtr(), *index, command,
+                    if (!mWorld.executeOblivionActorValueCommand(objectPtr(), *index, nativeCommand,
                             ESM4::ActorValueCommandSource::Script, static_cast<std::int32_t>(requested)))
                         throw std::invalid_argument("native actor-value command requires a resident actor");
                     return std::int64_t(0);
