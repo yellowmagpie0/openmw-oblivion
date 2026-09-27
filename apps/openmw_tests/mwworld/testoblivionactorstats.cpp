@@ -1962,6 +1962,119 @@ namespace
 
     }
 
+    TEST_F(OblivionActorStatsTest, unloadedCommandsCommitValuesLifeAndResidentSharedBaseAtomically)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        MWMechanics::OblivionCombatService service;
+        std::array<ESM4::ActorCharacter, 2> refs{};
+        std::array<std::unique_ptr<MWWorld::LiveCellRef<ESM4::Npc>>, 2> lives;
+        std::array<MWWorld::Ptr, 2> ptrs;
+        for (std::size_t i = 0; i < refs.size(); ++i)
+        {
+            auto& ref = refs[i];
+            ref.mId = {static_cast<std::uint32_t>(0x900 + i), 3};
+            ref.mFormKey = ESM::FormKey::content("actors.esm", 0x900 + i);
+            ref.mBaseKey = mActorKey;
+            mStore.getWritable<ESM4::ActorCharacter>().insertStatic(ref, ref.mFormKey);
+            lives[i] = std::make_unique<MWWorld::LiveCellRef<ESM4::Npc>>(ref, mStore.search<ESM4::Npc>(mActorKey));
+            ptrs[i] = MWWorld::Ptr(lives[i].get());
+            ESM4::RuntimeActorValues values;
+            values.mActor = ref.mFormKey;
+            values.mBase = mActorKey;
+            values.mValues[8].mBase = 100;
+            values.mValues[9].mBase = 50;
+            values.mValues[10].mBase = 40;
+            service.publishNonPlayerValues(ptrs[i], values);
+            ESM4::RuntimeActorLife life;
+            life.mActor = values.mActor;
+            life.mBase = values.mBase;
+            service.publishNonPlayerLife(ptrs[i], life);
+        }
+        using Command = ESM4::ActorValueCommand;
+        using Source = ESM4::ActorValueCommandSource;
+        const auto target = refs[0].mFormKey;
+        const auto run = [&](std::uint8_t av, Command command, Source source, int requested,
+                             std::span<const MWWorld::Ptr> residents = {}) {
+            return service.executeUnloadedValueCommand(target, mStore, av, command, source,
+                requested, {false, true}, residents);
+        };
+        EXPECT_THROW(run(8, Command::Mod, Source::Script, -1, ptrs), std::invalid_argument);
+        ptrs[0] = {};
+        lives[0].reset(); // The target really has no live actor or shared stats.
+        EXPECT_TRUE(run(8, Command::Mod, Source::Script, -25).mAccepted);
+        EXPECT_EQ(service.getNonPlayerValue(target, 8, mStore), 75);
+        EXPECT_EQ(run(8, Command::Force, Source::Console, 50).mHealthReactionDelta, -25);
+        EXPECT_EQ(service.getNonPlayerValue(target, 8, mStore), 50);
+        const auto before = *service.findActorValues(target);
+        const auto lifeBefore = *service.findActorLife(target);
+        EXPECT_THROW(run(8, static_cast<Command>(255), Source::Script, 0), std::invalid_argument);
+        EXPECT_THROW(run(8, Command::Set, static_cast<Source>(255), 0), std::invalid_argument);
+        const std::array duplicate{ptrs[1], ptrs[1]};
+        EXPECT_THROW(run(8, Command::Set, Source::Script, 200, duplicate), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(target), before);
+        EXPECT_EQ(*service.findActorLife(target), lifeBefore);
+        EXPECT_EQ(ptrs[1].getClass().getCreatureStats(ptrs[1]).getHealth().getCurrent(), 100);
+        const std::array residents{ptrs[1]};
+        EXPECT_TRUE(run(8, Command::Set, Source::Script, 200, residents).mAccepted);
+        EXPECT_EQ(service.getNonPlayerValue(target, 8, mStore), 150);
+        EXPECT_EQ(ptrs[1].getClass().getCreatureStats(ptrs[1]).getHealth().getCurrent(), 200);
+        EXPECT_TRUE(service.engage(target, refs[1].mFormKey));
+        EXPECT_TRUE(run(8, Command::Mod, Source::Script, -200).mAccepted);
+        EXPECT_EQ(service.findActorLife(target)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_FALSE(service.isInCombat(target));
+        EXPECT_FALSE(service.isInCombat(refs[1].mFormKey));
+        EXPECT_EQ(service.getDeadCount(mActorKey), 1);
+        EXPECT_TRUE(run(8, Command::Mod, Source::Script, -1).mAccepted);
+        EXPECT_EQ(service.getDeadCount(mActorKey), 1);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        for (const auto& ref : refs)
+        {
+            ESM4::RuntimeReferenceState state;
+            state.mKey = ref.mFormKey;
+            state.mBase = ref.mBaseKey;
+            state.mCell = saved.mPlayer.mCell;
+            saved.mReferences.push_back(state);
+        }
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        EXPECT_EQ(restored.getNonPlayerValue(target, 8, mStore), -51);
+        EXPECT_EQ(restored.getDeadCount(mActorKey), 1);
+        const auto event = restored.takeNextDeathEvent();
+        ASSERT_TRUE(event);
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+        EXPECT_EQ(service.takeNextDeathEvent(), event);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        // Later residency publishes the same committed values and terminal life.
+        lives[0] = std::make_unique<MWWorld::LiveCellRef<ESM4::Npc>>(refs[0], mStore.search<ESM4::Npc>(mActorKey));
+        ptrs[0] = MWWorld::Ptr(lives[0].get());
+        service.publishNonPlayerValues(ptrs[0], *service.findActorValues(target));
+        EXPECT_EQ(ptrs[0].getClass().getCreatureStats(ptrs[0]).getHealth().getCurrent(), -51);
+        EXPECT_TRUE(ptrs[0].getClass().getCreatureStats(ptrs[0]).isDead());
+        // A missing or changed winning reference cannot mutate the restored actor.
+        const auto prior = *restored.findActorValues(target);
+        refs[0].mBaseKey = ESM::FormKey::content("actors.esm", 0x999);
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(refs[0], target);
+        EXPECT_THROW(restored.executeUnloadedValueCommand(target, mStore, 8, Command::Mod,
+            Source::Script, 1, {}, {}), std::invalid_argument);
+        EXPECT_EQ(*restored.findActorValues(target), prior);
+    }
+
     TEST_F(OblivionActorStatsTest, sharedNpcBaseWritesReachResidentsUnloadedAndFutureActorsAtomically)
     {
         autoNpc();

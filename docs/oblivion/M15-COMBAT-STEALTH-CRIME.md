@@ -4874,3 +4874,34 @@ essential and truly unloaded runtime cases, AI-disabled behavior, native Lua
 writers, unloaded ModAV, recharge integration and failed-load world preservation.
 Current nearby selection uses the fork's processing range; complete original
 process-tier eligibility remains to be integrated. No S2/S3 or later gate closes.
+
+### S3 stable-key unloaded actor commands
+
+`executeUnloadedValueCommand` validates winning content identity and updates
+native values without constructing a live actor. Mod/Force retain the existing
+channel/eligibility/alias rules. Set updates the shared base and all owned
+references, preparing supplied resident siblings before committing. A supplied
+resident target is rejected. Negative Health uses the same atomic lifecycle,
+combat-membership and death-event transaction as resident commands, with no
+resident projection required. Later publication projects committed values/life.
+
+The new engine case destroys the target live reference, applies Mod/Force/Set,
+checks sibling stat agreement and invalid-input rollback, kills the unloaded
+target once, clears both combat memberships, and round-trips native values and
+the pending death event through binary persistence. Repeated negative Health
+does not duplicate the death count/event. A changed winning reference is rejected
+without changing restored values; later live publication retains terminal state.
+`S3/unloaded-commands-02` and `unloaded-commands-sanitized-01` pass all631 engine
+tests with no skips. The latter enables ASan leak detection and UBSan halting.
+Tested source fingerprint on parent `24f6b1651d`:
+`807c70ec47e798d9782174282b91dcc982052122e5a8ce5e2e4b0324afceee4a`.
+`unloaded-commands-01` passed the initial631 cases before persistence/content
+rejection coverage was extended. These are service checks, not world acceptance.
+
+`S3/unloaded-command-runtime-red-01` preserves the world/script integration
+negative control: disabled registered NPC ModAV Health -5 still errors because
+the adapter requires a resident actor. Saved Health remains25 instead of the
+predeclared20. The after-rest screenshot was inspected; the Player restores but
+the disabled NPC is offscreen. The prepared stable-key adapter remains the next
+step. Legacy lifecycle adoption for unloaded actors and remaining S3 gates stay
+open; automatic native actor publication remains off.

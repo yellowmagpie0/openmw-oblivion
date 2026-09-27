@@ -155,6 +155,8 @@ namespace MWMechanics
             bool essential, bool godMode, const ESM4::EssentialRecoverySettings& settings) const;
         void preparePlayerValues(ESM4::RuntimeActorValues& values,
             const ESM4::PlayerDynamicBaseSettings& settings) const;
+        void setNonPlayerBaseValue(const ESM4::RuntimeActorValues& target, ESM4::ActorBaseKind kind,
+            std::uint8_t value, std::int32_t requested, std::span<const MWWorld::Ptr> residents);
         void publishHealthChange(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values,
             bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode,
             const ESM::FormKey& source = {});
@@ -227,6 +229,14 @@ namespace MWMechanics
             std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,
             std::span<const MWWorld::Ptr> residents, bool essential = false,
             const ESM4::EssentialRecoverySettings& recoverySettings = {});
+        // Stable-key command path for an actor without a resident projection.
+        // Winning reference/base bindings are validated before mutation. Set
+        // still requires every resident sibling sharing the target base.
+        OblivionActorValueCommandResult executeUnloadedValueCommand(const ESM::FormKey& actor,
+            const MWWorld::ESMStore& store, std::uint8_t value, ESM4::ActorValueCommand command,
+            ESM4::ActorValueCommandSource source, std::int32_t requested,
+            const ESM4::ActorValueCommandPolicy& policy, std::span<const MWWorld::Ptr> residents,
+            bool essential = false, const ESM4::EssentialRecoverySettings& recoverySettings = {});
         OblivionActorValueCommandResult executePlayerValueCommand(MWWorld::Player& player,
             std::uint8_t value, ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source,
             std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,

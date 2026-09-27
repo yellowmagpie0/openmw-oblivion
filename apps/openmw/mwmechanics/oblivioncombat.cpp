@@ -610,6 +610,17 @@ namespace MWMechanics
         validateNonPlayerQuery(value);
         const auto& target = nonPlayerValues(actor);
         const auto kind = actor.getType() == ESM::REC_CREA4 ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc;
+        if (!ESM4::prepareActorBaseValueSet(kind, value, requested))
+            return;
+        if (std::none_of(residents.begin(), residents.end(), [&](const auto& ptr) { return ptr == actor; }))
+            throw std::invalid_argument("native shared-base transaction omits its target");
+        setNonPlayerBaseValue(target, kind, value, requested, residents);
+    }
+
+    void OblivionCombatService::setNonPlayerBaseValue(const ESM4::RuntimeActorValues& target,
+        ESM4::ActorBaseKind kind, std::uint8_t value, std::int32_t requested,
+        std::span<const MWWorld::Ptr> residents)
+    {
         const auto entry = ESM4::prepareActorBaseValueSet(kind, value, requested);
         if (!entry)
             return;
@@ -641,8 +652,6 @@ namespace MWMechanics
                 throw std::invalid_argument("invalid or duplicate native shared-base resident");
             prepared.emplace_back(ptr, actors.at(old.mActor), &base, findActorLife(old.mActor));
         }
-        if (!identities.contains(target.mActor))
-            throw std::invalid_argument("native shared-base transaction omits its target");
         mActorBases.swap(bases);
         mActorValues.swap(actors);
         for (auto& view : prepared)
@@ -829,6 +838,48 @@ namespace MWMechanics
         }
         else
             changeNonPlayerValue(actor, value, change->mModifier, change->mDelta);
+        return {true, change->mHealthReaction ? std::optional(change->mDelta) : std::nullopt};
+    }
+
+    OblivionActorValueCommandResult OblivionCombatService::executeUnloadedValueCommand(
+        const ESM::FormKey& actor, const MWWorld::ESMStore& store, std::uint8_t value,
+        ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source,
+        std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,
+        std::span<const MWWorld::Ptr> residents, bool essential,
+        const ESM4::EssentialRecoverySettings& recoverySettings)
+    {
+        validateNonPlayerQuery(value);
+        auto candidate = nonPlayerValues(actor);
+        const bool creature = nonPlayerContentIsCreature(candidate, store);
+        if (source != ESM4::ActorValueCommandSource::Script && source != ESM4::ActorValueCommandSource::Console)
+            throw std::invalid_argument("invalid native actor-value command source");
+        for (const auto& ptr : residents)
+            if (!ptr.isEmpty() && ptr.getCellRef().getFormKey() == actor)
+                throw std::invalid_argument("unloaded native command target has a resident projection");
+        if (command == ESM4::ActorValueCommand::Set)
+        {
+            setNonPlayerBaseValue(candidate, creature ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc,
+                value, requested, residents);
+            return {true, std::nullopt};
+        }
+        if (!residents.empty())
+            throw std::invalid_argument("unloaded modifier command does not affect resident siblings");
+        const auto change = ESM4::prepareActorValueModifierCommand(ESM4::ActorValueOwner::NonPlayer,
+            value, command, source, requested,
+            command == ESM4::ActorValueCommand::Force ? getNonPlayerValue(actor, value, store) : 0.f, policy);
+        if (!change)
+            return {false, std::nullopt};
+        value = nonPlayerValueIndex(creature, value);
+        candidate.mValues[value] = ESM4::changeActorValueModifier(
+            candidate.mValues[value], candidate.mOwner, value, change->mModifier, change->mDelta);
+        if (change->mHealthReaction)
+            publishHealthChange({}, std::move(candidate), essential, recoverySettings, false);
+        else
+        {
+            candidate.validate();
+            actorProjection(candidate, findActorBase(candidate.mBase), findActorLife(actor));
+            std::swap(mActorValues.at(actor), candidate);
+        }
         return {true, change->mHealthReaction ? std::optional(change->mDelta) : std::nullopt};
     }
 
@@ -1340,14 +1391,16 @@ namespace MWMechanics
         std::optional<PreparedNonPlayerView> actorView;
         if (player)
             playerView.emplace(actor.getClass().getNpcStats(actor), actorProjection(values, nullptr, &life));
-        else
+        else if (!actor.isEmpty())
             actorView.emplace(actor, values, base, &life);
+        else
+            actorProjection(values, base, &life);
         const bool terminal = life.mPhase == ESM4::ActorLifePhase::Dead;
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
         if (playerView)
             playerView->commit();
-        else
+        else if (actorView)
             actorView->commit();
         if (terminal)
             stopCombat(found->first);
