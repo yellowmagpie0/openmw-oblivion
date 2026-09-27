@@ -1,0 +1,13 @@
+{
+  "native_actor_life": [
+    {
+      "actor": "dynamic:player:0000000000000001",
+      "base": "dynamic:player-base:0000000000000001",
+      "phase": 2,
+      "recovery_remaining": 3.125,
+      "killer": "null"
+    }
+  ],
+  "next_death_event": 1,
+  "pending_death_events": []
+}

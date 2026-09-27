@@ -195,3 +195,15 @@ coexisting typed/legacy fields must agree. Pin any tail-offset wire test to its
 actual schema version when appending fields, retaining current-schema combined
 coverage. Python reference fixtures must include `owner` and `lock_level`, even
 when those fields are unrelated to the behavior being tested.
+
+For native GetDead, use `oblivion_m15_native_{dead,essential}_query_input.json`
+overlays and the matching `_query.json` manifests. Both have the same scheduled
+GetDead command; phase Dead expects1 and EssentialUnconscious expects0. Copy
+each resave into a fresh private slot for continuation. The
+`oblivion_m15_native_life_query_negative.json` control loads essential input and
+allows all actions to finish, but deliberately expects the wrong final result1.
+Require exactly that missing line, scenario exit1 and no other error. Examples:
+`S3/native-life-query-{dead,essential}-01`, their `-continuation-01` directories,
+and `native-life-query-negative-01`. Inspect every capture and compare native
+life, queue, value and base vectors plus pristine hashes. This is script-query
+and persistence evidence; injected lifecycle remains unpublished to gameplay.

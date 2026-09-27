@@ -62,6 +62,7 @@
 #include "../mwbase/statemanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwmechanics/oblivionai.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 #include "../mwmechanics/oblivionidle.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwmechanics/npcstats.hpp"
@@ -1607,6 +1608,9 @@ namespace MWWorld
         }
         if (name == "getdead")
         {
+            if (const auto* combat = mWorld.getOblivionCombatService())
+                if (const auto* life = combat->findActorLife(ESM4::runtimeReferenceKey(objectKey())))
+                    return std::int64_t(life->mPhase == ESM4::ActorLifePhase::Dead);
             const ESM4::RuntimeReferenceState* state = referenceState(objectKey());
             if (state)
                 if (const auto dead = state->mCustomState.find("obscript.dead"); dead != state->mCustomState.end())

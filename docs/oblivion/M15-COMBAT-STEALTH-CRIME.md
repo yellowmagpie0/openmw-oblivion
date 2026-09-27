@@ -3372,3 +3372,22 @@ Engine SHA-256:
 Attempt01 retains the incorrect ideal-decimal expected value; attempt03 retains
 a fixture expectation that overlooked its earlier shared base override. Original
 instructions and the existing authority contract determined both corrections.
+
+## S3 script GetDead reads lifecycle authority
+
+`GetDead` now reads the profile-owned lifecycle entry first, normalizing the
+player alias and without loading an actor/cell. Dead returns1; Alive and
+EssentialUnconscious return0. Actors without typed lifecycle state retain the
+legacy marker fallback during staged activation. GetDeadCount, Kill/Resurrect,
+automatic initialization and callback dispatch remain separate pending adapters.
+
+`S3/native-dead-query-01` passes all **593 engine tests**. Engine SHA-256:
+`1a164f87dcc7e9516a89ebfa3a4fa65e4bf459562bea1d10820dead4d743f065`.
+Actual engine cases `S3/native-life-query-{dead,essential}-01` and their
+`-continuation-01` runs return the expected values and preserve native lifecycle,
+queue and actor/base value fields across separate load/resave processes. Source
+and injected pristine inputs are unchanged. `native-life-query-negative-01`
+completes every action but exits1 solely for its deliberately wrong expected
+GetDead1 against essential GetDead0. All five captures were inspected and show
+the observation room/HUD without errors. These are silent injected unpublished
+state query courses, not physical death/recovery acceptance.
