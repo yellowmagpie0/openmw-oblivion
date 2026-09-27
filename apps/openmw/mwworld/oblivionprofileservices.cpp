@@ -13,6 +13,7 @@
 #include <components/debug/debuglog.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm3/variant.hpp>
+#include <components/esm3/inventorystate.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/playermechanics.hpp>
@@ -780,6 +781,34 @@ namespace MWWorld
             result.push_back({std::move(source), slot});
         }
         return result;
+    }
+
+    std::unique_ptr<InventoryStore> OblivionProfileServices::stageActorInventory(
+        const std::vector<PreparedOblivionInventoryItem>& items)
+    {
+        struct StagedInventory final : InventoryStore
+        {
+            explicit StagedInventory(const std::vector<PreparedOblivionInventoryItem>& items)
+            {
+                // Establish resolved/modified ownership without loading or
+                // registering any references through readState's item path.
+                readState({});
+                for (const auto& item : items)
+                {
+                    const Ptr ptr = item.mReference.getPtr();
+                    if (ptr.mRef->mWorldModel != nullptr)
+                        throw std::invalid_argument("native inventory staging requires detached source items");
+                    const auto added = addNewStack(ptr, ptr.getCellRef().getCount(false));
+                    if (item.mEquipmentSlot)
+                    {
+                        ESM::InventoryState equipment;
+                        equipment.mEquipmentSlots.emplace(0, *item.mEquipmentSlot);
+                        readEquipmentState(added, 0, equipment);
+                    }
+                }
+            }
+        };
+        return std::make_unique<StagedInventory>(items);
     }
 
     ESM::RefId OblivionProfileServices::sharedItemId(const ESMStore& store, const ESM::RefId& nativeId)

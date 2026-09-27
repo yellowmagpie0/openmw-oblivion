@@ -299,6 +299,9 @@ namespace MWWorld
 
         std::ptrdiff_t index(const ContainerStoreIterator& iter) const;
 
+        void rebindPreparedIterator(ContainerStoreIterator& iterator) noexcept;
+        void swapPreparedContents(ContainerStore& other) noexcept;
+
     private:
         ContainerStoreIterator addImp(const ConstPtr& ptr, int count, bool markModified = true);
         void addInitialItem(

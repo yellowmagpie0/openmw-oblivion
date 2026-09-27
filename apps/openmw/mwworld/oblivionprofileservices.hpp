@@ -2,6 +2,7 @@
 #define OPENMW_MWWORLD_OBLIVIONPROFILESERVICES_H
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -49,6 +50,8 @@ namespace MWWorld
         // Publication/registration and equipment callbacks remain caller-owned.
         static std::vector<PreparedOblivionInventoryItem> prepareActorInventory(const ESMStore& store,
             const ESM::FormKeyResolver& resolver, const std::vector<ESM4::RuntimeInventoryItem>& items);
+        static std::unique_ptr<InventoryStore> stageActorInventory(
+            const std::vector<PreparedOblivionInventoryItem>& items);
 
         // Populate the shared equipment slots from a projected native actor
         // inventory.  This is deliberately separate from InventoryStore's

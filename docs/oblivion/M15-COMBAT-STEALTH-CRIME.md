@@ -3929,3 +3929,36 @@ transaction. Its native inventory consumer, owner/listener preservation,
 controller operations and full resurrection command remain to be integrated.
 No real-runtime gate or S2/S3–S14 completion is inferred from these tests.
 Next: stage and swap inventory contents with this prepared registry batch.
+
+### S3 detached inventory contents and publication swap
+
+Commit `3db30d718f` adds prepared registry replacement. Native inventory content
+can now be staged as a resolved InventoryStore without pointer registration or
+callbacks, including non-stackable equipment splitting. `swapPreparedContents`
+publishes prebuilt lists/slots without allocation or callbacks, keeps the
+owner/listeners/resolution bindings, rebinds equipment and selected-item
+iterators, swaps matching weight/modified/resolved state, and invalidates
+recharge caches. Callers must prepare the corresponding registry publication
+and reacquire external iterators; this is not a general unchecked store move.
+
+The existing real weapon/ring preparation case now performs registry commit,
+contents swap and retired-store destruction. It checks exact stack counts,
+condition/charge, equipped weapon splitting, left ring, selected item, cached
+weights, owner/listener retention, final registered container pointers, no
+callbacks and no registry changes when retired contents are destroyed.
+Check 01 fails against the empty staging stub. Check 02 finds the equipment
+read override was private; exposing it to subclasses as protected matches the
+base interface and allows reuse of its equipment validation.
+`S3/native-inventory-publication-03` passes all **606 engine tests**, exact
+inventory, no skips. Source fingerprint:
+`ffacbc896725ee92dbbdec247b8b2c23362bf2e7830722f374a27899b0fdf49e`.
+`openmw-tests` SHA-256:
+`8473fdbc0db2d54da4a5d69f12fe8160916e07d37770abec707ee4f08c351fa3`.
+
+No world reset consumer is enabled by this chunk. Native save restoration
+currently uses content preflight followed by its existing insertion path;
+whole-world publication and controller callbacks remain open. Physical
+resurrection is an S6 deliverable, not a reason to call S3 activation complete.
+The owned sanitizer configuration has now successfully configured engine/tests
+ON (same ASan/UBSan flags); its engine compilation and lifetime tests are next.
+After that, return to remaining S3 native stat adapters/activation and its gate.

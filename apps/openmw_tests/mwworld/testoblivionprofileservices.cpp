@@ -26,6 +26,7 @@ namespace
         sharedWeapon.blank();
         sharedWeapon.mId = ESM::RefId(weapon.mId);
         sharedWeapon.mData.mType = ESM::Weapon::LongBladeOneHand;
+        sharedWeapon.mData.mWeight = 4;
         store.insertStatic(sharedWeapon);
         ESM4::Clothing ring{};
         ring.mId = {0x101, 0};
@@ -36,6 +37,7 @@ namespace
         sharedRing.blank();
         sharedRing.mId = ESM::RefId(ring.mId);
         sharedRing.mData.mType = ESM::Clothing::Ring;
+        sharedRing.mData.mWeight = 1;
         store.insertStatic(sharedRing);
         MWBase::Environment environment;
         environment.setESMStore(store);
@@ -104,6 +106,81 @@ namespace
             checkUntouched();
         }
         EXPECT_TRUE(MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {}).empty());
+
+        struct Listener : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+        {
+            int mEquipment = 0;
+            int mItems = 0;
+            void equipmentChanged() override { ++mEquipment; }
+            void itemAdded(const MWWorld::ConstPtr&, int) override { ++mItems; }
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++mItems; }
+        } listener;
+        MWWorld::ManualRef owner(store, sharedWeapon.mId);
+        model.registerPtr(owner.getPtr());
+        live.setPtr(owner.getPtr());
+        live.setInvListener(&listener);
+        live.setContListener(&listener);
+        live.setSelectedEnchantItem(originalItem);
+        EXPECT_EQ(live.getWeight(), 12);
+        const auto beforeStaging = model.getPtrRegistryRevision();
+        const auto beforeSerial = model.getLastGeneratedRefNum();
+        auto staged = MWWorld::OblivionProfileServices::stageActorInventory(
+            MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {savedWeapon, savedRing}));
+        ASSERT_EQ(staged->count(sharedWeapon.mId), 2);
+        ASSERT_EQ(staged->count(sharedRing.mId), 1);
+        EXPECT_TRUE(staged->isResolved());
+        EXPECT_EQ(staged->getWeight(), 9);
+        EXPECT_EQ(model.getPtrRegistryRevision(), beforeStaging);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), beforeSerial);
+        const auto held = staged->getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        ASSERT_NE(held, staged->end());
+        EXPECT_EQ(held->getCellRef().getCount(), 1);
+        EXPECT_EQ(held->getCellRef().getCharge(), 31);
+        EXPECT_EQ(held->getCellRef().getEnchantmentCharge(), 7.5f);
+        staged->setSelectedEnchantItem(held);
+        const auto heldReference = *held;
+        std::vector<MWWorld::Ptr> inserted;
+        for (auto ptr : *staged)
+        {
+            EXPECT_EQ(ptr.mRef->mWorldModel, nullptr);
+            ptr.setContainerStore(&live);
+            inserted.push_back(ptr);
+        }
+        // Equipped non-stackable weapons are split before publication.
+        ASSERT_EQ(inserted.size(), 3);
+        const std::array removed{*originalItem};
+        auto registry = model.preparePtrReplacement(removed, inserted);
+        EXPECT_EQ(live.count(sharedWeapon.mId), 3);
+        EXPECT_EQ(live.count(sharedRing.mId), 0);
+        registry.commit();
+        live.swapPreparedContents(*staged);
+        const auto publishedRevision = model.getPtrRegistryRevision();
+        EXPECT_EQ(live.getPtr(), owner.getPtr());
+        EXPECT_EQ(live.getInvListener(), &listener);
+        EXPECT_EQ(live.getContListener(), &listener);
+        EXPECT_TRUE(staged->getPtr().isEmpty());
+        EXPECT_EQ(live.count(sharedWeapon.mId), 2);
+        EXPECT_EQ(live.count(sharedRing.mId), 1);
+        EXPECT_EQ(live.getWeight(), 9);
+        EXPECT_EQ(staged->getWeight(), 12);
+        EXPECT_TRUE(live.isResolved());
+        EXPECT_EQ(live.getSelectedEnchantItem().getContainerStore(), &live);
+        EXPECT_EQ(*live.getSelectedEnchantItem(), heldReference);
+        EXPECT_EQ(staged->getSelectedEnchantItem().getContainerStore(), staged.get());
+        EXPECT_EQ(live.getSlot(MWWorld::InventoryStore::Slot_CarriedRight).getContainerStore(), &live);
+        EXPECT_EQ(live.getSlot(MWWorld::InventoryStore::Slot_LeftRing).getContainerStore(), &live);
+        for (const auto& ptr : inserted)
+        {
+            const auto registered = model.getPtr(ptr.getCellRef().getRefNum());
+            EXPECT_EQ(registered, ptr);
+            EXPECT_EQ(registered.getContainerStore(), &live);
+        }
+        EXPECT_TRUE(model.getPtr(originalRef).isEmpty());
+        staged.reset();
+        EXPECT_EQ(model.getPtrRegistryRevision(), publishedRevision);
+        EXPECT_EQ(listener.mItems, 0);
+        EXPECT_EQ(listener.mEquipment, 0);
+        EXPECT_EQ(*live.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), heldReference);
     }
 
     TEST(OblivionProfileServicesTest, adaptsNativeBootRecordsWithoutACatchAll)

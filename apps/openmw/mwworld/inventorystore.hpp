@@ -78,9 +78,12 @@ namespace MWWorld
 
         void storeEquipmentState(
             const MWWorld::LiveCellRefBase& ref, size_t index, ESM::InventoryState& inventory) const override;
+
+    protected:
         void readEquipmentState(
             const MWWorld::ContainerStoreIterator& iter, size_t index, const ESM::InventoryState& inventory) override;
 
+    private:
         ContainerStoreIterator findSlot(int slot) const;
 
     public:
@@ -90,6 +93,11 @@ namespace MWWorld
 
         InventoryStore& operator=(const InventoryStore& store);
         InventoryStore& operator=(InventoryStore&& store);
+
+        // Publish prebuilt contents without allocation or callbacks, retaining
+        // each store's owner/listeners. Caller must prepare pointer registration
+        // for the new containers first. External iterators must be reacquired.
+        void swapPreparedContents(InventoryStore& other) noexcept;
 
         std::unique_ptr<ContainerStore> clone() override
         {

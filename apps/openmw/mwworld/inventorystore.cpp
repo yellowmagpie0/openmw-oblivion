@@ -148,6 +148,18 @@ MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(InventoryStore&& sto
     return *this;
 }
 
+void MWWorld::InventoryStore::swapPreparedContents(InventoryStore& other) noexcept
+{
+    if (this == &other)
+        return;
+    ContainerStore::swapPreparedContents(other);
+    mSlots.swap(other.mSlots);
+    for (auto& slot : mSlots)
+        rebindPreparedIterator(slot);
+    for (auto& slot : other.mSlots)
+        other.rebindPreparedIterator(slot);
+}
+
 MWWorld::ContainerStoreIterator MWWorld::InventoryStore::add(
     const ConstPtr& itemPtr, int count, bool allowAutoEquip, bool resolve)
 {

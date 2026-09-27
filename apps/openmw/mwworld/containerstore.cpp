@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <stdexcept>
+#include <type_traits>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/inventorystate.hpp>
@@ -252,6 +253,35 @@ MWWorld::ContainerStore& MWWorld::ContainerStore::operator=(ContainerStore&& sto
     else
         mSelectedEnchantItem = end();
     return *this;
+}
+
+void MWWorld::ContainerStore::rebindPreparedIterator(ContainerStoreIterator& iterator) noexcept
+{
+    iterator.mContainer = this;
+    iterator.mPtr = {};
+}
+
+void MWWorld::ContainerStore::swapPreparedContents(ContainerStore& other) noexcept
+{
+    if (this == &other)
+        return;
+    static_assert(std::is_nothrow_swappable_v<Lists>);
+    using std::swap;
+    swap(mLists, other.mLists);
+    swap(mSelectedEnchantItem, other.mSelectedEnchantItem);
+    rebindPreparedIterator(mSelectedEnchantItem);
+    other.rebindPreparedIterator(other.mSelectedEnchantItem);
+    swap(mCachedWeight, other.mCachedWeight);
+    swap(mWeightUpToDate, other.mWeightUpToDate);
+    swap(mSeed, other.mSeed);
+    swap(mModified, other.mModified);
+    swap(mResolved, other.mResolved);
+    // Cached recharge iterators refer to the former store. Rebuild them on
+    // demand; owner/listener and temporary-resolution bindings stay in place.
+    mRechargingItems.clear();
+    other.mRechargingItems.clear();
+    mRechargingItemsUpToDate = false;
+    other.mRechargingItemsUpToDate = false;
 }
 
 MWWorld::ConstContainerStoreIterator MWWorld::ContainerStore::cbegin(int mask) const
