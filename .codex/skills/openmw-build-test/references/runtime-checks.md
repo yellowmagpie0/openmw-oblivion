@@ -387,3 +387,43 @@ revisions have configured regular and sanitizer builds, sharing
 engine. Keep that failure and rerun using `build/m15-sanitize/resources`;
 do not whitelist the warning. Examples: `native-wait-dialog-sanitized-01`
 (resource mismatch), `-02` (missed slider input), `-03` (corrected course).
+
+## Hourly Wait and regeneration fixtures
+
+Use `oblivion_m15_native_wait_hour.json`,
+`oblivion_m15_native_wait_continuation.json`, and
+`morrowind_m15_wait_hour.json` for actual held-key Wait/save/restart cases.
+The ordinary native input is `S3/native-rest-dialog-red-02/pristine.omwsave`
+under `build/oblivion-compat/m15`, SHA256
+`ffc9345176fef60e1b0c3eccf4aa2e5c238aaf1cc5cd358b6aeb09e46fec6f91`.
+It requires `S3/native-callback-fixture-01/m15-lifecycle.esm`, SHA256
+`8c47f944cfdd75bcd558e7ebf5ed74983a71c2aa4800a37cfea1506c4aba52b1`.
+Prepare a private M15Legacy slot and a pristine copy as above. Record the actual
+openmw executable hash **before** launch; hashing after a concurrent rebuild
+can incorrectly attribute old evidence to a new binary. Match resources to the
+selected build directory, especially the separate sanitizer configuration.
+
+Until automatic native publication is implemented, numerical frame/rest cases
+need explicit zero-Health native writes at simulation time0. A bootstrap at1
+second loses that interval from native regeneration even though ordinary logs
+and saving succeed. Allow0.5 seconds after command acknowledgements before the
+first HUD capture; immediate capture can show a stale projected bar. Preserve
+this fixture limitation explicitly; it is not automatic activation acceptance.
+
+The engine clamps actor processing range to at least3584. A range100 fixture
+therefore does not create a distant actor. Proven distant setup moves the NPC
+to x4096 and its AI last-valid position likewise, with range3584. Disabled actors
+cannot use the current resident-only ModAV adapter; omit that setup write when
+testing disabled rest eligibility, and keep the missing writer as an open gate.
+Neither distant nor disabled fixtures alone prove truly unloaded runtime behavior.
+
+Decode pristine and resaved state independently. Ordinary Wait should advance
+one hour plus running frames; continuation must advance only running frames.
+Assert exact actor/resource expectations and preserve nonresource values,
+lifecycle, event counters and pending actions. Normalize pre-v15 absent combat
+membership to an empty list only as the documented migration. For unstunted NPC
+Magicka with max1000, Willpower50, TimeScale3600, initial100, an independently
+audited expectation is100+17.5*(saved hour delta+2 for nearby, +0 for distant).
+Declare tolerance before launch; the existing numerical cases use1 point.
+Inspect screenshots separately; saved numerical state cannot validate HUD text,
+and an offscreen NPC is not visually verified by the Player HUD.
