@@ -119,6 +119,31 @@ namespace ESM4
         return result;
     }
 
+    ActorValueState resetResurrectionModifiers(
+        const ActorValueState& state, ActorValueOwner owner, std::uint8_t actorValue)
+    {
+        validateActorValueState(state);
+        validateOwner(owner);
+        if (actorValue >= 72)
+            throw std::invalid_argument("invalid native actor-value index");
+        ActorValueState result = state;
+        if (owner == ActorValueOwner::Player)
+        {
+            if (actorValue >= 8 && actorValue <= 10)
+                result.mModifiers[2] = 0.f;
+        }
+        else
+        {
+            result.mModifiers = {};
+            if (actorValue == 9 || actorValue == 10)
+            {
+                result.mModifiers[1] = state.mModifiers[1].value_or(0.f);
+                result.mModifiers[2] = 0.f;
+            }
+        }
+        return result;
+    }
+
     std::int32_t composeIntegerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
         ActorValueOwner owner, ActorValueProcess process)
     {

@@ -3783,3 +3783,38 @@ These results guide the next reset implementation. They do not establish
 inventory/base regeneration, script-local resets, visual acceptance, original
 normal-input resurrection or the currently guarded native script adapter.
 Controller mapping and all remaining S2/S3–S14 requirements remain open.
+
+### S2/S3 full resurrection AV/lifecycle reset (partial)
+
+Commit `7bafa684c0` fixes permanent nonplayer AV9/10 modifier ownership. The full
+resurrection reset now has an immutable per-value policy and atomic service
+adapters for real Player/NPC/Creature views. Nonplayer process ownership resets
+to Low, clearing process modifiers and ordinary Script entries while preserving
+Script Magicka/Fatigue. Newly constructed Damage Magicka/Fatigue retain zero.
+Player process ownership resets to Active and only dynamic AV8–10 Damage clears.
+Base values/shared base overrides are preserved by this portion of the reset.
+
+Life resets to Alive with cleared essential countdown/attribution. This is a
+storage reset, not a negative Health writer: negative resulting Health can
+remain Alive. Resetting an already live actor is valid and repeatable. Death
+counters and pending historical callbacks are preserved, not decremented or
+silently consumed. Required authority must exist before any view mutation.
+Tests cover all 72 values and both owners, absent/stored modifiers, malformed
+inputs, actual Player/NPC/Creature publication, death-animation flag transition,
+essential recovery reset, repeated reset and binary restart into a fresh NPC.
+
+The new component test first fails against a no-op baseline. A standalone driver
+matches **14,256 per-value checks** derived from the original Player arrays and
+NPC Script-container clear/fresh LowProcess results described above. Driver
+SHA-256: `2c71bf8d3a61a634a4732d944dd6c638c65b73d2bb5818f395c8b14285a06133`.
+`S3/native-resurrection-reset-01` passes **1,910 component**, **388 ASan/UBSan**
+and **600 engine tests** with exact inventories and no skips. Source fingerprint:
+`f48f592bcb0938795ba57b66f3c7124f93fd6c31aa2b038df88215951fbf6716`.
+`openmw-tests` SHA-256: `64c142f83435ef6e49ec993fc04eadb489c8227104f88612eecbe49ee2681ac2`.
+
+This adapter implements the AV/lifecycle portion only. The keep-state branch,
+world base/inventory reset, controller/3D replacement and actual script routing
+remain open; the native Resurrect command still rejects until those required
+operations are implemented. No normal-input resurrection or later gameplay
+acceptance is claimed. Next: prepare keep-state resurrection, including a new
+terminal entry after its intermediate Alive phase, before world integration.

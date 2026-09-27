@@ -252,6 +252,19 @@ namespace MWMechanics
             return true;
         }
 
+        void prepareResurrectionReset(ESM4::RuntimeActorValues& values, ESM4::RuntimeActorLife& life)
+        {
+            for (std::uint8_t av = 0; av < values.mValues.size(); ++av)
+                values.mValues[av] = ESM4::resetResurrectionModifiers(values.mValues[av], values.mOwner, av);
+            values.mProcess = values.mOwner == ESM4::ActorValueOwner::Player
+                ? ESM4::ActorValueProcess::Active : ESM4::ActorValueProcess::Low;
+            life.mPhase = ESM4::ActorLifePhase::Alive;
+            life.mRecoveryRemaining = 0;
+            life.mKiller = {};
+            values.validate();
+            life.validate();
+        }
+
         OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values,
             const ESM4::RuntimeActorBaseOverride* base = nullptr, const ESM4::RuntimeActorLife* life = nullptr)
         {
@@ -1021,6 +1034,35 @@ namespace MWMechanics
         const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode)
     {
         return enterPlayerDeath(player, killer, essential, settings, false, godMode);
+    }
+
+    void OblivionCombatService::resetNonPlayerForResurrection(const MWWorld::Ptr& actor)
+    {
+        auto values = nonPlayerValues(actor);
+        const auto found = mActorLife.find(values.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native resurrection requires initialized lifecycle");
+        auto life = found->second;
+        prepareResurrectionReset(values, life);
+        PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
+        std::swap(mActorValues.at(values.mActor), values);
+        std::swap(found->second, life);
+        prepared.commit();
+    }
+
+    void OblivionCombatService::resetPlayerForResurrection(MWWorld::Player& player)
+    {
+        auto values = playerValues();
+        const auto found = mActorLife.find(values.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native resurrection requires initialized lifecycle");
+        auto life = found->second;
+        prepareResurrectionReset(values, life);
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
+        std::swap(mActorValues.at(values.mActor), values);
+        std::swap(found->second, life);
+        prepared.commit();
     }
 
     void OblivionCombatService::prepareEssentialWake(ESM4::RuntimeActorValues& values,

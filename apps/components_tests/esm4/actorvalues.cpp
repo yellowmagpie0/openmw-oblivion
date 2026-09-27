@@ -403,3 +403,40 @@ TEST(ESM4ActorValues, ModifierMutationRequiresCanonicalActorValueIndex)
                 static_cast<std::uint8_t>(av), Modifier::Damage, 0), std::invalid_argument);
         }
 }
+
+TEST(ESM4ActorValues, ResurrectionResetPreservesOwnerSpecificModifierStorage)
+{
+    for (auto owner : {Owner::Player, Owner::NonPlayer})
+        for (std::uint8_t av = 0; av < 72; ++av)
+            for (bool present : {false, true})
+            {
+                SCOPED_TRACE(testing::Message() << "owner=" << static_cast<int>(owner)
+                    << " av=" << static_cast<int>(av) << " present=" << present);
+                const ESM4::ActorValueState initial{100,
+                    present ? ESM4::ActorValueModifiers{1, -2, -3} : ESM4::ActorValueModifiers{}};
+                const auto reset = ESM4::resetResurrectionModifiers(initial, owner, av);
+                EXPECT_EQ(reset.mBase, 100);
+                if (owner == Owner::Player)
+                {
+                    EXPECT_EQ(reset.mModifiers[0], initial.mModifiers[0]);
+                    EXPECT_EQ(reset.mModifiers[1], initial.mModifiers[1]);
+                    EXPECT_EQ(reset.mModifiers[2], av >= 8 && av <= 10
+                        ? std::optional<float>(0) : initial.mModifiers[2]);
+                }
+                else
+                {
+                    EXPECT_FALSE(reset.mModifiers[0]);
+                    EXPECT_EQ(reset.mModifiers[1], av == 9 || av == 10
+                        ? std::optional<float>(present ? -2 : 0) : std::nullopt);
+                    EXPECT_EQ(reset.mModifiers[2], av == 9 || av == 10
+                        ? std::optional<float>(0) : std::nullopt);
+                }
+                EXPECT_EQ(ESM4::resetResurrectionModifiers(reset, owner, av), reset);
+            }
+    EXPECT_THROW(ESM4::resetResurrectionModifiers({}, static_cast<Owner>(255), 8), std::invalid_argument);
+    EXPECT_THROW(ESM4::resetResurrectionModifiers({}, Owner::Player, 72), std::invalid_argument);
+    EXPECT_THROW(ESM4::resetResurrectionModifiers({std::numeric_limits<float>::infinity(), {}},
+        Owner::NonPlayer, 8), std::invalid_argument);
+    EXPECT_THROW(ESM4::resetResurrectionModifiers({1, {0, std::numeric_limits<float>::quiet_NaN(), 0}},
+        Owner::Player, 9), std::invalid_argument);
+}

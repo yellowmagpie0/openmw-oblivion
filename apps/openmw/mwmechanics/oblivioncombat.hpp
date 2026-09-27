@@ -241,6 +241,13 @@ namespace MWMechanics
             const ESM4::EssentialRecoverySettings& settings);
         bool killPlayer(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings, bool godMode = false);
+        // AV/lifecycle portion of full resurrection, without a Health writer
+        // callback or a new death event. Historical events/counts persist.
+        // Nonplayer process resets to Low; Player recreates an active process.
+        // World inventory/base/controller/3D reset and preserve-state selection
+        // remain caller-owned and must complete before exposing script success.
+        void resetNonPlayerForResurrection(const MWWorld::Ptr& actor);
+        void resetPlayerForResurrection(MWWorld::Player& player);
         // Returns true when an eligible expired timer is processed, including
         // immediate reentry/death caused by the recovery Health callback.
         // Caller supplies the native process knocked-state byte and frame delta.

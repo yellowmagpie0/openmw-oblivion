@@ -50,6 +50,13 @@ namespace ESM4
         const ActorValueState& state, ActorValueOwner owner, std::uint8_t actorValue,
         ActorValueModifier modifier, float delta);
 
+    // Modifier portion of a full resurrection reset, before any base/inventory
+    // reset or process promotion. Player clears only AV8–10 Damage. Nonplayer
+    // drops process modifiers and clears Script except permanent AV9/10 slots.
+    // The caller owns lifecycle, process replacement, events and shared views.
+    ActorValueState resetResurrectionModifiers(
+        const ActorValueState& state, ActorValueOwner owner, std::uint8_t actorValue);
+
     // Original ForceAV command: exact integer request minus the current float
     // query, then one float store. The caller selects Script or console Damage
     // and applies eligibility; this does not promise a final current value.
