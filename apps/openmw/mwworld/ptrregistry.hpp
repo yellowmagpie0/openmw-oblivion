@@ -6,6 +6,7 @@
 #include "components/esm3/cellref.hpp"
 
 #include <unordered_map>
+#include <utility>
 
 namespace MWWorld
 {
@@ -29,6 +30,13 @@ namespace MWWorld
         }
 
         void setLastGenerated(ESM::RefNum v) { mLastGenerated = v; }
+
+        void swap(PtrRegistry& other) noexcept
+        {
+            mIndex.swap(other.mIndex);
+            std::swap(mRevision, other.mRevision);
+            std::swap(mLastGenerated, other.mLastGenerated);
+        }
 
         void clear()
         {

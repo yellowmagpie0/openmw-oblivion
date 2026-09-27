@@ -1,4 +1,8 @@
 #include "apps/openmw/mwclass/npc.hpp"
+#include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwworld/manualref.hpp"
+#include <array>
+#include <limits>
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/cellref.hpp"
 #include "apps/openmw/mwworld/livecellref.hpp"
@@ -6,6 +10,7 @@
 #include "apps/openmw/mwworld/worldmodel.hpp"
 
 #include <components/esm3/loadnpc.hpp>
+#include <components/esm3/loadweap.hpp>
 #include <components/esm3/readerscache.hpp>
 
 #include <gmock/gmock.h>
@@ -16,6 +21,193 @@ namespace MWWorld
     namespace
     {
         using namespace testing;
+
+        TEST(MWWorldPtrTest, preparesPointerReplacementWithoutPublishingOrConsumingLiveSerials)
+        {
+            MWClass::Weapon::registerSelf();
+            MWWorld::ESMStore store;
+            ESM::Weapon base;
+            base.blank();
+            base.mId = ESM::RefId::stringRefId("prepared_weapon");
+            store.insertStatic(base);
+            ESM::ReadersCache readers;
+            MWWorld::WorldModel model(store, readers);
+            MWWorld::ManualRef old(store, base.mId), unrelated(store, base.mId);
+            model.registerPtr(old.getPtr());
+            model.registerPtr(unrelated.getPtr());
+            const auto oldId = old.getPtr().getCellRef().getRefNum();
+            const auto unrelatedId = unrelated.getPtr().getCellRef().getRefNum();
+            const auto revision = model.getPtrRegistryRevision();
+            const auto serial = model.getLastGeneratedRefNum();
+            const std::array removed{old.getPtr()};
+            const auto checkUnchanged = [&]() {
+                EXPECT_EQ(model.getPtr(oldId), old.getPtr());
+                EXPECT_EQ(model.getPtr(unrelatedId), unrelated.getPtr());
+                EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+                EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+            };
+            {
+                MWWorld::ManualRef abandoned(store, base.mId);
+                const std::array inserted{abandoned.getPtr()};
+                auto discarded = model.preparePtrReplacement(removed, inserted);
+                checkUnchanged();
+                EXPECT_EQ(abandoned.getPtr().mRef->mWorldModel, nullptr);
+            }
+            checkUnchanged();
+            MWWorld::ManualRef first(store, base.mId), second(store, base.mId);
+            const std::array inserted{first.getPtr(), second.getPtr()};
+            auto prepared = model.preparePtrReplacement(removed, inserted);
+            checkUnchanged();
+            const auto firstId = first.getPtr().getCellRef().getRefNum();
+            const auto secondId = second.getPtr().getCellRef().getRefNum();
+            EXPECT_TRUE(firstId.isSet());
+            EXPECT_TRUE(secondId.isSet());
+            EXPECT_NE(firstId, secondId);
+            EXPECT_EQ(first.getPtr().mRef->mWorldModel, nullptr);
+            auto moved = std::move(prepared);
+            EXPECT_THROW(prepared.commit(), std::logic_error);
+            moved.commit();
+            EXPECT_TRUE(model.getPtr(oldId).isEmpty());
+            EXPECT_EQ(model.getPtr(unrelatedId), unrelated.getPtr());
+            EXPECT_EQ(model.getPtr(firstId), first.getPtr());
+            EXPECT_EQ(model.getPtr(secondId), second.getPtr());
+            EXPECT_EQ(first.getPtr().mRef->mWorldModel, &model);
+            EXPECT_EQ(second.getPtr().mRef->mWorldModel, &model);
+            EXPECT_EQ(model.getLastGeneratedRefNum(), secondId);
+            const auto committedRevision = model.getPtrRegistryRevision();
+            EXPECT_THROW(moved.commit(), std::logic_error);
+            EXPECT_EQ(model.getPtrRegistryRevision(), committedRevision);
+        }
+
+        TEST(MWWorldPtrTest, pointerReplacementPreservesAliasesAndAdvancesPastDetachedReservations)
+        {
+            MWClass::Weapon::registerSelf();
+            ESMStore store;
+            ESM::Weapon base;
+            base.blank();
+            base.mId = ESM::RefId::stringRefId("prepared_weapon");
+            store.insertStatic(base);
+            ESM::ReadersCache readers;
+            WorldModel model(store, readers);
+            auto old = std::make_unique<ManualRef>(store, base.mId);
+            model.registerPtr(old->getPtr());
+            const auto oldId = old->getPtr().getCellRef().getRefNum();
+            ManualRef replacement(store, base.mId);
+            replacement.getPtr().getCellRef().setRefNum(oldId);
+            const std::array removed{old->getPtr()}, inserted{replacement.getPtr()};
+            auto prepared = model.preparePtrReplacement(removed, inserted);
+            prepared.commit();
+            const auto revision = model.getPtrRegistryRevision();
+            old.reset();
+            EXPECT_EQ(model.getPtr(oldId), replacement.getPtr());
+            EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+            EXPECT_EQ(model.getLastGeneratedRefNum(), oldId);
+
+            ManualRef retry(store, base.mId);
+            const std::array retried{retry.getPtr()};
+            {
+                auto abandoned = model.preparePtrReplacement({}, retried);
+                EXPECT_TRUE(retry.getPtr().getCellRef().getRefNum().isSet());
+                EXPECT_EQ(model.getLastGeneratedRefNum(), oldId);
+            }
+            const auto reservedId = retry.getPtr().getCellRef().getRefNum();
+            auto committedRetry = model.preparePtrReplacement({}, retried);
+            committedRetry.commit();
+            EXPECT_EQ(model.getLastGeneratedRefNum(), reservedId);
+            ManualRef later(store, base.mId);
+            model.registerPtr(later.getPtr());
+            EXPECT_NE(later.getPtr().getCellRef().getRefNum(), reservedId);
+            EXPECT_EQ(model.getPtr(reservedId), retry.getPtr());
+            EXPECT_EQ(model.getPtr(oldId), replacement.getPtr());
+        }
+
+        TEST(MWWorldPtrTest, pointerReplacementRejectsInvalidReferencesAndExhaustedNamespace)
+        {
+            MWClass::Weapon::registerSelf();
+            ESMStore store;
+            ESM::Weapon base;
+            base.blank();
+            base.mId = ESM::RefId::stringRefId("prepared_weapon");
+            store.insertStatic(base);
+            for (int fault = 0; fault < 6; ++fault)
+            {
+                SCOPED_TRACE(fault);
+                ESM::ReadersCache readers;
+                WorldModel model(store, readers);
+                ManualRef old(store, base.mId), fresh(store, base.mId), other(store, base.mId);
+                model.registerPtr(old.getPtr());
+                const auto oldId = old.getPtr().getCellRef().getRefNum();
+                std::vector<Ptr> removed{old.getPtr()}, inserted{fresh.getPtr()};
+                if (fault == 0)
+                    inserted.push_back({});
+                else if (fault == 1)
+                    inserted.push_back(old.getPtr());
+                else if (fault == 2)
+                    removed.push_back(other.getPtr());
+                else if (fault == 3)
+                    inserted.push_back(fresh.getPtr());
+                else if (fault == 4)
+                {
+                    removed.clear();
+                    fresh.getPtr().getCellRef().setRefNum(oldId);
+                }
+                else
+                    model.setLastGeneratedRefNum({std::numeric_limits<std::uint32_t>::max(),
+                        std::numeric_limits<std::int32_t>::min()});
+                const auto revision = model.getPtrRegistryRevision();
+                const auto serial = model.getLastGeneratedRefNum();
+                if (fault == 5)
+                {
+                    EXPECT_THROW(model.preparePtrReplacement(removed, inserted), std::overflow_error);
+                }
+                else
+                {
+                    EXPECT_THROW(model.preparePtrReplacement(removed, inserted), std::invalid_argument);
+                }
+                EXPECT_EQ(model.getPtr(oldId), old.getPtr());
+                EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+                EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+                EXPECT_EQ(fresh.getPtr().mRef->mWorldModel, nullptr);
+            }
+        }
+
+        TEST(MWWorldPtrTest, pointerReplacementRejectsStaleRegistrySerialOrPreparedIdentity)
+        {
+            MWClass::Weapon::registerSelf();
+            ESMStore store;
+            ESM::Weapon base;
+            base.blank();
+            base.mId = ESM::RefId::stringRefId("prepared_weapon");
+            store.insertStatic(base);
+            for (int change = 0; change < 3; ++change)
+            {
+                SCOPED_TRACE(change);
+                ESM::ReadersCache readers;
+                WorldModel model(store, readers);
+                ManualRef old(store, base.mId), fresh(store, base.mId), later(store, base.mId);
+                model.registerPtr(old.getPtr());
+                const auto oldId = old.getPtr().getCellRef().getRefNum();
+                const std::array removed{old.getPtr()}, inserted{fresh.getPtr()};
+                auto prepared = model.preparePtrReplacement(removed, inserted);
+                if (change == 0)
+                    model.registerPtr(later.getPtr());
+                else if (change == 1)
+                    model.setLastGeneratedRefNum({100, -1});
+                else
+                    fresh.getPtr().getCellRef().setRefNum({100, -1});
+                const auto revision = model.getPtrRegistryRevision();
+                const auto serial = model.getLastGeneratedRefNum();
+                EXPECT_THROW(prepared.commit(), std::logic_error);
+                EXPECT_EQ(model.getPtr(oldId), old.getPtr());
+                EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+                EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+                EXPECT_EQ(fresh.getPtr().mRef->mWorldModel, nullptr);
+                if (change == 0)
+                {
+                    EXPECT_EQ(model.getPtr(later.getPtr().getCellRef().getRefNum()), later.getPtr());
+                }
+            }
+        }
 
         TEST(MWWorldPtrTest, cellRefPreservesStableTes4InstanceIdentity)
         {

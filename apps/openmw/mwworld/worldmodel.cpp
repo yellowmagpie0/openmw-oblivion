@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 
@@ -343,6 +344,77 @@ namespace MWWorld
         if (result == nullptr)
             throw std::runtime_error(std::string("Can't find cell with name ") + std::string(name));
         return *result;
+    }
+
+    WorldModel::PreparedPtrReplacement::PreparedPtrReplacement(WorldModel& world,
+        std::span<const Ptr> removed, std::span<const Ptr> inserted)
+        : mWorld(&world)
+        , mRevision(world.getPtrRegistryRevision())
+        , mLastGenerated(world.getLastGeneratedRefNum())
+        , mRegistry(world.mPtrRegistry)
+        , mInserted(inserted.begin(), inserted.end())
+    {
+        for (const Ptr& ptr : removed)
+        {
+            if (ptr.isEmpty() || ptr.mRef->mWorldModel != &world
+                || world.getPtr(ptr.getCellRef().getRefNum()) != ptr)
+                throw std::invalid_argument("pointer replacement requires registered removed references");
+            mRegistry.remove(*ptr.mRef);
+        }
+        for (const Ptr& ptr : mInserted)
+            if (ptr.isEmpty() || ptr.mRef->mWorldModel != nullptr)
+                throw std::invalid_argument("pointer replacement requires detached inserted references");
+        for (const Ptr& ptr : mInserted)
+        {
+            auto last = mRegistry.getLastGenerated();
+            if (!ptr.getCellRef().getRefNum().isSet())
+            {
+                if (last.mContentFile >= 0)
+                    throw std::invalid_argument("pointer replacement requires a generated reference namespace");
+                if (last.mIndex == std::numeric_limits<std::uint32_t>::max()
+                    && last.mContentFile == std::numeric_limits<std::int32_t>::min())
+                    throw std::overflow_error("pointer replacement reference namespace exhausted");
+            }
+            const auto id = ptr.getCellRef().getOrAssignRefNum(last);
+            if (!mRegistry.getOrEmpty(id).isEmpty())
+                throw std::invalid_argument("pointer replacement has a duplicate reference identity");
+            // Detached references can retain reservations from a discarded
+            // preparation. Keep later generated identities beyond them.
+            if (id.mContentFile < 0 && (id.mContentFile < last.mContentFile
+                || (id.mContentFile == last.mContentFile && id.mIndex > last.mIndex)))
+                last = id;
+            mRegistry.setLastGenerated(last);
+            mRegistry.insert(ptr);
+        }
+    }
+
+    WorldModel::PreparedPtrReplacement::PreparedPtrReplacement(PreparedPtrReplacement&& other) noexcept
+        : mWorld(std::exchange(other.mWorld, nullptr))
+        , mRevision(other.mRevision)
+        , mLastGenerated(other.mLastGenerated)
+        , mRegistry(std::move(other.mRegistry))
+        , mInserted(std::move(other.mInserted))
+    {
+    }
+
+    void WorldModel::PreparedPtrReplacement::commit()
+    {
+        if (!mWorld || mWorld->getPtrRegistryRevision() != mRevision
+            || mWorld->getLastGeneratedRefNum() != mLastGenerated)
+            throw std::logic_error("pointer replacement preparation is stale or already committed");
+        for (const Ptr& ptr : mInserted)
+            if (ptr.mRef->mWorldModel != nullptr || mRegistry.getOrEmpty(ptr.getCellRef().getRefNum()) != ptr)
+                throw std::logic_error("prepared pointer replacement reference changed before commit");
+        mWorld->mPtrRegistry.swap(mRegistry);
+        for (const Ptr& ptr : mInserted)
+            ptr.mRef->mWorldModel = mWorld;
+        mWorld = nullptr;
+    }
+
+    WorldModel::PreparedPtrReplacement WorldModel::preparePtrReplacement(
+        std::span<const Ptr> removed, std::span<const Ptr> inserted)
+    {
+        return PreparedPtrReplacement(*this, removed, inserted);
     }
 
     void WorldModel::registerPtr(const Ptr& ptr)

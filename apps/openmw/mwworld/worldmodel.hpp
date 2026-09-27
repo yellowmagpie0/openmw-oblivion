@@ -3,9 +3,11 @@
 
 #include <list>
 #include <map>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 #include <components/esm/exteriorcelllocation.hpp>
 #include <components/misc/algorithm.hpp>
@@ -41,6 +43,35 @@ namespace MWWorld
     {
     public:
         explicit WorldModel(ESMStore& store, ESM::ReadersCache& reader);
+
+        // Batch publication for detached prepared references. Preparation may
+        // assign their RefNums, but leaves the live registry and serial alone.
+        // The references must outlive the preparation and its commit.
+        class PreparedPtrReplacement
+        {
+            friend class WorldModel;
+            WorldModel* mWorld;
+            std::size_t mRevision;
+            ESM::RefNum mLastGenerated;
+            PtrRegistry mRegistry;
+            std::vector<Ptr> mInserted;
+
+            PreparedPtrReplacement(WorldModel& world, std::span<const Ptr> removed,
+                std::span<const Ptr> inserted);
+
+        public:
+            PreparedPtrReplacement(const PreparedPtrReplacement&) = delete;
+            PreparedPtrReplacement& operator=(const PreparedPtrReplacement&) = delete;
+            PreparedPtrReplacement(PreparedPtrReplacement&& other) noexcept;
+            PreparedPtrReplacement& operator=(PreparedPtrReplacement&&) = delete;
+
+            // Reject a stale or already committed preparation before mutation.
+            // Successful publication performs no allocations or callbacks.
+            void commit();
+        };
+
+        PreparedPtrReplacement preparePtrReplacement(std::span<const Ptr> removed,
+            std::span<const Ptr> inserted);
 
         WorldModel(const WorldModel&) = delete;
         WorldModel& operator=(const WorldModel&) = delete;

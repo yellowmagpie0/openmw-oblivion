@@ -3894,3 +3894,38 @@ This closes content preflight only. Final inventory insertion/registration,
 equipment callbacks, whole-world restore rollback, resurrection base reset
 and controller/3D operations remain open. No S2/S3 or later gate is closed.
 Next: prepare inventory publication and native world resurrection continuation.
+
+### S3 prepared reference-registry publication prerequisite
+
+Commit `82e9fe6a45` prepares native inventory content before world mutation.
+`WorldModel::preparePtrReplacement` now prepares a batch in a private registry
+snapshot, removing only registered inputs and inserting detached references.
+Live pointers, revision and generated counter remain unchanged until commit.
+Commit rejects stale registry/counter state, changed prepared identities and
+repeat/moved-from calls before mutation; successful publication swaps the
+registry and assigns reference ownership without allocation or callbacks.
+Use one batch for a multi-actor restoration, rather than copying the complete
+registry separately for each actor. References and WorldModel must outlive the
+preparation; detached references may retain allocated IDs after discard.
+
+Four `MWWorldPtrTest` cases cover preparation/discard/move/commit, unrelated
+reference preservation, null/non-detached/unregistered inputs, duplicate IDs,
+namespace exhaustion, stale revisions/counters/identities, stable-ID
+replacement followed by retired-reference destruction, and reservation retry.
+The initial stub fails check 01. Moving the tests to the pointer suite exposes
+a missing concrete Weapon include in build 02; build 03 fixes that and then
+the new retry regression fails: a later ordinary registration overwrites the
+retried reference because its retained ID did not advance the counter.
+The corrected preparation advances past all retained generated IDs.
+
+`S3/native-pointer-replacement-04` passes all **606 engine tests**, exact
+inventory and no skips. Source fingerprint:
+`a0772fdd053de85fef61f2c1cd1d20fd6ba539c67d764d28dc176f891d044ac4`.
+`openmw-tests` SHA-256:
+`dd9b70731180d76961e58e7ce571e2acb12e4cf50d3070cd16b0021adbdf999c`.
+
+This is a tested publication primitive, not a completed inventory/world
+transaction. Its native inventory consumer, owner/listener preservation,
+controller operations and full resurrection command remain to be integrated.
+No real-runtime gate or S2/S3–S14 completion is inferred from these tests.
+Next: stage and swap inventory contents with this prepared registry batch.
