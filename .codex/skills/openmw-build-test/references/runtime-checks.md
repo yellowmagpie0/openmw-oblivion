@@ -235,3 +235,17 @@ assertion after all actions complete. Evidence lives in
 persistence binaries intentionally retained the queue before this consumer
 existed; those are historical evidence, not current delivery expectations.
 These fixtures have no attached OnDeath body and do not prove callback saves.
+
+For actual callback-save coverage, build `tes4_m15_lifecycle_fixture.py` using
+the pinned master, boot recipe and editable `m15_lifecycle_observer.obscript`.
+Use `oblivion_m15_native_callback_initial.json` for a fresh save, then the runtime,
+negative and continuation manifests. The observer counts OnDeath and saves at
+count 1. Assert that callback Autosave contains only pending ID 9 and count 1;
+final Quicksave must have no events and count 2. Restart Autosave and require
+only ID 9, count 2 and no new Autosave. Preparation/independent checks are retained
+in `S3/authority-draft/native-callback-{prepare,verify}.py`; passing courses are
+runtime/negative-01 and continuation-03. Preserve source/pristine hashes.
+A copied save retains its internal description: an Autosave renamed Quicksave
+is still an Autosave slot and a later Quicksave may acquire a numeric suffix.
+Keep its real filename and assert both files. Captures face the room wall and
+cannot establish NPC pose; these are injected-history callback tests.

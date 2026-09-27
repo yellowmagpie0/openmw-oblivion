@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "purpose": "Synthetic native NPC callback persistence course; not physical death acceptance",
+  "npc_template": 7,
+  "npc": 9437440,
+  "reference": 9437441,
+  "script": 9437442,
+  "position": [256, 160, -280],
+  "rotation": [0, 0, 0]
+}

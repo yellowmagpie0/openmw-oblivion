@@ -3487,3 +3487,35 @@ its deliberately nonexistent expected ID 5. Independent verification confirms
 all source/pristine hashes and saved vectors; all three silent observation-room
 captures were inspected. Actual callback-body execution and saving from inside
 OnDeath remain the next test, not a passed claim here. S3 remains open.
+
+### S3 actual OnDeath callback-save boundary (partial)
+
+A separate editable lifecycle recipe/builder adds one native NPC and one source
+ObScript to the observation boot content. The original observation builder
+remains script-free. The observer increments `deaths` in OnDeath and invokes
+AutoSave only at count 1; it does not create a death or change actor values.
+Generated licensed content remains ignored. Fixture SHA-256:
+`8c47f944cfdd75bcd558e7ebf5ed74983a71c2aa4800a37cfea1506c4aba52b1`.
+The actual engine compiles its one script without diagnostics. All **167 Python
+tests** pass in `S3/native-callback-fixture-tests-01`, including dependency,
+identity, transform and record/script-binding checks. Engine code/binary is
+unchanged from native-death-dispatch-02.
+
+`native-callback-initial-01` creates a fresh save with the resident NPC.
+`native-callback-runtime-01` injects historical event IDs 4/9 for that Alive NPC,
+then executes both real OnDeath bodies. The first callback's Autosave contains
+count 1, pending ID 9 only, and next ID 10. The final Quicksave contains count 2
+and an empty queue. `native-callback-continuation-03` starts a fresh process from
+that callback Autosave, executes only ID 9, reaches count 2, and neither replays
+ID 4 nor overwrites Autosave. Native values, base overrides and lifecycle are
+unchanged. Input/pristine hashes match. The negative course completes all actions
+and fails solely for absent expected ID 5. Independent assertions are retained
+in `S3/authority-draft/native-callback-verify.py` and per-run verification.json.
+
+Continuation attempts 01/02 are retained failures: the first expected the wrong
+saved-game description, and the second assumed copying an Autosave under a
+Quicksave filename made it an existing Quicksave slot. The corrected course
+preserves the Autosave filename and expects both that input and the newly written
+Quicksave. Every capture was inspected: silent room-wall/HUD views, NPC outside
+the camera. This demonstrates callback persistence, not physical death, corpse
+appearance, audio, native Kill routing or complete S3/S6 acceptance.

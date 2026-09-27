@@ -1,0 +1,8 @@
+scn M15DeathObserver
+short deaths
+begin OnDeath
+    set deaths to deaths + 1
+    if deaths == 1
+        AutoSave
+    endif
+end
