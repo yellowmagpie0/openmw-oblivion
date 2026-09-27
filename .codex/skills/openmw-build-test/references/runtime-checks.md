@@ -512,3 +512,11 @@ not OpenMW's internally flagged `ESM::REC_*4` class identifiers. Test both at th
 real-loader boundary. Keep known Morrowind baseline reviewed-error patterns when
 building a negative manifest; adding an intended rejection must not accidentally
 discard the existing missing-weather-asset classification.
+
+For pending native Lua activation, use `oblivion_m15_lua_pending_enable.json`
+then `oblivion_m15_lua_pending_continuation.json` with the actual changed save.
+The continuation intentionally issues no Enable. Require the NPC's saved
+reference enabled flag, both restoration markers, no repeated resource writes,
+and preserved Lua data/timers. An Enable acknowledgement alone is insufficient:
+disabled references in loaded cells may be absent from the Ptr registry and must
+be resolved through the resident-cell lookup before updating actual RefData.

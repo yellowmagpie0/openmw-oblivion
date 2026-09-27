@@ -1249,7 +1249,13 @@ namespace MWWorld
         if (name == "enable" || name == "disable")
         {
             const ESM::FormKey key = objectKey();
-            const Ptr ptr = ptrFor(key);
+            Ptr ptr = ptrFor(key);
+            // Disabled references in a loaded cell need not have entered the
+            // Ptr registry. Update their actual RefData and scene membership,
+            // not just the saved native flag that capture would overwrite.
+            if (ptr.isEmpty())
+                if (const auto id = mResolver.toFormId(key))
+                    ptr = mWorld.mWorldModel.getResidentPtr(*id);
             const bool enabled = name == "enable";
             bool changed = false;
             if (!ptr.isEmpty())

@@ -5130,3 +5130,29 @@ corrected continuation03 binary above. After promotion, `local-lua-manifests-01`
 passes180 Python tests and independently confirms that all10 editable manifests
 expand identically to their executed drafts. The updated build/test skill passes
 the skill-creator validator.
+
+### S3 continuation: enabling resident disabled references
+
+The script Enable/Disable adapter now resolves a resident reference outside the
+Ptr registry before changing its actual RefData and scene membership. The former
+Enable acknowledgement only changed a saved flag that capture then overwrote.
+The retained `S3/lua-persistence-enable-01` failure demonstrates that defect.
+
+`lua-enable-01` and `lua-enable-sanitized-01` each pass all632 engine tests on
+source fingerprint `d67db207dfdac6b8c3925ee7114bf7bc06755c174002adcf1329acee59c851d9`
+(parent `a903fa517d`). The instrumented unit run uses ASan leak detection and
+halting UBSan. `lua-enable-manifest-01` passes180 Python tests.
+
+`lua-persistence-enable-02` repeats the exact failed input and restores both
+actors without resource writes, saves the NPC enabled, and preserves pending Lua
+data across script-ID29->30 remapping. `lua-persistence-enable-continuation-01`
+loads that output in a fresh process without issuing Enable and preserves the
+same state. `lua-persistence-sanitized-enable-01` repeats activation with the
+instrumented engine (graphical leak detection off, UBSan halting). Independent
+resource, Lua-data and actual enabled-flag checks all pass. Runtime executable
+SHA256: regular `1ee56db4872afcda9ff366baa21526873758474ffc0d8f97e2bfdb817c3bb144`,
+instrumented `bec0469435b76e4bc4fd1cbee2e36a46354815ee36d3a6030243f4edfa36e1b6`.
+All six captures were directly inspected: rendered room and Player bars, no
+error dialog; NPC offscreen and audio disabled. The editable pending-continuation
+manifest retains the no-Enable/no-replay restart check. This closes the bounded
+resident Enable defect; the S3 and later milestone gates above remain open.
