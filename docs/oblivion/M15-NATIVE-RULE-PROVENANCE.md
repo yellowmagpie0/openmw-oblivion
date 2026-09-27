@@ -2670,3 +2670,58 @@ The C++ capacity/zero-division handling now preserves the sign. An additional
 Four additional original cases cover a negative capacity setting and both
 signed-zero Strength values. Component tests cover both signs and multipliers;
 no nonfinite value is published to actor authority.
+
+### Health restoration and Magicka regeneration requests
+
+The same hash-identified 1.2.0416 executable provides Health helper `005F2530`
+and Magicka helper `005F25F0`, with rate helper `00548D60`. `R` below means
+an explicit float store. Health resolves the eligible Maximum modifier and
+integer base, stores `maximum = R(integerBase + modifier)`, compares the
+current float, and requests `R(maximum - current)` only when positive.
+Its duration argument is unused. It queries current twice on the positive
+path; the immutable helper assumes no intervening actor mutation. This is a
+request to the Damage channel, not an unconditional assignment to maximum.
+
+Magicka stores the same maximum, floors the stored current float and stores
+that integer as float before comparing. It requests only while
+`maximum > R(floor(current))`. Positive current integer Stunted Magicka (AV57)
+suppresses the rate; zero and negative values do not. Rate is
+`R((fMagickaReturnBase + integerWillpower * fMagickaReturnMult) * (maximum / 100))`,
+then request is `R(rate * duration)`, dispatched only when positive. There is
+no deficit cap. Do not round the Willpower term before multiplication by
+maximum. The helper's boolean argument controls its early nonnull
+MagicCaster +30 gate. Player vtable `00A739BC` dispatches that getter to
+`0066B130` (actor +1E8); Creature vtable `00A710A4` uses `005E5400`, which
+queries process +2A8 or returns null without a process. The normal actor
+update's inline path `005FAD2A..005FAE3F` performs the same calculation and
+always checks this gate. Full spell-pointer lifecycle integration remains open.
+
+Compiled GMST defaults and installed winning records agree: base **.75**
+(`Oblivion.esm:037B21`) and Willpower multiplier **.02f** (`037B22`).
+Their original storage/initializers are `00B37F30`/`009EEB3F` and
+`00B37F38`/`009EEB6F`. These two input-manifest additions are initializer/record
+audits, not new live console probes.
+
+`S2/oracle-emulator/restoration.py` executes **2,016 Health /34,992 Magicka**
+cases across both x87 control modes. AV reads, caster queries and final mutation
+are boundary stubs; the Player maximum-modifier getter, flooring, arithmetic,
+branches and positive-dispatch path execute original instructions.
+`restoration-compare.py`/`restoration-comparison.json` show **37,008 exact float
+bit matches** with the production helpers. Duration zero/one/hour, negative
+current/maxima, fractional maxima, equality, actor/no-process paths, integer
+Willpower, signed Stunted Magicka and both active-item gates are represented.
+Health also covers integer base 16,777,217 without premature float rounding.
+The focused C++ tests additionally reject nonfinite/unsupported inputs and
+arithmetic overflow; these rejection rules protect state rather than claim
+original undefined-overflow behavior.
+
+The hourly player dispatcher `0065F770`, slice `0065F7C3..0065F88D`, first
+checks byte `00B14E4C`. With it enabled, effect advancement precedes Health,
+Magicka (check gate true), then Fatigue, each with **3,600 seconds**. The
+sleep/wait flag does not change these calls. With it disabled, all these
+calls are skipped. `rest-hour-dispatch.py` executes **32 original slice cases**,
+checking order, arguments and balanced stack with effect/restoration boundaries
+stubbed. Inspected jail caller `00670700` sets this byte false before its
+hour loop; the hourly completion resets it true. This does not yet verify a
+complete jail/effect lifecycle or authorize sharing ordinary restoration with
+jail time.

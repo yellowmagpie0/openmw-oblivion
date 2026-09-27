@@ -2922,3 +2922,29 @@ Both input sources reach the physics jump boundary, with no forbidden or
 unreviewed errors. The inspected screenshot again shows the dungeon/HUD.
 This remains unpublished-bridge regression coverage; native activation and the
 full normal-input combat/movement campaigns are still open.
+
+### S3 verified Health and Magicka restoration requests
+
+Commit `947056fbf0` contains the running/jump authority integration. The next
+chunk adds native Health-gap restoration and Magicka regeneration rules,
+including typed winning GMST inputs. Original instruction execution supplies
+37,008 exact C++ float-bit comparisons; 32 additional hourly-dispatch slice
+cases establish restoration order, 3,600-second arguments and the suppression
+flag used by jail. These are independent arithmetic/branch oracles, not live
+rest/jail acceptance. Details and boundary stubs are in the provenance report.
+
+Four new component tests cover rounded maximum versus current, exact integer
+base addition, Stunted Magicka sign, active-item suppression/override, request
+amounts exceeding the remaining deficit, typed overrides and invalid input/
+overflow rejection. The first preflight intentionally fails because the new
+APIs do not exist; the subsequent implementation passes all focused tests.
+Logs remain in `S3/authority-draft/restoration-preflight-01.log`,
+`restoration-preflight-02.log` and `restoration-tests-01.log`.
+`S3/restoration-rules-01` passes **1,891 component /369 ASan+UBSan ESM4 /160
+Python tests**, no skips/failures and exact C++ inventory agreement. Tested
+source fingerprint:
+`031bbb4b33ee5b437ec22df0901914a9533417ce5da4f80e75a25b49348cb9b1`.
+Sanitizers cover components only, with leak checks disabled. Authority
+transactions, active-item/effect integration, live rest dispatch, automatic
+publication and normal-input acceptance remain open. Next is an atomic
+Health/Magicka/Fatigue restoration transaction preserving raw Damage channels.

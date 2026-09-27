@@ -42,6 +42,7 @@ namespace ESM4
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
     MovementFatigueSettings buildMovementFatigueSettings(std::span<const GameSetting* const> settings);
     FatigueRegenerationSettings buildFatigueRegenerationSettings(std::span<const GameSetting* const> settings);
+    MagickaRegenerationSettings buildMagickaRegenerationSettings(std::span<const GameSetting* const> settings);
     PlayerDynamicBaseSettings buildPlayerDynamicBaseSettings(std::span<const GameSetting* const> settings);
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings);
     CreatureBaseStatsSettings buildCreatureBaseStatsSettings(std::span<const GameSetting* const> settings);

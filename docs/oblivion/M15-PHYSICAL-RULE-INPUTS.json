@@ -1921,6 +1921,32 @@
       "type": "float32",
       "installed_override": null,
       "note": "Original run/jump arithmetic, mastery and expenditure instructions independently verified. Gameplay input acceptance, actor eligibility and live writer activation remain separate gates."
+    },
+    {
+      "name": "fMagickaReturnBase",
+      "value": 0.75,
+      "storage": "0xb37f30",
+      "constructor": "0x9eeb3f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:037b21",
+        "type": "f",
+        "value": 0.75
+      },
+      "live_setting_probe": null
+    },
+    {
+      "name": "fMagickaReturnMult",
+      "value": 0.019999999552965164,
+      "storage": "0xb37f38",
+      "constructor": "0x9eeb6f",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:037b22",
+        "type": "f",
+        "value": 0.019999999552965164
+      },
+      "live_setting_probe": null
     }
   ]
 }

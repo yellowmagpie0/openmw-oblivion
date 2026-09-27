@@ -16,6 +16,92 @@ namespace
     const ESM4::PhysicalCombatSettings installed{ -20, .4f, 1.f, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f };
 }
 
+TEST(ESM4PhysicalCombat, HealthRestorationRequestsFullRoundedMaximumGap)
+{
+    EXPECT_EQ(ESM4::healthRestoration(9.5f, 10, .5f), 1);
+    EXPECT_EQ(ESM4::healthRestoration(10.5f, 10, .5f), 0);
+    EXPECT_EQ(ESM4::healthRestoration(11, 10, .5f), 0);
+    EXPECT_EQ(ESM4::healthRestoration(-10.5f, -10, -.25f), .25f);
+    // Integer base is exact until addition; maximum is stored before subtraction.
+    EXPECT_EQ(ESM4::healthRestoration(16777216, 16777217, 1), 2);
+    EXPECT_EQ(ESM4::healthRestoration(16777216, 16777217, 0), 0);
+    EXPECT_EQ(ESM4::healthRestoration(0, 0, std::numeric_limits<float>::denorm_min()),
+        std::numeric_limits<float>::denorm_min());
+}
+
+TEST(ESM4PhysicalCombat, MagickaRegenerationUsesIntegerWillpowerAndStuntedGate)
+{
+    const ESM4::MagickaRegenerationSettings settings{.75f, .02f};
+    ESM4::MagickaRegenerationInput input{99.5f, 100, 0, 50, 0, 1, false, true};
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 1.75f);
+    input.mDuration = 3600;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 6300);
+    input.mStuntedMagicka = 1;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 0);
+    input.mStuntedMagicka = -1;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 6300);
+    input.mHasActiveMagicItem = true;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 0);
+    input.mCheckActiveMagicItem = false;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 6300);
+    input = {10.5f, 10, .5f, 50, 0, 1, false, true};
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), .18375f);
+    input.mMaximumModifier = 0;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 0);
+    input = {0, 100, 0, -50, 0, 1, false, true};
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 0);
+    input.mWillpower = 50;
+    input.mDuration = 0;
+    EXPECT_EQ(ESM4::magickaRegeneration(input, settings), 0);
+}
+
+TEST(ESM4PhysicalCombat, RestorationRejectsMalformedInputsAndOverflow)
+{
+    const float maximum = std::numeric_limits<float>::max();
+    const ESM4::MagickaRegenerationInput valid{0, 100, 0, 50, 0, 1, false, true};
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::healthRestoration(bad, 10, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::healthRestoration(0, 10, bad), std::invalid_argument);
+        for (auto member : {&ESM4::MagickaRegenerationInput::mCurrent,
+                 &ESM4::MagickaRegenerationInput::mMaximumModifier, &ESM4::MagickaRegenerationInput::mDuration})
+        {
+            auto input = valid;
+            input.*member = bad;
+            EXPECT_THROW(ESM4::magickaRegeneration(input, {.75f, .02f}), std::invalid_argument);
+        }
+        EXPECT_THROW(ESM4::magickaRegeneration(valid, {bad, .02f}), std::invalid_argument);
+        EXPECT_THROW(ESM4::magickaRegeneration(valid, {.75f, bad}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::healthRestoration(-maximum, 100, maximum), std::invalid_argument);
+    auto input = valid;
+    input.mDuration = -1;
+    EXPECT_THROW(ESM4::magickaRegeneration(input, {.75f, .02f}), std::invalid_argument);
+    input = valid;
+    input.mCurrent = 2147483648.f;
+    EXPECT_THROW(ESM4::magickaRegeneration(input, {.75f, .02f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::magickaRegeneration(valid, {0, maximum}), std::invalid_argument);
+    input = valid;
+    input.mDuration = maximum;
+    EXPECT_THROW(ESM4::magickaRegeneration(input, {.75f, .02f}), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, MagickaRegenerationSettingsUseTypedDefaultsAndOverrides)
+{
+    const auto defaults = ESM4::buildMagickaRegenerationSettings({});
+    EXPECT_EQ(defaults.mBase, .75f);
+    EXPECT_EQ(defaults.mWillpowerMultiplier, .02f);
+    ESM4::GameSetting value{};
+    value.mEditorId = "fMagickaReturnBase";
+    value.mData = -1.f;
+    const std::array<const ESM4::GameSetting*, 1> values{&value};
+    EXPECT_EQ(ESM4::buildMagickaRegenerationSettings(values).mBase, -1);
+    value.mEditorId = "fMagickaReturnMult";
+    EXPECT_EQ(ESM4::buildMagickaRegenerationSettings(values).mWillpowerMultiplier, -1);
+    value.mData = std::int32_t{0};
+    EXPECT_THROW(ESM4::buildMagickaRegenerationSettings(values), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, FatigueRegenerationUsesFlooredValuesAndMaximumModifier)
 {
     const ESM4::FatigueRegenerationSettings settings{10, 0};

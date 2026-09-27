@@ -136,6 +136,35 @@ namespace ESM4
         return std::max(0.f, rounded(double(rate) * input.mDuration));
     }
 
+    float healthRestoration(float current, std::int32_t base, float maximumModifier)
+    {
+        finite(current);
+        finite(maximumModifier);
+        const float maximum = rounded(double(base) + maximumModifier);
+        return maximum > current ? rounded(double(maximum) - current) : 0.f;
+    }
+
+    void validateMagickaRegenerationSettings(const MagickaRegenerationSettings& settings)
+    {
+        finite(settings.mBase);
+        finite(settings.mWillpowerMultiplier);
+    }
+
+    float magickaRegeneration(const MagickaRegenerationInput& input, const MagickaRegenerationSettings& settings)
+    {
+        validateMagickaRegenerationSettings(settings);
+        const auto current = combatBaseValue(input.mCurrent);
+        finite(input.mMaximumModifier);
+        nonnegative(input.mDuration);
+        const float maximum = rounded(double(input.mBase) + input.mMaximumModifier);
+        if ((input.mCheckActiveMagicItem && input.mHasActiveMagicItem)
+            || input.mStuntedMagicka > 0 || maximum <= static_cast<float>(current))
+            return 0;
+        const float rate = rounded((settings.mBase + double(input.mWillpower) * settings.mWillpowerMultiplier)
+            * (double(maximum) / 100.0));
+        return std::max(0.f, rounded(double(rate) * input.mDuration));
+    }
+
     CombatConeResult combatHitCone(float facingRadians, float bearingRadians, float coneDegrees)
     {
         finite(facingRadians);

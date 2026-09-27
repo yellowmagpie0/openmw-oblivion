@@ -216,6 +216,29 @@ namespace ESM4
     float fatigueRegeneration(const FatigueRegenerationInput& input, const FatigueRegenerationSettings& settings);
     void validateFatigueRegenerationSettings(const FatigueRegenerationSettings& settings);
 
+    // Requested restoration, before Damage-channel mutation. Maximum modifier
+    // eligibility and actor/death/rest policy belong to the caller.
+    float healthRestoration(float current, std::int32_t base, float maximumModifier);
+
+    struct MagickaRegenerationSettings
+    {
+        float mBase;
+        float mWillpowerMultiplier;
+    };
+    struct MagickaRegenerationInput
+    {
+        float mCurrent;
+        std::int32_t mBase;
+        float mMaximumModifier;
+        std::int32_t mWillpower;
+        std::int32_t mStuntedMagicka;
+        float mDuration;
+        bool mHasActiveMagicItem;
+        bool mCheckActiveMagicItem;
+    };
+    float magickaRegeneration(const MagickaRegenerationInput& input, const MagickaRegenerationSettings& settings);
+    void validateMagickaRegenerationSettings(const MagickaRegenerationSettings& settings);
+
     struct DurabilitySettings
     {
         float mWeaponDamageMultiplier;

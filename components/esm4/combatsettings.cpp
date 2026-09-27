@@ -243,6 +243,15 @@ namespace ESM4
         return result;
     }
 
+    MagickaRegenerationSettings buildMagickaRegenerationSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const MagickaRegenerationSettings result{
+            inputs.number("fMagickaReturnBase", .75f), inputs.number("fMagickaReturnMult", .02f)};
+        validateMagickaRegenerationSettings(result);
+        return result;
+    }
+
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
