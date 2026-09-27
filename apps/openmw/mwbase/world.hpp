@@ -582,6 +582,9 @@ namespace MWBase
         virtual bool isPlayerInJail() const = 0;
 
         virtual void rest(double hours) = 0;
+        // True when the native profile handled one ordinary rest/wait hour,
+        // including time and AI. Jail sentence transitions have a separate owner.
+        virtual bool restOblivionHour(bool /*sleeping*/) { return false; }
 
         virtual void setPlayerTraveling(bool traveling) = 0;
         virtual bool isPlayerTraveling() const = 0;

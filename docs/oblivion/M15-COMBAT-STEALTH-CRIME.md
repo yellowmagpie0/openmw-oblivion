@@ -4805,3 +4805,72 @@ on parent `5a0e2e6d4d`. `resource-batch-sanitized-01` was stopped after the regu
 fixture failure so it could not validate outdated sources. This is service
 coverage; hourly GUI integration and actual Wait/restart remain the next task.
 No stage gate or automatic publication policy changes.
+
+### S3 native hourly Wait integration
+
+The Wait dialog now dispatches native resource restoration before advancing one
+hour and fast-forwarding native AI. Player restoration uses3600 seconds; enabled
+registered NPCs use3600/TimeScale with an additional2-second Health/Magicka/Fatigue
+update for nearby resident actors. Chargen suppresses the explicit Player/nearby
+updates; disabled/deleted references are excluded. Zero/negative scales provide
+zero ordinary elapsed time. Jail remains explicitly unsupported here. Native
+Wait no longer enters TES3 rest formulas, sleep encounters or level-up completion.
+
+All paths below are under `build/oblivion-compat/m15/S3`. `native-hour-03` passes
+630 engine and180 Python cases; `native-hour-sanitized-01` passes630 engine cases
+with leak detection and UBSan halting. Tested source fingerprint on parent
+`38412c9bb2` is
+`2d94371c04161041647fc2dff1581c78034895974e9ca9c0a5c3477b161b5c65`.
+Regular runtime executable SHA256 is
+`eb7f1138d6e4f6b2b2d91bbf0cedc8429d3968cdb710503223427f2444f4d75a`;
+sanitizer executable SHA256 is
+`93971279dfd55bb86feb833e6cb9b83f6c2e8bca5c5885020eb46e33eee9933f`.
+Graphical sanitizer cases disable leak detection, retain UBSan halting and use
+the matching sanitizer resources directory.
+
+Independent saved-state checks and direct screenshot review pass:
+
+- `native-hour-runtime-01` and `native-hour-continuation-01`: ordinary Wait
+  restores both Health25->100, preserves Stunted Magicka20 and lifecycle/action
+  state, then survives a fresh process without replaying the hour. These earlier
+  runs used `native-hour-02` executable
+  `56faf47ec6581191d4cff2eb90edb354fe76d2e31ebc3181b225dff56109dd4d`.
+- `native-hour-morrowind-01`: actual legacy Wait advances one hour, preserves
+  Health25/Magicka100/Fatigue200 and has no native records. Same earlier binary.
+- `native-hour-zero-01`: zero TimeScale still restores explicit Player/nearby
+  resources and advances exactly one game hour within float precision.
+- `native-hour-chargen-02`, `native-hour-distant-03`, `native-hour-disabled-02`:
+  chargen leaves both Health25; distant/disabled NPC Health25 remains unchanged
+  while Player reaches100. Stunted Magicka20 remains unchanged throughout.
+- `native-hour-magicka-high-02` and `native-hour-magicka-distant-02`: with
+  NPC maximum1000, Willpower50, initial Magicka100, TimeScale3600, the independent
+  formula is100+17.5*(saved clock delta+2 for nearby, +0 for distant). Errors are
+  0.000011 and0.000260, below the predeclared1-point tolerance.
+- `native-hour-sanitized-runtime-01`, `native-hour-sanitized-magicka-01`, and
+  `native-hour-sanitized-continuation-01`: normal Wait, numerical Magicka and
+  fresh-process continuation pass without sanitizer errors. Numerical error is
+  0.000267; continuation clock delta0.070532 hours proves no repeated rest hour.
+
+Every accepted directory retains pristine/resaved state, launch inputs, binary
+identity, scenario logs, state-verification and visual-verification JSON. NPCs
+are offscreen; their numerical acceptance comes from saved state. No audio
+acceptance is claimed. Editable native continuation and legacy Wait manifests
+are tracked beside the ordinary native Wait manifest.
+
+Retained failures: `native-hour-01` failed NotNullPtr type deduction;
+`native-hour-zero-red-01` rejected zero scale before correction. Distant-01 used
+an ineffective100-unit setting (engine minimum3584); corrected fixtures place
+NPC x4096 and update its AI last valid position. Chargen-01/distant-02 captured
+stale HUD before projection; corrected captures wait0.5 seconds. Disabled-01
+attempted an unsupported resident-only NPC ModAV. Magicka high/distant-01 failed
+the numerical expectation by about17 points because zero-write native projection
+was delayed until1 second. Their corrected fixtures bootstrap at0, preserving
+both the original expectation and tolerance. These are explicit setup changes,
+not acceptance of automatic actor initialization.
+
+Remaining gates include automatic publication, per-actor clock cadence and
+100000-second manager-clock wrap, beds/sleep/refusal policy, creature/dead/
+essential and truly unloaded runtime cases, AI-disabled behavior, native Lua
+writers, unloaded ModAV, recharge integration and failed-load world preservation.
+Current nearby selection uses the fork's processing range; complete original
+process-tier eligibility remains to be integrated. No S2/S3 or later gate closes.

@@ -4942,6 +4942,88 @@ namespace MWWorld
         return closestMarker;
     }
 
+    bool World::restOblivionHour(bool sleeping)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            return false;
+        if (!mOblivionCombat)
+            throw std::logic_error("native rest requires the native actor authority");
+        if (isPlayerInJail())
+            throw std::logic_error("native jail sentence requires its dedicated transition");
+        mOblivionCombat->getPlayerValue(8); // Never silently skip an unregistered Player.
+        const float timeScale = mTimeManager->getGameTimeScale();
+        if (!std::isfinite(timeScale))
+            throw std::invalid_argument("native hourly rest requires a finite time scale");
+        // A zero/negative scale cannot advance the original actor clock;
+        // nonfinite division results are sanitized by its clock setter too.
+        // Explicit Player/high-process restoration is independent of that clock.
+        float elapsed = timeScale > 0.f ? static_cast<float>(3600.0 / timeScale) : 0.f;
+        if (!std::isfinite(elapsed))
+            elapsed = 0.f;
+        const auto frameSettings = resolveOblivionFrameSettings(mStore);
+        const MWMechanics::OblivionRestorationSettings settings{
+            frameSettings.mMagicka, frameSettings.mFatigue.mRegeneration, frameSettings.mFatigue.mPlayerBase};
+        const auto player = getPlayerPtr();
+        const bool chargen = getGlobalInt(Globals::sCharGenState) > 0;
+        const auto playerPosition = player.getRefData().getPosition().asVec3();
+        const float range = Settings::game().mActorsProcessingRange;
+        std::map<ESM::FormKey, Ptr> residents;
+        for (const auto& [refNum, ptr] : mWorldModel.getPtrRegistryView())
+            if (!ptr.isEmpty() && ptr != player && mOblivionCombat->findActorValues(ptr.getCellRef().getFormKey()))
+                residents.emplace(ptr.getCellRef().getFormKey(), ptr);
+        std::map<ESM::FormKey, const ESM4::RuntimeReferenceState*> savedReferences;
+        if (mOblivionRuntimeState)
+            for (const auto& reference : mOblivionRuntimeState->mReferences)
+                savedReferences.emplace(reference.mKey, &reference);
+
+        ESM4::RuntimeState snapshot;
+        mOblivionCombat->capture(snapshot);
+        std::vector<MWMechanics::OblivionActorRestoration> updates;
+        std::vector<Ptr> projections;
+        for (const auto& values : snapshot.mNativeActorValues)
+        {
+            MWMechanics::OblivionActorRestoration update{values.mActor, {}};
+            if (values.mOwner == ESM4::ActorValueOwner::Player)
+            {
+                if (!chargen)
+                    update.mUpdates.push_back({3600.f, true, false});
+            }
+            else
+            {
+                bool high = false;
+                if (const auto found = residents.find(values.mActor); found != residents.end())
+                {
+                    const auto& ptr = found->second;
+                    if (!ptr.getRefData().isEnabled() || ptr.getCellRef().getCount() <= 0)
+                        continue;
+                    high = ptr.getRefData().getBaseNode()
+                        && (ptr.getRefData().getPosition().asVec3() - playerPosition).length2() <= range * range;
+                    projections.push_back(ptr);
+                }
+                else if (const auto found = savedReferences.find(values.mActor); found != savedReferences.end())
+                {
+                    if (!found->second->mEnabled || found->second->mDeleted)
+                        continue;
+                }
+                else
+                    throw std::invalid_argument("native rest has no reference state for unloaded actor");
+                // The ordinary actor update runs even for distant actors. The
+                // High dispatcher additionally restores H/M/F for two seconds.
+                // No native casting item exists before M16's effect integration.
+                update.mUpdates.push_back({elapsed, sleeping, false});
+                if (high && !chargen)
+                    update.mUpdates.push_back({2.f, true, false});
+            }
+            if (!update.mUpdates.empty())
+                updates.push_back(std::move(update));
+        }
+        mOblivionCombat->restoreResourceBatch(*mPlayer, updates, projections, settings);
+        advanceTime(1);
+        if (mOblivionAi && MWBase::Environment::get().getMechanicsManager()->isAIActive())
+            mOblivionAi->fastForward(1.f);
+        return true;
+    }
+
     void World::rest(double hours)
     {
         mWorldModel.forEachLoadedCellStore([hours](CellStore& store) { store.rest(hours); });

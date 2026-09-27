@@ -206,7 +206,7 @@ namespace MWGui
         // FIXME: move this somewhere else?
         mInterruptAt = -1;
         MWWorld::Ptr player = world->getPlayerPtr();
-        if (mSleeping && player.getCell()->isExterior())
+        if (world->getGameProfile() != ESM::GameProfile::Oblivion && mSleeping && player.getCell()->isExterior())
         {
             const ESM::RefId& regionstr = player.getCell()->getCell()->getRegion();
             if (!regionstr.empty())
@@ -269,8 +269,12 @@ namespace MWGui
     void WaitDialog::onWaitingProgressChanged(int cur, int total)
     {
         mProgressBar.setProgress(cur, total);
-        MWBase::Environment::get().getMechanicsManager()->rest(1, mSleeping);
-        MWBase::Environment::get().getWorld()->advanceTime(1);
+        MWBase::World* const world = MWBase::Environment::get().getWorld();
+        if (!world->restOblivionHour(mSleeping))
+        {
+            MWBase::Environment::get().getMechanicsManager()->rest(1, mSleeping);
+            world->advanceTime(1);
+        }
 
         MWWorld::Ptr player = MWBase::Environment::get().getWorld()->getPlayerPtr();
         if (player.getClass().getCreatureStats(player).isDead())
@@ -290,6 +294,11 @@ namespace MWGui
 
         MWWorld::Ptr player = MWMechanics::getPlayer();
         const MWMechanics::NpcStats& pcstats = player.getClass().getNpcStats(player);
+
+        // Native skill progression/level-up belongs to M16. Do not execute
+        // Morrowind's progress counter or missing GMSTs after a native bed rest.
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return;
 
         // trigger levelup if possible
         const MWWorld::Store<ESM::GameSetting>& gmst

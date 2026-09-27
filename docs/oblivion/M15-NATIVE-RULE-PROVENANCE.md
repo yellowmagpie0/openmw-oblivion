@@ -3051,3 +3051,13 @@ is120 seconds (at tested clocks0/.1/.3/1/1000), and wraps produce0 at clocks9990
 implementation comparison or low-process gameplay acceptance is claimed.
 The normal actor update at605B58..605B81 calls +368 with that manager clock;
 therefore the special2-second call cannot represent total NPC rest regeneration.
+
+`S3/authority-draft/rest-clock-special.py` adds54 original-instruction cases:
+clock0/1000/99900, TimeScale -3600/-30/-1/0/30/infinities/NaN/minimum positive
+float, both x87 precisions. Getter and CRT finite/NaN predicates are explicit
+stubs; original hourly caller/setter and actor elapsed prefix execute. Stack
+balance and nonnegative elapsed are asserted. Negative, zero and nonfinite or
+overflowing increments yield zero actor elapsed for these nonnegative prior
+clocks. This is arithmetic dispatch evidence, not actor-update/gameplay coverage.
+The hourly adapter handles zero/negative/division overflow; persistent manager
+clock wrap and each actor's previous-update cadence remain unimplemented.

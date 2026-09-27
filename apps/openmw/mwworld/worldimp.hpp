@@ -599,6 +599,7 @@ namespace MWWorld
         ///< check if the player is allowed to rest
 
         void rest(double hours) override;
+        bool restOblivionHour(bool sleeping) override;
         void rechargeItems(float duration, bool activeOnly);
 
         /// \todo Probably shouldn't be here
