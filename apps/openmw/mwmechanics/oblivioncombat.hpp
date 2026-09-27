@@ -104,6 +104,14 @@ namespace MWMechanics
         std::optional<float> mHealthReactionDelta;
     };
 
+    struct OblivionBreathUpdateResult
+    {
+        float mRemaining;
+        float mMaximum;
+        float mDamage;
+        bool mDrowning;
+    };
+
     // Profile-owned native action and actor-value authority. Live activation
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
@@ -136,6 +144,12 @@ namespace MWMechanics
         void publishHealthChange(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values,
             bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode,
             const ESM::FormKey& source = {});
+        std::optional<OblivionBreathUpdateResult> prepareBreathUpdate(const ESM4::RuntimeActorValues& values,
+            float duration, bool needsAir, const ESM4::SwimBreathSettings& settings) const;
+        void publishBreathUpdate(const MWWorld::Ptr& actor, MWWorld::Player* player,
+            const ESM::FormKey& key, const OblivionBreathUpdateResult& update, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase);
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -164,6 +178,15 @@ namespace MWMechanics
         bool changePlayerHealth(MWWorld::Player& player, float delta, const ESM::FormKey& source,
             bool essential, const ESM4::EssentialRecoverySettings& settings,
             const ESM4::PlayerDynamicBaseSettings& baseSettings, bool godMode = false);
+        // Water/controller eligibility is caller-owned. Timer and resulting
+        // Health/lifecycle effects commit together. Dead actors return nullopt.
+        std::optional<OblivionBreathUpdateResult> updateNonPlayerBreath(const MWWorld::Ptr& actor,
+            float duration, bool needsAir, bool essential, const ESM4::SwimBreathSettings& settings,
+            const ESM4::EssentialRecoverySettings& recovery);
+        std::optional<OblivionBreathUpdateResult> updatePlayerBreath(MWWorld::Player& player,
+            float duration, bool needsAir, bool essential, const ESM4::SwimBreathSettings& settings,
+            const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase, bool godMode = false);
         // Shared base-record transaction. The caller supplies every resident,
         // published reference of this base, including actor. Unloaded saved
         // actors change too; newly published references inherit the override.

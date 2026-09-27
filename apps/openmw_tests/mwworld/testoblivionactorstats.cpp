@@ -3371,4 +3371,274 @@ namespace
     }
 
 
+    void verifyBreathTransactions(MWMechanics::OblivionCombatService& service,
+        const MWWorld::Ptr& ptr, ESM4::RuntimeActorValues values, MWWorld::Player* player = nullptr)
+    {
+        using Phase = ESM4::ActorLifePhase;
+        const auto initial = [&](std::optional<float> remaining = .25f, float waterBreathing = 0.f) {
+            service.clear();
+            values.mValues[5].mBase = 50;
+            values.mValues[55].mBase = waterBreathing;
+            if (player)
+            {
+                service.publishPlayerValues(*player, values, {});
+                service.publishPlayerLife(*player, {values.mActor, values.mBase, Phase::Alive, 0, {}});
+            }
+            else
+            {
+                service.publishNonPlayerValues(ptr, values);
+                service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, Phase::Alive, 0, {}});
+            }
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            if (!player)
+            {
+                ESM4::RuntimeReferenceState reference;
+                reference.mKey = values.mActor;
+                reference.mBase = values.mBase;
+                reference.mCell = saved.mPlayer.mCell;
+                saved.mReferences.push_back(reference);
+            }
+            service.capture(saved);
+            if (remaining)
+                saved.mNativeActorBreath.emplace(values.mActor, *remaining);
+            service.restore(saved);
+            return saved;
+        };
+        const auto update = [&](float duration, bool needsAir = true, bool essential = false,
+                                ESM4::EssentialRecoverySettings recovery = {3, .5f},
+                                ESM4::SwimBreathSettings settings = {4, .3f, .2f}, bool godMode = false) {
+            return player ? service.updatePlayerBreath(*player, duration, needsAir, essential,
+                                settings, recovery, {}, godMode)
+                          : service.updateNonPlayerBreath(ptr, duration, needsAir, essential, settings, recovery);
+        };
+        const auto health = [&]() { return player ? service.getPlayerValue(8) : service.getNonPlayerValue(ptr, 8); };
+        auto saved = initial(std::nullopt);
+        auto result = update(.25f, true, false, {}, {40, 0, .2f});
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mRemaining, 19.75f); // Native constructor default20.
+        EXPECT_EQ(result->mMaximum, 40.f);
+        EXPECT_FALSE(result->mDrowning);
+        saved = initial();
+        result = update(.25f);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mRemaining, 0.f);
+        EXPECT_FALSE(result->mDrowning);
+        EXPECT_EQ(health(), 100.f);
+        result = update(.25f);
+        ASSERT_TRUE(result);
+        EXPECT_TRUE(result->mDrowning);
+        EXPECT_EQ(result->mDamage, 5.f);
+        EXPECT_EQ(health(), 95.f);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 95.f);
+        EXPECT_EQ(service.findActorBreath(values.mActor), 0.f);
+        service.capture(saved);
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), saved);
+        EXPECT_TRUE(saved.mPendingDeathEvents.empty());
+        result = update(30, false);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mRemaining, 19.f);
+        EXPECT_FALSE(result->mDrowning);
+        EXPECT_EQ(health(), 95.f);
+
+        for (float water : {1.f, -1.f})
+        {
+            initial(.25f, water);
+            result = update(.5f);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(result->mRemaining, .75f);
+            EXPECT_FALSE(result->mDrowning);
+        }
+        initial(.25f, .5f); // Native integer query floors to0.
+        result = update(.5f);
+        ASSERT_TRUE(result);
+        EXPECT_TRUE(result->mDrowning);
+        EXPECT_EQ(health(), 90.f);
+
+        // Damage derives from base Health, excluding all current modifiers.
+        values.mValues[8].mModifiers[1] = 25.f;
+        initial();
+        result = update(.5f);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mDamage, 10.f);
+        EXPECT_EQ(health(), 115.f);
+        values.mValues[8].mModifiers[1].reset();
+
+        for (bool essential : {false, true})
+        for (bool existingTimer : {false, true})
+        {
+            auto before = initial(existingTimer ? std::optional(.25f) : std::nullopt);
+            before.mNextDeathEvent = std::numeric_limits<std::uint64_t>::max();
+            service.restore(before);
+            if (essential)
+                EXPECT_THROW(update(30, true, true, {std::numeric_limits<float>::infinity(), .5f}),
+                    std::invalid_argument);
+            else
+                EXPECT_THROW(update(30), std::overflow_error);
+            auto after = before;
+            service.capture(after);
+            EXPECT_EQ(after, before);
+            EXPECT_EQ(health(), 100.f);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100.f);
+            EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
+        }
+        saved = initial();
+        result = update(6);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mDamage, 120.f);
+        EXPECT_EQ(health(), -20.f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Dead);
+        EXPECT_TRUE(service.findActorLife(values.mActor)->mKiller.isNull());
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
+        service.capture(saved);
+        ASSERT_EQ(saved.mPendingDeathEvents.size(), 1u);
+        EXPECT_EQ(saved.mNativeActorBreath.at(values.mActor), 0.f);
+        EXPECT_FALSE(update(1));
+        auto afterDead = saved;
+        service.capture(afterDead);
+        EXPECT_EQ(afterDead, saved);
+
+        initial();
+        result = update(6, true, true);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(health(), 50.f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::EssentialUnconscious);
+        EXPECT_FLOAT_EQ(service.findActorLife(values.mActor)->mRecoveryRemaining, 3.f);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 0);
+        EXPECT_EQ(service.findActorBreath(values.mActor), 0.f);
+        initial();
+        result = update(6, true, false, {}, {4, .3f, -.2f});
+        ASSERT_TRUE(result);
+        EXPECT_TRUE(result->mDrowning);
+        EXPECT_EQ(result->mDamage, 0.f);
+        EXPECT_EQ(health(), 100.f);
+
+        saved = initial(std::nullopt);
+        for (float bad : {-1.f, std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::quiet_NaN()})
+        {
+            EXPECT_THROW(update(bad, false), std::invalid_argument);
+            auto after = saved;
+            service.capture(after);
+            EXPECT_EQ(after, saved);
+        }
+        auto missingLife = saved;
+        missingLife.mNativeActorLife.clear();
+        service.restore(missingLife);
+        EXPECT_THROW(update(.25f), std::invalid_argument);
+        auto afterMissingLife = missingLife;
+        service.capture(afterMissingLife);
+        EXPECT_EQ(afterMissingLife, missingLife);
+        if (player)
+        {
+            initial();
+            result = update(30, true, true, {3, .5f}, {4, .3f, .2f}, true);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(result->mRemaining, 19.f);
+            EXPECT_FALSE(result->mDrowning);
+            EXPECT_EQ(health(), 100.f);
+            EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Alive);
+        }
+    }
+
+    TEST_F(OblivionActorStatsTest, nativeBreathTransactions)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        verifyBreathTransactions(service, ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureBreathTransactions)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 4;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        verifyBreathTransactions(service, ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerBreathTransactions)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initialState{};
+        initialState.blank();
+        ptr.getClass().readAdditionalState(ptr, initialState);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 30, 40, 0}};
+        MWMechanics::OblivionCombatService service;
+        verifyBreathTransactions(service, ptr, values, &player);
+    }
+
+
 }

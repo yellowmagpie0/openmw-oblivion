@@ -4205,3 +4205,35 @@ with no skips/failures. Source fingerprint:
 sanitizer evidence covers the preceding timer-state revision, not these flag
 changes. Rendered movement, flight and aquatic navigation remain campaign gates.
 Next: the native drowning frame writer and UI. S2/S3 and later gates remain open.
+
+### S3 transactional native breath service
+
+After `c56c6b1344`, Player/NPC/Creature breath updates use native integer
+Endurance/WaterBreathing, base Health, the original constructor timer20 and the
+verified strict-negative timer/damage rules. Timer adoption allocates before
+Health publication; existing timers update without a map copy. Health, life,
+death events/counts and the timer roll back together on rejected transitions.
+Dead actors do not advance; dry actors and Player god mode reset to maximum.
+Three actual actor tests cover fractional boundaries, damage ownership,
+essential recovery, terminal death, rollback, malformed inputs and persistence.
+
+`S3/native-breath-service-01` and `S3/native-breath-service-sanitized-01` pass
+**all619 engine tests**, exact inventories, zero skips/failures. Sanitizers use
+`ASAN_OPTIONS=detect_leaks=1:halt_on_error=1` and
+`UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`, with no findings. This also
+covers the preceding creature-capability change. Tested source fingerprint:
+`f00bbac4f7080c520ce63cb1ee27e18eb8963275d5515529236531edc9dd9cd9`.
+Regular/sanitized engine-test hashes:
+`16b86be1f68123b4efab36d720cb9ee8800ec4779faabc60c3f9007d7aa12a68` /
+`2bf952fb608a017077e8848e87387992461747097bb02f00a3454b24ad9b6d83`.
+
+The service is not yet a frame caller. Water prototypes `S3/native-breath-water-
+red-{01,02}` retained unchanged native maps while legacy stats ran independently:
+loading authority maps alone does not publish their shared stat projections.
+The corrected `-03` explicitly executes native `ModAV Health 0` for Player/NPC;
+it reproduces frame errors from legacy writes to protected native stats. Its
+inspected capture shows the room/HUD, and the harness correctly rejects the
+errors. These are retained failures, not gameplay acceptance. The dry baseline
+likewise proves map persistence only. Next: native frame/UI integration and
+independently decoded underwater/dry/restart outcomes. Automatic registration
+and publication remain off; S2/S3 and S4–S14 remain open.

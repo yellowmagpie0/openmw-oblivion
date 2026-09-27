@@ -638,6 +638,86 @@ namespace MWMechanics
         return true;
     }
 
+    std::optional<OblivionBreathUpdateResult> OblivionCombatService::prepareBreathUpdate(
+        const ESM4::RuntimeActorValues& values, float duration, bool needsAir,
+        const ESM4::SwimBreathSettings& settings) const
+    {
+        if (!std::isfinite(duration) || duration < 0.f)
+            throw std::invalid_argument("invalid native breath frame duration");
+        ESM4::validateSwimBreathSettings(settings);
+        const auto* life = findActorLife(values.mActor);
+        if (!life)
+            throw std::invalid_argument("native breath update requires initialized lifecycle");
+        if (life->mPhase == ESM4::ActorLifePhase::Dead)
+            return std::nullopt;
+        const auto integer = [&](std::uint8_t value) {
+            return values.mOwner == ESM4::ActorValueOwner::Player
+                ? ESM4::composeIntegerActorValue(ESM4::combatBaseValue(values.mValues[value].mBase),
+                    values.mValues[value].mModifiers, values.mOwner, values.mProcess)
+                : nonPlayerInteger(values, value, findActorBase(values.mBase));
+        };
+        const float maximum = ESM4::swimBreathMaximum(integer(5), settings);
+        if (!needsAir)
+            return OblivionBreathUpdateResult{maximum, maximum, 0.f, false};
+        // Original HighProcess construction/reset stores 20 at process+238.
+        // Older native saves have no timer until this process is first adopted.
+        const auto update = ESM4::updateSwimBreath(
+            findActorBreath(values.mActor).value_or(20.f), maximum, duration, integer(55));
+        const float damage = update.mDrowning
+            ? ESM4::drowningDamage(ESM4::combatBaseValue(values.mValues[8].mBase), duration, settings) : 0.f;
+        return OblivionBreathUpdateResult{update.mRemaining, maximum, damage, update.mDrowning};
+    }
+
+    void OblivionCombatService::publishBreathUpdate(const MWWorld::Ptr& actor, MWWorld::Player* player,
+        const ESM::FormKey& key, const OblivionBreathUpdateResult& update, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery, const ESM4::PlayerDynamicBaseSettings& playerBase)
+    {
+        const auto found = mActorBreath.find(key);
+        std::map<ESM::FormKey, float> prepared;
+        if (found == mActorBreath.end())
+        {
+            // Allocate only on adoption, before the fallible Health transition.
+            prepared = mActorBreath;
+            prepared.emplace(key, update.mRemaining);
+        }
+        if (update.mDamage > 0.f)
+        {
+            if (player)
+                changePlayerHealth(*player, -update.mDamage, {}, essential, recovery, playerBase);
+            else
+                changeNonPlayerHealth(actor, -update.mDamage, {}, essential, recovery);
+        }
+        // No callbacks occur inside the Health transaction. Existing timer writes
+        // and prepared-map swaps cannot fail after its publication.
+        if (found != mActorBreath.end())
+            found->second = update.mRemaining;
+        else
+            mActorBreath.swap(prepared);
+    }
+
+    std::optional<OblivionBreathUpdateResult> OblivionCombatService::updateNonPlayerBreath(
+        const MWWorld::Ptr& actor, float duration, bool needsAir, bool essential,
+        const ESM4::SwimBreathSettings& settings, const ESM4::EssentialRecoverySettings& recovery)
+    {
+        const auto& values = nonPlayerValues(actor);
+        const auto update = prepareBreathUpdate(values, duration, needsAir, settings);
+        if (update)
+            publishBreathUpdate(actor, nullptr, values.mActor, *update, essential, recovery, {});
+        return update;
+    }
+
+    std::optional<OblivionBreathUpdateResult> OblivionCombatService::updatePlayerBreath(
+        MWWorld::Player& player, float duration, bool needsAir, bool essential,
+        const ESM4::SwimBreathSettings& settings, const ESM4::EssentialRecoverySettings& recovery,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool godMode)
+    {
+        const auto& values = playerValues();
+        const auto update = prepareBreathUpdate(values, duration, needsAir && !godMode, settings);
+        if (update)
+            publishBreathUpdate(player.getPlayer(), &player, values.mActor, *update, essential, recovery, playerBase);
+        return update;
+    }
+
     OblivionActorValueCommandResult OblivionCombatService::executeNonPlayerValueCommand(
         const MWWorld::Ptr& actor, std::uint8_t value, ESM4::ActorValueCommand command,
         ESM4::ActorValueCommandSource source, std::int32_t requested,
