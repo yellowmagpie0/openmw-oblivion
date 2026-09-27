@@ -955,13 +955,17 @@ namespace MWMechanics
     void OblivionCombatService::regeneratePlayerFatigue(MWWorld::Player& player, float duration,
         const ESM4::FatigueRegenerationSettings& settings, const ESM4::PlayerDynamicBaseSettings& baseSettings)
     {
-        const auto& values = playerValues();
+        auto candidate = playerValues();
         const auto ptr = player.getPlayer();
         if (ptr.getClass().getCreatureStats(ptr).isDead())
             return;
-        const float delta = fatigueRestoration(values, duration, settings);
+        preparePlayerValues(candidate, baseSettings);
+        const float delta = fatigueRestoration(candidate, duration, settings);
         if (delta > 0)
-            changePlayerValue(player, 10, ESM4::ActorValueModifier::Damage, delta, baseSettings);
+            candidate.mValues[10] = ESM4::changeActorValueModifier(
+                candidate.mValues[10], candidate.mOwner, 10, ESM4::ActorValueModifier::Damage, delta);
+        if (candidate != playerValues())
+            publishPlayerValues(player, std::move(candidate), baseSettings);
     }
 
     void OblivionCombatService::regenerateNonPlayerMagicka(const MWWorld::Ptr& actor, float duration,
@@ -986,11 +990,10 @@ namespace MWMechanics
         preparePlayerValues(candidate, baseSettings);
         const float delta = magickaRestoration(candidate, duration, hasActiveMagicItem, settings);
         if (delta > 0)
-        {
             candidate.mValues[9] = ESM4::changeActorValueModifier(
                 candidate.mValues[9], candidate.mOwner, 9, ESM4::ActorValueModifier::Damage, delta);
+        if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), baseSettings);
-        }
     }
 
     void OblivionCombatService::restoreNonPlayerResources(const MWWorld::Ptr& actor,
@@ -1007,7 +1010,11 @@ namespace MWMechanics
     {
         auto candidate = playerValues();
         const auto ptr = player.getPlayer();
-        if (!ptr.getClass().getCreatureStats(ptr).isDead() && restoreResources(candidate, input, settings))
+        if (ptr.getClass().getCreatureStats(ptr).isDead())
+            return;
+        preparePlayerValues(candidate, settings.mPlayerBase);
+        restoreResources(candidate, input, settings);
+        if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
     }
 
@@ -1024,7 +1031,11 @@ namespace MWMechanics
     {
         auto candidate = playerValues();
         const auto ptr = player.getPlayer();
-        if (!ptr.getClass().getCreatureStats(ptr).isDead() && updateFatigue(candidate, input, settings))
+        if (ptr.getClass().getCreatureStats(ptr).isDead())
+            return;
+        preparePlayerValues(candidate, settings.mPlayerBase);
+        updateFatigue(candidate, input, settings);
+        if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
     }
 
@@ -1045,7 +1056,8 @@ namespace MWMechanics
         if (ptr.getClass().getCreatureStats(ptr).isDead())
             return;
         preparePlayerValues(candidate, settings.mFatigue.mPlayerBase);
-        if (updateFrameResources(candidate, input, hasActiveMagicItem, settings))
+        updateFrameResources(candidate, input, hasActiveMagicItem, settings);
+        if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), settings.mFatigue.mPlayerBase);
     }
 
@@ -1054,7 +1066,11 @@ namespace MWMechanics
     {
         auto candidate = playerValues();
         const auto ptr = player.getPlayer();
-        if (!ptr.getClass().getCreatureStats(ptr).isDead() && spendJumpFatigue(candidate, encumbrance, canSpend, settings))
+        if (ptr.getClass().getCreatureStats(ptr).isDead())
+            return;
+        preparePlayerValues(candidate, settings.mPlayerBase);
+        spendJumpFatigue(candidate, encumbrance, canSpend, settings);
+        if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
     }
 

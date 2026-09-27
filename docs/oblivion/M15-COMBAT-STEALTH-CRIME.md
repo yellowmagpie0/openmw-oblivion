@@ -4482,3 +4482,37 @@ regular/sanitized engine-test SHAs:
 `4c3ff3c967a819c855c0649eb699700a17a55d4ff26e0869af490157e88da546` /
 `1633874e6cd7b5297a8c875b981d9572f6605ecd1fdec9c5e9e3d725029253b4`.
 Native property writers and the remaining rest/activation gates remain open.
+
+### Player resource bases refresh before every request
+
+All six Player resource entry points now prepare derived bases before computing
+their operation, and publish a changed base even when no resource delta occurs:
+Fatigue/Magicka regeneration, rest, movement/Fatigue, combined frame and jump.
+This repairs stale rest rates and prevents zero-duration, suppressed-casting or
+suppressed-expenditure calls from silently retaining old settings. Dead actors
+remain untouched. Preparation and invalid-settings rejection precede publication.
+
+The actual Player test changes Intelligence50 Magicka base150 to200 through the
+new setting. A one-second rest request must be3.5, yielding123.5, rather than
+using the old2.625 rate. Six zero-duration/suppressed entry cases require current120,
+only the derived base changed, raw form inputs/modifiers preserved; invalid base
+settings must reject without changes. Existing dead and rollback cases remain.
+`S3/player-resource-base-refresh-01` and `player-resource-base-refresh-sanitized-01`
+pass all626 engine tests, exact inventory/no skips; ASan/UBSan and leak detection
+are enabled in the latter, no findings. Source fingerprint:
+`3cd28ae1d2cae1fad708d1c0b38d007640bd1899da54e2cea8f8d432a2291f30`.
+Regular/sanitized engine-test SHAs:
+`41fefd34f55c557ba675329ca2ab98bbfdb0c52577e7228feba5ae4eabb10c73` /
+`7c2762acd88de1d02fb355cf20b95602defc8dc05041220451cb4aa7492d7dbb`.
+
+The next retained normal-input baseline, `S3/native-rest-dialog-red-01`, fails
+before restoration: T invokes the shared enemy query and produces
+`Bad LiveCellRef cast to NPC_ from NPC_4`. The nearby native NPC reaches TES3
+`isAggressive`/`getDerivedDisposition`. All actions finish and save, but no dialog
+opens or rest hour completes; both Health25 and Stunted Magicka20 remain unchanged.
+All three captures inspected. Engine SHA:
+`a3b0f2c175f503a7d6f26530e371b821160a129dc2ab281a0e89dbaa611ff887`;
+save SHA `c4f7f2619dc7c737b323d2494c87189f3b528fa170b9e873179005a03d1af886`.
+The ignored editable draft is `S3/authority-draft/native-rest-dialog.json`;
+pristine inputs and precise source hashes are retained. Native enemy queries,
+rest integration, Lua property writers and activation still require work.

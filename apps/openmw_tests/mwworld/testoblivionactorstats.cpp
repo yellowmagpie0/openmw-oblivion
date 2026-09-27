@@ -3836,6 +3836,36 @@ namespace
             EXPECT_THROW(service.regeneratePlayerMagicka(*player, 1, false, settings, invalidBase), std::invalid_argument);
             EXPECT_EQ(*service.findActorValues(values.mActor), beforeInvalid);
             EXPECT_FLOAT_EQ(current(), 123.5f);
+            publish();
+            service.restorePlayerResources(*player, {1, false, false}, {settings, {2, 0}, {0, 1, 0}});
+            EXPECT_FLOAT_EQ(current(), 123.5f); // Rest must use the new base before calculating its request.
+            for (int entry = 0; entry < 6; ++entry)
+            {
+                SCOPED_TRACE(testing::Message() << "player resource entry=" << entry);
+                publish();
+                const auto beforeRefresh = *service.findActorValues(values.mActor);
+                const auto refresh = [&](const ESM4::PlayerDynamicBaseSettings& base) {
+                    auto config = frameSettings;
+                    config.mFatigue.mPlayerBase = base;
+                    switch (entry)
+                    {
+                        case 0: service.regeneratePlayerMagicka(*player, 0, true, settings, base); break;
+                        case 1: service.regeneratePlayerFatigue(*player, 0, {2, 0}, base); break;
+                        case 2: service.restorePlayerResources(*player, {0, false, true}, {settings, {2, 0}, base}); break;
+                        case 3: service.updatePlayerFatigue(*player, {0, 0, false, false}, config.mFatigue); break;
+                        case 4: service.updatePlayerFrameResources(*player, {0, 0, false, false}, true, config); break;
+                        case 5: service.spendPlayerJumpFatigue(*player, 0, false, config.mFatigue); break;
+                    }
+                };
+                refresh({0, 1, 0});
+                auto expectedRefresh = beforeRefresh;
+                expectedRefresh.mValues[9].mBase = 200;
+                EXPECT_EQ(*service.findActorValues(values.mActor), expectedRefresh);
+                EXPECT_FLOAT_EQ(current(), 120.f); // Refresh even when the resource operation itself is a no-op.
+                EXPECT_THROW(refresh(invalidBase), std::invalid_argument);
+                EXPECT_EQ(*service.findActorValues(values.mActor), expectedRefresh);
+                EXPECT_FLOAT_EQ(current(), 120.f);
+            }
             values.mValues[1].mBase = 0;
         }
         else
