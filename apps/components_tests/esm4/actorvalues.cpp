@@ -214,3 +214,62 @@ TEST(ESM4ActorValues, ForceCommandRetainsExactIntegerRequestUntilDeltaStore)
     EXPECT_THROW(ESM4::forceActorValueDelta(0, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
     EXPECT_THROW(ESM4::forceActorValueDelta(0, std::numeric_limits<float>::infinity()), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, BaseSetterPreservesNativeStorageWidths)
+{
+    using Kind = ESM4::ActorBaseKind;
+    for (Kind kind : {Kind::Npc, Kind::Creature})
+    {
+        for (std::uint8_t av : {0, 7, 12, 18, 19, 25, 26, 32, 33, 36})
+        {
+            for (const auto [requested, expected] : {std::pair{-1, 255}, {0, 0}, {255, 255},
+                     {256, 0}, {257, 1}, {std::numeric_limits<std::int32_t>::min(), 0}})
+            {
+                const auto change = ESM4::prepareActorBaseValueSet(kind, av, requested);
+                ASSERT_TRUE(change);
+                EXPECT_EQ(std::get<std::int32_t>(change->mValue), expected);
+            }
+        }
+        for (std::uint8_t av : {9, 10})
+        {
+            EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueSet(kind, av, -1)->mValue), 65535);
+            EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueSet(kind, av, 65536)->mValue), 0);
+        }
+        for (std::int32_t request : {-1, 0, 16777217, std::numeric_limits<std::int32_t>::min(),
+                 std::numeric_limits<std::int32_t>::max()})
+        {
+            const auto health = ESM4::prepareActorBaseValueSet(kind, 8, request);
+            ASSERT_TRUE(health);
+            EXPECT_EQ(health->mActorValue, 8);
+            EXPECT_EQ(std::get<std::int32_t>(health->mValue), request);
+        }
+        EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueSet(kind, 40, 16777217)->mValue), 16777216.f);
+        EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueSet(kind, 71,
+            std::numeric_limits<std::int32_t>::max())->mValue), 2147483648.f);
+    }
+}
+
+TEST(ESM4ActorValues, BaseSetterAliasesCreatureSkillsAndIdentifiesNoBaseWrite)
+{
+    using Kind = ESM4::ActorBaseKind;
+    for (std::uint8_t av = 0; av < 72; ++av)
+    {
+        for (Kind kind : {Kind::Npc, Kind::Creature})
+        {
+            const auto change = ESM4::prepareActorBaseValueSet(kind, av, 100);
+            if (av == 11 || (av >= 37 && av <= 39))
+                EXPECT_FALSE(change);
+            else
+            {
+                ASSERT_TRUE(change);
+                const auto expected = kind == Kind::Npc || av < 12 || av > 32 ? av
+                    : av <= 18 || av == 28 ? 12 : av <= 25 ? 19 : 26;
+                EXPECT_EQ(change->mActorValue, expected);
+                EXPECT_EQ(change->mValue.index(), av < 40 ? 0 : 1);
+            }
+        }
+    }
+    EXPECT_THROW(ESM4::prepareActorBaseValueSet(static_cast<Kind>(2), 8, 100), std::invalid_argument);
+    EXPECT_THROW(ESM4::prepareActorBaseValueSet(Kind::Npc, 72, 100), std::invalid_argument);
+    EXPECT_THROW(ESM4::prepareActorBaseValueSet(Kind::Creature, 255, 100), std::invalid_argument);
+}

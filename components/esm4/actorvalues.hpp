@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <variant>
 
 namespace ESM4
 {
@@ -41,6 +42,23 @@ namespace ESM4
     // query, then one float store. The caller selects Script or console Damage
     // and applies eligibility; this does not promise a final current value.
     float forceActorValueDelta(std::int32_t requested, float current);
+
+    enum class ActorBaseKind : std::uint8_t { Npc, Creature };
+    struct ActorBaseValueSet
+    {
+        std::uint8_t mActorValue;
+        // Attributes, skills and AI bytes; unsigned Magicka/Fatigue words;
+        // signed Health int32; or a stored float for extra AVs 40..71.
+        std::variant<std::int32_t, float> mValue;
+
+        friend bool operator==(const ActorBaseValueSet&, const ActorBaseValueSet&) = default;
+    };
+    // Prepare the base-record part of an actor SetAV command, including the
+    // Creature runtime skill aliases. The player uses the NPC base kind.
+    // Null means no base write (AV11 and 37..39), not no process-cache updates
+    // or notifications. Shared base ownership/publication belongs to the caller.
+    std::optional<ActorBaseValueSet> prepareActorBaseValueSet(
+        ActorBaseKind kind, std::uint8_t actorValue, std::int32_t requested);
 
     enum class DynamicActorValue : std::uint8_t { Health = 8, Magicka = 9, Fatigue = 10, Encumbrance = 11 };
 

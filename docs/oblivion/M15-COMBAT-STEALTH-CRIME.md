@@ -2984,3 +2984,31 @@ The unchanged component rules retain the 1,891 component /369 sanitizer /160
 Python pass from `S3/restoration-rules-01`; there is no engine sanitizer claim.
 Remaining live stat writers, shared-base ownership, legacy reconciliation,
 automatic publication and rest/gameplay acceptance are still open.
+
+### S3 typed shared-base SetAV preparation
+
+Commit `3d1a9f3396` contains the resource-restoration authority transaction.
+The next chunk prepares native SetAV base changes with original byte/word
+wrapping, exact signed Health integers, extra-AV float storage, Creature skill
+aliases and no-base-write cases. It deliberately preserves a typed value;
+converting every requested base to float would lose Health integer precision.
+Shared base ownership, process cache writes and script routing are subsequent
+integration work, not implemented by this preparation helper.
+
+Independent execution covers 7,488 direct base-form paths and 26,208
+Player/NPC/Creature runtime-to-base paths, including Low/High/no-process
+nonplayer dispatch. All 26,208 typed C++ results match integer values or float
+bits exactly. The initial original harness's incorrect AV11 storage expectation
+is preserved; jump-table decoding and rerun establish the no-base-write branch.
+The new tests cover all 72 IDs, storage boundaries, aliases and rejected kinds/
+IDs. `base-setter-preflight-01.log` retains the unimplemented-API compile failure;
+`base-setter-preflight-02.log` and `base-setter-tests-01.log` pass.
+`S3/base-setter-rules-01` passes **1,893 component /371 ASan+UBSan ESM4 tests**,
+no skips/failures and exact inventory agreement. Tested source fingerprint:
+`b035957421dea29f304011b3d07d8566b871808a427bfe62feb5b0f2ca0d78f4`.
+Leak checks are disabled; this is component sanitizer coverage. Existing
+RuntimeInventoryItem fixture initializer warnings remain unchanged. Next is
+versioned shared-base override state and authoritative propagation to actors
+using that base, retaining distinctions between base-float/floored queries and
+raw form integer queries. Automatic publication and the remaining M15 stages
+remain open.

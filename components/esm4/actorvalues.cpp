@@ -92,6 +92,24 @@ namespace ESM4
         return process == ActorValueProcess::Low ? low : truncated(double(low) + maximum);
     }
 
+    std::optional<ActorBaseValueSet> prepareActorBaseValueSet(
+        ActorBaseKind kind, std::uint8_t actorValue, std::int32_t requested)
+    {
+        if ((kind != ActorBaseKind::Npc && kind != ActorBaseKind::Creature) || actorValue >= 72)
+            throw std::invalid_argument("invalid native base actor-value setter");
+        if (actorValue == 11 || (actorValue >= 37 && actorValue <= 39))
+            return std::nullopt;
+        if (kind == ActorBaseKind::Creature && actorValue >= 12 && actorValue <= 32)
+            actorValue = actorValue <= 18 || actorValue == 28 ? 12 : actorValue <= 25 ? 19 : 26;
+        if (actorValue < 8 || (actorValue >= 12 && actorValue <= 36))
+            return ActorBaseValueSet{actorValue, std::int32_t(static_cast<std::uint8_t>(requested))};
+        if (actorValue == 9 || actorValue == 10)
+            return ActorBaseValueSet{actorValue, std::int32_t(static_cast<std::uint16_t>(requested))};
+        if (actorValue == 8)
+            return ActorBaseValueSet{actorValue, requested};
+        return ActorBaseValueSet{actorValue, static_cast<float>(requested)};
+    }
+
     float forceActorValueDelta(std::int32_t requested, float current)
     {
         if (!std::isfinite(current))

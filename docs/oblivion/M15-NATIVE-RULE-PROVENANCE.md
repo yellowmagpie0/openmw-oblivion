@@ -2742,3 +2742,51 @@ reload test explicitly covers that behavior instead of flattening channels.
 The first harness attempt failed while extracting a reusable Python prefix;
 `S3/authority-draft/resource-authority-oracle-01.log` is retained, followed by
 the successful `resource-authority-oracle-02.log`.
+
+### SetAV base storage widths, aliases and shared ownership
+
+Original Player SetInt `0065D1E0` resolves its base through `005E02E0`, calls
+base virtual +134, then issues notifications. Common actor SetInt `005E2360`
+resolves its base through +170/+190, delegates through process +274 when a
+process exists, and otherwise calls the base directly. Low/Middle processes
+use `00643480`; High uses `00628A80` and then the same base call. These are
+shared base writes, not per-reference Script or Damage modifier replacement.
+Creature wrapper `00625460` aliases runtime skills first, including Marksman
+28 -> Combat12. Base vtables are TESNPC `00A53DD4` (+134 -> `00523310`) and
+TESCreature `00A5324C` (+134 -> `0051D590`), both delegating non-skill fields to
+`00519F50`.
+
+The base-record write has these exact storage rules:
+
+- AV0..7 attributes, AV12..32 skills, and AV33..36 AI data keep the low byte,
+  without clamping. Creature skills target group12/19/26 after runtime aliases.
+- Health AV8 keeps the signed int32 request, including values not exactly
+  representable as float (`00519C50`).
+- Magicka9/Fatigue10 keep the low unsigned 16 bits (`00467290`/`004672B0`).
+- AV11 and AV37..39 perform no base write. Do not interpret that as a command
+  with no notifications or process side effects.
+- Extra AV40..71 store `R(int32Request)` through sparse setter `0065CB00`.
+  Zero removes an existing sparse entry or leaves an absent one absent.
+
+`prepareActorBaseValueSet` returns this typed base change (or no base write).
+It retains integer versus stored-float identity and leaves shared ownership,
+process caches, notifications and publication to the authority integration.
+High-process setters independently store Encumbrance11 as float at +294 and
+Paralysis48 as int32 at +298 before forwarding the base call. Therefore the
+existing generic scalar state is insufficient to activate those cached queries,
+and a rounded per-reference base float cannot be the sole owner of a new
+signed-int32 Health base override. Both remain explicit S3 integration work.
+
+`S2/oracle-emulator/base-value-set.py` executes **7,488** direct original
+NPC/Creature base-setter paths over all 72 AVs, signed int32 extremes and byte/
+word/float boundaries, sparse absence/presence and both x87 modes.
+`actor-base-value-set.py` then executes **26,208** complete runtime-to-base
+paths: Player, NPC and Creature, with Low/High/no-process nonplayer dispatch.
+Original field writes, skill aliases, sparse setter and High cache writes run;
+base resolution/dynamic cast, sparse container helpers and notifications are
+boundary stubs. `base-setter-compare.py`/`base-setter-comparison.json` compare
+all 26,208 typed C++ results exactly (integer values or float bits plus AV key).
+The first direct harness incorrectly expected AV11 to reach generic extra
+storage; its retained failure led to decoding the jump table and the no-write
+cases above. Logs: `S3/authority-draft/base-value-set-oracle-01.log`, corrected
+`base-value-set-oracle-02.log` and `actor-base-value-set-oracle-01.log`.
