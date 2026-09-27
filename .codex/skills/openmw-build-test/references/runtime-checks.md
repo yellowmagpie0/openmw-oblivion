@@ -412,10 +412,11 @@ this fixture limitation explicitly; it is not automatic activation acceptance.
 
 The engine clamps actor processing range to at least3584. A range100 fixture
 therefore does not create a distant actor. Proven distant setup moves the NPC
-to x4096 and its AI last-valid position likewise, with range3584. Disabled actors
-cannot use the current resident-only ModAV adapter; omit that setup write when
-testing disabled rest eligibility, and keep the missing writer as an open gate.
-Neither distant nor disabled fixtures alone prove truly unloaded runtime behavior.
+to x4096 and its AI last-valid position likewise, with range3584. For disabled rest-only eligibility,
+omit NPC setup writes to isolate restoration. Registered disabled actors with
+initialized lifecycle now support native script Mod/Force/Set by stable key;
+`native-hour-disabled-01` retains the earlier resident-only adapter failure.
+Neither distant nor disabled fixtures alone prove cell-unloaded runtime behavior.
 
 Decode pristine and resaved state independently. Ordinary Wait should advance
 one hour plus running frames; continuation must advance only running frames.
@@ -427,3 +428,15 @@ audited expectation is100+17.5*(saved hour delta+2 for nearby, +0 for distant).
 Declare tolerance before launch; the existing numerical cases use1 point.
 Inspect screenshots separately; saved numerical state cannot validate HUD text,
 and an offscreen NPC is not visually verified by the Player HUD.
+
+For disabled command acceptance use `oblivion_m15_disabled_value_commands.json`
+and `oblivion_m15_disabled_value_continuation.json`. The private input is
+`S3/native-hour-disabled-02/pristine.omwsave`, SHA256
+`2c24c80fcd4da4747468c811a5058fc0a77515ee4eaa4cc9b703b747ebe739b0`.
+Starting NPC Health is base100, Damage-75. Mod -5 then Force40 then Set200
+must produce base200, Script15, Damage-75, current140. Disabled GetAV reports
+the raw base200, not current140. Waiting leaves this disabled NPC unchanged;
+Player Health becomes100. A fresh process must preserve all channels and the
+shared base override. The continuation intentionally runs only zero writes and
+queries, never repeats the modifying command sequence. Old unloaded entries
+without initialized lifecycle still need explicit migration work.

@@ -2001,9 +2001,9 @@ namespace MWWorld
                     const auto nativeCommand = mod ? ESM4::ActorValueCommand::Mod
                         : name == "setav" || name == "setactorvalue" ? ESM4::ActorValueCommand::Set
                         : ESM4::ActorValueCommand::Force;
-                    if (!mWorld.executeOblivionActorValueCommand(objectPtr(), *index, nativeCommand,
+                    if (!mWorld.executeOblivionActorValueCommand(key, *index, nativeCommand,
                             ESM4::ActorValueCommandSource::Script, static_cast<std::int32_t>(requested)))
-                        throw std::invalid_argument("native actor-value command requires a resident actor");
+                        throw std::invalid_argument("native actor-value command requires a registered actor");
                     return std::int64_t(0);
                 }
                 catch (const std::exception& error)

@@ -4905,3 +4905,58 @@ predeclared20. The after-rest screenshot was inspected; the Player restores but
 the disabled NPC is offscreen. The prepared stable-key adapter remains the next
 step. Legacy lifecycle adoption for unloaded actors and remaining S3 gates stay
 open; automatic native actor publication remains off.
+
+### S3 world/script commands for registered disabled actors
+
+ObScript Set/Mod/Force now routes a registered target by stable key. The world
+uses the resident adapter when a live reference is registered; otherwise it
+validates initialized lifecycle and winning actor type/essential flags, gathers
+resident siblings for shared-base writes, and invokes the unloaded transaction.
+It does not load a target cell to perform the mutation. Unregistered actors keep
+the previous path; older unloaded entries without lifecycle still require
+explicit migration. No automatic-publication gate changes.
+
+`S3/unloaded-world-01` passes631 engine and180 Python tests;
+`unloaded-world-sanitized-01` passes631 engine tests with ASan leak detection
+and UBSan halting. Both tested the adapter fingerprint
+`3566a9095d31c6fa39d82e75727828ae1d1d612995bed9e2ac9b3ddb49e16d46`
+on parent `c94f80f80e`. After editable manifests were promoted,
+`unloaded-world-manifests-01` passes all180 Python tests again.
+
+Runtime input is `native-hour-disabled-02/pristine.omwsave`, SHA256
+`2c24c80fcd4da4747468c811a5058fc0a77515ee4eaa4cc9b703b747ebe739b0`,
+using the previously identified lifecycle plugin. Normal-input Wait/save checks:
+
+- `unloaded-command-runtime-01` fixes the retained red case: ModAV Health -5
+  changes disabled NPC Health25->20. GetAV still returns raw base100; Wait
+  leaves NPC20 while Player reaches100.
+- `unloaded-command-sequence-01` executes Mod -5, Force40, Set200. Expected
+  transitions25->20->40->140 were declared before launch. Saved base200,
+  Script15, Damage-75 and current140 match exactly; disabled GetAV returns200.
+- `unloaded-command-continuation-01` loads that actual result in a fresh process
+  and preserves every actor-value channel, shared base override, lifecycle,
+  death counters and pending actions. Only running time advances0.068233 hours.
+- `unloaded-command-sanitized-runtime-01` and
+  `unloaded-command-sanitized-continuation-01` repeat the sequence and actual
+  restart with instrumented openmw, matching resources, ASan leak checks off
+  for graphics, and UBSan halting. They pass with no sanitizer errors; restart
+  advances0.070886 hours and preserves the same exact state.
+
+Regular executable SHA256:
+`7158e0fb78f186e3b03b2819b5acc2083c97b3164c43235ac585e96a0bf98c3d`.
+Sanitizer executable SHA256:
+`f8d40a243601a5cdf82f7f179cc474e4a2b61e2d95a4c8597461260d8b7c6420`.
+Each directory records input/output hashes, predeclared expectations, independent
+saved-state verification and direct screenshot review. Captures show the readable
+Wait UI and Player resource restoration/preservation. Disabled NPC is offscreen;
+its values are checked in saves. Audio is disabled. A disabled reference in the
+loaded cell is not acceptance of travel to another unloaded cell, creature or
+essential command execution; those runtime branches remain to be demonstrated.
+
+The editable sequence/events and continuation are
+`oblivion_m15_disabled_value_commands.json`, `m15_disabled_value_commands_events.txt`
+and `oblivion_m15_disabled_value_continuation.json` under
+`scripts/data/oblivion_compat`. Copy the input into a private M15Legacy slot;
+never launch against the historical source save. The build/test skill now
+records this setup and exact expectations. Remaining S2/S3 and S4-S14 gates stay
+open, including native Lua writers, lifecycle adoption/activation and clock wrap.

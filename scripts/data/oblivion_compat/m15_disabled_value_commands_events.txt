@@ -1,0 +1,6 @@
+at 1 command content:m15-lifecycle.esm:900101 modav Health -5
+at 1 command content:m15-lifecycle.esm:900101 forceav Health 40
+at 1 command content:m15-lifecycle.esm:900101 setav Health 200
+at 1 command dynamic:player:0000000000000001 modav Health 0
+at 1 command content:m15-lifecycle.esm:900101 getav Health
+at 1 command content:m15-lifecycle.esm:900101 getdead
