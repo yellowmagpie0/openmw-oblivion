@@ -3962,3 +3962,44 @@ resurrection is an S6 deliverable, not a reason to call S3 activation complete.
 The owned sanitizer configuration has now successfully configured engine/tests
 ON (same ASan/UBSan flags); its engine compilation and lifetime tests are next.
 After that, return to remaining S3 native stat adapters/activation and its gate.
+
+### S3 Lua modified-value queries use native authority
+
+Following `b2d52b7d62`, actual Lua `Actor.stats.attributes.*.modified` and
+`NPC.stats.skills.*.modified` now read a native projection's exact current
+value. Their previous TES3 recomposition omitted Script modifiers and included
+Maximum even for a native Low process; it also incorrectly clamped negative
+native results. Legacy values retain the existing cached-property composition
+and zero clamp. This change does not implement queued Lua stat writers.
+
+The retained baseline `S3/authority-draft/lua-native-modified-red.{cpp,log,xml}`
+executes actual bindings against the prior engine library: Strength returned
+44 instead of Active57/Low50; Blade returned33 instead of Active50/Low45.
+The first scratch fixture used Armorer's index12 for Blade and was corrected
+to14 before retaining that baseline. Scratch replacement/expanded/final runs
+pass; `lua-native-reproduction-hashes.json` identifies the initial artifacts.
+The committed tests additionally cover negative native values, TES3 clamping,
+and the actual shared Player class with a native projection.
+
+`S3/native-lua-projection-01` rebuilds the engine and passes all **608 engine
+tests**, exact inventory, zero failures/skips. Tested source fingerprint:
+`9b2b44e5aeffb5792a0f3610af28f40534753d144a5878a0de61fa05a04b97ff`.
+`openmw-tests` SHA-256:
+`456e6b49cf5b6a03fdf7af8a742bd13da8cbb169c72115bb1f72ac9b2297fd27`.
+
+The first full sanitizer engine build (`S3/native-inventory-sanitized-engine-01`)
+was deliberately interrupted during compilation to integrate this fix and
+increase parallelism after checking memory. Its verification is **failed / no
+tests run**, with the reason in `interruption.json`; it is not sanitizer pass
+or leak-coverage evidence. The incremental full run remains required.
+
+A separate real-engine baseline, `S3/health-command-atomic-red-01`, exposes the
+next writer transaction gap. With the death-event namespace exhausted, ModAV
+Health -200 throws after changing Health100 to -100. GetDead remains0 and a
+normal F5 save retains Script=-200. All scenario actions complete; the expected
+GetAV100 is absent and the error is logged. The capture was inspected (rendered
+room/HUD, no dialog); the silent diagnostic course is not gameplay acceptance.
+Its manifest, preparation script, source/pristine hashes and decoded state are
+retained under `S3/authority-draft/health-command-atomic-*` and the run directory.
+Next: prepare command Health storage and lifecycle reaction together, then
+continue the remaining S3 adapters/activation gates. S2/S3 and S4–S14 remain open.

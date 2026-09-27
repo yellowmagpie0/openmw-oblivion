@@ -18,6 +18,10 @@
 
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
+#include "apps/openmw/mwlua/context.hpp"
+#include "apps/openmw/mwlua/object.hpp"
+#include "apps/openmw/mwlua/stats.hpp"
+#include <components/vfs/manager.hpp>
 
 namespace
 {
@@ -2731,4 +2735,141 @@ TEST(OblivionStatProjection, WholeValueAssignmentCannotReplaceNativeViews)
     legacy = MWMechanics::DynamicStat<float>(30);
     EXPECT_EQ(legacy.getCurrent(), 30);
     EXPECT_FALSE(legacy.isNativeProjection());
+}
+
+namespace
+{
+    TEST_F(OblivionActorStatsTest, luaModifiedQueriesIncludeNativeScriptAndProcessOwnership)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        VFS::Manager vfs;
+        LuaUtil::ScriptsConfiguration configuration;
+        LuaUtil::LuaState luaState(&vfs, &configuration);
+        MWLua::Context context{MWLua::Context::Global};
+        context.mLua = &luaState;
+        sol::state_view lua = luaState.unsafeState();
+        sol::table actor(lua, sol::create), npc(lua, sol::create);
+        MWLua::addActorStatsBindings(actor, context);
+        npc["baseType"] = actor;
+        MWLua::addNpcStatsBindings(npc, context);
+        lua["Actor"] = actor;
+        lua["NPC"] = npc;
+        lua["target"] = MWLua::LObject(ptr);
+        for (auto process : {ESM4::ActorValueProcess::Active, ESM4::ActorValueProcess::Low})
+        {
+            SCOPED_TRACE(static_cast<int>(process));
+            values.mProcess = process;
+            service.publishNonPlayerValues(ptr, values);
+            auto result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
+                "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
+            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            EXPECT_FLOAT_EQ(result.get<float>(0), process == ESM4::ActorValueProcess::Active ? 57.f : 50.f);
+            EXPECT_FLOAT_EQ(result.get<float>(1), process == ESM4::ActorValueProcess::Active ? 50.f : 45.f);
+            auto damaged = values;
+            damaged.mValues[0].mModifiers[2] = -70;
+            damaged.mValues[14].mModifiers[2] = -70;
+            service.publishNonPlayerValues(ptr, damaged);
+            result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
+                "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
+            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            EXPECT_FLOAT_EQ(result.get<float>(0), process == ESM4::ActorValueProcess::Active ? -10.f : -17.f);
+            EXPECT_FLOAT_EQ(result.get<float>(1), process == ESM4::ActorValueProcess::Active ? -18.f : -23.f);
+        }
+    }
+
+    TEST_F(OblivionActorStatsTest, luaModifiedQueriesPreserveLegacyAndNativePlayerComposition)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        model.registerPtr(ptr);
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto& stats = ptr.getClass().getNpcStats(ptr);
+        VFS::Manager vfs;
+        LuaUtil::ScriptsConfiguration configuration;
+        LuaUtil::LuaState luaState(&vfs, &configuration);
+        MWLua::Context context{MWLua::Context::Global};
+        context.mLua = &luaState;
+        sol::state_view lua = luaState.unsafeState();
+        sol::table actor(lua, sol::create), npc(lua, sol::create);
+        MWLua::addActorStatsBindings(actor, context);
+        npc["baseType"] = actor;
+        MWLua::addNpcStatsBindings(npc, context);
+        lua["Actor"] = actor;
+        lua["NPC"] = npc;
+        lua["target"] = MWLua::LObject(ptr);
+        for (float damage : {3.f, 70.f})
+        {
+            SCOPED_TRACE(damage);
+            MWMechanics::AttributeValue attribute;
+            attribute.setBase(40);
+            attribute.setModifier(7);
+            attribute.damage(damage);
+            stats.setAttribute(ESM::Attribute::Strength, attribute);
+            MWMechanics::SkillValue skill;
+            skill.setBase(30);
+            skill.setModifier(5);
+            skill.damage(damage);
+            stats.setSkill(ESM::Skill::LongBlade, skill);
+            auto result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
+                "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
+            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            EXPECT_FLOAT_EQ(result.get<float>(0), damage == 3 ? 44.f : 0.f);
+            EXPECT_FLOAT_EQ(result.get<float>(1), damage == 3 ? 32.f : 0.f);
+        }
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{0, 0, 0, 0}};
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        MWMechanics::OblivionCombatService service;
+        service.publishPlayerValues(player, values, {});
+        auto result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
+            "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
+        ASSERT_TRUE(result.valid()) << sol::error(result).what();
+        EXPECT_FLOAT_EQ(result.get<float>(0), 57.f);
+        EXPECT_FLOAT_EQ(result.get<float>(1), 50.f);
+    }
 }

@@ -286,6 +286,11 @@ namespace MWLua
 
             float getModified(const Context& context) const
             {
+                const auto ptr = mObject.ptr();
+                const auto& value = ptr.getClass().getCreatureStats(ptr).getAttribute(mId);
+                // Native composition includes Script and process-specific Maximum modifiers.
+                if (value.isNativeProjection())
+                    return value.getModified();
                 auto base = LuaUtil::cast<float>(get(context, "base", &MWMechanics::AttributeValue::getBase));
                 auto damage = LuaUtil::cast<float>(get(context, "damage", &MWMechanics::AttributeValue::getDamage));
                 auto modifier
@@ -365,6 +370,10 @@ namespace MWLua
 
             float getModified(const Context& context) const
             {
+                const auto ptr = mObject.ptr();
+                const auto& value = ptr.getClass().getNpcStats(ptr).getSkill(mId);
+                if (value.isNativeProjection())
+                    return value.getModified();
                 auto base = LuaUtil::cast<float>(get(context, "base", &MWMechanics::SkillValue::getBase));
                 auto damage = LuaUtil::cast<float>(get(context, "damage", &MWMechanics::SkillValue::getDamage));
                 auto modifier = LuaUtil::cast<float>(get(context, "modifier", &MWMechanics::SkillValue::getModifier));
