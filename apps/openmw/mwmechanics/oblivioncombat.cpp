@@ -556,6 +556,52 @@ namespace MWMechanics
         publishNonPlayerValues(actor, std::move(candidate));
     }
 
+    OblivionActorValueCommandResult OblivionCombatService::executeNonPlayerValueCommand(
+        const MWWorld::Ptr& actor, std::uint8_t value, ESM4::ActorValueCommand command,
+        ESM4::ActorValueCommandSource source, std::int32_t requested,
+        const ESM4::ActorValueCommandPolicy& policy, std::span<const MWWorld::Ptr> residents)
+    {
+        validateNonPlayerQuery(value);
+        nonPlayerValues(actor);
+        if (source != ESM4::ActorValueCommandSource::Script && source != ESM4::ActorValueCommandSource::Console)
+            throw std::invalid_argument("invalid native actor-value command source");
+        if (command == ESM4::ActorValueCommand::Set)
+        {
+            setNonPlayerBaseValue(actor, value, requested, residents);
+            return {true, std::nullopt};
+        }
+        const auto change = ESM4::prepareActorValueModifierCommand(ESM4::ActorValueOwner::NonPlayer,
+            value, command, source, requested,
+            command == ESM4::ActorValueCommand::Force ? getNonPlayerValue(actor, value) : 0.f, policy);
+        if (!change)
+            return {false, std::nullopt};
+        changeNonPlayerValue(actor, value, change->mModifier, change->mDelta);
+        return {true, change->mHealthReaction ? std::optional(change->mDelta) : std::nullopt};
+    }
+
+    OblivionActorValueCommandResult OblivionCombatService::executePlayerValueCommand(
+        MWWorld::Player& player, std::uint8_t value, ESM4::ActorValueCommand command,
+        ESM4::ActorValueCommandSource source, std::int32_t requested,
+        const ESM4::ActorValueCommandPolicy& policy, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        validatePlayerQuery(value);
+        playerValues();
+        if (source != ESM4::ActorValueCommandSource::Script && source != ESM4::ActorValueCommandSource::Console)
+            throw std::invalid_argument("invalid native actor-value command source");
+        if (command == ESM4::ActorValueCommand::Set)
+        {
+            setPlayerBaseValue(player, value, requested, settings);
+            return {true, std::nullopt};
+        }
+        const auto change = ESM4::prepareActorValueModifierCommand(ESM4::ActorValueOwner::Player,
+            value, command, source, requested,
+            command == ESM4::ActorValueCommand::Force ? getPlayerValue(value) : 0.f, policy);
+        if (!change)
+            return {false, std::nullopt};
+        changePlayerValue(player, value, change->mModifier, change->mDelta, settings);
+        return {true, change->mHealthReaction ? std::optional(change->mDelta) : std::nullopt};
+    }
+
     float OblivionCombatService::getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const
     {
         const auto& values = nonPlayerValues(actor);

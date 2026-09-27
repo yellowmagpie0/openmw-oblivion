@@ -1087,6 +1087,134 @@ namespace
         EXPECT_EQ(ptrs[3].getClass().getCreatureStats(ptrs[3]).getMagicka().getCurrent(), 3e38f);
     }
 
+    TEST_F(OblivionActorStatsTest, playerCommandsKeepBaseScriptAndConsoleDamageDistinct)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{7, 3, 9, 0}};
+        values.mValues[5].mBase = 40;
+        values.mValues[8].mModifiers = {10, 2, -5};
+        const ESM4::PlayerDynamicBaseSettings settings{2, 2, 5};
+        MWMechanics::OblivionCombatService service;
+        service.publishPlayerValues(player, values, settings);
+        using Command = ESM4::ActorValueCommand;
+        using Source = ESM4::ActorValueCommandSource;
+        const auto run = [&](std::uint8_t value, Command command, Source source, std::int32_t amount,
+                             bool god = false) {
+            return service.executePlayerValueCommand(player, value, command, source, amount, {god, false}, settings);
+        };
+        EXPECT_EQ(service.getPlayerValue(8), 94);
+        const auto suppressed = run(8, Command::Mod, Source::Script, -4, true);
+        EXPECT_FALSE(suppressed.mAccepted);
+        EXPECT_FALSE(suppressed.mHealthReactionDelta);
+        EXPECT_EQ(service.getPlayerValue(8), 94);
+        const auto damage = run(8, Command::Mod, Source::Console, -4);
+        EXPECT_TRUE(damage.mAccepted);
+        EXPECT_EQ(damage.mHealthReactionDelta, -4);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[8].mModifiers,
+            (ESM4::ActorValueModifiers{10, 2, -9}));
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 90);
+        const auto force = run(8, Command::Force, Source::Script, 100);
+        EXPECT_TRUE(force.mAccepted);
+        EXPECT_FALSE(force.mHealthReactionDelta);
+        EXPECT_EQ(service.getPlayerValue(8), 100);
+        EXPECT_EQ(service.getPlayerBaseValue(8), 87);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[8].mModifiers,
+            (ESM4::ActorValueModifiers{10, 12, -9}));
+        const auto set = run(8, Command::Set, Source::Console, -1, true);
+        EXPECT_TRUE(set.mAccepted); // Set is not suppressed by god mode.
+        EXPECT_FALSE(set.mHealthReactionDelta);
+        EXPECT_EQ((*service.findActorValues(values.mActor)->mPlayerFormValues)[0], -1);
+        EXPECT_EQ(service.getPlayerBaseValue(8), 79);
+        EXPECT_EQ(service.getPlayerValue(8), 92);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 92);
+        const auto before = *service.findActorValues(values.mActor);
+        EXPECT_THROW(run(8, static_cast<Command>(255), Source::Script, 0), std::invalid_argument);
+        EXPECT_THROW(run(8, Command::Set, static_cast<Source>(255), 0), std::invalid_argument);
+        EXPECT_THROW(service.executePlayerValueCommand(player, 8, Command::Mod, Source::Script, -1, {},
+            (ESM4::PlayerDynamicBaseSettings{2, 2, std::numeric_limits<float>::infinity()})), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 92);
+    }
+
+    TEST_F(OblivionActorStatsTest, npcCommandsPreserveScaledForceFatigueEligibilityAndSharedBaseWrites)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter ref{};
+        ref.mId = {0x900, 3};
+        ref.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        ref.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(ref, ref.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(ref, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr ptr(&live);
+        const std::array residents{ptr};
+        ESM4::RuntimeActorValues values;
+        values.mActor = ref.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[8] = {100, {10, 2, -5}};
+        values.mValues[9] = {50, {0, -4.25f, std::nullopt}};
+        values.mValues[10].mBase = 40;
+        values.mValues[40].mBase = 15;
+        MWMechanics::OblivionCombatService service;
+        service.publishNonPlayerValues(ptr, values);
+        using Command = ESM4::ActorValueCommand;
+        using Source = ESM4::ActorValueCommandSource;
+        const auto run = [&](std::uint8_t value, Command command, Source source, std::int32_t amount,
+                             bool spend = true) {
+            return service.executeNonPlayerValueCommand(ptr, value, command, source, amount, {true, spend}, residents);
+        };
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 9), 68.625f);
+        EXPECT_TRUE(run(9, Command::Force, Source::Script, 100).mAccepted);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 9), 115.6875f); // Scale applies again after delta storage.
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[9].mModifiers[1], 27.125f);
+        const auto before = *service.findActorValues(values.mActor);
+        EXPECT_FALSE(run(10, Command::Mod, Source::Console, -1, false).mAccepted);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_TRUE(run(10, Command::Mod, Source::Console, 1, false).mAccepted);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 10), 41); // Absent sparse Damage accepts positive insertion.
+        const auto health = run(8, Command::Force, Source::Console, 100);
+        EXPECT_EQ(health.mHealthReactionDelta, -7);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 8), 100);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
+        EXPECT_TRUE(run(8, Command::Set, Source::Script, 200).mAccepted);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 8), 200);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[8].mModifiers,
+            (ESM4::ActorValueModifiers{10, 2, -12}));
+        const auto final = *service.findActorValues(values.mActor);
+        EXPECT_THROW(run(48, Command::Mod, Source::Script, 1), std::invalid_argument);
+        EXPECT_THROW(run(8, static_cast<Command>(255), Source::Console, 1), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), final);
+    }
+
     TEST_F(OblivionActorStatsTest, sharedPlayerBaseWritesPreserveRawContributionsAndRecomputeDerivedViews)
     {
         sharedStats();
@@ -1150,6 +1278,75 @@ namespace
         service.publishPlayerValues(player, values, settings);
         EXPECT_EQ((*service.findActorValues(values.mActor)->mPlayerFormValues)[0], 16777217);
         EXPECT_EQ(service.getPlayerBaseValue(5), 1);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureCommandsAliasRuntimeSkillsAndPersistModifierOwnership)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 4;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        const MWWorld::Ptr ptr(&live);
+        const std::array residents{ptr};
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[8].mBase = 100;
+        values.mValues[10].mBase = 40;
+        for (std::size_t i = 12; i <= 32; ++i)
+            values.mValues[i].mBase = i <= 18 ? 21 : i <= 25 ? 22 : 23;
+        MWMechanics::OblivionCombatService service;
+        service.publishNonPlayerValues(ptr, values);
+        using Command = ESM4::ActorValueCommand;
+        using Source = ESM4::ActorValueCommandSource;
+        const auto run = [&](std::uint8_t value, Command command, Source source, std::int32_t amount) {
+            return service.executeNonPlayerValueCommand(ptr, value, command, source, amount, {false, false}, residents);
+        };
+        EXPECT_TRUE(run(28, Command::Mod, Source::Script, 2).mAccepted);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 23);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[12].mModifiers[1], 2);
+        EXPECT_FALSE(service.findActorValues(values.mActor)->mValues[28].mModifiers[1]);
+        EXPECT_TRUE(run(28, Command::Force, Source::Console, 20).mAccepted);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[12].mModifiers[2], -3);
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 20);
+        EXPECT_TRUE(run(28, Command::Set, Source::Console, 30).mAccepted);
+        EXPECT_EQ(service.getNonPlayerBaseValue(values.mActor, 28, mStore), 23); // Raw Marksman remains Stealth.
+        EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 29);
+        EXPECT_FALSE(run(10, Command::Force, Source::Script, 0).mAccepted);
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 10), 40);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = values.mActor;
+        savedActor.mBase = values.mBase;
+        savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        restored.publishNonPlayerValues(ptr, *restored.findActorValues(values.mActor));
+        EXPECT_EQ(restored.getNonPlayerValue(ptr, 28), 29);
+        auto resaved = saved;
+        restored.capture(resaved);
+        EXPECT_EQ(resaved, saved);
     }
 
     TEST_F(OblivionActorStatsTest, liveCreatureClassUsesCanonicalNativeSkillGroups)

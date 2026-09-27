@@ -313,3 +313,47 @@ TEST(ESM4ActorValues, ScriptNamesUseVanillaIndicesAndAsciiCaseFolding)
     for (const auto name : {"", " Strength", "Strength ", "CarryWeight", "Level", "LongBlade", "Spear", "ResistWaterDamageX"})
         EXPECT_FALSE(ESM4::actorValueIndex(name)) << name;
 }
+
+TEST(ESM4ActorValues, ModifierCommandsPreserveOriginEligibilityAndIntegerBoundaryOrder)
+{
+    using Command = ESM4::ActorValueCommand;
+    using Source = ESM4::ActorValueCommandSource;
+    const auto prepare = [](Owner owner, std::uint8_t value, Command command, Source source,
+                             std::int32_t requested, float current, bool god, bool spend) {
+        return ESM4::prepareActorValueModifierCommand(owner, value, command, source, requested, current, {god, spend});
+    };
+    for (const auto source : {Source::Script, Source::Console})
+    {
+        const auto force = prepare(Owner::Player, 8, Command::Force, source, 16777217, 16777216, false, true);
+        ASSERT_TRUE(force);
+        EXPECT_EQ(force->mDelta, 1);
+        EXPECT_EQ(force->mModifier, source == Source::Script ? Modifier::Script : Modifier::Damage);
+        EXPECT_FALSE(force->mHealthReaction);
+        EXPECT_FALSE(prepare(Owner::Player, 8, Command::Mod, source, -1, 0, true, true));
+        EXPECT_FALSE(prepare(Owner::Player, 9, Command::Force, source, 0, 1, true, true));
+        EXPECT_FALSE(prepare(Owner::NonPlayer, 10, Command::Mod, source, -1, 0, false, false));
+        EXPECT_FALSE(prepare(Owner::NonPlayer, 10, Command::Force, source, 10, 10.5, true, false));
+        EXPECT_TRUE(prepare(Owner::Player, 10, Command::Mod, source, -1, 0, false, false));
+        EXPECT_TRUE(prepare(Owner::NonPlayer, 9, Command::Mod, source, -1, 0, true, false));
+        const auto health = prepare(Owner::NonPlayer, 8, Command::Force, source, 10, 10.5, true, false);
+        ASSERT_TRUE(health);
+        EXPECT_EQ(health->mDelta, -.5f);
+        EXPECT_TRUE(health->mHealthReaction);
+        const auto wrapped = prepare(Owner::Player, 8, Command::Mod, source,
+            std::numeric_limits<std::int32_t>::max(), 0, true, true);
+        ASSERT_TRUE(wrapped); // Positive input passes god-mode gate before wrapping.
+        EXPECT_EQ(wrapped->mDelta, -0x1p31f);
+        EXPECT_TRUE(wrapped->mHealthReaction);
+        const auto zero = prepare(Owner::NonPlayer, 10, Command::Mod, source, 0, 0, true, false);
+        ASSERT_TRUE(zero);
+        EXPECT_EQ(zero->mDelta, 0);
+    }
+    EXPECT_THROW(prepare(Owner::Player, 8, Command::Set, Source::Script, 1, 0, false, true), std::invalid_argument);
+    EXPECT_THROW(prepare(Owner::Player, 72, Command::Mod, Source::Script, 1, 0, false, true), std::invalid_argument);
+    EXPECT_THROW(prepare(static_cast<Owner>(255), 8, Command::Mod, Source::Script, 1, 0, false, true),
+        std::invalid_argument);
+    EXPECT_THROW(prepare(Owner::Player, 8, Command::Mod, static_cast<Source>(255), 1, 0, false, true),
+        std::invalid_argument);
+    EXPECT_THROW(prepare(Owner::Player, 8, Command::Force, Source::Script, 1,
+        std::numeric_limits<float>::infinity(), false, true), std::invalid_argument);
+}

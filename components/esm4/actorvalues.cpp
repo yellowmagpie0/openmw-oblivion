@@ -154,6 +154,30 @@ namespace ESM4
         return stored(double(requested) - current);
     }
 
+    std::optional<ActorValueCommandChange> prepareActorValueModifierCommand(ActorValueOwner owner,
+        std::uint8_t value, ActorValueCommand command, ActorValueCommandSource source,
+        std::int32_t requested, float current, const ActorValueCommandPolicy& policy)
+    {
+        if ((owner != ActorValueOwner::Player && owner != ActorValueOwner::NonPlayer) || value >= 72
+            || (command != ActorValueCommand::Mod && command != ActorValueCommand::Force)
+            || (source != ActorValueCommandSource::Script && source != ActorValueCommandSource::Console))
+            throw std::invalid_argument("invalid native modifier command");
+        const float raw = command == ActorValueCommand::Force
+            ? forceActorValueDelta(requested, current) : static_cast<float>(requested);
+        // Eligibility precedes the integer wrapper's conversion. A positive
+        // request rounded beyond int32 can become negative after this gate.
+        const bool negative = command == ActorValueCommand::Mod ? requested < 0 : raw < 0;
+        if (negative && ((owner == ActorValueOwner::Player && policy.mGodMode && value >= 8 && value <= 10)
+                || (owner == ActorValueOwner::NonPlayer && value == 10 && !policy.mCanSpendFatigue)))
+            return std::nullopt;
+        // Both original CPU conversion paths return INT_MIN for rounded 2^31.
+        // Other int32 inputs round to an exactly integral, in-range float.
+        const float delta = command == ActorValueCommand::Mod && raw == 0x1p31f ? -0x1p31f : raw;
+        return ActorValueCommandChange{source == ActorValueCommandSource::Console
+                ? ActorValueModifier::Damage : ActorValueModifier::Script,
+            delta, value == 8 && delta < 0};
+    }
+
     float actorMagickaScale(float multiplier)
     {
         if (!std::isfinite(multiplier))

@@ -2823,3 +2823,34 @@ initial draft are in `S3/authority-draft/native-query-*`; the corrected oracle
 log is `native-query-oracle-02.log`. These establish query dispatch only;
 process-cache completeness, command writes and normal-input activation remain
 separate gates.
+
+### ModAV/ForceAV wrapper eligibility, conversion and callback boundary
+
+Original Player ScriptInt/Float `0065E300`/`0065E3C0` and DamageInt/Float
+`0065E490`/`0065E530` check god-mode byte `00B3BB06` before mutation: negative
+inputs to AV8..10 return without writes or callbacks. Common actor wrappers
+`005E28F0`/`005E29F0` and `005E2AB0`/`005E2BE0` instead gate negative Fatigue10
+through virtual +278. Player ignores that nonplayer fatigue predicate. Creature
+runtime aliases occur before the common wrapper, as previously audited.
+
+Mod's int32 argument is stored as float and converted back through the original
+rounding helper before storage; Force supplies its already stored float delta.
+For typed int32 input, both CPU conversion paths agree. Notably INT_MAX rounds
+to 2^31, converts to INT_MIN, and stores -2^31. Eligibility ran on the positive
+original argument, so god mode does not suppress that write. A resulting negative
+Health delta invokes virtual +3B8 **after** storage. It is a health-reaction
+callback, not by itself a death verdict. Script and console choose Script and
+Damage channels respectively; SetAV remains a separate ungated base write.
+
+`S2/oracle-emulator/command-modifier-wrappers.py` executes **6,272** Player/common
+actor integer/float wrapper cases over script/console channels, god-mode and
+fatigue eligibility, seven AV IDs, seven signed/int32 precision boundaries,
+both x87 modes and both `00BAABE0` CPU paths. Original eligibility, conversion,
+branching and callback dispatch execute. Scalar/sparse/process writes are
+captured at their boundaries; notification and health callbacks are stubs.
+All 6,272 accepted/suppressed results, exact float bits, channels and Health
+callback indicators match optimized C++ `prepareActorValueModifierCommand`
+(`command-modifier-comparison.json`). Force-wrapper comparison uses request0
+and negated float input as current; the independent 3,408 handler comparisons
+above separately cover exact request-minus-current computation. This does not
+resolve arbitrary out-of-range float conversion or implement callback effects.

@@ -71,3 +71,9 @@ requiring a large World fake for inventory filling/PRNG. Keep `mMissingACDT`
 and `mRecalcDynamicStats` false; populate shared attributes/skills first. Empty
 spell/inventory state avoids unrelated World callbacks. This tests the actual
 projected class, not full World activation or normal gameplay.
+
+When clearing TES4_PCLevelOffset on the `autoNpc()` engine fixture, also assign
+a positive absolute `levelOrOffset` (for example 2). That fixture starts at -1;
+clearing only the flag makes class initialization reject a nonpositive level
+before the behavior under test executes. Retain such fixture failures and fix
+the fixture, not the production validation.

@@ -76,3 +76,13 @@ getter can retain exact int32 precision through a double result store, unlike
 GetBaseAV's float-store/floor path. Use `actor-value-script-queries.py` and
 `script-disabled-flag.py` in the ignored M15 oracle directory as the known
 examples; do not conflate command return type with the underlying float getter.
+
+For actor ModAV wrappers, distinguish eligibility input from converted storage:
+Player checks god mode on the original signed input before the integer-to-float
+round trip. INT_MAX can pass that gate, round to 2^31, then become INT_MIN and
+trigger a negative-Health callback. NPC negative Fatigue additionally checks
+virtual +278. `command-modifier-wrappers.py` exercises both BAABE0 CPU branches;
+both agree for typed int32 command inputs. This does not establish arbitrary
+out-of-range float conversion behavior. The Unicorn virtualenv does not include
+Capstone; use the installed `objdump -d -M intel --start-address=... --stop-address=...`
+for bounded disassembly, without adding a dependency just for instruction reads.

@@ -52,6 +52,28 @@ namespace ESM4
     // and applies eligibility; this does not promise a final current value.
     float forceActorValueDelta(std::int32_t requested, float current);
 
+    enum class ActorValueCommand : std::uint8_t { Set, Mod, Force };
+    enum class ActorValueCommandSource : std::uint8_t { Script, Console };
+    struct ActorValueCommandPolicy
+    {
+        bool mGodMode = false;
+        bool mCanSpendFatigue = true;
+    };
+    struct ActorValueCommandChange
+    {
+        ActorValueModifier mModifier;
+        float mDelta;
+        // Dispatch only after the authority and every shared view commit.
+        // This signals the native negative-Health callback, not death itself.
+        bool mHealthReaction;
+    };
+    // Prepare ModAV/ForceAV. SetAV has separate shared base storage semantics.
+    // Current is queried only by ForceAV, independently of reference enablement.
+    // Null means the original actor wrapper suppressed the write and callbacks.
+    std::optional<ActorValueCommandChange> prepareActorValueModifierCommand(ActorValueOwner owner,
+        std::uint8_t value, ActorValueCommand command, ActorValueCommandSource source,
+        std::int32_t requested, float current, const ActorValueCommandPolicy& policy);
+
     enum class ActorBaseKind : std::uint8_t { Npc, Creature };
     struct ActorBaseValueSet
     {

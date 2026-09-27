@@ -91,6 +91,14 @@ namespace MWMechanics
         bool mHasActiveMagicItem;
     };
 
+    struct OblivionActorValueCommandResult
+    {
+        // False means eligibility suppressed both storage and notifications.
+        bool mAccepted;
+        // Caller dispatches the negative-Health callback after this transaction.
+        std::optional<float> mHealthReactionDelta;
+    };
+
     // Profile-owned native action and actor-value authority. Live activation
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
@@ -127,6 +135,18 @@ namespace MWMechanics
             std::int32_t requested, std::span<const MWWorld::Ptr> residents);
         void setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
             std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings);
+        // Typed command writers. Set shares a base transaction; Mod and Force
+        // select Script/console Damage storage and preserve native eligibility.
+        // No callback can observe partially published state. The caller owns
+        // notifications, health reactions and process-cache policy.
+        OblivionActorValueCommandResult executeNonPlayerValueCommand(const MWWorld::Ptr& actor,
+            std::uint8_t value, ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source,
+            std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,
+            std::span<const MWWorld::Ptr> residents);
+        OblivionActorValueCommandResult executePlayerValueCommand(MWWorld::Player& player,
+            std::uint8_t value, ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source,
+            std::int32_t requested, const ESM4::ActorValueCommandPolicy& policy,
+            const ESM4::PlayerDynamicBaseSettings& settings);
         float getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         std::int32_t getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         // Read saved actors without constructing/loading their live references.

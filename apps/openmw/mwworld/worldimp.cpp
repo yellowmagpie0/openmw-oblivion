@@ -1249,8 +1249,8 @@ namespace MWWorld
                 disabled = !saved->mEnabled;
             else if (const auto* reference = mStore.search<ESM4::ActorCharacter>(key))
                 disabled = (reference->mFlags & ESM4::Rec_Disabled) != 0;
-            else if (const auto* reference = mStore.search<ESM4::ActorCreature>(key))
-                disabled = (reference->mFlags & ESM4::Rec_Disabled) != 0;
+            else if (const auto* creatureRef = mStore.search<ESM4::ActorCreature>(key))
+                disabled = (creatureRef->mFlags & ESM4::Rec_Disabled) != 0;
         }
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }

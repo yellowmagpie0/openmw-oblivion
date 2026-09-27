@@ -3180,3 +3180,38 @@ no error dialog. These silent cases inject unpublished native authority;
 they are not normal-input stat construction, publication, death or combat
 acceptance. Script/console writers, process cache semantics and automatic
 activation remain open; S2/S3 continue in progress, S4–S14 pending.
+
+## S3 typed native command writer transactions
+
+The service now accepts typed Set/Mod/Force commands and explicit script/console
+origin. Set delegates to the shared-base transaction; Mod/Force prepare the
+native modifier delta, apply god-mode/nonplayer fatigue eligibility, and publish
+through existing atomic actor/view writers. Force queries the live current
+float path independently of reference enablement. Suppressed writes return
+without publication or callback requests. Successful writes return any negative
+Health reaction delta only after the transaction commits; world notifications,
+death/essential transitions and console/text adapters remain unwired.
+
+Three real class tests cover Player/NPC/Creature base versus modifier ownership,
+console Damage versus Script, god-mode bypass for Set, suppressed fatigue,
+scaled NPC Magicka Force behavior, Creature Marksman aliases, sparse positive
+Damage insertion, invalid-command/settings rollback, and binary reload of a
+Creature command sequence. Independent original wrapper comparison covers
+**6,272 cases** including both CPU conversion paths and integer overflow order.
+A follow-up original Health callback probe covers 1,024 gates (Health below 1,
+actor state query, caller forwarding); it does not execute the death transition.
+The initial NPC test had an invalid absolute level and the Creature save fixture
+omitted its reference state. Both strict production rejections were retained and
+the fixtures corrected; `S3/authority-draft/command-writer-tests-{01,02,03}.log`
+records the failures and passing focused run. The preceding query adapter's
+shadowed local name was also cleaned up without changing behavior.
+
+`S3/native-command-writers-01` passes **1,899 components /377 ASan+UBSan ESM4 /
+589 engine tests**, exact inventories and no skips. Tested source fingerprint:
+`d4d82da58b316f5c81223a54e60b048502986b1fb2faefeddf1fa6791f9aed09`.
+Engine SHA-256:
+`32bec6e773bf9c0c1aab92d1fca39993a29d3a13688a8af4aa0efbe99caa7f6d`.
+This chunk exposes service transactions, not automatic script/console writer
+activation or normal-input command acceptance. The next integration boundary
+is world callbacks and actor lifecycle; cache-only values and native activation
+also remain open. S2/S3 are in progress and S4–S14 remain pending.
