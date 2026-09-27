@@ -457,6 +457,7 @@ namespace MWMechanics
         mNextDeathEvent = 1;
         mPendingDeathEvents.clear();
         mDeathCounts.clear();
+        mActorBreath.clear();
     }
 
     std::uint64_t OblivionCombatService::allocateAction()
@@ -1350,6 +1351,12 @@ namespace MWMechanics
         return event;
     }
 
+    std::optional<float> OblivionCombatService::findActorBreath(const ESM::FormKey& actor) const
+    {
+        const auto found = mActorBreath.find(actor);
+        return found == mActorBreath.end() ? std::nullopt : std::optional(found->second);
+    }
+
     void OblivionCombatService::capture(ESM4::RuntimeState& state) const
     {
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
@@ -1363,6 +1370,9 @@ namespace MWMechanics
             throw std::invalid_argument("native actor lifecycle requires an Oblivion v12+ save");
         if (state.mVersion < 13 && !mDeathCounts.empty())
             throw std::invalid_argument("native death counts require an Oblivion v13+ save");
+        if (state.mVersion < 14 && !mActorBreath.empty())
+            throw std::invalid_argument("native actor breath requires an Oblivion v14+ save");
+        auto breath = mActorBreath;
         auto deathCounts = mDeathCounts;
         std::vector<ESM4::RuntimeActorLife> lives;
         lives.reserve(mActorLife.size());
@@ -1387,6 +1397,7 @@ namespace MWMechanics
         state.mPhysicalActions = std::move(actions);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
+        state.mNativeActorBreath.swap(breath);
         state.mPendingDeathEvents.swap(events);
         state.mNextDeathEvent = mNextDeathEvent;
     }
@@ -1458,6 +1469,7 @@ namespace MWMechanics
                 throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
         }
         auto deathCounts = state.mNativeDeathCounts;
+        auto breath = state.mNativeActorBreath;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> lives;
         for (const auto& life : state.mNativeActorLife)
             lives.emplace(life.mActor, life);
@@ -1467,6 +1479,7 @@ namespace MWMechanics
         mActorBases.swap(bases);
         mActorLife.swap(lives);
         mDeathCounts.swap(deathCounts);
+        mActorBreath.swap(breath);
         mPendingDeathEvents.swap(events);
         mNextDeathEvent = state.mNextDeathEvent;
     }

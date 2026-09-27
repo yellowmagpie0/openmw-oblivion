@@ -971,6 +971,7 @@ namespace
     TEST(ESM4RuntimeState, deathCountsRejectDuplicateAndNoncanonicalBinaryBases)
     {
         auto state = makeState();
+        state.mVersion = 13;
         const auto base = ESM::FormKey::content("actors.esm", 0x123);
         state.mNativeDeathCounts = {{base, 1}};
         const auto bytes = state.serializeBinary();
@@ -1009,5 +1010,87 @@ namespace
             EXPECT_EQ(restored.canonicalJson().find("native_death_counts"), std::string::npos);
         }
     }
+
+    TEST(ESM4RuntimeState, nativeBreathRoundTripsExactFloatsAndRejectsMalformedState)
+    {
+        auto state = makeState();
+        const auto& reference = state.mReferences.front();
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mKey;
+        values.mBase = reference.mBase;
+        state.mNativeActorValues.push_back(values);
+        for (float remaining : {0.f, -1.25f, .125f, 20.f, std::numeric_limits<float>::max()})
+        {
+            state.mNativeActorBreath = {{reference.mKey, remaining}};
+            const auto bytes = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+            EXPECT_EQ(restored, state);
+            EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+            EXPECT_NE(restored.canonicalJson().find("native_actor_breath"), std::string::npos);
+            auto truncated = bytes;
+            truncated.pop_back();
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        state.mVersion = 13;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mVersion = 14;
+        for (float invalid : {std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            state.mNativeActorBreath[reference.mKey] = invalid;
+            EXPECT_THROW(state.validate(), std::runtime_error);
+        }
+        state.mNativeActorBreath = {{ESM::FormKey::dynamic("missing", 1), 1}};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        state.mNativeActorBreath = {{{}, 1}};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, nativeBreathBinaryRejectsDuplicateNoncanonicalAndOversizedEntries)
+    {
+        auto state = makeState();
+        const auto& reference = state.mReferences.front();
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mKey;
+        values.mBase = reference.mBase;
+        state.mNativeActorValues.push_back(values);
+        state.mNativeActorBreath = {{reference.mKey, .125f}};
+        const auto bytes = state.serializeBinary();
+        const auto offset = bytes.size() - (4 + reference.mKey.serialize().size() + 4) - 4;
+        auto duplicate = bytes;
+        duplicate[offset] = 2;
+        duplicate.insert(duplicate.end(), bytes.begin() + offset + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(duplicate), std::runtime_error);
+        auto noncanonical = bytes;
+        noncanonical[offset + 8 + 8] = 'O';
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(noncanonical), std::runtime_error);
+        auto oversized = bytes;
+        std::fill_n(oversized.begin() + offset, 4, 0xff);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(oversized), std::runtime_error);
+        auto nonfinite = bytes;
+        const std::array<std::uint8_t, 4> infinity{0, 0, 0x80, 0x7f};
+        std::copy(infinity.begin(), infinity.end(), nonfinite.end() - 4);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(nonfinite), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, legacyVersionsLeaveNativeBreathUninitialized)
+    {
+        for (std::uint32_t version = 1; version < 14; ++version)
+        {
+            ESM4::RuntimeState state;
+            state.mVersion = version;
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            if (version >= 3)
+            {
+                state.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+                state.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            }
+            const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_TRUE(restored.mNativeActorBreath.empty());
+            EXPECT_EQ(restored.canonicalJson().find("native_actor_breath"), std::string::npos);
+        }
+    }
+
 
 }

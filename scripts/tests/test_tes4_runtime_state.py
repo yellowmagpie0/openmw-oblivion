@@ -708,6 +708,79 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             state["schema_version"] = version
             self.assertNotIn("native_death_counts", state_io.decode_payload(state_io.encode_payload(state)))
 
+    def test_native_breath_round_trip_and_strict_validation(self):
+        state = make_state()
+        state["schema_version"] = 14
+        state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": actor,
+            "base": "dynamic:player-base:0000000000000001", "owner": 0, "process": 1,
+            "values": [[0, None, None, None] for _ in range(72)]}]
+        for remaining in (0, -.125, .125, 20, 3.4028234663852886e38):
+            state["native_actor_breath"] = [{"actor": actor, "remaining": remaining}]
+            encoded = state_io.encode_payload(state)
+            restored = state_io.decode_payload(encoded)
+            self.assertEqual(restored["native_actor_breath"], state["native_actor_breath"])
+            self.assertEqual(state_io.encode_payload(restored), encoded)
+        for entry in ({"actor": actor, "remaining": float("nan")},
+                      {"actor": actor, "remaining": float("inf")},
+                      {"actor": actor, "remaining": -float("inf")},
+                      {"actor": actor, "remaining": 1e40},
+                      {"actor": actor, "remaining": True},
+                      {"actor": "dynamic:missing:0000000000000001", "remaining": 1},
+                      {"actor": "null", "remaining": 1},
+                      {"actor": actor}, {"actor": actor, "remaining": 1, "extra": 1}):
+            broken = copy.deepcopy(state)
+            broken["native_actor_breath"] = [entry]
+            with self.subTest(entry=entry), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        state["native_actor_breath"] = [{"actor": actor, "remaining": .125}] * 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state["native_actor_breath"].pop()
+        state["schema_version"] = 13
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_native_breath_rejects_corrupt_binary_tail(self):
+        state = make_state()
+        state["schema_version"] = 14
+        state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": actor,
+            "base": "dynamic:player-base:0000000000000001", "owner": 0, "process": 1,
+            "values": [[0, None, None, None] for _ in range(72)]}]
+        state["native_actor_breath"] = [{"actor": actor, "remaining": .125}]
+        payload = state_io.encode_payload(state)
+        entry = struct.pack("<I", len(actor)) + actor.encode() + struct.pack("<f", .125)
+        self.assertEqual(payload[-len(entry)-4:], struct.pack("<I", 1) + entry)
+        prefix = payload[:-len(entry)-4]
+        for tail in (struct.pack("<I", 2) + entry * 2,
+                     struct.pack("<I", 0xffffffff),
+                     struct.pack("<I", 1) + entry[:-4] + struct.pack("<f", float("inf")),
+                     struct.pack("<I", 1) + entry.replace(b"dynamic:", b"Dynamic:")):
+            with self.subTest(tail=tail), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(prefix + tail)
+        for count in range(1, len(entry) + 5):
+            with self.subTest(count=count), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-count])
+
+    def test_legacy_payloads_leave_native_breath_absent(self):
+        for version in range(1, 14):
+            state = make_state()
+            state["schema_version"] = version
+            state["ai_rng_state"] = 1
+            state["player"]["inventory"] = []
+            if version < 3:
+                for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(key)
+            if version < 2:
+                for key in ("script_event_sequence", "script_instances", "quests"):
+                    state.pop(key)
+            loaded = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("native_actor_breath", loaded)
+
+
 
 if __name__ == "__main__":
     unittest.main()

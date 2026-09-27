@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 13
+CURRENT_VERSION = 14
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -753,6 +753,19 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if process == 1:
                     native_float(low + maximum)
 
+    breath = check_collection(state.get("native_actor_breath", []), "native actor breath list")
+    if version < 14 and breath:
+        raise RuntimeStateError("TES4 native actor breath requires version 14")
+    breath_keys = set()
+    for entry in breath:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "remaining"}:
+            raise RuntimeStateError("Invalid TES4 native actor breath")
+        native_key(entry["actor"])
+        if entry["actor"] not in native_keys or entry["actor"] in breath_keys:
+            raise RuntimeStateError("Duplicate or dangling TES4 native actor breath")
+        native_float(entry["remaining"])
+        breath_keys.add(entry["actor"])
+
     death_counts = check_collection(state.get("native_death_counts", []), "native death count list")
     if version < 13 and death_counts:
         raise RuntimeStateError("TES4 native death counts require version 13")
@@ -1182,6 +1195,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_death_counts"] = [
             {"base": reader.string(), "count": reader.unpack("<H")} for _ in range(reader.count())
         ]
+    if version >= 14:
+        result["native_actor_breath"] = [
+            {"actor": reader.string(), "remaining": reader.unpack("<f")} for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1393,6 +1410,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in counts:
             writer.string(entry["base"])
             writer.pack("<H", entry["count"])
+    if version >= 14:
+        breath = sorted(state.get("native_actor_breath", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(breath))
+        for entry in breath:
+            writer.string(entry["actor"])
+            writer.pack("<f", entry["remaining"])
     return writer.finish()
 
 
@@ -1469,6 +1492,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("native_actor_bases", [])
     state.setdefault("native_actor_life", [])
     state.setdefault("native_death_counts", [])
+    state.setdefault("native_actor_breath", [])
     state.setdefault("next_death_event", 1)
     state.setdefault("pending_death_events", [])
     _upgrade_inventory(state["player"]["inventory"])
@@ -1504,6 +1528,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("native_actor_bases", [])
     result.setdefault("native_actor_life", [])
     result.setdefault("native_death_counts", [])
+    result.setdefault("native_actor_breath", [])
     result.setdefault("next_death_event", 1)
     result.setdefault("pending_death_events", [])
     _upgrade_inventory(result["player"]["inventory"])

@@ -460,3 +460,37 @@ TEST(OblivionCombat, deathCountsRequireWinningActorBasesAndClearWithoutInferring
     service.capture(after);
     EXPECT_TRUE(after.mNativeDeathCounts.empty());
 }
+
+TEST(OblivionCombatService, NativeBreathCaptureRestoreRejectAndClear)
+{
+    auto state = savedState();
+    ESM4::RuntimeActorValues values;
+    values.mActor = state.mPlayer.mReference;
+    values.mBase = ESM::FormKey::dynamic("player-base", 1);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    values.mPlayerFormValues = {{100, 30, 40, 0}};
+    state.mNativeActorValues.push_back(values);
+    state.mNativeActorBreath = {{values.mActor, .125f}};
+    MWMechanics::OblivionCombatService service;
+    EXPECT_FALSE(service.findActorBreath(values.mActor));
+    service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    EXPECT_EQ(service.findActorBreath(values.mActor), .125f);
+    auto captured = savedState();
+    service.capture(captured);
+    EXPECT_EQ(captured, state);
+    auto invalid = state;
+    invalid.mNativeActorValues.clear();
+    EXPECT_THROW(service.restore(invalid), std::runtime_error);
+    service.capture(captured);
+    EXPECT_EQ(captured, state);
+    auto old = savedState(13);
+    const auto before = old;
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    EXPECT_EQ(old, before);
+    service.clear();
+    EXPECT_FALSE(service.findActorBreath(values.mActor));
+    service.capture(captured);
+    EXPECT_TRUE(captured.mNativeActorBreath.empty());
+    service.restore(before);
+    EXPECT_FALSE(service.findActorBreath(values.mActor));
+}

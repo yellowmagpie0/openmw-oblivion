@@ -116,6 +116,7 @@ namespace MWMechanics
         std::uint64_t mNextDeathEvent = 1;
         std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
         std::map<ESM::FormKey, std::uint16_t> mDeathCounts;
+        std::map<ESM::FormKey, float> mActorBreath;
         struct PreparedLifeTransition
         {
             std::deque<ESM4::RuntimeActorDeathEvent> mEvents;
@@ -279,6 +280,7 @@ namespace MWMechanics
             std::int8_t knockedState, bool essential, const ESM4::EssentialRecoverySettings& settings,
             bool godMode = false);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
+        std::optional<float> findActorBreath(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain
         // remaining FIFO work and never replay the event being dispatched.
         std::optional<ESM4::RuntimeActorDeathEvent> takeNextDeathEvent();

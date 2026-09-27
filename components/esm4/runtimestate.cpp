@@ -562,6 +562,12 @@ namespace ESM4
                     throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
             }
         }
+        checkSize(mNativeActorBreath.size(), "native actor breath map");
+        if (mVersion < 14 && !mNativeActorBreath.empty())
+            throw std::runtime_error("TES4 native actor breath requires runtime-state version 14");
+        for (const auto& [actor, remaining] : mNativeActorBreath)
+            if (!nativeActors.contains(actor) || !std::isfinite(remaining))
+                throw std::runtime_error("Invalid or dangling TES4 native actor breath");
         checkSize(mNativeDeathCounts.size(), "native death count map");
         if (mVersion < 13 && !mNativeDeathCounts.empty())
             throw std::runtime_error("TES4 native death counts require runtime-state version 13");
@@ -1249,6 +1255,15 @@ namespace ESM4
                 writer.integer(count);
             }
         }
+        if (mVersion >= 14)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorBreath.size()));
+            for (const auto& [actor, remaining] : mNativeActorBreath)
+            {
+                writeKey(writer, actor);
+                writer.floating(remaining);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1678,6 +1693,23 @@ namespace ESM4
                 const auto value = reader.integer<std::uint16_t>();
                 if (!result.mNativeDeathCounts.emplace(std::move(base), value).second)
                     throw std::runtime_error("Duplicate TES4 native death count base");
+            }
+        }
+        if (result.mVersion >= 14)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                ESM::FormKey actor;
+                try { actor = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&)
+                { throw std::runtime_error("Invalid TES4 native breath actor"); }
+                if (actor.isNull() || actor.serialize() != text)
+                    throw std::runtime_error("Invalid or noncanonical TES4 native breath actor");
+                const float remaining = reader.float32();
+                if (!result.mNativeActorBreath.emplace(std::move(actor), remaining).second)
+                    throw std::runtime_error("Duplicate TES4 native breath actor");
             }
         }
         if (!reader.eof())
@@ -2132,6 +2164,19 @@ namespace ESM4
                 if (!first) stream << ',';
                 first = false;
                 stream << "{\"base\":\"" << escapeJson(base.serialize()) << "\",\"count\":" << count << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 14)
+        {
+            stream << ",\"native_actor_breath\":[";
+            bool first = true;
+            for (const auto& [actor, remaining] : mNativeActorBreath)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                       << "\",\"remaining\":" << std::setprecision(17) << remaining << '}';
             }
             stream << ']';
         }

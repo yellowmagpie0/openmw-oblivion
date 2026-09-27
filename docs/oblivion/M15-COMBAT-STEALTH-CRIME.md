@@ -4140,3 +4140,48 @@ three native water-height probes (.01, .7, .875 of actor height), swimming-state
 and aquatic-creature branches, and a Player god-mode breath reset. The current
 TES3 submerged/knockout predicate must not be silently reused as equivalent.
 S2/S3 and all later acceptance gates remain open.
+
+### S3 persistent native breath ownership (schema 14)
+
+After `13fb01a23e`, runtime schema14 adds a native actor-keyed float breath map,
+including unloaded references. C++ binary/JSON and Python readers/writers agree;
+service capture/restore prepares the map before publication and clear removes
+it. Entries require existing native actor values and canonical identities.
+Duplicate/dangling identities, nonfinite values, oversized/truncated payloads
+and writes into pre14 payloads are rejected. Finite negative timers remain valid
+because modded negative maxima can produce them. Versions1–13 leave the map
+absent; process adoption is responsible for initialization. No frame writer or
+automatic actor registration is enabled by this persistence change.
+
+`S3/native-breath-state-02` passes **175 Python tests, all 1,917 component tests,
+and all 615 engine tests**. `S3/native-breath-state-sanitized-01` passes **615
+engine tests with ASan/UBSan/leak detection** and **395 ESM4 component tests with
+ASan/UBSan** (component mode disables leaks). Exact C++ inventories, zero skips
+or findings. The retained `-01` Python attempt exposed two new fixtures missing
+the required nonzero AI RNG seed; corrected fixtures pass. The existing v13
+death-counter corruption test explicitly retains version13 so its tail offsets
+continue to exercise the intended bytes. Implementation fingerprint:
+`3e16df303d193deb1b2e4afac872eda913acd2a69ef8c84655e1a4f9d184c901`.
+Regular engine-test hash:
+`9a4e320c6eee1c480eedd88d1f0775b42d77f6d1d7a6846b01a2f993a9503af9`;
+sanitized engine-test hash:
+`05202a58375e860ce9bb38aa976e4a71aa8f88aa7f525fad6c0c302931e21fc2`.
+
+Actual-engine `S3/native-breath-state-{runtime,continuation}-01` loads and resaves
+a .125 timer exactly, then repeats in a fresh process. Independent decoding
+checks breath, values, base overrides, life, counts and event fields; source and
+pristine hashes are verified. Both use the existing read-only Health-command
+continuation manifest; its ordinary F5 action exercises world save capture.
+Actual executable SHA-256:
+`d46aa355d292e28d1ee46bbf6eeb9b77c58ea84ff593b0685311d2626fb24cb9`.
+Both captures were inspected: room/HUD, no error dialog. The runs are silent
+persistence checks and do not prove drowning gameplay or audio. Preparation and
+verification scripts remain under `S3/authority-draft/`; per-run input/state
+verification records retain all hashes.
+
+Next: native creature capability flags, verified water eligibility and the
+frame writer/UI. The original eligibility probe now passes4,096 complete paths
+without function stubs; pure aquatic creatures consume breath out of deep water,
+ordinary actors only while deeply submerged and swimming, Player god mode resets
+the timer. Original process constructor/reset stores20, not the shared NPC -1
+sentinel. S2/S3 and S4–S14 remain open.
