@@ -1322,7 +1322,10 @@ TEST(ESM4PhysicalCombat, EssentialRecoveryValidatesAndResolvesNativeSettings)
         EXPECT_THROW(ESM4::essentialRecoveryHealth(100, 0, {bad, .3f}), std::invalid_argument);
         EXPECT_THROW(ESM4::essentialRecoveryHealth(100, 0, {10, bad}), std::invalid_argument);
     }
-    EXPECT_THROW(ESM4::essentialRecoveryHealth(-1, 0, settings), std::invalid_argument);
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(-1, 0, settings).mTarget, -.3f);
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(-100, -50, settings).mAdjustment, 0x1.3ffffep+4f);
+    EXPECT_EQ(ESM4::essentialRecoveryHealth(std::numeric_limits<std::int32_t>::min(), 0, {10, 1}).mTarget,
+        -2147483648.f);
     EXPECT_THROW(ESM4::essentialRecoveryHealth(100, std::numeric_limits<float>::infinity(), settings), std::invalid_argument);
     EXPECT_THROW(ESM4::essentialRecoveryHealth(100, std::numeric_limits<float>::quiet_NaN(), settings), std::invalid_argument);
     EXPECT_THROW(ESM4::essentialRecoveryHealth(100, 0, {10, std::numeric_limits<float>::max()}), std::invalid_argument);

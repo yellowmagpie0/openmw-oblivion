@@ -468,6 +468,49 @@ namespace
         EXPECT_EQ(restored.findActorLife(values.mActor)->mRecoveryRemaining, 10);
         EXPECT_TRUE(restored.transitionPlayerLife(player, alive));
         restored.capture(saved);
+        service.restore(saved);
+        service.setPlayerBaseValue(player, 8, 1, {});
+        EXPECT_EQ(stats.getHealth().getCurrent(), 1);
+        EXPECT_FALSE(service.reactPlayerHealth(player, {}, false, {}));
+        service.changePlayerValue(player, 8, ESM4::ActorValueModifier::Damage, -0x1p-24f, {});
+        EXPECT_LT(stats.getHealth().getCurrent(), 1);
+        const auto beforeReaction = *service.findActorValues(values.mActor);
+        EXPECT_THROW(service.reactPlayerHealth(player, {}, true, {-1, .3f}), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), beforeReaction);
+        EXPECT_EQ(*service.findActorLife(values.mActor), alive);
+        EXPECT_TRUE(service.reactPlayerHealth(player, {}, true, {2.5f, .3f}));
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_TRUE(stats.getKnockedDown());
+        EXPECT_FLOAT_EQ(stats.getHealth().getCurrent(), .3f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mRecoveryRemaining, 2.5f);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        service.changePlayerValue(player, 8, ESM4::ActorValueModifier::Damage, -1, {});
+        EXPECT_FALSE(service.reactPlayerHealth(player, {}, true, {10, 1}));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mRecoveryRemaining, 2.5f);
+        EXPECT_TRUE(service.transitionPlayerLife(player, alive));
+        EXPECT_TRUE(service.reactPlayerHealth(player, values.mActor, false, {}));
+        EXPECT_TRUE(stats.isDead());
+        EXPECT_LT(stats.getHealth().getCurrent(), 0);
+        EXPECT_FALSE(service.reactPlayerHealth(player, {}, false, {}));
+        const auto reactionEvent = service.takeNextDeathEvent();
+        ASSERT_TRUE(reactionEvent);
+        EXPECT_EQ(reactionEvent->mId, 3);
+        EXPECT_EQ(reactionEvent->mKiller, values.mActor);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        EXPECT_TRUE(service.transitionPlayerLife(player, alive));
+        service.publishPlayerValues(player, saved.mNativeActorValues.front(), {});
+        service.changePlayerValue(player, 8, ESM4::ActorValueModifier::Script, -20, {});
+        EXPECT_EQ(stats.getHealth().getCurrent(), -19);
+        EXPECT_TRUE(service.reactPlayerHealth(player, {}, true, {10, .3f}));
+        // Player positive Damage is capped at zero, so a Script deficit is
+        // not erased by assigning the desired recovery target to current.
+        EXPECT_EQ(stats.getHealth().getCurrent(), -19);
+        EXPECT_TRUE(stats.getKnockedDown());
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        // Return the shared view to the saved alive state before the exhausted
+        // namespace rollback check on the independent restored authority.
+        restored.publishPlayerValues(player, *restored.findActorValues(values.mActor), {});
         saved.mNextDeathEvent = std::numeric_limits<std::uint64_t>::max();
         restored.restore(saved);
         EXPECT_THROW(restored.transitionPlayerLife(player, dead), std::overflow_error);
@@ -1077,6 +1120,39 @@ namespace
         restored.publishNonPlayerValues(newPtr, low);
         EXPECT_EQ(restored.getNonPlayerValue(newPtr, 9), 81.5f);
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getModified(), 50);
+        EXPECT_TRUE(restored.transitionNonPlayerLife(newPtr, aliveLife));
+        const auto beforeReaction = *restored.findActorValues(values.mActor);
+        EXPECT_THROW(restored.reactNonPlayerHealth(newPtr, {}, true,
+            {10, std::numeric_limits<float>::infinity()}), std::invalid_argument);
+        EXPECT_EQ(*restored.findActorValues(values.mActor), beforeReaction);
+        EXPECT_FALSE(newPtr.getClass().getCreatureStats(newPtr).isDead());
+        EXPECT_TRUE(restored.reactNonPlayerHealth(newPtr, saved.mPlayer.mReference, true, {3.125f, .3f}));
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getHealth().getCurrent(), 30);
+        EXPECT_TRUE(newPtr.getClass().getCreatureStats(newPtr).getKnockedDown());
+        EXPECT_EQ(restored.findActorLife(values.mActor)->mRecoveryRemaining, 3.125f);
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+        restored.changeNonPlayerValue(newPtr, 8, ESM4::ActorValueModifier::Damage, -31);
+        EXPECT_FALSE(restored.reactNonPlayerHealth(newPtr, {}, true, {10, 1}));
+        EXPECT_TRUE(restored.transitionNonPlayerLife(newPtr, aliveLife));
+        EXPECT_TRUE(restored.reactNonPlayerHealth(newPtr, saved.mPlayer.mReference, false, {}));
+        EXPECT_TRUE(newPtr.getClass().getCreatureStats(newPtr).isDead());
+        EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getHealth().getCurrent(), -1);
+        const auto reactionEvent = restored.takeNextDeathEvent();
+        ASSERT_TRUE(reactionEvent);
+        EXPECT_EQ(reactionEvent->mId, 2);
+        EXPECT_EQ(reactionEvent->mKiller, saved.mPlayer.mReference);
+        EXPECT_TRUE(restored.transitionNonPlayerLife(newPtr, aliveLife));
+        auto scriptDeficit = *restored.findActorValues(values.mActor);
+        scriptDeficit.mValues[8] = {100, {std::nullopt, -200, std::nullopt}};
+        restored.publishNonPlayerValues(newPtr, scriptDeficit);
+        EXPECT_EQ(restored.getNonPlayerValue(newPtr, 8), -100);
+        EXPECT_TRUE(restored.reactNonPlayerHealth(newPtr, {}, true, {10, .3f}));
+        // Unlike the player array, an absent nonplayer sparse Damage entry
+        // permits the initial positive value. Keep that native distinction.
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mValues[8].mModifiers[2], 130);
+        EXPECT_EQ(restored.getNonPlayerValue(newPtr, 8), 30);
+
+
     }
 
     TEST_F(OblivionActorStatsTest, sharedNpcBaseWritesReachResidentsUnloadedAndFutureActorsAtomically)

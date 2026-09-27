@@ -935,6 +935,64 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::reactNonPlayerHealth(const MWWorld::Ptr& actor,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        auto candidate = nonPlayerValues(actor);
+        const auto found = mActorLife.find(candidate.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native Health reaction requires initialized lifecycle");
+        const auto* base = findActorBase(candidate.mBase);
+        const float current = nonPlayerFloat(candidate, 8, base);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive || current >= 1.f)
+            return false;
+        auto life = found->second;
+        life.mKiller = killer;
+        life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+        if (!essential)
+            return transitionNonPlayerLife(actor, std::move(life));
+        const auto recovery = ESM4::essentialRecoveryHealth(
+            ESM4::combatBaseValue(candidate.mValues[8].mBase), current, settings);
+        life.mRecoveryRemaining = settings.mDelay;
+        candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+            ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
+        candidate.validate();
+        PreparedNonPlayerView prepared(actor, candidate, base, &life);
+        std::swap(mActorValues.at(candidate.mActor), candidate);
+        std::swap(found->second, life);
+        prepared.commit();
+        return true;
+    }
+
+    bool OblivionCombatService::reactPlayerHealth(MWWorld::Player& player,
+        const ESM::FormKey& killer, bool essential, const ESM4::EssentialRecoverySettings& settings)
+    {
+        auto candidate = playerValues();
+        const auto found = mActorLife.find(candidate.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native Health reaction requires initialized lifecycle");
+        const float current = ESM4::composeActorValue(candidate.mValues[8], candidate.mOwner, candidate.mProcess);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive || current >= 1.f)
+            return false;
+        auto life = found->second;
+        life.mKiller = killer;
+        life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+        if (!essential)
+            return transitionPlayerLife(player, std::move(life));
+        const auto recovery = ESM4::essentialRecoveryHealth(
+            ESM4::combatBaseValue(candidate.mValues[8].mBase), current, settings);
+        life.mRecoveryRemaining = settings.mDelay;
+        candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+            ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
+        candidate.validate();
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(candidate, nullptr, &life));
+        std::swap(mActorValues.at(candidate.mActor), candidate);
+        std::swap(found->second, life);
+        prepared.commit();
+        return true;
+    }
+
     const ESM4::RuntimeActorLife* OblivionCombatService::findActorLife(const ESM::FormKey& actor) const
     {
         const auto found = mActorLife.find(actor);

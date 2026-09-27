@@ -219,8 +219,6 @@ namespace ESM4
         const EssentialRecoverySettings& settings)
     {
         validateEssentialRecoverySettings(settings);
-        if (baseHealth < 0)
-            throw std::invalid_argument("negative native essential base health");
         finite(currentHealth);
         const float target = rounded(double(static_cast<float>(baseHealth)) * settings.mHealthFraction);
         return {target, rounded(double(target) - currentHealth)};

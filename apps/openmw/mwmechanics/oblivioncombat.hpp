@@ -215,6 +215,14 @@ namespace MWMechanics
         // event commit together; same-phase requests preserve the first cause.
         bool transitionNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life);
         bool transitionPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life);
+        // Negative-Health callback entry, after the value writer commits.
+        // Caller supplies resolved essential eligibility and validated source.
+        // Alive Health below one enters death or essential unconsciousness;
+        // essential Health restoration and lifecycle views commit together.
+        bool reactNonPlayerHealth(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
+            const ESM4::EssentialRecoverySettings& settings);
+        bool reactPlayerHealth(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
+            const ESM4::EssentialRecoverySettings& settings);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain
         // remaining FIFO work and never replay the event being dispatched.

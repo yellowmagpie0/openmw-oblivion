@@ -3333,3 +3333,42 @@ tail bookkeeping or terminal-death branches. No full physical transition is
 claimed. Hash identity is the original executable recorded above. Ignored
 script/corpus: `S2/oracle-emulator/essential-entry-transition.py` and its table;
 log: `S3/authority-draft/essential-entry-transition-01.log`.
+
+## S3 negative-Health callback integration
+
+Initialized Player and nonplayer authority now expose Health reaction entries.
+Only Alive actors with current Health strictly below 1 transition. Ordinary
+death retains the actual Health value and commits one attributed event through
+the existing lifecycle transaction. Essential entry prepares the native Damage
+adjustment, fractional recovery timer and unconscious phase before committing
+values, authority and shared views together. Invalid settings leave them intact.
+Repeated reactions on dead or essential actors preserve their existing cause and
+timer. The caller still resolves essential eligibility/source binding and invokes
+the callback after a negative Health writer; world routing is not yet active.
+
+Recovery uses the native Damage writer rather than assigning its target to
+current Health. Tests demonstrate the Player cap preserving a Script-caused
+deficit and the nonplayer absent sparse Damage entry accepting a positive initial
+value. Negative signed base Health is now accepted by the recovery formula,
+matching the original SetAV-reachable domain. The one-float-step-below-20 result
+for base -100/current -50 is asserted exactly, not rounded to an ideal decimal.
+
+Expanded original `006005F0` probe: **7,680** branch cases and **1,200** exact
+float-bit comparisons of captured Health adjustments against production C++.
+Same boundaries as the preceding entry: process/settings getters and cleanup
+are fixtures, Damage storage is captured, UI/tail/terminal physics are outside
+the probe. Ignored corpus and comparison live in
+`S2/oracle-emulator/essential-entry-transition-table.json` and
+`essential-entry-comparison.json`; logs `S3/authority-draft/essential-entry-transition-03.log`.
+
+`S3/native-health-reactions-02` passes **1,902 component /380 ASan+UBSan /593
+engine tests**, fingerprint
+`92a4ffd737dcfc1780e1a0b17a60c612fbb3ad42e067bbd4957d9f5268f6e026`.
+Added channel-ownership cases pass the full **593 engine tests** in
+`S3/native-health-reactions-04`, fingerprint
+`6663d8cc3295dc8c5f1e969bcc9bd3d87efd831f2d4b367304f040d73f2cce49`.
+Engine SHA-256:
+`60b2c3cc1faa5f8117aba91a5192b6fcead84a33809868a58c3a82e3a2954b8f`.
+Attempt01 retains the incorrect ideal-decimal expected value; attempt03 retains
+a fixture expectation that overlooked its earlier shared base override. Original
+instructions and the existing authority contract determined both corrections.
