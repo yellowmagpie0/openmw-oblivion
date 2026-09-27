@@ -246,6 +246,7 @@ add_component_dir (esm4
     combatsettings
     physicalcombat
     actorstats
+    actorclock
     actorvalues
     actionledger
     projectilerules

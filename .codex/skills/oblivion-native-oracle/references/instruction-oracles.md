@@ -159,3 +159,15 @@ returns and the Player list result; it does not prove list/pursuit maintenance.
 Use native archive menus to check UI actions before adapting shared dialogs:
 original sleep_wait_menu.xml has Rest/Wait and Cancel, no Until Healed button.
 Its prompt/hour traits come from menus/strings.xml, not TES3 sRestMenu GMSTs.
+
+## Actor manager clock
+
+For the pinned executable, `673B10` stores the manager time at B3BCF0, resets
+strictly above100000 or nonfinite values to+0, and preserves finite negatives
+and signed zero. The full setter probe `manager-clock-setter.py` uses actual
+CRT checks with no stubs. All Player/Character/Creature +368 virtuals resolve
+to5FAAE0; `actor-clock-delta.py` runs its clock prefix to5FAB4A. Reset/negative
+previous time produces zero elapsed except new time strictly inside(0,.3f).
+The threshold is binary32; equality is excluded. Keep prefix arithmetic evidence
+separate from full scheduler/resource execution. `actor-clock-compare.cpp` and
+its186-row recorded TSV provide exact-bit comparison examples.

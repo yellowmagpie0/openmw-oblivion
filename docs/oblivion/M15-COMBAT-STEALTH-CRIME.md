@@ -5291,3 +5291,21 @@ detection and halting UBSan. Both record source fingerprint
 `40f085f253cdd641fe8f6822c5aac0fcf9a74aacd868df1b03e7a0c7780ee03d`
 on parent `c76fc15dc2`. This verifies load-order classification, not actual
 pursuit/door traversal; those remain part of S7's gameplay gate.
+
+### S2/S3 native manager and per-actor clock arithmetic
+
+`components/esm4/actorclock` models the original manager setter's strict100000
+reset/nonfinite handling and the common actor update's elapsed-time prefix.
+The prefix preserves the binary32 .3 reset boundary and signed-zero behavior;
+nonfinite per-actor timestamps are rejected as invalid input. Provenance records
+actual virtual targets, instruction bounds, CRT execution and partial-path limits.
+All186 recorded original-instruction outputs match C++ bit-for-bit.
+
+Three added component cases cover manager bit patterns, rewind/initialization
+boundaries, ordinary subtraction and invalid per-actor inputs. Full regular
+`S2/actor-clock-01` and instrumented `actor-clock-sanitized-01` each pass1940
+component cases with complete inventory/XML and no skips. The latter enables
+ASan leak detection and halting UBSan. Source fingerprint
+`f8d69b0074d45bd14a47004e34f5365e4b023b03b7954e1f2ec41403bb4b3d81`
+on parent `5977e7ce71`. This is the verified arithmetic prerequisite; world clock
+advancement, actor scheduling and persistent timestamps remain to be integrated.
