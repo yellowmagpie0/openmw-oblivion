@@ -257,6 +257,8 @@ namespace MWWorld
 
     bool Player::isInCombat()
     {
+        if (const auto native = MWBase::Environment::get().getWorld()->isOblivionInCombat(getPlayer()))
+            return *native;
         return MWBase::Environment::get().getMechanicsManager()->getActorsFighting(getPlayer()).size() != 0;
     }
 

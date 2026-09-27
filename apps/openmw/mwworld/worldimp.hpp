@@ -244,6 +244,8 @@ namespace MWWorld
         std::optional<std::pair<float, float>> getOblivionBreath(const Ptr& actor) const override;
         bool updateOblivionFrameResources(const Ptr& actor, float duration, bool running) override;
         bool spendOblivionJumpFatigue(const Ptr& actor) override;
+        std::optional<bool> isOblivionInCombat(const Ptr& actor) const override;
+        std::optional<bool> isOblivionInCombatWith(const Ptr& actor, const Ptr& opponent) const override;
 
         // Bounded native interaction surface for the M5 prison slice.
         void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});

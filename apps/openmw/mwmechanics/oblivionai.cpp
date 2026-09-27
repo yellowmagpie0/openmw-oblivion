@@ -8,6 +8,7 @@
   later version.
 */
 #include "oblivionai.hpp"
+#include "oblivioncombat.hpp"
 #include "oblivionaidestination.hpp"
 #include "oblivionaigait.hpp"
 
@@ -1243,9 +1244,8 @@ namespace MWMechanics
             }
             if (function == "IsInCombat")
             {
-                if (const MWWorld::Ptr loaded = loadedPtrFor(subjectKey); !loaded.isEmpty())
-                    return value(loaded.getClass().getCreatureStats(loaded).getAiSequence().isInCombat() ? 1.0 : 0.0);
-                return value(0.0);
+                const auto* combat = mWorld.getOblivionCombatService();
+                return value(combat && combat->isInCombat(ESM4::runtimeReferenceKey(subjectKey)) ? 1.0 : 0.0);
             }
             if (function == "GetPCInFaction")
             {
@@ -1741,7 +1741,10 @@ namespace MWMechanics
             if (function == "IsRunning")
                 return value(nativeStats().getMovementFlag(CreatureStats::Flag_Run) ? 1.0 : 0.0);
             if (function == "IsInCombat")
-                return value(nativeStats().getAiSequence().isInCombat() ? 1.0 : 0.0);
+            {
+                const auto* combat = mWorld.getOblivionCombatService();
+                return value(combat && combat->isInCombat(actorKey(subjectPtr)) ? 1.0 : 0.0);
+            }
             if (function == "IsRaining")
                 return value((mWorld.getCurrentWeather().mNativeClassification & ESM4::Weather::Classification_Rainy)
                         != 0

@@ -4601,3 +4601,81 @@ explicitly adopt actors. Native public-query integration remains next:
 `native-combat-query-red-01` retains the actual failure where IsInCombat returns0
 for both paired actors and the original player-reference alias. Whole-world
 failed-load preservation, rest, Lua writers and S2/S3/later stage gates remain open.
+
+### Native combat query adapters
+
+World now exposes optional native combat queries: absence selects the legacy
+profile; native false never falls through to AiSequence. Player combat status,
+nearby fighting actors, native ObScript IsInCombat, and loaded/unloaded AI
+condition contexts read the same service. The original player-reference alias
+resolves to the runtime player. Nearby native opponents bypass TES3 disposition
+and Fight calculations. Unengaged hostility/pursuit, original package gates and
+full native rest-range policy remain S7/S10 work; the shared nearby list currently
+uses the existing actor processing range. This is membership integration, not
+complete native enemy classification or autonomous combat.
+
+`S3/native-combat-queries-02` passes all629 engine and180 Python tests;
+`native-combat-queries-sanitized-03` passes all629 engine tests with ASan, UBSan
+and leak checks, exact inventories/no skips. Source fingerprint:
+`eae5b63990c6c8cfaae09531e17bb92643db3b47f3948016e20b66b814426bb6`.
+Regular engine SHA `4b5f34f8f17610f5cfd27ecfe25cab1a17c706ce4d7148fe38c484faca87fdef`;
+sanitized engine SHA `1a83c9f15a448fa9987b651515669c532db2691e46c3ff87c0917fe3f5ba6d4d`.
+The first regular build caught an auto-pointer deduction error against
+Environment's NotNullPtr; corrected before passing. Sanitizer build01 was stopped
+for that correction, build02 for increased parallelism after the regular build
+finished. They are retained, not counted as passes.
+
+Actual courses use the dry lifecycle fixture and explicit ModAV Health0 adoption.
+The three editable `oblivion_m15_native_combat_query_{paired,unpaired,terminal}.json`
+manifests and two event lists are committed. Independent state checks compare
+binary save state with C++ report output, identity hashes, lifecycle and action
+namespace. Evidence directories under S3:
+
+- `native-combat-query-paired-01` / `unpaired-01`: NPC, player and player alias
+  report1/0 respectively; membership persists exactly. Save SHAs
+  `f3e497725ab349b81ad47204ae4b8d307034e6154f0465a157e8578aeab6aff0` /
+  `31b635191c3125c31470baca1e61bc04ebade45524cd3a40f6f5a48155f2e385`.
+- `native-combat-query-continuation-01`: prior paired save starts a fresh process,
+  all three queries still1; saveSHA
+  `147c41ab5e319f256363405ab5ce6ff9dc7a3960dd93b6ef7a77ab8f3f39d87f`.
+- `native-combat-query-terminal-02`: one NPC Kill callback, dead NPC/alive player,
+  both memberships removed and all three queries0; saveSHA
+  `86aca8ae6e8385b101ebccdcc2679b36f4042383b0fb330e6e70f05efa8938dd`.
+  Earlier terminal01 correctly rejected because the inherited pristine had
+  next_death_event=UINT64_MAX. Its failed scenario/query1 results remain; the
+  successful fixture changes only that counter to1 with empty queue/counts.
+- `native-combat-query-paired-sanitized-01` / `terminal-sanitized-01`: same actual
+  cases pass with no sanitizer findings, graphical leak checks disabled.
+  Save SHAs `1a7cd679d1b1e986cf01d68643f6b55b43d24efeeb8f091408d516f39ca54231` /
+  `306a16789aa5313e901f5f6466682fc4507bd7b81d565d757fc0cc96bb538796`.
+- `native-combat-query-ai-paired-03` / `ai-unpaired-03`: actual EvaluatePackage
+  chooses a stationary Wander package guarded by IsInCombat==1, or its
+  unconditional fallback. Resulting package identity persists; it is not
+  injected in setup. Diagnostic draft builder/manifests live in authority-draft;
+  pluginSHA `5622279f714bebb1ab4484330c895337c8c6d85cbaf7f2da7f469d4311d61938`.
+  Retained earlier attempts caught a content fingerprint mismatch, an Xvfb
+  startup failure, and a stale unselected package without explicit evaluation.
+  These cases prove loaded condition evaluation; unloaded runtime acceptance
+  and autonomous selection remain open.
+- `native-combat-rest-refusal-01` / `rest-available-01`: normal T input is blocked
+  with the pair and opens the dialog after removing only membership from the
+  same full-resource source. No native-to-TES3 cast occurs. Inspected captures
+  show no dialog versus a rest dialog; no readable refusal notification was
+  captured. This is not full rest/UI acceptance.
+- `native-combat-query-morrowind-01`: normal Hearth Heal input changes Health
+  25->80.8487015 and Magicka100->87, with unchanged maxima/no native save markers.
+  Before/after SHAs `166a0a27b4382fb5738b0d7803246fb2baac9cd5a4a742714aa01b4558287a4c` /
+  `6dda4480a5f51bcea731573a76c0d281546bedca50687738bbf1149b3bac2655`.
+
+All successful runtime captures inspected: native wall/HUD, rest dialog, and
+Morrowind rocks/casting hands/HUD. Silent cases do not prove audio or attack
+animation. Automatic publication stays off. No stage gate changes.
+
+The next failures are `native-rest-dialog-red-02` (Until Healed) and
+`native-one-hour-rest-red-01` (normal click on Rest). Both now reach the legacy
+`fRestMagicMult` lookup and fail without healing: both actors retain Health25 /
+Stunted Magicka20. No rest hour is advanced. Captures also expose unresolved
+sRestMenu2/3 captions. The pinned original sleep_wait_menu.xml has Rest/Wait and
+Cancel buttons, no Until Healed action; its asset provenance is recorded in the
+native-rule document. Next: native rest UI/caller policy and resource dispatch,
+then remaining Lua writers/activation and the other open stage gates.

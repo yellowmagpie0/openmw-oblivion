@@ -2417,6 +2417,7 @@ namespace MWMechanics
 
     std::vector<MWWorld::Ptr> Actors::getActorsFighting(const MWWorld::Ptr& actor) const
     {
+        const auto world = MWBase::Environment::get().getWorld();
         std::vector<MWWorld::Ptr> list;
         std::vector<MWWorld::Ptr> neighbors;
         const osg::Vec3f position(actor.getRefData().getPosition().asVec3());
@@ -2425,6 +2426,13 @@ namespace MWMechanics
         {
             if (neighbor == actor)
                 continue;
+
+            if (const auto native = world->isOblivionInCombatWith(neighbor, actor))
+            {
+                if (*native)
+                    list.push_back(neighbor);
+                continue;
+            }
 
             const CreatureStats& stats = neighbor.getClass().getCreatureStats(neighbor);
             if (stats.isDead())
@@ -2438,6 +2446,10 @@ namespace MWMechanics
 
     std::vector<MWWorld::Ptr> Actors::getEnemiesNearby(const MWWorld::Ptr& actor) const
     {
+        // Native engagement owns active opponents. Unengaged hostility belongs
+        // to native AI; the TES3 Fight/disposition calculation cannot read NPC_4.
+        if (MWBase::Environment::get().getWorld()->isOblivionInCombat(actor).has_value())
+            return getActorsFighting(actor);
         std::vector<MWWorld::Ptr> list;
         std::vector<MWWorld::Ptr> neighbors;
         osg::Vec3f position(actor.getRefData().getPosition().asVec3());

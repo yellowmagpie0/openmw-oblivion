@@ -1,0 +1,7 @@
+at 1 command content:m15-lifecycle.esm:900101 modav Health 0
+at 1 command dynamic:player:0000000000000001 modav Health 0
+at 1 command content:m15-lifecycle.esm:900101 getav Health
+at 1 command content:m15-lifecycle.esm:900101 getdead
+at 1 command content:m15-lifecycle.esm:900101 isincombat
+at 1 command dynamic:player:0000000000000001 isincombat
+at 1 command content:oblivion.esm:000014 isincombat

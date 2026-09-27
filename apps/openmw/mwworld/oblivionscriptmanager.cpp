@@ -1814,7 +1814,12 @@ namespace MWWorld
                                                   : ObScript::Value(std::int64_t(visible));
         }
 
-        if (name == "isincombat" || name == "isspelltarget" || name == "ispcamurderer")
+        if (name == "isincombat")
+        {
+            const auto* combat = mWorld.getOblivionCombatService();
+            return std::int64_t(combat && combat->isInCombat(ESM4::runtimeReferenceKey(objectKey())));
+        }
+        if (name == "isspelltarget" || name == "ispcamurderer")
             return std::int64_t(0);
         if (name == "issneaking")
         {

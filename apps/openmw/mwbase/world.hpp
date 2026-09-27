@@ -142,6 +142,11 @@ namespace MWBase
         virtual std::optional<std::pair<float, float>> getOblivionBreath(const MWWorld::Ptr& actor) const
         { return std::nullopt; }
         virtual bool spendOblivionJumpFatigue(const MWWorld::Ptr& actor) { return false; }
+        // Nullopt selects the legacy authority. Native false must not fall
+        // through to AiSequence or TES3 aggression/disposition rules.
+        virtual std::optional<bool> isOblivionInCombat(const MWWorld::Ptr& actor) const { return std::nullopt; }
+        virtual std::optional<bool> isOblivionInCombatWith(
+            const MWWorld::Ptr& actor, const MWWorld::Ptr& opponent) const { return std::nullopt; }
         ///< \param seed The seed used when starting a new game.
 
         virtual void startNewGame(bool bypass) = 0;

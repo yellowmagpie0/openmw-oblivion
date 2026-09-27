@@ -2988,3 +2988,40 @@ actor tables are Creature00A710F4, Character00A6FC9C and Player00A73A0C, whereas
 00605770; +368 resolves to005FAAE0. The earlier active-item getter findings
 remain valid for the MagicCaster subobjects. Original executable SHA is the
 same pinned `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+### Combat query dispatch and original rest menu
+
+For the pinned executable SHA
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+command-table entry00B0F5E8 identifies IsInCombat opcode1121, command00505FC0
+and condition004F8F30. Both use the same condition helper. It checks actor
+virtual+190 then calls+334 with true. Creature/Character actor tables dispatch
++334 to005E6110; Player dispatches to006FE080 (false), but the condition helper
+then explicitly replaces the player's result with006605A0(false). Do not infer
+player script behavior from its virtual alone.
+
+005E6110 requires a process and process+8 package type0C/0D. Its true argument
+adds an actor+380/process+36C gate. The independent ignored
+`S3/authority-draft/combat-query-dispatch.py` executes8,192 virtual combinations,
+224 command/condition combinations, two null-subject and four Player cases.
+All pass. Actor+380 and process+36C returns are boundary inputs; the player's
+006605A0 list result is supplied0/1. Actual dispatch, package checks, actor
+predicate, Player virtual, output double storage and balanced return stacks run.
+Console diagnostics are disabled. This establishes dispatch, not full package /
+pursuit/list-maintenance equivalence to the new membership service.
+
+Bounded inspection of006605A0 shows it prunes a Player+5AC list, checks opponent
+IsInCombat(false), and has a separate005E6CD0/distance branch (constant1500).
+Those paths still need full oracle/runtime coverage before closing native
+hostility and pursuit gates. Tables/disassembly remain ignored under
+`S3/authority-draft/combat-query-*`; no proprietary bytes are committed.
+
+Original menu audit: `Oblivion - Misc.bsa` SHA
+`a84290011a4ed5a1ca8d8cff3822eda67bbacd47c750744b7d786cc0a5527ca5`;
+`menus/sleep_wait_menu.xml` SHA
+`563583496adc3ca916b1f3dd03481a2e311b417518f752de9ae98d7230348b4b`.
+Its two action buttons are sleep/wait and cancel. The only mode switch is
+sleeping versus waiting; there is no Until Healed action. Prompt/hour text
+comes from menus/strings.xml traits _restquestion/_waitquestion/_hour/_s.
+This is structural original-asset evidence, not acceptance of this fork's
+currently incomplete rest dialog. Extracted licensed XML stays ignored.

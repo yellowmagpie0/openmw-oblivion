@@ -1448,6 +1448,30 @@ namespace MWWorld
         return true;
     }
 
+    std::optional<bool> World::isOblivionInCombat(const Ptr& actor) const
+    {
+        if (!mOblivionCombat)
+            return std::nullopt;
+        if (actor.isEmpty())
+            return false;
+        const auto key = actor == mPlayer->getPlayer()
+            ? ESM::FormKey::dynamic("player", 1) : ESM4::runtimeReferenceKey(actor.getCellRef().getFormKey());
+        return mOblivionCombat->isInCombat(key);
+    }
+
+    std::optional<bool> World::isOblivionInCombatWith(const Ptr& actor, const Ptr& opponent) const
+    {
+        if (!mOblivionCombat)
+            return std::nullopt;
+        if (actor.isEmpty() || opponent.isEmpty())
+            return false;
+        const auto key = [&](const Ptr& ptr) {
+            return ptr == mPlayer->getPlayer() ? ESM::FormKey::dynamic("player", 1)
+                : ESM4::runtimeReferenceKey(ptr.getCellRef().getFormKey());
+        };
+        return mOblivionCombat->isInCombatWith(key(actor), key(opponent));
+    }
+
     float World::getOblivionPlayerInventoryWeight() const
     {
         float result = 0.f;
