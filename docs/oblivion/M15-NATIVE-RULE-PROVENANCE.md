@@ -2725,3 +2725,20 @@ stubbed. Inspected jail caller `00670700` sets this byte false before its
 hour loop; the hourly completion resets it true. This does not yet verify a
 complete jail/effect lifecycle or authorize sharing ordinary restoration with
 jail time.
+
+`S2/oracle-emulator/resource-authority.py` additionally executes **3,600**
+Health/Magicka helper-to-storage cases through original Player `0065E530` /
+`0065D310` scalar modification and nonplayer `005E2BE0` process wrappers
+(Low/MiddleLow/MiddleHigh/High) with `0065CA60` sparse modification. Actor reads,
+caster state, container helpers and notifications are boundary stubs. The
+matrix checks signed/fractional Maximum and Script, absent/zero/negative Damage,
+zero/fractional/one/hour duration and both x87 modes. Positive restoration
+clamps an existing Damage entry at zero, removes a zero nonplayer sparse entry,
+and can create a positive entry when the nonplayer Damage entry was absent.
+Player Damage uses fixed scalar clamping. This preserves a surprising repeated
+restoration behavior: with Script -1, a first NPC Health restore can remove its
+negative Damage, and a second can insert +1 and reach maximum. The authority
+reload test explicitly covers that behavior instead of flattening channels.
+The first harness attempt failed while extracting a reusable Python prefix;
+`S3/authority-draft/resource-authority-oracle-01.log` is retained, followed by
+the successful `resource-authority-oracle-02.log`.

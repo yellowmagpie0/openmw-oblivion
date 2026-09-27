@@ -76,6 +76,20 @@ namespace MWMechanics
         bool mCanSpend;
     };
 
+    struct OblivionRestorationSettings
+    {
+        ESM4::MagickaRegenerationSettings mMagicka;
+        ESM4::FatigueRegenerationSettings mFatigue;
+        ESM4::PlayerDynamicBaseSettings mPlayerBase;
+    };
+
+    struct OblivionRestorationUpdate
+    {
+        float mDuration; // Elapsed seconds, after caller-owned effect advancement.
+        bool mRestoreHealth;
+        bool mHasActiveMagicItem;
+    };
+
     // Profile-owned native action and actor-value authority. Live activation
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
@@ -126,6 +140,12 @@ namespace MWMechanics
             const ESM4::FatigueRegenerationSettings& settings);
         void regeneratePlayerFatigue(MWWorld::Player& player, float duration,
             const ESM4::FatigueRegenerationSettings& settings, const ESM4::PlayerDynamicBaseSettings& baseSettings);
+        // Prepare Health, Magicka, then Fatigue and publish once. Callers own
+        // rest/wait/jail eligibility and active-item/effect lifecycle.
+        void restoreNonPlayerResources(const MWWorld::Ptr& actor, const OblivionRestorationUpdate& input,
+            const OblivionRestorationSettings& settings);
+        void restorePlayerResources(MWWorld::Player& player, const OblivionRestorationUpdate& input,
+            const OblivionRestorationSettings& settings);
         // Running expenditure precedes regeneration; prepare and publish both
         // as one transition so failure cannot leave a partially updated actor.
         void updateNonPlayerFatigue(const MWWorld::Ptr& actor, const OblivionFatigueUpdate& input,

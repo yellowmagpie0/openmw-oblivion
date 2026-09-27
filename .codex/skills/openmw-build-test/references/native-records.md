@@ -47,6 +47,13 @@ scaled construction needs the actual player. Query through `Ptr.getClass()`
 to exercise the shared gameplay readers. Keep these results distinct from
 normal-input gameplay and fresh-process persistence tests.
 
+The `autoNpc()` test helper starts with `TES4_PCLevelOffset` enabled. In a
+fixture without a World, clear that flag and set `levelOrOffset` explicitly
+before inserting the record. Constructing a separate `MWWorld::Player` does
+not satisfy scaled construction's `Environment::getWorld()->getPlayerPtr()`
+dependency. A crash in `resolveOblivionActorConstructionStats` at the first
+`getCreatureStats` can therefore be fixture setup, before authority code runs.
+
 When testing authority bindings, set the synthetic record's `mFormKey` as well
 as passing its key to `insertStatic`. The latter indexes the store but does not
 fill an otherwise empty embedded identity. Real record loading supplies both.

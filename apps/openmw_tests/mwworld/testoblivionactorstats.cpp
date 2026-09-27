@@ -607,6 +607,183 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, nativeResourceRestorationCommitsAllChannelsTogether)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{};
+        playerBase.blank();
+        playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(playerBase);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWClass::ESM4Npc::registerSelf();
+        MWWorld::Player player(playerRecord);
+        const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x902);
+        reference.mId = {0x902, 3};
+        reference.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr npcPtr(&live);
+        const MWMechanics::OblivionRestorationSettings settings{
+            {1, 0}, {2, 0}, MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore)};
+        using Process = ESM4::ActorValueProcess;
+        for (bool isPlayer : {false, true})
+        {
+            SCOPED_TRACE(testing::Message() << "player=" << isPlayer);
+            MWMechanics::OblivionCombatService service;
+            const auto ptr = isPlayer ? playerPtr : npcPtr;
+            const auto& stats = ptr.getClass().getCreatureStats(ptr);
+            ESM4::RuntimeActorValues values;
+            values.mActor = isPlayer ? ESM::FormKey::dynamic("player", 1) : reference.mFormKey;
+            values.mBase = isPlayer ? ESM::FormKey::dynamic("player-base", 1) : mActorKey;
+            values.mOwner = isPlayer ? ESM4::ActorValueOwner::Player : ESM4::ActorValueOwner::NonPlayer;
+            if (isPlayer)
+                values.mPlayerFormValues = {{100, 100, -10, 0}};
+            values.mValues[2] = {50, {.75f, {}, {}}}; // Integer Willpower 50, not 50.75.
+            values.mValues[8].mBase = 100;
+            values.mValues[9].mBase = 100;
+            values.mValues[10].mBase = 40;
+            for (int av : {8, 9, 10})
+                values.mValues[av].mModifiers = {2.f, -1.f, -10.f};
+            const auto publish = [&] {
+                if (isPlayer)
+                    service.publishPlayerValues(player, values, settings.mPlayerBase);
+                else
+                    service.publishNonPlayerValues(ptr, values);
+            };
+            const auto restore = [&](const MWMechanics::OblivionRestorationUpdate& input,
+                                     const MWMechanics::OblivionRestorationSettings& config) {
+                if (isPlayer)
+                    service.restorePlayerResources(player, input, config);
+                else
+                    service.restoreNonPlayerResources(ptr, input, config);
+            };
+            for (Process process : {Process::Active, Process::Low})
+            {
+                values.mProcess = process;
+                publish();
+                restore({1, true, false}, settings);
+                const bool maximumEligible = isPlayer || process == Process::Active;
+                EXPECT_EQ(stats.getHealth().getCurrent(), maximumEligible ? 101 : 99);
+                EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), maximumEligible ? 92.02f : 90.f);
+                EXPECT_EQ(stats.getFatigue().getCurrent(), maximumEligible ? 33 : 31);
+                const auto* result = service.findActorValues(values.mActor);
+                ASSERT_NE(result, nullptr);
+                for (int av : {8, 9, 10})
+                {
+                    EXPECT_EQ(result->mValues[av].mModifiers[0], 2);
+                    EXPECT_EQ(result->mValues[av].mModifiers[1], -1);
+                }
+                EXPECT_EQ(result->mValues[8].mModifiers[2], isPlayer ? std::optional<float>(0) : std::nullopt);
+            }
+            values.mProcess = Process::Active;
+            publish();
+            const auto unchanged = *service.findActorValues(values.mActor);
+            restore({0, false, false}, settings);
+            EXPECT_EQ(*service.findActorValues(values.mActor), unchanged);
+            restore({0, true, false}, settings);
+            EXPECT_EQ(stats.getHealth().getCurrent(), 101); // Health helper ignores duration.
+            EXPECT_EQ(stats.getMagicka().getCurrent(), 91);
+            EXPECT_EQ(stats.getFatigue().getCurrent(), 31);
+            publish();
+            restore({1, false, true}, settings);
+            EXPECT_EQ(stats.getHealth().getCurrent(), 91); // No Health request.
+            EXPECT_EQ(stats.getMagicka().getCurrent(), 91); // Active item suppresses only Magicka.
+            EXPECT_EQ(stats.getFatigue().getCurrent(), 33);
+            values.mValues[57].mBase = 1;
+            publish();
+            restore({1, true, false}, settings);
+            EXPECT_EQ(stats.getHealth().getCurrent(), 101);
+            EXPECT_EQ(stats.getMagicka().getCurrent(), 91);
+            values.mValues[57].mBase = .75f;
+            publish();
+            restore({1, true, false}, settings);
+            EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), 92.02f); // Integer query truncates to zero.
+
+            // A later invalid resource must not commit an earlier valid Health or Magicka request.
+            publish();
+            const auto before = *service.findActorValues(values.mActor);
+            auto invalid = settings;
+            invalid.mFatigue.mBase = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(restore({1, true, false}, invalid), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), before);
+            EXPECT_EQ(stats.getHealth().getCurrent(), 91);
+            EXPECT_EQ(stats.getMagicka().getCurrent(), 91);
+            EXPECT_EQ(stats.getFatigue().getCurrent(), 31);
+            EXPECT_THROW(restore({-1, true, false}, settings), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), before);
+
+            // Native sparse storage distinguishes absent Damage from a stored zero.
+            for (auto damage : {std::optional<float>{}, std::optional<float>{0}})
+            {
+                for (int av : {8, 9, 10})
+                    values.mValues[av].mModifiers[2] = damage;
+                publish();
+                restore({1, true, false}, settings);
+                const bool insertsPositive = !isPlayer && !damage;
+                EXPECT_EQ(stats.getHealth().getCurrent(), insertsPositive ? 102 : 101);
+                EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), insertsPositive ? 102.02f : 101.f);
+                EXPECT_EQ(stats.getFatigue().getCurrent(), insertsPositive ? 43 : 41);
+            }
+            for (int av : {8, 9, 10})
+                values.mValues[av].mModifiers[2] = -10;
+            publish();
+            restore({1, true, false}, settings);
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            if (!isPlayer)
+            {
+                ESM4::RuntimeReferenceState actor;
+                actor.mKey = values.mActor;
+                actor.mBase = values.mBase;
+                actor.mCell = saved.mPlayer.mCell;
+                saved.mReferences.push_back(actor);
+            }
+            service.capture(saved);
+            MWMechanics::OblivionCombatService restored;
+            restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            EXPECT_EQ(*restored.findActorValues(values.mActor), *service.findActorValues(values.mActor));
+            if (isPlayer)
+                restored.restorePlayerResources(player, {1, true, false}, settings);
+            else
+                restored.restoreNonPlayerResources(ptr, {1, true, false}, settings);
+            // NPC Health's absent Damage from the first clamped restore now admits +1.
+            EXPECT_EQ(stats.getHealth().getCurrent(), isPlayer ? 101 : 102);
+            EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), 93.04f);
+            EXPECT_EQ(stats.getFatigue().getCurrent(), 35);
+
+            // Nonplayer current Magicka has an outer scale; its restoration maximum does not.
+            if (!isPlayer)
+            {
+                values.mValues[40].mBase = 20;
+                values.mValues[9].mModifiers[2] = -10;
+                publish();
+                restore({1, true, false}, settings);
+                EXPECT_EQ(stats.getMagicka().getCurrent(), 182); // Above unscaled maximum: no request.
+                values.mValues[40].mBase = 5;
+                publish();
+                restore({1, true, false}, settings);
+                EXPECT_FLOAT_EQ(stats.getMagicka().getCurrent(), 46.01f); // Request 1.02, then scale .5.
+            }
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, nativeFatigueWritersLeaveDeadPlayerUnchanged)
     {
         sharedStats();
@@ -642,6 +819,8 @@ namespace
         service.regeneratePlayerFatigue(player, 1, settings.mRegeneration, settings.mPlayerBase);
         service.updatePlayerFatigue(player, {1, 100, true, true}, settings);
         service.spendPlayerJumpFatigue(player, 100, true, settings);
+        service.restorePlayerResources(player, {3600, true, false},
+            {{.75f, .02f}, settings.mRegeneration, settings.mPlayerBase});
         EXPECT_EQ(*service.findActorValues(values.mActor), before);
         EXPECT_EQ(stats.getFatigue().getCurrent(), 15);
         EXPECT_TRUE(stats.isDead());
@@ -884,6 +1063,15 @@ namespace
         restored.regenerateNonPlayerFatigue(newPtr, 1.f, {10, 0});
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getFatigue().getCurrent(), 18);
         EXPECT_FALSE(restored.findActorValues(values.mActor)->mValues[10].mModifiers[2]);
+        for (std::uint8_t av : {8, 9, 10})
+            restored.changeNonPlayerValue(newPtr, av, ESM4::ActorValueModifier::Damage, -2);
+        restored.restoreNonPlayerResources(newPtr, {1, true, false},
+            {{1, 0}, {2, 0}, MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore)});
+        const auto& restoredStats = newPtr.getClass().getCreatureStats(newPtr);
+        EXPECT_EQ(restoredStats.getHealth().getCurrent(), 19);
+        EXPECT_FLOAT_EQ(restoredStats.getMagicka().getCurrent(), 15.17f);
+        EXPECT_EQ(restoredStats.getFatigue().getCurrent(), 18);
+        EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Marksman), 21.75f);
     }
 
     TEST_F(OblivionActorStatsTest, nativeInitializationValidatesBeforeChangingSharedStats)

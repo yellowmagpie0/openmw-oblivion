@@ -142,6 +142,41 @@ namespace MWMechanics
                     values.mOwner, values.mProcess), duration}, settings);
         }
 
+        bool restoreResources(ESM4::RuntimeActorValues& values, const OblivionRestorationUpdate& input,
+            const OblivionRestorationSettings& settings)
+        {
+            const auto current = [&](std::uint8_t av) {
+                return values.mOwner == ESM4::ActorValueOwner::Player
+                    ? ESM4::composeActorValue(values.mValues[av], values.mOwner, values.mProcess)
+                    : nonPlayerFloat(values, av);
+            };
+            const auto integer = [&](std::uint8_t av) {
+                const auto& value = values.mValues[av];
+                return ESM4::composeIntegerActorValue(ESM4::combatBaseValue(value.mBase), value.mModifiers,
+                    values.mOwner, values.mProcess);
+            };
+            const auto maximum = [&](std::uint8_t av) {
+                return values.mOwner == ESM4::ActorValueOwner::Player
+                    || values.mProcess == ESM4::ActorValueProcess::Active
+                    ? values.mValues[av].mModifiers[0].value_or(0.f) : 0.f;
+            };
+            bool changed = false;
+            const auto restore = [&](std::uint8_t av, float delta) {
+                if (delta > 0)
+                {
+                    values.mValues[av] = ESM4::changeActorValueModifier(
+                        values.mValues[av], values.mOwner, ESM4::ActorValueModifier::Damage, delta);
+                    changed = true;
+                }
+            };
+            if (input.mRestoreHealth)
+                restore(8, ESM4::healthRestoration(current(8), ESM4::combatBaseValue(values.mValues[8].mBase), maximum(8)));
+            restore(9, ESM4::magickaRegeneration({current(9), ESM4::combatBaseValue(values.mValues[9].mBase),
+                maximum(9), integer(2), integer(57), input.mDuration, input.mHasActiveMagicItem, true}, settings.mMagicka));
+            restore(10, fatigueRestoration(values, input.mDuration, settings.mFatigue));
+            return changed;
+        }
+
         ESM4::MovementFatigueInput movementFatigueInput(const ESM4::RuntimeActorValues& values,
             std::int32_t encumbrance, std::uint8_t skill)
         {
@@ -481,6 +516,23 @@ namespace MWMechanics
         const float delta = fatigueRestoration(values, duration, settings);
         if (delta > 0)
             changePlayerValue(player, 10, ESM4::ActorValueModifier::Damage, delta, baseSettings);
+    }
+
+    void OblivionCombatService::restoreNonPlayerResources(const MWWorld::Ptr& actor,
+        const OblivionRestorationUpdate& input, const OblivionRestorationSettings& settings)
+    {
+        auto candidate = nonPlayerValues(actor);
+        if (!actor.getClass().getCreatureStats(actor).isDead() && restoreResources(candidate, input, settings))
+            publishNonPlayerValues(actor, std::move(candidate));
+    }
+
+    void OblivionCombatService::restorePlayerResources(MWWorld::Player& player,
+        const OblivionRestorationUpdate& input, const OblivionRestorationSettings& settings)
+    {
+        auto candidate = playerValues();
+        const auto ptr = player.getPlayer();
+        if (!ptr.getClass().getCreatureStats(ptr).isDead() && restoreResources(candidate, input, settings))
+            publishPlayerValues(player, std::move(candidate), settings.mPlayerBase);
     }
 
     void OblivionCombatService::updateNonPlayerFatigue(const MWWorld::Ptr& actor,

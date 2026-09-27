@@ -2948,3 +2948,39 @@ Sanitizers cover components only, with leak checks disabled. Authority
 transactions, active-item/effect integration, live rest dispatch, automatic
 publication and normal-input acceptance remain open. Next is an atomic
 Health/Magicka/Fatigue restoration transaction preserving raw Damage channels.
+
+### S3 atomic resource restoration authority
+
+Commit `e1f2864bd5` contains the verified Health/Magicka request rules. The
+service now prepares Health (when requested), Magicka and Fatigue restoration
+in original order on a candidate, then publishes authority and all shared
+views once. Any later invalid setting/input discards earlier prepared changes.
+It preserves Maximum/Script channels, nonplayer sparse Damage presence,
+Player fixed Damage clamping, process Maximum eligibility and NPC outer
+Magicka scaling. Dead actors are unchanged. Callers still own effect advancement,
+active-item state and ordinary-rest versus jail eligibility; this API alone
+does not activate the World rest path.
+
+Actual Player/NPC tests cover high/low process, active-item and integer Stunted
+Magicka gates, zero duration, optional Health restoration, invalid final Fatigue
+rollback, absent versus stored-zero Damage, and continued mutation after binary
+capture/restore. A reconstructed Creature also restores all three resources
+without changing its runtime skill aliases. Independent original helper plus
+modifier-wrapper/storage execution passes 3,600 cases, complementing the
+preceding request-rule and fatigue-authority oracles.
+
+The unimplemented baseline fails the new API assertions at compilation.
+The first implemented fixture crashed before service execution because the
+synthetic NPC was still player-level-scaled without a World. GDB identified
+`resolveOblivionActorConstructionStats`; the fixed-level fixture correction
+passes, and the testing skill now records that concrete setup pitfall. Failed
+preflight/test/backtrace logs remain in `S3/authority-draft/` with prefix
+`restoration-authority-`; corrected focused tests pass. The final
+`S3/restoration-authority-01` rebuilds **openmw/openmw-tests/esmtool** and passes
+**581 engine tests**, no failures/skips and exact inventory agreement. Tested
+source fingerprint:
+`e65e9157428af2159f9aafbdd427e2f5094dcc62eba82b84344fa0252916097f`.
+The unchanged component rules retain the 1,891 component /369 sanitizer /160
+Python pass from `S3/restoration-rules-01`; there is no engine sanitizer claim.
+Remaining live stat writers, shared-base ownership, legacy reconciliation,
+automatic publication and rest/gameplay acceptance are still open.
