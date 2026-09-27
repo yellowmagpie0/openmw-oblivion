@@ -4458,3 +4458,27 @@ inspected: Balmora startup rocks, raised casting hands and changed Health/Magick
 HUD. Existing reviewed missing-asset allowances remain; this is not full-route,
 asset or audio acceptance. Lua writers, rest, automatic registration, complete
 S2/S3 acceptance and S4–S14 remain open.
+
+### Failed Lua stat batches drain safely
+
+LocalScripts now moves the pending stat batch out of SelfObject before actor
+lookup or setter dispatch. Previously a rejected setter left the cache nonempty:
+normal subsequent writes could not schedule another StatUpdateAction, and an
+explicit second flush replayed an already committed prefix before failing again.
+The fix retains exception reporting and stops at the first failure, discarding
+the unprocessed remainder. It does not make a batch atomic or add native Lua
+property semantics. Individual successful writes retain their own transaction.
+
+The independent focused red/green reproduction is retained in
+`S3/authority-draft/lua-cache-failure-*`, including the genuine six-assertion red
+and two earlier harness setup failures. Three integrated actual LocalScripts /
+SelfObject tests now check failed-prefix recovery, same-key last-write wins and
+actor removal before flushing. `S3/lua-cache-drain-01` and
+`lua-cache-drain-sanitized-01` pass all626 engine cases, exact inventory/no skips.
+ASan/UBSan and leak detection are enabled in the latter; no findings.
+Tested source fingerprint:
+`a3bb1ce50736b050c83bda1fac03cacb21829432cbaf434f20047f4de76729f5`;
+regular/sanitized engine-test SHAs:
+`4c3ff3c967a819c855c0649eb699700a17a55d4ff26e0869af490157e88da546` /
+`1633874e6cd7b5297a8c875b981d9572f6605ecd1fdec9c5e9e3d725029253b4`.
+Native property writers and the remaining rest/activation gates remain open.

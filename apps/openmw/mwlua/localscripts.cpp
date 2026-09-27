@@ -1,5 +1,7 @@
 #include "localscripts.hpp"
 
+#include <utility>
+
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwmechanics/aicombat.hpp"
@@ -251,9 +253,12 @@ namespace MWLua
 
     void LocalScripts::applyStatsCache()
     {
+        // Drain before resolving the actor or invoking setters. A rejected write
+        // must not strand later batches or replay an already committed prefix.
+        // The failed batch stops at the first exception; it is not atomic.
+        auto pending = std::exchange(mData.mStatsCache, {});
         const auto& ptr = mData.ptr();
-        for (auto& [stat, value] : mData.mStatsCache)
+        for (auto& [stat, value] : pending)
             stat(ptr, value);
-        mData.mStatsCache.clear();
     }
 }

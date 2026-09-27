@@ -30,6 +30,8 @@ file(GLOB UNITTEST_SRC_FILES
     mwgui/tooltips.cpp
     mwgui/weightedsearch.cpp
 
+    mwlua/teststatscache.cpp
+
     mwscript/testscripts.cpp
 )
 
