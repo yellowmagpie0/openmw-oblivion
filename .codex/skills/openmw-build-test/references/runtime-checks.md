@@ -323,3 +323,32 @@ Health/counts. Final examples are death-02/death-continuation-01.
 `oblivion_m15_native_ui_snapshots.json` now covers22 writes and repeated updates
 to all dynamic stats plus Strength/Blade. Read-only caches must copy-construct
 new snapshots; do not loosen native actor write guards to fix a UI cache.
+
+## Snapshot lifetime and resource regression courses
+
+UI cache setters can receive a reference to their own cached entry
+(`StatsWindow::addSkills` does this). Copy the input before erasing/replacing the
+entry, and retain that copy through widget updates. Optional `emplace(value)`
+also destroys an aliased input before copying; construct a temporary first.
+Keep native actor write guards intact. All623 sanitizer unit tests missed this
+GUI path; actual `S3/native-magicka-frame-sanitized-01` caught it. The repaired
+`-02` repeats the pristine input and passes. Use an actual sanitizer engine run
+when changing these UI lifetime paths; compiling the GUI is not runtime coverage.
+Record graphical leak-off separately from leak-on engine tests.
+
+For a native Magicka frame course, use the breath-frame manifest with initial
+Magicka20/base100/Willpower50 and explicit publication. Measure elapsed simulation
+time from Player breath; expected Magicka is20+1.75*elapsed, tolerance.05. Stunted1
+must suppress Magicka while Fatigue still recovers. Examples and verifiers are
+`S3/native-magicka-{frame,continuation,stunted-frame}-01` and
+`S3/authority-draft/verify-magicka-frame.py`. Hash the executable named in the
+scenario command, not a hardcoded regular-build path.
+
+`morrowind_m15_magic_regression.json` sets up Hearth Heal, saves before casting,
+then performs normal R/mouse input and saves again. Console `player->Cast` only
+selects the player's spell; it does not execute it. The independent TES3 save
+reader in `S3/authority-draft/verify-morrowind-magic.py` checks Health increase,
+Magicka cost and no native markers. PLAY contains42 STBA entries:27 skills,
+8 attributes,3 dynamic stats,4 integer AI fields; dynamics are indices35:38,
+not the final three entries. Passing regular/sanitized examples are
+`S3/native-resource-morrowind-magic-01` and `-sanitized-01`.

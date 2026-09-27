@@ -132,3 +132,20 @@ at declared boundaries. The preserve branch needs all body/cell/attached gates.
 other Player modifier arrays survive. Common actor Script-container ownership
 is not the Player's separate Script array. Consult each probe's boundary list
 before using these results for a world resurrection implementation.
+
+## Actor subobject and rest dispatch distinctions
+
+In the pinned executable, Creature `00A710A4` and Player `00A739BC` are
+MagicCaster subobject vtables (the +30 active-item getter). Their actor vtables
+are `00A710F4` / `00A73A0C`; Character's actor table is `00A6FC9C`.
+Use the correct subobject address point before interpreting virtual slots.
+`S2/sources-01/actor-value-mutation-vtables.json` and
+`actor-physical-vtables.json` identify actor tables independently via RTTI.
+
+Do not apply the Player's hourly3,600-second restoration argument to NPCs
+without tracing their dispatcher. The actor-manager slice `00678006..0067804E`
+uses2 seconds when an actor was selected and Player remaining-hours is positive.
+`S3/authority-draft/rest-npc-dispatch.py` executes20 original cases with the real
+hours predicate; restoration callees are stubs. Eligibility/effect advancement
+precede that slice, and other process tiers remain separate. This proves a
+specific dispatch, not a full rest implementation or an NPC hourly-rate policy.

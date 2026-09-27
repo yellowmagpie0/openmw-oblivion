@@ -2966,3 +2966,25 @@ and takes swimming state from the same predicate as the shared character
 controller. The deep flooded-room course exercises frame/authority wiring;
 normal surface crossing and varied model/controller geometry remain separate
 campaign acceptance cases.
+
+### Separate actor-manager restoration dispatch during wait
+
+A direct-call scan followed by aligned disassembly found the same original
+Health/Magicka/Fatigue helpers in `00677EC0`'s actor-manager loop. The bounded
+slice `00678006..0067804E` skips a null selected actor; otherwise it calls the
+real Player predicate `0065D550` (signed remaining-hours at+590 >0), then requests
+Health, Magicka with active-item gate true, and Fatigue with **2.0 seconds**
+from `00A379B4`. This differs from Player's explicit3,600-second hourly dispatcher.
+`S3/authority-draft/rest-npc-dispatch.py` executes20 original cases over null/non-null
+actor, remaining-hours -1/0/1/2/24 and both x87 modes, asserting ordered calls,
+arguments and balanced stack. Restoration bodies are boundary stubs. Prior
+actor eligibility/effect updates and other process tiers are not established by
+this slice; it must not be promoted into a universal NPC hourly-rest formula.
+
+An initial vtable inspection used MagicCaster address points for actor virtual
+slots; that was an inspection error, not a game discrepancy. The verified
+actor tables are Creature00A710F4, Character00A6FC9C and Player00A73A0C, whereas
+00A710A4/00A739BC are their MagicCaster tables. Actual actor+1C0 resolves to
+00605770; +368 resolves to005FAAE0. The earlier active-item getter findings
+remain valid for the MagicCaster subobjects. Original executable SHA is the
+same pinned `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
