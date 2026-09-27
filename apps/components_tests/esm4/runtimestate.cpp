@@ -466,9 +466,116 @@ namespace
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
     }
 
+    TEST(ESM4RuntimeState, sharedBaseOverridesPreserveTypedValuesAndCanonicalOrder)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorBaseOverride npc{ESM::FormKey::content("oblivion.esm", 7), ESM4::ActorBaseKind::Npc,
+            {{8, std::int32_t{16777217}}, {9, std::int32_t{65535}}, {40, 2147483648.f}}};
+        ESM4::RuntimeActorBaseOverride creature{ESM::FormKey::content("oblivion.esm", 8), ESM4::ActorBaseKind::Creature,
+            {{12, std::int32_t{255}}, {19, std::int32_t{0}}, {26, std::int32_t{1}}}};
+        state.mNativeActorBases = {npc};
+        const auto oneBase = state.serializeBinary();
+        const std::vector<std::uint8_t> suffix{8, 0, 1, 0, 0, 1, 9, 0, 255, 255, 0, 0, 40, 1, 0, 0, 0, 79};
+        ASSERT_GE(oneBase.size(), suffix.size());
+        EXPECT_TRUE(std::equal(suffix.begin(), suffix.end(), oneBase.end() - suffix.size()));
+        for (const auto [offset, value] : {std::pair{17, 2}, {18, 72}, {5, 0}, {23, 2}})
+        {
+            auto corrupt = oneBase;
+            corrupt[corrupt.size() - offset] = value;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        }
+        auto nan = oneBase;
+        nan[nan.size() - 2] = 192;
+        nan[nan.size() - 1] = 127;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(nan), std::runtime_error);
+        state.mNativeActorBases = {npc, creature};
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mNativeActorBases, state.mNativeActorBases);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(restored.canonicalJson().find("\"values\":[[8,0,16777217],[9,0,65535],[40,1,2147483648]]"),
+            std::string::npos);
+        std::reverse(state.mNativeActorBases.begin(), state.mNativeActorBases.end());
+        for (auto& base : state.mNativeActorBases)
+            std::reverse(base.mValues.begin(), base.mValues.end());
+        EXPECT_EQ(state.serializeBinary(), bytes);
+        EXPECT_EQ(state.canonicalJson(), restored.canonicalJson());
+        for (std::uint32_t version = 1; version <= 10; ++version)
+        {
+            ESM4::RuntimeState legacy;
+            legacy.mVersion = version;
+            legacy.mPlayer.mReference = state.mPlayer.mReference;
+            legacy.mPlayer.mCell = state.mPlayer.mCell;
+            if (version >= 3)
+            {
+                legacy.mPlayer.mRace = state.mPlayer.mRace;
+                legacy.mPlayer.mClass = state.mPlayer.mClass;
+            }
+            EXPECT_NO_THROW(legacy.serializeBinary());
+            auto promoted = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+            EXPECT_TRUE(promoted.mNativeActorBases.empty());
+            promoted.mVersion = ESM4::CurrentRuntimeStateVersion;
+            promoted.mPlayer.mRace = state.mPlayer.mRace;
+            promoted.mPlayer.mClass = state.mPlayer.mClass;
+            EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(promoted.serializeBinary()).mNativeActorBases.empty());
+            legacy.mNativeActorBases = {npc};
+            EXPECT_THROW(legacy.serializeBinary(), std::runtime_error);
+        }
+        state.mNativeActorBases.clear();
+        const auto countOffset = state.serializeBinary().size() - 4;
+        for (std::size_t cut = countOffset; cut < bytes.size(); ++cut)
+        {
+            auto truncated = bytes;
+            truncated.resize(cut);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        auto corrupt = bytes;
+        std::fill_n(corrupt.begin() + countOffset, 4, 255);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        state.mVersion = 10;
+        const auto old = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_TRUE(old.mNativeActorBases.empty());
+        EXPECT_EQ(old.canonicalJson().find("native_actor_bases"), std::string::npos);
+    }
+
+    TEST(ESM4RuntimeState, sharedBaseOverridesRejectInvalidStorageAndDuplicates)
+    {
+        auto state = makeState();
+        const ESM4::RuntimeActorBaseOverride valid{ESM::FormKey::content("oblivion.esm", 7), ESM4::ActorBaseKind::Npc,
+            {{8, std::int32_t{16777217}}}};
+        state.mNativeActorBases = {valid, valid};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        state.mNativeActorBases = {valid};
+        auto& base = state.mNativeActorBases[0];
+        base.mBase = {};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        base = valid;
+        base.mKind = static_cast<ESM4::ActorBaseKind>(2);
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        base = valid;
+        base.mValues.push_back(base.mValues[0]);
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        for (const ESM4::ActorBaseValueSet invalid : {ESM4::ActorBaseValueSet{0, std::int32_t{-1}},
+                 {7, std::int32_t{256}}, {9, std::int32_t{65536}}, {10, std::int32_t{-1}},
+                 {8, 100.f}, {40, std::int32_t{1}}, {11, std::int32_t{0}}, {37, std::int32_t{0}},
+                 {72, 0.f}, {40, std::numeric_limits<float>::infinity()}})
+        {
+            base = valid;
+            base.mValues = {invalid};
+            EXPECT_THROW(state.validate(), std::runtime_error);
+        }
+        base = valid;
+        base.mKind = ESM4::ActorBaseKind::Creature;
+        base.mValues = {{28, std::int32_t{1}}}; // Must store the canonical runtime group key.
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        base.mValues = {{12, std::int32_t{1}}};
+        EXPECT_NO_THROW(state.validate());
+    }
+
     TEST(ESM4RuntimeState, playerFormInputsHaveIndependentVersionTenWireStorage)
     {
         auto state = makeState();
+        state.mVersion = 10;
         ESM4::RuntimeActorValues actor;
         actor.mActor = state.mPlayer.mReference;
         actor.mBase = ESM::FormKey::content("oblivion.esm", 7);

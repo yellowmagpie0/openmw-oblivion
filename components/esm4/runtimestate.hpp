@@ -26,7 +26,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 10;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 11;
 
     struct RuntimeContentIdentity
     {
@@ -254,6 +254,16 @@ namespace ESM4
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;
     };
 
+    struct RuntimeActorBaseOverride
+    {
+        ESM::FormKey mBase;
+        ActorBaseKind mKind = ActorBaseKind::Npc;
+        std::vector<ActorBaseValueSet> mValues;
+
+        void validate() const;
+        friend bool operator==(const RuntimeActorBaseOverride&, const RuntimeActorBaseOverride&) = default;
+    };
+
     // Versioned, load-order-independent state owned by the Oblivion profile.
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
@@ -286,6 +296,8 @@ namespace ESM4
         ActionLedgerState mPhysicalActions;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
+        // v11: shared base-record overrides, including bases with no loaded actors.
+        std::vector<RuntimeActorBaseOverride> mNativeActorBases;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

@@ -47,16 +47,22 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer actor-value identity mismatch");
         }
 
+        bool nativeBaseIsCreature(const ESM::FormKey& base, const MWWorld::ESMStore& store)
+        {
+            const auto* npc = store.search<ESM4::Npc>(base);
+            const auto* creature = store.search<ESM4::Creature>(base);
+            if ((!npc && !creature) || (npc && creature)
+                || (npc && (!npc->mIsTES4 || npc->mFormKey != base))
+                || (creature && (!creature->mAttackReach || creature->mFormKey != base)))
+                throw std::invalid_argument("missing, ambiguous or unsupported native actor base: " + base.serialize());
+            return creature != nullptr;
+        }
+
         bool nonPlayerContentIsCreature(const ESM4::RuntimeActorValues& values, const MWWorld::ESMStore& store)
         {
             if (values.mOwner != ESM4::ActorValueOwner::NonPlayer)
                 throw std::invalid_argument("native nonplayer content lookup has player ownership");
-            const auto* npc = store.search<ESM4::Npc>(values.mBase);
-            const auto* creature = store.search<ESM4::Creature>(values.mBase);
-            if ((!npc && !creature) || (npc && creature)
-                || (npc && (!npc->mIsTES4 || npc->mFormKey != values.mBase))
-                || (creature && (!creature->mAttackReach || creature->mFormKey != values.mBase)))
-                throw std::invalid_argument("missing, ambiguous or unsupported native actor base: " + values.mBase.serialize());
+            const bool creature = nativeBaseIsCreature(values.mBase, store);
             if (values.mActor.isContent())
             {
                 const auto* characterRef = store.search<ESM4::ActorCharacter>(values.mActor);
@@ -66,7 +72,7 @@ namespace MWMechanics
                     || reference->mBaseKey != values.mBase)
                     throw std::invalid_argument("missing or mismatched native actor reference: " + values.mActor.serialize());
             }
-            return creature != nullptr;
+            return creature;
         }
 
         void validateNonPlayerQuery(std::uint8_t value)
@@ -315,6 +321,7 @@ namespace MWMechanics
     {
         mActions = {};
         mActorValues.clear();
+        mActorBases.clear();
     }
 
     std::uint64_t OblivionCombatService::allocateAction()
@@ -590,6 +597,12 @@ namespace MWMechanics
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
         if (state.mVersion < 9 && !mActorValues.empty())
             throw std::invalid_argument("native actor values require an Oblivion v9+ save");
+        if (state.mVersion < 11 && !mActorBases.empty())
+            throw std::invalid_argument("native actor base overrides require an Oblivion v11+ save");
+        std::vector<ESM4::RuntimeActorBaseOverride> bases;
+        bases.reserve(mActorBases.size());
+        for (const auto& [key, base] : mActorBases)
+            bases.push_back(base);
         std::vector<ESM4::RuntimeActorValues> actors;
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
@@ -599,6 +612,7 @@ namespace MWMechanics
             actors.push_back(actor);
         }
         auto actions = mActions.capture();
+        state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
     }
@@ -609,6 +623,13 @@ namespace MWMechanics
         for (const auto& actor : state.mNativeActorValues)
             if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
                 nonPlayerContentIsCreature(actor, store);
+        for (const auto& base : state.mNativeActorBases)
+        {
+            const bool creature = base.mBase == ESM::FormKey::dynamic("player-base", 1)
+                ? false : nativeBaseIsCreature(base.mBase, store);
+            if (creature != (base.mKind == ESM4::ActorBaseKind::Creature))
+                throw std::invalid_argument("native actor base override kind mismatch: " + base.mBase.serialize());
+        }
         restore(state);
     }
 
@@ -620,7 +641,11 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
+        std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> bases;
+        for (const auto& base : state.mNativeActorBases)
+            bases.emplace(base.mBase, base);
         mActions = std::move(actions);
         mActorValues.swap(actors);
+        mActorBases.swap(bases);
     }
 }

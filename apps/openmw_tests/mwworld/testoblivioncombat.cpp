@@ -201,3 +201,77 @@ TEST(OblivionCombatService, SavedActorQueriesValidateWinningContentWithoutAWorld
     service.restore(state, store); // Dynamic references have no content ACHR.
     EXPECT_EQ(service.getNonPlayerValue(state.mReferences[0].mKey, 0, store), 100.75f);
 }
+
+TEST(OblivionCombatService, SharedBasesRestoreCaptureAndClearWithoutLosingTypes)
+{
+    auto state = savedState();
+    state.mNativeActorBases = {{ESM::FormKey::content("actors.esm", 0x800), ESM4::ActorBaseKind::Npc,
+        {{8, std::int32_t{16777217}}, {40, 2147483648.f}}}};
+    state.mPhysicalActions = {3, {1}};
+    MWMechanics::OblivionCombatService service;
+    service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    auto captured = savedState();
+    service.capture(captured);
+    EXPECT_EQ(captured.mNativeActorBases, state.mNativeActorBases);
+    EXPECT_EQ(captured.mPhysicalActions, state.mPhysicalActions);
+    auto old = savedState(10);
+    const auto unchanged = old;
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    EXPECT_EQ(old, unchanged);
+    auto invalid = state;
+    invalid.mNativeActorBases.push_back(invalid.mNativeActorBases[0]);
+    invalid.mPhysicalActions = {10, {9}};
+    EXPECT_THROW(service.restore(invalid), std::runtime_error);
+    service.capture(captured);
+    EXPECT_EQ(captured.mNativeActorBases, state.mNativeActorBases);
+    EXPECT_EQ(captured.mPhysicalActions, state.mPhysicalActions);
+    service.restore(savedState(10));
+    service.capture(captured);
+    EXPECT_TRUE(captured.mNativeActorBases.empty());
+    service.restore(state);
+    service.clear();
+    service.capture(captured);
+    EXPECT_TRUE(captured.mNativeActorBases.empty());
+}
+
+TEST(OblivionCombatService, SharedBaseContentPreflightIsAtomicAndRequiresCorrectNativeKind)
+{
+    MWWorld::ESMStore store;
+    ESM4::Npc npc{};
+    npc.mId = {0x800, 2};
+    npc.mFormKey = ESM::FormKey::content("actors.esm", 0x800);
+    npc.mIsTES4 = true;
+    store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+    auto state = savedState();
+    state.mNativeActorBases = {{npc.mFormKey, ESM4::ActorBaseKind::Npc, {{8, std::int32_t{16777217}}}}};
+    state.mPhysicalActions = {3, {1}};
+    MWMechanics::OblivionCombatService service;
+    service.restore(state, store);
+    auto replacement = state;
+    replacement.mPhysicalActions = {10, {9}};
+    const auto reject = [&](const MWWorld::ESMStore& content) {
+        EXPECT_THROW(service.restore(replacement, content), std::invalid_argument);
+        auto captured = savedState();
+        service.capture(captured);
+        EXPECT_EQ(captured.mNativeActorBases, state.mNativeActorBases);
+        EXPECT_EQ(captured.mPhysicalActions, state.mPhysicalActions);
+    };
+    MWWorld::ESMStore missing;
+    reject(missing);
+    replacement.mNativeActorBases[0].mKind = ESM4::ActorBaseKind::Creature;
+    reject(store);
+    replacement = state;
+    ESM4::Creature creature{};
+    creature.mId = npc.mId;
+    creature.mFormKey = npc.mFormKey;
+    creature.mAttackReach = 1;
+    store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+    reject(store); // Ambiguous across native base kinds.
+    ASSERT_TRUE(store.getWritable<ESM4::Npc>().eraseStatic(npc.mFormKey));
+    replacement.mNativeActorBases[0].mKind = ESM4::ActorBaseKind::Creature;
+    EXPECT_NO_THROW(service.restore(replacement, store));
+    replacement.mNativeActorBases[0].mBase = ESM::FormKey::dynamic("player-base", 1);
+    EXPECT_THROW(service.restore(replacement, store), std::invalid_argument);
+    replacement.mNativeActorBases[0].mKind = ESM4::ActorBaseKind::Npc;
+    EXPECT_NO_THROW(service.restore(replacement, store));
+}

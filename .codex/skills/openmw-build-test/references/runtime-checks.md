@@ -114,3 +114,31 @@ mutated-input hashes. The error must come from content binding validation, not
 binary/schema parsing. Passed example:
 `S3/unloaded-actors-reject-01/binding-rejection-verification.json`.
 Inspect the rejection dialog and pair the negative case with a valid restart.
+
+## Shared base overrides (schema 11)
+
+A proven v10 migration input is
+`build/oblivion-compat/m15/S3/player-value-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `91c806490e045b779b7627a54ff50605967bdc3f640e1677a9b78ec748130867`).
+Use `oblivion_m15_legacy_action_service.json` with a private copied slot as above.
+Require current schema, `native_actor_bases == []`, unchanged actor entries and
+ledger, and unchanged source/pristine hashes. The passing example is
+`S3/shared-base-state-legacy-01/verification.json`.
+
+To test populated typed persistence, merge the editable
+`scripts/data/oblivion_compat/oblivion_m15_native_base_roundtrip.json` into a
+copied decoded state and call `write_save(source, privateSlot, state)`. Run the
+same load/resave manifest, then require exact `native_actor_bases` equality.
+This distinguishes Health int32 16,777,217 from an extra AV's float 16,777,216.
+Passing example: `S3/shared-base-state-populated-01/verification.json`.
+Injected state verifies storage; it is not a normal-input SetAV or live actor
+publication test.
+
+The invalid-base counterpart uses
+`oblivion_m15_native_base_binding_fault.json` and
+`oblivion_m15_reject_native_base_binding.json`. It must fail content binding
+before `Applied TES4 runtime state:` and preserve source/pristine/mutated-input
+hashes, as in `S3/shared-base-state-reject-01/verification.json`. Pair it with
+`m15-restart` and Morrowind save isolation. Keep all generated saves and images
+in fresh ignored output directories. Hash the large engine binary once per
+unchanged build and reuse that verified identity in the reports.

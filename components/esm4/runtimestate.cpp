@@ -460,6 +460,34 @@ namespace ESM4
         }
     }
 
+    void RuntimeActorBaseOverride::validate() const
+    {
+        if (mBase.isNull() || mValues.empty() || mValues.size() > 72)
+            throw std::runtime_error("Invalid TES4 native actor base override");
+        std::set<std::uint8_t> seen;
+        try
+        {
+            for (const auto& value : mValues)
+            {
+                const auto shape = prepareActorBaseValueSet(mKind, value.mActorValue, 0);
+                if (!shape || shape->mActorValue != value.mActorValue || shape->mValue.index() != value.mValue.index()
+                    || !seen.insert(value.mActorValue).second)
+                    throw std::invalid_argument("invalid or duplicate base value storage");
+                if (const auto* integer = std::get_if<std::int32_t>(&value.mValue))
+                {
+                    if (prepareActorBaseValueSet(mKind, value.mActorValue, *integer) != value)
+                        throw std::invalid_argument("base value exceeds its native storage width");
+                }
+                else if (!std::isfinite(std::get<float>(value.mValue)))
+                    throw std::invalid_argument("nonfinite base value");
+            }
+        }
+        catch (const std::invalid_argument& error)
+        {
+            throw std::runtime_error(std::string("Invalid TES4 native actor base override: ") + error.what());
+        }
+    }
+
     void RuntimeState::validate() const
     {
         if (mVersion < 1 || mVersion > CurrentRuntimeStateVersion)
@@ -490,6 +518,16 @@ namespace ESM4
         checkSize(mPendingPackageDone.size(), "pending package completion list");
         checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
         checkSize(mNativeActorValues.size(), "native actor-value list");
+        checkSize(mNativeActorBases.size(), "native actor-base list");
+        if (mVersion < 11 && !mNativeActorBases.empty())
+            throw std::runtime_error("TES4 native actor base overrides require runtime-state version 11");
+        std::set<ESM::FormKey> overriddenBases;
+        for (const auto& base : mNativeActorBases)
+        {
+            base.validate();
+            if (!overriddenBases.insert(base.mBase).second)
+                throw std::runtime_error("Duplicate TES4 native actor base override");
+        }
         if (mVersion < 9 && !mNativeActorValues.empty())
             throw std::runtime_error("TES4 runtime-state versions before 9 cannot contain native actor values");
         std::map<ESM::FormKey, ESM::FormKey> actorBases;
@@ -1101,6 +1139,29 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 11)
+        {
+            auto bases = mNativeActorBases;
+            std::sort(bases.begin(), bases.end(), [](const auto& a, const auto& b) { return a.mBase < b.mBase; });
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(bases.size()));
+            for (auto& base : bases)
+            {
+                writeKey(writer, base.mBase);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(base.mKind));
+                std::sort(base.mValues.begin(), base.mValues.end(),
+                    [](const auto& a, const auto& b) { return a.mActorValue < b.mActorValue; });
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(base.mValues.size()));
+                for (const auto& value : base.mValues)
+                {
+                    writer.integer(value.mActorValue);
+                    writer.integer<std::uint8_t>(static_cast<std::uint8_t>(value.mValue.index()));
+                    if (const auto* integer = std::get_if<std::int32_t>(&value.mValue))
+                        writer.integer(*integer);
+                    else
+                        writer.floating(std::get<float>(value.mValue));
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1447,6 +1508,43 @@ namespace ESM4
                     }
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
+            }
+        }
+        if (result.mVersion >= 11)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                RuntimeActorBaseOverride base;
+                const auto key = reader.string();
+                try
+                {
+                    base.mBase = ESM::FormKey::deserialize(key);
+                }
+                catch (const std::invalid_argument&)
+                {
+                    throw std::runtime_error("Invalid TES4 native actor base identity");
+                }
+                if (base.mBase.isNull() || base.mBase.serialize() != key)
+                    throw std::runtime_error("Invalid or noncanonical TES4 native actor base identity");
+                base.mKind = static_cast<ActorBaseKind>(reader.integer<std::uint8_t>());
+                const auto size = reader.count();
+                if (size == 0 || size > 72)
+                    throw std::runtime_error("Invalid TES4 native actor base value count");
+                for (std::uint32_t j = 0; j < size; ++j)
+                {
+                    ActorBaseValueSet value;
+                    value.mActorValue = reader.integer<std::uint8_t>();
+                    const auto type = reader.integer<std::uint8_t>();
+                    if (type == 0)
+                        value.mValue = reader.integer<std::int32_t>();
+                    else if (type == 1)
+                        value.mValue = reader.float32();
+                    else
+                        throw std::runtime_error("Invalid TES4 native actor base storage type");
+                    base.mValues.push_back(value);
+                }
+                result.mNativeActorBases.push_back(std::move(base));
             }
         }
         if (!reader.eof())
@@ -1838,6 +1936,33 @@ namespace ESM4
                         stream << "null";
                 }
                 stream << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 11)
+        {
+            stream << ",\"native_actor_bases\":[";
+            auto bases = mNativeActorBases;
+            std::sort(bases.begin(), bases.end(), [](const auto& a, const auto& b) { return a.mBase < b.mBase; });
+            for (std::size_t i = 0; i < bases.size(); ++i)
+            {
+                if (i)
+                    stream << ',';
+                auto& base = bases[i];
+                stream << "{\"base\":\"" << escapeJson(base.mBase.serialize()) << "\",\"kind\":"
+                       << static_cast<unsigned>(base.mKind) << ",\"values\":[";
+                std::sort(base.mValues.begin(), base.mValues.end(),
+                    [](const auto& a, const auto& b) { return a.mActorValue < b.mActorValue; });
+                for (std::size_t j = 0; j < base.mValues.size(); ++j)
+                {
+                    if (j)
+                        stream << ',';
+                    const auto& value = base.mValues[j];
+                    stream << '[' << static_cast<unsigned>(value.mActorValue) << ',' << value.mValue.index() << ',';
+                    std::visit([&](auto number) { stream << number; }, value.mValue);
+                    stream << ']';
+                }
+                stream << "]}";
             }
             stream << ']';
         }

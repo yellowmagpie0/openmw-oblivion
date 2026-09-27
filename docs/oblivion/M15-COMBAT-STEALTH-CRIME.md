@@ -3012,3 +3012,61 @@ versioned shared-base override state and authoritative propagation to actors
 using that base, retaining distinctions between base-float/floored queries and
 raw form integer queries. Automatic publication and the remaining M15 stages
 remain open.
+
+### S3 version-11 shared base override ownership and persistence
+
+Commit `3192aa2065` contains the verified SetAV preparation rules. Schema 11
+now appends canonical shared-base overrides, keyed by stable base identity and
+native NPC/Creature kind. Each entry retains its AV key and integer/float tag;
+Health 16,777,217 remains an exact int32 while extra-AV float 16,777,216 remains
+a float. Entries validate storage widths, Creature group keys, finite values,
+unique bases/AVs, bounded counts and canonical identities. Versions 1–10 migrate
+with no invented overrides. C++ binary/JSON and Python readers/writers agree.
+
+The profile-owned service captures, restores and clears the base map with actor
+values and action ownership. Content-aware restore checks winning native kind,
+missing/ambiguous bases and the projected player-base alias before committing.
+It prepares all maps before publication, and refuses an older-schema capture
+without partially changing its target. The new engine tests first demonstrated
+the previous dropped-map and missing-binding-check failures; the implementation
+passes both. Live SetAV mutation/propagation and automatic activation remain
+open; persistence alone does not update the legacy shared views.
+
+Component tests cover exact tagged wire bytes, ordering, duplicate/invalid
+storage, type/kind/ID corruption, NaN, truncation and migration from all ten
+older schemas. Python's first upgraded fixture omitted its required AI RNG;
+that failure is retained and corrected before the full run. Evidence under
+`S3/authority-draft/` uses `shared-base-*` prefixes, including the missing-API
+compile failure, engine behavior failures and corrected focused passes.
+`S3/shared-base-state-01` passes **1,895 component /373 ASan+UBSan ESM4 /162
+Python /583 engine tests**, with exact C++ inventory agreement and no skips or
+failures. All three engine binaries rebuild. Tested source fingerprint:
+`63d0c37be169539e2fc8def1470b2223f4c5bf4fc5453a89e43c709cf480ac70`.
+Sanitizers cover components only, with leak checks disabled.
+
+Runtime evidence on executable SHA-256
+`1faf6a6d2d3ec36f685d637cc6c293cbe79a8b4fd53e9345395244fd2b9e3363`:
+
+- `S3/shared-base-state-restart-01`: real save/quit/fresh load/resave passes,
+  with schema-11 empty native actor/base vectors and matching live/binary state.
+- `S3/shared-base-state-legacy-01`: copied schema-10 input loads/resaves as 11;
+  native actor entries and action ledger are preserved, overrides remain empty,
+  and source/pristine hashes are unchanged.
+- `S3/shared-base-state-populated-01`: injected typed overrides survive actual
+  engine load/resave exactly. The editable roundtrip input is committed. This
+  establishes storage ownership, not normal-input SetAV or gameplay activation.
+- `S3/shared-base-state-reject-01`: a structurally valid override naming the
+  fixture's static base fails native content binding before the Applied boundary,
+  with no save write and unchanged source/pristine/mutated-input hashes. Editable
+  fault input and scenario are committed.
+- `S3/shared-base-state-morrowind-01`: unchanged M14 smoke manifest passes its
+  no-native-record save assertion. It is profile isolation, not TES3 combat/crime
+  acceptance.
+
+Inspected restart/migration/populated captures show the textured observation
+room and HUD. The rejection capture shows the expected invalid-base dialog.
+The Morrowind capture remains terrain-facing with sky and TES3 HUD. All these
+courses are silent and establish no audio acceptance. The build/test skill now
+records schema-11 migration, populated persistence and rejection reproduction.
+Next is authoritative shared-base writes and propagation to every affected
+loaded/unloaded actor, with raw integer query handling and preserved modifiers.

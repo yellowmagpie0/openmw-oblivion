@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 10
+CURRENT_VERSION = 11
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -665,22 +665,60 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("Nonfinite TES4 native actor value")
         return result
 
+    def native_key(identity: Any) -> None:
+        parts = identity.split(":") if isinstance(identity, str) else []
+        valid = len(parts) == 3 and parts[0] in ("content", "dynamic") and bool(parts[1])
+        if valid:
+            kind, namespace, number = parts
+            valid = len(number) == (6 if kind == "content" else 16) and all(
+                char in "0123456789abcdef" for char in number
+            ) and int(number, 16) != 0
+            if kind == "content":
+                valid = valid and "/" not in namespace and not any("A" <= c <= "Z" for c in namespace)
+        if not valid:
+            raise RuntimeStateError("Invalid TES4 native actor-value identity")
+
+    native_bases = check_collection(state.get("native_actor_bases", []), "native actor-base list")
+    if version < 11 and native_bases:
+        raise RuntimeStateError("TES4 native actor base overrides require version 11")
+    seen_bases: set[str] = set()
+    for base_override in native_bases:
+        if not isinstance(base_override, dict):
+            raise RuntimeStateError("Invalid TES4 native actor base override")
+        key, kind = base_override.get("base"), base_override.get("kind")
+        native_key(key)
+        if key in seen_bases or type(kind) is not int or kind not in (0, 1):
+            raise RuntimeStateError("Invalid or duplicate TES4 native actor base override")
+        seen_bases.add(key)
+        values = check_collection(base_override.get("values"), "native actor base values")
+        if not 1 <= len(values) <= 72:
+            raise RuntimeStateError("Invalid TES4 native actor base value count")
+        seen_values: set[int] = set()
+        for entry in values:
+            if not isinstance(entry, list) or len(entry) != 3:
+                raise RuntimeStateError("Invalid TES4 native actor base value")
+            av, storage, value = entry
+            if type(av) is not int or not 0 <= av < 72 or av == 11 or 37 <= av <= 39 or av in seen_values:
+                raise RuntimeStateError("Invalid or duplicate TES4 native actor base value")
+            seen_values.add(av)
+            if kind == 1 and 12 <= av <= 32 and av not in (12, 19, 26):
+                raise RuntimeStateError("Noncanonical TES4 creature base skill")
+            if type(storage) is not int or storage != int(av >= 40):
+                raise RuntimeStateError("Invalid TES4 native actor base storage type")
+            if storage == 0:
+                maximum = (1 << 31) - 1 if av == 8 else 65535 if av in (9, 10) else 255
+                minimum = -(1 << 31) if av == 8 else 0
+                if type(value) is not int or not minimum <= value <= maximum:
+                    raise RuntimeStateError("TES4 native actor base exceeds storage width")
+            else:
+                native_float(value)
+
     for actor in native_actors:
         if not isinstance(actor, dict):
             raise RuntimeStateError("Invalid TES4 native actor values")
         key, base = actor.get("actor"), actor.get("base")
-        for identity in (key, base):
-            parts = identity.split(":") if isinstance(identity, str) else []
-            valid = len(parts) == 3 and parts[0] in ("content", "dynamic") and bool(parts[1])
-            if valid:
-                kind, namespace, number = parts
-                valid = len(number) == (6 if kind == "content" else 16) and all(
-                    char in "0123456789abcdef" for char in number
-                ) and int(number, 16) != 0
-                if kind == "content":
-                    valid = valid and "/" not in namespace and not any("A" <= c <= "Z" for c in namespace)
-            if not valid:
-                raise RuntimeStateError("Invalid TES4 native actor-value identity")
+        native_key(key)
+        native_key(base)
         if key in native_keys:
             raise RuntimeStateError("Duplicate TES4 native actor-value identity")
         native_keys.add(key)
@@ -1054,6 +1092,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     raise RuntimeStateError("Invalid TES4 player form-value presence")
                 actor["player_form_values"] = [reader.unpack("<i") for _ in range(4)] if present else None
             result["native_actor_values"].append(actor)
+    if version >= 11:
+        result["native_actor_bases"] = []
+        for _ in range(reader.count()):
+            base = {"base": reader.string(), "kind": reader.unpack("<B"), "values": []}
+            count = reader.count()
+            if not 1 <= count <= 72:
+                raise RuntimeStateError("Invalid TES4 native actor base value count")
+            for _ in range(count):
+                av, storage = reader.unpack("<B"), reader.unpack("<B")
+                if storage not in (0, 1):
+                    raise RuntimeStateError("Invalid TES4 native actor base storage type")
+                base["values"].append([av, storage, reader.unpack("<i" if storage == 0 else "<f")])
+            result["native_actor_bases"].append(base)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1232,6 +1283,17 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 if form_values is not None:
                     for value in form_values:
                         writer.pack("<i", value)
+    if version >= 11:
+        bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
+        writer.pack("<I", len(bases))
+        for base in bases:
+            writer.string(base["base"])
+            writer.pack("<B", base["kind"])
+            writer.pack("<I", len(base["values"]))
+            for av, storage, value in sorted(base["values"], key=lambda entry: entry[0]):
+                writer.pack("<B", av)
+                writer.pack("<B", storage)
+                writer.pack("<i" if storage == 0 else "<f", value)
     return writer.finish()
 
 
@@ -1305,6 +1367,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("pending_package_done", [])
     state.setdefault("physical_actions", {"next": 1, "pending": []})
     state.setdefault("native_actor_values", [])
+    state.setdefault("native_actor_bases", [])
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
@@ -1335,6 +1398,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("pending_package_done", [])
     result.setdefault("physical_actions", {"next": 1, "pending": []})
     result.setdefault("native_actor_values", [])
+    result.setdefault("native_actor_bases", [])
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])

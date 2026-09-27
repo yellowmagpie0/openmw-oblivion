@@ -1,0 +1,15 @@
+{
+  "native_actor_bases": [
+    {
+      "base": "content:m15-fixture.esm:900001",
+      "kind": 0,
+      "values": [
+        [
+          8,
+          0,
+          100
+        ]
+      ]
+    }
+  ]
+}

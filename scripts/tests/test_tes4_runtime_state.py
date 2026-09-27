@@ -362,6 +362,63 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.decode_payload(bytes(duplicate))
 
+    def test_shared_base_overrides_have_typed_canonical_version_eleven_wire(self) -> None:
+        state = make_state()
+        state["schema_version"] = 11
+        state["ai_rng_state"] = 1
+        base = {"base": "content:oblivion.esm:000007", "kind": 0,
+                "values": [[8, 0, 16777217], [9, 0, 65535], [40, 1, 2147483648.0]]}
+        state["native_actor_bases"] = [base]
+        payload = state_io.encode_payload(state)
+        key = base["base"].encode()
+        suffix = (struct.pack("<II", 1, len(key)) + key + struct.pack("<BI", 0, 3)
+                  + struct.pack("<BBi", 8, 0, 16777217) + struct.pack("<BBi", 9, 0, 65535)
+                  + struct.pack("<BBf", 40, 1, 2147483648.0))
+        self.assertTrue(payload.endswith(suffix))
+        self.assertEqual(state_io.decode_payload(payload)["native_actor_bases"], [base])
+        base["values"].reverse()
+        self.assertEqual(state_io.encode_payload(state), payload)
+        for cut in range(len(payload) - len(suffix), len(payload)):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:cut])
+        for index, value in ((len(payload) - 5, 2), (len(payload) - 6, 72)):
+            corrupt = bytearray(payload)
+            corrupt[index] = value
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(bytes(corrupt))
+        state["schema_version"] = 10
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state["native_actor_bases"] = []
+        legacy = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("native_actor_bases", legacy)
+        legacy["schema_version"] = 11
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(legacy))["native_actor_bases"], [])
+
+    def test_shared_base_overrides_reject_bad_identity_kind_shape_and_storage(self) -> None:
+        state = make_state()
+        state["schema_version"] = 11
+        state["ai_rng_state"] = 1
+        valid = {"base": "content:oblivion.esm:000007", "kind": 0, "values": [[8, 0, 16777217]]}
+        state["native_actor_bases"] = [valid]
+        state_io.encode_payload(state)
+        invalids = [dict(valid, base="null"), dict(valid, base="content:Oblivion.esm:000007"),
+                    dict(valid, kind=2), dict(valid, kind=True), dict(valid, values=[]),
+                    dict(valid, values=[[8, 0, 1], [8, 0, 2]]),
+                    dict(valid, kind=1, values=[[28, 0, 1]])]
+        for value in ([0, 0, -1], [7, 0, 256], [9, 0, 65536], [10, 0, -1], [8, 1, 1.0],
+                      [40, 0, 1], [11, 0, 0], [37, 0, 0], [72, 1, 0], [40, 1, math.inf],
+                      [8, 0, True], [8, False, 1], [8, 0, 2147483648]):
+            invalids.append(dict(valid, values=[value]))
+        for invalid in invalids:
+            with self.subTest(invalid=invalid):
+                state["native_actor_bases"] = [invalid]
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+        state["native_actor_bases"] = [valid, valid]
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
     def test_player_form_values_match_cpp_version_ten_wire_and_preserve_legacy_absence(self) -> None:
         state = make_state()
         state["schema_version"] = 10
