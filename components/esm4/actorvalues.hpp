@@ -28,6 +28,10 @@ namespace ESM4
     // Ordinary scalar composition only. Base lookup, creature AV aliases,
     // magicka/encumbrance special handling and integer queries are separate.
     float composeActorValue(const ActorValueState& state, ActorValueOwner owner, ActorValueProcess process);
+    // Native NPC/Creature form-float getters return the exact int32 in x87.
+    // Add Script and Damage before the first float store, then active Maximum.
+    float composeNonPlayerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
+        ActorValueProcess process);
     // Integer AV queries have their own truncation boundaries. The caller
     // supplies the resolved integer base (player base floor or NPC form query).
     std::int32_t composeIntegerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
@@ -53,6 +57,10 @@ namespace ESM4
 
         friend bool operator==(const ActorBaseValueSet&, const ActorBaseValueSet&) = default;
     };
+    // Base-record integer query: extra stored floats truncate before either
+    // integer or float actor composition. Out-of-int32 conversions depend on
+    // the original CPU path and are outside this explicitly supported domain.
+    std::int32_t actorBaseValueInteger(const ActorBaseValueSet& value);
     // Prepare the base-record part of an actor SetAV command, including the
     // Creature runtime skill aliases. The player uses the NPC base kind.
     // Null means no base write (AV11 and 37..39), not no process-cache updates

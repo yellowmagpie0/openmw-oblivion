@@ -59,6 +59,16 @@ namespace ESM4
         return process == ActorValueProcess::Low ? low : stored(double(low) + maximum);
     }
 
+    float composeNonPlayerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
+        ActorValueProcess process)
+    {
+        validateActorValueState({0, modifiers});
+        if (process != ActorValueProcess::Low && process != ActorValueProcess::Active)
+            throw std::invalid_argument("invalid native actor-value process");
+        const float low = stored(double(base) + modifiers[1].value_or(0.f) + modifiers[2].value_or(0.f));
+        return process == ActorValueProcess::Low ? low : stored(double(low) + modifiers[0].value_or(0.f));
+    }
+
     ActorValueState changeActorValueModifier(
         const ActorValueState& state, ActorValueOwner owner, ActorValueModifier modifier, float delta)
     {
@@ -90,6 +100,11 @@ namespace ESM4
             return truncated(double(base) + maximum + script + damage);
         const auto low = truncated(double(base) + script + damage);
         return process == ActorValueProcess::Low ? low : truncated(double(low) + maximum);
+    }
+
+    std::int32_t actorBaseValueInteger(const ActorBaseValueSet& value)
+    {
+        return std::visit([](auto storedValue) { return truncated(double(storedValue)); }, value.mValue);
     }
 
     std::optional<ActorBaseValueSet> prepareActorBaseValueSet(

@@ -273,3 +273,31 @@ TEST(ESM4ActorValues, BaseSetterAliasesCreatureSkillsAndIdentifiesNoBaseWrite)
     EXPECT_THROW(ESM4::prepareActorBaseValueSet(Kind::Npc, 72, 100), std::invalid_argument);
     EXPECT_THROW(ESM4::prepareActorBaseValueSet(Kind::Creature, 255, 100), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, NonPlayerFormFloatRetainsExactIntegerUntilModifierAddition)
+{
+    // Original 51E790 returns FILD without FSTP; 6433E0 stores only after
+    // Script and Damage, then 6587E0 adds Maximum for an active process.
+    for (const auto process : {Process::Low, Process::Active})
+    {
+        EXPECT_EQ(ESM4::composeNonPlayerActorValue(16'777'217, {0, .5f, 0}, process), 16'777'218.f);
+        EXPECT_EQ(ESM4::composeNonPlayerActorValue(-16'777'217, {0, -.5f, 0}, process), -16'777'218.f);
+        EXPECT_EQ(ESM4::composeNonPlayerActorValue(16'777'217, {0, 0, -.5f}, process), 16'777'216.f);
+    }
+    EXPECT_EQ(ESM4::composeNonPlayerActorValue(16'777'217, {1, 1, 0}, Process::Active), 16'777'220.f);
+    EXPECT_EQ(ESM4::composeNonPlayerActorValue(16'777'217, {1, 1, 0}, Process::Low), 16'777'218.f);
+    EXPECT_THROW(ESM4::composeNonPlayerActorValue(1, {}, static_cast<Process>(255)), std::invalid_argument);
+    EXPECT_THROW(ESM4::composeNonPlayerActorValue(1, {std::numeric_limits<float>::infinity(), 0, 0},
+        Process::Low), std::invalid_argument);
+    EXPECT_THROW(ESM4::composeNonPlayerActorValue(1, {0, 3e38f, 3e38f}, Process::Active), std::invalid_argument);
+}
+
+TEST(ESM4ActorValues, BaseFloatStorageQueriesTruncateBeforeActorComposition)
+{
+    EXPECT_EQ(ESM4::actorBaseValueInteger({8, std::int32_t{16'777'217}}), 16'777'217);
+    EXPECT_EQ(ESM4::actorBaseValueInteger({71, 1.75f}), 1);
+    EXPECT_EQ(ESM4::actorBaseValueInteger({71, -1.75f}), -1);
+    EXPECT_EQ(ESM4::actorBaseValueInteger({40, -.75f}), 0);
+    EXPECT_THROW(ESM4::actorBaseValueInteger({40, 2147483648.f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::actorBaseValueInteger({40, std::numeric_limits<float>::quiet_NaN()}), std::invalid_argument);
+}

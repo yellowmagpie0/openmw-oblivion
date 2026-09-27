@@ -58,3 +58,12 @@ inputs, invalid-domain cases and both outcomes for each branch. For stochastic
 rules separate exact forced-draw tests from fixed-seed distributions with a
 predeclared tolerance. Save failing cases/logs; distinguish bad setup from a
 falsified rule. Avoid shipping an oracle script that imports production logic.
+
+- A function advertised as returning float can leave an exact integer in x87.
+  NPC/Creature form getter `0051E790` does FILD and RET without FSTP. The low
+  process adds Script/Damage before rounding; a C++ float base parameter loses
+  Health precision after a large SetAV. Use `base-health-float.py` and
+  `base-health-query.py` as local examples of full form/process composition.
+- Original `009828C0` has CPU-dependent overflow behavior. Its non-SSE path
+  uses FISTP int64 and returns low bits; do not assume CVTTSD2SI's int32 sentinel.
+  Keep unsupported conversion domains explicit until both paths are modeled.

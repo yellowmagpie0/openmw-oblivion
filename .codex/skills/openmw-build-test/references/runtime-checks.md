@@ -142,3 +142,14 @@ hashes, as in `S3/shared-base-state-reject-01/verification.json`. Pair it with
 `m15-restart` and Morrowind save isolation. Keep all generated saves and images
 in fresh ignored output directories. Hash the large engine binary once per
 unchanged build and reuse that verified identity in the reports.
+
+Shared-base consistency has an additional positive/negative pair:
+`oblivion_m15_native_actor_base_roundtrip.json` merges matching actor/base
+snapshots for the ordinary private-slot load/resave manifest;
+`oblivion_m15_native_base_conflict.json` merges a structurally valid conflicting
+raw player Health input. Run the latter with
+`oblivion_m15_reject_native_base_conflict.json`. Require the exact conflict
+message before Applied/save boundaries. Passed examples are
+`S3/shared-base-writer-populated-01` and `S3/shared-base-writer-conflict-01`.
+Verify both native vectors, input preservation and scenario status independently.
+`load_save` takes a `pathlib.Path`, and its version key is `schema_version`.

@@ -10,6 +10,7 @@
 
 #include <array>
 #include <map>
+#include <span>
 
 namespace MWWorld
 {
@@ -94,9 +95,11 @@ namespace MWMechanics
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
     {
+        class PreparedNonPlayerView;
         ESM4::ActionLedger mActions;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
+        const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -116,6 +119,14 @@ namespace MWMechanics
         // scalar transition. This method cannot run callbacks between commits.
         void changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta);
+        // Shared base-record transaction. The caller supplies every resident,
+        // published reference of this base, including actor. Unloaded saved
+        // actors change too; newly published references inherit the override.
+        // No pointers survive the call. Event/cache policy remains caller-owned.
+        void setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
+            std::int32_t requested, std::span<const MWWorld::Ptr> residents);
+        void setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
+            std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings);
         float getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         std::int32_t getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
         // Read saved actors without constructing/loading their live references.

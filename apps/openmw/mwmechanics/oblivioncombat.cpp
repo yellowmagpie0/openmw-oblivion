@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <type_traits>
 #include <optional>
+#include <list>
+#include <set>
 
 #include "../mwclass/esm4interactive.hpp"
 
@@ -97,22 +99,38 @@ namespace MWMechanics
             return value >= 26 && value <= 32 ? 26 : value;
         }
 
-        float nonPlayerFloat(const ESM4::RuntimeActorValues& values, std::uint8_t value)
+        std::optional<std::int32_t> integerBaseOverride(const ESM4::RuntimeActorBaseOverride* base, std::uint8_t value)
+        {
+            if (base)
+                for (const auto& entry : base->mValues)
+                    if (entry.mActorValue == value)
+                        return ESM4::actorBaseValueInteger(entry);
+            return std::nullopt;
+        }
+
+        float nonPlayerFloat(const ESM4::RuntimeActorValues& values, std::uint8_t value,
+            const ESM4::RuntimeActorBaseOverride* base = nullptr)
         {
             validateNonPlayerQuery(value);
-            const auto current = ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
+            const auto integerBase = integerBaseOverride(base, value);
+            const auto current = integerBase
+                ? ESM4::composeNonPlayerActorValue(*integerBase, values.mValues[value].mModifiers, values.mProcess)
+                : ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
             if (value != 9)
                 return current;
             const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
             return ESM4::scaleNpcMagicka(current, multiplier);
         }
 
-        std::int32_t nonPlayerInteger(const ESM4::RuntimeActorValues& values, std::uint8_t value)
+        std::int32_t nonPlayerInteger(const ESM4::RuntimeActorValues& values, std::uint8_t value,
+            const ESM4::RuntimeActorBaseOverride* base)
         {
             validateNonPlayerQuery(value);
             const auto& state = values.mValues[value];
+            const auto override = integerBaseOverride(base, value);
+            const auto integerBase = override ? *override : ESM4::combatBaseValue(state.mBase);
             const auto current = ESM4::composeIntegerActorValue(
-                ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
+                integerBase, state.mModifiers, values.mOwner, values.mProcess);
             if (value != 9)
                 return current;
             const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
@@ -149,12 +167,12 @@ namespace MWMechanics
         }
 
         bool restoreResources(ESM4::RuntimeActorValues& values, const OblivionRestorationUpdate& input,
-            const OblivionRestorationSettings& settings)
+            const OblivionRestorationSettings& settings, const ESM4::RuntimeActorBaseOverride* base = nullptr)
         {
             const auto current = [&](std::uint8_t av) {
                 return values.mOwner == ESM4::ActorValueOwner::Player
                     ? ESM4::composeActorValue(values.mValues[av], values.mOwner, values.mProcess)
-                    : nonPlayerFloat(values, av);
+                    : nonPlayerFloat(values, av, base);
             };
             const auto integer = [&](std::uint8_t av) {
                 const auto& value = values.mValues[av];
@@ -233,7 +251,8 @@ namespace MWMechanics
             return true;
         }
 
-        OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values)
+        OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values,
+            const ESM4::RuntimeActorBaseOverride* base = nullptr)
         {
             OblivionActorProjectionInput input;
             input.mOwner = values.mOwner;
@@ -248,11 +267,81 @@ namespace MWMechanics
                         value.mModifiers[0].value_or(0.f), values.mOwner, values.mProcess),
                     values.mOwner == ESM4::ActorValueOwner::Player
                         ? ESM4::composeActorValue(value, values.mOwner, values.mProcess)
-                        : nonPlayerFloat(values, static_cast<std::uint8_t>(8 + i))};
+                        : nonPlayerFloat(values, static_cast<std::uint8_t>(8 + i), base)};
             }
             return input;
         }
+
+        void applyActorBase(ESM4::RuntimeActorValues& values, const ESM4::RuntimeActorBaseOverride* base)
+        {
+            if (!base)
+                return;
+            if (base->mBase != values.mBase
+                || (values.mOwner == ESM4::ActorValueOwner::Player && base->mKind != ESM4::ActorBaseKind::Npc))
+                throw std::invalid_argument("native actor base override identity mismatch");
+            for (const auto& entry : base->mValues)
+            {
+                const auto av = entry.mActorValue;
+                if (values.mOwner == ESM4::ActorValueOwner::Player && av >= 8 && av <= 10)
+                {
+                    validatePlayerIdentity(values);
+                    (*values.mPlayerFormValues)[av - 8] = std::get<std::int32_t>(entry.mValue);
+                    continue; // Derived player bases require winning settings.
+                }
+                const float resolved = static_cast<float>(ESM4::actorBaseValueInteger(entry));
+                values.mValues[av].mBase = resolved;
+                if (base->mKind == ESM4::ActorBaseKind::Creature && av >= 12 && av <= 26)
+                    for (std::size_t i = av + 1; i < av + 7u; ++i)
+                        values.mValues[i].mBase = resolved;
+            }
+        }
+
+        void setActorBaseEntry(ESM4::RuntimeActorBaseOverride& base, const ESM4::ActorBaseValueSet& entry)
+        {
+            const auto found = std::find_if(base.mValues.begin(), base.mValues.end(),
+                [&](const auto& item) { return item.mActorValue == entry.mActorValue; });
+            if (found == base.mValues.end())
+                base.mValues.push_back(entry);
+            else
+                *found = entry;
+            base.validate();
+        }
+
     }
+
+    class OblivionCombatService::PreparedNonPlayerView
+    {
+        std::optional<OblivionActorProjection> mProjection;
+        std::array<float, 21> mSkills{};
+        std::array<float, 21>* mSkillTarget = nullptr;
+
+    public:
+        PreparedNonPlayerView(const MWWorld::Ptr& actor, const ESM4::RuntimeActorValues& values,
+            const ESM4::RuntimeActorBaseOverride* base)
+        {
+            validateNonPlayerIdentity(actor, values);
+            const auto projection = actorProjection(values, base);
+            if (actor.getType() == ESM::REC_NPC_4)
+                mProjection.emplace(actor.getClass().getNpcStats(actor), projection);
+            else
+            {
+                for (std::size_t i = 0; i < mSkills.size(); ++i)
+                    mSkills[i] = nonPlayerFloat(values, nonPlayerValueIndex(true, static_cast<std::uint8_t>(12 + i)));
+                mProjection.emplace(actor.getClass().getCreatureStats(actor), projection);
+                auto& data = actor.getRefData().getCustomData()->asESM4CreatureCustomData();
+                if (!data.mNativeSkills)
+                    throw std::logic_error("native creature lacks its skill projection");
+                mSkillTarget = &*data.mNativeSkills;
+            }
+        }
+
+        void commit() noexcept
+        {
+            mProjection->commit();
+            if (mSkillTarget)
+                *mSkillTarget = mSkills;
+        }
+    };
 
     OblivionActorProjection::OblivionActorProjection(
         CreatureStats& target, const OblivionActorProjectionInput& input)
@@ -359,23 +448,12 @@ namespace MWMechanics
     {
         values.validate();
         validateNonPlayerIdentity(actor, values);
-        const auto projection = actorProjection(values);
-        std::optional<OblivionActorProjection> prepared;
-        std::array<float, 21> preparedSkills{};
-        std::array<float, 21>* creatureSkills = nullptr;
-        if (actor.getType() == ESM::REC_NPC_4)
-            prepared.emplace(actor.getClass().getNpcStats(actor), projection);
-        else
-        {
-            for (std::size_t i = 0; i < preparedSkills.size(); ++i)
-                preparedSkills[i] = nonPlayerFloat(values,
-                    nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, static_cast<std::uint8_t>(12 + i)));
-            prepared.emplace(actor.getClass().getCreatureStats(actor), projection);
-            auto& data = actor.getRefData().getCustomData()->asESM4CreatureCustomData();
-            if (!data.mNativeSkills)
-                throw std::logic_error("native creature lacks its skill projection");
-            creatureSkills = &*data.mNativeSkills;
-        }
+        const auto* base = findActorBase(values.mBase);
+        if (base && (base->mKind == ESM4::ActorBaseKind::Creature) != (actor.getType() == ESM::REC_CREA4))
+            throw std::invalid_argument("native actor base override kind mismatch");
+        applyActorBase(values, base);
+        values.validate();
+        PreparedNonPlayerView prepared(actor, values, base);
         const auto found = mActorValues.find(values.mActor);
         if (found == mActorValues.end())
         {
@@ -388,9 +466,83 @@ namespace MWMechanics
             static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
             std::swap(found->second, values);
         }
-        prepared->commit();
-        if (creatureSkills)
-            *creatureSkills = preparedSkills;
+        prepared.commit();
+    }
+
+    const ESM4::RuntimeActorBaseOverride* OblivionCombatService::findActorBase(const ESM::FormKey& base) const
+    {
+        const auto found = mActorBases.find(base);
+        return found == mActorBases.end() ? nullptr : &found->second;
+    }
+
+    void OblivionCombatService::setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
+        std::int32_t requested, std::span<const MWWorld::Ptr> residents)
+    {
+        validateNonPlayerQuery(value);
+        const auto& target = nonPlayerValues(actor);
+        const auto kind = actor.getType() == ESM::REC_CREA4 ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc;
+        const auto entry = ESM4::prepareActorBaseValueSet(kind, value, requested);
+        if (!entry)
+            return;
+        auto bases = mActorBases;
+        auto [baseIt, inserted] = bases.try_emplace(target.mBase,
+            ESM4::RuntimeActorBaseOverride{target.mBase, kind, {}});
+        auto& base = baseIt->second;
+        if (base.mKind != kind)
+            throw std::invalid_argument("native actor base override kind mismatch");
+        setActorBaseEntry(base, *entry);
+        auto actors = mActorValues;
+        for (auto& [key, values] : actors)
+            if (values.mBase == target.mBase)
+            {
+                if (values.mOwner != ESM4::ActorValueOwner::NonPlayer)
+                    throw std::invalid_argument("native shared base has mixed player ownership");
+                applyActorBase(values, &base);
+                values.validate();
+                // Validate complete output even for an unloaded reference.
+                actorProjection(values, &base);
+            }
+        std::set<ESM::FormKey> identities;
+        std::list<PreparedNonPlayerView> prepared;
+        for (const auto& ptr : residents)
+        {
+            const auto& old = nonPlayerValues(ptr);
+            if (old.mBase != target.mBase || !identities.insert(old.mActor).second
+                || (ptr.getType() == ESM::REC_CREA4) != (kind == ESM4::ActorBaseKind::Creature))
+                throw std::invalid_argument("invalid or duplicate native shared-base resident");
+            prepared.emplace_back(ptr, actors.at(old.mActor), &base);
+        }
+        if (!identities.contains(target.mActor))
+            throw std::invalid_argument("native shared-base transaction omits its target");
+        mActorBases.swap(bases);
+        mActorValues.swap(actors);
+        for (auto& view : prepared)
+            view.commit();
+    }
+
+    void OblivionCombatService::setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
+        std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        validatePlayerQuery(value);
+        auto candidate = playerValues();
+        const auto entry = ESM4::prepareActorBaseValueSet(ESM4::ActorBaseKind::Npc, value, requested);
+        if (!entry)
+            return;
+        auto bases = mActorBases;
+        auto [baseIt, inserted] = bases.try_emplace(candidate.mBase,
+            ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+        if (baseIt->second.mKind != ESM4::ActorBaseKind::Npc)
+            throw std::invalid_argument("native player base override kind mismatch");
+        setActorBaseEntry(baseIt->second, *entry);
+        applyActorBase(candidate, &baseIt->second);
+        // Publish on an isolated candidate authority so all preparation can
+        // fail before the live base map, actor map or shared views change.
+        OblivionCombatService prepared;
+        prepared.mActorValues = mActorValues;
+        prepared.mActorBases = std::move(bases);
+        prepared.publishPlayerValues(player, std::move(candidate), settings);
+        mActorValues.swap(prepared.mActorValues);
+        mActorBases.swap(prepared.mActorBases);
     }
 
     void OblivionCombatService::changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,
@@ -407,13 +559,15 @@ namespace MWMechanics
     float OblivionCombatService::getNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value) const
     {
         const auto& values = nonPlayerValues(actor);
-        return nonPlayerFloat(values, nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value));
+        return nonPlayerFloat(values, nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value),
+            findActorBase(values.mBase));
     }
 
     std::int32_t OblivionCombatService::getNonPlayerIntegerValue(const MWWorld::Ptr& actor, std::uint8_t value) const
     {
         const auto& values = nonPlayerValues(actor);
-        return nonPlayerInteger(values, nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value));
+        return nonPlayerInteger(values, nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value),
+            findActorBase(values.mBase));
     }
 
     const ESM4::RuntimeActorValues& OblivionCombatService::nonPlayerValues(const ESM::FormKey& actor) const
@@ -428,14 +582,16 @@ namespace MWMechanics
         const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const
     {
         const auto& values = nonPlayerValues(actor);
-        return nonPlayerFloat(values, nonPlayerValueIndex(nonPlayerContentIsCreature(values, store), value));
+        return nonPlayerFloat(values, nonPlayerValueIndex(nonPlayerContentIsCreature(values, store), value),
+            findActorBase(values.mBase));
     }
 
     std::int32_t OblivionCombatService::getNonPlayerIntegerValue(
         const ESM::FormKey& actor, std::uint8_t value, const MWWorld::ESMStore& store) const
     {
         const auto& values = nonPlayerValues(actor);
-        return nonPlayerInteger(values, nonPlayerValueIndex(nonPlayerContentIsCreature(values, store), value));
+        return nonPlayerInteger(values, nonPlayerValueIndex(nonPlayerContentIsCreature(values, store), value),
+            findActorBase(values.mBase));
     }
 
     std::int32_t OblivionCombatService::getNonPlayerBaseValue(
@@ -469,6 +625,7 @@ namespace MWMechanics
     {
         values.validate();
         validatePlayerIdentity(values);
+        applyActorBase(values, findActorBase(values.mBase));
         std::array<std::int32_t, 8> attributes;
         for (std::size_t i = 0; i < attributes.size(); ++i)
             attributes[i] = ESM4::composeIntegerActorValue(ESM4::combatBaseValue(values.mValues[i].mBase),
@@ -529,7 +686,8 @@ namespace MWMechanics
         const OblivionRestorationUpdate& input, const OblivionRestorationSettings& settings)
     {
         auto candidate = nonPlayerValues(actor);
-        if (!actor.getClass().getCreatureStats(actor).isDead() && restoreResources(candidate, input, settings))
+        if (!actor.getClass().getCreatureStats(actor).isDead()
+            && restoreResources(candidate, input, settings, findActorBase(candidate.mBase)))
             publishNonPlayerValues(actor, std::move(candidate));
     }
 
@@ -644,6 +802,16 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> bases;
         for (const auto& base : state.mNativeActorBases)
             bases.emplace(base.mBase, base);
+        for (const auto& [key, actor] : actors)
+        {
+            const auto base = bases.find(actor.mBase);
+            if (base == bases.end())
+                continue;
+            auto resolved = actor;
+            applyActorBase(resolved, &base->second);
+            if (resolved != actor)
+                throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
+        }
         mActions = std::move(actions);
         mActorValues.swap(actors);
         mActorBases.swap(bases);

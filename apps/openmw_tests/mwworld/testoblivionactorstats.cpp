@@ -947,6 +947,211 @@ namespace
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getModified(), 50);
     }
 
+    TEST_F(OblivionActorStatsTest, sharedNpcBaseWritesReachResidentsUnloadedAndFutureActorsAtomically)
+    {
+        autoNpc();
+        sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        std::array<ESM4::ActorCharacter, 4> refs{};
+        std::array<std::unique_ptr<MWWorld::LiveCellRef<ESM4::Npc>>, 4> lives;
+        std::array<MWWorld::Ptr, 4> ptrs;
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues original;
+        original.mBase = mActorKey;
+        original.mValues[0] = {30, {1, -.5f, -2}};
+        original.mValues[8].mBase = 100;
+        original.mValues[9].mBase = 50;
+        original.mValues[10].mBase = 40;
+        for (std::size_t i = 0; i < refs.size(); ++i)
+        {
+            auto& ref = refs[i];
+            ref.mId = {static_cast<std::uint32_t>(0x900 + i), 3};
+            ref.mFormKey = ESM::FormKey::content("actors.esm", 0x900 + i);
+            ref.mBaseKey = mActorKey;
+            mStore.getWritable<ESM4::ActorCharacter>().insertStatic(ref, ref.mFormKey);
+            lives[i] = std::make_unique<MWWorld::LiveCellRef<ESM4::Npc>>(ref, mStore.search<ESM4::Npc>(mActorKey));
+            ptrs[i] = MWWorld::Ptr(lives[i].get());
+            original.mActor = ref.mFormKey;
+            if (i < 3)
+                service.publishNonPlayerValues(ptrs[i], original);
+        }
+        // Third reference unloads; the authority must not retain a Ptr to it.
+        ptrs[2] = {};
+        lives[2].reset();
+        const std::span<const MWWorld::Ptr> residents(ptrs.data(), 2);
+        const auto action = service.allocateAction();
+        service.setNonPlayerBaseValue(ptrs[0], 0, 257, residents);
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+            const auto* state = service.findActorValues(refs[i].mFormKey);
+            ASSERT_NE(state, nullptr);
+            EXPECT_EQ(state->mValues[0].mBase, 1);
+            EXPECT_EQ(state->mValues[0].mModifiers, original.mValues[0].mModifiers);
+            EXPECT_EQ(service.getNonPlayerValue(refs[i].mFormKey, 0, mStore), -.5f);
+        }
+        for (const auto& ptr : residents)
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getAttribute(ESM::Attribute::Strength).getModified(), -.5f);
+        EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
+        service.setNonPlayerBaseValue(ptrs[0], 8, 16777217, residents);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptrs[0], 8), 16777217);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 8), 16777216.f);
+        EXPECT_EQ(service.getNonPlayerBaseValue(refs[2].mFormKey, 8, mStore), 16777216);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(refs[2].mFormKey, 8, mStore), 16777217);
+        service.changeNonPlayerValue(ptrs[0], 8, ESM4::ActorValueModifier::Script, .5f);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 8), 16777218.f);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptrs[0], 8), 16777217);
+        EXPECT_EQ(ptrs[0].getClass().getCreatureStats(ptrs[0]).getHealth().getCurrent(), 16777218.f);
+        service.changeNonPlayerValue(ptrs[0], 8, ESM4::ActorValueModifier::Damage, -.5f);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 8), 16777216.f);
+        service.changeNonPlayerValue(ptrs[0], 8, ESM4::ActorValueModifier::Script, -.5f);
+        service.changeNonPlayerValue(ptrs[0], 8, ESM4::ActorValueModifier::Damage, .5f);
+        service.setNonPlayerBaseValue(ptrs[0], 9, -1, residents);
+        EXPECT_EQ(service.getNonPlayerBaseValue(refs[0].mFormKey, 9, mStore), 65535);
+        service.setNonPlayerBaseValue(ptrs[0], 71, 16777217, residents);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 71), 16777216.f);
+        service.setNonPlayerBaseValue(ptrs[0], 71, 0, residents);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 71), 0);
+        // A new reference's authored values cannot erase earlier shared writes.
+        service.publishNonPlayerValues(ptrs[3], original);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptrs[3], 8), 16777217);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[3], 0), -.5f);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        for (const auto& ref : refs)
+        {
+            ESM4::RuntimeReferenceState savedActor;
+            savedActor.mKey = ref.mFormKey;
+            savedActor.mBase = ref.mBaseKey;
+            savedActor.mCell = saved.mPlayer.mCell;
+            saved.mReferences.push_back(savedActor);
+        }
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        EXPECT_EQ(restored.getNonPlayerIntegerValue(refs[2].mFormKey, 8, mStore), 16777217);
+        EXPECT_EQ(restored.getNonPlayerBaseValue(refs[2].mFormKey, 8, mStore), 16777216);
+        EXPECT_TRUE(restored.isActionPending(action));
+        auto conflicting = saved;
+        conflicting.mNativeActorValues[0].mValues[8].mBase = 100;
+        EXPECT_THROW(restored.restore(conflicting, mStore), std::invalid_argument);
+        auto after = saved;
+        restored.capture(after);
+        EXPECT_EQ(after, saved);
+        auto fractional = saved;
+        for (auto& entry : fractional.mNativeActorBases[0].mValues)
+            if (entry.mActorValue == 71)
+                entry.mValue = -1.75f;
+        for (auto& actor : fractional.mNativeActorValues)
+            actor.mValues[71].mBase = -1;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(fractional.serializeBinary()), mStore);
+        EXPECT_EQ(restored.getNonPlayerValue(refs[2].mFormKey, 71, mStore), -1);
+        EXPECT_EQ(restored.getNonPlayerIntegerValue(refs[2].mFormKey, 71, mStore), -1);
+        restored.capture(after);
+        EXPECT_EQ(after, fractional);
+        const auto unchanged = [&] {
+            service.capture(after);
+            EXPECT_EQ(after, saved);
+            EXPECT_EQ(service.getNonPlayerIntegerValue(ptrs[0], 8), 16777217);
+            EXPECT_EQ(ptrs[0].getClass().getCreatureStats(ptrs[0]).getHealth().getCurrent(), 16777216.f);
+        };
+        EXPECT_THROW(service.setNonPlayerBaseValue(ptrs[0], 8, 200, {}), std::invalid_argument);
+        unchanged();
+        const std::array duplicate{ptrs[0], ptrs[0]};
+        EXPECT_THROW(service.setNonPlayerBaseValue(ptrs[0], 8, 200, duplicate), std::invalid_argument);
+        unchanged();
+        EXPECT_THROW(service.setNonPlayerBaseValue(ptrs[0], 48, 1, residents), std::invalid_argument);
+        unchanged();
+        EXPECT_THROW(service.setNonPlayerBaseValue(ptrs[0], 71, std::numeric_limits<std::int32_t>::max(), residents),
+            std::invalid_argument);
+        unchanged();
+        // The final resident overflows only after changing the shared multiplier.
+        auto dangerous = *service.findActorValues(refs[3].mFormKey);
+        dangerous.mValues[9].mModifiers[0] = 3e38f;
+        service.publishNonPlayerValues(ptrs[3], dangerous);
+        service.capture(saved);
+        const std::array allResidents{ptrs[0], ptrs[1], ptrs[3]};
+        EXPECT_THROW(service.setNonPlayerBaseValue(ptrs[0], 40, 20, allResidents), std::invalid_argument);
+        unchanged();
+        EXPECT_EQ(ptrs[3].getClass().getCreatureStats(ptrs[3]).getMagicka().getCurrent(), 3e38f);
+    }
+
+    TEST_F(OblivionActorStatsTest, sharedPlayerBaseWritesPreserveRawContributionsAndRecomputeDerivedViews)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{7, 3, 9, -3}};
+        values.mValues[5].mBase = 40;
+        values.mValues[8].mModifiers = {10, 2, -5};
+        const ESM4::PlayerDynamicBaseSettings settings{2, 2, 5};
+        MWMechanics::OblivionCombatService service;
+        service.publishPlayerValues(player, values, settings);
+        service.setPlayerBaseValue(player, 8, 16777217, settings);
+        EXPECT_EQ((*service.findActorValues(values.mActor)->mPlayerFormValues)[0], 16777217);
+        EXPECT_EQ(service.getPlayerBaseValue(8), 16777296);
+        EXPECT_EQ(service.getPlayerIntegerValue(8), 16777303);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 16777304.f);
+        service.setPlayerBaseValue(player, 5, 257, settings);
+        EXPECT_EQ(service.getPlayerBaseValue(5), 1);
+        EXPECT_EQ(service.getPlayerBaseValue(8), 16777220);
+        EXPECT_EQ(service.findActorValues(values.mActor)->mValues[8].mModifiers, values.mValues[8].mModifiers);
+        service.setPlayerBaseValue(player, 9, -1, settings);
+        EXPECT_EQ((*service.findActorValues(values.mActor)->mPlayerFormValues)[1], 65535);
+        EXPECT_EQ(service.getPlayerBaseValue(9), 65535);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = values.mActor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        restored.publishPlayerValues(player, *restored.findActorValues(values.mActor), settings);
+        EXPECT_EQ(restored.getPlayerBaseValue(8), 16777220);
+        EXPECT_EQ(restored.getPlayerBaseValue(9), 65535);
+        const auto before = *service.findActorValues(values.mActor);
+        const auto health = ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent();
+        EXPECT_THROW(service.setPlayerBaseValue(player, 0, 1,
+            (ESM4::PlayerDynamicBaseSettings{2, 2, std::numeric_limits<float>::infinity()})), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), before);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), health);
+        auto captured = saved;
+        service.capture(captured);
+        EXPECT_EQ(captured, saved);
+        service.publishPlayerValues(player, values, settings);
+        EXPECT_EQ((*service.findActorValues(values.mActor)->mPlayerFormValues)[0], 16777217);
+        EXPECT_EQ(service.getPlayerBaseValue(5), 1);
+    }
+
     TEST_F(OblivionActorStatsTest, liveCreatureClassUsesCanonicalNativeSkillGroups)
     {
         sharedStats();
@@ -1072,6 +1277,24 @@ namespace
         EXPECT_FLOAT_EQ(restoredStats.getMagicka().getCurrent(), 15.17f);
         EXPECT_EQ(restoredStats.getFatigue().getCurrent(), 18);
         EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Marksman), 21.75f);
+        const std::array residents{newPtr};
+        restored.setNonPlayerBaseValue(newPtr, 28, 257, residents);
+        EXPECT_EQ(restored.getNonPlayerValue(newPtr, 28), 1.75f);
+        EXPECT_EQ(restored.getNonPlayerBaseValue(values.mActor, 28, mStore), 23);
+        for (std::size_t i = 12; i <= 18; ++i)
+            EXPECT_EQ(restored.findActorValues(values.mActor)->mValues[i].mBase, 1);
+        restored.setNonPlayerBaseValue(newPtr, 31, -1, residents);
+        EXPECT_EQ(restored.getNonPlayerBaseValue(values.mActor, 28, mStore), 255);
+        EXPECT_EQ(restored.getNonPlayerValue(newPtr, 28), 1.75f);
+        EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Sneak), 257.5f);
+        restored.setNonPlayerBaseValue(newPtr, 22, 258, residents);
+        EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Conjuration), .75f);
+        restored.capture(saved);
+        MWMechanics::OblivionCombatService reloaded;
+        reloaded.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), mStore);
+        EXPECT_EQ(reloaded.getNonPlayerValue(values.mActor, 28, mStore), 1.75f);
+        EXPECT_EQ(reloaded.getNonPlayerBaseValue(values.mActor, 28, mStore), 255);
+        EXPECT_EQ(reloaded.getNonPlayerValue(values.mActor, 22, mStore), .75f);
     }
 
     TEST_F(OblivionActorStatsTest, nativeInitializationValidatesBeforeChangingSharedStats)

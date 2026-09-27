@@ -3070,3 +3070,74 @@ courses are silent and establish no audio acceptance. The build/test skill now
 records schema-11 migration, populated persistence and rejection reproduction.
 Next is authoritative shared-base writes and propagation to every affected
 loaded/unloaded actor, with raw integer query handling and preserved modifiers.
+
+### S3 shared-base authority transactions and exact Health queries
+
+The service now prepares a typed shared-base change, all affected saved actor
+snapshots, and every supplied resident view before committing. It retains no
+actor pointers between calls. The caller must supply the complete resident set
+for that base, including the target; duplicates, wrong bindings and omitted
+targets fail without publication. Unloaded snapshots change in the same
+transaction, and future actor publication reapplies saved overrides. Creature
+runtime Marksman writes Combat while its base query remains Stealth; all seven
+base skills in a written group change without altering modifier ownership.
+Player writes retain raw form contributions and recompute derived values from
+winning settings. Shared writes preserve action ownership and source records.
+Restore rejects conflicting actor/base snapshots before replacing any service
+state. The World resident enumeration and script/event/cache adapters remain
+next work; this is not yet a normal-input SetAV acceptance claim.
+
+Original-instruction checks on the previously hash-identified 1.2.0416 image:
+
+- `S2/oracle-emulator/base-health-query.py`: 144 complete current-integer/base
+  query paths across Low/Middle/High/no-process, signed precision boundaries,
+  and both x87 precision settings. Health int32 16,777,217 stays exact in a
+  processed current-integer query; GetBaseAV/no-process instead sees 16,777,216.
+  Actual NPC form getter, TESHealthForm virtual storage accessor, conversion and
+  process dispatch execute. Actor identity/type and zero sparse modifiers are
+  boundary stubs. Initial missing embedded Health vtable setup is retained.
+- `base-health-float.py`: 360 full current-float paths. Form virtual 51E790
+  returns FILD without a float store; Script and Damage precede the first
+  rounding in 6433E0, and active Maximum follows it. All 270 processed cases
+  match the C++ exact-integer composition helper bit for bit; the remaining
+  90 no-process cases characterize the original fallback. This caught and fixed
+  premature base rounding after SetAV. Original sparse lookups are supplied
+  independent modifier values; form and process composition execute.
+- `base-extra-query.py`: 576 original extra-AV queries and exact C++ matches
+  demonstrate truncation of stored float values before actor composition.
+  Nonfinite/out-of-int32 float conversions remain explicitly unsupported by
+  live publication. A retained out-of-domain experiment showed that the
+  original non-SSE CRT path uses a 64-bit conversion and cannot be replaced by
+  an assumed SSE int32 sentinel. CPU-path compatibility remains an open gate.
+
+Engine tests exercise multiple resident NPCs, a genuinely destroyed/unloaded
+reference, future reference publication, untouched content records, sparse
+modifiers, byte/word wrapping, raw Health integer/float divergence, fractional
+extra storage, actual Player derived values, all Creature groups, binary reload,
+conflicting snapshots, invalid resident lists and an overflow in the final
+resident. Failed preparation leaves actor/base maps, resource/skill views and
+pending actions unchanged. Initial private-member helper compilation and a
+save fixture missing its reference records are retained under
+`S3/authority-draft/shared-base-writer-*`; both are corrected.
+
+`S3/shared-base-writer-01` passes **1,897 component /375 ASan+UBSan ESM4 /585
+engine tests**, with exact inventories and no failures/skips, and rebuilds
+openmw/openmw-tests/esmtool. Tested dirty-source fingerprint:
+`9979b87b7e1350ff8c17cd186b8b247150e74f086889043caa2f1d2437c2e6e7`.
+Sanitizer coverage is components only, with leak checking disabled. No Python
+implementation changed in this chunk; the prior 162-case result remains its
+last full suite run.
+
+Runtime binary SHA-256:
+`3cca5f8243de3eb834c62c10b100a875628c34efecb2f99636689fec8aa6fb88`.
+`S3/shared-base-writer-populated-01` loads/resaves matching injected actor/base
+snapshots, preserving both vectors exactly. `S3/shared-base-writer-conflict-01`
+rejects a structurally valid player raw-form/base conflict before Applied or
+save-writing boundaries. Both preserve source/pristine hashes; rejection also
+preserves the mutated input slot. Their editable inputs and rejection manifest
+are committed. Independent verification files record decoded equality, hashes
+and inspection: the positive capture is the textured observation room with
+crosshair/resource HUD; the negative capture is the readable expected conflict
+dialog. These silent courses test persistence/preflight, not automatic native
+publication, normal-input commands or audio. Automatic activation stays off;
+script routing, remaining writers and the S3/S4–S14 gameplay gates remain open.
