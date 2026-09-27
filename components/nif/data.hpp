@@ -285,19 +285,19 @@ namespace Nif
             std::vector<std::vector<unsigned short>> mStrips;
             std::vector<unsigned short> mTriangles;
             std::vector<char> mBoneIndices;
-            BSVertexDesc mVertexDesc;
+            BSVertexDesc mVertexDesc{};
             std::vector<unsigned short> mTrueTriangles;
             std::vector<std::vector<unsigned short>> mTrueStrips;
-            uint8_t mLODLevel;
-            bool mGlobalVB;
+            uint8_t mLODLevel = 0;
+            bool mGlobalVB = false;
 
             void read(NIFStream* nif);
         };
         std::vector<Partition> mPartitions;
 
-        uint32_t mDataSize;
-        uint32_t mVertexSize;
-        BSVertexDesc mVertexDesc;
+        uint32_t mDataSize = 0;
+        uint32_t mVertexSize = 0;
+        BSVertexDesc mVertexDesc{};
         std::vector<BSVertexData> mVertexData;
 
         void read(NIFStream* nif) override;

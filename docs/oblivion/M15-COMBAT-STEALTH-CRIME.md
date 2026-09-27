@@ -4516,3 +4516,31 @@ save SHA `c4f7f2619dc7c737b323d2494c87189f3b528fa170b9e873179005a03d1af886`.
 The ignored editable draft is `S3/authority-draft/native-rest-dialog.json`;
 pristine inputs and precise source hashes are retained. Native enemy queries,
 rest integration, Lua property writers and activation still require work.
+
+### Version-dependent skin partition fields initialize before moves
+
+The actual graphical sanitizer course `S3/native-engagement-runtime-sanitized-01`
+failed before applying its save: UBSan caught an invalid boolean read while
+moving `NiSkinPartition::Partition` during character-preview mesh loading.
+Oblivion NIFs omit the newer LOD/global-buffer fields; these and the optional
+vertex descriptor now initialize explicitly. Parent SSE-only size/descriptor
+fields also initialize. A parser regression reads and moves two partitions for
+Bethesda versions11/34/83, checking omitted defaults and supplied values.
+
+`S3/native-partition-defaults-01` passes all1,923 components and629 engine tests.
+`native-engagement-contract-sanitized-02` passes410 selected component tests
+(including the new parser test) and227 selected engine tests;
+`native-engagement-engine-sanitized-01` separately passes all629 engine tests
+with leak detection, ASan and UBSan enabled. Exact inventories/no skips.
+Tested dirty-source fingerprint (including pending combat-state changes):
+`05bc8861c749fa42555367353f5e86983609ba9bf2fa72c5623cba2e36ec0b3f`.
+The earlier `native-engagement-contract-sanitized-01` completed400 native
+component cases but was interrupted after engine build; it is not a full pass.
+
+Actual corrected graphical replay `native-engagement-runtime-sanitized-02`
+passes without sanitizer findings; graphical leak detection is disabled.
+Engine SHA `26b6431fa6e511aab6f2b27611c99e707f9a167ea8d015fea6d00287f811948a`;
+save SHA `37b1aad202a16cdb8b554f545f38a5810673e7680b4c5324cc8d34d9a860d128`.
+Capture inspected: dry fixture wall, normal HUD, no breath meter. The inherited
+capture filename contains “water” but the fixture is dry. This silent course
+proves loading and persistence, not visual combat or audio acceptance.
