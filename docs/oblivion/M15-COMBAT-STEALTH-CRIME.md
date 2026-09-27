@@ -3818,3 +3818,32 @@ remain open; the native Resurrect command still rejects until those required
 operations are implemented. No normal-input resurrection or later gameplay
 acceptance is claimed. Next: prepare keep-state resurrection, including a new
 terminal entry after its intermediate Alive phase, before world integration.
+
+### S3 preserve-state resurrection AV/lifecycle transaction (partial)
+
+Commit `0af8eac625` adds the full-reset AV/lifecycle portion. The preserve-state
+service now performs the original intermediate Alive transition, integer-base
+minus current Health Damage write, and any resulting essential/death reaction
+as one prepared transaction. All other values and process ownership persist.
+A new death after revival increments history and appends a fresh callback even
+when both initial and final phases are Dead; earlier pending callbacks remain.
+The old death-animation completion marker clears on successful revival.
+
+The regression covers three initial phases and six Health/channel cases, zero
+delta writer effects, essential recovery, null new attribution, historical FIFO
+ordering, exhausted event IDs, malformed recovery settings and binary restart.
+The initial implementation stub fails the new test (retained in
+`S3/authority-draft/preserved-resurrection-red.log`). Check 01 passes 601 tests;
+the subsequently added presentation regression fails check 02 specifically for
+Dead -> Alive -> Dead retaining its old completion marker. After the fix,
+`S3/native-preserved-resurrection-03` passes all **601 engine tests**, exact
+inventory, no skips. Source fingerprint:
+`9b7b6cfd3514f12830b359b106f05bb3d1793cbe23f50f985bdd873529988741`.
+`openmw-tests` SHA-256:
+`32587cbc0426bfbf3ecf8239f98c9fd0e784f66aad2faff9e317802c4b1ef104`.
+
+This is service-level coverage using actual actor views, not world/controller
+resurrection acceptance. Body/cell eligibility, native knocked-state 3, base/
+inventory reset, controller/3D rebuilding and script routing remain open.
+Native Resurrect remains guarded until those operations are implemented.
+S2/S3 and S4–S14 remain incomplete. Next: world/controller reset integration.

@@ -1001,6 +1001,147 @@ namespace
         EXPECT_FALSE(restored.takeNextDeathEvent());
     }
 
+    TEST_F(OblivionActorStatsTest, preservedResurrectionKeepsStateAndCommitsNewHealthDeathEvenWhenPreviouslyDead)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        using Phase = ESM4::ActorLifePhase;
+        struct Case
+        {
+            ESM4::ActorValueState mHealth;
+            bool mEssential;
+            float mExpectedHealth;
+            float mExpectedDamage;
+            Phase mExpectedPhase;
+        };
+        const Case cases[] = {
+            {{100, {10, 7, -120}}, false, 100, -17, Phase::Alive},
+            {{100, {10, 7, 0}}, false, 100, -17, Phase::Alive},
+            {{0, {std::nullopt, 2, std::nullopt}}, false, 0, -2, Phase::Dead},
+            {{0, {std::nullopt, 2, std::nullopt}}, true, 0, -2, Phase::EssentialUnconscious},
+            {{0, {std::nullopt, -2, std::nullopt}}, false, 0, 2, Phase::Alive},
+            {{0, {std::nullopt, 2, -2}}, false, 0, -2, Phase::Alive},
+        };
+        const auto killer = ESM::FormKey::dynamic("player", 1);
+        ESM4::RuntimeState saveTemplate;
+        saveTemplate.mPlayer.mReference = killer;
+        saveTemplate.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saveTemplate.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saveTemplate.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = reference.mFormKey;
+        savedActor.mBase = mActorKey;
+        savedActor.mCell = saveTemplate.mPlayer.mCell;
+        saveTemplate.mReferences.push_back(savedActor);
+        for (auto prior : {Phase::Alive, Phase::Dead, Phase::EssentialUnconscious})
+            for (std::size_t index = 0; index < std::size(cases); ++index)
+            {
+                SCOPED_TRACE(testing::Message() << "prior=" << static_cast<int>(prior) << " case=" << index);
+                const auto& test = cases[index];
+                MWMechanics::OblivionCombatService service;
+                ESM4::RuntimeActorValues values;
+                values.mActor = reference.mFormKey;
+                values.mBase = mActorKey;
+                values.mValues[8] = test.mHealth;
+                values.mValues[9] = {30, {4, 6, -20}};
+                values.mValues[10] = {40, {5, -7, -50}};
+                values.mValues[12] = {20, {4, 5, -6}};
+                service.publishNonPlayerValues(ptr, values);
+                EXPECT_THROW(service.reviveNonPlayerPreservingState(ptr, test.mEssential, {4, .3f}),
+                    std::invalid_argument);
+                service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, prior,
+                    prior == Phase::EssentialUnconscious ? 2.f : 0.f, prior == Phase::Alive ? ESM::FormKey{} : killer});
+                ptr.getClass().getCreatureStats(ptr).setDeathAnimationFinished(prior == Phase::Dead);
+                auto before = saveTemplate;
+                service.capture(before);
+                before.mNativeDeathCounts[values.mBase] = 17;
+                before.mPendingDeathEvents.push_back({7, values.mActor, killer});
+                before.mNextDeathEvent = 9;
+                service.restore(before, mStore);
+                if (test.mExpectedPhase == Phase::Dead)
+                {
+                    auto exhausted = before;
+                    exhausted.mNextDeathEvent = std::numeric_limits<std::uint64_t>::max();
+                    service.restore(exhausted, mStore);
+                    const auto healthBefore = ptr.getClass().getCreatureStats(ptr).getHealth();
+                    EXPECT_THROW(service.reviveNonPlayerPreservingState(ptr, false, {}), std::overflow_error);
+                    auto afterFailure = exhausted;
+                    service.capture(afterFailure);
+                    EXPECT_EQ(afterFailure, exhausted);
+                    EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth(), healthBefore);
+                    EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).isDeathAnimationFinished(), prior == Phase::Dead);
+                    service.restore(before, mStore);
+                }
+                if (test.mEssential)
+                {
+                    EXPECT_THROW(service.reviveNonPlayerPreservingState(ptr, true,
+                        {std::numeric_limits<float>::quiet_NaN(), .3f}), std::invalid_argument);
+                    auto afterFailure = before;
+                    service.capture(afterFailure);
+                    EXPECT_EQ(afterFailure, before);
+                }
+                service.reviveNonPlayerPreservingState(ptr, test.mEssential, {4, .3f});
+                auto after = saveTemplate;
+                service.capture(after);
+                auto expectedValues = values;
+                expectedValues.mValues[8].mModifiers[2] = test.mExpectedDamage;
+                EXPECT_EQ(*service.findActorValues(values.mActor), expectedValues);
+                const auto* life = service.findActorLife(values.mActor);
+                ASSERT_TRUE(life);
+                EXPECT_EQ(life->mPhase, test.mExpectedPhase);
+                EXPECT_TRUE(life->mKiller.isNull());
+                EXPECT_EQ(life->mRecoveryRemaining, test.mExpectedPhase == Phase::EssentialUnconscious ? 4 : 0);
+                const auto& stats = ptr.getClass().getCreatureStats(ptr);
+                EXPECT_EQ(stats.getHealth().getCurrent(), test.mExpectedHealth);
+                EXPECT_EQ(stats.isDead(), test.mExpectedPhase == Phase::Dead);
+                EXPECT_FALSE(stats.isDeathAnimationFinished());
+                EXPECT_EQ(stats.getKnockedDown(), test.mExpectedPhase == Phase::EssentialUnconscious);
+                EXPECT_EQ(service.getDeadCount(values.mBase), test.mExpectedPhase == Phase::Dead ? 18 : 17);
+                EXPECT_EQ(after.mNextDeathEvent, test.mExpectedPhase == Phase::Dead ? 10 : 9);
+                EXPECT_EQ(service.takeNextDeathEvent(), before.mPendingDeathEvents[0]);
+                if (test.mExpectedPhase == Phase::Dead)
+                {
+                    const auto event = service.takeNextDeathEvent();
+                    ASSERT_TRUE(event);
+                    EXPECT_EQ(event->mId, 9);
+                    EXPECT_EQ(event->mActor, values.mActor);
+                    EXPECT_TRUE(event->mKiller.isNull());
+                }
+                EXPECT_FALSE(service.takeNextDeathEvent());
+                MWMechanics::OblivionCombatService restored;
+                restored.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), mStore);
+                auto again = saveTemplate;
+                restored.capture(again);
+                EXPECT_EQ(again, after);
+                // A zero delta still visits the native writer. An existing
+                // positive sparse Health Damage entry clamps back to zero.
+                if (index == 4)
+                {
+                    restored.reviveNonPlayerPreservingState(ptr, false, {});
+                    EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), -2);
+                    EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
+                    EXPECT_EQ(restored.getDeadCount(values.mBase), 17);
+                }
+            }
+    }
+
     TEST_F(OblivionActorStatsTest, essentialRecoverySettingsFollowCurrentWinningNativeRecords)
     {
         auto settings = MWWorld::resolveOblivionEssentialRecoverySettings(mStore);

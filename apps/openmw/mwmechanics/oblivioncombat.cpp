@@ -898,13 +898,15 @@ namespace MWMechanics
     }
 
     std::optional<OblivionCombatService::PreparedLifeTransition> OblivionCombatService::prepareLifeTransition(
-        const ESM4::RuntimeActorLife& life) const
+        const ESM4::RuntimeActorLife& life, bool afterRevival) const
     {
         life.validate();
         const auto* previous = findActorLife(life.mActor);
         if (!previous || previous->mBase != life.mBase)
             throw std::invalid_argument("native lifecycle transition requires initialized matching authority");
-        if (previous->mPhase == life.mPhase)
+        // Resurrection visits Alive before its Health writer, even if the
+        // prepared final phase is Dead again. That is a new terminal entry.
+        if (!afterRevival && previous->mPhase == life.mPhase)
             return std::nullopt;
         PreparedLifeTransition prepared{mPendingDeathEvents, mDeathCounts};
         if (life.mPhase == ESM4::ActorLifePhase::Dead)
@@ -1063,6 +1065,52 @@ namespace MWMechanics
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
         prepared.commit();
+    }
+
+    void OblivionCombatService::reviveNonPlayerPreservingState(const MWWorld::Ptr& actor, bool essential,
+        const ESM4::EssentialRecoverySettings& settings)
+    {
+        auto values = nonPlayerValues(actor);
+        const auto found = mActorLife.find(values.mActor);
+        if (found == mActorLife.end())
+            throw std::invalid_argument("native resurrection requires initialized lifecycle");
+        const auto* base = findActorBase(values.mBase);
+        const auto baseHealth = ESM4::combatBaseValue(values.mValues[8].mBase);
+        const float delta = ESM4::forceActorValueDelta(baseHealth, nonPlayerFloat(values, 8, base));
+        auto life = found->second;
+        life.mPhase = ESM4::ActorLifePhase::Alive;
+        life.mRecoveryRemaining = 0;
+        life.mKiller = {};
+        values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner, 8,
+            ESM4::ActorValueModifier::Damage, delta);
+        const float current = nonPlayerFloat(values, 8, base);
+        if (delta < 0.f && current < 1.f)
+        {
+            life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+            if (essential)
+            {
+                const auto recovery = ESM4::essentialRecoveryHealth(baseHealth, current, settings);
+                life.mRecoveryRemaining = settings.mDelay;
+                values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner, 8,
+                    ESM4::ActorValueModifier::Damage, recovery.mAdjustment);
+            }
+        }
+        values.validate();
+        life.validate();
+        auto terminal = life.mPhase == ESM4::ActorLifePhase::Dead ? prepareLifeTransition(life, true) : std::nullopt;
+        auto& stats = actor.getClass().getCreatureStats(actor);
+        PreparedNonPlayerView prepared(actor, values, base, &life);
+        std::swap(mActorValues.at(values.mActor), values);
+        std::swap(found->second, life);
+        prepared.commit();
+        // Revival passes through Alive even when its Health write immediately kills again.
+        stats.setDeathAnimationFinished(false);
+        if (terminal)
+        {
+            mPendingDeathEvents.swap(terminal->mEvents);
+            mDeathCounts.swap(terminal->mCounts);
+            ++mNextDeathEvent;
+        }
     }
 
     void OblivionCombatService::prepareEssentialWake(ESM4::RuntimeActorValues& values,

@@ -123,7 +123,7 @@ namespace MWMechanics
         };
         const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
         std::optional<PreparedLifeTransition> prepareLifeTransition(
-            const ESM4::RuntimeActorLife& life) const;
+            const ESM4::RuntimeActorLife& life, bool afterRevival = false) const;
         bool enterNonPlayerDeath(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
             const ESM4::EssentialRecoverySettings& settings, bool healthGate);
         bool enterPlayerDeath(MWWorld::Player& player, const ESM::FormKey& killer, bool essential,
@@ -248,6 +248,11 @@ namespace MWMechanics
         // remain caller-owned and must complete before exposing script success.
         void resetNonPlayerForResurrection(const MWWorld::Ptr& actor);
         void resetPlayerForResurrection(MWWorld::Player& player);
+        // Preserve-state resurrection changes Health through Damage after an
+        // intermediate Alive phase. Caller has verified body/cell eligibility
+        // and owns the native knocked-state/controller continuation.
+        void reviveNonPlayerPreservingState(const MWWorld::Ptr& actor, bool essential,
+            const ESM4::EssentialRecoverySettings& settings);
         // Returns true when an eligible expired timer is processed, including
         // immediate reentry/death caused by the recovery Health callback.
         // Caller supplies the native process knocked-state byte and frame delta.
