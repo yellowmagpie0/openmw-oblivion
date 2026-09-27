@@ -260,3 +260,13 @@ and `native-script-resurrect-guard-01`; preparation/verification scripts are in
 `S3/authority-draft/native-kill-{prepare,verify}.py`. Acceptance command argument
 strings are not compiled ObScript builtins: use the canonical dynamic Player
 key as killer, rather than the string `player` (which can resolve the NPC base).
+
+Concurrent scenarios require the `-displayfd` Xvfb allocator in
+`oblivion_compat._start_xvfb`. Never infer ownership from a socket appearing:
+two launches can race and capture/control the other scenario's window. The
+server must report readiness through its own inherited pipe. The actual
+8-server isolation/peer-teardown course is `S3/xvfb-concurrency-01`; all 8
+reported unique usable displays. Inspect xvfb.log as well as engine logs, and
+retain/rerun contaminated courses. The affected historical runs are
+`S3/native-death-count-{legacy,morrowind}-01`, superseded by `-02`. The audit of
+all other retained S3 logs found no other conflicting-server errors.

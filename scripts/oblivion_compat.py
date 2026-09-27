@@ -18,6 +18,7 @@ import math
 import os
 import platform
 import re
+import select
 import shutil
 import signal
 import statistics
@@ -1289,28 +1290,36 @@ def _start_xvfb(output: Path, width: int, height: int) -> tuple[subprocess.Popen
     executable = shutil.which("Xvfb")
     if not executable:
         raise RuntimeError("Xvfb is required by this scenario")
-    for number in range(91, 150):
-        display = f":{number}"
-        socket = Path(f"/tmp/.X11-unix/X{number}")
-        if socket.exists():
-            continue
-        log = (output / "xvfb.log").open("w", encoding="utf-8")
-        process = subprocess.Popen(
-            [executable, display, "-screen", "0", f"{width}x{height}x24", "-nolisten", "tcp"],
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-        )
-        for _ in range(50):
-            if socket.exists():
-                return process, display
-            if process.poll() is not None:
-                break
-            time.sleep(0.02)
-        process.terminate()
-        process.wait(timeout=5)
-        log.close()
-    raise RuntimeError("Unable to allocate an Xvfb display")
+    # Let the X server atomically reserve a display and report readiness. A
+    # socket existence check can mistake a competing server for our own child.
+    read_fd, write_fd = os.pipe()
+    process = None
+    try:
+        with (output / "xvfb.log").open("w", encoding="utf-8") as log:
+            process = subprocess.Popen(
+                [executable, "-displayfd", str(write_fd), "-screen", "0", f"{width}x{height}x24", "-nolisten", "tcp"],
+                stdout=log, stderr=subprocess.STDOUT, encoding="utf-8", pass_fds=(write_fd,),
+            )
+        os.close(write_fd)
+        write_fd = -1
+        ready, _, _ = select.select([read_fd], [], [], 10)
+        display = os.read(read_fd, 64) if ready else b""
+        if not re.fullmatch(rb"[0-9]+\n", display) or process.poll() is not None:
+            raise RuntimeError(f"Xvfb did not report a ready display; inspect {output / 'xvfb.log'}")
+        return process, ":" + display.decode("ascii").strip()
+    except BaseException:
+        if process is not None and process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+        raise
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
 
 
 def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: Path,

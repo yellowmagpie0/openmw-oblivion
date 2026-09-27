@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import struct
@@ -28,6 +29,50 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_xvfb_uses_its_child_readiness_report(self):
+        process = mock.Mock()
+        process.poll.return_value = None
+        def spawn(argv, **kwargs):
+            self.assertIn("-displayfd", argv)
+            fd = int(argv[argv.index("-displayfd") + 1])
+            self.assertIn(fd, kwargs["pass_fds"])
+            os.write(fd, b"143\n")
+            return process
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(MODULE.shutil, "which", return_value="Xvfb"), \
+                mock.patch.object(MODULE.subprocess, "Popen", side_effect=spawn):
+            self.assertEqual(MODULE._start_xvfb(Path(directory), 1280, 720), (process, ":143"))
+        process.terminate.assert_not_called()
+
+    def test_xvfb_invalid_or_missing_readiness_reaps_its_child(self):
+        for payload in (b"", b"not-a-display\n", b"91\n92\n"):
+            process = mock.Mock()
+            process.poll.return_value = None
+            def spawn(argv, **kwargs):
+                if payload:
+                    os.write(kwargs["pass_fds"][0], payload)
+                return process
+            with self.subTest(payload=payload), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.object(MODULE.shutil, "which", return_value="Xvfb"), \
+                    mock.patch.object(MODULE.subprocess, "Popen", side_effect=spawn):
+                with self.assertRaisesRegex(RuntimeError, "ready display"):
+                    MODULE._start_xvfb(Path(directory), 1280, 720)
+            process.terminate.assert_called_once()
+            process.wait.assert_called_once_with(timeout=5)
+
+    def test_xvfb_readiness_timeout_kills_unresponsive_child(self):
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.wait.side_effect = [subprocess.TimeoutExpired("Xvfb", 5), 0]
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(MODULE.shutil, "which", return_value="Xvfb"), \
+                mock.patch.object(MODULE.subprocess, "Popen", return_value=process), \
+                mock.patch.object(MODULE.select, "select", return_value=([], [], [])):
+            with self.assertRaisesRegex(RuntimeError, "ready display"):
+                MODULE._start_xvfb(Path(directory), 1280, 720)
+        process.terminate.assert_called_once()
+        process.kill.assert_called_once()
+        self.assertEqual(process.wait.call_count, 2)
+
     def test_m14_console_evidence_requires_ordered_acks_and_real_reference_state(self):
         key = "content:oblivion.esm:0b5d5b"
         commands = ["prid " + key, "disable"]

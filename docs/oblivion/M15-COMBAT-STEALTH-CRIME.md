@@ -3555,3 +3555,25 @@ the acceptance driver's string argument `player` resolved a base EditorID;
 canonical runtime Player identity fixes the fixture. Compiled ObScript resolves
 the Player builtin separately. The native handler's original direct entry at
 positive Health is covered by the previously documented 160 original cases.
+
+### Harness display ownership during concurrent courses
+
+Concurrent legacy-counter and Morrowind courses exposed an Xvfb allocation race:
+the harness tested socket existence before checking whether its own child had
+failed. Another scenario's socket could therefore be mistaken for readiness,
+sending input and screenshots to the wrong display. The affected
+`S3/native-death-count-{legacy,morrowind}-01` runs are failed evidence, retained.
+A search of all retained S3 xvfb.log files found the conflicting-server error
+only in that pair's Morrowind log.
+
+The harness now uses Xvfb's `-displayfd`: the server reserves its display and
+reports readiness through a private inherited pipe. Invalid/absent replies and
+timeouts clean up the child, including a forced kill when termination stalls.
+Three new harness tests pass; the working candidate's complete **172 Python
+tests** pass in `S3/xvfb-display-ownership-01` (fingerprint
+`8e82eb0aec9e8512b299f8f535a6dc44cc5edf167bd8d1b3432defe9c234addb`,
+including the separately pending counter tests). `S3/xvfb-concurrency-01`
+starts eight real servers concurrently, verifies eight unique usable displays,
+and confirms four remain usable after their peers terminate. Both affected
+actual engine courses pass on independent displays as `-02`, with their own
+correct profile captures inspected. This is test isolation, not a gameplay gate.
