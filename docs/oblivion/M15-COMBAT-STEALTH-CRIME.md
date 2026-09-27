@@ -4306,3 +4306,33 @@ load of frame-02 Quicksave gives NPC Health67.8345718/timer0 and Player
 Health100/timer4.4021368, with no deaths or errors and matching timer/damage
 rate. Capture inspected. `S3/native-breath-manifests-01` reruns all177 Python
 tests after the final editable continuation/death/UI manifests are installed.
+
+### Frame/UI sanitizer checkpoint and Magicka baseline
+
+`S3/native-breath-frame-sanitized-01` builds the engine, engine tests and esmtool
+from clean commit `0a47a5d8073814f7f857bc4abf3f1237b8f698b4`, then passes all
+**619 engine tests**, exact inventory, no skips or sanitizer findings, with
+`ASAN_OPTIONS=detect_leaks=1:halt_on_error=1` and
+`UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`.
+Source fingerprint: `33776db43f09e75c44fe3fce18d542c214d0028b4a89d74ab3c9d7dcecb0a371`;
+engine-test SHA: `65d128098eeb1aef8cf06aceb7c5ea61084e7b52ebe7f5a132b937062db36f17`.
+This includes compiling the World/UI changes; the graphical runtime courses
+above used the regular binary, not the sanitizer binary.
+
+The same regular binary also passes `S3/native-breath-morrowind-01`, using the
+existing M14 Morrowind regression manifest: startup, save and profile isolation,
+with no GPRO/T4VR/T4ST/OMW4STATE in the actual save. Save SHA:
+`73f1394a6556df3ec527361aa83470ecf6f059d900db3fddc093ebd6019f7261`.
+The inspected capture shows the Balmora startup view against nearby rocks and
+the HUD. This does not claim route or complete asset acceptance; the manifest's
+reviewed missing-asset findings remain allowed.
+
+`S3/native-magicka-frame-red-01` is the retained **failing** next-writer baseline.
+Both actors start at Magicka20 (base100, Damage-80), Willpower50, with explicit
+native publication and no casting. Player breath measures3.08869 simulated
+seconds; independent expected Magicka is25.4052105, with tolerance.05 declared
+before execution. Both native values and the Player shared saved view remain20.
+Scenario actions complete without errors, but intended-state verification fails.
+Save SHA: `712507d7438f25785ca6414bd991fb12426165a62513323fca5def65513bdaec`.
+Capture and pristine inputs retained. Remaining Magicka/rest/Lua, activation and
+later milestone gates remain open.
