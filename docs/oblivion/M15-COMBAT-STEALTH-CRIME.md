@@ -4185,3 +4185,23 @@ without function stubs; pure aquatic creatures consume breath out of deep water,
 ordinary actors only while deeply submerged and swimming, Player god mode resets
 the timer. Original process constructor/reset stores20, not the shared NPC -1
 sentinel. S2/S3 and S4–S14 remain open.
+
+### S3 native creature movement capabilities
+
+After `b712802f66`, ESM4Creature reads its native base flags for bipedal, flying,
+swimming and walking capabilities. Biped implies both swimming and walking, as
+in original helpers519C70/519CC0. This replaces the prior constant biped/swim/walk
+true, fly false responses and allows shared aquatic/flying/land classification
+to reflect the native record. NPC capability behavior is unchanged.
+
+The original `S2/oracle-emulator/creature-capabilities.py` executes **768** complete
+base capability queries over all256 low-byte flag patterns, without function
+stubs. An actual Creature-class test covers ten distinct capability/classification
+combinations, including unrelated Essential/PCLevelOffset bits.
+`S3/native-creature-capabilities-01` passes **all616 engine tests**, exact inventory
+with no skips/failures. Source fingerprint:
+`c973a415cb0be3758a2b1ff4018f466eb1fcfda1027a2db8a4451746127319e4`; test binary:
+`3a23fcf111c05ab0057742b7c9755f27086dcff143cc1a696faa8c567e38ea2b`. This chunk has a regular engine check; the previous
+sanitizer evidence covers the preceding timer-state revision, not these flag
+changes. Rendered movement, flight and aquatic navigation remain campaign gates.
+Next: the native drowning frame writer and UI. S2/S3 and later gates remain open.

@@ -3329,4 +3329,46 @@ namespace
     }
 
 
+    TEST_F(OblivionActorStatsTest, creatureMovementCapabilitiesUseNativeFlags)
+    {
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, &creature);
+        MWWorld::Ptr ptr(&live);
+        // Independent native predicate outcomes, including biped-implied swim/walk.
+        // Tuple: flags, biped, swim, walk, fly, pure aquatic, pure flying, pure land.
+        const std::array<std::tuple<unsigned, bool, bool, bool, bool, bool, bool, bool>, 10> cases{{
+            {0x00, false, false, false, false, false, false, false},
+            {0x01, true, true, true, false, false, false, false},
+            {0x10, false, true, false, false, true, false, false},
+            {0x20, false, false, false, true, false, true, false},
+            {0x40, false, false, true, false, false, false, true},
+            {0x50, false, true, true, false, false, false, false},
+            {0x11, true, true, true, false, false, false, false},
+            {0x30, false, true, false, true, false, false, false},
+            {0x71, true, true, true, true, false, false, false},
+            {0x92, false, true, false, false, true, false, false},
+        }};
+        for (const auto& [flags, biped, swim, walk, fly, aquatic, flying, land] : cases)
+        {
+            SCOPED_TRACE(flags);
+            creature.mBaseConfig.tes4.flags = flags;
+            EXPECT_EQ(ptr.getClass().isBipedal(ptr), biped);
+            EXPECT_EQ(ptr.getClass().canSwim(ptr), swim);
+            EXPECT_EQ(ptr.getClass().canWalk(ptr), walk);
+            EXPECT_EQ(ptr.getClass().canFly(ptr), fly);
+            EXPECT_EQ(ptr.getClass().isPureWaterCreature(ptr), aquatic);
+            EXPECT_EQ(ptr.getClass().isPureFlyingCreature(ptr), flying);
+            EXPECT_EQ(ptr.getClass().isPureLandCreature(ptr), land);
+        }
+    }
+
+
 }

@@ -333,24 +333,26 @@ namespace MWClass
         return isRunning(ptr) ? getRunSpeed(ptr) : getWalkSpeed(ptr);
     }
 
-    bool ESM4Creature::isBipedal(const MWWorld::ConstPtr&) const
+    bool ESM4Creature::isBipedal(const MWWorld::ConstPtr& ptr) const
     {
-        return true;
+        return (ptr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_Biped) != 0;
     }
 
-    bool ESM4Creature::canFly(const MWWorld::ConstPtr&) const
+    bool ESM4Creature::canFly(const MWWorld::ConstPtr& ptr) const
     {
-        return false;
+        return (ptr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_Flies) != 0;
     }
 
-    bool ESM4Creature::canSwim(const MWWorld::ConstPtr&) const
+    bool ESM4Creature::canSwim(const MWWorld::ConstPtr& ptr) const
     {
-        return true;
+        return (ptr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags
+            & (ESM4::Creature::TES4_Swims | ESM4::Creature::TES4_Biped)) != 0;
     }
 
-    bool ESM4Creature::canWalk(const MWWorld::ConstPtr&) const
+    bool ESM4Creature::canWalk(const MWWorld::ConstPtr& ptr) const
     {
-        return true;
+        return (ptr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags
+            & (ESM4::Creature::TES4_Walks | ESM4::Creature::TES4_Biped)) != 0;
     }
 
     int ESM4Creature::getBaseFightRating(const MWWorld::ConstPtr& ptr) const

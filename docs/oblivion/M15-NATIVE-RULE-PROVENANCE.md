@@ -2912,3 +2912,27 @@ These probes establish arithmetic and timer branches. They do not execute the
 full water/controller predicates, AI resurfacing, audio, native process save
 storage, or ordinary gameplay. Their synthetic boundary declarations, complete
 results and comparison binaries remain in the ignored oracle directory.
+
+### Native creature capability and breath eligibility predicates
+
+For the same pinned executable, complete519C70/519CC0/519CE0 queries read Creature
+base flags at+28: swim is(Swim0x10|Biped0x01), walk is(Walk0x40|Biped0x01),
+fly is0x20. `creature-capabilities.py` executes768 queries across256 patterns.
+The actual Creature-class regression checks pure aquatic/flying/land consumers
+as well as direct capabilities. Native NPC/Player classes remain bipedal.
+
+`drowning-eligibility.py` executes4,096 original paths604599..6045DF/6045F9,
+including real5EA680/5E1E90, base getters and god-mode getter65D820; no function
+stubs. Synthetic actor/base/process/global data supplies flags, identity,
+movement bits and the deep-water boolean. Pure aquatic creatures consume breath
+out of deep water; other actors consume it only in deep water with process
+Swimming0x800. Player god mode selects the reset branch. The water-height probe,
+physical scheduling, AI and damage sink are outside this eligibility probe.
+
+HighProcess constructor62908F..62909B and reset632F0E..632F1A store constant
+00A417B4(float20) at process+238; setter629830/getter629840 own that timer.
+Actor-height helper5E0660 subtracts model minZ from maxZ, multiplies actor scale
+and storesfloat. Water predicate5E06C0 stores(height*ratio) asfloat, then adds
+positionZ into a double temporary before comparing with water height. Actor
+update ratios are .01,.7,.875; the latter feeds breath eligibility. Shared TES3
+submerged thresholds and its final float position store are not equivalent.

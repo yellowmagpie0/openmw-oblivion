@@ -49,9 +49,13 @@ namespace ESM4
     {
         enum ActorBaseFlagsTes4
         {
+            TES4_Biped = 0x000001,
             TES4_Essential = 0x000002,
             TES4_WeapAndShield = 0x000004,
             TES4_Respawn = 0x000008,
+            TES4_Swims = 0x000010,
+            TES4_Flies = 0x000020,
+            TES4_Walks = 0x000040,
             TES4_PCLevelOffset = 0x000080,
             TES4_NoLowLevelProc = 0x000200,
             TES4_NoHead = 0x008000, // different meaning to npc_
