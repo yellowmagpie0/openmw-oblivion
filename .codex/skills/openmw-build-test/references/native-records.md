@@ -77,3 +77,13 @@ a positive absolute `levelOrOffset` (for example 2). That fixture starts at -1;
 clearing only the flag makes class initialization reject a nonpositive level
 before the behavior under test executes. Retain such fixture failures and fix
 the fixture, not the production validation.
+
+### Standalone CreatureStats lifecycle fixtures
+
+`CreatureStats::setHealth` can consult the World clock on the first death; do
+not invoke it without a World fixture. For a legacy dead-state regression, read
+an initialized saved CreatureStats instead. Both `writeState` and `readState`
+require an initialized spell list: insert an actual NPC base and call
+`stats.getSpells().setSpells(base.mId)` for every standalone stats instance.
+When extending a fixture that later tests an older schema, inspect its entire
+body and remove newer fields when constructing that older-format state.

@@ -252,9 +252,16 @@ namespace MWMechanics
         }
 
         OblivionActorProjectionInput actorProjection(const ESM4::RuntimeActorValues& values,
-            const ESM4::RuntimeActorBaseOverride* base = nullptr)
+            const ESM4::RuntimeActorBaseOverride* base = nullptr, const ESM4::RuntimeActorLife* life = nullptr)
         {
             OblivionActorProjectionInput input;
+            if (life)
+            {
+                life->validate();
+                if (life->mActor != values.mActor || life->mBase != values.mBase)
+                    throw std::invalid_argument("native life projection identity mismatch");
+                input.mLife = life->mPhase;
+            }
             input.mOwner = values.mOwner;
             input.mProcess = values.mProcess;
             std::copy_n(values.mValues.begin(), 8, input.mAttributes.begin());
@@ -317,10 +324,10 @@ namespace MWMechanics
 
     public:
         PreparedNonPlayerView(const MWWorld::Ptr& actor, const ESM4::RuntimeActorValues& values,
-            const ESM4::RuntimeActorBaseOverride* base)
+            const ESM4::RuntimeActorBaseOverride* base, const ESM4::RuntimeActorLife* life = nullptr)
         {
             validateNonPlayerIdentity(actor, values);
-            const auto projection = actorProjection(values, base);
+            const auto projection = actorProjection(values, base, life);
             if (actor.getType() == ESM::REC_NPC_4)
                 mProjection.emplace(actor.getClass().getNpcStats(actor), projection);
             else
@@ -358,7 +365,11 @@ namespace MWMechanics
     OblivionActorProjection::OblivionActorProjection(
         CreatureStats& target, NpcStats* npc, const OblivionActorProjectionInput& input)
         : mTarget(target)
+        , mLife(input.mLife)
     {
+        if (mLife && *mLife != ESM4::ActorLifePhase::Alive && *mLife != ESM4::ActorLifePhase::Dead
+            && *mLife != ESM4::ActorLifePhase::EssentialUnconscious)
+            throw std::invalid_argument("invalid native lifecycle projection");
         for (std::size_t i = 0; i < input.mAttributes.size(); ++i)
         {
             mAttributeTargets[i] = &target.mAttributes.at(ESM::Attribute::indexToRefId(i));
@@ -401,6 +412,22 @@ namespace MWMechanics
             mTarget.mDynamic[i].mStatic = mDynamic[i].mStatic;
             mTarget.mDynamic[i].mCurrent = mDynamic[i].mCurrent;
             mTarget.mDynamic[i].mNativeModified = mDynamic[i].mNativeModified;
+        }
+        if (mLife)
+        {
+            const bool dead = *mLife == ESM4::ActorLifePhase::Dead;
+            const bool essential = *mLife == ESM4::ActorLifePhase::EssentialUnconscious;
+            if (mTarget.isDead() != dead)
+                mTarget.mDeathAnimationFinished = false;
+            if (dead || (mTarget.mNativeEssentialUnconscious && !essential))
+            {
+                mTarget.mKnockdown = false;
+                mTarget.mKnockdownOneFrame = false;
+                mTarget.mKnockdownOverOneFrame = false;
+            }
+            mTarget.mNativeDead = dead;
+            mTarget.mDead = dead;
+            mTarget.mNativeEssentialUnconscious = essential;
         }
         mCommitted = true;
         return true;
@@ -456,7 +483,7 @@ namespace MWMechanics
             throw std::invalid_argument("native actor base override kind mismatch");
         applyActorBase(values, base);
         values.validate();
-        PreparedNonPlayerView prepared(actor, values, base);
+        PreparedNonPlayerView prepared(actor, values, base, findActorLife(values.mActor));
         const auto found = mActorValues.find(values.mActor);
         if (found == mActorValues.end())
         {
@@ -513,7 +540,7 @@ namespace MWMechanics
             if (old.mBase != target.mBase || !identities.insert(old.mActor).second
                 || (ptr.getType() == ESM::REC_CREA4) != (kind == ESM4::ActorBaseKind::Creature))
                 throw std::invalid_argument("invalid or duplicate native shared-base resident");
-            prepared.emplace_back(ptr, actors.at(old.mActor), &base);
+            prepared.emplace_back(ptr, actors.at(old.mActor), &base, findActorLife(old.mActor));
         }
         if (!identities.contains(target.mActor))
             throw std::invalid_argument("native shared-base transaction omits its target");
@@ -543,6 +570,7 @@ namespace MWMechanics
         OblivionCombatService prepared;
         prepared.mActorValues = mActorValues;
         prepared.mActorBases = std::move(bases);
+        prepared.mActorLife = mActorLife;
         prepared.publishPlayerValues(player, std::move(candidate), settings);
         mActorValues.swap(prepared.mActorValues);
         mActorBases.swap(prepared.mActorBases);
@@ -708,7 +736,8 @@ namespace MWMechanics
                     attributes, magickaMultiplier}, settings);
         values.validate();
         const auto ptr = player.getPlayer();
-        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values));
+        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr),
+            actorProjection(values, nullptr, findActorLife(values.mActor)));
         const auto found = mActorValues.find(values.mActor);
         if (found == mActorValues.end())
         {
@@ -817,6 +846,40 @@ namespace MWMechanics
     {
         const auto found = mActorValues.find(actor);
         return found == mActorValues.end() ? nullptr : &found->second;
+    }
+
+    void OblivionCombatService::publishNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life)
+    {
+        const auto& values = nonPlayerValues(actor);
+        PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
+        const auto found = mActorLife.find(life.mActor);
+        if (found == mActorLife.end())
+        {
+            const auto key = life.mActor;
+            mActorLife.emplace(key, std::move(life));
+        }
+        else
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
+            std::swap(found->second, life);
+        }
+        prepared.commit();
+    }
+
+    void OblivionCombatService::publishPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life)
+    {
+        const auto& values = playerValues();
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
+        const auto found = mActorLife.find(life.mActor);
+        if (found == mActorLife.end())
+        {
+            const auto key = life.mActor;
+            mActorLife.emplace(key, std::move(life));
+        }
+        else
+            std::swap(found->second, life);
+        prepared.commit();
     }
 
     const ESM4::RuntimeActorLife* OblivionCombatService::findActorLife(const ESM::FormKey& actor) const

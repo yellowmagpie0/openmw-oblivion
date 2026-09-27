@@ -338,6 +338,17 @@ namespace
         EXPECT_EQ(stats.getHealth().getCurrent(), -907.25f);
         EXPECT_EQ(stats.getMagicka().getCurrent(), 121.75f);
         EXPECT_THROW(stats.getSkill(ESM::Skill::Marksman).setBase(99), std::logic_error);
+        ESM4::RuntimeActorLife life;
+        life.mActor = values.mActor;
+        life.mBase = values.mBase;
+        life.mPhase = ESM4::ActorLifePhase::Dead;
+        service.publishPlayerLife(player, life);
+        EXPECT_TRUE(stats.isDead());
+        EXPECT_EQ(stats.getHealth().getCurrent(), -907.25f);
+        auto invalidLife = life;
+        invalidLife.mActor = ESM::FormKey::dynamic("player", 2);
+        EXPECT_THROW(service.publishPlayerLife(player, invalidLife), std::invalid_argument);
+        EXPECT_EQ(*service.findActorLife(values.mActor), life);
         ESM4::RuntimeState saved;
         saved.mPlayer.mReference = values.mActor;
         saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
@@ -350,6 +361,8 @@ namespace
         const auto freshPtr = fresh.getPlayer();
         freshPtr.getClass().readAdditionalState(freshPtr, initial);
         restored.publishPlayerValues(fresh, *restored.findActorValues(values.mActor), settings);
+        EXPECT_TRUE(freshPtr.getClass().getCreatureStats(freshPtr).isDead());
+        EXPECT_FALSE(restored.takeNextDeathEvent());
         EXPECT_EQ(*restored.findActorValues(values.mActor), before);
         EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getMagicka().getCurrent(), 121.75f);
         restored.changePlayerValue(fresh, 40, ESM4::ActorValueModifier::Script, -5, settings);
@@ -369,6 +382,7 @@ namespace
         auto legacy = before;
         legacy.mPlayerFormValues.reset();
         saved.mNativeActorValues = {legacy};
+        saved.mNativeActorLife.clear(); // Version 9 predates the lifecycle contract.
         saved.mVersion = 9;
         restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
         EXPECT_THROW(restored.getPlayerValue(8), std::invalid_argument);
@@ -914,6 +928,22 @@ namespace
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), -94.25f);
         EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
 
+        ESM4::RuntimeActorLife life;
+        life.mActor = values.mActor;
+        life.mBase = values.mBase;
+        life.mPhase = ESM4::ActorLifePhase::Dead;
+        service.publishNonPlayerLife(ptr, life);
+        EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
+        EXPECT_EQ(service.getNonPlayerValue(ptr, 8), -94.25f);
+        EXPECT_FALSE(service.takeNextDeathEvent()); // Loading a view does not dispatch death.
+        auto invalidLife = life;
+        invalidLife.mBase = ESM::FormKey::content("actors.esm", 0x999);
+        EXPECT_THROW(service.publishNonPlayerLife(ptr, invalidLife), std::invalid_argument);
+        invalidLife = life;
+        invalidLife.mRecoveryRemaining = 1;
+        EXPECT_THROW(service.publishNonPlayerLife(ptr, invalidLife), std::runtime_error);
+        EXPECT_EQ(*service.findActorLife(values.mActor), life);
+
         ESM4::RuntimeState saved;
         saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
         saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
@@ -935,6 +965,8 @@ namespace
         MWWorld::Ptr newPtr(&newLive);
         restored.publishNonPlayerValues(newPtr, *restored.findActorValues(reference.mFormKey));
         EXPECT_EQ(restored.getNonPlayerValue(newPtr, 8), service.getNonPlayerValue(ptr, 8));
+        EXPECT_TRUE(newPtr.getClass().getCreatureStats(newPtr).isDead());
+        EXPECT_FALSE(restored.takeNextDeathEvent());
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getHealth().getCurrent(), -94.25f);
         EXPECT_EQ(newPtr.getClass().getCreatureStats(newPtr).getMagicka().getCurrent(), 101.5f);
         EXPECT_EQ(newPtr.getClass().getSkill(newPtr, ESM::Skill::Athletics), 31.5f);
@@ -1436,6 +1468,14 @@ namespace
         EXPECT_EQ(ptr.getClass().getSkill(ptr, ESM::Skill::Marksman), 21.75f);
         service.publishNonPlayerValues(ptr, before);
 
+        ESM4::RuntimeActorLife life;
+        life.mActor = values.mActor;
+        life.mBase = values.mBase;
+        life.mPhase = ESM4::ActorLifePhase::EssentialUnconscious;
+        life.mRecoveryRemaining = 2.5f;
+        service.publishNonPlayerLife(ptr, life);
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_TRUE(stats.getKnockedDown());
         ESM4::RuntimeState saved;
         saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
         saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
@@ -1455,6 +1495,13 @@ namespace
         MWWorld::LiveCellRef<ESM4::Creature> newLive(reference, mStore.search<ESM4::Creature>(mActorKey));
         MWWorld::Ptr newPtr(&newLive);
         restored.publishNonPlayerValues(newPtr, *restored.findActorValues(reference.mFormKey));
+        EXPECT_FALSE(newPtr.getClass().getCreatureStats(newPtr).isDead());
+        EXPECT_TRUE(newPtr.getClass().getCreatureStats(newPtr).getKnockedDown());
+        EXPECT_EQ(restored.findActorLife(values.mActor)->mRecoveryRemaining, 2.5f);
+        life.mPhase = ESM4::ActorLifePhase::Alive;
+        life.mRecoveryRemaining = 0;
+        restored.publishNonPlayerLife(newPtr, life);
+        EXPECT_FALSE(newPtr.getClass().getCreatureStats(newPtr).getKnockedDown());
         for (auto id : ids)
             EXPECT_EQ(newPtr.getClass().getSkill(newPtr, id), ptr.getClass().getSkill(ptr, id));
         EXPECT_EQ(newLive.mData.getCustomData()->asESM4CreatureCustomData().mNativeDamage, 20);
@@ -1557,6 +1604,78 @@ namespace
         EXPECT_EQ(stats.getHealth().getCurrent(), 90);
         EXPECT_FALSE(prepared.commit()); // Cannot roll back a later transaction.
         EXPECT_EQ(stats.getHealth().getCurrent(), 90);
+    }
+
+    TEST_F(OblivionActorStatsTest, nativeLifeProjectionPreservesHealthAndControlsSharedLifecycle)
+    {
+        sharedStats();
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("lifecycle-test");
+        mStore.insertStatic(base);
+        MWMechanics::CreatureStats stats;
+        stats.getSpells().setSpells(base.mId);
+        MWMechanics::OblivionActorProjectionInput input;
+        input.mDynamic = {{{100, 100, -5}, {50, 50, 50}, {40, 40, 40}}};
+        input.mLife = ESM4::ActorLifePhase::Alive;
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_EQ(stats.getHealth().getCurrent(), -5);
+        EXPECT_THROW(stats.resurrect(), std::logic_error);
+        stats.setKnockedDown(true);
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_TRUE(stats.getKnockedDown());
+        input.mLife = ESM4::ActorLifePhase::EssentialUnconscious;
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        stats.setKnockedDown(false);
+        EXPECT_TRUE(stats.getKnockedDown());
+        EXPECT_FALSE(stats.isDead());
+        ESM::CreatureStats essentialSave{};
+        stats.writeState(essentialSave);
+        EXPECT_FALSE(essentialSave.mDead);
+        EXPECT_TRUE(essentialSave.mKnockdown);
+        stats.setKnockedDownOneFrame(true);
+        stats.setKnockedDownOverOneFrame(true);
+        input.mLife = ESM4::ActorLifePhase::Alive;
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_FALSE(stats.getKnockedDown());
+        EXPECT_FALSE(stats.getKnockedDownOneFrame());
+        EXPECT_FALSE(stats.getKnockedDownOverOneFrame());
+        stats.setDeathAnimationFinished(true);
+        input.mLife = ESM4::ActorLifePhase::Dead;
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_TRUE(stats.isDead());
+        EXPECT_FALSE(stats.isDeathAnimationFinished());
+        ESM::CreatureStats deadSave{};
+        stats.writeState(deadSave);
+        EXPECT_TRUE(deadSave.mDead);
+        EXPECT_FALSE(deadSave.mKnockdown);
+        EXPECT_EQ(stats.getHealth().getCurrent(), -5);
+        stats.setDeathAnimationFinished(true);
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_TRUE(stats.isDeathAnimationFinished());
+        input.mLife = static_cast<ESM4::ActorLifePhase>(255);
+        EXPECT_THROW((MWMechanics::OblivionActorProjection(stats, input)), std::invalid_argument);
+        EXPECT_TRUE(stats.isDead());
+        EXPECT_TRUE(stats.isDeathAnimationFinished());
+        input.mLife.reset();
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_TRUE(stats.isDead());
+        input.mLife = ESM4::ActorLifePhase::Alive;
+        ASSERT_TRUE(MWMechanics::OblivionActorProjection(stats, input).commit());
+        EXPECT_FALSE(stats.isDead());
+        EXPECT_FALSE(stats.isDeathAnimationFinished());
+        MWMechanics::CreatureStats legacy;
+        legacy.getSpells().setSpells(base.mId);
+        ESM::CreatureStats legacySave{};
+        legacySave.blank();
+        legacySave.mDead = true;
+        legacy.readState(legacySave);
+        EXPECT_TRUE(legacy.isDead());
+        EXPECT_NO_THROW(legacy.resurrect());
+        EXPECT_FALSE(legacy.isDead());
     }
 
     TEST_F(OblivionActorStatsTest, failedOrAbandonedPreparationLeavesAllNativeViewsIntact)

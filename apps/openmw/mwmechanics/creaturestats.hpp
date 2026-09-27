@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -50,6 +51,10 @@ namespace MWMechanics
         Stat<int> mAiSettings[4];
         AiSequence mAiSequence;
         bool mDead = false;
+        // Shared views of the native lifecycle authority. A missing projection
+        // retains the historical TES3 behavior; only the native publisher writes.
+        std::optional<bool> mNativeDead;
+        bool mNativeEssentialUnconscious = false;
         bool mDeathAnimationFinished = false;
         bool mDied = false; // flag for OnDeath script function
         bool mMurdered = false;

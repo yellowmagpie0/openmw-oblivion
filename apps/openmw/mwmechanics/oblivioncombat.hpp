@@ -34,6 +34,9 @@ namespace MWMechanics
         // Prepared native base, maximum and current, in health/magicka/fatigue
         // order. Their AV-specific formulas belong to the native authority.
         std::array<std::array<float, 3>, 3> mDynamic{};
+        // Optional during staged native activation. Absence preserves the
+        // target's existing lifecycle view; presence is authoritative.
+        std::optional<ESM4::ActorLifePhase> mLife;
     };
 
     // A synchronous transaction: the target must outlive this object. Prepare
@@ -47,6 +50,7 @@ namespace MWMechanics
         std::array<AttributeValue, 21> mSkills;
         std::array<AttributeValue*, 21> mSkillTargets{};
         std::array<DynamicStat<float>, 3> mDynamic;
+        std::optional<ESM4::ActorLifePhase> mLife;
         bool mCommitted = false;
 
         static void replaceAttribute(AttributeValue& target, const AttributeValue& value) noexcept;
@@ -199,6 +203,11 @@ namespace MWMechanics
         float getPlayerValue(std::uint8_t value) const;
         std::int32_t getPlayerIntegerValue(std::uint8_t value) const;
         const ESM4::RuntimeActorValues* findActorValues(const ESM::FormKey& actor) const;
+        // Explicit construction/load publication, after content validation.
+        // Changes lifecycle authority and shared views without issuing events.
+        // Normal health/death/resurrection transitions have separate policy.
+        void publishNonPlayerLife(const MWWorld::Ptr& actor, ESM4::RuntimeActorLife life);
+        void publishPlayerLife(MWWorld::Player& player, ESM4::RuntimeActorLife life);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain
         // remaining FIFO work and never replay the event being dispatched.

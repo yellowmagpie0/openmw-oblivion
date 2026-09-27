@@ -3271,3 +3271,33 @@ All seven required captures were inspected: observation rooms/HUDs, readable
 binding-error dialog and the terrain-facing Morrowind scene. Runs are silent.
 Verification JSON records input preservation, state vectors and binary identity.
 S2/S3 remain in progress, S4–S14 pending.
+
+## S3 live lifecycle projection
+
+The native actor projection now publishes Alive, Dead and EssentialUnconscious
+into shared CreatureStats alongside the prepared native values. Negative Health
+alone does not imply death or get clamped. Essential actors remain nondead and
+knocked down even when a controller clears its ordinary knockdown flag. Leaving
+essential unconsciousness clears its knockdown bookkeeping; an unchanged Alive
+publication preserves ordinary knockdown. Repeated dead publication preserves a
+completed death animation. Native resurrection requires the native authority;
+unprojected TES3 stats retain their legacy behavior.
+
+Construction/load publication validates lifecycle identity and fields before
+committing authority or views and never creates death events. Value and shared
+base transactions carry the owned lifecycle projection. Tests serialize native
+state and restore it into fresh actual NPC, Player and Creature instances,
+including fractional essential recovery time. Shared save fields agree with
+dead and essential projections. Automatic activation, health transitions,
+world/script routing and actual corpse/recovery acceptance remain open.
+
+`S3/native-life-projection-05` passes all **592 engine tests**, matching inventory
+and with no skips. Source fingerprint:
+`be1a21b4357cadb1070ff6e9db0fc56a81b8cbd381f0fbeb73f50d1780c5ce15`.
+Engine SHA-256:
+`8b0595b003e7c755cf2c6291cd6806ac6f3768c97b49896dce45111fe3fb3563`.
+Components and sanitizer code are unchanged from the preceding lifecycle-state
+check. Attempts 01–04 retain fixture failures: a legacy death setter requiring a
+world clock, uninitialized spell lists in standalone stats save/read, and a v9
+fixture retaining newly added v12 lifecycle data. Corrected tests initialize the
+real dependencies and construct a valid old-format case; validators are intact.

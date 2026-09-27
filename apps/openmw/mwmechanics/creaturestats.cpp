@@ -244,7 +244,7 @@ namespace MWMechanics
 
     bool CreatureStats::isDead() const
     {
-        return mDead;
+        return mNativeDead.value_or(mDead);
     }
 
     bool CreatureStats::isDeathAnimationFinished() const
@@ -289,6 +289,8 @@ namespace MWMechanics
 
     void CreatureStats::resurrect()
     {
+        if (mNativeDead)
+            throw std::logic_error("native actor lifecycle requires the native actor authority");
         if (mDead)
         {
             mDynamic[0].setCurrent(mDynamic[0].getBase());
@@ -453,7 +455,7 @@ namespace MWMechanics
 
     bool CreatureStats::getKnockedDown() const
     {
-        return mKnockdown;
+        return mNativeEssentialUnconscious || mKnockdown;
     }
 
     void CreatureStats::setKnockedDownOneFrame(bool value)
@@ -542,7 +544,7 @@ namespace MWMechanics
         state.mTradeTime = mLastRestock.toEsm();
         state.mGoldPool = mGoldPool;
 
-        state.mDead = mDead;
+        state.mDead = isDead();
         state.mDeathAnimationFinished = mDeathAnimationFinished;
         state.mDied = mDied;
         state.mMurdered = mMurdered;
@@ -554,7 +556,7 @@ namespace MWMechanics
         state.mAlarmed = mAlarmed;
         state.mAttacked = mAttacked;
         // TODO: rewrite. does this really need 3 separate bools?
-        state.mKnockdown = mKnockdown;
+        state.mKnockdown = getKnockedDown();
         state.mKnockdownOneFrame = mKnockdownOneFrame;
         state.mKnockdownOverOneFrame = mKnockdownOverOneFrame;
         state.mHitRecovery = mHitRecovery;
