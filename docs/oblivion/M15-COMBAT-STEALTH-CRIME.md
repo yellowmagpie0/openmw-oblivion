@@ -4731,3 +4731,46 @@ The corrected held-key fixture also passes regular `native-wait-dialog-03`;
 all four captures inspected (1 hour,2 hours,cancel). Reusable build/oracle skill
 references now document matching resources, held input, Steam initialization
 and absolute launch paths; both skill validators pass.
+
+
+### S3 original hourly wait observations and remaining failing writer
+
+`S3/original-rest-02` uses the pinned original 1.2.0416 executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+and master-only isolated prefix. Normal T/Wait input, held mouse actions and
+console queries establish these observations for Chorrol Guard028c83:
+
+- High process, character generation disabled: at maximum Magicka1000,
+  current100, fMagickaReturnBase0.1, fMagickaReturnMult0, TimeScale30, one hour
+  produces225.03. The predeclared122-second restoration plus3.036 seconds of
+  ordinary frames predicts225.036 (error0.006, tolerance0.5).
+- Before disabling character generation, the diagnostic case produces221.81,
+  consistent with120 seconds plus ordinary frames. Read-only process inspection
+  verifies Player+6E5 changes1->0 after SetInCharGen0. This first observation
+  discovered a precondition; it is not a predeclared acceptance case.
+- High process, injured NPC/Player: Health25/25 becomes127/80, their queried
+  maxima. Stunted Magicka1 preserves Magicka100. Predeclared tolerance0.02.
+- Moving to TestingHall leaves the guard in MiddleHigh process tier1: Health
+  stays25 while Magicka100->227.17. PurgeCellBuffers changes to Low tier3:
+  Health again stays25, Magicka100->223.14. These Magicka amounts are exploratory;
+  exact per-actor clock cadence was not controlled. Distant actors must not be
+  excluded from all regeneration merely because they lack High processing.
+
+Before/menu/after captures for every case were inspected. The read-only process
+snapshots identify actor, process vtable/tier getter, update flag and clock;
+no original memory was written. `rest-observation.json` retains displayed values,
+calculations and failed setup commands. The original exited via QuitGame.
+`cleanup.json` verifies exact restoration of isolated Plugins.txt, INI,
+quicksave and autosave; the owned reference Steam client was shut down.
+No sleep/bed, creature, dead, essential, AI-disabled or reentry acceptance is
+claimed by these waiting cases.
+
+Tracked `oblivion_m15_native_wait_hour.json` reproduces the current OpenMW
+failure in `S3/native-wait-hour-red-01`: confirming Wait reaches missing TES3
+`fEndFatigueMult`; no full hour advances. Inspected captures show the one-hour
+Wait dialog and return to the world. Source save remains pristine; failed output
+SHA256 is `474dad5dc55422d3f6de8a26d24cee270c681514232824c037233bc7c15dd8dc`.
+The retained state verification records all actor values and clock. Next is
+native hourly resource dispatch with unloaded authority and resident projections
+committed together, followed by real Wait and fresh-process verification.
+S2/S3 and all later gates remain open; automatic actor publication remains off.
