@@ -241,6 +241,13 @@ namespace MWMechanics
             const ESM4::FatigueRegenerationSettings& settings);
         void regeneratePlayerFatigue(MWWorld::Player& player, float duration,
             const ESM4::FatigueRegenerationSettings& settings, const ESM4::PlayerDynamicBaseSettings& baseSettings);
+        // Frame Magicka is independent of Health restoration and Fatigue updates.
+        // The caller supplies active casting-item state, not selected-spell state.
+        void regenerateNonPlayerMagicka(const MWWorld::Ptr& actor, float duration,
+            bool hasActiveMagicItem, const ESM4::MagickaRegenerationSettings& settings);
+        void regeneratePlayerMagicka(MWWorld::Player& player, float duration,
+            bool hasActiveMagicItem, const ESM4::MagickaRegenerationSettings& settings,
+            const ESM4::PlayerDynamicBaseSettings& baseSettings);
         // Prepare Health, Magicka, then Fatigue and publish once. Callers own
         // rest/wait/jail eligibility and active-item/effect lifecycle.
         void restoreNonPlayerResources(const MWWorld::Ptr& actor, const OblivionRestorationUpdate& input,

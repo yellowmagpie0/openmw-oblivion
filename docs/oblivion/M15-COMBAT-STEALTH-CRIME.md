@@ -4336,3 +4336,32 @@ Scenario actions complete without errors, but intended-state verification fails.
 Save SHA: `712507d7438f25785ca6414bd991fb12426165a62513323fca5def65513bdaec`.
 Capture and pristine inputs retained. Remaining Magicka/rest/Lua, activation and
 later milestone gates remain open.
+
+### Isolated native Magicka regeneration writer
+
+The new NPC/Creature and Player service entry points restore only Magicka's
+Damage channel and publish native authority plus shared views together. The
+restoration helper is shared with the existing rest transaction. The caller
+supplies active casting-item state explicitly; selected spell and animation
+follow-through are not substituted for that input. Player preparation resolves
+raw form contributions with the supplied current dynamic-base settings before
+calculating the request. Nonplayer current queries retain the outer Magicka
+scale while the rate uses its unscaled restoration maximum.
+
+Three actual actor-instance tests cover fractional frames, integer Willpower,
+active-item suppression, signed/fractional Stunted Magicka, active/low processes,
+Maximum and Script preservation, permanent Damage slots, full/dead actors,
+invalid duration/settings rollback, binary reload continuation and separate
+Health/Fatigue preservation. Additional cases change Player base settings and
+exercise nonplayer scale. These are service checks; frame integration remains
+next, and the retained runtime Magicka baseline is still failing at this point.
+
+`S3/native-magicka-service-01` retains an initializer compilation failure in the
+new test setup. Explicit optional initializers fix it. `-02` passes all622 engine
+tests; `-03`, including the derived-value cases, passes all622 again.
+`S3/native-magicka-service-sanitized-01` passes the same complete622 inventory
+under ASan/UBSan with leak detection and halt-on-error enabled. No skips,
+failures or sanitizer findings. Tested source fingerprint:
+`81af5e048a9804d6e477fea875e1284457fd6ea4a57b4f6d3de6b59eda02f7e9`;
+regular engine-test SHA `79b2edb745530b9ef3e08fca7326ec1b6117e2519eb1cb7f3f57bbe8ee62a197`;
+sanitized engine-test SHA `d5593715b333593241082bf40ac4ed95e08cd44f310d35d7dfa6a14dc0c0b248`.

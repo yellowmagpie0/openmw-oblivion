@@ -2739,6 +2739,14 @@ Player Damage uses fixed scalar clamping. This preserves a surprising repeated
 restoration behavior: with Script -1, a first NPC Health restore can remove its
 negative Damage, and a second can insert +1 and reach maximum. The authority
 reload test explicitly covers that behavior instead of flattening channels.
+This sparse-container observation applies to Health and other ordinary sparse
+AVs, **not Magicka/Fatigue**. The later complete-container audit in the milestone
+report ("permanent nonplayer Magicka/Fatigue modifier slots", commit
+`7bafa684c0`) supersedes the helper harness's stubbed container behavior for
+AV9/10: constructor `65BE10`, lookup `65C010` and zero-removal `65C9B0` retain
+permanent zero slots. `actor-dedicated-modifier-add.py` and its C++ comparison
+verify2,312 original cases without game-function stubs. Positive Damage cannot
+offset a Script penalty in those slots, even after repeated regeneration.
 The first harness attempt failed while extracting a reusable Python prefix;
 `S3/authority-draft/resource-authority-oracle-01.log` is retained, followed by
 the successful `resource-authority-oracle-02.log`.

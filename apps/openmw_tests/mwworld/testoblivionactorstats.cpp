@@ -3640,5 +3640,255 @@ namespace
         verifyBreathTransactions(service, ptr, values, &player);
     }
 
+    void verifyMagickaFrameTransactions(MWMechanics::OblivionCombatService& service,
+        const MWWorld::Ptr& ptr, ESM4::RuntimeActorValues values, MWWorld::Player* player = nullptr)
+    {
+        using Phase = ESM4::ActorLifePhase;
+        const ESM4::MagickaRegenerationSettings settings{.75f, .02f};
+        values.mValues[2] = {50, {.75f, {}, {}}}; // Native integer Willpower50.
+        values.mValues[8] = {100, {std::nullopt, std::nullopt, -10}};
+        values.mValues[9] = {100, {std::nullopt, std::nullopt, -80}};
+        values.mValues[10] = {200, {std::nullopt, std::nullopt, -50}};
+        if (player)
+            values.mPlayerFormValues = {{100, 100, 200, 0}};
+        const auto publish = [&] {
+            if (player)
+            {
+                service.publishPlayerValues(*player, values, {});
+                service.publishPlayerLife(*player, {values.mActor, values.mBase, Phase::Alive, 0, {}});
+            }
+            else
+            {
+                service.publishNonPlayerValues(ptr, values);
+                service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, Phase::Alive, 0, {}});
+            }
+        };
+        const auto update = [&](float duration, bool casting = false,
+                                ESM4::MagickaRegenerationSettings config = {.75f, .02f}) {
+            if (player)
+                service.regeneratePlayerMagicka(*player, duration, casting, config, {});
+            else
+                service.regenerateNonPlayerMagicka(ptr, duration, casting, config);
+        };
+        const auto current = [&] { return ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(); };
+        publish();
+        const auto before = *service.findActorValues(values.mActor);
+        update(.5f);
+        EXPECT_FLOAT_EQ(current(), 20.875f);
+        auto expected = before;
+        expected.mValues[9].mModifiers[2] = -79.125f;
+        EXPECT_EQ(*service.findActorValues(values.mActor), expected); // Only Magicka Damage changes.
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Alive);
+        update(.5f, true);
+        update(0);
+        EXPECT_EQ(*service.findActorValues(values.mActor), expected);
+        for (float duration : {-1.f, std::numeric_limits<float>::quiet_NaN(),
+                 std::numeric_limits<float>::infinity()})
+        {
+            EXPECT_THROW(update(duration), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), expected);
+            EXPECT_FLOAT_EQ(current(), 20.875f);
+        }
+        auto invalid = settings;
+        invalid.mBase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(update(1, false, invalid), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), expected);
+        for (float stunted : {1.f, .75f, 0.f, -1.f})
+        {
+            values.mValues[57].mBase = stunted;
+            publish();
+            update(1);
+            EXPECT_FLOAT_EQ(current(), stunted == 1 ? 20.f : 21.75f);
+        }
+        values.mValues[57].mBase = 0;
+        for (auto process : {ESM4::ActorValueProcess::Active, ESM4::ActorValueProcess::Low})
+        {
+            values.mProcess = process;
+            values.mValues[9].mModifiers = {10, -1, -80};
+            publish();
+            update(1);
+            const bool maximum = player || process == ESM4::ActorValueProcess::Active;
+            EXPECT_FLOAT_EQ(current(), maximum ? 30.925f : 20.75f);
+            const auto& result = service.findActorValues(values.mActor)->mValues[9];
+            EXPECT_EQ(result.mModifiers[0], 10);
+            EXPECT_EQ(result.mModifiers[1], -1);
+        }
+        values.mProcess = ESM4::ActorValueProcess::Active;
+        values.mValues[9].mModifiers = {std::nullopt, std::nullopt, -.25f};
+        publish();
+        update(1); // Truncated current99 admits restoration; Damage clamps at zero.
+        EXPECT_FLOAT_EQ(current(), 100.f);
+        const auto full = *service.findActorValues(values.mActor);
+        update(1);
+        EXPECT_EQ(*service.findActorValues(values.mActor), full);
+        for (auto damage : {std::optional<float>{}, std::optional<float>{0}})
+        {
+            values.mValues[9].mModifiers = {std::nullopt, -1, damage};
+            publish();
+            update(1);
+            update(1);
+            EXPECT_FLOAT_EQ(current(), 99.f); // Magicka's permanent Damage slot cannot offset Script.
+            EXPECT_EQ(service.findActorValues(values.mActor)->mValues[9].mModifiers[2], 0.f);
+        }
+        values.mValues[9].mModifiers = {std::nullopt, std::nullopt, -80};
+        publish();
+        update(.5f);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        if (!player)
+        {
+            ESM4::RuntimeReferenceState reference;
+            reference.mKey = values.mActor;
+            reference.mBase = values.mBase;
+            reference.mCell = saved.mPlayer.mCell;
+            saved.mReferences.push_back(reference);
+        }
+        service.capture(saved);
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        update(.5f);
+        EXPECT_FLOAT_EQ(current(), 21.75f);
+        if (player)
+        {
+            values.mValues[1].mBase = 50;
+            publish(); // Magicka base150 with the initial zero setting.
+            EXPECT_FLOAT_EQ(current(), 70.f);
+            const auto health = ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent();
+            const auto fatigue = ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent();
+            service.regeneratePlayerMagicka(*player, 1, false, settings, {0, 1, 0});
+            EXPECT_FLOAT_EQ(current(), 123.5f); // New base200 gives a3.5 request, not the stale2.625.
+            EXPECT_EQ(service.findActorValues(values.mActor)->mValues[9].mBase, 200);
+            EXPECT_EQ((*service.findActorValues(values.mActor)->mPlayerFormValues)[1], 100);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), health);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), fatigue);
+            auto invalidBase = ESM4::PlayerDynamicBaseSettings{0, std::numeric_limits<float>::quiet_NaN(), 0};
+            const auto beforeInvalid = *service.findActorValues(values.mActor);
+            EXPECT_THROW(service.regeneratePlayerMagicka(*player, 1, false, settings, invalidBase), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), beforeInvalid);
+            EXPECT_FLOAT_EQ(current(), 123.5f);
+            values.mValues[1].mBase = 0;
+        }
+        else
+        {
+            for (float multiplier : {5.f, 20.f})
+            {
+                values.mValues[40].mBase = multiplier;
+                publish();
+                update(1);
+                EXPECT_FLOAT_EQ(current(), multiplier == 5 ? 10.875f : 43.5f);
+                EXPECT_FLOAT_EQ(*service.findActorValues(values.mActor)->mValues[9].mModifiers[2], -78.25f);
+            }
+            values.mValues[40].mBase = 0;
+        }
+        publish();
+        update(1);
+        if (player)
+            service.publishPlayerLife(*player, {values.mActor, values.mBase, Phase::Dead, 0, {}});
+        else
+            service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, Phase::Dead, 0, {}});
+        const auto dead = *service.findActorValues(values.mActor);
+        update(10);
+        EXPECT_EQ(*service.findActorValues(values.mActor), dead);
+        EXPECT_FLOAT_EQ(current(), 21.75f);
+    }
+
+    TEST_F(OblivionActorStatsTest, nativeMagickaFrameTransactions)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        verifyMagickaFrameTransactions(service, ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureMagickaFrameTransactions)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 4;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        MWMechanics::OblivionCombatService service;
+        verifyMagickaFrameTransactions(service, ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerMagickaFrameTransactions)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initialState{};
+        initialState.blank();
+        ptr.getClass().readAdditionalState(ptr, initialState);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 30, 40, 0}};
+        MWMechanics::OblivionCombatService service;
+        verifyMagickaFrameTransactions(service, ptr, values, &player);
+    }
+
 
 }

@@ -168,6 +168,26 @@ namespace MWMechanics
                     values.mOwner, values.mProcess), duration}, settings);
         }
 
+        float magickaRestoration(const ESM4::RuntimeActorValues& values, float duration,
+            bool hasActiveMagicItem, const ESM4::MagickaRegenerationSettings& settings,
+            const ESM4::RuntimeActorBaseOverride* base = nullptr)
+        {
+            const auto& magicka = values.mValues[9];
+            const auto integer = [&](std::uint8_t av) {
+                const auto& value = values.mValues[av];
+                return ESM4::composeIntegerActorValue(ESM4::combatBaseValue(value.mBase), value.mModifiers,
+                    values.mOwner, values.mProcess);
+            };
+            const float current = values.mOwner == ESM4::ActorValueOwner::Player
+                ? ESM4::composeActorValue(magicka, values.mOwner, values.mProcess)
+                : nonPlayerFloat(values, 9, base);
+            const float maximumModifier = values.mOwner == ESM4::ActorValueOwner::Player
+                || values.mProcess == ESM4::ActorValueProcess::Active
+                ? magicka.mModifiers[0].value_or(0.f) : 0.f;
+            return ESM4::magickaRegeneration({current, ESM4::combatBaseValue(magicka.mBase), maximumModifier,
+                integer(2), integer(57), duration, hasActiveMagicItem, true}, settings);
+        }
+
         bool restoreResources(ESM4::RuntimeActorValues& values, const OblivionRestorationUpdate& input,
             const OblivionRestorationSettings& settings, const ESM4::RuntimeActorBaseOverride* base = nullptr)
         {
@@ -175,11 +195,6 @@ namespace MWMechanics
                 return values.mOwner == ESM4::ActorValueOwner::Player
                     ? ESM4::composeActorValue(values.mValues[av], values.mOwner, values.mProcess)
                     : nonPlayerFloat(values, av, base);
-            };
-            const auto integer = [&](std::uint8_t av) {
-                const auto& value = values.mValues[av];
-                return ESM4::composeIntegerActorValue(ESM4::combatBaseValue(value.mBase), value.mModifiers,
-                    values.mOwner, values.mProcess);
             };
             const auto maximum = [&](std::uint8_t av) {
                 return values.mOwner == ESM4::ActorValueOwner::Player
@@ -197,8 +212,7 @@ namespace MWMechanics
             };
             if (input.mRestoreHealth)
                 restore(8, ESM4::healthRestoration(current(8), ESM4::combatBaseValue(values.mValues[8].mBase), maximum(8)));
-            restore(9, ESM4::magickaRegeneration({current(9), ESM4::combatBaseValue(values.mValues[9].mBase),
-                maximum(9), integer(2), integer(57), input.mDuration, input.mHasActiveMagicItem, true}, settings.mMagicka));
+            restore(9, magickaRestoration(values, input.mDuration, input.mHasActiveMagicItem, settings.mMagicka, base));
             restore(10, fatigueRestoration(values, input.mDuration, settings.mFatigue));
             return changed;
         }
@@ -936,6 +950,35 @@ namespace MWMechanics
         const float delta = fatigueRestoration(values, duration, settings);
         if (delta > 0)
             changePlayerValue(player, 10, ESM4::ActorValueModifier::Damage, delta, baseSettings);
+    }
+
+    void OblivionCombatService::regenerateNonPlayerMagicka(const MWWorld::Ptr& actor, float duration,
+        bool hasActiveMagicItem, const ESM4::MagickaRegenerationSettings& settings)
+    {
+        const auto& values = nonPlayerValues(actor);
+        if (actor.getClass().getCreatureStats(actor).isDead())
+            return;
+        const float delta = magickaRestoration(values, duration, hasActiveMagicItem, settings, findActorBase(values.mBase));
+        if (delta > 0)
+            changeNonPlayerValue(actor, 9, ESM4::ActorValueModifier::Damage, delta);
+    }
+
+    void OblivionCombatService::regeneratePlayerMagicka(MWWorld::Player& player, float duration,
+        bool hasActiveMagicItem, const ESM4::MagickaRegenerationSettings& settings,
+        const ESM4::PlayerDynamicBaseSettings& baseSettings)
+    {
+        auto candidate = playerValues();
+        const auto ptr = player.getPlayer();
+        if (ptr.getClass().getCreatureStats(ptr).isDead())
+            return;
+        preparePlayerValues(candidate, baseSettings);
+        const float delta = magickaRestoration(candidate, duration, hasActiveMagicItem, settings);
+        if (delta > 0)
+        {
+            candidate.mValues[9] = ESM4::changeActorValueModifier(
+                candidate.mValues[9], candidate.mOwner, 9, ESM4::ActorValueModifier::Damage, delta);
+            publishPlayerValues(player, std::move(candidate), baseSettings);
+        }
     }
 
     void OblivionCombatService::restoreNonPlayerResources(const MWWorld::Ptr& actor,
