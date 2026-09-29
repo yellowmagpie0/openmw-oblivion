@@ -10,6 +10,17 @@ namespace ESM4
         return !std::isfinite(time) || time > 100000.f ? 0.f : time;
     }
 
+    float advanceActorManagerTime(float time, float elapsed) noexcept
+    {
+        return normalizeActorManagerTime(static_cast<float>(double(time) + elapsed));
+    }
+
+    float actorManagerTimeAfterHour(float time, float timeScale) noexcept
+    {
+        const float elapsed = static_cast<float>(3600.0 / timeScale);
+        return advanceActorManagerTime(time, elapsed);
+    }
+
     float actorUpdateDuration(float time, float previousTime)
     {
         if (!std::isfinite(time) || !std::isfinite(previousTime))

@@ -49,6 +49,7 @@
 #include <components/esm4/loadwrld.hpp>
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/actorclock.hpp>
 #include <components/esm4/runtimereferences.hpp>
 
 #include <components/misc/constants.hpp>
@@ -1500,7 +1501,13 @@ namespace MWWorld
         return true;
     }
 
-    bool World::updateOblivionFrameResources(const Ptr& actor, float duration, bool running)
+    void World::advanceOblivionActorClock(float duration)
+    {
+        if (mOblivionCombat)
+            mOblivionCombat->advanceFrameClock(duration);
+    }
+
+    bool World::updateOblivionFrameResources(const Ptr& actor, float, bool running)
     {
         if (!mOblivionCombat)
             return false;
@@ -1509,15 +1516,15 @@ namespace MWWorld
         // Original Character/Player virtual +278 returns true. The Creature
         // constructor initializes its separate expenditure flag to false.
         const bool canSpend = actor.getType() != ESM::REC_CREA4 && (!player || !getGodModeState());
-        const MWMechanics::OblivionFatigueUpdate input{duration,
+        const MWMechanics::OblivionActorMovement movement{
             ESM4::combatBaseValue(actor.getClass().getEncumbrance(actor)), running, canSpend};
         // Native spell/enchantment execution is an explicit M16 boundary below.
         // No native active casting item exists yet. M16 must wire its actual
         // item lifetime here; selected spell and animation flags are not that state.
         if (player)
-            mOblivionCombat->updatePlayerFrameResources(*mPlayer, input, false, settings);
+            mOblivionCombat->updatePlayerFrameResourcesFromClock(*mPlayer, movement, false, settings);
         else
-            mOblivionCombat->updateNonPlayerFrameResources(actor, input, false, settings);
+            mOblivionCombat->updateNonPlayerFrameResourcesFromClock(actor, movement, false, settings);
         return true;
     }
 
@@ -5050,17 +5057,16 @@ namespace MWWorld
         const float timeScale = mTimeManager->getGameTimeScale();
         if (!std::isfinite(timeScale))
             throw std::invalid_argument("native hourly rest requires a finite time scale");
-        // A zero/negative scale cannot advance the original actor clock;
-        // nonfinite division results are sanitized by its clock setter too.
-        // Explicit Player/high-process restoration is independent of that clock.
-        float elapsed = timeScale > 0.f ? static_cast<float>(3600.0 / timeScale) : 0.f;
-        if (!std::isfinite(elapsed))
-            elapsed = 0.f;
+        // Compute without publishing: resources and every completed actor time
+        // must commit together. The native setter resets overflow/nonfinite
+        // division results, but retains a finite negative clock.
+        const float nextManagerTime = ESM4::actorManagerTimeAfterHour(mOblivionCombat->actorManagerTime(), timeScale);
         const auto frameSettings = resolveOblivionFrameSettings(mStore);
         const MWMechanics::OblivionRestorationSettings settings{
             frameSettings.mMagicka, frameSettings.mFatigue.mRegeneration, frameSettings.mFatigue.mPlayerBase};
         const auto player = getPlayerPtr();
         const bool chargen = getGlobalInt(Globals::sCharGenState) > 0;
+        const bool dispatchActors = !chargen && MWBase::Environment::get().getMechanicsManager()->isAIActive();
         const auto playerPosition = player.getRefData().getPosition().asVec3();
         const float range = Settings::game().mActorsProcessingRange;
         std::map<ESM::FormKey, Ptr> residents;
@@ -5081,11 +5087,16 @@ namespace MWWorld
             MWMechanics::OblivionActorRestoration update{values.mActor, {}};
             if (values.mOwner == ESM4::ActorValueOwner::Player)
             {
-                if (!chargen)
-                    update.mUpdates.push_back({3600.f, true, false});
+                update.mUpdates.push_back({3600.f, true, false});
+                // Ordinary rest restores Player resources even during chargen
+                // or with AI disabled, then invokes the common +368 update.
+                update.mUpdates.push_back({mOblivionCombat->elapsedSinceActorUpdate(values.mActor, nextManagerTime),
+                    sleeping, false});
             }
             else
             {
+                if (!dispatchActors)
+                    continue;
                 bool high = false;
                 if (const auto found = residents.find(values.mActor); found != residents.end())
                 {
@@ -5106,14 +5117,15 @@ namespace MWWorld
                 // The ordinary actor update runs even for distant actors. The
                 // High dispatcher additionally restores H/M/F for two seconds.
                 // No native casting item exists before M16's effect integration.
-                update.mUpdates.push_back({elapsed, sleeping, false});
-                if (high && !chargen)
+                update.mUpdates.push_back({mOblivionCombat->elapsedSinceActorUpdate(values.mActor, nextManagerTime),
+                    sleeping, false});
+                if (high)
                     update.mUpdates.push_back({2.f, true, false});
             }
             if (!update.mUpdates.empty())
                 updates.push_back(std::move(update));
         }
-        mOblivionCombat->restoreResourceBatch(*mPlayer, updates, projections, settings);
+        mOblivionCombat->restoreResourceBatch(*mPlayer, updates, projections, settings, nextManagerTime);
         advanceTime(1);
         if (mOblivionAi && MWBase::Environment::get().getMechanicsManager()->isAIActive())
             mOblivionAi->fastForward(1.f);

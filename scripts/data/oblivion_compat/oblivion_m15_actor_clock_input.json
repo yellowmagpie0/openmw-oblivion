@@ -23,5 +23,11 @@
     "with": "content:m15-lifecycle.esm:9001ff"
   },
   "scenario": "oblivion_m15_lua_stat_modifiers_continuation.json",
-  "acceptance": "Normal engine save and fresh-process resave; clocks are not advanced in this save-contract-only course."
+  "acceptance": "Normal engine save and fresh-process resave; clocks are not advanced in this save-contract-only course.",
+  "frame_advancement_variant": {
+    "scenario": "oblivion_m15_actor_frame_clock.json",
+    "reset_manager_time": 100000.0,
+    "reset_all_actor_update_times": 100000.0,
+    "acceptance": "Manager advances, actor timestamps equal completed manager time, reset becomes0 and fresh-process continuation advances without resource/Lua replay."
+  }
 }

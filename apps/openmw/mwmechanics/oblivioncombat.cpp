@@ -1,6 +1,7 @@
 #include "oblivioncombat.hpp"
 
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/actorclock.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -77,6 +78,25 @@ namespace MWMechanics
                     throw std::invalid_argument("missing or mismatched native actor reference: " + values.mActor.serialize());
             }
             return creature;
+        }
+
+        template <class Update>
+        void updateWithActorClock(std::map<ESM::FormKey, float>& times, const ESM::FormKey& actor,
+            float time, Update&& update)
+        {
+            const auto found = times.find(actor);
+            const float elapsed = ESM4::actorUpdateDuration(time, found == times.end() ? -1.f : found->second);
+            // Allocate a missing entry before touching resource authority. The
+            // node transfer below allocates nothing; FormKey comparison only
+            // compares its existing kind/string/integer members.
+            std::map<ESM::FormKey, float> prepared;
+            if (found == times.end())
+                prepared.emplace(actor, time);
+            update(elapsed);
+            if (found == times.end())
+                times.insert(prepared.extract(prepared.begin()));
+            else
+                found->second = time;
         }
 
         float statModifierDelta(const ESM4::RuntimeActorValues& values, std::uint8_t value,
@@ -501,6 +521,23 @@ namespace MWMechanics
         mActorManagerTime = 0;
         mActorUpdateTimes.clear();
         mCombatOpponents.clear();
+    }
+
+    void OblivionCombatService::advanceFrameClock(float duration)
+    {
+        if (!std::isfinite(duration) || duration < 0.f)
+            throw std::invalid_argument("native frame clock requires finite nonnegative elapsed time");
+        mActorManagerTime = ESM4::advanceActorManagerTime(mActorManagerTime, duration);
+    }
+
+    float OblivionCombatService::elapsedSinceActorUpdate(const ESM::FormKey& actor, float time) const
+    {
+        if (!mActorValues.contains(actor))
+            throw std::invalid_argument("native actor clock requires registered actor values");
+        if (!std::isfinite(time) || time > 100000.f)
+            throw std::invalid_argument("invalid native actor manager time");
+        const auto found = mActorUpdateTimes.find(actor);
+        return ESM4::actorUpdateDuration(time, found == mActorUpdateTimes.end() ? -1.f : found->second);
     }
 
     bool OblivionCombatService::engage(const ESM::FormKey& actor, const ESM::FormKey& opponent)
@@ -1200,11 +1237,14 @@ namespace MWMechanics
 
     void OblivionCombatService::restoreResourceBatch(MWWorld::Player& player,
         std::span<const OblivionActorRestoration> updates, std::span<const MWWorld::Ptr> residents,
-        const OblivionRestorationSettings& settings)
+        const OblivionRestorationSettings& settings, std::optional<float> completedManagerTime)
     {
         ESM4::validateMagickaRegenerationSettings(settings.mMagicka);
         ESM4::validateFatigueRegenerationSettings(settings.mFatigue);
         auto candidates = mActorValues;
+        if (completedManagerTime && (!std::isfinite(*completedManagerTime) || *completedManagerTime > 100000.f))
+            throw std::invalid_argument("invalid native completed manager time");
+        auto updateTimes = mActorUpdateTimes;
         std::set<ESM::FormKey> affected;
         std::optional<OblivionActorProjection> playerView;
         for (const auto& update : updates)
@@ -1233,6 +1273,8 @@ namespace MWMechanics
                     restoreResources(values, step, settings, base);
             }
             values.validate();
+            if (completedManagerTime)
+                updateTimes.insert_or_assign(update.mActor, *completedManagerTime);
             const auto projection = actorProjection(values, base, life);
             if (isPlayer)
                 playerView.emplace(player.getPlayer().getClass().getNpcStats(player.getPlayer()), projection);
@@ -1248,6 +1290,11 @@ namespace MWMechanics
         }
         // All fallible work precedes the authority/projection publication.
         mActorValues.swap(candidates);
+        if (completedManagerTime)
+        {
+            mActorUpdateTimes.swap(updateTimes);
+            mActorManagerTime = *completedManagerTime;
+        }
         if (playerView)
             playerView->commit();
         for (auto& view : prepared)
@@ -1295,6 +1342,26 @@ namespace MWMechanics
         updateFrameResources(candidate, input, hasActiveMagicItem, settings);
         if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), settings.mFatigue.mPlayerBase);
+    }
+
+    void OblivionCombatService::updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor,
+        const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings)
+    {
+        const auto key = nonPlayerValues(actor).mActor;
+        updateWithActorClock(mActorUpdateTimes, key, mActorManagerTime, [&](float elapsed) {
+            updateNonPlayerFrameResources(actor, {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
+                hasActiveMagicItem, settings);
+        });
+    }
+
+    void OblivionCombatService::updatePlayerFrameResourcesFromClock(MWWorld::Player& player,
+        const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings)
+    {
+        const auto key = playerValues().mActor;
+        updateWithActorClock(mActorUpdateTimes, key, mActorManagerTime, [&](float elapsed) {
+            updatePlayerFrameResources(player, {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
+                hasActiveMagicItem, settings);
+        });
     }
 
     void OblivionCombatService::spendPlayerJumpFatigue(MWWorld::Player& player,

@@ -1786,7 +1786,7 @@ namespace
             {npcKey, {{120, false, false}, {2, true, false}}},
             {unloadedKey, {{120, false, false}}},
             {playerKey, {{3600, true, false}}}};
-        service.restoreResourceBatch(player, updates, residents, settings);
+        service.restoreResourceBatch(player, updates, residents, settings, 120.f);
         EXPECT_FLOAT_EQ(service.getNonPlayerValue(npc, 8), 100);
         EXPECT_FLOAT_EQ(service.getNonPlayerValue(npc, 9), 222);
         EXPECT_FLOAT_EQ(service.getNonPlayerValue(unloadedKey, 8, mStore), 25);
@@ -1799,16 +1799,20 @@ namespace
         after.mProfile = ESM::GameProfile::Oblivion;
         service.capture(after);
         EXPECT_EQ(after.mNativeActorLife, before.mNativeActorLife);
+        EXPECT_EQ(after.mNativeActorManagerTime, 120.f);
+        for (const auto& key : {npcKey, unloadedKey, playerKey})
+            EXPECT_EQ(after.mNativeActorUpdateTimes.at(key), 120.f);
         MWMechanics::OblivionCombatService restored;
         restored.restore(after);
         EXPECT_FLOAT_EQ(restored.getNonPlayerValue(unloadedKey, 9, mStore), 220);
 
         // Fail after earlier candidates have already been computed. Neither the
         // owned state nor any resident projection may expose partial restoration.
-        for (int failure = 0; failure != 6; ++failure)
+        for (int failure = 0; failure != 9; ++failure)
         {
             SCOPED_TRACE(failure);
             auto invalid = updates;
+            float completedTime = 240.f;
             auto invalidResidents = std::vector<MWWorld::Ptr>{npc};
             if (failure == 0)
                 invalid.back().mUpdates.back().mDuration = std::numeric_limits<float>::quiet_NaN();
@@ -1820,14 +1824,22 @@ namespace
                 invalidResidents.push_back(npc);
             else if (failure == 4)
                 invalidResidents.push_back(MWWorld::Ptr{});
-            else
+            else if (failure == 5)
                 invalid.front().mUpdates.clear();
-            EXPECT_THROW(service.restoreResourceBatch(player, invalid, invalidResidents, settings), std::exception);
+            else if (failure == 6)
+                completedTime = std::numeric_limits<float>::quiet_NaN();
+            else if (failure == 7)
+                completedTime = std::numeric_limits<float>::infinity();
+            else
+                completedTime = 100001.f;
+            EXPECT_THROW(service.restoreResourceBatch(player, invalid, invalidResidents, settings, completedTime), std::exception);
             auto result = after;
             result.mProfile = ESM::GameProfile::Oblivion;
             service.capture(result);
             EXPECT_EQ(result.mNativeActorValues, after.mNativeActorValues);
             EXPECT_EQ(result.mNativeActorLife, after.mNativeActorLife);
+            EXPECT_EQ(result.mNativeActorManagerTime, after.mNativeActorManagerTime);
+            EXPECT_EQ(result.mNativeActorUpdateTimes, after.mNativeActorUpdateTimes);
             EXPECT_FLOAT_EQ(npc.getClass().getCreatureStats(npc).getMagicka().getCurrent(), 222);
             EXPECT_FLOAT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getMagicka().getCurrent(), 1000);
         }
@@ -1838,6 +1850,10 @@ namespace
         const std::array tinyUpdates{MWMechanics::OblivionActorRestoration{
             npcKey, {{.00003f, false, false}, {.00003f, false, false}}}};
         service.restoreResourceBatch(player, tinyUpdates, residents, settings);
+        auto withoutClock = before;
+        service.capture(withoutClock);
+        EXPECT_EQ(withoutClock.mNativeActorManagerTime, before.mNativeActorManagerTime);
+        EXPECT_EQ(withoutClock.mNativeActorUpdateTimes, before.mNativeActorUpdateTimes);
         EXPECT_EQ(service.findActorValues(npcKey)->mValues[9].mModifiers[2], -900.f);
         EXPECT_FLOAT_EQ(npc.getClass().getCreatureStats(npc).getMagicka().getCurrent(), 100);
 
@@ -4470,6 +4486,116 @@ namespace
         EXPECT_FLOAT_EQ(current(), 21.75f);
     }
 
+    void verifyClockFrameTransactions(const MWWorld::Ptr& ptr,
+        ESM4::RuntimeActorValues values, MWWorld::Player* player = nullptr)
+    {
+        using Phase = ESM4::ActorLifePhase;
+        MWMechanics::OblivionCombatService service;
+        values.mValues[2] = {50, {}};
+        values.mValues[8] = {100, {std::nullopt, std::nullopt, -10}};
+        values.mValues[9] = {100, {std::nullopt, std::nullopt, -80}};
+        values.mValues[10] = {200, {std::nullopt, std::nullopt, -50}};
+        if (player)
+            values.mPlayerFormValues = {{100, 100, 150, 0}}; // Willpower adds50 to the native Fatigue base.
+        auto settings = MWWorld::resolveOblivionFrameSettings(*MWBase::Environment::get().getESMStore());
+        settings.mMagicka = {.75f, .02f};
+        settings.mFatigue.mRegeneration = {2, 0};
+        settings.mFatigue.mPlayerBase = {};
+        const auto life = [&](Phase phase) {
+            if (player)
+                service.publishPlayerLife(*player, {values.mActor, values.mBase, phase, 0, {}});
+            else
+                service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, phase, 0, {}});
+        };
+        const auto publish = [&] {
+            if (player)
+                service.publishPlayerValues(*player, values, {});
+            else
+                service.publishNonPlayerValues(ptr, values);
+            life(Phase::Alive);
+        };
+        const auto update = [&](const MWMechanics::OblivionFrameSettings& config) {
+            if (player)
+                service.updatePlayerFrameResourcesFromClock(*player, {0, false, false}, false, config);
+            else
+                service.updateNonPlayerFrameResourcesFromClock(ptr, {0, false, false}, false, config);
+        };
+        ESM4::RuntimeState identity;
+        identity.mProfile = ESM::GameProfile::Oblivion;
+        identity.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        identity.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        identity.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        identity.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        if (!player)
+        {
+            ESM4::RuntimeReferenceState ref;
+            ref.mKey = values.mActor;
+            ref.mBase = values.mBase;
+            ref.mCell = identity.mPlayer.mCell;
+            identity.mReferences.push_back(ref);
+        }
+        const auto capture = [&] {
+            auto state = identity;
+            service.capture(state);
+            return state;
+        };
+        const auto fatigue = [&] { return ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(); };
+        publish();
+        EXPECT_EQ(service.elapsedSinceActorUpdate(values.mActor, .125f), .125f);
+        EXPECT_EQ(service.elapsedSinceActorUpdate(values.mActor, .3f), 0.f);
+        EXPECT_THROW(service.elapsedSinceActorUpdate(values.mActor, 100001.f), std::invalid_argument);
+        for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            EXPECT_THROW(service.advanceFrameClock(bad), std::invalid_argument);
+            EXPECT_EQ(service.actorManagerTime(), 0.f);
+        }
+        service.advanceFrameClock(.125f);
+        update(settings); // Missing constructor time -1 permits this small initial duration.
+        EXPECT_FLOAT_EQ(fatigue(), 150.25f);
+        EXPECT_FLOAT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 20.21875f);
+        const auto first = capture();
+        EXPECT_EQ(first.mNativeActorUpdateTimes.at(values.mActor), .125f);
+        update(settings); // A second writer in the same tick cannot regenerate twice.
+        EXPECT_EQ(capture().mNativeActorValues, first.mNativeActorValues);
+        service.restore(ESM4::RuntimeState::deserializeBinary(first.serializeBinary()));
+        service.advanceFrameClock(.5f);
+        service.advanceFrameClock(.25f); // Actor skipped two manager ticks.
+        auto bad = settings;
+        bad.mMagicka.mBase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(update(bad), std::invalid_argument);
+        EXPECT_EQ(capture().mNativeActorValues, first.mNativeActorValues);
+        EXPECT_EQ(capture().mNativeActorUpdateTimes, first.mNativeActorUpdateTimes);
+        EXPECT_EQ(service.actorManagerTime(), .875f);
+        update(settings);
+        EXPECT_FLOAT_EQ(fatigue(), 151.75f);
+        EXPECT_FLOAT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 21.53125f);
+        EXPECT_EQ(capture().mNativeActorUpdateTimes.at(values.mActor), .875f);
+        life(Phase::Dead);
+        const auto dead = capture();
+        service.advanceFrameClock(1.f);
+        update(settings);
+        EXPECT_EQ(capture().mNativeActorValues, dead.mNativeActorValues);
+        EXPECT_EQ(capture().mNativeActorUpdateTimes.at(values.mActor), 1.875f);
+        life(Phase::Alive);
+        service.advanceFrameClock(.125f);
+        update(settings);
+        EXPECT_FLOAT_EQ(fatigue(), 152.f); // Dead interval never replays after revival.
+        service.advanceFrameClock(100000.f);
+        EXPECT_EQ(service.actorManagerTime(), 0.f);
+        update(settings);
+        EXPECT_FLOAT_EQ(fatigue(), 152.f); // Rewind is not elapsed=100000.
+        EXPECT_EQ(capture().mNativeActorUpdateTimes.at(values.mActor), 0.f);
+        service.advanceFrameClock(.125f);
+        update(settings);
+        EXPECT_FLOAT_EQ(fatigue(), 152.25f);
+        service.clear();
+        publish();
+        service.advanceFrameClock(.3f);
+        update(settings);
+        EXPECT_FLOAT_EQ(fatigue(), 150.f); // Strict initialization threshold.
+        EXPECT_EQ(capture().mNativeActorUpdateTimes.at(values.mActor), .3f);
+    }
+
     TEST_F(OblivionActorStatsTest, nativeMagickaFrameTransactions)
     {
         autoNpc();
@@ -4502,6 +4628,7 @@ namespace
         values.mValues[10].mBase = 40;
         MWMechanics::OblivionCombatService service;
         verifyMagickaFrameTransactions(service, ptr, values);
+        verifyClockFrameTransactions(ptr, values);
     }
 
     TEST_F(OblivionActorStatsTest, creatureMagickaFrameTransactions)
@@ -4537,6 +4664,7 @@ namespace
         values.mValues[10].mBase = 40;
         MWMechanics::OblivionCombatService service;
         verifyMagickaFrameTransactions(service, ptr, values);
+        verifyClockFrameTransactions(ptr, values);
     }
 
     TEST_F(OblivionActorStatsTest, playerMagickaFrameTransactions)
@@ -4564,6 +4692,7 @@ namespace
         values.mPlayerFormValues = {{100, 30, 40, 0}};
         MWMechanics::OblivionCombatService service;
         verifyMagickaFrameTransactions(service, ptr, values, &player);
+        verifyClockFrameTransactions(ptr, values, &player);
     }
 
 

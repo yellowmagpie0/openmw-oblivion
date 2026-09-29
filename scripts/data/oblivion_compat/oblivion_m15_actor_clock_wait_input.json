@@ -1,0 +1,40 @@
+{
+  "source_course": "native-rest-dialog-red-02/pristine.omwsave",
+  "source_sha256": "ffc9345176fef60e1b0c3eccf4aa2e5c238aaf1cc5cd358b6aeb09e46fec6f91",
+  "schema_version": 16,
+  "native_combat_engagements": [],
+  "native_actor_manager_time": 0.0,
+  "native_actor_update_times": [
+    {
+      "actor": "content:m15-lifecycle.esm:900101",
+      "time": 0.0
+    },
+    {
+      "actor": "dynamic:player:0000000000000001",
+      "time": 0.0
+    }
+  ],
+  "fatigue_values": [
+    10000.0,
+    null,
+    null,
+    -5000.0
+  ],
+  "player_form_fatigue": 9800,
+  "chargen_variant": "Set only legacy GLOB chargenstate FLTV to1; leave T4ST globals unchanged.",
+  "scenario": "oblivion_m15_native_wait_hour.json",
+  "continuation": "oblivion_m15_native_wait_continuation.json",
+  "chargen_continuation": "oblivion_m15_native_chargen_wait_continuation.json",
+  "expected": {
+    "npc_rate": 10.0,
+    "normal_high_hour_extra": 20.0,
+    "chargen_high_hour_extra": 0.0,
+    "npc_health_normal": 100.0,
+    "npc_health_chargen": 25.0,
+    "player_health": 100.0,
+    "player_fatigue": 10000.0,
+    "magicka": 20.0,
+    "npc_fatigue_tolerance": 0.5
+  },
+  "acceptance": "NPC Fatigue follows the difference in saved manager time plus the single two-second High rest addition. Fresh-process continuation must not replay the addition. Full native scheduler cadence remains open."
+}

@@ -64,3 +64,18 @@ TEST(ESM4ActorClock, OrdinaryUpdatesRetainFloatStoreAndZeroSign)
         EXPECT_THROW(ESM4::actorUpdateDuration(0.f, bad), std::invalid_argument);
     }
 }
+
+TEST(ESM4ActorClock, FrameAndHourCallersRetainNativeFloatStoresAndReset)
+{
+    EXPECT_EQ(ESM4::advanceActorManagerTime(99999.f, 1.f), 100000.f);
+    EXPECT_EQ(ESM4::advanceActorManagerTime(100000.f, .016f), 0.f);
+    EXPECT_EQ(ESM4::advanceActorManagerTime(100000.f, 100000.f), 0.f);
+    EXPECT_EQ(ESM4::advanceActorManagerTime(-1.f, .125f), -.875f);
+    EXPECT_EQ(ESM4::actorManagerTimeAfterHour(.125f, 30.f), 120.125f);
+    EXPECT_EQ(ESM4::actorManagerTimeAfterHour(.125f, -30.f), -119.875f);
+    EXPECT_EQ(ESM4::actorManagerTimeAfterHour(99999.f, 30.f), 0.f);
+    for (const float scale : {0.f, -0.f, 1e-40f})
+        EXPECT_EQ(ESM4::actorManagerTimeAfterHour(.125f, scale), 0.f);
+    // A finite division can also exceed the manager limit and reset.
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::actorManagerTimeAfterHour(-1.f, .001f)), 0u);
+}

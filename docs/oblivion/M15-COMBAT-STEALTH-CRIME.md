@@ -5361,3 +5361,77 @@ executed draft. Build/test skill instructions cover setup and bitwise checks.
 This closes persistence of the clock fields. Advancing the manager, applying
 per-actor elapsed time, native scheduling and hourly-rest integration remain
 open, along with the other S3 and later M15 gates.
+
+### S3 resident frame and hourly resource clocks
+
+The unpaused actor pass now advances the native manager once. Published resident
+Player/NPC/creature resource writers derive elapsed time from their own completed
+update timestamp, then commit that timestamp after successful resource publication.
+Missing timestamps use the original constructor's -1; duplicate same-tick calls
+consume no elapsed time. Dead resident updates stamp time without restoring
+resources, preventing their dead interval from replaying on revival. Float stores,
+strict rollover and negative hourly scale follow independently checked callers.
+Hourly restoration prepares resource candidates, affected timestamps and manager
+time together, then publishes them atomically. Failure leaves prior resource and
+clock authority/projections intact. Explicit-duration lower-level batches retain
+their existing contract and do not change clocks.
+
+Ordinary Player hourly restoration runs during character creation and with AI
+disabled. NPC hourly dispatch requires AI enabled and no character creation;
+disabled/deleted references remain excluded. Player's common update follows its
+explicit3600-second restoration. NPC common elapsed restoration precedes the
+existing High-process special2-second calls. Skipped NPC dispatch keeps its last
+timestamp; a later resident frame can consume the elapsed interval. Native full
+scheduler cadence and truly unloaded normal-frame resources remain open.
+
+All120 independently recorded original caller outputs match the scalar helpers
+exactly. Full `S3/actor-clock-integration-02` passes1944 component,637 engine and183
+Python cases. `actor-clock-integration-sanitized-02` passes1944 component and637
+engine cases with leak checks and halting UBSan. Inventories/XML match, no skips.
+Both record tested source fingerprint
+`a7384be416f36cdb5411843a86085dbe228313d4e2b4e767150638a9ce6d227f`
+on parent `9a77892d6b`. Added assertions exercise actual Player/NPC/creature
+projections, skipped ticks, duplicate calls, initialization boundary, rollover,
+save/restore, failed frame writes, dead/revival timing and batch rollback. The01
+engine run failed because the new Player fixture incorrectly omitted Willpower's
+50-point Fatigue base adjustment; corrected input and retained failure are explicit.
+
+Actual normal-input save/restart evidence under S3:
+
+- `actor-clock-frame-regular-{normal,reset}-final-{load,continuation}-01` and
+  `actor-clock-frame-sanitized-reset-final-{load,continuation}-01`: advancing
+  manager, exact completed resident timestamps in save/JSON, rollover from100000,
+  unchanged72 AVs, lifecycle/actions and NPC Lua companion, no Lua write replay.
+- `actor-clock-wait-{regular,sanitized}-final-{load,continuation}-01`: actual T,
+  one-hour Wait, F5 and fresh-process resave. NPC Fatigue starts5000/max10000;
+  final current matches5000 +10*manager_elapsed +20 within declared0.5. The20
+  addition occurs once in the hour course and is absent on continuation. All
+  other AVs, identities, life/actions and pending counters are independently
+  checked. Player Health100/Fatigue10000, both Magicka20; NPC Health100.
+- `actor-clock-wait-regular-chargen-final02-{load,continuation}-01` and
+  `actor-clock-wait-sanitized-chargen-final-{load,continuation}-01`: only legacy
+  GLOB chargenstate=1 differs. Player still restores, NPC Health stays25 and
+  Fatigue has no special20 addition. The retained timestamp permits frame
+  catch-up, checked against saved manager time with the same declared tolerance.
+
+Retained failures: a floating Player raw-form integer was rejected before launch;
+the first numerical Wait oracle used Magicka's17.5 rate instead of this fixture's
+Fatigue default10; a first chargen fixture used an invalid T4ST global FormKey
+instead of the legacy GLOB; a first chargen continuation manifest wrongly expected
+NPC Health100. These are fixture/oracle errors, not production defects. An early
+frame capture caught Loading Area; the final frame manifest pauses3 seconds and
+its captures show the room. All32 final captures were directly inspected. NPCs
+remain offscreen, audio disabled. Wait menus visibly select1 hour. The first-pass
+Wait Health bar remains short in captures despite saved Health100, whereas the
+restart bar is full; HUD synchronization is not accepted and needs investigation.
+Numerical clock acceptance does not close that visual gate.
+
+Executable SHA256 before launches: regular
+`1742639bdb09e90a07269b59f294e944b8164ad74aacfabe0a78b42c13c0c4e4`, instrumented
+`68c54050deb0ea15ac3a281bc7246975a30718221d01ce81350a023aaf0bd2af`.
+Graphical sanitizer leak detection is off, UBSan halts. Promoted frame/chargen
+continuation manifests and clock/Wait input recipes reproduce the setup; build
+skill notes preserve independent timing checks and fixture pitfalls. This is a
+bounded clock integration, not an S3/S14 pass: automatic publication, unloaded
+cadence, broader life/load/Lua adapters, rest/sleep/AI-off gameplay and later
+combat/stealth/crime stages still require implementation and acceptance.

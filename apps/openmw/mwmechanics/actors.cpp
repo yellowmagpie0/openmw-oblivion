@@ -1664,6 +1664,8 @@ namespace MWMechanics
             }
             const int actorsProcessingRange = Settings::game().mActorsProcessingRange;
             MWWorld::World* const nativeWorld = dynamic_cast<MWWorld::World*>(world);
+            if (nativeWorld != nullptr)
+                nativeWorld->advanceOblivionActorClock(duration);
 
             // The native TES4 coordinator owns a state-only low-process pass
             // for actors whose CellStore is not resident. Loaded actors are
@@ -1708,6 +1710,8 @@ namespace MWMechanics
                 // For dead actors we need to update looping spell particles
                 if (actor.getPtr().getClass().getCreatureStats(actor.getPtr()).isDead())
                 {
+                    if (actor.getPtr().getClass().getCreatureStats(actor.getPtr()).getHealth().isNativeProjection())
+                        world->updateOblivionFrameResources(actor.getPtr(), duration, false);
                     // They can be added during the death animation
                     if (!actor.getPtr().getClass().getCreatureStats(actor.getPtr()).isDeathAnimationFinished())
                         adjustMagicEffects(actor.getPtr(), duration);

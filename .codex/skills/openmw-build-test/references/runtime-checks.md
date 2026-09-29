@@ -671,3 +671,35 @@ The above courses close the save contract while clock advancement is still
 unwired. Once scheduler integration lands, replace constant-time expectations
 with independently derived advancement/reset expectations; retained intermediate
 courses are not proof of a running native clock.
+
+### Resident clock advancement and resource timing
+
+After clock advancement is integrated, the old v16 constant-clock persistence
+courses are historical save-contract evidence. Use
+`oblivion_m15_actor_frame_clock.json` with the actor-clock recipe's normal or
+100000 reset variant. Completed resident times must equal saved manager time
+bitwise; manager advances through a fresh process, resets rather than taking a
+remainder, and unchanged full-resource/Lua state must not replay writes. Pause
+3 seconds before initial captures: under a concurrent sanitizer build, the
+former .5-second pause captured Loading Area even after Lua restored messages.
+
+`oblivion_m15_actor_clock_wait_input.json` declares a depleted high-capacity
+Fatigue fixture so one Wait hour cannot hide timing errors behind clamping.
+This fixture's Fatigue rate is10 (default return base10, multiplier0), not its
+Magicka rate17.5. NPC expected Fatigue is prior current +10*(saved manager
+change) +20 for the single normal High hourly call; fresh continuation omits20.
+Declare0.5 tolerance before running to bound repeated float Damage stores.
+Player raw form Fatigue9800 must be an integer; runtime base10000 includes
+four50-point attributes. Preserve every other72 AV channel and lifecycle/action
+field independently. Select the unique changed Quicksave recursively.
+
+For character creation, change legacy GLOB chargenstate FLTV to1; this synthetic
+internal global is not a T4ST stable FormKey. NPC Health stays25 while Player
+restores100. Skip the special20 addition; next resident frame can catch up the
+elapsed interval because skipped hourly dispatch did not stamp the NPC clock.
+Use `oblivion_m15_native_chargen_wait_continuation.json`: the ordinary restart
+manifest expects NPC Health100 and is deliberately inappropriate here. Keep
+failed fixture/manifest attempts. Numerical saved resource values do not prove
+HUD synchronization: these first-pass hour captures show a short Health bar
+while restart shows a full bar. Investigate that visual discrepancy separately.
+Automatic native publication and full scheduler cadence are still open.

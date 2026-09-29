@@ -83,6 +83,13 @@ namespace MWMechanics
         bool mCanSpend;
     };
 
+    struct OblivionActorMovement
+    {
+        std::int32_t mEncumbrance;
+        bool mRunning;
+        bool mCanSpend;
+    };
+
     struct OblivionFrameSettings
     {
         OblivionFatigueSettings mFatigue;
@@ -174,6 +181,9 @@ namespace MWMechanics
 
     public:
         void clear();
+        float actorManagerTime() const noexcept { return mActorManagerTime; }
+        void advanceFrameClock(float duration);
+        float elapsedSinceActorUpdate(const ESM::FormKey& actor, float time) const;
         // Membership authority only: callers own attack/AI/legal eligibility.
         // Endpoints require native values and nonterminal lifecycle. Repeated
         // engagement is idempotent; stop/death removes both sides without events.
@@ -308,9 +318,11 @@ namespace MWMechanics
         // Atomic ordered resource updates across resident and unloaded actors.
         // Caller supplies every affected resident nonplayer; no pointers survive.
         // All actors require initialized lifecycle. Dead actors remain unchanged.
-        // Caller owns hourly clock, processing eligibility and effect advancement.
+        // An optional completed clock commits with all resources/timestamps.
+        // Caller owns processing eligibility and effect advancement.
         void restoreResourceBatch(MWWorld::Player& player, std::span<const OblivionActorRestoration> updates,
-            std::span<const MWWorld::Ptr> residents, const OblivionRestorationSettings& settings);
+            std::span<const MWWorld::Ptr> residents, const OblivionRestorationSettings& settings,
+            std::optional<float> completedManagerTime = {});
         // Running expenditure precedes regeneration; prepare and publish both
         // as one transition so failure cannot leave a partially updated actor.
         void updateNonPlayerFatigue(const MWWorld::Ptr& actor, const OblivionFatigueUpdate& input,
@@ -321,6 +333,12 @@ namespace MWMechanics
         void updateNonPlayerFrameResources(const MWWorld::Ptr& actor, const OblivionFatigueUpdate& input,
             bool hasActiveMagicItem, const OblivionFrameSettings& settings);
         void updatePlayerFrameResources(MWWorld::Player& player, const OblivionFatigueUpdate& input,
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings);
+        // Resource values and the last completed update time commit together.
+        // Dead actors advance only their timestamp, preventing replay on revival.
+        void updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor, const OblivionActorMovement& movement,
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings);
+        void updatePlayerFrameResourcesFromClock(MWWorld::Player& player, const OblivionActorMovement& movement,
             bool hasActiveMagicItem, const OblivionFrameSettings& settings);
         void spendPlayerJumpFatigue(MWWorld::Player& player, std::int32_t encumbrance, bool canSpend,
             const OblivionFatigueSettings& settings);
