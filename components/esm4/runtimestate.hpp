@@ -28,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 18;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 19;
 
     struct RuntimeContentIdentity
     {
@@ -246,6 +246,10 @@ namespace ESM4
         // Post-sign/clamp magnitude actually dispatched during application.
         // Removal uses this saved value, never a re-resolved winning EFIT.
         float mStoredMagnitude = 0;
+        // v19: quantity before detrimental sign/clamp and base application.
+        // Native list insertion compares this to older applied quantities.
+        // Absence on older snapshots is unknown, never an inferred magnitude.
+        std::optional<float> mInitialMagnitude = std::nullopt;
         friend bool operator==(const RuntimePassiveValueModifier&, const RuntimePassiveValueModifier&) = default;
     };
 

@@ -3663,3 +3663,17 @@ thread/locale retrieval; attempt04 uses a declared C-locale fixture and executes
 the real ASCII comparison rather than replacing it with a host comparison.
 Sorted insertion, source grant order, full caster behavior and gameplay
 acceptance still require their own evidence.
+
+### Original sorted insertion and actual CRT formatting
+
+`S3/authority-draft/passive-list-insertion-01`: Full416650 sorted insertion,446CB0 head insertion and6A25E0 comparator execute. All24 input permutations in five synthetic profiles and both x87 modes pass960 insertions. Equal keys insert before; comparison is against the then-current stored quantities, so applying a sign change after insertion can leave a list that differs from sorting its final keys. Allocations, C-locale construction, integer formatting and effect names are declared boundaries; quantity changes are an explicit application boundary. Source/caster grant order and gameplay are not established.
+Original executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Probe SHA256 `b719790ac7bb132928b0830e8a2b300c935b2f9de76b641c3a5e614343d4eeae`;
+report SHA256 `a14099acbf43514cd0884ecce8dcf19735f2a8abafc03c15b10e96e6718a6147`.
+
+`S3/authority-draft/passive-native-format-04`: Actual982837 initializes the original CRT floating-conversion function table before full98208B sprintf executes, including original floating conversion. The thread getter supplies a fixture with the original image C-locale globals; pointer decoding returns the original unencoded image code pointer. No numeric/string formatting routine is replaced. Nineteen observations include signed zero, quarter/half-decimal boundaries, binary32 tenths,2^24,2^32,1e16/1e20 and signed maximum finite binary32. Native0.25 formats0.3; negative0.25 formats-0.3. Maximum float formats340282346638528860000000000000000000000.0, so exact fixed decimal output from a host formatter is not interchangeable. Broad generated comparison, non-ASCII locale behavior and gameplay still require their own evidence.
+Original executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Probe SHA256 `d607b2d746a883a2fa11a1749148076cfca1baae4b7b9484e519fcea7eef88cc`;
+report SHA256 `3c0722358ccb5b6f74285d1adebab0297067cf0a6ae229a876c70c0c9a316f82`.
+
+Formatter attempts01/02 lacked initialized OS pointer decoding and then the CRT floating-function table, respectively. They are harness failures, not observed game-rule differences. Attempt03 executes the actual floating initializer and twelve formatting observations pass; attempt04 extends that successful path to nineteen.

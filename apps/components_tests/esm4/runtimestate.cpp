@@ -624,6 +624,70 @@ namespace
         EXPECT_NE(migrated.canonicalJson().find("\"player_form_values\":null"), std::string::npos);
     }
 
+    TEST(ESM4RuntimeState, passiveInitialMagnitudePreservesVersionNineteenWireAndLegacyUnknown)
+    {
+        auto state = makeState(); state.mVersion = 18;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences[0].mKey; actor.mBase = state.mReferences[0].mBase;
+        actor.mPassiveAbilities = {{ESM4::RuntimePassiveAbility{ESM::FormKey::content("abilities.esp", 0x123),
+            {{7, ESM::fourCC("FOAT"), 5, -10.f}}}}};
+        state.mNativeActorValues = {actor};
+        const auto legacy = state.serializeBinary();
+        auto restored = ESM4::RuntimeState::deserializeBinary(legacy);
+        EXPECT_FALSE(restored.mNativeActorValues[0].mPassiveAbilities->front().mEffects[0].mInitialMagnitude);
+        EXPECT_EQ(restored.serializeBinary(), legacy);
+        state.mVersion = 19;
+        auto& effect = state.mNativeActorValues[0].mPassiveAbilities->front().mEffects[0];
+        effect.mInitialMagnitude = 25.f;
+        const auto bytes = state.serializeBinary();
+        auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 19;
+        const std::array<std::uint8_t, 5> field{1, 0, 0, 0xc8, 0x41};
+        expected.insert(expected.end() - 40, field.begin(), field.end());
+        EXPECT_EQ(bytes, expected);
+        restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        effect.mInitialMagnitude.reset();
+        const auto unknown = state.serializeBinary();
+        expected = legacy; expected[std::string_view("OMW4STATE").size()] = 19;
+        expected.insert(expected.end() - 40, 0);
+        EXPECT_EQ(unknown, expected);
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(unknown).mNativeActorValues[0]
+            .mPassiveAbilities->front().mEffects[0].mInitialMagnitude);
+    }
+
+    TEST(ESM4RuntimeState, passiveInitialMagnitudeRejectsDowngradeNonfiniteAndMalformedPresence)
+    {
+        auto state = makeState(); state.mVersion = 19;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences[0].mKey; actor.mBase = state.mReferences[0].mBase;
+        actor.mPassiveAbilities = {{ESM4::RuntimePassiveAbility{ESM::FormKey::content("abilities.esp", 0x123),
+            {{7, ESM::fourCC("FOAT"), 5, -10.f, -0.f}}}}};
+        state.mNativeActorValues = {actor};
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_TRUE(std::signbit(*restored.mNativeActorValues[0].mPassiveAbilities->front().mEffects[0].mInitialMagnitude));
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        state.mVersion = 18;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+        state.mVersion = 19;
+        auto& effect = state.mNativeActorValues[0].mPassiveAbilities->front().mEffects[0];
+        for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            effect.mInitialMagnitude = value;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+        auto corrupt = bytes; corrupt[bytes.size() - 45] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        for (std::size_t i = 0; i < 5; ++i)
+        {
+            auto truncated = bytes; truncated.resize(bytes.size() - 45 + i);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+    }
+
     TEST(ESM4RuntimeState, passiveOwnershipPreservesAppliedOrderBitsAndVersionEighteenWire)
     {
         auto state = makeState();

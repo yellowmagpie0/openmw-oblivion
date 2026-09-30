@@ -7194,3 +7194,43 @@ ran in the shared workspace. This does not yet wire the character dialogs or
 automatically activate native actors. Next: reviewed passive-list removal order
 and actual native character choices, then activation and melee. S2/S3 and later
 required gameplay gates remain open.
+
+### Passive constructor quantity persistence
+
+Runtime-state version19 now retains each owned passive effect's incoming
+constructor magnitude separately from the post-sign/clamp magnitude used for
+application/removal. Original sorted insertion compares the incoming quantity
+against older applied quantities; the saved applied magnitude cannot always
+reconstruct it. New grants record both quantities before any publication.
+Version18 still reads/re-emits its original wire format with constructor
+quantity explicitly unknown. Version19 preserves known/unknown separately;
+known constructor quantities cannot be silently dropped by an older capture
+or binary/JSON save. This is comparison-input persistence, not a completed
+caster or live character-choice implementation.
+
+C++ and Python independently assert the v19 presence-plus-binary32 field,
+v18 unchanged bytes, unknown migration, negative zero, nonfinite rejection,
+malformed presence, truncation and downgrade rejection. The actual Player
+clamped-grant fixture checks original-25 versus applied-10 and original25
+versus applied-25, binary restart and capture rollback when requesting v18.
+Configured syntax passes; existing RuntimeInventoryItem initializer warnings
+remain in the older fixtures. Initial baseline attempt01 contained an invalid
+new Python fixture assumption about references; attempt02 uses the Player
+identity and both new Python cases reject unsupported v19. The same C++
+missing-member diagnostics are retained explicitly from attempt01.
+
+`native-passive-initial-magnitude-full-01` passes1979 full component cases,
+689 full engine cases and214 full Python cases.
+`native-passive-initial-magnitude-sanitized-full-01` passes454 ESM4 component
+cases and689 full engine cases under ASan/UBSan. Exact C++ inventories match,
+no failures/skips, fingerprint
+`1e338b8819611a393cc71276a2dd63318e1b4460a28b998c46e7a0e37845ced8`. Leak checks are off.
+
+Checkpoint40 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-18/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: original comparison/list-order adapter and
+actual native character choices, then activation and melee. S2/S3 and later
+required gameplay gates remain open.

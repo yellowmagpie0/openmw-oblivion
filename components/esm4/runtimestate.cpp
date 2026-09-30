@@ -455,7 +455,8 @@ namespace ESM4
         for (const auto& effect : mEffects)
             if (!indices.insert(effect.mEffectIndex).second
                 || !compiledPassiveValueModifierDefinition(effect.mCode)
-                || effect.mActorValue >= 72 || !std::isfinite(effect.mStoredMagnitude))
+                || effect.mActorValue >= 72 || !std::isfinite(effect.mStoredMagnitude)
+                || (effect.mInitialMagnitude && !std::isfinite(*effect.mInitialMagnitude)))
                 throw std::runtime_error("Invalid TES4 passive value-modifier ownership");
     }
 
@@ -583,6 +584,11 @@ namespace ESM4
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
             if (mVersion < 18 && actor.mPassiveAbilities)
                 throw std::runtime_error("TES4 passive ability ownership requires runtime-state version 18");
+            if (mVersion < 19 && actor.mPassiveAbilities)
+                for (const auto& ability : *actor.mPassiveAbilities)
+                    for (const auto& effect : ability.mEffects)
+                        if (effect.mInitialMagnitude)
+                            throw std::runtime_error("TES4 passive initial magnitude requires runtime-state version 19");
             if (mVersion < 17 && actor.mNonPlayerFormHealth)
                 throw std::runtime_error("TES4 nonplayer form Health requires runtime-state version 17");
             if (!nativeActors.emplace(actor.mActor, actor.mBase).second)
@@ -1277,6 +1283,12 @@ namespace ESM4
                                 writer.integer(effect.mCode);
                                 writer.integer(effect.mActorValue);
                                 writer.floating(effect.mStoredMagnitude);
+                                if (mVersion >= 19)
+                                {
+                                    writer.integer<std::uint8_t>(effect.mInitialMagnitude.has_value());
+                                    if (effect.mInitialMagnitude)
+                                        writer.floating(*effect.mInitialMagnitude);
+                                }
                             }
                         }
                     }
@@ -1733,8 +1745,19 @@ namespace ESM4
                             ability.mSpell = nativeKey();
                             const auto effectCount = reader.count();
                             for (std::uint32_t k = 0; k < effectCount; ++k)
-                                ability.mEffects.push_back({reader.integer<std::uint32_t>(),
-                                    reader.integer<std::uint32_t>(), reader.integer<std::uint32_t>(), reader.float32()});
+                            {
+                                RuntimePassiveValueModifier effect{reader.integer<std::uint32_t>(),
+                                    reader.integer<std::uint32_t>(), reader.integer<std::uint32_t>(), reader.float32()};
+                                if (result.mVersion >= 19)
+                                {
+                                    const auto initialPresent = reader.integer<std::uint8_t>();
+                                    if (initialPresent > 1)
+                                        throw std::runtime_error("Invalid TES4 passive initial magnitude presence");
+                                    if (initialPresent)
+                                        effect.mInitialMagnitude = reader.float32();
+                                }
+                                ability.mEffects.push_back(std::move(effect));
+                            }
                             actor.mPassiveAbilities->push_back(std::move(ability));
                         }
                     }
@@ -2299,7 +2322,16 @@ namespace ESM4
                                     stream << ',';
                                 const auto& effect = ability.mEffects[k];
                                 stream << '[' << effect.mEffectIndex << ',' << effect.mCode << ','
-                                    << effect.mActorValue << ',' << effect.mStoredMagnitude << ']';
+                                    << effect.mActorValue << ',' << effect.mStoredMagnitude;
+                                if (mVersion >= 19)
+                                {
+                                    stream << ',';
+                                    if (effect.mInitialMagnitude)
+                                        stream << *effect.mInitialMagnitude;
+                                    else
+                                        stream << "null";
+                                }
+                                stream << ']';
                             }
                             stream << "]}";
                         }

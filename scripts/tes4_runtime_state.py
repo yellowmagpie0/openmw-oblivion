@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 18
+CURRENT_VERSION = 19
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -797,14 +797,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     raise RuntimeStateError("Empty TES4 passive ability effects")
                 seen_indices = set()
                 for effect in effects:
-                    if not isinstance(effect, list) or len(effect) != 4:
+                    if not isinstance(effect, list) or len(effect) != (5 if version >= 19 else 4):
                         raise RuntimeStateError("Invalid TES4 passive value-modifier ownership")
-                    index, code, av, magnitude = effect
+                    index, code, av, magnitude = effect[:4]
                     if (type(index) is not int or not 0 <= index < (1 << 32) or index in seen_indices
                         or type(code) is not int or code not in codes
                         or type(av) is not int or not 0 <= av < 72):
                         raise RuntimeStateError("Invalid TES4 passive value-modifier ownership")
                     native_float(magnitude)
+                    if version >= 19 and effect[4] is not None:
+                        native_float(effect[4])
                     seen_indices.add(index)
         for value in values:
             if not isinstance(value, list) or len(value) != 4:
@@ -1280,7 +1282,13 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     for _ in range(reader.count()):
                         ability = {"spell": reader.string(), "effects": []}
                         for _ in range(reader.count()):
-                            ability["effects"].append([reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<f")])
+                            effect = [reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<f")]
+                            if version >= 19:
+                                initial_present = reader.unpack("<B")
+                                if initial_present > 1:
+                                    raise RuntimeStateError("Invalid TES4 passive initial magnitude presence")
+                                effect.append(reader.unpack("<f") if initial_present else None)
+                            ability["effects"].append(effect)
                         actor["passive_abilities"].append(ability)
             result["native_actor_values"].append(actor)
     if version >= 11:
@@ -1514,8 +1522,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     for ability in abilities:
                         writer.string(ability["spell"])
                         writer.pack("<I", len(ability["effects"]))
-                        for index, code, av, magnitude in ability["effects"]:
+                        for effect in ability["effects"]:
+                            index, code, av, magnitude = effect[:4]
                             writer.add(struct.pack("<IIIf", index, code, av, magnitude))
+                            if version >= 19:
+                                initial_magnitude = effect[4]
+                                writer.pack("<B", initial_magnitude is not None)
+                                if initial_magnitude is not None:
+                                    writer.pack("<f", initial_magnitude)
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))

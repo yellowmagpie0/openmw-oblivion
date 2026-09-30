@@ -5764,6 +5764,12 @@ namespace
         ASSERT_TRUE(committed.mPassiveAbilities);
         ASSERT_EQ(committed.mPassiveAbilities->size(), 1);
         EXPECT_EQ(committed.mPassiveAbilities->front().mEffects.front().mStoredMagnitude, -10);
+        EXPECT_EQ(committed.mPassiveAbilities->front().mEffects.front().mInitialMagnitude, -25);
+        EXPECT_EQ(committed.mPassiveAbilities->front().mEffects[1].mInitialMagnitude, 25);
+        auto downgrade = saved; downgrade.mVersion = 18;
+        const auto beforeDowngrade = downgrade.canonicalJson();
+        EXPECT_THROW(service.capture(downgrade), std::invalid_argument);
+        EXPECT_EQ(downgrade.canonicalJson(), beforeDowngrade);
         EXPECT_EQ(committed.mValues[0].mBase, 40);
         EXPECT_EQ(service.getPlayerValue(0), 0);
         EXPECT_EQ(committed.mValues[61].mBase, -25);

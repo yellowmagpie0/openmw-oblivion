@@ -151,6 +151,68 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def test_passive_initial_magnitude_v19_wire_and_v18_unknown(self):
+        state = make_state()
+        state["schema_version"] = 18
+        state["ai_rng_state"] = 1
+        effect = [7, int.from_bytes(b"FOAT", "little"), 5, -10.]
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": None,
+                 "passive_abilities": [{"spell": "content:abilities.esp:000123", "effects": [effect]}]}
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        state["schema_version"] = 19
+        state["ai_rng_state"] = 1
+        effect.append(25.)
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 19)
+        expected[len(legacy) - 40:len(legacy) - 40] = b"\x01" + struct.pack("<f", 25.)
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_actor_values"], [actor])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        old = state_io.decode_payload(legacy)
+        self.assertEqual(len(old["native_actor_values"][0]["passive_abilities"][0]["effects"][0]), 4)
+        effect[4] = None
+        unknown = state_io.encode_payload(state)
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 19)
+        expected[len(legacy) - 40:len(legacy) - 40] = b"\x00"
+        self.assertEqual(unknown, bytes(expected))
+        self.assertIsNone(state_io.decode_payload(unknown)["native_actor_values"][0]["passive_abilities"][0]["effects"][0][4])
+
+    def test_passive_initial_magnitude_rejects_downgrade_nonfinite_and_presence(self):
+        state = make_state()
+        state["schema_version"] = 19
+        state["ai_rng_state"] = 1
+        effect = [7, int.from_bytes(b"FOAT", "little"), 5, -10., -0.]
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": None,
+                 "passive_abilities": [{"spell": "content:abilities.esp:000123", "effects": [effect]}]}
+        state["native_actor_values"] = [actor]
+        payload = state_io.encode_payload(state)
+        restored_effect = state_io.decode_payload(payload)["native_actor_values"][0]["passive_abilities"][0]["effects"][0]
+        self.assertEqual(struct.pack("<f", restored_effect[4]), b"\0\0\0\x80")
+        state["schema_version"] = 18
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state["schema_version"] = 19
+        state["ai_rng_state"] = 1
+        for value in (math.inf, math.nan, True):
+            effect[4] = value
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        corrupt = bytearray(payload)
+        corrupt[len(payload) - 45] = 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(corrupt))
+        for size in range(5):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:len(payload) - 45 + size])
+
     def test_global_formkeys_reject_invalid_text_on_encode_and_decode(self):
         valid_key = "content:oblivion.esm:000001"
         source = make_state()

@@ -1508,7 +1508,7 @@ namespace MWMechanics
                     applyActorBase(candidate, &it->second);
                 }
                 preparePlayerValues(candidate, settings);
-                owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude});
+                owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude, effect.mValues.mMagnitude});
                 if (av == 5 && magnitude < 0 && life.mPhase == ESM4::ActorLifePhase::Alive
                     && ESM4::composeActorValue(candidate.mValues[8], candidate.mOwner, candidate.mProcess) <= 1.f)
                 {
@@ -2439,6 +2439,11 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer form Health requires an Oblivion v17+ save");
             if (state.mVersion < 18 && actor.mPassiveAbilities)
                 throw std::invalid_argument("native passive ownership requires an Oblivion v18+ save");
+            if (state.mVersion < 19 && actor.mPassiveAbilities)
+                for (const auto& ability : *actor.mPassiveAbilities)
+                    for (const auto& effect : ability.mEffects)
+                        if (effect.mInitialMagnitude)
+                            throw std::invalid_argument("native passive initial magnitude requires an Oblivion v19+ save");
             actors.push_back(actor);
         }
         auto actions = mActions.capture();
