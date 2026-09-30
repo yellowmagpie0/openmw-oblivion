@@ -18,6 +18,7 @@
 namespace ESM4
 {
     struct ActorCharacterBaseStats;
+    struct PassiveAbilityInput;
 }
 
 namespace MWWorld
@@ -340,6 +341,12 @@ namespace MWMechanics
         // Character generation and abilities are separate operations.
         void initializePlayerActor(MWWorld::Player& player, const MWWorld::ESMStore& store,
             std::optional<bool> legacyDead = {});
+        // Narrow self passive grants. Known saved ownership prevents duplicate
+        // application. Resolve winning spell/definition admission beforehand.
+        void grantPlayerPassiveAbilities(MWWorld::Player& player,
+            std::span<const ESM4::PassiveAbilityInput> abilities,
+            const ESM4::PlayerDynamicBaseSettings& settings, bool essential = false,
+            const ESM4::EssentialRecoverySettings& recovery = {});
         void changePlayerValue(MWWorld::Player& player, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings);
         // Regeneration restores the native Damage channel. It must not clamp

@@ -3,6 +3,9 @@
 
 #include <cstdint>
 #include <optional>
+#include <vector>
+
+#include <components/esm/formkey.hpp>
 
 namespace ESM4
 {
@@ -29,6 +32,22 @@ namespace ESM4
         std::uint32_t mActorValue;
         float mMagnitude;
         float mDuration;
+    };
+
+    struct PassiveValueModifierInput
+    {
+        std::uint32_t mEffectIndex;
+        std::uint32_t mCode;
+        std::uint32_t mFlags;
+        ValueModifierEffectInputs mValues;
+    };
+
+    // Resolved self Ability4 constructor inputs. These are not saved applied
+    // magnitudes. The winning-record adapter owns class/range admission.
+    struct PassiveAbilityInput
+    {
+        ESM::FormKey mSpell;
+        std::vector<PassiveValueModifierInput> mEffects;
     };
 
     // Constructor inputs only. Caller verifies native effect class/admission;

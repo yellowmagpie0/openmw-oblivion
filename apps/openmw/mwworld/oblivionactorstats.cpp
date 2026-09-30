@@ -272,6 +272,49 @@ namespace MWWorld
         return result;
     }
 
+    std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
+        const ESMStore& store, std::span<const ESM::FormKey> spells)
+    {
+        std::vector<ESM4::PassiveAbilityInput> result;
+        std::set<ESM::FormKey> seen;
+        const auto definitions = winningRecords<ESM4::EffectSetting>(store);
+        for (const auto& key : spells)
+        {
+            if (key.isNull())
+                throw std::invalid_argument("null native passive spell identity");
+            if (!seen.insert(key).second)
+                continue; // Same spell granted by multiple selection sources.
+            const auto* spell = store.get<ESM4::Spell>().searchStatic(key);
+            if (!spell || !spell->mData || spell->mData->mType != 4 || spell->mEffects.empty())
+                throw std::invalid_argument("native passive input requires a winning nonempty Ability4");
+            ESM4::PassiveAbilityInput ability{key, {}};
+            for (std::size_t index = 0; index < spell->mEffects.size(); ++index)
+            {
+                const auto& effect = spell->mEffects[index];
+                if (effect.mRange != 0 || effect.mArea != 0 || effect.mScriptEffect
+                    || !ESM4::compiledPassiveValueModifierDefinition(effect.mId))
+                    throw std::invalid_argument("unsupported native passive effect class, range or area");
+                const ESM4::EffectSetting* definition = nullptr;
+                for (const auto* candidate : definitions)
+                    if (candidate->mEffectCode == effect.mId)
+                    {
+                        if (definition)
+                            throw std::invalid_argument("ambiguous winning native passive effect code");
+                        definition = candidate;
+                    }
+                if (!definition || !definition->mPassiveValueModifierDefinition)
+                    throw std::invalid_argument("missing prepared native passive effect definition");
+                const auto loaded = *definition->mPassiveValueModifierDefinition;
+                const auto inputs = ESM4::resolveValueModifierEffectInputs(effect, loaded);
+                if (inputs.mActorValue >= 72 || inputs.mActorValue == 8 || inputs.mDuration != 0 || !(loaded.mFlags & 2))
+                    throw std::invalid_argument("unsupported native passive actor value or lifecycle");
+                ability.mEffects.push_back({static_cast<std::uint32_t>(index), effect.mId, loaded.mFlags, inputs});
+            }
+            result.push_back(std::move(ability));
+        }
+        return result;
+    }
+
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,
         const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel)
     {

@@ -3489,12 +3489,12 @@ compiled definitions and FOAT Strength/Endurance, magnitudes0/25/50, apply and
 remove current-5/0/10/100, and both x87 words. Constructor, detrimental sign,
 clamp, Player identity, recoverable writer selection and UI exclusion execute.
 Actor current, target resolution and writer storage/notifications are boundaries;
-post-Endurance Health is10 and essential predicate false. Apply stores the
+post-Endurance Health is10 and the actor terminal-state predicate is false. Apply stores the
 clamped signed magnitude. On positive stored magnitude, removal issues an
 initial Damage write of R(clamp(-magnitude)+magnitude), **including zero writes**,
 then always dispatches the base inverse-magnitude. It does not substitute the
 clamped inverse for the base subtraction. Nonpositive magnitude omits initial
-Damage. Health-specific compensation and essential-health follow-up are not
+Damage. Health-specific compensation and terminal-state Health cleanup are not
 proved by these cases. Attempt02 records/checks exact bits including signed zero;
 attempt01 retains the earlier numeric comparison.
 
@@ -3541,3 +3541,39 @@ replacement, active-effect insertion/application and save handling. It does
 not prove general spell resistance or the subsequent admission path.
 Probe SHA `8714a0b0d1a09ed9264d69585e03e664f87be201f5ede14292e5b88c746153e6`;
 report SHA `bc7c8b157b55554d0902030a49a11757cf3fa2af9899b9dbe9640e548f9d45af`.
+
+### Passive Endurance application and terminal-state removal cleanup
+
+The original executable identity remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`passive-endurance-health-reaction-07` executes560 original constructor, clamp,
+application and actual caster-parent resolution cases. Current Endurance
+includes negative/zero values, magnitude includes signed inputs, and Health
+crosses negative, zero, adjacent floats around1 and positive values, with
+nullable caster and both x87 words. After the recoverable base write, the
+original calls the direct terminal/essential entry6005F0 only when the stored
+clamped magnitude is strictly negative and current Health is <=1. Actual
+self-caster resolution supplies the actor as killer; null caster supplies null.
+Current/base storage, target resolution and terminal entry are declared
+boundaries. This probe does not execute physical death or a gameplay course.
+Attempt02 falsified the positive-magnitude assumption;04 falsified a strict
+Health<1 assumption. Attempts01/03 retain harness failures. Successful05–07
+expand the domain without overwriting those failures.
+
+`passive-removal-life-cleanup-01` executes1024 full original6A88D0 cases,
+including actual5E33B0(false) virtual dispatch across eight native life states,
+four stored magnitudes, four current Endurance values, four integer base
+Health values and both x87 words. Following the base inverse, states1/2/6
+with positive integer base Health issue DamageHealth=-R(baseHealth). The
+predicate is dead/essential-unconscious state, not the essential form flag.
+The earlier primitive-probe prose incorrectly named this an essential
+predicate; that label is corrected above. Alive Endurance removal has no
+direct terminal callback on this path. Getters, storage writers and target
+resolution are boundaries; Health AV8-specific removal is outside the admitted
+runtime subset. Neither probe proves frame lifecycle, god-mode integration
+or live gameplay acceptance.
+
+Probe/report SHA256 pairs:
+
+- `passive-endurance-health-reaction-07`: probe `c00bdea006652f38612c964906e88bb93ab5accd6a1fb98e5c46b9a6dbaa3323`; report `c1184455b3f091feccedad9a54bd585d688af85da24cc8d73208785bc61776ce`.
+- `passive-removal-life-cleanup-01`: probe `68f7d951a980728397aff4584ca2e9f6415e81f527218544c89dccb5310bd3be`; report `07b2e598b5e05d64b44edfaf70d18dbac33cdf8d07641ad36ea7189a5541b4ad`.

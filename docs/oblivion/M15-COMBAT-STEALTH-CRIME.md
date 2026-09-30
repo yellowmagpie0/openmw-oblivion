@@ -6908,3 +6908,47 @@ Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
 The source-byte and clean fresh clone checks verify the checkpoint; builds
 ran in the shared workspace. Automatic actor activation remains off and all
 pending S2/S3 and later gameplay gates remain open.
+
+### Transactional narrow Player passive grants
+
+Winning-record admission now resolves prepared definitions for the fourteen
+passive value-modifier classes, retaining authored effect order and stable
+spell identity. Ambiguous/missing definitions, non-Ability spells, non-self
+ranges, area/script effects, duration, unsupported actor values and unrecoverable
+effects reject explicitly. Fresh Player ownership starts known-empty; legacy
+unknown ownership remains unknown and rejects grants. Automatic activation
+remains off. This is a narrow prerequisite, not a complete AddSpell inventory,
+casting or M16 active-effect implementation.
+
+The service stages native sign/clamp/base writes, recomputes derived Player
+resources after each write, and commits ownership, facade, base authority and
+life/event changes atomically. Stored magnitudes survive save/restore and
+repeated grants do not reapply changed winning magnitudes. Invalid requests or
+settings leave serialized state unchanged. Negative Endurance application
+with current Health<=1 follows the independently checked terminal/essential
+reaction and self-caster identity; tests include the exact1 boundary and
+rollback. Other modifier slots remain unchanged. Version17 capture rejects
+owned abilities before state publication. Removal and character-choice wiring
+remain the next tasks.
+
+Attempt01 retained a compile failure from an incorrect MGEF member name.
+Attempt02 built both production configurations and passed1977 full components
+and452 sanitized ESM4 cases; one engine fixture omitted the native additional
+Intelligence term in its Magicka expectation. Corrected03 passes677 full
+engine cases in each normal and ASan/UBSan configuration, exact inventories
+with no skips/failures, fingerprint
+`3247c8f3991686ad8bb19772a8601f2c995b1be88697272aed28cc8d3c17d21d`.
+Evidence: `native-passive-grant-engine-03` and
+`native-passive-grant-sanitized-engine-03`. Leak detection is off. These are
+engine/service checks, not normal-input gameplay acceptance. The independent
+560 application and1024 removal instruction cases are documented separately
+in the native-rule provenance.
+
+Checkpoint33 is committed in the independent `m15-implementation` repository.
+Its portable bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-11/m15-progress.bundle`;
+clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Builds ran in the shared workspace; changed-file bytes and a clean fresh bundle
+clone verify the committed checkpoint. S2/S3 and all later pending gates remain
+open, including passive removal, character choices, default activation and
+physical death wiring.

@@ -5,11 +5,14 @@
 #include <components/esm/refid.hpp>
 #include <components/esm4/actorvalues.hpp>
 #include <components/esm4/actorstats.hpp>
+#include <components/esm4/ability.hpp>
 #include <components/esm4/physicalcombat.hpp>
 
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <span>
+#include <vector>
 
 namespace MWMechanics
 {
@@ -67,6 +70,11 @@ namespace MWWorld
     // calculation. Full FormId class comparison follows the original branch.
     ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
         const ESM::RefId& race, const ESM::RefId& characterClass, bool female, std::int16_t level);
+
+    // Narrow Ability4 self effects. Resolve stable winning definitions and
+    // prepared override history; reject unsupported or ambiguous inputs.
+    std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
+        const ESMStore& store, std::span<const ESM::FormKey> spells);
 
     // Authored Player form inputs before character generation or abilities.
     // Derived resource bases are resolved by preparePlayerValues at publication;

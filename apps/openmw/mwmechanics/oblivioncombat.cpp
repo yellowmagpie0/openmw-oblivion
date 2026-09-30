@@ -15,6 +15,7 @@
 #include "../mwclass/esm4interactive.hpp"
 
 #include <components/esm4/physicalcombat.hpp>
+#include <components/esm4/ability.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
@@ -1388,6 +1389,7 @@ namespace MWMechanics
             // contributions. preparePlayerValues then applies saved base
             // overrides before deriving resources from current attributes.
             values.mPlayerFormValues = {{0, 0, 0, 0}};
+            values.mPassiveAbilities.emplace();
             preparePlayerValues(values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
         }
 
@@ -1432,6 +1434,119 @@ namespace MWMechanics
         if (!oldLife)
             mActorLife.insert(preparedLife.extract(preparedLife.begin()));
         view.commit();
+    }
+
+    void OblivionCombatService::grantPlayerPassiveAbilities(MWWorld::Player& player,
+        std::span<const ESM4::PassiveAbilityInput> abilities,
+        const ESM4::PlayerDynamicBaseSettings& settings, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery)
+    {
+        auto candidate = playerValues();
+        if (abilities.empty())
+            return;
+        if (!candidate.mPassiveAbilities)
+            throw std::invalid_argument("native passive grant requires known ability ownership");
+        const auto* oldLife = findActorLife(candidate.mActor);
+        if (!oldLife)
+            throw std::invalid_argument("native passive grant requires initialized lifecycle");
+        std::set<ESM::FormKey> requested;
+        for (const auto& ability : abilities)
+        {
+            ESM4::RuntimePassiveAbility shape{ability.mSpell, {}};
+            if (!requested.insert(ability.mSpell).second)
+                throw std::invalid_argument("duplicate native passive grant request");
+            for (const auto& effect : ability.mEffects)
+            {
+                if (!(effect.mFlags & 2) || effect.mValues.mDuration != 0 || effect.mValues.mActorValue == 8)
+                    throw std::invalid_argument("unsupported native passive lifecycle or Health effect");
+                shape.mEffects.push_back({effect.mEffectIndex, effect.mCode,
+                    effect.mValues.mActorValue, effect.mValues.mMagnitude});
+            }
+            shape.validate();
+        }
+        OblivionCombatService prepared;
+        prepared.mActorValues = mActorValues;
+        prepared.mActorBases = mActorBases;
+        prepared.mActorLife = mActorLife;
+        prepared.mPendingDeathEvents = mPendingDeathEvents;
+        prepared.mDeathCounts = mDeathCounts;
+        prepared.mNextDeathEvent = mNextDeathEvent;
+        prepared.mCombatOpponents = mCombatOpponents;
+        auto life = *oldLife;
+        bool changed = false;
+        for (const auto& ability : abilities)
+        {
+            if (std::any_of(candidate.mPassiveAbilities->begin(), candidate.mPassiveAbilities->end(),
+                    [&](const auto& owned) { return owned.mSpell == ability.mSpell; }))
+                continue;
+            if (life.mPhase != ESM4::ActorLifePhase::Alive)
+                throw std::invalid_argument("new native passive grants require an alive actor");
+            changed = true;
+            ESM4::RuntimePassiveAbility owned{ability.mSpell, {}};
+            for (const auto& effect : ability.mEffects)
+            {
+                const auto av = static_cast<std::uint8_t>(effect.mValues.mActorValue);
+                float magnitude = effect.mFlags & 4 ? -effect.mValues.mMagnitude : effect.mValues.mMagnitude;
+                std::optional<float> current;
+                if (ESM4::valueModifierRequiresCurrent(av, effect.mCode, magnitude))
+                    current = ESM4::composeActorValue(candidate.mValues[av], candidate.mOwner, candidate.mProcess);
+                magnitude = ESM4::clampValueModifierDelta(av, effect.mCode, magnitude, current);
+                const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
+                    : integerBaseOverride(prepared.findActorBase(candidate.mBase), av).value_or(
+                        ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
+                const auto entry = ESM4::prepareActorBaseValueFloatMod(
+                    ESM4::ActorBaseKind::Npc, av, formCurrent, magnitude, ESM4::ActorValueConversionMode::Sse);
+                if (entry)
+                {
+                    auto [it, inserted] = prepared.mActorBases.try_emplace(candidate.mBase,
+                        ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+                    if (it->second.mKind != ESM4::ActorBaseKind::Npc)
+                        throw std::invalid_argument("native passive Player base kind mismatch");
+                    setActorBaseEntry(it->second, *entry);
+                    applyActorBase(candidate, &it->second);
+                }
+                prepared.preparePlayerValues(candidate, settings);
+                owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude});
+                if (av == 5 && magnitude < 0 && life.mPhase == ESM4::ActorLifePhase::Alive
+                    && ESM4::composeActorValue(candidate.mValues[8], candidate.mOwner, candidate.mProcess) <= 1.f)
+                {
+                    life.mKiller = candidate.mActor; // The self ability's caster.
+                    life.mPhase = essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+                    if (essential)
+                    {
+                        const auto adjustment = ESM4::essentialRecoveryHealth(
+                            ESM4::combatBaseValue(candidate.mValues[8].mBase),
+                            ESM4::composeActorValue(candidate.mValues[8], candidate.mOwner, candidate.mProcess), recovery);
+                        life.mRecoveryRemaining = recovery.mDelay;
+                        candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+                            8, ESM4::ActorValueModifier::Damage, adjustment.mAdjustment);
+                    }
+                }
+            }
+            candidate.mPassiveAbilities->push_back(std::move(owned));
+        }
+        if (!changed)
+            return;
+        candidate.validate();
+        const auto transition = prepared.prepareLifeTransition(life);
+        prepared.mActorLife.at(candidate.mActor) = life;
+        if (transition)
+        {
+            prepared.mPendingDeathEvents = transition->mEvents;
+            prepared.mDeathCounts = transition->mCounts;
+            if (life.mPhase == ESM4::ActorLifePhase::Dead)
+                ++prepared.mNextDeathEvent;
+        }
+        if (life.mPhase == ESM4::ActorLifePhase::Dead)
+            prepared.stopCombat(candidate.mActor);
+        prepared.publishPlayerValues(player, std::move(candidate), settings);
+        mActorValues.swap(prepared.mActorValues);
+        mActorBases.swap(prepared.mActorBases);
+        mActorLife.swap(prepared.mActorLife);
+        mPendingDeathEvents.swap(prepared.mPendingDeathEvents);
+        mDeathCounts.swap(prepared.mDeathCounts);
+        mCombatOpponents.swap(prepared.mCombatOpponents);
+        std::swap(mNextDeathEvent, prepared.mNextDeathEvent);
     }
 
     void OblivionCombatService::changePlayerValue(MWWorld::Player& player, std::uint8_t value,
@@ -2175,6 +2290,8 @@ namespace MWMechanics
                 throw std::invalid_argument("native player form values require an Oblivion v10+ save");
             if (state.mVersion < 17 && actor.mNonPlayerFormHealth)
                 throw std::invalid_argument("native nonplayer form Health requires an Oblivion v17+ save");
+            if (state.mVersion < 18 && actor.mPassiveAbilities)
+                throw std::invalid_argument("native passive ownership requires an Oblivion v18+ save");
             actors.push_back(actor);
         }
         auto actions = mActions.capture();
