@@ -7155,3 +7155,42 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: prospective custom-class calculation,
 combined constructor/character transaction, then live character-choice wiring
 and automatic actor activation. S2/S3 and later gameplay gates remain open.
+
+### Combined Player constructor and character preparation
+
+The character-base adapter now calculates a prospective custom class directly
+from its owned prepared record. Identity mismatch and malformed class fields
+reject before publication; the original adapter signature and winning native
+class precedence remain intact. A new service operation stages Player
+constructor adoption, explicit old-effect removal, character-base reset and
+new passive grants on an isolated candidate, then publishes actor authority,
+lifecycle and the shared Player facade together. A failed fresh choice leaves
+no newly initialized actor state. Restored authority still supersedes fresh
+form inputs; constructor adoption emits no death events/counts.
+
+Two new fixtures cover uncommitted custom classes without generated-ID
+consumption, absent/mismatched/malformed calculation inputs, rejected fresh and
+existing Player choices, settings failures, preserved facade state/action IDs,
+correct Health/Magicka/Fatigue, retained damage and actual fresh-Player rebuild
+after binary restore. `native-player-character-readiness-baseline-01` rejects
+both missing APIs; all three changed translation units pass configured syntax.
+Both full attempt01 runs execute689 cases, with688 passing: the new fixture
+incorrectly expected zero raw Magicka after FOSP had legitimately added150.
+The constructor's zero-before-grant behavior remains covered independently.
+The corrected expectation agrees with the reviewed FOSP AV9/native raw-base
+writer; production source did not change in this correction. Failures remain.
+
+`native-player-character-readiness-engine-02` and
+`native-player-character-readiness-sanitized-engine-02` each pass689 full engine
+cases, exact inventories, no failures/skips, fingerprint
+`27332661568dc84fd366b3f7326013e14f81adbf2d6a659b424fe5405c99bd47`. ASan/UBSan leak checks are off.
+
+Checkpoint39 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-17/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. This does not yet wire the character dialogs or
+automatically activate native actors. Next: reviewed passive-list removal order
+and actual native character choices, then activation and melee. S2/S3 and later
+required gameplay gates remain open.

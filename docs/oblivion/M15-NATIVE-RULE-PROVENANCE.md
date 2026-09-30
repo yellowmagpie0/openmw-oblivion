@@ -3634,3 +3634,32 @@ input log SHA `27b38a7785e6aad9abd8c03e9d1fa77f8cb67778a43eba14bc715c692b380c78`
 This verifies the source collector's stated declaration contract; it does not
 assert original source-grant or active-list order, execute ordinary spells or
 powers, or establish normal-input gameplay/restart acceptance.
+
+### Original passive-list comparison operands and ASCII case folding
+
+`S3/authority-draft/passive-list-comparison-04` executes full original6A25E0,
+the412F20 school getter,9836C9 multibyte comparison wrapper and its982525 ASCII
+case-fold loop, plus9811E2 stack-cookie verification. All10976 cases agree
+across seven school values, independent ignore-duration/ignore-magnitude flags,
+signed integer magnitudes, integer durations, mixed-case/different/truncated
+ASCII names and both x87 precision words. The original image hash is
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Probe SHA256:
+`12d0dfe080fc02080cc46aa898968bcd5643519759114d3cb688dd57ac671467`; report SHA256:
+`917e31974c818d11d6b1c3217245b29231afbcfec10d872a9a00102478d505d5`.
+
+The raw format is `%c%.30s%.1f%.1f`. Actual argument placement establishes
+**magnitude before duration**, correcting the earlier unexecuted inference.
+The comparison is **case insensitive for ASCII**, correcting the presumed
+strcmp label. School values0..5 map to C/E/A/D/F/B, other values to Z. Each
+ignored quantity uses the actual1000.f literal. School's script-effect pointer
+is EffectItem+18; otherwise its setting+64 field is read. This does not change
+the earlier original forward removal-traversal result.
+
+Effect-name retrieval, free, explicit C-locale construction and sprintf are
+boundaries. The formatting boundary admits exact integer quantities and ASCII
+names only, so decimal rounding, non-ASCII locale/encoding and original name
+allocation are not established. Attempts01..03 faulted in uninitialized CRT
+thread/locale retrieval; attempt04 uses a declared C-locale fixture and executes
+the real ASCII comparison rather than replacing it with a host comparison.
+Sorted insertion, source grant order, full caster behavior and gameplay
+acceptance still require their own evidence.

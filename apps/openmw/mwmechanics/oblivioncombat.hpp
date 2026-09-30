@@ -211,6 +211,13 @@ namespace MWMechanics
             const ESM::FormKey& key, const OblivionBreathUpdateResult& update, bool essential,
             const ESM4::EssentialRecoverySettings& recovery,
             const ESM4::PlayerDynamicBaseSettings& playerBase);
+        ESM4::RuntimeActorValues preparePlayerInitialization(MWWorld::Player& player,
+            const MWWorld::ESMStore& store, std::optional<bool> legacyDead);
+        void preparePlayerCharacterReplacement(ESM4::RuntimeActorValues& values,
+            const ESM4::ActorCharacterBaseStats& stats, std::span<const ESM4::PassiveAbilityInput> abilities,
+            std::span<const OblivionPassiveEffectIdentity> removalOrder,
+            const ESM4::PlayerDynamicBaseSettings& settings, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery, bool godMode);
         void preparePlayerCharacterBase(ESM4::RuntimeActorValues& values,
             const ESM4::ActorCharacterBaseStats& stats, const ESM4::PlayerDynamicBaseSettings& settings);
         bool preparePlayerPassiveGrants(ESM4::RuntimeActorValues& values,
@@ -365,6 +372,14 @@ namespace MWMechanics
         // Restored authority takes precedence over fresh authored inputs.
         // Character generation and abilities are separate operations.
         void initializePlayerActor(MWWorld::Player& player, const MWWorld::ESMStore& store,
+            std::optional<bool> legacyDead = {});
+        // Stage constructor adoption and character replacement together. A
+        // rejected choice publishes neither fresh authority nor its facade.
+        void initializePlayerCharacter(MWWorld::Player& player, const MWWorld::ESMStore& store,
+            const ESM4::ActorCharacterBaseStats& stats, std::span<const ESM4::PassiveAbilityInput> abilities,
+            std::span<const OblivionPassiveEffectIdentity> removalOrder,
+            const ESM4::PlayerDynamicBaseSettings& settings, bool essential = false,
+            const ESM4::EssentialRecoverySettings& recovery = {}, bool godMode = false,
             std::optional<bool> legacyDead = {});
         // Narrow self passive grants. Known saved ownership prevents duplicate
         // application. Resolve winning spell/definition admission beforehand.

@@ -1368,7 +1368,7 @@ namespace MWMechanics
         prepared.commit();
     }
 
-    void OblivionCombatService::initializePlayerActor(MWWorld::Player& player,
+    ESM4::RuntimeActorValues OblivionCombatService::preparePlayerInitialization(MWWorld::Player& player,
         const MWWorld::ESMStore& store, std::optional<bool> legacyDead)
     {
         const auto key = ESM::FormKey::dynamic("player", 1);
@@ -1427,13 +1427,23 @@ namespace MWMechanics
             preparedValues.emplace(key, values);
         if (!oldLife)
             preparedLife.emplace(key, life);
-        OblivionActorProjection view(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
-        // Prepared nodes and stat projections own every allocation before the
-        // synchronous commit. Construction emits no terminal entry effects.
         if (!oldValues)
             mActorValues.insert(preparedValues.extract(preparedValues.begin()));
         if (!oldLife)
             mActorLife.insert(preparedLife.extract(preparedLife.begin()));
+        return values;
+    }
+
+    void OblivionCombatService::initializePlayerActor(MWWorld::Player& player,
+        const MWWorld::ESMStore& store, std::optional<bool> legacyDead)
+    {
+        auto prepared = *this;
+        const auto values = prepared.preparePlayerInitialization(player, store, legacyDead);
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection view(ptr.getClass().getNpcStats(ptr),
+            actorProjection(values, nullptr, prepared.findActorLife(values.mActor)));
+        mActorValues.swap(prepared.mActorValues);
+        mActorLife.swap(prepared.mActorLife);
         view.commit();
     }
 
@@ -1633,13 +1643,12 @@ namespace MWMechanics
         std::swap(mNextDeathEvent, prepared.mNextDeathEvent);
     }
 
-    void OblivionCombatService::replacePlayerCharacter(MWWorld::Player& player,
+    void OblivionCombatService::preparePlayerCharacterReplacement(ESM4::RuntimeActorValues& candidate,
         const ESM4::ActorCharacterBaseStats& stats, std::span<const ESM4::PassiveAbilityInput> abilities,
         std::span<const OblivionPassiveEffectIdentity> removalOrder,
         const ESM4::PlayerDynamicBaseSettings& settings, bool essential,
         const ESM4::EssentialRecoverySettings& recovery, bool godMode)
     {
-        auto candidate = playerValues();
         if (!candidate.mPassiveAbilities)
             throw std::invalid_argument("native character replacement requires known passive ownership");
         if (!findActorLife(candidate.mActor))
@@ -1653,12 +1662,37 @@ namespace MWMechanics
                 throw std::invalid_argument("invalid or duplicate native character removal identity");
         if (!remaining.empty())
             throw std::invalid_argument("incomplete native character removal order");
-        auto prepared = *this;
         for (const auto& effect : removalOrder)
-            if (!prepared.preparePlayerPassiveRemoval(candidate, effect.mSpell, effect.mEffectIndex, settings, godMode))
+            if (!preparePlayerPassiveRemoval(candidate, effect.mSpell, effect.mEffectIndex, settings, godMode))
                 throw std::logic_error("validated native character effect disappeared during preparation");
-        prepared.preparePlayerCharacterBase(candidate, stats, settings);
-        prepared.preparePlayerPassiveGrants(candidate, abilities, settings, essential, recovery, godMode);
+        preparePlayerCharacterBase(candidate, stats, settings);
+        preparePlayerPassiveGrants(candidate, abilities, settings, essential, recovery, godMode);
+    }
+
+    void OblivionCombatService::replacePlayerCharacter(MWWorld::Player& player,
+        const ESM4::ActorCharacterBaseStats& stats, std::span<const ESM4::PassiveAbilityInput> abilities,
+        std::span<const OblivionPassiveEffectIdentity> removalOrder,
+        const ESM4::PlayerDynamicBaseSettings& settings, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery, bool godMode)
+    {
+        auto prepared = *this;
+        auto candidate = prepared.playerValues();
+        prepared.preparePlayerCharacterReplacement(candidate, stats, abilities, removalOrder,
+            settings, essential, recovery, godMode);
+        commitPreparedPlayer(player, prepared, std::move(candidate), settings);
+    }
+
+    void OblivionCombatService::initializePlayerCharacter(MWWorld::Player& player,
+        const MWWorld::ESMStore& store, const ESM4::ActorCharacterBaseStats& stats,
+        std::span<const ESM4::PassiveAbilityInput> abilities,
+        std::span<const OblivionPassiveEffectIdentity> removalOrder,
+        const ESM4::PlayerDynamicBaseSettings& settings, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery, bool godMode, std::optional<bool> legacyDead)
+    {
+        auto prepared = *this;
+        auto candidate = prepared.preparePlayerInitialization(player, store, legacyDead);
+        prepared.preparePlayerCharacterReplacement(candidate, stats, abilities, removalOrder,
+            settings, essential, recovery, godMode);
         commitPreparedPlayer(player, prepared, std::move(candidate), settings);
     }
 

@@ -20,6 +20,11 @@ namespace MWMechanics
     struct OblivionFrameSettings;
 }
 
+namespace ESM
+{
+    struct Class;
+}
+
 namespace ESM4
 {
     struct RuntimeActorValues;
@@ -70,6 +75,11 @@ namespace MWWorld
     // calculation. Full FormId class comparison follows the original branch.
     ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
         const ESM::RefId& race, const ESM::RefId& characterClass, bool female, std::int16_t level);
+    // Calculate an uncommitted custom class owned by a prepared Player record.
+    // Its identity must match the proposed class; this does not publish it.
+    ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
+        const ESM::RefId& race, const ESM::RefId& characterClass, bool female, std::int16_t level,
+        const ESM::Class* preparedCustomClass);
 
     // Narrow Ability4 self effects. Resolve stable winning definitions and
     // prepared override history; reject unsupported or ambiguous inputs.

@@ -212,13 +212,22 @@ namespace MWWorld
     ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
         const ESM::RefId& raceId, const ESM::RefId& classId, bool female, std::int16_t actorLevel)
     {
+        return resolveOblivionPlayerCharacterBaseStats(store, raceId, classId, female, actorLevel, nullptr);
+    }
+
+    ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
+        const ESM::RefId& raceId, const ESM::RefId& classId, bool female, std::int16_t actorLevel,
+        const ESM::Class* preparedCustomClass)
+    {
+        if (preparedCustomClass && preparedCustomClass->mId != classId)
+            throw std::invalid_argument("prepared native Player custom class identity mismatch");
         const auto* race = store.get<ESM4::Race>().search(raceId);
         const auto* characterClass = store.get<ESM4::Class>().search(classId);
         ESM4::Class translated{};
         const bool nativeClass = characterClass != nullptr;
         if (!characterClass)
         {
-            const auto* custom = store.get<ESM::Class>().search(classId);
+            const auto* custom = preparedCustomClass ? preparedCustomClass : store.get<ESM::Class>().search(classId);
             if (!custom)
                 throw std::invalid_argument("missing native Player class calculation input");
             for (std::size_t i = 0; i < translated.mData.mFavoredAttributes.size(); ++i)

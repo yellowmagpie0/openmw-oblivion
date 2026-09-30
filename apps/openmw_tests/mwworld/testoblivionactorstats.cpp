@@ -367,6 +367,84 @@ namespace
         EXPECT_THROW(MWWorld::resolveOblivionInitialPlayerValues(mStore), std::invalid_argument);
     }
 
+    TEST_F(OblivionActorStatsTest, freshPlayerCharacterChoiceStagesConstructorAndPassivesBeforePublication)
+    {
+        sharedStats();
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        const auto baseKey = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{}; native.mId = {7, 4}; native.mFormKey = baseKey; native.mIsTES4 = true;
+        native.mData.attribs = {50, 50, 30, 30, 40, 40, 50, 50};
+        native.mData.health = 45;
+        native.mBaseConfig.tes4.baseSpell = 350;
+        native.mBaseConfig.tes4.fatigue = 150;
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, baseKey);
+        ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(facade);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record); ESM::NpcState initial{}; initial.blank();
+        const auto ptr = player.getPlayer(); ptr.getClass().readAdditionalState(ptr, initial);
+        const auto oldHealth = ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent();
+        MWMechanics::OblivionCombatService service;
+        const auto action = service.allocateAction();
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = actor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        const auto snapshot = [&] { service.capture(saved); return saved.serializeBinary(); };
+        const auto before = snapshot();
+        ESM4::ActorCharacterBaseStats character{}; character.mAttributes.fill(40); character.mSkills.fill(5);
+        const auto spell = ESM::FormKey::content("abilities.esp", 0x123);
+        std::array abilities{ESM4::PassiveAbilityInput{spell, {
+            {7, ESM::fourCC("FOAT"), 0x100072, {5, 10, 0}},
+            {2, ESM::fourCC("FOSP"), 0x1000072, {9, 150, 0}}}}};
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
+        auto invalid = abilities;
+        invalid[0].mEffects.back().mValues.mMagnitude = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(service.initializePlayerCharacter(player, mStore, character, invalid, {}, settings), std::runtime_error);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), oldHealth);
+        auto badSettings = settings; badSettings.mHealthMultiplier = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(service.initializePlayerCharacter(player, mStore, character, abilities, {}, badSettings), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), oldHealth);
+        service.initializePlayerCharacter(player, mStore, character, abilities, {}, settings);
+        ASSERT_NE(service.findActorValues(actor), nullptr);
+        ASSERT_NE(service.findActorLife(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Alive);
+        EXPECT_EQ(service.findActorValues(actor)->mPlayerFormValues,
+            (std::optional<std::array<std::int32_t, 4>>{{0, 150, 0, 0}}));
+        EXPECT_EQ(service.getPlayerValue(5), 50);
+        EXPECT_EQ(service.getPlayerValue(8), 100);
+        EXPECT_EQ(service.getPlayerValue(9), 210);
+        EXPECT_EQ(service.getPlayerValue(10), 170);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        EXPECT_EQ(service.allocateAction(), action + 1);
+        service.changePlayerValue(player, 8, ESM4::ActorValueModifier::Damage, -7, settings);
+        const auto accepted = snapshot();
+        std::array order{MWMechanics::OblivionPassiveEffectIdentity{spell, 7},
+            MWMechanics::OblivionPassiveEffectIdentity{spell, 2}};
+        EXPECT_THROW(service.initializePlayerCharacter(player, mStore, character, invalid, order, settings), std::runtime_error);
+        EXPECT_EQ(snapshot(), accepted);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 93);
+        native.mIsTES4 = false;
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, baseKey);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        MWWorld::Player fresh(record);
+        const auto freshPtr = fresh.getPlayer(); freshPtr.getClass().readAdditionalState(freshPtr, initial);
+        restored.initializePlayerCharacter(fresh, mStore, character, abilities, order, settings);
+        EXPECT_EQ(*restored.findActorValues(actor), *service.findActorValues(actor));
+        EXPECT_EQ(*restored.findActorLife(actor), *service.findActorLife(actor));
+        EXPECT_EQ(freshPtr.getClass().getCreatureStats(freshPtr).getHealth().getCurrent(), 93);
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+    }
+
     TEST_F(OblivionActorStatsTest, playerConstructorPublishesLifeAndPrefersRestoredAuthorityWithoutEvents)
     {
         sharedStats();
@@ -6127,6 +6205,43 @@ namespace
         mStore.getWritable<ESM4::GameSetting>().insertStatic(temporary);
         EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
             mStore, mNpc.mRace, mNpc.mClass, true, 1).mSkills[0], 30);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerCharacterBaseCalculatesPreparedCustomClassWithoutPublishingRecords)
+    {
+        autoNpc();
+        const auto expected = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1);
+        ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+        player.mRace = mNpc.mRace;
+        player.mClass = mNpc.mClass;
+        mStore.insertStatic(player);
+        ESM::Class custom{}; custom.blank();
+        custom.mData.mAttribute = {ESM::Attribute::Personality, ESM::Attribute::Strength};
+        custom.mData.mSpecialization = 0;
+        const auto& ids = MWWorld::oblivionSkillIds();
+        const std::array<unsigned, 7> indices{0, 1, 3, 13, 6, 15, 16};
+        for (std::size_t i = 0; i < 5; ++i) custom.mData.mSkills[i][1] = ids[indices[i]];
+        custom.mData.mSkills[0][0] = ids[indices[5]];
+        custom.mData.mSkills[1][0] = ids[indices[6]];
+        {
+            auto prepared = mStore.preparePlayerRecord(player, &custom);
+            const auto id = prepared.player().mClass;
+            EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                mStore, mNpc.mRace, id, true, 1, prepared.customClass()), expected);
+            EXPECT_EQ(mStore.find(id), 0);
+            EXPECT_EQ(mStore.get<ESM::Class>().getDynamicSize(), 0);
+            EXPECT_EQ(mStore.get<ESM::NPC>().find(player.mId)->mClass, player.mClass);
+            EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                mStore, mNpc.mRace, id, true, 1), std::invalid_argument);
+            EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                mStore, mNpc.mRace, ESM::RefId::generated(123), true, 1, prepared.customClass()), std::invalid_argument);
+            auto malformed = *prepared.customClass();
+            malformed.mData.mSkills[0][1] = ESM::RefId::stringRefId("invalid-major");
+            EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                mStore, mNpc.mRace, id, true, 1, &malformed), std::invalid_argument);
+        }
+        EXPECT_EQ(mStore.generateId(), ESM::RefId::generated(0));
     }
 
     TEST_F(OblivionActorStatsTest, playerCharacterBaseAdmitsCustomClassProjectionWithNativeRounding)
