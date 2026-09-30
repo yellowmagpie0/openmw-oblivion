@@ -2,6 +2,7 @@
 #define OPENMW_ESM4_LOADMGEF_H
 
 #include "loadrawrecord.hpp"
+#include "ability.hpp"
 #include <components/esm/defs.hpp>
 #include <optional>
 
@@ -28,7 +29,11 @@ namespace ESM4
         static constexpr ESM::RecNameInts sRecordId = ESM::REC_MGEF4;
         std::optional<std::uint32_t> mEffectCode;
         std::optional<EffectSettingData> mData;
+        // Narrow prepared flag/data inputs for the verified passive VMOD subset.
+        // Authored DATA stays unchanged; absence leaves other classes unadmitted.
+        std::optional<LoadedEffectSetting> mPassiveValueModifierDefinition;
         void load(Reader& reader);
+        void preparePassiveValueModifierDefinition(const EffectSetting* previous = nullptr);
     };
 }
 #endif

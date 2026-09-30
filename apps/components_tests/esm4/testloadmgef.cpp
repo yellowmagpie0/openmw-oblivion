@@ -1,3 +1,4 @@
+#include <components/esm4/loadspel.hpp>
 #include <components/esm4/loadmgef.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/common.hpp>
@@ -170,4 +171,72 @@ TEST(ESM4EffectSetting, PreservesAuthoredFlagAndFloatBitsForSeparateReadyGameVal
     EXPECT_EQ(record.mData->mResistanceActorValue,std::numeric_limits<std::int32_t>::min());
     EXPECT_EQ(record.mData->mAssociatedForm,ESM::FormKey{});
     EXPECT_EQ(record.mSubRecords[1].mData,data);
+}
+
+TEST(ESM4LoadEffectSetting, PassivePreparationPreservesAuthoredDataAndCompiledStaticActorValue)
+{
+    ESM4::EffectSetting setting{};
+    setting.mEffectCode = ESM::fourCC("FOSP");
+    setting.mData = ESM4::EffectSettingData{};
+    setting.mData->mFlags = 0xffffffff;
+    setting.mData->mAssociatedData = 123;
+    setting.preparePassiveValueModifierDefinition();
+    ASSERT_TRUE(setting.mPassiveValueModifierDefinition);
+    EXPECT_EQ(setting.mPassiveValueModifierDefinition->mFlags, 0x0fc03c72u);
+    EXPECT_EQ(setting.mPassiveValueModifierDefinition->mData, 9);
+    EXPECT_EQ(setting.mData->mFlags, 0xffffffff);
+    EXPECT_EQ(setting.mData->mAssociatedData, 123);
+    auto unknown = setting;
+    unknown.mEffectCode = ESM::fourCC("ZZZZ");
+    unknown.preparePassiveValueModifierDefinition();
+    EXPECT_FALSE(unknown.mPassiveValueModifierDefinition);
+    setting.mFlags = ESM4::Rec_Deleted;
+    setting.preparePassiveValueModifierDefinition();
+    EXPECT_FALSE(setting.mPassiveValueModifierDefinition);
+}
+
+TEST(ESM4LoadEffectSetting, PassivePreparationUsesPredecessorHistoryForStickyStaticActorValue)
+{
+    ESM4::EffectSetting first{};
+    first.mEffectCode = ESM::fourCC("FOAT");
+    first.mData = ESM4::EffectSettingData{};
+    first.mData->mFlags = 1u << 24;
+    first.mData->mAssociatedData = 40;
+    first.preparePassiveValueModifierDefinition();
+    ASSERT_TRUE(first.mPassiveValueModifierDefinition);
+    EXPECT_EQ(first.mPassiveValueModifierDefinition->mData, 40);
+    ESM4::EffectSetting second{};
+    second.mEffectCode = first.mEffectCode;
+    second.mData = ESM4::EffectSettingData{};
+    second.mData->mAssociatedData = 55;
+    second.preparePassiveValueModifierDefinition(&first);
+    ASSERT_TRUE(second.mPassiveValueModifierDefinition);
+    EXPECT_TRUE(second.mPassiveValueModifierDefinition->mFlags & (1u << 24));
+    EXPECT_EQ(second.mPassiveValueModifierDefinition->mData, 40);
+    EXPECT_EQ(second.mData->mFlags, 0);
+    EXPECT_EQ(second.mData->mAssociatedData, 55);
+    ESM4::SpellEffect item{};
+    item.mActorValue = 5;
+    EXPECT_EQ(ESM4::resolveValueModifierEffectInputs(item, *second.mPassiveValueModifierDefinition).mActorValue, 40);
+    auto withoutHistory = second;
+    withoutHistory.preparePassiveValueModifierDefinition();
+    EXPECT_FALSE(withoutHistory.mPassiveValueModifierDefinition->mFlags & (1u << 24));
+    EXPECT_EQ(ESM4::resolveValueModifierEffectInputs(item, *withoutHistory.mPassiveValueModifierDefinition).mActorValue, 5);
+}
+
+TEST(ESM4LoadEffectSetting, PassivePreparationRejectsUnpreparedSameCodeHistoryAndResetsOnDifferentCode)
+{
+    ESM4::EffectSetting previous{};
+    previous.mEffectCode = ESM::fourCC("FOAT");
+    previous.mData = ESM4::EffectSettingData{};
+    ESM4::EffectSetting current = previous;
+    EXPECT_THROW(current.preparePassiveValueModifierDefinition(&previous), std::invalid_argument);
+    EXPECT_FALSE(current.mPassiveValueModifierDefinition);
+    current.mEffectCode = ESM::fourCC("FOSP");
+    current.preparePassiveValueModifierDefinition(&previous);
+    ASSERT_TRUE(current.mPassiveValueModifierDefinition);
+    EXPECT_EQ(current.mPassiveValueModifierDefinition->mData, 9);
+    current.mData.reset();
+    current.preparePassiveValueModifierDefinition();
+    EXPECT_FALSE(current.mPassiveValueModifierDefinition);
 }

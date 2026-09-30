@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <bit>
 #include <span>
+#include <stdexcept>
 
 namespace ESM4
 {
@@ -54,4 +55,23 @@ namespace ESM4
         if (!(mFlags & Rec_Deleted) && (!mEffectCode || !mData))
             reader.fail("MGEF is missing required EDID or DATA");
     }
+
+    void EffectSetting::preparePassiveValueModifierDefinition(const EffectSetting* previous)
+    {
+        mPassiveValueModifierDefinition.reset();
+        if ((mFlags & Rec_Deleted) || !mEffectCode || !mData)
+            return;
+        const auto compiled = compiledPassiveValueModifierDefinition(*mEffectCode);
+        if (!compiled)
+            return;
+        auto prior = *compiled;
+        if (previous && previous->mEffectCode == mEffectCode)
+        {
+            if (!previous->mPassiveValueModifierDefinition)
+                throw std::invalid_argument("native passive definition predecessor has no prepared history");
+            prior = *previous->mPassiveValueModifierDefinition;
+        }
+        mPassiveValueModifierDefinition = mergeLoadedEffectSetting(prior, *mData);
+    }
+
 }

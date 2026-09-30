@@ -328,6 +328,11 @@ namespace MWWorld
                                 value.mId = ESM::FormId{ key.localId(),
                                     static_cast<std::int32_t>(reader.getModIndex()) };
                         }
+                        if constexpr (std::is_same_v<T, ESM4::EffectSetting>)
+                        {
+                            if (!deleted)
+                                value.preparePassiveValueModifierDefinition(store.searchStatic(key));
+                        }
                         stores.mFormKeyIndex.apply(std::move(metadata));
                         if constexpr (requires { std::string_view(value.mEditorId); })
                         {

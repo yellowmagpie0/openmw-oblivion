@@ -6834,3 +6834,40 @@ clone verify the committed checkpoint. The next implementation must preserve
 native definition merge history in stores, then own passive grants/effects in
 runtime transactions and save state. Automatic activation and all pending
 S2/S3/gameplay gates remain open.
+
+### Passive definition override history
+
+The fourteen admitted passive value-modifier definitions now retain prepared
+native flags/data across actual winning-record overrides in ESMStore. The
+original authored DATA prefix remains separate and unchanged. A first FOAT
+record that enables static actor-value data keeps that data when a later
+record omits the bit and authors a different number. Starting only from the
+final authored record would select a different actor value. Changing code
+resets the narrow compiled input; unknown classes remain raw and unadmitted.
+The pure parser does not silently prepare execution history. A known-code
+predecessor missing preparation rejects before store publication.
+
+The component tests cover compiled/default merging, authored preservation,
+static-data history, malformed predecessor rejection and code changes. The
+engine test runs real reader/store override chains, immutable prior copies,
+unknown codes and deletion. Deletion/reintroduction against an original global
+registry and duplicate-code runtime admission remain separate work; this is
+not a claim of complete native MGEF loader parity.
+
+`native-passive-definition-history-engine-01` passes1974 full component and
+673 full engine cases. `native-passive-definition-history-sanitized-engine-01`
+passes449 ESM4 ASan/UBSan and673 full sanitized engine cases. Both inventories
+match XML exactly with no failures/skips, fingerprint
+`ab11bd7e74259b491d2d8bc9fb91b200b8f6f1b2e5ec4b0b70fe7c0f8cfa2b0e`.
+Leak detection is off. The engine rebuild includes all accumulated narrow
+passive prerequisites and builds openmw/openmw-tests/esmtool. These are store,
+parser and integration checks, not gameplay acceptance.
+
+Checkpoint31 follows these checks in the independent `m15-implementation`
+repository. Its portable source/history bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-09/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Tests ran in the shared workspace; the checkpoint verifies changed-file bytes
+and a clean fresh bundle clone. Automatic actor activation remains off;
+runtime passive ownership, application, removal and character-choice wiring
+remain pending. S2/S3 and all later gameplay gates stay open.
