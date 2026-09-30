@@ -94,6 +94,7 @@ namespace ESM4
     {
         std::array<std::uint8_t, 8> mAttributes;
         std::array<std::uint8_t, 21> mSkills;
+        friend bool operator==(const ActorCharacterBaseStats&, const ActorCharacterBaseStats&) = default;
     };
 
     using NpcAutoStats = ActorCharacterBaseStats;

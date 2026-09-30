@@ -5452,4 +5452,143 @@ namespace
         EXPECT_EQ(service.combatOpponents(a), (std::vector<ESM::FormKey>{b}));
     }
 
+    TEST_F(OblivionActorStatsTest, playerCharacterBaseUsesWinningNativeSexSkillsOrderedBonusesAndFullClassId)
+    {
+        autoNpc();
+        const auto female = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1);
+        EXPECT_EQ(female.mAttributes,
+            (std::array<std::uint8_t, 8>{42, 28, 71, 80, 56, 56, 40, 69}));
+        EXPECT_EQ(female.mSkills[0], 25);
+        EXPECT_EQ(female.mSkills[1], 30);
+        EXPECT_EQ(female.mSkills[5], 29); // Both signed ordered bonuses match AV17.
+        auto race = *mStore.get<ESM4::Race>().find(mNpc.mRace);
+        race.mSkillBonus[ESM4::Race::Skill_HandToHand] = 200; // Legacy lossy map cannot supply native values.
+        race.mAttribMale = {60, 60, 60, 60, 60, 60, 60, 60};
+        mStore.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("race.esm", 0x100));
+        EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1), female);
+        const auto male = MWWorld::resolveOblivionPlayerCharacterBaseStats(mStore, mNpc.mRace, mNpc.mClass, false, 1);
+        EXPECT_EQ(male.mAttributes[0], 66); // Secondary6.5 rounds66.5 to even66.
+        EXPECT_EQ(male.mAttributes[6], 66); // Primary5.5 rounds65.5 to even66.
+        ESM4::GameSetting temporary{};
+        temporary.mId = {0x3333, 6};
+        temporary.mEditorId = "iClassCharactergenClass";
+        temporary.mData = std::int32_t(0x200); // Same local ID, different content index.
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(temporary);
+        EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1), female);
+        temporary.mData = std::int32_t(mNpc.mClass.toUint32());
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(temporary);
+        const auto initial = MWWorld::resolveOblivionPlayerCharacterBaseStats(mStore, mNpc.mRace, mNpc.mClass, true, 1);
+        EXPECT_EQ(initial.mAttributes, (std::array<std::uint8_t, 8>{36, 28, 71, 80, 56, 56, 35, 69}));
+        EXPECT_EQ(initial.mSkills[0], 5);
+        EXPECT_EQ(initial.mSkills[1], 5);
+        EXPECT_EQ(initial.mSkills[5], 24);
+        auto skill = mSkills[0];
+        skill.mData->mSpecialization = 0;
+        mStore.getWritable<ESM4::Skill>().insertStatic(skill, ESM::FormKey::content("skills.esm", 0x1000));
+        temporary.mData = std::int32_t(0);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(temporary);
+        EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1).mSkills[0], 30);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerCharacterBaseRejectsMissingNativeInputsAndMalformedWinningSettings)
+    {
+        autoNpc();
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, ESM::RefId{}, mNpc.mClass, true, 1), std::invalid_argument);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, ESM::RefId{}, true, 1), std::invalid_argument);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 0), std::invalid_argument);
+        ESM4::GameSetting wrong{};
+        wrong.mId = {0x3333, 6};
+        wrong.mEditorId = "iClassCharactergenClass";
+        wrong.mData = 143590.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(wrong);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1), std::invalid_argument);
+        wrong.mData = std::int32_t(143590);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(wrong);
+        ASSERT_TRUE(mStore.getWritable<ESM4::Skill>().eraseStatic(ESM::FormKey::content("skills.esm", 0x1000)));
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1), std::invalid_argument);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerCharacterBasePublishesAtomicallyPreservesOtherAuthorityAndRestarts)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 30, 40, 0}};
+        for (auto& value : values.mValues) value.mModifiers = {0, 0, 0};
+        values.mValues[0] = {50, {7, 13, -3}};
+        values.mValues[8].mModifiers = {2, 3, -5};
+        MWMechanics::OblivionCombatService service;
+        ESM4::ActorCharacterBaseStats calculated{};
+        calculated.mAttributes.fill(60);
+        calculated.mSkills.fill(20);
+        EXPECT_THROW(service.publishPlayerCharacterBase(player, calculated, {}), std::invalid_argument);
+        service.publishPlayerValues(player, values, {});
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        service.setPlayerBaseValue(player, 55, 1, {});
+        service.publishPlayerCharacterBase(player, calculated, {});
+        const auto committed = *service.findActorValues(values.mActor);
+        EXPECT_EQ(committed.mPlayerFormValues, values.mPlayerFormValues);
+        EXPECT_EQ(committed.mValues[0].mBase, 60);
+        EXPECT_EQ(committed.mValues[12].mBase, 20);
+        EXPECT_EQ(committed.mValues[55].mBase, 1);
+        for (std::size_t i=0; i<72; ++i) EXPECT_EQ(committed.mValues[i].mModifiers, values.mValues[i].mModifiers);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getAttribute(ESM::Attribute::Strength).getBase(), 60);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), service.getPlayerValue(8));
+        EXPECT_EQ(service.getDeadCount(values.mBase), 0);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = values.mActor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        service.capture(saved);
+        const auto bytes = saved.serializeBinary();
+        auto invalid = ESM4::PlayerDynamicBaseSettings{};
+        invalid.mHealthMultiplier = std::numeric_limits<float>::quiet_NaN();
+        auto different = calculated;
+        different.mAttributes.fill(10);
+        EXPECT_THROW(service.publishPlayerCharacterBase(player, different, invalid), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(values.mActor), committed);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getAttribute(ESM::Attribute::Strength).getBase(), 60);
+        service.capture(saved);
+        EXPECT_EQ(saved.serializeBinary(), bytes);
+        service.publishPlayerCharacterBase(player, calculated, {});
+        EXPECT_EQ(*service.findActorValues(values.mActor), committed);
+        MWMechanics::OblivionCombatService restarted;
+        restarted.restore(ESM4::RuntimeState::deserializeBinary(bytes));
+        EXPECT_EQ(*restarted.findActorValues(values.mActor), committed);
+        restarted.publishPlayerValues(player, *restarted.findActorValues(values.mActor), {});
+        restarted.publishPlayerCharacterBase(player, different, {});
+        EXPECT_EQ(restarted.findActorValues(values.mActor)->mValues[0].mBase, 10);
+        EXPECT_EQ(restarted.findActorValues(values.mActor)->mValues[55].mBase, 1);
+        EXPECT_EQ(restarted.findActorValues(values.mActor)->mValues[8].mModifiers, values.mValues[8].mModifiers);
+        EXPECT_EQ(restarted.getDeadCount(values.mBase), 0);
+    }
+
 }

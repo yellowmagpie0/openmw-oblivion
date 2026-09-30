@@ -890,6 +890,32 @@ namespace MWMechanics
             view.commit();
     }
 
+    void OblivionCombatService::publishPlayerCharacterBase(MWWorld::Player& player,
+        const ESM4::ActorCharacterBaseStats& stats, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        auto candidate = playerValues();
+        auto bases = mActorBases;
+        auto [baseIt, inserted] = bases.try_emplace(candidate.mBase,
+            ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+        if (baseIt->second.mKind != ESM4::ActorBaseKind::Npc)
+            throw std::invalid_argument("native Player character base override kind mismatch");
+        const auto write = [&](std::uint8_t av, std::uint8_t value) {
+            setActorBaseEntry(baseIt->second, *ESM4::prepareActorBaseValueSet(ESM4::ActorBaseKind::Npc, av, value));
+        };
+        for (std::size_t i = 0; i < stats.mAttributes.size(); ++i)
+            write(i, stats.mAttributes[i]);
+        for (std::size_t i = 0; i < stats.mSkills.size(); ++i)
+            write(12 + i, stats.mSkills[i]);
+        applyActorBase(candidate, &baseIt->second);
+        OblivionCombatService prepared;
+        prepared.mActorValues = mActorValues;
+        prepared.mActorBases = std::move(bases);
+        prepared.mActorLife = mActorLife;
+        prepared.publishPlayerValues(player, std::move(candidate), settings);
+        mActorValues.swap(prepared.mActorValues);
+        mActorBases.swap(prepared.mActorBases);
+    }
+
     void OblivionCombatService::setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
         std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings)
     {

@@ -207,6 +207,29 @@ namespace MWWorld
         return result;
     }
 
+    ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
+        const ESM::RefId& raceId, const ESM::RefId& classId, bool female, std::int16_t actorLevel)
+    {
+        const auto* race = store.get<ESM4::Race>().search(raceId);
+        const auto* characterClass = store.get<ESM4::Class>().search(classId);
+        if (!race || !race->mTES4SkillBonuses || !characterClass)
+            throw std::invalid_argument("missing native Player race/class calculation input");
+        const auto skills = ESM4::resolveSkillDefinitions(winningRecords<ESM4::Skill>(store));
+        const auto settings = winningRecords<ESM4::GameSetting>(store);
+        ESM4::ActorCharacterBaseInput input{};
+        input.mLevel = actorLevel;
+        input.mRaceAttributes = attributes(female ? race->mAttribFemale : race->mAttribMale);
+        input.mFavoredAttributes = characterClass->mData.mFavoredAttributes;
+        input.mMajorSkills = characterClass->mData.mMajorSkills;
+        input.mSpecialization = characterClass->mData.mSpecialization;
+        for (std::size_t i = 0; i < skills.size(); ++i)
+            input.mSkills[i] = {skills[i]->mData->mGoverningAttribute, skills[i]->mData->mSpecialization};
+        for (std::size_t i = 0; i < input.mRaceBonuses.size(); ++i)
+            input.mRaceBonuses[i] = {(*race->mTES4SkillBonuses)[i].mSkill, (*race->mTES4SkillBonuses)[i].mBonus};
+        const bool temporary = characterClass->mId.toUint32() == ESM4::buildCharacterGenerationClassId(settings);
+        return ESM4::calculatePlayerCharacterBaseStats(input, ESM4::buildNpcAutoStatsSettings(settings), temporary);
+    }
+
     ESM4::RuntimeActorValues resolveOblivionInitialPlayerValues(const ESMStore& store)
     {
         const auto key = ESM::FormKey::content("Oblivion.esm", 7);

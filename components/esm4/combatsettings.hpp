@@ -47,6 +47,8 @@ namespace ESM4
     PlayerDynamicBaseSettings buildPlayerDynamicBaseSettings(std::span<const GameSetting* const> settings);
     NpcDynamicStatsSettings buildNpcDynamicStatsSettings(std::span<const GameSetting* const> settings);
     CreatureBaseStatsSettings buildCreatureBaseStatsSettings(std::span<const GameSetting* const> settings);
+    // Native full FormId comparison used by the original Player base calculator.
+    std::uint32_t buildCharacterGenerationClassId(std::span<const GameSetting* const> settings);
     NpcAutoStatsSettings buildNpcAutoStatsSettings(std::span<const GameSetting* const> settings);
     DurabilitySettings buildDurabilitySettings(std::span<const GameSetting* const> settings);
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);

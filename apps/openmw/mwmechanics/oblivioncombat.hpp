@@ -15,6 +15,11 @@
 #include <span>
 #include <set>
 
+namespace ESM4
+{
+    struct ActorCharacterBaseStats;
+}
+
 namespace MWWorld
 {
     class Ptr;
@@ -277,6 +282,11 @@ namespace MWMechanics
         // No pointers survive the call. Event/cache policy remains caller-owned.
         void setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
             std::int32_t requested, std::span<const MWWorld::Ptr> residents);
+        // Batch native attribute/skill form writes. Resource form inputs,
+        // modifier containers, other base entries and lifecycle stay owned by
+        // their existing authorities; no healing or ability application occurs.
+        void publishPlayerCharacterBase(MWWorld::Player& player, const ESM4::ActorCharacterBaseStats& stats,
+            const ESM4::PlayerDynamicBaseSettings& settings);
         void setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
             std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings);
         // Typed command writers. Set shares a base transaction; Mod and Force

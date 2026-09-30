@@ -4,6 +4,7 @@
 #include <components/esm/formkey.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm4/actorvalues.hpp>
+#include <components/esm4/actorstats.hpp>
 #include <components/esm4/physicalcombat.hpp>
 
 #include <array>
@@ -60,6 +61,12 @@ namespace MWWorld
     ESM4::RuntimeActorValues resolveOblivionInitialNonPlayerValues(const ESMStore& store,
         const ESM::FormKey& actor, const ESM::FormKey& actorBase,
         std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process);
+
+    // Native Player form calculation from the selected winning race/class,
+    // original ordered signed bonuses, SKILs and GMSTs. No facade or ability
+    // calculation. Full FormId class comparison follows the original branch.
+    ESM4::ActorCharacterBaseStats resolveOblivionPlayerCharacterBaseStats(const ESMStore& store,
+        const ESM::RefId& race, const ESM::RefId& characterClass, bool female, std::int16_t level);
 
     // Authored Player form inputs before character generation or abilities.
     // Derived resource bases are resolved by preparePlayerValues at publication;

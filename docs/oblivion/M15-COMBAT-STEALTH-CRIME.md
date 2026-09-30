@@ -6758,3 +6758,48 @@ repository. Its portable source/history bundle is
 clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
 The clean bundle clone and changed-file comparison establish the source Git
 checkpoint; the stage table and gameplay gates remain open.
+
+
+### Winning Player character-base inputs and atomic authority publication
+
+`resolveOblivionPlayerCharacterBaseStats` resolves selected winning TES4 race,
+class, ordered signed racial bonuses, all21 native SKIL definitions and typed
+GMST bonuses. It compares the full class FormId against the original
+`iClassCharactergenClass` integer bits (compiled fallback143590). It does not
+use the legacy lossy race map or shared stat settings. Missing/malformed inputs
+fail. Custom class translation and choice metadata transactions remain separate
+work; this resolver does not invent a native class from a legacy facade.
+
+`publishPlayerCharacterBase` prepares all eight attribute and21 skill form
+writes on a candidate shared base/actor authority, then prepares the derived
+Player projection before one publication. Raw resource form inputs, all
+modifier containers, other base entries and lifecycle remain authoritative.
+It does not heal, cast or apply/remove abilities. The engine test verifies
+shared views, invalid-settings rollback with identical serialized authority,
+repeated publication, base-override save/restore and subsequent writes without
+new death counts/events. This is service/store integration, not a fresh-process
+normal-input character-generation course.
+
+`native-player-character-base-engine-01` passes1967 full component cases but
+retains a fixture enum-key compile failure in its engine build. The sanitizer
+partner passes442 ESM4 ASan/UBSan cases before the same compile failure. Only
+that engine fixture changes in attempt02; both builds then retain one failed
+assertion expecting runtime_error instead of the skill validator's
+invalid_argument. The rejection remains intact. Attempt03 corrects only the
+assertion and passes all672 normal and672 sanitized engine cases, with no
+skips/failures and exact inventory/XML matching. Both final runs have source
+fingerprint `82d0d5370a6555606ac4ca929aefe8df5a684bd7b8c034356c7ddf2bbc71ca50`.
+Earlier component/sanitizer results retain their earlier fingerprints; their
+production/component sources are unchanged by the two fixture corrections.
+Leak detection is off; UBSan halts. Evidence directories are under
+`build/oblivion-compat/m15/S3/`.
+
+Checkpoint29 is committed after these checks in the independent
+`m15-implementation` repository. The portable source/history bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-07/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`;
+`commits.json` maps commit/tree to the tested fingerprint. Tests ran in the
+shared workspace; the clean bundle clone and changed-file comparison verify
+this Git checkpoint. Automatic fresh actor activation remains off; passive
+ability ownership/removal/persistence and normal selection wiring are next.
+S2/S3 and all later gameplay gates remain open.

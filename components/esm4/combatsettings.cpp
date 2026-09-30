@@ -2,6 +2,7 @@
 #include "combatstylepolicy.hpp"
 #include "loadgmst.hpp"
 
+#include <bit>
 #include <cmath>
 #include <map>
 #include <stdexcept>
@@ -184,6 +185,12 @@ namespace ESM4
             inputs.number("fCreatureCalcDamage", 1.f)};
         validateCreatureBaseStatsSettings(result);
         return result;
+    }
+
+    std::uint32_t buildCharacterGenerationClassId(std::span<const GameSetting* const> settings)
+    {
+        return std::bit_cast<std::uint32_t>(Inputs(settings).number(
+            "iClassCharactergenClass", std::int32_t(143590)));
     }
 
     NpcAutoStatsSettings buildNpcAutoStatsSettings(std::span<const GameSetting* const> settings)

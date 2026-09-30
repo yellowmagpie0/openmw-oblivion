@@ -322,3 +322,19 @@ TEST(ESM4CombatSettings, CreatureScalingUsesVerifiedDefaultsAndTypedWinningOverr
     setting.mData = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::buildCreatureBaseStatsSettings(inputs), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, CharacterGenerationClassUsesTypedWinningFullFormIdBits)
+{
+    EXPECT_EQ(ESM4::buildCharacterGenerationClassId({}), 143590u);
+    ESM4::GameSetting setting{};
+    setting.mEditorId = "iClassCharactergenClass";
+    setting.mData = std::int32_t(-1);
+    std::array<const ESM4::GameSetting*, 1> inputs{&setting};
+    EXPECT_EQ(ESM4::buildCharacterGenerationClassId(inputs), 0xffffffffu);
+    setting.mData = 143590.f;
+    EXPECT_THROW(ESM4::buildCharacterGenerationClassId(inputs), std::invalid_argument);
+    ESM4::GameSetting duplicate = setting;
+    duplicate.mEditorId = "ICLASSCHARACTERGENCLASS";
+    std::array<const ESM4::GameSetting*, 2> ambiguous{&setting, &duplicate};
+    EXPECT_THROW(ESM4::buildCharacterGenerationClassId(ambiguous), std::invalid_argument);
+}
