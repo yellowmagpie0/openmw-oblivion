@@ -31,6 +31,7 @@
 #include "apps/openmw/mwlua/stats.hpp"
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 #include "apps/openmw/mwworld/worldimp.hpp"
+#include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
 #include "apps/openmw/mwworld/timestamp.hpp"
 
@@ -2134,6 +2135,153 @@ namespace
             EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
                 store, race.mId, characterClass.mId, false, 1), ordinary);
         }
+    }
+
+    TEST(OblivionWorldTest, scriptCombatCommandsPublishNativeMembershipAndStopOwnedActions)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        std::array<MWWorld::Ptr, 3> actors;
+        std::array<ESM::FormKey, 3> keys;
+        for (std::size_t i = 0; i < actors.size(); ++i)
+        {
+            actors[i] = addNativeNpc(fixture, 0x900 + i);
+            world.getWorldModel().registerPtr(actors[i]);
+            ASSERT_TRUE(world.activateOblivionActor(actors[i]));
+            keys[i] = actors[i].getCellRef().getFormKey();
+        }
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = keys[0];
+        const auto ref = [](const ESM::FormKey& key) -> ObScript::Value { return ObScript::ReferenceValue{key, {}}; };
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, actors[0]);
+            for (std::size_t i = 1; i < actors.size(); ++i)
+                state.mReferences.push_back(captureNativeActorState(fixture, actors[i]).mReferences[0]);
+            return state.serializeBinary();
+        };
+        EXPECT_EQ(ObScript::asInteger(host.call("IsInCombat", {}, {}, context, {})), 0);
+        EXPECT_EQ(ObScript::asInteger(host.call("StartCombat", {}, {ref(keys[1])}, context, {})), 0);
+        EXPECT_TRUE(service.isInCombatWith(keys[0], keys[1]));
+        EXPECT_TRUE(service.isInCombatWith(keys[1], keys[0]));
+        EXPECT_EQ(ObScript::asInteger(host.call("IsInCombat", {}, {}, context, {})), 1);
+        EXPECT_EQ(ObScript::asInteger(host.call("IsInCombat", ref(keys[1]), {}, context, {})), 1);
+        const auto first = snapshot();
+        host.call("startcombat", ref(keys[0]), {ref(keys[1])}, {}, {});
+        EXPECT_EQ(snapshot(), first); // Repeat is idempotent.
+        host.call("STARTCOMBAT", ref(keys[1]), {ref(keys[2])}, {}, {});
+        EXPECT_TRUE(service.isInCombatWith(keys[1], keys[2]));
+        const auto a = service.allocateAction(keys[0]);
+        const auto b = service.allocateAction(keys[1]);
+        const auto c = service.allocateAction(keys[2]);
+        const auto anonymous = service.allocateAction();
+        auto restartedState = ESM4::RuntimeState::deserializeBinary(snapshot());
+        MWMechanics::OblivionCombatService restarted;
+        restarted.restore(restartedState);
+        EXPECT_TRUE(restarted.isInCombatWith(keys[0], keys[1]));
+        EXPECT_TRUE(restarted.isActionPending(a, keys[0]));
+        EXPECT_EQ(ObScript::asInteger(host.call("StopCombat", {}, {}, context, {})), 0);
+        EXPECT_FALSE(service.isInCombat(keys[0]));
+        EXPECT_FALSE(service.isInCombatWith(keys[1], keys[0]));
+        EXPECT_TRUE(service.isInCombatWith(keys[1], keys[2]));
+        EXPECT_FALSE(service.isActionPending(a, keys[0]));
+        EXPECT_TRUE(service.isActionPending(b, keys[1]));
+        EXPECT_TRUE(service.isActionPending(c, keys[2]));
+        EXPECT_TRUE(service.isActionPending(anonymous));
+        restarted.stopCombat(keys[0]); restarted.cancelActorActions(keys[0]);
+        restarted.capture(restartedState);
+        EXPECT_EQ(restartedState.serializeBinary(), snapshot());
+        const auto stopped = snapshot();
+        host.call("StopCombat", ref(keys[0]), {}, {}, {});
+        EXPECT_EQ(snapshot(), stopped);
+        const auto noMembership = service.allocateAction(keys[0]);
+        host.call("StopCombat", ref(keys[0]), {}, {}, {});
+        EXPECT_TRUE(service.isActionPending(noMembership));
+        EXPECT_TRUE(service.isActionPending(b, keys[1]));
+        EXPECT_EQ(service.getNonPlayerValue(actors[0], 8), 100);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
+    TEST(OblivionWorldTest, scriptCombatRejectsInvalidEndpointsWithoutNativeMutation)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto a = addNativeNpc(fixture, 0x900);
+        const auto b = addNativeNpc(fixture, 0x901);
+        const auto uninitialized = addNativeNpc(fixture, 0x902);
+        for (auto actor : {a, b, uninitialized}) world.getWorldModel().registerPtr(actor);
+        ASSERT_TRUE(world.activateOblivionActor(a));
+        ASSERT_TRUE(world.activateOblivionActor(b));
+        const auto key = a.getCellRef().getFormKey(), other = b.getCellRef().getFormKey();
+        const auto ref = [](const ESM::FormKey& value) -> ObScript::Value { return ObScript::ReferenceValue{value, {}}; };
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context; context.mSelf = key;
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, a);
+            state.mReferences.push_back(captureNativeActorState(fixture, b).mReferences[0]);
+            return state.serializeBinary();
+        };
+        const auto owned = service.allocateAction(key);
+        const auto before = snapshot();
+        for (const auto& arguments : std::vector<std::vector<ObScript::Value>>{
+                 {}, {ref(other), ref(other)}, {std::int64_t(1)}, {ref(key)},
+                 {ref(ESM::FormKey::content("headless.esm", 0x990))},
+                 {ref(ESM::FormKey::content("different.esm", 0x901))},
+                 {ref(uninitialized.getCellRef().getFormKey())},
+                 {ref(ESM::FormKey::content("headless.esm", 0x800))}})
+        {
+            EXPECT_THROW(host.call("StartCombat", {}, arguments, context, {}), ObScript::RuntimeError);
+            EXPECT_EQ(snapshot(), before);
+            EXPECT_TRUE(service.isActionPending(owned, key));
+        }
+        EXPECT_THROW(host.call("StopCombat", {}, {ref(other)}, context, {}), ObScript::RuntimeError);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_THROW(host.call("StartCombat", ref(uninitialized.getCellRef().getFormKey()), {ref(other)}, {}, {}),
+            ObScript::RuntimeError);
+        EXPECT_EQ(snapshot(), before);
+        ASSERT_TRUE(world.killOblivionActor(b, {}));
+        const auto afterDeath = snapshot();
+        EXPECT_THROW(host.call("StartCombat", {}, {ref(other)}, context, {}), ObScript::RuntimeError);
+        EXPECT_EQ(snapshot(), afterDeath);
+        EXPECT_TRUE(service.isActionPending(owned, key));
+    }
+
+    TEST(OblivionWorldTest, scriptCombatPlayerAliasQueriesDoNotChangeStopCommandVirtualPolicy)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{10, 0, 0, 0}};
+        for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+        service.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        service.publishPlayerLife(world.getPlayer(), {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        const auto ref = [](const ESM::FormKey& key) -> ObScript::Value { return ObScript::ReferenceValue{key, {}}; };
+        const auto npcKey = actor.getCellRef().getFormKey();
+        const auto alias = ESM::FormKey::content("Oblivion.esm", 0x14);
+        host.call("StartCombat", ref(npcKey), {ref(alias)}, {}, {});
+        ASSERT_TRUE(service.isInCombatWith(npcKey, values.mActor));
+        EXPECT_EQ(ObScript::asInteger(host.call("IsInCombat", ref(alias), {}, {}, {})), 1);
+        EXPECT_EQ(ObScript::asInteger(host.call("IsInCombat", ref(values.mActor), {}, {}, {})), 1);
+        const auto action = service.allocateAction(values.mActor);
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        host.call("StopCombat", ref(alias), {}, {}, {});
+        host.call("StopCombat", ref(values.mActor), {}, {}, {});
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        EXPECT_TRUE(service.isActionPending(action, values.mActor));
+        host.call("StopCombat", ref(npcKey), {}, {}, {});
+        EXPECT_FALSE(service.isInCombat(values.mActor));
+        EXPECT_TRUE(service.isActionPending(action, values.mActor));
     }
 
 }

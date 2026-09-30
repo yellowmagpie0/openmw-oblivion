@@ -3759,3 +3759,29 @@ Unicorn's previously translated ret8 for a ret0 call. Attempt02 separates those
 addresses and then falsifies the preliminary strict slope comparison at48.
 Attempt03 corrects that equality and passes864 observations;04 passes6,912.
 These retained failures do not establish physical gameplay acceptance.
+
+### Script combat dispatch (checkpoint49)
+
+The pinned executable's command registry identifies StartCombat opcode1016,
+handler514660, and StopCombat opcode1017, handler501D30. StartCombat takes one
+actor argument; StopCombat has none. Full StopCombat executes16 null/cast/query/
+Player profiles. It calls +334(true), then +340(false) only if the predicate
+is true. Actual Player +334 is6FE080 and returns false; its command remains
+a no-op even when the special IsInCombat Player-list query reports combat.
+RTTI, NPC/Creature combat predicate and stop application are supplied boundaries.
+
+Full StartCombat executes256 profiles under a nonspecial actor state with no
+current controller. Parsed nonnull alive source/target both require process
+pointers. Eligible paths call process +228 with the verified ten argument
+slots; the supplied alarm-policy predicate additionally selects +22C.
+Parsing/RTTI, dead predicates, special/alarm flags, combat controller/query and
+start/alarm application are stubs. This does not establish underlying package
+installation, symmetric membership, crime, Player initiation or gameplay.
+The fork's current script adapter publishes membership only; those other
+command consequences remain required open integration work.
+Evidence: S3/script-combat-command-investigation-01. Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+stop-probe.py SHA256 `22c2ffd3282790894260bcba9ce57687fc0ce8d88a10baafd87fbc49c21660e7`.
+stop-report.json SHA256 `baa34915977fa83300e6418ade3c2a277d04c0a30ca4f41652b9cee019d5ed76`.
+start-probe.py SHA256 `42e06d748a32554a8a62aad4bfac6227d654ef27dddf1eaaaf9a1b146acc4bfd`.
+start-report.json SHA256 `e577ef99576bd3dc564b3e6019e5832e129ff945fafd4fe08885138fcc1aeb31`.

@@ -1820,6 +1820,49 @@ namespace MWWorld
                                                   : ObScript::Value(std::int64_t(visible));
         }
 
+        if (name == "startcombat" || name == "stopcombat")
+        {
+            try
+            {
+                const bool start = name == "startcombat";
+                if (arguments.size() != (start ? 1u : 0u))
+                    throw std::invalid_argument("native combat command has invalid argument count");
+                auto* combat = mWorld.getOblivionCombatService();
+                const auto requireActor = [&](const ESM::FormKey& reference) {
+                    const Ptr actor = ptrFor(reference);
+                    const auto key = ESM4::runtimeReferenceKey(reference);
+                    if (!combat || actor.isEmpty() || !actor.getClass().isActor()
+                        || (actor != mWorld.getPlayerPtr()
+                            && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+                        || !combat->findActorValues(key) || !combat->findActorLife(key))
+                        throw std::invalid_argument("native combat command requires an initialized resident actor");
+                    return key;
+                };
+                const auto actor = requireActor(objectKey());
+                if (start)
+                {
+                    const auto targetKey = keyFromValue(argument(0));
+                    if (!targetKey)
+                        throw std::invalid_argument("StartCombat requires an actor reference");
+                    const auto opponent = requireActor(*targetKey);
+                    combat->engage(actor, opponent);
+                }
+                else if (actor != ESM::FormKey::dynamic("player", 1) && combat->isInCombat(actor))
+                {
+                    // The native command uses actor +334(true), whose Player
+                    // implementation is false. It does not use IsInCombat's
+                    // special Player-list query and is a no-op out of combat.
+                    combat->stopCombat(actor);
+                    combat->cancelActorActions(actor);
+                }
+                trace(name + " actor=" + actor.serialize());
+                return std::int64_t(0);
+            }
+            catch (const std::exception& error)
+            {
+                throw ObScript::RuntimeError("OBSV117", error.what(), name);
+            }
+        }
         if (name == "isincombat")
         {
             const auto* combat = mWorld.getOblivionCombatService();
@@ -2261,7 +2304,7 @@ namespace MWWorld
             "addtopic", "showmap",
             "cast", "addspell", "removespell", "moddisposition", "setessential",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
-            "stopcombat", "startcombat", "setunconscious" };
+            "setunconscious" };
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());

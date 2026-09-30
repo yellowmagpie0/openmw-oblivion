@@ -7633,3 +7633,40 @@ commit/export follows these tests; original protected Git metadata stays
 unchanged. Native stock Hit keys are bare after lowercase normalization;
 the provenance wording is corrected accordingly. Next work is native
 controller contact dispatch, production geometry and live melee acceptance.
+
+### Checkpoint49 — native script combat membership and stop commands
+
+StartCombat and StopCombat leave the deferred-command set and reach the
+profile-owned combat service. They require initialized, resolvable native
+actor endpoints and reject malformed arguments without native mutation.
+StartCombat creates the existing symmetric engagement; repeat calls are
+idempotent. StopCombat removes the non-Player actor's engagement and cancels
+only its owned intents when it is in combat. It preserves unrelated pairs,
+other owners and anonymous IDs. The Player command is a no-op, matching its
+native +334 predicate; IsInCombat still uses the special Player-list authority.
+
+Three actual-world/ObScript-host cases cover contextual/explicit targets,
+case-insensitive commands, Player aliases, repeat operations, malformed and
+missing/uninitialized/dead endpoints, stop ownership and binary-restored
+continuation. The prior deferred implementation fails both initial cases in
+S3/script-combat-baseline-01; all3 new cases pass after implementation.
+S3/script-combat-engine-01 and script-combat-sanitized-engine-01 each pass all706
+engine cases with exact inventories and zero failures/skips. ASan/UBSan leak
+checks are disabled. Tested source fingerprint:
+`596ea0562ccfe6af6a12ea171421c7a43deeb41d5592fa0850421a7747b29cfb`.
+Component and Python sources are unchanged since their preceding passes.
+
+Original StopCombat dispatch passes16 branch observations including actual
+Player +334 execution. Original StartCombat passes256 supplied-boundary
+observations of resident/alive/process gates and start/alarm dispatch arguments.
+The production addition is membership/intent wiring, not full StartCombat
+semantics: alarm/legal effects, forced native package/controller installation,
+Player initiation, schedule interruption and normal combat remain open.
+No TES3 AiCombat sequence is introduced. S2/S3 remain in progress; S4–S14
+retain their open gates. Next is physical contact input/controller wiring.
+
+Checkpoint48 was committed as0f3badc66d45d2b92a4e4a288742aa59e01b8fce;
+its verified portable bundle is S3/isolated-git-progress-26/m15-progress.bundle
+(SHA25658cee9bef2117a646e8f6c349051f43c1646d2c1b75577b0243b30f67a4e67a3).
+Checkpoint49 is exported/committed separately after these tests, preserving
+protected original Git metadata and matching all changed source bytes.
