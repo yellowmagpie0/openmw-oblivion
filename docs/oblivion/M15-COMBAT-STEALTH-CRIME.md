@@ -6952,3 +6952,44 @@ Builds ran in the shared workspace; changed-file bytes and a clean fresh bundle
 clone verify the committed checkpoint. S2/S3 and all later pending gates remain
 open, including passive removal, character choices, default activation and
 physical death wiring.
+
+### Atomic removal of saved Player passive effects
+
+An identified passive effect can now be removed using its saved post-clamp
+magnitude, without reading changed winning records. Removal stages Damage
+compensation, the separate native base inverse and derived resources before
+publishing authority and facade together. It preserves other base writes,
+removes ownership once, and erases the ability only after its last effect.
+Unknown legacy ownership and Health AV8 effects remain explicitly unsupported.
+The caller supplies individual effect identity: original active-list removal
+order is distinct from application order and is not guessed here. Whole
+character-choice replacement and its ordering remain pending.
+
+Positive saved magnitude compensates Damage, including native zero dispatch;
+nonpositive magnitude omits that write. Endurance removal cleans up positive
+integer base Health in Dead/EssentialUnconscious states, respecting Player
+god-mode suppression. Alive removal emits no terminal callback. Tests cover
+24 combinations of saved magnitude/life phase/god mode, invalid settings and
+identity rollback, independent base writes, sparse effect indices, repeated
+removal, last-effect cleanup, changed-magnitude regrant and actual fresh Player
+restoration. No new death event is emitted. The prior checkpoint rejects the
+new entry in `native-passive-removal-baseline-01`; configured syntax checks
+pass in `native-passive-removal-syntax-01`.
+
+Normal and sanitizer attempt01 retained one fixture failure: it expected raw
+Magicka30 from the derived base getter. Corrected02 asserts derived155 and the
+separate raw30 field. Both02 runs pass679 full engine cases, exact inventories
+with no failures/skips, fingerprint
+`ba6cecede1f3e6baaaa81d61a7d0c1590314dcb4396e014d4133e3e06021b4a8`.
+Evidence: `native-passive-removal-engine-02` and
+`native-passive-removal-sanitized-engine-02`. ASan/UBSan leak checks remain off;
+this is service integration evidence, not gameplay acceptance.
+
+Checkpoint34 is committed in the independent `m15-implementation` repository;
+its portable bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-12/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the checkpoint;
+builds ran in the shared workspace. Next: custom-class native input adaptation
+and transactional character-choice rebuilding before default activation.
+S2/S3 and all later pending gameplay gates remain open.

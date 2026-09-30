@@ -3577,3 +3577,17 @@ Probe/report SHA256 pairs:
 
 - `passive-endurance-health-reaction-07`: probe `c00bdea006652f38612c964906e88bb93ab5accd6a1fb98e5c46b9a6dbaa3323`; report `c1184455b3f091feccedad9a54bd585d688af85da24cc8d73208785bc61776ce`.
 - `passive-removal-life-cleanup-01`: probe `68f7d951a980728397aff4584ca2e9f6415e81f527218544c89dccb5310bd3be`; report `07b2e598b5e05d64b44edfaf70d18dbac33cdf8d07641ad36ea7189a5541b4ad`.
+
+### Original passive removal-mark traversal
+
+`passive-removal-traversal-02` executes4608 original6A1F70 and68EA10 cases through
+four-node linked lists, all24 permutations, disabled masks, two spell
+identities, nullable/two caster filters and both x87 words. With no EffectItem
+filter, it marks matching undisabled effects in forward linked-list order.
+Original68EA10 sets the disabled flag before the immediate zero-duration
+update. The target list getter and68E670 update are boundaries; this does not
+prove insertion sorting, update/application storage or physical removal.
+Attempt01 retains a harness failure caused by placing the list head at the
+emulated stack address;02 uses separate guarded regions. The executable
+identity remains the pinned1.2.0416 SHA above. Probe SHA `d7e71a1cf9b74a3f33cb35d5e4bb772ccab6d9e4063cc61f75ca649840111ed7`;
+report SHA `4a9ececa447b798d9b78648876d96f5d94c4a53458c0db9285bbbcb6ebe3a2e0`. No live gameplay acceptance is claimed.

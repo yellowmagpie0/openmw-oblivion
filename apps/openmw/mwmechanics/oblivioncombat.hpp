@@ -347,6 +347,11 @@ namespace MWMechanics
             std::span<const ESM4::PassiveAbilityInput> abilities,
             const ESM4::PlayerDynamicBaseSettings& settings, bool essential = false,
             const ESM4::EssentialRecoverySettings& recovery = {});
+        // Remove one identified applied effect using its saved magnitude. The
+        // caller owns native active-list order; application order is not a
+        // substitute for the original display-sorted removal traversal.
+        void removePlayerPassiveEffect(MWWorld::Player& player, const ESM::FormKey& spell,
+            std::uint32_t effectIndex, const ESM4::PlayerDynamicBaseSettings& settings, bool godMode = false);
         void changePlayerValue(MWWorld::Player& player, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings);
         // Regeneration restores the native Damage channel. It must not clamp

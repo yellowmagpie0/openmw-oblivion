@@ -1549,6 +1549,76 @@ namespace MWMechanics
         std::swap(mNextDeathEvent, prepared.mNextDeathEvent);
     }
 
+    void OblivionCombatService::removePlayerPassiveEffect(MWWorld::Player& player,
+        const ESM::FormKey& spell, std::uint32_t effectIndex,
+        const ESM4::PlayerDynamicBaseSettings& settings, bool godMode)
+    {
+        auto candidate = playerValues();
+        if (!candidate.mPassiveAbilities)
+            throw std::invalid_argument("native passive removal requires known ability ownership");
+        if (spell.isNull())
+            throw std::invalid_argument("native passive removal requires spell identity");
+        const auto* life = findActorLife(candidate.mActor);
+        if (!life)
+            throw std::invalid_argument("native passive removal requires initialized lifecycle");
+        auto ability = std::find_if(candidate.mPassiveAbilities->begin(), candidate.mPassiveAbilities->end(),
+            [&](const auto& owned) { return owned.mSpell == spell; });
+        if (ability == candidate.mPassiveAbilities->end())
+            return;
+        auto effect = std::find_if(ability->mEffects.begin(), ability->mEffects.end(),
+            [&](const auto& owned) { return owned.mEffectIndex == effectIndex; });
+        if (effect == ability->mEffects.end())
+            return;
+        if (effect->mActorValue == 8)
+            throw std::invalid_argument("native passive Health removal is unsupported");
+        const auto av = static_cast<std::uint8_t>(effect->mActorValue);
+        const float magnitude = effect->mStoredMagnitude;
+        OblivionCombatService prepared;
+        prepared.mActorValues = mActorValues;
+        prepared.mActorBases = mActorBases;
+        prepared.mActorLife = mActorLife;
+        std::optional<float> current;
+        if (magnitude > 0 && ESM4::valueModifierRequiresCurrent(av, effect->mCode, -magnitude))
+            current = ESM4::composeActorValue(candidate.mValues[av], candidate.mOwner, candidate.mProcess);
+        const auto damage = ESM4::initialValueModifierRemovalDamage(av, effect->mCode, magnitude, current);
+        if (damage && (!godMode || *damage >= 0))
+            candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
+                av, ESM4::ActorValueModifier::Damage, *damage);
+        const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
+            : integerBaseOverride(prepared.findActorBase(candidate.mBase), av).value_or(
+                ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
+        const auto entry = ESM4::prepareActorBaseValueFloatMod(
+            ESM4::ActorBaseKind::Npc, av, formCurrent, -magnitude, ESM4::ActorValueConversionMode::Sse);
+        if (entry)
+        {
+            auto [it, inserted] = prepared.mActorBases.try_emplace(candidate.mBase,
+                ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+            if (it->second.mKind != ESM4::ActorBaseKind::Npc)
+                throw std::invalid_argument("native passive Player base kind mismatch");
+            setActorBaseEntry(it->second, *entry);
+            applyActorBase(candidate, &it->second);
+        }
+        prepared.preparePlayerValues(candidate, settings);
+        // Original6A88D0 queries5E33B0(false): states1/2/6. This is a
+        // terminal-state cleanup, not an essential form predicate. It uses
+        // integer base Health after the inverse, without an Alive callback.
+        if (av == 5 && (life->mPhase == ESM4::ActorLifePhase::Dead
+                || life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious))
+        {
+            const auto baseHealth = ESM4::actorBaseValueInteger({8, candidate.mValues[8].mBase});
+            if (baseHealth > 0 && !godMode)
+                candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner,
+                    8, ESM4::ActorValueModifier::Damage, -static_cast<float>(baseHealth));
+        }
+        ability->mEffects.erase(effect);
+        if (ability->mEffects.empty())
+            candidate.mPassiveAbilities->erase(ability);
+        candidate.validate();
+        prepared.publishPlayerValues(player, std::move(candidate), settings);
+        mActorValues.swap(prepared.mActorValues);
+        mActorBases.swap(prepared.mActorBases);
+    }
+
     void OblivionCombatService::changePlayerValue(MWWorld::Player& player, std::uint8_t value,
         ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings)
     {

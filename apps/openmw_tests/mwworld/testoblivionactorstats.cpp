@@ -5686,6 +5686,133 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, playerPassiveRemovalUsesSavedMagnitudePreservesOtherWritesAndRollsBack)
+    {
+        sharedStats();
+        ESM::NPC base{}; base.blank(); base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record); ESM::NpcState initial{}; initial.blank();
+        const auto ptr = player.getPlayer(); ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 30, 40, 0}};
+        values.mPassiveAbilities.emplace();
+        for (auto& value : values.mValues) value.mModifiers = {0, 0, 0};
+        for (unsigned av = 0; av < 8; ++av) values.mValues[av].mBase = 50;
+        values.mValues[0].mModifiers[2] = -80;
+        const ESM4::PlayerDynamicBaseSettings settings{2, 1.5f, 5};
+        MWMechanics::OblivionCombatService service;
+        service.publishPlayerValues(player, values, settings);
+        service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto spell = ESM::FormKey::content("abilities.esp", 0x123);
+        std::array abilities{ESM4::PassiveAbilityInput{spell, {
+            {7, ESM::fourCC("FOAT"), 0x100072, {0, 25, 0}},
+            {2, ESM::fourCC("FOSP"), 0x1000072, {9, 150, 0}}}}};
+        service.grantPlayerPassiveAbilities(player, abilities, settings);
+        service.setPlayerBaseValue(player, 0, 82, settings); // Independent +7 persists.
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = values.mActor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        MWWorld::Player fresh(record); fresh.getPlayer().getClass().readAdditionalState(fresh.getPlayer(), initial);
+        restored.publishPlayerValues(fresh, *restored.findActorValues(values.mActor), settings);
+        const auto snapshot = [&] { restored.capture(saved); return saved.serializeBinary(); };
+        const auto before = snapshot();
+        auto invalid = settings; invalid.mHealthMultiplier = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(restored.removePlayerPassiveEffect(fresh, spell, 7, invalid), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_THROW(restored.removePlayerPassiveEffect(fresh, {}, 7, settings), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        restored.removePlayerPassiveEffect(fresh, spell, 999, settings);
+        EXPECT_EQ(snapshot(), before);
+        restored.removePlayerPassiveEffect(fresh, spell, 7, settings);
+        EXPECT_EQ(restored.getPlayerBaseValue(0), 57);
+        EXPECT_EQ(restored.getPlayerValue(0), 0);
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mValues[0].mModifiers[2], -57);
+        ASSERT_EQ(restored.findActorValues(values.mActor)->mPassiveAbilities->front().mEffects.size(), 1);
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mPassiveAbilities->front().mEffects.front().mEffectIndex, 2);
+        const auto removed = snapshot();
+        restored.removePlayerPassiveEffect(fresh, spell, 7, settings);
+        EXPECT_EQ(snapshot(), removed);
+        restored.removePlayerPassiveEffect(fresh, spell, 2, settings);
+        EXPECT_EQ(restored.getPlayerBaseValue(9), 155);
+        EXPECT_EQ((*restored.findActorValues(values.mActor)->mPlayerFormValues)[1], 30);
+        EXPECT_TRUE(restored.findActorValues(values.mActor)->mPassiveAbilities->empty());
+        abilities[0].mEffects[0].mValues.mMagnitude = 5;
+        restored.grantPlayerPassiveAbilities(fresh, abilities, settings);
+        EXPECT_EQ(restored.getPlayerBaseValue(0), 62);
+        EXPECT_EQ(restored.findActorValues(values.mActor)->mPassiveAbilities->front().mEffects.front().mStoredMagnitude, 5);
+        auto unknown = *restored.findActorValues(values.mActor); unknown.mPassiveAbilities.reset();
+        restored.publishPlayerValues(fresh, unknown, settings);
+        const auto legacy = snapshot();
+        EXPECT_THROW(restored.removePlayerPassiveEffect(fresh, spell, 7, settings), std::invalid_argument);
+        EXPECT_EQ(snapshot(), legacy);
+        EXPECT_FALSE(restored.takeNextDeathEvent());
+    }
+
+    TEST_F(OblivionActorStatsTest, playerPassiveRemovalCompensatesDamageAndTerminalEnduranceWithoutNewDeath)
+    {
+        sharedStats();
+        ESM::NPC base{}; base.blank(); base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record); ESM::NpcState initial{}; initial.blank();
+        const auto ptr = player.getPlayer(); ptr.getClass().readAdditionalState(ptr, initial);
+        const auto spell = ESM::FormKey::content("abilities.esp", 0x123);
+        const ESM4::PlayerDynamicBaseSettings settings{2, 1.5f, 5};
+        for (const auto phase : {ESM4::ActorLifePhase::Alive, ESM4::ActorLifePhase::Dead,
+                ESM4::ActorLifePhase::EssentialUnconscious})
+        for (const float stored : {-25.f, -0.f, 0.f, 25.f})
+        for (const bool godMode : {false, true})
+        {
+            SCOPED_TRACE(static_cast<int>(phase));
+            SCOPED_TRACE(stored);
+            SCOPED_TRACE(godMode);
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{100, 0, 0, 0}};
+            values.mPassiveAbilities = std::vector<ESM4::RuntimePassiveAbility>{
+                {spell, {{3, ESM::fourCC("FOAT"), 5, stored}}}};
+            for (auto& value : values.mValues) value.mModifiers = {0, 0, 0};
+            for (unsigned av = 0; av < 8; ++av) values.mValues[av].mBase = 50;
+            values.mValues[5].mBase = 50 + stored;
+            values.mValues[5].mModifiers[2] = -80;
+            values.mValues[8].mModifiers[2] = -250;
+            MWMechanics::OblivionCombatService service;
+            service.publishPlayerValues(player, values, settings);
+            service.publishPlayerLife(player, {values.mActor, values.mBase, phase, 0, {}});
+            const auto* life = service.findActorLife(values.mActor);
+            const auto beforeLife = *life;
+            while (service.takeNextDeathEvent()) {}
+            service.removePlayerPassiveEffect(player, spell, 3, settings, godMode);
+            const auto& after = *service.findActorValues(values.mActor);
+            EXPECT_EQ(service.getPlayerBaseValue(5), 50);
+            EXPECT_EQ(after.mValues[5].mModifiers[2], stored > 0 ? -50 : -80);
+            // Derived Health follows current integer Endurance, including its
+            // remaining Damage. The native integer getter can be negative.
+            const float baseHealth = stored > 0 ? 100.f : 40.f;
+            EXPECT_EQ(after.mValues[8].mBase, baseHealth);
+            EXPECT_EQ(after.mValues[8].mModifiers[2], phase != ESM4::ActorLifePhase::Alive && !godMode
+                ? -250 - baseHealth : -250);
+            EXPECT_EQ(*service.findActorLife(values.mActor), beforeLife);
+            EXPECT_TRUE(after.mPassiveAbilities->empty());
+            EXPECT_FALSE(service.takeNextDeathEvent());
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, playerCharacterBaseUsesWinningNativeSexSkillsOrderedBonusesAndFullClassId)
     {
         autoNpc();
