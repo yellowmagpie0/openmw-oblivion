@@ -925,6 +925,63 @@ namespace
         EXPECT_FALSE(world.getOblivionCombatService()->takeNextDeathEvent());
     }
 
+    TEST(OblivionWorldTest, nativeWorldDataClearResetsAuthorityAndSupportsAnotherCycle)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        MWClass::Npc::registerSelf();
+        for (std::uint32_t cycle = 0; cycle < 2; ++cycle)
+        {
+            SCOPED_TRACE(cycle);
+            world.setupPlayer();
+            const auto npc = addNativeNpc(fixture, 0x900 + cycle);
+            ASSERT_TRUE(world.initializeOblivionNonPlayerActor(npc, ESM4::ActorValueProcess::Active));
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{10, 0, 0, 0}};
+            for (std::size_t i = 0; i < 8; ++i)
+                values.mValues[i].mBase = 50;
+            service.publishPlayerValues(world.getPlayer(), values,
+                MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+            ESM4::RuntimeActorLife life;
+            life.mActor = values.mActor;
+            life.mBase = values.mBase;
+            service.publishPlayerLife(world.getPlayer(), life);
+            ASSERT_TRUE(service.engage(values.mActor, npc.getCellRef().getFormKey()));
+            const auto action = service.allocateAction();
+            ASSERT_EQ(action, 1);
+            ASSERT_TRUE(service.isActionPending(action));
+            service.advanceFrameClock(7);
+            ASSERT_EQ(service.actorManagerTime(), 7);
+            ASSERT_NO_THROW(world.clear());
+            EXPECT_EQ(world.getOblivionCombatService(), &service);
+            EXPECT_TRUE(world.getWorldModel().getResidentPtrs().empty());
+            EXPECT_FALSE(service.isActionPending(action));
+            EXPECT_FALSE(service.isActionConsumed(action));
+            EXPECT_FALSE(service.isInCombat(values.mActor));
+            EXPECT_EQ(service.actorManagerTime(), 0);
+            ESM4::RuntimeState cleared;
+            service.capture(cleared);
+            EXPECT_TRUE(cleared.mNativeActorValues.empty());
+            EXPECT_TRUE(cleared.mNativeActorBases.empty());
+            EXPECT_TRUE(cleared.mNativeActorLife.empty());
+            EXPECT_TRUE(cleared.mNativeActorBreath.empty());
+            EXPECT_TRUE(cleared.mNativeActorUpdateTimes.empty());
+            EXPECT_TRUE(cleared.mNativeDeathCounts.empty());
+            EXPECT_TRUE(cleared.mNativeCombatEngagements.empty());
+            EXPECT_TRUE(cleared.mPendingDeathEvents.empty());
+            EXPECT_EQ(cleared.mNextDeathEvent, 1);
+            const auto player = world.getPlayerPtr();
+            ASSERT_FALSE(player.isEmpty());
+            EXPECT_FALSE(player.isInCell());
+            EXPECT_FALSE(player.getClass().getCreatureStats(player).getHealth().isNativeProjection());
+            EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 100);
+        }
+    }
+
     TEST(OblivionWorldTest, nativeWorldPlayerDataConstructionDoesNotRequireRendering)
     {
         NativeWorldFixture fixture;

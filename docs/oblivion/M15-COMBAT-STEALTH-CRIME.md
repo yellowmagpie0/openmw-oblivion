@@ -6006,3 +6006,22 @@ resource/attribute/skill coverage now passes all17 schema versions1–17
 without native Player authority. This does not establish missing-form-input
 migration, whole-game rollback, scene acceptance or fresh-process restart.
 The local commit is still unavailable because .git is read-only.
+
+### S3 continuation: actual World data clear and reconstruction
+
+World clear now clears optional weather/render/projectile/scene subsystems
+when present, and always clears World data and native services. Its normal
+initialized scene path retains the same order. A real native-profile World
+now supports two Player/NPC publication, engagement, action and clock cycles
+without scene initialization: clear discards residents, values/base overrides/
+life/breath/update times/counts/events/engagements and action ownership, resets
+clocks/event sequence, and reconstructs fresh Player class data without
+automatically publishing new native values.
+
+`native-world-data-clear-baseline-01` retains the null-subsystem SIGSEGV(-11),
+without completed XML. Normal and sanitizer `native-world-data-clear-01` each
+pass all660 engine cases, exact inventories/XML and no skips, at fingerprint
+`93fa2485c92df97fe8fd42a376d5c741565e761775c25750e2151237ace4fa5e` on parent `8cf3491f18`. Leak detection is off.
+This is actual data/service clear and reconstruction, not rendered new-game
+acceptance, full load failure recovery, save/quit/fresh restart or S3 closure.
+The requested commit remains unavailable because .git is read-only.

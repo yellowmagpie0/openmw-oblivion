@@ -692,12 +692,16 @@ namespace MWWorld
 
     void World::clear()
     {
-        mWeatherManager->clear();
-        mRendering->clear();
-        mProjectileManager->clear();
+        if (mWeatherManager)
+            mWeatherManager->clear();
+        if (mRendering)
+            mRendering->clear();
+        if (mProjectileManager)
+            mProjectileManager->clear();
         mLocalScripts.clear();
 
-        mWorldScene->clear();
+        if (mWorldScene)
+            mWorldScene->clear();
         mWorldModel.clear();
 
         mStore.clearDynamic();
