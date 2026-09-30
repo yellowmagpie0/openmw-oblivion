@@ -76,6 +76,20 @@ namespace MWWorld
     std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
         const ESMStore& store, std::span<const ESM::FormKey> spells);
 
+    struct OblivionPlayerSpellInputs
+    {
+        // All declared source spells, including powers and ordinary spells.
+        // Declaration is not execution of their effects or casting behavior.
+        std::vector<ESM::FormKey> mDeclaredSpells;
+        std::vector<ESM4::PassiveAbilityInput> mPassiveAbilities;
+    };
+
+    // Winning Player form7, selected RACE and optional BSGN declarations.
+    // Preserve first source occurrence and stable spell identity. This source
+    // collection order does not establish original caster/active-list order.
+    OblivionPlayerSpellInputs resolveOblivionPlayerSpellInputs(
+        const ESMStore& store, const ESM::RefId& race, const ESM::RefId& birthSign);
+
     // Authored Player form inputs before character generation or abilities.
     // Derived resource bases are resolved by preparePlayerValues at publication;
     // existing save authority must take precedence over these fresh inputs.

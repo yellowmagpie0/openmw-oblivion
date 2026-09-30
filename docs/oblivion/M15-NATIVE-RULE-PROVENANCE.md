@@ -3616,3 +3616,21 @@ driver identity, input-log hash, master identity and the tested source
 fingerprint. Attempt01 retains a driver compile failure from missing complete
 record includes. These are record preparation/admission checks, not proof of
 source-grant ordering, resistance/application lifecycle or live gameplay.
+
+### Winning selected Player declaration graph
+
+`native-player-spell-sources-master-01` reads the complete original master
+through production ESMStore and resolves all210 race/birthsign selections:
+15 RACE records crossed with13 BSGN records plus no sign. Independently parsed
+master record bytes supply Player form7's two SPLOs, all RACE/BSGN SPLO lists
+and SPEL SPIT types. Exact selected declarations, stable identities, source
+de-duplication and Ability4 selection agree. The driver admits33 effect inputs
+across the union of23 passive abilities, already checked against66 original
+constructor cases above.
+
+Master SHA `a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`;
+linked driver SHA `9095f6aace4955e0d26f6030f78ca3ac6002858756bcb2c93c8e56579b266e7e`;
+input log SHA `27b38a7785e6aad9abd8c03e9d1fa77f8cb67778a43eba14bc715c692b380c78`.
+This verifies the source collector's stated declaration contract; it does not
+assert original source-grant or active-list order, execute ordinary spells or
+powers, or establish normal-input gameplay/restart acceptance.

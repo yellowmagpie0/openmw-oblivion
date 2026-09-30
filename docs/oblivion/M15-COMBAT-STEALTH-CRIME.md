@@ -7072,3 +7072,41 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. S2/S3 and all later pending gameplay gates remain
 open. Next: winning NPC/race/birthsign source selection and actual prepared
 character-choice publication, then automatic actor activation and melee wiring.
+
+### Winning Player spell-source declarations
+
+The character-input bridge now gathers the winning Player form7 SPLOs, selected
+RACE bonuses and optional BSGN spells into stable de-duplicated declarations.
+Ability4 entries use the prepared passive adapter. Ordinary spells and powers
+remain declared inputs; no casting, scripted power effects or M16 execution is
+claimed. Disease execution, malformed/missing/deleted spells and unadmitted
+passive effects reject explicitly. First declaration occurrence is retained;
+this source collection contract does not prove native caster/active-list order.
+
+Fixtures cover stable spell identities across different resolved content
+indices, duplicate source ownership, no birthsign, winning race/spell overrides,
+immutable prior results, scripted powers, absent/non-native Player, null links,
+missing race/sign, empty declarations, unsupported kinds and malformed/deleted
+spells. The prior checkpoint rejects the missing source collector in
+`native-player-spell-sources-baseline-01`; configured syntax checks pass.
+`native-player-spell-sources-engine-01` and
+`native-player-spell-sources-sanitized-engine-01` each pass684 full engine cases
+with exact inventories and no failures/skips, fingerprint
+`8a052226c5067fd6581ad238d8827271ef4ee84bcfb2845250c4c63e334a4b5d`.
+ASan/UBSan leak checks are off.
+
+`native-player-spell-sources-master-01` loads the entire hash-identified original
+master through actual production ESMStore and this adapter. All210 selections
+across15 RACE records and14 birthsign options (including no sign) match an
+independent raw-byte source graph, including the Player's two ordinary spells.
+Declared identities/order, de-duplication and Ability4 admission agree. This
+is record/input integration, not dialog, casting, gameplay or restart acceptance.
+
+Checkpoint37 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-15/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: prepared character-choice metadata
+publication, native character rebuilding and live activation. Pending S2/S3
+and later gameplay gates remain open.

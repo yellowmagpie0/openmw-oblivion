@@ -10,6 +10,7 @@
 
 #include <components/esm/records.hpp>
 #include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadbsgn.hpp>
 #include <components/esm4/runtimereferences.hpp>
 
 #include <algorithm>
@@ -262,6 +263,44 @@ namespace MWWorld
         const bool temporary = nativeClass
             && characterClass->mId.toUint32() == ESM4::buildCharacterGenerationClassId(settings);
         return ESM4::calculatePlayerCharacterBaseStats(input, ESM4::buildNpcAutoStatsSettings(settings), temporary);
+    }
+
+    OblivionPlayerSpellInputs resolveOblivionPlayerSpellInputs(
+        const ESMStore& store, const ESM::RefId& raceId, const ESM::RefId& birthSignId)
+    {
+        const auto playerKey = ESM::FormKey::content("Oblivion.esm", 7);
+        const auto* player = store.search<ESM4::Npc>(playerKey);
+        const auto* race = store.get<ESM4::Race>().search(raceId);
+        const auto* sign = birthSignId.empty() ? nullptr : store.get<ESM4::BirthSign>().search(birthSignId);
+        if (!player || !player->mIsTES4 || player->mFormKey != playerKey || !race || (!birthSignId.empty() && !sign))
+            throw std::invalid_argument("missing winning native Player/race/birthsign spell source");
+        OblivionPlayerSpellInputs result;
+        std::vector<ESM::FormKey> passives;
+        std::set<ESM::FormKey> seen;
+        const auto collect = [&](const auto& source) {
+            for (const auto id : source)
+            {
+                if (id.isZeroOrUnset())
+                    throw std::invalid_argument("null native character source spell");
+                const auto key = store.get<ESM4::Spell>().findFormKey(ESM::RefId(id));
+                const auto* spell = key ? store.get<ESM4::Spell>().searchStatic(*key) : nullptr;
+                if (!spell || !spell->mData || spell->mData->mType > 4)
+                    throw std::invalid_argument("missing or malformed winning native character source spell");
+                if (!seen.insert(*key).second)
+                    continue;
+                result.mDeclaredSpells.push_back(*key);
+                if (spell->mData->mType == 4)
+                    passives.push_back(*key);
+                else if (spell->mData->mType == 1)
+                    throw std::invalid_argument("native character disease execution is not admitted");
+            }
+        };
+        collect(player->mSpell);
+        collect(race->mBonusSpells);
+        if (sign)
+            collect(sign->mSpells);
+        result.mPassiveAbilities = resolveOblivionPassiveAbilityInputs(store, passives);
+        return result;
     }
 
     ESM4::RuntimeActorValues resolveOblivionInitialPlayerValues(const ESMStore& store)

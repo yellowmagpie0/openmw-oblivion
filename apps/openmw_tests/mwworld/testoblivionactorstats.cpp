@@ -5530,6 +5530,111 @@ namespace
         EXPECT_THROW(MWWorld::resolveOblivionPassiveAbilityInputs(mStore, requested), std::invalid_argument);
     }
 
+    TEST_F(OblivionActorStatsTest, playerSpellSourcesUseWinningDeclarationsStableKeysAndPreserveUnexecutedPowers)
+    {
+        ESM4::Npc player{}; player.mId = {7, 3}; player.mIsTES4 = true;
+        const auto playerKey = ESM::FormKey::content("Oblivion.esm", 7);
+        player.mFormKey = playerKey;
+        ESM4::Race race{}; race.mId = {0x100, 5};
+        const auto raceKey = ESM::FormKey::content("race.esm", 0x100);
+        ESM4::BirthSign sign{}; sign.mId = {0x110, 4};
+        const auto signKey = ESM::FormKey::content("signs.esm", 0x110);
+        ESM4::EffectSetting definition{}; definition.mId = {0x812, 3};
+        definition.mEffectCode = ESM::fourCC("FOAT"); definition.mData.emplace();
+        definition.preparePassiveValueModifierDefinition();
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(definition, ESM::FormKey::content("effects.esm", 0x812));
+        std::array<ESM4::Spell, 5> spells{};
+        const std::array<int, 5> slots{2, 4, 1, 6, 9};
+        const std::array<unsigned, 5> types{4, 0, 2, 4, 4};
+        std::array<ESM::FormKey, 5> keys;
+        for (unsigned i = 0; i < spells.size(); ++i)
+        {
+            auto& spell = spells[i]; spell.mId = {0x200 + i, slots[i]};
+            spell.mData = ESM4::SpellData{types[i], 0, 0, 0, {}};
+            spell.mEffects = {{ESM::fourCC("FOAT"), 25 + i, 0, 0, 0, i, {}}};
+            keys[i] = ESM::FormKey::content("spells" + std::to_string(i) + ".esm", 0x200 + i);
+            mStore.getWritable<ESM4::Spell>().insertStatic(spell, keys[i]);
+        }
+        // Power effects are retained as declarations without entering the
+        // narrow passive adapter, which would reject this scripted class.
+        spells[2].mEffects[0].mId = ESM::fourCC("SEFF");
+        spells[2].mEffects[0].mScriptEffect.emplace();
+        mStore.getWritable<ESM4::Spell>().insertStatic(spells[2], keys[2]);
+        player.mSpell = {spells[0].mId, spells[1].mId};
+        race.mBonusSpells = {spells[2].mId, spells[3].mId, spells[0].mId};
+        sign.mSpells = {spells[3].mId, spells[4].mId};
+        mStore.getWritable<ESM4::Npc>().insertStatic(player, playerKey);
+        mStore.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        mStore.getWritable<ESM4::BirthSign>().insertStatic(sign, signKey);
+        const auto result = MWWorld::resolveOblivionPlayerSpellInputs(mStore, race.mId, sign.mId);
+        EXPECT_EQ(result.mDeclaredSpells, (std::vector<ESM::FormKey>(keys.begin(), keys.end())));
+        ASSERT_EQ(result.mPassiveAbilities.size(), 3);
+        EXPECT_EQ(result.mPassiveAbilities[0].mSpell, keys[0]);
+        EXPECT_EQ(result.mPassiveAbilities[1].mSpell, keys[3]);
+        EXPECT_EQ(result.mPassiveAbilities[2].mSpell, keys[4]);
+        EXPECT_EQ(result.mPassiveAbilities[2].mEffects[0].mValues.mMagnitude, 29);
+        const auto noSign = MWWorld::resolveOblivionPlayerSpellInputs(mStore, race.mId, {});
+        EXPECT_EQ(noSign.mDeclaredSpells, (std::vector<ESM::FormKey>{keys[0], keys[1], keys[2], keys[3]}));
+        EXPECT_EQ(noSign.mPassiveAbilities.size(), 2);
+        race.mBonusSpells = {spells[4].mId, spells[0].mId};
+        mStore.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        spells[4].mEffects[0].mMagnitude = 75;
+        mStore.getWritable<ESM4::Spell>().insertStatic(spells[4], keys[4]);
+        const auto winning = MWWorld::resolveOblivionPlayerSpellInputs(mStore, race.mId, {});
+        EXPECT_EQ(winning.mDeclaredSpells, (std::vector<ESM::FormKey>{keys[0], keys[1], keys[4]}));
+        EXPECT_EQ(winning.mPassiveAbilities[1].mEffects[0].mValues.mMagnitude, 75);
+        EXPECT_EQ(result.mPassiveAbilities[2].mEffects[0].mValues.mMagnitude, 29);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerSpellSourcesRejectMissingMalformedDeletedAndUnadmittedSources)
+    {
+        ESM4::Npc player{}; player.mId = {7, 3}; player.mIsTES4 = true;
+        const auto playerKey = ESM::FormKey::content("Oblivion.esm", 7);
+        player.mFormKey = playerKey;
+        ESM4::Race race{}; race.mId = {0x100, 5};
+        const auto raceKey = ESM::FormKey::content("race.esm", 0x100);
+        ESM4::BirthSign sign{}; sign.mId = {0x110, 4};
+        const auto signKey = ESM::FormKey::content("signs.esm", 0x110);
+        ESM4::Spell spell{}; spell.mId = {0x200, 2};
+        const auto spellKey = ESM::FormKey::content("spells.esm", 0x200);
+        spell.mData = ESM4::SpellData{0, 0, 0, 0, {}};
+        race.mBonusSpells = {spell.mId};
+        mStore.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        mStore.getWritable<ESM4::BirthSign>().insertStatic(sign, signKey);
+        mStore.getWritable<ESM4::Spell>().insertStatic(spell, spellKey);
+        const auto resolve = [&] { return MWWorld::resolveOblivionPlayerSpellInputs(mStore, race.mId, sign.mId); };
+        EXPECT_THROW(resolve(), std::invalid_argument); // Missing native Player.
+        player.mIsTES4 = false;
+        mStore.getWritable<ESM4::Npc>().insertStatic(player, playerKey);
+        EXPECT_THROW(resolve(), std::invalid_argument);
+        player.mIsTES4 = true;
+        mStore.getWritable<ESM4::Npc>().insertStatic(player, playerKey);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerSpellInputs(mStore, {}, sign.mId), std::invalid_argument);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerSpellInputs(mStore, race.mId,
+            ESM::RefId::stringRefId("missing-sign")), std::invalid_argument);
+        race.mBonusSpells.push_back({});
+        mStore.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        EXPECT_THROW(resolve(), std::invalid_argument);
+        race.mBonusSpells.pop_back();
+        mStore.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        for (const unsigned type : {1u, 5u, 0xffffffffu, 4u})
+        {
+            spell.mData->mType = type; // Disease, invalid kinds, empty Ability.
+            mStore.getWritable<ESM4::Spell>().insertStatic(spell, spellKey);
+            EXPECT_THROW(resolve(), std::invalid_argument);
+        }
+        spell.mData.reset();
+        mStore.getWritable<ESM4::Spell>().insertStatic(spell, spellKey);
+        EXPECT_THROW(resolve(), std::invalid_argument);
+        EXPECT_TRUE(mStore.getWritable<ESM4::Spell>().eraseStatic(spellKey));
+        EXPECT_THROW(resolve(), std::invalid_argument);
+        // Empty declarations are legitimate and don't invent active effects.
+        race.mBonusSpells.clear();
+        mStore.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        EXPECT_TRUE(resolve().mDeclaredSpells.empty());
+        EXPECT_TRUE(resolve().mPassiveAbilities.empty());
+    }
+
     TEST_F(OblivionActorStatsTest, playerPassiveGrantOwnsClampedBaseWritesAtomicallyAndSurvivesRestart)
     {
         sharedStats();
