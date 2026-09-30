@@ -7110,3 +7110,48 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: prepared character-choice metadata
 publication, native character rebuilding and live activation. Pending S2/S3
 and later gameplay gates remain open.
+
+### Prepared Player and custom-class metadata
+
+ESMStore now owns a move-only preparation for the Player facade and an optional
+generated shared custom class. Preparation allocates/reserves the record and
+type-index nodes without publishing records or consuming a generated ID.
+Abandonment and rejection preserve the Player metadata. Synchronous commit
+publishes once; replacing an existing dynamic Player preserves its address and
+the authored static Player remains intact. The store must outlive the handle;
+the relevant stores and generator must not change during its short prepared
+interval. This is metadata preparation, not yet character-choice or gameplay
+activation.
+
+Three new fixtures cover missing/wrong Player identities, generated-ID
+collisions, concurrent preparation, abandonment, moved handles, repeated
+commit, old committed handles coexisting with a later preparation, custom
+fields and existing dynamic Player replacement. Actual dynamic-record
+write/read checks both generated classes, the Player class reference, the
+saved next generated ID and another dropped preparation after restoration.
+The prior checkpoint rejects the absent preparation API in
+`native-player-record-preparation-baseline-01`.
+
+Both initial build attempts failed the new roundtrip fixture's missing
+record-name `toInt()` conversion; the syntax failure is retained as
+`native-player-record-preparation-roundtrip-syntax-01` and the corrected syntax
+check passes as attempt02. Both full engine attempt02 runs execute687 cases,
+with686 passing and one incorrect fixture assertion: CLAS is deliberately not
+in the rebuilt generic reference cache. Typed class identities/fields and the
+next prepared ID now establish the intended readback contract. Production
+metadata preparation did not change in those corrections. Failed evidence
+remains in its original directories.
+
+`native-player-record-preparation-engine-03` and
+`native-player-record-preparation-sanitized-engine-03` each pass687 full engine
+cases with exact inventories, no failures/skips, fingerprint
+`182f18685791fa29fc9552fe8a91fc39f88dc5431edde6df926ac4fbc2a74c56`. ASan/UBSan leak checks are off.
+
+Checkpoint38 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-16/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: prospective custom-class calculation,
+combined constructor/character transaction, then live character-choice wiring
+and automatic actor activation. S2/S3 and later gameplay gates remain open.

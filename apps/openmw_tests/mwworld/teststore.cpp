@@ -1161,3 +1161,143 @@ TEST(MWWorldStoreTest, tes4SpellsUseWinningKeysAndRemapOnlyScriptReferencesAcros
     EXPECT_EQ(store.search<ESM4::Spell>(base),nullptr);
     EXPECT_NE(store.search<ESM4::Spell>(other),nullptr);
 }
+
+TEST(MWWorldStoreTest, preparedPlayerRecordPublishesNoMetadataUntilCommitAndPreservesStaticInput)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC original{}; original.blank(); original.mId = ESM::RefId::stringRefId("Player");
+    original.mName = "Original"; original.mRace = ESM::RefId::stringRefId("old-race");
+    const auto* authored = store.insertStatic(original);
+    auto next = original; next.mName = "Prepared"; next.mRace = ESM::RefId::stringRefId("new-race");
+    {
+        auto dropped = store.preparePlayerRecord(next);
+        EXPECT_EQ(dropped.player().mName, "Prepared");
+        EXPECT_EQ(dropped.customClass(), nullptr);
+        EXPECT_EQ(store.get<ESM::NPC>().find(original.mId), authored);
+        EXPECT_EQ(store.get<ESM::NPC>().getDynamicSize(), 0);
+        EXPECT_EQ(store.get<ESM::NPC>().getSize(), 1);
+        EXPECT_THROW(store.preparePlayerRecord(next), std::logic_error);
+    }
+    EXPECT_EQ(store.get<ESM::NPC>().find(original.mId), authored);
+    auto prepared = store.preparePlayerRecord(next);
+    const auto* committed = prepared.commit();
+    ASSERT_NE(committed, nullptr);
+    EXPECT_NE(committed, authored);
+    EXPECT_EQ(committed, store.get<ESM::NPC>().find(original.mId));
+    EXPECT_EQ(committed->mName, "Prepared");
+    EXPECT_EQ(committed->mRace, next.mRace);
+    EXPECT_EQ(authored->mName, "Original");
+    EXPECT_EQ(authored->mRace, original.mRace);
+    EXPECT_EQ(store.get<ESM::NPC>().getDynamicSize(), 1);
+    EXPECT_EQ(store.get<ESM::NPC>().getSize(), 2);
+    EXPECT_EQ(prepared.commit(), committed);
+    EXPECT_EQ(&prepared.player(), committed);
+    next.mName = "Replaced";
+    auto replacement = store.preparePlayerRecord(next);
+    EXPECT_EQ(committed->mName, "Prepared");
+    EXPECT_EQ(replacement.commit(), committed); // Existing dynamic address remains stable.
+    EXPECT_EQ(committed->mName, "Replaced");
+    EXPECT_EQ(store.get<ESM::NPC>().getSize(), 2);
+    EXPECT_EQ(store.find(original.mId), ESM::REC_NPC_);
+}
+
+TEST(MWWorldStoreTest, preparedPlayerCustomClassOwnsNodesAndConsumesItsIdOnlyOnceAtCommit)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+    store.insertStatic(player);
+    ESM::Class custom{}; custom.blank(); custom.mName = "Prepared class";
+    custom.mData.mAttribute = {ESM::Attribute::Strength, ESM::Attribute::Endurance};
+    custom.mData.mSkills[0][1] = ESM::Skill::LongBlade;
+    ESM::RefId planned;
+    {
+        auto dropped = store.preparePlayerRecord(player, &custom);
+        ASSERT_NE(dropped.customClass(), nullptr);
+        planned = dropped.player().mClass;
+        EXPECT_EQ(planned, ESM::RefId::generated(0));
+        EXPECT_EQ(dropped.customClass()->mId, planned);
+        EXPECT_EQ(dropped.customClass()->mData.mSkills[0][1], ESM::Skill::LongBlade);
+        EXPECT_EQ(store.find(planned), 0);
+        EXPECT_EQ(store.get<ESM::Class>().getDynamicSize(), 0);
+        EXPECT_EQ(store.get<ESM::NPC>().find(player.mId)->mClass, player.mClass);
+    }
+    auto source = store.preparePlayerRecord(player, &custom);
+    EXPECT_EQ(source.player().mClass, planned);
+    auto moved = std::move(source);
+    EXPECT_EQ(source.commit(), nullptr);
+    EXPECT_EQ(source.customClass(), nullptr);
+    EXPECT_THROW(source.player(), std::logic_error);
+    const auto* readyClass = moved.customClass();
+    const auto* readyPlayer = moved.commit();
+    EXPECT_EQ(store.get<ESM::Class>().find(planned), readyClass);
+    EXPECT_EQ(readyClass->mName, custom.mName);
+    EXPECT_EQ(readyPlayer->mClass, planned);
+    EXPECT_EQ(store.find(planned), ESM::REC_CLAS);
+    EXPECT_EQ(store.get<ESM::Class>().getDynamicSize(), 1);
+    EXPECT_EQ(store.get<ESM::Class>().getSize(), 1);
+    EXPECT_EQ(moved.commit(), readyPlayer);
+    // Keeping a committed handle alive must not release a later preparation.
+    auto second = store.preparePlayerRecord(*readyPlayer, &custom);
+    EXPECT_EQ(second.player().mClass, ESM::RefId::generated(1));
+    EXPECT_EQ(moved.commit(), readyPlayer);
+    EXPECT_THROW(store.preparePlayerRecord(*readyPlayer), std::logic_error);
+    const auto* replaced = second.commit();
+    EXPECT_EQ(replaced, readyPlayer);
+    EXPECT_EQ(replaced->mClass, ESM::RefId::generated(1));
+    EXPECT_EQ(store.get<ESM::Class>().getDynamicSize(), 2);
+
+    auto stream = std::make_unique<std::stringstream>();
+    ESM::ESMWriter writer;
+    writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+    writer.save(*stream);
+    store.write(writer, dummyListener);
+    ESM::ESMReader reader;
+    reader.open(std::move(stream), "prepared-player-records");
+    MWWorld::ESMStore restored;
+    restored.insertStatic(player);
+    while (reader.hasMoreRecs())
+    {
+        const auto type = reader.getRecName();
+        reader.getRecHeader();
+        ASSERT_TRUE(restored.readRecord(reader, type.toInt()));
+    }
+    restored.rebuildIdsIndex();
+    EXPECT_EQ(restored.get<ESM::NPC>().find(player.mId)->mClass, replaced->mClass);
+    for (unsigned i = 0; i < 2; ++i)
+    {
+        const auto id = ESM::RefId::generated(i);
+        const auto* restoredClass = restored.get<ESM::Class>().find(id);
+        EXPECT_EQ(restoredClass->mName, custom.mName);
+        EXPECT_EQ(restoredClass->mData.mAttribute, custom.mData.mAttribute);
+        EXPECT_EQ(restoredClass->mData.mSkills[0][1], ESM::Skill::LongBlade);
+        EXPECT_EQ(restoredClass->mId, id);
+    }
+    {
+        auto next = restored.preparePlayerRecord(*restored.get<ESM::NPC>().find(player.mId), &custom);
+        EXPECT_EQ(next.player().mClass, ESM::RefId::generated(2));
+        EXPECT_EQ(restored.get<ESM::Class>().getDynamicSize(), 2);
+    }
+    EXPECT_EQ(restored.generateId(), ESM::RefId::generated(2));
+    EXPECT_EQ(store.generateId(), ESM::RefId::generated(2));
+}
+
+TEST(MWWorldStoreTest, preparedPlayerRecordRejectsInvalidIdentityMissingDefinitionAndGeneratedCollision)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+    EXPECT_THROW(store.preparePlayerRecord(player), std::invalid_argument);
+    store.insertStatic(player);
+    auto wrong = player; wrong.mId = ESM::RefId::stringRefId("Other");
+    EXPECT_THROW(store.preparePlayerRecord(wrong), std::invalid_argument);
+    ESM::Class custom{}; custom.blank();
+    ESM::Miscellaneous collision{}; collision.blank(); collision.mId = ESM::RefId::generated(0);
+    store.insertStatic(collision);
+    EXPECT_THROW(store.preparePlayerRecord(player, &custom), std::invalid_argument);
+    EXPECT_EQ(store.get<ESM::Class>().getDynamicSize(), 0);
+    EXPECT_EQ(store.get<ESM::NPC>().getDynamicSize(), 0);
+    EXPECT_EQ(store.find(collision.mId), ESM::REC_MISC);
+    // The rejected preparation did not consume ID0 or leave its guard held.
+    auto ordinary = store.preparePlayerRecord(player);
+    EXPECT_NE(ordinary.commit(), nullptr);
+    EXPECT_EQ(store.generateId(), ESM::RefId::generated(0));
+}

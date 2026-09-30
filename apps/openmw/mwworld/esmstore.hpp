@@ -229,6 +229,7 @@ namespace MWWorld
         std::map<std::string, ESM::FormKey, std::less<>> mEsm4EditorIds;
 
         uint64_t mDynamicCount;
+        bool mPlayerRecordPrepared = false;
 
         mutable std::unordered_map<ESM::RefId, std::weak_ptr<MWMechanics::SpellList>> mSpellListCache;
 
@@ -270,6 +271,28 @@ namespace MWWorld
         void clearDynamic();
         void rebuildIdsIndex();
         ESM::RefId generateId() { return ESM::RefId::generated(mDynamicCount++); }
+
+        class PreparedPlayerRecord
+        {
+            friend class ESMStore;
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedPlayerRecord(std::unique_ptr<Impl> impl);
+
+        public:
+            ~PreparedPlayerRecord();
+            PreparedPlayerRecord(PreparedPlayerRecord&&) noexcept;
+            PreparedPlayerRecord& operator=(PreparedPlayerRecord&&) noexcept;
+            const ESM::NPC& player() const;
+            const ESM::Class* customClass() const;
+            const ESM::NPC* commit() noexcept;
+        };
+
+        // Stage the Player facade and an optional new shared custom class.
+        // Dropping the handle publishes nothing and consumes no generated ID.
+        // The store must outlive it; NPC/class/ID stores and the ID generator
+        // must not change between preparation and synchronous commit.
+        PreparedPlayerRecord preparePlayerRecord(const ESM::NPC& player, const ESM::Class* customClass = nullptr);
 
         void movePlayerRecord();
 

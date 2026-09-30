@@ -3,6 +3,9 @@
 #include "esmstore.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <limits>
+#include <type_traits>
 #include <fstream>
 #include <tuple>
 
@@ -377,6 +380,136 @@ namespace MWWorld
             return 0;
         }
         return it->second;
+    }
+
+    struct ESMStore::PreparedPlayerRecord::Impl
+    {
+        using NpcMap = std::unordered_map<ESM::RefId, ESM::NPC>;
+        using ClassMap = std::unordered_map<ESM::RefId, ESM::Class>;
+        ESMStore* mStore = nullptr;
+        NpcMap::node_type mPlayer;
+        ClassMap::node_type mClass;
+        IDMap::node_type mClassType;
+        ESM::NPC* mExistingPlayer = nullptr;
+        const ESM::NPC* mCommittedPlayer = nullptr;
+        const ESM::Class* mCustomClass = nullptr;
+        std::uint64_t mDynamicCount = 0;
+        ~Impl()
+        {
+            if (mStore)
+                mStore->mPlayerRecordPrepared = false;
+        }
+    };
+
+    ESMStore::PreparedPlayerRecord::PreparedPlayerRecord(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl))
+    {
+    }
+
+    ESMStore::PreparedPlayerRecord::~PreparedPlayerRecord() = default;
+    ESMStore::PreparedPlayerRecord::PreparedPlayerRecord(PreparedPlayerRecord&&) noexcept = default;
+    ESMStore::PreparedPlayerRecord& ESMStore::PreparedPlayerRecord::operator=(PreparedPlayerRecord&&) noexcept = default;
+
+    const ESM::NPC& ESMStore::PreparedPlayerRecord::player() const
+    {
+        if (!mImpl)
+            throw std::logic_error("moved native Player record preparation");
+        return mImpl->mCommittedPlayer ? *mImpl->mCommittedPlayer : mImpl->mPlayer.mapped();
+    }
+
+    const ESM::Class* ESMStore::PreparedPlayerRecord::customClass() const
+    {
+        return mImpl ? mImpl->mCustomClass : nullptr;
+    }
+
+    const ESM::NPC* ESMStore::PreparedPlayerRecord::commit() noexcept
+    {
+        if (!mImpl || !mImpl->mStore)
+            return mImpl ? mImpl->mCommittedPlayer : nullptr;
+        auto& store = *mImpl->mStore;
+        assert(store.mPlayerRecordPrepared && store.mDynamicCount == mImpl->mDynamicCount);
+        auto& npcs = store.getWritable<ESM::NPC>();
+        if (mImpl->mCustomClass)
+        {
+            auto& classes = store.getWritable<ESM::Class>();
+            assert(classes.mDynamic.bucket_count() * classes.mDynamic.max_load_factor() >= classes.mDynamic.size() + 1);
+            assert(classes.mShared.capacity() > classes.mShared.size());
+            const auto inserted = classes.mDynamic.insert(std::move(mImpl->mClass));
+            assert(inserted.inserted);
+            classes.mShared.push_back(&inserted.position->second);
+            const auto indexed = store.mStoreImp->mIds.insert(std::move(mImpl->mClassType));
+            assert(indexed.inserted);
+            ++store.mDynamicCount;
+        }
+        if (mImpl->mExistingPlayer)
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM::NPC>);
+            std::swap(*mImpl->mExistingPlayer, mImpl->mPlayer.mapped());
+            mImpl->mCommittedPlayer = mImpl->mExistingPlayer;
+        }
+        else
+        {
+            assert(npcs.mDynamic.bucket_count() * npcs.mDynamic.max_load_factor() >= npcs.mDynamic.size() + 1);
+            assert(npcs.mShared.capacity() > npcs.mShared.size());
+            const auto inserted = npcs.mDynamic.insert(std::move(mImpl->mPlayer));
+            assert(inserted.inserted);
+            npcs.mShared.push_back(&inserted.position->second);
+            mImpl->mCommittedPlayer = &inserted.position->second;
+        }
+        store.mPlayerRecordPrepared = false;
+        mImpl->mStore = nullptr;
+        return mImpl->mCommittedPlayer;
+    }
+
+    ESMStore::PreparedPlayerRecord ESMStore::preparePlayerRecord(
+        const ESM::NPC& player, const ESM::Class* customClass)
+    {
+        if (mPlayerRecordPrepared)
+            throw std::logic_error("native Player record preparation is already active");
+        auto& npcs = getWritable<ESM::NPC>();
+        if (player.mId != "Player" || !npcs.search(player.mId) || find(player.mId) != ESM::REC_NPC_)
+            throw std::invalid_argument("native Player record preparation requires the existing Player facade");
+        auto impl = std::make_unique<PreparedPlayerRecord::Impl>();
+        impl->mDynamicCount = mDynamicCount;
+        auto candidate = player;
+        if (customClass)
+        {
+            if (mDynamicCount == std::numeric_limits<std::uint64_t>::max())
+                throw std::overflow_error("native Player custom class ID exhausted");
+            auto custom = *customClass;
+            custom.mId = ESM::RefId::generated(mDynamicCount);
+            auto& classes = getWritable<ESM::Class>();
+            if (classes.search(custom.mId) || mStoreImp->mIds.contains(custom.mId))
+                throw std::invalid_argument("native Player custom class ID collision");
+            PreparedPlayerRecord::Impl::ClassMap staged;
+            staged.emplace(custom.mId, std::move(custom));
+            impl->mClass = staged.extract(staged.begin());
+            impl->mCustomClass = &impl->mClass.mapped();
+            candidate.mClass = impl->mCustomClass->mId;
+            IDMap stagedTypes;
+            stagedTypes.emplace(candidate.mClass, ESM::REC_CLAS);
+            impl->mClassType = stagedTypes.extract(stagedTypes.begin());
+            classes.mDynamic.reserve(classes.mDynamic.size() + 1);
+            classes.mShared.reserve(classes.mShared.size() + 1);
+            mStoreImp->mIds.reserve(mStoreImp->mIds.size() + 1);
+        }
+        PreparedPlayerRecord::Impl::NpcMap staged;
+        staged.emplace(candidate.mId, std::move(candidate));
+        impl->mPlayer = staged.extract(staged.begin());
+        const auto existing = npcs.mDynamic.find(player.mId);
+        if (existing != npcs.mDynamic.end())
+            impl->mExistingPlayer = &existing->second;
+        else
+        {
+            npcs.mDynamic.reserve(npcs.mDynamic.size() + 1);
+            npcs.mShared.reserve(npcs.mShared.size() + 1);
+        }
+        // Allocations and ID/type lookups are complete. A synchronous commit
+        // uses reserved node insertions and no-throw swaps; no record identity
+        // or ID-counter change is visible during preparation.
+        impl->mStore = this;
+        mPlayerRecordPrepared = true;
+        return PreparedPlayerRecord(std::move(impl));
     }
 
     ESMStore::ESMStore()
