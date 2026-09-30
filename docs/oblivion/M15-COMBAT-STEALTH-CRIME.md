@@ -6025,3 +6025,27 @@ pass all660 engine cases, exact inventories/XML and no skips, at fingerprint
 This is actual data/service clear and reconstruction, not rendered new-game
 acceptance, full load failure recovery, save/quit/fresh restart or S3 closure.
 The requested commit remains unavailable because .git is read-only.
+
+### S3 continuation: staged native global bindings and conversions
+
+World restore now resolves and converts every global into detached copies
+before committing globals or the native allocation serial. Commit uses
+noexcept Variant moves and preserves FormKey order, including editor-ID
+aliases. Float target overflow and double-to-int64 conversion overflow are
+rejected before casting. Supported int64 inputs retain the existing int32
+clamp; supported fractional doubles retain truncation. This is save-bridge
+validation, not a new original-game global arithmetic or overflow rule.
+
+Global preflight baseline01 retains an earlier global changed by a later
+wrong type and finite-double overflow accepted as infinity. Baseline02 adds
+positive/negative huge integer doubles and the excluded2^63 boundary, which
+are accepted through an unsafe cast and change earlier globals. The corrected
+normal and sanitizer `native-world-global-preflight-01` runs each pass all661
+engine cases, exact inventory/XML and no skips, at fingerprint
+`ebf2c12347e3b2772b5eb51bb9b9b242cfc1b1266e971835494978b908ca2c32` on parent `8cf3491f18`. Leak detection is off.
+Actual World read/apply tests cover rejection without earlier global/clock
+mutation, valid retry, int64 extrema, fractional signed truncation and the
+included-2^63 boundary. Synthetic global definitions are registered through
+real native/projected stores. Full World/StateManager rollback, other consumed
+scalar domains, save/quit/fresh restart and gameplay acceptance remain open.
+The requested local commit remains unavailable under the read-only Git mount.

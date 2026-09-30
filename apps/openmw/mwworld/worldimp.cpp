@@ -1737,7 +1737,6 @@ namespace MWWorld
             for (const auto& [item, slot] : equipped)
                 inventory.equip(slot, item);
         };
-        mNextOblivionDynamicSerial = state.mNextDynamicSerial;
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
             if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
@@ -1769,6 +1768,8 @@ namespace MWWorld
                             return static_cast<double>(item);
                     },
                     value);
+                if (number < -std::numeric_limits<float>::max() || number > std::numeric_limits<float>::max())
+                    throw std::runtime_error("TES4 runtime-state global exceeds the finite float domain");
                 target.setFloat(static_cast<float>(number));
             }
             else
@@ -1778,14 +1779,25 @@ namespace MWWorld
                         using T = std::decay_t<decltype(item)>;
                         if constexpr (std::is_same_v<T, std::string>)
                             throw std::runtime_error("TES4 runtime-state numeric global has a string value");
+                        else if constexpr (std::is_same_v<T, double>)
+                        {
+                            const double integral = std::trunc(item);
+                            // INT64_MAX rounds to the excluded upper bound
+                            // when represented as double. Check before casting.
+                            if (integral < -0x1p63 || integral >= 0x1p63)
+                                throw std::runtime_error("TES4 runtime-state global exceeds the integer conversion domain");
+                            return static_cast<std::int64_t>(integral);
+                        }
                         else
-                            return static_cast<std::int64_t>(item);
+                            return item;
                     },
                     value);
                 target.setInteger(static_cast<std::int32_t>(std::clamp<std::int64_t>(number,
                     std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max())));
             }
         };
+        std::vector<std::pair<ESM::Variant*, ESM::Variant>> preparedGlobals;
+        preparedGlobals.reserve(state.mGlobals.size());
         for (const auto& [key, value] : state.mGlobals)
         {
             const std::optional<ESM::FormId> formId = resolver.toFormId(key);
@@ -1795,8 +1807,17 @@ namespace MWWorld
                 = mStore.get<ESM4::GlobalVariable>().search(ESM::RefId(*formId));
             if (global == nullptr || global->mEditorId.empty())
                 throw std::runtime_error("TES4 runtime-state global is not present: " + key.serialize());
-            setVariant(mGlobalVariables[GlobalVariableName(runtimeGlobalName(global->mEditorId))], value);
+            auto& target = mGlobalVariables[GlobalVariableName(runtimeGlobalName(global->mEditorId))];
+            ESM::Variant prepared = target;
+            setVariant(prepared, value);
+            preparedGlobals.emplace_back(&target, std::move(prepared));
         }
+        // Every binding/conversion/allocation above succeeds before changing
+        // any global. Preserve FormKey ordering even for editor-ID aliases.
+        static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
+        mNextOblivionDynamicSerial = state.mNextDynamicSerial;
+        for (auto& [target, prepared] : preparedGlobals)
+            *target = std::move(prepared);
         mGlobalVariables[Globals::sYear].setInteger(state.mClock.mYear);
         mGlobalVariables[Globals::sMonth].setInteger(state.mClock.mMonth);
         mGlobalVariables[Globals::sDay].setInteger(state.mClock.mDay);

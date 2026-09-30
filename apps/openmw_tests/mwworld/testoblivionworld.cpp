@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <stdexcept>
 #include <sstream>
@@ -8,6 +9,7 @@
 #include <components/esm/records.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm4/loadglob.hpp>
 #include <components/files/hash.hpp>
 #include <components/files/collections.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -980,6 +982,95 @@ namespace
             EXPECT_FALSE(player.getClass().getCreatureStats(player).getHealth().isNativeProjection());
             EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 100);
         }
+    }
+
+    TEST(OblivionWorldTest, nativeWorldGlobalRestoreRejectsBeforeEarlierGlobalMutation)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        const std::array keys{ESM::FormKey::content("headless.esm", 0xa10),
+            ESM::FormKey::content("headless.esm", 0xa11), ESM::FormKey::content("headless.esm", 0xa12)};
+        const std::array names{std::string("atomicfirst"), std::string("atomicsecond"), std::string("atomicinteger")};
+        for (std::size_t i = 0; i < keys.size(); ++i)
+        {
+            ESM4::GlobalVariable native{};
+            native.mId = {static_cast<std::uint32_t>(0xa10 + i), 0};
+            native.mEditorId = names[i];
+            native.mType = i == 2 ? 'l' : 'f';
+            native.mValue = i == 0 ? 3 : i == 1 ? 5 : 7;
+            store.getWritable<ESM4::GlobalVariable>().insertStatic(native, keys[i]);
+            ESM::Global projected{};
+            projected.mId = ESM::RefId::stringRefId(names[i]);
+            projected.mValue = i == 2 ? ESM::Variant(std::int32_t{7}) : ESM::Variant(native.mValue);
+            store.getWritable<ESM::Global>().insertStatic(projected);
+        }
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+        cell.mCellFlags = ESM4::CELL_Interior;
+        cell.mEditorId = "GlobalRestoreCell";
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        world.clear(); // Install the synthetic projected global definitions.
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        ESM4::RuntimeState saved;
+        saved.mVersion = 2;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = cell.mFormKey;
+        saved.mClock.mHour = 7;
+        saved.mGlobals[keys[0]] = 42.;
+        std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+        saved.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+        const MWWorld::GlobalVariableName firstName{names[0]};
+        const MWWorld::GlobalVariableName secondName{names[1]};
+        const std::array<ESM4::RuntimeValue, 2> invalidValues{std::string("wrong type"), 1e300};
+        for (const auto& invalid : invalidValues)
+        {
+            world.setGlobalFloat(firstName, 3);
+            world.setGlobalFloat(secondName, 5);
+            const auto clockBefore = world.getTimeStamp();
+            saved.mGlobals[keys[1]] = invalid;
+            ASSERT_NO_THROW(saved.validate());
+            readNativeSnapshot(fixture, saved);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(world.getGlobalFloat(secondName), 5);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
+        const MWWorld::GlobalVariableName integerName{names[2]};
+        saved.mGlobals[keys[1]] = 10.;
+        for (const double invalidInteger : {1e300, -1e300, std::ldexp(1., 63)})
+        {
+            SCOPED_TRACE(invalidInteger);
+            world.setGlobalFloat(firstName, 3);
+            world.setGlobalFloat(secondName, 5);
+            world.setGlobalInt(integerName, 7);
+            const auto clockBefore = world.getTimeStamp();
+            saved.mGlobals[keys[2]] = invalidInteger;
+            ASSERT_NO_THROW(saved.validate());
+            readNativeSnapshot(fixture, saved);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(world.getGlobalFloat(secondName), 5);
+            EXPECT_EQ(world.getGlobalInt(integerName), 7);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
+        const std::array<std::pair<ESM4::RuntimeValue, std::int32_t>, 5> supportedIntegers{{
+            {std::int64_t{std::numeric_limits<std::int64_t>::max()}, std::numeric_limits<std::int32_t>::max()},
+            {std::int64_t{std::numeric_limits<std::int64_t>::min()}, std::numeric_limits<std::int32_t>::min()},
+            {1.9, 1}, {-1.9, -1}, {-std::ldexp(1., 63), std::numeric_limits<std::int32_t>::min()}}};
+        for (const auto& [input, expected] : supportedIntegers)
+        {
+            saved.mGlobals[keys[2]] = input;
+            readNativeSnapshot(fixture, saved);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            EXPECT_EQ(world.getGlobalInt(integerName), expected);
+        }
+        readNativeSnapshot(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.getGlobalFloat(firstName), 42);
+        EXPECT_EQ(world.getGlobalFloat(secondName), 10);
     }
 
     TEST(OblivionWorldTest, nativeWorldPlayerDataConstructionDoesNotRequireRendering)
