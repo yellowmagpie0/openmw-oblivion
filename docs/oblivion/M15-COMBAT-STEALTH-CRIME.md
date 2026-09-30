@@ -6221,3 +6221,18 @@ the sanitized engine SHA256 is
 Other legacy attribute-derived arithmetic, World/StateManager rollback, fresh
 native construction and the remaining S2/S3 gates are still open. Local commits
 remain unavailable; the source and evidence are retained as pending chunks.
+
+Player cell binding now also resolves before global/clock/Player writes.
+`native-player-cell-preflight-baseline-01` retains an actual World rejection
+of a missing content cell after the earlier global changed3 to42 and the
+clock changed7 to8. The corrected normal
+`native-player-cell-preflight-01` and sanitized
+`native-player-cell-preflight-sanitized-01` each pass all661 engine cases,
+exact inventory/XML and no skips, fingerprint
+`6bf614c31c2f5dab269c95c1a7ac9989b80e5c2063a1d4fbe58a20cd14051789`
+on parent `8cf3491f18`, with leak detection disabled. The same case retains
+valid retry and checks the previous Player cell/global/clock on rejection.
+Cell-cache loading itself is not a detached transaction; this does not close
+reference restore, whole-World or StateManager failure recovery. It is a
+bounded data-binding preflight fix, not another graphical acceptance claim.
+Local commits remain unavailable under the read-only Git mount.

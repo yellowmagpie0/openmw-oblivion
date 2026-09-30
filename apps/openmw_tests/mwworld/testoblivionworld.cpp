@@ -1104,6 +1104,21 @@ namespace
             EXPECT_EQ(stats.getLevel(), levelBefore);
             EXPECT_EQ(world.getTimeStamp(), clockBefore);
         }
+        {
+            world.setGlobalFloat(firstName, 3);
+            const auto player = world.getPlayerPtr();
+            const auto* cellBefore = player.getCell();
+            const auto clockBefore = world.getTimeStamp();
+            auto missingPlayerCell = saved;
+            missingPlayerCell.mClock.mHour = 8;
+            missingPlayerCell.mPlayer.mCell = ESM::FormKey::content("headless.esm", 0xa99);
+            ASSERT_NO_THROW(missingPlayerCell.validate());
+            readNativeSnapshot(fixture, missingPlayerCell);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(player.getCell(), cellBefore);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
         for (const auto* resource : {"health", "magicka", "fatigue"})
         {
             for (const bool oldModified : {false, true})

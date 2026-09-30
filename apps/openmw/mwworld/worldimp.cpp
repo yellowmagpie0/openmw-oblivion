@@ -1789,6 +1789,10 @@ namespace MWWorld
                 prepareDynamicStat("fatigue", current.getFatigue())});
         }
         const ESM::FormKeyResolver resolver(mContentFiles);
+        const std::optional<ESM::FormId> playerCellId = resolver.toFormId(state.mPlayer.mCell);
+        if (!playerCellId || !playerCellId->hasContentFile())
+            throw std::runtime_error("TES4 runtime-state player cell cannot be resolved");
+        CellStore& playerCell = mWorldModel.getCell(ESM::RefId(*playerCellId));
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
         // leave an earlier inventory cleared or only partly reconstructed.
@@ -1933,10 +1937,6 @@ namespace MWWorld
             mPlayer->setOblivionCharacterGenerationFlags(state.mPlayer.mCharacterGenerationFlags);
         }
 
-        const std::optional<ESM::FormId> playerCellId = resolver.toFormId(state.mPlayer.mCell);
-        if (!playerCellId || !playerCellId->hasContentFile())
-            throw std::runtime_error("TES4 runtime-state player cell cannot be resolved");
-        CellStore& playerCell = mWorldModel.getCell(ESM::RefId(*playerCellId));
         mPlayer->setCell(&playerCell);
         const Ptr player = getPlayerPtr();
         InventoryStore& playerInventory = player.getClass().getInventoryStore(player);
