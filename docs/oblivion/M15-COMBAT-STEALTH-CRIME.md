@@ -6393,3 +6393,29 @@ Tested dirty-source fingerprint:
 `00a2eb4845b69a1ddc227c8dbef680418d196db433f45e20f52c6fe845ef7825`
 on parent `8cf3491f18`. Git metadata is still read-only; this tested chunk is
 retained in the pending worktree and recovery export rather than a commit.
+
+### S2/S3 continuation: shared constructor modifier storage
+
+`initialActorValueModifierStorage` now supplies the original constructor
+storage for both owners: all216 Player slots contain positive zero;
+nonplayers retain only Magicka/Fatigue permanent Script/Damage nodes,
+and their Maximum nodes exist only above Low. The fresh nonplayer resolver
+uses this shared rule. Two component cases check every slot, positive-zero
+bits, mutation behavior and invalid construction domains against the
+independent constructor probes recorded above.
+
+`native-constructor-storage-rule-01` passes all1950 component cases and425
+ESM4 sanitizer cases. Its engine run and the separate sanitized engine01
+retain a failure caused by changing the resolver's invalid-process exception
+from runtime_error to invalid_argument. Explicit resolver domain validation
+preserves the existing exception contract. Corrected engine02 and
+sanitized-engine02 each pass all661 engine cases with matching inventories,
+no failures or skips. ASan leak detection is disabled; UBSan halts.
+Corrected engine source fingerprint:
+`baaf488d697227527901cb020a2175342f6b49926c487806a244ca9ebfad99f0`.
+The passing component run predates only that resolver exception correction;
+it is not represented as a rerun of the final engine source.
+Evidence is under `build/oblivion-compat/m15/S3/`, with run names prefixed
+`native-constructor-storage-rule`. Automatic fresh actor publication and
+full Player construction remain open. Git metadata remains read-only;
+this chunk is exported as pending-chunks-21, not committed.

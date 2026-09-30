@@ -175,6 +175,8 @@ namespace MWWorld
     {
         if (actor.isNull() || ESM4::runtimeReferenceKey(actor) == ESM::FormKey::dynamic("player", 1))
             throw std::invalid_argument("native nonplayer construction requires a nonplayer actor identity");
+        if (process != ESM4::ActorValueProcess::Low && process != ESM4::ActorValueProcess::Active)
+            throw std::runtime_error("native actor construction has an invalid process");
         const auto* npc = store.search<ESM4::Npc>(actorBase);
         const auto* creature = store.search<ESM4::Creature>(actorBase);
         if ((!npc && !creature) || (npc && creature)
@@ -198,12 +200,9 @@ namespace MWWorld
         const std::array<std::uint8_t, 4> settings{ai.aggression, ai.confidence, ai.energyLevel, ai.responsibility};
         for (std::size_t i = 0; i < settings.size(); ++i)
             result.mValues[33 + i].mBase = settings[i];
-        // Common Script and process Damage containers start with permanent
-        // AV9/10 zero nodes. LowProcess has no Maximum container; do not
-        // invent its slot presence when preparing fresh Low actors.
-        for (const auto av : {9, 10})
-            result.mValues[av].mModifiers = {
-                process == ESM4::ActorValueProcess::Active ? std::optional(0.f) : std::nullopt, 0.f, 0.f};
+        const auto modifiers = ESM4::initialActorValueModifierStorage(result.mOwner, process);
+        for (std::size_t av = 0; av < result.mValues.size(); ++av)
+            result.mValues[av].mModifiers = modifiers[av];
         result.validate();
         return result;
     }

@@ -18,6 +18,12 @@ namespace ESM4
     enum class ActorValueModifier : std::uint8_t { Maximum, Script, Damage };
     using ActorValueModifiers = std::array<std::optional<float>, 3>;
 
+    // Modifier containers after successful owner/process construction, before
+    // form lookups or effects. Player arrays are allocated for every AV;
+    // nonplayer containers are sparse, and Low has no Maximum container.
+    std::array<ActorValueModifiers, 72> initialActorValueModifierStorage(
+        ActorValueOwner owner, ActorValueProcess process);
+
     // Native scalar storage. Sparse-entry presence must survive serialization:
     // an absent NPC modifier does not behave like a stored zero when mutated.
     struct ActorValueState

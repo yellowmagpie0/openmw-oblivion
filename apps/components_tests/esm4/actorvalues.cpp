@@ -492,3 +492,48 @@ TEST(ESM4ActorValues, ResurrectionResetPreservesOwnerSpecificModifierStorage)
     EXPECT_THROW(ESM4::resetResurrectionModifiers({1, {0, std::numeric_limits<float>::quiet_NaN(), 0}},
         Owner::Player, 9), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, InitialModifierStorageMatchesOriginalOwnerAndProcessConstructors)
+{
+    // Independent original construction reports: Player stores 216 positive
+    // zeros; sparse NPC containers store only permanent Magicka/Fatigue nodes.
+    for (const auto owner : {Owner::Player, Owner::NonPlayer})
+        for (const auto process : {Process::Low, Process::Active})
+        {
+            SCOPED_TRACE(static_cast<unsigned>(owner));
+            SCOPED_TRACE(static_cast<unsigned>(process));
+            const auto storage = ESM4::initialActorValueModifierStorage(owner, process);
+            std::array<std::size_t, 3> present{};
+            for (std::uint8_t av = 0; av < storage.size(); ++av)
+            {
+                for (std::size_t channel = 0; channel < storage[av].size(); ++channel)
+                    if (const auto value = storage[av][channel])
+                    {
+                        ++present[channel];
+                        EXPECT_EQ(std::bit_cast<std::uint32_t>(*value), 0u);
+                        if (owner == Owner::NonPlayer)
+                            EXPECT_TRUE(av == 9 || av == 10);
+                    }
+                ESM4::ActorValueState initial{100.f, storage[av]};
+                EXPECT_EQ(ESM4::composeActorValue(initial, owner, process), 100.f);
+                const auto zeroScript = ESM4::changeActorValueModifier(initial, owner, av, Modifier::Script, 0.f);
+                EXPECT_EQ(zeroScript, initial);
+                const auto debit = ESM4::changeActorValueModifier(initial, owner, av, Modifier::Damage, -1.f);
+                EXPECT_EQ(ESM4::composeActorValue(debit, owner, process), 99.f);
+                EXPECT_EQ(storage[av], initial.mModifiers); // Immutable construction inputs.
+            }
+            const auto expected = owner == Owner::Player ? std::array<std::size_t, 3>{72, 72, 72}
+                : process == Process::Low ? std::array<std::size_t, 3>{0, 2, 2}
+                                         : std::array<std::size_t, 3>{2, 2, 2};
+            EXPECT_EQ(present, expected);
+        }
+}
+
+TEST(ESM4ActorValues, InitialModifierStorageRejectsInvalidConstructionDomains)
+{
+    EXPECT_THROW(ESM4::initialActorValueModifierStorage(static_cast<Owner>(255), Process::Active),
+        std::invalid_argument);
+    for (const auto owner : {Owner::Player, Owner::NonPlayer})
+        EXPECT_THROW(ESM4::initialActorValueModifierStorage(owner, static_cast<Process>(255)),
+            std::invalid_argument);
+}

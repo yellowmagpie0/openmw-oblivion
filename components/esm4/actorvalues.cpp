@@ -35,6 +35,22 @@ namespace ESM4
         }
     }
 
+    std::array<ActorValueModifiers, 72> initialActorValueModifierStorage(
+        ActorValueOwner owner, ActorValueProcess process)
+    {
+        validateOwner(owner);
+        if (process != ActorValueProcess::Low && process != ActorValueProcess::Active)
+            throw std::invalid_argument("invalid native actor-value initial process");
+        std::array<ActorValueModifiers, 72> result{};
+        if (owner == ActorValueOwner::Player)
+            result.fill({0.f, 0.f, 0.f});
+        else
+            for (const auto av : {9, 10})
+                result[av] = {
+                    process == ActorValueProcess::Active ? std::optional(0.f) : std::nullopt, 0.f, 0.f};
+        return result;
+    }
+
     std::optional<std::uint8_t> actorValueIndex(std::string_view name)
     {
         static constexpr std::array<std::string_view, 72> names{
