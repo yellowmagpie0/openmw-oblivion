@@ -1,3 +1,5 @@
+#include <components/esm4/loadbsgn.hpp>
+#include "apps/openmw/mwworld/player.hpp"
 #include <gtest/gtest.h>
 
 #include <array>
@@ -1603,5 +1605,133 @@ namespace
         EXPECT_TRUE(ptrs[2].mRef->isDeleted());
         EXPECT_TRUE(model.getPtr(ptrs[1].getCellRef().getRefNum()).isEmpty());
         EXPECT_TRUE(model.getPtr(ptrs[2].getCellRef().getRefNum()).isEmpty());
+    }    TEST(OblivionWorldTest, nativeCharacterChoicesCommitMetadataAuthorityAndPassiveReplacementTogether)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        auto& service = *world.getOblivionCombatService();
+        const auto beforeMetadata = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        ESM4::Npc native{}; native.mId = {7, 0}; native.mIsTES4 = true;
+        const auto playerBase = ESM::FormKey::content("Oblivion.esm", 7);
+        native.mFormKey = playerBase; native.mData.attribs = {40, 40, 40, 40, 40, 40, 40, 40};
+        store.getWritable<ESM4::Npc>().insertStatic(native, playerBase);
+        ESM4::Race race{}; race.mId = {0x810, 0};
+        race.mAttribMale = {40, 40, 40, 40, 40, 40, 40, 40};
+        race.mAttribFemale = {30, 30, 30, 30, 30, 30, 30, 30};
+        race.mTES4SkillBonuses = std::array<ESM4::Race::SkillBonus, 7>{};
+        for (auto& bonus : *race.mTES4SkillBonuses) bonus.mSkill = -1;
+        const auto raceKey = ESM::FormKey::content("headless.esm", 0x810);
+        store.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        ESM4::Class characterClass{}; characterClass.mId = {0x811, 0};
+        characterClass.mData.mFavoredAttributes = {0, 5};
+        characterClass.mData.mMajorSkills = {12, 13, 14, 15, 16, 17, 18};
+        characterClass.mData.mSpecialization = 0;
+        store.getWritable<ESM4::Class>().insertStatic(characterClass, ESM::FormKey::content("headless.esm", 0x811));
+        for (unsigned i = 0; i < 21; ++i)
+        {
+            ESM4::Skill skill{}; skill.mId = {0x1000 + i, 0}; skill.mIndex = i + 12;
+            skill.mData = ESM4::SkillData{i + 12, 0, i % 3, {1, 2}};
+            store.getWritable<ESM4::Skill>().insertStatic(skill, ESM::FormKey::content("headless.esm", 0x1000 + i));
+        }
+        auto proposed = beforeMetadata; proposed.mRace = race.mId; proposed.mClass = characterClass.mId;
+        proposed.mNpdt.mLevel = 1; proposed.setIsMale(true);
+        auto invalid = proposed; invalid.mRace = ESM::RefId::stringRefId("missing-race");
+        EXPECT_THROW(world.replaceOblivionPlayerCharacter(invalid, {}, nullptr, 2), std::invalid_argument);
+        EXPECT_THROW(world.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0x80), std::invalid_argument);
+        EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase->mRace, beforeMetadata.mRace);
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 0);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 2));
+        EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase->mRace, proposed.mRace);
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 2);
+        EXPECT_EQ(service.getPlayerValue(8), 90);
+        EXPECT_EQ(service.getPlayerValue(9), 60);
+        EXPECT_EQ(service.getPlayerValue(10), 170);
+        ASSERT_TRUE(world.requestOblivionResourceCurrent(world.getPlayerPtr(), 8, 80));
+        ESM4::EffectSetting effect{}; effect.mId = {0x812, 0}; effect.mEffectCode = ESM::fourCC("FOAT");
+        effect.mFullName = "Fortify Attribute"; effect.mData.emplace(); effect.mData->mSchool = 2;
+        effect.preparePassiveValueModifierDefinition();
+        store.getWritable<ESM4::EffectSetting>().insertStatic(effect, ESM::FormKey::content("headless.esm", 0x812));
+        ESM4::Spell spell{}; spell.mId = {0x813, 0}; spell.mData = ESM4::SpellData{4, 0, 0, 0, {}};
+        spell.mEffects = {{ESM::fourCC("FOAT"), 25, 0, 0, 0, 5, {}}};
+        const auto spellKey = ESM::FormKey::content("headless.esm", 0x813);
+        store.getWritable<ESM4::Spell>().insertStatic(spell, spellKey);
+        ESM4::BirthSign sign{}; sign.mId = {0x814, 0}; sign.mSpells = {spell.mId};
+        store.getWritable<ESM4::BirthSign>().insertStatic(sign, ESM::FormKey::content("headless.esm", 0x814));
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, sign.mId, nullptr, 8));
+        EXPECT_EQ(world.getPlayer().getBirthSign(), ESM::RefId(sign.mId));
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 10);
+        EXPECT_EQ(service.getPlayerValue(5), 70);
+        EXPECT_EQ(service.getPlayerValue(8), 130); // Existing Health damage survives.
+        EXPECT_EQ(service.getPlayerValue(10), 195);
+        ASSERT_EQ(service.findActorValues(actor)->mPassiveAbilities->size(), 1);
+        const auto before = *service.findActorValues(actor);
+        const auto* record = world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        EXPECT_THROW(world.replaceOblivionPlayerCharacter(proposed,
+            ESM::RefId::stringRefId("missing-sign"), nullptr, 4), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(actor), before);
+        EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, record);
+        EXPECT_EQ(world.getPlayer().getBirthSign(), ESM::RefId(sign.mId));
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 10);
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, sign.mId, nullptr, 0));
+        EXPECT_EQ(*service.findActorValues(actor), before); // No duplicated grant.
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0));
+        EXPECT_EQ(service.getPlayerValue(5), 45);
+        EXPECT_EQ(service.getPlayerValue(8), 80);
+        EXPECT_TRUE(service.findActorValues(actor)->mPassiveAbilities->empty());
+        proposed.setIsMale(false);
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0));
+        EXPECT_EQ(service.getPlayerValue(8), 60);
+        EXPECT_EQ(service.getPlayerValue(9), 45);
+        EXPECT_EQ(service.getPlayerValue(10), 130);
+        EXPECT_FALSE(world.getPlayerPtr().get<ESM::NPC>()->mBase->isMale());
+        proposed.setIsMale(true);
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0));
+        EXPECT_EQ(service.getPlayerValue(8), 80);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = actor;
+        saved.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        saved.mPlayer.mRace = raceKey;
+        saved.mPlayer.mClass = ESM::FormKey::content("headless.esm", 0x811);
+        service.capture(saved);
+        const auto bytes = saved.serializeBinary();
+        service.clear();
+        service.restore(ESM4::RuntimeState::deserializeBinary(bytes), store);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        EXPECT_EQ(service.getPlayerValue(8), 80);
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0));
+        EXPECT_EQ(*service.findActorValues(actor), saved.mNativeActorValues.front());
+        ESM::Class custom{}; custom.blank();
+        custom.mData.mAttribute = {ESM::Attribute::Strength, ESM::Attribute::Endurance};
+        custom.mData.mSpecialization = 0;
+        const auto& skills = MWWorld::oblivionSkillIds();
+        for (unsigned i = 0; i < 5; ++i) custom.mData.mSkills[i][1] = skills[i];
+        custom.mData.mSkills[0][0] = skills[5]; custom.mData.mSkills[1][0] = skills[6];
+        ESM::RefId nextClass;
+        {
+            auto preparation = store.preparePlayerRecord(proposed, &custom);
+            nextClass = preparation.customClass()->mId;
+        }
+        auto malformed = custom; malformed.mData.mSkills[0][1] = {};
+        const auto beforeCustom = *service.findActorValues(actor);
+        EXPECT_THROW(world.replaceOblivionPlayerCharacter(proposed, {}, &malformed, 4), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(actor), beforeCustom);
+        EXPECT_EQ(store.get<ESM::Class>().search(nextClass), nullptr);
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 10);
+        ASSERT_TRUE(world.replaceOblivionPlayerCharacter(proposed, {}, &custom, 4));
+        EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase->mClass, nextClass);
+        ASSERT_NE(store.get<ESM::Class>().search(nextClass), nullptr);
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 14);
+        EXPECT_EQ(service.getPlayerValue(8), 80);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_FALSE(legacy.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0));
     }
+
+
 }

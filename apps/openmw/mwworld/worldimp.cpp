@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
+#include <type_traits>
 #include <vector>
 
 #include <osg/ComputeBoundsVisitor>
@@ -1325,6 +1326,60 @@ namespace MWWorld
             legacyDead = *dead;
         }
         mOblivionCombat->initializeNonPlayerActor(actor, mStore, playerLevel, process, legacyDead);
+        if (marker)
+            reference->mCustomState.erase(*marker);
+        return true;
+    }
+
+    bool World::replaceOblivionPlayerCharacter(const ESM::NPC& candidate, const ESM::RefId& birthSign,
+        const ESM::Class* customClass, std::uint8_t characterGenerationFlags)
+    {
+        if (!mOblivionCombat || !mPlayer)
+            return false;
+        if (characterGenerationFlags & ~0x0f)
+            throw std::invalid_argument("invalid native Player character-generation flags");
+        static_assert(std::is_nothrow_copy_assignable_v<ESM::RefId>);
+        auto metadata = mStore.preparePlayerRecord(candidate, customClass);
+        const auto& proposed = metadata.player();
+        const auto stats = resolveOblivionPlayerCharacterBaseStats(mStore, proposed.mRace, proposed.mClass,
+            !proposed.isMale(), proposed.mNpdt.mLevel, metadata.customClass());
+        const auto spells = resolveOblivionPlayerSpellInputs(mStore, proposed.mRace, birthSign);
+        std::vector<MWMechanics::OblivionPassiveEffectIdentity> removalOrder;
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        if (const auto* previous = mOblivionCombat->findActorValues(actor))
+        {
+            if (!previous->mPassiveAbilities)
+                throw std::invalid_argument("unknown native Player passive ownership during character choice");
+            removalOrder = resolveOblivionPlayerPassiveRemovalOrder(mStore, *previous->mPassiveAbilities);
+        }
+        const auto settings = resolveOblivionPlayerDynamicBaseSettings(mStore);
+        const bool essential = (proposed.mFlags & ESM::NPC::Essential) != 0;
+        const auto recovery = essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        ESM4::RuntimeReferenceState* reference = nullptr;
+        if (mOblivionRuntimeState)
+            for (auto& saved : mOblivionRuntimeState->mReferences)
+                if (saved.mKey == actor)
+                {
+                    reference = &saved;
+                    break;
+                }
+        const auto marker = findLegacyDeathMarker(reference);
+        std::optional<bool> legacyDead;
+        if (marker)
+        {
+            const auto* dead = std::get_if<bool>(&(*marker)->second);
+            if (!dead)
+                throw std::invalid_argument("invalid legacy native Player death marker");
+            legacyDead = *dead;
+        }
+        mOblivionCombat->initializePlayerCharacter(*mPlayer, mStore, stats, spells.mPassiveAbilities,
+            removalOrder, settings, essential, recovery, getGodModeState(), legacyDead);
+        // All allocating/validating work is finished. Publish metadata before
+        // returning to any rendering, scripts, UI or actor-update callbacks.
+        mPlayer->set(metadata.commit());
+        mPlayer->setBirthSign(birthSign);
+        mPlayer->markOblivionCharacterGeneration(characterGenerationFlags);
         if (marker)
             reference->mCustomState.erase(*marker);
         return true;
@@ -5366,9 +5421,9 @@ namespace MWWorld
                         && (ptr.getRefData().getPosition().asVec3() - playerPosition).length2() <= range * range;
                     projections.push_back(ptr);
                 }
-                else if (const auto found = savedReferences.find(values.mActor); found != savedReferences.end())
+                else if (const auto saved = savedReferences.find(values.mActor); saved != savedReferences.end())
                 {
-                    if (!found->second->mEnabled || found->second->mDeleted)
+                    if (!saved->second->mEnabled || saved->second->mDeleted)
                         continue;
                 }
                 else

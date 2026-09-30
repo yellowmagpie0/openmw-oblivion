@@ -7290,3 +7290,62 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: apply and test prepared World/native
 character-selection publication, then automatic activation and melee.
 S2/S3 and all later required gameplay gates remain open.
+
+### Transactional native character-selection publication
+
+World now prepares the Player record/custom class, winning character bases,
+spell declarations, passive replacement/removal order, settings and legacy
+death adoption before publishing native values/lifecycle and metadata. The
+remaining metadata commit uses no-throw prepared nodes; RefId assignment is
+asserted no-throw. Invalid generation bits reject before preparation. Native
+race/sex, class, custom-class and birthsign mechanics paths use this operation
+before selection flags or rendering callbacks. The native build path runs
+before shared spell/stat resets and replaces the older M12 hardcoded stat
+builder. The Morrowind path retains its existing stat/spell calculations.
+
+The new headless actual-World fixture verifies fresh failed choices do not
+create actor authority; accepted choices agree with metadata and generation
+flags; birthsign replacement/removal preserves Health damage without duplicate
+grants; sex changes update derived pools; binary authority readback/reprojection
+and repeated rebuilding preserve values; malformed custom classes publish
+neither class nor generated ID; and a valid custom class commits together with
+Player metadata. These checks do not exercise rendering or normal GUI input.
+Baseline attempt01 lacked the complete Player include; corrected attempt02
+rejects the absent API. Syntax attempt01 found an auto-pointer/NotNullPtr
+declaration mismatch, corrected to the existing conventional pointer style;
+all three changed translation units pass syntax attempt03 without warnings.
+The existing rest shadow warning is also removed by renaming its saved lookup.
+
+Both full engine attempt01 runs executed692 cases:691 passed and the new
+fixture failed only its two incorrect Magicka expectations20/15. The reviewed
+native formula adds Intelligence as well as its GMST product, giving60/45 for
+these default-GMST fixtures. The corrected assertions and invalid-bit guard are
+verified in fresh attempt02 runs. Failed evidence remains unchanged.
+
+`native-world-character-engine-02` and
+`native-world-character-sanitized-engine-02` each pass692 full engine cases,
+exact inventories, no failures/skips, fingerprint
+`e49589dfed90e42df1f4416d995d3bc478655783440eb99fa0aa6ad025e20a8b`. ASan/UBSan leak checks are off.
+
+`native-world-character-master-02` independently loads the hash-identified
+installed Oblivion.esm through actual World/loadData and profile setup. All420
+choices (15 races,14 birthsign options including none,both sexes) publish their
+requested metadata, reapply idempotently without duplicated owned grants and
+produce no death events. The first unchanged-input run also passed420 before
+the invalid-bit guard; the final run links the final production source.
+Master hash: `a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+Final driver hash: `c48158371ced81cfbbd9714a4debad321254fbff3a9e05340c19b2c7528b3afb`.
+Final output hash: `68961ca5484a247fd90330e12407a4eaa6934bfeb11472a336130f75dbe155b9`.
+Configured compile/link/run arguments and source remain with that evidence.
+This is real-content headless world integration, not normal-input gameplay,
+original caster-source scheduling, visual/audio review or fresh-process game
+save acceptance. Ordinary spells/powers remain declarations pending casting.
+
+Checkpoint42 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-20/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: native scene activation, legacy-save
+admission/migration and melee wiring. S2/S3 and all later required gameplay
+gates remain open.

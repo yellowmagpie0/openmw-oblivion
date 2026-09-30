@@ -245,6 +245,10 @@ namespace MWWorld
         bool requestOblivionStatBase(const Ptr& actor, std::uint8_t value, float requested) override;
         bool initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process);
         bool initializeOblivionPlayerActor();
+        // Validate/stage metadata, native bases and self-passive replacement
+        // before one synchronous publication. Rendering follows acceptance.
+        bool replaceOblivionPlayerCharacter(const ESM::NPC& candidate, const ESM::RefId& birthSign,
+            const ESM::Class* customClass = nullptr, std::uint8_t characterGenerationFlags = 0);
         bool updateOblivionFrameResources(const Ptr& actor, float duration, bool running) override;
         bool spendOblivionJumpFatigue(const Ptr& actor) override;
         std::optional<bool> isOblivionInCombat(const Ptr& actor) const override;
