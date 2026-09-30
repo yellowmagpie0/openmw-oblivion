@@ -1835,6 +1835,8 @@ namespace MWWorld
         applyPreparedInventory(playerInventory, preparedPlayerInventory);
         player.getRefData().setPosition(state.mPlayer.mPosition);
         MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+        const bool nativePlayerValues = preparedCombat
+            && preparedCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
         const auto applyDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& current) {
             const std::string prefix(name);
             const auto value = [&](std::string_view suffix, double fallback) {
@@ -1852,24 +1854,32 @@ namespace MWWorld
             const float currentValue = value(".current", current.getCurrent());
             return MWMechanics::DynamicStat<float>(base, modifier, currentValue);
         };
-        stats.setHealth(applyDynamicStat("health", stats.getHealth()));
-        stats.setMagicka(applyDynamicStat("magicka", stats.getMagicka()));
-        stats.setFatigue(applyDynamicStat("fatigue", stats.getFatigue()));
+        // Native channels are installed by the prepared authority/view commit.
+        // Legacy telemetry is not an alternate source for those same values.
+        if (!nativePlayerValues)
+        {
+            stats.setHealth(applyDynamicStat("health", stats.getHealth()));
+            stats.setMagicka(applyDynamicStat("magicka", stats.getMagicka()));
+            stats.setFatigue(applyDynamicStat("fatigue", stats.getFatigue()));
+        }
         if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
             stats.setLevel(static_cast<int>(level->second));
         static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
             "endurance", "personality", "luck" };
-        for (std::size_t i = 0; i < attributeNames.size(); ++i)
+        if (!nativePlayerValues)
         {
-            MWMechanics::AttributeValue value = stats.getAttribute(ESM::Attribute::indexToRefId(i));
-            const std::string prefix(attributeNames[i]);
-            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".base");
-                found != state.mPlayer.mActorValues.end())
-                value.setBase(static_cast<float>(found->second), true);
-            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".modifier");
-                found != state.mPlayer.mActorValues.end())
-                value.setModifier(static_cast<float>(found->second));
-            stats.setAttribute(ESM::Attribute::indexToRefId(i), value);
+            for (std::size_t i = 0; i < attributeNames.size(); ++i)
+            {
+                MWMechanics::AttributeValue value = stats.getAttribute(ESM::Attribute::indexToRefId(i));
+                const std::string prefix(attributeNames[i]);
+                if (const auto found = state.mPlayer.mActorValues.find(prefix + ".base");
+                    found != state.mPlayer.mActorValues.end())
+                    value.setBase(static_cast<float>(found->second), true);
+                if (const auto found = state.mPlayer.mActorValues.find(prefix + ".modifier");
+                    found != state.mPlayer.mActorValues.end())
+                    value.setModifier(static_cast<float>(found->second));
+                stats.setAttribute(ESM::Attribute::indexToRefId(i), value);
+            }
         }
         static const std::array skillIds{ ESM::Skill::Armorer, ESM::Skill::Athletics, ESM::Skill::LongBlade,
             ESM::Skill::Block, ESM::Skill::BluntWeapon, ESM::Skill::HandToHand, ESM::Skill::HeavyArmor,
@@ -1885,16 +1895,19 @@ namespace MWWorld
         if (const auto breath = state.mPlayer.mActorValues.find("breath_time.current");
             breath != state.mPlayer.mActorValues.end())
             npcStats.setTimeToStartDrowning(static_cast<float>(breath->second));
-        for (std::size_t i = 0; i < skillIds.size(); ++i)
+        if (!nativePlayerValues)
         {
-            MWMechanics::SkillValue& value = npcStats.getSkill(ESM::RefId(skillIds[i]));
-            const std::string prefix(skillNames[i]);
-            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".base");
-                found != state.mPlayer.mActorValues.end())
-                value.setBase(static_cast<float>(found->second), true);
-            if (const auto found = state.mPlayer.mActorValues.find(prefix + ".modifier");
-                found != state.mPlayer.mActorValues.end())
-                value.setModifier(static_cast<float>(found->second));
+            for (std::size_t i = 0; i < skillIds.size(); ++i)
+            {
+                MWMechanics::SkillValue& value = npcStats.getSkill(ESM::RefId(skillIds[i]));
+                const std::string prefix(skillNames[i]);
+                if (const auto found = state.mPlayer.mActorValues.find(prefix + ".base");
+                    found != state.mPlayer.mActorValues.end())
+                    value.setBase(static_cast<float>(found->second), true);
+                if (const auto found = state.mPlayer.mActorValues.find(prefix + ".modifier");
+                    found != state.mPlayer.mActorValues.end())
+                    value.setModifier(static_cast<float>(found->second));
+            }
         }
 
         // Load every target cell first, then build a stable-key index. This also makes moved-reference restoration

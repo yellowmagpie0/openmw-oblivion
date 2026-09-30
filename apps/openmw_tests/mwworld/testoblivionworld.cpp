@@ -26,6 +26,7 @@
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 #include "apps/openmw/mwworld/worldimp.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
+#include "apps/openmw/mwworld/timestamp.hpp"
 
 namespace
 {
@@ -114,6 +115,7 @@ namespace
         ESM4::ActorCharacter reference{};
         reference.mId = {referenceId, 0};
         reference.mFormKey = ESM::FormKey::content("headless.esm", referenceId);
+        reference.mBaseObj = ESM::FormId{0x800, 0};
         reference.mBaseKey = base;
         store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
         MWWorld::LiveCellRef<ESM4::Npc> live(reference, store.search<ESM4::Npc>(base));
@@ -724,6 +726,146 @@ namespace
         EXPECT_EQ(captureNativeActorState(fixture, npc).mNativeActorValues, saved.mNativeActorValues);
         EXPECT_EQ(captureNativeActorState(fixture, npc).mNativeActorLife, saved.mNativeActorLife);
         EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
+    TEST(OblivionWorldTest, actualWorldApplyUsesNativePlayerAuthorityOverLegacyTelemetry)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        // Register synthetic data through the normal stores, without scene
+        // attachment. This is World apply, not graphical restart acceptance.
+        const auto npc = addNativeNpc(fixture, 0x900);
+        auto& store = world.getStore();
+        ESM::Race race{};
+        race.blank();
+        race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+        store.getWritable<ESM::Race>().insertStatic(race);
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+        cell.mCellFlags = ESM4::CELL_Interior;
+        cell.mEditorId = "NativeRestoreCell";
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        auto& service = *world.getOblivionCombatService();
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{10, 0, 0, 0}};
+        for (std::size_t i = 0; i < 8; ++i)
+            values.mValues[i].mBase = 50;
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
+        service.publishPlayerValues(world.getPlayer(), values, settings);
+        ESM4::RuntimeActorLife life;
+        life.mActor = values.mActor;
+        life.mBase = values.mBase;
+        life.mPhase = ESM4::ActorLifePhase::Dead;
+        service.publishPlayerLife(world.getPlayer(), life);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = values.mActor;
+        saved.mPlayer.mCell = cell.mFormKey;
+        saved.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        saved.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+        // Deliberately inconsistent legacy telemetry must not overwrite the
+        // native channels or invoke guarded legacy stat mutation.
+        saved.mPlayer.mActorValues["health.current"] = 999;
+        saved.mPlayer.mActorValues["strength.base"] = 99;
+        saved.mPlayer.mActorValues["blade.base"] = 99;
+        service.capture(saved);
+        std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+        saved.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(world.getPlayerPtr(), 0,
+            ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, -7));
+        const auto clockBefore = world.getTimeStamp();
+        auto bad = saved;
+        bad.mClock.mHour = 7;
+        bad.mNativeActorValues[0].mValues[33].mModifiers[1] = 1e32f;
+        ASSERT_NO_THROW(bad.validate());
+        readNativeSnapshot(fixture, bad);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+        // Reject unsupported Player integer views during detached service
+        // preparation, before changing the world clock or live authority.
+        EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        EXPECT_EQ(world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr())
+            .getAttribute(ESM::Attribute::Strength).getModified(), 43);
+        auto beforeRetry = saved;
+        service.capture(beforeRetry);
+        EXPECT_EQ(beforeRetry.mNativeActorValues[0].mValues[0].mModifiers[1], -7);
+        readNativeSnapshot(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto player = world.getPlayerPtr();
+        const auto& stats = player.getClass().getNpcStats(player);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 110);
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 50);
+        EXPECT_EQ(stats.getSkill(ESM::Skill::LongBlade).getBase(), 0);
+        EXPECT_TRUE(stats.isDead());
+        auto after = saved;
+        service.capture(after);
+        EXPECT_EQ(after.serializeBinary(), saved.serializeBinary());
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        const auto resident = npc.getCell()->moveTo(npc, player.getCell());
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(resident, ESM4::ActorValueProcess::Active));
+        const auto captured = world.captureOblivionRuntimeState();
+        ASSERT_EQ(captured.mReferences.size(), 1);
+        EXPECT_EQ(captured.mReferences[0].mKey, resident.getCellRef().getFormKey());
+        EXPECT_EQ(captured.mPlayer.mActorValues.at("health.current"), 110);
+        EXPECT_EQ(captured.mPlayer.mActorValues.at("strength.base"), 50);
+        EXPECT_EQ(captured.mNativeActorValues.size(), 2);
+        service.changePlayerValue(world.getPlayer(), 8, ESM4::ActorValueModifier::Damage, -3, settings);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(resident, 8, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Console, -7));
+        readNativeSnapshot(fixture, captured);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), captured.serializeBinary());
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 110);
+        EXPECT_EQ(resident.getClass().getCreatureStats(resident).getHealth().getCurrent(), 100);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
+    TEST(OblivionWorldTest, actualWorldApplyPreservesSupportedLegacyPlayerTelemetry)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        auto& store = world.getStore();
+        ESM::Race race{};
+        race.blank();
+        race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+        store.getWritable<ESM::Race>().insertStatic(race);
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+        cell.mCellFlags = ESM4::CELL_Interior;
+        cell.mEditorId = "LegacyRestoreCell";
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = cell.mFormKey;
+        saved.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        saved.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+        saved.mPlayer.mActorValues["health.current"] = 123;
+        saved.mPlayer.mActorValues["strength.base"] = 11;
+        saved.mPlayer.mActorValues["blade.base"] = 17;
+        std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+        saved.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+        for (std::uint32_t version = 3; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+        {
+            SCOPED_TRACE(version);
+            saved.mVersion = version;
+            readNativeSnapshot(fixture, saved);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            const auto player = world.getPlayerPtr();
+            const auto& stats = player.getClass().getNpcStats(player);
+            EXPECT_FALSE(stats.getHealth().isNativeProjection());
+            EXPECT_EQ(stats.getHealth().getCurrent(), 123);
+            EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getBase(), 11);
+            EXPECT_EQ(stats.getSkill(ESM::Skill::LongBlade).getBase(), 17);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorValues(saved.mPlayer.mReference), nullptr);
+            EXPECT_FALSE(world.getOblivionCombatService()->takeNextDeathEvent());
+        }
     }
 
     TEST(OblivionWorldTest, nativeWorldPlayerDataConstructionDoesNotRequireRendering)

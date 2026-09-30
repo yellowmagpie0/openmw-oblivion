@@ -5919,3 +5919,61 @@ World-owned Player and a binary snapshot roundtrip; it is not actual World
 apply, a save/quit/fresh restart, or whole-world load rollback. Those paths,
 older Player form-input migration and fresh authority construction remain
 open. Local commits are still unavailable because .git is read-only.
+
+### S3 continuation: actual World T4ST apply respects Player authority
+
+World data restoration is now callable independently of the scene-attachment
+part of saveLoaded, using its already-read native snapshot. Native Player
+resources, attributes and skills are installed from prepared authority;
+legacy Player telemetry no longer writes those guarded views first. Snapshots
+without native Player authority retain the existing legacy data path.
+
+`native-player-world-apply-baseline-01` retains the private-method compile
+failure; baseline02, after exposing the unchanged data method, reproduces
+the native dynamic-stat mutation guard. Normal and sanitizer
+`native-player-world-apply-01` each pass all657 engine cases, exact inventory/
+XML and no skips, at fingerprint
+`e8bc7ba83204149e064b6c13a85539e8ac187b0f225aa2ee072dc2e330d9f686`
+on parent `8cf3491f18`. ASan/halting UBSan run with leak detection off. The
+new regression passes a real T4ST record through World read/apply with
+conflicting legacy Health/Strength/Blade telemetry and verifies the native
+resource, attribute, skill and dead views plus unchanged captured authority
+and no historical events. Synthetic cell/race data use real stores; no
+rendering or gameplay restart occurs. Whole-world rollback, native Player
+preflight before unrelated mutations, old form-input migration, fresh
+activation and normal-input/fresh-process acceptance remain open. Commits
+remain unavailable under the read-only .git mount.
+
+Player projection preflight now also runs during detached service restore.
+`native-player-world-preflight-baseline-01` demonstrates an unsupported finite
+Player AI Script scalar changing World hour to7 before late rejection. The
+corrected normal and sanitizer `native-player-world-preflight-01` runs each
+pass all658 engine cases, exact inventory/XML and no skips, at fingerprint
+`90eb3a5b297dba0f0dd853e1841f4a49891e22309a7db4b7e09a5d36dbb381bb` on parent `8cf3491f18`. Leak detection is disabled.
+Tests verify clock preservation, unchanged live Player authority/view and
+corrected retry. A separate actual World read/apply regression preserves
+legacy resource/attribute/skill telemetry without native Player authority
+through all15 schema versions3–17. This is neither migration of missing raw
+Player form inputs nor complete whole-world transactional rollback. Those
+gates, fresh authority construction and gameplay/restart acceptance remain
+open. The local Git commit still cannot be written under this sandbox.
+
+### S3 continuation: actual World capture/read/apply/recapture
+
+The existing World native capture method is available alongside its data-apply
+method for data-layer validation. The actual World test now includes a moved
+NPC in a native cell and live Player/NPC authority. It captures through World,
+mutates both resources, writes/reads T4ST, applies through World and requires
+binary-identical recapture plus matching cached class reads and no events.
+
+Normal and sanitizer `native-world-capture-roundtrip-01` retain the fixture
+identity failure: its NPC reference supplied a stable base key but omitted
+the corresponding FormId field. The corrected fixture supplies both, without
+weakening World serialization. Normal and sanitizer roundtrip02 pass all658
+engine cases with exact inventories/XML and no skips at fingerprint
+`7c682846cf40ee491b9876b0a06c2f71d491ae9ddbb525bcf5c3802a3e6c90d7`
+on parent `8cf3491f18`. Leak detection is disabled. This exercises actual
+World native capture and T4ST data restoration in one process, not a complete
+engine save, scene reattachment, quit/fresh load or normal-input acceptance.
+Whole-world rollback and remaining M15 stage gates stay open. Local commits
+remain prevented by the read-only Git metadata mount.

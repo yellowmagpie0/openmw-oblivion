@@ -2209,11 +2209,11 @@ namespace MWMechanics
                 if (resolved != actor)
                     throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
             }
-            // Ordinary state composition does not include the NPC outer
-            // Magicka scale or dynamic maxima. Reject those invalid outputs
-            // before replacing authority, including for unloaded actors.
-            if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
-                actorProjection(actor, base == bases.end() ? nullptr : &base->second);
+            // Scalar validation alone does not include integer AI views,
+            // dynamic maxima or the NPC outer Magicka scale. Prepare these
+            // for both Player and nonplayer snapshots before map replacement
+            // or World mutations, including for unloaded actors.
+            actorProjection(actor, base == bases.end() ? nullptr : &base->second);
         }
         decltype(mCombatOpponents) opponents;
         for (const auto& [first, second] : state.mNativeCombatEngagements)

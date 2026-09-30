@@ -208,8 +208,6 @@ namespace MWWorld
 
         void ensureNeededRecords();
         void installOblivionProfileServices();
-        ESM4::RuntimeState captureOblivionRuntimeState() const;
-        void applyOblivionRuntimeState();
 
         void fillGlobalVariables();
 
@@ -560,6 +558,11 @@ namespace MWWorld
         void saveLoaded(const ESM::ESMReader& reader) override;
 
         void setupPlayer() override;
+
+        // Apply the validated native snapshot read by readRecord. World data
+        // restoration precedes optional scene attachment in saveLoaded.
+        void applyOblivionRuntimeState();
+        ESM4::RuntimeState captureOblivionRuntimeState() const;
         void renderPlayer() override;
 
         /// open or close a non-teleport door (depending on current state)
