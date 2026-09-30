@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "initializer": "00417420",
+  "creator_boundary": "00417220",
+  "source_report_sha256": "74e29aba76f4901ada4cdd2e2957eea6c2e44b23f71be53eb1400df16088aae7",
+  "scope": "Compiled flag/data/resistance facts for14 original-master racial/birthsign passive codes. Registry/factory and full apply/remove instruction checks are scoped separately in provenance; this manifest is not a gameplay acceptance result.",
+  "records": [
+    {
+      "code": "WABR",
+      "flags": 16777586,
+      "data": 55,
+      "resistance": 4294967295
+    },
+    {
+      "code": "WKFI",
+      "flags": 16777343,
+      "data": 61,
+      "resistance": 64
+    },
+    {
+      "code": "WKFR",
+      "flags": 16777343,
+      "data": 62,
+      "resistance": 64
+    },
+    {
+      "code": "WKSH",
+      "flags": 16777343,
+      "data": 68,
+      "resistance": 64
+    },
+    {
+      "code": "WKMA",
+      "flags": 16777343,
+      "data": 64,
+      "resistance": 64
+    },
+    {
+      "code": "STMA",
+      "flags": 16777490,
+      "data": 57,
+      "resistance": 4294967295
+    },
+    {
+      "code": "SABS",
+      "flags": 16777330,
+      "data": 52,
+      "resistance": 64
+    },
+    {
+      "code": "FOAT",
+      "flags": 1048690,
+      "data": 0,
+      "resistance": 4294967295
+    },
+    {
+      "code": "FOSP",
+      "flags": 16777330,
+      "data": 9,
+      "resistance": 4294967295
+    },
+    {
+      "code": "RSFI",
+      "flags": 16777338,
+      "data": 61,
+      "resistance": 4294967295
+    },
+    {
+      "code": "RSFR",
+      "flags": 16777338,
+      "data": 62,
+      "resistance": 4294967295
+    },
+    {
+      "code": "RSMA",
+      "flags": 16777338,
+      "data": 64,
+      "resistance": 4294967295
+    },
+    {
+      "code": "RSDI",
+      "flags": 16777338,
+      "data": 63,
+      "resistance": 4294967295
+    },
+    {
+      "code": "RSPO",
+      "flags": 16777338,
+      "data": 67,
+      "resistance": 4294967295
+    }
+  ]
+}

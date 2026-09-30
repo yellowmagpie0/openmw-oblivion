@@ -6803,3 +6803,34 @@ shared workspace; the clean bundle clone and changed-file comparison verify
 this Git checkpoint. Automatic fresh actor activation remains off; passive
 ability ownership/removal/persistence and normal selection wiring are next.
 S2/S3 and all later gameplay gates remain open.
+
+
+### Passive value-modifier prerequisites
+
+The fourteen compiled racial/birthsign VMOD inputs now have a reviewed JSON
+manifest and a narrow production lookup. Native clamp/query preparation and the
+initial recoverable-removal Damage compensation are pure functions. In
+particular, removal preserves the distinction between an omitted Damage write
+and an engaged zero, and the eventual base inverse remains the negated stored
+magnitude. Health-specific correction/essential checks remain separate work.
+
+`native-passive-effect-primitives-parser-01` retains a test fixture compile
+failure using a pointer instead of the FourCC helper's fixed array.
+Corrected02 passes all1971 components and
+446 ESM4 ASan/UBSan cases with no skips/failures and matching
+inventories, source fingerprint
+`cce2fd777f6651ca8e9c799693f78714e67c2a0d0167fd7ce65f7bff7bcb7fd3`.
+Leak detection is off. Production comparison passes14 compiled definitions,
+15552 original clamp/query cases and1440 original application/removal cases with
+exact bits. Original factory registration/selection and boundary scopes are
+recorded in `M15-NATIVE-RULE-PROVENANCE.md`; none is a gameplay acceptance result.
+
+Checkpoint30 follows these checks in the independent `m15-implementation`
+repository. Its portable source/history bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-08/m15-progress.bundle`;
+clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Tests ran in the shared workspace; changed-file bytes and a clean fresh bundle
+clone verify the committed checkpoint. The next implementation must preserve
+native definition merge history in stores, then own passive grants/effects in
+runtime transactions and save state. Automatic activation and all pending
+S2/S3/gameplay gates remain open.

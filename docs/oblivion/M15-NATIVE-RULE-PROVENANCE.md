@@ -3448,3 +3448,65 @@ application/removal are outside that probe. The production comparison uses
 Health dword output to observe all conversion bits and matches all4800 cases;
 separate component cases cover native byte/word/extra storage, ignored AVs and
 Creature aliases. Evidence is under`build/oblivion-compat/m15/S3/`.
+
+
+### Compiled passive factory, native clamps and removal compensation
+
+The compiled racial/birthsign VMOD subset is versioned as editable facts in
+`M15-PASSIVE-ABILITY-DEFAULTS.json`, pinned to the original executable and
+initializer-argument report. It contains14 codes, flags/data and resistance
+inputs; production exposes only flags/data at this point. Other codes remain
+unadmitted by that subset rather than inheriting a guessed generic policy.
+
+Original custom-factory registration is`0068DA10`;23 identified initializer
+routines pass code/factory arguments. Their original calls execute in
+`authority-draft/effect-factory-registration-arguments-01`, with registry mutation
+as a boundary. None of the14 selected codes is among those23 custom keys.
+`passive-value-modifier-factory-02` executes the full factory`0068EA50`, native
+VMOD constructor/common constructor and original quantity getters in336 cases
+across14 compiled definitions, success/allocation-failure, magnitudes0/50/UINT_MAX,
+item AV0/9 and both x87 words. Successful objects have VMOD vtable`00A76D34`;
+failed allocations return null and leave the guarded object unchanged. Registry
+lookup uses captured compiled keys at a boundary; allocation and MagicItem type4
+getter are boundaries. DLL/indirect registration and actual gameplay admission
+are outside this probe. Attempt01 is retained;02 also explicitly checks every
+draft input against the captured original initializer facts.
+
+Original clamp`006A8220` queries current only for AV0–32 except Fatigue10,
+code other thanABHE, and delta<=0. It stores current+delta as float and, when
+negative, returns delta minus that stored sum with a float store. Zero magnitude
+can therefore produce a positive correction for a negative current attribute;
+Fatigue, extra AVs, absorb Health and positive deltas bypass the query.
+`value-modifier-clamp-01` executes15552 cases: all72 AVs, FOAT/ABHE, deltas
+-50/-.5/-0/+0/.5/50, nine signed/fractional/zero/subnormal current values and
+both x87 words. The VMOD AV getter executes; actor resolution/current are
+boundaries. Exact float bits and query presence match the independently declared
+expectations. Production rejects invalid AV/nonfinite required inputs and
+nonfinite intermediate arithmetic; those are explicit supported-domain checks.
+
+Original full apply`006A86F0` and remove`006A88D0` run in1440 cases using14
+compiled definitions and FOAT Strength/Endurance, magnitudes0/25/50, apply and
+remove current-5/0/10/100, and both x87 words. Constructor, detrimental sign,
+clamp, Player identity, recoverable writer selection and UI exclusion execute.
+Actor current, target resolution and writer storage/notifications are boundaries;
+post-Endurance Health is10 and essential predicate false. Apply stores the
+clamped signed magnitude. On positive stored magnitude, removal issues an
+initial Damage write of R(clamp(-magnitude)+magnitude), **including zero writes**,
+then always dispatches the base inverse-magnitude. It does not substitute the
+clamped inverse for the base subtraction. Nonpositive magnitude omits initial
+Damage. Health-specific compensation and essential-health follow-up are not
+proved by these cases. Attempt02 records/checks exact bits including signed zero;
+attempt01 retains the earlier numeric comparison.
+
+`native-passive-effect-primitives-comparison-01` compiles actual production C++
+and matches all14 compiled inputs,15552 clamp/query cases and1440 magnitude/
+initial-removal-compensation/base-inverse cases. These pure preparations do not
+apply fields, manage ability ownership, resist effects or prove runtime/restart
+acceptance. Evidence is under`build/oblivion-compat/m15/S3/`.
+
+Original probe report SHA256 values:
+
+- `effect-factory-registration-arguments-01`: `bc2447bcb1d54e9dfa434af31b01ce679d82c2420c1b0566c75488826bfcc9ba`.
+- `passive-value-modifier-factory-02`: `9be106ce4994c2a4e289a087146649660c614121e640a4abd8fef7453f7c0e71`.
+- `passive-value-modifier-apply-remove-02`: `a244aa7feffc6822706c662f341caaeae07adf19aa436c19911947c9ea98ec67`.
+- `value-modifier-clamp-01`: `906af975e1b09cf297266ddc18c7ade02814ef7d5c2da7ca41473ddd7120b47c`.

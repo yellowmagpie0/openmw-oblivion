@@ -5,6 +5,8 @@
 #include <gtest/gtest.h>
 #include <array>
 #include <bit>
+#include <limits>
+#include <stdexcept>
 
 TEST(ESM4AbilityInputs, ReconcilesAuthoredFieldsAgainstIndependentOriginalLoaderCases)
 {
@@ -58,4 +60,74 @@ TEST(ESM4AbilityInputs, ConstructorFlagsOverrideMagnitudeAndDurationWithoutApply
     actual=ESM4::resolveValueModifierEffectInputs(effect,{4,40});
     EXPECT_EQ(std::bit_cast<std::uint32_t>(actual.mMagnitude),0);
     EXPECT_EQ(std::bit_cast<std::uint32_t>(actual.mDuration),0);
+}
+
+TEST(ESM4AbilityInputs, CompiledPassiveDefinitionsRetainOriginalFlagsAndStaticActorValues)
+{
+    struct Expected {const char code[5]; std::uint32_t flags, av;};
+    const std::array<Expected, 14> original{{
+        {"WABR",0x1000172,55}, {"WKFI",0x100007f,61}, {"WKFR",0x100007f,62},
+        {"WKSH",0x100007f,68}, {"WKMA",0x100007f,64}, {"FOSP",0x1000072,9},
+        {"SABS",0x1000072,52}, {"STMA",0x1000112,57}, {"FOAT",0x100072,0},
+        {"RSFI",0x100007a,61}, {"RSPO",0x100007a,67}, {"RSDI",0x100007a,63},
+        {"RSMA",0x100007a,64}, {"RSFR",0x100007a,62}
+    }};
+    for (const auto& row : original)
+    {
+        const auto definition = ESM4::compiledPassiveValueModifierDefinition(ESM::fourCC(row.code));
+        ASSERT_TRUE(definition) << row.code;
+        EXPECT_EQ(definition->mFlags,row.flags);
+        EXPECT_EQ(definition->mData,row.av);
+    }
+    EXPECT_FALSE(ESM4::compiledPassiveValueModifierDefinition(ESM::fourCC("SEFF")));
+    EXPECT_FALSE(ESM4::compiledPassiveValueModifierDefinition(ESM::fourCC("SHLD")));
+    EXPECT_FALSE(ESM4::compiledPassiveValueModifierDefinition(ESM::fourCC("ZZZZ")));
+}
+
+TEST(ESM4AbilityInputs, NativeClampBranchesQueryOnlyRequiredCurrentAndPreserveSignedZero)
+{
+    const auto foat = ESM::fourCC("FOAT");
+    EXPECT_TRUE(ESM4::valueModifierRequiresCurrent(0,foat,-50));
+    EXPECT_EQ(ESM4::clampValueModifierDelta(0,foat,-50,10),-10);
+    EXPECT_EQ(ESM4::clampValueModifierDelta(0,foat,0,-5),5);
+    EXPECT_EQ(ESM4::clampValueModifierDelta(32,foat,-50,10),-10);
+    for (const auto av : {10,33,64,71})
+    {
+        EXPECT_FALSE(ESM4::valueModifierRequiresCurrent(av,foat,-50));
+        EXPECT_EQ(ESM4::clampValueModifierDelta(av,foat,-50,{}),-50);
+    }
+    EXPECT_EQ(ESM4::clampValueModifierDelta(8,ESM::fourCC("ABHE"),-50,{}),-50);
+    EXPECT_FALSE(ESM4::valueModifierRequiresCurrent(0,foat,1));
+    EXPECT_EQ(ESM4::clampValueModifierDelta(0,foat,1,{}),1);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::clampValueModifierDelta(0,foat,-0.f,1)),0x80000000u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::clampValueModifierDelta(0,foat,0.f,-0x1p-149f)),1u);
+}
+
+TEST(ESM4AbilityInputs, RecoverableRemovalKeepsInitialDamageWritePresenceSeparateFromBaseInverse)
+{
+    const auto foat = ESM::fourCC("FOAT");
+    EXPECT_EQ(ESM4::initialValueModifierRemovalDamage(0,foat,50,10),40.f);
+    const auto zero = ESM4::initialValueModifierRemovalDamage(0,foat,50,100);
+    ASSERT_TRUE(zero);
+    EXPECT_EQ(*zero,0);
+    EXPECT_FALSE(ESM4::initialValueModifierRemovalDamage(0,foat,0,{}));
+    EXPECT_FALSE(ESM4::initialValueModifierRemovalDamage(0,foat,-50,{}));
+    const auto extra = ESM4::initialValueModifierRemovalDamage(64,ESM::fourCC("RSMA"),50,{});
+    ASSERT_TRUE(extra);
+    EXPECT_EQ(*extra,0);
+    // The eventual base inverse remains-50 even where initial Damage is40.
+    // This helper intentionally does not replace it with the clamped-10.
+}
+
+TEST(ESM4AbilityInputs, ValueModifierPreparationsRejectInvalidQueriedInputsAndArithmeticOverflow)
+{
+    const auto foat = ESM::fourCC("FOAT");
+    EXPECT_THROW(ESM4::clampValueModifierDelta(72,foat,1,{}),std::invalid_argument);
+    EXPECT_THROW(ESM4::clampValueModifierDelta(0,foat,-1,{}),std::invalid_argument);
+    EXPECT_THROW(ESM4::clampValueModifierDelta(0,foat,-1,std::numeric_limits<float>::quiet_NaN()),std::invalid_argument);
+    EXPECT_THROW(ESM4::valueModifierRequiresCurrent(0,foat,std::numeric_limits<float>::infinity()),std::invalid_argument);
+    EXPECT_THROW(ESM4::initialValueModifierRemovalDamage(0,foat,std::numeric_limits<float>::quiet_NaN(),{}),std::invalid_argument);
+    EXPECT_THROW(ESM4::clampValueModifierDelta(0,foat,-std::numeric_limits<float>::max(),
+        -std::numeric_limits<float>::max()),std::invalid_argument);
+    EXPECT_EQ(ESM4::clampValueModifierDelta(0,foat,1,std::numeric_limits<float>::quiet_NaN()),1);
 }
