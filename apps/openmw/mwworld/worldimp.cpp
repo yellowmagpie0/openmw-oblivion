@@ -1809,7 +1809,12 @@ namespace MWWorld
                 [&](const Ptr& ptr) {
                     const auto key = ptr.getCellRef().getFormKey();
                     if (!key.isNull())
-                        references.emplace(key, ptr);
+                    {
+                        const auto [owner, inserted] = references.emplace(key, ptr);
+                        if (!inserted && owner->second != ptr)
+                            throw std::invalid_argument("TES4 runtime-state has multiple live owners for reference: "
+                                + key.serialize());
+                    }
                     return true;
                 }, true);
         });

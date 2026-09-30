@@ -849,6 +849,32 @@ namespace
         EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 110);
         EXPECT_EQ(resident.getClass().getCreatureStats(resident).getHealth().getCurrent(), 100);
         EXPECT_FALSE(service.takeNextDeathEvent());
+        auto secondCell = cell;
+        secondCell.mId = ESM::RefId(ESM::FormId{2, 0});
+        secondCell.mFormKey = ESM::FormKey::content("headless.esm", 2);
+        secondCell.mEditorId = "DuplicateActorRestoreCell";
+        store.getWritable<ESM4::Cell>().insertStatic(secondCell, secondCell.mFormKey);
+        const auto* placed = store.search<ESM4::ActorCharacter>(resident.getCellRef().getFormKey());
+        ASSERT_NE(placed, nullptr);
+        MWWorld::LiveCellRef<ESM4::Npc> duplicate(*placed, resident.get<ESM4::Npc>()->mBase);
+        auto& duplicateCell = world.getWorldModel().getCell(secondCell.mId);
+        const MWWorld::Ptr duplicatePtr(duplicateCell.insert(&duplicate), &duplicateCell);
+        ASSERT_NE(duplicatePtr, resident);
+        const auto beforeDuplicateClock = world.getTimeStamp();
+        const auto beforeDuplicatePosition = resident.getRefData().getPosition();
+        auto conflictingResidents = captured;
+        conflictingResidents.mClock.mHour = 9;
+        conflictingResidents.mReferences[0].mPosition.pos[0] = 45;
+        ASSERT_NO_THROW(conflictingResidents.validate());
+        readNativeSnapshot(fixture, conflictingResidents);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+        EXPECT_EQ(world.getTimeStamp(), beforeDuplicateClock);
+        EXPECT_EQ(resident.getRefData().getPosition(), beforeDuplicatePosition);
+        auto retainedAuthority = captured;
+        service.capture(retainedAuthority);
+        EXPECT_EQ(retainedAuthority.mNativeActorValues, captured.mNativeActorValues);
+        EXPECT_EQ(retainedAuthority.mNativeActorLife, captured.mNativeActorLife);
+        EXPECT_FALSE(service.takeNextDeathEvent());
     }
 
     TEST(OblivionWorldTest, actualWorldApplyPreservesSupportedLegacyPlayerTelemetry)

@@ -6289,3 +6289,57 @@ This closes these consumed-field rejection cases, not whole-World rollback,
 rendered animation acceptance or native fresh construction. Local Git commits
 remain unavailable because Git metadata is read-only; recovery patches are
 exports of pending work, not commits.
+
+### S3 continuation: duplicate live reference owners reject before world writes
+
+Reference indexing now rejects two distinct live objects with the same native
+stable key before applying any runtime state. Repeated views of the same live
+object remain accepted. The actual World regression reproduces a duplicated
+resident across two loaded cells: the former final-service rejection changed
+clock and position first. `native-resident-owner-preflight-baseline-01` retains
+that failure. `native-resident-owner-preflight-01` and its `sanitized-01` partner
+pass all661 engine tests, including cross-cell moves and restored resident
+views. Exact inventory/XML counts agree, no cases skip, and ASan leak checks
+are off with halting UBSan. Tested dirty source fingerprint:
+`4e6536cc16f210fd7d7702d1aa816d79bd8d71b27e4bd6b294f108aed767e538`.
+
+The rebuilt engines also complete both SDL offscreen idle populated
+save/quit/fresh-load/resave phases in `sdl-offscreen-native-restart-03` and
+`sdl-offscreen-native-sanitized-restart-03`. Independent decoding preserves
+actor values, raw inputs, life, breath, base overrides, engagement/death maps,
+Player resources and position, with the deliberate schema16->17 upgrade.
+Both phases exit0 by SDL input. HUD checks pass; all four screenshots retain
+SHA256 `0b785b32a9db3da21dc052162855370392cdf3e37ed68e6863f94bef0480b7a5`.
+Normal executable SHA256:
+`0753eba3d06fe48f99a0a4fc53f011063bbc49afff6200c59e9c34d5b687cab9`;
+sanitized executable SHA256:
+`45f8c710294e1e456728cd4bf086509bf5730a51d241c4507b1d5f3f13edf176`.
+Private inputs, receipts, probes and source/build provenance are retained.
+This is idle persistence evidence, not full load rollback, fresh construction,
+combat, audio or completion of S3. Git metadata remains read-only.
+
+### S2/S3 construction investigation: absent process and initial attachment
+
+Two independent probes execute the pinned original1.2.0416 SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`authority-draft/no-process-current-queries-01` passes5760 cases across all72 AV
+IDs, ten signed integer-derived base boundaries, both x87 precision words,
+both CPU conversion modes and float/integer return conventions. Original
+current-query dispatch and base-integer flooring execute; the base float
+lookup is a declared boundary fixture. With no process, current queries use
+that base-integer fallback, omit modifiers and skip the AV9 process multiplier.
+Report SHA256:
+`2f8eba60d0dedb7bf8a418364f247299876f14ac73ffe943735897007c9c58cb`.
+
+`authority-draft/initial-life-attachment-01` passes448 cases through the
+original attachment slice, Player identity check, unsigned form Health
+predicate and state setter with no process. Zero form Health selects raw
+state2, or6 with essential + the native global mode; Player identity and
+referenceID7 suppress the branch. The Starts Dead header bit does not select
+this predicate. Changed-flags and manager-request3 calls are observed boundary
+fixtures, not applied effects. Report SHA256:
+`ba3ca77a507b767f37e21b16cd9cccea9edf15d3be4ad0fff0b31786db9e1fea`.
+Neither probe executes full factory/record autocalculation order, process
+creation, callbacks/count history or physical lifecycle. The current public
+Low/Active process enum still has no absent-process state; automatic fresh
+publication remains disabled while those construction requirements are open.
