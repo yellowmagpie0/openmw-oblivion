@@ -60,6 +60,11 @@ namespace MWWorld
     ESM4::RuntimeActorValues resolveOblivionInitialNonPlayerValues(const ESMStore& store,
         const ESM::FormKey& actor, const ESM::FormKey& actorBase,
         std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process);
+
+    // Authored Player form inputs before character generation or abilities.
+    // Derived resource bases are resolved by preparePlayerValues at publication;
+    // existing save authority must take precedence over these fresh inputs.
+    ESM4::RuntimeActorValues resolveOblivionInitialPlayerValues(const ESMStore& store);
 }
 
 #endif

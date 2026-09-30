@@ -242,6 +242,131 @@ namespace
         EXPECT_EQ(mStore.search<ESM4::Npc>(mActorKey)->mData.attribs.strength, 0);
     }
 
+    TEST_F(OblivionActorStatsTest, freshPlayerUsesWinningRawFormAndDenseConstructorStorage)
+    {
+        sharedStats();
+        const auto key = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 4}; // Resolved load-order index is not persistent identity.
+        native.mFormKey = key;
+        native.mIsTES4 = true;
+        native.mEditorId = "Player";
+        native.mData.attribs = {50, 50, 30, 30, 40, 40, 50, 50};
+        native.mData.skills = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+        native.mData.health = 45;
+        native.mBaseConfig.tes4.baseSpell = 0;
+        native.mBaseConfig.tes4.fatigue = 150;
+        native.mAIData = {1, 2, 3, 4, 0, 0, 0, 0};
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, key);
+        const auto raw = MWWorld::resolveOblivionInitialPlayerValues(mStore);
+        EXPECT_EQ(raw.mActor, ESM::FormKey::dynamic("player", 1));
+        EXPECT_EQ(raw.mBase, ESM::FormKey::dynamic("player-base", 1));
+        EXPECT_EQ(raw.mOwner, ESM4::ActorValueOwner::Player);
+        EXPECT_EQ(raw.mProcess, ESM4::ActorValueProcess::Active);
+        EXPECT_EQ(raw.mPlayerFormValues, (std::optional<std::array<std::int32_t, 4>>{{45, 0, 150, 0}}));
+        EXPECT_FALSE(raw.mNonPlayerFormHealth);
+        for (std::size_t av = 0; av < 72; ++av)
+        {
+            EXPECT_EQ(raw.mValues[av].mModifiers, (ESM4::ActorValueModifiers{0.f, 0.f, 0.f}));
+            if (av >= 12 && av <= 32)
+            {
+                EXPECT_EQ(raw.mValues[av].mBase, av - 7);
+            }
+            if (av >= 33 && av <= 36)
+            {
+                EXPECT_EQ(raw.mValues[av].mBase, av - 32);
+            }
+            if (av >= 37)
+            {
+                EXPECT_EQ(raw.mValues[av].mBase, 0);
+            }
+        }
+        ESM::NPC facade{};
+        facade.blank();
+        facade.mId = ESM::RefId::stringRefId("Player");
+        facade.mNpdt.mHealth = 999; // Shared telemetry cannot supply raw forms.
+        const auto* record = mStore.insertStatic(facade);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initial{};
+        initial.blank();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        MWMechanics::OblivionCombatService service;
+        ESM4::GameSetting magickaSetting{};
+        magickaSetting.mId = {0x9e62f, 4};
+        magickaSetting.mEditorId = "fPCBaseMagickaMult";
+        magickaSetting.mData = 1.f;
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(magickaSetting,
+            ESM::FormKey::content("Oblivion.esm", 0x9e62f));
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
+        EXPECT_EQ(settings.mMagickaMultiplier, 1.f);
+        service.publishPlayerValues(player, raw, settings);
+        EXPECT_EQ(service.getPlayerBaseValue(8), 125); // Form45 + current Endurance40 *2.
+        EXPECT_EQ(service.getPlayerBaseValue(9), 100);
+        EXPECT_EQ(service.getPlayerBaseValue(10), 300); // Form150 + four current attributes.
+        EXPECT_EQ(service.getPlayerBaseValue(11), 250);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 125);
+        EXPECT_EQ(ptr.getClass().getNpcStats(ptr).getSkill(ESM::Skill::Marksman).getBase(), 21);
+        const std::uint32_t authoredHealth = mStore.search<ESM4::Npc>(key)->mData.health;
+        EXPECT_EQ(authoredHealth, 45);
+        EXPECT_EQ(raw.mValues[8].mBase, 45); // Publication leaves detached raw inputs unchanged.
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = raw.mActor;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        service.capture(saved);
+        const auto restarted = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+        EXPECT_EQ(restarted.mNativeActorValues, saved.mNativeActorValues);
+    }
+
+    TEST_F(OblivionActorStatsTest, freshPlayerRejectsForeignFormsAndPreservesWinningRawPrecision)
+    {
+        EXPECT_THROW(MWWorld::resolveOblivionInitialPlayerValues(mStore), std::invalid_argument);
+        const auto key = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 5};
+        native.mFormKey = key;
+        native.mIsTES4 = true;
+        native.mEditorId = "RenamedPlayer"; // Editor names do not replace stable identity.
+        native.mData.health = 16777217;
+        native.mBaseConfig.tes4.baseSpell = 65535;
+        native.mBaseConfig.tes4.fatigue = 65535;
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, key);
+        auto values = MWWorld::resolveOblivionInitialPlayerValues(mStore);
+        EXPECT_EQ((*values.mPlayerFormValues)[0], 16777217);
+        EXPECT_EQ(values.mValues[8].mBase, 16777216.f);
+        EXPECT_EQ((*values.mPlayerFormValues)[1], 65535);
+        EXPECT_EQ((*values.mPlayerFormValues)[2], 65535);
+        // A later winning override must be read anew, not cached by EditorID.
+        native.mData.health = 0xffffffff;
+        native.mData.attribs.endurance = 255;
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, key);
+        values = MWWorld::resolveOblivionInitialPlayerValues(mStore);
+        EXPECT_EQ((*values.mPlayerFormValues)[0], -1);
+        EXPECT_EQ(values.mValues[5].mBase, 255);
+        for (const auto flags : {ESM4::Npc::TES4_AutoCalcStats, ESM4::Npc::TES4_PCLevelOffset})
+        {
+            native.mBaseConfig.tes4.flags = flags;
+            mStore.getWritable<ESM4::Npc>().insertStatic(native, key);
+            EXPECT_THROW(MWWorld::resolveOblivionInitialPlayerValues(mStore), std::invalid_argument);
+        }
+        native.mBaseConfig.tes4.flags = 0;
+        native.mIsTES4 = false;
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, key);
+        EXPECT_THROW(MWWorld::resolveOblivionInitialPlayerValues(mStore), std::invalid_argument);
+        native.mIsTES4 = true;
+        native.mFormKey = ESM::FormKey::content("foreign.esm", 7);
+        mStore.getWritable<ESM4::Npc>().insertStatic(native, key);
+        EXPECT_THROW(MWWorld::resolveOblivionInitialPlayerValues(mStore), std::invalid_argument);
+    }
+
     TEST_F(OblivionActorStatsTest, nativePlayerRecomputesFromRawInputsAndRestoresIntoActualPlayer)
     {
         sharedStats();

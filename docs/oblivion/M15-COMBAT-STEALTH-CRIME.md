@@ -6419,3 +6419,43 @@ Evidence is under `build/oblivion-compat/m15/S3/`, with run names prefixed
 `native-constructor-storage-rule`. Automatic fresh actor publication and
 full Player construction remain open. Git metadata remains read-only;
 this chunk is exported as pending-chunks-21, not committed.
+
+### S3 continuation: authored Player inputs before character generation
+
+`resolveOblivionInitialPlayerValues` reads the winning canonical Player NPC_
+form by stable key, retains raw signed Health and unsigned Magicka/Fatigue
+words, maps all authored attributes/skills/AI settings and seeds all216 dense
+modifier slots. Publication derives resources from native GMSTs; shared facade
+stats never supply raw form contributions. Missing, foreign/mismatched and
+non-TES4 records are rejected. Autocalculated/scaled Player forms remain an
+explicit unsupported construction domain. No automatic call site is enabled;
+character generation, abilities and full Player readiness are still open.
+
+The independent standalone master audit `authority-draft/player-winning-form-audit-02`
+reports authored Player Health45, Magicka0 and Fatigue150 in hash-identified
+Oblivion.esm. It corrects audit01's level offset (barterGold was read as level).
+Its report SHA256 is
+`1392e433bad257e49af9038c70cf83775ac0507fc2ed1b761e8a09f420095b7b`.
+This is not a winning override or ready-actor audit. Derived arithmetic and
+dense slot expectations come from the independent original instruction probes
+already recorded; tests use a synthetic winning store and an explicit Magicka
+GMST, not assertions about a fully generated original-game character.
+
+Two engine cases check fresh raw inputs, a real Player's shared stat views,
+binary persistence, winning override rereads, signed Health precision above
+2^24, full resource words and malformed domains. Baseline01 retains a harness
+compile failure (wrong serialization API); corrected baseline02 fails at the
+explicit unimplemented resolver. Attempt01's normal test used the wrong
+Magicka fallback assumption; the corrected fixture supplies its intended
+winning GMST. Sanitizer01 catches a packed Health reference passed to bit_cast;
+copying to aligned storage fixes production. Sanitizer02 catches the same
+reference problem in the new test's comparison; its aligned copy fixes the
+harness. Failures remain in their evidence directories.
+
+`native-player-raw-construction-03` and `native-player-raw-construction-sanitized-03`
+each pass all663 engine cases with exact inventory/XML agreement and no skips.
+ASan leak detection is disabled, UBSan halts. Tested source fingerprint:
+`99d3679d1857707357b5a66adc1b916586e935fc5f6f88d956e3ba619dbe6bb2`.
+Evidence lives under `build/oblivion-compat/m15/S3/`. This establishes the
+construction-input and publication boundary, not normal gameplay or S3 closure.
+Git metadata remains read-only; pending-chunks-22 is an export, not a commit.

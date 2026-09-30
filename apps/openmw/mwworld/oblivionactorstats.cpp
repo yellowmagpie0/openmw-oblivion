@@ -207,6 +207,48 @@ namespace MWWorld
         return result;
     }
 
+    ESM4::RuntimeActorValues resolveOblivionInitialPlayerValues(const ESMStore& store)
+    {
+        const auto key = ESM::FormKey::content("Oblivion.esm", 7);
+        const auto* npc = store.search<ESM4::Npc>(key);
+        if (!npc || !npc->mIsTES4 || npc->mFormKey != key)
+            throw std::invalid_argument("native Player construction requires the winning TES4 Player form");
+        if (npc->mBaseConfig.tes4.flags & (ESM4::Npc::TES4_AutoCalcStats | ESM4::Npc::TES4_PCLevelOffset))
+            throw std::invalid_argument("native Player construction does not support autocalculated Player forms");
+        ESM4::RuntimeActorValues result;
+        result.mActor = ESM::FormKey::dynamic("player", 1);
+        result.mBase = ESM::FormKey::dynamic("player-base", 1);
+        result.mOwner = ESM4::ActorValueOwner::Player;
+        result.mProcess = ESM4::ActorValueProcess::Active;
+        const auto a = attributes(npc->mData.attribs);
+        for (std::size_t i = 0; i < a.size(); ++i)
+            result.mValues[i].mBase = a[i];
+        // Keep signed form inputs separately from the first float store.
+        // Character generation and abilities are later native operations;
+        // shared facade resources already contain derived contributions.
+        const std::uint32_t health = npc->mData.health;
+        result.mPlayerFormValues = {{std::bit_cast<std::int32_t>(health),
+            npc->mBaseConfig.tes4.baseSpell, npc->mBaseConfig.tes4.fatigue, 0}};
+        for (std::size_t i = 0; i < result.mPlayerFormValues->size(); ++i)
+            result.mValues[8 + i].mBase = static_cast<float>((*result.mPlayerFormValues)[i]);
+        const auto& s = npc->mData.skills;
+        const std::array<std::uint8_t, 21> skills{s.armorer, s.athletics, s.blade, s.block, s.blunt,
+            s.handToHand, s.heavyArmor, s.alchemy, s.alteration, s.conjuration, s.destruction,
+            s.illusion, s.mysticism, s.restoration, s.acrobatics, s.lightArmor, s.marksman,
+            s.mercantile, s.security, s.sneak, s.speechcraft};
+        for (std::size_t i = 0; i < skills.size(); ++i)
+            result.mValues[12 + i].mBase = skills[i];
+        const auto& ai = npc->mAIData;
+        const std::array<std::uint8_t, 4> settings{ai.aggression, ai.confidence, ai.energyLevel, ai.responsibility};
+        for (std::size_t i = 0; i < settings.size(); ++i)
+            result.mValues[33 + i].mBase = settings[i];
+        const auto modifiers = ESM4::initialActorValueModifierStorage(result.mOwner, result.mProcess);
+        for (std::size_t av = 0; av < result.mValues.size(); ++av)
+            result.mValues[av].mModifiers = modifiers[av];
+        result.validate();
+        return result;
+    }
+
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,
         const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel)
     {
