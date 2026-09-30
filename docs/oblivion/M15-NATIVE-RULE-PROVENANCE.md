@@ -3510,3 +3510,34 @@ Original probe report SHA256 values:
 - `passive-value-modifier-factory-02`: `9be106ce4994c2a4e289a087146649660c614121e640a4abd8fef7453f7c0e71`.
 - `passive-value-modifier-apply-remove-02`: `a244aa7feffc6822706c662f341caaeae07adf19aa436c19911947c9ea98ec67`.
 - `value-modifier-clamp-01`: `906af975e1b09cf297266ddc18c7ade02814ef7d5c2da7ca41473ddd7120b47c`.
+
+### Passive grant identity and resistance admission
+
+Two additional isolated original-instruction probes pin the same 1.2.0416
+executable SHA `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Neither imports production code or establishes live gameplay acceptance.
+
+`S3/authority-draft/passive-grant-dispatch-01` executes240 cases through
+Actor5E0990, Player6646D0 and the complete6A1DF0 active-item list scan.
+Actual actor base/type virtuals execute. Base spell-list insertion, change
+marking, MagicItem type, target list getter, the two caster virtuals and Player
+notification are boundaries. Across six spell types, added/not-added base-list
+results, five active-list fixtures, two owners and both x87 words, Ability4 and
+Disease1 dispatch when no matching active MagicItem exists. A matching item
+suppresses dispatch even when effect flags are set. A spell already in the base
+list can still dispatch missing active effects and report success. This proves
+the separate ownership layers, not caster execution/application or persistence.
+Probe SHA `d0fbb9db44f525cfbafc24117bc936c16258e1327c3ce87e78af328d396e4ec3`;
+report SHA `4770cad864510c41ca6b5b2324bc3d5155008bdfd124dc38d00e38a202c17245`.
+
+`S3/authority-draft/passive-resistance-admission-01` executes108 cases through
+6A27F0..6A293D with a non-SEFF definition. It crosses nine MagicItem types,
+Player/nonplayer target identity, three ranges and both x87 words. Parent/type
+getters, record marking and a supplied resistance factor are boundaries.
+Ability4 and Disease1 bypass the resistance virtual and store factor1;
+Player self spells of types0/2/3 also take their explicit bypass. Other cases
+query the supplied resistance and store.25. The probe stops before god-mode,
+replacement, active-effect insertion/application and save handling. It does
+not prove general spell resistance or the subsequent admission path.
+Probe SHA `8714a0b0d1a09ed9264d69585e03e664f87be201f5ede14292e5b88c746153e6`;
+report SHA `bc7c8b157b55554d0902030a49a11757cf3fa2af9899b9dbe9640e548f9d45af`.

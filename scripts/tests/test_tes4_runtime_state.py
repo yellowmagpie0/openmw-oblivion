@@ -468,6 +468,85 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
 
+    def test_passive_ownership_version_eighteen_matches_independent_wire_and_preserves_order(self):
+        state = make_state()
+        state["schema_version"] = 17
+        state["ai_rng_state"] = 1
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": None}
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        spell = "content:abilities.esp:000123"
+        foat, fosp = [int.from_bytes(code.encode("ascii"), "little") for code in ("FOAT", "FOSP")]
+        ability = {"spell": spell, "effects": [[7, foat, 5, -0.], [2, fosp, 9, 50.]]}
+        state["schema_version"] = 18
+        actor["passive_abilities"] = [ability]
+        field = b"\x01" + struct.pack("<II", 1, len(spell)) + spell.encode("ascii") + struct.pack("<I", 2)
+        field += struct.pack("<IIII", 7, foat, 5, 0x80000000)
+        field += struct.pack("<IIIf", 2, fosp, 9, 50.)
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 18)
+        offset = len(legacy) - 40
+        expected[offset:offset] = field
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_actor_values"], [actor])
+        self.assertEqual(struct.pack("<f", decoded["native_actor_values"][0]["passive_abilities"][0]["effects"][0][3]), b"\0\0\0\x80")
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        corrupt = bytearray(payload)
+        corrupt[offset] = 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(corrupt))
+        for size in range(len(field)):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:offset + size])
+        state["schema_version"] = 17
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        old = state_io.decode_payload(legacy)
+        self.assertNotIn("passive_abilities", old["native_actor_values"][0])
+        self.assertEqual(state_io.encode_payload(old), legacy)
+        old["schema_version"] = 18
+        unknown = state_io.encode_payload(old)
+        self.assertIsNone(state_io.decode_payload(unknown)["native_actor_values"][0]["passive_abilities"])
+        old["native_actor_values"][0]["passive_abilities"] = []
+        known = state_io.encode_payload(old)
+        self.assertNotEqual(known, unknown)
+        self.assertEqual(state_io.decode_payload(known)["native_actor_values"][0]["passive_abilities"], [])
+
+    def test_passive_ownership_rejects_malformed_duplicates_and_unsupported_effects(self):
+        state = make_state()
+        state["schema_version"] = 18
+        state["ai_rng_state"] = 1
+        effect = [0, int.from_bytes(b"FOAT", "little"), 5, -10.]
+        valid = {"spell": "content:abilities.esp:000123", "effects": [effect]}
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)]}
+        state["native_actor_values"] = [actor]
+        invalids = [True, {}, [valid, valid], [{**valid, "spell": "null"}],
+                    [{**valid, "spell": "content:Abilities.esp:000123"}], [{**valid, "effects": []}],
+                    [{**valid, "effects": [effect, effect]}]]
+        for index, values in ((0, (-1, 1 << 32, True)), (1, (0, int.from_bytes(b"SEFF", "little"), True)),
+                              (2, (-1, 72, True)), (3, (math.inf, math.nan, True, "1"))):
+            for value in values:
+                bad_effect = list(effect)
+                bad_effect[index] = value
+                invalids.append([{**valid, "effects": [bad_effect]}])
+        invalids.extend([{**valid, "effects": [malformed]}] for malformed in ([], [0, 1, 5], "bad"))
+        for invalid in invalids:
+            actor["passive_abilities"] = invalid
+            with self.subTest(invalid=invalid), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        actor["passive_abilities"] = [valid]
+        state_io.encode_payload(state)
+        actor["passive_abilities"] = []
+        state_io.encode_payload(state)
+        state["schema_version"] = 17
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
     def test_nonplayer_form_health_matches_version_seventeen_wire_and_legacy_absence(self):
         state = make_state()
         state["schema_version"] = 17

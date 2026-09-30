@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 17
+CURRENT_VERSION = 18
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -776,6 +776,36 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             expected_base = struct.unpack("<f", struct.pack("<f", form_health))[0]
             if not isinstance(values[8], list) or len(values[8]) != 4 or native_float(values[8][0]) != expected_base:
                 raise RuntimeStateError("TES4 nonplayer form Health conflicts with resolved float base")
+        abilities = actor.get("passive_abilities")
+        if abilities is not None:
+            if version < 18:
+                raise RuntimeStateError("TES4 passive ability ownership requires version 18")
+            seen_spells = set()
+            codes = {int.from_bytes(code.encode("ascii"), "little") for code in
+                ("WABR", "WKFI", "WKFR", "WKSH", "WKMA", "FOSP", "SABS", "STMA",
+                 "FOAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR")}
+            for ability in check_collection(abilities, "passive ability ownership list"):
+                if not isinstance(ability, dict):
+                    raise RuntimeStateError("Invalid TES4 passive ability")
+                spell = ability.get("spell")
+                native_key(spell)
+                if spell in seen_spells:
+                    raise RuntimeStateError("Duplicate TES4 passive ability ownership")
+                seen_spells.add(spell)
+                effects = check_collection(ability.get("effects"), "passive ability effect list")
+                if not effects:
+                    raise RuntimeStateError("Empty TES4 passive ability effects")
+                seen_indices = set()
+                for effect in effects:
+                    if not isinstance(effect, list) or len(effect) != 4:
+                        raise RuntimeStateError("Invalid TES4 passive value-modifier ownership")
+                    index, code, av, magnitude = effect
+                    if (type(index) is not int or not 0 <= index < (1 << 32) or index in seen_indices
+                        or type(code) is not int or code not in codes
+                        or type(av) is not int or not 0 <= av < 72):
+                        raise RuntimeStateError("Invalid TES4 passive value-modifier ownership")
+                    native_float(magnitude)
+                    seen_indices.add(index)
         for value in values:
             if not isinstance(value, list) or len(value) != 4:
                 raise RuntimeStateError("Invalid TES4 native actor-value categories")
@@ -1240,6 +1270,18 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid TES4 nonplayer form Health presence")
                 actor["nonplayer_form_health"] = reader.unpack("<i") if present else None
+            if version >= 18:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 passive ability ownership presence")
+                actor["passive_abilities"] = None
+                if present:
+                    actor["passive_abilities"] = []
+                    for _ in range(reader.count()):
+                        ability = {"spell": reader.string(), "effects": []}
+                        for _ in range(reader.count()):
+                            ability["effects"].append([reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<f")])
+                        actor["passive_abilities"].append(ability)
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -1464,6 +1506,16 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", form_health is not None)
                 if form_health is not None:
                     writer.pack("<i", form_health)
+            if version >= 18:
+                abilities = actor.get("passive_abilities")
+                writer.pack("<B", abilities is not None)
+                if abilities is not None:
+                    writer.pack("<I", len(abilities))
+                    for ability in abilities:
+                        writer.string(ability["spell"])
+                        writer.pack("<I", len(ability["effects"]))
+                        for index, code, av, magnitude in ability["effects"]:
+                            writer.add(struct.pack("<IIIf", index, code, av, magnitude))
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))

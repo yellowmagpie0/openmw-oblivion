@@ -28,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 17;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 18;
 
     struct RuntimeContentIdentity
     {
@@ -238,6 +238,26 @@ namespace ESM4
         friend bool operator==(const RuntimePackageDoneEvent&, const RuntimePackageDoneEvent&) = default;
     };
 
+    struct RuntimePassiveValueModifier
+    {
+        std::uint32_t mEffectIndex = 0;
+        std::uint32_t mCode = 0;
+        std::uint32_t mActorValue = 0;
+        // Post-sign/clamp magnitude actually dispatched during application.
+        // Removal uses this saved value, never a re-resolved winning EFIT.
+        float mStoredMagnitude = 0;
+        friend bool operator==(const RuntimePassiveValueModifier&, const RuntimePassiveValueModifier&) = default;
+    };
+
+    struct RuntimePassiveAbility
+    {
+        ESM::FormKey mSpell;
+        // Preserve application order; do not sort effects for serialization.
+        std::vector<RuntimePassiveValueModifier> mEffects;
+        void validate() const;
+        friend bool operator==(const RuntimePassiveAbility&, const RuntimePassiveAbility&) = default;
+    };
+
     struct RuntimeActorValues
     {
         ESM::FormKey mActor;
@@ -255,6 +275,10 @@ namespace ESM4
         // Older snapshots retain their float-only interpretation; do not infer
         // a lost integer from a rounded legacy base or current shared record.
         std::optional<std::int32_t> mNonPlayerFormHealth;
+        // v18: narrow self ability ownership, including applied magnitudes.
+        // Null means unknown legacy ownership. An empty vector means known
+        // no applied abilities; neither state permits guessing from AV bases.
+        std::optional<std::vector<RuntimePassiveAbility>> mPassiveAbilities;
 
         void validate() const;
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;

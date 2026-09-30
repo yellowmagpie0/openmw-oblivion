@@ -1,5 +1,7 @@
 #include "runtimestate.hpp"
 
+#include "ability.hpp"
+
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -443,6 +445,20 @@ namespace ESM4
         }
     }
 
+    void RuntimePassiveAbility::validate() const
+    {
+        if (mSpell.isNull() || mEffects.empty())
+            throw std::runtime_error("Invalid TES4 passive ability identity or empty effects");
+        if (mEffects.size() > sMaximumCollectionSize)
+            throw std::runtime_error("TES4 passive ability effect list exceeds the size limit");
+        std::set<std::uint32_t> indices;
+        for (const auto& effect : mEffects)
+            if (!indices.insert(effect.mEffectIndex).second
+                || !compiledPassiveValueModifierDefinition(effect.mCode)
+                || effect.mActorValue >= 72 || !std::isfinite(effect.mStoredMagnitude))
+                throw std::runtime_error("Invalid TES4 passive value-modifier ownership");
+    }
+
     void RuntimeActorValues::validate() const
     {
         if (mActor.isNull() || mBase.isNull())
@@ -452,6 +468,18 @@ namespace ESM4
         if (mNonPlayerFormHealth && (mOwner != ActorValueOwner::NonPlayer
             || mValues[8].mBase != static_cast<float>(*mNonPlayerFormHealth)))
             throw std::runtime_error("TES4 nonplayer form Health conflicts with owner or resolved float base");
+        if (mPassiveAbilities)
+        {
+            if (mPassiveAbilities->size() > sMaximumCollectionSize)
+                throw std::runtime_error("TES4 passive ability ownership list exceeds the size limit");
+            std::set<ESM::FormKey> spells;
+            for (const auto& ability : *mPassiveAbilities)
+            {
+                ability.validate();
+                if (!spells.insert(ability.mSpell).second)
+                    throw std::runtime_error("Duplicate TES4 passive ability ownership");
+            }
+        }
         try
         {
             for (const auto& value : mValues)
@@ -553,6 +581,8 @@ namespace ESM4
             actor.validate();
             if (mVersion < 10 && actor.mPlayerFormValues)
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
+            if (mVersion < 18 && actor.mPassiveAbilities)
+                throw std::runtime_error("TES4 passive ability ownership requires runtime-state version 18");
             if (mVersion < 17 && actor.mNonPlayerFormHealth)
                 throw std::runtime_error("TES4 nonplayer form Health requires runtime-state version 17");
             if (!nativeActors.emplace(actor.mActor, actor.mBase).second)
@@ -1231,6 +1261,26 @@ namespace ESM4
                     if (actor.mNonPlayerFormHealth)
                         writer.integer(*actor.mNonPlayerFormHealth);
                 }
+                if (mVersion >= 18)
+                {
+                    writer.integer<std::uint8_t>(actor.mPassiveAbilities.has_value());
+                    if (actor.mPassiveAbilities)
+                    {
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mPassiveAbilities->size()));
+                        for (const auto& ability : *actor.mPassiveAbilities)
+                        {
+                            writeKey(writer, ability.mSpell);
+                            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(ability.mEffects.size()));
+                            for (const auto& effect : ability.mEffects)
+                            {
+                                writer.integer(effect.mEffectIndex);
+                                writer.integer(effect.mCode);
+                                writer.integer(effect.mActorValue);
+                                writer.floating(effect.mStoredMagnitude);
+                            }
+                        }
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -1667,6 +1717,27 @@ namespace ESM4
                         throw std::runtime_error("Invalid TES4 nonplayer form Health presence");
                     if (present)
                         actor.mNonPlayerFormHealth = reader.integer<std::int32_t>();
+                }
+                if (result.mVersion >= 18)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 passive ability ownership presence");
+                    if (present)
+                    {
+                        actor.mPassiveAbilities.emplace();
+                        const auto abilityCount = reader.count();
+                        for (std::uint32_t j = 0; j < abilityCount; ++j)
+                        {
+                            RuntimePassiveAbility ability;
+                            ability.mSpell = nativeKey();
+                            const auto effectCount = reader.count();
+                            for (std::uint32_t k = 0; k < effectCount; ++k)
+                                ability.mEffects.push_back({reader.integer<std::uint32_t>(),
+                                    reader.integer<std::uint32_t>(), reader.integer<std::uint32_t>(), reader.float32()});
+                            actor.mPassiveAbilities->push_back(std::move(ability));
+                        }
+                    }
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -2205,6 +2276,35 @@ namespace ESM4
                         stream << *actor.mNonPlayerFormHealth;
                     else
                         stream << "null";
+                }
+                if (mVersion >= 18)
+                {
+                    stream << ",\"passive_abilities\":";
+                    if (!actor.mPassiveAbilities)
+                        stream << "null";
+                    else
+                    {
+                        stream << '[';
+                        for (std::size_t j = 0; j < actor.mPassiveAbilities->size(); ++j)
+                        {
+                            if (j)
+                                stream << ',';
+                            const auto& ability = (*actor.mPassiveAbilities)[j];
+                            stream << "{\"spell\":";
+                            stream << '"' << escapeJson(ability.mSpell.serialize()) << '"';
+                            stream << ",\"effects\":[";
+                            for (std::size_t k = 0; k < ability.mEffects.size(); ++k)
+                            {
+                                if (k)
+                                    stream << ',';
+                                const auto& effect = ability.mEffects[k];
+                                stream << '[' << effect.mEffectIndex << ',' << effect.mCode << ','
+                                    << effect.mActorValue << ',' << effect.mStoredMagnitude << ']';
+                            }
+                            stream << "]}";
+                        }
+                        stream << ']';
+                    }
                 }
                 stream << '}';
             }

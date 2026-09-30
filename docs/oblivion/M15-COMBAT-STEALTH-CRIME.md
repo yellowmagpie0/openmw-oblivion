@@ -6871,3 +6871,40 @@ Tests ran in the shared workspace; the checkpoint verifies changed-file bytes
 and a clean fresh bundle clone. Automatic actor activation remains off;
 runtime passive ownership, application, removal and character-choice wiring
 remain pending. S2/S3 and all later gameplay gates stay open.
+
+### Version18 passive ownership storage
+
+RuntimeActorValues now owns an optional ordered list of narrow passive
+abilities. Each ability identifies its stable spell and each applied effect's
+index, code, actor value and stored post-sign/clamp magnitude. This snapshot
+retains what removal must undo without re-reading changed winning EFITs.
+Null ownership remains unknown; an engaged empty list means known no applied
+abilities. Versions1–17 remain readable and re-encodable without this field;
+promotion preserves unknown ownership instead of guessing from base values.
+This is a codec prerequisite. Fresh initialization, runtime grant/removal,
+service capture preflight and actual character choices are the next work.
+
+C++ and the independent Python inspector implement matching version18 wire
+fields. Tests construct explicit wire bytes separately, preserve effect order
+and negative-zero magnitude bits, reject duplicate spells/effect indices,
+unknown effect classes, invalid actor values/nonfinite magnitudes, invalid
+presence and every truncation through the new field. Both null and empty
+ownership round-trip distinctly. Earlier schemas reject populated ownership.
+
+`native-passive-ownership-parser-01` retains one test-fixture failure: the
+manual expected wire version byte used offset8 for the nine-byte magic header.
+Corrected02 passes all checks. Attempt03 removes a new local shadow warning
+and passes1977 full components,452 ESM4 ASan/UBSan and212 Python cases, with
+no failures/skips and exact C++ inventories, fingerprint
+`a5e4b56a4af773475387bb62faa405038960948f14dc7caf24d770fa6e546800`.
+Leak detection is off. No engine rebuild or normal-input gameplay claim is
+made for this codec-only checkpoint. Native grant/resistance probes are
+recorded separately in the rule provenance document.
+
+Checkpoint32 is committed in the independent `m15-implementation` repository;
+its portable source/history bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-10/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+The source-byte and clean fresh clone checks verify the checkpoint; builds
+ran in the shared workspace. Automatic actor activation remains off and all
+pending S2/S3 and later gameplay gates remain open.
