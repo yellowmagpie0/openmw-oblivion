@@ -5977,3 +5977,32 @@ World native capture and T4ST data restoration in one process, not a complete
 engine save, scene reattachment, quit/fresh load or normal-input acceptance.
 Whole-world rollback and remaining M15 stage gates stay open. Local commits
 remain prevented by the read-only Git metadata mount.
+
+Player projection binding now has a shared detached validator, called before
+World mutation and again during actor-view installation. The identity
+preflight baseline01 retains both wrong-base-alias and missing-form-input
+snapshots changing the clock to8/9 before rejection. Normal and sanitizer
+`native-player-identity-preflight-01` each pass all658 engine cases, exact
+inventory/XML and no skips, at fingerprint `16086adfa1464e462d8bc7672ebd4edf6d8cb9af7328f51b38c6b0569aa5a16e`
+on parent `8cf3491f18`, with leak detection disabled. Rejected identity
+snapshots preserve the clock and captured live authority and permit retry.
+Generic binary/service-map readers still support absent old form inputs;
+actual Player projection already required those inputs, and this change
+moves that rejection earlier rather than defining their migration. Legacy
+World telemetry snapshots3–17 still pass. Migration, complete load rollback,
+fresh activation and gameplay/restart acceptance remain open. Git metadata
+remains read-only, so this chunk also awaits its requested commit.
+
+World native data apply now requires a constructed Player before mutation.
+`native-player-ready-preflight-baseline-01` retains the version2 snapshot's
+null-Player SIGSEGV (-11), without completed XML. Normal/sanitizer ready01
+retain a test-only attempt to capture native service data into that old
+version2 container; the readiness guard itself passes. The corrected normal
+and sanitizer ready02 each pass all659 engine cases, exact inventories/XML
+and no skips, at fingerprint `bf4328c437c9e3b97a86e3a3b556e1c67abce0d8e95d109e96a078a427c8b63c` on parent
+`8cf3491f18`. Leak detection is disabled. Missing Player data now fails
+without clock changes or authority publication. Legacy World read/apply
+resource/attribute/skill coverage now passes all17 schema versions1–17
+without native Player authority. This does not establish missing-form-input
+migration, whole-game rollback, scene acceptance or fresh-process restart.
+The local commit is still unavailable because .git is read-only.

@@ -2097,15 +2097,23 @@ namespace MWMechanics
         state.mNextDeathEvent = mNextDeathEvent;
     }
 
+    void OblivionCombatService::validateRestoredPlayerBinding() const
+    {
+        const auto playerKey = ESM::FormKey::dynamic("player", 1);
+        for (const auto& [key, values] : mActorValues)
+            if (values.mOwner == ESM4::ActorValueOwner::Player || key == playerKey)
+                validatePlayerIdentity(values);
+    }
+
     void OblivionCombatService::installRestoredActorState(OblivionCombatService&& replacement,
         std::span<const MWWorld::Ptr> residents, MWWorld::Player* player)
     {
         if (this == &replacement)
             throw std::invalid_argument("native restore replacement aliases live authority");
+        replacement.validateRestoredPlayerBinding();
         std::optional<OblivionActorProjection> preparedPlayer;
         if (const auto* values = replacement.findActorValues(ESM::FormKey::dynamic("player", 1)))
         {
-            validatePlayerIdentity(*values);
             if (!player || player->getPlayer().isEmpty())
                 throw std::invalid_argument("native restore requires a ready Player view");
             const auto ptr = player->getPlayer();

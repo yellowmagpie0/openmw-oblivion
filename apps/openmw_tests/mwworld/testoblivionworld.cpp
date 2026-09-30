@@ -793,6 +793,31 @@ namespace
         auto beforeRetry = saved;
         service.capture(beforeRetry);
         EXPECT_EQ(beforeRetry.mNativeActorValues[0].mValues[0].mModifiers[1], -7);
+        for (const bool missingFormInputs : {false, true})
+        {
+            SCOPED_TRACE(missingFormInputs);
+            auto invalidIdentity = saved;
+            invalidIdentity.mClock.mHour = missingFormInputs ? 9 : 8;
+            if (missingFormInputs)
+                invalidIdentity.mNativeActorValues[0].mPlayerFormValues.reset();
+            else
+            {
+                invalidIdentity.mNativeActorValues[0].mBase = ESM::FormKey::content("headless.esm", 0x800);
+                invalidIdentity.mNativeActorLife[0].mBase = invalidIdentity.mNativeActorValues[0].mBase;
+            }
+            ASSERT_NO_THROW(invalidIdentity.validate());
+            const auto beforeIdentityClock = world.getTimeStamp();
+            auto beforeIdentity = saved;
+            service.capture(beforeIdentity);
+            readNativeSnapshot(fixture, invalidIdentity);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+            EXPECT_EQ(world.getTimeStamp(), beforeIdentityClock);
+            auto afterIdentity = saved;
+            service.capture(afterIdentity);
+            EXPECT_EQ(afterIdentity.serializeBinary(), beforeIdentity.serializeBinary());
+            EXPECT_EQ(world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr())
+                .getAttribute(ESM::Attribute::Strength).getModified(), 43);
+        }
         readNativeSnapshot(fixture, saved);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         const auto player = world.getPlayerPtr();
@@ -851,10 +876,12 @@ namespace
         saved.mPlayer.mActorValues["blade.base"] = 17;
         std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
         saved.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
-        for (std::uint32_t version = 3; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+        for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
         {
             SCOPED_TRACE(version);
             saved.mVersion = version;
+            saved.mPlayer.mRace = version >= 3 ? ESM::FormKey::content("headless.esm", 0x810) : ESM::FormKey{};
+            saved.mPlayer.mClass = version >= 3 ? ESM::FormKey::dynamic("fixture-class", 1) : ESM::FormKey{};
             readNativeSnapshot(fixture, saved);
             ASSERT_NO_THROW(world.applyOblivionRuntimeState());
             const auto player = world.getPlayerPtr();
@@ -866,6 +893,36 @@ namespace
             EXPECT_EQ(world.getOblivionCombatService()->findActorValues(saved.mPlayer.mReference), nullptr);
             EXPECT_FALSE(world.getOblivionCombatService()->takeNextDeathEvent());
         }
+    }
+
+    TEST(OblivionWorldTest, nativeWorldApplyRequiresReadyPlayerBeforeMutation)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        EXPECT_TRUE(world.getPlayerPtr().isEmpty());
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+        cell.mCellFlags = ESM4::CELL_Interior;
+        cell.mEditorId = "UnconstructedPlayerCell";
+        world.getStore().getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        ESM4::RuntimeState saved;
+        saved.mVersion = 2;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = cell.mFormKey;
+        saved.mClock.mHour = 7;
+        std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+        saved.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+        const auto clockBefore = world.getTimeStamp();
+        readNativeSnapshot(fixture, saved);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+        EXPECT_TRUE(world.getPlayerPtr().isEmpty());
+        EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        ESM4::RuntimeState captured;
+        world.getOblivionCombatService()->capture(captured);
+        EXPECT_TRUE(captured.mNativeActorValues.empty());
+        EXPECT_TRUE(captured.mNativeActorLife.empty());
+        EXPECT_FALSE(world.getOblivionCombatService()->takeNextDeathEvent());
     }
 
     TEST(OblivionWorldTest, nativeWorldPlayerDataConstructionDoesNotRequireRendering)

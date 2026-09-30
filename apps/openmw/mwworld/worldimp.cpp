@@ -1689,6 +1689,8 @@ namespace MWWorld
             return;
         }
         const ESM4::RuntimeState& state = *mOblivionRuntimeState;
+        if (!mPlayer || getPlayerPtr().isEmpty())
+            throw std::runtime_error("TES4 runtime-state apply requires ready Player data");
         // Native actor bindings and service allocation must fail before any
         // globals, inventories, serials or projected player stats are changed.
         std::optional<MWMechanics::OblivionCombatService> preparedCombat;
@@ -1696,6 +1698,7 @@ namespace MWWorld
         {
             preparedCombat.emplace();
             preparedCombat->restore(state, mStore);
+            preparedCombat->validateRestoredPlayerBinding();
         }
         else
             state.validate();
