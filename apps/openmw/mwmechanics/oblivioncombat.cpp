@@ -347,7 +347,14 @@ namespace MWMechanics
             input.mAiSettings.emplace();
             constexpr std::array<std::uint8_t, 4> aiValues{35, 33, 34, 36};
             for (std::size_t i = 0; i < aiValues.size(); ++i)
+            {
                 (*input.mAiSettings)[i] = values.mValues[aiValues[i]];
+                // Restore also prepares unloaded actors, without constructing
+                // a class target. Reject an unsupported integer AI projection
+                // before authority maps can be replaced.
+                Stat<int> checked;
+                checked.setNativeProjection((*input.mAiSettings)[i], values.mOwner, values.mProcess);
+            }
             for (std::size_t i = 0; i < input.mDynamic.size(); ++i)
             {
                 const auto& value = values.mValues[8 + i];
@@ -2090,11 +2097,22 @@ namespace MWMechanics
         state.mNextDeathEvent = mNextDeathEvent;
     }
 
-    void OblivionCombatService::installRestoredNonPlayerState(OblivionCombatService&& replacement,
-        std::span<const MWWorld::Ptr> residents)
+    void OblivionCombatService::installRestoredActorState(OblivionCombatService&& replacement,
+        std::span<const MWWorld::Ptr> residents, MWWorld::Player* player)
     {
         if (this == &replacement)
             throw std::invalid_argument("native restore replacement aliases live authority");
+        std::optional<OblivionActorProjection> preparedPlayer;
+        if (const auto* values = replacement.findActorValues(ESM::FormKey::dynamic("player", 1)))
+        {
+            validatePlayerIdentity(*values);
+            if (!player || player->getPlayer().isEmpty())
+                throw std::invalid_argument("native restore requires a ready Player view");
+            const auto ptr = player->getPlayer();
+            preparedPlayer.emplace(ptr.getClass().getNpcStats(ptr),
+                actorProjection(*values, replacement.findActorBase(values->mBase),
+                    replacement.findActorLife(values->mActor)));
+        }
         std::list<PreparedNonPlayerView> prepared;
         std::map<ESM::FormKey, MWWorld::Ptr> seen;
         for (const auto& actor : residents)
@@ -2119,6 +2137,8 @@ namespace MWMechanics
         }
         static_assert(std::is_nothrow_move_assignable_v<OblivionCombatService>);
         *this = std::move(replacement);
+        if (preparedPlayer)
+            preparedPlayer->commit();
         for (auto& view : prepared)
             view.commit();
     }

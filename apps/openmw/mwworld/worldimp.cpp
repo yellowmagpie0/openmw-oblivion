@@ -2049,7 +2049,7 @@ namespace MWWorld
         if (preparedCombat)
         {
             const auto residents = mWorldModel.getResidentPtrs();
-            mOblivionCombat->installRestoredNonPlayerState(std::move(*preparedCombat), residents);
+            mOblivionCombat->installRestoredActorState(std::move(*preparedCombat), residents, mPlayer.get());
         }
     }
 
@@ -4035,18 +4035,24 @@ namespace MWWorld
             mPlayer = std::make_unique<MWWorld::Player>(player);
         else
         {
-            // Remove the old CharacterController
-            MWBase::Environment::get().getMechanicsManager()->remove(getPlayerPtr(), true);
-            mNavigator->removeAgent(getPathfindingAgentBounds(getPlayerConstPtr()));
-            mPhysics->remove(getPlayerPtr());
-            mRendering->removePlayer(getPlayerPtr());
-            MWBase::Environment::get().getLuaManager()->objectRemovedFromScene(getPlayerPtr());
+            if (mRendering)
+            {
+                // Remove the old CharacterController and scene attachment.
+                MWBase::Environment::get().getMechanicsManager()->remove(getPlayerPtr(), true);
+                mNavigator->removeAgent(getPathfindingAgentBounds(getPlayerConstPtr()));
+                mPhysics->remove(getPlayerPtr());
+                mRendering->removePlayer(getPlayerPtr());
+                MWBase::Environment::get().getLuaManager()->objectRemovedFromScene(getPlayerPtr());
+            }
 
             mPlayer->set(player);
         }
 
         Ptr ptr = mPlayer->getPlayer();
-        mRendering->setupPlayer(ptr);
+        // Player data also supports construction/load validation before scene
+        // initialization. Normal engine startup attaches the renderer here.
+        if (mRendering)
+            mRendering->setupPlayer(ptr);
         MWBase::Environment::get().getLuaManager()->setupPlayer(ptr);
     }
 

@@ -5855,3 +5855,67 @@ query and optimized C++ comparisons match1008 cases; the new Stat<int> view
 matches336 original integer cases with672 mutation-guard checks. These are
 adapter/oracle checks, not full runtime or fresh-process restart acceptance.
 The .git read-only mount still prevents the requested local commits.
+
+The AI restore follow-up reproduces a finite Script scalar outside the current
+supported integer projection domain replacing service authority before any
+class reconstruction. `native-ai-restore-preflight-baseline-01` retains that
+failure. Projection preflight now validates AI integer views for unloaded as
+well as resident actors before map replacement. The normal and sanitizer
+`native-ai-restore-preflight-01` suites each pass all654 engine cases, exact
+inventories and no skips, at fingerprint `a4ab4a49274bd9b8012ad1a668f0a3c280e285bfb274a9c39bb8fe7ad013a861` on parent `8cf3491f18`.
+Leak detection is disabled. This is rejection/rollback for the supported
+projection domain; native overflow behavior and whole-world load rollback
+remain open. The source still awaits a commit because .git is read-only.
+
+A follow-up preview boundary test retains `native-ai-legacy-preview-baseline-01`:
+the newly introduced legacy fallback rounds untouched INT_MAX through float
+and fails to reject infinity. The helper now preserves untouched typed fields,
+checks override conversion and sums, and retains the legacy zero clamp. Existing
+legacy getters are unchanged. Normal and sanitizer `native-ai-legacy-preview-01`
+pass all654 engine cases, exact inventories and no skips, at fingerprint
+`264042eec0669a36b0eb75877e0a9e8136402e4216e7feeb9b44bf1a35c6723e` on parent `8cf3491f18`, with leak detection off. This guards the new
+preview utility; it does not broaden native overflow or gameplay acceptance.
+The local commit remains unavailable because .git is read-only.
+
+### S3 continuation: real World Player data construction before rendering
+
+World setup now constructs/retains its Player data independently of optional
+scene attachment. With rendering installed, the existing controller/physics/
+scene removal and setup path still runs. A real native-profile content load
+constructs the projected Player, reads its actual class stats, and repeats
+setup with stable identity and no fresh native authority publication. This
+removes a rendering dependency from data-adapter validation; it is not a
+headless gameplay or graphical acceptance shortcut.
+
+`native-player-data-construction-baseline-01` retains the null-renderer SIGSEGV
+(-11), with no completed test XML. The corrected normal and sanitizer
+`native-player-data-construction-01` runs pass all655 engine cases, exact
+inventories/XML and no skips, at fingerprint `0cd7e32723d237ec627c06b1287ae817344d7c7de840f733b4c4e56132a874e9` on parent `8cf3491f18`.
+Sanitizer leak detection is off. Player authority construction/restoration,
+automatic actor activation, scene acceptance and remaining M15 stages stay
+open. The requested local commit remains blocked by read-only .git.
+
+### S3 continuation: cached real World Player restore installation
+
+The restoration adapter now prepares the actual World-owned Player together
+with all resident native NPC/creature views before replacing live authority.
+It installs saved derived values and modifier channels directly, without
+recalculating fresh defaults or dispatching historical death events. World
+load supplies its Player to this adapter. Missing Player data, invalid resident
+identity, and self-aliasing reject before authority/view commit; rejected
+replacement data remains available for a corrected retry.
+
+`native-player-restored-view-baseline-01` retains the missing resolver include
+compile failure. Baseline02 demonstrates stale Player Strength43, Health103
+and alive class views despite restored authority50,110,Dead. The corrected
+normal and sanitizer `native-player-restored-view-01` suites each pass all656
+engine cases with exact inventories/XML and no skips at fingerprint
+`eea141756329da61b54b38f57539c9b924bc1913deaecaa2782281cdf4d992ff`
+on parent `8cf3491f18`. ASan/halting UBSan run with leak detection disabled.
+The mixed Player/NPC test verifies unchanged complete captured service state
+and views after rejection, retained replacement data, corrected retry and
+restored resource/life reads. This is service/view installation using a real
+World-owned Player and a binary snapshot roundtrip; it is not actual World
+apply, a save/quit/fresh restart, or whole-world load rollback. Those paths,
+older Player form-input migration and fresh authority construction remain
+open. Local commits are still unavailable because .git is read-only.

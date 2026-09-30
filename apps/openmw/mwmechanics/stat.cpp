@@ -72,8 +72,38 @@ namespace MWMechanics
     T Stat<T>::getModifiedWithOverrides(std::optional<float> base, std::optional<float> modifier) const
     {
         if (!mNativeCurrent)
-            return std::max(T{}, static_cast<T>(base.value_or(static_cast<float>(mBase)))
-                + static_cast<T>(modifier.value_or(static_cast<float>(mModifier))));
+        {
+            const auto convert = [](float value) -> T {
+                if (!std::isfinite(value))
+                    throw std::invalid_argument("nonfinite stat preview override");
+                if constexpr (std::is_integral_v<T>)
+                {
+                    const double integer = std::trunc(static_cast<double>(value));
+                    if (integer < std::numeric_limits<T>::min() || integer > std::numeric_limits<T>::max())
+                        throw std::invalid_argument("integer stat preview override overflow");
+                    return static_cast<T>(integer);
+                }
+                else
+                    return value;
+            };
+            // Preserve untouched integer fields without a binary32 round trip.
+            const T resolvedBase = base ? convert(*base) : mBase;
+            const T resolvedModifier = modifier ? convert(*modifier) : mModifier;
+            if constexpr (std::is_integral_v<T>)
+            {
+                const std::int64_t current = std::int64_t(resolvedBase) + resolvedModifier;
+                if (current > std::numeric_limits<T>::max())
+                    throw std::invalid_argument("integer stat preview sum overflow");
+                return static_cast<T>(std::max<std::int64_t>(0, current));
+            }
+            else
+            {
+                const T current = resolvedBase + resolvedModifier;
+                if (!std::isfinite(current))
+                    throw std::invalid_argument("nonfinite stat preview sum");
+                return std::max(T{}, current);
+            }
+        }
         ESM4::ActorValueState state{base.value_or(mNativeCurrent->mBase), mNativeCurrent->mModifiers};
         if (modifier)
             state.mModifiers[0] = *modifier;

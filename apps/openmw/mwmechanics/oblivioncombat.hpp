@@ -431,11 +431,11 @@ namespace MWMechanics
         // World load preflight: validate winning native actor bindings before
         // replacing either action ownership or actor values.
         void restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store);
-        // Install a validated replacement with all resident nonplayer views.
+        // Install a validated replacement with Player and resident actor views.
         // Prepare every view before changing authority or committing projections.
         // Actors absent from replacement authority are not initialized here.
-        void installRestoredNonPlayerState(OblivionCombatService&& replacement,
-            std::span<const MWWorld::Ptr> residents);
+        void installRestoredActorState(OblivionCombatService&& replacement,
+            std::span<const MWWorld::Ptr> residents, MWWorld::Player* player = nullptr);
 
     };
 }

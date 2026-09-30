@@ -16,6 +16,7 @@
 
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwclass/esm4npc.hpp"
+#include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/esm4interactive.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include "apps/openmw/mwlua/context.hpp"
@@ -24,6 +25,7 @@
 #include "apps/openmw/mwlua/stats.hpp"
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 #include "apps/openmw/mwworld/worldimp.hpp"
+#include "apps/openmw/mwworld/oblivionactorstats.hpp"
 
 namespace
 {
@@ -314,6 +316,11 @@ namespace
         EXPECT_EQ(legacy.getModified(false), -9);
         legacy.setModifier(3);
         EXPECT_EQ(legacy.getModified(false), -7);
+        MWMechanics::Stat<int> largeLegacy(std::numeric_limits<int>::max(), 0);
+        EXPECT_EQ(largeLegacy.getModified(), std::numeric_limits<int>::max());
+        EXPECT_EQ(largeLegacy.getModifiedWithOverrides({}, {}), std::numeric_limits<int>::max());
+        EXPECT_THROW(largeLegacy.getModifiedWithOverrides(std::numeric_limits<float>::infinity(), {}),
+            std::invalid_argument);
     }
 
     TEST(OblivionWorldTest, restoredAuthorityRefreshesCachedResidentViews)
@@ -331,7 +338,7 @@ namespace
         MWMechanics::OblivionCombatService replacement;
         replacement.restore(saved, world.getStore());
         const auto residents = world.getWorldModel().getResidentPtrs();
-        service.installRestoredNonPlayerState(std::move(replacement), residents);
+        service.installRestoredActorState(std::move(replacement), residents);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
         EXPECT_EQ(captureNativeActorState(fixture, ptr).mNativeActorValues, saved.mNativeActorValues);
         EXPECT_FALSE(service.takeNextDeathEvent());
@@ -370,7 +377,7 @@ namespace
         MWWorld::LiveCellRef<ESM4::Npc> wrong(duplicate, &wrongBase);
         const MWWorld::Ptr wrongPtr(&wrong, first.getCell());
         const std::array invalidResidents{first, wrongPtr};
-        EXPECT_THROW(service.installRestoredNonPlayerState(std::move(replacement), invalidResidents),
+        EXPECT_THROW(service.installRestoredActorState(std::move(replacement), invalidResidents),
             std::invalid_argument);
         EXPECT_EQ(captureNativeActorState(fixture, first).mNativeActorValues, before.mNativeActorValues);
         EXPECT_EQ(captureNativeActorState(fixture, first).mNativeActorLife, before.mNativeActorLife);
@@ -384,7 +391,7 @@ namespace
         MWWorld::LiveCellRef<ESM4::Npc> duplicateLive(duplicate, second.get<ESM4::Npc>()->mBase);
         const MWWorld::Ptr duplicatePtr(&duplicateLive, second.getCell());
         const std::array ambiguousResidents{first, second, duplicatePtr};
-        EXPECT_THROW(service.installRestoredNonPlayerState(std::move(replacement), ambiguousResidents),
+        EXPECT_THROW(service.installRestoredActorState(std::move(replacement), ambiguousResidents),
             std::invalid_argument);
         EXPECT_EQ(captureNativeActorState(fixture, first).mNativeActorValues, before.mNativeActorValues);
         EXPECT_EQ(first.getClass().getCreatureStats(first).getHealth().getCurrent(), 93);
@@ -393,13 +400,13 @@ namespace
         // The rejected replacement remains intact and can be installed once
         // the roster is corrected. Duplicate valid pointers are harmless.
         const std::array residents{first, second, first};
-        service.installRestoredNonPlayerState(std::move(replacement), residents);
+        service.installRestoredActorState(std::move(replacement), residents);
         EXPECT_EQ(first.getClass().getCreatureStats(first).getHealth().getCurrent(), 100);
         EXPECT_FALSE(first.getClass().getCreatureStats(first).isDead());
         EXPECT_EQ(second.getClass().getCreatureStats(second).getHealth().getCurrent(), 100);
         EXPECT_EQ(captureNativeActorState(fixture, first).mNativeActorValues, saved.mNativeActorValues);
         EXPECT_EQ(captureNativeActorState(fixture, first).mNativeActorLife, saved.mNativeActorLife);
-        EXPECT_THROW(service.installRestoredNonPlayerState(std::move(service), residents), std::invalid_argument);
+        EXPECT_THROW(service.installRestoredActorState(std::move(service), residents), std::invalid_argument);
         EXPECT_FALSE(service.takeNextDeathEvent());
     }
 
@@ -632,8 +639,111 @@ namespace
         EXPECT_EQ(after.mNativeActorLife, original.mNativeActorLife);
         EXPECT_EQ(after.mPhysicalActions, original.mPhysicalActions);
         EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getMagicka().getCurrent(), 20);
+        auto badAi = original;
+        badAi.mNativeActorValues[0].mValues[33].mModifiers[1] = 1e32f;
+        ASSERT_NO_THROW(badAi.validate()); // Finite float composition, unsupported integer view.
+        EXPECT_THROW(service.restore(badAi, world.getStore()), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, ptr).mNativeActorValues, original.mNativeActorValues);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getAiSetting(MWMechanics::AiSetting::Fight)
+            .getModified(), 13);
         MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
         EXPECT_FALSE(legacy.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active));
+    }
+
+    TEST(OblivionWorldTest, restoredAuthorityRefreshesActualWorldPlayerView)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto player = world.getPlayerPtr();
+        const auto npc = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(npc, ESM4::ActorValueProcess::Active));
+        auto& service = *world.getOblivionCombatService();
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{10, 0, 0, 0}};
+        for (std::size_t i = 0; i < 8; ++i)
+            values.mValues[i].mBase = 50;
+        service.publishPlayerValues(world.getPlayer(), values, settings);
+        ESM4::RuntimeActorLife dead;
+        dead.mActor = values.mActor;
+        dead.mBase = values.mBase;
+        dead.mPhase = ESM4::ActorLifePhase::Dead;
+        service.publishPlayerLife(world.getPlayer(), dead);
+        const auto saved = captureNativeActorState(fixture, npc);
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 110);
+        auto alive = dead;
+        alive.mPhase = ESM4::ActorLifePhase::Alive;
+        service.publishPlayerLife(world.getPlayer(), alive);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 0, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, -7));
+        service.changePlayerValue(world.getPlayer(), 8, ESM4::ActorValueModifier::Damage, -7, settings);
+        ASSERT_EQ(player.getClass().getCreatureStats(player).getAttribute(ESM::Attribute::Strength)
+            .getModified(), 43);
+        ASSERT_FALSE(player.getClass().getCreatureStats(player).isDead());
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(npc, 8, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Console, -11));
+        const auto before = captureNativeActorState(fixture, npc);
+        MWMechanics::OblivionCombatService replacement;
+        replacement.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+        const auto residents = world.getWorldModel().getResidentPtrs();
+        EXPECT_THROW(service.installRestoredActorState(std::move(replacement), residents), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before.serializeBinary());
+        auto wrongBase = *npc.get<ESM4::Npc>()->mBase;
+        wrongBase.mFormKey = ESM::FormKey::content("headless.esm", 0x899);
+        ESM4::ActorCharacter reference{};
+        reference.mId = {0x900, 0};
+        reference.mFormKey = npc.getCellRef().getFormKey();
+        reference.mBaseKey = wrongBase.mFormKey;
+        MWWorld::LiveCellRef<ESM4::Npc> wrong(reference, &wrongBase);
+        const std::array invalidResidents{MWWorld::Ptr(&wrong, npc.getCell())};
+        // Player preparation precedes the invalid resident. Neither its view
+        // nor authority may change when the later preparation fails.
+        EXPECT_THROW(service.installRestoredActorState(std::move(replacement), invalidResidents,
+            &world.getPlayer()), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before.serializeBinary());
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getAttribute(ESM::Attribute::Strength)
+            .getModified(), 43);
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 103);
+        EXPECT_FALSE(player.getClass().getCreatureStats(player).isDead());
+        EXPECT_EQ(npc.getClass().getCreatureStats(npc).getHealth().getCurrent(), 89);
+        auto retained = saved;
+        replacement.capture(retained);
+        EXPECT_EQ(retained.serializeBinary(), saved.serializeBinary());
+        service.installRestoredActorState(std::move(replacement), residents, &world.getPlayer());
+        EXPECT_EQ(npc.getClass().getCreatureStats(npc).getHealth().getCurrent(), 100);
+        EXPECT_EQ(world.getOblivionScriptActorValue(values.mActor, 0, false), 50);
+        const auto& stats = player.getClass().getCreatureStats(player);
+        EXPECT_EQ(stats.getAttribute(ESM::Attribute::Strength).getModified(), 50);
+        EXPECT_EQ(stats.getHealth().getCurrent(), 110);
+        EXPECT_TRUE(stats.isDead());
+        EXPECT_EQ(captureNativeActorState(fixture, npc).mNativeActorValues, saved.mNativeActorValues);
+        EXPECT_EQ(captureNativeActorState(fixture, npc).mNativeActorLife, saved.mNativeActorLife);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
+    TEST(OblivionWorldTest, nativeWorldPlayerDataConstructionDoesNotRequireRendering)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        EXPECT_TRUE(world.getPlayerPtr().isEmpty());
+        // Actual loaded native profile and projected Player record; no World
+        // rendering/physics initialization. This is data construction only.
+        world.setupPlayer();
+        const auto ptr = world.getPlayerPtr();
+        ASSERT_FALSE(ptr.isEmpty());
+        EXPECT_EQ(world.getPlayerConstPtr(), MWWorld::ConstPtr(ptr));
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
+        EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).getHealth().isNativeProjection());
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(ESM::FormKey::dynamic("player", 1)), nullptr);
+        world.setupPlayer();
+        EXPECT_EQ(world.getPlayerPtr(), ptr);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
     }
 
     TEST(OblivionWorldTest, playerIdentityQueriesAreEmptyBeforeRendererSetup)
