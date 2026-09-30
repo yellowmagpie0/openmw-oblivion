@@ -7670,3 +7670,33 @@ its verified portable bundle is S3/isolated-git-progress-26/m15-progress.bundle
 (SHA25658cee9bef2117a646e8f6c349051f43c1646d2c1b75577b0243b30f67a4e67a3).
 Checkpoint49 is exported/committed separately after these tests, preserving
 protected original Git metadata and matching all changed source bytes.
+
+### Checkpoint50 — hand contact input from native victim process state
+
+The remaining suppression input in the hand-to-hand arithmetic now has an
+independent caller/getter oracle: any nonzero native victim knocked-state
+result suppresses Fatigue damage while preserving Health damage. Low process
+getters/no process do not suppress it. The new contact input adapter derives
+this policy and the attacker Fatigue ratio instead of exposing a chosen
+suppression flag.12,800 original observations pass; the hermetic component case
+covers all256 native byte states plus missing process, independent literal
+Health/Fatigue values, zero base and malformed inputs.
+
+S4/hand-contact-input-baseline-01 confirms checkpoint49 lacks the API;
+configured syntax checks pass both changed translation units.
+S4/hand-contact-input-components-01 passes all1,989 component cases;
+S4/hand-contact-input-sanitized-components-01 passes all464 ESM4 component
+cases with ASan/UBSan and leak checks disabled. Exact inventories match with
+zero failures/skips. Tested source fingerprint:
+`cff3a40b4f32c51068d725e19fecdf93b8af3d2270b6f868579913dd98189eec`.
+Engine and Python implementation are unchanged since their preceding passes.
+This closes the instruction-level hand suppression input, not physical contact
+or runtime knocked-state/controller integration. S4 remains pending; no live
+melee, input timing, attack-cost timing or reaction acceptance is claimed.
+
+Checkpoint49 is committed as96bf27a1a1eb73544a89eca384c43b98ec49e3e1.
+Its verified bundle is S3/isolated-git-progress-27/m15-progress.bundle,
+SHA25640c996f32b6b64a84334a800685b48b8d116d278fa504d1e62a3bf4377513c9c.
+Checkpoint50 follows as a separate commit after these checks. Next is the
+production native intent/controller/contact slice with geometry and state
+adapters, preserving existing open integration and acceptance gates.

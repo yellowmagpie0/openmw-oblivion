@@ -1774,3 +1774,39 @@ TEST(ESM4PhysicalCombat, MeleeDistanceRejectsMalformedBoundsAndUnsupportedArithm
     a.mPosition[0] = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, false, 48), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, HandContactUsesOriginalVictimKnockedGetterAndFatigueRatio)
+{
+    const ESM4::HandToHandSettings hand{0, 1, 0, .75f, 1, 15, 1, .5f};
+    struct Observation { float current, health, fatigue; };
+    // Full original caller/getter/arithmetic observations, not production output.
+    const Observation observations[] = {
+        {0x0.0p+0f, 0x1.35c28e0000000p+0f, 0x1.9ae1480000000p+0f},
+        {0x1.1800000000000p+6f, 0x1.50a3d60000000p+0f, 0x1.a851ec0000000p+0f},
+        {0x1.1800000000000p+7f, 0x1.6b851e0000000p+0f, 0x1.b5c2900000000p+0f},
+        {0x1.1800000000000p+8f, 0x1.a147ac0000000p+0f, 0x1.d0a3d60000000p+0f},
+        {-0x1.c000000000000p+3f, 0x1.30624e0000000p+0f, 0x1.9831280000000p+0f},
+    };
+    for (const auto& row : observations)
+    {
+        ESM4::HandToHandContactInput input{10, 50, 40, row.current, 140, std::nullopt};
+        auto result = ESM4::handToHandContactDamage(input, hand, installed);
+        EXPECT_EQ(result.mHealth, row.health);
+        EXPECT_EQ(result.mFatigue, row.fatigue);
+        for (int state = -128; state <= 127; ++state)
+        {
+            input.mVictimKnockedState = static_cast<std::int8_t>(state);
+            result = ESM4::handToHandContactDamage(input, hand, installed);
+            EXPECT_EQ(result.mHealth, row.health);
+            EXPECT_EQ(result.mFatigue, state == 0 ? row.fatigue : 0.f);
+        }
+    }
+    // Zero-base behavior comes from the independently verified native ratio.
+    EXPECT_EQ(ESM4::handToHandContactDamage({10, 50, 40, -14, 0, {}}, hand, installed).mHealth,
+        0x1.6b851ep+0f);
+    for (float bad : {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()})
+        EXPECT_THROW(ESM4::handToHandContactDamage((ESM4::HandToHandContactInput{10, 50, 40, bad, 140, {}}),
+            hand, installed), std::invalid_argument);
+    EXPECT_THROW(ESM4::handToHandContactDamage((ESM4::HandToHandContactInput{10, 50, -1, 140, 140, {}}),
+        hand, installed), std::invalid_argument);
+}

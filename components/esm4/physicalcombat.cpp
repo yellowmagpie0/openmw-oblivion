@@ -703,6 +703,14 @@ namespace ESM4
         return result;
     }
 
+    HandToHandDamage handToHandContactDamage(const HandToHandContactInput& input,
+        const HandToHandSettings& settings, const PhysicalCombatSettings& physical)
+    {
+        const float ratio = combatFatigueRatio(input.mCurrentFatigue, input.mBaseFatigue);
+        return handToHandDamage({input.mSkill, input.mLuck, input.mStrength, ratio,
+            input.mVictimKnockedState && *input.mVictimKnockedState != 0}, settings, physical);
+    }
+
     float blockFraction(const BlockInput& input, const BlockSettings& settings, const PhysicalCombatSettings& physical)
     {
         validatePhysicalCombatSettings(physical);

@@ -214,8 +214,9 @@ same `R`, percent constant, effective skill and fatigue factor defined above:
 - Hand health damage: `R(fHandHealthMin + (fHandHealthMax - fHandHealthMin) * factor)`.
 - Hand fatigue damage: `R(healthDamage * fHandFatigueDamageMult +
   fHandFatigueDamageBase)`, or zero when the explicit suppression argument is
-  set. The pure helper preserves this separate output. The gameplay conditions
-  selecting suppression are not yet established by a behavioral probe.
+  set. The pure helper preserves this separate output. Checkpoint50 establishes
+  caller/getter selection from original instructions; normal-input gameplay
+  remains a separate open gate.
 - Block skill term: `R(fBlockSkillBase + effectiveSkill * percent * fBlockSkillMult)`.
 - Block fraction: `min(fBlockMax, R(fatigueFactor * skillTerm * equipmentFactor))`.
   The equipment factor is one for a shield, `fBlockAmountWeaponMult` for a weapon,
@@ -3785,3 +3786,34 @@ stop-probe.py SHA256 `22c2ffd3282790894260bcba9ce57687fc0ce8d88a10baafd87fbc49c2
 stop-report.json SHA256 `baa34915977fa83300e6418ade3c2a277d04c0a30ca4f41652b9cee019d5ed76`.
 start-probe.py SHA256 `42e06d748a32554a8a62aad4bfac6227d654ef27dddf1eaaaf9a1b146acc4bfd`.
 start-report.json SHA256 `e577ef99576bd3dc564b3e6019e5832e129ff945fafd4fe08885138fcc1aeb31`.
+
+### Hand-to-hand contact caller and victim knocked state (checkpoint50)
+
+The original caller5FF3CA..5FF41E supplies the suppression byte from the
+victim's virtual +19C, common5E04F0. That getter returns true for any nonzero
+native process +2E4 result. The actual High/MiddleHigh getter64B080 sign-extends
+process+11C; actual Low/MiddleLow getters return zero. No process returns false.
+This is not the essential-recovery gate limited to states1/3, and it is not a
+TES3 animation-state enum. Health damage is unchanged by this flag.
+
+S4/hand-contact-caller-oracle-01 executes12,800 exact observations across all
+256 signed byte values, all four actual process getter bodies, no process,
+five attacker Fatigue quantities and both x87 words. The caller, common victim
+predicate, real process virtual bodies, full5F4880 fatigue ratio, full547280 and
+luck/fatigue arithmetic helpers execute. Attacker base/current AV reads and
+installed physical/hand GMSTs are supplied. The caller's original stack and
+output pointers are verified; no hook chooses the suppression argument.
+Contact eligibility, attack-cost timing, mutation, reactions and normal-input
+combat are outside this probe.
+
+HandToHandContactInput accepts current/base attacker Fatigue and the resolved
+victim getter result; handToHandContactDamage derives the ratio and suppression
+before using the already audited arithmetic. A hermetic test carries five
+literal original Health/Fatigue expectations and exercises no-process/zero/all
+256 byte results, zero base and invalid inputs. It introduces no native
+knocked-state storage or inferred controller state; the runtime controller
+still needs to supply its actual native process state.
+Original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+probe.py SHA256 `ff8ac91a7e48daf1f9c5832281141420cf9b4cc6b901e8a6a33199626bcec91e`.
+report.json SHA256 `4e1fa799cb7e459d42aeca41e5ad7df5e51a8f1a033ca27d32d093054cbf35b2`.

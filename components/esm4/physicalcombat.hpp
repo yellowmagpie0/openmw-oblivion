@@ -358,6 +358,18 @@ namespace ESM4
         float mFatigue;
     };
 
+    struct HandToHandContactInput
+    {
+        std::int32_t mSkill;
+        std::int32_t mLuck;
+        std::int32_t mStrength;
+        float mCurrentFatigue;
+        std::int32_t mBaseFatigue;
+        // Result of the victim's native process knocked-state getter, not a
+        // TES3 animation enum. Low processes return zero; no process is nullopt.
+        std::optional<std::int8_t> mVictimKnockedState;
+    };
+
     enum class BlockEquipment { Shield, Weapon, Unarmed };
     struct BlockContactInput
     {
@@ -433,6 +445,8 @@ namespace ESM4
     enum class PlayerDamageRole { Unaffected, Attacker, Victim };
 
     HandToHandDamage handToHandDamage(const HandToHandInput& input,
+        const HandToHandSettings& settings, const PhysicalCombatSettings& physical);
+    HandToHandDamage handToHandContactDamage(const HandToHandContactInput& input,
         const HandToHandSettings& settings, const PhysicalCombatSettings& physical);
     float blockFraction(const BlockInput& input, const BlockSettings& settings,
         const PhysicalCombatSettings& physical);
