@@ -205,6 +205,17 @@ namespace ESM4
         return prepareActorBaseValueSet(kind, actorValue, convertActorBaseFloat(requested, mode));
     }
 
+    std::optional<ActorBaseValueSet> prepareActorBaseValueFloatMod(
+        ActorBaseKind kind, std::uint8_t actorValue, std::int32_t current, float delta, ActorValueConversionMode mode)
+    {
+        if (!std::isfinite(delta))
+            throw std::invalid_argument("nonfinite native float base modifier");
+        // Form getter 51E790 leaves its int32 result exact in x87; ModAV
+        // 51E810 adds the float delta before its first float store. Casting
+        // current to float before this addition loses observable precision.
+        return prepareActorBaseValueFloatSet(kind, actorValue, stored(double(current) + double(delta)), mode);
+    }
+
     std::optional<ActorBaseValueSet> prepareActorBaseValueSet(
         ActorBaseKind kind, std::uint8_t actorValue, std::int32_t requested)
     {

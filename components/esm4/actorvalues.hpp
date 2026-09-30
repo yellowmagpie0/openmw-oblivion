@@ -117,6 +117,11 @@ namespace ESM4
     std::int32_t convertActorBaseFloat(float requested, ActorValueConversionMode mode);
     std::optional<ActorBaseValueSet> prepareActorBaseValueFloatSet(
         ActorBaseKind kind, std::uint8_t actorValue, float requested, ActorValueConversionMode mode);
+    // Original form float ModAV: exact integer getter plus binary32 delta,
+    // one float store, then the native float setter and base storage widths.
+    // Caller supplies the form getter result, not a derived runtime AV query.
+    std::optional<ActorBaseValueSet> prepareActorBaseValueFloatMod(
+        ActorBaseKind kind, std::uint8_t actorValue, std::int32_t current, float delta, ActorValueConversionMode mode);
 
     enum class DynamicActorValue : std::uint8_t { Health = 8, Magicka = 9, Fatigue = 10, Encumbrance = 11 };
 

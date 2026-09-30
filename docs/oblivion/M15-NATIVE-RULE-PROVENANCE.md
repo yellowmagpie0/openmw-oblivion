@@ -3408,3 +3408,43 @@ memset/reset and complete flag/data reconciliation execute. Report
 Setting constructors, EDID selection, remapping and effect execution remain
 outside that probe. A future typed MGEF parser must distinguish authored fields
 from these ready flags/data before Player ability admission.
+
+
+### Player character-generation base calculation and permanent float writer
+
+Pinned executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Original form calculation `005222D0` identifies the Player by full form ID7.
+The Player calculates Personality from race attributes; NPC Personality keeps
+its authored byte. The temporary class comparison uses winning
+`iClassCharactergenClass` (compiled143590, storage`00B37D00`). A match skips
+favored-attribute/level-growth and major/specialization bonuses, while ordered
+signed racial skill bonuses still run. Other classes retain the original
+first-favored-only choice, skill membership, float-store boundaries, upper100
+cap, nearest-even conversion and wrapping byte storage. This character-base
+calculation does not establish progression, ability application or selection
+transaction ordering.
+
+`authority-draft/player-character-base-calculation-01` retains a missing-import
+setup failure. Corrected02 executes256 cases;03 adds eight curated duplicate,
+negative and rounding cases, totaling264 across both sexes, both x87 words,
+levels1/2/5/51 and both class branches. Native race/class/SKIL readers, loops,
+byte setters and dynamic calculations execute. The argument suppresses resource
+writes; execution stops before class-service assignment at`00522706`.
+Notification/RTTI are declared boundaries. Actual production C++ compares all
+264 Player and384 previously captured NPC attribute/skill cases in
+`native-player-character-base-comparison-01`.
+
+Original Player float base writer`0065D1A0` dispatches form virtual+138 to
+`0051E810`. The form float getter`0051E790` leaves an exact int32 in x87; the
+float delta is added before a binary32 store, followed by float setter
+`0051E7B0` and original CPU conversion`009828C0`. Converting the initial int32
+to float prematurely changes boundaries such as16777217+.5.
+`authority-draft/player-base-float-modifier-01` executes4800 cases across twelve
+AVs, integer precision/signed boundaries, fractional deltas, both x87 words and
+both CPU branches. Base resolution, integer getter/setter and the two
+notifications are boundary stubs. Width/sparse storage and effect clamp,
+application/removal are outside that probe. The production comparison uses
+Health dword output to observe all conversion bits and matches all4800 cases;
+separate component cases cover native byte/word/extra storage, ignored AVs and
+Creature aliases. Evidence is under`build/oblivion-compat/m15/S3/`.

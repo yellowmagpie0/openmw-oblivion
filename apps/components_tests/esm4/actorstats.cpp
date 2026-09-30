@@ -373,3 +373,64 @@ TEST(ESM4ActorStats, SparseModifiersPreserveNativeAbsentEntrySemantics)
     EXPECT_THROW(ESM4::addSparseActorValueModifier(std::numeric_limits<float>::infinity(),
         0, true), std::invalid_argument);
 }
+
+namespace
+{
+    ESM4::ActorCharacterBaseInput playerBaseInputs()
+    {
+        ESM4::ActorCharacterBaseInput input{};
+        input.mLevel = 1;
+        input.mRaceAttributes.fill(50);
+        input.mRaceAttributes[6] = 80;
+        input.mAuthoredPersonality = 7;
+        input.mFavoredAttributes = {6, 6};
+        input.mMajorSkills.fill(12);
+        input.mSpecialization = 0;
+        input.mSkills.fill({0, 0});
+        input.mRaceBonuses = {{{12, -10}, {12, 3}, {13, -20}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}}};
+        return input;
+    }
+}
+
+TEST(ESM4ActorStats, PlayerUsesRacePersonalityFirstFavoredBonusAndOrderedSignedBonuses)
+{
+    const auto input = playerBaseInputs();
+    // Original form7 probe, level1, repeated favored/major entries. Native
+    // nearest-even byte storage wraps the negative skill; no lower clamp.
+    const auto result = ESM4::calculatePlayerCharacterBaseStats(input, {6.5f, 5.5f}, false);
+    EXPECT_EQ(result.mAttributes, (std::array<std::uint8_t, 8>{50, 50, 50, 50, 50, 50, 86, 50}));
+    auto expected = std::array<std::uint8_t, 21>{};
+    expected.fill(10);
+    expected[0] = 23;
+    expected[1] = 246;
+    EXPECT_EQ(result.mSkills, expected);
+    EXPECT_EQ(ESM4::calculateNpcAutoStats(input, {6.5f, 5.5f}).mAttributes[6], 7);
+}
+
+TEST(ESM4ActorStats, TemporaryPlayerClassOmitsClassBonusesButKeepsRacialBonuses)
+{
+    const auto input = playerBaseInputs();
+    const auto result = ESM4::calculatePlayerCharacterBaseStats(input, {6.5f, 5.5f}, true);
+    EXPECT_EQ(result.mAttributes, input.mRaceAttributes);
+    auto expected = std::array<std::uint8_t, 21>{};
+    expected.fill(5);
+    expected[0] = 254;
+    expected[1] = 241;
+    EXPECT_EQ(result.mSkills, expected);
+}
+
+TEST(ESM4ActorStats, PlayerBaseCalculationRejectsUnsupportedInputsAndSettings)
+{
+    auto input = playerBaseInputs();
+    input.mLevel = 0;
+    EXPECT_THROW(ESM4::calculatePlayerCharacterBaseStats(input, {5, 5}, false), std::invalid_argument);
+    input = playerBaseInputs();
+    input.mRaceBonuses[0].mSkill = 11;
+    EXPECT_THROW(ESM4::calculatePlayerCharacterBaseStats(input, {5, 5}, true), std::invalid_argument);
+    input = playerBaseInputs();
+    input.mSkills[0].mGoverningAttribute = 8;
+    EXPECT_THROW(ESM4::calculatePlayerCharacterBaseStats(input, {5, 5}, false), std::invalid_argument);
+    input = playerBaseInputs();
+    EXPECT_THROW(ESM4::calculatePlayerCharacterBaseStats(input,
+        {std::numeric_limits<float>::infinity(), 5}, false), std::invalid_argument);
+}

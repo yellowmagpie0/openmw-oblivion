@@ -537,3 +537,44 @@ TEST(ESM4ActorValues, InitialModifierStorageRejectsInvalidConstructionDomains)
         EXPECT_THROW(ESM4::initialActorValueModifierStorage(owner, static_cast<Process>(255)),
             std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, FloatBaseModifierAddsExactIntegerBeforeFloatStoreAndSetterConversion)
+{
+    using Kind = ESM4::ActorBaseKind;
+    using Mode = ESM4::ActorValueConversionMode;
+    const auto change = ESM4::prepareActorBaseValueFloatMod(Kind::Npc, 8, 16777217, .5f, Mode::NonSse);
+    ASSERT_TRUE(change);
+    EXPECT_EQ(std::get<std::int32_t>(change->mValue), 16777218);
+    EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatMod(
+        Kind::Npc, 8, -1, -.75f, Mode::NonSse)->mValue), -1);
+    EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatMod(
+        Kind::Npc, 9, 65535, 1.75f, Mode::NonSse)->mValue), 0);
+    EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatMod(
+        Kind::Npc, 0, 255, 1.75f, Mode::NonSse)->mValue), 0);
+    EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatMod(
+        Kind::Npc, 8, std::numeric_limits<std::int32_t>::max(), 0.f, Mode::Sse)->mValue),
+        std::numeric_limits<std::int32_t>::min());
+    EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatMod(
+        Kind::Npc, 8, std::numeric_limits<std::int32_t>::max(), 0.f, Mode::NonSse)->mValue),
+        std::numeric_limits<std::int32_t>::min());
+    EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueFloatMod(
+        Kind::Npc, 55, 1, .75f, Mode::NonSse)->mValue), 1.f);
+    const auto creature = ESM4::prepareActorBaseValueFloatMod(Kind::Creature, 28, 50, 10, Mode::NonSse);
+    ASSERT_TRUE(creature);
+    EXPECT_EQ(creature->mActorValue, 12);
+    EXPECT_EQ(std::get<std::int32_t>(creature->mValue), 60);
+    for (const auto ignored : {11, 37, 38, 39})
+        EXPECT_FALSE(ESM4::prepareActorBaseValueFloatMod(Kind::Npc, ignored, 0, 1, Mode::NonSse));
+}
+
+TEST(ESM4ActorValues, FloatBaseModifierRejectsNonfiniteAndInvalidDomains)
+{
+    using Kind = ESM4::ActorBaseKind;
+    using Mode = ESM4::ActorValueConversionMode;
+    for (float delta : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::prepareActorBaseValueFloatMod(Kind::Npc, 8, 0, delta, Mode::NonSse), std::invalid_argument);
+    EXPECT_THROW(ESM4::prepareActorBaseValueFloatMod(Kind::Npc, 72, 0, 0, Mode::NonSse), std::invalid_argument);
+    EXPECT_THROW(ESM4::prepareActorBaseValueFloatMod(static_cast<Kind>(2), 8, 0, 0, Mode::NonSse), std::invalid_argument);
+    EXPECT_THROW(ESM4::prepareActorBaseValueFloatMod(Kind::Npc, 8, 0, 0, static_cast<Mode>(2)), std::invalid_argument);
+}

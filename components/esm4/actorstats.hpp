@@ -76,11 +76,11 @@ namespace ESM4
         std::int8_t mBonus = 0;
     };
 
-    struct NpcAutoStatsInput
+    struct ActorCharacterBaseInput
     {
         std::int16_t mLevel;
         std::array<std::uint8_t, 8> mRaceAttributes; // Resolved actor sex.
-        std::uint8_t mAuthoredPersonality;
+        std::uint8_t mAuthoredPersonality; // NPC-only; Player uses race Personality.
         std::array<std::uint32_t, 2> mFavoredAttributes;
         std::array<std::uint32_t, 7> mMajorSkills; // Native AVs 12..32.
         std::uint32_t mSpecialization;
@@ -88,11 +88,20 @@ namespace ESM4
         std::array<NpcRaceSkillBonus, 7> mRaceBonuses; // Ordered, signed, duplicates retained.
     };
 
-    struct NpcAutoStats
+    using NpcAutoStatsInput = ActorCharacterBaseInput;
+
+    struct ActorCharacterBaseStats
     {
         std::array<std::uint8_t, 8> mAttributes;
         std::array<std::uint8_t, 21> mSkills;
     };
+
+    using NpcAutoStats = ActorCharacterBaseStats;
+
+    // Original form7 branch. Temporary class suppresses class bonuses/majors;
+    // ordered racial skill bonuses still apply. No resource/effect writes.
+    ActorCharacterBaseStats calculatePlayerCharacterBaseStats(const ActorCharacterBaseInput& input,
+        const NpcAutoStatsSettings& settings, bool temporaryClass);
 
     void validateNpcAutoStatsSettings(const NpcAutoStatsSettings& settings);
     // NPC-only base auto-calculation. Personality retains its authored value.

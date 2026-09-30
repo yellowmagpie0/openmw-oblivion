@@ -6727,3 +6727,34 @@ Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
 `commits.json` records the exact commit/tree and tested source fingerprint.
 Tests ran in the shared workspace; a clean fresh bundle clone and changed-file
 byte comparison verify the committed checkpoint. M15 remains in progress.
+
+
+### Native Player character-base and float base-modifier primitives
+
+The original Player branch now has a pure character-base calculation alongside
+the retained NPC API. It uses winning-data inputs, ordered signed race bonuses,
+original first-favored/membership rules and native byte rounding/wrap. Temporary
+class suppression and Player race-derived Personality are explicit. The shared
+implementation retains NPC Personality behavior. A separate float form modifier
+adds an exact integer getter result before the float store/conversion; the caller
+must supply a form getter, not a derived runtime AV. Neither primitive publishes
+Player choices or applies/removes passive abilities.
+
+`native-player-character-base-baseline-01` retains failures against the explicit
+unimplemented Player calculation. `native-player-character-base-parser-01`
+passes all 1966 components and
+441 ESM4 ASan/UBSan cases, with matching inventories,
+no skips/failures and source fingerprint
+`9fa2da9a49ed5d67df1b06ad7d5574c2de85cc0c0b770c3c3571fcd83df087d0`.
+Leak detection is off. Independent production comparisons match264 original
+Player,384 NPC regression and4800 Player float-writer cases; their scopes and
+boundary stubs are in `M15-NATIVE-RULE-PROVENANCE.md`. This bounded component
+checkpoint has no new engine/runtime acceptance claim. The next change must
+resolve winning character inputs and publish the native Player transaction.
+
+Checkpoint28 follows these checks in the independent `m15-implementation`
+repository. Its portable source/history bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-06/m15-progress.bundle`;
+clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+The clean bundle clone and changed-file comparison establish the source Git
+checkpoint; the stage table and gameplay gates remain open.
