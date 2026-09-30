@@ -2167,8 +2167,9 @@ namespace
             {
                 EXPECT_EQ(values.mValues[av].mBase, 0);
             }
-            for (const auto& modifier : values.mValues[av].mModifiers)
-                EXPECT_EQ(modifier, av == 9 || av == 10 ? std::optional(0.f) : std::nullopt);
+            for (std::size_t channel = 0; channel < values.mValues[av].mModifiers.size(); ++channel)
+                EXPECT_EQ(values.mValues[av].mModifiers[channel],
+                    (av == 9 || av == 10) && channel != 0 ? std::optional(0.f) : std::nullopt);
         }
         const std::uint32_t authoredHealth = mStore.search<ESM4::Npc>(mActorKey)->mData.health;
         EXPECT_EQ(authoredHealth, 0);
@@ -2187,6 +2188,8 @@ namespace
             mStore, actor, mActorKey, {}, ESM4::ActorValueProcess::Active);
         EXPECT_EQ(fixed.mValues[8].mBase, 16777216.f);
         EXPECT_EQ(fixed.mNonPlayerFormHealth, 16777217);
+        for (const auto av : {9, 10})
+            EXPECT_EQ(fixed.mValues[av].mModifiers, (ESM4::ActorValueModifiers{0.f, 0.f, 0.f}));
 
         const auto creatureKey = ESM::FormKey::content("actors.esm", 0x801);
         ESM4::Creature creature{};
@@ -2207,6 +2210,11 @@ namespace
         EXPECT_EQ(initialCreature.mValues[19].mBase, 20);
         EXPECT_EQ(initialCreature.mValues[28].mBase, 30); // Form getter; runtime aliases are separate.
         EXPECT_EQ(initialCreature.mValues[36].mBase, 101);
+        const auto lowCreature = MWWorld::resolveOblivionInitialNonPlayerValues(
+            mStore, actor, creatureKey, {}, ESM4::ActorValueProcess::Low);
+        for (const auto av : {9, 10})
+            EXPECT_EQ(lowCreature.mValues[av].mModifiers,
+                (ESM4::ActorValueModifiers{std::nullopt, 0.f, 0.f}));
     }
 
     TEST_F(OblivionActorStatsTest, nonPlayerRawHealthRetainsFormPrecisionAcrossQueriesWritesAndRestart)

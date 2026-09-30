@@ -198,10 +198,12 @@ namespace MWWorld
         const std::array<std::uint8_t, 4> settings{ai.aggression, ai.confidence, ai.energyLevel, ai.responsibility};
         for (std::size_t i = 0; i < settings.size(); ++i)
             result.mValues[33 + i].mBase = settings[i];
-        // Every native ActorValues container starts with permanent AV9/10
-        // zero nodes. Other modifier entries and extra form AVs are absent.
+        // Common Script and process Damage containers start with permanent
+        // AV9/10 zero nodes. LowProcess has no Maximum container; do not
+        // invent its slot presence when preparing fresh Low actors.
         for (const auto av : {9, 10})
-            result.mValues[av].mModifiers = {0.f, 0.f, 0.f};
+            result.mValues[av].mModifiers = {
+                process == ESM4::ActorValueProcess::Active ? std::optional(0.f) : std::nullopt, 0.f, 0.f};
         result.validate();
         return result;
     }

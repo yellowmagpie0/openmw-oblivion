@@ -6343,3 +6343,53 @@ Neither probe executes full factory/record autocalculation order, process
 creation, callbacks/count history or physical lifecycle. The current public
 Low/Active process enum still has no absent-process state; automatic fresh
 publication remains disabled while those construction requirements are open.
+
+### S2/S3 continuation: fresh LowProcess storage matches original constructors
+
+The initial nonplayer resolver no longer invents Maximum-slot presence for
+fresh Low actors. Magicka/Fatigue keep their permanent Script and Damage zero
+nodes, while Maximum remains absent. Active construction retains its existing
+permanent zero entries in all three channels. Existing restored snapshots are
+still preferred; this change does not normalize old persisted modifiers.
+
+This corrects the earlier blanket statement that all three fresh channels
+have permanent AV9/10 nodes regardless of process. The independent original
+constructor probes establish the owning containers, not just their scalar
+outputs. On the pinned executable, `common-actor-construction-01` executes48
+common Actor/Character constructors with poisoned memory, both x87/CPU modes,
+and successful/failed LowProcess allocation. Successful construction allocates
+LowProcess; raw life state is0 and magic objectF8 is absent. Common Script and
+Low Damage retain only AV9/10 zero nodes. TESForm identity/global registration
+and manager insertion are declared boundaries. Report SHA256:
+`36606691c361ec60e952f17f9e33ee3d8b16bf0237677be75b68f76260493ff0`.
+
+`process-construction-04` executes48 Low/MiddleLow/MiddleHigh/High constructors
+and their actual nested constructors. Each tier owns its Damage container;
+MiddleLow and higher additionally own Maximum94. AV9/10 nodes are positive
+zero and other sparse entries absent. Allocation, a High random return and a
+zero cached-angle normalization are declared boundaries. Attempts01–03 retain
+probe failures; the angle-helper loop exhausted the instruction budget before
+its non-AV cache boundary was isolated. Report SHA256:
+`b3358423aa5c78853a1fbf6deab7f1a1ead18f15fa9f8e22f7f6aad93d7f7763`.
+
+`player-constructor-modifier-arrays-01` separately executes the original Player
+initialization loop without function stubs:1296 positive-zero stores across
+all72 Maximum/Script/Damage entries, three poisoned patterns and both x87
+words. Surrounding bytes remain poisoned. Report SHA256:
+`6c1573e5f16d7fea612154a7f784b466ee6e0044e39fd5768a5adca51a47568b`.
+Full Player construction and form/race/class loading do not execute here.
+
+`native-fresh-low-maximum-baseline-01` retains the wrong fresh Low-slot failure.
+The first full normal/sanitized attempts also expose an older creature test's
+assumption that fresh Low and Active storage are identical; that expectation
+now distinguishes Maximum presence and independently compares bases, Script
+and Damage. `native-fresh-low-maximum-02` and its `sanitized-02` partner pass
+all661 engine cases, including actual World publication and binary persistence
+of absent Low slots. Exact inventories/XML agree, no tests skip; ASan leaks
+are off and UBSan halts. Automatic fresh activation, absent-process authority,
+full record/autocalculation/load order and essential attachment still remain
+open. These constructor checks do not close gameplay or S3.
+Tested dirty-source fingerprint:
+`00a2eb4845b69a1ddc227c8dbef680418d196db433f45e20f52c6fe845ef7825`
+on parent `8cf3491f18`. Git metadata is still read-only; this tested chunk is
+retained in the pending worktree and recovery export rather than a commit.

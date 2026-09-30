@@ -192,6 +192,12 @@ namespace
         service.clear();
         ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
         EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Dead);
+        for (const auto av : {9, 10})
+            EXPECT_EQ(service.findActorValues(key)->mValues[av].mModifiers,
+                (ESM4::ActorValueModifiers{std::nullopt, 0.f, 0.f}));
+        const auto freshLow = captureNativeActorState(fixture, ptr);
+        const auto decodedLow = ESM4::RuntimeState::deserializeBinary(freshLow.serializeBinary());
+        EXPECT_EQ(decodedLow.mNativeActorValues, freshLow.mNativeActorValues);
         state.mReferences[0].mCustomState["obscript.dead"]=std::int64_t{42};
         readNativeSnapshot(fixture, state);
         service.clear();
@@ -554,7 +560,14 @@ namespace
         service.initializeNonPlayerActor(ptr, store, {}, ESM4::ActorValueProcess::Low, true);
         EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
         EXPECT_EQ(service.findActorLife(reference.mFormKey)->mPhase, ESM4::ActorLifePhase::Dead);
-        EXPECT_EQ(service.findActorValues(reference.mFormKey)->mValues, original.mValues);
+        const auto& freshLowValues = service.findActorValues(reference.mFormKey)->mValues;
+        for (std::size_t av = 0; av < freshLowValues.size(); ++av)
+        {
+            EXPECT_EQ(freshLowValues[av].mBase, original.mValues[av].mBase);
+            EXPECT_EQ(freshLowValues[av].mModifiers[0], std::nullopt);
+            EXPECT_EQ(freshLowValues[av].mModifiers[1], original.mValues[av].mModifiers[1]);
+            EXPECT_EQ(freshLowValues[av].mModifiers[2], original.mValues[av].mModifiers[2]);
+        }
         EXPECT_EQ(service.getDeadCount(creature.mFormKey), 0);
         EXPECT_FALSE(service.takeNextDeathEvent());
         EXPECT_TRUE(world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()).isEmpty());
