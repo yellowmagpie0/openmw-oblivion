@@ -1355,7 +1355,15 @@ namespace MWMechanics
                 throw std::logic_error("native Player construction snapshot disagrees with base authority");
         }
         else
+        {
+            // TESNPC post-load resets Player form7's three resource fields
+            // before actor construction (5240B2..5240E0). The winning store
+            // retains authored data; readiness uses those separate zero form
+            // contributions. preparePlayerValues then applies saved base
+            // overrides before deriving resources from current attributes.
+            values.mPlayerFormValues = {{0, 0, 0, 0}};
             preparePlayerValues(values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+        }
 
         const auto ptr = player.getPlayer();
         if (ptr.isEmpty())

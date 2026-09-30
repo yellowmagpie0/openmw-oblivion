@@ -6531,3 +6531,74 @@ its previously verified compiled fallback still applies absent overrides.
 This is a standalone master audit, not a winning load-order/ready-Player proof.
 Report SHA256:
 `3f34bd9d5fa89a645df6f3718de261812bfeb5c850b03a0c5a63ea6fab941cc1`.
+
+### S3 correction: Player resource readiness includes the original form loader
+
+Fresh Player initialization now separates authored inputs from post-load form
+contributions. The original TESNPC post-load branch for formID7 zeros Health,
+Magicka and Fatigue before actor construction. `initializePlayerActor` applies
+those zero contributions before deriving resources, then applies any retained
+base overrides through the existing preparation path. Restored actor snapshots
+are still preferred and are not normalized. The authored-input resolver still
+returns untouched winning data for its explicitly documented pre-load boundary.
+
+This corrects the earlier initializer/World constructor expectations of
+Health125 and Fatigue300 from authored form45/150 with the synthetic attributes.
+Ready fresh inputs are zero, yielding Health80 and Fatigue150; synthetic fallback
+Magicka is75, and installed-master multiplier1 instead yields100. Earlier raw
+publication tests intentionally exercise authored inputs directly and remain
+scoped to that boundary. This is still before character-generation choices and
+abilities; it does not close full Player startup activation.
+
+`authority-draft/player-form-postload-resources-01` independently executes2688
+original instruction cases: full form IDs7/6/8/0x01000007, seven Health patterns,
+four Magicka/Fatigue words, three memory poison patterns and both x87 words.
+Only exact formID7 follows the resource reset. Original three setters and the
+initialized-flag write execute; all other bytes, including attributes/skills,
+remain unchanged. Changed-flags notifications are boundary fixtures. Other
+forms stop before their autocalculation path. Earlier record loading, abilities,
+scene attachment and gameplay do not execute. Report SHA256:
+`24f8cc9a181695de8b56abddbe6a0dd4d7c3374ddaba2173e80070bcad5242cc`.
+
+`native-player-postload-resources-baseline-01` retains the fresh-construction
+failure against these expectations. Corrected normal and sanitized
+`native-player-postload-resources-01` runs each pass all667 engine cases with
+exact inventories/XML, no failures/skips. ASan leaks are off; UBSan halts.
+Source fingerprint:
+`1950362032ec42a1b4d986bea0748dec5d0a6d4e739b8923d194b03523499d58`.
+Evidence is under `build/oblivion-compat/m15/S3/`; recovery export25 records
+this source independently of the commit metadata.
+
+### Git progress in an independent checkout
+
+The shared checkout's protected `.git` remains unchanged at `8cf3491f18`.
+A normal independent Git clone under `/tmp/m15-progress-repository` now holds
+branch `m15-implementation`. No alternate metadata path, linked worktree or
+write to the protected repository was used. The earliest fully tested recovery
+checkpoint04 and each checkpoint05–24 were imported as21 separate commits;
+untested intermediate exports01/02 were not represented as passing commits.
+The import's final tree matches the earlier five-commit20–24 recovery import
+exactly. That earlier history is retained on a separate local branch.
+Checkpoint24 is commit `c4e773ba274a70032f1832a27349f66bce239593`.
+
+`isolated-git-progress-02/commits.json` maps each commit/tree to its source
+export hash and dirty-source test fingerprint/evidence. Tests ran against the
+shared working source, not a rebuilt independent checkout. Git metadata changes
+are not represented as additional runtime verification. The post-load correction
+is committed separately after its passed normal/sanitizer checks.
+
+The portable bundle after correction25 is retained under
+`build/oblivion-compat/m15/S3/isolated-git-progress-03/m15-progress.bundle`.
+Review in a separate checkout so the shared dirty workspace stays intact:
+
+```bash
+git clone --branch m15-implementation /home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S3/isolated-git-progress-03/m15-progress.bundle ~/openmw-oblivion-m15-review
+cd ~/openmw-oblivion-m15-review
+git log --oneline -25
+```
+
+The bundle contains Git source/history. Ignored build directories, game assets,
+saves and generated evidence remain in the original workspace. Use the versioned
+`openmw-build-test` skill with the actual review checkout path when configuring
+and running additional checks. M15 remains in progress; the stage table and
+normal-input/official campaign gates have not been waived.

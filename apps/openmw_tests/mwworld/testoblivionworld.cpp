@@ -692,13 +692,13 @@ namespace
         world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
         ASSERT_TRUE(world.initializeOblivionPlayerActor());
         auto player = world.getPlayerPtr();
-        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 125);
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 80);
         ASSERT_NE(service.findActorLife(actor), nullptr);
         EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Alive);
-        EXPECT_EQ(world.getOblivionScriptActorValue(actor, 8, false), 125);
-        ASSERT_TRUE(world.requestOblivionResourceCurrent(player, 8, 100));
-        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 100);
-        EXPECT_EQ(world.getOblivionScriptActorValue(actor, 8, false), 100);
+        EXPECT_EQ(world.getOblivionScriptActorValue(actor, 8, false), 80);
+        ASSERT_TRUE(world.requestOblivionResourceCurrent(player, 8, 60));
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 60);
+        EXPECT_EQ(world.getOblivionScriptActorValue(actor, 8, false), 60);
         const auto values = *service.findActorValues(actor);
         native.mIsTES4 = false;
         world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
@@ -713,7 +713,7 @@ namespace
         world.setupPlayer();
         ASSERT_TRUE(world.initializeOblivionPlayerActor());
         player = world.getPlayerPtr();
-        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 125);
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 80);
         EXPECT_FALSE(service.takeNextDeathEvent());
         MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
         EXPECT_FALSE(legacy.initializeOblivionPlayerActor());

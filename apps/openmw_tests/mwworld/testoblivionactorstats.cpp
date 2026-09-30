@@ -377,6 +377,7 @@ namespace
         native.mIsTES4 = true;
         native.mData.attribs = {50, 50, 30, 30, 40, 40, 50, 50};
         native.mData.health = 45;
+        native.mBaseConfig.tes4.baseSpell = 350;
         native.mBaseConfig.tes4.fatigue = 150;
         mStore.getWritable<ESM4::Npc>().insertStatic(native, baseKey);
         ESM::NPC facade{};
@@ -397,7 +398,11 @@ namespace
         MWMechanics::OblivionCombatService service;
         const auto actor = ESM::FormKey::dynamic("player", 1);
         service.initializePlayerActor(player, mStore);
-        EXPECT_EQ(service.getPlayerValue(8), 125);
+        EXPECT_EQ(service.getPlayerValue(8), 80);
+        EXPECT_EQ(service.getPlayerValue(9), 75);
+        EXPECT_EQ(service.getPlayerValue(10), 150);
+        EXPECT_EQ(service.findActorValues(actor)->mPlayerFormValues,
+            (std::optional<std::array<std::int32_t, 4>>{{0, 0, 0, 0}}));
         ASSERT_NE(service.findActorLife(actor), nullptr);
         EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Alive);
         EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
@@ -412,7 +417,7 @@ namespace
         service.initializePlayerActor(player, mStore);
         EXPECT_EQ(*service.findActorValues(actor), before);
         EXPECT_EQ(*service.findActorLife(actor), life);
-        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 115);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 70);
         EXPECT_THROW(service.initializePlayerActor(player, mStore, true), std::invalid_argument);
         EXPECT_EQ(*service.findActorValues(actor), before);
         EXPECT_EQ(*service.findActorLife(actor), life);
@@ -430,7 +435,7 @@ namespace
         restored.initializePlayerActor(fresh, mStore);
         EXPECT_EQ(*restored.findActorValues(actor), before);
         EXPECT_EQ(*restored.findActorLife(actor), life);
-        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 115);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 70);
         EXPECT_FALSE(restored.takeNextDeathEvent());
         restored.capture(saved);
         EXPECT_TRUE(saved.mNativeDeathCounts.empty());
