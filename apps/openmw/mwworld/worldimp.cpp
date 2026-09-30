@@ -1275,7 +1275,7 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
-    bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process)
+    bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process, bool activate)
     {
         if (!mOblivionCombat || actor.isEmpty())
             return false;
@@ -1325,10 +1325,27 @@ namespace MWWorld
                 throw std::invalid_argument("invalid legacy native death marker");
             legacyDead = *dead;
         }
-        mOblivionCombat->initializeNonPlayerActor(actor, mStore, playerLevel, process, legacyDead);
+        mOblivionCombat->initializeNonPlayerActor(actor, mStore, playerLevel, process, legacyDead, activate);
         if (marker)
             reference->mCustomState.erase(*marker);
         return true;
+    }
+
+    bool World::activateOblivionActor(const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        if (actor == getPlayerPtr())
+        {
+            const auto key = ESM::FormKey::dynamic("player", 1);
+            if (mOblivionCombat->findActorValues(key) || mOblivionRuntimeState)
+                return initializeOblivionPlayerActor();
+            const auto* record = actor.get<ESM::NPC>()->mBase;
+            if (!record)
+                throw std::invalid_argument("native Player admission has no character record");
+            return replaceOblivionPlayerCharacter(*record, mPlayer->getBirthSign());
+        }
+        return initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active, true);
     }
 
     bool World::replaceOblivionPlayerCharacter(const ESM::NPC& candidate, const ESM::RefId& birthSign,
@@ -4337,6 +4354,8 @@ namespace MWWorld
 
     MWRender::Animation* World::getAnimation(const MWWorld::Ptr& ptr)
     {
+        if (!mRendering)
+            return nullptr;
         auto* animation = mRendering->getAnimation(ptr);
         if (!animation)
         {
@@ -4350,7 +4369,7 @@ namespace MWWorld
 
     const MWRender::Animation* World::getAnimation(const MWWorld::ConstPtr& ptr) const
     {
-        return mRendering->getAnimation(ptr);
+        return mRendering ? mRendering->getAnimation(ptr) : nullptr;
     }
 
     void World::screenshot(osg::Image* image, int w, int h)

@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "name": "m15-native-actor-admission-stock-fresh-load",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 1 command player getav Health\nat 1 command player getav Magicka\nat 1 command player getav Fatigue\nat 1 command player getdead\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+  ],
+  "xvfb": false,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "sleep",
+      "seconds": 8
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "native-admission.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/Quicksave.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": [
+        "T4ST",
+        "OMW4STATE"
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "after-save.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 180,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Writing saved game 'Quicksave'",
+    "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  },
+  "sdl_offscreen_input": true
+}

@@ -24,6 +24,7 @@
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/esm4interactive.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
+#include "apps/openmw/mwmechanics/actors.hpp"
 #include "apps/openmw/mwlua/context.hpp"
 #include "apps/openmw/mwlua/localscripts.hpp"
 #include "apps/openmw/mwlua/luamanagerimp.hpp"
@@ -36,8 +37,8 @@
 namespace
 {
     // A real native content-load path with no renderer, input, physics or audio
-    // device. Actors enter authority explicitly; this is not automatic actor
-    // publication or a normal-input gameplay fixture.
+    // device. Registration tests exercise actual Actors admission without an
+    // animation/controller; this remains a headless integration fixture.
     struct NativeWorldFixture
     {
         const std::filesystem::path mDirectory = TestingOpenMW::currentTestDirPath();
@@ -1848,5 +1849,210 @@ namespace
         EXPECT_FALSE(service.takeNextDeathEvent());
     }
 
+
+    TEST(OblivionWorldTest, actorRegistrationPromotesRestoredNpcWithoutResettingValuesOrLife)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto ptr = addNativeNpc(fixture, 0x900);
+        const auto key = ptr.getCellRef().getFormKey();
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
+        auto values = *service.findActorValues(key);
+        values.mValues[8].mModifiers = {25.f, 3.f, -13.f};
+        values.mValues[0].mModifiers = {7.f, 2.f, -1.f};
+        service.publishNonPlayerValues(ptr, values);
+        auto life = *service.findActorLife(key);
+        life.mPhase = ESM4::ActorLifePhase::Dead;
+        service.publishNonPlayerLife(ptr, life);
+        auto saved = captureNativeActorState(fixture, ptr);
+        service.clear();
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_EQ(service.findActorValues(key)->mProcess, ESM4::ActorValueProcess::Low);
+        MWMechanics::Actors actors;
+        ASSERT_NO_THROW(actors.addActor(ptr));
+        values.mProcess = ESM4::ActorValueProcess::Active;
+        ASSERT_NE(service.findActorValues(key), nullptr);
+        EXPECT_EQ(*service.findActorValues(key), values);
+        EXPECT_EQ(*service.findActorLife(key), life);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 115);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getAttribute(ESM::Attribute::Strength).getModified(), 45);
+        EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
+        EXPECT_EQ(service.getDeadCount(values.mBase), 0);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        EXPECT_EQ(actors.size(), 0); // Headless admission has no animation/controller.
+        ASSERT_NO_THROW(actors.addActor(ptr));
+        EXPECT_EQ(*service.findActorValues(key), values);
+        EXPECT_TRUE(world.activateOblivionActor(ptr));
+        EXPECT_FALSE(world.activateOblivionActor({}));
+        EXPECT_FALSE(static_cast<const MWWorld::World&>(world).getAnimation(MWWorld::ConstPtr(ptr)));
+    }
+
+    TEST(OblivionWorldTest, actorRegistrationRejectsMalformedMarkerBeforeNativePublication)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto ptr = addNativeNpc(fixture, 0x900);
+        const auto key = ptr.getCellRef().getFormKey();
+        auto saved = captureNativeActorState(fixture, ptr);
+        saved.mReferences[0].mCustomState["obscript.dead"] = std::string("invalid");
+        ASSERT_NO_FATAL_FAILURE(readNativeSnapshot(fixture, saved));
+        MWMechanics::Actors actors;
+        EXPECT_THROW(actors.addActor(ptr), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(key), nullptr);
+        EXPECT_EQ(service.findActorLife(key), nullptr);
+        EXPECT_EQ(actors.size(), 0);
+        EXPECT_THROW(actors.addActor(ptr), std::invalid_argument);
+        saved.mReferences[0].mCustomState["obscript.dead"] = true;
+        ASSERT_NO_FATAL_FAILURE(readNativeSnapshot(fixture, saved));
+        ASSERT_NO_THROW(actors.addActor(ptr));
+        ASSERT_NE(service.findActorLife(key), nullptr);
+        EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
+    TEST(OblivionWorldTest, freshPlayerRegistrationBuildsNativeCharacterAndRetainsGrantsOnReadmission)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        auto& service = *world.getOblivionCombatService();
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        ESM4::Npc native{}; native.mId = {7, 0}; native.mIsTES4 = true;
+        native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        native.mData.attribs = {40, 40, 40, 40, 40, 40, 40, 40};
+        store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+        ESM4::Race race{}; race.mId = {0x810, 0};
+        race.mAttribMale = race.mAttribFemale = {40, 40, 40, 40, 40, 40, 40, 40};
+        race.mTES4SkillBonuses = std::array<ESM4::Race::SkillBonus, 7>{};
+        for (auto& bonus : *race.mTES4SkillBonuses) bonus.mSkill = -1;
+        ESM4::Class characterClass{}; characterClass.mId = {0x811, 0};
+        characterClass.mData.mFavoredAttributes = {0, 5};
+        characterClass.mData.mMajorSkills = {12, 13, 14, 15, 16, 17, 18};
+        characterClass.mData.mSpecialization = 0;
+        store.getWritable<ESM4::Class>().insertStatic(characterClass, ESM::FormKey::content("headless.esm", 0x811));
+        ESM4::EffectSetting effect{}; effect.mId = {0x812, 0}; effect.mEffectCode = ESM::fourCC("FOSP");
+        effect.mFullName = "Fortify Magicka"; effect.mData.emplace(); effect.mData->mSchool = 2;
+        effect.preparePassiveValueModifierDefinition();
+        store.getWritable<ESM4::EffectSetting>().insertStatic(effect, ESM::FormKey::content("headless.esm", 0x812));
+        ESM4::Spell spell{}; spell.mId = {0x813, 0}; spell.mData = ESM4::SpellData{4, 0, 0, 0, {}};
+        spell.mEffects = {{ESM::fourCC("FOSP"), 25, 0, 0, 0, 0, {}}};
+        race.mBonusSpells = {spell.mId};
+        store.getWritable<ESM4::Spell>().insertStatic(spell, ESM::FormKey::content("headless.esm", 0x813));
+        store.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("headless.esm", 0x810));
+        // Native profile loading also publishes the shared race facade used
+        // by the Player class while constructing its first CustomData.
+        ESM::Race sharedRace{}; sharedRace.blank(); sharedRace.mId = race.mId;
+        store.insertStatic(sharedRace);
+        auto proposed = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        proposed.mRace = race.mId; proposed.mClass = characterClass.mId; proposed.mNpdt.mLevel = 1;
+        proposed.setIsMale(true);
+        auto metadata = store.preparePlayerRecord(proposed);
+        world.getPlayer().set(metadata.commit());
+        ASSERT_EQ(service.findActorValues(actor), nullptr);
+        MWMechanics::Actors actors;
+        EXPECT_THROW(actors.addActor(world.getPlayerPtr()), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        for (unsigned i = 0; i < 21; ++i)
+        {
+            ESM4::Skill skill{}; skill.mId = {0x1000 + i, 0}; skill.mIndex = i + 12;
+            skill.mData = ESM4::SkillData{i + 12, 0, i % 3, {1, 2}};
+            store.getWritable<ESM4::Skill>().insertStatic(skill, ESM::FormKey::content("headless.esm", 0x1000 + i));
+        }
+        ASSERT_NO_THROW(actors.addActor(world.getPlayerPtr()));
+        ASSERT_NE(service.findActorValues(actor), nullptr);
+        ASSERT_TRUE(service.findActorValues(actor)->mPassiveAbilities);
+        ASSERT_EQ(service.findActorValues(actor)->mPassiveAbilities->size(), 1);
+        EXPECT_EQ(service.getPlayerValue(8), 90);
+        EXPECT_EQ(service.getPlayerValue(9), 85);
+        EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationFlags(), 0);
+        ASSERT_TRUE(world.requestOblivionResourceCurrent(world.getPlayerPtr(), 9, 55));
+        const auto values = *service.findActorValues(actor);
+        ASSERT_NO_THROW(actors.addActor(world.getPlayerPtr()));
+        EXPECT_EQ(*service.findActorValues(actor), values);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = actor;
+        saved.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        saved.mPlayer.mClass = ESM::FormKey::content("headless.esm", 0x811);
+        service.capture(saved);
+        service.clear();
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(actors.addActor(world.getPlayerPtr()));
+        EXPECT_EQ(*service.findActorValues(actor), values);
+        EXPECT_EQ(service.getPlayerValue(9), 55);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
+    TEST(OblivionWorldTest, actorRegistrationRejectsActiveOverflowWithoutChangingLowAuthority)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto ptr = addNativeNpc(fixture, 0x900);
+        const auto key = ptr.getCellRef().getFormKey();
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
+        auto values = *service.findActorValues(key);
+        const float large = std::numeric_limits<float>::max() * .75f;
+        // Low processing ignores Maximum. Active processing would overflow.
+        values.mValues[8].mModifiers = {large, large, 0.f};
+        service.publishNonPlayerValues(ptr, values);
+        const auto life = *service.findActorLife(key);
+        const auto before = ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent();
+        MWMechanics::Actors actors;
+        EXPECT_THROW(actors.addActor(ptr), std::runtime_error);
+        EXPECT_EQ(*service.findActorValues(key), values);
+        EXPECT_EQ(*service.findActorLife(key), life);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), before);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        EXPECT_EQ(actors.size(), 0);
+        values.mValues[8].mModifiers = {10.f, 3.f, -13.f};
+        service.publishNonPlayerValues(ptr, values);
+        ASSERT_NO_THROW(actors.addActor(ptr));
+        EXPECT_EQ(service.findActorValues(key)->mProcess, ESM4::ActorValueProcess::Active);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 100);
+    }
+
+    TEST(OblivionWorldTest, actorRegistrationAdmitsNativeCreatureAndBypassesMorrowindProfile)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        auto& service = *world.getOblivionCombatService();
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{};
+        creature.mId = {0x820, 0};
+        creature.mFormKey = ESM::FormKey::content("headless.esm", 0x820);
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 1;
+        creature.mBaseConfig.tes4.baseSpell = 20;
+        creature.mBaseConfig.tes4.fatigue = 40;
+        creature.mData.health = 99;
+        creature.mData.attribs.strength = 37;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{};
+        reference.mId = {0x920, 0}; reference.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        MWWorld::Ptr ptr(cell.insert(&live), &cell);
+        MWMechanics::Actors actors;
+        ASSERT_NO_THROW(actors.addActor(ptr));
+        ASSERT_NE(service.findActorValues(reference.mFormKey), nullptr);
+        EXPECT_EQ(service.findActorValues(reference.mFormKey)->mProcess, ESM4::ActorValueProcess::Active);
+        EXPECT_EQ(service.findActorValues(reference.mFormKey)->mNonPlayerFormHealth, 99);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getHealth().getCurrent(), 99);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        MWWorld::World legacy{&fixture.mResources, -1, "", fixture.mDirectory, ESM::GameProfile::Morrowind};
+        EXPECT_FALSE(legacy.activateOblivionActor(ptr));
+        EXPECT_FALSE(legacy.activateOblivionActor({}));
+        EXPECT_EQ(legacy.getOblivionCombatService(), nullptr);
+        EXPECT_EQ(service.findActorValues(reference.mFormKey)->mNonPlayerFormHealth, 99);
+    }
 
 }

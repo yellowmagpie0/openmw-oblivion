@@ -1242,6 +1242,9 @@ namespace MWMechanics
 
     void Actors::addActor(const MWWorld::Ptr& ptr, bool updateImmediately)
     {
+        MWBase::World* const baseWorld = MWBase::Environment::get().getWorld();
+        if (auto* world = dynamic_cast<MWWorld::World*>(baseWorld))
+            world->activateOblivionActor(ptr);
         removeActor(ptr, true);
 
         MWRender::Animation* anim = MWBase::Environment::get().getWorld()->getAnimation(ptr);

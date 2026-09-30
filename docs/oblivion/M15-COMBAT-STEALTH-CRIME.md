@@ -7384,3 +7384,73 @@ portable bundle:
 Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: actor scene activation and melee integration.
 S2/S3 and all later gameplay gates remain open.
+
+### Automatic native actor admission (checkpoint44)
+
+Actors::addActor now admits native authority before removing an existing
+controller. Fresh Player admission builds the selected character/passives;
+restored Player values win. Native NPC/creature scene admission explicitly
+promotes Low processing to Active without resetting bases, modifier channels,
+lifecycle or events. Promotion validates all72 values and shared projections
+before a no-throw publication. Ordinary explicit constructor calls retain their
+previous snapshot/process preference. Headless World animation queries now
+return null safely; no controller is fabricated for these fixtures. Morrowind
+profile admission returns false without constructing native state.
+
+Five actual Actors/World fixtures cover NPC binary readback and promotion,
+positive-Health dead adoption, repeat admission, malformed death markers,
+fresh Player grants/depletion/readmission, missing skill inventory, Active
+composition overflow with unchanged Low authority, creatures and profile
+isolation. Baseline02 diagnoses the absent admission API; baseline01 also had
+incorrect synthetic spell/race field names, corrected before implementation.
+Syntax01 caught a NotNullPtr cast and the unfinished service signature;
+configured syntax04 passes all four translation units. Engine attempts01/02
+each execute699 cases with698 passes: the new Player fixture lacked skill
+records, then the shared race facade normally created by profile loading.
+These fixtures were completed; the missing-skills rejection remains asserted.
+
+`native-actor-activation-engine-03` and
+`native-actor-activation-sanitized-engine-03` each pass699 full engine cases,
+exact inventories without failures/skips; fingerprint
+`dfa374a6e9dc428b9020d89108de792ff8f4c8dcc538f0ed498ef432a9109a32`.
+ASan/UBSan leak checks are off. Component code is unchanged since checkpoint43.
+
+`native-actor-activation-master-01` loads the hash-identified installed master,
+admits a fresh Player and verifies all420 character-choice/readmission cases.
+`native-actor-activation-master-reorder-01` additionally loads builtin.omwscripts
+first and passes the same identity/idempotence cases, but reveals an existing
+numerical bug: temporary chargen-class detection compares the GMST's raw ID
+against a content-index-shifted resolved ID. Its initial pools80/90/145 differ
+from no-builtin80/80/140. This is a failing cross-order semantic finding, not
+closed rule acceptance; the next bounded fix must address stable class identity.
+
+The initial rendered attempt `native-actor-activation-runtime-01/first` cannot
+start Xvfb because display socket creation fails. The existing diagnostic SDL
+offscreen route succeeds in `native-actor-activation-offscreen-01`: stock
+ImperialDungeon01 admission -> F12 captures -> F5 save -> SDL quit -> private
+copy -> fresh engine load -> captures -> resave -> SDL quit, both exit0. Independent
+Python decoding finds nine native actors at schema19, identical complete
+actor values/lifecycle/breath across both saves, no death events and an unchanged
+pristine input. There are no stat-bootstrap writes. Binary hash:
+`a7822d41f4b1cd6b0f73b378a0a93ba42e9923165529b87711d0aa3ddb4911ca`.
+The first/second save hashes and content hash are in the run verification.json.
+All four captures were opened: textured prison arch/chains/bench, readable
+location/weapon text and full resource bars. No actor appears in this camera;
+no combat, animation, ragdoll or audio acceptance is implied. An existing missing
+menu_icon_equip.dds diagnostic remains. Process PIDs were not retained in this
+diagnostic run, so section7's full evidence gate remains open.
+
+Editable scenarios are `oblivion_m15_native_actor_admission.json` and
+`oblivion_m15_native_actor_admission_continuation.json`. Run `scenario MANIFEST
+--output FRESH --variable openmw=ABS_BINARY --variable resources=ABS_RESOURCES
+--variable oblivion_data=ABS_DATA`. Before continuation, create its private
+`userdata/saves/M15Review/Quicksave.omwsave` from the first run and retain an
+input-pristine.omwsave copy; never overwrite historical inputs.
+
+Checkpoint44 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-22/m15-progress.bundle`.
+Changed-source bytes and a clean fresh bundle clone verify the commit. Next:
+fix temporary class identity under shifted content order, then continue melee.
+Legacy passive reconciliation, process demotion/unload, full load rollback,
+S2/S3 and all later gameplay gates remain open.

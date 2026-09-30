@@ -258,10 +258,12 @@ namespace MWMechanics
         void publishNonPlayerValues(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values);
         // Prepare first values/life together, or reproject restored authority.
         // Fresh process/level inputs never overwrite an existing snapshot.
+        // Scene activation may explicitly change its process while preserving
+        // values, modifiers and lifecycle; projection validates before commit.
         // Legacy death adoption generates no historical events or death counts.
         void initializeNonPlayerActor(const MWWorld::Ptr& actor, const MWWorld::ESMStore& store,
             std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process,
-            std::optional<bool> legacyDead);
+            std::optional<bool> legacyDead, bool activate = false);
         // Caller applies eligibility, event and death policy before/after this
         // scalar transition. This method cannot run callbacks between commits.
         void changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,

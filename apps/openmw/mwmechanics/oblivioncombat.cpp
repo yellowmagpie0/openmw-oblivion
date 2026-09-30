@@ -762,7 +762,7 @@ namespace MWMechanics
 
     void OblivionCombatService::initializeNonPlayerActor(const MWWorld::Ptr& actor,
         const MWWorld::ESMStore& store, std::optional<std::uint16_t> playerLevel,
-        ESM4::ActorValueProcess process, std::optional<bool> legacyDead)
+        ESM4::ActorValueProcess process, std::optional<bool> legacyDead, bool activate)
     {
         if (actor.isEmpty() || (process != ESM4::ActorValueProcess::Low
             && process != ESM4::ActorValueProcess::Active))
@@ -796,6 +796,11 @@ namespace MWMechanics
         values.validate();
         if (oldValues && values != *oldValues)
             throw std::logic_error("native construction snapshot disagrees with shared base authority");
+        if (activate)
+        {
+            values.mProcess = process;
+            values.validate();
+        }
 
         const auto* oldLife = findActorLife(key);
         if (!oldLife && isInCombat(key))
@@ -826,6 +831,11 @@ namespace MWMechanics
         // map nodes. No callbacks or fallible stat setters occur during commit.
         if (!oldValues)
             mActorValues.insert(preparedValues.extract(preparedValues.begin()));
+        else if (activate)
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+            std::swap(mActorValues.find(key)->second, values);
+        }
         if (!oldLife)
             mActorLife.insert(preparedLife.extract(preparedLife.begin()));
         view.commit();

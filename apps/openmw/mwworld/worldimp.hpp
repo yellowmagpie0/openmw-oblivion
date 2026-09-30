@@ -243,7 +243,10 @@ namespace MWWorld
         bool requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested) override;
         bool requestOblivionStatModifier(const Ptr& actor, std::uint8_t value, bool damage, float requested) override;
         bool requestOblivionStatBase(const Ptr& actor, std::uint8_t value, float requested) override;
-        bool initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process);
+        bool initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process, bool activate = false);
+        // Scene admission precedes controller replacement. Restored values win;
+        // fresh Player construction includes the selected character passives.
+        bool activateOblivionActor(const Ptr& actor);
         bool initializeOblivionPlayerActor();
         // Validate/stage metadata, native bases and self-passive replacement
         // before one synchronous publication. Rendering follows acceptance.
