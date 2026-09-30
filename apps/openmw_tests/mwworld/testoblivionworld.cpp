@@ -1104,6 +1104,33 @@ namespace
             EXPECT_EQ(stats.getLevel(), levelBefore);
             EXPECT_EQ(world.getTimeStamp(), clockBefore);
         }
+        for (const auto* resource : {"health", "magicka", "fatigue"})
+        {
+            for (const bool oldModified : {false, true})
+            {
+                SCOPED_TRACE(resource);
+                SCOPED_TRACE(oldModified);
+                world.setGlobalFloat(firstName, 3);
+                const auto player = world.getPlayerPtr();
+                const auto& stats = player.getClass().getCreatureStats(player);
+                const auto healthBefore = stats.getHealth();
+                const auto magickaBefore = stats.getMagicka();
+                const auto fatigueBefore = stats.getFatigue();
+                const auto clockBefore = world.getTimeStamp();
+                auto invalidComposite = saved;
+                const std::string prefix(resource);
+                invalidComposite.mPlayer.mActorValues[prefix + ".base"] = oldModified ? -3e38 : 3e38;
+                invalidComposite.mPlayer.mActorValues[prefix + (oldModified ? ".modified" : ".modifier")] = 3e38;
+                ASSERT_NO_THROW(invalidComposite.validate());
+                readNativeSnapshot(fixture, invalidComposite);
+                EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+                EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+                EXPECT_EQ(stats.getHealth(), healthBefore);
+                EXPECT_EQ(stats.getMagicka(), magickaBefore);
+                EXPECT_EQ(stats.getFatigue(), fatigueBefore);
+                EXPECT_EQ(world.getTimeStamp(), clockBefore);
+            }
+        }
         saved.mPlayer.mActorValues = {{"health.base", 100}, {"health.modifier", 0}, {"health.current", 100},
             {"magicka.base", 20}, {"magicka.modifier", 0}, {"magicka.current", 20}, {"fatigue.base", 40},
             {"fatigue.modifier", 0}, {"fatigue.current", 40}, {"strength.base", 40}, {"strength.modifier", 0},
@@ -1116,6 +1143,18 @@ namespace
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.getGlobalFloat(firstName), 42);
         EXPECT_EQ(world.getGlobalFloat(secondName), 10);
+        for (const double sign : {-1., 1.})
+        {
+            saved.mPlayer.mActorValues["health.base"] = sign * 3e38;
+            saved.mPlayer.mActorValues["health.modifier"] = -sign * 3e38;
+            readNativeSnapshot(fixture, saved);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            const auto player = world.getPlayerPtr();
+            const auto& health = player.getClass().getCreatureStats(player).getHealth();
+            EXPECT_EQ(health.getModified(false), 0);
+            EXPECT_TRUE(std::isfinite(health.getModifier()));
+            EXPECT_EQ(health.getCurrent(), 100);
+        }
     }
 
     TEST(OblivionWorldTest, nativeWorldPlayerDataConstructionDoesNotRequireRendering)

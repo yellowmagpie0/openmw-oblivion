@@ -6186,3 +6186,38 @@ sanitized engine hashes remain those recorded above. Original-game
 AI-disabled behavioral comparison, audio, full S3 and M15 acceptance remain
 open. Git metadata remains read-only; exports are recovery patches rather
 than the requested commits.
+
+### S3 continuation: finite legacy resource composites before mutation
+
+Finite input fields could still overflow a legacy resource's computed
+maximum or the old-modified-minus-base conversion. The retained
+`native-world-resource-composite-baseline-01` fails the actual World
+read/apply case: six resource/encoding combinations accept overflow and
+change earlier globals or projected Player stats. Restore now prepares all
+three legacy dynamic stats together, retaining existing fallbacks and
+modifier precedence, and validates their computed modifiers and uncapped
+maxima before World mutation. Native Player authority still supersedes this
+legacy telemetry branch.
+
+Normal `native-world-resource-composite-01` and sanitized
+`native-world-resource-composite-sanitized-01` each pass all661 engine cases,
+with matching inventories/XML and no skips, at fingerprint
+`3049c5ab6fe35eeda4bf700a92bc393792165064567030a1641fa7e2b3448824`
+on parent `8cf3491f18`. Leak detection is disabled. The case checks rejection
+without resource/global/clock changes, valid retry, and supported large signed
+cancellations yielding finite zero maxima. It is save-bridge output-domain
+validation, not an original-game limit on authored stats.
+
+Actual legacy-telemetry courses `sdl-offscreen-save-restart-02` and
+`sdl-offscreen-legacy-sanitized-restart-01` each pass load, native F12 capture,
+F5 save, SDL quit, fresh load and resave with clean exit0 and unchanged private
+input saves. Independent binary/resource/HUD checks pass. Both phases have
+the same already-inspected full-resource image SHA256
+`1438ae8fdfb0e7419dc430638e1ed3b42bebd10cc3eb7c403ac624825254abec`.
+The normal engine SHA256 is
+`8fcf29574bd40b979b5da60d0409bd6d94b22573e56c34bd96457f33e89482e3`;
+the sanitized engine SHA256 is
+`ad403c17989d3b29beee68499ae23df00a0469e153b2c3a74709b4ad87ea7468`.
+Other legacy attribute-derived arithmetic, World/StateManager rollback, fresh
+native construction and the remaining S2/S3 gates are still open. Local commits
+remain unavailable; the source and evidence are retained as pending chunks.

@@ -1757,6 +1757,37 @@ namespace MWWorld
             validateBaseAndModifier(attributeNames);
             validateBaseAndModifier(skillNames);
         }
+        std::optional<std::array<MWMechanics::DynamicStat<float>, 3>> preparedLegacyResources;
+        if (!nativePlayerValues)
+        {
+            const auto prepareDynamicStat = [&](std::string_view name,
+                                                const MWMechanics::DynamicStat<float>& current) {
+                const std::string prefix(name);
+                const auto value = [&](std::string_view suffix, double fallback) {
+                    const auto found = state.mPlayer.mActorValues.find(prefix + std::string(suffix));
+                    const double selected = found != state.mPlayer.mActorValues.end() ? found->second : fallback;
+                    validateFloatInput(selected, prefix + std::string(suffix));
+                    return static_cast<float>(selected);
+                };
+                const float base = value(".base", current.getBase());
+                float modifier = value(".modifier", current.getModifier());
+                if (!state.mPlayer.mActorValues.contains(prefix + ".modifier"))
+                {
+                    const auto oldModified = state.mPlayer.mActorValues.find(prefix + ".modified");
+                    if (oldModified != state.mPlayer.mActorValues.end())
+                        modifier = static_cast<float>(oldModified->second) - base;
+                }
+                validateFloatInput(modifier, prefix + " computed modifier");
+                MWMechanics::DynamicStat<float> result(base, modifier, value(".current", current.getCurrent()));
+                validateFloatInput(result.getModified(false), prefix + " computed maximum");
+                return result;
+            };
+            const auto player = getPlayerPtr();
+            const auto& current = player.getClass().getCreatureStats(player);
+            preparedLegacyResources.emplace(std::array{
+                prepareDynamicStat("health", current.getHealth()), prepareDynamicStat("magicka", current.getMagicka()),
+                prepareDynamicStat("fatigue", current.getFatigue())});
+        }
         const ESM::FormKeyResolver resolver(mContentFiles);
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -1912,30 +1943,13 @@ namespace MWWorld
         applyPreparedInventory(playerInventory, preparedPlayerInventory);
         player.getRefData().setPosition(state.mPlayer.mPosition);
         MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
-        const auto applyDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& current) {
-            const std::string prefix(name);
-            const auto value = [&](std::string_view suffix, double fallback) {
-                const auto found = state.mPlayer.mActorValues.find(prefix + std::string(suffix));
-                return static_cast<float>(found != state.mPlayer.mActorValues.end() ? found->second : fallback);
-            };
-            const float base = value(".base", current.getBase());
-            float modifier = value(".modifier", current.getModifier());
-            if (!state.mPlayer.mActorValues.contains(prefix + ".modifier"))
-            {
-                const auto oldModified = state.mPlayer.mActorValues.find(prefix + ".modified");
-                if (oldModified != state.mPlayer.mActorValues.end())
-                    modifier = static_cast<float>(oldModified->second) - base;
-            }
-            const float currentValue = value(".current", current.getCurrent());
-            return MWMechanics::DynamicStat<float>(base, modifier, currentValue);
-        };
         // Native channels are installed by the prepared authority/view commit.
         // Legacy telemetry is not an alternate source for those same values.
         if (!nativePlayerValues)
         {
-            stats.setHealth(applyDynamicStat("health", stats.getHealth()));
-            stats.setMagicka(applyDynamicStat("magicka", stats.getMagicka()));
-            stats.setFatigue(applyDynamicStat("fatigue", stats.getFatigue()));
+            stats.setHealth((*preparedLegacyResources)[0]);
+            stats.setMagicka((*preparedLegacyResources)[1]);
+            stats.setFatigue((*preparedLegacyResources)[2]);
         }
         if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
             stats.setLevel(static_cast<int>(level->second));
