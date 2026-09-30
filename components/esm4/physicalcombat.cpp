@@ -258,6 +258,54 @@ namespace ESM4
         return rounded(double(base) * scale);
     }
 
+    float meleeContactDistance(float referenceDistance, const MeleeDistanceActor& attacker,
+        const MeleeDistanceActor& target, bool selectedTarget, float slopeDifference)
+    {
+        nonnegative(referenceDistance);
+        nonnegative(slopeDifference);
+        for (const auto* actor : {&attacker, &target})
+        {
+            for (float coordinate : actor->mPosition)
+                finite(coordinate);
+            finite(actor->mMinimumZ);
+            finite(actor->mMaximumZ);
+            nonnegative(actor->mMaximumY);
+            nonnegative(actor->mScale);
+            if (actor->mMinimumZ > actor->mMaximumZ)
+                throw std::invalid_argument("inverted native melee bounds");
+        }
+        // Native invalid/cross-space distance sentinel bypasses bounds entirely.
+        if (referenceDistance == std::numeric_limits<float>::max())
+            return referenceDistance;
+        float distance = referenceDistance;
+        if (attacker.mIsActor && target.mIsActor)
+        {
+            const float dz = rounded(double(attacker.mPosition[2]) - target.mPosition[2]);
+            if ((attacker.mFlying && target.mFlying)
+                || (selectedTarget && std::abs(dz) >= slopeDifference))
+            {
+                const float aMin = rounded(double(attacker.mMinimumZ) + attacker.mPosition[2]);
+                const float aMax = rounded(double(attacker.mMaximumZ) + attacker.mPosition[2]);
+                const float tMin = rounded(double(target.mMinimumZ) + target.mPosition[2]);
+                const float tMax = rounded(double(target.mMaximumZ) + target.mPosition[2]);
+                if (aMax >= tMin && tMax >= aMin)
+                {
+                    const float dx = rounded(double(attacker.mPosition[0]) - target.mPosition[0]);
+                    const float dy = rounded(double(attacker.mPosition[1]) - target.mPosition[1]);
+                    const float squared = rounded(double(dx) * dx + double(dy) * dy);
+                    distance = rounded(std::sqrt(double(squared)));
+                }
+            }
+        }
+        // The original stores each product as double and truncates the sum
+        // once. Subtracting two float half-extents gives different boundaries.
+        const double radius = double(attacker.mMaximumY) * attacker.mScale
+            + double(target.mMaximumY) * target.mScale;
+        if (!std::isfinite(radius) || radius >= 2147483648.0)
+            throw std::invalid_argument("native melee radius outside supported int32 domain");
+        return rounded(double(distance) - static_cast<std::int32_t>(radius));
+    }
+
     void validateEssentialRecoverySettings(const EssentialRecoverySettings& settings)
     {
         nonnegative(settings.mDelay);

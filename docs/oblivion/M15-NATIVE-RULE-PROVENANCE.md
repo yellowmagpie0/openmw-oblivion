@@ -3725,6 +3725,37 @@ and end at0.900000036. Equip contains Attach, Enum: Equip and a0.2-second end;
 handtohandblockidle spans0..1.29999995. Exact binary32 times, source file bytes,
 configured driver commands and textkeys.tsv are retained in ignored evidence.
 These native groups/keys differ from the shared TES3 windup-section contract;
-the existing M11 sequence loader prefixes/lowercases text keys for the animation
-runtime. Decoding key declarations does not establish dispatch, collision,
+the existing M11 sequence loader lowercases/trims bare text keys and adds
+group-prefixed start/stop keys. Bare Hit becomes hit; it is not prefixed.
+The shared controller currently skips that bare native key. Decoding key declarations does not establish dispatch, collision,
 fatigue/damage timing or visual/audio combat acceptance.
+
+### Native adjusted melee contact distance (checkpoint48)
+
+Full original612F50 executes6,912 observations in both x87 precision words,
+including original404C90 vector norm and9828C0 non-SSE truncation. A FLT_MAX
+reference-distance sentinel returns unchanged. For two actors, both flying
+or a selected target with absolute height difference **at least** the slope
+GMST permits horizontal distance when vertical bounds overlap inclusively.
+Otherwise the initial reference distance survives. Each bounds maximumY is
+multiplied by its resolved scale; the double products are summed and truncated
+once before subtraction. Negative contact distances are valid.
+The production helper accepts resolved bounds/positions/reference distance,
+rejects malformed finite-domain inputs and explicitly rejects radius sums
+outside the nonnegative int32 domain. It does not guess upstream bounds
+scaling, same-space validity, LOS, physics or target selection.
+
+The hermetic432-row C++ corpus contains literal binary32 expectations from
+original instruction execution. Additional cases cover actor gates, sentinel,
+height equality, negative distance and malformed/overflow input. Oracle04
+adds all four actor-flag pairs and sentinel/non-sentinel cases. Getter outputs,
+flight flags, raw reference distance and slope GMST lookup are declared stubs.
+Evidence: S4/melee-distance-oracle-03/04. Original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Oracle04 probe SHA256 `2e7adc9a3ebf80581a87d668b1d600aee7f3762f5486263742244986a300ab5c`;
+report SHA256 `ef693ebed6d94a22605f701412b732a3e85184ef8e9f7c647eaf59494b556e8d`.
+Attempt01 failed on a harness return: rewriting one float-return stub reused
+Unicorn's previously translated ret8 for a ret0 call. Attempt02 separates those
+addresses and then falsifies the preliminary strict slope comparison at48.
+Attempt03 corrects that equality and passes864 observations;04 passes6,912.
+These retained failures do not establish physical gameplay acceptance.

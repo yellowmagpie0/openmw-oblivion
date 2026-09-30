@@ -7606,3 +7606,30 @@ Exact changed-source bytes and a fresh clean bundle clone verify the commit.
 S2/S3 and S4-S14 remain open. Next: production native contact acquisition and
 shipped KF contact-key/controller dispatch. Actor queues/resources are now
 available to that integration; complete load rollback and other S3 gates remain.
+
+### Checkpoint48 — independently verified adjusted melee distance
+
+The component contact-distance rule now preserves native slope equality,
+vertical overlap, flight/actor gates, the invalid reference-distance sentinel,
+and truncation of the combined scaled radius.432 independent literal expected
+rows plus malformed-input cases pass; the original executable oracle expands
+to6,912 observations. This is a rule deliverable for S4 contact acquisition.
+Production controller/physics contact remains unwired, so S4 remains pending
+and S2/S3 remain in progress with their existing open gates.
+
+Baseline S4/melee-distance-baseline-01 confirms checkpoint47 lacks the new API;
+configured syntax checks pass both changed translation units. Fresh checks:
+S4/melee-distance-components-01 passes all1,988 component cases;
+S4/melee-distance-sanitized-components-01 passes all463 ESM4 component cases
+under ASan/UBSan with leak checks disabled. Exact inventories match with zero
+failures/skips. Tested source fingerprint:
+`c22eba3148cc94e9c37dac9e6b7deae1f9c6c4e957456db70c98fc6a7c76ca9a`.
+Engine and Python implementation are unchanged from their preceding passes;
+no new engine/runtime acceptance is claimed for this component checkpoint.
+
+Checkpoint47 local commit is9d24859fe884feff50397ae1241ae0670e8dd459 on
+m15-implementation in the independent writable repository. The checkpoint48
+commit/export follows these tests; original protected Git metadata stays
+unchanged. Native stock Hit keys are bare after lowercase normalization;
+the provenance wording is corrected accordingly. Next work is native
+controller contact dispatch, production geometry and live melee acceptance.

@@ -1704,3 +1704,73 @@ TEST(ESM4PhysicalCombat, UnarmedBlockAgainstWeaponsAndProjectilesHasReactionWith
         EXPECT_THROW(ESM4::blockContactDisposition({blocking, false, false, true,
             static_cast<E>(99), false, false}), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, MeleeDistanceMatchesOriginalInstructions)
+{
+    struct Observation
+    {
+        float reference, x, z;
+        bool selected, aFlying, tFlying;
+        float aRadius, tRadius, aScale, tScale, expected;
+    };
+    const Observation observations[] = {
+#include "meleedistance_expected.inc"
+    };
+    static_assert(std::size(observations) == 432);
+    for (const auto& row : observations)
+    {
+        const ESM4::MeleeDistanceActor attacker{{0, 0, 0}, 0, 50, row.aRadius, row.aScale, true, row.aFlying};
+        const ESM4::MeleeDistanceActor target{{row.x, 20, row.z}, 0, 50, row.tRadius, row.tScale, true, row.tFlying};
+        SCOPED_TRACE(&row - observations);
+        EXPECT_EQ(ESM4::meleeContactDistance(row.reference, attacker, target, row.selected, 48), row.expected);
+    }
+}
+
+TEST(ESM4PhysicalCombat, MeleeDistancePreservesActorGatesSentinelAndNegativeContact)
+{
+    ESM4::MeleeDistanceActor a{{0, 0, 0}, 0, 50, 15.25f, 1.1f, true, true};
+    ESM4::MeleeDistanceActor b{{0, 20, 48}, 0, 50, 8.5f, .9f, true, true};
+    // Original corpus04: 24-unit truncated radius; horizontal20 or reference52.
+    for (bool aActor : {false, true})
+        for (bool bActor : {false, true})
+            for (bool selected : {false, true})
+            {
+                a.mIsActor = aActor;
+                b.mIsActor = bActor;
+                EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, selected, 48), aActor && bActor ? -4.f : 28.f);
+                EXPECT_EQ(ESM4::meleeContactDistance(std::numeric_limits<float>::max(), a, b, selected, 48),
+                    std::numeric_limits<float>::max());
+            }
+    a.mIsActor = b.mIsActor = true;
+    a.mFlying = b.mFlying = false;
+    EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, true, 48), -4.f);
+    EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, true, std::nextafter(48.f, 49.f)), 28.f);
+    EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, false, 48), 28.f);
+}
+
+TEST(ESM4PhysicalCombat, MeleeDistanceRejectsMalformedBoundsAndUnsupportedArithmetic)
+{
+    ESM4::MeleeDistanceActor a, b;
+    for (float invalid : {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), -1.f})
+    {
+        EXPECT_THROW(ESM4::meleeContactDistance(invalid, a, b, true, 48), std::invalid_argument);
+        EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, true, invalid), std::invalid_argument);
+        auto bad = a;
+        bad.mMaximumY = invalid;
+        EXPECT_THROW(ESM4::meleeContactDistance(1, bad, b, true, 48), std::invalid_argument);
+        bad = a;
+        bad.mScale = invalid;
+        EXPECT_THROW(ESM4::meleeContactDistance(1, a, bad, true, 48), std::invalid_argument);
+    }
+    a.mMinimumZ = 1;
+    EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, true, 48), std::invalid_argument);
+    a.mMinimumZ = 0;
+    a.mMaximumY = 2147483648.f;
+    EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, true, 48), std::invalid_argument);
+    a.mMaximumY = 0;
+    a.mPosition[0] = std::numeric_limits<float>::max();
+    a.mFlying = b.mFlying = true;
+    EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, false, 48), std::invalid_argument);
+    a.mPosition[0] = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, false, 48), std::invalid_argument);
+}

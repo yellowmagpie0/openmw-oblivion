@@ -50,6 +50,22 @@ namespace ESM4
         const MeleeReachSettings& settings);
     void validateMeleeReachSettings(const MeleeReachSettings& settings);
 
+    struct MeleeDistanceActor
+    {
+        std::array<float, 3> mPosition{};
+        float mMinimumZ = 0;
+        float mMaximumZ = 0;
+        float mMaximumY = 0;
+        float mScale = 1;
+        bool mIsActor = true;
+        bool mFlying = false;
+    };
+    // Bounds are outputs of the native reference bounds getters, before the
+    // separate scale multiplication for radius. The caller owns reference
+    // validity, same-space checks and the initial reference distance.
+    float meleeContactDistance(float referenceDistance, const MeleeDistanceActor& attacker,
+        const MeleeDistanceActor& target, bool selectedTarget, float slopeDifference);
+
     struct PhysicalCombatSettings
     {
         std::int32_t mLuckSkillBase;
