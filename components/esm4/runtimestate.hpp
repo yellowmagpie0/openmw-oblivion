@@ -28,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 19;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 20;
 
     struct RuntimeContentIdentity
     {
@@ -352,6 +352,9 @@ namespace ESM4
         // v8: M15 action identity ownership. Older versions start a new ledger;
         // script/AI event IDs belong to separate namespaces and are not reused.
         ActionLedgerState mPhysicalActions;
+        // v20: pending physical intents bind to stable attacker identity. Older
+        // anonymous IDs remain anonymous; no actor or contact is inferred.
+        std::map<std::uint64_t, ESM::FormKey> mPhysicalActionOwners;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

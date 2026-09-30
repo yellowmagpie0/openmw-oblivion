@@ -174,6 +174,7 @@ namespace MWMechanics
         friend class OblivionActorLifeAdoption;
         class PreparedNonPlayerView;
         ESM4::ActionLedger mActions;
+        std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
@@ -248,6 +249,12 @@ namespace MWMechanics
         bool isInCombatWith(const ESM::FormKey& actor, const ESM::FormKey& opponent) const;
         std::vector<ESM::FormKey> combatOpponents(const ESM::FormKey& actor) const;
         std::uint64_t allocateAction();
+        // An owned intent requires initialized Alive authority. Allocation
+        // publishes ID and owner together; animation handles are never stored.
+        std::uint64_t allocateAction(const ESM::FormKey& actor);
+        bool isActionPending(std::uint64_t id, const ESM::FormKey& actor) const;
+        bool consumeAction(std::uint64_t id, const ESM::FormKey& actor);
+        std::size_t cancelActorActions(const ESM::FormKey& actor) noexcept;
         bool isActionPending(std::uint64_t id) const;
         bool isActionConsumed(std::uint64_t id) const;
         // Internal completion/cancellation boundary. Call only with the

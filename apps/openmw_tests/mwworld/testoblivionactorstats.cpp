@@ -5838,6 +5838,7 @@ namespace
             MWMechanics::OblivionCombatService service;
             service.publishPlayerValues(player, values, settings);
             service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            const auto ownedAction = service.allocateAction(values.mActor);
             if (essential && reacts)
             {
                 const auto before = *service.findActorValues(values.mActor);
@@ -5846,6 +5847,7 @@ namespace
                 EXPECT_EQ(*service.findActorValues(values.mActor), before);
                 EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, ESM4::ActorLifePhase::Alive);
                 EXPECT_FALSE(service.takeNextDeathEvent());
+                EXPECT_TRUE(service.isActionPending(ownedAction, values.mActor));
             }
             service.grantPlayerPassiveAbilities(player, abilities, settings, essential, {10, .1f});
             EXPECT_EQ(service.getPlayerBaseValue(5), 50 + magnitude);
@@ -5853,6 +5855,8 @@ namespace
             ASSERT_NE(life, nullptr);
             EXPECT_EQ(life->mPhase, !reacts ? ESM4::ActorLifePhase::Alive : essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead);
             EXPECT_EQ(life->mKiller, reacts ? values.mActor : ESM::FormKey{});
+            EXPECT_EQ(service.isActionPending(ownedAction, values.mActor), !reacts);
+            EXPECT_EQ(service.isActionConsumed(ownedAction), reacts);
             EXPECT_EQ(service.getPlayerValue(8), essential && reacts ? 19 : currentHealth);
             if (!reacts || essential)
             {
@@ -6477,5 +6481,83 @@ namespace
         EXPECT_NO_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities));
     }
 
+
+    TEST_F(OblivionActorStatsTest, ownedPhysicalIntentsValidateCompleteOwnerConsumeOnceAndCancelWithLife)
+    {
+        autoNpc(); sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3}; reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey; values.mBase = mActorKey; values.mValues[8].mBase = 100;
+        const auto foreign = ESM::FormKey::content("different.esm", 0x900);
+        EXPECT_THROW(service.allocateAction(values.mActor), std::invalid_argument);
+        service.publishNonPlayerValues(ptr, values);
+        EXPECT_THROW(service.allocateAction(values.mActor), std::invalid_argument);
+        service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto anonymous = service.allocateAction();
+        const auto first = service.allocateAction(values.mActor);
+        const auto second = service.allocateAction(values.mActor);
+        EXPECT_EQ(first, anonymous + 1); EXPECT_EQ(second, first + 1);
+        EXPECT_THROW(service.allocateAction(foreign), std::invalid_argument);
+        EXPECT_FALSE(service.isActionPending(first, foreign));
+        EXPECT_FALSE(service.consumeAction(first, foreign));
+        EXPECT_THROW(service.consumeAction(first), std::invalid_argument);
+        EXPECT_FALSE(service.consumeAction(anonymous, values.mActor));
+        EXPECT_TRUE(service.isActionPending(first, values.mActor));
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = values.mActor; savedActor.mBase = values.mBase; savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved);
+        const auto bytes = saved.serializeBinary();
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(bytes));
+        EXPECT_TRUE(restored.isActionPending(first, values.mActor));
+        EXPECT_TRUE(restored.consumeAction(second, values.mActor));
+        EXPECT_FALSE(restored.consumeAction(second, values.mActor));
+        EXPECT_TRUE(restored.isActionConsumed(second));
+        auto broken = saved; broken.mPhysicalActionOwners[first] = foreign;
+        EXPECT_THROW(restored.restore(broken), std::runtime_error);
+        EXPECT_TRUE(restored.isActionPending(first, values.mActor));
+        EXPECT_TRUE(restored.isActionConsumed(second));
+        auto legacy = saved; legacy.mVersion = 19;
+        EXPECT_THROW(service.capture(legacy), std::invalid_argument);
+        EXPECT_EQ(legacy.mPhysicalActions, saved.mPhysicalActions);
+        EXPECT_EQ(legacy.mPhysicalActionOwners, saved.mPhysicalActionOwners);
+        EXPECT_EQ(restored.cancelActorActions(foreign), 0);
+        EXPECT_EQ(restored.cancelActorActions(values.mActor), 1);
+        EXPECT_EQ(restored.cancelActorActions(values.mActor), 0);
+        EXPECT_TRUE(restored.isActionPending(anonymous));
+        EXPECT_TRUE(service.changeNonPlayerHealth(ptr, -100, {}, true, {4, .5f}));
+        EXPECT_TRUE(service.isActionConsumed(first)); EXPECT_TRUE(service.isActionConsumed(second));
+        EXPECT_TRUE(service.isActionPending(anonymous));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, ESM4::ActorLifePhase::EssentialUnconscious);
+        EXPECT_THROW(service.allocateAction(values.mActor), std::invalid_argument);
+        service.capture(saved); saved.validate();
+        service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto deathAction = service.allocateAction(values.mActor);
+        service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, ESM4::ActorLifePhase::Dead, 0, {}});
+        EXPECT_TRUE(service.isActionConsumed(deathAction));
+        EXPECT_THROW(service.allocateAction(values.mActor), std::invalid_argument);
+        service.clear();
+        EXPECT_FALSE(service.isActionPending(anonymous));
+        EXPECT_EQ(service.allocateAction(), 1);
+    }
 
 }

@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 19
+CURRENT_VERSION = 20
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -919,6 +919,19 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 any(actor not in native_keys or actor not in phases or phases[actor] == 1 for actor in pair)):
             raise RuntimeStateError("Invalid, duplicate, dangling or terminal TES4 combat engagement")
         seen_engagements.add(pair)
+    action_owners = check_collection(state.get("physical_action_owners", []), "physical action owner list")
+    if version < 20 and action_owners:
+        raise RuntimeStateError("TES4 physical action owners require version 20")
+    owned_ids: set[int] = set()
+    for entry in action_owners:
+        if not isinstance(entry, dict) or set(entry) != {"id", "actor"}:
+            raise RuntimeStateError("Invalid TES4 physical action owner")
+        identity, actor = entry["id"], entry["actor"]
+        native_key(actor)
+        if (type(identity) is not int or identity not in seen_actions or identity in owned_ids
+                or actor not in native_keys or phases.get(actor) != 0):
+            raise RuntimeStateError("Invalid, duplicate, dangling or incapacitated TES4 physical action owner")
+        owned_ids.add(identity)
     previous = 0
     for event in death_events:
         if not isinstance(event, dict):
@@ -1331,6 +1344,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_actor_update_times"] = [
             {"actor": reader.string(), "time": reader.unpack("<f")} for _ in range(reader.count())
         ]
+    if version >= 20:
+        result["physical_action_owners"] = [
+            {"id": reader.unpack("<Q"), "actor": reader.string()} for _ in range(reader.count())
+        ]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1582,6 +1599,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in times:
             writer.string(entry["actor"])
             writer.pack("<f", entry["time"])
+    if version >= 20:
+        owners = sorted(state.get("physical_action_owners", []), key=lambda item: item["id"])
+        writer.pack("<I", len(owners))
+        for entry in owners:
+            writer.pack("<Q", entry["id"])
+            writer.string(entry["actor"])
     return writer.finish()
 
 
@@ -1654,6 +1677,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("detection_vectors", [])
     state.setdefault("pending_package_done", [])
     state.setdefault("physical_actions", {"next": 1, "pending": []})
+    state.setdefault("physical_action_owners", [])
     state.setdefault("native_actor_values", [])
     state.setdefault("native_actor_bases", [])
     state.setdefault("native_actor_life", [])
@@ -1693,6 +1717,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("detection_vectors", [])
     result.setdefault("pending_package_done", [])
     result.setdefault("physical_actions", {"next": 1, "pending": []})
+    result.setdefault("physical_action_owners", [])
     result.setdefault("native_actor_values", [])
     result.setdefault("native_actor_bases", [])
     result.setdefault("native_actor_life", [])

@@ -3693,3 +3693,23 @@ the script prefix; actual rendered fresh/load observations now agree at
 Health80/Magicka80/Fatigue140. Evidence is under
 S3/native-class-content-index-* and S3/native-actor-activation-offscreen-03.
 No additional original-executable formula claim is inferred from this adapter fix.
+
+### Native melee acquisition selection (checkpoint46 investigation)
+
+Full original6156C0 acquisition executes432 observations in both x87 precision
+words. A present selected combat target is tested exclusively: facing and
+inclusive reach gate it, with no fallback when it fails. Without a selected
+target, eligible resident nondead candidates inside inclusive reach are ranked
+by smallest supplied facing angle; equal angles replace the previous result.
+This corrects a potential nearest-distance/TES3 target-list substitution.
+The same6131D0 facing predicate audited above is called in attack acquisition
+as well as blocking. Distance, facing/bearing geometry, combat-target getter,
+actor flags/residency, manager lists/RTTI and final Player check are supplied
+boundaries. Geometry, LOS, physical contact and normal gameplay remain unproved.
+Original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Evidence: S4/melee-acquisition-instructions-01. Selection probe SHA256
+`f82e0f93c92304a126ec29de8ac828faba145d4dab646072b5c77d475a1ce37a`; report SHA256
+`2b37cc6b6d54b7e52537715682f66f62ddda7e0c4c04927e7f686baaf825ab48`. Bounded original geometry instructions
+are retained for the next contact implementation; no additional geometry rule
+is inferred solely from their labels.

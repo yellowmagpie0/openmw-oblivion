@@ -1530,4 +1530,78 @@ namespace
         }
     }
 
+    ESM4::RuntimeState ownedActionState()
+    {
+        auto state = makeState();
+        const auto& reference = state.mReferences.front();
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mKey; values.mBase = reference.mBase;
+        state.mNativeActorValues = {values};
+        state.mNativeActorLife = {{values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}}};
+        state.mPhysicalActions = {7, {5, 2, 1}};
+        state.mPhysicalActionOwners = {{5, values.mActor}, {2, values.mActor}};
+        return state;
+    }
+
+    TEST(ESM4RuntimeState, physicalActionOwnersHaveVersionTwentyCanonicalWireAndLegacyIsolation)
+    {
+        auto state = ownedActionState();
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mPhysicalActionOwners, state.mPhysicalActionOwners);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(state.canonicalJson().find("\"physical_action_owners\":[{\"id\":2,\"actor\":\"content:oblivion.esm:000100\"},{\"id\":5"), std::string::npos);
+        state.mVersion = 19;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mPhysicalActionOwners.clear();
+        const auto old = state.serializeBinary();
+        auto promoted = old;
+        promoted[std::string_view("OMW4STATE").size()] = 20;
+        promoted.insert(promoted.end(), 4, 0);
+        state.mVersion = 20;
+        EXPECT_EQ(state.serializeBinary(), promoted);
+        EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(old).mPhysicalActionOwners.empty());
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(old).canonicalJson().find("physical_action_owners"), std::string::npos);
+    }
+
+    TEST(ESM4RuntimeState, physicalActionOwnersRejectInvalidBindingsAndCorruptTail)
+    {
+        auto state = ownedActionState();
+        const auto reject = [&](auto change) {
+            auto broken = state; change(broken);
+            EXPECT_THROW(broken.serializeBinary(), std::runtime_error);
+        };
+        reject([](auto& x) { x.mPhysicalActionOwners.emplace(0, x.mNativeActorValues[0].mActor); });
+        reject([](auto& x) { x.mPhysicalActionOwners.emplace(3, x.mNativeActorValues[0].mActor); });
+        reject([](auto& x) { x.mPhysicalActionOwners[2] = {}; });
+        reject([](auto& x) { x.mPhysicalActionOwners[2] = ESM::FormKey::dynamic("missing", 1); });
+        reject([](auto& x) { x.mNativeActorValues.clear(); });
+        reject([](auto& x) { x.mNativeActorLife.clear(); });
+        reject([](auto& x) { x.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::Dead; });
+        reject([](auto& x) { x.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::EssentialUnconscious; });
+        state.mPhysicalActionOwners.erase(5);
+        const auto bytes = state.serializeBinary();
+        const auto key = state.mPhysicalActionOwners.begin()->second.serialize();
+        const auto tailSize = 4 + 8 + 4 + key.size();
+        const auto start = bytes.size() - tailSize;
+        EXPECT_EQ(bytes[start], 1);
+        EXPECT_EQ(bytes[start + 4], 2);
+        for (std::size_t cut = 1; cut <= tailSize; ++cut)
+        {
+            auto bad = bytes; bad.resize(bytes.size() - cut);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+        }
+        auto duplicate = bytes;
+        duplicate[start] = 2;
+        duplicate.insert(duplicate.end(), bytes.begin() + start + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(duplicate), std::runtime_error);
+        auto excessive = bytes;
+        std::fill_n(excessive.begin() + start, 4, 255);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(excessive), std::runtime_error);
+        auto noncanonical = bytes;
+        noncanonical[start + 16] = 'C';
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(noncanonical), std::runtime_error);
+    }
+
 }

@@ -620,6 +620,7 @@ namespace MWMechanics
     void OblivionCombatService::clear()
     {
         mActions = {};
+        mActionOwners.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -709,6 +710,55 @@ namespace MWMechanics
         return mActions.allocate();
     }
 
+    std::uint64_t OblivionCombatService::allocateAction(const ESM::FormKey& actor)
+    {
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!values || !life || values->mBase != life->mBase || life->mPhase != ESM4::ActorLifePhase::Alive)
+            throw std::invalid_argument("native physical intent requires initialized Alive actor authority");
+        // Allocate the map node first. Ledger allocation itself changes nothing
+        // if its set allocation or exhausted-identity check fails.
+        decltype(mActionOwners) prepared;
+        prepared.emplace(0, actor);
+        auto node = prepared.extract(prepared.begin());
+        const auto id = mActions.allocate();
+        node.key() = id;
+        mActionOwners.insert(std::move(node));
+        return id;
+    }
+
+    bool OblivionCombatService::isActionPending(std::uint64_t id, const ESM::FormKey& actor) const
+    {
+        const auto found = mActionOwners.find(id);
+        return found != mActionOwners.end() && found->second == actor && mActions.isPending(id);
+    }
+
+    bool OblivionCombatService::consumeAction(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        if (!isActionPending(id, actor))
+            return false;
+        mActions.consume(id);
+        mActionOwners.erase(id);
+        return true;
+    }
+
+    std::size_t OblivionCombatService::cancelActorActions(const ESM::FormKey& actor) noexcept
+    {
+        std::size_t count = 0;
+        for (auto it = mActionOwners.begin(); it != mActionOwners.end();)
+        {
+            if (it->second != actor)
+            {
+                ++it;
+                continue;
+            }
+            mActions.consume(it->first);
+            it = mActionOwners.erase(it);
+            ++count;
+        }
+        return count;
+    }
+
     bool OblivionCombatService::isActionPending(std::uint64_t id) const
     {
         return mActions.isPending(id);
@@ -721,6 +771,8 @@ namespace MWMechanics
 
     bool OblivionCombatService::consumeAction(std::uint64_t id)
     {
+        if (mActionOwners.contains(id))
+            throw std::invalid_argument("native owned physical action requires its actor identity");
         return mActions.consume(id);
     }
 
@@ -1471,6 +1523,9 @@ namespace MWMechanics
             actorProjection(values, nullptr, prepared.findActorLife(values.mActor)));
         mActorValues.swap(prepared.mActorValues);
         mActorLife.swap(prepared.mActorLife);
+        if (const auto* life = findActorLife(ESM::FormKey::dynamic("player", 1));
+            life && life->mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(life->mActor);
         view.commit();
     }
 
@@ -1560,6 +1615,8 @@ namespace MWMechanics
         candidate.validate();
         const auto transition = prepareLifeTransition(life);
         mActorLife.at(candidate.mActor) = life;
+        if (life.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(candidate.mActor);
         if (transition)
         {
             mPendingDeathEvents = transition->mEvents;
@@ -1661,9 +1718,14 @@ namespace MWMechanics
         const ESM4::PlayerDynamicBaseSettings& settings)
     {
         prepared.publishPlayerValues(player, std::move(values), settings);
+        std::swap(mActions, prepared.mActions);
+        mActionOwners.swap(prepared.mActionOwners);
         mActorValues.swap(prepared.mActorValues);
         mActorBases.swap(prepared.mActorBases);
         mActorLife.swap(prepared.mActorLife);
+        if (const auto* life = findActorLife(ESM::FormKey::dynamic("player", 1));
+            life && life->mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(life->mActor);
         mActorBreath.swap(prepared.mActorBreath);
         mPendingDeathEvents.swap(prepared.mPendingDeathEvents);
         mDeathCounts.swap(prepared.mDeathCounts);
@@ -1991,6 +2053,8 @@ namespace MWMechanics
             static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
             std::swap(found->second, life);
         }
+        if (findActorLife(values.mActor)->mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(values.mActor);
         prepared.commit();
         if (terminal)
             stopCombat(values.mActor);
@@ -2010,6 +2074,8 @@ namespace MWMechanics
         }
         else
             std::swap(found->second, life);
+        if (findActorLife(values.mActor)->mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(values.mActor);
         prepared.commit();
         if (terminal)
             stopCombat(values.mActor);
@@ -2114,6 +2180,8 @@ namespace MWMechanics
         const bool terminal = life.mPhase == ESM4::ActorLifePhase::Dead;
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         if (playerView)
             playerView->commit();
         else if (actorView)
@@ -2154,6 +2222,8 @@ namespace MWMechanics
         PreparedNonPlayerView prepared(actor, candidate, base, &life);
         std::swap(mActorValues.at(candidate.mActor), candidate);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
         return true;
     }
@@ -2184,6 +2254,8 @@ namespace MWMechanics
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(candidate, nullptr, &life));
         std::swap(mActorValues.at(candidate.mActor), candidate);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
         return true;
     }
@@ -2223,6 +2295,8 @@ namespace MWMechanics
         PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
     }
 
@@ -2238,6 +2312,8 @@ namespace MWMechanics
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
     }
 
@@ -2276,6 +2352,8 @@ namespace MWMechanics
         PreparedNonPlayerView prepared(actor, values, base, &life);
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
         // Revival passes through Alive even when its Health write immediately kills again.
         stats.setDeathAnimationFinished(false);
@@ -2346,6 +2424,8 @@ namespace MWMechanics
         PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
         if (terminal)
         {
@@ -2379,6 +2459,8 @@ namespace MWMechanics
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
+            cancelActorActions(found->first);
         prepared.commit();
         if (terminal)
         {
@@ -2426,6 +2508,8 @@ namespace MWMechanics
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
+        if (state.mVersion < 20 && !mActionOwners.empty())
+            throw std::invalid_argument("native physical action owners require an Oblivion v20+ save");
         if (state.mVersion < 9 && !mActorValues.empty())
             throw std::invalid_argument("native actor values require an Oblivion v9+ save");
         if (state.mVersion < 11 && !mActorBases.empty())
@@ -2475,9 +2559,11 @@ namespace MWMechanics
             actors.push_back(actor);
         }
         auto actions = mActions.capture();
+        auto actionOwners = mActionOwners;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
+        state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -2592,6 +2678,7 @@ namespace MWMechanics
         state.validate();
         ESM4::ActionLedger actions;
         actions.restore(state.mPhysicalActions);
+        auto actionOwners = state.mPhysicalActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -2628,6 +2715,7 @@ namespace MWMechanics
             lives.emplace(life.mActor, life);
         std::deque<ESM4::RuntimeActorDeathEvent> events(state.mPendingDeathEvents.begin(), state.mPendingDeathEvents.end());
         mActions = std::move(actions);
+        mActionOwners.swap(actionOwners);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);

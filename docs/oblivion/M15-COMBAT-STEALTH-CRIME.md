@@ -7508,3 +7508,60 @@ Changed-source bytes and a clean fresh bundle clone verify the commit. S2/S3
 and S4-S14 remain open. Next: bind physical action identity and transaction
 boundaries before wiring normal melee contact; legacy passive reconciliation,
 process demotion and complete failed-load rollback also remain open.
+
+### Owned physical intent and cancellation contract (checkpoint46)
+
+Physical intents can now bind their monotonic ID to a stable attacker FormKey.
+Allocation requires matching initialized Alive values/lifecycle and prepares the
+owner node before issuing an ID. Wrong-owner or duplicate completion returns
+false; anonymous completion cannot consume an owned intent. Explicit actor
+cancellation consumes only that actor's owned IDs. Death/unconscious lifecycle
+publication cancels its owned work before callback consumption, including the
+isolated Player passive transaction. Cancelled/finished owner entries are erased;
+the existing pending-only ledger avoids retaining completed history.
+
+Queue contract: allocation order is monotonic; completion may occur out of order.
+A future contact transaction must publish resource/life deltas and consume its
+owned ID before dispatching external callbacks. This chunk provides that identity
+boundary, not the contact transaction itself. Controller handles are ephemeral;
+owner restoration does not fabricate contact, animation or an attacker for old
+anonymous IDs. Controller cancellation/rebinding is still integration work.
+
+Runtime schema20 appends a canonical ID/owner table. Owners must refer to pending
+IDs and matching native Alive authority. C++/Python decoders reject duplicate,
+noncanonical, dangling, incapacitated, excessive-count and truncated owner data.
+Version19 bytes/layout remain unchanged; old IDs retain anonymous ownership.
+The service prepares restored maps before publication and rejects down-version
+capture with owned work before modifying the destination. Actual NPC fixtures
+cover wrong same-local-ID/different-plugin owners, consume-once, malformed
+restore rollback, targeted cancellation, essential/dead transitions and clear.
+Existing Player passive lifecycle cases now assert cancellation and failed
+preparation retaining the pending action.
+
+Prior committed-header baseline01 diagnoses both absent contracts. Configured
+syntax01 passes four translation units; existing legacy inventory initializer
+warnings remain. `owned-physical-actions-full-01` passes1,985 full component,
+701 full engine and215 full Python cases. `owned-physical-actions-sanitized-full-01`
+passes460 ESM4 component and701 full engine cases under ASan/UBSan, leak checks
+off. Exact inventories have no failures/skips; both tested fingerprints are
+`76e56b4c9755514020eeb635ceb8f44884ea4acc71887170595f45b6f512815d`.
+
+`owned-physical-actions-offscreen-01` loads the pristine checkpoint45 schema19
+save, captures/saves/quits normally, then fresh-loads/resaves the resulting
+schema20 save. Both processes exit0. PIDs13/12 have distinct kernel start ticks
+8987074/8992734 on the retained boot; executable SHA256
+`9bef23d503155f6d7f7b8351fa193eb56a05953fab66b516bf1d8db70c04ebbd`.
+Independent decoding preserves all nine actors' complete values/life/breath/base
+state, death counts/events and physical ledger across19->20->20. Owner tables
+are empty; this is idle migration, not active-contact continuation. Public pools
+and authority remain80/80/140, capacity200, pristine inputs unchanged. All four
+captures were opened with textured prison architecture, readable labels and
+full bars; no actor/contact appears. Sound is off, existing menu-icon diagnostics
+remain, and the Xvfb/full failure-injection/gameplay gates remain open.
+
+Checkpoint46 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-24/m15-progress.bundle`.
+Exact changed-source bytes and a fresh clean bundle clone verify the commit.
+S2/S3 and S4-S14 remain open. Next: atomically publish attacker fatigue, victim
+resource/lifecycle changes and owned-action consumption, then wire normal contact.

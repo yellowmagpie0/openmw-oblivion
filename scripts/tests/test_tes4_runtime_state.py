@@ -1048,6 +1048,49 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state["native_combat_engagements"] = [{"first": actor, "second": player}]
         return state
 
+    def test_owned_physical_action_v20_wire_legacy_and_invalid_bindings(self):
+        state = self.engagement_state()
+        state["schema_version"] = 20
+        actor = state["native_actor_values"][0]["actor"]
+        state["physical_actions"] = {"next": 7, "pending": [5, 2, 1]}
+        state["physical_action_owners"] = [{"id": 5, "actor": actor}, {"id": 2, "actor": actor}]
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["physical_action_owners"], list(reversed(state["physical_action_owners"])))
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        entry = struct.pack("<QI", 2, len(actor)) + actor.encode()
+        tail = struct.pack("<I", 2) + entry + struct.pack("<QI", 5, len(actor)) + actor.encode()
+        self.assertEqual(payload[-len(tail):], tail)
+        prefix = payload[:-len(tail)]
+        for bad in (struct.pack("<I", 2) + entry * 2, struct.pack("<I", 0xffffffff),
+                    tail.replace(b"content:", b"Content:", 1)):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(prefix + bad)
+        for cut in range(1, len(tail) + 1):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-cut])
+        for change in (lambda x: x.update(schema_version=19),
+                       lambda x: x["physical_action_owners"][0].update(id=0),
+                       lambda x: x["physical_action_owners"][0].update(id=3),
+                       lambda x: x["physical_action_owners"][0].update(id=True),
+                       lambda x: x["physical_action_owners"][0].update(actor="null"),
+                       lambda x: x["physical_action_owners"][0].update(actor="content:missing.esm:000001"),
+                       lambda x: x["native_actor_values"].clear(),
+                       lambda x: x["native_actor_life"].clear(),
+                       lambda x: x["native_actor_life"][0].update(phase=1),
+                       lambda x: x["native_actor_life"][0].update(phase=2)):
+            broken = copy.deepcopy(state); change(broken)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(broken)
+        state["schema_version"] = 19
+        state["physical_action_owners"] = []
+        old = state_io.encode_payload(state)
+        self.assertNotIn("physical_action_owners", state_io.decode_payload(old))
+        state["schema_version"] = 20
+        expected = bytearray(old)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 20)
+        self.assertEqual(state_io.encode_payload(state), bytes(expected) + struct.pack("<I", 0))
+
     def test_native_combat_engagement_roundtrip_and_validation(self):
         state = self.engagement_state()
         restored = state_io.decode_payload(state_io.encode_payload(state))

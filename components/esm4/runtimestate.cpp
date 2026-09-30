@@ -560,6 +560,7 @@ namespace ESM4
         checkSize(mDetectionVectors.size(), "detection vector list");
         checkSize(mPendingPackageDone.size(), "pending package completion list");
         checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
+        checkSize(mPhysicalActionOwners.size(), "physical action owner list");
         checkSize(mNativeActorValues.size(), "native actor-value list");
         checkSize(mNativeActorBases.size(), "native actor-base list");
         if (mVersion < 11 && !mNativeActorBases.empty())
@@ -684,6 +685,16 @@ namespace ESM4
         catch (const std::invalid_argument& error)
         {
             throw std::runtime_error(std::string("Invalid TES4 physical actions: ") + error.what());
+        }
+        if (mVersion < 20 && !mPhysicalActionOwners.empty())
+            throw std::runtime_error("TES4 physical action owners require runtime-state version 20");
+        const std::set<std::uint64_t> pendingActions(mPhysicalActions.mPending.begin(), mPhysicalActions.mPending.end());
+        for (const auto& [id, actor] : mPhysicalActionOwners)
+        {
+            const auto life = lives.find(actor);
+            if (!pendingActions.contains(id) || !nativeActors.contains(actor) || life == lives.end()
+                || life->second->mPhase != ActorLifePhase::Alive)
+                throw std::runtime_error("Invalid, dangling or incapacitated TES4 physical action owner");
         }
         if (mVersion < 6 && !mPendingPackageDone.empty())
             throw std::runtime_error("TES4 runtime-state versions before 6 cannot contain pending package events");
@@ -1377,6 +1388,15 @@ namespace ESM4
                 writer.floating(time);
             }
         }
+        if (mVersion >= 20)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPhysicalActionOwners.size()));
+            for (const auto& [id, actor] : mPhysicalActionOwners)
+            {
+                writer.integer(id);
+                writeKey(writer, actor);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1902,6 +1922,23 @@ namespace ESM4
                 const float time = reader.float32();
                 if (!result.mNativeActorUpdateTimes.emplace(std::move(actor), time).second)
                     throw std::runtime_error("Duplicate TES4 actor clock owner");
+            }
+        }
+        if (result.mVersion >= 20)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                const auto text = reader.string();
+                ESM::FormKey actor;
+                try { actor = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&)
+                { throw std::runtime_error("Invalid TES4 physical action owner"); }
+                if (actor.isNull() || actor.serialize() != text)
+                    throw std::runtime_error("Invalid or noncanonical TES4 physical action owner");
+                if (!result.mPhysicalActionOwners.emplace(id, std::move(actor)).second)
+                    throw std::runtime_error("Duplicate TES4 physical action owner identity");
             }
         }
         if (!reader.eof())
@@ -2446,6 +2483,18 @@ namespace ESM4
                        << "\",\"time\":" << std::setprecision(17) << time << '}';
             }
             stream << ']' << std::noshowpoint;
+        }
+        if (mVersion >= 20)
+        {
+            stream << ",\"physical_action_owners\":[";
+            bool first = true;
+            for (const auto& [id, actor] : mPhysicalActionOwners)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"id\":" << id << ",\"actor\":\"" << escapeJson(actor.serialize()) << "\"}";
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();
