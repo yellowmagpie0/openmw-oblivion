@@ -5821,3 +5821,37 @@ inventories/XML and no skips at fingerprint `2e9e9e87000d9ed31a5f4029013c8144550
 ASan and halting UBSan use leak detection off. Commit remains blocked by the
 read-only .git mount. Automatic publication and the remaining M15 gates stay
 open.
+
+### S3 continuation: native AI views and Lua authority requests
+
+Shared AI stats now project native AV33–36 through the integer query contract.
+Hello maps to Energy35, Fight to Aggression33, Flee to Confidence34 and Alarm
+to Responsibility36. Native views preserve negative current values, process
+rules and separate Maximum/Script/Damage channels. Legacy Base/Modifier writes
+reject once a native view owns the target. Lua previews and applied writes use
+world authority, retain fractional Maximum and existing Script/Damage, and
+apply native byte-width shared-base writes to resident siblings. Ordinary
+legacy stat behavior remains covered. Integer composition still uses the
+existing supported int32 domain; arbitrary integer overflow and no-process
+semantics remain open, as do gameplay AI decisions and automatic activation.
+
+The actual-world NPC/Lua test reproduces stale class reads. Its first baseline
+also contains swapped Hello/Alarm fixture expectations, corrected after the
+record/AV catalog review; those initial-name assertions are not accepted as
+native expected behavior. Normal03 retains a missing physicalcombat.hpp
+include failure; normal04 retains an old rejection test for newly supported
+AI modifiers. Normal06 retains a damaged generated archive after interruption;
+normal07 rebuilds that archive from objects. Normal01/02/05 and sanitizer01–03
+were interrupted without successful verification. The initial standalone stat
+comparison retains a missing actorstats.cpp link dependency before correction.
+
+`native-ai-projection-07` and `native-ai-projection-sanitized-04` pass all654
+engine cases, exact inventories/XML, no skips, at fingerprint `24c86ce829a4e902b9f8512392481d29cda1b14bf79d94f2c35fc26109398f89` on
+parent `8cf3491f18`. ASan/halting UBSan run with leak detection disabled.
+Tests include NPC and projected Player AI modifier requests, negative class
+and Lua reads, byte-width queued bases, fractional previews/applies, resident
+siblings, rejected writes and preserved channels. Independent original AI
+query and optimized C++ comparisons match1008 cases; the new Stat<int> view
+matches336 original integer cases with672 mutation-guard checks. These are
+adapter/oracle checks, not full runtime or fresh-process restart acceptance.
+The .git read-only mount still prevents the requested local commits.

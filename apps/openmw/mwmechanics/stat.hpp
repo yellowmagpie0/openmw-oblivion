@@ -1,6 +1,7 @@
 #ifndef GAME_MWMECHANICS_STAT_H
 #define GAME_MWMECHANICS_STAT_H
 
+#include <array>
 #include <cstdint>
 #include <optional>
 
@@ -24,6 +25,16 @@ namespace MWMechanics
     {
         T mBase;
         T mModifier;
+        struct NativeValue
+        {
+            float mBase;
+            std::array<std::optional<float>, 3> mModifiers;
+            ESM4::ActorValueOwner mOwner;
+            ESM4::ActorValueProcess mProcess;
+            T mCurrent;
+        };
+        std::optional<NativeValue> mNativeCurrent;
+        void requireWritable() const;
 
     public:
         typedef T Type;
@@ -36,9 +47,15 @@ namespace MWMechanics
         T getModified(bool capped = true) const;
         T getModifier() const { return mModifier; }
 
-        void setBase(const T& value) { mBase = value; }
+        void setBase(const T& value) { requireWritable(); mBase = value; }
 
-        void setModifier(const T& modifier) { mModifier = modifier; }
+        void setModifier(const T& modifier) { requireWritable(); mModifier = modifier; }
+
+        void setNativeProjection(const ESM4::ActorValueState& state,
+            ESM4::ActorValueOwner owner, ESM4::ActorValueProcess process);
+        bool isNativeProjection() const { return mNativeCurrent.has_value(); }
+        float getNativeModifier() const;
+        T getModifiedWithOverrides(std::optional<float> base, std::optional<float> modifier) const;
 
         void writeState(ESM::StatState<T>& state) const;
         void readState(const ESM::StatState<T>& state);
@@ -47,7 +64,10 @@ namespace MWMechanics
     template <typename T>
     inline bool operator==(const Stat<T>& left, const Stat<T>& right)
     {
-        return left.getBase() == right.getBase() && left.getModifier() == right.getModifier();
+        return left.getBase() == right.getBase() && left.getModifier() == right.getModifier()
+            && left.isNativeProjection() == right.isNativeProjection()
+            && (!left.isNativeProjection() || (left.getModified() == right.getModified()
+                && left.getNativeModifier() == right.getNativeModifier()));
     }
 
     template <typename T>

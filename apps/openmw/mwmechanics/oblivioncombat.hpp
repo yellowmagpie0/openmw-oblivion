@@ -51,6 +51,9 @@ namespace MWMechanics
         ESM4::ActorValueProcess mProcess = ESM4::ActorValueProcess::Active;
         std::array<ESM4::ActorValueState, 8> mAttributes{};
         std::array<ESM4::ActorValueState, 21> mSkills{};
+        // Shared AI order: Hello, Fight, Flee, Alarm. Absence preserves
+        // the target during staged projections that do not own AI yet.
+        std::optional<std::array<ESM4::ActorValueState, 4>> mAiSettings;
         // Prepared native base, maximum and current, in health/magicka/fatigue
         // order. Their AV-specific formulas belong to the native authority.
         std::array<std::array<float, 3>, 3> mDynamic{};
@@ -70,6 +73,7 @@ namespace MWMechanics
         std::array<AttributeValue, 21> mSkills;
         std::array<AttributeValue*, 21> mSkillTargets{};
         std::array<DynamicStat<float>, 3> mDynamic;
+        std::optional<std::array<Stat<int>, 4>> mAiSettings;
         std::optional<ESM4::ActorLifePhase> mLife;
         bool mCommitted = false;
 

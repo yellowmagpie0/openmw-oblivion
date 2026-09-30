@@ -1,7 +1,9 @@
 #include "stat.hpp"
 
 #include <components/esm4/actorvalues.hpp>
+#include <components/esm4/physicalcombat.hpp>
 #include <stdexcept>
+#include <type_traits>
 
 #include <algorithm>
 #include <cmath>
@@ -25,8 +27,68 @@ namespace MWMechanics
     }
 
     template <typename T>
+    void Stat<T>::requireWritable() const
+    {
+        if (mNativeCurrent)
+            throw std::logic_error("native stat projection requires authority mutation");
+    }
+
+    template <typename T>
+    void Stat<T>::setNativeProjection(const ESM4::ActorValueState& state,
+        ESM4::ActorValueOwner owner, ESM4::ActorValueProcess process)
+    {
+        ESM4::validateActorValueState(state);
+        const auto compose = [&](const ESM4::ActorValueModifiers& modifiers) -> T {
+            if constexpr (std::is_integral_v<T>)
+                return ESM4::composeIntegerActorValue(ESM4::combatBaseValue(state.mBase), modifiers, owner, process);
+            else
+                return ESM4::composeActorValue({state.mBase, modifiers}, owner, process);
+        };
+        const T current = compose(state.mModifiers);
+        T base, modifier;
+        if constexpr (std::is_integral_v<T>)
+        {
+            base = ESM4::combatBaseValue(state.mBase);
+            modifier = ESM4::composeIntegerActorValue(0,
+                {std::nullopt, state.mModifiers[0], std::nullopt}, owner, process);
+        }
+        else
+        {
+            base = state.mBase;
+            modifier = state.mModifiers[0].value_or(0.f);
+        }
+        mBase = base;
+        mModifier = modifier;
+        mNativeCurrent = NativeValue{state.mBase, state.mModifiers, owner, process, current};
+    }
+
+    template <typename T>
+    float Stat<T>::getNativeModifier() const
+    {
+        return mNativeCurrent ? mNativeCurrent->mModifiers[0].value_or(0.f) : static_cast<float>(mModifier);
+    }
+
+    template <typename T>
+    T Stat<T>::getModifiedWithOverrides(std::optional<float> base, std::optional<float> modifier) const
+    {
+        if (!mNativeCurrent)
+            return std::max(T{}, static_cast<T>(base.value_or(static_cast<float>(mBase)))
+                + static_cast<T>(modifier.value_or(static_cast<float>(mModifier))));
+        ESM4::ActorValueState state{base.value_or(mNativeCurrent->mBase), mNativeCurrent->mModifiers};
+        if (modifier)
+            state.mModifiers[0] = *modifier;
+        if constexpr (std::is_integral_v<T>)
+            return ESM4::composeIntegerActorValue(ESM4::combatBaseValue(state.mBase), state.mModifiers,
+                mNativeCurrent->mOwner, mNativeCurrent->mProcess);
+        else
+            return ESM4::composeActorValue(state, mNativeCurrent->mOwner, mNativeCurrent->mProcess);
+    }
+
+    template <typename T>
     T Stat<T>::getModified(bool capped) const
     {
+        if (mNativeCurrent)
+            return mNativeCurrent->mCurrent;
         if (capped)
             return std::max({}, mModifier + mBase);
         return mModifier + mBase;
@@ -41,6 +103,7 @@ namespace MWMechanics
     template <typename T>
     void Stat<T>::readState(const ESM::StatState<T>& state)
     {
+        requireWritable();
         mBase = state.mBase;
         mModifier = state.mMod;
     }

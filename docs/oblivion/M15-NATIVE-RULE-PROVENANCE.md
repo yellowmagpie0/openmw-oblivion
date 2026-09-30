@@ -3310,3 +3310,34 @@ Pinned EXE SHA256 remains
 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
 report SHA256 is
 `9ec3770d176b8b59ba74cc0fe9098fc3a7819cf424a25b59ba2d9b89433494c8`.
+
+### AI current queries and the guarded integer projection
+
+`S3/authority-draft/ai-current-queries-01` executes1008 pinned original queries:
+four asymmetric AI bytes (AV33 Aggression,34 Confidence,35 Energy,
+36 Responsibility), Low/Middle/High processes, both x87 control words and
+BAABE0 modes, seven signed/fractional modifier patterns, and current float,
+current integer and base integer wrappers. Actor base identity/type and sparse
+lookups are fixtures; original NPC/common form byte reads, process dispatch,
+composition and conversion execute. Every result matches the independent
+expectation. The table SHA256 is
+`51a9f46179034ed275a0312d06deb99358bee2ebea24519a08c0eec31dbc2590`.
+A hash-checked existing optimized component driver matches336 cases of each
+query (1008 total). A newly compiled optimized Stat<int> adapter matches all336
+integer cases for capped/uncapped/unchanged-preview reads and672 write-guard
+checks. The first standalone link failure omitted actorstats.cpp; its log is
+retained. No game AI decisions or normal-input acceptance are claimed.
+
+`S3/authority-draft/initial-life-health-predicate-01` executes224 cases of
+004D7DD0: actor-kind gate, Player reference id7/other, seven raw Health dword
+patterns, base header bit19 clear/set, both x87 words and both boolean arguments.
+Actual true-kind virtual977C50, base getter4D9B40, component getter and unsigned
+int32-to-x87 conversion execute; false-kind dispatch and Health RTTI identity
+are fixtures. The predicate returns true only for a supported nonplayer id
+with raw unsigned Health zero. Header bit19 and the argument do not affect it.
+Caller004DFA50..004DFA73 can then set state2, but full factory/load dispatch and
+autocalculation order remain unproved; this is not a new fresh-life default.
+Report SHA256:
+`e9da38b7619722df49e928b93f195dd69e7e7117875fbb8167744af67dbbeaa5`.
+Both probes use the pinned original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
+#include <stdexcept>
 
 #include <components/esm3/actoridconverter.hpp>
 #include <components/esm3/creaturestats.hpp>
@@ -222,6 +223,8 @@ namespace MWMechanics
 
     void CreatureStats::setAiSetting(AiSetting index, Stat<int> value)
     {
+        if (mAiSettings[static_cast<std::underlying_type_t<AiSetting>>(index)].isNativeProjection())
+            throw std::logic_error("native AI projection requires authority mutation");
         mAiSettings[static_cast<std::underlying_type_t<AiSetting>>(index)] = value;
     }
 

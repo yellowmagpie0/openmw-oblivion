@@ -102,10 +102,10 @@ namespace MWMechanics
         float statModifierDelta(const ESM4::RuntimeActorValues& values, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float requested)
         {
-            if (!(value < 8 || (value >= 12 && value <= 32))
+            if (!(value < 8 || (value >= 12 && value <= 36))
                 || (modifier != ESM4::ActorValueModifier::Maximum && modifier != ESM4::ActorValueModifier::Damage)
                 || !std::isfinite(requested))
-                throw std::invalid_argument("native stat modifier request requires an attribute or skill channel");
+                throw std::invalid_argument("native stat modifier request requires an attribute, skill or AI channel");
             const float old = values.mValues[value].mModifiers[static_cast<unsigned>(modifier)].value_or(0.f);
             const float delta = static_cast<float>(double(requested) - old);
             if (!std::isfinite(delta))
@@ -344,6 +344,10 @@ namespace MWMechanics
             input.mProcess = values.mProcess;
             std::copy_n(values.mValues.begin(), 8, input.mAttributes.begin());
             std::copy_n(values.mValues.begin() + 12, 21, input.mSkills.begin());
+            input.mAiSettings.emplace();
+            constexpr std::array<std::uint8_t, 4> aiValues{35, 33, 34, 36};
+            for (std::size_t i = 0; i < aiValues.size(); ++i)
+                (*input.mAiSettings)[i] = values.mValues[aiValues[i]];
             for (std::size_t i = 0; i < input.mDynamic.size(); ++i)
             {
                 const auto& value = values.mValues[8 + i];
@@ -462,6 +466,12 @@ namespace MWMechanics
             mAttributeTargets[i] = &target.mAttributes.at(ESM::Attribute::indexToRefId(i));
             mAttributes[i].setNativeProjection(input.mAttributes[i], input.mOwner, input.mProcess);
         }
+        if (input.mAiSettings)
+        {
+            mAiSettings.emplace();
+            for (std::size_t i = 0; i < mAiSettings->size(); ++i)
+                (*mAiSettings)[i].setNativeProjection((*input.mAiSettings)[i], input.mOwner, input.mProcess);
+        }
         for (std::size_t i = 0; i < input.mDynamic.size(); ++i)
             mDynamic[i].setNativeProjection(input.mDynamic[i][0], input.mDynamic[i][1], input.mDynamic[i][2]);
         if (npc)
@@ -500,6 +510,9 @@ namespace MWMechanics
             mTarget.mDynamic[i].mCurrent = mDynamic[i].mCurrent;
             mTarget.mDynamic[i].mNativeModified = mDynamic[i].mNativeModified;
         }
+        if (mAiSettings)
+            for (std::size_t i = 0; i < mAiSettings->size(); ++i)
+                mTarget.mAiSettings[i] = (*mAiSettings)[i];
         if (mLife)
         {
             const bool dead = *mLife == ESM4::ActorLifePhase::Dead;
@@ -922,7 +935,7 @@ namespace MWMechanics
         const auto& values = nonPlayerValues(actor);
         // Lua exposes skills only on NPCs. Do not turn one creature group
         // request into a different visible skill through runtime aliases.
-        if (value >= 12 && actor.getType() != ESM::REC_NPC_4)
+        if (value >= 12 && value <= 32 && actor.getType() != ESM::REC_NPC_4)
             throw std::invalid_argument("native Lua skill modifier requires an NPC");
         changeNonPlayerValue(actor, value, modifier, statModifierDelta(values, value, modifier, requested));
     }

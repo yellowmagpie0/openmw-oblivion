@@ -233,6 +233,89 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, nativeAiClassAndLuaReadsFollowAuthorityWithoutLegacyClamps)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto ptr = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active));
+        auto& service = *world.getOblivionCombatService();
+        const auto& stats = ptr.getClass().getCreatureStats(ptr);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Hello).getModified(), 39);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Fight).getModified(), 13);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Flee).getModified(), 27);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Alarm).getModified(), 101);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(ptr, 33, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, -20));
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(ptr, 34, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Console, -50));
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(ptr, 35, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 257));
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(ptr, 36, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, -120));
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 33), -7);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 34), -23);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 35), 1);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 36), -19);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Fight).getModified(), -7);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Flee).getModified(), -23);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Alarm).getModified(), -19);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Hello).getModified(), 1);
+        LuaUtil::ScriptsConfiguration config;
+        LuaUtil::LuaState luaState(&fixture.mVfs, &config);
+        InspectableScripts scripts(&luaState, MWLua::LObject(ptr));
+        MWLua::Context context{MWLua::Context::Local};
+        context.mLuaManager = fixture.mLuaManager.get();
+        context.mLua = &luaState;
+        sol::state_view lua = luaState.unsafeState();
+        sol::table actor(lua, sol::create);
+        MWLua::addActorStatsBindings(actor, context);
+        lua["Actor"] = actor;
+        lua.new_usertype<MWLua::SelfObject>("SelfObject", sol::no_constructor);
+        lua["target"] = &scripts.self();
+        auto result = lua.safe_script("assert(Actor.stats.ai.fight(target).modified == -7); "
+            "assert(Actor.stats.ai.flee(target).modified == -23); "
+            "assert(Actor.stats.ai.alarm(target).modified == -19); "
+            "assert(Actor.stats.ai.hello(target).modified == 1)", sol::script_pass_on_error);
+        EXPECT_TRUE(result.valid()) << sol::error(result).what();
+        auto projected = stats.getAiSetting(MWMechanics::AiSetting::Fight);
+        EXPECT_THROW(projected.setBase(50), std::logic_error);
+        EXPECT_THROW(projected.setModifier(50), std::logic_error);
+        EXPECT_THROW(ptr.getClass().getCreatureStats(ptr).setAiSetting(MWMechanics::AiSetting::Fight,
+            MWMechanics::Stat<int>(50, 0)), std::logic_error);
+        const auto sibling = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(sibling, ESM4::ActorValueProcess::Low));
+        result = lua.safe_script("Actor.stats.ai.fight(target).base = 257.75; "
+            "Actor.stats.ai.fight(target).modifier = 0.5; "
+            "assert(Actor.stats.ai.fight(target).base == 1); "
+            "assert(Actor.stats.ai.fight(target).modifier == 0.5); "
+            "assert(Actor.stats.ai.fight(target).modified == -18)", sol::script_pass_on_error);
+        ASSERT_TRUE(result.valid()) << sol::error(result).what();
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 33), -7);
+        ASSERT_NO_THROW(scripts.applyStatsCache());
+        const auto& values = *service.findActorValues(ptr.getCellRef().getFormKey());
+        EXPECT_EQ(values.mValues[33].mBase, 1);
+        EXPECT_EQ(values.mValues[33].mModifiers[0], 0.5f);
+        EXPECT_EQ(values.mValues[33].mModifiers[1], -20.f);
+        EXPECT_FALSE(values.mValues[33].mModifiers[2]);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 33), -18);
+        EXPECT_EQ(stats.getAiSetting(MWMechanics::AiSetting::Fight).getModified(), -18);
+        EXPECT_EQ(sibling.getClass().getCreatureStats(sibling).getAiSetting(MWMechanics::AiSetting::Fight)
+            .getModified(), 1);
+        result = lua.safe_script("assert(Actor.stats.ai.fight(target).modified == -18); "
+            "assert(Actor.stats.ai.fight(target).modifier == 0.5)", sol::script_pass_on_error);
+        EXPECT_TRUE(result.valid()) << sol::error(result).what();
+        EXPECT_THROW(world.requestOblivionStatModifier(ptr, 33, false,
+            std::numeric_limits<float>::infinity()), std::invalid_argument);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 33), -18);
+        MWMechanics::Stat<int> legacy(-10, 1);
+        EXPECT_FALSE(legacy.isNativeProjection());
+        EXPECT_EQ(legacy.getModified(), 0);
+        EXPECT_EQ(legacy.getModified(false), -9);
+        legacy.setModifier(3);
+        EXPECT_EQ(legacy.getModified(false), -7);
+    }
+
     TEST(OblivionWorldTest, restoredAuthorityRefreshesCachedResidentViews)
     {
         NativeWorldFixture fixture;

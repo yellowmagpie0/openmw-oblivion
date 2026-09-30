@@ -1504,9 +1504,21 @@ namespace
                         EXPECT_EQ(view.getModified(), 54.25f); // Original3, not either ignored request.
                     }
                 }
+            auto ai = *service.findActorValues(key);
+            ai.mValues[33] = {13, {0.5f, -20.f, -1.25f}};
+            if (isPlayer)
+                service.publishPlayerValues(player, ai, settings);
+            else
+                service.publishNonPlayerValues(npc, ai);
+            request(33, ESM4::ActorValueModifier::Maximum, 2.5f);
+            request(33, ESM4::ActorValueModifier::Damage, -2.25f);
+            EXPECT_EQ(service.findActorValues(key)->mValues[33].mModifiers,
+                (ESM4::ActorValueModifiers{2.5f, -20.f, -2.25f}));
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getAiSetting(MWMechanics::AiSetting::Fight)
+                .getModified(), -6);
             const auto before = *service.findActorValues(key);
             const auto life = *service.findActorLife(key);
-            for (std::uint8_t invalid : {8, 9, 10, 11, 33, 71, 72, 255})
+            for (std::uint8_t invalid : {8, 9, 10, 11, 37, 71, 72, 255})
                 EXPECT_THROW(request(invalid, ESM4::ActorValueModifier::Maximum, 2.f), std::invalid_argument);
             EXPECT_THROW(request(4, ESM4::ActorValueModifier::Script, 2.f), std::invalid_argument);
             EXPECT_THROW(request(4, ESM4::ActorValueModifier::Maximum,

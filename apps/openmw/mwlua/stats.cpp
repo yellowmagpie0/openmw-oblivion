@@ -502,6 +502,12 @@ namespace MWLua
             ObjectVariant mObject;
             MWMechanics::AiSetting mIndex;
 
+            static std::uint8_t actorValue(MWMechanics::AiSetting index)
+            {
+                constexpr std::array<std::uint8_t, 4> values{35, 33, 34, 36};
+                return values.at(static_cast<std::size_t>(index));
+            }
+
             AIStat(ObjectVariant object, MWMechanics::AiSetting index)
                 : mObject(std::move(object))
                 , mIndex(index)
@@ -512,6 +518,12 @@ namespace MWLua
             template <class G>
             sol::object get(const Context& context, std::string_view prop, G getter) const
             {
+                if (prop == "modifier" && mObject.ptr().getClass().getCreatureStats(mObject.ptr())
+                        .getAiSetting(mIndex).isNativeProjection())
+                    return getValue(context, mObject, &AIStat::setValue, static_cast<int>(mIndex), prop,
+                        [this](const MWWorld::Ptr& ptr) {
+                            return ptr.getClass().getCreatureStats(ptr).getAiSetting(mIndex).getNativeModifier();
+                        });
                 return getValue(context, mObject, &AIStat::setValue, static_cast<int>(mIndex), prop,
                     [this, getter](const MWWorld::Ptr& ptr) {
                         return (ptr.getClass().getCreatureStats(ptr).getAiSetting(mIndex).*getter)();
@@ -520,6 +532,20 @@ namespace MWLua
 
             int getModified(const Context& context) const
             {
+                const auto stat = mObject.ptr().getClass().getCreatureStats(mObject.ptr()).getAiSetting(mIndex);
+                if (stat.isNativeProjection())
+                {
+                    std::optional<float> base, modifier;
+                    if (mObject.isSelfObject())
+                    {
+                        auto* self = mObject.asSelfObject();
+                        if (auto value = self->getCachedStat({&AIStat::setValue, static_cast<int>(mIndex), "base"}))
+                            base = LuaUtil::cast<float>(*value);
+                        if (auto value = self->getCachedStat({&AIStat::setValue, static_cast<int>(mIndex), "modifier"}))
+                            modifier = LuaUtil::cast<float>(*value);
+                    }
+                    return stat.getModifiedWithOverrides(base, modifier);
+                }
                 auto base = LuaUtil::cast<int>(get(context, "base", &MWMechanics::Stat<int>::getBase));
                 auto modifier = LuaUtil::cast<int>(get(context, "modifier", &MWMechanics::Stat<int>::getModifier));
                 return std::max(0, base + modifier);
@@ -535,6 +561,14 @@ namespace MWLua
             void cache(const Context& context, std::string_view prop, const sol::object& value) const
             {
                 SelfObject* obj = mObject.asSelfObject();
+                if (prop == "base" && mObject.ptr().getClass().getCreatureStats(mObject.ptr())
+                        .getAiSetting(mIndex).isNativeProjection())
+                {
+                    obj->cacheStat(*context.mLuaManager,
+                        SelfObject::CachedStat{&AIStat::setValue, static_cast<int>(mIndex), prop},
+                        nativeBaseCacheValue(context, mObject.ptr(), actorValue(mIndex), value));
+                    return;
+                }
                 obj->cacheStat(*context.mLuaManager,
                     SelfObject::CachedStat{ &AIStat::setValue, static_cast<int>(mIndex), prop }, value);
             }
@@ -544,6 +578,17 @@ namespace MWLua
                 auto index = static_cast<MWMechanics::AiSetting>(std::get<int>(i));
                 auto& stats = ptr.getClass().getCreatureStats(ptr);
                 auto stat = stats.getAiSetting(index);
+                if (stat.isNativeProjection())
+                {
+                    const auto requested = LuaUtil::cast<float>(value);
+                    MWBase::World* world = MWBase::Environment::get().getWorld();
+                    const bool accepted = prop == "base"
+                        ? world->requestOblivionStatBase(ptr, actorValue(index), requested)
+                        : world->requestOblivionStatModifier(ptr, actorValue(index), false, requested);
+                    if (!accepted)
+                        throw std::logic_error("native AI view has no registered actor authority");
+                    return;
+                }
                 int intValue = LuaUtil::cast<int>(value);
                 if (prop == "base")
                     stat.setBase(intValue);
