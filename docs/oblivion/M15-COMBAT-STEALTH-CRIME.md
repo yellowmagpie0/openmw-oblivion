@@ -6236,3 +6236,32 @@ Cell-cache loading itself is not a detached transaction; this does not close
 reference restore, whole-World or StateManager failure recovery. It is a
 bounded data-binding preflight fix, not another graphical acceptance claim.
 Local commits remain unavailable under the read-only Git mount.
+
+Reference bindings now prepare target cells, existing references, expected
+bases and resolvable owners before global/clock/Player/reference value writes.
+`native-reference-binding-preflight-baseline-01` retains four actual World
+failures: missing reference, mismatched base, missing target cell and dynamic
+owner all change an earlier global; the owner failure also changes NPC position.
+Prepared bindings retain the existing skip for unprojected dynamic references.
+Cell loading/enumeration can still change caches; this is not whole-World
+transactional rollback.
+
+Normal `native-reference-binding-preflight-02` and sanitized
+`native-reference-binding-preflight-sanitized-02` each pass all661 engine
+cases, exact inventory/XML and no skips, fingerprint
+`0d14b57c31e316fb37211370196ac2edd13b44f63ad1f3d968cf0d959dbf7480`
+on parent `8cf3491f18`, with leak detection disabled. The extended actual
+read/apply case checks failure preservation, valid retry, a move into a second
+native cell, and unchanged acceptance of an unprojected dynamic reference.
+The first corrected01 pair also passed before these additional cases.
+
+Actual populated authority courses `sdl-offscreen-native-restart-02` and
+`sdl-offscreen-native-sanitized-restart-02` pass both idle load/save/SDL-quit/
+fresh-load/resave phases with independent binary/HUD checks. Their images
+match the already-inspected earlier populated captures. Engine SHA256s are
+`d1041535c8e10aa02d4d4162929699efc083c8f098eaa1878e0d2f27bc6fd9f8`
+and `43cd34fea19ddb408686c2470357eb0de273600d1bef928154abecc68335b679`.
+This exercises the changed binding order in the actual engine. Reference
+custom-state application, full load recovery, fresh construction and the
+remaining S2/S3 gates stay open. Git metadata remains read-only, and recovery
+patches do not fulfill the requested commits.

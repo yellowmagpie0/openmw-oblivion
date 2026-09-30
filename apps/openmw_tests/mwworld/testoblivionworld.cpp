@@ -1119,6 +1119,73 @@ namespace
             EXPECT_EQ(player.getCell(), cellBefore);
             EXPECT_EQ(world.getTimeStamp(), clockBefore);
         }
+        auto npc = addNativeNpc(fixture, 0x900);
+        npc = npc.getCell()->moveTo(npc, &world.getWorldModel().getCell(cell.mId));
+        ESM4::RuntimeReferenceState restoredReference;
+        restoredReference.mKey = npc.getCellRef().getFormKey();
+        restoredReference.mBase = ESM::FormKey::content("headless.esm", 0x800);
+        restoredReference.mCell = cell.mFormKey;
+        restoredReference.mEnabled = true;
+        restoredReference.mPosition.pos[0] = 31;
+        for (const int invalidBinding : {0, 1, 2, 3})
+        {
+            SCOPED_TRACE(invalidBinding);
+            world.setGlobalFloat(firstName, 3);
+            const auto clockBefore = world.getTimeStamp();
+            const auto positionBefore = npc.getRefData().getPosition();
+            auto invalidReference = saved;
+            invalidReference.mReferences.push_back(restoredReference);
+            auto& reference = invalidReference.mReferences.back();
+            if (invalidBinding == 0)
+                reference.mKey = ESM::FormKey::content("headless.esm", 0xa98);
+            else if (invalidBinding == 1)
+                reference.mBase = ESM::FormKey::content("headless.esm", 0xa99);
+            else if (invalidBinding == 2)
+                reference.mCell = ESM::FormKey::content("headless.esm", 0xa99);
+            else
+                reference.mOwner = ESM::FormKey::dynamic("unresolved-owner", 1);
+            ASSERT_NO_THROW(invalidReference.validate());
+            readNativeSnapshot(fixture, invalidReference);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(npc.getRefData().getPosition(), positionBefore);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
+        auto validReference = saved;
+        validReference.mReferences.push_back(restoredReference);
+        readNativeSnapshot(fixture, validReference);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(npc.getRefData().getPosition(), restoredReference.mPosition);
+        EXPECT_EQ(world.getGlobalFloat(firstName), 42);
+        auto secondCell = cell;
+        secondCell.mId = ESM::RefId(ESM::FormId{2, 0});
+        secondCell.mFormKey = ESM::FormKey::content("headless.esm", 2);
+        secondCell.mEditorId = "GlobalRestoreSecondCell";
+        store.getWritable<ESM4::Cell>().insertStatic(secondCell, secondCell.mFormKey);
+        auto movedReference = validReference;
+        movedReference.mReferences[0].mCell = secondCell.mFormKey;
+        readNativeSnapshot(fixture, movedReference);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        MWWorld::Ptr movedNpc;
+        auto& targetCell = world.getWorldModel().getCell(secondCell.mId);
+        targetCell.forEach([&](const MWWorld::Ptr& candidate) {
+            if (candidate.getCellRef().getFormKey() == restoredReference.mKey)
+                movedNpc = candidate;
+            return true;
+        }, true);
+        ASSERT_FALSE(movedNpc.isEmpty());
+        EXPECT_EQ(movedNpc.getCell(), &targetCell);
+        EXPECT_EQ(movedNpc.getRefData().getPosition(), restoredReference.mPosition);
+        auto deferredReference = movedReference;
+        deferredReference.mNextDynamicSerial = 2;
+        deferredReference.mReferences.push_back(restoredReference);
+        deferredReference.mReferences.back().mKey = ESM::FormKey::dynamic("unprojected-reference", 1);
+        deferredReference.mReferences.back().mOwner = ESM::FormKey::dynamic("unresolved-owner", 1);
+        ASSERT_NO_THROW(deferredReference.validate());
+        readNativeSnapshot(fixture, deferredReference);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.getGlobalFloat(firstName), 42);
+        EXPECT_EQ(movedNpc.getCell(), &targetCell);
         for (const auto* resource : {"health", "magicka", "fatigue"})
         {
             for (const bool oldModified : {false, true})

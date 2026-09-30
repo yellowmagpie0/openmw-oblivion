@@ -1793,6 +1793,62 @@ namespace MWWorld
         if (!playerCellId || !playerCellId->hasContentFile())
             throw std::runtime_error("TES4 runtime-state player cell cannot be resolved");
         CellStore& playerCell = mWorldModel.getCell(ESM::RefId(*playerCellId));
+        // Resolve all target cells before indexing references so moved actors
+        // remain independent of record order. Cell caches may load during preflight.
+        for (const auto& reference : state.mReferences)
+        {
+            const auto cellId = resolver.toFormId(reference.mCell);
+            if (!cellId || !cellId->hasContentFile())
+                throw std::runtime_error("TES4 runtime-state reference cell cannot be resolved: "
+                    + reference.mCell.serialize());
+            mWorldModel.getCell(ESM::RefId(*cellId));
+        }
+        std::map<ESM::FormKey, Ptr> references;
+        mWorldModel.forEachLoadedCellStore([&](CellStore& cell) {
+            cell.forEach(
+                [&](const Ptr& ptr) {
+                    const auto key = ptr.getCellRef().getFormKey();
+                    if (!key.isNull())
+                        references.emplace(key, ptr);
+                    return true;
+                }, true);
+        });
+        struct PreparedReferenceBinding
+        {
+            const ESM4::RuntimeReferenceState* mState;
+            Ptr mReference;
+            CellStore* mCell;
+            std::optional<ESM::RefId> mOwner;
+        };
+        std::vector<PreparedReferenceBinding> preparedReferences;
+        preparedReferences.reserve(state.mReferences.size());
+        for (const auto& reference : state.mReferences)
+        {
+            const auto found = references.find(reference.mKey);
+            if (found == references.end())
+            {
+                if (reference.mKey.isDynamic())
+                    continue; // Retain unprojected dynamic state for its future MWClass.
+                throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
+            }
+            const auto baseId = resolver.toFormId(reference.mBase);
+            const auto actualBaseId = found->second.getCellRef().getRefId();
+            const auto* actualBase = actualBaseId.getIf<ESM::FormId>();
+            if (!baseId || actualBase == nullptr || *baseId != *actualBase)
+                throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
+            std::optional<ESM::RefId> owner;
+            if (reference.mOwner)
+            {
+                const auto ownerId = resolver.toFormId(*reference.mOwner);
+                if (!ownerId || !ownerId->hasContentFile())
+                    throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
+                        + reference.mOwner->serialize());
+                owner.emplace(*ownerId);
+            }
+            const auto cellId = resolver.toFormId(reference.mCell);
+            preparedReferences.push_back({&reference, found->second,
+                &mWorldModel.getCell(ESM::RefId(*cellId)), owner});
+        }
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
         // leave an earlier inventory cleared or only partly reconstructed.
@@ -1993,59 +2049,16 @@ namespace MWWorld
             }
         }
 
-        // Load every target cell first, then build a stable-key index. This also makes moved-reference restoration
-        // independent of plugin order and of the order in which cell records appeared in the save.
-        for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
+        for (const auto& binding : preparedReferences)
         {
-            const std::optional<ESM::FormId> cellId = resolver.toFormId(reference.mCell);
-            if (!cellId || !cellId->hasContentFile())
-                throw std::runtime_error("TES4 runtime-state reference cell cannot be resolved: "
-                    + reference.mCell.serialize());
-            mWorldModel.getCell(ESM::RefId(*cellId));
-        }
-        std::map<ESM::FormKey, Ptr> references;
-        mWorldModel.forEachLoadedCellStore([&](CellStore& cell) {
-            cell.forEach(
-                [&](const Ptr& ptr) {
-                    const ESM::FormKey key = ptr.getCellRef().getFormKey();
-                    if (!key.isNull())
-                        references.emplace(key, ptr);
-                    return true;
-                },
-                true);
-        });
-
-        for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
-        {
-            const auto found = references.find(reference.mKey);
-            if (found == references.end())
-            {
-                if (reference.mKey.isDynamic())
-                    continue; // Native state remains authoritative until this dynamic form has a projected MWClass.
-                throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
-            }
-            Ptr ptr = found->second;
-            const std::optional<ESM::FormId> baseId = resolver.toFormId(reference.mBase);
-            const ESM::RefId actualBaseId = ptr.getCellRef().getRefId();
-            const ESM::FormId* actualBase = actualBaseId.getIf<ESM::FormId>();
-            if (!baseId || actualBase == nullptr || *baseId != *actualBase)
-                throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
-            const std::optional<ESM::FormId> cellId = resolver.toFormId(reference.mCell);
-            CellStore& targetCell = mWorldModel.getCell(ESM::RefId(*cellId));
+            const auto& reference = *binding.mState;
+            Ptr ptr = binding.mReference;
+            CellStore& targetCell = *binding.mCell;
             if (ptr.getCell() != &targetCell)
                 ptr = ptr.getCell()->moveTo(ptr, &targetCell);
             ptr.getRefData().setPosition(reference.mPosition);
             reference.mEnabled ? ptr.getRefData().enable() : ptr.getRefData().disable();
-            if (reference.mOwner)
-            {
-                const std::optional<ESM::FormId> owner = resolver.toFormId(*reference.mOwner);
-                if (!owner || !owner->hasContentFile())
-                    throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
-                        + reference.mOwner->serialize());
-                ptr.getCellRef().setOwner(ESM::RefId(*owner));
-            }
-            else
-                ptr.getCellRef().setOwner(ESM::RefId());
+            ptr.getCellRef().setOwner(binding.mOwner.value_or(ESM::RefId()));
             try
             {
                 ptr.getCellRef().setLockLevel(reference.mLockLevel);
