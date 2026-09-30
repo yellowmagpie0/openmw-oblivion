@@ -7234,3 +7234,59 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: original comparison/list-order adapter and
 actual native character choices, then activation and melee. S2/S3 and later
 required gameplay gates remain open.
+
+### Native passive comparison and character-removal ordering
+
+A pure ASCII comparison-key helper now reproduces the original school prefix,
+case folding, thirty-byte name limit, magnitude-before-duration fields, ignored
+quantity sentinels and native one-decimal formatting. It preserves signed zero
+and the original seventeen-significant-digit cap for very large binary32
+quantities. Used nonfinite values and non-ASCII bytes in the read prefix reject;
+masked quantities and bytes after the original name limit are not queried.
+
+The retained original `passive-native-format-05` experiment executes the actual
+98208B formatter after the actual 982837 floating-function-table initializer:
+4,156 finite binary32 values, 8,312 observations across both x87 precision words.
+It covers every finite exponent, signs, subnormals, signed zero, adjacent
+rounding thresholds and extrema, seed150019. Thread-local C-locale storage and
+image pointer decoding are declared setup boundaries; numeric conversion and
+formatting are original instructions. The report hash is
+`2d3dd2c26b7c4931f863970036cb94e2e05a516b01657083585a8e82ef2f8f7a`.
+The independently compiled C++ comparison in `native-passive-format-cpp-01`
+matches all8,312 original keys after ASCII normalization, with no failures.
+The executable identity and prior insertion/comparator provenance remain those
+recorded above; this does not establish complete source/caster scheduling.
+
+The winning-store adapter replays this authority's complete grant sequence,
+inserting each incoming key before the first older applied key greater than
+or equal to it. Ties reverse and post-application signs/clamps can leave the
+list unsorted; sorting final magnitudes is incorrect. Unknown queried incoming
+magnitudes, missing/unadmitted comparison metadata, duplicate spell owners,
+ambiguous effect codes and unsupported names reject before mutation. This
+narrow replay is for complete retained grant sequences, not reconstruction of
+an arbitrary caster history after selective effect removals or changed content.
+Those broader M16 list-history semantics remain outside this adapter's proof.
+
+Two component and two engine fixtures cover original formatting goldens,
+ignored fields, field order, name clipping, invalid inputs, reversed ties,
+post-sign and clamped insertion, immutable inputs and winning-definition
+rejections. Both configured fixture translation units pass syntax; baseline
+fixtures fail specifically because the new APIs are absent.
+
+`native-passive-order-full-01` passes1,981 full component cases and691 full
+engine cases. `native-passive-order-sanitized-full-01` passes456 ESM4 component
+cases and691 full engine cases under ASan/UBSan, leak checks off. Both exact
+inventories match with no failures/skips, tested fingerprint
+`4e4ca54b87355cb8f16246ed27fda85f2aafa264efe85b546a01153e6f89cf46`.
+Existing sol3/standard-library, animation and world shadow warnings remain;
+no new warning is reported for the comparison/helper implementation. The
+unchanged214 Python cases passed at checkpoint40 and were not rerun here.
+
+Checkpoint41 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-19/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: apply and test prepared World/native
+character-selection publication, then automatic activation and melee.
+S2/S3 and all later required gameplay gates remain open.

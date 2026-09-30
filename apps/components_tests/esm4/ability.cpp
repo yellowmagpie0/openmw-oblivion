@@ -131,3 +131,43 @@ TEST(ESM4AbilityInputs, ValueModifierPreparationsRejectInvalidQueriedInputsAndAr
         -std::numeric_limits<float>::max()),std::invalid_argument);
     EXPECT_EQ(ESM4::clampValueModifierDelta(0,foat,1,std::numeric_limits<float>::quiet_NaN()),1);
 }
+
+TEST(ESM4AbilityInputs, PassiveComparisonKeysMatchOriginalAsciiFormattingAndFieldOrder)
+{
+    const auto key = [](unsigned flags, unsigned school, std::string_view name, float mag, float duration) {
+        return ESM4::passiveEffectComparisonKey(flags, school, name, mag, duration);
+    };
+    const std::string letters = "ceadfbz";
+    for (unsigned i = 0; i < letters.size(); ++i)
+        EXPECT_EQ(key(0, i, "Name", 10, 0), std::string(1, letters[i]) + "name10.00.0");
+    EXPECT_EQ(key(0, 2, "FoRtIfY Attribute", .25f, 0), "afortify attribute0.30.0");
+    EXPECT_EQ(key(0, 2, "Name", -.25f, 0), "aname-0.30.0");
+    EXPECT_EQ(key(0, 2, "Name", -.0f, -.0f), "aname-0.0-0.0");
+    EXPECT_EQ(key(0, 2, "Name", .35f, 0), "aname0.30.0");
+    EXPECT_EQ(key(0, 2, "Name", 100, 10), "aname100.010.0");
+    EXPECT_LT(key(0, 2, "Name", 10, 100), key(0, 2, "Name", 100, 0));
+    EXPECT_EQ(key(0x80, 2, "Name", 10, 0), "aname10.01000.0");
+    EXPECT_EQ(key(0x100, 2, "Name", 10, 0), "aname1000.00.0");
+    EXPECT_EQ(key(0x180, 7, "Name", std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity()), "zname1000.01000.0");
+    EXPECT_EQ(key(0, 2, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdLEFT", 10, 0),
+        key(0, 2, "abcdefghijklmnopqrstuvwxyzabcdRIGHT", 10, 0));
+    EXPECT_EQ(key(0, 2, std::string_view("Name\0ignored", 12), 10, 0), "aname10.00.0");
+    EXPECT_EQ(key(0, 2, "Name", 4294967296.f, 0), "aname4294967296.00.0");
+    EXPECT_EQ(key(0, 2, "Name", 1.e20f, 0), "aname100000002004087730000.00.0");
+    EXPECT_EQ(key(0, 2, "Name", std::numeric_limits<float>::max(), 0),
+        "aname340282346638528860000000000000000000000.00.0");
+}
+
+TEST(ESM4AbilityInputs, PassiveComparisonKeysRejectUnreadableAsciiOrNonfiniteQueriedQuantities)
+{
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::passiveEffectComparisonKey(0, 2, "Name", value, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::passiveEffectComparisonKey(0, 2, "Name", 0, value), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::passiveEffectComparisonKey(0, 2, "\xc3\xa9", 1, 0), std::invalid_argument);
+    const std::string prefix(30, 'A');
+    EXPECT_EQ(ESM4::passiveEffectComparisonKey(0, 2, prefix + "\xff", 1, 0),
+        "a" + std::string(30, 'a') + "1.00.0");
+}

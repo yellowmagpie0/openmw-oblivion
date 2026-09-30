@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include <components/esm/formkey.hpp>
@@ -26,6 +28,11 @@ namespace ESM4
     // The caller supplies the prior ready definition, including on overrides.
     LoadedEffectSetting mergeLoadedEffectSetting(
         LoadedEffectSetting previous, const EffectSettingData& authored);
+
+    // Native ASCII comparison key, not a display label. Only the first thirty
+    // name bytes are read; ignored quantities use the original 1000 sentinel.
+    std::string passiveEffectComparisonKey(std::uint32_t flags, std::uint32_t school,
+        std::string_view name, float magnitude, float duration);
 
     struct ValueModifierEffectInputs
     {

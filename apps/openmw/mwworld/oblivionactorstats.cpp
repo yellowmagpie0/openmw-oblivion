@@ -354,6 +354,54 @@ namespace MWWorld
         return result;
     }
 
+    std::vector<MWMechanics::OblivionPassiveEffectIdentity> resolveOblivionPlayerPassiveRemovalOrder(
+        const ESMStore& store, std::span<const ESM4::RuntimePassiveAbility> abilities)
+    {
+        struct Entry
+        {
+            MWMechanics::OblivionPassiveEffectIdentity mIdentity;
+            std::string mAppliedKey;
+        };
+        std::vector<Entry> entries;
+        std::set<ESM::FormKey> seen;
+        const auto definitions = winningRecords<ESM4::EffectSetting>(store);
+        for (const auto& ability : abilities)
+        {
+            ability.validate();
+            if (!seen.insert(ability.mSpell).second)
+                throw std::invalid_argument("duplicate native passive removal spell identity");
+            for (const auto& effect : ability.mEffects)
+            {
+                const ESM4::EffectSetting* definition = nullptr;
+                for (const auto* candidate : definitions)
+                    if (candidate->mEffectCode == effect.mCode)
+                    {
+                        if (definition)
+                            throw std::invalid_argument("ambiguous winning native passive comparison code");
+                        definition = candidate;
+                    }
+                if (!definition || !definition->mPassiveValueModifierDefinition || !definition->mData
+                    || definition->mFullName.empty() || !ESM4::compiledPassiveValueModifierDefinition(effect.mCode))
+                    throw std::invalid_argument("missing admitted native passive comparison metadata");
+                const auto flags = definition->mPassiveValueModifierDefinition->mFlags;
+                if (!effect.mInitialMagnitude && !(flags & 0x100))
+                    throw std::invalid_argument("unknown native passive insertion magnitude");
+                const auto incoming = ESM4::passiveEffectComparisonKey(flags, definition->mData->mSchool,
+                    definition->mFullName, effect.mInitialMagnitude.value_or(0), 0);
+                auto applied = ESM4::passiveEffectComparisonKey(flags, definition->mData->mSchool,
+                    definition->mFullName, effect.mStoredMagnitude, 0);
+                const auto at = std::find_if(entries.begin(), entries.end(),
+                    [&](const Entry& entry) { return incoming <= entry.mAppliedKey; });
+                entries.insert(at, {{ability.mSpell, effect.mEffectIndex}, std::move(applied)});
+            }
+        }
+        std::vector<MWMechanics::OblivionPassiveEffectIdentity> result;
+        result.reserve(entries.size());
+        for (const auto& entry : entries)
+            result.push_back(entry.mIdentity);
+        return result;
+    }
+
     std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
         const ESMStore& store, std::span<const ESM::FormKey> spells)
     {

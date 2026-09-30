@@ -16,6 +16,7 @@
 
 namespace MWMechanics
 {
+    struct OblivionPassiveEffectIdentity;
     struct OblivionFatigueSettings;
     struct OblivionFrameSettings;
 }
@@ -28,6 +29,7 @@ namespace ESM
 namespace ESM4
 {
     struct RuntimeActorValues;
+    struct RuntimePassiveAbility;
 }
 
 namespace MWWorld
@@ -85,6 +87,12 @@ namespace MWWorld
     // prepared override history; reject unsupported or ambiguous inputs.
     std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
         const ESMStore& store, std::span<const ESM::FormKey> spells);
+
+    // Replay this authority's grant sequence using incoming comparison quantities
+    // against each previously applied magnitude. Ties insert before older nodes.
+    // Unknown queried quantities or comparison metadata reject without mutation.
+    std::vector<MWMechanics::OblivionPassiveEffectIdentity> resolveOblivionPlayerPassiveRemovalOrder(
+        const ESMStore& store, std::span<const ESM4::RuntimePassiveAbility> abilities);
 
     struct OblivionPlayerSpellInputs
     {

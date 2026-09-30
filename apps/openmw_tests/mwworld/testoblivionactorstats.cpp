@@ -6397,5 +6397,85 @@ namespace
         EXPECT_EQ(restarted.findActorValues(values.mActor)->mValues[8].mModifiers, values.mValues[8].mModifiers);
         EXPECT_EQ(restarted.getDeadCount(values.mBase), 0);
     }
+    TEST_F(OblivionActorStatsTest, passiveRemovalOrderReplaysNativeInsertionBeforeAppliedMagnitudeChanges)
+    {
+        for (auto [code, id, school, name] : std::array{
+            std::tuple{ESM::fourCC("FOAT"), 0x800u, 2u, "Fortify Attribute"},
+            std::tuple{ESM::fourCC("FOSP"), 0x801u, 5u, "Fortify Magicka"},
+            std::tuple{ESM::fourCC("WKMA"), 0x802u, 2u, "Weakness to Magic"}})
+        {
+            ESM4::EffectSetting definition{}; definition.mId = {id, 3}; definition.mEffectCode = code;
+            definition.mFullName = name; definition.mData = ESM4::EffectSettingData{};
+            definition.mData->mSchool = school; definition.preparePassiveValueModifierDefinition();
+            mStore.getWritable<ESM4::EffectSetting>().insertStatic(definition,
+                ESM::FormKey::content("effects.esm", id));
+        }
+        const auto a = ESM::FormKey::content("abilities.esp", 0x123);
+        const auto b = ESM::FormKey::content("abilities.esp", 0x124);
+        std::array abilities{
+            ESM4::RuntimePassiveAbility{a, {{8, ESM::fourCC("FOAT"), 0, 10, 10},
+                {3, ESM::fourCC("FOAT"), 1, 10, 10}, {5, ESM::fourCC("FOAT"), 5, 100, 100},
+                {6, ESM::fourCC("FOSP"), 9, 50, 50}}},
+            ESM4::RuntimePassiveAbility{b, {{7, ESM::fourCC("FOAT"), 2, 10, 10},
+                {2, ESM::fourCC("WKMA"), 64, -25, 25}, {9, ESM::fourCC("WKMA"), 64, -100, 100}}}};
+        const auto before = abilities;
+        const auto order = MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities);
+        const std::array expected{std::pair{b, 7u}, std::pair{a, 3u}, std::pair{a, 8u}, std::pair{a, 5u},
+            std::pair{b, 2u}, std::pair{b, 9u}, std::pair{a, 6u}};
+        ASSERT_EQ(order.size(), expected.size());
+        for (std::size_t i = 0; i < order.size(); ++i)
+        {
+            EXPECT_EQ(order[i].mSpell, expected[i].first);
+            EXPECT_EQ(order[i].mEffectIndex, expected[i].second);
+        }
+        EXPECT_EQ(abilities, before);
+        // Clamped fractional application must retain its original insertion key.
+        abilities[0].mEffects = {{8, ESM::fourCC("FOAT"), 0, -.25f, 25},
+            {3, ESM::fourCC("FOAT"), 1, 10, 10}};
+        const auto fractional = MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, std::span(abilities).first(1));
+        ASSERT_EQ(fractional.size(), 2);
+        EXPECT_EQ(fractional[0].mEffectIndex, 8);
+        EXPECT_EQ(fractional[1].mEffectIndex, 3);
+    }
+
+    TEST_F(OblivionActorStatsTest, passiveRemovalOrderRejectsUnknownAmbiguousOrUnadmittedComparisonInputs)
+    {
+        const auto spell = ESM::FormKey::content("abilities.esp", 0x123);
+        std::array abilities{ESM4::RuntimePassiveAbility{spell, {{0, ESM::fourCC("FOAT"), 5, 10, 10}}}};
+        EXPECT_TRUE(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, {}).empty());
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities), std::invalid_argument);
+        ESM4::EffectSetting definition{}; definition.mId = {0x800, 3};
+        definition.mEffectCode = ESM::fourCC("FOAT"); definition.mFullName = "Fortify Attribute";
+        definition.mData = ESM4::EffectSettingData{}; definition.mData->mSchool = 5;
+        definition.preparePassiveValueModifierDefinition();
+        const auto key = ESM::FormKey::content("effects.esm", 0x800);
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(definition, key);
+        abilities[0].mEffects[0].mInitialMagnitude.reset();
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities), std::invalid_argument);
+        abilities[0].mEffects[0].mInitialMagnitude = 10;
+        auto duplicate = std::array{abilities[0], abilities[0]};
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, duplicate), std::invalid_argument);
+        auto ambiguous = definition; ambiguous.mId = {0x801, 3};
+        const auto otherKey = ESM::FormKey::content("effects.esm", 0x801);
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(ambiguous, otherKey);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities), std::invalid_argument);
+        ASSERT_TRUE(mStore.getWritable<ESM4::EffectSetting>().eraseStatic(otherKey));
+        auto invalid = definition; invalid.mPassiveValueModifierDefinition.reset();
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(invalid, key);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities), std::invalid_argument);
+        invalid = definition; invalid.mData.reset();
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(invalid, key);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities), std::invalid_argument);
+        invalid = definition; invalid.mFullName = "\xc3\xa9";
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(invalid, key);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities), std::invalid_argument);
+        // A masked quantity is genuinely unqueried, including on legacy data.
+        definition.mEffectCode = ESM::fourCC("STMA"); definition.mFullName = "Stunted Magicka";
+        definition.mPassiveValueModifierDefinition.reset(); definition.preparePassiveValueModifierDefinition();
+        mStore.getWritable<ESM4::EffectSetting>().insertStatic(definition, key);
+        abilities[0].mEffects = {{0, ESM::fourCC("STMA"), 57, 1}};
+        EXPECT_NO_THROW(MWWorld::resolveOblivionPlayerPassiveRemovalOrder(mStore, abilities));
+    }
+
 
 }
