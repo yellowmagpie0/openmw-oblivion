@@ -165,6 +165,30 @@ namespace ESM4
         return std::visit([](auto storedValue) { return truncated(double(storedValue)); }, value.mValue);
     }
 
+    std::int32_t convertActorBaseFloat(float requested, ActorValueConversionMode mode)
+    {
+        if (!std::isfinite(requested)
+            || (mode != ActorValueConversionMode::NonSse && mode != ActorValueConversionMode::Sse))
+            throw std::invalid_argument("invalid native float base conversion");
+        const double value = requested;
+        if (mode == ActorValueConversionMode::Sse)
+        {
+            if (value < -0x1p31 || value >= 0x1p31)
+                return std::numeric_limits<std::int32_t>::min();
+            return static_cast<std::int32_t>(value);
+        }
+        if (value < -0x1p63 || value >= 0x1p63)
+            return 0;
+        const auto integer = static_cast<std::int64_t>(value);
+        return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::uint64_t>(integer)));
+    }
+
+    std::optional<ActorBaseValueSet> prepareActorBaseValueFloatSet(
+        ActorBaseKind kind, std::uint8_t actorValue, float requested, ActorValueConversionMode mode)
+    {
+        return prepareActorBaseValueSet(kind, actorValue, convertActorBaseFloat(requested, mode));
+    }
+
     std::optional<ActorBaseValueSet> prepareActorBaseValueSet(
         ActorBaseKind kind, std::uint8_t actorValue, std::int32_t requested)
     {

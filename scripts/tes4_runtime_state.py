@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 16
+CURRENT_VERSION = 17
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -31,6 +31,31 @@ DEFAULT_MIGRATION_CLASS = "content:oblivion.esm:0230e6"
 
 class RuntimeStateError(RuntimeError):
     pass
+
+
+def _global_identity(value: Any) -> tuple[str, str, int]:
+    """Parse non-null global keys like ESM::FormKey::deserialize on this host.
+
+    Old envelopes may use unpadded hex or mixed-case content names. Preserve
+    their wire text, but compare the identities after native normalization.
+    This deliberately differs from the canonical-only native actor ledger.
+    """
+    parts = value.split(":") if isinstance(value, str) else []
+    if len(parts) != 3:
+        raise RuntimeStateError("Invalid TES4 runtime-state global FormKey")
+    kind, namespace, number = parts
+    if (kind not in ("content", "dynamic") or not number
+            or any(char not in "0123456789abcdefABCDEF" for char in number)):
+        raise RuntimeStateError("Invalid TES4 runtime-state global FormKey")
+    serial = int(number, 16)
+    if not 0 < serial <= (0xffffff if kind == "content" else 0xffffffffffffffff):
+        raise RuntimeStateError("Null or overflowing TES4 runtime-state global FormKey")
+    if kind == "content":
+        namespace = namespace.rsplit("/", 1)[-1]
+        namespace = "".join(chr(ord(char) + 32) if "A" <= char <= "Z" else char for char in namespace)
+    if not namespace:
+        raise RuntimeStateError("Empty TES4 runtime-state global FormKey namespace")
+    return kind, namespace, serial
 
 
 class _Reader:
@@ -605,9 +630,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     globals_ = state.get("globals", {})
     if not isinstance(globals_, dict) or len(globals_) > MAX_COLLECTION:
         raise RuntimeStateError("TES4 runtime-state global list exceeds the size limit")
+    global_keys: set[tuple[str, str, int]] = set()
     for key, value in globals_.items():
-        if str(key) == "null" or not str(key):
-            raise RuntimeStateError("TES4 runtime-state global has a null FormKey")
+        identity = _global_identity(key)
+        if identity in global_keys:
+            raise RuntimeStateError("Duplicate TES4 runtime-state global FormKey")
+        global_keys.add(identity)
         _write_value(_Writer(), value)
 
     references = check_collection(state.get("references", []), "reference list")
@@ -741,6 +769,13 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         values = actor.get("values")
         if not isinstance(values, list) or len(values) != 72:
             raise RuntimeStateError("TES4 native actor values require 72 entries")
+        form_health = actor.get("nonplayer_form_health")
+        if form_health is not None:
+            if version < 17 or owner != 1 or type(form_health) is not int or not -(1 << 31) <= form_health < (1 << 31):
+                raise RuntimeStateError("TES4 nonplayer form Health requires nonplayer ownership, int32 and version 17")
+            expected_base = struct.unpack("<f", struct.pack("<f", form_health))[0]
+            if not isinstance(values[8], list) or len(values[8]) != 4 or native_float(values[8][0]) != expected_base:
+                raise RuntimeStateError("TES4 nonplayer form Health conflicts with resolved float base")
         for value in values:
             if not isinstance(value, list) or len(value) != 4:
                 raise RuntimeStateError("Invalid TES4 native actor-value categories")
@@ -1200,6 +1235,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid TES4 player form-value presence")
                 actor["player_form_values"] = [reader.unpack("<i") for _ in range(4)] if present else None
+            if version >= 17:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 nonplayer form Health presence")
+                actor["nonplayer_form_health"] = reader.unpack("<i") if present else None
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -1419,6 +1459,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 if form_values is not None:
                     for value in form_values:
                         writer.pack("<i", value)
+            if version >= 17:
+                form_health = actor.get("nonplayer_form_health")
+                writer.pack("<B", form_health is not None)
+                if form_health is not None:
+                    writer.pack("<i", form_health)
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))

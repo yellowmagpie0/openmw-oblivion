@@ -5421,10 +5421,10 @@ instead of the legacy GLOB; a first chargen continuation manifest wrongly expect
 NPC Health100. These are fixture/oracle errors, not production defects. An early
 frame capture caught Loading Area; the final frame manifest pauses3 seconds and
 its captures show the room. All32 final captures were directly inspected. NPCs
-remain offscreen, audio disabled. Wait menus visibly select1 hour. The first-pass
-Wait Health bar remains short in captures despite saved Health100, whereas the
-restart bar is full; HUD synchronization is not accepted and needs investigation.
-Numerical clock acceptance does not close that visual gate.
+remain offscreen, audio disabled. Wait menus visibly select1 hour. An initial visual estimate mistakenly classified the first-pass Health bar as
+short. Subsequent pixel measurement finds61 red pixels after Wait and16 in the
+pre-Wait menu, matching full Health100 and injured Health25. See the quantitative
+HUD review below; no HUD synchronization defect was reproduced.
 
 Executable SHA256 before launches: regular
 `1742639bdb09e90a07269b59f294e944b8164ad74aacfabe0a78b42c13c0c4e4`, instrumented
@@ -5435,3 +5435,280 @@ skill notes preserve independent timing checks and fixture pitfalls. This is a
 bounded clock integration, not an S3/S14 pass: automatic publication, unloaded
 cadence, broader life/load/Lua adapters, rest/sleep/AI-off gameplay and later
 combat/stealth/crime stages still require implementation and acceptance.
+
+### Quantitative HUD review and reusable capture check
+
+The build/test skill now includes `scripts/verify_fixture_hud.py`, scoped to the
+fixed 1280x720 default-skin fixture. It hashes the decoded input, measures
+contiguous dominant-color pixels, requires declared fill bounds, and rejects
+missing/wrong-size captures and reused evidence outputs. Four synthetic-image
+cases exercise wrong expectations, fragmented fills and invalid inputs. Full
+`S3/fixture-hud-checks-02` passes187 Python cases without skips at fingerprint
+`da62cdd882addc788cb8a372cd30e6f515e2b05e32d9142d103837a0ea49ca6b`
+on parent `8cf3491f18`. Skill metadata validation also passes.
+
+Twelve measurements of the original accepted Wait menu/post-Wait/restart
+captures pass. The deliberately wrong full-Health expectation on an injured
+pre-Wait menu fails (`hud-wrong-health-red-01.json`). The previous visual estimate
+of short post-Wait Health was incorrect: measured red fill is16 pixels before
+and61 after. No production HUD change was necessary.
+
+The normal-input Wait manifest now pauses3 seconds before its initial capture,
+allowing command-triggered native projections to reach the displayed HUD.
+`actor-clock-wait-regular-hud-checked-{load,continuation}-01` and
+`actor-clock-wait-sanitized-hud-checked02-{load,continuation}-01` pass saved-state
+checks and all10 quantitative capture checks (`hud-review-*-03.json`). All10
+images were directly reviewed: fixture room, injured pre-Wait bars, one-hour
+menu, full post-Wait/restart Health and Fatigue, depleted Magicka. NPCs remain
+offscreen and audio is disabled. Numerical NPC Fatigue errors stay below0.06
+against the declared0.5 tolerance; continuation has no hourly addition replay.
+Inherited input expectation metadata was corrected after execution with original
+input/binary hashes retained. Earlier visual metadata now records the review
+correction; captures and failed diagnostic artifacts remain unchanged.
+
+Regular executable SHA256 is
+`22951458a3d9424a77f212e4d9cd77f46174b4c71e7e21c9bf247614db28845a`;
+sanitized executable remains
+`68c54050deb0ea15ac3a281bc7246975a30718221d01ce81350a023aaf0bd2af`.
+The first concurrent sanitized course failed during Xvfb readiness, before
+OpenMW launched; that setup failure is retained separately. The serialized
+retry above passed. Graphical ASan leak checks are off and UBSan halts.
+These checks cover this fixture's bars and clock/Wait continuation, not broader
+NPC, audio, automatic publication, scheduler or M15 gameplay acceptance.
+
+### Native global fixture codec validation
+
+The Python T4ST writer/reader now validates global FormKeys before accepting an
+envelope, including the previously admitted plain `chargenstate` key. It rejects
+null/zero identities, invalid kinds/hex/namespaces, overflow, and collisions after
+native content-name/hex normalization. Legacy unpadded hex, mixed-case names and
+content paths remain accepted; their wire spelling is preserved. This change is
+scoped to globals, not a claim that every older envelope key has been audited.
+
+Three new cases check encode rejection, malformed-wire decode rejection,
+normalization collisions and compatible legacy round trips. Full
+`S3/global-formkey-checks-01` passes190 Python cases without skips at fingerprint
+`f69e55da4ed59c96b71c7e90cecaca73e7de14a5127ba765f4b0258508b40b51`
+on parent `8cf3491f18`. A separately compiled actual `components/esm/formkey.cpp`
+parser agrees with Python on270 inputs, including path/case/width/overflow and
+namespace boundaries (`S3/global-formkey-native-01/comparison.json`). This is
+native save-codec compatibility evidence, not original-game mechanics evidence.
+
+Both this chunk and the preceding HUD workflow chunk remain uncommitted:
+the current sandbox rejects `.git/index.lock` creation with a read-only filesystem.
+Source editing/testing remains available; no push or publication was attempted.
+
+### S3 correction: Low-process Maximum writes
+
+Independent original-executable dispatch checks found that LowProcess's Maximum
+setter is a no-op. The service previously changed its retained Maximum storage,
+creating a latent modifier that appeared after an actor became active. Native
+nonplayer Maximum writes now preserve that storage while Low. Player and active
+NPC/creature paths retain their existing behavior; Script and Damage still run.
+
+`S3/low-maximum-red-01` fails both updated targeted tests against the old writer.
+`low-maximum-01` passes all637 engine and190 Python cases; the full engine
+inventory/XML matches with no skips. `low-maximum-sanitized-02` passes all637
+engine cases under ASan and halting UBSan, with leak detection disabled. Both
+record tested fingerprint
+`5b2cd0ccde0d2e03bedc9198cb7b0364f83e5dc2dcda9047219ed1e10aa18d80`
+on parent `8cf3491f18`. The initial sanitizer attempt failed during inventory
+listing when LeakSanitizer reported its ptrace limitation; it remains retained
+and supplies no leak coverage. The independent2304/5760-case wrapper/process
+probes and their boundary limits are recorded in the native provenance document.
+This corrects the previous unit expectation that Low writes should change the
+stored Maximum channel. Tests now also promote actual actors back to active
+processes and reject replay of ignored writes.
+
+Editable AI-disabled Wait/continuation manifests have been prepared and their
+schemas validate. The first launch under
+`actor-clock-wait-actor-clock-ai-disabled-regular-load-01` failed before OpenMW:
+Xvfb could not bind a display socket. A separate Unix-socket bind diagnostic
+returns EPERM in the current sandbox. No AI-disabled runtime acceptance is
+claimed, and no graphical course has exercised the new Low-process fix yet.
+The sandbox also makes `.git` read-only, so the HUD, global codec and Low-process
+chunks remain uncommitted despite authorized staging/commit attempts. Full M15
+and its outstanding runtime/implementation gates remain open.
+
+Float base-write preparation now has independent72576-case original-instruction
+coverage, with an exact C++ base-field comparison using the existing conversion
+and field-width helpers. Provenance records the supported conversion domain,
+High cache distinction, boundary fixtures and retained probe failures. No Lua
+`.base` adapter or broader base-write runtime acceptance is claimed by this
+arithmetic/dispatch evidence.
+
+### S2 continuation: mode-aware finite float base setters
+
+New immutable helpers explicitly model the two native CPU float-to-integer
+conversion paths, including finite int32/int64 overflow behavior, then apply
+native base-field widths and creature aliases. They leave existing integer
+query/command behavior intact. They have no default CPU mode and are not yet
+called by the Lua/world base adapters.
+
+`S2/base-float-conversion-01` and `base-float-conversion-sanitized-01` each pass
+all1946 component cases with exact inventories/XML and no skips at fingerprint
+`1743454bf2755d5dbceeee461cc018966b4a25021be8683be0e4a12301607867`
+on parent `8cf3491f18`. The sanitizer run uses ASan plus halting UBSan with leak
+detection off because of the recorded sandbox ptrace limitation. Existing
+missing-owner aggregate-initializer warnings occur in unchanged inventory/state
+tests; the modified actor-value source/test emits no new warning.
+
+Independent original-instruction tables precede production edits. A standalone
+optimized C++ driver matches all7088 finite conversion outputs and all72576
+typed base-field outputs (`S2/oracle-emulator/base-float-mode-comparison.json`).
+Provenance records domains, CPU branches, boundary fixtures and earlier probe
+failures. The new scalar rules require subsequent adapter/runtime acceptance;
+S2/S3 and full M15 remain open. This chunk also awaits a local commit because
+`.git` is read-only in the current sandbox.
+
+### S3 continuation: Lua attribute and skill base requests
+
+Native Lua attribute/skill `.base` setters now normalize queued reads through
+the native finite float conversion and field widths, and route world writes
+through the existing shared-base command transaction. The adapter explicitly
+selects the modern SSE reference conversion. Legacy base setters remain on
+their existing path. Dynamic resource base/modifier and skill progress adapters
+remain open.
+
+`S3/lua-stat-base-01` and `lua-stat-base-sanitized-01` each pass all638 engine
+cases with exact inventories/XML and no skips at tested fingerprint
+`ec97ba90035044fc5a5fcfdd4876d3c5c2ab75181815acb797289ea75dfd038b`
+on parent `8cf3491f18`. ASan/halting UBSan run with leak detection disabled.
+The new real Lua cache test covers fractional/negative wrapping, overflow,
+nonfinite rejection, process-dependent reads and unchanged authority before
+publication. It does not execute the queued world transaction or prove restart
+acceptance. Graphical checks and local commits remain blocked by the sandbox.
+
+### S3 continuation: shared-base resident roster
+
+Both world command overloads now gather the public registry plus references in
+already loaded cells, deduplicating live references. Stable-key commands resolve
+disabled resident targets through the resident path, and shared-base updates
+refresh disabled/deleted sibling projections without enabling or registering
+them. No new deleted-actor command eligibility rule is introduced.
+
+Cell iteration now tracks whether its merged cache includes content-deleted
+references. A request that needs those entries upgrades a cache primed by an
+ordinary scan; ordinary visitors continue filtering them afterward. Disabled
+references alone are accessible to ordinary cell visitors.
+
+`resident-base-roster-01` retained one test-fixture failure from a manual record
+lookup; that fixture was corrected. `resident-base-roster-red-02` then genuinely
+fails the new scan-order regression: two residents instead of three.
+`resident-base-roster-03` and `resident-base-roster-sanitized-03` each pass
+all639 engine cases with exact inventories/XML and no skips at fingerprint
+`1332537b148b1e1746e3a0801e87a44d5957bf14f0db93fd7b4dd2c1bf6c3c3d`
+on parent `8cf3491f18`. The sanitizer run disables leak detection and halts on
+ASan/UBSan errors. The only regular-build warning is a pre-existing shadowed
+local in the saved actor clock path. Tests cover actual native NPC projections,
+cache inclusion order, duplicate suppression, registry identity preservation
+and unchanged unloaded cells. Actual world-command/Lua publication and graphical
+restart acceptance require subsequent coverage. The chunk remains uncommitted
+because the sandbox marks `.git` read-only. Full M15 remains open.
+
+### S3 continuation: real headless world stat transactions
+
+The engine suite now has a portable fixture that loads synthetic native content
+through the real World, resource, Lua and disabled sound managers, without a
+renderer or audio device. Public player pointer queries return empty before
+player setup, allowing nonplayer transactions during this phase. A stable-key
+command targets a disabled resident absent from the registry; actual Lua cached
+attribute/skill base setters then commit through the world adapter. Tests verify
+unchanged authority before application, native integer wrapping, all shared
+resident projections afterward, lifecycle adoption and preserved disabled/deleted
+flags and registry exclusions. Actors are explicitly registered with authority;
+this does not prove automatic publication, player gameplay or fresh-process
+save acceptance.
+
+The first regular run passes641 cases. The first sanitizer run genuinely fails
+in fallback player projection: std::clamp binds a reference to packed NPC DATA
+Health, which follows21 skill bytes and is unaligned. The production bridge now
+copies Health to aligned scalar storage before applying the same1..65535 clamp.
+`headless-world-stats-02` and `headless-world-stats-sanitized-02` each pass all641
+engine cases, exact inventories/XML, no skips, fingerprint
+`01c822c98ff656086e992367b829339238b314170a6483fd3f758bacc8944c2c`
+on parent `8cf3491f18`. ASan/halting UBSan use leak detection off. Earlier
+standalone headless setup failures are retained under
+`authority-draft/headless-world-probe-01`; they involved link ordering and absent
+resource/sound/Player inputs, not successful gameplay.
+
+A subsequent standalone actual-world negative control under
+`authority-draft/world-lifecycle-rejection-probe-01` rejects AV72 as expected
+but fails its no-mutation assertion: the world creates lifecycle state before
+the service rejects the request. Lifecycle adoption must join writer rollback.
+This and broader M15 gates remain open; current chunks cannot be committed
+because the sandbox keeps `.git` read-only.
+
+### S3 continuation: lifecycle adoption joins writer rollback
+
+First lifecycle adoption now uses a scoped rollback guard around world Kill,
+actor-value commands, resource-current requests and breath updates. Failure
+removes only the new lifecycle node and restores the exact prior shared death,
+essential, animation and knockdown flags. Existing lifecycle authority survives
+an abandoned guard. Successful writers commit adoption before notifications;
+legacy death-marker lookup is prepared before the writer and erased by iterator
+after success. This does not establish whole-world failed-load rollback.
+
+The standalone actual-world rejection probe above demonstrated the original
+bug. The first implementation run retained a test compilation error; the next
+retained a mistaken integer-overflow expectation for a legitimate float view.
+The corrected late-failure test uses overflowing Magicka projection instead.
+Actual-world tests cover rejected AV/source inputs, failed shared-base
+preparation, exact flag restoration, successful stable-key and Lua commits.
+A real projected Player test covers rollback, commit, existing-authority
+preservation and rejection of a mismatched player pointer.
+
+`lifecycle-adoption-rollback-04` and
+`lifecycle-adoption-rollback-sanitized-04` each pass all642 engine cases,
+matching inventories/XML with no skips at source fingerprint
+`8d387e045df4bf666c696c979a462a182db39c61735683b78733cf1938ddfe14`
+on parent `8cf3491f18`. ASan/halting UBSan use leak detection off. Automatic
+actor publication, graphical acceptance, physical lifecycle and full M15 remain
+open. This verified chunk also awaits a local commit because `.git` remains
+read-only under the active sandbox policy.
+
+### S3 continuation: fresh native values and exact form Health
+
+A fresh nonplayer resolver now constructs native values from winning NPC or
+creature records and the independently verified stat rules. It fills native
+attributes, skill form groups and AI bytes, preserves sparse modifier absence,
+and initializes the permanent Magicka/Fatigue slots to zero. Process selection
+is explicit. It rejects missing/mismatched native bases and player aliases.
+This is a construction input resolver; it neither activates actors nor replaces
+restored authority, abilities, effects or lifecycle state.
+
+Runtime-state v17 adds optional signed nonplayer form Health before the first
+float store. A matching float base remains available for shared views and base
+queries. Native current float/integer and disabled form queries retain the
+integer input; shared-base writes update it when present. Older snapshots keep
+their float-only interpretation, with no invented reconstruction from changed
+content. An older-schema capture rejects loss of present raw Health before
+changing output. Both C++ and Python validate ownership, float-base agreement,
+presence flags and version requirements, preserving absence through migration.
+
+The first runs pass all1948 component cases in regular and ASan/halting UBSan
+builds at fingerprint
+`03dad56f2c841f32e8b3a6153eb500cc25146e97ed8750bfc13b3883db39cc2f`
+under `initial-native-values-01` and `initial-native-values-sanitized-01`.
+Their engine attempts retain a missing-player-identity test-fixture
+failure and a sanitizer failure binding a GoogleTest reference to packed NPC
+Health. The corrected fixture supplies required identities and copies packed
+Health to aligned storage. Two assertion braces also remove new macro warnings.
+`initial-native-values-02` passes all644 engine and191 Python cases;
+`initial-native-values-sanitized-02` passes all644 engine cases with leak
+detection disabled. Both engine inventories/XML have no skips and record
+fingerprint `f3ba8cfaad54cfd0b94c024cde30265c4682cc063f85ebb46385a48925df839b`
+on parent `8cf3491f18`. Component production/tests did not change after their
+1948-case passes; the corrected runs change engine test fixtures only.
+
+Independent original instruction probes verify828 fresh-container/NPC form
+cases and record3120 Health query cases. Optimized C++ comparisons match780
+float-current,768 supported integer-current and1040 base-integer outputs.
+No-process current and12 overflowing integer-current cases remain outside that
+production comparison. A separate production C++ serializer/Python codec check
+matches all56 v16/v17 payloads and canonical JSON exactly, with byte-for-byte
+re-encoding. Evidence and retained oracle setup/expectation failures are under
+`authority-draft/initial-native-values-*`, `initial-health-query-*` and
+`raw-health-cross-codec-01`. This is not an actual engine save/quit/restart gate.
+Automatic publication and the remaining M15 stages remain open. `.git` is still
+read-only, so this tested chunk cannot yet be committed locally.

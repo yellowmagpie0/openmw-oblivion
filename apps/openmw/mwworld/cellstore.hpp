@@ -221,7 +221,7 @@ namespace MWWorld
             if (mState != State_Loaded)
                 return false;
 
-            if (mMergedRefsNeedsUpdate)
+            if (mMergedRefsNeedsUpdate || (includeDeleted && !mMergedRefsIncludeDeleted))
                 updateMergedRefs(includeDeleted);
             if (mMergedRefs.empty())
                 return true;
@@ -250,7 +250,7 @@ namespace MWWorld
             if (mState != State_Loaded)
                 return false;
 
-            if (mMergedRefsNeedsUpdate)
+            if (mMergedRefsNeedsUpdate || (includeDeleted && !mMergedRefsIncludeDeleted))
                 updateMergedRefs(includeDeleted);
 
             for (const LiveCellRefBase* mergedRef : mMergedRefs)
@@ -275,7 +275,7 @@ namespace MWWorld
             if (mState != State_Loaded)
                 return false;
 
-            if (mMergedRefsNeedsUpdate)
+            if (mMergedRefsNeedsUpdate || (includeDeleted && !mMergedRefsIncludeDeleted))
                 updateMergedRefs(includeDeleted);
             if (mMergedRefs.empty())
                 return true;
@@ -397,6 +397,7 @@ namespace MWWorld
         // mMovedToAnotherCell
         mutable std::vector<LiveCellRefBase*> mMergedRefs;
         mutable bool mMergedRefsNeedsUpdate = false;
+        mutable bool mMergedRefsIncludeDeleted = false;
 
         // Get the Ptr for the given ref which originated from this cell (possibly moved to another cell at this point).
         Ptr getCurrentPtr(MWWorld::LiveCellRefBase* ref);

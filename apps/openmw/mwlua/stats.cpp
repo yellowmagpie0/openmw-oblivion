@@ -9,6 +9,7 @@
 #include <variant>
 
 #include <components/esm3/loadclas.hpp>
+#include <components/esm4/actorvalues.hpp>
 #include <components/lua/luastate.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/resource/resourcesystem.hpp>
@@ -33,6 +34,17 @@ namespace
     using SelfObject = MWLua::SelfObject;
     using ObjectVariant = MWLua::ObjectVariant;
     using Index = const SelfObject::CachedStat::Index&;
+
+    sol::object nativeBaseCacheValue(const MWLua::Context& context, const MWWorld::Ptr& ptr,
+        std::uint8_t av, const sol::object& value)
+    {
+        const auto kind = ptr.getType() == ESM::REC_CREA4 ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc;
+        const auto prepared = ESM4::prepareActorBaseValueFloatSet(kind, av, LuaUtil::cast<float>(value),
+            ESM4::ActorValueConversionMode::Sse);
+        if (!prepared || !std::holds_alternative<std::int32_t>(prepared->mValue))
+            throw std::invalid_argument("native attribute/skill base request requires integer field storage");
+        return sol::make_object(context.mLua->unsafeState(), static_cast<float>(std::get<std::int32_t>(prepared->mValue)));
+    }
 
     template <class T>
     auto addIndexedAccessor(auto index)
@@ -315,6 +327,13 @@ namespace MWLua
             void cache(const Context& context, std::string_view prop, const sol::object& value) const
             {
                 SelfObject* obj = mObject.asSelfObject();
+                const auto& ptr = mObject.ptr();
+                if (prop == "base" && ptr.getClass().getCreatureStats(ptr).getAttribute(mId).isNativeProjection())
+                {
+                    obj->cacheStat(*context.mLuaManager, SelfObject::CachedStat{ &AttributeStat::setValue, mId, prop },
+                        nativeBaseCacheValue(context, ptr, ESM::Attribute::refIdToIndex(mId), value));
+                    return;
+                }
                 obj->cacheStat(
                     *context.mLuaManager, SelfObject::CachedStat{ &AttributeStat::setValue, mId, prop }, value);
             }
@@ -325,6 +344,13 @@ namespace MWLua
                 auto& stats = ptr.getClass().getCreatureStats(ptr);
                 auto stat = stats.getAttribute(id);
                 float floatValue = LuaUtil::cast<float>(value);
+                if (stat.isNativeProjection() && prop == "base")
+                {
+                    if (!MWBase::Environment::get().getWorld()->requestOblivionStatBase(
+                            ptr, ESM::Attribute::refIdToIndex(id), floatValue))
+                        throw std::logic_error("native stat view has no registered actor authority");
+                    return;
+                }
                 if (stat.isNativeProjection() && (prop == "modifier" || prop == "damage"))
                 {
                     const int av = ESM::Attribute::refIdToIndex(id);
@@ -413,6 +439,17 @@ namespace MWLua
             void cache(const Context& context, std::string_view prop, const sol::object& value) const
             {
                 SelfObject* obj = mObject.asSelfObject();
+                const auto& ptr = mObject.ptr();
+                if (prop == "base" && ptr.getClass().getNpcStats(ptr).getSkill(mId).isNativeProjection())
+                {
+                    const auto& ids = MWWorld::oblivionSkillIds();
+                    const auto found = std::find(ids.begin(), ids.end(), mId);
+                    if (found == ids.end())
+                        throw std::invalid_argument("unknown native skill");
+                    obj->cacheStat(*context.mLuaManager, SelfObject::CachedStat{ &SkillStat::setValue, mId, prop },
+                        nativeBaseCacheValue(context, ptr, 12 + static_cast<int>(found - ids.begin()), value));
+                    return;
+                }
                 obj->cacheStat(*context.mLuaManager, SelfObject::CachedStat{ &SkillStat::setValue, mId, prop }, value);
             }
 
@@ -422,6 +459,17 @@ namespace MWLua
                 auto& stats = ptr.getClass().getNpcStats(ptr);
                 auto stat = stats.getSkill(id);
                 float floatValue = LuaUtil::cast<float>(value);
+                if (stat.isNativeProjection() && prop == "base")
+                {
+                    const auto& ids = MWWorld::oblivionSkillIds();
+                    const auto found = std::find(ids.begin(), ids.end(), id);
+                    if (found == ids.end())
+                        throw std::invalid_argument("unknown native skill");
+                    if (!MWBase::Environment::get().getWorld()->requestOblivionStatBase(
+                            ptr, 12 + static_cast<int>(found - ids.begin()), floatValue))
+                        throw std::logic_error("native stat view has no registered actor authority");
+                    return;
+                }
                 if (stat.isNativeProjection() && (prop == "modifier" || prop == "damage"))
                 {
                     const auto& ids = MWWorld::oblivionSkillIds();

@@ -151,6 +151,55 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def test_global_formkeys_reject_invalid_text_on_encode_and_decode(self):
+        valid_key = "content:oblivion.esm:000001"
+        source = make_state()
+        source["globals"] = {valid_key: 1}
+        payload = state_io.encode_payload(source)
+        needle = struct.pack("<I", len(valid_key)) + valid_key.encode()
+        self.assertEqual(payload.count(needle), 1)
+        for key in ["chargenstate", "", "null", "unknown:global:1", "content::1",
+                    "content:folder/:1", "content:oblivion.esm:0", "content:oblivion.esm:1000000",
+                    "dynamic:global:0", "dynamic:global:10000000000000000",
+                    "dynamic::1", "dynamic:global:+1", "dynamic:global:0x1",
+                    "dynamic:global: 1", "dynamic:global:1:2", "dynamic:global:gg"]:
+            with self.subTest(key=key):
+                state = make_state()
+                state["globals"] = {key: 1}
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+                replacement = struct.pack("<I", len(key)) + key.encode()
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.decode_payload(payload.replace(needle, replacement))
+        source["globals"] = {42: 1}
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(source)
+
+    def test_global_formkeys_detect_native_normalization_collisions(self):
+        for alias in ["content:Oblivion.esm:1", "content:folder/oblivion.esm:000001",
+                      "content:oblivion.esm:00000001"]:
+            with self.subTest(alias=alias):
+                state = make_state()
+                state["globals"] = {"content:oblivion.esm:000001": 1, alias: 2}
+                with self.assertRaisesRegex(state_io.RuntimeStateError, "Duplicate"):
+                    state_io.encode_payload(state)
+        state = make_state()
+        state["globals"] = {"content:oblivion.esm:000001": 1, "content:oblivion.esm:000002": 2}
+        payload = state_io.encode_payload(state)
+        # Distinct wire strings can represent one native key after hex parsing.
+        with self.assertRaisesRegex(state_io.RuntimeStateError, "Duplicate"):
+            state_io.decode_payload(payload.replace(b"content:oblivion.esm:000002", b"content:Oblivion.esm:000001"))
+
+    def test_global_formkeys_preserve_compatible_legacy_spellings(self):
+        state = make_state()
+        state["globals"] = {"content:folder/Oblivion.esm:Ab": 1,
+                            "dynamic:Global:FFFFFFFFFFFFFFFF": 2,
+                            "dynamic:global:1": 3}
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["globals"], state["globals"])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+
     def test_m7_payload_round_trip_preserves_typed_locals_and_quests(self) -> None:
         expected = make_state()
         expected["content"][0]["plugin"] = "oblivion.esm"
@@ -416,6 +465,63 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 with self.assertRaises(state_io.RuntimeStateError):
                     state_io.encode_payload(state)
         state["native_actor_bases"] = [valid, valid]
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_nonplayer_form_health_matches_version_seventeen_wire_and_legacy_absence(self):
+        state = make_state()
+        state["schema_version"] = 17
+        state["ai_rng_state"] = 1
+        key, base = "content:oblivion.esm:000901", "content:oblivion.esm:000800"
+        state["references"] = [{"key": key, "base": base, "cell": state["player"]["cell"],
+            "enabled": True, "deleted": False, "position": [0.] * 6, "inventory": [],
+            "custom_state": {}, "owner": None, "lock_level": 0}]
+        actor = {"actor": key, "base": base, "owner": 1, "process": 1,
+            "values": [[0., None, None, None] for _ in range(72)], "player_form_values": None}
+        state["native_actor_values"] = [actor]
+        for health in (-(1 << 31), -16777217, 0, 16777217, (1 << 31) - 1):
+            actor["nonplayer_form_health"] = health
+            actor["values"][8][0] = struct.unpack("<f", struct.pack("<f", health))[0]
+            payload = state_io.encode_payload(state)
+            offset = len(payload) - 40 - 5
+            self.assertEqual(payload[offset:offset + 5], b"\x01" + struct.pack("<i", health))
+            self.assertEqual(state_io.decode_payload(payload)["native_actor_values"], [actor])
+            legacy_state = copy.deepcopy(state)
+            legacy_state["schema_version"] = 16
+            del legacy_state["native_actor_values"][0]["nonplayer_form_health"]
+            legacy = state_io.encode_payload(legacy_state)
+            # Independent v16 -> v17 wire insertion: version header and optional field only.
+            expected = bytearray(legacy)
+            struct.pack_into("<I", expected, len(state_io.MAGIC), 17)
+            expected[-40:-40] = b"\x01" + struct.pack("<i", health)
+            self.assertEqual(payload, bytes(expected))
+            decoded = state_io.decode_payload(legacy)
+            self.assertNotIn("nonplayer_form_health", decoded["native_actor_values"][0])
+            self.assertEqual(state_io.encode_payload(decoded), legacy)
+            decoded["schema_version"] = 17
+            promoted = state_io.decode_payload(state_io.encode_payload(decoded))
+            self.assertIsNone(promoted["native_actor_values"][0]["nonplayer_form_health"])
+            corrupt = bytearray(payload)
+            corrupt[offset] = 2
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(bytes(corrupt))
+            for remove in range(1, 6):
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.decode_payload(payload[:offset + 5 - remove])
+        for invalid in (True, 1., "1", -(1 << 31) - 1, 1 << 31):
+            actor["nonplayer_form_health"] = invalid
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        actor["nonplayer_form_health"] = 16777217
+        actor["values"][8][0] = 16777218.
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        actor["values"][8][0] = 16777216.
+        state["schema_version"] = 16
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state["schema_version"] = 17
+        actor.update(actor=state["player"]["reference"], owner=0)
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
 

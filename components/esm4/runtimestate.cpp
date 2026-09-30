@@ -449,6 +449,9 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 native actor-value identity");
         if (mPlayerFormValues && mOwner != ActorValueOwner::Player)
             throw std::runtime_error("TES4 player form values require player ownership");
+        if (mNonPlayerFormHealth && (mOwner != ActorValueOwner::NonPlayer
+            || mValues[8].mBase != static_cast<float>(*mNonPlayerFormHealth)))
+            throw std::runtime_error("TES4 nonplayer form Health conflicts with owner or resolved float base");
         try
         {
             for (const auto& value : mValues)
@@ -550,6 +553,8 @@ namespace ESM4
             actor.validate();
             if (mVersion < 10 && actor.mPlayerFormValues)
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
+            if (mVersion < 17 && actor.mNonPlayerFormHealth)
+                throw std::runtime_error("TES4 nonplayer form Health requires runtime-state version 17");
             if (!nativeActors.emplace(actor.mActor, actor.mBase).second)
                 throw std::runtime_error("Duplicate TES4 native actor-value identity");
             const bool player = actor.mActor == mPlayer.mReference;
@@ -1220,6 +1225,12 @@ namespace ESM4
                         for (const auto value : *actor.mPlayerFormValues)
                             writer.integer(value);
                 }
+                if (mVersion >= 17)
+                {
+                    writer.integer<std::uint8_t>(actor.mNonPlayerFormHealth.has_value());
+                    if (actor.mNonPlayerFormHealth)
+                        writer.integer(*actor.mNonPlayerFormHealth);
+                }
             }
         }
         if (mVersion >= 11)
@@ -1648,6 +1659,14 @@ namespace ESM4
                         for (auto& value : *actor.mPlayerFormValues)
                             value = reader.integer<std::int32_t>();
                     }
+                }
+                if (result.mVersion >= 17)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 nonplayer form Health presence");
+                    if (present)
+                        actor.mNonPlayerFormHealth = reader.integer<std::int32_t>();
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -2176,6 +2195,14 @@ namespace ESM4
                         }
                         stream << ']';
                     }
+                    else
+                        stream << "null";
+                }
+                if (mVersion >= 17)
+                {
+                    stream << ",\"nonplayer_form_health\":";
+                    if (actor.mNonPlayerFormHealth)
+                        stream << *actor.mNonPlayerFormHealth;
                     else
                         stream << "null";
                 }

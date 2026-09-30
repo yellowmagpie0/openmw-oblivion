@@ -5,6 +5,7 @@
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm/defs.hpp>
@@ -441,6 +442,24 @@ namespace MWWorld
                 result = ptr;
                 return false;
             }, true);
+        });
+        return result;
+    }
+
+    std::vector<Ptr> WorldModel::getResidentPtrs()
+    {
+        std::vector<Ptr> result;
+        std::unordered_set<LiveCellRefBase*> seen;
+        const auto add = [&](const Ptr& ptr) {
+            if (!ptr.isEmpty() && seen.insert(ptr.mRef).second)
+                result.push_back(ptr);
+            return true;
+        };
+        for (const auto& [refNum, ptr] : getPtrRegistryView())
+            add(ptr);
+        forEachLoadedCellStore([&](CellStore& cell) {
+            if (cell.getState() == CellStore::State_Loaded)
+                cell.forEach(add, true);
         });
         return result;
     }

@@ -22,7 +22,7 @@
     "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
   ],
   "xvfb": true,
-  "name": "m15-native-wait-hour",
+  "name": "m15-native-ai-disabled-wait-continuation",
   "actions": [
     {
       "type": "wait_log",
@@ -44,30 +44,13 @@
       "name": "OpenMW"
     },
     {
-      "type": "sleep",
-      "seconds": 3
-    },
-    {
       "type": "screenshot",
-      "name": "before-rest.png",
+      "name": "after-load.png",
       "minimum_entropy": 0.02
-    },
-    {
-      "type": "key_held",
-      "value": "t"
     },
     {
       "type": "sleep",
       "seconds": 2
-    },
-    {
-      "type": "screenshot",
-      "name": "rest-dialog.png",
-      "minimum_entropy": 0.02
-    },
-    {
-      "type": "key_held",
-      "value": "Return"
     },
     {
       "type": "sleep",
@@ -98,7 +81,7 @@
     },
     {
       "type": "screenshot",
-      "name": "after-rest.png",
+      "name": "after-resave.png",
       "minimum_entropy": 0.02
     }
   ],

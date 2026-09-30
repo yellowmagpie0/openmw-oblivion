@@ -149,6 +149,19 @@ namespace MWWorld
 {
     namespace
     {
+        using LegacyDeathMarker = decltype(ESM4::RuntimeReferenceState::mCustomState)::iterator;
+
+        std::optional<LegacyDeathMarker> findLegacyDeathMarker(ESM4::RuntimeReferenceState* reference)
+        {
+            if (reference)
+            {
+                const auto found = reference->mCustomState.find("obscript.dead");
+                if (found != reference->mCustomState.end())
+                    return found;
+            }
+            return std::nullopt;
+        }
+
         GlobalVariableName canonicalOblivionGlobal(GlobalVariableName name)
         {
             if (Misc::StringUtils::ciEqual(name.getValue(), "GameDaysPassed"))
@@ -1309,13 +1322,16 @@ namespace MWWorld
         const bool essential = actor.getClass().isEssential(actor);
         const auto settings = essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
         auto* reference = adoptOblivionActorLife(actor);
+        const auto deadMarker = findLegacyDeathMarker(reference);
         if (player)
             mOblivionCombat->killPlayer(*mPlayer, killer, essential, settings, getGodModeState());
         else
             mOblivionCombat->killNonPlayer(actor, killer, essential, settings);
-        if (reference)
-            reference->mCustomState.erase("obscript.dead");
+        if (deadMarker)
+            reference->mCustomState.erase(*deadMarker);
+        adoption.commit();
         return true;
     }
 
@@ -1331,7 +1347,7 @@ namespace MWWorld
         if (!values)
             return false;
         std::vector<Ptr> residents;
-        for (const auto& [refNum, ptr] : mWorldModel.getPtrRegistryView())
+        for (const auto& ptr : mWorldModel.getResidentPtrs())
         {
             if (ptr.isEmpty() || ptr == getPlayerPtr())
                 continue;
@@ -1381,7 +1397,7 @@ namespace MWWorld
         std::vector<Ptr> residents;
         if (!player && command == ESM4::ActorValueCommand::Set)
         {
-            for (const auto& [refNum, resident] : mWorldModel.getPtrRegistryView())
+            for (const auto& resident : mWorldModel.getResidentPtrs())
             {
                 if (resident.isEmpty() || resident == getPlayerPtr())
                     continue;
@@ -1392,7 +1408,9 @@ namespace MWWorld
             if (std::find(residents.begin(), residents.end(), actor) == residents.end())
                 residents.push_back(actor);
         }
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
         auto* reference = adoptOblivionActorLife(actor);
+        const auto deadMarker = findLegacyDeathMarker(reference);
         const ESM4::ActorValueCommandPolicy policy{player && getGodModeState(), actor.getType() != ESM::REC_CREA4};
         if (player)
             mOblivionCombat->executePlayerValueCommand(*mPlayer, value, command, source, requested, policy,
@@ -1400,8 +1418,9 @@ namespace MWWorld
         else
             mOblivionCombat->executeNonPlayerValueCommand(actor, value, command, source, requested, policy,
                 residents, essential, recoverySettings);
-        if (reference)
-            reference->mCustomState.erase("obscript.dead");
+        if (deadMarker)
+            reference->mCustomState.erase(*deadMarker);
+        adoption.commit();
         return true;
     }
 
@@ -1423,11 +1442,13 @@ namespace MWWorld
         const auto recovery = essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
         const auto settings = resolveOblivionSwimBreathSettings(mStore);
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
         adoptOblivionActorLife(actor);
         const auto update = player
             ? mOblivionCombat->updatePlayerBreath(*mPlayer, duration, needsAir, essential, settings,
                 recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState())
             : mOblivionCombat->updateNonPlayerBreath(actor, duration, needsAir, essential, settings, recovery);
+        adoption.commit(); // Audio/UI notifications run after the native transaction.
         if (update && update->mDamage > 0.f)
         {
             const auto sound = MWBase::Environment::get().getSoundManager();
@@ -1470,15 +1491,18 @@ namespace MWWorld
         const bool essential = actor.getClass().isEssential(actor);
         const auto recovery = value == 8 && essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
         auto* reference = adoptOblivionActorLife(actor);
+        const auto deadMarker = findLegacyDeathMarker(reference);
         if (player)
             mOblivionCombat->requestPlayerResourceCurrent(*mPlayer, value, requested, getGodModeState(),
                 essential, recovery, settings);
         else
             mOblivionCombat->requestNonPlayerResourceCurrent(actor, value, requested,
                 {false, actor.getType() != ESM::REC_CREA4}, essential, recovery);
-        if (reference)
-            reference->mCustomState.erase("obscript.dead");
+        if (deadMarker)
+            reference->mCustomState.erase(*deadMarker);
+        adoption.commit();
         return true;
     }
 
@@ -1499,6 +1523,22 @@ namespace MWWorld
         else
             mOblivionCombat->requestNonPlayerStatModifier(actor, value, modifier, target);
         return true;
+    }
+
+    bool World::requestOblivionStatBase(const Ptr& actor, std::uint8_t value, float requested)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                                                : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->findActorValues(key))
+            return false;
+        // The native CRT selects SSE conversion when CPU and OS support SSE2.
+        // Use that modern reference behavior explicitly on every host, rather
+        // than depending on this port's floating-point cast implementation.
+        const auto integer = ESM4::convertActorBaseFloat(requested, ESM4::ActorValueConversionMode::Sse);
+        return executeOblivionActorValueCommand(actor, value, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, integer);
     }
 
     void World::advanceOblivionActorClock(float duration)
@@ -5308,12 +5348,12 @@ namespace MWWorld
 
     MWWorld::Ptr World::getPlayerPtr()
     {
-        return mPlayer->getPlayer();
+        return mPlayer ? mPlayer->getPlayer() : MWWorld::Ptr{};
     }
 
     MWWorld::ConstPtr World::getPlayerConstPtr() const
     {
-        return mPlayer->getConstPlayer();
+        return mPlayer ? mPlayer->getConstPlayer() : MWWorld::ConstPtr{};
     }
 
     void World::updateDialogueGlobals()

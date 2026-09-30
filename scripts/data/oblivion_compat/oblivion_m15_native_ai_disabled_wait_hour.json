@@ -22,7 +22,7 @@
     "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
   ],
   "xvfb": true,
-  "name": "m15-native-wait-hour",
+  "name": "m15-native-wait-hour-ai-disabled",
   "actions": [
     {
       "type": "wait_log",
@@ -42,6 +42,40 @@
     {
       "type": "focus_window",
       "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "grave"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "type_held",
+      "value": "tai"
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Console command succeeded: tai",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "name": "ai-disabled.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_held",
+      "value": "grave"
     },
     {
       "type": "sleep",
@@ -109,7 +143,8 @@
     "Applied TES4 runtime state:",
     "Writing saved game 'Quicksave'",
     "M7 ObScript: acceptance-command actor=content:m15-lifecycle.esm:900101 name=getav result=25",
-    "M7 ObScript: acceptance-command actor=content:m15-lifecycle.esm:900101 name=getdead result=0"
+    "M7 ObScript: acceptance-command actor=content:m15-lifecycle.esm:900101 name=getdead result=0",
+    "Console command succeeded: tai"
   ],
   "forbidden_log": [
     "Failed to load saved game",

@@ -1494,8 +1494,11 @@ namespace MWWorld
         }
         else
         {
+            // DATA is packed: its 32-bit Health follows 21 skill bytes.
+            // std::clamp takes references, so first copy to aligned storage.
+            const std::uint32_t health = nativePlayer.mData.health;
             player.mNpdt.mHealth
-                = static_cast<std::uint16_t>(std::clamp<std::uint32_t>(nativePlayer.mData.health, 1, 65535));
+                = static_cast<std::uint16_t>(std::clamp<std::uint32_t>(health, 1, 65535));
             player.mNpdt.mFatigue = std::max<std::uint16_t>(1, nativePlayer.mBaseConfig.tes4.fatigue);
             const auto playerAttributes = attributes(nativePlayer.mData.attribs);
             for (int i = 0; i < ESM::Attribute::Length; ++i)

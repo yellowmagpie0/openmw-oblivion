@@ -106,6 +106,11 @@ namespace MWWorld
         // back to stale authored state. Not a per-actor scheduler lookup.
         Ptr getResidentPtr(ESM::RefNum refNum);
 
+        // Union of the public registry and references in already loaded cells,
+        // including disabled/deleted references. Each live reference appears
+        // once. Does not load cells or publish registry entries.
+        std::vector<Ptr> getResidentPtrs();
+
         PtrRegistryView getPtrRegistryView() const { return PtrRegistryView(mPtrRegistry); }
 
         ESM::RefNum getLastGeneratedRefNum() const { return mPtrRegistry.getLastGenerated(); }

@@ -144,6 +144,8 @@ namespace MWBase
         }
         virtual bool requestOblivionStatModifier(
             const MWWorld::Ptr& actor, std::uint8_t value, bool damage, float requested) { return false; }
+        virtual bool requestOblivionStatBase(
+            const MWWorld::Ptr& actor, std::uint8_t value, float requested) { return false; }
         virtual bool updateOblivionFrameResources(const MWWorld::Ptr& actor, float duration, bool running) { return false; }
         virtual bool updateOblivionBreath(const MWWorld::Ptr& actor, float duration) { return false; }
         // Remaining and maximum native breath; absent before process adoption.

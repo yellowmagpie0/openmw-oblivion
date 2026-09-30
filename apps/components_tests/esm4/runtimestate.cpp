@@ -624,6 +624,72 @@ namespace
         EXPECT_NE(migrated.canonicalJson().find("\"player_form_values\":null"), std::string::npos);
     }
 
+    TEST(ESM4RuntimeState, nonPlayerFormHealthPreservesIntegerVersionSeventeenWireAndLegacyAbsence)
+    {
+        auto state = makeState();
+        state.mVersion = 17;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences[0].mKey;
+        actor.mBase = state.mReferences[0].mBase;
+        for (const auto health : {std::numeric_limits<std::int32_t>::min(), -16777217, 0, 16777217,
+                 std::numeric_limits<std::int32_t>::max()})
+        {
+            actor.mNonPlayerFormHealth = health;
+            actor.mValues[8].mBase = static_cast<float>(health);
+            state.mNativeActorValues = {actor};
+            const auto bytes = state.serializeBinary();
+            // Native v11..16 empty collections and clock occupy 40 bytes
+            // after the v17 actor's optional raw Health field.
+            const std::size_t offset = bytes.size() - 40 - 5;
+            EXPECT_EQ(bytes[offset], 1);
+            const auto bits = static_cast<std::uint32_t>(health);
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(bytes[offset + 1 + i], (bits >> (i * 8)) & 255);
+            const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+            EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+            EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+            EXPECT_NE(restored.canonicalJson().find("\"nonplayer_form_health\":" + std::to_string(health)),
+                std::string::npos);
+            auto corrupt = bytes;
+            corrupt[offset] = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+            for (unsigned remove = 1; remove <= 5; ++remove)
+            {
+                auto truncated = bytes;
+                truncated.resize(offset + 5 - remove);
+                EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+            }
+        }
+        state.mVersion = 16;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+        state.mNativeActorValues[0].mNonPlayerFormHealth.reset();
+        const auto legacy = state.serializeBinary();
+        auto restored = ESM4::RuntimeState::deserializeBinary(legacy);
+        EXPECT_FALSE(restored.mNativeActorValues[0].mNonPlayerFormHealth);
+        EXPECT_EQ(restored.canonicalJson().find("nonplayer_form_health"), std::string::npos);
+        EXPECT_EQ(restored.serializeBinary(), legacy);
+        restored.mVersion = 17;
+        const auto promoted = ESM4::RuntimeState::deserializeBinary(restored.serializeBinary());
+        EXPECT_EQ(promoted.mNativeActorValues, restored.mNativeActorValues);
+        EXPECT_NE(promoted.canonicalJson().find("\"nonplayer_form_health\":null"), std::string::npos);
+    }
+
+    TEST(ESM4RuntimeState, nonPlayerFormHealthRejectsPlayerOwnershipAndRoundedBaseConflicts)
+    {
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = ESM::FormKey::content("actors.esm", 0x900);
+        actor.mBase = ESM::FormKey::content("actors.esm", 0x800);
+        actor.mNonPlayerFormHealth = 16777217;
+        actor.mValues[8].mBase = 16777216.f;
+        EXPECT_NO_THROW(actor.validate());
+        actor.mValues[8].mBase = 16777218.f;
+        EXPECT_THROW(actor.validate(), std::runtime_error);
+        actor.mValues[8].mBase = 16777216.f;
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        EXPECT_THROW(actor.validate(), std::runtime_error);
+    }
+
     TEST(ESM4RuntimeState, nativeActorValuesRejectInvalidAndDanglingAuthority)
     {
         auto state = makeState();

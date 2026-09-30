@@ -699,7 +699,33 @@ restores100. Skip the special20 addition; next resident frame can catch up the
 elapsed interval because skipped hourly dispatch did not stamp the NPC clock.
 Use `oblivion_m15_native_chargen_wait_continuation.json`: the ordinary restart
 manifest expects NPC Health100 and is deliberately inappropriate here. Keep
-failed fixture/manifest attempts. Numerical saved resource values do not prove
-HUD synchronization: these first-pass hour captures show a short Health bar
-while restart shows a full bar. Investigate that visual discrepancy separately.
+failed fixture/manifest attempts. Numerical saved resource values do not prove HUD synchronization. An initial
+visual estimate of the small Health bar was wrong; pixel measurements show16
+red pixels in the menu and61 after Wait, correctly matching25 and100. Use the
+quantitative check below alongside direct image review.
 Automatic native publication and full scheduler cadence are still open.
+
+
+### Quantify the fixed fixture HUD
+
+Use [verify_fixture_hud.py](../scripts/verify_fixture_hud.py) for the current
+1280x720 default-skin M15 fixture captures. It requires the same ImageMagick
+installation as the runtime harness; no additional Python image library is
+needed. It measures contiguous dominant-color pixels along declared bar rows,
+records image SHA256 and expectation bounds, and refuses an existing output.
+Declare bounds before a course, for example:
+
+```bash
+python3 SKILL/scripts/verify_fixture_hud.py --image CASE/rest-dialog.png --bar health:0.22:0.30 --bar magicka:0.17:0.25 --bar fatigue:0.45:0.60 --output CASE/hud-before.json
+python3 SKILL/scripts/verify_fixture_hud.py --image CASE/after-rest.png --bar health:0.95:1 --bar magicka:0.17:0.25 --bar fatigue:0.95:1 --output CASE/hud-after.json
+```
+
+The hour manifest now pauses3 seconds after focus before the initial capture;
+command acknowledgments can precede the first GUI projection, particularly on
+the sanitized engine. The pre-Wait menu is also a useful stable control. This
+scanner is deliberately tied to the current skin/layout and cannot establish
+image provenance, identity, NPC visibility, general rendering, or audio. Do not
+adjust bounds to fit a failed case. Keep normal-input logs and independent save
+checks, and directly review images. Small on-screen bars are easy to misread:
+the former reported short-after-Wait bar was actually full. Quantitative review
+prevented an unnecessary speculative GUI change.

@@ -10,8 +10,10 @@
 
 #include <components/esm/records.hpp>
 #include <components/esm4/combatsettings.hpp>
+#include <components/esm4/runtimereferences.hpp>
 
 #include <limits>
+#include <bit>
 #include <set>
 #include <stdexcept>
 #include <vector>
@@ -165,6 +167,43 @@ namespace MWWorld
     ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store)
     {
         return ESM4::buildPlayerDynamicBaseSettings(winningRecords<ESM4::GameSetting>(store));
+    }
+
+    ESM4::RuntimeActorValues resolveOblivionInitialNonPlayerValues(const ESMStore& store,
+        const ESM::FormKey& actor, const ESM::FormKey& actorBase,
+        std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process)
+    {
+        if (actor.isNull() || ESM4::runtimeReferenceKey(actor) == ESM::FormKey::dynamic("player", 1))
+            throw std::invalid_argument("native nonplayer construction requires a nonplayer actor identity");
+        const auto* npc = store.search<ESM4::Npc>(actorBase);
+        const auto* creature = store.search<ESM4::Creature>(actorBase);
+        if ((!npc && !creature) || (npc && creature)
+            || (npc && (!npc->mIsTES4 || npc->mFormKey != actorBase))
+            || (creature && (!creature->mAttackReach || creature->mFormKey != actorBase)))
+            throw std::invalid_argument("native actor construction has a missing or mismatched winning base");
+        const auto stats = resolveOblivionActorBaseStats(store, actorBase, playerLevel);
+        const auto& ai = npc ? npc->mAIData : creature->mAIData;
+        ESM4::RuntimeActorValues result;
+        result.mActor = actor;
+        result.mBase = actorBase;
+        result.mProcess = process;
+        for (std::size_t i = 0; i < stats.mAttributes.size(); ++i)
+            result.mValues[i].mBase = stats.mAttributes[i];
+        result.mNonPlayerFormHealth = std::bit_cast<std::int32_t>(stats.mHealth);
+        result.mValues[8].mBase = static_cast<float>(*result.mNonPlayerFormHealth);
+        result.mValues[9].mBase = stats.mMagicka;
+        result.mValues[10].mBase = stats.mFatigue;
+        for (std::size_t i = 0; i < stats.mSkills.size(); ++i)
+            result.mValues[12 + i].mBase = stats.mSkills[i];
+        const std::array<std::uint8_t, 4> settings{ai.aggression, ai.confidence, ai.energyLevel, ai.responsibility};
+        for (std::size_t i = 0; i < settings.size(); ++i)
+            result.mValues[33 + i].mBase = settings[i];
+        // Every native ActorValues container starts with permanent AV9/10
+        // zero nodes. Other modifier entries and extra form AVs are absent.
+        for (const auto av : {9, 10})
+            result.mValues[av].mModifiers = {0.f, 0.f, 0.f};
+        result.validate();
+        return result;
     }
 
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,

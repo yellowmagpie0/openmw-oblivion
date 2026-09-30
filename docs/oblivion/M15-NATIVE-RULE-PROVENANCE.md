@@ -3123,3 +3123,166 @@ adapter's incorrect use of character creation to suppress Player restoration.
 The fork's ordinary hourly adapter rejects jail until its dedicated transition
 is implemented. Full native scheduling/effects/character-creation gameplay
 eligibility remains a separate gate.
+
+### Maximum float wrappers and LowProcess write suppression
+
+Pinned executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Player Maximum-float virtual +294 is `65E260`; common Character is `5E2800`,
+and Creature `625570` aliases skills before that common wrapper. Unlike the
+Player Script/Damage wrappers, this Maximum wrapper has no god-mode debit gate.
+Common negative Fatigue still checks +278. Negative Health dispatches +3B8 after
+the storage boundary, even with no process. The callback itself remains a
+separate policy/lifecycle boundary.
+
+Process Maximum setter +278 resolves to `890B90` on Low: its complete body is
+RET12. MiddleLow/MiddleHigh use `658850`, which dispatches the sparse Maximum
+map. High `628C00` delegates to that setter and also invalidates Encumbrance/
+Paralysis caches. Therefore a LowProcess Maximum request must not change retained
+storage that could become visible after promotion to an active process tier.
+
+`S2/oracle-emulator/maximum-float-wrappers.py` executes2304 wrapper cases;
+`maximum-float-process-wrappers.py` expands this to5760 cases across Player,
+Character and Creature, absent/Low/middle/High processes, god mode, Fatigue
+eligibility, signed/fractional/zero inputs and both x87 control words. The
+executable hash is checked before mapping. Actual Low/middle/High dispatch,
+wrapper branches and callback selection execute. Scalar/sparse storage,
+actor-base lookup, notifications and Health reaction effects are explicit
+boundary fixtures. These are branch/dispatch probes, not gameplay acceptance
+or a5760-row production comparison. Tables and logs remain ignored under
+S2/oracle-emulator and S3/authority-draft; independently read targets are recorded
+in `process-maximum-write-vtables.json`.
+
+The service now suppresses Maximum writes for nonplayer Low-process actors.
+Updated actual-Ptr tests reproduce the former latent write, retain existing
+Maximum values across ignored set/clear requests and verify activation later
+exposes only those retained values. Creature resource/attribute probes include
+a finite delta that would overflow active arithmetic, plus invalid-input
+rejection and unchanged lifecycle authority. Lua resource Maximum adapters and
+their Health reaction/god-mode policy remain open.
+
+### Float base setter conversion before native field widths
+
+For the pinned executable above, Player actor setter `65D220`, common setter
+`5E2430` and Creature alias wrapper `6254B0` dispatch the shared form float
+setter `51E7B0` (+130). That setter calls actual `9828C0`, then the native form
+integer setter (+134). Fractional input therefore truncates before byte/uint16/
+int32/extra-value storage; the form float path does not preserve fractional
+extra values. Process float setter +270 is `6434A0` on Low/middle and `628AC0`
+on High. High preserves raw float Encumbrance in its process cache, but floors
+Paralysis for its integer cache separately from the form's truncation.
+
+`S2/oracle-emulator/actor-base-float-value-set.py` records72576 original cases:
+Player, NPC/Creature absent/Low/High processes; all72 AVs; signed fractional,
+zero, width and binary32 precision boundaries; present/absent extra entries;
+both x87 words and both BAABE0 conversion branches. The domain is finite
+binary32 inputs whose truncated integer fits int32. Arbitrary outside-domain
+CPU-dependent conversion remains open. Original wrappers, conversion, form
+setters, aliases and High cache writes execute. Dynamic/base lookup, change
+flags and sparse allocation/container operations are boundary fixtures.
+
+A standalone C++ driver composes existing `actorBaseValueInteger` and
+`prepareActorBaseValueSet`; all72576 canonical field IDs, storage types and
+value bits match (`base-float-setter-comparison.json`, table SHA256
+`e71efb5a0a5693b3f42d5feb88a2e3c1e368cb0fed311ec68d74b438a32d017f`).
+This comparison covers base fields, not High cache effects or Lua/world adapters.
+The first probe failed before execution because its bit encoder was undefined.
+The second incorrectly expected truncation for High's Paralysis cache;
+instructions and the corrected probe establish floor. Both failed scripts/logs
+are retained. The final metadata-complete run is
+`S3/authority-draft/base-float-value-set-oracle-04.log`. The first standalone
+link omitted unrelated modifier dependencies; section garbage collection in
+`base-float-driver-build-02.log` links only the actual field helpers used.
+
+### Complete finite float base conversion in both CPU modes
+
+A further independent probe extends the preceding bounded conversion domain.
+`base-float-conversion-domain.py` executes the complete shared form float setter
+`51E7B0` and converter `9828C0`, capturing only the downstream integer-setter
+argument. All7088 cases cover1772 finite binary32 inputs across both BAABE0 CPU
+branches and both x87 words: signed subnormals/zero, adjacent powers through
+2^127, int32/int64 thresholds, maximum finite magnitudes and seeded samples.
+SSE yields INT_MIN outside int32. Non-SSE truncates through FISTP int64 and
+returns the low32 bits; its int64 overflow sentinel consequently returns0.
+Original code executes without a conversion stub. Table SHA256 is
+`760f74dbf800627b396a236d7bd9cf933afd48186c188f6dd54e20f108a097c7`.
+
+Production `convertActorBaseFloat` now models both finite domains with an
+explicit `ActorValueConversionMode` argument. `prepareActorBaseValueFloatSet`
+then applies existing native field widths and aliases. Both reject nonfinite
+inputs or invalid mode. No implicit host-dependent/default CPU mode is selected;
+world/Lua integration must choose its policy explicitly. Existing strict base
+integer queries retain their previous supported-domain contract.
+`base-float-mode-comparison.json` matches all7088 conversion bits and all72576
+recorded typed base fields against the new helpers. The full component tests
+also exercise overflow sentinels, sign/fractional/adjacent boundaries, wrapping,
+creature aliases and malformed inputs. This closes the finite scalar conversion
+rule, not base-write adapters or gameplay acceptance.
+
+### Native float conversion mode selection
+
+`S2/oracle-emulator/base-conversion-mode-selection.py` executes initializer
+`99CB37` and capability check `99CAD7` in the same hash-pinned original image.
+All20 cases pass across SSE/SSE2 flags, initial EFLAGS ID states and declared
+OS support. The original stores SSE mode in BAABE0 only when CPUID reports
+SSE2 and the OS probe succeeds. CPUID outputs are supplied at the original
+instructions; OS probe `99CA87` is a boolean boundary stub, so this does not
+observe an actual Windows/Wine process mode. The new Lua/world attribute/skill
+base adapter explicitly selects this modern SSE reference policy rather than
+using an implicit C++ overflow cast. Actual world publication/restart acceptance
+remains open.
+### Fresh nonplayer construction inputs and signed form Health
+
+The pinned original executable remains SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S3/authority-draft/initial-native-values-03` executes828 cases across x87
+control words027F/037F and both BAABE0 modes. Actual ActorValues constructor
+65BE10 and lookup65C010 prove fresh permanent AV9/10 zero nodes and absence
+for other indices. NPC form getter5232D0, common519D90, sparse65CB80 and
+conversion9828C0 prove zero untouched form AV37..71 and truncation of96
+controlled stored extra values per mode pair. Original getter paths map
+asymmetric AI object bytes6C..6F to AV33..36. Only allocation is hooked,
+supplying fresh poisoned memory. The form container is initialized directly;
+full actor/form construction, racial abilities and active effects are excluded.
+The first probe incorrectly reused additive modifier writes as assignments;
+its failing log is retained before fresh-container correction.
+
+`initial-health-query-05` records3120 original signed Health/current/base
+query cases:13 int32 boundary inputs, four process/no-process paths, five
+modifier patterns, both x87 words and CPU modes, three queries. Actor base
+identity/type and sparse modifier returns are boundary fixtures. Actual NPC
+form field/accessors, current float/integer and base integer wrappers, process
+dispatch and conversions execute. Current form composition must retain the
+signed integer before Script/Damage and the first float store. Base-integer
+5F1910 instead stores the form float first: INT_MAX becomes2^31 and the base
+query returns INT_MIN in both CPU modes. This is not the float setter's
+CPU-dependent overflow behavior. A no-process current-float query at INT_MAX
+also returns float(INT_MIN); no-process is not represented by the current
+Low/active authority pair and is excluded from the production comparison.
+
+Optimized production actor-value helpers match780 float-current,768 supported
+integer-current and1040 base-integer outputs exactly. Twelve out-of-int32
+integer-current cases are recorded but excluded from the strict supported
+composition domain. Table SHA-256:
+`0006b1d9741071bacd12f37b0da48805fd8ca4cc12a65ee16e9a46e7202a05de`.
+The comparison records driver/source hashes and excludes no-process current
+explicitly. Failed mixed-stop emulator setup and incorrect CPU/no-process
+expectations remain in attempts01..04; the first standalone comparison link
+also remains retained before unused-section removal.
+
+Runtime-state v17 preserves optional signed nonplayer form Health separately
+from its rounded float view. Legacy absence is preserved; it is not replaced
+using today's winning records. Native current float/integer and disabled form
+queries use that exact input, and typed shared-base writes refresh it when
+present. Base queries/shared maxima retain the separately proven float-store
+boundary. The fresh value resolver uses previously audited winning-record
+manual/auto/scaled stats and the verified initial slot/AI rules. Full actor
+activation and world restoration remain later integration work.
+
+Production C++ serialization/canonical JSON and Python decoding/re-encoding
+match56 exact v16/v17 payloads with signed extrema, both process tiers and
+modifier presence under `raw-health-cross-codec-01`. This is codec evidence,
+not engine fresh-process gameplay acceptance. Regular and sanitizer component
+runs pass1948 cases; corrected engine runs pass644 cases, with191 Python
+cases also passing. The milestone report identifies fingerprints, fixture
+failures, sanitizer scope and the current Git/runtime sandbox limitations.

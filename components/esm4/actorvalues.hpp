@@ -104,6 +104,13 @@ namespace ESM4
     // or notifications. Shared base ownership/publication belongs to the caller.
     std::optional<ActorBaseValueSet> prepareActorBaseValueSet(
         ActorBaseKind kind, std::uint8_t actorValue, std::int32_t requested);
+    enum class ActorValueConversionMode : std::uint8_t { NonSse, Sse };
+    // Original float form setter conversion. Finite overflow is observable:
+    // SSE returns INT_MIN; non-SSE returns the low word of FISTP int64 (zero
+    // for its overflow sentinel). The caller explicitly selects CPU behavior.
+    std::int32_t convertActorBaseFloat(float requested, ActorValueConversionMode mode);
+    std::optional<ActorBaseValueSet> prepareActorBaseValueFloatSet(
+        ActorBaseKind kind, std::uint8_t actorValue, float requested, ActorValueConversionMode mode);
 
     enum class DynamicActorValue : std::uint8_t { Health = 8, Magicka = 9, Fatigue = 10, Encumbrance = 11 };
 

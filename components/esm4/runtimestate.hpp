@@ -28,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 16;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 17;
 
     struct RuntimeContentIdentity
     {
@@ -251,6 +251,10 @@ namespace ESM4
         // Never infer these from the resolved dynamic bases above. Absence
         // denotes legacy/uninitialized player authority, not four zeroes.
         std::optional<std::array<std::int32_t, 4>> mPlayerFormValues;
+        // v17: resolved signed Health form input before the first float store.
+        // Older snapshots retain their float-only interpretation; do not infer
+        // a lost integer from a rounded legacy base or current shared record.
+        std::optional<std::int32_t> mNonPlayerFormHealth;
 
         void validate() const;
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;

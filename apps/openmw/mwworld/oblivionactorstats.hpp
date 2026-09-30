@@ -16,6 +16,11 @@ namespace MWMechanics
     struct OblivionFrameSettings;
 }
 
+namespace ESM4
+{
+    struct RuntimeActorValues;
+}
+
 namespace MWWorld
 {
     class ESMStore;
@@ -48,6 +53,13 @@ namespace MWWorld
     // modifiers/current values and persisted changes belong to actor authority.
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,
         const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel);
+
+    // Fresh native values only. Callers must prefer restored authority and
+    // select the actual process before publishing these construction inputs.
+    // This resolves winning forms, not abilities, effects or lifecycle events.
+    ESM4::RuntimeActorValues resolveOblivionInitialNonPlayerValues(const ESMStore& store,
+        const ESM::FormKey& actor, const ESM::FormKey& actorBase,
+        std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process);
 }
 
 #endif

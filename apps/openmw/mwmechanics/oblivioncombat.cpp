@@ -148,7 +148,9 @@ namespace MWMechanics
             const ESM4::RuntimeActorBaseOverride* base = nullptr)
         {
             validateNonPlayerQuery(value);
-            const auto integerBase = integerBaseOverride(base, value);
+            auto integerBase = integerBaseOverride(base, value);
+            if (!integerBase && value == 8)
+                integerBase = values.mNonPlayerFormHealth;
             const auto current = integerBase
                 ? ESM4::composeNonPlayerActorValue(*integerBase, values.mValues[value].mModifiers, values.mProcess)
                 : ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
@@ -164,7 +166,8 @@ namespace MWMechanics
             validateNonPlayerQuery(value);
             const auto& state = values.mValues[value];
             const auto override = integerBaseOverride(base, value);
-            const auto integerBase = override ? *override : ESM4::combatBaseValue(state.mBase);
+            const auto integerBase = override ? *override : value == 8 && values.mNonPlayerFormHealth
+                ? *values.mNonPlayerFormHealth : ESM4::combatBaseValue(state.mBase);
             const auto current = ESM4::composeIntegerActorValue(
                 integerBase, state.mModifiers, values.mOwner, values.mProcess);
             if (value != 9)
@@ -344,8 +347,15 @@ namespace MWMechanics
             for (std::size_t i = 0; i < input.mDynamic.size(); ++i)
             {
                 const auto& value = values.mValues[8 + i];
+                // Native base-integer Health queries store the form float
+                // before flooring. INT_MAX rounds to 2^31 and returns INT_MIN
+                // in both native CPU modes; the current integer query instead
+                // retains the exact form input through its process path.
+                const auto integerBase = i == 0 && values.mNonPlayerFormHealth
+                    ? ESM4::convertActorBaseFloat(value.mBase, ESM4::ActorValueConversionMode::Sse)
+                    : ESM4::combatBaseValue(value.mBase);
                 input.mDynamic[i] = {value.mBase,
-                    ESM4::dynamicActorValueMaximum(ESM4::combatBaseValue(value.mBase),
+                    ESM4::dynamicActorValueMaximum(integerBase,
                         value.mModifiers[0].value_or(0.f), values.mOwner, values.mProcess),
                     values.mOwner == ESM4::ActorValueOwner::Player
                         ? ESM4::composeActorValue(value, values.mOwner, values.mProcess)
@@ -372,6 +382,8 @@ namespace MWMechanics
                 }
                 const float resolved = static_cast<float>(ESM4::actorBaseValueInteger(entry));
                 values.mValues[av].mBase = resolved;
+                if (av == 8 && values.mNonPlayerFormHealth)
+                    values.mNonPlayerFormHealth = std::get<std::int32_t>(entry.mValue);
                 if (base->mKind == ESM4::ActorBaseKind::Creature && av >= 12 && av <= 26)
                     for (std::size_t i = av + 1; i < av + 7u; ++i)
                         values.mValues[i].mBase = resolved;
@@ -506,6 +518,82 @@ namespace MWMechanics
         }
         mCommitted = true;
         return true;
+    }
+
+    struct OblivionActorLifeAdoption::Impl
+    {
+        OblivionCombatService& mService;
+        ESM::FormKey mActor;
+        CreatureStats& mTarget;
+        std::optional<bool> mNativeDead;
+        bool mDead;
+        bool mEssentialUnconscious;
+        bool mDeathAnimationFinished;
+        bool mKnockdown;
+        bool mKnockdownOneFrame;
+        bool mKnockdownOverOneFrame;
+        bool mCommitted = false;
+
+        Impl(OblivionCombatService& service, const ESM::FormKey& actor, CreatureStats& target)
+            : mService(service)
+            , mActor(actor)
+            , mTarget(target)
+            , mNativeDead(target.mNativeDead)
+            , mDead(target.mDead)
+            , mEssentialUnconscious(target.mNativeEssentialUnconscious)
+            , mDeathAnimationFinished(target.mDeathAnimationFinished)
+            , mKnockdown(target.mKnockdown)
+            , mKnockdownOneFrame(target.mKnockdownOneFrame)
+            , mKnockdownOverOneFrame(target.mKnockdownOverOneFrame)
+        {
+        }
+
+        ~Impl()
+        {
+            if (mCommitted)
+                return;
+            // Native writers prepare all fallible work before publishing AVs.
+            // Adoption changes only this life node and these projection flags.
+            mService.mActorLife.erase(mActor);
+            mTarget.mNativeDead = mNativeDead;
+            mTarget.mDead = mDead;
+            mTarget.mNativeEssentialUnconscious = mEssentialUnconscious;
+            mTarget.mDeathAnimationFinished = mDeathAnimationFinished;
+            mTarget.mKnockdown = mKnockdown;
+            mTarget.mKnockdownOneFrame = mKnockdownOneFrame;
+            mTarget.mKnockdownOverOneFrame = mKnockdownOverOneFrame;
+        }
+    };
+
+    OblivionActorLifeAdoption::OblivionActorLifeAdoption() = default;
+    OblivionActorLifeAdoption::OblivionActorLifeAdoption(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl))
+    {
+    }
+    OblivionActorLifeAdoption::~OblivionActorLifeAdoption() = default;
+    OblivionActorLifeAdoption::OblivionActorLifeAdoption(OblivionActorLifeAdoption&&) noexcept = default;
+    OblivionActorLifeAdoption& OblivionActorLifeAdoption::operator=(OblivionActorLifeAdoption&&) noexcept = default;
+
+    void OblivionActorLifeAdoption::commit() noexcept
+    {
+        if (mImpl)
+            mImpl->mCommitted = true;
+    }
+
+    OblivionActorLifeAdoption OblivionCombatService::guardLifeAdoption(
+        const MWWorld::Ptr& actor, MWWorld::Player* player)
+    {
+        if (player && actor != player->getPlayer())
+            throw std::invalid_argument("native player lifecycle guard requires the player's own reference");
+        const auto& values = player ? playerValues() : nonPlayerValues(actor);
+        if (findActorLife(values.mActor))
+            return {};
+        // engage/restore require initialized lifecycle. Initial adoption cannot
+        // legitimately cancel an existing engagement through a Dead marker.
+        if (isInCombat(values.mActor))
+            throw std::invalid_argument("uninitialized native lifecycle has combat opponents");
+        return OblivionActorLifeAdoption(std::make_unique<OblivionActorLifeAdoption::Impl>(
+            *this, values.mActor, actor.getClass().getCreatureStats(actor)));
     }
 
     void OblivionCombatService::clear()
@@ -743,6 +831,15 @@ namespace MWMechanics
         validateNonPlayerQuery(value);
         auto candidate = nonPlayerValues(actor);
         value = nonPlayerValueIndex(actor.getType() == ESM::REC_CREA4, value);
+        // LowProcess +278 is a no-op in the original engine. Keep any
+        // retained Maximum values intact rather than creating a latent write
+        // that appears when the actor later enters an active process tier.
+        if (modifier == ESM4::ActorValueModifier::Maximum && candidate.mProcess == ESM4::ActorValueProcess::Low)
+        {
+            if (!std::isfinite(delta))
+                throw std::invalid_argument("native modifier delta must be finite");
+            return;
+        }
         candidate.mValues[value] = ESM4::changeActorValueModifier(
             candidate.mValues[value], candidate.mOwner, value, modifier, delta);
         publishNonPlayerValues(actor, std::move(candidate));
@@ -1071,6 +1168,8 @@ namespace MWMechanics
             throw std::invalid_argument("invalid native base actor-value query");
         const auto& values = nonPlayerValues(actor);
         nonPlayerContentIsCreature(values, store);
+        if (value == 8 && values.mNonPlayerFormHealth)
+            return ESM4::convertActorBaseFloat(values.mValues[8].mBase, ESM4::ActorValueConversionMode::Sse);
         return ESM4::combatBaseValue(values.mValues[value].mBase);
     }
 
@@ -1100,6 +1199,8 @@ namespace MWMechanics
             return (*values.mPlayerFormValues)[value - 8];
         if (const auto raw = integerBaseOverride(findActorBase(values.mBase), value))
             return *raw;
+        if (!player && value == 8 && values.mNonPlayerFormHealth)
+            return *values.mNonPlayerFormHealth;
         return ESM4::actorBaseValueInteger({value, values.mValues[value].mBase});
     }
 
@@ -1887,6 +1988,8 @@ namespace MWMechanics
         {
             if (state.mVersion < 10 && actor.mPlayerFormValues)
                 throw std::invalid_argument("native player form values require an Oblivion v10+ save");
+            if (state.mVersion < 17 && actor.mNonPlayerFormHealth)
+                throw std::invalid_argument("native nonplayer form Health requires an Oblivion v17+ save");
             actors.push_back(actor);
         }
         auto actions = mActions.capture();

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <limits>
+#include <bit>
 #include <cmath>
 #include <stdexcept>
 
@@ -248,6 +249,57 @@ TEST(ESM4ActorValues, BaseSetterPreservesNativeStorageWidths)
         EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueSet(kind, 71,
             std::numeric_limits<std::int32_t>::max())->mValue), 2147483648.f);
     }
+}
+
+TEST(ESM4ActorValues, FloatBaseConversionPreservesBothNativeCpuDomains)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    struct Case { float input; std::int32_t nonSse; std::int32_t sse; };
+    constexpr auto minimum = std::numeric_limits<std::int32_t>::min();
+    for (const auto& [input, nonSse, sse] : {
+             Case{-1.75f, -1, -1}, Case{-.5f, 0, 0}, Case{-0.f, 0, 0}, Case{.5f, 0, 0},
+             Case{1.75f, 1, 1}, Case{0x1p31f, minimum, minimum},
+             Case{-0x1p31f, minimum, minimum}, Case{0x1p31f + 256.f, minimum + 256, minimum},
+             Case{-0x1p31f - 256.f, 2147483392, minimum},
+             Case{0x1p32f, 0, minimum}, Case{-0x1p32f, 0, minimum},
+             Case{0x1p63f, 0, minimum}, Case{-0x1p63f, 0, minimum},
+             Case{std::numeric_limits<float>::max(), 0, minimum}})
+    {
+        SCOPED_TRACE(input);
+        EXPECT_EQ(ESM4::convertActorBaseFloat(input, Mode::NonSse), nonSse);
+        EXPECT_EQ(ESM4::convertActorBaseFloat(input, Mode::Sse), sse);
+    }
+    for (Mode mode : {Mode::NonSse, Mode::Sse})
+    {
+        EXPECT_EQ(ESM4::convertActorBaseFloat(std::nextafter(0x1p31f, 0.f), mode), 2147483520);
+        EXPECT_EQ(ESM4::convertActorBaseFloat(std::numeric_limits<float>::denorm_min(), mode), 0);
+        EXPECT_THROW(ESM4::convertActorBaseFloat(std::numeric_limits<float>::quiet_NaN(), mode),
+            std::invalid_argument);
+        EXPECT_THROW(ESM4::convertActorBaseFloat(std::numeric_limits<float>::infinity(), mode),
+            std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::convertActorBaseFloat(1, static_cast<Mode>(2)), std::invalid_argument);
+}
+
+TEST(ESM4ActorValues, FloatBaseSetConvertsBeforeNativeWidthsAndAliases)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    using Kind = ESM4::ActorBaseKind;
+    for (Mode mode : {Mode::NonSse, Mode::Sse})
+        for (Kind kind : {Kind::Npc, Kind::Creature})
+        {
+            EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatSet(kind, 0, -1.75f, mode)->mValue), 255);
+            EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatSet(kind, 9, -1.75f, mode)->mValue), 65535);
+            EXPECT_EQ(std::get<std::int32_t>(ESM4::prepareActorBaseValueFloatSet(kind, 8, -1.75f, mode)->mValue), -1);
+            EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueFloatSet(kind, 40, -1.75f, mode)->mValue), -1.f);
+            const auto skill = ESM4::prepareActorBaseValueFloatSet(kind, 28, 257.75f, mode);
+            EXPECT_EQ(skill->mActorValue, kind == Kind::Creature ? 12 : 28);
+            EXPECT_EQ(std::get<std::int32_t>(skill->mValue), 1);
+            EXPECT_FALSE(ESM4::prepareActorBaseValueFloatSet(kind, 11, 1.75f, mode));
+            EXPECT_FALSE(ESM4::prepareActorBaseValueFloatSet(kind, 38, 1.75f, mode));
+        }
+    EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueFloatSet(Kind::Npc, 40, 0x1p32f, Mode::NonSse)->mValue), 0.f);
+    EXPECT_EQ(std::get<float>(ESM4::prepareActorBaseValueFloatSet(Kind::Npc, 40, 0x1p32f, Mode::Sse)->mValue), -0x1p31f);
 }
 
 TEST(ESM4ActorValues, BaseSetterAliasesCreatureSkillsAndIdentifiesNoBaseWrite)

@@ -10,6 +10,7 @@
 
 #include <array>
 #include <map>
+#include <memory>
 #include <deque>
 #include <span>
 #include <set>
@@ -25,6 +26,24 @@ namespace MWMechanics
 {
     class CreatureStats;
     class NpcStats;
+    class OblivionCombatService;
+
+    // Keeps first-time lifecycle adoption inside a writer's transaction.
+    // Prepare before adoption; commit only after the native writer succeeds.
+    class OblivionActorLifeAdoption
+    {
+        friend class OblivionCombatService;
+        struct Impl;
+        std::unique_ptr<Impl> mImpl;
+        explicit OblivionActorLifeAdoption(std::unique_ptr<Impl> impl);
+
+    public:
+        OblivionActorLifeAdoption();
+        ~OblivionActorLifeAdoption();
+        OblivionActorLifeAdoption(OblivionActorLifeAdoption&&) noexcept;
+        OblivionActorLifeAdoption& operator=(OblivionActorLifeAdoption&&) noexcept;
+        void commit() noexcept;
+    };
 
     struct OblivionActorProjectionInput
     {
@@ -136,6 +155,7 @@ namespace MWMechanics
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
     {
+        friend class OblivionActorLifeAdoption;
         class PreparedNonPlayerView;
         ESM4::ActionLedger mActions;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
@@ -180,6 +200,7 @@ namespace MWMechanics
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
 
     public:
+        OblivionActorLifeAdoption guardLifeAdoption(const MWWorld::Ptr& actor, MWWorld::Player* player = nullptr);
         void clear();
         float actorManagerTime() const noexcept { return mActorManagerTime; }
         void advanceFrameClock(float duration);

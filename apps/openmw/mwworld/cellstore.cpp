@@ -584,6 +584,7 @@ namespace MWWorld
         CellStoreImp::forEachInternal(visitor, const_cast<CellStore&>(*this), includeDeleted);
         visitor.merge();
         mMergedRefsNeedsUpdate = false;
+        mMergedRefsIncludeDeleted = includeDeleted;
     }
 
     bool CellStore::movedHere(const MWWorld::Ptr& ptr) const
