@@ -95,6 +95,13 @@ namespace MWMechanics
         return mDynamic[2];
     }
 
+    bool CreatureStats::isFatigueKnockedOut() const
+    {
+        const auto& fatigue = getFatigue();
+        return fatigue.getCurrent() < 0
+            || (!fatigue.isNativeProjection() && fatigue.getBase() == 0);
+    }
+
     const Spells& CreatureStats::getSpells() const
     {
         return mSpells;

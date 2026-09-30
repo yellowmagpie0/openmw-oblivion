@@ -3912,3 +3912,53 @@ Original resident ordering, water/process state updates, upstream bounds/scale
 resolution and LOS remain independent runtime/original acceptance work. A
 missing physical context is not turned into a fabricated contact or miss.
 Controller/animation dispatch, damage, reactions and restart remain open.
+
+## Native controller fatigue prerequisite (checkpoint53)
+
+CreatureStats::isFatigueKnockedOut and the CharacterController recoil caller now
+preserve the independently established fatigue<0 entry rule for native
+projections, without importing TES3's additional base==0 condition. This is
+only the fatigue cause. Essential unconsciousness and random knockdown remain
+separate; native paralysis and physical animation/recovery mapping are open.
+The new projection regression is included in both712-case engine runs recorded
+in the milestone report. A retained failing reproduction records the exact old
+controller expression and source hash; it is not a rendered controller run.
+
+## Original ordinary/hold and queued attack input (checkpoint53)
+
+Pinned original1.2.0416 executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-attack-input-oracle-02 executes65EB57 to65EC36/65EF38, including full
+403520/403490/4032D0 keyboard queries,51AC80/51ACC0 animation-group predicates,
+5E0550/5E0530 and High-process6285A0 movement getter. All18,432 observations pass
+in both x87 modes. Keyboard query1 is a new press, query0 is currently held.
+A press outside an attack group selects20/21 immediately and resets held time.
+Held time has a binary32 store after frame addition. The65EE10–65EE25 comparison
+requires held time strictly greater than delay, not equal. Power/group/state
+selection is distinct from applying a multiplier to an already started strike.
+Original queued state writes1/2 and held-time resets execute unchanged.
+
+The ordinary/power/block metadata subtypes4/5/6 are read from original B102E0,
+not supplied. Process+304=true,+138/+13C=false, actor+25C=false, animation getters,
+side selector, Acrobatics base-rank and airborne predicate are supplied. The
+sequence+48 offset and animation-data+94 sum is supplied; real clock advancement
+and interpretation of those fields are not proved by this instruction harness.
+Input-oracle01 remains a passing diagnostic with less precise field labels;
+02 records offset and raw animation-data94 separately.
+
+S4/native-attack-queue-oracle-01 executes the preceding65E9EC branch in768 cases,
+with original subtype predicates and supplied stage/animation queries. Queued
+state1/2 can dispatch after button release; a power group blocks resumption,
+and an ordinary/block group resumes only when the supplied stage equals2.
+This probes the branch, not the NiController event that produces stage2.
+Later65EF21 clears the queue after the animation-start call; full native start,
+sneak/directional conversion, actual contact, save continuation and gameplay
+remain outside these probes and still require implementation/acceptance.
+
+native-attack-input-oracle-02/probe.py SHA256 `d0a0d1c4eeca289398aa09aaf574241e24e94c3cf30f906ee7d8f35006bcb52d`.
+
+native-attack-input-oracle-02/report.json SHA256 `81173c83815cb13684a7c9b48aef821c5f771d0ea60a485ec32941902eb212c2`.
+
+native-attack-queue-oracle-01/probe.py SHA256 `740320ace388a488a4f658cb48c8b96973dd5f03c7dee8777e8d13068020de62`.
+
+native-attack-queue-oracle-01/report.json SHA256 `a92597018ccf01c90be4799d250aa6a1f10fc9fb6f50b3a47c78c98946aeaeee`.

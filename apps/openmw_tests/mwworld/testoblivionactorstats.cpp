@@ -3653,6 +3653,51 @@ namespace
         EXPECT_EQ(stats.getFatigue().getCurrent(), 3);
     }
 
+    TEST_F(OblivionActorStatsTest, fatigueKnockoutRespectsNativeProjectionAndLegacyZeroPool)
+    {
+        sharedStats();
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        for (const float base : {0.f, 100.f})
+        for (const float maximum : {0.f, 100.f})
+        for (const float current : {-1.f, -std::numeric_limits<float>::denorm_min(), -0.f, 0.f, 1.f})
+        {
+            SCOPED_TRACE(base);
+            SCOPED_TRACE(maximum);
+            SCOPED_TRACE(current);
+            MWMechanics::CreatureStats legacy;
+            legacy.setFatigue(MWMechanics::DynamicStat<float>(base, maximum, current));
+            const auto before = legacy.getFatigue();
+            EXPECT_EQ(legacy.isFatigueKnockedOut(), current < 0 || base == 0);
+            EXPECT_EQ(legacy.getFatigue(), before);
+            for (const auto owner : {ESM4::ActorValueOwner::Player, ESM4::ActorValueOwner::NonPlayer})
+            for (const auto process : {ESM4::ActorValueProcess::Low, ESM4::ActorValueProcess::Active})
+            {
+                MWMechanics::CreatureStats native;
+                MWMechanics::OblivionActorProjectionInput input;
+                input.mOwner = owner;
+                input.mProcess = process;
+                input.mDynamic = {{{100, 100, 100}, {0, 0, 0}, {base, maximum, current}}};
+                input.mLife = ESM4::ActorLifePhase::Alive;
+                MWMechanics::OblivionActorProjection prepared(native, input);
+                ASSERT_TRUE(prepared.commit());
+                const auto projected = native.getFatigue();
+                ASSERT_TRUE(projected.isNativeProjection());
+                EXPECT_EQ(native.isFatigueKnockedOut(), current < 0);
+                EXPECT_EQ(native.getFatigue(), projected);
+                EXPECT_FALSE(native.getKnockedDown());
+                EXPECT_FALSE(native.isDead());
+                // Essential unconsciousness remains an independent reaction.
+                input.mLife = ESM4::ActorLifePhase::EssentialUnconscious;
+                MWMechanics::OblivionActorProjection unconscious(native, input);
+                ASSERT_TRUE(unconscious.commit());
+                EXPECT_TRUE(native.getKnockedDown());
+                EXPECT_EQ(native.isFatigueKnockedOut(), current < 0);
+                EXPECT_EQ(native.getFatigue(), projected);
+            }
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, preparedNativeViewsCommitTogetherAndCannotReplay)
     {
         sharedStats();

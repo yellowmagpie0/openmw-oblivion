@@ -135,6 +135,11 @@ namespace MWMechanics
 
         const DynamicStat<float>& getFatigue() const;
 
+        // Native projections use strictly negative current fatigue; TES3 also
+        // treats a zero base pool as exhausted. Independent reactions retain
+        // their own lifecycle and animation state.
+        bool isFatigueKnockedOut() const;
+
         const DynamicStat<float>& getDynamic(int index) const;
 
         const Spells& getSpells() const;

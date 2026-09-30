@@ -7781,3 +7781,48 @@ Checkpoint51 is committed asdd380c1263b2c4f5ec5c0ee22ced80f139a21a45;
 verified bundle S3/isolated-git-progress-29/m15-progress.bundle, SHA256
 3adbcb343f5fc80306e2bbf179aff51e5020959e0ba6ad561c0b5868594b2871.
 Checkpoint52 is exported and committed separately after both corrected checks.
+
+### Checkpoint53 — native fatigue knockout in the production controller
+
+The shared controller's recoil update now asks CreatureStats whether fatigue
+requires a knockout. Native projected pools use strictly negative current
+fatigue, including when the base pool is zero; TES3 keeps its existing extra
+zero-base rule. A native creature with a legitimate zero fatigue pool is no
+longer forced into knockout by that legacy condition. Essential unconsciousness
+and ordinary knockdown retain their separate reaction flags. This connects the
+previous independently verified strict-negative fatigue rule to a real caller;
+it does not implement native paralysis or the remaining physical reactions.
+
+One new engine case checks native Player/non-player and Low/Active projections,
+zero/nonzero base and maximum, positive and negative zero, tiny negative fatigue,
+positive fatigue, view preservation, legacy behavior and independent essential
+unconsciousness. The minimal old-predicate reproduction fails its zero-pool
+assertion in S4/native-fatigue-knockout-baseline-01; this is a predicate
+reproduction, not an executed gameplay controller. Syntax01 passes all three
+affected translation units. Normal and ASan/UBSan engine checks each pass all
+712 cases without failures/skips and with exact inventories, in
+S4/native-fatigue-knockout-main-01 and sanitized-01. Leak detection is disabled.
+Tested source fingerprint: `b6c1dbebdffb0ebd95d2266cd7bb29d222c48ec4807c51f5bc129b625a76bd3e`.
+No component or Python implementation changed in this chunk.
+
+The next controller work also has independent original input traces:
+S4/native-attack-input-oracle-02 passes18,432 cases through the original
+ordinary/hold branch and actual keyboard control-query instructions.
+A new press selects an ordinary strike immediately; held time must strictly
+exceed fPowerAttackDelay before the separate power selection/queue branch.
+Original queued-prefix execution passes768 cases in
+S4/native-attack-queue-oracle-01: queued attacks survive input release, wait
+through a power animation and resume an ordinary/block group at stage2.
+Animation getters, process gates, Acrobatics rank and airborne predicate are
+supplied boundaries. The sequence-offset/animation-data clock sum is supplied,
+not a measured gameplay clock. Input-oracle01 is retained; oracle02 clarifies
+that raw sum's labels without treating it as elapsed animation time.
+Neither probe executes actual animation advancement, contact or real input.
+
+Distinct ordinary/power strike IDs, persistent native animation intent, stock
+Hit dispatch and resolved damage/reactions remain the next bounded work.
+S2/S3 stay in progress; S4–S14 remain open. Checkpoint52 is committed as
+89bdd3c037d7254f630b7760f24e08a6cbd94b2f; verified bundle
+S3/isolated-git-progress-30/m15-progress.bundle, SHA256
+4da001aabca5755351ae8f7536d91123a090805a1786ec8b2d63fdc8ca81c674.
+Checkpoint53 is exported and committed separately after both engine checks.
