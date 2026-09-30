@@ -3286,3 +3286,27 @@ not engine fresh-process gameplay acceptance. Regular and sanitizer component
 runs pass1948 cases; corrected engine runs pass644 cases, with191 Python
 cases also passing. The milestone report identifies fingerprints, fixture
 failures, sanitizer scope and the current Git/runtime sandbox limitations.
+
+### Authored death inventory and common DATA Health decoder
+
+The independent `S3/authority-draft/starts-dead-record-audit-01` checks the
+installed eleven official plugin hashes against the S0 inputs and audits
+winning NPC/creature base header bit19 (0x80000), using pinned xEdit TES4
+record definitions at commit9fb016884bec138ea6c7b872cec831537d464c3e.
+It finds158 flagged bases (109NPC,49creature), including six with positive
+raw authored Health. This is a content-input inventory, not native initial
+life/resource/event behavior. Reference bit9 is not this flag. Report SHA256:
+`aa34a191a0bda0fd379a0968a91972569da30f998efa570ae619255c59c6c1cd`.
+
+`S3/authority-draft/npc-health-record-load-01` independently executes original
+common DATA decoder0046BDA0 for32 cases: eight four-byte Health patterns,
+zero/21-byte prefix offsets, and x87 control words027F/037F. Original RTTI
+name at00B05CF4 identifies TESHealthForm;0046BEF5..0046BF04 reads/stores a
+full dword at the component+4, preserving signed/high-word patterns. The
+reader and RTTI identities are fixtures; memcpy/security checks are stubs;
+original stack allocation and decoder branches execute. This confirms the
+common decoder width, not full NPC loading or fresh-life initialization.
+Pinned EXE SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+report SHA256 is
+`9ec3770d176b8b59ba74cc0fe9098fc3a7819cf424a25b59ba2d9b89433494c8`.

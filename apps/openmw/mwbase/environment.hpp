@@ -98,6 +98,8 @@ namespace MWBase
         void setL10nManager(L10n::Manager& value) { mL10nManager = &value; }
 
         Misc::NotNullPtr<World> getWorld() const { return mWorld; }
+        // Native record/class queries also run before a World is installed.
+        World* getWorldOrNull() const noexcept { return mWorld; }
         Misc::NotNullPtr<MWWorld::WorldModel> getWorldModel() const { return mWorldModel; }
         Misc::NotNullPtr<MWWorld::Scene> getWorldScene() const { return mWorldScene; }
         Misc::NotNullPtr<MWWorld::ESMStore> getESMStore() const { return mESMStore; }

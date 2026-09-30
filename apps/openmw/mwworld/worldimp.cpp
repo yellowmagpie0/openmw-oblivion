@@ -1270,6 +1270,62 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
+    bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        bool scaled;
+        if (actor.getType() == ESM::REC_NPC_4)
+        {
+            const auto* base = actor.get<ESM4::Npc>()->mBase;
+            if (!base || !base->mIsTES4)
+                return false;
+            scaled = (base->mBaseConfig.tes4.flags & ESM4::Npc::TES4_PCLevelOffset) != 0;
+        }
+        else if (actor.getType() == ESM::REC_CREA4)
+        {
+            const auto* base = actor.get<ESM4::Creature>()->mBase;
+            if (!base || !base->mAttackReach)
+                return false;
+            scaled = (base->mBaseConfig.tes4.flags & ESM4::Creature::TES4_PCLevelOffset) != 0;
+        }
+        else
+            return false;
+        const auto key = actor.getCellRef().getFormKey();
+        std::optional<std::uint16_t> playerLevel;
+        if (scaled && !mOblivionCombat->findActorValues(key))
+        {
+            const auto player = getPlayerPtr();
+            if (player.isEmpty())
+                throw std::invalid_argument("native scaled actor construction requires the player");
+            const int level = player.getClass().getCreatureStats(player).getLevel();
+            if (level < 1 || level > std::numeric_limits<std::uint16_t>::max())
+                throw std::invalid_argument("invalid native construction player level");
+            playerLevel = static_cast<std::uint16_t>(level);
+        }
+        ESM4::RuntimeReferenceState* reference = nullptr;
+        if (mOblivionRuntimeState)
+            for (auto& saved : mOblivionRuntimeState->mReferences)
+                if (saved.mKey == key)
+                {
+                    reference = &saved;
+                    break;
+                }
+        const auto marker = findLegacyDeathMarker(reference);
+        std::optional<bool> legacyDead;
+        if (marker)
+        {
+            const auto* dead = std::get_if<bool>(&(*marker)->second);
+            if (!dead)
+                throw std::invalid_argument("invalid legacy native death marker");
+            legacyDead = *dead;
+        }
+        mOblivionCombat->initializeNonPlayerActor(actor, mStore, playerLevel, process, legacyDead);
+        if (marker)
+            reference->mCustomState.erase(*marker);
+        return true;
+    }
+
     ESM4::RuntimeReferenceState* World::adoptOblivionActorLife(const Ptr& actor)
     {
         const bool player = actor == getPlayerPtr();
@@ -1992,8 +2048,8 @@ namespace MWWorld
             mOblivionAi->restore(state);
         if (preparedCombat)
         {
-            static_assert(std::is_nothrow_move_assignable_v<MWMechanics::OblivionCombatService>);
-            *mOblivionCombat = std::move(*preparedCombat);
+            const auto residents = mWorldModel.getResidentPtrs();
+            mOblivionCombat->installRestoredNonPlayerState(std::move(*preparedCombat), residents);
         }
     }
 

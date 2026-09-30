@@ -739,6 +739,77 @@ namespace MWMechanics
         prepared.commit();
     }
 
+    void OblivionCombatService::initializeNonPlayerActor(const MWWorld::Ptr& actor,
+        const MWWorld::ESMStore& store, std::optional<std::uint16_t> playerLevel,
+        ESM4::ActorValueProcess process, std::optional<bool> legacyDead)
+    {
+        if (actor.isEmpty() || (process != ESM4::ActorValueProcess::Low
+            && process != ESM4::ActorValueProcess::Active))
+            throw std::invalid_argument("invalid native nonplayer construction target/process");
+        ESM::FormKey baseKey;
+        if (actor.getType() == ESM::REC_NPC_4)
+        {
+            const auto* record = actor.get<ESM4::Npc>()->mBase;
+            if (record)
+                baseKey = record->mFormKey;
+        }
+        else if (actor.getType() == ESM::REC_CREA4)
+        {
+            const auto* record = actor.get<ESM4::Creature>()->mBase;
+            if (record)
+                baseKey = record->mFormKey;
+        }
+        else
+            throw std::invalid_argument("native nonplayer construction requires an NPC or creature");
+        if (baseKey.isNull())
+            throw std::invalid_argument("native nonplayer construction has no stable base identity");
+        const auto key = actor.getCellRef().getFormKey();
+        const auto* oldValues = findActorValues(key);
+        auto values = oldValues ? *oldValues : MWWorld::resolveOblivionInitialNonPlayerValues(
+            store, key, baseKey, playerLevel, process);
+        validateNonPlayerIdentity(actor, values);
+        const auto* base = findActorBase(baseKey);
+        if (base && (base->mKind == ESM4::ActorBaseKind::Creature) != (actor.getType() == ESM::REC_CREA4))
+            throw std::invalid_argument("native actor base override kind mismatch");
+        applyActorBase(values, base);
+        values.validate();
+        if (oldValues && values != *oldValues)
+            throw std::logic_error("native construction snapshot disagrees with shared base authority");
+
+        const auto* oldLife = findActorLife(key);
+        if (!oldLife && isInCombat(key))
+            throw std::invalid_argument("native constructor cannot adopt an engaged actor without lifecycle");
+        ESM4::RuntimeActorLife life;
+        if (oldLife)
+        {
+            life = *oldLife;
+            if (legacyDead && *legacyDead != (life.mPhase == ESM4::ActorLifePhase::Dead))
+                throw std::invalid_argument("native lifecycle conflicts with legacy death marker");
+        }
+        else
+        {
+            life.mActor = key;
+            life.mBase = values.mBase;
+            const bool dead = legacyDead ? *legacyDead : actor.getClass().getCreatureStats(actor).isDead();
+            life.mPhase = dead ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive;
+        }
+        life.validate();
+        std::map<ESM::FormKey, ESM4::RuntimeActorValues> preparedValues;
+        std::map<ESM::FormKey, ESM4::RuntimeActorLife> preparedLife;
+        if (!oldValues)
+            preparedValues.emplace(key, values);
+        if (!oldLife)
+            preparedLife.emplace(key, life);
+        PreparedNonPlayerView view(actor, values, base, &life);
+        // All allocations and projection checks precede insertion of prepared
+        // map nodes. No callbacks or fallible stat setters occur during commit.
+        if (!oldValues)
+            mActorValues.insert(preparedValues.extract(preparedValues.begin()));
+        if (!oldLife)
+            mActorLife.insert(preparedLife.extract(preparedLife.begin()));
+        view.commit();
+    }
+
     const ESM4::RuntimeActorBaseOverride* OblivionCombatService::findActorBase(const ESM::FormKey& base) const
     {
         const auto found = mActorBases.find(base);
@@ -2006,6 +2077,39 @@ namespace MWMechanics
         state.mNextDeathEvent = mNextDeathEvent;
     }
 
+    void OblivionCombatService::installRestoredNonPlayerState(OblivionCombatService&& replacement,
+        std::span<const MWWorld::Ptr> residents)
+    {
+        if (this == &replacement)
+            throw std::invalid_argument("native restore replacement aliases live authority");
+        std::list<PreparedNonPlayerView> prepared;
+        std::map<ESM::FormKey, MWWorld::Ptr> seen;
+        for (const auto& actor : residents)
+        {
+            if (actor.isEmpty())
+                continue;
+            const auto* values = replacement.findActorValues(actor.getCellRef().getFormKey());
+            if (!values || values->mOwner != ESM4::ActorValueOwner::NonPlayer)
+                continue;
+            // Validate even duplicate keys so a second conflicting live owner
+            // cannot hide behind the first resident's identity.
+            validateNonPlayerIdentity(actor, *values);
+            const auto [owner, inserted] = seen.emplace(values->mActor, actor);
+            if (!inserted)
+            {
+                if (owner->second != actor)
+                    throw std::invalid_argument("native restore has multiple live owners for one actor key");
+                continue;
+            }
+            prepared.emplace_back(actor, *values, replacement.findActorBase(values->mBase),
+                replacement.findActorLife(values->mActor));
+        }
+        static_assert(std::is_nothrow_move_assignable_v<OblivionCombatService>);
+        *this = std::move(replacement);
+        for (auto& view : prepared)
+            view.commit();
+    }
+
     void OblivionCombatService::restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store)
     {
         state.validate();
@@ -2065,12 +2169,18 @@ namespace MWMechanics
         for (const auto& [key, actor] : actors)
         {
             const auto base = bases.find(actor.mBase);
-            if (base == bases.end())
-                continue;
-            auto resolved = actor;
-            applyActorBase(resolved, &base->second);
-            if (resolved != actor)
-                throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
+            if (base != bases.end())
+            {
+                auto resolved = actor;
+                applyActorBase(resolved, &base->second);
+                if (resolved != actor)
+                    throw std::invalid_argument("native actor snapshot disagrees with shared base override: " + key.serialize());
+            }
+            // Ordinary state composition does not include the NPC outer
+            // Magicka scale or dynamic maxima. Reject those invalid outputs
+            // before replacing authority, including for unloaded actors.
+            if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
+                actorProjection(actor, base == bases.end() ? nullptr : &base->second);
         }
         decltype(mCombatOpponents) opponents;
         for (const auto& [first, second] : state.mNativeCombatEngagements)

@@ -5712,3 +5712,112 @@ re-encoding. Evidence and retained oracle setup/expectation failures are under
 `raw-health-cross-codec-01`. This is not an actual engine save/quit/restart gate.
 Automatic publication and the remaining M15 stages remain open. `.git` is still
 read-only, so this tested chunk cannot yet be committed locally.
+
+### S3 continuation: atomic nonplayer construction and restored projection
+
+An explicit world construction adapter now prepares native nonplayer values
+and lifecycle together before publication. Fresh NPCs and creatures use the
+winning-record resolver; restored values, process, shared-base overrides,
+lifecycle and completed update timestamps are preserved on repeated calls.
+Construction creates no historical death callback or count. A prepared legacy
+death marker is consumed only after successful publication. Automatic actor
+activation remains off pending initial-death, player and load-order coverage.
+
+Restore now checks the complete nonplayer resource projection before replacing
+service authority, including finite scalar compositions whose outer Magicka
+scaling overflows. This is service rollback, not whole-world failed-load
+rollback. Actual-world tests cover disabled/unregistered actors, sibling shared
+bases, native creature skill aliases, a binary service restart, conflicting
+lifecycle adoption, malformed process and missing attribute definitions. The
+restart uses a manually assembled runtime snapshot, not World save/quit/load.
+
+The first build retains a fixture compilation failure assigning a StringRefId
+through a nonexistent getIf method. The corrected assignment passes all647
+engine cases in `atomic-native-construction-02` and
+`atomic-native-construction-sanitized-01`, with exact inventories/XML and no
+skips, at fingerprint
+`08b8354cba9ae39462fc4a9fb08e9cf0b3777813eb0395244d201dba3d88db1d`
+on parent `8cf3491f18`. Sanitizers use ASan and halting UBSan with leak detection
+off. Graphical acceptance, physical lifecycle, automatic construction and all
+remaining M15 gates stay open. The chunk awaits a local commit because `.git`
+is read-only in the current sandbox.
+
+### S3 continuation: legacy death markers through the actual T4ST reader
+
+The real World T4ST reader now has a permanent integration case with a
+fingerprint-checked synthetic native content file. Successful first adoption
+consumes the legacy true marker without generating a death event or count.
+A later alive projection therefore does not conflict with the consumed marker.
+A newly parsed conflicting marker rejects without replacing live values/life
+and remains available for a subsequent valid adoption. Nonboolean markers
+reject before first publication. A changed-content rejection retains the
+previously parsed snapshot as well as live service authority. This does not
+exercise StateManager's broader failed-load cleanup or a gameplay restart.
+
+The initial standalone setup was retained without a runnable probe because
+this configuration has no compile_commands.json. The first permanent test
+builds retain an incorrect esm/ header path; corrected esm3/ includes pass
+all648 engine cases in `world-legacy-marker-02` and
+`world-legacy-marker-sanitized-02` with exact inventories/XML and no skips at
+fingerprint `3d419dfafa2d0e268e58b654c27717368b42749f93b9f0d2819c5f05738ea88a` on parent `8cf3491f18`.
+ASan/halting UBSan run with leak checks disabled. This is additional S3 reader
+coverage, not closure of automatic construction, physical death, whole-world
+load rollback or M15. Local commits remain prevented by the read-only .git
+mount.
+
+The follow-up legacy schema matrix uses the actual T4ST reader for versions
+7 through17, each with true and false death markers (22 combinations). Marker
+adoption overrides the fresh shared class default, consumes the marker,
+preserves process on repeated construction, and produces no historical event
+or count. The complete suites `world-legacy-schema-01` and
+`world-legacy-schema-sanitized-01` pass all649 engine cases, exact inventories
+and no skips, at fingerprint `f48b4717c810a6f25e4b5dc4c9b9d8d393341563f128c746113ba31fa349c932` on parent
+`8cf3491f18`. Sanitizer leak detection is disabled. Versions1-6 are not claimed
+by this new world marker matrix; existing codec migrations remain separate.
+
+### S3 continuation: lazy restored native class views
+
+Ordinary NPC/creature class construction now projects existing values and life
+from the world-owned native authority after installing custom data. It does
+not publish fresh actors. A nullable World accessor preserves startup and
+service fixtures that do not have a World installed. Two actual-world cases
+clear/rebuild custom data after a manually assembled binary service restore,
+then verify ordinary class reads, raw/shared-base attributes, creature skill
+aliases, death flags and unchanged authority/events. This is not a full world
+save/load or normal-input restart.
+
+The failing baseline `lazy-native-projection-baseline-01` retains one failed
+NPC projection case among650 engine cases. Interrupted normal/sanitizer01
+builds have no completion reports. Replacement `lazy-native-projection-02`
+and `lazy-native-projection-sanitized-02` pass all651 engine cases with exact
+inventories/XML, no skips, and unchanged tested fingerprint
+`74d72cb42e062b0c2f8c27d6261cade39afa033737d79f4de2a9761c0d8fd08e`
+on parent `8cf3491f18`. Sanitizers use ASan and halting UBSan, leak detection
+disabled. Cached resident projections during full world restore, fresh actor
+activation, physical lifecycle and the remaining M15 stages stay open.
+The source chunk cannot be committed because .git is mounted read-only.
+
+### S3 continuation: cached resident views at restored service installation
+
+The world now installs prepared native authority together with prepared
+resident NPC/creature views. Actors absent from replacement authority remain
+outside automatic activation. All matching views and stable identities are
+prepared before service replacement and noexcept projection commits. Repeated
+pointers are accepted; distinct live owners of one stable key reject. A rejected
+replacement remains usable for a corrected roster. The actual-world adapter
+tests cover a disabled cached NPC and a two-actor rejected/retried batch,
+including preserved old Health/lifecycle and absence of historical events.
+This does not make the surrounding World inventory/global/script restore or
+StateManager cleanup transactional, nor test a gameplay restart.
+
+`cached-native-projection-baseline-01` retains the stale Health failure
+(restored100 versus cached93). The initial implementation passes all653
+normal/sanitizer engine cases at fingerprint
+`93f93a97ac117b44125e88bb490c5f93c4a4e94aafa02823330ef5a165c3bb75`.
+Review added `cached-native-duplicate-baseline-01`, retaining the duplicate-owner
+rejection failure. Corrected `cached-native-projection-02` and
+`cached-native-projection-sanitized-02` pass all653 engine cases with exact
+inventories/XML and no skips at fingerprint `2e9e9e87000d9ed31a5f4029013c8144550604ce5180a6e7a7861a1990ed4c3e` on parent `8cf3491f18`.
+ASan and halting UBSan use leak detection off. Commit remains blocked by the
+read-only .git mount. Automatic publication and the remaining M15 gates stay
+open.

@@ -22,6 +22,7 @@
 #include "../mwbase/world.hpp"
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/movement.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 #include "../mwworld/actionopen.hpp"
 #include "../mwworld/actiontalk.hpp"
 #include "../mwworld/failedaction.hpp"
@@ -30,6 +31,7 @@
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "esm4base.hpp"
 
@@ -254,6 +256,13 @@ namespace MWClass
         MWWorld::OblivionProfileServices::equipNativeApparel(res.mInventoryStore, *store);
         res.mInventoryStore.setPtr(mutablePtr);
         cacheEquipment(res, *store);
+        // Rebuild the view of already restored authority after lazy class
+        // construction. Fresh actors still await explicit initialization.
+        if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+            if (auto* combat = world->getOblivionCombatService())
+                if (const auto* values = combat->findActorValues(mutablePtr.getCellRef().getFormKey());
+                    values && combat->findActorLife(values->mActor))
+                    world->initializeOblivionNonPlayerActor(mutablePtr, values->mProcess);
         return res;
     }
 

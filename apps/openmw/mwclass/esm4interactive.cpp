@@ -15,6 +15,7 @@
 #include <components/esm4/playermechanics.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
@@ -215,6 +216,11 @@ namespace MWClass
         initialized.mInventoryStore.setPtr(ptr);
         MWWorld::OblivionProfileServices::equipNativeApparel(initialized.mInventoryStore, *store);
         initialized.mInventoryStore.setPtr(ptr);
+        if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+            if (auto* combat = world->getOblivionCombatService())
+                if (const auto* values = combat->findActorValues(ptr.getCellRef().getFormKey());
+                    values && combat->findActorLife(values->mActor))
+                    world->initializeOblivionNonPlayerActor(ptr, values->mProcess);
     }
 
     MWWorld::Ptr ESM4Creature::copyToCellImpl(const MWWorld::ConstPtr& ptr, MWWorld::CellStore& cell) const

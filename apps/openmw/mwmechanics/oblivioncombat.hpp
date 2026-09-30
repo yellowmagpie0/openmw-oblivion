@@ -222,6 +222,12 @@ namespace MWMechanics
         // Explicit construction/load publication. TES4 NPCs and creatures
         // are supported here; automatic gameplay activation is wired separately.
         void publishNonPlayerValues(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values);
+        // Prepare first values/life together, or reproject restored authority.
+        // Fresh process/level inputs never overwrite an existing snapshot.
+        // Legacy death adoption generates no historical events or death counts.
+        void initializeNonPlayerActor(const MWWorld::Ptr& actor, const MWWorld::ESMStore& store,
+            std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process,
+            std::optional<bool> legacyDead);
         // Caller applies eligibility, event and death policy before/after this
         // scalar transition. This method cannot run callbacks between commits.
         void changeNonPlayerValue(const MWWorld::Ptr& actor, std::uint8_t value,
@@ -421,6 +427,12 @@ namespace MWMechanics
         // World load preflight: validate winning native actor bindings before
         // replacing either action ownership or actor values.
         void restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store);
+        // Install a validated replacement with all resident nonplayer views.
+        // Prepare every view before changing authority or committing projections.
+        // Actors absent from replacement authority are not initialized here.
+        void installRestoredNonPlayerState(OblivionCombatService&& replacement,
+            std::span<const MWWorld::Ptr> residents);
+
     };
 }
 

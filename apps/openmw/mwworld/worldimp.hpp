@@ -245,6 +245,7 @@ namespace MWWorld
         bool requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested) override;
         bool requestOblivionStatModifier(const Ptr& actor, std::uint8_t value, bool damage, float requested) override;
         bool requestOblivionStatBase(const Ptr& actor, std::uint8_t value, float requested) override;
+        bool initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process);
         bool updateOblivionFrameResources(const Ptr& actor, float duration, bool running) override;
         bool spendOblivionJumpFatigue(const Ptr& actor) override;
         std::optional<bool> isOblivionInCombat(const Ptr& actor) const override;
