@@ -161,6 +161,12 @@ namespace MWMechanics
         bool mDrowning;
     };
 
+    struct OblivionPassiveEffectIdentity
+    {
+        ESM::FormKey mSpell;
+        std::uint32_t mEffectIndex;
+    };
+
     // Profile-owned native action and actor-value authority. Live activation
     // and contact transitions are wired separately; issuing an ID is not a hit.
     class OblivionCombatService
@@ -205,6 +211,17 @@ namespace MWMechanics
             const ESM::FormKey& key, const OblivionBreathUpdateResult& update, bool essential,
             const ESM4::EssentialRecoverySettings& recovery,
             const ESM4::PlayerDynamicBaseSettings& playerBase);
+        void preparePlayerCharacterBase(ESM4::RuntimeActorValues& values,
+            const ESM4::ActorCharacterBaseStats& stats, const ESM4::PlayerDynamicBaseSettings& settings);
+        bool preparePlayerPassiveGrants(ESM4::RuntimeActorValues& values,
+            std::span<const ESM4::PassiveAbilityInput> abilities,
+            const ESM4::PlayerDynamicBaseSettings& settings, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery, bool godMode);
+        bool preparePlayerPassiveRemoval(ESM4::RuntimeActorValues& values,
+            const ESM::FormKey& spell, std::uint32_t effectIndex,
+            const ESM4::PlayerDynamicBaseSettings& settings, bool godMode);
+        void commitPreparedPlayer(MWWorld::Player& player, OblivionCombatService& prepared,
+            ESM4::RuntimeActorValues values, const ESM4::PlayerDynamicBaseSettings& settings);
         const ESM4::RuntimeActorValues& playerValues() const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const MWWorld::Ptr& actor) const;
         const ESM4::RuntimeActorValues& nonPlayerValues(const ESM::FormKey& actor) const;
@@ -288,6 +305,14 @@ namespace MWMechanics
         // their existing authorities; no healing or ability application occurs.
         void publishPlayerCharacterBase(MWWorld::Player& player, const ESM4::ActorCharacterBaseStats& stats,
             const ESM4::PlayerDynamicBaseSettings& settings);
+        // Scalar/lifecycle transaction only. The caller resolves winning
+        // inputs and supplies the complete native active-list removal order;
+        // race/class/birthsign metadata has a separate prepared publication.
+        void replacePlayerCharacter(MWWorld::Player& player, const ESM4::ActorCharacterBaseStats& stats,
+            std::span<const ESM4::PassiveAbilityInput> abilities,
+            std::span<const OblivionPassiveEffectIdentity> removalOrder,
+            const ESM4::PlayerDynamicBaseSettings& settings, bool essential = false,
+            const ESM4::EssentialRecoverySettings& recovery = {}, bool godMode = false);
         void setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
             std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings);
         // Typed command writers. Set shares a base transaction; Mod and Force

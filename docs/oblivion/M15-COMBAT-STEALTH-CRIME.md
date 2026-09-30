@@ -7025,3 +7025,50 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: combine character-base and passive
 replacement preparation into one transaction, then connect character choices.
 Default activation and pending S2/S3 and later gameplay gates remain open.
+
+### Combined Player character scalar transaction
+
+Character replacement now prepares the complete explicit effect removal order,
+attribute/skill base writes and new passive grants before publishing the Player
+facade or authority. The removal identities must cover saved ownership exactly
+once; incomplete, duplicate or foreign identities reject. Private preparation
+helpers also serve the existing individual grant/removal/base APIs, preserving
+their behavior. The combined operation requires known ownership and initialized
+lifecycle. Its caller still owns winning source selection, original list order
+and separate race/class/birthsign metadata publication. Those UI/store
+transactions and automatic activation remain the next integration work.
+
+Tests prove rollback after removal/base preparation and invalid new input,
+including a later spell failing after a prior spell staged death or essential
+unconsciousness. Eight essential/god-mode/raw-Health cases verify event/count
+ownership and negative essential Health adjustment suppression. Damage
+compensation, remaining modifiers/resource form contributions, action IDs,
+facade values, last-effect cleanup and serialized restoration are checked.
+The previous checkpoint rejects the combined entry in
+`native-character-transaction-baseline-01`. Configured syntax checks pass.
+
+Attempt01 passes682 full engine cases in both normal and ASan/UBSan builds.
+Attempt02 removes a test macro dangling-else warning and adds unknown-ownership
+and missing-lifecycle checks; both configurations again pass682 cases, exact
+inventories and no skips/failures, fingerprint
+`b89a425380b6124ecb2af76e904f2a4a66f1a21b105ce69a60a50aae79aa9b8d`.
+Evidence: `native-character-transaction-engine-02` and
+`native-character-transaction-sanitized-engine-02`. Leak checks are off.
+
+The actual production ESMStore additionally loads the complete hash-identified
+original master in `native-passive-winning-records-02`. All23 linked racial/
+birthsign Ability4 spells,33 effects and14 admitted codes resolve. Their
+identities, effect indices/order, ready flags, actor values and quantity bits
+match66 independently executed original DATA-merge/constructor cases.
+Attempt01 retains a utility compile failure from missing record definitions.
+This record/admission check does not prove native source-grant order, active
+application order, normal-input gameplay or fresh-process acceptance.
+
+Checkpoint36 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-14/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. S2/S3 and all later pending gameplay gates remain
+open. Next: winning NPC/race/birthsign source selection and actual prepared
+character-choice publication, then automatic actor activation and melee wiring.

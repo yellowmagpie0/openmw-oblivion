@@ -3591,3 +3591,28 @@ Attempt01 retains a harness failure caused by placing the list head at the
 emulated stack address;02 uses separate guarded regions. The executable
 identity remains the pinned1.2.0416 SHA above. Probe SHA `d7e71a1cf9b74a3f33cb35d5e4bb772ccab6d9e4063cc61f75ca649840111ed7`;
 report SHA `4a9ececa447b798d9b78648876d96f5d94c4a53458c0db9285bbbcb6ebe3a2e0`. No live gameplay acceptance is claimed.
+
+### Actual master passive constructor inputs and production admission
+
+`passive-master-constructor-inputs-01` executes66 cases through original
+DATA merge41617B..416229 and complete VMOD/common constructor6A82F0, using
+the independently audited33 EFITs in23 master racial/birthsign Ability4 spells,
+with both x87 words. Compiled definition flags/data come from the independently
+captured initializer arguments. The source master SHA is
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`;
+the original executable SHA remains pinned above. The file read supplies the
+actual audited flags/data and payload length; unrelated payload fields are
+zeroed and are not read by this quantity path. MagicItem type4 is a declared
+boundary. Probe SHA `4e448c71bdbae3c7626b1ddf0d999628214e6e7ac7c69b6cff76aaf3fab8e405`;
+report SHA `b85e4e665dda71a690dc043e1d333fe2d2829282e0a3a5d50d69663ccbda9e3d`.
+
+`native-passive-winning-records-02` compiles an actual production-store adapter
+driver against the configured normal engine libraries, reads the complete
+master and collects all racial/birthsign/Player NPC sources. All23 admitted
+abilities,33 effects and14 codes match the original observations: stable
+selected identity, EFIT index/order, prepared flags, actor value and magnitude/
+duration float bits. Its verification records executable/library-linked
+driver identity, input-log hash, master identity and the tested source
+fingerprint. Attempt01 retains a driver compile failure from missing complete
+record includes. These are record preparation/admission checks, not proof of
+source-grant ordering, resistance/application lifecycle or live gameplay.
