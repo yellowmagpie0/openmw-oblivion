@@ -7565,3 +7565,44 @@ portable bundle:
 Exact changed-source bytes and a fresh clean bundle clone verify the commit.
 S2/S3 and S4-S14 remain open. Next: atomically publish attacker fatigue, victim
 resource/lifecycle changes and owned-action consumption, then wire normal contact.
+
+### Atomic physical contact resource publication (checkpoint47)
+
+commitPhysicalContact prepares both actual actor bindings, signed native
+Damage-channel changes, Player derived bases, victim lifecycle, death counter/FIFO
+event updates and both shared projections before live publication. The owner-bound
+ID is consumed with the committed resources before external callbacks can run.
+The existing single-actor Health writer shares the extracted state-only reaction
+preparation; no formula or historical-death behavior is replaced. Misses can
+spend attacker fatigue but cannot alter a nonexistent victim. Wrong-owner,
+cancelled, repeated and terminal contacts return false without applying deltas;
+self-target/malformed/mismatched binding requests reject before publication.
+God-mode Player debits are suppressed while nonplayer costs remain native.
+
+Two actual actor fixtures cover NPC/NPC channel preservation, finite-input
+validation, invalid essential overflow, miss/cancellation, exact save/restore
+continuation and duplicate rejection. Eight Player/creature role x essential x
+god-mode combinations cover visible pool agreement, source attribution, victim
+intent cancellation, FIFO death consumption and snapshot validity. Exhausted
+death-event identity rejects the complete transaction with unchanged serialized
+authority, both facades and pending ownership. Restored continuation uses the
+actual projection-install boundary. These are L2 transactions using supplied
+resource deltas: normal input/contact, mitigation, inventory wear, animation,
+sound, combat-triggered effects and legal/script events are still to be wired.
+
+Prior committed-header baseline01 diagnoses the absent contact API. Configured
+syntax03 passes both translation units. `physical-contact-engine-01` and
+`physical-contact-sanitized-engine-01` each pass703 full engine cases with exact
+inventories and no failures/skips; ASan/UBSan leak checks are off. Both tested
+fingerprints are
+`d4961194423bd0549bd0c88dcaf4bccb06895923bd2b8eafb3e4d5662eea4765`.
+Components/Python are unchanged since the checkpoint46 passing checks. No new
+rendered acceptance is claimed for this unwired transaction.
+
+Checkpoint47 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-25/m15-progress.bundle`.
+Exact changed-source bytes and a fresh clean bundle clone verify the commit.
+S2/S3 and S4-S14 remain open. Next: production native contact acquisition and
+shipped KF contact-key/controller dispatch. Actor queues/resources are now
+available to that integration; complete load rollback and other S3 gates remain.

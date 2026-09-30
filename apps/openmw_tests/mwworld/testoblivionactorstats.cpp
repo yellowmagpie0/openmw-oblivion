@@ -6560,4 +6560,187 @@ namespace
         EXPECT_EQ(service.allocateAction(), 1);
     }
 
+    TEST_F(OblivionActorStatsTest, physicalContactPublishesBothActorsAndConsumptionAtomicallyAcrossRestart)
+    {
+        autoNpc(); sharedStats(); mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        std::array<ESM4::ActorCharacter, 2> refs{};
+        std::array<std::unique_ptr<MWWorld::LiveCellRef<ESM4::Npc>>, 2> lives;
+        std::array<MWWorld::Ptr, 2> ptrs;
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        for (std::size_t i = 0; i < refs.size(); ++i)
+        {
+            refs[i].mId = {static_cast<std::uint32_t>(0x900 + i), 3};
+            refs[i].mFormKey = ESM::FormKey::content("actors.esm", 0x900 + i);
+            refs[i].mBaseKey = mActorKey;
+            mStore.getWritable<ESM4::ActorCharacter>().insertStatic(refs[i], refs[i].mFormKey);
+            lives[i] = std::make_unique<MWWorld::LiveCellRef<ESM4::Npc>>(refs[i], mStore.search<ESM4::Npc>(mActorKey));
+            ptrs[i] = MWWorld::Ptr(lives[i].get());
+            ESM4::RuntimeActorValues values;
+            values.mActor = refs[i].mFormKey; values.mBase = mActorKey;
+            values.mValues[8] = {100, {20, 5, -5}};
+            values.mValues[10] = {80, {7, 3, -4}};
+            service.publishNonPlayerValues(ptrs[i], values);
+            service.publishNonPlayerLife(ptrs[i], {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeReferenceState reference;
+            reference.mKey = values.mActor; reference.mBase = values.mBase; reference.mCell = saved.mPlayer.mCell;
+            saved.mReferences.push_back(reference);
+        }
+        const ESM4::PlayerDynamicBaseSettings playerBase{2, 1.5f, 5};
+        const auto snapshot = [&] { service.capture(saved); return saved.serializeBinary(); };
+        const auto id = service.allocateAction(refs[0].mFormKey);
+        const auto before = snapshot();
+        for (const auto bad : {MWMechanics::OblivionPhysicalContactDeltas{std::numeric_limits<float>::quiet_NaN(), -12, -15},
+                 MWMechanics::OblivionPhysicalContactDeltas{-10, std::numeric_limits<float>::infinity(), -15},
+                 MWMechanics::OblivionPhysicalContactDeltas{-10, -12, -std::numeric_limits<float>::infinity()}})
+        {
+            EXPECT_THROW(service.commitPhysicalContact(id, ptrs[0], ptrs[1], bad, nullptr, false, {4, .5f}, playerBase), std::invalid_argument);
+            EXPECT_EQ(snapshot(), before);
+            EXPECT_EQ(ptrs[0].getClass().getCreatureStats(ptrs[0]).getFatigue().getCurrent(), 86);
+            EXPECT_EQ(ptrs[1].getClass().getCreatureStats(ptrs[1]).getHealth().getCurrent(), 120);
+        }
+        EXPECT_THROW(service.commitPhysicalContact(id, ptrs[0], {}, {-10, -1, 0}, nullptr, false, {4, .5f}, playerBase), std::invalid_argument);
+        EXPECT_THROW(service.commitPhysicalContact(id, ptrs[0], ptrs[0], {-10, -1, 0}, nullptr, false, {4, .5f}, playerBase), std::invalid_argument);
+        EXPECT_THROW(service.commitPhysicalContact(id, ptrs[0], ptrs[1], {-10, -200, -15}, nullptr, true,
+            {4, std::numeric_limits<float>::max()}, playerBase), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_FALSE(service.commitPhysicalContact(id, ptrs[1], ptrs[0], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_TRUE(service.commitPhysicalContact(id, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 10), 76);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[0], 8), 120);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[1], 8), 108);
+        EXPECT_EQ(service.getNonPlayerValue(ptrs[1], 10), 71);
+        EXPECT_EQ(ptrs[0].getClass().getCreatureStats(ptrs[0]).getFatigue().getCurrent(), 76);
+        EXPECT_EQ(ptrs[1].getClass().getCreatureStats(ptrs[1]).getHealth().getCurrent(), 108);
+        EXPECT_EQ(service.findActorValues(refs[1].mFormKey)->mValues[8].mModifiers[0], 20);
+        EXPECT_EQ(service.findActorValues(refs[1].mFormKey)->mValues[8].mModifiers[1], 5);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        const auto after = snapshot();
+        EXPECT_FALSE(service.commitPhysicalContact(id, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+        EXPECT_EQ(snapshot(), after);
+        MWMechanics::OblivionCombatService candidate, resumed;
+        candidate.restore(ESM4::RuntimeState::deserializeBinary(before));
+        resumed.installRestoredActorState(std::move(candidate), ptrs, nullptr);
+        EXPECT_TRUE(resumed.commitPhysicalContact(id, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+        auto continued = saved; resumed.capture(continued);
+        EXPECT_EQ(continued.serializeBinary(), after);
+        const auto miss = resumed.allocateAction(refs[0].mFormKey);
+        EXPECT_TRUE(resumed.commitPhysicalContact(miss, ptrs[0], {}, {-2, 0, 0}, nullptr, false, {4, .5f}, playerBase));
+        EXPECT_EQ(resumed.getNonPlayerValue(ptrs[0], 10), 74);
+        EXPECT_EQ(resumed.getNonPlayerValue(ptrs[1], 8), 108);
+        EXPECT_FALSE(resumed.takeNextDeathEvent());
+        const auto cancelled = resumed.allocateAction(refs[0].mFormKey);
+        resumed.cancelActorActions(refs[0].mFormKey);
+        EXPECT_FALSE(resumed.commitPhysicalContact(cancelled, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+    }
+
+    TEST_F(OblivionActorStatsTest, physicalPlayerCreatureContactOwnsDeathEssentialGodModeAndEventFailure)
+    {
+        sharedStats();
+        ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(facade);
+        ESM4::Creature creature{}; creature.mId = {0x800, 3}; creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+        MWWorld::Player player(playerRecord); const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{}; initial.blank(); playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCreature reference{}; reference.mId = {0x900, 3};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900); reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr creaturePtr(&live);
+        const ESM4::PlayerDynamicBaseSettings playerBase{2, 1.5f, 5};
+        for (const bool playerAttacks : {false, true})
+        for (const bool essential : {false, true})
+        for (const bool godMode : {false, true})
+        {
+            SCOPED_TRACE(playerAttacks);
+            SCOPED_TRACE(essential);
+            SCOPED_TRACE(godMode);
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues pv; pv.mActor = ESM::FormKey::dynamic("player", 1);
+            pv.mBase = ESM::FormKey::dynamic("player-base", 1); pv.mOwner = ESM4::ActorValueOwner::Player;
+            pv.mPlayerFormValues = {{0, 0, 0, 0}};
+            for (std::size_t i = 0; i < 8; ++i) pv.mValues[i].mBase = 40;
+            service.publishPlayerValues(player, pv, playerBase);
+            service.publishPlayerLife(player, {pv.mActor, pv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeActorValues cv; cv.mActor = reference.mFormKey; cv.mBase = mActorKey;
+            cv.mValues[8].mBase = 100; cv.mValues[10].mBase = 60;
+            service.publishNonPlayerValues(creaturePtr, cv);
+            service.publishNonPlayerLife(creaturePtr, {cv.mActor, cv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            const auto attacker = playerAttacks ? playerPtr : creaturePtr;
+            const auto victim = playerAttacks ? creaturePtr : playerPtr;
+            const auto attackerKey = playerAttacks ? pv.mActor : cv.mActor;
+            const auto victimKey = playerAttacks ? cv.mActor : pv.mActor;
+            const auto id = service.allocateAction(attackerKey);
+            const auto victimAction = service.allocateAction(victimKey);
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = pv.mActor; saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2); saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            ESM4::RuntimeReferenceState savedActor; savedActor.mKey = cv.mActor; savedActor.mBase = cv.mBase;
+            savedActor.mCell = saved.mPlayer.mCell; saved.mReferences.push_back(savedActor);
+            service.capture(saved); const auto before = saved.serializeBinary();
+            if (playerAttacks)
+                EXPECT_FALSE(service.commitPhysicalContact(id, attacker, victim, {-10, -1000, -5}, nullptr,
+                    essential, {4, .5f}, playerBase, godMode));
+            else
+                EXPECT_THROW(service.commitPhysicalContact(id, attacker, victim, {-10, -1000, -5}, nullptr,
+                    essential, {4, .5f}, playerBase, godMode), std::invalid_argument);
+            service.capture(saved); EXPECT_EQ(saved.serializeBinary(), before);
+            ASSERT_TRUE(service.commitPhysicalContact(id, attacker, victim, {-10, -1000, -5}, &player,
+                essential, {4, .5f}, playerBase, godMode));
+            const bool suppressed = !playerAttacks && godMode;
+            const auto* life = service.findActorLife(victimKey);
+            EXPECT_EQ(life->mPhase, suppressed ? ESM4::ActorLifePhase::Alive
+                : essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead);
+            EXPECT_EQ(life->mKiller, suppressed ? ESM::FormKey{} : attackerKey);
+            EXPECT_TRUE(service.isActionConsumed(id));
+            EXPECT_EQ(service.isActionPending(victimAction, victimKey), suppressed);
+            EXPECT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getFatigue().getCurrent(),
+                playerAttacks ? godMode ? 160 : 150 : godMode ? 160 : 155);
+            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getFatigue().getCurrent(), playerAttacks ? 55 : 50);
+            EXPECT_EQ(service.getPlayerValue(8), playerAttacks || godMode ? 80 : essential ? 40 : -920);
+            EXPECT_EQ(service.getNonPlayerValue(creaturePtr, 8), !playerAttacks ? 100 : essential ? 50 : -900);
+            const auto event = service.takeNextDeathEvent();
+            EXPECT_EQ(bool(event), !suppressed && !essential);
+            if (event) { EXPECT_EQ(event->mActor, victimKey); EXPECT_EQ(event->mKiller, attackerKey); }
+            EXPECT_FALSE(service.takeNextDeathEvent());
+            service.capture(saved); saved.validate();
+            EXPECT_EQ(saved.mPhysicalActions.mPending.size(), suppressed ? 1 : 0);
+            // Event-identity exhaustion rejects a terminal hit before either
+            // resource facade or pending action changes; the same action retries.
+            MWMechanics::OblivionCombatService failure;
+            auto exhausted = ESM4::RuntimeState::deserializeBinary(before);
+            exhausted.mNextDeathEvent = std::numeric_limits<std::uint64_t>::max();
+            failure.restore(exhausted);
+            MWMechanics::OblivionCombatService candidate;
+            candidate.restore(exhausted);
+            const std::array residents{creaturePtr};
+            failure.installRestoredActorState(std::move(candidate), residents, &player);
+            const auto beforeFailure = exhausted.serializeBinary();
+            EXPECT_THROW(failure.commitPhysicalContact(id, attacker, victim, {-10, -1000, -5}, &player,
+                false, {4, .5f}, playerBase), std::overflow_error);
+            failure.capture(exhausted);
+            EXPECT_EQ(exhausted.serializeBinary(), beforeFailure);
+            EXPECT_TRUE(failure.isActionPending(id, attackerKey));
+            EXPECT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getFatigue().getCurrent(), 160);
+            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getHealth().getCurrent(), 100);
+            EXPECT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getHealth().getCurrent(), 80);
+        }
+    }
+
 }

@@ -3713,3 +3713,18 @@ Evidence: S4/melee-acquisition-instructions-01. Selection probe SHA256
 `2b37cc6b6d54b7e52537715682f66f62ddda7e0c4c04927e7f686baaf825ab48`. Bounded original geometry instructions
 are retained for the next contact implementation; no additional geometry rule
 is inferred solely from their labels.
+
+### Shipped first-person melee text keys (checkpoint47 investigation)
+
+Read-only extraction and typed NIF decoding of five stock first-person KFs are
+retained under S4/native-melee-kf-inspection-01. Oblivion - Meshes.bsa SHA256:
+`d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b`.
+handtohandattackleft/right both contain Hit at approximately0.2 seconds and
+end at approximately0.666667; handtohandattackpower contains Hit at0.433333337
+and end at0.900000036. Equip contains Attach, Enum: Equip and a0.2-second end;
+handtohandblockidle spans0..1.29999995. Exact binary32 times, source file bytes,
+configured driver commands and textkeys.tsv are retained in ignored evidence.
+These native groups/keys differ from the shared TES3 windup-section contract;
+the existing M11 sequence loader prefixes/lowercases text keys for the animation
+runtime. Decoding key declarations does not establish dispatch, collision,
+fatigue/damage timing or visual/audio combat acceptance.

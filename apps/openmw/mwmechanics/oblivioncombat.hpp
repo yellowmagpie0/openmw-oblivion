@@ -161,6 +161,15 @@ namespace MWMechanics
         bool mDrowning;
     };
 
+    // Signed native Damage-channel deltas, already resolved by contact policy.
+    // Geometry, mitigation, equipment wear and reactions are caller contracts.
+    struct OblivionPhysicalContactDeltas
+    {
+        float mAttackerFatigue = 0;
+        float mVictimHealth = 0;
+        float mVictimFatigue = 0;
+    };
+
     struct OblivionPassiveEffectIdentity
     {
         ESM::FormKey mSpell;
@@ -203,6 +212,9 @@ namespace MWMechanics
             const ESM4::PlayerDynamicBaseSettings& settings) const;
         void setNonPlayerBaseValue(const ESM4::RuntimeActorValues& target, ESM4::ActorBaseKind kind,
             std::uint8_t value, std::int32_t requested, std::span<const MWWorld::Ptr> residents);
+        ESM4::RuntimeActorLife prepareHealthReaction(ESM4::RuntimeActorValues& values,
+            bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode,
+            const ESM::FormKey& source) const;
         void publishHealthChange(const MWWorld::Ptr& actor, ESM4::RuntimeActorValues values,
             bool essential, const ESM4::EssentialRecoverySettings& settings, bool godMode,
             const ESM::FormKey& source = {});
@@ -255,6 +267,15 @@ namespace MWMechanics
         bool isActionPending(std::uint64_t id, const ESM::FormKey& actor) const;
         bool consumeAction(std::uint64_t id, const ESM::FormKey& actor);
         std::size_t cancelActorActions(const ESM::FormKey& actor) noexcept;
+        // False for stale/wrong-owner or terminal contacts. Validate and prepare
+        // both actors, projections and death events before changing any live
+        // state. Resource publication and consumption precede external callbacks.
+        // An empty victim commits a swing/miss with no victim deltas.
+        bool commitPhysicalContact(std::uint64_t id, const MWWorld::Ptr& attacker,
+            const MWWorld::Ptr& victim, const OblivionPhysicalContactDeltas& deltas,
+            MWWorld::Player* player, bool victimEssential,
+            const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode = false);
         bool isActionPending(std::uint64_t id) const;
         bool isActionConsumed(std::uint64_t id) const;
         // Internal completion/cancellation boundary. Call only with the

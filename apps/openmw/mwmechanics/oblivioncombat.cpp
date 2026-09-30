@@ -776,6 +776,121 @@ namespace MWMechanics
         return mActions.consume(id);
     }
 
+    bool OblivionCombatService::commitPhysicalContact(std::uint64_t id,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+        bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
+    {
+        const auto actorKey = [&](const MWWorld::Ptr& ptr) {
+            if (ptr.isEmpty())
+                throw std::invalid_argument("native physical contact has no attacker");
+            return player && ptr == player->getPlayer()
+                ? ESM::FormKey::dynamic("player", 1) : ptr.getCellRef().getFormKey();
+        };
+        const auto attackerKey = actorKey(attacker);
+        if (!isActionPending(id, attackerKey))
+            return false;
+        const auto validateActor = [&](const MWWorld::Ptr& ptr, const ESM::FormKey& key) {
+            const auto* values = findActorValues(key);
+            const auto* life = findActorLife(key);
+            if (!values || !life || life->mBase != values->mBase)
+                throw std::invalid_argument("native physical contact requires matching values and lifecycle");
+            if (values->mOwner == ESM4::ActorValueOwner::Player)
+            {
+                validatePlayerIdentity(*values);
+                if (!player || ptr != player->getPlayer())
+                    throw std::invalid_argument("native physical contact Player binding mismatch");
+            }
+            else
+                validateNonPlayerIdentity(ptr, *values);
+            return values;
+        };
+        auto attacking = *validateActor(attacker, attackerKey);
+        if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
+            return false;
+        for (const float delta : {deltas.mAttackerFatigue, deltas.mVictimHealth, deltas.mVictimFatigue})
+            if (!std::isfinite(delta))
+                throw std::invalid_argument("native physical contact requires finite resource deltas");
+        ESM4::validateEssentialRecoverySettings(recovery);
+        const auto change = [&](ESM4::RuntimeActorValues& values, std::uint8_t av, float delta) {
+            if (delta != 0 && !(playerGodMode && values.mOwner == ESM4::ActorValueOwner::Player && delta < 0))
+                values.mValues[av] = ESM4::changeActorValueModifier(
+                    values.mValues[av], values.mOwner, av, ESM4::ActorValueModifier::Damage, delta);
+        };
+        std::optional<ESM4::RuntimeActorValues> receiving;
+        std::optional<ESM4::RuntimeActorLife> receivingLife;
+        std::optional<PreparedLifeTransition> transition;
+        ESM::FormKey victimKey;
+        if (victim.isEmpty())
+        {
+            if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0)
+                throw std::invalid_argument("native missed swing cannot change victim resources");
+        }
+        else
+        {
+            victimKey = actorKey(victim);
+            if (attackerKey == victimKey)
+                throw std::invalid_argument("native physical contact cannot target its own attacker");
+            receiving = *validateActor(victim, victimKey);
+            receivingLife = *findActorLife(victimKey);
+            if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead)
+                return false;
+            change(*receiving, 8, deltas.mVictimHealth);
+            change(*receiving, 10, deltas.mVictimFatigue);
+            if (receiving->mOwner == ESM4::ActorValueOwner::Player)
+                preparePlayerValues(*receiving, playerBase);
+            if (deltas.mVictimHealth < 0
+                && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player))
+                receivingLife = prepareHealthReaction(*receiving, victimEssential, recovery, playerGodMode, attackerKey);
+            receiving->validate();
+            transition = prepareLifeTransition(*receivingLife);
+        }
+        change(attacking, 10, deltas.mAttackerFatigue);
+        if (attacking.mOwner == ESM4::ActorValueOwner::Player)
+            preparePlayerValues(attacking, playerBase);
+        attacking.validate();
+        std::optional<OblivionActorProjection> playerView;
+        std::optional<PreparedNonPlayerView> attackerView;
+        std::optional<PreparedNonPlayerView> victimView;
+        const auto prepareView = [&](const MWWorld::Ptr& ptr, const ESM4::RuntimeActorValues& values,
+                                     const ESM4::RuntimeActorLife* life,
+                                     std::optional<PreparedNonPlayerView>& npcView) {
+            if (values.mOwner == ESM4::ActorValueOwner::Player)
+                playerView.emplace(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, life));
+            else
+                npcView.emplace(ptr, values, findActorBase(values.mBase), life);
+        };
+        prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
+        if (receiving)
+            prepareView(victim, *receiving, &*receivingLife, victimView);
+        // No allocations, callbacks or fallible calculations after this point.
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
+        std::swap(mActorValues.at(attackerKey), attacking);
+        if (receiving)
+        {
+            std::swap(mActorValues.at(victimKey), *receiving);
+            std::swap(mActorLife.at(victimKey), *receivingLife);
+            if (findActorLife(victimKey)->mPhase != ESM4::ActorLifePhase::Alive)
+                cancelActorActions(victimKey);
+            if (findActorLife(victimKey)->mPhase == ESM4::ActorLifePhase::Dead)
+                stopCombat(victimKey);
+        }
+        consumeAction(id, attackerKey);
+        if (transition)
+        {
+            mPendingDeathEvents.swap(transition->mEvents);
+            mDeathCounts.swap(transition->mCounts);
+            if (findActorLife(victimKey)->mPhase == ESM4::ActorLifePhase::Dead)
+                ++mNextDeathEvent;
+        }
+        if (playerView) playerView->commit();
+        if (attackerView) attackerView->commit();
+        if (victimView) victimView->commit();
+        return true;
+    }
+
     const ESM4::RuntimeActorValues& OblivionCombatService::nonPlayerValues(const MWWorld::Ptr& actor) const
     {
         if (actor.isEmpty())
@@ -2139,9 +2254,9 @@ namespace MWMechanics
         return true;
     }
 
-    void OblivionCombatService::publishHealthChange(const MWWorld::Ptr& actor,
-        ESM4::RuntimeActorValues values, bool essential,
-        const ESM4::EssentialRecoverySettings& settings, bool godMode, const ESM::FormKey& source)
+    ESM4::RuntimeActorLife OblivionCombatService::prepareHealthReaction(
+        ESM4::RuntimeActorValues& values, bool essential,
+        const ESM4::EssentialRecoverySettings& settings, bool godMode, const ESM::FormKey& source) const
     {
         const auto found = mActorLife.find(values.mActor);
         if (found == mActorLife.end())
@@ -2168,6 +2283,17 @@ namespace MWMechanics
         }
         values.validate();
         life.validate();
+        return life;
+    }
+
+    void OblivionCombatService::publishHealthChange(const MWWorld::Ptr& actor,
+        ESM4::RuntimeActorValues values, bool essential,
+        const ESM4::EssentialRecoverySettings& settings, bool godMode, const ESM::FormKey& source)
+    {
+        auto life = prepareHealthReaction(values, essential, settings, godMode, source);
+        const auto found = mActorLife.find(values.mActor);
+        const bool player = values.mOwner == ESM4::ActorValueOwner::Player;
+        const auto* base = findActorBase(values.mBase);
         auto transition = prepareLifeTransition(life);
         std::optional<OblivionActorProjection> playerView;
         std::optional<PreparedNonPlayerView> actorView;
