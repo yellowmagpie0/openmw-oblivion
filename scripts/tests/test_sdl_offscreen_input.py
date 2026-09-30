@@ -37,6 +37,15 @@ int main() {
         } else {
             e = {};
             int result = SDL_PollEvent(&e), count = 0;
+            if (line == "text") {
+                std::cout << "text " << result << " " << e.type << " " << e.text.text << std::endl;
+                continue;
+            }
+            if (line == "window") {
+                std::cout << "window " << result << " " << e.type << " " << e.window.windowID
+                          << " " << static_cast<int>(e.window.event) << std::endl;
+                continue;
+            }
             const auto* keys = SDL_GetKeyboardState(&count);
             std::cout << result << " " << e.type << " " << e.key.keysym.scancode
                       << " " << e.key.keysym.sym << " " << e.key.keysym.mod
@@ -125,6 +134,19 @@ int main() {
         self.append("1 quit\n")
         self.assertEqual(self.event(process)[1], 256)
         self.assertEqual(Path(str(self.input) + ".delivered").read_text(), "1 quit\n")
+
+    def test_text_input_and_window_focus_are_sdl_events(self):
+        process = self.launch()
+        self.append("1 text 746169\n2 focus\n")
+        self.assertEqual(self.command(process, "text"), "text 1 771 tai")
+        self.assertEqual(self.command(process, "window"), "window 1 512 1 12")
+        self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
+
+    def test_text_rejects_controls_and_does_not_deliver_them(self):
+        process = self.launch()
+        self.append("1 text 00\n")
+        self.assertEqual(self.event(process)[1], 256)
+        self.assertFalse(Path(str(self.input) + ".delivered").exists())
 
     def test_invalid_sequence_fails_closed(self):
         process = self.launch()

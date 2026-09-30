@@ -29,6 +29,15 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_offscreen_scenario_rejects_incompatible_backends_and_actions(self):
+        base = {"schema_version": 1, "name": "offscreen", "command": ["openmw"],
+                "sdl_offscreen_input": True, "actions": []}
+        for changes in ({"xvfb": True}, {"virtual_gamepad": True},
+                        {"actions": [{"type": "mouse_click", "button": 1}]},
+                        {"sdl_offscreen_input": "true"}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                MODULE.validate_scenario_manifest(dict(base, **changes))
+
     def test_xvfb_uses_its_child_readiness_report(self):
         process = mock.Mock()
         process.poll.return_value = None

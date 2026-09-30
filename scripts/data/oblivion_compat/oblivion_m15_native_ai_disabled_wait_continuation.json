@@ -21,7 +21,7 @@
     "--no-grab",
     "--load-savegame={output}/userdata/saves/M15Legacy/Quicksave.omwsave"
   ],
-  "xvfb": true,
+  "xvfb": false,
   "name": "m15-native-ai-disabled-wait-continuation",
   "actions": [
     {
@@ -107,5 +107,6 @@
     "OPENMW_OBSCRIPT_EVENTS": "{source}/scripts/data/oblivion_compat/m15_native_breath_frame_events.txt",
     "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
   },
-  "reviewed_error_log": []
+  "reviewed_error_log": [],
+  "sdl_offscreen_input": true
 }

@@ -6134,3 +6134,55 @@ acceptance, combat/campaign acceptance, original-game visual comparisons or
 audio validation. S2/S3 remain open; the next task is reusable scenario input
 integration and the outstanding Wait/AI-disabled course. Local commits still
 cannot be created because the sandbox mounts Git metadata read-only.
+
+The replay helper now also supports focus and printable ASCII text events;
+text is hex encoded, limited to SDL's31-byte payload, and rejects controls.
+`text-focus-baseline.log` retains the failing unsupported-event test. Nine
+real-SDL tests now verify event payloads, focus window/event IDs, keyboard
+state and the prior queue/protocol cases. Five additional replay-controller
+cases verify key mappings/chord rejection, exact receipt causality, missing
+receipt timeout, validation before input, and lossless text chunking.
+
+`scripts/sdl_offscreen_replay.py` integrates that backend into
+`oblivion_compat.py scenario`. Set `sdl_offscreen_input: true` and `xvfb: false`
+in a diagnostic manifest with private `output/userdata`. The runner builds
+and hashes the trusted helper, records its environment, waits for each input
+receipt, uses F12 and retains the engine's complete PNG before inspection,
+and sends SDL quit after actions. It rejects unsupported actions, competing
+backends, unsafe keys, reused input files and nonprivate user-data paths.
+Strict M14/M15 contract scenarios remain rejected for this backend until
+corresponding contract/evidence integration is implemented; no schema or
+normal-input restriction has been weakened. The initial runner validation
+failure is retained in `runner-baseline.log`. Corrected full Python
+`sdl-offscreen-runner-python-01` passes all206 cases without skips, fingerprint
+`014a56dbf0ff58ffeb9381bee380e64cfa0d9e3a0e2d2ca8c66566da3ebc8c81`.
+
+The pending AI-disabled Wait/continuation editable manifests now select this
+backend. Actual courses `sdl-offscreen-ai-disabled-wait-01` and
+`sdl-offscreen-ai-disabled-wait-continuation-01` pass all actions and clean
+exit0; their sanitized counterparts also pass with ASan/halting UBSan and
+leak detection disabled. Inputs are private copies of the historical v16
+`actor-clock-wait-sanitized-hud-checked02-load-01/pristine.omwsave`, with
+synthetic populated authority and Player raw form values. No fresh actor
+construction is demonstrated. Bootstrap ObScript zero-delta ModAV and
+read-only queries remain explicit setup; Wait itself uses ordinary UI input.
+I inspected the console's `AI -> Off`, the one-hour Wait dialog, the post-Wait
+HUD and the fresh-load HUD. Configurations, helper build/input receipts, logs,
+source save/fixture/binary hashes and verifier scripts are retained.
+
+Independent binary and HUD verification passes normal and sanitized pairs:
+one calendar hour plus regular frame time, Player H/M/F100/20/10000, NPC
+Health25 and Magicka20, full19-second breath, stable life and no death events,
+completed actor clocks and matching legacy Player views. The NPC does not
+receive the High-process two-second hourly restoration while AI is disabled;
+ordinary frames still update it, including the elapsed-clock catch-up after
+Wait. Independent raw fixture decoding pins `fFatigueReturnBase=10` and
+`fFatigueReturnMult=0`; NPC fatigue matches5000 plus10 times manager time
+within0.5 points for accumulated single-precision rounding. The fresh process
+continues normal recovery. This is not a claim that the console AI toggle
+persists across restart. `wait-restart-verification.json` in each first course
+records all expectations and their measured values. Current normal and
+sanitized engine hashes remain those recorded above. Original-game
+AI-disabled behavioral comparison, audio, full S3 and M15 acceptance remain
+open. Git metadata remains read-only; exports are recovery patches rather
+than the requested commits.

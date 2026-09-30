@@ -3,6 +3,7 @@
 //          $(pkg-config --cflags --libs sdl2) -ldl -o replay.so
 // Opt in with LD_PRELOAD and OPENMW_SDL_INPUT pointing to an append-only file.
 // Lines: <sequence starting at 1> <down|up> <SDL scancode>, or <sequence> quit.
+// Also: <sequence> focus, or <sequence> text <hex-encoded printable ASCII>.
 // Complete lines are consumed only after SDL's existing event queue is empty.
 // The helper supplies input events; it has no engine or game-state interface.
 
@@ -15,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
 
 namespace
 {
@@ -53,6 +55,38 @@ namespace
                 if (fields >> extra)
                     return fail(event, "unexpected quit arguments");
                 event.type = SDL_QUIT;
+            }
+            else if (operation == "focus")
+            {
+                if (fields >> extra)
+                    return fail(event, "unexpected focus arguments");
+                event.type = SDL_WINDOWEVENT;
+                event.window.timestamp = SDL_GetTicks();
+                event.window.windowID = 1;
+                event.window.event = SDL_WINDOWEVENT_FOCUS_GAINED;
+            }
+            else if (operation == "text")
+            {
+                std::string hex;
+                if (!(fields >> hex) || (fields >> extra) || hex.size() % 2 != 0
+                    || hex.size() >= 2 * SDL_TEXTINPUTEVENT_TEXT_SIZE)
+                    return fail(event, "invalid text input size");
+                const auto digit = [](char c) -> int {
+                    if (c >= '0' && c <= '9') return c - '0';
+                    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+                    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+                    return -1;
+                };
+                event.type = SDL_TEXTINPUT;
+                event.text.timestamp = SDL_GetTicks();
+                event.text.windowID = 1;
+                for (std::size_t i = 0; i < hex.size(); i += 2)
+                {
+                    const int high = digit(hex[i]), low = digit(hex[i + 1]);
+                    if (high < 0 || low < 0 || high * 16 + low < 32 || high * 16 + low > 126)
+                        return fail(event, "text must be printable ASCII");
+                    event.text.text[i / 2] = static_cast<char>(high * 16 + low);
+                }
             }
             else
             {

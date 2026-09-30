@@ -40,6 +40,7 @@ import tes4_runtime_state as tes4_state  # noqa: E402
 import tes4_m15_audit as tes4_m15_audit
 import tes4_m14_audit as tes4_m14  # noqa: E402
 import tes4_m15_evidence as tes4_m15  # noqa: E402
+import sdl_offscreen_replay  # noqa: E402
 
 
 SCHEMA_VERSION = 1
@@ -461,6 +462,7 @@ def _validate_m14_console_commands(commands: Any) -> None:
 def validate_scenario_manifest(raw: dict[str, Any]) -> None:
     if not isinstance(raw, dict):
         raise ValueError("Scenario manifest must be a JSON object")
+    sdl_offscreen_replay.validate(raw)
     if "m15" in raw:
         tes4_m15.validate_manifest(raw)
     if raw.get("schema_version") != SCHEMA_VERSION:
@@ -1323,13 +1325,24 @@ def _start_xvfb(output: Path, width: int, height: int) -> tuple[subprocess.Popen
 
 
 def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: Path,
-                m15_session: tes4_m15.Session | None = None) -> dict[str, Any]:
+                m15_session: tes4_m15.Session | None = None,
+                offscreen_input: sdl_offscreen_replay.Replay | None = None) -> dict[str, Any]:
     if action.get("type") == "m15_snapshot":
         if m15_session is None:
             raise ValueError("M15 snapshots require an isolated M15 session")
         return m15_session.snapshot(action)
     action_type = action.get("type")
     started = time.monotonic()
+    if offscreen_input is not None and action_type in sdl_offscreen_replay.INPUT_ACTIONS:
+        result = offscreen_input.action(action)
+        result["duration_seconds"] = round(time.monotonic() - started, 6)
+        if action_type == "screenshot" and action.get("inspect", True):
+            result["image_inspection"] = inspect_image(
+                output / action["name"], minimum_entropy=float(action.get("minimum_entropy", .01)),
+                minimum_mean=float(action.get("minimum_mean", .001)),
+                maximum_mean=float(action.get("maximum_mean", .999)))
+            result["passed"] = result["image_inspection"]["passed"]
+        return result
     if action_type == "sleep":
         time.sleep(float(action.get("seconds", 0)))
         return {"type": action_type, "passed": True, "duration_seconds": time.monotonic() - started}
@@ -2024,6 +2037,13 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
     if m15_session is not None:
         environment = m15_session.environment()
     environment.setdefault("OPENMW_SUPPRESS_ERROR_DIALOG", "1")
+    offscreen_input = None
+    if manifest.get("sdl_offscreen_input", False):
+        config = (output / "config/openmw.cfg").read_text()
+        userdata = re.findall(r'^user-data=(.*)$', config, re.MULTILINE)
+        if userdata != ['"' + str(output.resolve() / "userdata") + '"']:
+            raise ValueError("Offscreen scenarios require private output/userdata")
+        offscreen_input = sdl_offscreen_replay.Replay(output, environment)
     m14_config = manifest.get("m14")
     if isinstance(m14_config, dict):
         event_path = _scenario_output_path(output, m14_config.get("event_file", "ai-events.jsonl"), "M14 event file")
@@ -2082,7 +2102,11 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                 signal.setitimer(signal.ITIMER_REAL, remaining)
                 try:
                     if m15_session is None:
-                        action_results.append(_run_action(action, environment=environment, output=output))
+                        if offscreen_input is None:
+                            action_results.append(_run_action(action, environment=environment, output=output))
+                        else:
+                            action_results.append(_run_action(action, environment=environment, output=output,
+                                                              offscreen_input=offscreen_input))
                     else:
                         action_result = _run_action(action, environment=environment, output=output,
                                                     m15_session=m15_session)
@@ -2110,7 +2134,15 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                     signal.signal(signal.SIGALRM, previous_alarm)
             if manifest.get("terminate_after_actions", False) and process.poll() is None:
                 shutdown_requested = True
-                process.send_signal(signal.SIGTERM)
+                if offscreen_input is None:
+                    process.send_signal(signal.SIGTERM)
+                else:
+                    try:
+                        offscreen_input.send("quit", timeout=min(10, max(.001, deadline - time.monotonic())))
+                    except Exception as error:
+                        action_results.append({"type": "offscreen_shutdown", "passed": False,
+                                               "error": f"{type(error).__name__}: {error}"})
+                        process.send_signal(signal.SIGTERM)
             if timed_out and process.poll() is None:
                 process.terminate()
                 try:
@@ -2133,6 +2165,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
         expected = [str(value) for value in manifest.get("expected_log", [])]
         missing_expected = [pattern for pattern in expected if not re.search(pattern, log_text, re.MULTILINE)]
         forbidden = [str(value) for value in manifest.get("forbidden_log", [])]
+        if offscreen_input is not None:
+            forbidden.append("SDL offscreen replay error:")
         if isinstance(m14_config, dict):
             forbidden.append("Console diagnostic:")
         forbidden_findings = check_log_text(log_text, forbidden_patterns=forbidden)["findings"]
@@ -2179,6 +2213,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
         }
         if m15_result is not None:
             result["m15"] = m15_result
+        if offscreen_input is not None:
+            result["input_backend"] = offscreen_input.provenance
         write_json(output / "scenario.json", result)
         return result
     finally:
