@@ -32,6 +32,40 @@ def plugin(records, masters=()):
 
 
 class M15NativeAuditTests(unittest.TestCase):
+    def test_effect_prefix_preserves_partial_layouts_padding_and_reference_identity(self):
+        def decode(data,code=b'FOSP\0'):
+            return audit.effect_definition(dict(plugin='patch.esp',masters=['other.esm','base.esm'],
+                subrecords=[dict(name='EDID',payload=code),dict(name='DATA',payload=data)]))
+        prefix=struct.pack('<4IiHH',0x1000072,0x7fc12345,9,5,-1,7,0x80ff)
+        for length in range(24,69,4):
+            result=decode(prefix+bytes(length-24))
+            self.assertEqual(result['data_length'],length);self.assertEqual(result['base_cost_bits'],0x7fc12345)
+            self.assertEqual(result['associated_data'],9);self.assertIsNone(result['associated_form'])
+            self.assertEqual(result['resistance_actor_value'],-1);self.assertEqual(result['counter_padding'],0x80ff)
+        for flag in (1<<16,1<<17,1<<18):
+            data=struct.pack('<4IiHH',flag,0,0x01000812,5,-1,0,0)
+            self.assertEqual(decode(data,b'FOSP')['associated_form'],'content:base.esm:000812')
+        for length in range(73):
+            if 24<=length<=68 and length%4==0:continue
+            with self.assertRaises(audit.M15AuditError):decode(bytes(length))
+        for code in (b'',b'FO',b'F\0SP',b'FOSPX',b'FOSP\0\0'):
+            with self.assertRaises(audit.M15AuditError):decode(prefix,code)
+
+    def test_effect_inventory_uses_stable_keys_overrides_deletes_and_reports_ambiguous_codes(self):
+        def effect(form,code,data):
+            return record('MGEF',form,sub('EDID',code)+sub('DATA',struct.pack('<4IiHH',0x1000072,0,data,5,-1,0,0)))
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);base=root/'base.esm';patch=root/'patch.esp'
+            base.write_bytes(plugin([effect(0x800,b'FOSP\0',9)]))
+            patch.write_bytes(plugin([effect(0x800,b'FOSP\0',40)],['base.esm']))
+            result=audit.inventory([base,patch]);self.assertTrue(result['data_passed'],result['failures'])
+            self.assertEqual(result['effect_definitions']['content:base.esm:000800']['associated_data'],40)
+            patch.write_bytes(plugin([record('MGEF',0x800,b'',0x20)],['base.esm']))
+            self.assertEqual(audit.inventory([base,patch])['summary']['effect_definitions'],0)
+            patch.write_bytes(plugin([effect(0x01000800,b'FOSP\0',40)],['base.esm']))
+            result=audit.inventory([base,patch]);self.assertFalse(result['data_passed'])
+            self.assertIn('ambiguous winning MGEF effect codes',result['failures'])
+
     def test_spell_layout_order_padding_partial_script_fields_and_name(self):
         def decode(parts):
             return audit.spell_definition(dict(plugin='base.esm', masters=['other.esm'],

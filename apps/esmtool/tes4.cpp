@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -216,6 +217,19 @@ namespace EsmTool
                               << " specialization=" << value.mData->mSpecialization
                               << " use0=" << value.mData->mUseValues[0]
                               << " use1=" << value.mData->mUseValues[1];
+            }
+            if constexpr (std::is_same_v<T, ESM4::EffectSetting>)
+            {
+                if (value.mData && value.mEffectCode)
+                {
+                    const auto& data = *value.mData;
+                    std::cout << "\n  EffectSetting: code=" << *value.mEffectCode << " flags=" << data.mFlags
+                              << " costBits=" << std::bit_cast<std::uint32_t>(data.mBaseCost)
+                              << " data=" << data.mAssociatedData << " school=" << data.mSchool
+                              << " resistance=" << data.mResistanceActorValue << " counters=" << data.mCounterCount
+                              << " padding=" << data.mCounterPadding;
+                    if (data.mAssociatedForm) std::cout << " associatedForm=" << data.mAssociatedForm->serialize();
+                }
             }
             if constexpr (std::is_same_v<T, ESM4::Spell>)
             {
@@ -674,7 +688,10 @@ namespace EsmTool
                 case ESM4::REC_MESG:
                     break;
                 case ESM4::REC_MGEF:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::EffectSetting>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_MISC:
                     readTypedRecord<ESM4::MiscItem>(params, reader);

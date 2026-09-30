@@ -6667,3 +6667,63 @@ following these checks. The new portable bundle is
 Clone that bundle with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`
 to review the current source. Tests ran in the shared workspace; a fresh clean
 bundle clone and changed-source byte comparison verify the Git checkpoint.
+
+### Typed effect definitions and original ability input rules
+
+Typed `ESM4::EffectSetting` preserves the authored MGEF FourCC and DATA prefix,
+including raw cost bits, flags/data, signed resistance actor value and counter
+fields. DATA sizes24–68 in four-byte increments follow the existing structural
+reader domain; the official master has144 64-byte and one 36-byte definitions.
+Associated data becomes a stable FormKey only for the authored item-reference
+flags. Other data remains numeric. Unknown codes/domains and raw tail bytes are
+preserved, including nonfinite authored float bits; runtime admission is a
+separate responsibility. Duplicate/missing fields and malformed layouts fail,
+while empty deletion tombstones remain valid.
+
+The parser is registered throughout components, the typed store tuple and
+explicit dynamic-store instantiation, TES4-only dispatch and `esmtool`. An actual
+store test verifies winning overrides, deletion and conditional stable keys
+across reordered masters. Independent Python audit decoding adds145 winning
+effect definitions to the reviewed count lock without changing previous counts
+or content hashes. Audit01 retains the old-lock failure; audit02 passes the
+expanded lock and still fails data acceptance on the same three authored spell
+script links recorded above. No error is waived.
+
+Pure ability input rules implement the independently established native loader
+flag/data merge and value-modifier constructor quantity selection. Compiled
+flags remain authoritative outside the editable mask; compiled UseActorValue
+retains its data, and the loader clears bit21. EFIT quantities use signed int32
+conversion to float; no-magnitude/no-duration flags select1/0. These functions
+perform no admission, detrimental sign, clamp, application, removal or casting.
+The original executable probes and their boundary scope are recorded in
+`M15-NATIVE-RULE-PROVENANCE.md`.
+
+Both baseline attempts retain explicit unimplemented-parser/rule failures.
+`native-effect-definition-parser-01` passes1961 full component cases and436
+ESM4 ASan/UBSan cases. A subsequent JSON-only count-lock correction leaves the
+C++ implementation unchanged; that component run retains its earlier source
+fingerprint. `native-effect-rule-comparison-01` compares actual production C++
+to all768 original loader-merge and2880 constructor cases with exact float bits.
+`native-effect-definition-typed-comparison-01` agrees on every145 official
+MGEF authored prefix through rebuilt C++ tooling versus independent Python.
+These comparisons do not execute effects in the world.
+
+The normal integration run `native-effect-definition-engine-01` passes210
+Python and669 engine cases. The instrumented integration run
+`native-effect-definition-sanitized-engine-01` passes all 669 engine cases with no skips/failures.
+Both final integration runs have source fingerprint:
+`eb30f092310def9367439758a2f9df7ab469579bbae7249e51b8c228b188f789`.
+Leak detection is off; this is ASan/UBSan coverage, not leak coverage.
+A GNU-only option disables assignment tracking for the large store-test
+translation unit to avoid its previously observed repeated debug tracking pass;
+line/debug information and sanitizers remain enabled. No gameplay/performance
+gate is inferred from this build option.
+
+Evidence is under `build/oblivion-compat/m15/S3/`. Checkpoint27 is committed in
+the independent `m15-implementation` repository after the above checks; the
+portable source/history bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-05/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+`commits.json` records the exact commit/tree and tested source fingerprint.
+Tests ran in the shared workspace; a clean fresh bundle clone and changed-file
+byte comparison verify the committed checkpoint. M15 remains in progress.

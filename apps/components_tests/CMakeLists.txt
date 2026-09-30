@@ -98,6 +98,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/crimerules.cpp
     esm4/combatairules.cpp
     esm4/combatsettings.cpp
+    esm4/ability.cpp
     esm4/combatstylepolicy.cpp
     esm4/testloadnpc.cpp
     esm4/testloadgmst.cpp
@@ -105,6 +106,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/testloadcsty.cpp
     esm4/testloadskil.cpp
     esm4/testloadspel.cpp
+    esm4/testloadmgef.cpp
     esm4/testloadfact.cpp
     esm4/testloadpack.cpp
     esm4/testloadpgrd.cpp

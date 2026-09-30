@@ -22,6 +22,7 @@
 #include <components/esm4/loadcsty.hpp>
 #include <components/esm4/loadskil.hpp>
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadmgef.hpp>
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadpgrd.hpp>
 #include <components/esm4/pathgriddata.hpp>
@@ -197,7 +198,7 @@ namespace MWWorld
             Store<ESM4::Music>, Store<ESM4::Npc>, Store<ESM4::Outfit>, Store<ESM4::Potion>, Store<ESM4::Race>,
             Store<ESM4::Region>, Store<ESM4::Road>, Store<ESM4::SigilStone>, Store<ESM4::SoulGem>,
             Store<ESM4::Reference>,
-            Store<ESM4::CombatStyle>, Store<ESM4::Skill>, Store<ESM4::Spell>, Store<ESM4::AIPackage>, Store<ESM4::Pathgrid>, Store<ESM4::IdleAnimation>,
+            Store<ESM4::CombatStyle>, Store<ESM4::Skill>, Store<ESM4::Spell>, Store<ESM4::EffectSetting>, Store<ESM4::AIPackage>, Store<ESM4::Pathgrid>, Store<ESM4::IdleAnimation>,
             Store<ESM4::Script>, Store<ESM4::Quest>, Store<ESM4::DialogInfo>, Store<ESM4::Sound>,
             Store<ESM4::SoundReference>, Store<ESM4::Static>, Store<ESM4::StaticCollection>,
             Store<ESM4::Terminal>, Store<ESM4::TextureSet>, Store<ESM4::Tree>, Store<ESM4::Water>,

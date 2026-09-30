@@ -281,7 +281,7 @@ namespace MWWorld
                     if (T::sRecordId == esm4RecName)
                     {
                         if constexpr (std::is_same_v<T, ESM4::CombatStyle> || std::is_same_v<T, ESM4::Faction>
-                            || std::is_same_v<T, ESM4::Skill> || std::is_same_v<T, ESM4::Spell>)
+                            || std::is_same_v<T, ESM4::Skill> || std::is_same_v<T, ESM4::Spell> || std::is_same_v<T, ESM4::EffectSetting>)
                         {
                             if (reader.hasFormVersion() || (reader.esmVersionF() != 0.8f && reader.esmVersionF() != 1.f))
                                 return false; // Later-game layouts are not TES4 combat/crime data.

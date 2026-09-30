@@ -11,6 +11,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testoblivionactorstats.cpp
     mwworld/testoblivionworld.cpp
     mwworld/testoblivioncombatdata.cpp
+    mwworld/testoblivionmagicrecords.cpp
     mwworld/testoblivioncombat.cpp
     mwworld/testoblivionai.cpp
     mwworld/testoblivionpathgridstore.cpp
@@ -47,6 +48,13 @@ if (MSVC)
         PROPERTIES
         COMPILE_OPTIONS /cgthreads1
     )
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # GCC retries this large tuple-based TU after exceeding its debug variable
+    # tracking budget. Keep line/debug information and sanitizer instrumentation
+    # while avoiding that repeated assignment-tracking pass.
+    set_property(SOURCE mwworld/teststore.cpp APPEND PROPERTY COMPILE_OPTIONS -fno-var-tracking-assignments)
 endif()
 
 source_group(apps\\openmw-tests FILES ${UNITTEST_SRC_FILES})
