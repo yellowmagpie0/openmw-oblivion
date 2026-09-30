@@ -6489,3 +6489,45 @@ ASan leaks are off, UBSan halts. Tested source fingerprint:
 
 Evidence is under `build/oblivion-compat/m15/S3/`. Git metadata remains
 read-only; pending-chunks-23 is a recovery export rather than a commit.
+
+### S3 continuation: explicit World Player construction bridge
+
+`World::initializeOblivionPlayerActor` binds the atomic service initializer to
+an actual World Player. It returns false outside the native service or before
+Player setup, validates a pending legacy death marker, and consumes the marker
+only after successful values/life/view publication. It remains an explicit
+construction entry point; startup activation is not enabled while character
+generation still uses legacy setters.
+
+Two World cases exercise missing fresh source rejection, canonical raw inputs
+independent of the synthetic profile facade, actual resource writers and script
+queries, restored-state preference, World clear/recreate, TES3 isolation and
+actual T4ST reader legacy-marker adoption. A conflicting marker leaves live
+state unchanged, then can be adopted after clearing authority without new
+events/counts; a consumed marker cannot conflict with later Alive state.
+Malformed marker types reject before publication. The canonical Player form is
+injected into a real loaded synthetic World store here; this is not an official
+winning-load-order or normal-input gameplay course.
+
+`native-world-player-construction-baseline-01` fails with the unimplemented
+World entry point. Normal/sanitized attempt01 passes construction/clear but
+rejects a bad marker fixture before read: it combined typed Alive lifecycle
+with a true legacy dead marker. The corrected fixture models a legacy snapshot
+without typed values/life; production validation is unchanged.
+Normal and sanitized `native-world-player-construction-02` each pass all667
+engine cases, exact inventory/XML agreement and no skips. ASan leaks are off;
+UBSan halts. Tested source fingerprint:
+`f9f9e351cb5e09cbc40d9630e74c45ce3eba83577b910dfb025f46c760211b79`.
+
+Evidence is under `build/oblivion-compat/m15/S3/`; pending-chunks-24 is the
+recovery export. Git metadata remains read-only; no commit is claimed.
+
+The independent hash-identified master probe
+`authority-draft/player-resource-gmst-audit-01` confirms authored Player inputs
+and six resource GMSTs, including fPCBaseMagickaMult1 (distinct from its compiled
+fallback0.5), fMagickaReturnBase0.75/Mult0.02, fFatigueReturnBase10/Mult0 and
+strength capacity multiplier5. fPCBaseHealthMult is absent from this master;
+its previously verified compiled fallback still applies absent overrides.
+This is a standalone master audit, not a winning load-order/ready-Player proof.
+Report SHA256:
+`3f34bd9d5fa89a645df6f3718de261812bfeb5c850b03a0c5a63ea6fab941cc1`.

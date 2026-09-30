@@ -667,6 +667,113 @@ namespace
         EXPECT_FALSE(legacy.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active));
     }
 
+    TEST(OblivionWorldTest, explicitWorldPlayerConstructionSharesWritersAndClearsWithoutEvents)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        EXPECT_FALSE(world.initializeOblivionPlayerActor()); // Player is not set up yet.
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        // The synthetic profile's facade was authored from headless.esm:800.
+        // Inject canonical Player construction inputs independently of it.
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 1};
+        native.mFormKey = base;
+        native.mIsTES4 = true;
+        native.mData.attribs = {50, 50, 30, 30, 40, 40, 50, 50};
+        native.mData.health = 45;
+        native.mBaseConfig.tes4.fatigue = 150;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        auto player = world.getPlayerPtr();
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 125);
+        ASSERT_NE(service.findActorLife(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Alive);
+        EXPECT_EQ(world.getOblivionScriptActorValue(actor, 8, false), 125);
+        ASSERT_TRUE(world.requestOblivionResourceCurrent(player, 8, 100));
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 100);
+        EXPECT_EQ(world.getOblivionScriptActorValue(actor, 8, false), 100);
+        const auto values = *service.findActorValues(actor);
+        native.mIsTES4 = false;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        EXPECT_EQ(*service.findActorValues(actor), values);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        native.mIsTES4 = true;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_NO_THROW(world.clear());
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        world.setupPlayer();
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        player = world.getPlayerPtr();
+        EXPECT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), 125);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_FALSE(legacy.initializeOblivionPlayerActor());
+    }
+
+    TEST(OblivionWorldTest, actualReaderPlayerConstructorConsumesLegacyMarkersOnlyAfterCommit)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 1};
+        native.mFormKey = base;
+        native.mIsTES4 = true;
+        native.mData.health = 100;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        auto& service = *world.getOblivionCombatService();
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        ESM4::RuntimeState state;
+        state.mPlayer.mReference = actor;
+        state.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        state.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        state.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = actor;
+        reference.mBase = ESM::FormKey::dynamic("player-base", 1);
+        reference.mCell = state.mPlayer.mCell;
+        reference.mCustomState["obscript.dead"] = true;
+        state.mReferences.push_back(reference);
+        std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+        state.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+        // The on-disk legacy snapshot has no typed native values/lifecycle.
+        // Live authority may already exist when its marker is later adopted.
+        const auto before = *service.findActorValues(actor);
+        readNativeSnapshot(fixture, state);
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(*service.findActorValues(actor), before);
+        EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Alive);
+        service.clear();
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_TRUE(world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr()).isDead());
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        EXPECT_EQ(service.getDeadCount(reference.mBase), 0);
+        auto alive = *service.findActorLife(actor);
+        alive.mPhase = ESM4::ActorLifePhase::Alive;
+        service.publishPlayerLife(world.getPlayer(), alive);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor()); // Consumed true marker cannot conflict.
+        state.mReferences[0].mCustomState["obscript.dead"] = std::int64_t{42};
+        readNativeSnapshot(fixture, state);
+        service.clear();
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
     TEST(OblivionWorldTest, restoredAuthorityRefreshesActualWorldPlayerView)
     {
         NativeWorldFixture fixture;

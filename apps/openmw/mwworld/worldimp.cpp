@@ -1330,6 +1330,33 @@ namespace MWWorld
         return true;
     }
 
+    bool World::initializeOblivionPlayerActor()
+    {
+        if (!mOblivionCombat || !mPlayer)
+            return false;
+        ESM4::RuntimeReferenceState* reference = nullptr;
+        if (mOblivionRuntimeState)
+            for (auto& saved : mOblivionRuntimeState->mReferences)
+                if (saved.mKey == ESM::FormKey::dynamic("player", 1))
+                {
+                    reference = &saved;
+                    break;
+                }
+        const auto marker = findLegacyDeathMarker(reference);
+        std::optional<bool> legacyDead;
+        if (marker)
+        {
+            const auto* dead = std::get_if<bool>(&(*marker)->second);
+            if (!dead)
+                throw std::invalid_argument("invalid legacy native Player death marker");
+            legacyDead = *dead;
+        }
+        mOblivionCombat->initializePlayerActor(*mPlayer, mStore, legacyDead);
+        if (marker)
+            reference->mCustomState.erase(*marker);
+        return true;
+    }
+
     ESM4::RuntimeReferenceState* World::adoptOblivionActorLife(const Ptr& actor)
     {
         const bool player = actor == getPlayerPtr();
