@@ -227,6 +227,29 @@ namespace ESM4
         return {degrees, coneDegrees > degrees};
     }
 
+    std::optional<std::size_t> selectMeleeContact(std::span<const MeleeContactCandidate> candidates,
+        float reach, std::optional<std::size_t> selectedTarget)
+    {
+        nonnegative(reach);
+        if (selectedTarget && *selectedTarget >= candidates.size())
+            throw std::invalid_argument("native selected melee target outside candidate inventory");
+        const auto valid = [&](const MeleeContactCandidate& candidate, bool selected) {
+            if (!selected && !candidate.mEligible)
+                return false;
+            finite(candidate.mDistance); // Overlapping hulls can have negative distance.
+            nonnegative(candidate.mFacingDegrees);
+            return candidate.mInsideCone && candidate.mDistance <= reach;
+        };
+        if (selectedTarget)
+            return valid(candidates[*selectedTarget], true) ? selectedTarget : std::nullopt;
+        std::optional<std::size_t> result;
+        for (std::size_t i = 0; i < candidates.size(); ++i)
+            if (valid(candidates[i], false)
+                && (!result || candidates[i].mFacingDegrees <= candidates[*result].mFacingDegrees))
+                result = i;
+        return result;
+    }
+
     void validateMeleeReachSettings(const MeleeReachSettings& settings)
     {
         nonnegative(settings.mCombatDistance);
@@ -281,7 +304,7 @@ namespace ESM4
         if (attacker.mIsActor && target.mIsActor)
         {
             const float dz = rounded(double(attacker.mPosition[2]) - target.mPosition[2]);
-            if ((attacker.mFlying && target.mFlying)
+            if ((attacker.mSwimming && target.mSwimming)
                 || (selectedTarget && std::abs(dz) >= slopeDifference))
             {
                 const float aMin = rounded(double(attacker.mMinimumZ) + attacker.mPosition[2]);

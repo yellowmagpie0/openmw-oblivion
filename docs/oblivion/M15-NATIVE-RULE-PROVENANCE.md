@@ -3858,3 +3858,57 @@ melee-contact-keys.json SHA256 `29335217c9343273ad965141ba1fb4ac0c2f370d1ae1c189
 The reused typed NIF inspection driver is the checkpoint47 asset decoder;
 this read-only inventory is separate from the checkpoint51 tested source and
 from required input/controller/runtime acceptance.
+
+### Native acquisition selection, swimming correction and slope default (checkpoint52)
+
+The new component selection rule matches216 literal outcomes from the existing
+full6156C0 original probe (432 observations including both x87 words).
+The selected branch reads facing/distance exclusively and does not inspect
+candidate death/residency flags; a failed selected target never enumerates a
+fallback. The enumerated branch skips dead/nonresident actors and picks the
+smallest facing angle, replacing equal angles in manager order. Inclusive
+reach admits equality; negative adjusted hull distance is valid. Runtime contact
+application has separate lifecycle eligibility. These observations still supply
+geometry/manager membership and do not establish LOS or physical gameplay.
+
+The earlier adjusted-distance provenance called helper5E0530 a flight predicate.
+That label was incorrect. Native IsSwimming opcode10B9 registers execute5053B0
+and condition4F56D0; the actual condition calls5E0530, which tests bit0x800 from
+process virtual+2C0. Actual High getter6285A0 reads process+1FC. Low, MiddleLow
+and MiddleHigh all use60CF50 and return zero. Flag0x2000 does not enable this
+predicate. The contact input is renamed mSwimming; numeric distance outcomes
+are unchanged, but callers now supply swimming rather than flight/swim unions.
+S4/melee-swimming-state-investigation-02 executes90 observations through the
+full registered condition, common predicate and real process getter bodies.
+Only the actor-type virtual predicate is supplied. Attempt01 incorrectly
+expected MiddleHigh to read flags; that retained failed expectation is corrected
+by actual virtual dispatch in02. Water/process flag updates and live swimming
+contact remain outside this probe.
+Original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+probe.py SHA256 `3abdc5253bd25586c11c1cdaf0dc714f1cedc8e6cd87dfc256c8a4b1d4e3d2b9`;
+registry.json SHA256 `b1647ae7ee465d887103522f8f486291ca880bc9380f02c2e7032e7eb08a1ce2`;
+report.json SHA256 `4d48260849355efa4c968c7741720fd1f57cd7550093d9c5d42e350984317ae4`.
+
+Independent raw-master traversal in S4/melee-slope-winning-investigation-01
+finds no fAICombatSlopeDifference override. Original initializer prefix
+9EA850..9EA864 supplies that exact name, float48 and storageB37330 to41BAE0.
+The settings resolver therefore uses verified compiled48 when absent, accepts
+case-insensitive typed winning overrides and rejects ambiguity/bad values.
+The prefix probe does not execute registration, override loading or gameplay.
+Its initial system-Python invocation failed because Unicorn is only installed
+in the established oracle venv; that failure is retained separately.
+Master SHA256:
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+master-settings.json SHA256 `91f2469f9c8b4ca1b8ce430d09f4847e66765890e70667df1dc5d001b4e5a829`;
+initializer-probe.py SHA256 `b5ed1d93d86842627e7858939b5b275812b99bec3815f2e29de077c0e330fcd1`;
+initializer-prefix.json SHA256 `bf824e642de7066d4eb81e8ded287a9a1b8f48b2d427a606c9a8370c8c393ff0`.
+
+The engine acquisition query adapts actual collision-body bounds, native height
+scale and active-actor swimming, then applies native distance/cone/selection and
+actual same-space/LOS checks. The Bullet adapter test proves its as-built
+collision representation, not equivalence with original Havok process bounds.
+Original resident ordering, water/process state updates, upstream bounds/scale
+resolution and LOS remain independent runtime/original acceptance work. A
+missing physical context is not turned into a fabricated contact or miss.
+Controller/animation dispatch, damage, reactions and restart remain open.

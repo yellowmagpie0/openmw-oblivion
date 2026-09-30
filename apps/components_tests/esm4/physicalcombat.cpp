@@ -1710,7 +1710,7 @@ TEST(ESM4PhysicalCombat, MeleeDistanceMatchesOriginalInstructions)
     struct Observation
     {
         float reference, x, z;
-        bool selected, aFlying, tFlying;
+        bool selected, aSwimming, tSwimming;
         float aRadius, tRadius, aScale, tScale, expected;
     };
     const Observation observations[] = {
@@ -1719,8 +1719,8 @@ TEST(ESM4PhysicalCombat, MeleeDistanceMatchesOriginalInstructions)
     static_assert(std::size(observations) == 432);
     for (const auto& row : observations)
     {
-        const ESM4::MeleeDistanceActor attacker{{0, 0, 0}, 0, 50, row.aRadius, row.aScale, true, row.aFlying};
-        const ESM4::MeleeDistanceActor target{{row.x, 20, row.z}, 0, 50, row.tRadius, row.tScale, true, row.tFlying};
+        const ESM4::MeleeDistanceActor attacker{{0, 0, 0}, 0, 50, row.aRadius, row.aScale, true, row.aSwimming};
+        const ESM4::MeleeDistanceActor target{{row.x, 20, row.z}, 0, 50, row.tRadius, row.tScale, true, row.tSwimming};
         SCOPED_TRACE(&row - observations);
         EXPECT_EQ(ESM4::meleeContactDistance(row.reference, attacker, target, row.selected, 48), row.expected);
     }
@@ -1742,7 +1742,7 @@ TEST(ESM4PhysicalCombat, MeleeDistancePreservesActorGatesSentinelAndNegativeCont
                     std::numeric_limits<float>::max());
             }
     a.mIsActor = b.mIsActor = true;
-    a.mFlying = b.mFlying = false;
+    a.mSwimming = b.mSwimming = false;
     EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, true, 48), -4.f);
     EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, true, std::nextafter(48.f, 49.f)), 28.f);
     EXPECT_EQ(ESM4::meleeContactDistance(52, a, b, false, 48), 28.f);
@@ -1769,7 +1769,7 @@ TEST(ESM4PhysicalCombat, MeleeDistanceRejectsMalformedBoundsAndUnsupportedArithm
     EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, true, 48), std::invalid_argument);
     a.mMaximumY = 0;
     a.mPosition[0] = std::numeric_limits<float>::max();
-    a.mFlying = b.mFlying = true;
+    a.mSwimming = b.mSwimming = true;
     EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, false, 48), std::invalid_argument);
     a.mPosition[0] = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::meleeContactDistance(1, a, b, false, 48), std::invalid_argument);
@@ -1809,4 +1809,67 @@ TEST(ESM4PhysicalCombat, HandContactUsesOriginalVictimKnockedGetterAndFatigueRat
             hand, installed), std::invalid_argument);
     EXPECT_THROW(ESM4::handToHandContactDamage((ESM4::HandToHandContactInput{10, 50, -1, 140, 140, {}}),
         hand, installed), std::invalid_argument);
+}
+
+
+TEST(ESM4PhysicalCombat, MeleeSelectionMatchesOriginalSelectedAndResidentBranches)
+{
+    struct Row { float reach; int preferred; std::array<unsigned, 3> order; unsigned profile; int expected; };
+    const Row rows[] = {
+#include "meleeselection_expected.inc"
+    };
+    ASSERT_EQ(std::size(rows), 216u);
+    for (const auto& row : rows)
+    {
+        std::array<float, 3> distances{10, 5, 10};
+        std::array<float, 3> angles{5, 10, 5};
+        std::array<bool, 3> inside{true, true, true}, eligible{true, true, true};
+        switch (row.profile)
+        {
+            case 1: inside[0] = false; break;
+            case 2: eligible[0] = false; break; // Dead.
+            case 3: eligible[0] = false; break; // Not resident.
+            case 4: distances = {11, 5, 9}; break;
+            case 5: angles = {10, 10, 10}; break;
+        }
+        std::array<ESM4::MeleeContactCandidate, 3> candidates;
+        std::optional<std::size_t> selected;
+        for (std::size_t i = 0; i < candidates.size(); ++i)
+        {
+            const auto actor = row.order[i];
+            candidates[i] = {distances[actor], angles[actor], inside[actor], eligible[actor]};
+            if (static_cast<int>(actor) == row.preferred)
+                selected = i;
+        }
+        const auto result = ESM4::selectMeleeContact(candidates, row.reach, selected);
+        EXPECT_EQ(result ? static_cast<int>(row.order[*result]) : -1, row.expected)
+            << "profile " << row.profile << " preferred " << row.preferred << " reach " << row.reach;
+    }
+}
+
+TEST(ESM4PhysicalCombat, MeleeSelectionRejectsMalformedInputsAndPreservesExclusiveTarget)
+{
+    using Candidate = ESM4::MeleeContactCandidate;
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    const std::array<Candidate, 3> candidates{{{1, 1, true, true}, {0, 2, true, true}, {1, 1, true, true}}};
+    EXPECT_EQ(ESM4::selectMeleeContact(candidates, 1), 2u); // Equal angle replaces earlier, not nearest.
+    EXPECT_EQ(ESM4::selectMeleeContact(candidates, 0), 1u);
+    EXPECT_FALSE(ESM4::selectMeleeContact(candidates, 0, 0)); // No fallback.
+    EXPECT_FALSE(ESM4::selectMeleeContact({}, 0));
+    EXPECT_THROW(ESM4::selectMeleeContact(candidates, -1), std::invalid_argument);
+    EXPECT_THROW(ESM4::selectMeleeContact(candidates, nan), std::invalid_argument);
+    EXPECT_THROW(ESM4::selectMeleeContact(candidates, 1, 3), std::invalid_argument);
+    std::array<Candidate, 1> overlap{{{-1, 0, true, true}}};
+    EXPECT_EQ(ESM4::selectMeleeContact(overlap, 0), 0u);
+    overlap[0].mEligible = false;
+    EXPECT_FALSE(ESM4::selectMeleeContact(overlap, 0));
+    EXPECT_EQ(ESM4::selectMeleeContact(overlap, 0, 0), 0u); // Original selected branch ignores flags.
+    overlap[0].mEligible = true;
+    overlap[0].mDistance = nan;
+    EXPECT_THROW(ESM4::selectMeleeContact(overlap, 0), std::invalid_argument);
+    overlap[0].mDistance = 0;
+    overlap[0].mFacingDegrees = -1;
+    EXPECT_THROW(ESM4::selectMeleeContact(overlap, 0), std::invalid_argument);
+    overlap[0].mFacingDegrees = nan;
+    EXPECT_THROW(ESM4::selectMeleeContact(overlap, 0), std::invalid_argument);
 }

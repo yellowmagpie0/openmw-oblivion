@@ -77,6 +77,10 @@ namespace MWPhysics
          */
         osg::Vec3f getOriginalHalfExtents() const;
 
+        // Local collision-box center before scale/rotation. Used together with
+        // original half extents when native contact needs the maximum Y bound.
+        osg::Vec3f getOriginalCollisionCenter() const { return mMeshTranslation; }
+
         /**
          * Returns the position of the collision body
          * @note The collision shape's origin is in its center, so the position returned can be described as center of

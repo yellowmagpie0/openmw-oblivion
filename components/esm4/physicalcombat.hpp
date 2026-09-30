@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <array>
 #include <optional>
+#include <span>
+#include <cstddef>
 
 namespace ESM4
 {
@@ -58,13 +60,28 @@ namespace ESM4
         float mMaximumY = 0;
         float mScale = 1;
         bool mIsActor = true;
-        bool mFlying = false;
+        bool mSwimming = false;
     };
     // Bounds are outputs of the native reference bounds getters, before the
     // separate scale multiplication for radius. The caller owns reference
     // validity, same-space checks and the initial reference distance.
     float meleeContactDistance(float referenceDistance, const MeleeDistanceActor& attacker,
         const MeleeDistanceActor& target, bool selectedTarget, float slopeDifference);
+
+    struct MeleeContactCandidate
+    {
+        float mDistance;
+        float mFacingDegrees;
+        bool mInsideCone;
+        bool mEligible;
+    };
+    // A selected target is exclusive, even when it fails. Otherwise native
+    // acquisition chooses the smallest angle; equal angles prefer the later
+    // candidate in the caller's resident actor order. Reach is inclusive.
+    // Eligibility applies to enumeration only; the original selected branch
+    // does not read death/residency flags. Application eligibility is separate.
+    std::optional<std::size_t> selectMeleeContact(std::span<const MeleeContactCandidate> candidates,
+        float reach, std::optional<std::size_t> selectedTarget = {});
 
     struct PhysicalCombatSettings
     {

@@ -1,3 +1,4 @@
+#include "apps/openmw/mwmechanics/oblivionmelee.hpp"
 #include <components/esm4/loadbsgn.hpp>
 #include "apps/openmw/mwworld/player.hpp"
 #include <gtest/gtest.h>
@@ -2421,6 +2422,67 @@ namespace
         EXPECT_EQ(legacy.beginOblivionPhysicalAction({}), 0);
         EXPECT_FALSE(legacy.cancelOblivionPhysicalAction(1, {}));
         EXPECT_FALSE(legacy.commitOblivionPhysicalContact(1, {}, {}, {}));
+    }
+
+    TEST(OblivionWorldTest, NativeMeleeQueryCannotConvertUnavailablePhysicsIntoContactOrMiss)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        const auto target = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(fixture.mWorld.activateOblivionActor(actor));
+        ASSERT_TRUE(fixture.mWorld.activateOblivionActor(target));
+        auto& world = fixture.mWorld;
+        const auto id = world.beginOblivionPhysicalAction(actor);
+        const auto unrelated = world.beginOblivionPhysicalAction(target);
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, actor);
+            state.mReferences.push_back(captureNativeActorState(fixture, target).mReferences[0]);
+            return state.serializeBinary();
+        };
+        const auto before = snapshot();
+        EXPECT_FALSE(MWMechanics::acquireOblivionMeleeContact(world, id, actor, target, 64));
+        EXPECT_FALSE(MWMechanics::acquireOblivionMeleeContact(world, id, actor, {}, 64));
+        EXPECT_FALSE(MWMechanics::acquireOblivionMeleeContact(world, id, target, actor, 64));
+        EXPECT_FALSE(MWMechanics::acquireOblivionMeleeContact(world, id, {}, target, 64));
+        EXPECT_THROW(MWMechanics::acquireOblivionMeleeContact(world, id, actor, target, -1), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::acquireOblivionMeleeContact(world, id, actor, target,
+            std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(id, actor.getCellRef().getFormKey()));
+        EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(unrelated, target.getCellRef().getFormKey()));
+        ASSERT_TRUE(world.cancelOblivionPhysicalAction(id, actor));
+        EXPECT_FALSE(MWMechanics::acquireOblivionMeleeContact(world, id, actor, target, 64));
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_FALSE(MWMechanics::acquireOblivionMeleeContact(legacy, 1, actor, target, 64));
+    }
+
+    TEST(OblivionWorldTest, NativeMeleeAcquisitionSettingsUseCompiledSlopeDefaultAndWinningOverrides)
+    {
+        const auto defaults = MWMechanics::resolveOblivionMeleeAcquisitionSettings({});
+        EXPECT_FLOAT_EQ(defaults.mConeDegrees, 20);
+        EXPECT_FLOAT_EQ(defaults.mSlopeDifference, 48);
+        ESM4::GameSetting slope{}, cone{};
+        slope.mEditorId = "FAICOMBATSLOPEDIFFERENCE";
+        slope.mData = 1.5f;
+        cone.mEditorId = "fCombatHitConeAngle";
+        cone.mData = 30.f;
+        std::array<const ESM4::GameSetting*, 2> settings{&slope, &cone};
+        auto actual = MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings);
+        EXPECT_FLOAT_EQ(actual.mSlopeDifference, 1.5f);
+        EXPECT_FLOAT_EQ(actual.mConeDegrees, 30);
+        slope.mData = std::int32_t{48};
+        EXPECT_THROW(MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings), std::invalid_argument);
+        slope.mData = -1.f;
+        EXPECT_THROW(MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings), std::invalid_argument);
+        slope.mData = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings), std::invalid_argument);
+        slope.mData = 0.f;
+        actual = MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings);
+        EXPECT_FLOAT_EQ(actual.mSlopeDifference, 0);
+        auto duplicate = slope;
+        duplicate.mEditorId = "fAICombatSlopeDifference";
+        settings[1] = &duplicate;
+        EXPECT_THROW(MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings), std::invalid_argument);
     }
 
 }

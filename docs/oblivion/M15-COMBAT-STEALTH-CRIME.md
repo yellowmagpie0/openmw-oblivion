@@ -7731,3 +7731,53 @@ Checkpoint50 is committed as81b9d3ada9d335d17221a3e40f3c387d81dad03e;
 its verified bundle is S3/isolated-git-progress-28/m15-progress.bundle,
 SHA256d6d83a0f738ae309776cff5588392fc91fedf62bc131a3dac00815e32b5cb49b.
 Checkpoint51 is exported and committed separately after both engine checks.
+
+### Checkpoint52 — native melee acquisition over collision actors
+
+The native engine now has a read-only acquisition query for a pending owned
+physical action. It uses collision-body vertical bounds and original local
+maximum Y, separately resolved native actor scale, the native cone/distance
+rules, exclusive selected-target handling and ordered resident selection.
+Enumeration chooses smallest facing angle, replacing equal-angle candidates,
+with inclusive reach; it does not reuse TES3 nearest-distance targeting.
+Same-space and actual LOS checks reject invalid contacts. Unavailable physics
+is distinct from a physical miss, and the query never consumes IDs or writes AVs.
+
+The component selection test carries216 literal original outcomes; the other
+component case covers malformed inputs, empty lists, overlap, equal angles and
+selected-target no-fallback behavior. A real Bullet Actor case verifies the
+collision-bound adapter. Headless actual-world coverage verifies unavailable
+physics, rejected/wrong-owner/cancelled actions and exact snapshot preservation.
+A third engine case covers compiled acquisition settings and case-insensitive
+winning overrides, wrong types, invalid values and ambiguous names.
+
+The independent master audit showed no slope override. Original initializer
+execution confirms fAICombatSlopeDifference48, now used when absent. Original
+IsSwimming dispatch confirms the adjusted-distance flag is swimming, correcting
+the earlier flying label. High process reads mask0x800; other process levels
+return zero. The fork query derives swimming for admitted active collision
+actors; the full original process/water update and gameplay remain separate.
+
+Initial S4/melee-acquisition-main-01 and sanitized-01 fail the new headless
+snapshot fixture because it serialized two actors' values with one reference;
+both retained failures are corrected by listing both references. The component
+suites passed those initial runs but do not accept that candidate. Syntax01
+also retained test API mistakes; corrected syntax02/03 passes the affected TUs.
+Fresh S4/melee-acquisition-main-02 passes all1,991 component and711 engine cases.
+S4/melee-acquisition-sanitized-02 passes all466 ESM4 component and711 engine
+cases with ASan/UBSan, leak detection disabled. Inventories match with zero
+failures/skips. Tested source fingerprint:
+`13a62db61750d734a6da63944b683437b7463dca6cfd29cad1fb5004fba40eb0`.
+Checkpoint51 lacks the selection API in melee-acquisition-baseline-01.
+
+Acquisition is production query code, not a completed controller route. The
+as-built collision bounds/scale adapter, original resident ordering, LOS policy,
+water/process continuation and physics contact still require runtime/original
+acceptance; the original instruction probes supply those boundaries. Damage,
+block/armor/condition, reactions and persistent animation intent remain open.
+S2/S3 remain in progress and S4–S14 remain open. Next: native controller group
+selection and stock Hit dispatch into one resolved/published physical contact.
+Checkpoint51 is committed asdd380c1263b2c4f5ec5c0ee22ced80f139a21a45;
+verified bundle S3/isolated-git-progress-29/m15-progress.bundle, SHA256
+3adbcb343f5fc80306e2bbf179aff51e5020959e0ba6ad561c0b5868594b2871.
+Checkpoint52 is exported and committed separately after both corrected checks.
