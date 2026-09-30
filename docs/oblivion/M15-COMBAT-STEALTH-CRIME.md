@@ -7700,3 +7700,34 @@ SHA25640c996f32b6b64a84334a800685b48b8d116d278fa504d1e62a3bf4377513c9c.
 Checkpoint50 follows as a separate commit after these checks. Next is the
 production native intent/controller/contact slice with geometry and state
 adapters, preserving existing open integration and acceptance gates.
+
+### Checkpoint51 — owned physical actions through the actual world interface
+
+The shared world interface now exposes begin, cancel and contact publication
+for native physical actions. The concrete world validates actual actor bindings
+and alive lifecycle authority before allocating an ID. Cancellation and contact
+reject an ID belonging to another actor or an already consumed ID. Contact
+resolves actual Player identity, essential flags, winning recovery/base settings
+and live god mode before calling the existing atomic native transaction.
+Morrowind retains the default no-op implementation.
+
+Two actual-world cases cover wrong owners, stale/replayed IDs, invalid deltas,
+uninitialized actors, explicit misses, isolated cancellation, binary-restored
+pending IDs, source death and Player essential/god-mode combinations. Baseline
+S3/world-physical-entry-baseline-01 confirms checkpoint50 has none of the three
+new APIs. Configured syntax checks pass both modified translation units; the
+initial dangling-else warning in a test was corrected before the full builds.
+S3/world-physical-entry-engine-01 and world-physical-entry-sanitized-engine-01
+pass all708 engine cases with exact inventories and zero failures/skips.
+ASan/UBSan leak detection is disabled. Tested source fingerprint:
+`1a8a3d33d2b5e79747632d48644d1d6399fb21d5772bd61fcb0b684c3e6e36ba`.
+
+Callers still supply resolved signed deltas. These entry points do not acquire
+geometry, derive damage, dispatch text keys, or produce physical reactions.
+The tests use headless native World fixtures; they do not establish rendered
+melee acceptance. S2/S3 remain in progress and S4–S14 remain open. Next is the
+production controller/contact path using the stock native animation groups.
+Checkpoint50 is committed as81b9d3ada9d335d17221a3e40f3c387d81dad03e;
+its verified bundle is S3/isolated-git-progress-28/m15-progress.bundle,
+SHA256d6d83a0f738ae309776cff5588392fc91fedf62bc131a3dac00815e32b5cb49b.
+Checkpoint51 is exported and committed separately after both engine checks.

@@ -3817,3 +3817,44 @@ Original executable SHA256:
 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
 probe.py SHA256 `ff8ac91a7e48daf1f9c5832281141420cf9b4cc6b901e8a6a33199626bcec91e`.
 report.json SHA256 `4e1fa799cb7e459d42aeca41e5ad7df5e51a8f1a033ca27d32d093054cbf35b2`.
+
+### Ordinary attack contact ordering and expanded stock KF inventory (checkpoint51 investigation)
+
+S4/normal-attack-contact-order-oracle-02 executes eight original ordinary
+AttackLeft/Right subtype4 dispatcher profiles across Player/non-Player,
+combat/noncombat and both x87 words. The contact virtual invocation precedes
+the attack Fatigue debit. Full5E4010/547560 computes the unarmed basic cost7
+from the supplied winning attack GMSTs; the debit writer observes-7.
+Process/magic-item/engagement predicates, contact application and debit mutation
+are supplied boundaries. This proves invocation order, not complete contact
+arithmetic, input timing, physical mutation or normal gameplay. Attempt01 used
+incorrect GMST addresses and is retained as a failed harness setup.
+Original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+probe.py SHA256 `9b544e6e7248ac80a99e4f54ed5dd315228f2275164cc66a0165448d04b5026c`;
+report.json SHA256 `38854212037a797c5b3710d6a18e4eedec1273356bd9c1cc20e16cda2418c1fd`.
+
+The original animation metadata table is atB102E0, with36-byte entries.
+AttackLeft/Right are type3/subtype4; AttackPower and four directional power
+groups are type3/subtype5; BlockAttack is type3/subtype6. The preliminary
+B102E4 table read was misaligned and is retained separately. This metadata
+inspection does not by itself establish power-attack gameplay semantics.
+Evidence: S4/attack-event-order-investigation-02/group-table.json, SHA256
+`9e991c0cbf307906b5f8eea345ce7c5b4576588f600cdd1a2a1c85522a1161c7`.
+
+S4/native-melee-group-keys-02 extracts and decodes53 attack KFs in each of the
+stock _1stperson and _male directories. All58 hand-to-hand/one-hand/two-hand
+melee groups across these views contain exactly one bare Hit key. Some timings
+differ between views; controller contact must follow actual animation events
+instead of a shared fixed timer. Other decoded attack assets include bows and
+block attacks; they are not counted as these58 melee groups. Archive list paths
+use backslashes; the initial slash-only selection failed its nonempty assertion
+in attempt01, which is retained. No production NIF key rewriting was made.
+Archive SHA256:
+`d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b`.
+assets.json SHA256 `d7c8563a0164e6f25e693eb8cb0d90381c0a480696334cafba26f274094022b8`;
+commands.json SHA256 `689a380655f298f495dac9fc3e73e4e95371b1d87df978100aaea4ce1c2425e6`;
+melee-contact-keys.json SHA256 `29335217c9343273ad965141ba1fb4ac0c2f370d1ae1c189193279b979f580b8`.
+The reused typed NIF inspection driver is the checkpoint47 asset decoder;
+this read-only inventory is separate from the checkpoint51 tested source and
+from required input/controller/runtime acceptance.

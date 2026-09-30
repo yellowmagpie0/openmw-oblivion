@@ -1479,6 +1479,59 @@ namespace MWWorld
         return reference;
     }
 
+    std::uint64_t World::beginOblivionPhysicalAction(const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return 0;
+        const bool player = actor == getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+            return 0;
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* life = mOblivionCombat->findActorLife(key);
+        if (!mOblivionCombat->findActorValues(key) || !life || life->mPhase != ESM4::ActorLifePhase::Alive)
+            return 0;
+        // Validate the actual resident binding before issuing an identity.
+        if (!player)
+            static_cast<void>(mOblivionCombat->getNonPlayerValue(actor, 8));
+        return mOblivionCombat->allocateAction(key);
+    }
+
+    bool World::cancelOblivionPhysicalAction(std::uint64_t id, const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const bool player = actor == getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+            return false;
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->isActionPending(id, key))
+            return false;
+        if (!player)
+            static_cast<void>(mOblivionCombat->getNonPlayerValue(actor, 8));
+        return mOblivionCombat->consumeAction(id, key);
+    }
+
+    bool World::commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        if (!mOblivionCombat || attacker.isEmpty())
+            return false;
+        const bool player = attacker == getPlayerPtr();
+        if (!player && attacker.getType() != ESM::REC_NPC_4 && attacker.getType() != ESM::REC_CREA4)
+            return false;
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
+        if (!mOblivionCombat->isActionPending(id, key))
+            return false;
+        if (!victim.isEmpty() && victim != getPlayerPtr()
+            && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
+            return false;
+        const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
+        const auto recovery = essential
+            ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
+        return mOblivionCombat->commitPhysicalContact(id, attacker, victim, deltas, mPlayer.get(), essential,
+            recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
+    }
+
     bool World::killOblivionActor(const Ptr& actor, const ESM::FormKey& killer)
     {
         if (!mOblivionCombat || actor.isEmpty())

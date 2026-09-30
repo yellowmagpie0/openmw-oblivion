@@ -2284,4 +2284,143 @@ namespace
         EXPECT_TRUE(service.isActionPending(action, values.mActor));
     }
 
+    TEST(OblivionWorldTest, physicalWorldEntryPointsPreserveOwnershipMissReplayAndRejectedContact)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWBase::World& api = world;
+        auto& service = *world.getOblivionCombatService();
+        const auto a = addNativeNpc(fixture, 0x900);
+        const auto b = addNativeNpc(fixture, 0x901);
+        const auto uninitialized = addNativeNpc(fixture, 0x902);
+        ASSERT_TRUE(world.activateOblivionActor(a));
+        ASSERT_TRUE(world.activateOblivionActor(b));
+        const auto key = a.getCellRef().getFormKey();
+        const auto other = b.getCellRef().getFormKey();
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, a);
+            state.mReferences.push_back(captureNativeActorState(fixture, b).mReferences[0]);
+            return state.serializeBinary();
+        };
+        const auto initial = snapshot();
+        EXPECT_EQ(api.beginOblivionPhysicalAction({}), 0);
+        EXPECT_EQ(api.beginOblivionPhysicalAction(uninitialized), 0);
+        EXPECT_FALSE(api.cancelOblivionPhysicalAction(1, {}));
+        EXPECT_FALSE(api.commitOblivionPhysicalContact(1, {}, b, {-7, -3, -1}));
+        EXPECT_EQ(snapshot(), initial);
+        const auto id = api.beginOblivionPhysicalAction(a);
+        ASSERT_NE(id, 0);
+        EXPECT_TRUE(service.isActionPending(id, key));
+        const auto before = snapshot();
+        EXPECT_FALSE(api.cancelOblivionPhysicalAction(id, b));
+        EXPECT_FALSE(api.commitOblivionPhysicalContact(id, b, a, {-7, -3, -1}));
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_THROW(api.commitOblivionPhysicalContact(id, a, b,
+            {std::numeric_limits<float>::quiet_NaN(), -3, -1}), std::invalid_argument);
+        EXPECT_THROW(api.commitOblivionPhysicalContact(id, a, uninitialized, {-7, -3, -1}), std::invalid_argument);
+        EXPECT_THROW(api.commitOblivionPhysicalContact(id, a, {}, {-7, -3, -1}), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        const float sourceFatigue = service.getNonPlayerValue(a, 10);
+        const float targetFatigue = service.getNonPlayerValue(b, 10);
+        EXPECT_TRUE(api.commitOblivionPhysicalContact(id, a, b, {-7, -3, -1}));
+        EXPECT_EQ(service.getNonPlayerValue(a, 10), sourceFatigue - 7);
+        EXPECT_EQ(service.getNonPlayerValue(b, 10), targetFatigue - 1);
+        EXPECT_EQ(service.getNonPlayerValue(b, 8), 97);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        const auto hit = snapshot();
+        EXPECT_FALSE(api.commitOblivionPhysicalContact(id, a, b, {-7, -3, -1}));
+        EXPECT_EQ(snapshot(), hit);
+        const auto miss = api.beginOblivionPhysicalAction(a);
+        EXPECT_TRUE(api.commitOblivionPhysicalContact(miss, a, {}, {-2, 0, 0}));
+        EXPECT_EQ(service.getNonPlayerValue(a, 10), sourceFatigue - 9);
+        EXPECT_EQ(service.getNonPlayerValue(b, 8), 97);
+        const auto cancel = api.beginOblivionPhysicalAction(a);
+        const auto retained = api.beginOblivionPhysicalAction(a);
+        const auto anotherOwner = api.beginOblivionPhysicalAction(b);
+        EXPECT_TRUE(api.cancelOblivionPhysicalAction(cancel, a));
+        EXPECT_FALSE(api.cancelOblivionPhysicalAction(cancel, a));
+        EXPECT_FALSE(api.commitOblivionPhysicalContact(cancel, a, b, {-7, -3, -1}));
+        EXPECT_TRUE(service.isActionPending(retained, key));
+        EXPECT_TRUE(service.isActionPending(anotherOwner, other));
+        const auto restored = ESM4::RuntimeState::deserializeBinary(snapshot());
+        MWMechanics::OblivionCombatService resumed; resumed.restore(restored);
+        EXPECT_TRUE(resumed.isActionPending(retained, key));
+        EXPECT_TRUE(resumed.isActionConsumed(cancel));
+        ASSERT_TRUE(world.killOblivionActor(a, {}));
+        EXPECT_EQ(api.beginOblivionPhysicalAction(a), 0);
+        EXPECT_FALSE(api.commitOblivionPhysicalContact(retained, a, b, {-7, -3, -1}));
+        EXPECT_TRUE(service.isActionPending(anotherOwner, other));
+    }
+
+    TEST(OblivionWorldTest, physicalWorldContactResolvesEssentialAndPlayerGodMode)
+    {
+        for (bool essential : {false, true})
+            for (bool godMode : {false, true})
+            {
+                NativeWorldFixture fixture;
+                auto& world = fixture.mWorld;
+                MWBase::World& api = world;
+                MWClass::Npc::registerSelf(); world.setupPlayer();
+                auto& service = *world.getOblivionCombatService();
+                const auto actor = addNativeNpc(fixture, 0x900);
+                ASSERT_TRUE(world.activateOblivionActor(actor));
+                const auto key = actor.getCellRef().getFormKey();
+                ESM4::RuntimeActorValues values;
+                values.mActor = ESM::FormKey::dynamic("player", 1);
+                values.mBase = ESM::FormKey::dynamic("player-base", 1);
+                values.mOwner = ESM4::ActorValueOwner::Player;
+                values.mPlayerFormValues = {{10, 0, 0, 0}};
+                for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+                service.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+                service.publishPlayerLife(world.getPlayer(), {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+                auto player = world.getPlayerPtr();
+                if (essential)
+                {
+                    auto record = *player.get<ESM::NPC>()->mBase;
+                    record.mFlags |= ESM::NPC::Essential;
+                    world.getStore().getWritable<ESM::NPC>().insert(record);
+                }
+                ASSERT_EQ(player.getClass().isEssential(player), essential);
+                if (godMode)
+                {
+                    ASSERT_TRUE(world.toggleGodMode());
+                }
+                const float sourceFatigue = service.getNonPlayerValue(actor, 10);
+                const float playerHealth = service.getPlayerValue(8);
+                const float playerFatigue = service.getPlayerValue(10);
+                const auto id = api.beginOblivionPhysicalAction(actor);
+                const auto playerAction = api.beginOblivionPhysicalAction(player);
+                ASSERT_TRUE(api.commitOblivionPhysicalContact(id, actor, player, {-7, -1000, -1}));
+                EXPECT_EQ(service.getNonPlayerValue(actor, 10), sourceFatigue - 7);
+                EXPECT_EQ(service.getPlayerValue(10), godMode ? playerFatigue : playerFatigue - 1);
+                const auto* life = service.findActorLife(values.mActor);
+                ASSERT_NE(life, nullptr);
+                EXPECT_EQ(life->mPhase, godMode ? ESM4::ActorLifePhase::Alive
+                    : essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead);
+                if (godMode)
+                {
+                    EXPECT_EQ(service.getPlayerValue(8), playerHealth);
+                    EXPECT_TRUE(service.isActionPending(playerAction, values.mActor));
+                    EXPECT_TRUE(api.commitOblivionPhysicalContact(playerAction, player, actor, {-7, -3, -1}));
+                    EXPECT_EQ(service.getPlayerValue(10), playerFatigue);
+                    EXPECT_EQ(service.getNonPlayerValue(actor, 8), 97);
+                }
+                else
+                {
+                    EXPECT_FALSE(service.isActionPending(playerAction, values.mActor));
+                    EXPECT_EQ(api.beginOblivionPhysicalAction(player), 0);
+                }
+                const auto event = service.takeNextDeathEvent();
+                if (!godMode && !essential)
+                {
+                    ASSERT_TRUE(event); EXPECT_EQ(event->mActor, values.mActor); EXPECT_EQ(event->mKiller, key);
+                }
+                else EXPECT_FALSE(event);
+            }
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_EQ(legacy.beginOblivionPhysicalAction({}), 0);
+        EXPECT_FALSE(legacy.cancelOblivionPhysicalAction(1, {}));
+        EXPECT_FALSE(legacy.commitOblivionPhysicalContact(1, {}, {}, {}));
+    }
+
 }

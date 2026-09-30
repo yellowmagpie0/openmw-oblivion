@@ -3,6 +3,7 @@
 
 #include "rotationflags.hpp"
 
+#include <cstdint>
 #include <deque>
 #include <optional>
 #include <utility>
@@ -84,6 +85,7 @@ namespace MWRender
 namespace MWMechanics
 {
     struct Movement;
+    struct OblivionPhysicalContactDeltas;
 }
 
 namespace DetourNavigator
@@ -180,6 +182,14 @@ namespace MWBase
         virtual bool toggleBorders() = 0;
 
         virtual MWWorld::Player& getPlayer() = 0;
+
+        // Native physical intent/contact publication boundary. The controller
+        // owns motion, geometry and resolved deltas; zero/false means this
+        // world or actor does not support the requested native transition.
+        virtual std::uint64_t beginOblivionPhysicalAction(const MWWorld::Ptr&) { return 0; }
+        virtual bool cancelOblivionPhysicalAction(std::uint64_t, const MWWorld::Ptr&) { return false; }
+        virtual bool commitOblivionPhysicalContact(std::uint64_t, const MWWorld::Ptr&, const MWWorld::Ptr&,
+            const MWMechanics::OblivionPhysicalContactDeltas&) { return false; }
         virtual MWWorld::Ptr getPlayerPtr() = 0;
         virtual MWWorld::ConstPtr getPlayerConstPtr() const = 0;
 

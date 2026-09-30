@@ -272,6 +272,10 @@ namespace MWWorld
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
         // False only for actors not yet registered with native value authority.
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
+        std::uint64_t beginOblivionPhysicalAction(const Ptr& actor) override;
+        bool cancelOblivionPhysicalAction(std::uint64_t id, const Ptr& actor) override;
+        bool commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas) override;
         bool executeOblivionActorValueCommand(const ESM::FormKey& actor, std::uint8_t value,
             ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested);
         bool executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
