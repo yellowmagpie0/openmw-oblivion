@@ -6993,3 +6993,35 @@ Changed-source bytes and a clean fresh bundle clone verify the checkpoint;
 builds ran in the shared workspace. Next: custom-class native input adaptation
 and transactional character-choice rebuilding before default activation.
 S2/S3 and all later pending gameplay gates remain open.
+
+### Native custom-class calculation input
+
+The Player character-base adapter now accepts the existing shared custom-class
+projection when no winning TES4 CLAS record exists. It maps the two favored
+attributes and seven projected major skills into the same original-verified
+calculation as native classes. Five shared major slots and the first two minor
+slots supply those majors, matching projectClass and the existing dialog
+bridge. Spare minor slots are ignored. Invalid attributes/majors/specialization
+reject explicitly; duplicate favored attributes receive the primary bonus
+once, preserving native nearest-even rounding. A custom string ID never
+becomes the native temporary class because its translated FormId is zero.
+Winning TES4 CLAS records retain precedence and full-ID comparison.
+
+`native-custom-class-baseline-01` retains the new fixture failing on the prior
+adapter's missing-class rejection. Configured syntax checks pass.
+`native-custom-class-engine-01` and
+`native-custom-class-sanitized-engine-01` each pass680 full engine cases with
+exact inventories and no skips/failures, fingerprint
+`92c3eccd646b03823efdba90aa83d51289164e9331dda5f6b031f3a5484dcd5c`.
+ASan/UBSan leak checks are off. No new arithmetic oracle is claimed: the adapter
+uses the existing native Player calculation and compares projected/native
+inputs directly. This is calculation integration, not dialog acceptance.
+
+Checkpoint35 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-13/m15-progress.bundle`.
+Clone with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: combine character-base and passive
+replacement preparation into one transaction, then connect character choices.
+Default activation and pending S2/S3 and later gameplay gates remain open.

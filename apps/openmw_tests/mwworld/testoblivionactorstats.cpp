@@ -5855,6 +5855,57 @@ namespace
             mStore, mNpc.mRace, mNpc.mClass, true, 1).mSkills[0], 30);
     }
 
+    TEST_F(OblivionActorStatsTest, playerCharacterBaseAdmitsCustomClassProjectionWithNativeRounding)
+    {
+        autoNpc();
+        const auto expected = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1);
+        ESM::Class custom{}; custom.blank(); custom.mId = ESM::RefId::stringRefId("custom-player-class");
+        custom.mData.mAttribute = {ESM::Attribute::Personality, ESM::Attribute::Strength};
+        custom.mData.mSpecialization = 0;
+        const auto& ids = MWWorld::oblivionSkillIds();
+        const std::array<unsigned, 7> indices{0, 1, 3, 13, 6, 15, 16};
+        for (std::size_t i = 0; i < 5; ++i) custom.mData.mSkills[i][1] = ids[indices[i]];
+        custom.mData.mSkills[0][0] = ids[indices[5]];
+        custom.mData.mSkills[1][0] = ids[indices[6]];
+        mStore.getWritable<ESM::Class>().insertStatic(custom);
+        EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, custom.mId, true, 1), expected);
+        ESM4::GameSetting temporary{}; temporary.mId = {0x3333, 6};
+        temporary.mEditorId = "iClassCharactergenClass"; temporary.mData = std::int32_t(0);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(temporary);
+        // A custom string ID is not native FormId0 and never inherits its
+        // temporary-class suppression. Spare shared minor slots are ignored.
+        custom.mData.mSkills[2][0] = ESM::RefId::stringRefId("not-a-native-skill");
+        mStore.getWritable<ESM::Class>().insertStatic(custom);
+        EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, custom.mId, true, 1), expected);
+        custom.mData.mAttribute[1] = custom.mData.mAttribute[0];
+        mStore.getWritable<ESM::Class>().insertStatic(custom);
+        auto native = *mStore.get<ESM4::Class>().find(mNpc.mClass);
+        native.mData.mFavoredAttributes = {6, 6};
+        mStore.getWritable<ESM4::Class>().insertStatic(native);
+        const auto duplicate = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, custom.mId, true, 1);
+        EXPECT_EQ(duplicate, MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, mNpc.mClass, true, 1));
+        EXPECT_EQ(duplicate.mAttributes[6], 40); // Add primary once;35+5.5 rounds40.
+        EXPECT_EQ(duplicate.mAttributes[0], 36);
+        custom.mData.mAttribute[0] = ESM::RefId::stringRefId("invalid-attribute");
+        mStore.getWritable<ESM::Class>().insertStatic(custom);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, custom.mId, true, 1), std::invalid_argument);
+        custom.mData.mAttribute[0] = ESM::Attribute::Personality;
+        custom.mData.mSkills[0][1] = ESM::RefId::stringRefId("invalid-major");
+        mStore.getWritable<ESM::Class>().insertStatic(custom);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, custom.mId, true, 1), std::invalid_argument);
+        custom.mData.mSkills[0][1] = ids[0]; custom.mData.mSpecialization = 3;
+        mStore.getWritable<ESM::Class>().insertStatic(custom);
+        EXPECT_THROW(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+            mStore, mNpc.mRace, custom.mId, true, 1), std::invalid_argument);
+    }
+
     TEST_F(OblivionActorStatsTest, playerCharacterBaseRejectsMissingNativeInputsAndMalformedWinningSettings)
     {
         autoNpc();

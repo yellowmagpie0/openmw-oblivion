@@ -12,6 +12,7 @@
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/runtimereferences.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <bit>
 #include <set>
@@ -212,6 +213,38 @@ namespace MWWorld
     {
         const auto* race = store.get<ESM4::Race>().search(raceId);
         const auto* characterClass = store.get<ESM4::Class>().search(classId);
+        ESM4::Class translated{};
+        const bool nativeClass = characterClass != nullptr;
+        if (!characterClass)
+        {
+            const auto* custom = store.get<ESM::Class>().search(classId);
+            if (!custom)
+                throw std::invalid_argument("missing native Player class calculation input");
+            for (std::size_t i = 0; i < translated.mData.mFavoredAttributes.size(); ++i)
+            {
+                const auto index = ESM::Attribute::refIdToIndex(custom->mData.mAttribute[i]);
+                if (index < 0 || index >= 8)
+                    throw std::invalid_argument("invalid native Player custom favored attribute");
+                translated.mData.mFavoredAttributes[i] = index;
+            }
+            translated.mData.mSpecialization = custom->mData.mSpecialization;
+            const auto nativeSkill = [&](const ESM::RefId& id) -> std::uint32_t {
+                const auto& ids = oblivionSkillIds();
+                const auto found = std::find(ids.begin(), ids.end(), id);
+                if (found == ids.end())
+                    throw std::invalid_argument("invalid native Player custom major skill");
+                return 12 + std::distance(ids.begin(), found);
+            };
+            // The shared custom-class dialog projects seven majors into five
+            // major slots and the first two minor slots. Read only that
+            // established projection; the three spare minor slots are not
+            // native majors and must not affect the result.
+            for (std::size_t i = 0; i < 5; ++i)
+                translated.mData.mMajorSkills[i] = nativeSkill(custom->mData.mSkills[i][1]);
+            translated.mData.mMajorSkills[5] = nativeSkill(custom->mData.mSkills[0][0]);
+            translated.mData.mMajorSkills[6] = nativeSkill(custom->mData.mSkills[1][0]);
+            characterClass = &translated;
+        }
         if (!race || !race->mTES4SkillBonuses || !characterClass)
             throw std::invalid_argument("missing native Player race/class calculation input");
         const auto skills = ESM4::resolveSkillDefinitions(winningRecords<ESM4::Skill>(store));
@@ -226,7 +259,8 @@ namespace MWWorld
             input.mSkills[i] = {skills[i]->mData->mGoverningAttribute, skills[i]->mData->mSpecialization};
         for (std::size_t i = 0; i < input.mRaceBonuses.size(); ++i)
             input.mRaceBonuses[i] = {(*race->mTES4SkillBonuses)[i].mSkill, (*race->mTES4SkillBonuses)[i].mBonus};
-        const bool temporary = characterClass->mId.toUint32() == ESM4::buildCharacterGenerationClassId(settings);
+        const bool temporary = nativeClass
+            && characterClass->mId.toUint32() == ESM4::buildCharacterGenerationClassId(settings);
         return ESM4::calculatePlayerCharacterBaseStats(input, ESM4::buildNpcAutoStatsSettings(settings), temporary);
     }
 
