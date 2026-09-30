@@ -1707,6 +1707,56 @@ namespace MWWorld
         else
             state.validate();
         MWBase::Environment::get().getLuaManager()->validateNativeState(state);
+        const bool nativePlayerValues = preparedCombat
+            && preparedCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
+        static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
+            "endurance", "personality", "luck" };
+        static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt", "handtohand",
+            "heavyarmor", "alchemy", "alteration", "conjuration", "destruction", "illusion", "mysticism",
+            "restoration", "acrobatics", "lightarmor", "marksman", "mercantile", "security", "sneak",
+            "speechcraft" };
+        const auto validateFloatInput = [](double value, std::string_view name) {
+            if (!std::isfinite(value) || value < -std::numeric_limits<float>::max()
+                || value > std::numeric_limits<float>::max())
+                throw std::runtime_error("TES4 runtime-state " + std::string(name)
+                    + " exceeds the finite float domain");
+        };
+        validateFloatInput(state.mClock.mTimeScale, "time scale");
+        const auto validatePlayerFloat = [&](std::string_view name) {
+            const auto found = state.mPlayer.mActorValues.find(std::string(name));
+            if (found != state.mPlayer.mActorValues.end())
+                validateFloatInput(found->second, name);
+        };
+        validatePlayerFloat("breath_time.current");
+        if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
+        {
+            const double integral = std::trunc(level->second);
+            if (integral < std::numeric_limits<int>::min() || integral > std::numeric_limits<int>::max())
+                throw std::runtime_error("TES4 runtime-state level exceeds the integer conversion domain");
+        }
+        if (!nativePlayerValues)
+        {
+            for (const auto* name : {"health", "magicka", "fatigue"})
+            {
+                const std::string prefix(name);
+                validatePlayerFloat(prefix + ".base");
+                validatePlayerFloat(prefix + ".current");
+                if (state.mPlayer.mActorValues.contains(prefix + ".modifier"))
+                    validatePlayerFloat(prefix + ".modifier");
+                else
+                    validatePlayerFloat(prefix + ".modified");
+            }
+            const auto validateBaseAndModifier = [&](const auto& names) {
+                for (const auto* name : names)
+                {
+                    const std::string prefix(name);
+                    validatePlayerFloat(prefix + ".base");
+                    validatePlayerFloat(prefix + ".modifier");
+                }
+            };
+            validateBaseAndModifier(attributeNames);
+            validateBaseAndModifier(skillNames);
+        }
         const ESM::FormKeyResolver resolver(mContentFiles);
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -1749,7 +1799,7 @@ namespace MWWorld
                 return Globals::sYear.getValue();
             return nativeName;
         };
-        const auto setVariant = [](ESM::Variant& target, const ESM4::RuntimeValue& value) {
+        const auto setVariant = [&validateFloatInput](ESM::Variant& target, const ESM4::RuntimeValue& value) {
             if (target.getType() == ESM::VT_String)
             {
                 if (const auto* text = std::get_if<std::string>(&value))
@@ -1768,8 +1818,7 @@ namespace MWWorld
                             return static_cast<double>(item);
                     },
                     value);
-                if (number < -std::numeric_limits<float>::max() || number > std::numeric_limits<float>::max())
-                    throw std::runtime_error("TES4 runtime-state global exceeds the finite float domain");
+                validateFloatInput(number, "global");
                 target.setFloat(static_cast<float>(number));
             }
             else
@@ -1863,8 +1912,6 @@ namespace MWWorld
         applyPreparedInventory(playerInventory, preparedPlayerInventory);
         player.getRefData().setPosition(state.mPlayer.mPosition);
         MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
-        const bool nativePlayerValues = preparedCombat
-            && preparedCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
         const auto applyDynamicStat = [&state](std::string_view name, const MWMechanics::DynamicStat<float>& current) {
             const std::string prefix(name);
             const auto value = [&](std::string_view suffix, double fallback) {
@@ -1892,8 +1939,6 @@ namespace MWWorld
         }
         if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
             stats.setLevel(static_cast<int>(level->second));
-        static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
-            "endurance", "personality", "luck" };
         if (!nativePlayerValues)
         {
             for (std::size_t i = 0; i < attributeNames.size(); ++i)
@@ -1915,10 +1960,6 @@ namespace MWWorld
             ESM::Skill::Illusion, ESM::Skill::Mysticism, ESM::Skill::Restoration, ESM::Skill::Acrobatics,
             ESM::Skill::LightArmor, ESM::Skill::Marksman, ESM::Skill::Mercantile, ESM::Skill::Security,
             ESM::Skill::Sneak, ESM::Skill::Speechcraft };
-        static constexpr std::array skillNames{ "armorer", "athletics", "blade", "block", "blunt", "handtohand",
-            "heavyarmor", "alchemy", "alteration", "conjuration", "destruction", "illusion", "mysticism",
-            "restoration", "acrobatics", "lightarmor", "marksman", "mercantile", "security", "sneak",
-            "speechcraft" };
         MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
         if (const auto breath = state.mPlayer.mActorValues.find("breath_time.current");
             breath != state.mPlayer.mActorValues.end())

@@ -6049,3 +6049,21 @@ included-2^63 boundary. Synthetic global definitions are registered through
 real native/projected stores. Full World/StateManager rollback, other consumed
 scalar domains, save/quit/fresh restart and gameplay acceptance remain open.
 The requested local commit remains unavailable under the read-only Git mount.
+
+Clock scale and consumed legacy Player scalar conversions now also preflight
+before World mutation. Resource/attribute/skill fields are checked only when
+native Player authority is absent; selected modifier/old-modified precedence
+is preserved. Breath and level fields retain their existing consumption.
+Finite float conversion and truncated integer range checks prevent overflow
+before casting. They do not define original-game stat or level limits.
+
+Scalar baseline01 retains huge positive/negative clock scale and18 oversized
+legacy Player fields changing globals/class data without rejection. Normal
+and sanitizer `native-world-scalar-preflight-01` each pass all661 engine cases,
+exact inventories/XML and no skips, at fingerprint `e3f40675603c314fa960045954d4065c89fd7a96b8b9c19f86d61ce3baf73e33`
+on parent `8cf3491f18`, with leak detection disabled. Tests include valid
+retry, ignored unknown telemetry and superseded old-modified telemetry.
+This validates consumed conversion inputs; derived legacy arithmetic, missing
+Player form-input migration and whole-world rollback remain open, alongside
+normal-input/fresh-process acceptance. Local commits are still unavailable
+because Git metadata is read-only.

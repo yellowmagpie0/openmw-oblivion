@@ -1067,6 +1067,51 @@ namespace
             ASSERT_NO_THROW(world.applyOblivionRuntimeState());
             EXPECT_EQ(world.getGlobalInt(integerName), expected);
         }
+        for (const double invalidScale : {1e300, -1e300})
+        {
+            world.setGlobalFloat(firstName, 3);
+            world.setGlobalFloat(MWWorld::Globals::sTimeScale, 30);
+            const auto clockBefore = world.getTimeStamp();
+            auto invalidClock = saved;
+            invalidClock.mClock.mTimeScale = invalidScale;
+            ASSERT_NO_THROW(invalidClock.validate());
+            readNativeSnapshot(fixture, invalidClock);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(world.getGlobalFloat(MWWorld::Globals::sTimeScale), 30);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
+        const std::array invalidScalars{"health.base", "health.modifier", "health.modified", "health.current",
+            "magicka.base", "magicka.modifier", "magicka.modified", "magicka.current", "fatigue.base",
+            "fatigue.modifier", "fatigue.modified", "fatigue.current", "strength.base", "strength.modifier",
+            "blade.base", "blade.modifier", "breath_time.current", "level"};
+        for (const auto* scalar : invalidScalars)
+        {
+            SCOPED_TRACE(scalar);
+            world.setGlobalFloat(firstName, 3);
+            const auto player = world.getPlayerPtr();
+            const auto& stats = player.getClass().getNpcStats(player);
+            const auto healthBefore = stats.getHealth().getCurrent();
+            const auto levelBefore = stats.getLevel();
+            const auto clockBefore = world.getTimeStamp();
+            auto invalidPlayer = saved;
+            invalidPlayer.mPlayer.mActorValues[scalar] = 1e300;
+            ASSERT_NO_THROW(invalidPlayer.validate());
+            readNativeSnapshot(fixture, invalidPlayer);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(stats.getHealth().getCurrent(), healthBefore);
+            EXPECT_EQ(stats.getLevel(), levelBefore);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
+        saved.mPlayer.mActorValues = {{"health.base", 100}, {"health.modifier", 0}, {"health.current", 100},
+            {"magicka.base", 20}, {"magicka.modifier", 0}, {"magicka.current", 20}, {"fatigue.base", 40},
+            {"fatigue.modifier", 0}, {"fatigue.current", 40}, {"strength.base", 40}, {"strength.modifier", 0},
+            {"blade.base", 5}, {"blade.modifier", 0}, {"breath_time.current", 10}, {"level", 1}};
+        // An explicit modifier supersedes old modified telemetry; unknown
+        // telemetry is unconsumed. Preflight must validate consumed inputs.
+        saved.mPlayer.mActorValues["health.modified"] = 1e300;
+        saved.mPlayer.mActorValues["unused.telemetry"] = 1e300;
         readNativeSnapshot(fixture, saved);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.getGlobalFloat(firstName), 42);
