@@ -1340,6 +1340,66 @@ namespace MWMechanics
         prepared.commit();
     }
 
+    void OblivionCombatService::initializePlayerActor(MWWorld::Player& player,
+        const MWWorld::ESMStore& store, std::optional<bool> legacyDead)
+    {
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        const auto* oldValues = findActorValues(key);
+        auto values = oldValues ? *oldValues : MWWorld::resolveOblivionInitialPlayerValues(store);
+        validatePlayerIdentity(values);
+        if (oldValues)
+        {
+            applyActorBase(values, findActorBase(values.mBase));
+            values.validate();
+            if (values != *oldValues)
+                throw std::logic_error("native Player construction snapshot disagrees with base authority");
+        }
+        else
+            preparePlayerValues(values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+
+        const auto ptr = player.getPlayer();
+        if (ptr.isEmpty())
+            throw std::invalid_argument("native Player construction requires a ready Player view");
+        const auto* oldLife = findActorLife(key);
+        if (!oldLife && isInCombat(key))
+            throw std::invalid_argument("native Player constructor cannot adopt engagement without lifecycle");
+        ESM4::RuntimeActorLife life;
+        if (oldLife)
+        {
+            life = *oldLife;
+            if (legacyDead && *legacyDead != (life.mPhase == ESM4::ActorLifePhase::Dead))
+                throw std::invalid_argument("native Player lifecycle conflicts with legacy death marker");
+        }
+        else
+        {
+            life.mActor = key;
+            life.mBase = values.mBase;
+            // Original construction starts Alive; Player identity suppresses
+            // the nonplayer zero-form-Health attachment predicate. An older
+            // snapshot without life retains its explicit legacy death view.
+            const bool dead = legacyDead ? *legacyDead
+                : oldValues && ptr.getClass().getCreatureStats(ptr).isDead();
+            life.mPhase = dead ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive;
+        }
+        life.validate();
+        if (life.mActor != key || life.mBase != values.mBase)
+            throw std::invalid_argument("native Player construction has mismatched lifecycle identity");
+        std::map<ESM::FormKey, ESM4::RuntimeActorValues> preparedValues;
+        std::map<ESM::FormKey, ESM4::RuntimeActorLife> preparedLife;
+        if (!oldValues)
+            preparedValues.emplace(key, values);
+        if (!oldLife)
+            preparedLife.emplace(key, life);
+        OblivionActorProjection view(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
+        // Prepared nodes and stat projections own every allocation before the
+        // synchronous commit. Construction emits no terminal entry effects.
+        if (!oldValues)
+            mActorValues.insert(preparedValues.extract(preparedValues.begin()));
+        if (!oldLife)
+            mActorLife.insert(preparedLife.extract(preparedLife.begin()));
+        view.commit();
+    }
+
     void OblivionCombatService::changePlayerValue(MWWorld::Player& player, std::uint8_t value,
         ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings)
     {

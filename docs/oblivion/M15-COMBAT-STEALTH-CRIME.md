@@ -6459,3 +6459,33 @@ ASan leak detection is disabled, UBSan halts. Tested source fingerprint:
 Evidence lives under `build/oblivion-compat/m15/S3/`. This establishes the
 construction-input and publication boundary, not normal gameplay or S3 closure.
 Git metadata remains read-only; pending-chunks-22 is an export, not a commit.
+
+### S3 continuation: atomic Player values/lifecycle construction
+
+`initializePlayerActor` prepares native values, lifecycle and actual Player
+stat views before inserting prepared map nodes and committing views. Fresh
+Player construction begins Alive even with zero authored form Health;
+explicit legacy death is adopted without emitting death events/counts.
+Restored values/life are preferred without rereading a fresh Player form or
+recomputing stored bases through today's GMSTs. Base-override disagreement
+and conflicting legacy death markers reject before publication. This is a
+public construction boundary; automatic activation and character generation
+remain disabled/open.
+
+Two engine cases exercise actual Player instances, mutation then repeated
+initialization, changed/invalid fresh source records, binary restart into a
+new Player, invalid GMST rollback, zero-Health initial life and absent/false/true
+legacy markers. Original initial Alive and Player suppression of the
+nonplayer zero-Health predicate are covered by the independent constructor
+and attachment probes above; the tests do not claim physical death or a full
+original-game factory probe. Constructor adoption preserves the event namespace
+and creates no death-count history.
+
+`native-player-lifecycle-construction-baseline-01` fails at the unimplemented
+initializer. Normal and sanitized `native-player-lifecycle-construction-01`
+runs each pass all665 engine cases, exact inventory/XML agreement, no skips.
+ASan leaks are off, UBSan halts. Tested source fingerprint:
+`9c8ff0bfee001c36a526b7f7040bc3a0b59a267ce569b2fb720142bdadb2ede8`.
+
+Evidence is under `build/oblivion-compat/m15/S3/`. Git metadata remains
+read-only; pending-chunks-23 is a recovery export rather than a commit.

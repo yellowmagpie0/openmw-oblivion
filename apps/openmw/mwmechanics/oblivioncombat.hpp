@@ -325,6 +325,11 @@ namespace MWMechanics
         // preparing all shared views; never feed resolved bases back as inputs.
         void publishPlayerValues(MWWorld::Player& player, ESM4::RuntimeActorValues values,
             const ESM4::PlayerDynamicBaseSettings& settings);
+        // Adopt values and lifecycle together without death events/counts.
+        // Restored authority takes precedence over fresh authored inputs.
+        // Character generation and abilities are separate operations.
+        void initializePlayerActor(MWWorld::Player& player, const MWWorld::ESMStore& store,
+            std::optional<bool> legacyDead = {});
         void changePlayerValue(MWWorld::Player& player, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float delta, const ESM4::PlayerDynamicBaseSettings& settings);
         // Regeneration restores the native Damage channel. It must not clamp
