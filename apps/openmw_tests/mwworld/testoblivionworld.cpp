@@ -49,7 +49,7 @@ namespace
         std::unique_ptr<MWLua::LuaManager> mLuaManager;
         std::unique_ptr<MWSound::SoundManager> mSoundManager;
 
-        NativeWorldFixture()
+        explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false)
         {
             mEnvironment.setResourceSystem(mResources);
             mEnvironment.setWorld(mWorld);
@@ -92,7 +92,26 @@ namespace
             }
             Files::Collections files(Files::PathContainer{mDirectory});
             Loading::Listener listener;
-            mWorld.loadData(files, {"headless.esm"}, {}, nullptr, &listener);
+            if (scriptsFirst)
+            {
+                std::ofstream scripts(mDirectory / "prefix.omwscripts");
+                scripts << "# Empty script configuration shifts the resolved content index.\n";
+            }
+            std::vector<std::string> content;
+            if (scriptsFirst)
+                content.push_back("prefix.omwscripts");
+            content.push_back("headless.esm");
+            if (extraNative)
+            {
+                std::ofstream second(mDirectory / "second.esm", std::ios::binary);
+                second << record(ESM4::REC_TES4, 0, subrecord(ESM::fourCC("HEDR"),
+                    bytes(1.f) + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0x800})));
+                second.close();
+                if (!second)
+                    throw std::runtime_error("failed to write second native content fixture");
+                content.push_back("second.esm");
+            }
+            mWorld.loadData(files, content, {}, nullptr, &listener);
         }
     };
 
@@ -2053,6 +2072,68 @@ namespace
         EXPECT_FALSE(legacy.activateOblivionActor({}));
         EXPECT_EQ(legacy.getOblivionCombatService(), nullptr);
         EXPECT_EQ(service.findActorValues(reference.mFormKey)->mNonPlayerFormHealth, 99);
+    }
+
+    TEST(OblivionWorldTest, temporaryNativeClassIgnoresPrecedingScriptFilesWithoutAliasingOtherClasses)
+    {
+        for (const bool scriptsFirst : {false, true})
+        for (const bool extraNative : {false, true})
+        {
+            SCOPED_TRACE(scriptsFirst);
+            SCOPED_TRACE(extraNative);
+            NativeWorldFixture fixture(scriptsFirst, extraNative);
+            auto& store = fixture.mWorld.getStore();
+            const auto base = store.search<ESM4::Npc>(ESM::FormKey::content("headless.esm", 0x800));
+            ASSERT_NE(base, nullptr);
+            const auto contentIndex = base->mId.mContentFile;
+            EXPECT_EQ(contentIndex, scriptsFirst ? 1 : 0);
+            ESM4::Race race{}; race.mId = {0x810, contentIndex};
+            race.mAttribMale = race.mAttribFemale = {40, 40, 40, 40, 40, 40, 40, 40};
+            race.mTES4SkillBonuses = std::array<ESM4::Race::SkillBonus, 7>{};
+            for (auto& bonus : *race.mTES4SkillBonuses) bonus.mSkill = -1;
+            store.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("headless.esm", 0x810));
+            ESM4::Class characterClass{}; characterClass.mId = {0x230e6, contentIndex};
+            characterClass.mData.mFavoredAttributes = {0, 1};
+            characterClass.mData.mMajorSkills = {12, 13, 14, 15, 16, 17, 18};
+            characterClass.mData.mSpecialization = 0;
+            store.getWritable<ESM4::Class>().insertStatic(characterClass,
+                ESM::FormKey::content("headless.esm", 0x230e6));
+            for (unsigned i = 0; i < 21; ++i)
+            {
+                ESM4::Skill skill{}; skill.mId = {0x1000 + i, contentIndex}; skill.mIndex = i + 12;
+                skill.mData = ESM4::SkillData{i + 12, 0, 0, {1, 2}};
+                store.getWritable<ESM4::Skill>().insertStatic(skill, ESM::FormKey::content("headless.esm", 0x1000 + i));
+            }
+            EXPECT_FALSE(store.resolveEsm4RuntimeFormId(0));
+            EXPECT_EQ(store.resolveEsm4RuntimeFormId(0x230e6), characterClass.mId);
+            EXPECT_FALSE(store.resolveEsm4RuntimeFormId(0xff0230e6));
+            const auto temporary = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                store, race.mId, characterClass.mId, false, 1);
+            EXPECT_EQ(temporary.mAttributes, (std::array<std::uint8_t, 8>{40, 40, 40, 40, 40, 40, 40, 40}));
+            EXPECT_EQ(temporary.mSkills, (std::array<std::uint8_t, 21>{5, 5, 5, 5, 5, 5, 5,
+                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5}));
+            auto unrelated = characterClass;
+            unrelated.mId.mContentFile = contentIndex + 1;
+            store.getWritable<ESM4::Class>().insertStatic(unrelated, ESM::FormKey::content("other.esm", 0x230e6));
+            const auto ordinary = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                store, race.mId, unrelated.mId, false, 1);
+            EXPECT_EQ(ordinary.mAttributes[0], 45);
+            EXPECT_EQ(ordinary.mAttributes[1], 45);
+            EXPECT_EQ(ordinary.mSkills[0], 30);
+            ESM4::GameSetting disabled{}; disabled.mId = {0x3333, contentIndex};
+            disabled.mEditorId = "iClassCharactergenClass"; disabled.mData = std::int32_t(0);
+            store.getWritable<ESM4::GameSetting>().insertStatic(disabled);
+            EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                store, race.mId, characterClass.mId, false, 1), ordinary);
+            disabled.mData = std::int32_t(0x010230e6);
+            store.getWritable<ESM4::GameSetting>().insertStatic(disabled);
+            EXPECT_EQ(store.resolveEsm4RuntimeFormId(0x010230e6).has_value(), extraNative);
+            const auto selectedSecond = MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                store, race.mId, unrelated.mId, false, 1);
+            EXPECT_EQ(selectedSecond, extraNative ? temporary : ordinary);
+            EXPECT_EQ(MWWorld::resolveOblivionPlayerCharacterBaseStats(
+                store, race.mId, characterClass.mId, false, 1), ordinary);
+        }
     }
 
 }

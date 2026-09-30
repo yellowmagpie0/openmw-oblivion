@@ -304,6 +304,10 @@ namespace MWWorld
 
         const ESM::FormKeyIndex& getFormKeyIndex() const { return mFormKeyIndex; }
         std::optional<ESM::FormKey> findEsm4FormKey(std::string_view editorId) const;
+        // Native integer FormIDs count TES4 plugins, excluding Lua/TES3 files.
+        // Return the corresponding resolved fork ID, or no ID for null/missing
+        // slots. Content-free constructed stores already use resolved IDs.
+        std::optional<ESM::FormId> resolveEsm4RuntimeFormId(std::uint32_t value) const;
 
         ESM4::PathgridService& getOblivionPathgridService() { return mOblivionPathgrids; }
         const ESM4::PathgridService& getOblivionPathgridService() const { return mOblivionPathgrids; }

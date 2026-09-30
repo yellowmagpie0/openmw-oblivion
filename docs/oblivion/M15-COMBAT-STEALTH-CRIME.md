@@ -7454,3 +7454,57 @@ Changed-source bytes and a clean fresh bundle clone verify the commit. Next:
 fix temporary class identity under shifted content order, then continue melee.
 Legacy passive reconciliation, process demotion/unload, full load rollback,
 S2/S3 and all later gameplay gates remain open.
+
+### Native temporary-class identity across script prefixes (checkpoint45)
+
+Native integer FormIDs now resolve through the loaded TES4 file order to the
+fork's full content identity. Lua/TES3 file slots do not count as native plugin
+slots. Null and absent native slots fail resolution; content-free constructed
+stores retain their explicit full-ID contract. Temporary chargen-class
+recognition compares the resolved complete identity, preserving distinct
+classes that share a local ID. No native character formula changes.
+
+The new World fixture covers four script-prefix/second-native-file combinations,
+missing/null slots, matching and nonmatching complete identities and a GMST
+selecting the second native file. Baseline01 reproduces the prefix failure
+against checkpoint44 libraries. Syntax01 caught two SCOPED_TRACE declarations
+on one line; corrected syntax02 passes. Full checks in
+`native-class-content-index-engine-01` pass700 engine and214 Python cases;
+`native-class-content-index-sanitized-engine-01` passes700 engine cases under
+ASan/UBSan with leak checks off. Exact inventories have no failures/skips.
+Both tested fingerprints are
+`1910a0fd5f37f854f34c9f90d7c6aeba6ddd24cc3663335eb3f74516bb0b53a0`.
+Components are unchanged since checkpoint43.
+
+Installed-master drivers `native-class-content-index-master-01` and
+`native-class-content-index-master-prefix-01` each pass420 character-choice,
+repeat-choice and Actors readmission cases. Cross-order comparison passes all
+420 rows: fresh pools are80/80/140 in both configurations. Master SHA256:
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+Ignored shared-spell and unknown-class diagnostics remain in their logs;
+these drivers do not establish original caster scheduling or GUI choice flows.
+
+`native-actor-activation-offscreen-03` passes actual F12/F5/quit -> private save
+copy -> fresh process load -> F12/F5/quit, both exit0. Epochs were captured in
+the same launcher namespace: first PID14/start8737831, second PID12/start8762763,
+100 clock ticks/second and boot ID a80f9d5d-d691-4275-a06f-c8a6dcb4a3f8.
+Python independently decodes schema19 with nine actors, equal complete values,
+life, breath, bases, death counts/events and action state. Player authority and
+public observations agree at80/80/140, capacity200; pristine input is unchanged.
+Binary SHA256:
+`7f505930b2d9b8a1addc6da78bb7bc87619718d3ad93e5a068113fc24138fc72`.
+Save SHA256 values and all commands/epochs are retained in verification.json.
+All four captures were opened: textured prison architecture, readable labels
+and full resource bars. No actor/contact is visible. Sound is disabled; the
+existing missing menu icon diagnostic and unavailable Xvfb socket remain.
+This closes the earlier pool discrepancy, not combat or section7's full
+failure-injection gate. Preliminary offscreen02 succeeded, but its separate
+namespace monitor missed the process; it is not process-epoch evidence.
+
+Checkpoint45 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-23/m15-progress.bundle`.
+Changed-source bytes and a clean fresh bundle clone verify the commit. S2/S3
+and S4-S14 remain open. Next: bind physical action identity and transaction
+boundaries before wiring normal melee contact; legacy passive reconciliation,
+process demotion and complete failed-load rollback also remain open.

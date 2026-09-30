@@ -3677,3 +3677,19 @@ Probe SHA256 `d607b2d746a883a2fa11a1749148076cfca1baae4b7b9484e519fcea7eef88cc`;
 report SHA256 `3c0722358ccb5b6f74285d1adebab0297067cf0a6ae229a876c70c0c9a316f82`.
 
 Formatter attempts01/02 lacked initialized OS pointer decoding and then the CRT floating-function table, respectively. They are harness failures, not observed game-rule differences. Attempt03 executes the actual floating initializer and twelve formatting observations pass; attempt04 extends that successful path to nineteen.
+
+### Temporary chargen class: fork content identity (checkpoint45)
+
+The previously audited native iClassCharactergenClass value143590 (0x230e6)
+and original favored-attribute/major/specialization suppression remain unchanged.
+The fork additionally loads builtin.omwscripts before Oblivion.esm. Consequently
+native runtime plugin ordinal0 must resolve to fork content slot1, preserving
+both local ID and complete loaded-file identity. ESMStore records TES4 content
+indices in native file order and resolves the integer GMST through that table;
+this is not a disk record's master-relative FormID transformation. Fixtures
+cover a second native file and same-local-ID distinct classes. Independent
+installed-master driver outputs across all420 choices are equal with and without
+the script prefix; actual rendered fresh/load observations now agree at
+Health80/Magicka80/Fatigue140. Evidence is under
+S3/native-class-content-index-* and S3/native-actor-activation-offscreen-03.
+No additional original-executable formula claim is inferred from this adapter fix.

@@ -272,8 +272,8 @@ namespace MWWorld
             input.mSkills[i] = {skills[i]->mData->mGoverningAttribute, skills[i]->mData->mSpecialization};
         for (std::size_t i = 0; i < input.mRaceBonuses.size(); ++i)
             input.mRaceBonuses[i] = {(*race->mTES4SkillBonuses)[i].mSkill, (*race->mTES4SkillBonuses)[i].mBonus};
-        const bool temporary = nativeClass
-            && characterClass->mId.toUint32() == ESM4::buildCharacterGenerationClassId(settings);
+        const auto temporaryClass = store.resolveEsm4RuntimeFormId(ESM4::buildCharacterGenerationClassId(settings));
+        const bool temporary = nativeClass && temporaryClass && characterClass->mId == *temporaryClass;
         return ESM4::calculatePlayerCharacterBaseStats(input, ESM4::buildNpcAutoStatsSettings(settings), temporary);
     }
 

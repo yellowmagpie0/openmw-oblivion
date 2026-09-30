@@ -249,6 +249,7 @@ namespace MWWorld
         // maps the id name to the record type.
         IDMap mIds;
         IDMap mStaticIds;
+        std::vector<std::uint32_t> mEsm4ContentIndices;
 
         template <typename T>
         static void assignStoreToIndex(ESMStore& stores, Store<T>& store)
@@ -685,6 +686,10 @@ namespace MWWorld
 
     void ESMStore::loadESM4(ESM4::Reader& reader, Loading::Listener* listener)
     {
+        auto& indices = mStoreImp->mEsm4ContentIndices;
+        const auto index = reader.getModIndex();
+        if (std::find(indices.begin(), indices.end(), index) == indices.end())
+            indices.push_back(index);
         if (listener != nullptr)
             listener->setProgressRange(::EsmLoader::fileProgress);
         auto visitorRec = [this, listener](ESM4::Reader& r) {
@@ -694,6 +699,23 @@ namespace MWWorld
             return result;
         };
         ESM4::ReaderUtils::readAll(reader, visitorRec, [](ESM4::Reader&) {});
+    }
+
+    std::optional<ESM::FormId> ESMStore::resolveEsm4RuntimeFormId(std::uint32_t value) const
+    {
+        if (value == 0)
+            return std::nullopt;
+        auto id = ESM::FormId::fromUint32(value);
+        const auto& indices = mStoreImp->mEsm4ContentIndices;
+        if (indices.empty())
+            return id;
+        if (static_cast<std::size_t>(id.mContentFile) >= indices.size())
+            return std::nullopt;
+        const auto resolved = indices[id.mContentFile];
+        if (resolved > static_cast<std::uint32_t>(std::numeric_limits<std::int32_t>::max()))
+            throw std::invalid_argument("native runtime FormID content index exceeds the resolved domain");
+        id.mContentFile = static_cast<std::int32_t>(resolved);
+        return id;
     }
 
     void ESMStore::setIdType(const ESM::RefId& id, ESM::RecNameInts type)
