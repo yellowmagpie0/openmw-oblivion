@@ -1186,6 +1186,60 @@ namespace
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.getGlobalFloat(firstName), 42);
         EXPECT_EQ(movedNpc.getCell(), &targetCell);
+        const std::array<std::pair<std::string, ESM4::RuntimeValue>, 5> invalidCustom{{
+            {"locked", std::string("wrong type")}, {"scale", 1e300},
+            {"obscript.animation_scripted", std::int64_t{1}},
+            {"obscript.animation_progress", std::string("wrong type")},
+            {"obscript.animation_group", std::string{}}}};
+        for (const auto& [field, value] : invalidCustom)
+        {
+            SCOPED_TRACE(field);
+            world.setGlobalFloat(firstName, 3);
+            const auto clockBefore = world.getTimeStamp();
+            const auto positionBefore = movedNpc.getRefData().getPosition();
+            const auto scaleBefore = movedNpc.getCellRef().getScale();
+            auto invalidReference = movedReference;
+            auto& reference = invalidReference.mReferences[0];
+            reference.mPosition.pos[0] = 42;
+            reference.mCustomState["obscript.animation_group"] = std::string("idle");
+            reference.mCustomState["obscript.animation_progress"] = .5;
+            reference.mCustomState[field] = value;
+            ASSERT_NO_THROW(invalidReference.validate());
+            readNativeSnapshot(fixture, invalidReference);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+            EXPECT_EQ(world.getGlobalFloat(firstName), 3);
+            EXPECT_EQ(movedNpc.getRefData().getPosition(), positionBefore);
+            EXPECT_EQ(movedNpc.getCellRef().getScale(), scaleBefore);
+            EXPECT_EQ(world.getTimeStamp(), clockBefore);
+        }
+        // Preserve unconsumed telemetry and legacy playing migration. Progress
+        // is clamped before storing float, so large finite values remain valid.
+        auto animationReference = movedReference;
+        auto& animationCustom = animationReference.mReferences[0].mCustomState;
+        animationCustom = {{"locked", true}, {"scale", 1.25},
+            {"obscript.animation_group", std::string("idle")}, {"obscript.animation_playing", true},
+            {"obscript.animation_loop_count", std::int64_t{-1}}, {"obscript.animation_absolute", true}};
+        readNativeSnapshot(fixture, animationReference);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(movedNpc.getCellRef().getScale(), 1.25f);
+        const auto& animation = movedNpc.getRefData().getAnimationState().mScriptedAnims;
+        ASSERT_EQ(animation.size(), 1u);
+        EXPECT_EQ(animation[0].mGroup, "idle");
+        EXPECT_EQ(animation[0].mTime, 1.f);
+        EXPECT_EQ(animation[0].mLoopCount, 0u);
+        EXPECT_TRUE(animation[0].mAbsolute);
+        animationCustom["obscript.animation_progress"] = 1e300;
+        readNativeSnapshot(fixture, animationReference);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(movedNpc.getRefData().getAnimationState().mScriptedAnims[0].mTime, 1.f);
+        animationCustom["obscript.animation_group"] = std::int64_t{17};
+        animationCustom["obscript.animation_scripted"] = false;
+        animationCustom["scale"] = std::string("unconsumed");
+        animationCustom["count"] = std::string("unconsumed");
+        readNativeSnapshot(fixture, animationReference);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(movedNpc.getCellRef().getScale(), 1.25f);
+        EXPECT_EQ(movedNpc.getRefData().getAnimationState().mScriptedAnims[0].mGroup, "idle");
         for (const auto* resource : {"health", "magicka", "fatigue"})
         {
             for (const bool oldModified : {false, true})

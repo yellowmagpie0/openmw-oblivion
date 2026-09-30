@@ -1819,6 +1819,9 @@ namespace MWWorld
             Ptr mReference;
             CellStore* mCell;
             std::optional<ESM::RefId> mOwner;
+            std::optional<bool> mLocked;
+            std::optional<float> mScale;
+            std::optional<ESM::AnimationState> mAnimation;
         };
         std::vector<PreparedReferenceBinding> preparedReferences;
         preparedReferences.reserve(state.mReferences.size());
@@ -1845,9 +1848,76 @@ namespace MWWorld
                         + reference.mOwner->serialize());
                 owner.emplace(*ownerId);
             }
+            std::optional<bool> locked;
+            if (const auto saved = reference.mCustomState.find("locked"); saved != reference.mCustomState.end())
+            {
+                const auto* value = std::get_if<bool>(&saved->second);
+                if (value == nullptr)
+                    throw std::runtime_error(
+                        "TES4 runtime-state locked value is not boolean: " + reference.mKey.serialize());
+                locked = *value;
+            }
+            std::optional<float> scale;
+            if (const auto saved = reference.mCustomState.find("scale"); saved != reference.mCustomState.end())
+                if (const auto* value = std::get_if<double>(&saved->second))
+                {
+                    validateFloatInput(*value, "reference scale");
+                    scale = static_cast<float>(*value);
+                }
+            std::optional<ESM::AnimationState> animationState;
+            const auto animationGroup = reference.mCustomState.find("obscript.animation_group");
+            const auto animationProgress = reference.mCustomState.find("obscript.animation_progress");
+            const auto animationScripted = reference.mCustomState.find("obscript.animation_scripted");
+            bool scriptedAnimation = true;
+            if (animationScripted != reference.mCustomState.end())
+            {
+                const auto* value = std::get_if<bool>(&animationScripted->second);
+                if (value == nullptr)
+                    throw std::runtime_error("TES4 runtime-state animation scripted flag has the wrong type: "
+                        + reference.mKey.serialize());
+                scriptedAnimation = *value;
+            }
+            std::optional<double> progress;
+            if (animationProgress != reference.mCustomState.end())
+            {
+                if (const auto* value = std::get_if<double>(&animationProgress->second))
+                    progress = *value;
+                else
+                    throw std::runtime_error(
+                        "TES4 runtime-state animation value has the wrong type: " + reference.mKey.serialize());
+            }
+            else if (const auto playing = reference.mCustomState.find("obscript.animation_playing");
+                playing != reference.mCustomState.end())
+            {
+                // Migration for M7 development saves that recorded the group
+                // before animation progress became part of native state.
+                if (const auto* value = std::get_if<bool>(&playing->second); value != nullptr && *value)
+                    progress = 1.0;
+            }
+            if (animationGroup != reference.mCustomState.end() && progress && scriptedAnimation)
+            {
+                const auto* group = std::get_if<std::string>(&animationGroup->second);
+                if (group == nullptr || group->empty())
+                    throw std::runtime_error(
+                        "TES4 runtime-state animation group has the wrong type: " + reference.mKey.serialize());
+                ESM::AnimationState::ScriptedAnimation animation;
+                animation.mGroup = *group;
+                animation.mTime = static_cast<float>(std::clamp(*progress, 0.0, 1.0));
+                if (const auto loopCount
+                    = reference.mCustomState.find("obscript.animation_loop_count");
+                    loopCount != reference.mCustomState.end())
+                    if (const auto* value = std::get_if<std::int64_t>(&loopCount->second))
+                        animation.mLoopCount = static_cast<std::uint64_t>(std::max<std::int64_t>(0, *value));
+                if (const auto absolute = reference.mCustomState.find("obscript.animation_absolute");
+                    absolute != reference.mCustomState.end())
+                    if (const auto* value = std::get_if<bool>(&absolute->second))
+                        animation.mAbsolute = *value;
+                animationState.emplace();
+                animationState->mScriptedAnims.push_back(std::move(animation));
+            }
             const auto cellId = resolver.toFormId(reference.mCell);
             preparedReferences.push_back({&reference, found->second,
-                &mWorldModel.getCell(ESM::RefId(*cellId)), owner});
+                &mWorldModel.getCell(ESM::RefId(*cellId)), owner, locked, scale, std::move(animationState)});
         }
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -2049,7 +2119,7 @@ namespace MWWorld
             }
         }
 
-        for (const auto& binding : preparedReferences)
+        for (auto& binding : preparedReferences)
         {
             const auto& reference = *binding.mState;
             Ptr ptr = binding.mReference;
@@ -2068,15 +2138,8 @@ namespace MWWorld
                 if (reference.mLockLevel != 0)
                     throw;
             }
-            if (const auto locked = reference.mCustomState.find("locked");
-                locked != reference.mCustomState.end())
-            {
-                const auto* value = std::get_if<bool>(&locked->second);
-                if (value == nullptr)
-                    throw std::runtime_error(
-                        "TES4 runtime-state locked value is not boolean: " + reference.mKey.serialize());
-                ptr.getCellRef().setLocked(*value);
-            }
+            if (binding.mLocked)
+                ptr.getCellRef().setLocked(*binding.mLocked);
             int count = reference.mDeleted ? 0 : 1;
             if (const auto savedCount = reference.mCustomState.find("count");
                 savedCount != reference.mCustomState.end())
@@ -2086,64 +2149,17 @@ namespace MWWorld
                         std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
             }
             ptr.getCellRef().setCount(reference.mDeleted ? 0 : count);
-            if (const auto scale = reference.mCustomState.find("scale"); scale != reference.mCustomState.end())
-                if (const auto* number = std::get_if<double>(&scale->second))
-                    ptr.getCellRef().setScale(static_cast<float>(*number));
+            if (binding.mScale)
+                ptr.getCellRef().setScale(*binding.mScale);
 
             if (ptr.getClass().getType() == ESM::REC_NPC_4 || ptr.getClass().getType() == ESM::REC_CREA4)
                 applyPreparedInventory(ptr.getClass().getInventoryStore(ptr),
                     preparedActorInventories.at(reference.mKey));
 
-            const auto animationGroup = reference.mCustomState.find("obscript.animation_group");
-            const auto animationProgress = reference.mCustomState.find("obscript.animation_progress");
-            const auto animationScripted = reference.mCustomState.find("obscript.animation_scripted");
-            bool scriptedAnimation = true;
-            if (animationScripted != reference.mCustomState.end())
+            if (binding.mAnimation)
             {
-                const auto* value = std::get_if<bool>(&animationScripted->second);
-                if (value == nullptr)
-                    throw std::runtime_error("TES4 runtime-state animation scripted flag has the wrong type: "
-                        + reference.mKey.serialize());
-                scriptedAnimation = *value;
-            }
-            std::optional<double> progress;
-            if (animationProgress != reference.mCustomState.end())
-            {
-                if (const auto* value = std::get_if<double>(&animationProgress->second))
-                    progress = *value;
-                else
-                    throw std::runtime_error(
-                        "TES4 runtime-state animation value has the wrong type: " + reference.mKey.serialize());
-            }
-            else if (const auto playing = reference.mCustomState.find("obscript.animation_playing");
-                playing != reference.mCustomState.end())
-            {
-                // Migration for M7 development saves that recorded the group
-                // before animation progress became part of native state.
-                if (const auto* value = std::get_if<bool>(&playing->second); value != nullptr && *value)
-                    progress = 1.0;
-            }
-            if (animationGroup != reference.mCustomState.end() && progress && scriptedAnimation)
-            {
-                const auto* group = std::get_if<std::string>(&animationGroup->second);
-                if (group == nullptr || group->empty())
-                    throw std::runtime_error(
-                        "TES4 runtime-state animation group has the wrong type: " + reference.mKey.serialize());
-                ESM::AnimationState::ScriptedAnimation animation;
-                animation.mGroup = *group;
-                animation.mTime = static_cast<float>(std::clamp(*progress, 0.0, 1.0));
-                if (const auto loopCount
-                    = reference.mCustomState.find("obscript.animation_loop_count");
-                    loopCount != reference.mCustomState.end())
-                    if (const auto* value = std::get_if<std::int64_t>(&loopCount->second))
-                        animation.mLoopCount = static_cast<std::uint64_t>(std::max<std::int64_t>(0, *value));
-                if (const auto absolute = reference.mCustomState.find("obscript.animation_absolute");
-                    absolute != reference.mCustomState.end())
-                    if (const auto* value = std::get_if<bool>(&absolute->second))
-                        animation.mAbsolute = *value;
-                ESM::AnimationState& animationState = ptr.getRefData().getAnimationState();
-                animationState.mScriptedAnims.clear();
-                animationState.mScriptedAnims.push_back(std::move(animation));
+                static_assert(std::is_nothrow_move_assignable_v<ESM::AnimationState>);
+                ptr.getRefData().getAnimationState() = std::move(*binding.mAnimation);
             }
         }
         Log(Debug::Info) << "Applied TES4 runtime state: " << state.mGlobals.size() << " globals, "

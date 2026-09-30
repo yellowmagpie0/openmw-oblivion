@@ -6265,3 +6265,27 @@ This exercises the changed binding order in the actual engine. Reference
 custom-state application, full load recovery, fresh construction and the
 remaining S2/S3 gates stay open. Git metadata remains read-only, and recovery
 patches do not fulfill the requested commits.
+
+### S3 continuation: consumed reference custom state prepares before writes
+
+World restore now validates consumed lock, scale and animation values while
+binding references, before changing globals, clocks or reference positions.
+Animation strings/vector entries allocate into detached state; the later
+assignment moves that prepared state without allocation. Unsupported lock or
+animation types reject early, and a finite double scale outside the float
+range cannot store infinity. Unconsumed legacy telemetry retains its previous
+semantics: wrong-type count/scale are ignored, inactive animation groups are
+ignored, legacy playing=true supplies progress1, negative loops clamp0, and
+large finite progress clamps1 before its float store.
+
+`S3/native-reference-custom-preflight-baseline-01` reproduces the earlier-global
+and position mutation and infinite-scale bug in the actual World test.
+`native-reference-custom-preflight-01` and
+`native-reference-custom-preflight-sanitized-01` both pass all661 engine cases,
+with exact inventory/XML agreement and no skipped cases. Tested dirty-source
+fingerprint: `6e20ba273dc3d07193e96a32ec851a9d2ad60e7c98c0db33bf41c5bbb800859c`
+on parent `8cf3491f18`. ASan leak detection is disabled and UBSan halts on errors.
+This closes these consumed-field rejection cases, not whole-World rollback,
+rendered animation acceptance or native fresh construction. Local Git commits
+remain unavailable because Git metadata is read-only; recovery patches are
+exports of pending work, not commits.
