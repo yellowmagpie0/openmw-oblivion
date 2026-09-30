@@ -578,3 +578,37 @@ TEST(ESM4ActorValues, FloatBaseModifierRejectsNonfiniteAndInvalidDomains)
     EXPECT_THROW(ESM4::prepareActorBaseValueFloatMod(static_cast<Kind>(2), 8, 0, 0, Mode::NonSse), std::invalid_argument);
     EXPECT_THROW(ESM4::prepareActorBaseValueFloatMod(Kind::Npc, 8, 0, 0, static_cast<Mode>(2)), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, LegacyPlayerFormReencodingPreservesSmallUnscaledCachedBases)
+{
+    const ESM4::PlayerDynamicBaseSettings settings{2, 1, 5};
+    const std::array<std::int32_t, 8> attributes{40, 40, 40, 40, 40, 50, 40, 40};
+    const std::array<float, 4> bases{110, 130, 170, 205};
+    const auto raw = ESM4::legacyPlayerFormValues(bases, attributes, settings);
+    EXPECT_EQ(raw, (std::array<std::int32_t, 4>{10, 50, 0, 5}));
+    for (unsigned i = 0; i < raw.size(); ++i)
+        EXPECT_EQ(ESM4::calculatePlayerDynamicBaseValue(
+            {static_cast<ESM4::DynamicActorValue>(8 + i), raw[i], attributes, 0}, settings), bases[i]);
+    auto negative = bases; negative[0] = -80;
+    EXPECT_EQ(ESM4::legacyPlayerFormValues(negative, attributes, settings)[0], -180);
+    auto fractionalSettings = settings; fractionalSettings.mStrengthEncumbranceMultiplier = 5.25f;
+    auto fractional = bases; fractional[3] = 215;
+    EXPECT_EQ(ESM4::legacyPlayerFormValues(fractional, attributes, fractionalSettings)[3], 5);
+}
+
+TEST(ESM4ActorValues, LegacyPlayerFormReencodingRejectsAmbiguousOrUnrepresentableCaches)
+{
+    const ESM4::PlayerDynamicBaseSettings settings{2, 1, 5};
+    const std::array<std::int32_t, 8> attributes{40, 40, 40, 40, 40, 50, 40, 40};
+    const std::array<float, 4> valid{110, 130, 170, 205};
+    for (float unsupported : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN(),
+        8388608.f, -8388608.f, 110.25f})
+    {
+        auto invalid = valid; invalid[0] = unsupported;
+        EXPECT_THROW(ESM4::legacyPlayerFormValues(invalid, attributes, settings), std::invalid_argument);
+    }
+    auto nonfinite = settings; nonfinite.mHealthMultiplier = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::legacyPlayerFormValues(valid, attributes, nonfinite), std::invalid_argument);
+    auto zero = valid; zero[0] = -.0f;
+    EXPECT_THROW(ESM4::legacyPlayerFormValues(zero, attributes, settings), std::invalid_argument);
+}

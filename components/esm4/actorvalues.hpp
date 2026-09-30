@@ -153,6 +153,12 @@ namespace ESM4
     // Encumbrance is capacity; the current Encumbrance query uses inventory.
     float calculatePlayerDynamicBaseValue(
         const PlayerDynamicBaseInput& input, const PlayerDynamicBaseSettings& settings);
+    // Compatibility re-encoding, not recovery of historical raw form fields.
+    // Unscaled legacy cached bases must map uniquely to integer contributions
+    // and roundtrip bit-for-bit. Ambiguous/wide/fractional inputs reject.
+    std::array<std::int32_t, 4> legacyPlayerFormValues(const std::array<float, 4>& cachedBases,
+        const std::array<std::int32_t, 8>& currentAttributes, const PlayerDynamicBaseSettings& settings);
+
 }
 
 #endif

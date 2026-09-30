@@ -333,5 +333,31 @@ namespace ESM4
                 throw std::invalid_argument("unsupported native player dynamic base actor value");
         }
         return stored((double(input.mFormValue) + adjustment) * scale);
+    }    std::array<std::int32_t, 4> legacyPlayerFormValues(const std::array<float, 4>& cachedBases,
+        const std::array<std::int32_t, 8>& currentAttributes, const PlayerDynamicBaseSettings& settings)
+    {
+        std::array<std::int32_t, 4> result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+        {
+            const float cached = cachedBases[i];
+            // At this bound each integer input step spans at least two ULPs,
+            // including fractional capacity adjustments. Wider caches can
+            // conceal distinct integer form inputs and cannot be recovered.
+            if (!std::isfinite(cached) || std::abs(cached) >= 8388608.f)
+                throw std::invalid_argument("ambiguous legacy Player dynamic base");
+            const auto value = static_cast<DynamicActorValue>(8 + i);
+            const float adjustment = calculatePlayerDynamicBaseValue({value, 0, currentAttributes, 0}, settings);
+            const double raw = double(cached) - double(adjustment);
+            if (raw != std::trunc(raw) || raw < std::numeric_limits<std::int32_t>::min()
+                || raw > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("unrepresentable legacy Player form contribution");
+            result[i] = static_cast<std::int32_t>(raw);
+            const float reconstructed = calculatePlayerDynamicBaseValue({value, result[i], currentAttributes, 0}, settings);
+            if (std::bit_cast<std::uint32_t>(reconstructed) != std::bit_cast<std::uint32_t>(cached))
+                throw std::invalid_argument("legacy Player dynamic base cannot roundtrip exactly");
+        }
+        return result;
     }
+
+
 }

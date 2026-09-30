@@ -1406,7 +1406,16 @@ namespace MWWorld
                 throw std::invalid_argument("invalid legacy native Player death marker");
             legacyDead = *dead;
         }
-        mOblivionCombat->initializePlayerActor(*mPlayer, mStore, legacyDead);
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        if (mOblivionRuntimeState && mOblivionRuntimeState->mVersion < 9
+            && !mOblivionCombat->findActorValues(key))
+        {
+            const auto values = resolveOblivionLegacyPlayerValues(*mPlayer, mStore);
+            const float breath = getPlayerPtr().getClass().getNpcStats(getPlayerPtr()).getTimeToStartDrowning();
+            mOblivionCombat->initializePlayerActorFromLegacyView(*mPlayer, mStore, values, breath, legacyDead);
+        }
+        else
+            mOblivionCombat->initializePlayerActor(*mPlayer, mStore, legacyDead);
         if (marker)
             reference->mCustomState.erase(*marker);
         return true;

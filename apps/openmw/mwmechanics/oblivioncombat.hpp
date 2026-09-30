@@ -373,6 +373,11 @@ namespace MWMechanics
         // Character generation and abilities are separate operations.
         void initializePlayerActor(MWWorld::Player& player, const MWWorld::ESMStore& store,
             std::optional<bool> legacyDead = {});
+        // Bounded legacy-facade conversion is supplied explicitly by World.
+        // Stage its values, breath and life together; never overwrite authority
+        // or create historical death events. Missing passive history stays unknown.
+        void initializePlayerActorFromLegacyView(MWWorld::Player& player, const MWWorld::ESMStore& store,
+            ESM4::RuntimeActorValues values, float breathRemaining, std::optional<bool> legacyDead = {});
         // Stage constructor adoption and character replacement together. A
         // rejected choice publishes neither fresh authority nor its facade.
         void initializePlayerCharacter(MWWorld::Player& player, const MWWorld::ESMStore& store,

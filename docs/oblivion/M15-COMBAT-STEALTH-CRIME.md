@@ -7349,3 +7349,38 @@ Changed-source bytes and a clean fresh bundle clone verify the commit; builds
 ran in the shared workspace. Next: native scene activation, legacy-save
 admission/migration and melee wiring. S2/S3 and all later required gameplay
 gates remain open.
+
+### Legacy Player resource adoption (checkpoint43)
+
+For runtime versions7/8 without typed Player actor values, initialization now
+adopts the parsed legacy attribute/skill/AI modifiers, cached resource bases,
+resource depletion and breath timer. Signed form inputs are compatibility
+re-encodings verified by an exact native-base round trip; they are not claimed
+to recover historical original form fields. Nonfinite, fractional,
+unrepresentable and sign-boundary-changing inputs reject before publication.
+The retained death marker is consumed only after acceptance, with no historical
+death count/event. Passive ownership remains explicitly unknown; reconstructing
+legacy character passives and completing old character choices remain open.
+Version9 unknown raw contributions retain their deliberate rejection contract.
+
+Two component fixtures and two parsed-save/actual-World fixtures cover both
+legacy versions, live/dead adoption, modifier channels, skill progress, breath,
+idempotence, current binary readback and rejection without marker consumption.
+They do not demonstrate a full World save load or fresh-process gameplay.
+Baseline component syntax rejects the missing API; the two baseline World cases
+both fail against checkpoint42. All six changed translation units pass configured
+syntax. An existing component-test dangling-else warning remains.
+
+`native-legacy-player-full-01` passes1,983 full component cases and694 full
+engine cases. `native-legacy-player-sanitized-full-01` passes458 ESM4 component
+cases and694 full engine cases under ASan/UBSan, leak checks off. Both exact
+inventories match without failures/skips, fingerprint
+`8037a153b05d2e2c041a9baa60c4ebd59d185be8b2a959b847eaf64351a34d48`.
+The unchanged214 Python cases last passed at checkpoint40.
+
+Checkpoint43 is committed in the independent `m15-implementation` repository;
+portable bundle:
+`build/oblivion-compat/m15/S3/isolated-git-progress-21/m15-progress.bundle`.
+Changed-source bytes and a clean fresh bundle clone verify the commit; builds
+ran in the shared workspace. Next: actor scene activation and melee integration.
+S2/S3 and all later gameplay gates remain open.

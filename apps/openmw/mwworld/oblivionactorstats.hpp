@@ -35,6 +35,7 @@ namespace ESM4
 namespace MWWorld
 {
     class ESMStore;
+    class Player;
 
     struct OblivionActorBaseStats
     {
@@ -112,6 +113,11 @@ namespace MWWorld
     // Derived resource bases are resolved by preparePlayerValues at publication;
     // existing save authority must take precedence over these fresh inputs.
     ESM4::RuntimeActorValues resolveOblivionInitialPlayerValues(const ESMStore& store);
+    // Adopt an older parsed Player facade only before native authority exists.
+    // Preserve its byte bases, Script/Damage attributes and shared resource
+    // maxima, re-encoding small cached resource bases into native inputs.
+    // Passive ownership remains explicitly unknown; no caster history is inferred.
+    ESM4::RuntimeActorValues resolveOblivionLegacyPlayerValues(Player& player, const ESMStore& store);
 }
 
 #endif

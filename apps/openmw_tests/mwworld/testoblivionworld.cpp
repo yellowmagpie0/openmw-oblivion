@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <fstream>
+#include <limits>
 #include <stdexcept>
 #include <sstream>
 
@@ -1731,6 +1732,120 @@ namespace
         EXPECT_FALSE(service.takeNextDeathEvent());
         MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
         EXPECT_FALSE(legacy.replaceOblivionPlayerCharacter(proposed, {}, nullptr, 0));
+    }
+
+    TEST(OblivionWorldTest, olderNativePlayerViewAdoptionPreservesResourcesBreathAndNoHistoricalDeaths)
+    {
+        for (const unsigned version : {7u, 8u})
+        for (const bool dead : {false, true})
+        {
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            MWClass::Npc::registerSelf(); world.setupPlayer();
+            const auto ptr = world.getPlayerPtr();
+            auto& stats = ptr.getClass().getNpcStats(ptr);
+            for (unsigned i = 0; i < 8; ++i)
+                stats.setAttribute(ESM::Attribute::indexToRefId(i), 40);
+            stats.setHealth(MWMechanics::DynamicStat<float>(100, 5, 80));
+            stats.setMagicka(MWMechanics::DynamicStat<float>(80, 10, 60));
+            stats.setFatigue(MWMechanics::DynamicStat<float>(180, 5, 150));
+            stats.setTimeToStartDrowning(7.25f);
+            stats.getSkill(ESM::Skill::Athletics).setProgress(.75f);
+            ESM4::Npc native{}; native.mId = {7, 1}; native.mIsTES4 = true;
+            const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+            native.mFormKey = base;
+            world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+            const auto actor = ESM::FormKey::dynamic("player", 1);
+            ESM4::RuntimeState state; state.mVersion = version;
+            state.mPlayer.mReference = actor;
+            state.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+            state.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+            state.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+            ESM4::RuntimeReferenceState reference; reference.mKey = actor;
+            reference.mBase = ESM::FormKey::dynamic("player-base", 1); reference.mCell = state.mPlayer.mCell;
+            reference.mCustomState["obscript.dead"] = dead; state.mReferences.push_back(reference);
+            std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+            state.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+            readNativeSnapshot(fixture, state);
+            auto& service = *world.getOblivionCombatService();
+            ASSERT_TRUE(world.initializeOblivionPlayerActor());
+            ASSERT_NE(service.findActorValues(actor), nullptr);
+            const auto values = *service.findActorValues(actor);
+            EXPECT_EQ(values.mPlayerFormValues, (std::optional<std::array<std::int32_t, 4>>{{20, 20, 20, 0}}));
+            EXPECT_FALSE(values.mPassiveAbilities); // Omitted history remains unknown.
+            EXPECT_EQ(values.mValues[8].mModifiers, (ESM4::ActorValueModifiers{5.f, 0.f, -25.f}));
+            EXPECT_EQ(service.getPlayerValue(8), 80);
+            EXPECT_EQ(service.getPlayerValue(9), 60);
+            EXPECT_EQ(service.getPlayerValue(10), 150);
+            EXPECT_EQ(stats.getHealth().getModified(false), 105);
+            EXPECT_EQ(stats.getMagicka().getModified(false), 90);
+            EXPECT_EQ(stats.getFatigue().getModified(false), 185);
+            EXPECT_EQ(stats.getSkill(ESM::Skill::Athletics).getProgress(), .75f);
+            EXPECT_EQ(service.findActorBreath(actor), 7.25f);
+            EXPECT_EQ(service.findActorLife(actor)->mPhase,
+                dead ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive);
+            EXPECT_EQ(stats.isDead(), dead);
+            EXPECT_FALSE(service.takeNextDeathEvent());
+            EXPECT_EQ(service.getDeadCount(reference.mBase), 0);
+            ASSERT_TRUE(world.initializeOblivionPlayerActor());
+            EXPECT_EQ(*service.findActorValues(actor), values);
+            auto saved = state; saved.mVersion = ESM4::CurrentRuntimeStateVersion;
+            service.capture(saved);
+            MWMechanics::OblivionCombatService restored;
+            restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            EXPECT_EQ(*restored.findActorValues(actor), values);
+            EXPECT_EQ(restored.findActorBreath(actor), 7.25f);
+            EXPECT_FALSE(restored.takeNextDeathEvent());
+        }
+    }
+
+    TEST(OblivionWorldTest, olderNativePlayerUnrepresentableViewRejectsBeforeAuthorityOrMarkerConsumption)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        const auto ptr = world.getPlayerPtr();
+        auto& stats = ptr.getClass().getNpcStats(ptr);
+        for (unsigned i = 0; i < 8; ++i) stats.setAttribute(ESM::Attribute::indexToRefId(i), 40);
+        stats.setHealth(MWMechanics::DynamicStat<float>(100.25f, 0, 80));
+        stats.setMagicka(MWMechanics::DynamicStat<float>(80, 0, 60));
+        stats.setFatigue(MWMechanics::DynamicStat<float>(180, 0, 150));
+        ESM4::Npc native{}; native.mId = {7, 1}; native.mIsTES4 = true;
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7); native.mFormKey = base;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        ESM4::RuntimeState state; state.mVersion = 7; state.mPlayer.mReference = actor;
+        state.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        state.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        state.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+        ESM4::RuntimeReferenceState reference; reference.mKey = actor;
+        reference.mBase = ESM::FormKey::dynamic("player-base", 1); reference.mCell = state.mPlayer.mCell;
+        reference.mCustomState["obscript.dead"] = true; state.mReferences.push_back(reference);
+        std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
+        state.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
+        readNativeSnapshot(fixture, state);
+        auto& service = *world.getOblivionCombatService();
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        EXPECT_FALSE(service.findActorBreath(actor));
+        EXPECT_EQ(stats.getHealth().getBase(), 100.25f);
+        EXPECT_FALSE(stats.isDead());
+        stats.setHealth(MWMechanics::DynamicStat<float>(100, 0, 80));
+        stats.setAttribute(ESM::Attribute::Strength, 12.25f);
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        stats.setAttribute(ESM::Attribute::Strength, 40);
+        stats.setTimeToStartDrowning(std::numeric_limits<float>::quiet_NaN());
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        EXPECT_EQ(service.findActorLife(actor), nullptr);
+        EXPECT_FALSE(service.findActorBreath(actor));
+        stats.setTimeToStartDrowning(7.5f);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        EXPECT_EQ(service.findActorBreath(actor), 7.5f);
+        EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_FALSE(service.takeNextDeathEvent());
     }
 
 

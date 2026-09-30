@@ -4,6 +4,8 @@
 
 #include "esmstore.hpp"
 #include "class.hpp"
+#include "player.hpp"
+#include "../mwmechanics/npcstats.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwmechanics/creaturestats.hpp"
@@ -14,6 +16,7 @@
 #include <components/esm4/runtimereferences.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <bit>
 #include <set>
@@ -309,6 +312,64 @@ namespace MWWorld
         if (sign)
             collect(sign->mSpells);
         result.mPassiveAbilities = resolveOblivionPassiveAbilityInputs(store, passives);
+        return result;
+    }
+
+    ESM4::RuntimeActorValues resolveOblivionLegacyPlayerValues(Player& player, const ESMStore& store)
+    {
+        auto result = resolveOblivionInitialPlayerValues(store);
+        const auto ptr = player.getPlayer();
+        const auto& stats = ptr.getClass().getNpcStats(ptr);
+        const auto copyStat = [&](std::uint8_t av, const MWMechanics::AttributeValue& value) {
+            if (!std::isfinite(value.getBase()) || value.getBase() != std::floor(value.getBase())
+                || value.getBase() < 0 || value.getBase() > 255)
+                throw std::invalid_argument("legacy Player attribute/skill cannot use native byte storage");
+            result.mValues[av] = {value.getBase(), {0.f, value.getModifier(), -value.getDamage()}};
+        };
+        for (std::uint8_t i = 0; i < 8; ++i)
+            copyStat(i, stats.getAttribute(ESM::Attribute::indexToRefId(i)));
+        const auto& skills = oblivionSkillIds();
+        for (std::uint8_t i = 0; i < skills.size(); ++i)
+            copyStat(12 + i, stats.getSkill(skills[i]));
+        const std::array<const MWMechanics::DynamicStat<float>*, 3> resources{
+            &stats.getHealth(), &stats.getMagicka(), &stats.getFatigue()};
+        std::array<float, 4> cachedBases;
+        for (std::size_t i = 0; i < resources.size(); ++i)
+        {
+            const auto& resource = *resources[i];
+            cachedBases[i] = resource.getBase();
+            const float damage = static_cast<float>(double(resource.getCurrent())
+                - double(resource.getBase()) - double(resource.getModifier()));
+            // Legacy DynamicStat's modifier contributes to both maximum and
+            // current. It is not evidence of a native Script channel.
+            result.mValues[8 + i] = {resource.getBase(), {resource.getModifier(), 0.f, damage}};
+            const float current = ESM4::composeActorValue(result.mValues[8 + i], result.mOwner, result.mProcess);
+            if ((current > 0) != (resource.getCurrent() > 0))
+                throw std::invalid_argument("legacy Player resource conversion changes its zero boundary");
+        }
+        cachedBases[3] = ptr.getClass().getCapacity(ptr);
+        std::array<std::int32_t, 8> attributes;
+        for (std::uint8_t i = 0; i < attributes.size(); ++i)
+            attributes[i] = ESM4::composeIntegerActorValue(static_cast<std::int32_t>(result.mValues[i].mBase),
+                result.mValues[i].mModifiers, result.mOwner, result.mProcess);
+        result.mPlayerFormValues = ESM4::legacyPlayerFormValues(cachedBases, attributes,
+            resolveOblivionPlayerDynamicBaseSettings(store));
+        for (std::size_t i = 0; i < cachedBases.size(); ++i)
+            result.mValues[8 + i].mBase = cachedBases[i];
+        const std::array ai{MWMechanics::AiSetting::Fight, MWMechanics::AiSetting::Flee,
+            MWMechanics::AiSetting::Hello, MWMechanics::AiSetting::Alarm};
+        for (std::size_t i = 0; i < ai.size(); ++i)
+        {
+            const auto& value = stats.getAiSetting(ai[i]);
+            if (value.getBase() < 0 || value.getBase() > 255)
+                throw std::invalid_argument("legacy Player AI base cannot use native byte storage");
+            result.mValues[33 + i] = {static_cast<float>(value.getBase()),
+                {0.f, static_cast<float>(value.getModifier()), 0.f}};
+        }
+        // Older saves did not record passive ownership. Never manufacture an
+        // empty ledger, native application quantities or caster history.
+        result.mPassiveAbilities.reset();
+        result.validate();
         return result;
     }
 

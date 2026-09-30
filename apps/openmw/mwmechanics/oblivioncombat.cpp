@@ -1434,6 +1434,23 @@ namespace MWMechanics
         return values;
     }
 
+    void OblivionCombatService::initializePlayerActorFromLegacyView(MWWorld::Player& player,
+        const MWWorld::ESMStore& store, ESM4::RuntimeActorValues values,
+        float breathRemaining, std::optional<bool> legacyDead)
+    {
+        validatePlayerIdentity(values);
+        if (findActorValues(values.mActor))
+            throw std::invalid_argument("legacy Player adoption cannot overwrite existing native authority");
+        if (!std::isfinite(breathRemaining))
+            throw std::invalid_argument("nonfinite legacy Player breath timer");
+        const auto key = values.mActor;
+        auto prepared = *this;
+        prepared.mActorValues.emplace(key, std::move(values));
+        prepared.mActorBreath.insert_or_assign(ESM::FormKey::dynamic("player", 1), breathRemaining);
+        const auto candidate = prepared.preparePlayerInitialization(player, store, legacyDead);
+        commitPreparedPlayer(player, prepared, candidate, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+    }
+
     void OblivionCombatService::initializePlayerActor(MWWorld::Player& player,
         const MWWorld::ESMStore& store, std::optional<bool> legacyDead)
     {
@@ -1637,6 +1654,7 @@ namespace MWMechanics
         mActorValues.swap(prepared.mActorValues);
         mActorBases.swap(prepared.mActorBases);
         mActorLife.swap(prepared.mActorLife);
+        mActorBreath.swap(prepared.mActorBreath);
         mPendingDeathEvents.swap(prepared.mPendingDeathEvents);
         mDeathCounts.swap(prepared.mDeathCounts);
         mCombatOpponents.swap(prepared.mCombatOpponents);
