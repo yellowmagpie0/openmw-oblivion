@@ -6602,3 +6602,68 @@ saves and generated evidence remain in the original workspace. Use the versioned
 `openmw-build-test` skill with the actual review checkout path when configuring
 and running additional checks. M15 remains in progress; the stage table and
 normal-input/official campaign gates have not been waived.
+
+### Native TES4 spell inputs for character-generation abilities
+
+Typed `ESM4::Spell` now retains SPIT and ordered EFID/EFIT effects, including
+4-/12-/16-byte SCIT fields with stable script keys. SPIT/script flags are bytes;
+neighboring padding remains separate. Effect codes and visual-effect codes are
+FourCC values and are not remapped as FormIds. A script effect's FULL name no
+longer replaces the spell's display name. Original unknown subrecords, padding
+and numeric domains survive; runtime policy must explicitly admit supported
+effects. Malformed lengths, duplicate fields and incomplete/mismatched pairs
+fail. Empty deletion tombstones remain valid. This is typed input support, not
+spell execution or completed character generation.
+
+The component catalog/CMake, ESMStore tuple, explicit dynamic-store instantiation,
+TES4-only dispatch and typed `esmtool` dump are registered together. Later-game
+spell layouts retain the tool's raw fallback. An actual ESMStore test establishes
+winning overrides, deletion and stable script-key remapping across reordered
+masters while leaving FourCC values unchanged.
+
+Independent standalone-master inventory `authority-draft/player-ability-record-audit-01`
+finds1137 spells/1856 effects. All SPIT/EFIT lengths are16/24 bytes; SCIT has80
+16-byte, four12-byte and five4-byte fields. This supports parsing those original
+short layouts rather than assuming every script effect is16 bytes. The winning
+all-official-content audit extends the reviewed count lock to1314 spells; all
+previous counts and plugin hashes remain identical. Audit01 retains the old
+lock failure; audit02 passes the expanded lock but correctly reports three
+script-link errors: original `MS40TestSpell` points to a REFR, and Knights'
+`NDAbArmorCumulative`/`NDAbWoodlandGrace` point to missing scripts. Those authored
+problems are not repaired or waived as successful effect execution. This new
+audit coverage does not close S2 or any gameplay gate.
+
+`native-spell-input-baseline-01` retains an incomplete test registration failure;
+`baseline-02` has all four newly registered component cases fail against the
+explicit unimplemented decoder. `native-spell-input-parser-01` passes1954 full
+component and429 ESM4 sanitizer cases. After removing an unused fixture helper
+and improving the SPIT truncation test, `native-spell-input-complete-01` passes
+all1954 components,429 ESM4 sanitizer,208 Python and668 engine cases.
+`native-spell-input-sanitized-engine-01` passes all668 engine cases. Inventories
+and XML match, with no skips/failures; leak detection is off, UBSan halts.
+Both final runs share source fingerprint:
+`2e8a472807d05e1e91d36d0b70a183578c47d3b68e291c65020a76e1f358f9fc`.
+The initial component/sanitizer run predates the fixture cleanup/Python changes
+and is retained at its original source fingerprint.
+
+`native-spell-typed-comparison-01` compares every1314 official spell and its2186
+ordered effects through rebuilt C++ `esmtool` versus independent raw Python
+layouts. Type/cost/level/flags, spell names, all effect fields, stable script keys
+and present school/visual/flags agree. Padding/raw preservation and script-effect
+names are component-test coverage; no effects execute in this comparison.
+Report SHA256:
+`1ba39c80ecc6e0e5fb8e06f8fa3d0c92697da754f1b68ccf2eda41531068cd82`.
+Evidence paths above are under `build/oblivion-compat/m15/S3/`.
+
+The next bounded prerequisite is a native Player character-generation transaction
+using winning ability definitions and the original base-form writer policy;
+fresh automatic activation remains off. The typed decoder alone does not make
+racial/birthsign abilities run, and full spell execution remains M16.
+
+Checkpoint26 is committed in the independent `m15-implementation` repository
+following these checks. The new portable bundle is
+`build/oblivion-compat/m15/S3/isolated-git-progress-04/m15-progress.bundle`;
+`commits.json` maps the resulting commit/tree to this tested fingerprint.
+Clone that bundle with `git clone --branch m15-implementation BUNDLE NEW_DIRECTORY`
+to review the current source. Tests ran in the shared workspace; a fresh clean
+bundle clone and changed-source byte comparison verify the Git checkpoint.

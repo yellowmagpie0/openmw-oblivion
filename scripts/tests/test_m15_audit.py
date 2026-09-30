@@ -32,6 +32,52 @@ def plugin(records, masters=()):
 
 
 class M15NativeAuditTests(unittest.TestCase):
+    def test_spell_layout_order_padding_partial_script_fields_and_name(self):
+        def decode(parts):
+            return audit.spell_definition(dict(plugin='base.esm', masters=['other.esm'],
+                subrecords=[dict(name=tag,payload=data) for tag,data in parts]))
+        info = struct.pack('<IIIB3s',4,123,2,1,b'\xa5\xff\x80')
+        effect = struct.pack('<4s5I',b'SEFF',50,3,7,0,9)
+        basic = [('SPIT',info),('FULL',b'spell\0'),('EFID',b'SEFF'),('ZZZZ',b'poison'),('EFIT',effect)]
+        for size in (4,12,16):
+            script = struct.pack('<IIIB3s',0x01000812,3,0x47444946,1,b'\xa5\xff\x80')[:size]
+            result = decode(basic+[('SCIT',script),('FULL',b'effect\0')])
+            self.assertEqual(result['flags'],1)
+            self.assertEqual(result['padding'],[0xa5,0xff,0x80])
+            self.assertEqual(result['full_name'],'spell')
+            parsed = result['effects'][0]['script']
+            self.assertEqual(parsed['key'],'content:base.esm:000812')
+            self.assertEqual(parsed['name'],'effect')
+            self.assertEqual(parsed['school'],3 if size>=12 else None)
+            self.assertEqual(parsed['visual'],0x47444946 if size>=12 else None)
+            self.assertEqual(parsed['flags'],1 if size==16 else None)
+        malformed = [[],[('SPIT',info[:-1])],basic+[('SPIT',info)],basic+[('EFIT',effect)],
+                     basic+[('EFID',b'FOAT')],basic+[('SCIT',bytes(8))],basic+[('SCIT',bytes(4))]*2,
+                     [('SPIT',info),('EFID',b'FOAT'),('EFIT',effect)],
+                     [('SPIT',info),('SCIT',bytes(4))]]
+        for parts in malformed:
+            with self.assertRaises(audit.M15AuditError):decode(parts)
+
+    def test_spell_inventory_overrides_remaps_script_links_and_deletes(self):
+        def spell(form,magnitude,script):
+            return record('SPEL',form,sub('SPIT',struct.pack('<IIIB3s',4,0,0,1,bytes(3)))
+                +sub('EFID',b'SEFF')+sub('EFIT',struct.pack('<4s5I',b'SEFF',magnitude,0,0,0,9))
+                +sub('SCIT',struct.pack('<I',script)))
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);base=root/'base.esm';other=root/'other.esm';patch=root/'patch.esp'
+            base.write_bytes(plugin([spell(0x800,50,0x810),record('SCPT',0x810,b'')]))
+            other.write_bytes(plugin([spell(0x800,60,0x811),record('SCPT',0x811,b'')]))
+            patch.write_bytes(plugin([spell(0x01000800,100,0x00000811)],['other.esm','base.esm']))
+            result=audit.inventory([base,other,patch]);self.assertTrue(result['data_passed'],result['failures'])
+            effects=result['spells']['content:base.esm:000800']['effects']
+            self.assertEqual(effects[0]['magnitude'],100)
+            self.assertEqual(effects[0]['script']['key'],'content:other.esm:000811')
+            self.assertEqual(result['spells']['content:other.esm:000800']['effects'][0]['magnitude'],60)
+            patch.write_bytes(plugin([record('SPEL',0x01000800,b'',0x20)],['other.esm','base.esm']))
+            result=audit.inventory([base,other,patch]);self.assertEqual(result['summary']['spells'],1)
+            patch.write_bytes(plugin([spell(0x01000800,100,0x00000999)],['other.esm','base.esm']))
+            self.assertFalse(audit.inventory([base,other,patch])['data_passed'])
+
     def test_native_skill_layout_domains_and_mismatched_index(self):
         index = struct.pack('<I', 19)
         data = struct.pack('<III2f', 19, 1, 1, 5, .5)
@@ -131,7 +177,7 @@ class M15NativeAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             base, other, patch = (root / name for name in ('base.esm', 'other.esm', 'patch.esp'))
-            base.write_bytes(plugin([record('MISC', 0x800, b''), record('SPEL', 0x801, b''),
+            base.write_bytes(plugin([record('MISC', 0x800, b''), record('SPEL', 0x801, sub('SPIT', struct.pack('<IIIB3s', 0, 0, 0, 0, bytes(3)))),
                                     record('RACE', 0x802, b''), record('CLAS', 0x803, b''), record('LVSP', 0x805, b'')]))
             other.write_bytes(plugin([record('SGST', 0x800, b'')]))
             actor = sub('AIDT', bytes(12)) + sub('ACBS', bytes(16))

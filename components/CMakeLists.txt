@@ -240,6 +240,7 @@ add_component_dir (esm4
     loadcont
     loadcrea
     loadcsty
+    loadspel
     loadskil
     loadfact
     combatstylepolicy

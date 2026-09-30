@@ -3341,3 +3341,70 @@ Report SHA256:
 `e9da38b7619722df49e928b93f195dd69e7e7117875fbb8167744af67dbbeaa5`.
 Both probes use the pinned original executable SHA256
 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+### Recoverable ability writer selection for the Player
+
+For original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+RTTI navigation identifies the candidate ValueModifierEffect vtable at `A76D34`.
+Navigation alone is not semantic proof. The reviewed mutation dispatcher
+`6A84D0` executes the actual Player predicate `5E04E0`, tests spell type4 and
+recoverable-effect flag2, then invokes Player virtual +2AC for that combination.
+Other actors or other spell types with that flag use +294. The Player vtable
+`A73A0C` resolves +2AC to `65D1A0`, which invokes base-form float ModAV (+138),
+then notifies/updates the Player. Native NPC/creature form +138 resolves to
+`51E810`: query the base float (+12C), add the float delta with a float store,
+and dispatch the float setter (+130). Thus permanent Player ability admission
+must not be implemented as an ordinary Maximum-modifier write.
+
+`S3/authority-draft/recoverable-effect-writer-dispatch-01` independently executes
+864 original dispatch cases: absent/Player/NPC target, spell types0/2/4, eight
+actor values, six signed/fractional/zero/width-boundary deltas and both x87 words.
+Writer selection and actual Player identity execute. Actor writer callbacks are
+boundary fixtures; no base field mutation, magnitude construction, resistance,
+effect admission/removal, events or gameplay execute. Report SHA256:
+`0154cd23d1f5099420685406f9147b6cc3c3057c851595cda2b946e8cf106ff9`.
+The wrapper/getter/add/store/setter chain above is static reviewed evidence,
+not a claim that all its conversions have been compared in this new probe.
+
+The independent original-master ability-record audit is
+`S3/authority-draft/player-ability-record-audit-01`, report SHA256
+`e2070f4dc5c20d09255083c377b6e155ae5da20cb408d1db1109ce14542dad51`.
+The companion effect-definition byte audit finds145 MGEF records,14464-byte
+DATA fields and one36-byte field (DARK). All have nonzero form IDs. It decodes
+only offsets0/8/16; interpreting their flags/AV choices still requires reviewed
+loader/getter paths. Its report SHA256 is
+`6dee6cb9ef05abbb7d53d57e575a94f238f93da41af8ada99317ddc13d2c2e11`.
+These standalone-master inventories do not establish winning overrides, full
+active-effect semantics, abilities during normal startup or M15 acceptance.
+
+`value-modifier-effect-construction-01` executes2880 original `6A82F0`
+constructors, including common `68D7A0` and actual magnitude/duration getters.
+The MagicItem spell-type virtual returns4 at a boundary. The constructor chooses
+setting data when flag0x01000000 is set, otherwise the EFIT actor value; flag0x100
+sets magnitude1, and flag0x80 sets duration0. Otherwise raw quantity bits undergo
+signed-int32-to-float conversion. Poison guards, bit boundaries and both x87
+words are covered. No effects apply. Report SHA256:
+`6142cd9df5b5f2bd52caa278826b51609b140d9b13dd7488fb6890993539315a`.
+
+The default-effect initializer `417420` produces161 argument sets, independently
+captured at the allocation/registration boundary `417220` without allocating
+effects. All145 original-master MGEF codes appear in this compiled inventory.
+Arguments carry code, flags, data, school, base cost, resistance and counters;
+ready-setting construction is not inferred from capture alone. Report
+`compiled-effect-default-arguments-01` SHA256:
+`74e29aba76f4901ada4cdd2e2957eea6c2e44b23f71be53eb1400df16088aae7`.
+
+Crucially, original MGEF loading is not a direct replacement of all compiled
+flags with authored DATA. `41617B..416229` resets/reads the64-byte block (including
+short36-byte input), merges editable bits using the original flag tables,
+retains static ActorValue data when the previous flag0x01000000 was set, and
+clears bit0x00200000. Editable mask is0x0FE03C00. The native flag tables and merge
+execute in768 cases against initial/file flag patterns, both lengths, three
+poison patterns and both x87 words. Only file read `450C20` is a boundary;
+memset/reset and complete flag/data reconciliation execute. Report
+`effect-definition-load-merge-01` SHA256:
+`0409cfa325ff5adf8b5f0f40b9ff8f7d28d54307f43729c46055707b0ded5dbb`.
+Setting constructors, EDID selection, remapping and effect execution remain
+outside that probe. A future typed MGEF parser must distinguish authored fields
+from these ready flags/data before Player ability admission.

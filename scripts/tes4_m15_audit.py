@@ -32,6 +32,52 @@ def skill_definition(index: bytes, data: bytes) -> dict[str, Any]:
             'specialization': specialization, 'use_values': [use0, use1]}
 
 
+def spell_definition(record: dict) -> dict[str, Any]:
+    """Decode original TES4 SPEL bytes; effect execution is deliberately absent."""
+    subs = record['subrecords']
+    kind, cost, level, flags, padding = _unpack(_one(subs, 'SPIT', True), '<IIIB3s', 'SPIT')
+    effects = []
+    pending = None
+    name = ''
+    for subrecord in subs:
+        tag, payload = subrecord['name'], subrecord['payload']
+        if tag == 'EFID':
+            if pending is not None or len(payload) != 4:
+                raise M15AuditError('EFID requires four bytes and a paired EFIT')
+            pending = payload
+        elif tag == 'EFIT':
+            code, magnitude, area, duration, range_, av = _unpack(payload, '<4s5I', 'EFIT')
+            if pending is None or code != pending:
+                raise M15AuditError('EFIT disagrees with or lacks EFID')
+            effects.append(dict(code=struct.unpack('<I', code)[0], magnitude=magnitude,
+                                area=area, duration=duration, range=range_, actor_value=av, script=None))
+            pending = None
+        elif tag == 'SCIT':
+            if pending is not None or not effects or effects[-1]['script'] is not None or len(payload) not in (4, 12, 16):
+                raise M15AuditError('invalid SCIT length/order/duplicate')
+            script_id, = struct.unpack_from('<I', payload)
+            script = dict(key=_stable_key(record['plugin'], script_id, record['masters']),
+                          school=None, visual=None, flags=None, padding=[], name=None)
+            if len(payload) >= 12:
+                script['school'], script['visual'] = struct.unpack_from('<II', payload, 4)
+            if len(payload) == 16:
+                script['flags'] = payload[12]
+                script['padding'] = list(payload[13:16])
+            effects[-1]['script'] = script
+        elif tag == 'FULL':
+            if not effects and pending is None:
+                name = binary._decode_string(payload)
+            elif effects and pending is None and effects[-1]['script'] is not None:
+                script = effects[-1]['script']
+                if script['name'] is not None:
+                    raise M15AuditError('duplicate script-effect FULL')
+                script['name'] = binary._decode_string(payload)
+    if pending is not None:
+        raise M15AuditError('EFID has no EFIT')
+    return dict(type=kind, cost=cost, level=level, flags=flags, padding=list(padding),
+                full_name=name, effects=effects)
+
+
 # Struct grouping is independent of the C++ decoder's explicit byte offsets.
 _CORE = struct.Struct('<2B2x8f2B2x3fB3x2f5B3x2f2B2x')
 _CORE_NAMES = ('dodge_chance', 'left_right_chance', 'dodge_lr_min', 'dodge_lr_max',
@@ -258,7 +304,7 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     if len(set(masters)) != len(masters):
         raise M15AuditError(f'{path.name}: duplicate masters')
     records = []
-    wanted = {'CSTY', 'SKIL', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
+    wanted = {'CSTY', 'SKIL', 'SPEL', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
 
     def walk(start: int, end: int, cell: str | None = None, depth: int = 0):
         if depth > 64:
@@ -396,7 +442,7 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             winners[key] = record
     styles, actors, settings, factions, equipment = {}, {}, {}, {}, {}
     ownership, references = {}, {}
-    skills = {}
+    skills, spells = {}, {}
     failures = []
     for key, record in winners.items():
         if record['deleted'] or 'subrecords' not in record:
@@ -422,6 +468,8 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
                         if any(not math.isfinite(v) for v in values[1:]):
                             raise M15AuditError('nonfinite door destination')
                         references[key]['destination'] = _stable_key(record['plugin'], values[0], record['masters'])
+            elif record['type'] == 'SPEL':
+                spells[key] = dict(spell_definition(record), editor_id=edid)
             elif record['type'] == 'SKIL':
                 skills[key] = dict(skill_definition(_one(subs, 'INDX', True), _one(subs, 'DATA', True)),
                                    editor_id=edid)
@@ -521,6 +569,10 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             check_link(key, relation['faction'], ('FACT',))
     for key, item in equipment.items():
         check_link(key, item['enchantment'], ('ENCH',))
+    for key, spell in spells.items():
+        for effect in spell['effects']:
+            if effect['script'] is not None:
+                check_link(key, effect['script']['key'], ('SCPT',))
     for key, actor in actors.items():
         for entry in actor['inventory']:
             check_link(key, entry['item'], ('WEAP', 'ARMO', 'AMMO', 'MISC', 'KEYM', 'BOOK',
@@ -569,12 +621,12 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
         failures.append('ambiguous winning SKIL actor values')
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
-        'settings': settings, 'skills': skills, 'factions': factions, 'equipment': equipment,
+        'settings': settings, 'skills': skills, 'spells': spells, 'factions': factions, 'equipment': equipment,
         'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures, 'data_passed': not failures,
         'skill_inventory_complete': skill_counts == collections.Counter(range(12, 33)),
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],
-        'summary': {'styles': len(styles), 'skills': len(skills), 'actors': len(actors), 'settings': len(settings),
+        'summary': {'styles': len(styles), 'skills': len(skills), 'spells': len(spells), 'actors': len(actors), 'settings': len(settings),
                     'factions': len(factions), 'equipment': len(equipment), 'owned_forms': len(ownership), 'references': len(references), 'prisons': len(prison_reports), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.
