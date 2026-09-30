@@ -6067,3 +6067,70 @@ This validates consumed conversion inputs; derived legacy arithmetic, missing
 Player form-input migration and whole-world rollback remain open, alongside
 normal-input/fresh-process acceptance. Local commits are still unavailable
 because Git metadata is read-only.
+
+### S3 continuation: socket-free SDL input and actual engine restarts
+
+The installed SDL `offscreen` driver can create Mesa llvmpipe OpenGL core and
+compatibility contexts using `EGL_PLATFORM=surfaceless`. The retained
+`sdl-offscreen-context-01` probe and `sdl-offscreen-engine-load-01` actual-engine
+load establish a new runtime route without X11 sockets. Xvfb and original-game
+Wine remain unavailable; this does not resolve the original-game oracle gate.
+
+`scripts/sdl_offscreen_input.cpp` is a test-only preload library. Its opt-in
+append-only input protocol emits SDL key down/up and quit events after the
+native event queue empties. It maintains held keys and modifier state, records
+every delivered line, waits for complete lines, and rejects bad sequences,
+invalid scancodes and other video drivers. It does not access engine state.
+Compile with C++17, `-shared -fPIC`, SDL2 pkg-config flags and `-ldl`; set
+`LD_PRELOAD` to the library and `OPENMW_SDL_INPUT` to a new empty private input
+file. Lines are `1 down 62`, `2 up 62` (F5), for example; each subsequent line
+must increment its sequence. F12 is scancode69. Append presses/releases with a
+frame interval between them. This currently supports keyboard/quit only;
+existing scenario actions still require integration before replacing their
+X11 controls. Do not substitute console world/stat mutations for input.
+
+The new real-SDL tests exercise seven cases: keyboard/held/modifier release,
+partial lines/native-event priority, opt-out pass-through, recorded quit,
+invalid sequence, invalid scancode and wrong driver. The corrected full Python
+check `sdl-offscreen-input-python-01` passes all198 cases with no skips at
+fingerprint `629d0ee7849ecbff53d414c1e07fecf1bd44ba15cca3b29ddf4f2ce29888b36e`.
+The initial wrong-driver test failure identified rejection during the test's
+startup event drain; validation now occurs when input is available.
+
+Actual engine courses `sdl-offscreen-save-restart-01`,
+`sdl-offscreen-native-restart-01` and
+`sdl-offscreen-native-sanitized-restart-01` each perform private-copy load,
+F12 screenshot, F5 save, SDL quit, fresh-process load, screenshot and resave.
+Each phase exits0, consumes every input exactly once and leaves its input save
+unchanged. The first upgrades an idle v9 save with no native actor entries.
+The populated course upgrades the historical v16 regular-zero fixture with
+Player and NPC authority and persisted Lua modifiers. Independent binary
+inspection preserves all actor values, life/breath/base/engagement/death data,
+Player position and resource currents; absent optional v17 non-player form
+health normalizes to null. Manager/completed update clocks advance normally.
+Lua reports both restored actors. There is no fresh actor publication here.
+
+The normal executable SHA256 is
+`6c59d8f499cbf6d8ab23e1aa589376d753868babee817cfd5ca37e379c18a73e`;
+the sanitized executable is
+`be2ca2ddbace380b111c6f9fa660fb59ab096882dfdf3894d28ed8750a02da77`.
+Their engine source was verified by the preceding normal/sanitized all661
+scalar-preflight checks at fingerprint `e3f40675603c314fa960045954d4065c89fd7a96b8b9c19f86d61ce3baf73e33`.
+The sanitizer course preloads libasan before the replay helper and halts on
+ASan/UBSan errors, with leak detection disabled. Both runtime logs are clean
+of replay/load/save/frame/sanitizer failures. Retained probe scripts,
+configuration/input/log hashes, save and image hashes and state/visual
+verification are in each course directory.
+
+I inspected the screenshots: the empty-authority fixture has full resources;
+the populated fixture displays health25/100, magicka20/100 and fatigue200/200.
+Restart images are byte-identical within each course, including the sanitized
+populated course. Initial visual checks expecting98% full-bar fill failed
+because two border pixels in the63-pixel measurement region are not fill;
+those checks remain as `state-visual-baseline-01.json`. Corrected full-bar
+bounds95%-100%, health23%-27% and magicka18%-22% pass both phases, with contiguous
+fills. These are narrow idle persistence/HUD checks, not complete S3 runtime
+acceptance, combat/campaign acceptance, original-game visual comparisons or
+audio validation. S2/S3 remain open; the next task is reusable scenario input
+integration and the outstanding Wait/AI-disabled course. Local commits still
+cannot be created because the sandbox mounts Git metadata read-only.
