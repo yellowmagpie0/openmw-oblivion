@@ -20,6 +20,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/player.hpp"
+#include "../mwworld/inventorystore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include <components/esm4/loadachr.hpp>
 
@@ -1020,6 +1021,18 @@ namespace MWMechanics
         return mActions.consume(id);
     }
 
+    OblivionPhysicalConditionChange captureOblivionPhysicalConditionChange(
+        const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float condition)
+    {
+        if (item.isEmpty() || !std::isfinite(condition) || condition < 0)
+            throw std::invalid_argument("invalid native physical condition candidate");
+        const auto& ref = item.getCellRef();
+        const auto native = ref.getNativeItemCondition();
+        if (native && (!std::isfinite(*native) || *native < 0))
+            throw std::invalid_argument("invalid native physical condition snapshot");
+        return {owner, item, native, ref.getCharge(), ref.getChargeIntRemainder(), ref.getCount(), condition};
+    }
+
     bool OblivionCombatService::commitPhysicalContact(std::uint64_t id,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
@@ -1110,9 +1123,56 @@ namespace MWMechanics
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);
+        struct PreparedCondition
+        {
+            MWWorld::Ptr mItem;
+            MWWorld::CellRef mReference;
+            bool mApply;
+        };
+        std::vector<PreparedCondition> conditions;
+        conditions.reserve(deltas.mConditionChanges.size());
+        if (victim.isEmpty() && !deltas.mConditionChanges.empty())
+            throw std::invalid_argument("native missed swing cannot change equipment condition");
+        for (const auto& request : deltas.mConditionChanges)
+        {
+            if (request.mOwner != attacker && request.mOwner != victim)
+                throw std::invalid_argument("native contact condition owner is not a participant");
+            if (request.mItem.isEmpty()
+                || (request.mItem.getType() != ESM::REC_WEAP && request.mItem.getType() != ESM::REC_ARMO)
+                || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>())
+                throw std::invalid_argument("native contact condition requires a native weapon or armor instance");
+            if (!std::isfinite(request.mCondition) || request.mCondition < 0
+                || !std::isfinite(request.mExpectedRemainder)
+                || (request.mExpectedNativeCondition
+                    && (!std::isfinite(*request.mExpectedNativeCondition) || *request.mExpectedNativeCondition < 0)))
+                throw std::invalid_argument("invalid native contact condition publication");
+            auto& inventory = request.mOwner.getClass().getInventoryStore(request.mOwner);
+            if (request.mItem.getContainerStore() != &inventory || !inventory.isEquipped(request.mItem))
+                throw std::invalid_argument("native contact condition requires owned equipped equipment");
+            auto found = std::find_if(conditions.begin(), conditions.end(),
+                [&](const auto& prepared) { return prepared.mItem == request.mItem; });
+            if (found == conditions.end())
+            {
+                const bool isPlayer = player && request.mOwner == player->getPlayer();
+                conditions.push_back({request.mItem, request.mItem.getCellRef(), !(playerGodMode && isPlayer)});
+                found = std::prev(conditions.end());
+            }
+            auto& ref = found->mReference;
+            if (request.mExpectedCount != 1 || ref.getCount() != request.mExpectedCount
+                || ref.getNativeItemCondition() != request.mExpectedNativeCondition
+                || ref.getCharge() != request.mExpectedCharge
+                || ref.getChargeIntRemainder() != request.mExpectedRemainder)
+                throw std::invalid_argument("stale or stacked native contact condition request");
+            if (found->mApply)
+                ref.setNativeItemCondition(request.mCondition);
+        }
         // No allocations, callbacks or fallible calculations after this point.
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
+        static_assert(std::is_nothrow_swappable_v<MWWorld::CellRef>);
+        for (auto& prepared : conditions)
+            if (prepared.mApply)
+                std::swap(prepared.mItem.getCellRef(), prepared.mReference);
         std::swap(mActorValues.at(attackerKey), attacking);
         if (receiving)
         {

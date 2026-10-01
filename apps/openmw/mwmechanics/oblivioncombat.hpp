@@ -7,6 +7,8 @@
 #include <components/esm/refid.hpp>
 
 #include "stat.hpp"
+#include "../mwworld/ptr.hpp"
+#include <vector>
 
 #include <array>
 #include <map>
@@ -162,8 +164,24 @@ namespace MWMechanics
         bool mDrowning;
     };
 
+    // A transient, precomputed condition publication on an equipped instance.
+    // Capture comparison fields before rule evaluation; no Ptr enters a save.
+    struct OblivionPhysicalConditionChange
+    {
+        MWWorld::Ptr mOwner;
+        MWWorld::Ptr mItem;
+        std::optional<float> mExpectedNativeCondition;
+        int mExpectedCharge = -1;
+        float mExpectedRemainder = 0;
+        int mExpectedCount = 1;
+        float mCondition = 0;
+    };
+    OblivionPhysicalConditionChange captureOblivionPhysicalConditionChange(
+        const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float condition);
+
     // Signed native Damage-channel deltas, already resolved by contact policy.
-    // Geometry, mitigation, equipment wear and reactions are caller contracts.
+    // Geometry, mitigation, wear quantities and reactions are caller contracts.
+    // Prepared instance conditions publish atomically with resource deltas.
     struct OblivionPhysicalContactDeltas
     {
         float mAttackerFatigue = 0;
@@ -172,6 +190,7 @@ namespace MWMechanics
         // Native block caller writes this before Health/contact Fatigue. Keep
         // the distinct float store rather than adding the two Fatigue deltas.
         float mVictimBlockFatigue = 0;
+        std::vector<OblivionPhysicalConditionChange> mConditionChanges{};
     };
 
     struct OblivionPassiveEffectIdentity

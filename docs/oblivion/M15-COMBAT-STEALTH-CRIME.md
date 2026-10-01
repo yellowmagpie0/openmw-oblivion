@@ -9864,3 +9864,48 @@ S4–S14 open. Next: native condition publication and acquired weapon contacts,
 armor/block wear and reactions, opponent policy and all remaining plan gates.
 Previous checkpoint90 commit2a5b34c216df4a5f2cc7a79f479388e675d4b9a9;
 verified bundle68 SHA2561d2098e4271d520150f1c6539918bdcb93089c722d54200d8d85d97f5c77eb19.
+
+### Prepared equipment condition publication — checkpoint 92
+
+Checkpoint 91 was committed as `db13436ef0ef97bf9e97dc67516d96073ba0a3fe`
+(tree `a1e175c25a0f2911895617ae8649882668190929`) in the independent local
+`m15-implementation` repository. Its verified fresh-clone bundle is
+`S3/isolated-git-progress-69/m15-progress.bundle`, SHA-256
+`809798ddbf6f37675aa4e43ffda2b2a237b5611c06a71696ded750f70e87fd2e`.
+The original checkout metadata remains unchanged.
+
+The native physical contact writer now accepts transient, precomputed condition
+requests on actual equipped native WEAP/ARMO instances. Requests include the
+owner and expected condition/charge/remainder/count. Only the attacker or victim
+can own a requested item, and the item must belong to that actor's inventory,
+be equipped and have count one. Missing contacts cannot wear equipment. Invalid,
+nonfinite, stale, foreign or stacked requests reject before resource publication
+or action consumption. Condition quantities are still the caller's rule contract.
+
+All requested writes prepare complete `CellRef` copies. Repeated writes to the
+same instance validate against the preceding prepared state, preserving separately
+rounded native block/armor writes. Publication uses statically verified noexcept
+swaps of references and actor authority. Inventory instances, equipment slots and
+other reference metadata remain stable. Player god mode suppresses physical
+condition publication on Player equipment while allowing NPC equipment and
+victim resource changes. These requests introduce no persistent Ptr or schema.
+
+The new headless engine tests cover rejected requests without spending, two
+participant weapons, armor, count-two rejection, an uninitialized foreign actor
+without cache construction, Player god mode, ordered repeated writes, exact
+fractional binary serialization and production inventory preparation/hydration,
+and consumed-contact rejection after restoring the service. Their reference
+inventory rows are explicitly assembled from the staged instances: this is
+structural save/hydration verification, not a new world-capture gameplay course.
+
+The red baseline `S3/native-contact-condition-baseline-01` ran the new test against
+the unfinished writer and failed: it ignored malformed equipment updates while
+publishing damage and consuming the action. The failure is retained. Final normal
+and sanitizer evidence is recorded below. Wear arithmetic, actual equipped WEAP
+contact dispatch, armor-selection randomness, broken-item unequip/reactions and
+normal-input wear/save/restart acceptance remain open; this chunk closes none
+of S3–S14's incomplete gates.
+
+- `S3/native-contact-condition-main-01`: **757/757 engine tests passed**.
+- `S3/native-contact-condition-sanitize-01`: **757/757 engine tests passed**, ASan leak detection disabled and both ASan/UBSan halt on error; no sanitizer findings.
+- Both runs validated exact inventories/XML, zero skips/failures and stable shared-source fingerprint `102c685c23c953de12249f113890606e3eea8920b3e3e288989620318a69a7c0`. No component/Python implementation changed in this chunk; their preceding evidence remains separate.

@@ -3687,6 +3687,173 @@ namespace
         EXPECT_EQ(paralyzed->mBlockAbsorbedFraction, 0); EXPECT_EQ(paralyzed->mBlockFatigueDebit, 0);
     }
 
+    TEST(OblivionWorldTest, NativeContactPublishesPreparedConditionsAtomicallyAndOnce)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Weapon::registerSelf();
+        const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        ESM4::Weapon native{}; native.mId = {0x940, 0}; native.mData.health = 100;
+        native.mData.speed = native.mData.reach = 1;
+        const auto base = ESM::FormKey::content("headless.esm", 0x940);
+        store.getWritable<ESM4::Weapon>().insertStatic(native, base);
+        ESM::Weapon projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+        projected.mData.mHealth = 100; store.insertStatic(projected);
+        const auto install = [&](const MWWorld::Ptr& owner, float condition) {
+            ESM4::RuntimeInventoryItem item; item.mBase = base; item.mCount = 1;
+            item.mCondition = condition; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {item});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = owner.getClass().getInventoryStore(owner);
+            inventory.swapPreparedContents(*staged);
+            return *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        };
+        auto source = install(attacker, 125.5f), target = install(victim, 50.25f);
+        auto& service = *world.getOblivionCombatService();
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, attacker);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            // Headless inventory fixture: encode the equipped instances using
+            // their native condition and metadata, then hydrate through the
+            // production prepare/stage bridge below.
+            for (unsigned i = 0; i < 2; ++i)
+            {
+                const auto item = i == 0 ? source : target;
+                ESM4::RuntimeInventoryItem saved; saved.mBase = base;
+                saved.mCount = item.getCellRef().getCount();
+                saved.mCondition = *item.getCellRef().getNativeItemCondition();
+                saved.mCharge = item.getCellRef().getEnchantmentCharge();
+                saved.mEquippedSlots = ESM4::InventorySlotWeapon;
+                state.mReferences[i].mInventory.push_back(saved);
+            }
+            return state.serializeBinary();
+        };
+        const auto id = world.beginOblivionPhysicalAction(attacker);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -1, -1, -1};
+        deltas.mConditionChanges = {
+            MWMechanics::captureOblivionPhysicalConditionChange(attacker, source, 124.25f),
+            MWMechanics::captureOblivionPhysicalConditionChange(victim, target, 50.125f)};
+        const auto before = snapshot();
+        const auto reject = [&](const MWMechanics::OblivionPhysicalContactDeltas& bad) {
+            EXPECT_THROW(world.commitOblivionPhysicalContact(id, attacker, victim, bad), std::invalid_argument);
+            EXPECT_EQ(snapshot(), before);
+            EXPECT_TRUE(service.isActionPending(id, attacker.getCellRef().getFormKey()));
+        };
+        auto bad = deltas; bad.mConditionChanges.back().mCondition = std::numeric_limits<float>::quiet_NaN();
+        reject(bad);
+        bad = deltas; bad.mConditionChanges.back().mExpectedCharge += 1; reject(bad);
+        bad = deltas; bad.mConditionChanges.back().mExpectedRemainder += .125f; reject(bad);
+        bad = deltas; bad.mConditionChanges.back().mExpectedNativeCondition = 50.5f; reject(bad);
+        bad = deltas; bad.mConditionChanges.back().mOwner = attacker; reject(bad);
+        bad = deltas; bad.mConditionChanges.back().mExpectedCount = 2; reject(bad);
+        MWMechanics::OblivionPhysicalContactDeltas miss{-7, 0, 0, 0, deltas.mConditionChanges};
+        EXPECT_THROW(world.commitOblivionPhysicalContact(id, attacker, {}, miss), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, attacker, victim, deltas));
+        EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 124.25f);
+        EXPECT_EQ(target.getCellRef().getNativeItemCondition(), 50.125f);
+        EXPECT_EQ(source.getCellRef().getCharge(), 125);
+        EXPECT_EQ(target.getCellRef().getCharge(), 51);
+        const auto committed = snapshot();
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, attacker, victim, deltas));
+        EXPECT_EQ(snapshot(), committed);
+        service.restore(ESM4::RuntimeState::deserializeBinary(committed), store);
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, attacker, victim, deltas));
+        EXPECT_EQ(snapshot(), committed);
+
+        // A shield can receive two separately rounded writes during one contact.
+        // Later requests compare against the earlier prepared state, not the live item.
+        const auto next = world.beginOblivionPhysicalAction(attacker);
+        auto first = MWMechanics::captureOblivionPhysicalConditionChange(victim, target, 50.f);
+        auto second = first; second.mExpectedNativeCondition = 50.f; second.mExpectedCharge = 50;
+        second.mCondition = std::bit_cast<float>(0x4247ffffu);
+        MWMechanics::OblivionPhysicalContactDeltas ordered{0, 0, 0, 0, {first, second}};
+        const auto orderedBefore = snapshot();
+        bad = ordered; bad.mConditionChanges.back().mExpectedNativeCondition = 50.125f;
+        EXPECT_THROW(world.commitOblivionPhysicalContact(next, attacker, victim, bad), std::invalid_argument);
+        EXPECT_EQ(snapshot(), orderedBefore);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(next, attacker, victim, ordered));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*target.getCellRef().getNativeItemCondition()), 0x4247ffffu);
+        const auto orderedCommitted = snapshot();
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(orderedCommitted);
+        ASSERT_EQ(decoded.mReferences.size(), 2u);
+        ASSERT_EQ(decoded.mReferences[1].mInventory.size(), 1u);
+        EXPECT_EQ(decoded.mReferences[1].mInventory[0].mCondition, second.mCondition);
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            const auto owner = i == 0 ? attacker : victim;
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), decoded.mReferences[i].mInventory);
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = owner.getClass().getInventoryStore(owner);
+            inventory.swapPreparedContents(*staged);
+            (i == 0 ? source : target) = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        }
+        service.restore(decoded, store);
+        MWMechanics::OblivionPhysicalContactDeltas replay{0, 0, 0, 0, {
+            MWMechanics::captureOblivionPhysicalConditionChange(victim, target, 49.f)}};
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(next, attacker, victim, replay));
+        EXPECT_EQ(snapshot(), orderedCommitted);
+    }
+
+    TEST(OblivionWorldTest, NativeContactConditionAdmissionAndPlayerGodMode)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); MWClass::Armor::registerSelf(); world.setupPlayer();
+        const auto playerBase = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc nativePlayer{}; nativePlayer.mId = {7, 1}; nativePlayer.mFormKey = playerBase;
+        nativePlayer.mIsTES4 = true; nativePlayer.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(nativePlayer, playerBase);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr(), victim = addNativeNpc(fixture, 0x802);
+        const auto stranger = addNativeNpc(fixture, 0x803);
+        ASSERT_TRUE(world.activateOblivionActor(victim));
+        ESM4::Armor native{}; native.mId = {0x941, 0}; native.mData.health = 100;
+        native.mArmorFlags = ESM4::Armor::TES4_UpperBody; native.mGeneralFlags = ESM4::Armor::TYPE_TES4;
+        const auto base = ESM::FormKey::content("headless.esm", 0x941);
+        store.getWritable<ESM4::Armor>().insertStatic(native, base);
+        ESM::Armor projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+        projected.mData.mType = ESM::Armor::Cuirass; projected.mData.mHealth = 100;
+        store.insertStatic(projected);
+        const auto install = [&](const MWWorld::Ptr& owner) {
+            ESM4::RuntimeInventoryItem item; item.mBase = base; item.mCount = 1;
+            item.mCondition = 80.25f; item.mEquippedSlots = ESM4::Armor::TES4_UpperBody;
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {item});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = owner.getClass().getInventoryStore(owner);
+            inventory.swapPreparedContents(*staged);
+            return *inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass);
+        };
+        const auto source = install(player), target = install(victim);
+        auto& service = *world.getOblivionCombatService();
+        const auto id = world.beginOblivionPhysicalAction(player);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -1, 0, 0, {
+            MWMechanics::captureOblivionPhysicalConditionChange(player, source, 79.125f),
+            MWMechanics::captureOblivionPhysicalConditionChange(victim, target, 79.125f)}};
+        const auto before = captureNativeActorState(fixture, victim).serializeBinary();
+        auto bad = deltas; bad.mConditionChanges.back().mOwner = stranger;
+        ASSERT_FALSE(stranger.getRefData().getCustomData());
+        EXPECT_THROW(world.commitOblivionPhysicalContact(id, player, victim, bad), std::invalid_argument);
+        EXPECT_FALSE(stranger.getRefData().getCustomData());
+        EXPECT_EQ(captureNativeActorState(fixture, victim).serializeBinary(), before);
+        target.getCellRef().setCount(2);
+        bad = deltas; bad.mConditionChanges.back().mExpectedCount = 2;
+        EXPECT_THROW(world.commitOblivionPhysicalContact(id, player, victim, bad), std::invalid_argument);
+        target.getCellRef().setCount(1);
+        ASSERT_TRUE(world.toggleGodMode());
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, player, victim, deltas));
+        EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 80.25f);
+        EXPECT_EQ(target.getCellRef().getNativeItemCondition(), 79.125f);
+        EXPECT_EQ(service.findActorValues(ESM::FormKey::dynamic("player", 1))->mValues[10].mModifiers[2], 0);
+        EXPECT_EQ(service.findActorValues(victim.getCellRef().getFormKey())->mValues[8].mModifiers[2], -1);
+    }
+
     TEST(OblivionWorldTest, NativePhysicalBlockCostKeepsSeparateFloatStoresAndAtomicRejection)
     {
         NativeWorldFixture fixture;
