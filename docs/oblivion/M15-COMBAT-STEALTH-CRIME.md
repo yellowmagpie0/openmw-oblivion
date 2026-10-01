@@ -8315,3 +8315,46 @@ S2/S3 remain in progress and S4–S14 remain open.
 Previous checkpoint62 commit `b62c6fe024786744110f3da4ab786a3baaaef0d5`;
 verified bundle40 SHA256
 `615a62b2ddfa307ca2218f101dc03f43d71a73548d8ad41add51c7d49a005210`.
+
+### Checkpoint64 — ordinary windup cancellation before animation callbacks
+
+Native ordinary windup now answers the production attack-preparation query from
+its authoritative Start phase. The Lua stance handler previously saw the shared
+AttackEnd renderer state and rejected a normal weapon-hide request as TES3
+recovery. Ordinary Contact/Queue/End do not become preparation states; powers
+continue through their existing path until their native phase mapping is added.
+The controller now finishes the native strike and clears its rendered identity,
+weapon group and upper-body state before disabling animation and emitting its
+Lua end event. Cancellation is logged separately from natural playback completion.
+
+Editable keyboard manifests draw a weapon, start an ordinary strike, release
+Use, request weapon hiding, require interruption of action1, save, and restart
+in a separate process without restoring or selecting another strike. The fixed
+5 FPS offscreen course uses acknowledged held input rather than an ephemeral
+press. S4/native-melee-unequip-cancellation-offscreen-03 preserves all nine native
+actors' values/life/breath/base/death/combat fields, clears all strikes and input,
+and leaves ledger next2 with no pending action or owner in both saves. Source
+schema21 migrates to22; binary SHA256
+`bf33f31c82dda0230740ef7035f75bc7be72c47acf51e31656d951d4d260a129`. Input copies/source hashes match;
+separate process epochs and public80/80/140/alive queries are verified. The actual
+captures are reviewed independently of saved timing; they do not prove callback
+execution or an earlier animation phase.
+
+Offscreen-01 and-02 remain failed evidence: neither observed the required
+interruption. The first short press was initially suspected of missing the
+frame; the held-key repeat exposed the shared preparation-query gate, which was
+then fixed. Passing broad checks of the earlier source did not close this runtime
+gate. Main-03 passes720 engine and223 Python cases; sanitized-03 passes720 engine
+cases under ASan/UBSan with leaks disabled, exact inventories and no skipped or
+failed cases. Tested source fingerprint
+`d5b4b7e07dd86ae38d5f8a38ba6b744513f01a66dec90fa61a52a96db65c67dd`. Component source is unchanged
+from checkpoint63's2001 normal/476 TES4 sanitizer cases. Main/sanitized01 and02
+passed before the query fix and are retained as earlier-source evidence only.
+
+Native phase advancement itself remains unwired, so Start here is the service's
+current unadvanced phase. This proves ordinary preparation-query integration and
+weapon-hide cancellation, not timing/contact/damage, power interruption, all
+cancellation types, first/third-person/device/FPS campaigns or full S4. S2/S3
+remain in progress and S4–S14 remain open. Previous checkpoint63 commit
+`05cf9e0cd070cfc848f4e46180faed4bf1bf6b36`; verified bundle41 SHA256
+`5ceb9d7df5d2cb9410a4a37de7e69101897c272e48adee3381392f98789546be`.

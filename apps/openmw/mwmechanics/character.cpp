@@ -1359,15 +1359,22 @@ namespace MWMechanics
         const auto& stats = cls.getCreatureStats(mPtr);
         const bool drawn = stats.getDrawState() == DrawState::Weapon || mPtr.getType() == ESM::REC_CREA4;
         const auto interrupt = [&] {
+            std::string interruptedGroup;
             if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
             {
                 const auto strike = *state->mStrike;
-                mAnimation->disable(strike.mAnimationGroup);
+                interruptedGroup = strike.mAnimationGroup;
                 service->finishMeleeStrike(strike.mActionId, actor);
+                Log(Debug::Verbose) << "M15 melee interrupt: actor=" << actor.serialize()
+                                    << " id=" << strike.mActionId << " group=" << interruptedGroup;
             }
             mOblivionRenderedStrike = 0;
             mCurrentWeapon.clear();
             mUpperBodyState = drawn ? UpperBodyState::WeaponEquipped : UpperBodyState::None;
+            // Publish cancellation and clear the renderer's strike identity
+            // before disable emits the Lua animation-end callback.
+            if (!interruptedGroup.empty())
+                mAnimation->disable(interruptedGroup);
         };
         if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
         {
@@ -3255,6 +3262,19 @@ namespace MWMechanics
 
     bool CharacterController::isAttackPreparing() const
     {
+        auto* world = dynamic_cast<MWWorld::World*>(
+            MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (service)
+        {
+            const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                : mPtr.getCellRef().getFormKey();
+            const auto* state = service->findMeleeState(actor);
+            if (state && state->mStrike
+                && state->mStrike->mKind <= ESM4::MeleeStrikeKind::Right)
+                return state->mStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::Start;
+        }
         return mUpperBodyState == UpperBodyState::AttackWindUp;
     }
 
