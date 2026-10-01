@@ -7949,3 +7949,39 @@ S4–S14 remain open. Checkpoint54 commit:
 `c4abfd2612042d1d0a9c257b429832057f44c4e2`; verified bundle
 S3/isolated-git-progress-32/m15-progress.bundle SHA256
 `90372290c4c2e7246b3d09ff961ae5724d9d296dc20cdb928ba1411205980059`.
+
+### Checkpoint56 — winning melee input settings and separate airborne gates
+
+Native melee input now resolves fPowerAttackDelay and ordered combat mastery
+thresholds from actual winning TES4 GMST records through a typed, uncached
+resolver. Signed finite delay overrides are retained; malformed variants,
+nonfinite values, duplicate editor IDs and unordered thresholds are rejected.
+The held-power adapter uses these settings rather than a fixed Acrobatics50
+threshold. Independent immutable rules distinguish ordinary start (airborne
+allowed above Novice) from held power (airborne allowed above Apprentice,
+swimming disallowed). Ordinary-start eligibility is not yet wired. The current
+controller ground predicate remains an approximation of original5EC180;
+complete native start eligibility and actual airborne construction remain open.
+
+S4/native-input-settings-main-01 passes all1995 component and716 engine tests;
+native-input-settings-sanitized-01 passes470 ESM4 component and all716 engine
+cases under ASan/UBSan, leak detection disabled. Exact inventories match with
+zero failures/skips. Tested fingerprint:
+`9ec33e95cf0c7c86f3382cbd9745979f71e5b354d8dd3827ce33441caecb33e3`.
+Three new cases cover signed/wrong/nonfinite/duplicate settings, distinct and
+modded mastery gates, and actual winning-store overrides without caching.
+Unchanged Python bytes retain the checkpoint55 results.
+
+S4/native-input-settings-offscreen-01 passes configured keyboard ordinary and
+standing-power playback plus fresh-process continuation at executable SHA256
+`d706700621e99a51f54d4b9122fdba3bafc06fc8db52d8407c7d8e1872b73813`.
+The first save owns ID1 at0.4000000059604645; the second resumes that ID and
+finishes with next-ID2 and no pending strike. Nine native actors and public
+pools80/80/140 are preserved, pristine inputs verified, both exits normal.
+Both captures were directly reviewed; the first post-save fist pose can belong
+to later power playback and does not prove the earlier saved phase. No-sound
+SDL diagnostic establishes no audio acceptance. Native Hit still dispatches no
+contact/damage; this checkpoint does not close S4. S2/S3 remain in progress and
+S4–S14 remain open. Checkpoint55 commit:
+`a8c16baefc42bd008b6c4632082a23c442ef6224`; bundle33 SHA256
+`e804730e4d729749e774a337c6d734d2efbb47d65859713178f46f000bfbecb4`.

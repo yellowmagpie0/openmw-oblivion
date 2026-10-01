@@ -4021,3 +4021,50 @@ pass in first/third person at the milestone's reported binary/fingerprint.
 Those are playback/ownership observations with unchanged actor pools; native
 bare Hit still cannot dispatch damage. No contact, block, mitigation, condition,
 reaction or audio gameplay acceptance is claimed.
+
+## Native melee input settings and contact phase (checkpoint56)
+
+Pinned original executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-attack-start-gate-oracle-01 executes156 observations through original
+5F48D0–5F48F8 and56A300 mastery in both x87 modes, with supplied Acrobatics
+getter,5EC180 airborne predicate and threshold storage. Only Novice rejects
+airborne start in this prefix; the separately probed held-power path rejects
+both Novice and Apprentice. Process/drawn/block/start-clock/contact eligibility
+and real gameplay are outside this prefix.
+
+S4/native-attack-delay-oracle-01 executes24576 observations through original
+65EB57 input branch with native B36B48 delays[-0.1,0,0.3,0.5], preserving signed
+finite thresholds. Supplied animation queries/rank/airborne boundaries remain;
+this does not prove the full original input/controller integration.
+
+S4/native-contact-phase-oracle-01 composes the original4770D4–47710E phase
+prefix with5FCC36 contact gating and5FCDDE ordinary contact/fatigue dispatch,
+including full5E4010 fatigue calculation. All64 observations pass in both
+x87 modes: phase must equal1 for ordinary contact; exact Hit equality does not
+advance phase0. Native contact precedes fatigue debit. Composition order,
+actor/process context and contact/debit writers are supplied. Earlier process
+eligibility and later state3 anti-replay writer are outside this bounded probe;
+repeated phase1 invocation is not a full anti-replay test. The runtime adapter
+needs original phase/clock/caller ordering before damage wiring.
+
+Read-only caller inspection finds contact before animation update at60193E/
+60195C and66CB49/66CB7D; exact actor identity/full eligibility remain unproved.
+The65589F/6558EF calls occupy distinct conditional branches and cannot establish
+reversed Player order. Original5EC180 consults animation groups40/41/42 or
+controller state2 via65A2C0/88D370; controller type/state meaning is unproved,
+and must not be labelled AI procedure or replaced by ground contact alone.
+An unavailable Capstone attempt is retained; objdump inspection succeeded.
+No disassembly-only observation is claimed as executed gameplay evidence.
+
+native-attack-start-gate-oracle-01:
+probe.py SHA256 `c018db2c18ef77362a95d19e8305e410fbd9951e732260304582f91745eeedfd`.
+report.json SHA256 `f290d61229467a45c066f61d6819cd571c93757810f8d224fc626035b8dd35e8`.
+
+native-attack-delay-oracle-01:
+probe.py SHA256 `72f271c6db29a46d90b43852123bf84fd604598fba7b72ddd4401fa1f3296c8b`.
+report.json SHA256 `27dd82ea1b6cfd2c535db0e9625bf59317dc97bdf2a07e1701abb87f7f6becd7`.
+
+native-contact-phase-oracle-01:
+probe.py SHA256 `b2e1d07924e32dbcdd92250c7cd70c0b7a0e5881cc558825de1c279d6c83190b`.
+report.json SHA256 `1e636c37c53bc9a76d408a0560f5bc84cb6b1cca80e15e8a9c1192ac6aeef68a`.

@@ -591,6 +591,25 @@ namespace ESM4
         return static_cast<CombatMastery>(std::upper_bound(settings.mMinimumSkill.begin(),
             settings.mMinimumSkill.end(), skill) - settings.mMinimumSkill.begin());
     }
+    void validateMeleeInputSettings(const MeleeInputSettings& settings)
+    {
+        if (!std::isfinite(settings.mPowerAttackDelay))
+            throw std::invalid_argument("invalid native power attack delay");
+        validateCombatMasterySettings(settings.mMastery);
+    }
+    bool airborneMeleeStartAllowed(std::int32_t baseAcrobatics, bool airborne,
+        const MeleeInputSettings& settings)
+    {
+        validateMeleeInputSettings(settings);
+        return combatMastery(baseAcrobatics, settings.mMastery) > CombatMastery::Novice || !airborne;
+    }
+    bool heldPowerAttackAllowed(std::int32_t baseAcrobatics, bool swimming, bool airborne,
+        const MeleeInputSettings& settings)
+    {
+        validateMeleeInputSettings(settings);
+        return !swimming && (combatMastery(baseAcrobatics, settings.mMastery) > CombatMastery::Apprentice
+            || !airborne);
+    }
     float powerAttackMultiplier(std::int32_t skill, PowerAttackDirection direction,
         const PowerAttackSettings& settings, const CombatMasterySettings& mastery)
     {

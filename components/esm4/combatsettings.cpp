@@ -283,6 +283,15 @@ namespace ESM4
         validateCombatMasterySettings(result);
         return result;
     }
+    MeleeInputSettings buildMeleeInputSettings(std::span<const GameSetting* const> settings)
+    {
+        const MeleeInputSettings result{Inputs(settings).number("fPowerAttackDelay", .3f),
+            buildCombatMasterySettings(settings)};
+        // Original input compares directly with this finite signed threshold;
+        // a negative override requests power on the first held frame.
+        validateMeleeInputSettings(result);
+        return result;
+    }
     PowerAttackSettings buildPowerAttackSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

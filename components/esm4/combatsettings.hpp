@@ -54,6 +54,7 @@ namespace ESM4
     ArmorWearMasterySettings buildArmorWearMasterySettings(std::span<const GameSetting* const> settings);
     ArmorWearSelectionSettings buildArmorWearSelectionSettings(std::span<const GameSetting* const> settings);
     CombatMasterySettings buildCombatMasterySettings(std::span<const GameSetting* const> settings);
+    MeleeInputSettings buildMeleeInputSettings(std::span<const GameSetting* const> settings);
     PowerAttackSettings buildPowerAttackSettings(std::span<const GameSetting* const> settings);
     HandToHandSettings buildHandToHandSettings(std::span<const GameSetting* const> settings);
     BlockSettings buildBlockSettings(std::span<const GameSetting* const> settings);

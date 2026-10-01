@@ -57,6 +57,7 @@ namespace MWWorld
     MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store);
     ESM4::SwimBreathSettings resolveOblivionSwimBreathSettings(const ESMStore& store);
     ESM4::EssentialRecoverySettings resolveOblivionEssentialRecoverySettings(const ESMStore& store);
+    ESM4::MeleeInputSettings resolveOblivionMeleeInputSettings(const ESMStore& store);
     // Uses the live player's base level only for PCLevelOffset actors.
     OblivionActorBaseStats resolveOblivionActorConstructionStats(const ESMStore& store,
         ESM::FormId actorBase, bool scaled);

@@ -2571,4 +2571,43 @@ namespace
         EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackright", "hit"), .4f);
     }
 
+    TEST(OblivionWorldTest, MeleeInputResolvesActualWinningNativeSettingsWithoutCachingOrLegacyAliases)
+    {
+        NativeWorldFixture fixture;
+        auto& store = fixture.mWorld.getStore();
+        const auto initial = MWWorld::resolveOblivionMeleeInputSettings(store);
+        EXPECT_FLOAT_EQ(initial.mPowerAttackDelay, .3f);
+        ESM4::GameSetting delay{}, apprentice{}, journeyman{};
+        delay.mId = {0x3333, 0};
+        delay.mEditorId = "fPowerAttackDelay";
+        delay.mData = -.1f;
+        apprentice.mId = {0x3334, 0};
+        apprentice.mEditorId = "iSkillApprenticeMin";
+        apprentice.mData = std::int32_t{5};
+        journeyman.mId = {0x3335, 0};
+        journeyman.mEditorId = "iSkillJourneymanMin";
+        journeyman.mData = std::int32_t{10};
+        for (const auto& value : {delay, apprentice, journeyman})
+            store.getWritable<ESM4::GameSetting>().insertStatic(value);
+        const auto first = MWWorld::resolveOblivionMeleeInputSettings(store);
+        EXPECT_FLOAT_EQ(first.mPowerAttackDelay, -.1f);
+        EXPECT_EQ(first.mMastery.mMinimumSkill, (std::array<std::int32_t, 4>{5, 10, 75, 100}));
+        EXPECT_TRUE(ESM4::heldPowerAttackAllowed(10, false, true, first));
+        EXPECT_FALSE(ESM4::heldPowerAttackAllowed(9, false, true, first));
+        delay.mEditorId = "FPOWERATTACKDELAY";
+        delay.mData = .5f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(delay);
+        EXPECT_FLOAT_EQ(MWWorld::resolveOblivionMeleeInputSettings(store).mPowerAttackDelay, .5f);
+        EXPECT_FLOAT_EQ(first.mPowerAttackDelay, -.1f);
+        EXPECT_FLOAT_EQ(initial.mPowerAttackDelay, .3f);
+        delay.mData = std::int32_t{1};
+        store.getWritable<ESM4::GameSetting>().insertStatic(delay);
+        EXPECT_THROW(MWWorld::resolveOblivionMeleeInputSettings(store), std::invalid_argument);
+        delay.mData = .2f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(delay);
+        apprentice.mData = std::int32_t{20};
+        store.getWritable<ESM4::GameSetting>().insertStatic(apprentice);
+        EXPECT_THROW(MWWorld::resolveOblivionMeleeInputSettings(store), std::invalid_argument);
+    }
+
 }

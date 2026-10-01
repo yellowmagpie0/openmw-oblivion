@@ -338,3 +338,64 @@ TEST(ESM4CombatSettings, CharacterGenerationClassUsesTypedWinningFullFormIdBits)
     std::array<const ESM4::GameSetting*, 2> ambiguous{&setting, &duplicate};
     EXPECT_THROW(ESM4::buildCharacterGenerationClassId(ambiguous), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, MeleeInputDelayRetainsSignedOverridesAndRejectsAmbiguousOrMalformedSettings)
+{
+    const auto defaults = ESM4::buildMeleeInputSettings({});
+    EXPECT_FLOAT_EQ(defaults.mPowerAttackDelay, .3f);
+    EXPECT_EQ(defaults.mMastery.mMinimumSkill, (std::array<std::int32_t, 4>{25, 50, 75, 100}));
+    ESM4::GameSetting delay{};
+    delay.mEditorId = "FPOWERATTACKDELAY";
+    delay.mData = -.1f; // Original input oracle retains this finite signed override.
+    std::array<const ESM4::GameSetting*, 1> settings{&delay};
+    EXPECT_FLOAT_EQ(ESM4::buildMeleeInputSettings(settings).mPowerAttackDelay, -.1f);
+    delay.mData = 0.f;
+    EXPECT_FLOAT_EQ(ESM4::buildMeleeInputSettings(settings).mPowerAttackDelay, 0.f);
+    delay.mData = std::int32_t{0};
+    EXPECT_THROW(ESM4::buildMeleeInputSettings(settings), std::invalid_argument);
+    for (const float value : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        delay.mData = value;
+        EXPECT_THROW(ESM4::buildMeleeInputSettings(settings), std::invalid_argument);
+    }
+    delay.mData = .5f;
+    auto duplicate = delay;
+    duplicate.mEditorId = "fPowerAttackDelay";
+    std::array<const ESM4::GameSetting*, 2> ambiguous{&delay, &duplicate};
+    EXPECT_THROW(ESM4::buildMeleeInputSettings(ambiguous), std::invalid_argument);
+    EXPECT_FLOAT_EQ(defaults.mPowerAttackDelay, .3f);
+}
+
+TEST(ESM4CombatSettings, NativeAirborneStartAndHeldPowerHaveDifferentMasteryGates)
+{
+    const auto settings = ESM4::buildMeleeInputSettings({});
+    struct Expected
+    {
+        std::int32_t mSkill;
+        bool mAirborneStart;
+        bool mAirbornePower;
+    };
+    // Original5F48D0/56A300 prefix and65EB57 held-input observations. Grounded
+    // eligibility here is only these arithmetic gates, not all attack eligibility.
+    constexpr Expected cases[] = {{-1, false, false}, {0, false, false}, {24, false, false},
+        {25, true, false}, {49, true, false}, {50, true, true}, {100, true, true}};
+    for (const auto& value : cases)
+    {
+        EXPECT_EQ(ESM4::airborneMeleeStartAllowed(value.mSkill, true, settings), value.mAirborneStart);
+        EXPECT_EQ(ESM4::heldPowerAttackAllowed(value.mSkill, false, true, settings), value.mAirbornePower);
+        EXPECT_TRUE(ESM4::airborneMeleeStartAllowed(value.mSkill, false, settings));
+        EXPECT_TRUE(ESM4::heldPowerAttackAllowed(value.mSkill, false, false, settings));
+        EXPECT_FALSE(ESM4::heldPowerAttackAllowed(value.mSkill, true, false, settings));
+        EXPECT_FALSE(ESM4::heldPowerAttackAllowed(value.mSkill, true, true, settings));
+    }
+    const ESM4::MeleeInputSettings overrides{.5f, {{5, 10, 20, 30}}};
+    EXPECT_FALSE(ESM4::airborneMeleeStartAllowed(4, true, overrides));
+    EXPECT_TRUE(ESM4::airborneMeleeStartAllowed(5, true, overrides));
+    EXPECT_FALSE(ESM4::heldPowerAttackAllowed(9, false, true, overrides));
+    EXPECT_TRUE(ESM4::heldPowerAttackAllowed(10, false, true, overrides));
+    auto malformed = settings;
+    malformed.mMastery.mMinimumSkill = {25, 20, 75, 100};
+    EXPECT_THROW(ESM4::airborneMeleeStartAllowed(100, false, malformed), std::invalid_argument);
+    EXPECT_THROW(ESM4::heldPowerAttackAllowed(100, true, false, malformed), std::invalid_argument);
+}

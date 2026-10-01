@@ -53,6 +53,7 @@
 #include "oblivionai.hpp"
 #include "../mwworld/worldimp.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadweap.hpp>
 #include "aicombataction.hpp"
@@ -1472,22 +1473,16 @@ namespace MWMechanics
         {
             if (!power && input.mQueued != ESM4::MeleeQueuedStrike::Power)
                 input.mHeldSeconds = static_cast<float>(double(input.mHeldSeconds) + duration);
-            float delay = .3f; // Original initializer B36B48; winning GMST overrides.
-            for (const auto& setting : world->getStore().get<ESM4::GameSetting>())
-                if (Misc::StringUtils::ciEqual(setting.mEditorId, "fPowerAttackDelay"))
-                {
-                    const auto* winning = world->getStore().get<ESM4::GameSetting>().search(setting.mId);
-                    const auto* value = std::get_if<float>(&winning->mData);
-                    if (!value || !std::isfinite(*value) || *value < 0)
-                        throw std::runtime_error("invalid native power attack delay");
-                    delay = *value;
-                }
-            if (input.mHeldSeconds > delay)
+            const auto settings = MWWorld::resolveOblivionMeleeInputSettings(world->getStore());
+            if (input.mHeldSeconds > settings.mPowerAttackDelay)
             {
                 input.mHeldSeconds = 0;
                 const int acrobatics = player ? service->getPlayerBaseValue(26)
                     : service->getNonPlayerBaseValue(actor, 26, world->getStore());
-                if (world->isSwimming(mPtr) || (acrobatics < 50 && !world->isOnGround(mPtr)))
+                // Exact native5EC180 construction is still a separate adapter
+                // boundary; collision grounding currently supplies this flag.
+                if (!ESM4::heldPowerAttackAllowed(acrobatics, world->isSwimming(mPtr),
+                        !world->isOnGround(mPtr), settings))
                     input.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
                 else if (active && saved->mStrike->mAnimationTime > 0)
                     input.mQueued = ESM4::MeleeQueuedStrike::Power;

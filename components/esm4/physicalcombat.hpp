@@ -14,6 +14,18 @@ namespace ESM4
     {
         std::array<std::int32_t, 4> mMinimumSkill;
     };
+    struct MeleeInputSettings
+    {
+        float mPowerAttackDelay;
+        CombatMasterySettings mMastery;
+    };
+    void validateMeleeInputSettings(const MeleeInputSettings& settings);
+    // airborne is the caller-resolved native5EC180 predicate, not an inferred
+    // collision or shared TES3 animation state.
+    bool airborneMeleeStartAllowed(std::int32_t baseAcrobatics, bool airborne,
+        const MeleeInputSettings& settings);
+    bool heldPowerAttackAllowed(std::int32_t baseAcrobatics, bool swimming, bool airborne,
+        const MeleeInputSettings& settings);
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings
     {

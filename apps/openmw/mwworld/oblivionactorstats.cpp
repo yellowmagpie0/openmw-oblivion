@@ -169,6 +169,11 @@ namespace MWWorld
         return ESM4::buildEssentialRecoverySettings(winningRecords<ESM4::GameSetting>(store));
     }
 
+    ESM4::MeleeInputSettings resolveOblivionMeleeInputSettings(const ESMStore& store)
+    {
+        return ESM4::buildMeleeInputSettings(winningRecords<ESM4::GameSetting>(store));
+    }
+
     ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store)
     {
         return ESM4::buildPlayerDynamicBaseSettings(winningRecords<ESM4::GameSetting>(store));
