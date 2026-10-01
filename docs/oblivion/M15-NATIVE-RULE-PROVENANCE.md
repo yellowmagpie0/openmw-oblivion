@@ -4131,3 +4131,38 @@ captured audio remain acceptance work.
 native-contact-replay-oracle-04/probe.py SHA256 `34bbe047518de502468a7e14a07290e44fd15d55e9aa2cc3b00c19ad6b2a7826`.
 
 native-contact-replay-oracle-04/report.json SHA256 `d1d11aad950b94fc4d902fa55851c936335bae4d6b2d42f7a89799f52335aa8a`.
+
+## Synthetic native animation sound routing capture (checkpoint59)
+
+Final S4/native-animation-sound-wave-02 executes configured normal keyboard
+input against unchanged checkpoint58 C++ at binary SHA256
+`fb04056153fc7de335de0df31258a2a77c6d5a2484faad9e73656de9008e575a`.
+Generated TES4 SOUN localID00000800 names M15FixtureTone and a separately authored
+1kHz,0.25-second PCM resource. The synthetic shared NetImmerse4 first-person
+ordinary group emits Sound: at0.15. Its missing-editor-ID counterpart changes
+only that keyframe, retaining identical plugin/tone hashes. No original game
+sound or proprietary asset is copied into versioned fixture source.
+
+Both OpenAL Wave File Writer courses exit normally; predeclared stereo PCM16,
+48kHz,0.1-second windows require positive RMS>=.01 and1kHz fraction>=.8, negative
+tone RMS<=.001. Channel-independent analysis and negative controls pass; numeric
+metrics are in the milestone and final stereo-02 reports. Native actors/resources
+and pristine saves are semantically reinspected, configured Use/actual playback
+and distinct process epochs verified. Exploratory wave-01 declared thresholds
+after launch and is explicitly excluded from predeclared acceptance evidence.
+
+This demonstrates native SOUN lookup/typed FormId dispatch/resource decoding
+and real mixing for a synthetic animation event. It is not stock attack/creature
+sound selection, original-game acoustic fidelity, saved audio continuation,
+contact/damage or full S4 acceptance. Both final images are directly reviewed;
+post-save poses do not identify the saved phase. Audio-tool review was attempted
+but the tool cannot supply audio input here; no perceptual listening result is
+claimed. The captured review clip remains ignored for later playback.
+
+wave-02/audio-expectations.json SHA256 `4d106e1dcc9b2b890e7e431e63fb6995afc55c85f6864aa35cb5a7fc0c2d21d2`.
+
+wave-02/positive/run/rendered-audio.wav SHA256 `ef5e4abfefb1613a926c6fe7defafb7ef3354de180e75f0258a33194ccb31ad5`.
+
+wave-02/negative/run/rendered-audio.wav SHA256 `9cd8f5af5b48a4a0802098cfb5721d2075e843a473565d69d20de6d55390f55b`.
+
+wave-02/verification-stereo-02.json SHA256 `25e6b8a731549d6e695a2a807f1468f74be01d3baa65589de9deababd7449160`.

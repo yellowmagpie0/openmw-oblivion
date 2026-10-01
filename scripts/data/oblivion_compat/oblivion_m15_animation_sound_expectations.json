@@ -1,0 +1,11 @@
+{
+  "sample_rate": 48000,
+  "channels": 2,
+  "sample_width": 2,
+  "tone_frequency_hz": 1000,
+  "window_frames": 4800,
+  "positive_minimum_rms": 0.01,
+  "positive_minimum_tone_energy_fraction": 0.8,
+  "negative_maximum_tone_rms": 0.001,
+  "maximum_seconds": 120
+}

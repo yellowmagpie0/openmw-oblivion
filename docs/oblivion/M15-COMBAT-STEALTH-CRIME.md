@@ -8051,3 +8051,68 @@ contact/condition/reactions and ranged/death/crime/justice remain open.
 Checkpoint57 commit `7d11390a3dd7974db6e57de7f5fe8b812969eef2`; verified bundle35
 SHA256 `20e1b2b537f806436b4afaf6a60514ac0c0d6a5ce0740842af1b7a297b521934`.
 S2/S3 remain in progress and S4–S14 remain open.
+
+### Checkpoint59 — reproducible native animation audio capture and negative control
+
+`scripts/tes4_m15_animation_audio.py` generates an isolated TES4 SOUN plugin,
+synthetic shared-loader NetImmerse4 ordinary keyframe and0.25-second1kHz PCM
+source. The positive key names M15FixtureTone; the negative key names a missing
+editor ID. Only that generated keyframe differs between fixture variants; plugin
+and tone bytes remain identical. Generated files stay ignored, with editable
+positive/negative manifests and fixed expectations versioned under
+`scripts/data/oblivion_compat/oblivion_m15_animation_sound_*.json`.
+This is native SOUN/text-key routing coverage, not stock TES4 KF fidelity.
+
+The checker requires bounded complete stereo PCM16 at the declared rate,
+nonvacuous separated thresholds and whole-cycle spectral windows. It measures
+channels separately so opposite-phase stereo cannot hide a tone from the
+negative control. Five regressions reject silence/wrong frequency, detect
+antiphase tone, reject wrong/truncated/short PCM and malformed/vacuous thresholds,
+preserve existing outputs, and ensure the missing-key fixture changes only KF
+bytes. S4/native-animation-audio-python-03 passes all222 Python tests without
+failures/skips. Tested fingerprint:
+`ec55d4db6fc7b48f907396e3aaed49cfdd73fefb2de1fd53080d3a9239887022`.
+Earlier01/02 pass221 cases before the channel-independent regression; retained
+reports apply to those earlier helper bytes. No C++ changed in this checkpoint;
+checkpoint58's719 normal/instrumented engine checks apply to the unchanged code.
+
+S4/native-animation-sound-wave-01 is exploratory: OpenAL Wave File Writer
+captured the tone; its thresholds were written after launch and before waveform
+inspection, so it is not predeclared acceptance evidence. Final wave-02 copies
+versioned fixed expectations before launching either independent process. Both
+normal configured keyboard courses pass with normal exits and current binary
+SHA256 `fb04056153fc7de335de0df31258a2a77c6d5a2484faad9e73656de9008e575a`.
+Positive captured41.24 seconds; its strongest0.1-second window has RMS
+0.20566214990418988 and1kHz energy fraction0.9999999940626328 (required RMS>=.01,
+fraction>=.8). Negative captured41.9 seconds, maximum tone RMS
+0.0000006674746935512792, below the predeclared.001 threshold. Use final
+`audio-verification-stereo-02.json` reports and `verification-stereo-02.json`;
+earlier averaged-channel reports remain as preliminary measurements.
+
+Runtime reinspection verifies actual plugin loading, Wave File Writer selection,
+Use input/ordinary playback, distinct process epochs, both pristine source hashes,
+actual quicksaves and unchanged nine native actors/life/breath/bases/death/combat
+membership. Public pools stay80/80/140, getdead0, pending owned ordinary ID1.
+Both captures were directly reviewed: textured prison/readable HUD/full bars;
+post-save forearm differences do not prove the saved strike phase. A captured
+0.8-second tone was offered to the audio tool, which reports audio input
+unsupported; numeric capture verification passes, but no listening/stock sound
+quality acceptance is claimed. These are independent starts, not saved audio
+continuation. Native contact/damage, creature sound policies and full S4 remain
+open. Checkpoint58 commit `64b251ddb0d11aa96b536d0be329c5b240f3e919`; verified
+bundle36 SHA256 `6d94ed3dc1ae776d257d4c012d39868eee893c1aafe513652c730e5b2f51c89f`.
+S2/S3 remain in progress and S4–S14 remain open.
+
+To repeat the synthetic course, generate a fresh fixture with
+`python3 scripts/tes4_m15_animation_audio.py fixture --output NEW/data --key-editor-id M15FixtureTone`
+(or M15MissingTone for the control). Copy the known pristine schema21 input from
+S3/melee-state-offscreen-01/second into a separate course save slot
+`NEW/run/userdata/saves/M15Review/Quicksave.omwsave`, retaining its hash and pristine
+copy. Run the corresponding versioned manifest through `oblivion_compat.py scenario`
+with fresh `--output NEW/run` and variables openmw/resources/oblivion_data plus
+`audio_fixture=ABSOLUTE_NEW/data`. Preserve process epochs and source/binary hashes
+as in the ignored wave-02 launcher; do not point at historical saves directly.
+After normal exit, run the helper's `check` command with `--wave` pointing to
+`NEW/run/rendered-audio.wav`, the versioned `--expectations`, matching `--case`
+and a fresh `--output` JSON. Parser/spectral success alone does not replace the
+course's normal-input/save/provenance and independent native-state checks.
