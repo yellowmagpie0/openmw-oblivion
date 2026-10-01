@@ -149,4 +149,30 @@ namespace MWMechanics
             return MWWorld::Ptr{};
         return actors[*selected];
     }
+    bool commitOblivionOrdinaryMeleeMiss(MWBase::World& world, std::uint64_t actionId,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
+        float reach, float weaponWeight)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || attacker.isEmpty() || attacker.getType() == ESM::REC_CREA4)
+            return false; // Creature process/fatigue eligibility is a separate caller.
+        const auto actor = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : attacker.getCellRef().getFormKey();
+        if (!service->isOrdinaryMeleeContactPending(actionId, actor))
+            return false;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const float cost = ESM4::attackFatigueCost(weaponWeight, false,
+            ESM4::buildAttackFatigueSettings(settings));
+        const auto contact = acquireOblivionMeleeContact(world, actionId, attacker, selectedTarget, reach);
+        if (!contact || !contact->isEmpty())
+            return false;
+        return world.commitOblivionPhysicalContact(actionId, attacker, {}, {-cost, 0, 0});
+    }
+
 }

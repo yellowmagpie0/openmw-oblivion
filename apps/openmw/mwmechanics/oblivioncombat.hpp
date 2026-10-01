@@ -284,6 +284,8 @@ namespace MWMechanics
         bool advanceOrdinaryMeleeSequence(std::uint64_t id, const ESM::FormKey& actor,
             float duration, float frequency, float begin, float end,
             const std::array<float, 4>& keyTimes, bool freezeClock = false);
+        // Read the prior animation phase before its next frame update.
+        bool isOrdinaryMeleeContactPending(std::uint64_t id, const ESM::FormKey& actor) const;
         bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
         std::uint64_t allocateAction();
         // An owned intent requires initialized Alive authority. Allocation

@@ -8776,3 +8776,51 @@ left two zero-byte generated objects; deleting only those objects and rebuilding
 produced the passing fresh sanitized-07 run. Warning cleanliness remains open.
 Previous checkpoint70 commit099fe16fe2e5bec394349d3160d277800db4778a;
 verified bundle48 SHA2560dcd4bcfa1778ed09a50659d8f145f959ae421449cd127591f1a5e1fe3331073.
+
+### Checkpoint72 — ordinary physical miss dispatch
+
+Character reads the prior ordinary Contact phase before advancing the native
+animation frame. The public service gate requires an owned pending action,
+matching ordinary strike, uncommitted contact and Alive actor. The controller
+resolves actual equipped native weapon identity, winning weapon weight/reach
+settings and current race-height scale. The physical adapter distinguishes
+unavailable context from an acquired victim and a real miss. Only a real miss
+commits native attack fatigue through the existing atomic resource/ledger
+transaction. Powers, creatures and acquired-victim policy remain open; this
+chunk does not claim successful-hit damage/mitigation, wear or reactions.
+
+The new gate assertion fails in retained native-ordinary-contact-gate-baseline-01
+with the unimplemented false-return baseline. Final normal and ASan/UBSan engine
+checks each pass724 cases, exact inventory/XML without skips or source drift;
+leaks disabled. Fingerprint9c905bd968c236142f02fe91e2eeeeaf7da343f0f95212bf38cb068980434ff1.
+Engine tests cover both ordinary variants, stale/wrong owners, prior Start/
+Contact/Queue, power rejection, consumed contact, no duplicate fatigue, continued
+follow-through and unavailable physics without spending or consuming an action.
+Unchanged component/Python suites retain checkpoint71 evidence, not new runs.
+
+S4/native-ordinary-miss-contact-offscreen-01 runs the actual engine with ordinary
+action1 resumed from initialized windup: exactly one miss commit debits140 to133
+before Queue; public GetAV later reports137 during native regeneration. The
+final save restores140 and keeps next2/empty ledger/no strike. A distinct process
+loads that save without contact, selection or restore replay. Both scenarios,
+script compilation/diagnostics and directly reviewed idle prison/HUD captures
+pass. Current executable SHA25677e49596329149c477d6e2f10fe90e63b4ddde7ec4f201224a174fb43001c8a0.
+The retained first verifier copied an obsolete no-contact Fatigue140 assertion;
+verify-02 follows the predeclared debit/regeneration range133–140 rather than
+requiring observed137. Audio muted; no measured FPS or whole S4 acceptance.
+
+Correction to checkpoint71's first-load addition counts: actual condition
+runtime course04 adds1141 references,82 with nonempty inventories, rather than
+78/19 from an earlier course. Its second adds146/17 as already reported. The
+strict complete-map assertion remains failed. Subsequent diagnostic checks
+confirm every existing inventory and all eight native field sets unchanged.
+The new miss course also adds1141/82 then146/17; existing inventories remain
+unchanged. Newly captured references are reported, not treated as complete-map
+restart equality. The final idle AV equality alone does not prove fatigue
+spending; the transaction/gate tests and earlier real GetAV/debit establish it.
+
+S2/S3 remain in progress and S4–S14 remain open. Next: acquired-victim native
+mitigation and reaction authority, remaining power/creature timing variants,
+block intent and equipment condition consequences. Previous checkpoint71
+commitb4ecf10ee5b40bcc1623491efdd7e21215d403e0; verified bundle49 SHA256
+d2b2ba2d138bd24dcdfce1f375d8bc7f7a434d68dafb33f28c414d322838e813.

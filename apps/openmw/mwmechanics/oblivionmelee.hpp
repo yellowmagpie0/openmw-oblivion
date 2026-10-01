@@ -33,5 +33,12 @@ namespace MWMechanics
     std::optional<MWWorld::Ptr> acquireOblivionMeleeContact(MWBase::World& world,
         std::uint64_t actionId, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& selectedTarget, float reach);
+    // Ordinary physical misses consume the owned action and spend native
+    // attack fatigue once. Unavailable physics and acquired victims return
+    // false without mutation; successful-hit policy is a separate adapter.
+    bool commitOblivionOrdinaryMeleeMiss(MWBase::World& world, std::uint64_t actionId,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
+        float reach, float weaponWeight);
+
 }
 #endif

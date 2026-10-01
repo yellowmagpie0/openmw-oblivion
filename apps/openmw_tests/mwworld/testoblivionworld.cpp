@@ -2436,6 +2436,46 @@ namespace
         EXPECT_FALSE(legacy.commitOblivionPhysicalContact(1, {}, {}, {}));
     }
 
+    TEST(OblivionWorldTest, OrdinaryContactGateUsesPriorPhaseAndCannotReplayAfterMiss)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(fixture.mWorld.activateOblivionActor(actor));
+        auto& service = *fixture.mWorld.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        const std::array<float, 4> keys{0, .2f, .6f, 1};
+        for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::Right})
+        {
+            const auto id = service.beginMeleeStrike(key, kind, "handtohandattackleft");
+            EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id, key));
+            ASSERT_TRUE(service.advanceOrdinaryMeleePhase(id, key, 0, .3f, keys));
+            ASSERT_TRUE(service.isOrdinaryMeleeContactPending(id, key));
+            EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id + 1, key));
+            EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id, ESM::FormKey::dynamic("other", 1)));
+            EXPECT_TRUE(service.isOrdinaryMeleeContactPending(id, key)); // Read-only, no spending.
+            const float fatigue = service.getNonPlayerValue(actor, 10);
+            ASSERT_TRUE(fixture.mWorld.commitOblivionPhysicalContact(id, actor, {}, {-7, 0, 0}));
+            EXPECT_FLOAT_EQ(service.getNonPlayerValue(actor, 10), fatigue - 7);
+            EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id, key));
+            EXPECT_FALSE(fixture.mWorld.commitOblivionPhysicalContact(id, actor, {}, {-7, 0, 0}));
+            EXPECT_FLOAT_EQ(service.getNonPlayerValue(actor, 10), fatigue - 7);
+            ASSERT_TRUE(service.advanceOrdinaryMeleePhase(id, key, 0, .7f, keys));
+            EXPECT_EQ(service.findMeleeState(key)->mStrike->mOrdinaryPhase, ESM4::OrdinaryMeleePhase::Queue);
+            EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id, key));
+            EXPECT_TRUE(service.finishMeleeStrike(id, key));
+            EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id, key));
+        }
+        const auto power = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::StandingPower,
+            "handtohandattackpower");
+        EXPECT_FALSE(service.isOrdinaryMeleeContactPending(power, key));
+        ASSERT_TRUE(service.finishMeleeStrike(power, key));
+        const auto queued = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left,
+            "handtohandattackleft");
+        ASSERT_TRUE(service.advanceOrdinaryMeleePhase(queued, key, 0, 2, keys));
+        ASSERT_TRUE(service.advanceOrdinaryMeleePhase(queued, key, 0, 2, keys));
+        EXPECT_FALSE(service.isOrdinaryMeleeContactPending(queued, key));
+    }
+
     TEST(OblivionWorldTest, NativeMeleeQueryCannotConvertUnavailablePhysicsIntoContactOrMiss)
     {
         NativeWorldFixture fixture;
@@ -2460,6 +2500,16 @@ namespace
         EXPECT_THROW(MWMechanics::acquireOblivionMeleeContact(world, id, actor, target,
             std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
         EXPECT_EQ(snapshot(), before);
+        auto& service = *world.getOblivionCombatService();
+        const auto strike = service.beginMeleeStrike(actor.getCellRef().getFormKey(),
+            ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        ASSERT_TRUE(service.advanceOrdinaryMeleePhase(strike, actor.getCellRef().getFormKey(),
+            0, .3f, {0, .2f, .6f, 1}));
+        const auto pending = snapshot();
+        EXPECT_FALSE(MWMechanics::commitOblivionOrdinaryMeleeMiss(world, strike, actor, {}, 64, 0));
+        EXPECT_EQ(snapshot(), pending);
+        EXPECT_TRUE(service.isOrdinaryMeleeContactPending(strike, actor.getCellRef().getFormKey()));
+        ASSERT_TRUE(service.finishMeleeStrike(strike, actor.getCellRef().getFormKey()));
         EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(id, actor.getCellRef().getFormKey()));
         EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(unrelated, target.getCellRef().getFormKey()));
         ASSERT_TRUE(world.cancelOblivionPhysicalAction(id, actor));

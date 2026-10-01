@@ -847,6 +847,18 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::isOrdinaryMeleeContactPending(std::uint64_t id,
+        const ESM::FormKey& actor) const
+    {
+        const auto* state = findMeleeState(actor);
+        const auto* life = findActorLife(actor);
+        return state && state->mStrike && state->mStrike->mActionId == id
+            && state->mStrike->mKind <= ESM4::MeleeStrikeKind::Right
+            && state->mStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::Contact
+            && !state->mStrike->mContactCommitted && isActionPending(id, actor)
+            && life && life->mPhase == ESM4::ActorLifePhase::Alive;
+    }
+
     bool OblivionCombatService::finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
     {
         const auto found = mMeleeStates.find(actor);

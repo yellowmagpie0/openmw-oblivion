@@ -54,6 +54,8 @@
 
 #include "actorutil.hpp"
 #include "oblivioncombat.hpp"
+#include "oblivionmelee.hpp"
+#include <set>
 #include "oblivionai.hpp"
 #include "../mwworld/worldimp.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
@@ -1381,6 +1383,56 @@ namespace MWMechanics
             if (std::isfinite(time) && time >= state->mStrike->mAnimationTime)
                 service->updateMeleeAnimation(mOblivionRenderedStrike, actor, time);
         }
+    }
+
+    void CharacterController::dispatchOblivionMeleeContact()
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mOblivionRenderedStrike || mSkipAnim || !mAnimation
+            || mPtr.getType() == ESM::REC_CREA4)
+            return;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        if (!service->isOrdinaryMeleeContactPending(mOblivionRenderedStrike, actor))
+            return;
+        const auto strike = *service->findMeleeState(actor)->mStrike;
+        float weaponWeight = 0;
+        const ESM4::Weapon* weapon = nullptr;
+        if (!mWeapon.isEmpty())
+        {
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                world->getStore(), mWeapon.getCellRef().getRefId());
+            const auto* form = id.getIf<ESM::FormId>();
+            weapon = form ? world->getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+            if (!weapon || weapon->mData.type > 3
+                || ESM::FormKeyResolver(world->getContentFiles()).toFormKey(*form) != strike.mWeaponBase)
+                return;
+            weaponWeight = weapon->mData.weight;
+        }
+        else if (!strike.mWeaponBase.isNull())
+            return;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world->getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world->getStore().get<ESM4::GameSetting>().search(record.mId));
+        const auto reachSettings = ESM4::buildMeleeReachSettings(settings);
+        const float placed = mPtr.getCellRef().getScale();
+        osg::Vec3f scale(placed, placed, placed);
+        mPtr.getClass().adjustScale(mPtr, scale, true);
+        const float reach = weapon ? ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings)
+            : ESM4::unarmedMeleeReach(scale.z(), reachSettings);
+        const float cost = ESM4::attackFatigueCost(weaponWeight, false,
+            ESM4::buildAttackFatigueSettings(settings));
+        const auto fatigue = [&] { return mPtr == world->getPlayerPtr()
+            ? service->getPlayerValue(10) : service->getNonPlayerValue(mPtr, 10); };
+        const float before = fatigue();
+        if (commitOblivionOrdinaryMeleeMiss(*world, strike.mActionId, mPtr, {}, reach, weaponWeight))
+            Log(Debug::Verbose) << "M15 melee miss committed: actor=" << actor.serialize()
+                                << " id=" << strike.mActionId << " fatigue_cost=" << cost
+                                << " before=" << before << " after=" << fatigue();
     }
 
     void CharacterController::advanceOblivionMeleePlayback(float duration)
@@ -2980,6 +3032,8 @@ namespace MWMechanics
             }
         }
 
+        // Original actor contact dispatch observes the prior Contact phase.
+        dispatchOblivionMeleeContact();
         advanceOblivionMeleePlayback(duration);
         osg::Vec3f movementFromAnimation
             = mAnimation->runAnimation(mSkipAnim && !isScriptedAnimPlaying() ? 0.f : duration);
