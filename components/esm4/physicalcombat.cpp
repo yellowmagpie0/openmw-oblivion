@@ -719,6 +719,12 @@ namespace ESM4
         return double(draw) / 100.0 <= threshold;
     }
 
+    CombatRandomDraw combatRandomDraw(std::uint32_t state) noexcept
+    {
+        const std::uint32_t next = state * std::uint32_t{214013} + std::uint32_t{2531011};
+        return {next, static_cast<std::uint16_t>((next >> 16) & 0x7fff)};
+    }
+
     void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings)
     {
         for (int value : {settings.mHeadChance, settings.mUpperBodyChance, settings.mLowerBodyChance,

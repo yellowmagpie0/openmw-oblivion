@@ -5364,3 +5364,20 @@ Physical weapon contact now publishes prepared condition and damage atomically;
 unsupported positive armor selection/block/break/stealth/resistance/ENAM and
 later gates stay open. Post-hit HUD captures do not prove contact-frame held
 weapon rendering or sound.
+
+### Native initialized random stream (checkpoint95)
+
+Pinned executable SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Original47DF80 nonzero argument invokes9859D0 and clears initialization byte
+B069C3; initialized zero-argument path tails9859DD.9859D0 stores seed at
+TLS+14;9859DD uses unsigned32 multiply/add214013/2531011, stores next state,
+then logical-shifts16 and masks32767.98C0F5 TLS accessor is the sole supplied
+boundary in `S4/native-combat-random-oracle-01`; caller removes seed argument
+(cdecl). All paths return to the sentinel at expected ESP.256 profiles under
+027F/037F plus100k consecutive original draws; frozen corpus
+`532bb579f9297bd63d80214903c5d8242647b7f38db64d9cb1ab16332b278fa0`.
+Armor caller5E5A00 divides by100 with IDIV and uses remainder. This confirms
+native sequence/modulo bias; own combat stream publication/save ownership,
+automatic wall-clock initialization and global world call interleaving are
+separate claims. No armor mutation, contact, reaction or gameplay gate closed.

@@ -10036,3 +10036,30 @@ all on boot `a80f9d5d-d691-4275-a06f-c8a6dcb4a3f8`. Normal references
 failures/diagnostics. SDL receipt300 and actual ASan shared object first in
 LD_PRELOAD are used for the instrumented course. **S3 remains in progress;
 armor/block/break/RNG/reactions and every later open gate still require work.**
+
+### Checkpoint95 — independently verified native random stream
+
+The immutable `combatRandomDraw` rule retains unsigned32 state overflow and
+the original 15-bit CRT output. Percentile users preserve `value % 100`,
+including its native modulo bias. It does not read a clock, mutate AI state
+or yet advance live combat state. Stream ownership and persistence remain
+open integration work; reproducing a declared seed sequence does not imply
+matching the original game's shared world random-call scheduling.
+
+`S4/native-combat-random-oracle-01` executes original47DF80 initialized and
+explicit-seed branches,9859D0 and9859DD, supplying only98C0F5 TLS lookup
+(cdecl RET0).256 frozen profiles/eight seeds/32 draws each agree under both
+x87 precision words (512 cases), including0, signed boundaries and uint32
+maximum.100,000 original consecutive draws at0x15a4 end at2450783044;
+stream SHA-256 `9c96457fb02dce9107924fcd2cb0c11a3db02848ec9349b7cd084aa0e4d9dea5`;
+corpus SHA-256 `532bb579f9297bd63d80214903c5d8242647b7f38db64d9cb1ab16332b278fa0`.
+The exact percentile histogram and armor selection distribution are tested
+with a predeclared700-count tolerance for100k draws (hair0 when head present).
+Automatic clock seeding is excluded from the oracle.
+
+`S4/native-combat-random-main-01` and `-sanitized-01` each pass all2045
+component tests with exact inventories/XML, zero skips/failures and stable
+tested source fingerprint `93c49dc4747a6c20ed098faf9c52ee92941ba98f138be7ef996e7691d4d7b0d1`.ASan/UBSan halt on errors, leak checks
+disabled; no sanitizer findings. Existing aggregate-initializer/dangling-else
+test warnings remain. No engine/Python changes or new runtime acceptance
+claim in this chunk. S3 and later gates remain open.

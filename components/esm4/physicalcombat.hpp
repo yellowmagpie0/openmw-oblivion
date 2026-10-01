@@ -438,6 +438,15 @@ namespace ESM4
     // The caller resolves armor bypass eligibility; this helper only applies it.
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass);
 
+    struct CombatRandomDraw
+    {
+        std::uint32_t mNextState;
+        std::uint16_t mValue;
+    };
+    // Original initialized CRT stream: explicit state in/out, no clock seed.
+    // Percentile callers use mValue % 100, preserving the native modulo bias.
+    CombatRandomDraw combatRandomDraw(std::uint32_t state) noexcept;
+
     enum class ArmorWearSlot { Head, Hair, UpperBody, LowerBody, Hands, Feet, Shield };
     struct ArmorWearSelectionSettings
     {
