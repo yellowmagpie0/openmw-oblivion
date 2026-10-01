@@ -198,6 +198,39 @@ namespace MWMechanics
             : actor.getCellRef().getFormKey());
     }
 
+    ESM4::HandToHandDamage oblivionHandToHandContactDamage(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || attacker.isEmpty())
+            throw std::invalid_argument("native hand contact requires a native attacker");
+        const bool player = attacker == world.getPlayerPtr();
+        if (!player && attacker.getType() != ESM::REC_NPC_4)
+            throw std::invalid_argument("native hand contact requires a Player or NPC attacker");
+        const auto integer = [&](std::uint8_t index) {
+            return player ? service->getPlayerIntegerValue(index)
+                : service->getNonPlayerIntegerValue(attacker, index);
+        };
+        const auto key = player ? ESM::FormKey::dynamic("player", 1)
+            : attacker.getCellRef().getFormKey();
+        // Original hand caller reads +284 integer AVs and the separate floored
+        // base Fatigue query. Armor/weapon float-query conversion differs.
+        const ESM4::HandToHandContactInput input{integer(17), integer(7), integer(0),
+            player ? service->getPlayerValue(10) : service->getNonPlayerValue(attacker, 10),
+            player ? service->getPlayerBaseValue(10)
+                : service->getNonPlayerBaseValue(key, 10, world.getStore()),
+            oblivionKnockedState(world, victim)};
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        return ESM4::handToHandContactDamage(input, ESM4::buildHandToHandSettings(settings),
+            ESM4::buildPhysicalCombatSettings(settings));
+    }
+
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion

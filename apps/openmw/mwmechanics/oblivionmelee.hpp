@@ -45,6 +45,12 @@ namespace MWMechanics
     // Resolve actual native actor binding before reading its process byte.
     std::int8_t oblivionKnockedState(MWBase::World& world, const MWWorld::Ptr& actor);
 
+    // Pre-mitigation unarmed contact damage from live native integer AV getters,
+    // current/base Fatigue and the actual victim process byte. Read-only;
+    // creature natural attacks use a separate native damage path.
+    ESM4::HandToHandDamage oblivionHandToHandContactDamage(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim);
+
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor);
 
 }

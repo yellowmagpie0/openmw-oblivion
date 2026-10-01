@@ -9061,3 +9061,42 @@ S2/S3 remain in progress and S4–S14 remain open. Next: acquired-victim damage
 integration, native mitigation/block/gear/reaction policy and the remaining
 stages. Previous checkpoint76 commit cdb1715f9704081625b7174adeafbdbcb29ad154;
 verified bundle54 SHA256 d5c99e9ede095068386e8d0fd4d825578fc10c3792e2df6b2ae8df5f63d3b197.
+
+### Checkpoint78 — live native unarmed damage inputs
+
+The world adapter now resolves actual Player/NPC integer HandToHand/Luck/
+Strength getters, current Fatigue, the separate floored base Fatigue query,
+and the actual Player/NPC/Creature victim process knocked byte. It reads
+winning native hand/physical GMSTs and computes pre-mitigation damage through
+the independently verified original caller rule. Creature natural attacks
+are a separate path. Missing/foreign actors and unknown legacy Active victim
+state are diagnosed without writes; Low victim processes query zero. This
+is a read-only contact prerequisite, not acquired-victim damage publication.
+
+Three engine cases cover1024 NPC input/process combinations and256 Player-to-
+Creature combinations using recorded original checkpoint50 expected values;
+Player self-query, Low/unknown victims, actual aliases and wrong attacker/profile
+are also covered. An NPC fractional-modifier discriminator reads float skill11
+but native integer skill10, proving the separate getter boundary. Exact binary
+snapshots preserve all registered resource/life/action state during queries;
+Player/Creature snapshots preserve their values. Winning setting changes are
+read immediately. The malformed-type test replaces the same GMST FormId and
+checks the exact type diagnostic, avoiding duplicate-name rejection as a false
+positive.
+
+S3/native-hand-contact-main-01 retains two fixture failures: the attribute/skill
+request API rejected staged Fatigue, and a serialized state omitted the second
+actor reference. Fixtures now use the native Fatigue writer and complete
+reference inventories; no production validation was relaxed. Main02 and
+sanitized01 passed before the malformed-type assertion was strengthened.
+Final main03 and sanitized02 each pass all733 engine cases, exact inventories,
+zero failures/skips and no source drift. ASan/UBSan leak detection is disabled.
+Tested fingerprintad6439c9db7bf8d7a5ac00d33e61e58ae1debce5fa99fbd9de5384f57c37519c.
+Unchanged components/Python evidence is retained from77/75 respectively.
+No new normal-input hit, block, wear, reaction or campaign gate is claimed.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: finish the native contact
+mitigation/sink pipeline, difficulty binding, block intent, gear/reactions and
+acquired-victim runtime publication. Previous checkpoint77 commit
+bd44e2742dfd202b601bb5628922d955f6088b35; verified bundle55 SHA256
+60d7954ba9f433f04985e0f3b186259a39a0005710f12f6843b0ccb2205751d2.

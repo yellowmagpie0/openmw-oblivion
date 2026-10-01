@@ -2555,6 +2555,170 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, NativeHandContactReadsIntegerAuthorityAndAllSignedVictimStates)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto attacker = addNativeNpc(fixture, 0x801);
+        const auto victim = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(attacker));
+        ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        const auto set = [&](unsigned av, int value) {
+            return world.executeOblivionActorValueCommand(attacker, av, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, value);
+        };
+        ASSERT_TRUE(set(17, 11)); ASSERT_TRUE(set(7, 50)); ASSERT_TRUE(set(0, 40)); ASSERT_TRUE(set(10, 140));
+        ASSERT_TRUE(world.requestOblivionStatModifier(attacker, 17, true, .75f));
+        ASSERT_TRUE(world.requestOblivionStatModifier(attacker, 17, false, .75f));
+        ASSERT_EQ(service.getNonPlayerValue(attacker, 17), 11);
+        ASSERT_EQ(service.getNonPlayerIntegerValue(attacker, 17), 10);
+        ASSERT_EQ(service.getNonPlayerBaseValue(attacker.getCellRef().getFormKey(), 10, world.getStore()), 140);
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, attacker);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            return state.serializeBinary();
+        };
+        unsigned settingId = 0x950;
+        const auto setting = [&](const char* name, float value) {
+            ESM4::GameSetting record{}; record.mId = {settingId, 0}; record.mEditorId = name; record.mData = value;
+            world.getStore().getWritable<ESM4::GameSetting>().insertStatic(record,
+                ESM::FormKey::content("headless.esm", settingId++));
+        };
+        setting("fFatigueBase", 1); setting("fHandHealthMax", 15);
+        setting("fHandFatigueDamageBase", 1); setting("fHandFatigueDamageMult", .5f);
+        struct Row { float current, health, fatigue; };
+        // Recorded original caller values, shared with the independent oracle50.
+        const Row rows[] = {
+            {0, 0x1.35c28ep+0f, 0x1.9ae148p+0f},
+            {70, 0x1.50a3d6p+0f, 0x1.a851ecp+0f},
+            {140, 0x1.6b851ep+0f, 0x1.b5c29p+0f},
+            {-14, 0x1.30624ep+0f, 0x1.983128p+0f},
+        };
+        for (const auto& row : rows)
+        {
+            service.changeNonPlayerValue(attacker, 10, ESM4::ActorValueModifier::Damage,
+                row.current - service.getNonPlayerValue(attacker, 10));
+            ASSERT_EQ(service.getNonPlayerValue(attacker, 10), row.current);
+            for (int raw = -128; raw <= 127; ++raw)
+            {
+                service.setProcessKnockedState(victim.getCellRef().getFormKey(), static_cast<std::int8_t>(raw));
+                const auto before = snapshot();
+                const auto damage = MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim);
+                EXPECT_EQ(damage.mHealth, row.health);
+                EXPECT_EQ(damage.mFatigue, raw == 0 ? row.fatigue : 0.f);
+                EXPECT_EQ(snapshot(), before);
+            }
+        }
+        // Winning override affects the result immediately; malformed type is
+        // diagnosed without publishing actor state.
+        setting("fHandHealthMin", 15);
+        service.setProcessKnockedState(victim.getCellRef().getFormKey(), 0);
+        EXPECT_EQ(MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim).mHealth, 15);
+        ESM4::GameSetting bad{}; bad.mId = {0x951, 0}; bad.mEditorId = "fHandHealthMax"; bad.mData = std::int32_t{15};
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(bad,
+            ESM::FormKey::content("headless.esm", 0x951));
+        const auto before = snapshot();
+        try
+        {
+            (void)MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim);
+            FAIL() << "native hand damage accepted an integer Health maximum";
+        }
+        catch (const std::invalid_argument& error)
+        {
+            EXPECT_STREQ(error.what(), "incorrect native combat setting type: fHandHealthMax");
+        }
+        EXPECT_EQ(snapshot(), before);
+    }
+
+    TEST(OblivionWorldTest, NativeHandContactRejectsUnavailableAuthorityAndUnknownLegacyVictim)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto attacker = addNativeNpc(fixture, 0x801);
+        const auto victim = addNativeNpc(fixture, 0x802);
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim), std::invalid_argument);
+        ASSERT_TRUE(world.activateOblivionActor(attacker));
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim), std::invalid_argument);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(victim, ESM4::ActorValueProcess::Low));
+        EXPECT_GT(MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim).mFatigue, 0);
+        ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto state = captureNativeActorState(fixture, attacker);
+        state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+        for (auto& values : state.mNativeActorValues) values.mProcessKnockedState.reset();
+        world.getOblivionCombatService()->restore(state, world.getStore());
+        const auto snapshot = [&] {
+            auto complete = captureNativeActorState(fixture, attacker);
+            complete.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            return complete.serializeBinary();
+        };
+        const auto before = snapshot();
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, {}, victim), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, attacker, {}), std::invalid_argument);
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(legacy, attacker, victim), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+    }
+
+    TEST(OblivionWorldTest, NativeHandContactBindsActualPlayerAndCreatureVictim)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 1}; native.mFormKey = base; native.mIsTES4 = true; native.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr();
+        auto& service = *world.getOblivionCombatService();
+        EXPECT_EQ(MWMechanics::oblivionKnockedState(world, player), 0);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{};
+        creature.mId = {0x820, 0}; creature.mFormKey = ESM::FormKey::content("headless.esm", 0x820);
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 1; creature.mData.health = 99;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{};
+        reference.mId = {0x920, 0}; reference.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        EXPECT_EQ(MWMechanics::oblivionKnockedState(world, actor), 0);
+        for (auto [av, value] : {std::pair{17, 10}, {7, 50}, {0, 40}, {2, 30}, {3, 30}, {5, 40}})
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(player, av, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, value));
+        ASSERT_EQ(service.getPlayerBaseValue(10), 140);
+        ASSERT_EQ(service.getPlayerValue(10), 140);
+        unsigned id = 0x960;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fHandHealthMax", 15.f},
+            {"fHandFatigueDamageBase", 1.f}, {"fHandFatigueDamageMult", .5f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+        }
+        const auto originalPlayer = *service.findActorValues(ESM::FormKey::dynamic("player", 1));
+        for (int raw = -128; raw <= 127; ++raw)
+        {
+            service.setProcessKnockedState(actor.getCellRef().getFormKey(), static_cast<std::int8_t>(raw));
+            const auto originalCreature = *service.findActorValues(actor.getCellRef().getFormKey());
+            const auto damage = MWMechanics::oblivionHandToHandContactDamage(world, player, actor);
+            EXPECT_EQ(damage.mHealth, 0x1.6b851ep+0f);
+            EXPECT_EQ(damage.mFatigue, raw == 0 ? 0x1.b5c29p+0f : 0.f);
+            EXPECT_EQ(*service.findActorValues(ESM::FormKey::dynamic("player", 1)), originalPlayer);
+            EXPECT_EQ(*service.findActorValues(actor.getCellRef().getFormKey()), originalCreature);
+        }
+        EXPECT_EQ(MWMechanics::oblivionHandToHandContactDamage(world, player, player).mFatigue, 0x1.b5c29p+0f);
+        service.setProcessKnockedState(ESM::FormKey::dynamic("player", 1), -1);
+        EXPECT_EQ(MWMechanics::oblivionHandToHandContactDamage(world, player, player).mFatigue, 0);
+        EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, actor, player), std::invalid_argument);
+    }
+
     TEST(OblivionWorldTest, NativeArmorQueryReadsDefenseAuthorityWithoutProjectedItemRatings)
     {
         NativeWorldFixture fixture;
