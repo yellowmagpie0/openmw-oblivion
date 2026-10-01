@@ -1429,11 +1429,19 @@ namespace MWMechanics
         const auto fatigue = [&] { return mPtr == world->getPlayerPtr()
             ? service->getPlayerValue(10) : service->getNonPlayerValue(mPtr, 10); };
         const float before = fatigue();
-        if (commitOblivionOrdinaryMeleeMiss(*world, strike.mActionId, mPtr, {}, reach, weaponWeight))
-            Log(Debug::Verbose) << "M15 melee miss committed: actor=" << actor.serialize()
+        const auto contact = commitOblivionOrdinaryMeleeContact(*world, strike.mActionId, mPtr, {},
+            reach, weaponWeight, oblivionNormalizedDifficulty(Settings::game().mDifficulty), isSneaking());
+        if (contact)
+            Log(Debug::Verbose) << (contact->mVictim.isEmpty() ? "M15 melee miss committed: actor="
+                : "M15 melee hit committed: actor=") << actor.serialize()
                                 << " id=" << strike.mActionId << " fatigue_cost=" << cost
                                 << " before=" << before << " after=" << fatigue()
-                                << " action=" << service->getProcessAction(actor);
+                                << " action=" << service->getProcessAction(actor)
+                                << " health_damage=" << contact->mDamage.mHealth
+                                << " fatigue_damage=" << contact->mDamage.mFatigue
+                                << " victim=" << (contact->mVictim.isEmpty() ? "none"
+                                    : contact->mVictim == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1).serialize()
+                                    : contact->mVictim.getCellRef().getFormKey().serialize());
     }
 
     void CharacterController::advanceOblivionMeleePlayback(float duration)

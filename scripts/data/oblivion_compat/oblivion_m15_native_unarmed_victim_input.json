@@ -1,0 +1,21 @@
+{
+  "source": "build/oblivion-compat/m15/S3/melee-state-offscreen-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+  "source_sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e",
+  "victim": "content:oblivion.esm:01fc43",
+  "reference_position": [
+    672,
+    60,
+    -109.68915557861328,
+    0,
+    0,
+    3.1415927410125732
+  ],
+  "native_ai_restrained": true,
+  "purpose": "Isolated acquired-victim course, staged position/AI only; damage supplied solely by normal attack input, not a native resource command.",
+  "version": 1,
+  "expected_health_modifier_bits": "0xbfb5c28f",
+  "expected_attack_fatigue": 7,
+  "expected_incoming_health_bits": "0x3fb5c28f",
+  "expected_incoming_fatigue_bits": "0x3fdae148",
+  "continuation": "No attack input; health modifier unchanged, no hit replay."
+}

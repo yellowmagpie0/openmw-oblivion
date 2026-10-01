@@ -9571,3 +9571,88 @@ in progress and S4–S14 open. Next: acquired-victim native damage, block/armor/
 condition/reactions and all remaining plan gates. Previous checkpoint86 commit
 2a247600a6210e880af671e679843bbdd5e56438; verified bundle64 SHA256
 1b3738434062392cf2e233224ea6aa4e4954a9645ba771e140be9b71d1daad6f.
+
+### Checkpoint88 — acquired ordinary unarmed victim damage
+
+Character contact now acquires real collision-body/cone/range/LOS victims and
+prepares ordinary Player/NPC unarmed damage before committing the owned native
+transaction. Empty physical acquisition retains the once-only miss debit.
+Supported hits read native integer HandToHand/Luck/Strength, current/base Fatigue,
+victim knocked state and equipped native armor authority; signed Defense and
+the winning fArmorRatingMax cap feed armor mitigation. Fatigue scales with the
+pre-difficulty Health ratio; difficulty changes Health only with victim-player
+priority, including self. The original contact-before-attack-debit order is
+preserved. Contact publishes followthrough3, completes to-1, and cannot replay
+through typed restoration. Shared TES3 hit chance/damage rules are not used.
+
+The existing GUI's integer difficulty slider[-100,100] maps to normalized[-1,1]
+with a float store after double division. Out-of-UI-range config values saturate;
+this is an explicit fork UI adapter policy, not native INI reader equivalence.
+Creature, held-block, sneak, nonzero ResistNormalWeapons and zero/nonpositive
+incoming hand Fatigue contexts remain unsupported in this bounded caller.
+WEAP hits still require their damage/condition branch. Positive incoming hand
+Fatigue skips original armor wear; no equipment wear is silently discarded in
+this supported branch. Reactions, engagement/assault/OnHit, mastery, power and
+full opponent policy are still unfinished; this is not full S4 acceptance.
+
+S4/native-unarmed-mitigation-oracle-01 executes original5FF712..5FF7BD armor,
+cap and positive-Fatigue wear skip,5FFEB5..6000E2 Fatigue ratio, and full physical
+sink5E58F0/difficulty5E2560. All240 observations/120 profiles pass in both x87
+modes, spanning signed ratings, caps, five difficulties and four identity roles.
+Premitigation20/10, armor query, non-sneak bypass0, score-context null/dead false
+and recorded AV writers are declared boundaries. Corpus SHA256
+ d1d92ad188898b12b71eadbe1118811dcae09ef139105b761e5ea6ae60cedb49.
+Frozen bit outcomes are versioned in unarmedmitigation_expected.inc. Installed
+runtime settings independently match the existing original hand-caller oracle:
+HandToHand10/Luck50/Strength40/current/base Fatigue140, Health1.4199999570846558,
+Fatigue1.7100000381469727. Winning master SHA256 remains
+ a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70.
+
+Two added engine cases verify all120 immutable profiles on actual typed
+Player/NPC bindings, read-only queries, unsupported contexts and invalid
+normalized input, exact native deltas, action3/-1, duplicate rejection and
+binary/content restore without another debit. S3/native-unarmed-contact-main-03
+passes752 engine cases and231 Python cases; sanitized-03 passes752 engine
+cases, exact inventories/XML and zero failures/skips/drift. ASan/UBSan halt on
+errors with leak detection disabled. Tested fingerprint
+07d8dc160f3d8967b08b664243c674af93a50d4916f58df3ef13b727abf57cb9.
+Baseline-01 fails the new acquired-damage assertion against a nullopt stub;
+main-01 retains an incorrect armor-cap member compile failure, corrected-02
+passes before the editable runtime manifests were added. Main/sanitized-03
+include those manifests. Existing AnimationQueueEntry warning remains recorded.
+
+S4/native-unarmed-victim-offscreen-02 stages only Valen Dreth's position and
+native AI restraint in a private copy of the pinned schema21 idle save. The
+writer migrates this setup to26 with explicit unknown raw fields and empty
+animation clocks; the independent verifier checks exactly those setup changes.
+Normal remapped u input admits action2, acquires living native reference01fc43,
+commits one hit Health1.42/Fatigue1.71 and player Fatigue140→133/action3, then
+finishes-1. An explicit eight-second wait caps Fatigue before normal F5 save.
+Victim Health Damage modifier is exactly-1.4199999570846558 in both schema26
+saves; every other prior AV/life/breath/base/death/engagement and reference
+inventory stays exact except constructor0/-1. Fresh process has no attack or
+hit replay. Prior actors9; refs34674→35522→36289 and nonempty inventories
+2021→2093→2151 include separately reported content discoveries. NPC immediate
+Fatigue is logged rather than independently queried before regeneration;
+exact debit/publication is covered by the engine transaction test.
+
+Engine SHA256bff3ab27c830eba382c08f0f0d3f77fddcb26eda4e8eaf4d16ebbba4e4d2b142;
+epochsPID13/start15687674→PID12/start15695707. Staged input SHA256
+276fb7c18e44bd6e62948497c3df9aa21dd28b435e2228e242ce7b11b4b66b36;
+first save8e3b05bf39dac43cf4a43a74e8e8adb3959c21a01343282a96c47af721394547.
+Independent scenario/script/input/epoch/save verification passes. Both captures
+directly reviewed: named visible living target at melee range, idle fists and
+full HUD, same target on continuation. No reaction/contact-frame/audio claim;
+these are isolated staged geometry/AI cases, not legitimate tutorial progression.
+Offscreen-01 retained: hit and fresh replay checks pass, but immediate save has
+legitimate depleted/regenerating Player Fatigue; strict capped comparison fails.
+Verifier setup failures for omitted schema migration and incorrectly expected
+next-side=true are retained; ordinary left completion correctly preserves
+next-side=false. The corrected verifier maps reference keys to avoid quadratic
+inventory scans without changing its assertions.
+
+S2/S3 remain in progress and S4–S14 open. Next: actual block mitigation/cost,
+weapon/creature/power damage, wear and reactions, native opponent policy and all
+remaining acceptance gates. Previous checkpoint87 commit
+ d1829e9ed606afd799be7b8acb551ac3c7c33ef5; verified bundle65 SHA256
+09c8f570039f53fa7c60135b4f3153d41d9d0c8cac00579edd9ba006b5bf76cc.

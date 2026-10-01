@@ -3498,6 +3498,139 @@ namespace
         EXPECT_FALSE(service.isOrdinaryMeleeContactPending(queued, key));
     }
 
+    TEST(OblivionWorldTest, OrdinaryUnarmedVictimPolicyMatchesOriginalMitigationAndIdentityCorpus)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{}; native.mId = {7, 1}; native.mFormKey = base; native.mIsTES4 = true;
+        native.mData.health = 100;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr();
+        const auto source = addNativeNpc(fixture, 0x801), target = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(target));
+        auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fHandHealthMin", 20.f}, {"fHandHealthMax", 20.f},
+            {"fHandFatigueDamageBase", 10.f}, {"fHandFatigueDamageMult", 0.f},
+            {"fArmorRatingMax", .85f}, {"fDifficultyDamageMultiplier", 5.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            world.getStore().getWritable<ESM4::GameSetting>().insertStatic(setting,
+                ESM::FormKey::content("headless.esm", id++));
+        }
+        struct Row { int role; float difficulty; int rating; std::uint32_t health, fatigue; };
+        const Row rows[] = {
+#include "unarmedmitigation_expected.inc"
+        };
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, source);
+            state.mReferences.push_back(captureNativeActorState(fixture, target).mReferences[0]);
+            return state.serializeBinary();
+        };
+        for (const auto& row : rows)
+        {
+            SCOPED_TRACE(::testing::Message() << row.role << ',' << row.difficulty << ',' << row.rating);
+            const auto attacker = row.role == 1 || row.role == 3 ? player : source;
+            const auto victim = row.role >= 2 ? player : target;
+            const float old = victim == player ? service.getPlayerValue(43) : service.getNonPlayerValue(victim, 43);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Mod,
+                ESM4::ActorValueCommandSource::Script, row.rating - static_cast<int>(old)));
+            const auto before = snapshot();
+            const auto damage = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world,
+                attacker, victim, row.difficulty, false);
+            ASSERT_TRUE(damage);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(damage->mHealth), row.health);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(damage->mFatigue), row.fatigue);
+            EXPECT_EQ(snapshot(), before);
+        }
+        const auto before = snapshot();
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, target, 0, true));
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, {}, target, 0, false));
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, {}, 0, false));
+        EXPECT_THROW(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, target, 1.01f, false),
+            std::invalid_argument);
+        EXPECT_THROW(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, target,
+            std::numeric_limits<float>::quiet_NaN(), false), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        const auto key = target.getCellRef().getFormKey();
+        service.setProcessAction(key, 6);
+        const auto blocking = snapshot();
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, target, 0, false));
+        EXPECT_EQ(snapshot(), blocking);
+        service.setProcessAction(key, -1); service.setProcessKnockedState(key, 1);
+        const auto knocked = snapshot();
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, target, 0, false));
+        EXPECT_EQ(snapshot(), knocked);
+        service.setProcessKnockedState(key, 0);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(target, 65, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, 100));
+        const auto immune = snapshot();
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, target, 0, false));
+        EXPECT_EQ(snapshot(), immune);
+        EXPECT_EQ(MWMechanics::oblivionNormalizedDifficulty(-500), -1);
+        EXPECT_EQ(MWMechanics::oblivionNormalizedDifficulty(500), 1);
+        EXPECT_EQ(MWMechanics::oblivionNormalizedDifficulty(0), 0);
+        EXPECT_EQ(MWMechanics::oblivionNormalizedDifficulty(20), .2f);
+        EXPECT_EQ(MWMechanics::oblivionNormalizedDifficulty(-50), -.5f);
+    }
+
+    TEST(OblivionWorldTest, OrdinaryUnarmedVictimPolicyUsesNativeArmorAndCommitsOnce)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto attacker = addNativeNpc(fixture, 0x801);
+        const auto victim = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(attacker));
+        ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fHandHealthMin", 20.f}, {"fHandHealthMax", 20.f},
+            {"fHandFatigueDamageBase", 10.f}, {"fHandFatigueDamageMult", 0.f},
+            {"fArmorRatingMax", .85f}, {"fDifficultyDamageMultiplier", 5.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            world.getStore().getWritable<ESM4::GameSetting>().insertStatic(setting,
+                ESM::FormKey::content("headless.esm", id++));
+        }
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, 25));
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, attacker);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            return state;
+        };
+        const auto key = attacker.getCellRef().getFormKey();
+        const auto strike = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        ASSERT_TRUE(service.bindMeleePlayback(strike, key));
+        ASSERT_TRUE(service.advanceOrdinaryMeleePhase(strike, key, 0, .3f, {0, .2f, .6f, 1}));
+        const auto before = snapshot().serializeBinary();
+        const auto damage = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 1, false);
+        ASSERT_TRUE(damage);
+        EXPECT_EQ(damage->mHealth, 15); // 20*(1-.25), NPC-to-NPC ignores difficulty.
+        EXPECT_EQ(damage->mFatigue, 7.5f); // 10*(15/20), before health-only difficulty.
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        const float health = service.getNonPlayerValue(victim, 8);
+        const float fatigue = service.getNonPlayerValue(victim, 10);
+        const float attackerFatigue = service.getNonPlayerValue(attacker, 10);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(strike, attacker, victim,
+            {-7, -damage->mHealth, -damage->mFatigue}));
+        EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 15);
+        EXPECT_EQ(service.getNonPlayerValue(victim, 10), fatigue - 7.5f);
+        EXPECT_EQ(service.getNonPlayerValue(attacker, 10), attackerFatigue - 7);
+        EXPECT_EQ(service.getProcessAction(key), 3);
+        const auto committed = snapshot().serializeBinary();
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(strike, attacker, victim, {-7, -15, -7.5f}));
+        EXPECT_EQ(snapshot().serializeBinary(), committed);
+        service.restore(ESM4::RuntimeState::deserializeBinary(committed), world.getStore());
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(strike, attacker, victim, {-7, -15, -7.5f}));
+        EXPECT_EQ(snapshot().serializeBinary(), committed);
+        ASSERT_TRUE(service.finishMeleeStrike(strike, key));
+        EXPECT_EQ(service.getProcessAction(key), -1);
+    }
+
     TEST(OblivionWorldTest, NativeMeleeQueryCannotConvertUnavailablePhysicsIntoContactOrMiss)
     {
         NativeWorldFixture fixture;
@@ -3528,7 +3661,7 @@ namespace
         ASSERT_TRUE(service.advanceOrdinaryMeleePhase(strike, actor.getCellRef().getFormKey(),
             0, .3f, {0, .2f, .6f, 1}));
         const auto pending = snapshot();
-        EXPECT_FALSE(MWMechanics::commitOblivionOrdinaryMeleeMiss(world, strike, actor, {}, 64, 0));
+        EXPECT_FALSE(MWMechanics::commitOblivionOrdinaryMeleeContact(world, strike, actor, {}, 64, 0, 0, false));
         EXPECT_EQ(snapshot(), pending);
         EXPECT_TRUE(service.isOrdinaryMeleeContactPending(strike, actor.getCellRef().getFormKey()));
         ASSERT_TRUE(service.finishMeleeStrike(strike, actor.getCellRef().getFormKey()));

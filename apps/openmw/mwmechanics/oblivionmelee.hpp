@@ -33,12 +33,21 @@ namespace MWMechanics
     std::optional<MWWorld::Ptr> acquireOblivionMeleeContact(MWBase::World& world,
         std::uint64_t actionId, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& selectedTarget, float reach);
-    // Ordinary physical misses consume the owned action and spend native
-    // attack fatigue once. Unavailable physics and acquired victims return
-    // false without mutation; successful-hit policy is a separate adapter.
-    bool commitOblivionOrdinaryMeleeMiss(MWBase::World& world, std::uint64_t actionId,
-        const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
-        float reach, float weaponWeight);
+    struct OblivionOrdinaryContactResult
+    {
+        MWWorld::Ptr mVictim; // Empty means an acquired physical miss.
+        ESM4::PhysicalContactDamage mDamage{0, 0};
+    };
+    // Acquire actual collision/LOS contact, prepare native damage, then publish
+    // one owned transaction. Unavailable and unsupported contexts do not spend.
+    std::optional<OblivionOrdinaryContactResult> commitOblivionOrdinaryMeleeContact(
+        MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& selectedTarget, float reach, float weaponWeight,
+        float normalizedDifficulty, bool sneaking);
+
+    // Adapter for this fork's existing -100..100 GUI slider. Config values
+    // outside that UI range saturate; this is not native INI deserialization.
+    float oblivionNormalizedDifficulty(int difficultySetting);
 
     // Read native equipped condition and AV authority. This is a query, not
     // damage, block, wear or effect execution; shared TES3 ratings are not used.
@@ -54,6 +63,13 @@ namespace MWMechanics
     // creature natural attacks use a separate native damage path.
     ESM4::HandToHandDamage oblivionHandToHandContactDamage(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim);
+
+    // Read-only ordinary unarmed hit policy. Unsupported contact branches
+    // return nullopt; malformed or missing authority is diagnosed. Geometry
+    // and owned-action admission remain the contact caller's responsibility.
+    std::optional<ESM4::PhysicalContactDamage> resolveOblivionOrdinaryUnarmedContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float normalizedDifficulty, bool sneaking);
 
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor);
 

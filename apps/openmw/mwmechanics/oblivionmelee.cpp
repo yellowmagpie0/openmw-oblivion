@@ -152,19 +152,20 @@ namespace MWMechanics
             return MWWorld::Ptr{};
         return actors[*selected];
     }
-    bool commitOblivionOrdinaryMeleeMiss(MWBase::World& world, std::uint64_t actionId,
+    std::optional<OblivionOrdinaryContactResult> commitOblivionOrdinaryMeleeContact(
+        MWBase::World& world, std::uint64_t actionId,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
-        float reach, float weaponWeight)
+        float reach, float weaponWeight, float normalizedDifficulty, bool sneaking)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
         auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
         if (!service || attacker.isEmpty() || attacker.getType() == ESM::REC_CREA4)
-            return false; // Creature process/fatigue eligibility is a separate caller.
+            return std::nullopt; // Creature process/fatigue eligibility is a separate caller.
         const auto actor = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : attacker.getCellRef().getFormKey();
         if (!service->isOrdinaryMeleeContactPending(actionId, actor))
-            return false;
+            return std::nullopt;
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
@@ -173,9 +174,24 @@ namespace MWMechanics
         const float cost = ESM4::attackFatigueCost(weaponWeight, false,
             ESM4::buildAttackFatigueSettings(settings));
         const auto contact = acquireOblivionMeleeContact(world, actionId, attacker, selectedTarget, reach);
-        if (!contact || !contact->isEmpty())
-            return false;
-        return world.commitOblivionPhysicalContact(actionId, attacker, {}, {-cost, 0, 0});
+        if (!contact)
+            return std::nullopt;
+        OblivionOrdinaryContactResult result{*contact, {0, 0}};
+        if (!contact->isEmpty())
+        {
+            const auto* state = service->findMeleeState(actor);
+            if (!state || !state->mStrike || !state->mStrike->mWeaponBase.isNull())
+                return std::nullopt; // Weapon damage/wear has its own contact branch.
+            const auto damage = resolveOblivionOrdinaryUnarmedContact(world, attacker,
+                *contact, normalizedDifficulty, sneaking);
+            if (!damage)
+                return std::nullopt;
+            result.mDamage = *damage;
+        }
+        if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact,
+            {-cost, -result.mDamage.mHealth, -result.mDamage.mFatigue}))
+            return std::nullopt;
+        return result;
     }
 
     std::int16_t oblivionProcessAction(MWBase::World& world, const MWWorld::Ptr& actor)
@@ -272,6 +288,53 @@ namespace MWMechanics
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         return ESM4::handToHandContactDamage(input, ESM4::buildHandToHandSettings(settings),
             ESM4::buildPhysicalCombatSettings(settings));
+    }
+
+    float oblivionNormalizedDifficulty(int difficultySetting)
+    {
+        return static_cast<float>(double(std::clamp(difficultySetting, -100, 100)) / 100.0);
+    }
+
+    std::optional<ESM4::PhysicalContactDamage> resolveOblivionOrdinaryUnarmedContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float normalizedDifficulty, bool sneaking)
+    {
+        if (!std::isfinite(normalizedDifficulty) || normalizedDifficulty < -1 || normalizedDifficulty > 1)
+            throw std::invalid_argument("native unarmed contact difficulty outside normalized slider domain");
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service)
+            return std::nullopt;
+        const auto player = world.getPlayerPtr();
+        const auto eligible = [&](const MWWorld::Ptr& ptr) {
+            return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_NPC_4);
+        };
+        if (!service || !eligible(attacker) || !eligible(victim))
+            return std::nullopt; // Creature Fatigue eligibility is not NPC eligibility.
+        const auto integer = [&](const MWWorld::Ptr& ptr, std::uint8_t av) {
+            return ptr == player ? service->getPlayerIntegerValue(av)
+                : service->getNonPlayerIntegerValue(ptr, av);
+        };
+        // These branches require sneak/mastery, block or gear-wear policy.
+        // Do not substitute a generic TES3 hit or silently omit their effects.
+        if (sneaking || oblivionBlockingPosture(world, victim)
+            || integer(victim, 65) != 0)
+            return std::nullopt;
+        const auto incoming = oblivionHandToHandContactDamage(world, attacker, victim);
+        if (incoming.mFatigue <= 0)
+            return std::nullopt; // Native zero-Fatigue contacts enter armor wear.
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const auto armor = ESM4::mitigateArmor(incoming.mHealth, oblivionArmorRating(world, victim),
+            ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
+        const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
+            : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
+        return ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, armor.mHealthDamage,
+            normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
     }
 
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)
