@@ -1053,7 +1053,8 @@ namespace MWMechanics
         auto attacking = *validateActor(attacker, attackerKey);
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
             return false;
-        for (const float delta : {deltas.mAttackerFatigue, deltas.mVictimHealth, deltas.mVictimFatigue})
+        for (const float delta : {deltas.mAttackerFatigue, deltas.mVictimHealth,
+                 deltas.mVictimFatigue, deltas.mVictimBlockFatigue})
             if (!std::isfinite(delta))
                 throw std::invalid_argument("native physical contact requires finite resource deltas");
         ESM4::validateEssentialRecoverySettings(recovery);
@@ -1068,7 +1069,7 @@ namespace MWMechanics
         ESM::FormKey victimKey;
         if (victim.isEmpty())
         {
-            if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0)
+            if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0)
                 throw std::invalid_argument("native missed swing cannot change victim resources");
         }
         else
@@ -1080,6 +1081,7 @@ namespace MWMechanics
             receivingLife = *findActorLife(victimKey);
             if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead)
                 return false;
+            change(*receiving, 10, deltas.mVictimBlockFatigue);
             change(*receiving, 8, deltas.mVictimHealth);
             change(*receiving, 10, deltas.mVictimFatigue);
             if (receiving->mOwner == ESM4::ActorValueOwner::Player)

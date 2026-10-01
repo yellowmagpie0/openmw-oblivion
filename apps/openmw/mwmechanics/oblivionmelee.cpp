@@ -186,10 +186,12 @@ namespace MWMechanics
                 *contact, normalizedDifficulty, sneaking);
             if (!damage)
                 return std::nullopt;
-            result.mDamage = *damage;
+            result.mDamage = {damage->mHealth, damage->mFatigue};
+            result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
+            result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
         }
         if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact,
-            {-cost, -result.mDamage.mHealth, -result.mDamage.mFatigue}))
+            {-cost, -result.mDamage.mHealth, -result.mDamage.mFatigue, -result.mBlockFatigueDebit}))
             return std::nullopt;
         return result;
     }
@@ -295,7 +297,7 @@ namespace MWMechanics
         return static_cast<float>(double(std::clamp(difficultySetting, -100, 100)) / 100.0);
     }
 
-    std::optional<ESM4::PhysicalContactDamage> resolveOblivionOrdinaryUnarmedContact(
+    std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         float normalizedDifficulty, bool sneaking)
     {
@@ -318,8 +320,7 @@ namespace MWMechanics
         };
         // These branches require sneak/mastery, block or gear-wear policy.
         // Do not substitute a generic TES3 hit or silently omit their effects.
-        if (sneaking || oblivionBlockingPosture(world, victim)
-            || integer(victim, 65) != 0)
+        if (sneaking || integer(victim, 65) != 0)
             return std::nullopt;
         const auto incoming = oblivionHandToHandContactDamage(world, attacker, victim);
         if (incoming.mFatigue <= 0)
@@ -331,10 +332,47 @@ namespace MWMechanics
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         const auto armor = ESM4::mitigateArmor(incoming.mHealth, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
+        float remaining = armor.mHealthDamage;
+        float blockFraction = 0, blockDebit = 0;
+        if (oblivionBlockingPosture(world, victim) && !oblivionParalyzed(world, victim))
+        {
+            const auto& from = attacker.getRefData().getPosition();
+            const auto& to = victim.getRefData().getPosition();
+            const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
+            const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
+            const auto cone = ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy),
+                ESM4::buildCombatHitConeAngle(settings));
+            if (cone.mInside)
+            {
+                // Native process +F8/+EC selects actual shield/weapon entries.
+                // This branch supports an unarmed blocker: no blocking-item
+                // wear exists. Equipped blocking items require the wear branch.
+                auto& inventory = victim.getClass().getInventoryStore(victim);
+                const auto shield = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                if ((shield != inventory.end() && shield->getType() == ESM::REC_ARMO)
+                    || (weapon != inventory.end() && weapon->getType() == ESM::REC_WEAP))
+                    return std::nullopt;
+                const auto key = victim == player ? ESM::FormKey::dynamic("player", 1)
+                    : victim.getCellRef().getFormKey();
+                const auto base = [&](std::uint8_t av) { return victim == player ? service->getPlayerBaseValue(av)
+                    : service->getNonPlayerBaseValue(key, av, world.getStore()); };
+                const float fatigue = victim == player ? service->getPlayerValue(10)
+                    : service->getNonPlayerValue(victim, 10);
+                blockFraction = ESM4::blockFraction({integer(victim, 15), integer(victim, 7),
+                    ESM4::combatFatigueRatio(fatigue, base(10)), ESM4::BlockEquipment::Unarmed},
+                    ESM4::buildBlockSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
+                blockDebit = ESM4::blockContactCosts(base(15), integer(victim, 15), remaining,
+                    blockFraction, false, ESM4::buildBlockCostSettings(settings),
+                    ESM4::buildCombatMasterySettings(settings)).mFatigueDebit;
+                remaining = static_cast<float>(double(remaining) * (1.0 - blockFraction));
+            }
+        }
         const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
-        return ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, armor.mHealthDamage,
+        const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, remaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
+        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction};
     }
 
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)

@@ -161,8 +161,11 @@ Format of ``.omwscripts``
     # Script that will be automatically attached to the player
     PLAYER: scripts/my_mod/player.lua
 
-    # Local script that will be automatically attached to every NPC and every creature in the game
+    # Local script automatically attached to TES3 NPCs and creatures
     NPC, CREATURE: scripts/my_mod/some_other_script.lua
+
+    # Local script automatically attached to native TES4 NPCs and creatures
+    ESM4_NPC, ESM4_CREATURE: scripts/my_mod/native_actor.lua
 
     # Local script that can be attached to any object by a global script
     CUSTOM: scripts/my_mod/something.lua
@@ -187,12 +190,13 @@ Possible flags are:
 - ``BOOK`` - a local script that will be automatically attached to any book;
 - ``CLOTHING`` - a local script that will be automatically attached to any clothing;
 - ``CONTAINER`` - a local script that will be automatically attached to any container;
-- ``CREATURE`` - a local script that will be automatically attached to any creature;
+- ``CREATURE`` - a local script that will be automatically attached to any TES3 creature;
 - ``DOOR`` - a local script that will be automatically attached to any door;
 - ``INGREDIENT`` - a local script that will be automatically attached to any ingredient;
 - ``LIGHT`` - a local script that will be automatically attached to any light;
 - ``MISC_ITEM`` - a local script that will be automatically attached to any miscellaneous item;
-- ``NPC`` - a local script that will be automatically attached to any NPC;
+- ``NPC`` - a local script that will be automatically attached to any TES3 NPC;
+- ``ESM4_NPC`` and ``ESM4_CREATURE`` select the corresponding native TES4 actor types;
 - ``POTION`` - a local script that will be automatically attached to any potion;
 - ``WEAPON`` - a local script that will be automatically attached to any weapon;
 - ``APPARATUS`` - a local script that will be automatically attached to any apparatus;

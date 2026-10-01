@@ -4,10 +4,10 @@
 -- @module types
 -- @usage local types = require('openmw.types')
 
---- Common @{#Actor} functions for Creature, NPC, and Player.
+--- Common @{#Actor} functions for Creature, NPC, Player, ESM4NPC, and ESM4Creature.
 -- @field [parent=#types] #Actor Actor
 
---- Common functions for Creature, NPC, and Player.
+--- Common functions for Creature, NPC, Player, ESM4NPC, and ESM4Creature.
 -- @type Actor
 
 ---
@@ -2756,3 +2756,13 @@
 -- @field #string closeSound FormId of the door closing sound
 
 return nil
+
+--- Native TES4 NPC objects with the common @{#Actor} interface.
+-- @field [parent=#types] #ESM4NPC ESM4NPC
+-- @type ESM4NPC
+-- @extends #Actor
+
+--- Native TES4 creature objects with the common @{#Actor} interface.
+-- @field [parent=#types] #ESM4Creature ESM4Creature
+-- @type ESM4Creature
+-- @extends #Actor

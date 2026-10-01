@@ -37,6 +37,8 @@ namespace MWMechanics
     {
         MWWorld::Ptr mVictim; // Empty means an acquired physical miss.
         ESM4::PhysicalContactDamage mDamage{0, 0};
+        float mBlockFatigueDebit = 0;
+        float mBlockAbsorbedFraction = 0;
     };
     // Acquire actual collision/LOS contact, prepare native damage, then publish
     // one owned transaction. Unavailable and unsupported contexts do not spend.
@@ -67,7 +69,14 @@ namespace MWMechanics
     // Read-only ordinary unarmed hit policy. Unsupported contact branches
     // return nullopt; malformed or missing authority is diagnosed. Geometry
     // and owned-action admission remain the contact caller's responsibility.
-    std::optional<ESM4::PhysicalContactDamage> resolveOblivionOrdinaryUnarmedContact(
+    struct OblivionUnarmedContactDamage
+    {
+        float mHealth;
+        float mFatigue;
+        float mBlockFatigueDebit = 0;
+        float mBlockAbsorbedFraction = 0;
+    };
+    std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         float normalizedDifficulty, bool sneaking);
 

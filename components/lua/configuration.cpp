@@ -36,6 +36,8 @@ namespace LuaUtil
             { "LIGHT", ESM::REC_LIGH },
             { "MISC_ITEM", ESM::REC_MISC },
             { "NPC", ESM::REC_NPC_ },
+            { "ESM4_NPC", ESM::REC_NPC_4 },
+            { "ESM4_CREATURE", ESM::REC_CREA4 },
             { "POTION", ESM::REC_ALCH },
             { "WEAPON", ESM::REC_WEAP },
             { "APPARATUS", ESM::REC_APPA },

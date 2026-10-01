@@ -9656,3 +9656,96 @@ weapon/creature/power damage, wear and reactions, native opponent policy and all
 remaining acceptance gates. Previous checkpoint87 commit
  d1829e9ed606afd799be7b8acb551ac3c7c33ef5; verified bundle65 SHA256
 09c8f570039f53fa7c60135b4f3153d41d9d0c8cac00579edd9ba006b5bf76cc.
+
+### Checkpoint89 — unarmed block mitigation and separate Novice debit
+
+The acquired ordinary unarmed contact now checks native raw action6, integer
+Paralysis, and the victim-facing strict winning fCombatHitConeAngle. Unarmed
+blockers evaluate native integer Block/Luck and current/base Fatigue after
+armor, then scale Health and hand Fatigue before difficulty. Base Block selects
+Novice versus Apprentice cost admission. The World transaction prepares the
+block Fatigue debit separately before Health and hand Fatigue; adding these
+Fatigue amounts would lose original float-store behavior. Preparation remains
+atomic, owned contact consumes once, and schema26 needs no additional fields.
+Equipped shield/weapon blocking remains unsupported until condition/reaction
+policy is implemented. Sneak, nonzero ResistNormalWeapons, zero incoming hand
+Fatigue, WEAP/power/CREA and reactions remain open.
+
+Two new engine cases cover armor-before-block, native bindings and read-only
+queries, base Block0/24/25/49/50/100, strict facing/paralysis admission, malformed
+costs, atomic rejection, separate float stores at16777216 and save/restore
+without replay. The red baseline is retained. Main-01 failed compilation due
+to a test mutating a const position; main-02 exposed a test indexing modifier3
+in a three-channel C++ array, corrected to Damage2 and Paralysis Script1.
+These fixture errors are retained rather than reported as production defects.
+
+Native local Lua scripts have explicit ESM4_NPC/ESM4_CREATURE selectors; legacy
+NPC/CREATURE remain TES3. Both native type tables inherit the common Actor
+surface, preserving actual native classification and excluding TES3 NPC
+record-specific APIs. One new component case verifies separate selection and
+reload remapping. Its red baseline rejects the unknown native tag. Native NPC
+updates use onUpdate; onFrame is player-only. Runtime courses assert Actor
+membership, native parent identity and absence of legacy NPC membership.
+This narrow prerequisite does not imply TES4 MCP or all native Lua APIs.
+
+S4/native-unarmed-block-pipeline-oracle-01 passes120 observations/60 profiles
+in both x87 modes: original5FF894..8CF/full5F4880/5474A0, full547590 cost,
+5FF8F3..914 Health store,5FFEB5..6000E2 Fatigue ratio and full5E58F0/5E2560.
+Supplied armor remainder15, original20/Fatigue10 and actor AV/writer boundaries
+are explicit. Corpus SHA256ea43a53e8084cc6853e880af3714f00a6f0d8ee0e8dd84013f2de2a556b8cf1b.
+Runtime-oracle-03 adds original5F5C0F..69 mastery selection/full56A300 and a
+supplied5E07D0 writer recorder. Four observations/two profiles cover actual
+runtime incoming1.42/1.71 with Block5/25, Luck50 and current/base Fatigue155.
+Novice fraction0.01249999925494194 records debit20.012500762939453; Apprentice
+fraction0.0625 records no block debit. Corpus SHA256
+3b0e38219675e9aa7bdc2bb210fbef6c07a39ae72a0488088b93440279f7dc0d.
+The original modifier writers/reactions/equipment are outside that slice.
+Runtime-oracle-01 metadata incorrectly labelled supplied amounts; corrected-02
+is retained, and-03 adds mastery admission rather than pretending raw cost is
+always spent. Winning-block-settings.json independently audits installed GMSTs.
+
+Main-06 passes754 engine,2042 component and231 Python cases; sanitize-06 passes
+754 engine/2042 component cases. Exact inventories/XML, zero failures/skips
+and stable fingerprint0a444d08e6c7681658151f0e35c629f8fa584cf284e01bad7fb6416eacfa1395.
+ASan/UBSan halt on errors, leaks disabled. Main/sanitize-03 passed before the
+native Lua prerequisite;04 before corrected onUpdate,05 before Novice manifest,
+and06 includes final editable fixtures. Existing build warnings are retained.
+
+S4/native-unarmed-block-victim-offscreen-03 stages only the pinned original
+idle save's declared target geometry/restraint and writer migration26. Normal
+Player u input acquires script-controlled blocking Valen Dreth, whose original
+base Block is25. Exact Health Damage-1.3312499523162842 persists once in both
+saves; block fraction0.0625/debit0 and player140→133 match the oracle. Fresh
+process explicitly reissues NPC block, with no new attack/hit. Epochs13/
+16065110→14/16103095. Offscreen-04 explicitly sets native Block5 through the
+scheduled command before normal input; only that base override and AV15 change
+in addition to declared damage/process fields. Exact Health-1.4022499322891235
+persists once; block fraction0.0125/cost20.0125 match original profile5. Epochs
+13/16159581→12/16169519. Both final saves cap Fatigue through normal regeneration.
+Immediate NPC hand/block amounts are logged and covered by exact engine
+transaction tests, rather than independently queried before regeneration.
+All other prior AV/life/breath/death/engagement and reference inventories are
+preserved, with newly discovered references reported separately. Both courses
+have34674→36762→39111 references, inventories2021→2178→2420, prior actors9.
+Engine SHA256d3ea3d844c9c61ad84045fca121cee3b7266b024687ee9399f233bd2dc1b6ca6.
+Staged input SHA256276fb7c18e44bd6e62948497c3df9aa21dd28b435e2228e242ce7b11b4b66b36.
+All four final normal captures directly show the named target holding the
+blocking pose and full HUD. No contact-frame/reaction/audio/campaign claim.
+Offscreen-01 uses the legacy NPC selector so correctly attaches no native
+script;02 uses the native selector but unsupported NPC onFrame. Both fail
+required block markers and are retained with unblocked hits as controls.
+
+Additional sanitized runtime attempts01/02 fail before gameplay due to replay
+preload ordering, then a linker-script path mistaken for the shared library.
+Attempt03 uses the actual libasan.so.8.0.0 first and loads schema26, but expires
+during input delivery. Attempt04 increases scenario deadlines and still fails:
+the replay receipt has an independent fixed10-second timeout, shorter than
+instrumented whole-world frames. No sanitizer finding occurs, but no hit/save
+acceptance is established. The harness also labels that receipt timeout as an
+expired whole-scenario deadline. Both harness issues are the next bounded fix;
+this runtime sanitizer gate remains open. These failures are not waived.
+
+S2/S3 remain in progress and S4–S14 open. Next: shield/weapon wear, WEAP/power/
+CREA damage, reactions and native opponent policy, then all remaining M15
+acceptance gates. Previous checkpoint88 commit088270d4dc299e2367be4235294ba8d1f2be5c37;
+verified bundle66 SHA2565ae40866282a20cceabb8d01c0069e695d68d7d93a54700205fe3094681cbdc2.

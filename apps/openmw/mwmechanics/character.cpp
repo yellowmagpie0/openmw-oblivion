@@ -1439,6 +1439,8 @@ namespace MWMechanics
                                 << " action=" << service->getProcessAction(actor)
                                 << " health_damage=" << contact->mDamage.mHealth
                                 << " fatigue_damage=" << contact->mDamage.mFatigue
+                                << " block_fraction=" << contact->mBlockAbsorbedFraction
+                                << " block_fatigue=" << contact->mBlockFatigueDebit
                                 << " victim=" << (contact->mVictim.isEmpty() ? "none"
                                     : contact->mVictim == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1).serialize()
                                     : contact->mVictim.getCellRef().getFormKey().serialize());

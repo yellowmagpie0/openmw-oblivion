@@ -202,7 +202,8 @@ namespace MWLua
         };
 
         addActorBindings(
-            addType(ObjectTypeName::Actor, { ESM::REC_INTERNAL_PLAYER, ESM::REC_CREA, ESM::REC_NPC_ }), context);
+            addType(ObjectTypeName::Actor,
+                { ESM::REC_INTERNAL_PLAYER, ESM::REC_CREA, ESM::REC_NPC_, ESM::REC_NPC_4, ESM::REC_CREA4 }), context);
         addItemBindings(
             addType(ObjectTypeName::Item,
                 { ESM::REC_ARMO, ESM::REC_BOOK, ESM::REC_CLOT, ESM::REC_INGR, ESM::REC_LIGH, ESM::REC_MISC,
@@ -251,8 +252,8 @@ namespace MWLua
         addType(ObjectTypeName::ESM4Light, { ESM::REC_LIGH4 });
         addType(ObjectTypeName::ESM4MiscItem, { ESM::REC_MISC4 });
         addType(ObjectTypeName::ESM4MovableStatic, { ESM::REC_MSTT4 });
-        addType(ObjectTypeName::ESM4NPC, { ESM::REC_NPC_4 });
-        addType(ObjectTypeName::ESM4Creature, { ESM::REC_CREA4 });
+        addType(ObjectTypeName::ESM4NPC, { ESM::REC_NPC_4 }, ObjectTypeName::Actor);
+        addType(ObjectTypeName::ESM4Creature, { ESM::REC_CREA4 }, ObjectTypeName::Actor);
         addType(ObjectTypeName::ESM4Potion, { ESM::REC_ALCH4 });
         addType(ObjectTypeName::ESM4Static, { ESM::REC_STAT4 });
         addType(ObjectTypeName::ESM4StaticCollection, { ESM::REC_SCOL4 });

@@ -169,6 +169,9 @@ namespace MWMechanics
         float mAttackerFatigue = 0;
         float mVictimHealth = 0;
         float mVictimFatigue = 0;
+        // Native block caller writes this before Health/contact Fatigue. Keep
+        // the distinct float store rather than adding the two Fatigue deltas.
+        float mVictimBlockFatigue = 0;
     };
 
     struct OblivionPassiveEffectIdentity

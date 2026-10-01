@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <components/esm/records.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/formatversion.hpp>
@@ -62,6 +63,33 @@ namespace
         for (const auto& [k, v] : d)
             res.emplace_back(k, std::string(v));
         return res;
+    }
+
+    TEST(LuaConfigurationTest, NativeActorSelectorsRemainSeparateFromLegacyAndRemapIndependently)
+    {
+        ESM::LuaScriptsCfg cfg;
+        LuaUtil::parseOMWScripts(cfg, "NPC: legacy_npc.lua\nCREATURE: legacy_creature.lua\n"
+            "ESM4_NPC: native_npc.lua\nESM4_CREATURE: native_creature.lua\n"
+            "ESM4_NPC ESM4_CREATURE: native_actor.lua\n");
+        LuaUtil::ScriptsConfiguration conf;
+        conf.init(cfg, false);
+        const auto selected = [&](std::uint32_t type) { return asVector(conf.getLocalConf(type, {}, {})); };
+        EXPECT_THAT(selected(ESM::REC_NPC_), ElementsAre(Pair(0, "")));
+        EXPECT_THAT(selected(ESM::REC_CREA), ElementsAre(Pair(1, "")));
+        EXPECT_THAT(selected(ESM::REC_NPC_4), ElementsAre(Pair(2, ""), Pair(4, "")));
+        EXPECT_THAT(selected(ESM::REC_CREA4), ElementsAre(Pair(3, ""), Pair(4, "")));
+        EXPECT_TRUE(selected(ESM::REC_INTERNAL_PLAYER).empty());
+        EXPECT_TRUE(selected(ESM::REC_STAT4).empty());
+        ESM::LuaScriptsCfg replacement;
+        LuaUtil::parseOMWScripts(replacement, "ESM4_CREATURE: native_creature.lua\n"
+            "NPC: legacy_npc.lua\nESM4_NPC: native_npc.lua\n");
+        conf.init(replacement, true);
+        EXPECT_THAT(selected(ESM::REC_CREA4), ElementsAre(Pair(0, "")));
+        EXPECT_THAT(selected(ESM::REC_NPC_4), ElementsAre(Pair(2, "")));
+        EXPECT_THAT(selected(ESM::REC_NPC_), ElementsAre(Pair(1, "")));
+        EXPECT_TRUE(selected(ESM::REC_CREA).empty());
+        EXPECT_EQ(conf.mapId(0), 1); EXPECT_FALSE(conf.mapId(1));
+        EXPECT_EQ(conf.mapId(2), 2); EXPECT_EQ(conf.mapId(3), 0); EXPECT_FALSE(conf.mapId(4));
     }
 
     TEST(LuaConfigurationTest, ValidOMWScripts)
