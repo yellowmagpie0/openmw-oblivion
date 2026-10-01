@@ -5481,3 +5481,29 @@ use2/3/1 draws respectively, agreeing under both x87 words. Corpus SHA-256
 6246a3ca1c7590a7bca5f5e0155f725f6fa7d0226ec0540c10fbb061c4c4f8b8.
 The actual normal and sanitizer contacts/restarts are recorded separately in
 M15-COMBAT-STEALTH-CRIME.md; these expectations were frozen before launch.
+
+### Player god-mode armor guard occurs after selection (checkpoint101)
+
+Full65FF10 reads cheat byteB3BB06 and returns false without entering5F3870
+when enabled. It does not read condition or snap below-one gear in that branch.
+`S4/native-player-armor-guard-oracle-01` covers32 executions, god/wear0-or1,
+Light/Heavy skill5-or50 and both x87 words. Corpus SHA-256
+ab318d82a4b2488ae29f556f5a8451b91f0e15588650ceb42d8cfe52364c9a4f.
+Boundaries are the same native max/float/base/setting/bookkeeping/publication
+readers as checkpoint98; forwarding executes full original body/mastery paths.
+
+`native-player-armor-caller-oracle-02` executes original5FFBF9..5FFC6D,
+full5E5A00/47DF80/9859DD,65FF10 and admitted5F3870 paths:16 cases under both
+control words. Positive absorbed armor fraction and positive incoming wear
+select three draws fromseed1, next415139642, even when Player god mode suppresses
+the condition call. Nonpositive fraction or incoming wear makes no draws.
+Body Upper only, inventory/TLS readers and the condition boundaries are supplied;
+pre-entry non-CREA victim is declared. This does not execute the resource sink,
+armor formula, later skill-use/reactions or the full hit function.
+Corpus SHA-256e107d2e7539ae326da3b6ea6a28de790d37c3d596ea3a28421c1a50db12a9fe1.
+
+Retained `-caller-oracle-01` is invalid with zero completed corpus: stack+38
+was mislabelled victim Fatigue and a wrong stop sent execution into unconfigured
+continuation. Original5FF759 establishes that slot as absorbed armor fraction;
+zero skips selection. Corrected02 uses explicit actual branch stops and checks
+EIP/ESP. No production arithmetic or result corpus was tuned to this failure.

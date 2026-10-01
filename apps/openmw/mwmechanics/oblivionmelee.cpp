@@ -432,8 +432,6 @@ namespace MWMechanics
             if (wear <= 0)
                 return result;
             const bool player = victim == world.getPlayerPtr();
-            if (player && world.getGodModeState())
-                return std::nullopt; // Victim god-mode wear admission still needs its native caller branch.
             const auto key = player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
             const auto* values = service.findActorValues(key);
             if (!values)
@@ -477,6 +475,8 @@ namespace MWMechanics
                 throw std::logic_error("native armor selection random preparation mismatch");
             if (!selected.mSlot)
                 return result; // All seven failed draws still belong to this contact.
+            if (player && world.getGodModeState())
+                return result; // Original65FF10 suppresses condition after selection has consumed its draws.
             const auto& candidate = candidates[static_cast<unsigned>(*selected.mSlot)];
             const auto& ref = candidate.mItem.getCellRef();
             const double current = ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())

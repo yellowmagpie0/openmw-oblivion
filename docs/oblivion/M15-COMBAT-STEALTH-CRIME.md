@@ -10274,3 +10274,30 @@ are empty. Ordinary positive nonbreaking armor wear is now demonstrated for
 one Upper-body seed/course; other slots, equip flow, valid weapon blocks,
 break/reactions, Player god admission and all later open stages still require
 completion. S4 remains open.
+
+### Checkpoint101 — Player god-mode armor admission preserves selection draws
+
+Ordinary weapon armor selection now proceeds before the Player condition
+cheat guard. Selected draws publish with the owned contact, while the guarded
+Player armor condition is omitted. No below-one condition read/break is
+performed in that branch. Existing Player resource guards remain authoritative;
+NPC source attack cost and weapon wear still publish. Original full selection
+and Player wrapper admission are documented in the native provenance.
+
+One integration case compares ordinary and guarded preparation, exact seed1
+three-draw transition, read-only snapshots, malformed next-state rollback,
+Player Health/Fatigue/armor preservation, NPC weapon and Fatigue cost, duplicate
+rejection and binary clear/restore. A below-one Player item remains untouched
+under god mode while selection is prepared. This is headless World/service
+integration, not actual NPC-controller/normal-input acceptance of this branch.
+
+Retained `native-player-armor-guard-main-01`/`-sanitized-01` each failed only
+the new fixture: Player Fatigue140 was inconsistent with attributes deriving40,
+and publication recomputed40. Fixture attributes now sum140 and Player values
+are published through production dynamic-base preparation before the baseline.
+No production derivation was changed. Final `-main-02` and `-sanitized-02`
+each pass all761 engine cases, exact inventory/XML, zero skips/failures and
+stable tested source fingerprint `8401c65851b7b4fbb80101404d201a438cbfd1e16d4909b17319e1d950c7bc52`.
+No sanitizer findings; leaks disabled. Component/Python source unchanged.
+Normal-input NPC attacks, other armor slots, blocking equipment, breaks,
+reactions, audio and all later open gates still require completion. S4 is open.
