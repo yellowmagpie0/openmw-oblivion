@@ -37,6 +37,8 @@ MoveRight_description: "Can cancel out with Move Left."
 
 Use_name: "Use"
 Use_description: "Attack with a weapon or cast a spell depending on the current stance."
+Block_name: "Block"
+Block_description: "Hold to request blocking with a readied weapon in Oblivion."
 
 Run_name: "Run"
 Run_description: "Hold to run/walk depending on the Always Run setting."

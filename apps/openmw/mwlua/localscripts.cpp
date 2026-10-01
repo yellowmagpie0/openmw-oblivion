@@ -69,6 +69,7 @@ namespace MWLua
         controls["sneak"] = CONTROL(bool, mSneak);
         controls["jump"] = CONTROL(bool, mJump);
         controls["use"] = CONTROL(MWMechanics::AttackType, mUse);
+        controls["block"] = CONTROL(bool, mBlock);
 #undef CONTROL
 
         sol::usertype<SelfObject> selfAPI

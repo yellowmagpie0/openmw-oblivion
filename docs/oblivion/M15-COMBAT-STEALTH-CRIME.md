@@ -9275,3 +9275,47 @@ posture/animation scheduling, actual strike action publication, acquired-victim
 damage/condition/reactions and the remaining plan gates. Previous checkpoint81
 commitc3a24c29b99be9f964d7102914864c8f4dc2f563; verified bundle59 SHA256
 e3ccc6ca2fc60216c0f09fa69a5d849f3de4079deeb9aa289364c2fcfcecc873.
+
+### Checkpoint83 — transient native block input plumbing
+
+Stable input action51 adds remappable Block without renumbering older actions.
+Oblivion defaults right mouse to Block; Morrowind retains right-mouse Inventory
+and hides the new C++ binding description. Lua exposes Boolean controls.block
+(defaultfalse), a Boolean Block action and left-trigger threshold0.6. The trigger
+is suppressed during held POV camera preview. Builtin player controls request
+block only with drawn weapon, enabled Controls/Fighting, no menu/pause or
+paralysis (existing god-mode exception); a combat-controls override retains
+custom script ownership. Loading clears transient block; it is not serialized
+in builtin player controls. No native posture/absorption is inferred from intent.
+The gameplay consumer is the next chunk, within the existing native controller.
+
+Two behavioral Python/LuaJIT cases execute the shipped Lua scripts with mocked
+engine API boundaries:64 control combinations plus paralysis/god/override/load/
+save, and24 mouse/trigger/POV combinations. The LuaJIT executable is required
+for these tests. A focused first attempt had the mock colon-method signature
+wrong; corrected async callback wrapping passes. S3/native-block-input-main-01
+passes738 engine and231 Python cases; native-block-input-sanitized-01 passes738
+ASan/UBSan engine cases. Exact inventories, no skipped/failed cases or source
+drift; leak detection disabled. Tested fingerprint:
+dbbe0c3c4e2644201146b2599f5edc8d79c5d5551a78ebc93690ba11613e0d1b.
+
+S4/native-block-input-offscreen-02 verifies the actual C++ Lua property through
+normal keyboard action51 (remapped to B): false/holdtrue/Tab-menufalse/Escape-
+heldtrue/releasefalse; save/quit/fresh-load observes onlyfalse. All nine original
+native actor values, life/breath/base/death/engagement/action fields are unchanged;
+no attack is selected/restored. Reference counts34674→34896→34904 are legitimate
+load discoveries, not claimed equal. Both captures were directly reviewed:
+ordinary dungeon scene with full HUD resources, no block pose acceptance.
+Engine SHA2561b95488e5b552c5fdbeb71dc9459fb786579afc470742476724c2e44237db485;
+epochs PID13/start14672697 andPID12/start14680400 on the recorded boot ID.
+Retained offscreen-01 rejected unescaped Lua braces during manifest formatting
+before engine launch; offscreen-02 escapes literal braces. Fresh process and
+independent save/trace/pristine-input checks pass in verification.json.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: native block posture6 and
+actual family block animations with interruption/release/restore ownership,
+verified strike process action transitions, then acquired contact damage and
+all remaining plan gates. Full Lua/API/editor/Morrowind/performance gates remain
+open; this input test is deliberately smaller. Previous checkpoint82 commit
+5ef71db4d28feb9bdef00859737868ed4b135a78; verified bundle60 SHA256
+62a6b975d231a837a2769637ad23980083a8eba8880883dd06b3bd5108a69979.

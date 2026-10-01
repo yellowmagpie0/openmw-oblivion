@@ -75,6 +75,11 @@ bindHold('TogglePOV', input.ACTION.TogglePOV)
 bindHold('Sneak', input.ACTION.Sneak)
 
 bindHold('Run', input.ACTION.Run)
+input.bindAction('Block', async:callback(function()
+    return input.isActionPressed(input.ACTION.Block)
+        or (not input.isActionPressed(input.ACTION.TogglePOV)
+            and input.getAxisValue(input.CONTROLLER_AXIS.TriggerLeft) >= 0.6)
+end), {})
 input.bindAction('Run', async:callback(function(_, value)
     local controllerInput = util.vector2(
         input.getAxisValue(input.CONTROLLER_AXIS.MoveForwardBackward),

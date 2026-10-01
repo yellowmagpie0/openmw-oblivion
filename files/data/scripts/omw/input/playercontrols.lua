@@ -32,6 +32,7 @@ do
 
     local booleanActions = {
         'Use',
+        'Block',
         'Run',
         'Sneak',
     }
@@ -184,6 +185,14 @@ local function processAttacking()
     startUse = false
 end
 
+local function processBlocking()
+    if combatControlsOverridden then return end
+    self.controls.block = combatAllowed()
+        and Player.getControlSwitch(self, Player.CONTROL_SWITCH.Fighting)
+        and Actor.getStance(self) == Actor.STANCE.Weapon
+        and input.getBooleanActionValue('Block')
+end
+
 local uiControlsOverridden = false
 
 local function uiAllowed()
@@ -231,6 +240,7 @@ local function onFrame(_)
     if combatAllowed() then
         processAttacking()
     end
+    processBlocking()
     attemptToJump = false
 end
 
@@ -241,6 +251,8 @@ local function onSave()
 end
 
 local function onLoad(data)
+    -- Held input is transient; it must be resampled after loading.
+    self.controls.block = false
     if not data then return end
     self.controls.sneak = data.sneaking or false
 end

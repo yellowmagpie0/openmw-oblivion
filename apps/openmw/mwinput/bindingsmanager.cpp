@@ -303,6 +303,8 @@ namespace MWInput
         std::map<int, int> defaultMouseButtonBindings;
         if (mGameProfile != ESM::GameProfile::Oblivion)
             defaultMouseButtonBindings[A_Inventory] = SDL_BUTTON_RIGHT;
+        else
+            defaultMouseButtonBindings[A_Block] = SDL_BUTTON_RIGHT;
         defaultMouseButtonBindings[A_Use] = SDL_BUTTON_LEFT;
 
         std::map<int, ICS::InputControlSystem::MouseWheelClick> defaultMouseWheelBindings;
@@ -525,6 +527,8 @@ namespace MWInput
                 return "#{sQuickLoadCmd}";
             case A_TogglePostProcessorHUD:
                 return "#{OMWEngine:TogglePostProcessorHUD}";
+            case A_Block:
+                return mGameProfile == ESM::GameProfile::Oblivion ? "#{OMWControls:Block_name}" : std::string_view{};
             default:
                 return {}; // not configurable
         }
@@ -584,7 +588,7 @@ namespace MWInput
     const std::initializer_list<int>& BindingsManager::getActionKeySorting()
     {
         static const std::initializer_list<int> actions{ A_MoveForward, A_MoveBackward, A_MoveLeft, A_MoveRight,
-            A_TogglePOV, A_ZoomIn, A_ZoomOut, A_Run, A_AlwaysRun, A_Sneak, A_Activate, A_Use, A_ToggleWeapon,
+            A_TogglePOV, A_ZoomIn, A_ZoomOut, A_Run, A_AlwaysRun, A_Sneak, A_Activate, A_Use, A_Block, A_ToggleWeapon,
             A_ToggleSpell, A_CycleSpellLeft, A_CycleSpellRight, A_CycleWeaponLeft, A_CycleWeaponRight, A_AutoMove,
             A_Jump, A_Inventory, A_Journal, A_Rest, A_Console, A_QuickSave, A_QuickLoad, A_ToggleHUD, A_Screenshot,
             A_QuickKeysMenu, A_QuickKey1, A_QuickKey2, A_QuickKey3, A_QuickKey4, A_QuickKey5, A_QuickKey6, A_QuickKey7,
@@ -595,7 +599,7 @@ namespace MWInput
     const std::initializer_list<int>& BindingsManager::getActionControllerSorting()
     {
         static const std::initializer_list<int> actions{ A_MoveForward, A_MoveBackward, A_MoveLeft, A_MoveRight,
-            A_TogglePOV, A_ZoomIn, A_ZoomOut, A_Sneak, A_Activate, A_Use, A_ToggleWeapon, A_ToggleSpell, A_AutoMove,
+            A_TogglePOV, A_ZoomIn, A_ZoomOut, A_Sneak, A_Activate, A_Use, A_Block, A_ToggleWeapon, A_ToggleSpell, A_AutoMove,
             A_Jump, A_Inventory, A_Journal, A_Rest, A_QuickSave, A_QuickLoad, A_ToggleHUD, A_Screenshot,
             A_QuickKeysMenu, A_QuickKey1, A_QuickKey2, A_QuickKey3, A_QuickKey4, A_QuickKey5, A_QuickKey6, A_QuickKey7,
             A_QuickKey8, A_QuickKey9, A_QuickKey10, A_CycleSpellLeft, A_CycleSpellRight, A_CycleWeaponLeft,
