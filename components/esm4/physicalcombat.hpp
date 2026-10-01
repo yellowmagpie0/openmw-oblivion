@@ -47,6 +47,11 @@ namespace ESM4
     // than collecting independently named keys or sorting a renderer map.
     // Missing/unwritten slots retain the original zero initialization.
     OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
+    // Original raw Blend: decimal parsing stores the low byte; last match wins.
+    // Integer overflow and malformed leading CR without LF are unsupported.
+    std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys);
+    float meleeBlendDuration(std::optional<std::uint8_t> priorFrames,
+        std::uint8_t frames, float defaultDuration);
 
     enum class OrdinaryMeleePhase : std::uint8_t { Start, Contact, Queue, End };
     // Original ordinary subtype4 slots: Start, Hit, a:, End. Advance at most
@@ -82,6 +87,19 @@ namespace ESM4
     // actual controlled transforms. Does not change its input state.
     MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
         float animationClock, float frequency, float begin, float end);
+
+    struct OrdinaryMeleeFrame
+    {
+        float mClock;
+        OrdinaryMeleePhase mPhase;
+        MeleeSequenceTiming mTiming;
+        friend bool operator==(const OrdinaryMeleeFrame&, const OrdinaryMeleeFrame&) = default;
+    };
+    // Common ordinary slot frame prefix, then unsynchronized clamp manager
+    // update. freezeClock models original mode5, not slot freezes3/6.
+    OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
+        float duration, float speed, float frequency, float begin, float end,
+        const std::array<float, 4>& keyTimes, bool freezeClock = false);
 
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings

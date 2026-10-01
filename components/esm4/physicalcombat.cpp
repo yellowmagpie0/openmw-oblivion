@@ -102,6 +102,76 @@ namespace ESM4
         return result;
     }
 
+    std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys)
+    {
+        for (const auto& key : textKeys)
+            finite(key.mTime);
+        std::uint8_t frames = 0;
+        constexpr std::string_view prefix = "blend:";
+        for (const auto& key : textKeys)
+        {
+            auto remaining = key.mText.substr(0, key.mText.find('\0'));
+            while (!remaining.empty())
+            {
+                if (remaining.front() == '\r')
+                {
+                    const auto lf = remaining.find('\n');
+                    if (lf == std::string_view::npos)
+                        throw std::invalid_argument("unsupported native key with leading bare CR");
+                    remaining.remove_prefix(lf);
+                    while (!remaining.empty() && (remaining.front() == '\r' || remaining.front() == '\n'))
+                        remaining.remove_prefix(1);
+                    if (remaining.empty())
+                        break;
+                }
+                bool match = remaining.size() >= prefix.size();
+                for (std::size_t i = 0; match && i < prefix.size(); ++i)
+                {
+                    const auto c = remaining[i];
+                    match = (c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c) == prefix[i];
+                }
+                if (match)
+                {
+                    auto number = remaining.substr(prefix.size());
+                    while (!number.empty() && (number.front() == ' '
+                        || (number.front() >= '\t' && number.front() <= '\r')))
+                        number.remove_prefix(1);
+                    const bool negative = !number.empty() && number.front() == '-';
+                    if (!number.empty() && (number.front() == '-' || number.front() == '+'))
+                        number.remove_prefix(1);
+                    std::uint64_t magnitude = 0;
+                    const std::uint64_t limit = negative ? 2147483648u : 2147483647u;
+                    while (!number.empty() && number.front() >= '0' && number.front() <= '9')
+                    {
+                        const unsigned digit = number.front() - '0';
+                        if (magnitude > (limit - digit) / 10)
+                            throw std::invalid_argument("unsupported native Blend integer overflow");
+                        magnitude = magnitude * 10 + digit;
+                        number.remove_prefix(1);
+                    }
+                    const auto value = negative ? -static_cast<std::int64_t>(magnitude)
+                        : static_cast<std::int64_t>(magnitude);
+                    frames = static_cast<std::uint8_t>(value);
+                }
+                const auto lf = remaining.find('\n');
+                if (lf == std::string_view::npos)
+                    break;
+                remaining.remove_prefix(lf);
+                while (!remaining.empty() && (remaining.front() == '\r' || remaining.front() == '\n'))
+                    remaining.remove_prefix(1);
+            }
+        }
+        return frames;
+    }
+
+    float meleeBlendDuration(std::optional<std::uint8_t> priorFrames,
+        std::uint8_t frames, float defaultDuration)
+    {
+        nonnegative(defaultDuration);
+        const auto selected = std::max(priorFrames.value_or(0), frames);
+        return selected == 0 ? defaultDuration : rounded(double(selected) / 30.0);
+    }
+
     OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
         float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes)
     {
@@ -192,6 +262,28 @@ namespace ESM4
         result.mLastInput = input;
         result.mOutputTime = std::clamp(result.mWeightedTime, begin, end);
         return result;
+    }
+
+    OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
+        float duration, float speed, float frequency, float begin, float end,
+        const std::array<float, 4>& keyTimes, bool freezeClock)
+    {
+        nonnegative(duration);
+        nonnegative(speed);
+        if (speed == 0 || frame.mTiming.mOffset.has_value() != frame.mTiming.mEaseStart.has_value()
+            || frame.mTiming.mOffset.has_value() != frame.mTiming.mLastInput.has_value())
+            throw std::invalid_argument("unsupported ordinary sequence initialization or speed");
+        // Validate all keys/phase even while easing/frozen/uninitialized.
+        (void)advanceOrdinaryMeleePhase(frame.mPhase, 0, 0, keyTimes);
+        auto next = frame;
+        next.mClock = advanceMeleeAnimationClock(frame.mClock, freezeClock ? 0.f : duration);
+        if (!freezeClock && !frame.mTiming.mEasing && frame.mTiming.mOffset)
+        {
+            next.mTiming.mOffset = correctMeleeSequenceOffset(*frame.mTiming.mOffset, begin, speed, duration);
+            next.mPhase = advanceOrdinaryMeleePhase(frame.mPhase, *next.mTiming.mOffset, next.mClock, keyTimes);
+        }
+        next.mTiming = updateMeleeSequenceTiming(next.mTiming, next.mClock, frequency, begin, end);
+        return next;
     }
 
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)

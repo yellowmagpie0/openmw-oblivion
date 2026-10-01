@@ -7054,3 +7054,81 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(OblivionActorStatsTest, ordinarySequenceFramesPublishAtomicallyAndResumeSavedHistory)
+    {
+        autoNpc(); sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3}; reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey; values.mBase = mActorKey; values.mValues[8].mBase = 100;
+
+        values.mValues[10].mBase = 60;
+
+        service.publishNonPlayerValues(ptr, values);
+        service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto id = service.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left,
+            "handtohandattackleft", 2);
+        const std::array<float, 4> keys{0, .2f, .6f, 1};
+        EXPECT_FALSE(service.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 1, 0, 1, keys));
+        EXPECT_EQ(service.animationClock(values.mActor), 0);
+        service.advanceAnimationClock(values.mActor, 0);
+        ESM4::MeleeSequenceTiming timing;
+        timing.mEasing = true; timing.mEaseEnd = .1f;
+        ASSERT_TRUE(service.setMeleeSequenceTiming(id, values.mActor, timing));
+        ASSERT_TRUE(service.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 1, 0, 1, keys));
+        EXPECT_EQ(service.animationClock(values.mActor), .1f);
+        EXPECT_EQ(service.findMeleeState(values.mActor)->mStrike->mSequenceTiming->mOutputTime, 0);
+        ASSERT_TRUE(service.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 1, 0, 1, keys));
+        service.updateMeleeAnimation(id, values.mActor, .1f);
+        EXPECT_EQ(service.animationClock(values.mActor), .2f);
+        EXPECT_EQ(service.findMeleeState(values.mActor)->mStrike->mOrdinaryPhase, ESM4::OrdinaryMeleePhase::Start);
+        EXPECT_FALSE(service.findMeleeState(values.mActor)->mStrike->mSequenceTiming->mEasing);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = values.mActor; savedActor.mBase = values.mBase; savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved); const auto before = saved.serializeBinary();
+        EXPECT_THROW(service.advanceOrdinaryMeleeSequence(id, values.mActor, -.1f, 1, 0, 1, keys, true), std::invalid_argument);
+        EXPECT_THROW(service.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 0, 0, 1, keys), std::invalid_argument);
+        EXPECT_THROW(service.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 1, 0, 1,
+            {0, .6f, .2f, 1}), std::invalid_argument);
+        EXPECT_FALSE(service.advanceOrdinaryMeleeSequence(id + 1, values.mActor, .1f, 1, 0, 1, keys));
+        EXPECT_FALSE(service.advanceOrdinaryMeleeSequence(id, ESM::FormKey::content("foreign.esm", 1), .1f, 1, 0, 1, keys));
+        service.capture(saved); EXPECT_EQ(saved.serializeBinary(), before);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(before));
+        ASSERT_TRUE(restored.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 1, 0, 1, keys));
+        ASSERT_TRUE(service.advanceOrdinaryMeleeSequence(id, values.mActor, .1f, 1, 0, 1, keys));
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike, service.findMeleeState(values.mActor)->mStrike);
+        EXPECT_EQ(restored.animationClock(values.mActor), .3f);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mOrdinaryPhase, ESM4::OrdinaryMeleePhase::Contact);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mSequenceTiming->mOutputTime, .3f);
+        EXPECT_TRUE(restored.isActionPending(id, values.mActor)); // Timing does not dispatch contact.
+        ASSERT_TRUE(restored.advanceOrdinaryMeleeSequence(id, values.mActor, 10, 1, 0, 1, keys, true));
+        EXPECT_EQ(restored.animationClock(values.mActor), .3f);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mOrdinaryPhase, ESM4::OrdinaryMeleePhase::Contact);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mSequenceTiming->mOutputTime, .3f);
+        EXPECT_TRUE(restored.finishMeleeStrike(id, values.mActor));
+        EXPECT_EQ(restored.animationClock(values.mActor), .3f);
+        EXPECT_TRUE(restored.isActionConsumed(id));
+    }
+}

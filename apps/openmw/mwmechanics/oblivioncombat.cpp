@@ -819,6 +819,34 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::advanceOrdinaryMeleeSequence(std::uint64_t id,
+        const ESM::FormKey& actor, float duration, float frequency, float begin, float end,
+        const std::array<float, 4>& keyTimes, bool freezeClock)
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mStrike
+            || found->second.mStrike->mActionId != id)
+            return false;
+        auto& strike = *found->second.mStrike;
+        if (strike.mKind > ESM4::MeleeStrikeKind::Right || !strike.mSequenceTiming)
+            return false;
+        const auto clock = mAnimationClocks.find(actor);
+        if (clock == mAnimationClocks.end())
+            throw std::invalid_argument("ordinary sequence frame requires its actor clock");
+        const auto next = ESM4::advanceOrdinaryMeleeFrame(
+            {clock->second, strike.mOrdinaryPhase, *strike.mSequenceTiming}, duration,
+            strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock);
+        auto candidate = strike;
+        candidate.mOrdinaryPhase = next.mPhase;
+        candidate.mSequenceTiming = next.mTiming;
+        candidate.validate();
+        static_assert(std::is_nothrow_copy_assignable_v<ESM4::MeleeSequenceTiming>);
+        clock->second = next.mClock;
+        strike.mOrdinaryPhase = next.mPhase;
+        strike.mSequenceTiming = next.mTiming;
+        return true;
+    }
+
     bool OblivionCombatService::finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
     {
         const auto found = mMeleeStates.find(actor);

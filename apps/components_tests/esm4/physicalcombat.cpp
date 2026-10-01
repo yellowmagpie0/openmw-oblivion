@@ -2121,3 +2121,71 @@ TEST(ESM4PhysicalCombat, NativeSequenceTimingRejectsUnsupportedInputsWithoutMuta
         std::invalid_argument);
     EXPECT_EQ(state, ESM4::MeleeSequenceTiming{});
 }
+
+TEST(ESM4PhysicalCombat, AuthoredBlendKeepsOriginalDecimalByteAndLastMatch)
+{
+    // Literal outputs of original51B688/983479, not renderer-trimmed keys.
+    for (const auto& [text, expected] : std::vector<std::pair<std::string_view, unsigned>>{
+             {"Blend: 0", 0}, {"bLeNd: 10", 10}, {"Blend: -1", 255}, {"Blend: 256", 0},
+             {"Blend: 257", 1}, {"Blend: 10abc", 10}, {"Blend: x", 0}, {" Blend: 25", 0},
+             {"Blend: +25", 25}, {"Blend: 2.5", 2}, {"Blend: \t50", 50},
+             {"Blend: 9\r\nBlend: 20", 20}, {"Blend: 9\rBlend: 20", 9},
+             {"\r\nBlend: 20", 20}, {"Blend: 2147483647", 255}, {"Blend: -2147483648", 0}})
+    {
+        const std::array keys{ESM4::MeleeTextKey{0, text}};
+        EXPECT_EQ(ESM4::meleeBlendFrames(keys), expected) << text;
+    }
+    const std::array repeated{ESM4::MeleeTextKey{0, "Blend: 255"},
+        ESM4::MeleeTextKey{1, "unrelated"}, ESM4::MeleeTextKey{2, "Blend: 256"}};
+    EXPECT_EQ(ESM4::meleeBlendFrames(repeated), 0);
+    const std::array nul{ESM4::MeleeTextKey{0, std::string_view("Blend: 9\0Blend: 20", 18)}};
+    EXPECT_EQ(ESM4::meleeBlendFrames(nul), 9);
+    EXPECT_EQ(ESM4::meleeBlendFrames({}), 0);
+    EXPECT_EQ(ESM4::meleeBlendDuration({}, 0, .1f), .1f);
+    EXPECT_EQ(ESM4::meleeBlendDuration(0, 0, .25f), .25f);
+    EXPECT_EQ(ESM4::meleeBlendDuration(10, 5, .1f), .3333333432674408f);
+    EXPECT_EQ(ESM4::meleeBlendDuration({}, 255, .1f), 8.5f);
+    EXPECT_EQ(ESM4::meleeBlendDuration(1, 10, .1f), .3333333432674408f);
+    for (const auto text : {"Blend: 2147483648", "Blend: -2147483649", "Blend: 99999999999999999999", "\rBlend: 20"})
+    {
+        const std::array invalid{ESM4::MeleeTextKey{0, text}};
+        EXPECT_THROW(ESM4::meleeBlendFrames(invalid), std::invalid_argument);
+    }
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::meleeBlendDuration({}, 10, bad), std::invalid_argument);
+    const std::array badTime{ESM4::MeleeTextKey{std::numeric_limits<float>::infinity(), "Blend: 10"}};
+    EXPECT_THROW(ESM4::meleeBlendFrames(badTime), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, OrdinaryFrameOrdersActivationEasePhaseAndManagerTime)
+{
+    using Phase = ESM4::OrdinaryMeleePhase;
+    const std::array<float, 4> keys{0, .2f, .6f, 1};
+    ESM4::OrdinaryMeleeFrame initial{0, Phase::Start, {}};
+    initial.mTiming.mEasing = true; initial.mTiming.mEaseEnd = .1f;
+    const auto first = ESM4::advanceOrdinaryMeleeFrame(initial, .1f, 2, 1, 0, 1, keys);
+    EXPECT_EQ(first.mClock, .1f); EXPECT_EQ(first.mPhase, Phase::Start);
+    EXPECT_EQ(first.mTiming.mOffset, -.1f); EXPECT_EQ(first.mTiming.mOutputTime, 0);
+    EXPECT_EQ(first.mTiming.mEaseEnd, .2f); EXPECT_TRUE(first.mTiming.mEasing);
+    const auto second = ESM4::advanceOrdinaryMeleeFrame(first, .1f, 2, 1, 0, 1, keys);
+    EXPECT_EQ(second.mClock, .2f); EXPECT_FALSE(second.mTiming.mEasing);
+    EXPECT_EQ(second.mPhase, Phase::Start); EXPECT_EQ(second.mTiming.mOutputTime, .1f);
+    const auto frozen = ESM4::advanceOrdinaryMeleeFrame(second, 10, 2, 1, 0, 1, keys, true);
+    EXPECT_EQ(frozen.mClock, second.mClock); EXPECT_EQ(frozen.mPhase, second.mPhase);
+    EXPECT_EQ(frozen.mTiming.mOffset, second.mTiming.mOffset);
+    EXPECT_EQ(frozen.mTiming.mOutputTime, second.mTiming.mOutputTime);
+    const auto third = ESM4::advanceOrdinaryMeleeFrame(second, .1f, 2, 1, 0, 1, keys);
+    EXPECT_EQ(third.mPhase, Phase::Contact); EXPECT_EQ(third.mTiming.mOffset, 0);
+    EXPECT_EQ(third.mTiming.mOutputTime, .3f);
+    const auto fourth = ESM4::advanceOrdinaryMeleeFrame(third, 1, 2, 1, 0, 1, keys);
+    EXPECT_EQ(fourth.mPhase, Phase::Queue); EXPECT_EQ(fourth.mTiming.mOutputTime, 1);
+    const auto fifth = ESM4::advanceOrdinaryMeleeFrame(fourth, 0, 2, 1, 0, 1, keys);
+    EXPECT_EQ(fifth.mPhase, Phase::End); // One strict phase step even on a zero-duration call.
+    EXPECT_EQ(initial.mClock, 0); EXPECT_FALSE(initial.mTiming.mOffset);
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleeFrame(initial, -.1f, 1, 1, 0, 1, keys, true), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleeFrame(initial, .1f, 0, 1, 0, 1, keys), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleeFrame(initial, .1f, 1, 0, 0, 1, keys), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleeFrame(initial, .1f, 1, 1, 0, 1, {0, .6f, .2f, 1}), std::invalid_argument);
+    auto partial = initial; partial.mTiming.mOffset = 0;
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleeFrame(partial, .1f, 1, 1, 0, 1, keys), std::invalid_argument);
+}

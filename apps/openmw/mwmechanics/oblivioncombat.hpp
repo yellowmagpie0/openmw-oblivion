@@ -279,6 +279,11 @@ namespace MWMechanics
         // inferred contact or renderer clock mutation occurs here.
         bool advanceOrdinaryMeleePhase(std::uint64_t id, const ESM::FormKey& actor,
             float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes);
+        // Publish clock, ordinary phase and sequence timing together after all
+        // validation. Requires initialized timing; no contact/render callbacks.
+        bool advanceOrdinaryMeleeSequence(std::uint64_t id, const ESM::FormKey& actor,
+            float duration, float frequency, float begin, float end,
+            const std::array<float, 4>& keyTimes, bool freezeClock = false);
         bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
         std::uint64_t allocateAction();
         // An owned intent requires initialized Alive authority. Allocation

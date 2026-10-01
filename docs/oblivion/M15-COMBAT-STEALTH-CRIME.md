@@ -8597,3 +8597,76 @@ S4–S14 remain open. Next: native ordinary timing/controller/contact integratio
 Previous checkpoint67 commit21d7c7c5c1b515fab79f78eaa579f8e223a205b2;
 verified bundle45 SHA256
 828e6eb2fe2ad5a258a52635b53dcbcc21369e9b44ef30bed61d5b72f1c06c80.
+
+### Checkpoint69 — ordinary frame authority and authored blend rules
+
+The immutable ordinary frame transition composes actor-clock addition, active
+sequence speed correction, strict single phase advancement and the subsequent
+unsynchronized clamp sequence-manager time conversion. Easing and uninitialized
+sequences skip active phase/speed correction; the manager initializes timing and
+finishes easing inclusively, making the phase path eligible on the following
+frame. Original mode5 clock freeze preserves clock/phase and an initialized offset while the manager
+still updates its stored history. This does not model slot-only freezes3/6.
+Finite/bounded inputs, positive speed/frequency, complete optional initialization
+and ordered nonnegative four-key metadata validate before return. The result
+contains clock, phase and the full timing history without mutating its input.
+
+The combat service now advances an existing ordinary owned strike through this
+transition. Stale/foreign IDs, powers and absent timing return false; timing
+requires the actor clock. It prepares and validates the candidate before writing
+clock/phase/timing with nonthrowing scalar publication. No ID is allocated or
+consumed and no contact/resource/render callback is issued. Actual service tests
+verify uninitialized rejection, activation/ease/phase order, failed-frame exact
+save-byte atomicity, foreign/stale rejection, saved-history restart equivalence,
+frozen progression and clock survival after strike completion. This method is
+not yet called by Character, which still uses shared playback and unadvanced
+ordinary phases; this is not normal-input timing/contact acceptance.
+
+The raw Blend: parser preserves authored order, ASCII case-insensitive prefix
+matching without space trim, NUL boundary and original CR/LF traversal. Original
+atoi-compatible whitespace/sign/digit-prefix parsing stores the low uint8 byte;
+last matching key wins, including zero replacing a previous nonzero value.
+Supported integers are bounded to int32; overflow and a malformed leading bare
+CR without LF reject explicitly instead of claiming original undefined behavior.
+The separate duration rule selects max(prior,new)/30, using caller-supplied
+validated default duration when zero. Special UI/root/forced-zero/global-speed
+branches remain caller-owned and are not implemented by this duration rule.
+
+S4/native-blend-key-oracle-03 executes1124 original full raw loops including
+signed/full-byte-range/whitespace/last-key/NUL/CRLF cases, actual original decimal
+conversion, and only the existing diagnostic logger boundary. Oracle02's native
+bare-CR fault remains, with trace/registers and completed observations. Original
+activation-prefix duration oracle01 supplies3072 cases with both x87 modes, no
+called-function stubs. Native-blend-comparison-01 compares all4196 parser-byte/
+duration-float cases exactly; corpus SHA256
+83b2da352579a10948e5ef523741730b29f294fd3513811d1c49bbc724d66d4c.
+
+S4/native-ordinary-sequence-frame-oracle-02 executes648 independent original
+courses/9720 updates: actual6C9BA0 activation, ordinary476F95 prefix, then full
+6CA950 manager update including actual time conversion and empty-controller
+application. Original clamp/null-sync groups/managers are preallocated; slot3 is
+supplied at476FA6. No called-function stubs. Other slots/full actor contact caller,
+frame-time producer, visual transforms and early mode5 freeze are outside this
+composed probe. Oracle01 retains a harness-only syntax failure caused by splitting
+at rows=[] inside a loader string; corrected02 retains the complete loader prefix.
+Native-ordinary-sequence-frame-comparison-01 matches every clock/phase/easing and
+six timing float fields bit-for-bit for all9720 updates, including origin1e6,
+nonzero begin, speed/frequency variants and zero durations. Independent report
+SHA256 a85b0b14481564a5da27e35fe99cdac8757dff3e22d4fa339c8274526bc5f539;
+comparison corpus SHA256
+a6c2b03921313b8c78f85e5cd87625995b0f01a4e26b86738d5d129802322e1e.
+No production-generated expectations or full gameplay claim.
+
+Normal checks pass2010 component and721 engine tests; ASan/UBSan checks pass485
+TES4 component and721 engine tests, exact inventories/XML, no skips/failures or
+source drift, leaks disabled. Tested fingerprint
+`5b1198a55187f6abc20e42a5338acac043850ab6e858e41d8968c52b6c974f8f`; normal openmw SHA256
+`28b9ff1817e9037ed618f694dcbf2764f86967d0c715959ff2d1b7b816a8198b`. Existing RuntimeInventoryItem owner initializer and GCC
+unpersistAnimationState warnings remain in retained logs; final warning gate
+open. Schema23/Python codecs are unchanged, so prior226 Python cases remain
+prior-source evidence. S2/S3 in progress; full S4–S14 open. Next: connect this
+frame authority to Character/rendering and native contact dispatch, then complete
+normal-input/restart/interruption courses.
+Previous checkpoint68 commit548e6982922cf15b44f9b12b342ea75bfb234b94;
+verified bundle46 SHA256
+816f5222258c8c2595773c804c98a26420181f0616a623f7c82323867d802f27.
