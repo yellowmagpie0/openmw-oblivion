@@ -216,7 +216,11 @@ namespace MWMechanics
         void refreshMovementAnims(CharacterState movement, bool force = false);
         void refreshIdleAnims(CharacterState idle, bool force = false);
 
-        bool updateWeaponState();
+        bool updateWeaponState(float duration);
+        bool updateOblivionWeaponState(float duration);
+        void persistOblivionMeleeProgress() const;
+        void finishOblivionMeleePlayback();
+        std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
         void updateIdleStormState(bool inwater) const;
 
         std::string chooseRandomAttackAnimation() const;

@@ -1,3 +1,6 @@
+#include "apps/openmw/mwrender/animation.hpp"
+#include <components/vfs/filesystemarchive.hpp>
+#include <osg/MatrixTransform>
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
 #include <components/esm4/loadbsgn.hpp>
 #include "apps/openmw/mwworld/player.hpp"
@@ -2483,6 +2486,89 @@ namespace
         duplicate.mEditorId = "fAICombatSlopeDifference";
         settings[1] = &duplicate;
         EXPECT_THROW(MWMechanics::resolveOblivionMeleeAcquisitionSettings(settings), std::invalid_argument);
+    }
+    TEST(OblivionWorld, BareMeleeKeysUsePlayingGroupAndWinningSource)
+    {
+        NativeWorldFixture fixture;
+        MWClass::Npc::registerSelf();
+        fixture.mWorld.setupPlayer();
+        ASSERT_FALSE(fixture.mWorld.getPlayerPtr().isEmpty());
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto string = [&](std::string_view value) {
+            return bytes(static_cast<std::uint32_t>(value.size())) + std::string(value);
+        };
+        const auto writeKeys = [&](const std::string& file, const std::string& group, float hit, float queue) {
+            std::string data = "NetImmerse File Format, Version 4.0.0.2\n";
+            data += bytes(std::uint32_t{0x04000002}) + bytes(std::uint32_t{5});
+            data += string("NiSequenceStreamHelper") + string("SyntheticMelee")
+                + bytes(std::int32_t{1}) + bytes(std::int32_t{3});
+            data += string("NiTextKeyExtraData") + bytes(std::int32_t{2}) + bytes(std::uint32_t{0});
+            const std::vector<std::pair<float, std::string>> keys = hit < 0
+                ? std::vector<std::pair<float, std::string>>{{0, group + ": start"}, {1, group + ": stop"}}
+                : std::vector<std::pair<float, std::string>>{{0, group + ": start"}, {hit, "hit"},
+                    {queue, "a:r"}, {1, group + ": stop"}};
+            data += bytes(static_cast<std::uint32_t>(keys.size()));
+            for (const auto& [time, text] : keys)
+                data += bytes(time) + string(text);
+            data += string("NiStringExtraData") + bytes(std::int32_t{-1}) + bytes(std::uint32_t{0}) + string("Bip01");
+            data += string("NiKeyframeController") + bytes(std::int32_t{-1}) + bytes(std::uint16_t{8})
+                + bytes(1.f) + bytes(0.f) + bytes(0.f) + bytes(1.f) + bytes(std::int32_t{-1}) + bytes(std::int32_t{4});
+            data += string("NiKeyframeData") + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0});
+            data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0});
+            std::ofstream stream(fixture.mDirectory / file, std::ios::binary);
+            stream.write(data.data(), data.size());
+            if (!stream)
+                throw std::runtime_error("failed to write synthetic melee keyframe");
+        };
+        writeKeys("left.kf", "handtohandattackleft", .2f, .6f);
+        writeKeys("right.kf", "handtohandattackright", .4f, .8f);
+        writeKeys("override.kf", "handtohandattackleft", -1, -1);
+        writeKeys("handtohandattackpower.kf", "handtohandattackpower", .3f, .7f);
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        class KeyAnimation : public MWRender::Animation
+        {
+        public:
+            using MWRender::Animation::Animation;
+            void lazyDirectory() { addAnimDirectory(VFS::Path::Normalized("")); }
+            void source(std::string_view path)
+            {
+                if (!mObjectRoot)
+                {
+                    mObjectRoot = new osg::Group;
+                    osg::ref_ptr<osg::MatrixTransform> bone = new osg::MatrixTransform;
+                    bone->setName("Bip01");
+                    mObjectRoot->addChild(bone);
+                }
+                if (!addSingleAnimSource(VFS::Path::Normalized(path), "synthetic", {}, false))
+                    throw std::runtime_error("synthetic melee source failed to load");
+            }
+        };
+        osg::ref_ptr<KeyAnimation> animation = new KeyAnimation(
+            fixture.mWorld.getPlayerPtr(), new osg::Group, &fixture.mResources);
+        animation->source("left.kf");
+        animation->source("right.kf");
+        EXPECT_FLOAT_EQ(animation->getTextKeyTime("hit"), .4f);
+        animation->lazyDirectory();
+        ASSERT_TRUE(animation->hasAnimation("handtohandattackpower"));
+        EXPECT_EQ(animation->getTextKeyTime("handtohandattackpower: start"), -1);
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackpower", "handtohandattackpower: start"), 0);
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackpower", "hit"), .3f);
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "hit"), .2f);
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackright", "a:"), .8f);
+        EXPECT_EQ(animation->getTextKeyTimeInGroup("missing", "hit"), -1);
+        EXPECT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "missing"), -1);
+        animation->play("handtohandattackleft", MWRender::AnimPriority(1), MWRender::BlendMask_All,
+            false, 1.25f, "start", "stop", .65f, 0);
+        EXPECT_FLOAT_EQ(animation->getCurrentTime("handtohandattackleft"), .65f);
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "a:"), .6f);
+        animation->source("override.kf");
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "hit"), .2f);
+        animation->disable("handtohandattackleft");
+        EXPECT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "hit"), -1);
+        EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackright", "hit"), .4f);
     }
 
 }

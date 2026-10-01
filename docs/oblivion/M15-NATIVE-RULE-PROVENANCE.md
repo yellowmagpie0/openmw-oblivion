@@ -3977,3 +3977,47 @@ Tests pass at the source fingerprint and counts in the milestone report.
 Stock idle schema20→21→21 migration preserves nine admitted actors and has
 no melee state. Native animation start/advancement, exact gear instance,
 Hit-event physics acquisition and caller eligibility remain unimplemented.
+
+## Native ordinary stage/clock and key ingestion (checkpoint55)
+
+Pinned original executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-attack-stage-oracle-03 executes192 ordinary phase-prefix and18 clock
+observations in both x87 modes. 4770D4–47710E reads supplied TESAnimGroup frame
+times through original51AE20/984012 and increments animation-data+54 by at most
+one phase per call, only when the binary32 sequence-offset(+48)+clock(+94) sum
+is strictly greater than the next key time. Equality does not advance. Original
+476F93–476FA6 adds supplied frame delta to clock+94 with a float store. 470750
+returns data+54 for argument3; it is not NiControllerSequence easing state.
+The ordinary subtype4 slot names are Start, Hit, a:, End; power subtype5 uses
+Start, Hit, End and block-attack subtype6 Start, Attack, End. Ordinary stage2
+therefore follows a:, not Hit or End. The full actor/sequence clock setup,
+caller order, phase catch-up across large frame steps and gameplay are outside
+these bounded probes. Stage01 failed an equality hypothesis; stage02 passed a
+synthetic table with slot2 misleadingly labelled End. Both remain; use03's
+corrected native key-name/slot audit, not02 as evidence for End semantics.
+
+S4/native-attack-key-ingestion-oracle-01 executes14 observations through
+51B87C–51B95A/51B9B1, including original9864D9 case-insensitive prefix matching
+and the actual subtype key-name table. Supplied stock key times are stored in
+preallocated frame-array slots: Start0, Hit1, a:R/a:L/A:r2 and End3; mismatched
+Hit at slot2 writes nothing. Both x87 modes pass. This checks native key
+matching/storage, not KF allocation/reader, side-suffix interpretation, animation
+start, advancing actor clock or a real contact. Stock third-person HtHLeft's
+a:R is0.433333397 and End0.666666985; first-person HtHRight's a:L is0.43333292
+and End0.666666508. Native production timing/variant/FPS fidelity remains open.
+
+stage03 probe SHA256 `0e9851ff7afabb8ba0a27ec8a42d85070483d29a070b812731f7e792da05efc3`;
+report SHA256 `f15343742dc77caa32abfab7a76a93c3496a66543f843349c98499961bd2ff57`.
+Key-ingestion probe SHA256 `fc00955443ae032399a995c19354a2e2a8617bb68d18918907e099c03ba03ff3`;
+report SHA256 `14c1fbff67c653515273ac87a74d940b7e42142a0a505ac04792bf2755cbac87`.
+Original instructions, extracted content and full reports stay in ignored paths.
+
+The checkpoint55 renderer adapter persists exact selected group/speed/time;
+its queue-window comparison currently uses scoped a: time. That does not yet
+reproduce original one-phase-per-call catch-up or prove identical ordering at
+all FPS. Normal keyboard input and active-strike fresh-process continuation now
+pass in first/third person at the milestone's reported binary/fingerprint.
+Those are playback/ownership observations with unchanged actor pools; native
+bare Hit still cannot dispatch damage. No contact, block, mitigation, condition,
+reaction or audio gameplay acceptance is claimed.

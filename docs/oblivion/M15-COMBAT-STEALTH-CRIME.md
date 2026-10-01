@@ -7882,3 +7882,70 @@ Checkpoint54 is exported/committed after these terminal checks. Next: native
 controller input, exact stock animation and bare Hit dispatch to an owned
 resolved contact. Physics acquisition and signed-delta publication exist but
 are not yet called by that controller. S2/S3 remain in progress; S4–S14 open.
+
+### Checkpoint55 — native melee playback and active-strike continuation
+
+The Oblivion CharacterController branch now owns ordinary/standing-power
+playback through the native service, selects actual native weapon family/speed,
+loads stock groups lazily, stores progress before text-key callbacks and saves,
+and resumes the exact saved group/time/owned ID. Physical stop/interruption
+finishes the service strike; completed playback cleans up after runAnimation
+returns, before any animation-end callback. Shared TES3 windup/release and
+bare native Hit handling remain separated; native Hit currently has no contact
+or damage dispatch. This is a playback foundation, not the S4 gate.
+
+The group-scoped text-key query uses the actual playing source, otherwise the
+same winning Start/Stop selection as playback, and loads registered lazy groups.
+It cannot take bare Hit/a: keys from another group or an overridden source. One
+headless real-resource-loader regression covers unrelated groups, lazy loading,
+missing keys, duplicate source precedence, active-source retention and normalized
+resume time. Synthetic NetImmerse4 KF data tests the shared loader; it is not a
+stock TES4 content probe. Initial fixture setup omitted setupPlayer and faulted
+in Lua animation-ended dispatch; the corrected fixture and focused test pass.
+
+Rendered diagnostics01–08 retain failed attempts: missing Use binding/short
+input timing hypotheses, an unescaped Lua diagnostic manifest, and successive
+input-handoff observations. The decisive cause was showWeapons(false) for a
+drawn unarmed Player, which clears shared attack intent. Visibility now changes
+only for equipment/stance transitions and retains drawn unarmed intent.
+Diagnostic09 resumed the strike but saved it at End with its ID still pending;
+post-run completion cleanup fixes that boundary. Third-person01 mistakenly used
+Tab, opening inventory and preventing gameplay/save; its reviewed capture and
+failed scenario remain. Third-person02 uses the configured camera key R.
+
+S4/native-controller-offscreen-10 and native-controller-third-person-02 pass
+normal configured keyboard input (F draws, U is the editable Use binding), stock
+ordinary/standing-power animation loading and fresh-process continuation. First
+saves hold ordinary ID1 at animation time0.4000000059604645, input-held true,
+next ID2 and pending[1]. Distinct processes resume ID1 at0.4; second saves have
+next ID2, no pending IDs/owners, released input and no strike. Nine native actor
+values/life/breath/bases/death counts/events/combat membership are preserved;
+public Health/Magicka/Fatigue remain80/80/140 and getdead remains0. Pristine
+sources, normal terminal exits, process epochs and save hashes are checked in
+both verification.json files. Editable first-person manifests are versioned as
+`oblivion_m15_native_melee_playback.json` and its `_continuation.json` companion.
+Binary SHA256: `a064a11eebdce64d9e5d00443ef851095f00e62d94afbf71cb8439cad72eae7f`.
+First-person groups bind66 tracks, third-person64 with9 skipped tracks. Four
+captures are directly reviewed: textured prison, readable HUD/full bars,
+post-save fist/body playback and idle continuation. Post-save poses do not
+prove the earlier saved ordinary phase. Cyan third-person hair remains a prior
+rendering limitation. SDL offscreen and no-sound establish no audio acceptance.
+
+S4/native-controller-main-01 passes all715 engine and217 Python tests;
+native-controller-sanitized-01 passes all715 engine tests under ASan/UBSan,
+leak detection disabled. Exact inventories match, zero failures/skips. Tested
+source fingerprint: `2a0faf58465d58b6d8133687cd3208488af203c51204d725f9c5e1337d22d85b`.
+Components are unchanged from checkpoint54; their prior1993/468 checks apply
+to those component bytes, not this new controller integration.
+
+Original stage/key ingestion observations are recorded in the provenance report.
+The adapter still needs exact phase/caller/FPS ordering, sneak/directional/rank
+variants, complete airborne/start eligibility, native block/knocked authority,
+exact weapon-instance persistence, atomic contact/condition/reactions and sound.
+The hard-coded Acrobatics boundary and current power-delay lookup are temporary
+adapter inputs requiring typed winning settings. Physical acquisition and
+signed-delta publication are not yet invoked by Hit. S2/S3 remain in progress;
+S4–S14 remain open. Checkpoint54 commit:
+`c4abfd2612042d1d0a9c257b429832057f44c4e2`; verified bundle
+S3/isolated-git-progress-32/m15-progress.bundle SHA256
+`90372290c4c2e7246b3d09ff961ae5724d9d296dc20cdb928ba1411205980059`.

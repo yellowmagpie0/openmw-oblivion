@@ -972,6 +972,33 @@ namespace MWRender
         return -1.f;
     }
 
+    float Animation::getTextKeyTimeInGroup(std::string_view group, std::string_view keyPrefix)
+    {
+        ensureAnimSource(group);
+        const auto inspect = [&](const SceneUtil::TextKeyMap& keys, const AnimState& bounds) {
+            for (auto it = keys.lowerBound(bounds.mStartTime), end = keys.upperBound(bounds.mStopTime);
+                 it != end; ++it)
+                if (it->second.starts_with(keyPrefix))
+                    return it->first;
+            return -1.f;
+        };
+        const auto state = mStates.find(group);
+        if (state != mStates.end())
+        {
+            AnimState bounds;
+            const auto& keys = state->second.mSource->getTextKeys();
+            return reset(bounds, keys, group, "start", "stop", 0, false) ? inspect(keys, bounds) : -1.f;
+        }
+        for (auto it = mAnimSources.rbegin(); it != mAnimSources.rend(); ++it)
+        {
+            AnimState bounds;
+            const auto& keys = (*it)->getTextKeys();
+            if (reset(bounds, keys, group, "start", "stop", 0, false))
+                return inspect(keys, bounds);
+        }
+        return -1.f;
+    }
+
     void Animation::handleTextKey(AnimState& state, std::string_view groupname,
         SceneUtil::TextKeyMap::ConstIterator key, const SceneUtil::TextKeyMap& map)
     {

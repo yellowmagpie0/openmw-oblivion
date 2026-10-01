@@ -448,6 +448,10 @@ namespace MWRender
         /// Get the absolute position in the animation track of the text key
         float getTextKeyTime(std::string_view textKey) const;
 
+        // Group-scoped bare TES4 keys use the same winning source as playback.
+        // Missing keys return -1; keys in another group/source never qualify.
+        float getTextKeyTimeInGroup(std::string_view group, std::string_view keyPrefix);
+
         /// Get the current absolute position in the animation track for the animation that is currently playing from
         /// the given group.
         float getCurrentTime(std::string_view groupname) const;

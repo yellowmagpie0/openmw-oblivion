@@ -694,6 +694,9 @@ namespace MWInput
             Log(Debug::Info) << "M12 input action: jump value=" << previousValue << "->" << currentValue
                              << " source=" << (manager->joystickLastUsed() ? "gamepad" : "keyboard-mouse");
 
+        if (mGameProfile == ESM::GameProfile::Oblivion && action == A_Use)
+            Log(Debug::Verbose) << "M15 input action: use value=" << previousValue << "->" << currentValue;
+
         if (mDragDrop && action != A_GameMenu && action != A_Inventory)
             return;
 

@@ -49,6 +49,12 @@
 #include "../mwworld/spellcaststate.hpp"
 
 #include "actorutil.hpp"
+#include "oblivioncombat.hpp"
+#include "oblivionai.hpp"
+#include "../mwworld/worldimp.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
+#include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadweap.hpp>
 #include "aicombataction.hpp"
 #include "creaturestats.hpp"
 #include "movement.hpp"
@@ -1014,7 +1020,16 @@ namespace MWMechanics
             return;
         std::string_view evt = key->second;
 
+        persistOblivionMeleeProgress();
         MWBase::Environment::get().getLuaManager()->animationTextKey(mPtr, key->second);
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && (evt == "hit" || evt.starts_with("a:") || evt == std::string(groupname) + ": hit"))
+        {
+            // Native contact dispatch is implemented separately from playback.
+            // These stock keys must not invoke TES3 evaluateHit/hit or wind-up.
+            return;
+        }
 
         if (evt.substr(0, 7) == "sound: ")
         {
@@ -1275,8 +1290,264 @@ namespace MWMechanics
         mReadyToHit = true;
     }
 
-    bool CharacterController::updateWeaponState()
+    void CharacterController::persistOblivionMeleeProgress() const
     {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation || !mOblivionRenderedStrike)
+            return;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(actor);
+        if (state && state->mStrike && state->mStrike->mActionId == mOblivionRenderedStrike)
+        {
+            const float time = mAnimation->getCurrentTime(state->mStrike->mAnimationGroup);
+            if (std::isfinite(time) && time >= state->mStrike->mAnimationTime)
+                service->updateMeleeAnimation(mOblivionRenderedStrike, actor, time);
+        }
+    }
+
+    void CharacterController::finishOblivionMeleePlayback()
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation || !mOblivionRenderedStrike)
+            return;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(actor);
+        float complete = 0;
+        if (!state || !state->mStrike || state->mStrike->mActionId != mOblivionRenderedStrike
+            || !mAnimation->getInfo(state->mStrike->mAnimationGroup, &complete) || complete < 1)
+            return;
+        const auto strike = *state->mStrike;
+        service->finishMeleeStrike(strike.mActionId, actor);
+        mOblivionRenderedStrike = 0;
+        mCurrentWeapon.clear();
+        mUpperBodyState = UpperBodyState::WeaponEquipped;
+        // runAnimation has returned; disabling here cannot invalidate its
+        // text-key iterator. Publish cancellation before the Lua end callback.
+        mAnimation->disable(strike.mAnimationGroup);
+    }
+
+    bool CharacterController::updateOblivionWeaponState(float duration)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation)
+            return false;
+        const bool player = mPtr == world->getPlayerPtr();
+        const auto actor = player ? ESM::FormKey::dynamic("player", 1) : mPtr.getCellRef().getFormKey();
+        const auto* life = service->findActorLife(actor);
+        const auto& cls = mPtr.getClass();
+        const auto& stats = cls.getCreatureStats(mPtr);
+        const bool drawn = stats.getDrawState() == DrawState::Weapon || mPtr.getType() == ESM::REC_CREA4;
+        const auto interrupt = [&] {
+            if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
+            {
+                const auto strike = *state->mStrike;
+                mAnimation->disable(strike.mAnimationGroup);
+                service->finishMeleeStrike(strike.mActionId, actor);
+            }
+            mOblivionRenderedStrike = 0;
+            mCurrentWeapon.clear();
+            mUpperBodyState = drawn ? UpperBodyState::WeaponEquipped : UpperBodyState::None;
+        };
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
+        {
+            interrupt();
+            return false;
+        }
+        if (!drawn || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
+            || mSkipAnim || (player && world->getOblivionAiService() && world->getOblivionAiService()->isRidingHorse(mPtr)))
+        {
+            interrupt();
+            if (!drawn && mWeaponType != ESM::Weapon::None)
+            {
+                mAnimation->showWeapons(false);
+                mWeaponType = ESM::Weapon::None;
+                mWeapon = {};
+            }
+            if (service->findMeleeState(actor))
+                service->setMeleeInput(actor, {});
+            return false;
+        }
+        MWWorld::Ptr weapon;
+        std::string family = mPtr.getType() == ESM::REC_CREA4 ? "" : "handtohand";
+        ESM::FormKey weaponBase;
+        float speed = 1;
+        int weaponType = ESM::Weapon::HandToHand;
+        if (cls.hasInventoryStore(mPtr))
+        {
+            auto& inventory = cls.getInventoryStore(mPtr);
+            auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (equipped != inventory.end())
+            {
+                weapon = *equipped;
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                    world->getStore(), weapon.getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                const auto* record = form ? world->getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+                if (!record || record->mData.type > 3 || !std::isfinite(record->mData.speed)
+                    || record->mData.speed <= 0)
+                {
+                    interrupt();
+                    service->setMeleeInput(actor, {});
+                    return false; // Bow/staff have their own native controller path.
+                }
+                family = record->mData.type % 2 ? "twohand" : "onehand";
+                speed = record->mData.speed;
+                weaponBase = ESM::FormKeyResolver(world->getContentFiles()).toFormKey(*form);
+                weaponType = record->mData.type % 2 ? ESM::Weapon::LongBladeTwoHand : ESM::Weapon::LongBladeOneHand;
+            }
+        }
+        if (const auto* state = service->findMeleeState(actor); state && state->mStrike
+            && (state->mStrike->mWeaponBase != weaponBase || (mOblivionRenderedStrike && weapon != mWeapon)))
+            interrupt();
+        const bool equipmentChanged = weapon != mWeapon || weaponType != mWeaponType
+            || mUpperBodyState == UpperBodyState::None;
+        mWeapon = weapon;
+        mWeaponType = weaponType;
+        mUpperBodyState = UpperBodyState::WeaponEquipped;
+        // Hiding a player's weapon clears shared attack intent. Drawn unarmed
+        // combat must retain that intent, and an unchanged weapon needs no rebuild.
+        if (equipmentChanged)
+            mAnimation->showWeapons(true);
+        persistOblivionMeleeProgress();
+        const auto* saved = service->findMeleeState(actor);
+        auto input = saved ? saved->mInput : ESM4::RuntimeMeleeInput{};
+        bool active = saved && saved->mStrike;
+        bool power = active && saved->mStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower;
+        bool queueWindow = !active;
+        if (active)
+        {
+            const auto strike = *saved->mStrike;
+            mCurrentWeapon = strike.mAnimationGroup;
+            const float start = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, strike.mAnimationGroup + ": start");
+            const float stop = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, strike.mAnimationGroup + ": stop");
+            if (start < 0 || stop <= start || strike.mAnimationTime > stop)
+            {
+                interrupt();
+                active = false;
+            }
+            else
+            {
+                if (mOblivionRenderedStrike != strike.mActionId)
+                {
+                    mOblivionRenderedStrike = strike.mActionId;
+                    Log(Debug::Verbose) << "M15 melee restore: actor=" << actor.serialize()
+                                        << " id=" << strike.mActionId << " time=" << strike.mAnimationTime;
+                    const float fraction = (std::max(start, strike.mAnimationTime) - start) / (stop - start);
+                    playBlendedAnimation(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
+                        false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);
+                }
+                const float window = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, "a:");
+                queueWindow = !power && window >= 0 && strike.mAnimationTime > window;
+                float complete = 0;
+                if (!mAnimation->getInfo(strike.mAnimationGroup, &complete) || complete >= 1)
+                {
+                    interrupt();
+                    active = false;
+                    queueWindow = true;
+                }
+            }
+        }
+        const bool held = getAttackingOrSpell();
+        const bool pressed = held && !input.mInputHeld;
+        std::optional<ESM4::MeleeStrikeKind> selected;
+        if (input.mQueued != ESM4::MeleeQueuedStrike::None && queueWindow)
+            selected = input.mQueued == ESM4::MeleeQueuedStrike::Power ? ESM4::MeleeStrikeKind::StandingPower
+                : input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
+        else if (pressed)
+        {
+            input.mHeldSeconds = 0;
+            if (!active)
+                selected = input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
+            else if (!stats.getStance(CreatureStats::Stance_Sneak) || world->isSwimming(mPtr))
+                input.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
+        }
+        else if (held)
+        {
+            if (!power && input.mQueued != ESM4::MeleeQueuedStrike::Power)
+                input.mHeldSeconds = static_cast<float>(double(input.mHeldSeconds) + duration);
+            float delay = .3f; // Original initializer B36B48; winning GMST overrides.
+            for (const auto& setting : world->getStore().get<ESM4::GameSetting>())
+                if (Misc::StringUtils::ciEqual(setting.mEditorId, "fPowerAttackDelay"))
+                {
+                    const auto* winning = world->getStore().get<ESM4::GameSetting>().search(setting.mId);
+                    const auto* value = std::get_if<float>(&winning->mData);
+                    if (!value || !std::isfinite(*value) || *value < 0)
+                        throw std::runtime_error("invalid native power attack delay");
+                    delay = *value;
+                }
+            if (input.mHeldSeconds > delay)
+            {
+                input.mHeldSeconds = 0;
+                const int acrobatics = player ? service->getPlayerBaseValue(26)
+                    : service->getNonPlayerBaseValue(actor, 26, world->getStore());
+                if (world->isSwimming(mPtr) || (acrobatics < 50 && !world->isOnGround(mPtr)))
+                    input.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
+                else if (active && saved->mStrike->mAnimationTime > 0)
+                    input.mQueued = ESM4::MeleeQueuedStrike::Power;
+                else
+                    selected = ESM4::MeleeStrikeKind::StandingPower;
+            }
+        }
+        input.mInputHeld = held;
+        if (selected)
+        {
+            if (active)
+                interrupt();
+            // Exact sneak/directional/mastery variant selection is the next adapter step.
+            constexpr std::array suffixes = {"attackleft", "attackright", "attackpower", "attackforwardpower",
+                "attackbackpower", "attackleftpower", "attackrightpower"};
+            const std::string group = family + suffixes[static_cast<unsigned>(*selected)];
+            Log(Debug::Verbose) << "M15 melee selection: actor=" << actor.serialize()
+                                << " group=" << group << " available=" << mAnimation->hasAnimation(group);
+            input.mQueued = ESM4::MeleeQueuedStrike::None;
+            if (mAnimation->hasAnimation(group))
+            {
+                const float start = mAnimation->getTextKeyTimeInGroup(group, group + ": start");
+                const float stop = mAnimation->getTextKeyTimeInGroup(group, group + ": stop");
+                if (start >= 0 && stop > start)
+                {
+                    const auto id = service->beginMeleeStrike(actor, *selected, group, speed, weaponBase);
+                    service->setMeleeInput(actor, input); // Publish input before text-key/Lua callbacks.
+                    mCurrentWeapon = group;
+                    mOblivionRenderedStrike = id;
+                    try
+                    {
+                        playBlendedAnimation(group, Priority_Weapon, MWRender::BlendMask_All,
+                            false, speed, "start", "stop", 0, 0);
+                    }
+                    catch (...)
+                    {
+                        service->finishMeleeStrike(id, actor);
+                        mOblivionRenderedStrike = 0;
+                        throw;
+                    }
+                    if (*selected == ESM4::MeleeStrikeKind::Left || *selected == ESM4::MeleeStrikeKind::Right)
+                        input.mPreferLeft = *selected != ESM4::MeleeStrikeKind::Left;
+                }
+            }
+        }
+        life = service->findActorLife(actor);
+        if (life && life->mPhase == ESM4::ActorLifePhase::Alive)
+        {
+            service->setMeleeInput(actor, input);
+            if (const auto* current = service->findMeleeState(actor); current && current->mStrike)
+                mUpperBodyState = UpperBodyState::AttackEnd;
+        }
+        return false;
+    }
+
+    bool CharacterController::updateWeaponState(float duration)
+    {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return updateOblivionWeaponState(duration);
+
         // If the current animation is scripted, we can't do anything here.
         if (isScriptedAnimPlaying())
             return false;
@@ -2390,7 +2661,7 @@ namespace MWMechanics
 
             if (!mSkipAnim)
             {
-                refreshCurrentAnims(idlestate, movestate, jumpstate, updateWeaponState());
+                refreshCurrentAnims(idlestate, movestate, jumpstate, updateWeaponState(duration));
                 updateIdleStormState(inwater);
             }
 
@@ -2455,6 +2726,8 @@ namespace MWMechanics
 
         osg::Vec3f movementFromAnimation
             = mAnimation->runAnimation(mSkipAnim && !isScriptedAnimPlaying() ? 0.f : duration);
+        persistOblivionMeleeProgress();
+        finishOblivionMeleePlayback();
 
         if (mPtr.getClass().isActor() && !isScriptedAnimPlaying())
         {
@@ -2548,6 +2821,7 @@ namespace MWMechanics
 
     void CharacterController::persistAnimationState() const
     {
+        persistOblivionMeleeProgress();
         ESM::AnimationState& state = mPtr.getRefData().getAnimationState();
 
         state.mScriptedAnims.clear();
