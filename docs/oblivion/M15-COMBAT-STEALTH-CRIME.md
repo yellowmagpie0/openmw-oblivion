@@ -9144,3 +9144,49 @@ and process authority, difficulty binding and acquired-victim damage with
 condition/reaction consequences. Previous checkpoint78 commit
 6ea4635e484bbc41787ebaed3df939ed3bc13211; verified bundle56 SHA256
 1f40b902a62191332258670fbeba3789d6c482790ca8c0e17835d69acdfe6782.
+
+### Checkpoint80 — versioned native process action code
+
+Schema26 adds optional signed int16 process_action to C++/Python native actor
+values. It follows the schema25 knocked presence/value in the wire and precedes
+Player form values. Known codes require Active process and version26; older
+schemas retain absent/unknown action without inventing posture. Known zero and
+minus one are distinct from unknown. Lossy downgrade, malformed presence,
+wrong JSON type/domain and Low-process known codes are rejected. Native
+blocking predicate compares the supplied process action exactly to6. Held
+input alone is not posture. Live constructor/setter/controller/renderer action
+integration and held-block controls remain separate work.
+
+S4/native-process-action-oracle-01 executes65,577 original cases: all65,536
+signed High action words through actual raw setter628220 (+2D8), signed getter
+628200 (+2D0) and common block predicate5E5670; eight memory profiles each for
+MiddleHigh/MiddleLow/Low actual vtable getters6F7030 returning-1; one null-
+process predicate; sixteen constructor prefixes628F12..628FB9. High action
+storage is process+1F4, action data+1F8, and constructor initializes-1/data0.
+No game-function stubs are invoked. The full higher-level selector63C730,
+action-data meaning, held-input scheduling and renderer transitions are not
+executed or claimed. Corpus SHA256:
+74f3a35463cb4d2410ba35a6dbc1728e4bef89e60052b9458c58fad0763e269a.
+The fork's Active process is its admitted High-process adapter; other original
+process tiers are not silently equated with High blocking posture.
+
+Both codecs test every65,536 signed action word. C++ also checks canonical JSON,
+legacy25 byte round-trip, unknown promotion, corrupted presence, downgrade
+and process validation. Python additionally verifies exact little-endian wire
+insertion for each word and rejects bool/float/string/out-of-range metadata.
+The pure block predicate covers all words and absent process. S2/native-action-
+codec-main-01 passes2041 component cases,497 ESM4 ASan/UBSan cases and229 Python
+cases, exact C++ inventories, zero skips/failures and no source drift; sanitizer
+leak detection remains disabled. Tested fingerprint:
+237c4bf35faf88158900999c78a39b9ec4cd1efa99e9865033a739b8c91631e7.
+S3/native-action-cross-codec-01 passes40 C++ binary/JSON-to-Python reencoding
+cases: signed boundaries/unknown with both owners in26 and legacy25 unknown.
+Probe binary SHA2560d5bd54503b38c6d59631fd1e8c920daa4797a4597f74f7ef9f0482a80ef1ec5.
+No new gameplay/persistence UI course or stage gate is inferred from codec
+coverage; unchanged engine evidence remains78.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: live action construction/
+query/reset/restore and native held-block control/posture scheduling, followed
+by actual contact damage, condition/reactions and all later acceptance gates.
+Previous checkpoint79 commit7fd7ce33cc75cd452861ebd3a772b42a97c831dd;
+verified bundle57 SHA2565ce06ecf7873fee920dd4e914b4d1bdf1a6faba7b14ba4a68b589604c321286c.

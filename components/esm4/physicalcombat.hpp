@@ -477,6 +477,10 @@ namespace ESM4
         std::optional<std::int8_t> mVictimKnockedState;
     };
 
+    // Common native predicate queries process action +2D0 and compares exactly6.
+    // A missing process or another signed action code is not blocking.
+    bool nativeBlockingPosture(std::optional<std::int16_t> processAction);
+
     enum class BlockEquipment { Shield, Weapon, Unarmed };
     struct BlockContactInput
     {

@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 25
+CURRENT_VERSION = 26
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -760,6 +760,10 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("TES4 native actor-value player identity mismatch")
         if not is_player and bases.get(key) != base:
             raise RuntimeStateError("Dangling or mismatched TES4 native actor-value reference")
+        action = actor.get("process_action")
+        if action is not None and (version < 26 or process != 1 or type(action) is not int
+                                  or not -32768 <= action <= 32767):
+            raise RuntimeStateError("TES4 native action code requires Active process, signed int16 and version 26")
         knocked = actor.get("process_knocked_state")
         if knocked is not None and (version < 25 or process != 1 or type(knocked) is not int
                                    or not -128 <= knocked <= 127):
@@ -1362,6 +1366,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid TES4 native knocked byte presence")
                 actor["process_knocked_state"] = reader.unpack("<b") if present else None
+            if version >= 26:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 native action-code presence")
+                actor["process_action"] = reader.unpack("<h") if present else None
             if version >= 10:
                 present = reader.unpack("<B")
                 if present > 1:
@@ -1643,6 +1652,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", knocked is not None)
                 if knocked is not None:
                     writer.pack("<b", knocked)
+            if version >= 26:
+                action = actor.get("process_action")
+                writer.pack("<B", action is not None)
+                if action is not None:
+                    writer.pack("<h", action)
             if version >= 10:
                 form_values = actor.get("player_form_values")
                 writer.pack("<B", form_values is not None)

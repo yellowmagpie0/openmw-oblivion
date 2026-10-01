@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 25;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 26;
 
     struct RuntimeContentIdentity
     {
@@ -288,6 +288,9 @@ namespace ESM4
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.
         std::optional<std::int8_t> mProcessKnockedState;
+        // v26: signed High-process action code. Unknown legacy state remains
+        // absent. Low queries return -1; action6 is the native blocking posture.
+        std::optional<std::int16_t> mProcessAction;
 
         void validate() const;
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;

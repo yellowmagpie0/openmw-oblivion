@@ -472,6 +472,8 @@ namespace ESM4
     {
         if (mActor.isNull() || mBase.isNull())
             throw std::runtime_error("Invalid TES4 native actor-value identity");
+        if (mProcessAction && mProcess != ActorValueProcess::Active)
+            throw std::runtime_error("TES4 native action code requires an Active process");
         if (mProcessKnockedState && mProcess != ActorValueProcess::Active)
             throw std::runtime_error("TES4 native knocked byte requires an Active process");
         if (mPlayerFormValues && mOwner != ActorValueOwner::Player)
@@ -628,6 +630,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 26 && actor.mProcessAction)
+                throw std::runtime_error("TES4 native action code requires runtime-state version 26");
             if (mVersion < 25 && actor.mProcessKnockedState)
                 throw std::runtime_error("TES4 native knocked byte requires runtime-state version 25");
             if (mVersion < 10 && actor.mPlayerFormValues)
@@ -1355,6 +1359,12 @@ namespace ESM4
                     if (actor.mProcessKnockedState)
                         writer.integer<std::int8_t>(*actor.mProcessKnockedState);
                 }
+                if (mVersion >= 26)
+                {
+                    writer.integer<std::uint8_t>(actor.mProcessAction.has_value());
+                    if (actor.mProcessAction)
+                        writer.integer<std::int16_t>(*actor.mProcessAction);
+                }
                 if (mVersion >= 10)
                 {
                     writer.integer<std::uint8_t>(actor.mPlayerFormValues.has_value());
@@ -1879,6 +1889,14 @@ namespace ESM4
                         throw std::runtime_error("Invalid TES4 native knocked byte presence");
                     if (present)
                         actor.mProcessKnockedState = reader.integer<std::int8_t>();
+                }
+                if (result.mVersion >= 26)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 native action-code presence");
+                    if (present)
+                        actor.mProcessAction = reader.integer<std::int16_t>();
                 }
                 if (result.mVersion >= 10)
                 {
@@ -2535,6 +2553,14 @@ namespace ESM4
                     stream << ",\"process_knocked_state\":";
                     if (actor.mProcessKnockedState)
                         stream << static_cast<int>(*actor.mProcessKnockedState);
+                    else
+                        stream << "null";
+                }
+                if (mVersion >= 26)
+                {
+                    stream << ",\"process_action\":";
+                    if (actor.mProcessAction)
+                        stream << *actor.mProcessAction;
                     else
                         stream << "null";
                 }

@@ -418,6 +418,60 @@ namespace
         EXPECT_EQ(json, makeState().canonicalJson());
     }
 
+    TEST(ESM4RuntimeState, NativeProcessAction26PreservesEverySignedWord)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues = {actor};
+        for (int raw = -32768; raw <= 32767; ++raw)
+        {
+            state.mNativeActorValues[0].mProcessAction = static_cast<std::int16_t>(raw);
+            const auto binary = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(binary);
+            ASSERT_EQ(restored.mNativeActorValues[0].mProcessAction,
+                state.mNativeActorValues[0].mProcessAction) << raw;
+            ASSERT_EQ(restored.serializeBinary(), binary) << raw;
+            ASSERT_NE(restored.canonicalJson().find("\"process_action\":" + std::to_string(raw)),
+                std::string::npos) << raw;
+        }
+    }
+
+    TEST(ESM4RuntimeState, NativeProcessAction26PreservesUnknownAndRejectsLossyDowngrade)
+    {
+        auto state = makeState();
+        state.mVersion = 25;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues = {actor};
+        const auto old = state.serializeBinary();
+        auto decoded = ESM4::RuntimeState::deserializeBinary(old);
+        EXPECT_FALSE(decoded.mNativeActorValues[0].mProcessAction);
+        EXPECT_EQ(decoded.serializeBinary(), old);
+        EXPECT_EQ(decoded.canonicalJson().find("process_action"), std::string::npos);
+        decoded.mVersion = 26;
+        const auto unknown = decoded.serializeBinary();
+        EXPECT_NE(decoded.canonicalJson().find("\"process_action\":null"), std::string::npos);
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(unknown).mNativeActorValues[0].mProcessAction);
+        decoded.mNativeActorValues[0].mProcessAction = 0;
+        const auto known = decoded.serializeBinary();
+        const auto marker = std::mismatch(unknown.begin(), unknown.end(), known.begin()).first - unknown.begin();
+        auto corrupt = known;
+        corrupt[marker] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        decoded.mVersion = 25;
+        EXPECT_THROW(decoded.serializeBinary(), std::runtime_error);
+        decoded.mVersion = 26;
+        decoded.mNativeActorValues[0].mProcess = ESM4::ActorValueProcess::Low;
+        EXPECT_THROW(decoded.serializeBinary(), std::runtime_error);
+        decoded.mNativeActorValues[0].mProcessAction.reset();
+        EXPECT_NO_THROW(decoded.serializeBinary());
+    }
+
     TEST(ESM4RuntimeState, NativeProcessKnockedBytePreservesAllSignedStates)
     {
         auto state = makeState();

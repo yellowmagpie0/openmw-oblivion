@@ -2309,3 +2309,10 @@ TEST(ESM4PhysicalCombat, ContactPipelineValidatesEvenNoWriterBranches)
     EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{max, 0}), max, 1, 5,
         Role::Victim), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeBlockPostureRequiresExactSignedProcessActionSix)
+{
+    EXPECT_FALSE(ESM4::nativeBlockingPosture(std::nullopt));
+    for (int raw = -32768; raw <= 32767; ++raw)
+        EXPECT_EQ(ESM4::nativeBlockingPosture(static_cast<std::int16_t>(raw)), raw == 6) << raw;
+}

@@ -946,6 +946,11 @@ namespace ESM4
             throw std::invalid_argument("reversed native hand damage range");
     }
 
+    bool nativeBlockingPosture(std::optional<std::int16_t> processAction)
+    {
+        return processAction == 6;
+    }
+
     BlockContactDisposition blockContactDisposition(const BlockContactInput& input)
     {
         switch (input.mEquipment)
