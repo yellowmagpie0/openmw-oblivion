@@ -73,6 +73,27 @@ namespace ESM4
         return rounded(double(animationClock) + frameDuration);
     }
 
+    float initialMeleeSequenceOffset(float animationClock)
+    {
+        finite(animationClock);
+        return -animationClock; // FCHS preserves the sign of zero.
+    }
+
+    float correctMeleeSequenceOffset(float sequenceOffset, float sequenceBegin,
+        float playbackSpeed, float frameDuration)
+    {
+        finite(sequenceOffset);
+        finite(sequenceBegin);
+        nonnegative(playbackSpeed);
+        nonnegative(frameDuration);
+        if (playbackSpeed == 0)
+            throw std::invalid_argument("zero native melee playback speed");
+        const float relative = rounded(double(sequenceOffset) - sequenceBegin);
+        const double correction = double(playbackSpeed) * frameDuration - frameDuration;
+        const float corrected = rounded(correction + relative);
+        return rounded(double(corrected) + sequenceBegin);
+    }
+
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)
     {
         finite(positionZ);

@@ -2,6 +2,7 @@
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <array>
+#include <bit>
 #include <algorithm>
 #include <utility>
 #include <gtest/gtest.h>
@@ -1951,4 +1952,36 @@ TEST(ESM4PhysicalCombat, NativeAttackAirborneRetainsAnimationPriorityAndMissingC
     EXPECT_TRUE(ESM4::nativeAttackAirborne({}, 2));
     for (std::uint32_t state : {0u, 1u, 3u, 4u, 5u, 12u, 0xffffffffu})
         EXPECT_FALSE(ESM4::nativeAttackAirborne({}, state));
+}
+
+TEST(ESM4PhysicalCombat, MeleeSequenceOffsetPreservesNativeStoresAndSignedZeroInitialization)
+{
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::initialMeleeSequenceOffset(0.f)), 0x80000000u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::initialMeleeSequenceOffset(-0.f)), 0u);
+    EXPECT_EQ(ESM4::initialMeleeSequenceOffset(10000), -10000);
+    EXPECT_EQ(ESM4::initialMeleeSequenceOffset(-1), 1);
+    // Original-instruction observations; rounding speed*dt separately changes
+    // these exact output bits, which can change the strict next-key predicate.
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, .1f, .2f)), 0xbf970a3du);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, .7f, .2f)), 0xbf87ae15u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, 10, 1.f/60)), 0xbf599999u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, 10, .1f)), 0xbdcccccbu);
+    // Even zero duration/speed1 retains the original anchor round trips.
+    EXPECT_EQ(ESM4::correctMeleeSequenceOffset(.2f, 1000, 1, 0), .20001220703125f);
+    EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, 0, .1f), std::invalid_argument);
+    EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, -1, .1f), std::invalid_argument);
+    EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, 1, -.1f), std::invalid_argument);
+    EXPECT_THROW(ESM4::correctMeleeSequenceOffset(std::numeric_limits<float>::max(),
+        -std::numeric_limits<float>::max(), 1, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max()), std::invalid_argument);
+    for (float bad : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::initialMeleeSequenceOffset(bad), std::invalid_argument);
+        EXPECT_THROW(ESM4::correctMeleeSequenceOffset(bad, 0, 1, .1f), std::invalid_argument);
+        EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, bad, 1, .1f), std::invalid_argument);
+        EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, bad, .1f), std::invalid_argument);
+        EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, 1, bad), std::invalid_argument);
+    }
 }

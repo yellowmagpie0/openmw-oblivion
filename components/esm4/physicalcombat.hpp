@@ -37,6 +37,14 @@ namespace ESM4
     OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
         float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes);
     float advanceMeleeAnimationClock(float animationClock, float frameDuration);
+    // The caller has resolved a newly activated sequence's sentinel offset.
+    // Original6CA950 initializes it from the current native animation clock.
+    float initialMeleeSequenceOffset(float animationClock);
+    // Original477086 speed correction, including separate stored offset-minus-
+    // begin and corrected terms. Caller owns group/state/freeze eligibility.
+    float correctMeleeSequenceOffset(float sequenceOffset, float sequenceBegin,
+        float playbackSpeed, float frameDuration);
+
 
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings

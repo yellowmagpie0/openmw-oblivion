@@ -4285,3 +4285,49 @@ S2/S3 remain in progress; S4–S14 remain open. Previous checkpoint60 commit
 native-sequence-clock-prefix-oracle-01/report.json SHA256 `ff3cd8c4b47f831ae1800fa9d19774948b0d55bb8a8b5ab1774392283b4e818d`.
 
 native-sequence-clock-inspection-01/controller-vtables.json SHA256 `f9e012eafb1ce268fc48d6d745d778b358f72f91f52bdcfe4665f5268c2d347e`.
+
+## Native sequence offset initialization and speed correction (checkpoint62)
+
+Immutable rules now initialize a resolved new sequence offset from the negative
+native animation clock (including signed zero) and correct an eligible melee
+sequence's offset for playback speed. Correction preserves the native separately
+stored offset-minus-begin term, corrected term and final anchor addition. It does
+not round speed-times-duration separately, optimize away duration0/speed1 anchor
+round trips, or use the renderer's accumulated duration-times-speed clock.
+Finite signed clock/offset/begin inputs, positive speed and nonnegative duration
+are validated; nonfinite/overflow inputs fail explicitly. Caller eligibility,
+actual clock production and metadata resolution are not supplied by these rules.
+
+S4/native-melee-speed-offset-oracle-01 executes the exact original477086→4770B1
+arithmetic with no calls/stubs for4096 observations in both x87 modes, varying
+signed offsets, source anchors, speeds and zero/144/60/30 FPS/other durations.
+Together with checkpoint61's6CA950 prefix, clock-offset-comparison-01 matches
+4384 original observations bit for bit:288 eligible sentinel initialization
+observations and4096 speed corrections. Original report SHA256 values:
+`ff3cd8c4b47f831ae1800fa9d19774948b0d55bb8a8b5ab1774392283b4e818d`,
+`5fe888534a73e6782bf7989ef794e19dffdb6418b120ff4da562c22a2f9898e8`.
+Reviewed numeric corpus SHA256
+`60cb22eb9fae7da146bb2dc802f2d49df4f90d745231a7130c5a3ae863c3bd35`.
+
+A literal regression fixes exact output bits: offset-1/speed.1/duration.2 becomes
+BF970A3D; speed.7 becomes BF87AE15. With begin1000/offset.2/speed1/duration0, the
+native stores produce.20001220703125, so zero duration is not an identity for
+all source anchors. Initialization flips signed zero. Invalid factors/nonfinite
+inputs and overflow fail. S4/native-melee-clock-offset-main-01 passes all2000
+component cases; sanitized-01 passes475 ESM4 cases under ASan/UBSan (no leak
+checks). No failed/skipped cases, unchanged tested source fingerprint
+`44e1cbaa7fabdfe11a9b30f61bb406f5714f0578ac4f748a9cb6d4bb5c6258ea`.
+Engine and Python source are unchanged from checkpoint61's719 normal/instrumented
+engine and223 Python checks; this checkpoint does not claim a fresh engine build
+or a runtime course for helpers that are not yet wired.
+
+Inspection also identifies a required input boundary: the shared KF loader
+normalizes controller-sequence key times into renderer timelines, and
+KeyframeHolder does not retain original sequence begin/frequency/raw key times.
+Actual native phase integration must preserve and resolve those inputs from the
+winning playing source before using these rules. It must not infer them from
+normalized renderer time. Contact/damage/block, original clock lifecycle,
+freeze/eligibility and full S4 remain open. S2/S3 remain in progress and S4–S14
+remain open. Previous checkpoint61 commit
+`e26cee7a9c5b96a6fabea82cc4d490a110e14e9a`; verified bundle39 SHA256
+`b669b6e9106f629bfd0a14a7b9f053d58e3987addd3777541f750e7633164189`.
