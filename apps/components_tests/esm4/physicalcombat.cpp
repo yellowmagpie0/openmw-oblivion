@@ -1931,3 +1931,24 @@ TEST(ESM4PhysicalCombat, MeleeAnimationClockStoresFloatAndRejectsMalformedPhaseI
     EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, std::numeric_limits<float>::max(),
         std::numeric_limits<float>::max(), keys), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeAttackAirborneRetainsAnimationPriorityAndMissingContext)
+{
+    EXPECT_FALSE(ESM4::nativeAttackAirborne({}, {}));
+    for (std::uint8_t group : {0, 20, 39, 43, 255})
+    {
+        EXPECT_FALSE(ESM4::nativeAttackAirborne(group, {}));
+        for (std::uint32_t state : {0u, 1u, 3u, 4u, 5u, 12u, 0xffffffffu})
+            EXPECT_FALSE(ESM4::nativeAttackAirborne(group, state));
+        EXPECT_TRUE(ESM4::nativeAttackAirborne(group, 2));
+    }
+    for (std::uint8_t group : {40, 41, 42})
+    {
+        EXPECT_TRUE(ESM4::nativeAttackAirborne(group, {}));
+        for (std::uint32_t state : {0u, 1u, 2u, 3u, 4u, 5u, 12u, 0xffffffffu})
+            EXPECT_TRUE(ESM4::nativeAttackAirborne(group, state));
+    }
+    EXPECT_TRUE(ESM4::nativeAttackAirborne({}, 2));
+    for (std::uint32_t state : {0u, 1u, 3u, 4u, 5u, 12u, 0xffffffffu})
+        EXPECT_FALSE(ESM4::nativeAttackAirborne({}, state));
+}

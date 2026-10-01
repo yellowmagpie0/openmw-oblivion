@@ -1468,6 +1468,25 @@ namespace MWMechanics
                 }
             }
         }
+        std::optional<ESM4::MeleeInputSettings> inputSettings;
+        const auto settingsForInput = [&]() -> const ESM4::MeleeInputSettings& {
+            if (!inputSettings)
+                inputSettings = MWWorld::resolveOblivionMeleeInputSettings(world->getStore());
+            return *inputSettings;
+        };
+        const auto airborneForInput = [&] {
+            // The shared jump group spans native JumpStart/JumpLoop/JumpLand.
+            // Keep that animation predicate ahead of physical state, including
+            // landing playback on an already grounded body.
+            const std::optional<std::uint8_t> jumpGroup = !mCurrentJump.empty()
+                    && mAnimation->isPlaying(mCurrentJump)
+                ? std::optional<std::uint8_t>{40} : std::nullopt;
+            // Bridge common live motion states; this does not establish every
+            // original Havok context transition (climbing, noclip, jump windup).
+            const std::uint32_t motion = world->isSwimming(mPtr) ? 5
+                : world->isFlying(mPtr) ? 4 : world->isOnGround(mPtr) ? 0 : 2;
+            return ESM4::nativeAttackAirborne(jumpGroup, motion);
+        };
         const bool held = getAttackingOrSpell();
         const bool pressed = held && !input.mInputHeld;
         std::optional<ESM4::MeleeStrikeKind> selected;
@@ -1486,16 +1505,14 @@ namespace MWMechanics
         {
             if (!power && input.mQueued != ESM4::MeleeQueuedStrike::Power)
                 input.mHeldSeconds = static_cast<float>(double(input.mHeldSeconds) + duration);
-            const auto settings = MWWorld::resolveOblivionMeleeInputSettings(world->getStore());
+            const auto& settings = settingsForInput();
             if (input.mHeldSeconds > settings.mPowerAttackDelay)
             {
                 input.mHeldSeconds = 0;
                 const int acrobatics = player ? service->getPlayerBaseValue(26)
                     : service->getNonPlayerBaseValue(actor, 26, world->getStore());
-                // Exact native5EC180 construction is still a separate adapter
-                // boundary; collision grounding currently supplies this flag.
                 if (!ESM4::heldPowerAttackAllowed(acrobatics, world->isSwimming(mPtr),
-                        !world->isOnGround(mPtr), settings))
+                        airborneForInput(), settings))
                     input.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
                 else if (active && saved->mStrike->mAnimationTime > 0)
                     input.mQueued = ESM4::MeleeQueuedStrike::Power;
@@ -1504,6 +1521,18 @@ namespace MWMechanics
             }
         }
         input.mInputHeld = held;
+        if (selected)
+        {
+            const int acrobatics = player ? service->getPlayerBaseValue(26)
+                : service->getNonPlayerBaseValue(actor, 26, world->getStore());
+            if (!ESM4::airborneMeleeStartAllowed(acrobatics, airborneForInput(), settingsForInput()))
+            {
+                Log(Debug::Verbose) << "M15 melee start rejected: actor=" << actor.serialize()
+                                    << " reason=airborne-acrobatics base=" << acrobatics;
+                input.mQueued = ESM4::MeleeQueuedStrike::None;
+                selected.reset();
+            }
+        }
         if (selected)
         {
             if (active)

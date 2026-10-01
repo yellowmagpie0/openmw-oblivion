@@ -8116,3 +8116,56 @@ After normal exit, run the helper's `check` command with `--wave` pointing to
 `NEW/run/rendered-audio.wav`, the versioned `--expectations`, matching `--case`
 and a fresh `--output` JSON. Parser/spectral success alone does not replace the
 course's normal-input/save/provenance and independent native-state checks.
+
+### Checkpoint60 — actual melee airborne eligibility
+
+The ordinary/power start adapter now applies the independently verified Acrobatics
+mastery gate before interrupting a strike or allocating an action. Winning typed
+input settings resolve at most once per controller update without a cross-frame
+cache. Held-power eligibility uses the same airborne classification. The immutable
+classifier retains original animation priority: native JumpStart/JumpLoop/JumpLand
+(groups40/41/42) or character-context state2 mean airborne, with missing pointers
+handled explicitly. The controller bridges active shared jump playback and common
+live swimming/flying/ground/in-air states; exact original Havok transitions,
+climbing/noclip/jump windup and complete native start-process eligibility remain
+unproved, not claimed as production fidelity.
+
+S4/native-airborne-predicate-comparison-01 passes1024 comparisons against the
+independent checkpoint57 original-instruction observations. Oracle report SHA256
+`3acf9c63a7201147d33be0eb09ce8ca6b908609f7db7ee9fb7e6c2b8f0d9750b`;
+numeric corpus SHA256
+`517471ab7cb04285f37e5b912c386a8a4dee141f792a9e13168216676e2b4fb1`.
+S4/native-start-airborne-main-01 passes all1998 component/719 engine cases;
+sanitized-01 passes473 ESM4/719 engine cases under ASan/UBSan with leak checks
+disabled. Both exact inventories have zero failed/skipped cases and unchanged
+tested fingerprint
+`5b16231f334c937c1f962557ea09524d322e3b62bd8f8b0fb976ce82ed4ca3e9`.
+Python is unchanged from checkpoint59's222 passing cases.
+
+Actual S4/native-start-airborne-offscreen-01 normal configured keyboard grounded
+first/restart courses pass. ID1 saves at animation time.4000000059604645,
+resumes in a distinct fresh process without another selection/ID, and completes
+with nextID2/pendingempty. All nine actor values/life/breath/bases/death/combat
+membership and public80/80/140 pools stay unchanged. Both captures were directly
+reviewed: textured prison and full bars, first subsequent fist playback and second
+idle. Capture pose does not prove the earlier saved phase.
+
+Predeclared S4/native-start-airborne-rejection-02 uses normal E jump then U Use
+at actual pristine Player base Acrobatics5. It rejects the start, performs no
+melee selection, keeps nextID1/pendingempty/noowners and no active strikes.
+Saved z7.311005592346191 exceeds pristine z-109.68915557861328. All nine actors'
+values are unchanged except Player Fatigue Damage from0 to-24.0000057220459;
+that difference is permitted explicitly for jumping. Life/breath/bases/death/
+combat membership stay unchanged. The directly inspected capture shows an
+elevated prison viewpoint/readable HUD/reduced Fatigue, not independent proof of
+eligibility. Rejection-01's relative launcher-base replacement failure occurred
+before game launch and is retained;02 corrects only that launcher path.
+Runtime executable SHA256
+`b88b0cce02c61d88c8864b1d2236280f05040b8cef9e126c85643fb1eef75a6f`.
+
+These checks cover actual below-mastery airborne rejection with a grounded
+positive/save continuation control, not every physics mode or full native
+start/attack/block/contact/damage acceptance. S2/S3 remain in progress;
+S4–S14 remain open. Previous checkpoint59 commit
+`3bcaac7686280ed738f2292ad1f1f8f0bcd79b94`; verified bundle37 SHA256
+`7b5879455bfe9e3404537cccb68366b322eaa55f343aac5ecca3945b6d3ff5d6`.

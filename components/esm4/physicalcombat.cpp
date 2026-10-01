@@ -39,6 +39,13 @@ namespace ESM4
         }
     }
 
+    bool nativeAttackAirborne(std::optional<std::uint8_t> animationGroup,
+        std::optional<std::uint32_t> characterState)
+    {
+        return (animationGroup && *animationGroup >= 40 && *animationGroup <= 42)
+            || characterState == 2;
+    }
+
     OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
         float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes)
     {

@@ -26,6 +26,11 @@ namespace ESM4
         const MeleeInputSettings& settings);
     bool heldPowerAttackAllowed(std::int32_t baseAcrobatics, bool swimming, bool airborne,
         const MeleeInputSettings& settings);
+    // Original5EC180 reads the low-byte group in locomotion slot0 first,
+    // then resolved character context state2. Missing objects stay missing.
+    bool nativeAttackAirborne(std::optional<std::uint8_t> animationGroup,
+        std::optional<std::uint32_t> characterState);
+
     enum class OrdinaryMeleePhase : std::uint8_t { Start, Contact, Queue, End };
     // Original ordinary subtype4 slots: Start, Hit, a:, End. Advance at most
     // one phase per native animation update, strictly after its next key.
