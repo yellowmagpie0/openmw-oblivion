@@ -1444,7 +1444,9 @@ namespace MWMechanics
                                 << " weapon_condition_write=" << contact->mWeaponConditionAfterWear.value_or(-1.f)
                                 << " victim=" << (contact->mVictim.isEmpty() ? "none"
                                     : contact->mVictim == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1).serialize()
-                                    : contact->mVictim.getCellRef().getFormKey().serialize());
+                                    : contact->mVictim.getCellRef().getFormKey().serialize())
+                                << " armor_condition_writes=" << contact->mArmorConditionWrites
+                                << " combat_random_draws=" << contact->mRandomDraws;
     }
 
     void CharacterController::advanceOblivionMeleePlayback(float duration)

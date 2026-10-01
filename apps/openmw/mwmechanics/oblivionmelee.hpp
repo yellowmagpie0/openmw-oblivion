@@ -5,6 +5,7 @@
 #include <optional>
 #include <components/esm4/physicalcombat.hpp>
 #include "../mwworld/ptr.hpp"
+#include "oblivioncombat.hpp"
 
 namespace ESM4 { struct GameSetting; }
 namespace MWBase { class World; }
@@ -40,6 +41,8 @@ namespace MWMechanics
         float mBlockFatigueDebit = 0;
         float mBlockAbsorbedFraction = 0;
         std::optional<float> mWeaponConditionAfterWear{};
+        unsigned mArmorConditionWrites = 0;
+        unsigned mRandomDraws = 0;
     };
     // Acquire actual collision/LOS contact, prepare native damage, then publish
     // one owned transaction. Unavailable and unsupported contexts do not spend.
@@ -87,6 +90,8 @@ namespace MWMechanics
     {
         float mHealth;
         std::optional<float> mConditionAfterWear;
+        std::vector<OblivionPhysicalConditionChange> mArmorConditionChanges{};
+        std::optional<OblivionCombatRandomTransition> mRandomTransition{};
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

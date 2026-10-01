@@ -3770,7 +3770,12 @@ namespace
         source.getCellRef().setNativeItemCondition(1000);
         ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Mod,
             ESM4::ActorValueCommandSource::Script, 25));
-        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false));
+        const auto bareArmor = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+        ASSERT_TRUE(bareArmor); EXPECT_EQ(bareArmor->mHealth, 12.46875f);
+        EXPECT_TRUE(bareArmor->mArmorConditionChanges.empty());
+        ASSERT_TRUE(bareArmor->mRandomTransition);
+        EXPECT_EQ(bareArmor->mRandomTransition->mDraws, 7u);
+        EXPECT_EQ(service.combatRandomState(), 1u); // Preparation does not advance.
         ESM4::GameSetting noArmorWear{}; noArmorWear.mId = {0x95b, 0};
         noArmorWear.mEditorId = "fDamageToArmorPercentage"; noArmorWear.mData = 0.f;
         store.getWritable<ESM4::GameSetting>().insertStatic(noArmorWear,
@@ -4780,6 +4785,142 @@ namespace
         const auto untouched = lossy.serializeBinary();
         EXPECT_THROW(service.capture(lossy), std::invalid_argument);
         EXPECT_EQ(lossy.serializeBinary(), untouched);
+    }
+
+    TEST(OblivionWorldTest, OrdinaryWeaponArmorWearPublishesConditionsAndRandomStateOnce)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Weapon::registerSelf(); MWClass::Armor::registerSelf();
+        const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", .5f},
+            {"fDamageWeaponMult", .5f}, {"fDamageSkillBase", .2f}, {"fDamageSkillMult", 1.5f},
+            {"fDamageWeaponConditionBase", .5f}, {"fDamageWeaponConditionMult", .5f},
+            {"fDamageStrengthBase", .75f}, {"fDamageStrengthMult", .5f}, {"fActorLuckSkillMult", .4f},
+            {"fDamageToWeaponPercentage", .06f}, {"fDamageToArmorPercentage", 9.f},
+            {"fArmorRatingMax", .85f}, {"fDifficultyDamageMultiplier", 5.f},
+            {"fPerkHeavyArmorNoviceDamageMult", 1.5f}, {"fArmorRatingConditionMult", 0.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+        }
+        ESM4::Weapon weapon{}; weapon.mId = {0x940, 0}; weapon.mData.health = 1000;
+        weapon.mData.damage = 100; weapon.mData.speed = weapon.mData.reach = 1;
+        const auto weaponBase = ESM::FormKey::content("headless.esm", 0x940);
+        store.getWritable<ESM4::Weapon>().insertStatic(weapon, weaponBase);
+        ESM::Weapon weaponView; weaponView.blank(); weaponView.mId = ESM::RefId(weapon.mId);
+        weaponView.mData.mHealth = 1; weaponView.mData.mChop[0] = weaponView.mData.mChop[1] = 255;
+        store.insertStatic(weaponView);
+        ESM4::Armor armor{}; armor.mId = {0x941, 0}; armor.mArmorFlags = ESM4::Armor::TES4_UpperBody;
+        armor.mGeneralFlags = ESM4::Armor::TYPE_TES4 | ESM4::Armor::TES4_HeavyArmor;
+        armor.mData.health = 100; armor.mData.armor = 0;
+        const auto armorBase = ESM::FormKey::content("headless.esm", 0x941);
+        store.getWritable<ESM4::Armor>().insertStatic(armor, armorBase);
+        ESM::Armor armorView; armorView.blank(); armorView.mId = ESM::RefId(armor.mId);
+        armorView.mData.mType = ESM::Armor::Cuirass; armorView.mData.mHealth = 1;
+        armorView.mData.mArmor = 60000; store.insertStatic(armorView);
+        const auto install = [&](const MWWorld::Ptr& owner, ESM4::RuntimeInventoryItem item, int slot) {
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {item});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = owner.getClass().getInventoryStore(owner);
+            inventory.swapPreparedContents(*staged);
+            return *inventory.getSlot(slot);
+        };
+        ESM4::RuntimeInventoryItem sword; sword.mBase = weaponBase; sword.mCount = 1;
+        sword.mCondition = 1000; sword.mEquippedSlots = ESM4::InventorySlotWeapon;
+        ESM4::RuntimeInventoryItem body; body.mBase = armorBase; body.mCount = 1;
+        body.mCondition = 100.125; body.mEquippedSlots = ESM4::Armor::TES4_UpperBody;
+        auto source = install(attacker, sword, MWWorld::InventoryStore::Slot_CarriedRight);
+        auto target = install(victim, body, MWWorld::InventoryStore::Slot_Cuirass);
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, attacker);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            sword.mCondition = *source.getCellRef().getNativeItemCondition();
+            body.mCondition = *target.getCellRef().getNativeItemCondition();
+            state.mReferences[0].mInventory = {sword}; state.mReferences[1].mInventory = {body};
+            return state;
+        };
+        auto initial = snapshot();
+        for (auto& values : initial.mNativeActorValues)
+        {
+            for (auto [av, amount] : {std::pair{0, 40.f}, {7, 50.f}, {14, 10.f}, {10, 140.f}, {42, 0.f}, {43, 0.f}})
+            { values.mValues[av] = {}; values.mValues[av].mBase = amount; }
+            if (values.mActor == victim.getCellRef().getFormKey())
+            {
+                values.mValues[43].mBase = 25;
+                values.mValues[18] = {}; values.mValues[18].mBase = 5;
+                values.mValues[18].mModifiers[1] = 95; // Current100, original base mastery5.
+            }
+        }
+        struct Row { std::uint32_t seed, next; unsigned draws; };
+        // Frozen concatenated original mitigation/selection/condition paths,
+        // both x87 words: S4/native-armor-contact-oracle-01.
+        for (const auto row : {Row{0, 505908858, 2}, Row{1, 415139642, 3}, Row{0x15a4, 1188163031, 1}})
+        {
+            initial.mCombatRngState = row.seed;
+            service.restore(initial, store);
+            source.getCellRef().setNativeItemCondition(1000); target.getCellRef().setNativeItemCondition(100.125f);
+            EXPECT_EQ(MWMechanics::oblivionArmorRating(world, victim), 25.f);
+            const auto before = snapshot().serializeBinary();
+            const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+            ASSERT_TRUE(prepared);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(prepared->mHealth), 1095204864u); //12.46875
+            EXPECT_EQ(prepared->mConditionAfterWear, 994.f);
+            ASSERT_EQ(prepared->mArmorConditionChanges.size(), 1u);
+            EXPECT_EQ(prepared->mArmorConditionChanges[0].mItem, target);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(prepared->mArmorConditionChanges[0].mCondition), 1110446080u); //44.015625
+            ASSERT_TRUE(prepared->mRandomTransition);
+            EXPECT_EQ(prepared->mRandomTransition->mExpectedState, row.seed);
+            EXPECT_EQ(prepared->mRandomTransition->mNextState, row.next);
+            EXPECT_EQ(prepared->mRandomTransition->mDraws, row.draws);
+            EXPECT_EQ(snapshot().serializeBinary(), before);
+        }
+        initial.mCombatRngState = 1; service.restore(initial, store);
+        const auto action = world.beginOblivionPhysicalAction(attacker);
+        const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+        ASSERT_TRUE(prepared);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -prepared->mHealth, 0, 0, {
+            MWMechanics::captureOblivionPhysicalConditionChange(attacker, source, *prepared->mConditionAfterWear)}};
+        deltas.mConditionChanges.insert(deltas.mConditionChanges.end(),
+            prepared->mArmorConditionChanges.begin(), prepared->mArmorConditionChanges.end());
+        deltas.mRandomTransition = prepared->mRandomTransition;
+        const auto pending = snapshot().serializeBinary();
+        for (unsigned invalid = 0; invalid < 3; ++invalid)
+        {
+            auto bad = deltas;
+            if (invalid == 0) bad.mConditionChanges.back().mExpectedNativeCondition = 100.25f;
+            if (invalid == 1) bad.mConditionChanges.back().mCondition = std::numeric_limits<float>::quiet_NaN();
+            if (invalid == 2) ++bad.mRandomTransition->mNextState;
+            EXPECT_THROW(world.commitOblivionPhysicalContact(action, attacker, victim, bad), std::invalid_argument);
+            EXPECT_EQ(snapshot().serializeBinary(), pending);
+        }
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
+        EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 994.f);
+        EXPECT_EQ(target.getCellRef().getNativeItemCondition(), 44.015625f);
+        EXPECT_EQ(service.combatRandomState(), 415139642u);
+        EXPECT_EQ(service.findActorValues(victim.getCellRef().getFormKey())->mValues[8].mModifiers[2], -12.46875f);
+        EXPECT_EQ(service.findActorValues(attacker.getCellRef().getFormKey())->mValues[10].mModifiers[2], -7.f);
+        const auto committed = snapshot();
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
+        EXPECT_EQ(snapshot().serializeBinary(), committed.serializeBinary());
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(committed.serializeBinary());
+        source = install(attacker, loaded.mReferences[0].mInventory[0], MWWorld::InventoryStore::Slot_CarriedRight);
+        target = install(victim, loaded.mReferences[1].mInventory[0], MWWorld::InventoryStore::Slot_Cuirass);
+        service.clear(); service.restore(loaded, store);
+        EXPECT_EQ(snapshot().serializeBinary(), committed.serializeBinary());
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
+        const auto beforeBreak = snapshot().serializeBinary();
+        target.getCellRef().setNativeItemCondition(1);
+        const auto broken = snapshot().serializeBinary();
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false));
+        EXPECT_EQ(snapshot().serializeBinary(), broken);
+        target.getCellRef().setNativeItemCondition(44.015625f);
+        EXPECT_EQ(snapshot().serializeBinary(), beforeBreak);
     }
 
 }

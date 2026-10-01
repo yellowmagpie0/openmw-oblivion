@@ -10179,3 +10179,40 @@ component tests with exact inventories/XML, zero skips/failures and stable
 tested source fingerprint `c3bc5c57c732969533086bf8df43e5a05df0d7248800438f80e7f9584fb42083`. No sanitizer findings; leaks disabled.
 No engine/Python source changes or new runtime armor acceptance. S3 and later
 open gates remain open.
+
+### Checkpoint99 — owned ordinary weapon armor wear and RNG publication
+
+Ordinary unblocked weapon contacts now prepare native positive armor wear,
+body/shield selection and a combat-owned RNG transition, then publish them
+with weapon condition, resources and action consumption through the existing
+atomic transaction. Equipped body candidates must be winning native ARMO;
+clothing is absent for this selection (original486790 armor-only flag).
+Shield availability requires the actual active-process carried-left item.
+The original floored base Light/Heavy skill selects wear mastery. Seven
+unsuccessful selections still publish their seven draws. Read-only preparation,
+late malformed/stale condition or RNG failures, duplicate contacts and binary
+restart leave ownership and publication consistent. Player victim god mode,
+valid weapon blocks, breaks and stack splitting remain explicit open branches.
+
+Independent `S4/native-armor-contact-oracle-01` concatenates original mitigation,
+547260 wear, full5E5A00/47DF80/9859DD selection and5F3870 armor condition paths.
+Three seeds agree under both x87 words: Health12.46875, weapon994,
+armor44.015625; draw counts2/3/1 and next states505908858/415139642/1188163031.
+Armor query25 and incoming16.625 are supplied boundaries, not a whole caller.
+Corpus SHA-256 `6b9630b7f9cb4c4e67dc9a575e9e9c153031e36e546ed205bacf5ff0d9c87621`.
+`native-armor-slot-lookup-oracle-01` independently covers3072 ARMO/CLOT worn,
+mask and armor-only lookup cases; no stack splitting/conflict precedence claim.
+
+Retained `native-weapon-armor-main-01`/`-sanitized-01` each failed only the new
+fixture: armor hundredths0 still produces the native formula minimum1 before
+condition scaling. The fixture now explicitly sets winning condition multiplier0
+to isolate the supplied Ward25, asserts query25, and uses the correct perk GMST
+name. No production arithmetic was tuned to this fixture. Final `-main-02` and
+`-sanitized-02` each pass all760 engine cases with exact inventories/XML, zero
+skips/failures, no sanitizer findings (leaks disabled), tested fingerprint
+`e698fac2f0a31570465036ee77beaa7873d8a3a666501055e21f1f56c9ef3233`.
+No Python/component source changed. Live armored contact acceptance remains
+open: independent full488CB0 entry probes discovered missing outer rounding
+in the existing equipped-item query. The next chunk corrects that omission
+before freezing actual armor-contact expectations. S4 and all later gates
+remain open; no full gameplay acceptance is claimed here.

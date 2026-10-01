@@ -214,11 +214,16 @@ namespace MWMechanics
                     return std::nullopt;
                 result.mDamage = {damage->mHealth, 0};
                 result.mWeaponConditionAfterWear = damage->mConditionAfterWear;
+                result.mArmorConditionWrites = static_cast<unsigned>(damage->mArmorConditionChanges.size());
+                result.mRandomDraws = damage->mRandomTransition ? damage->mRandomTransition->mDraws : 0;
                 if (damage->mConditionAfterWear)
                 {
                     condition.mCondition = *damage->mConditionAfterWear;
                     deltas.mConditionChanges.push_back(std::move(condition));
                 }
+                deltas.mConditionChanges.insert(deltas.mConditionChanges.end(),
+                    damage->mArmorConditionChanges.begin(), damage->mArmorConditionChanges.end());
+                deltas.mRandomTransition = damage->mRandomTransition;
             }
         }
         deltas.mVictimHealth = -result.mDamage.mHealth;
@@ -408,6 +413,90 @@ namespace MWMechanics
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction};
     }
 
+    namespace
+    {
+        struct PreparedArmorWear
+        {
+            std::vector<OblivionPhysicalConditionChange> mConditions;
+            std::optional<OblivionCombatRandomTransition> mRandom;
+        };
+
+        std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
+            OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,
+            float absorbedFraction, std::span<const ESM4::GameSetting* const> settings)
+        {
+            PreparedArmorWear result;
+            if (absorbedFraction <= 0)
+                return result;
+            const float wear = ESM4::armorWear(incoming, absorbedFraction, ESM4::buildDurabilitySettings(settings));
+            if (wear <= 0)
+                return result;
+            const bool player = victim == world.getPlayerPtr();
+            if (player && world.getGodModeState())
+                return std::nullopt; // Victim god-mode wear admission still needs its native caller branch.
+            const auto key = player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
+            const auto* values = service.findActorValues(key);
+            if (!values)
+                throw std::invalid_argument("native armor wear requires actor-value authority");
+            struct Candidate { const ESM4::Armor* mBase = nullptr; MWWorld::Ptr mItem; };
+            std::array<Candidate, 7> candidates{};
+            auto& inventory = victim.getClass().getInventoryStore(victim);
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+            {
+                if (!inventory.isEquipped(*item) || item->getType() != ESM::REC_ARMO)
+                    continue; // Original486790(slot,1) excludes clothing.
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item->getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                const auto* armor = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
+                if (!armor)
+                    throw std::invalid_argument("native armor wear has no winning armor definition");
+                for (unsigned slot = 0; slot < candidates.size(); ++slot)
+                {
+                    const unsigned nativeSlot = slot == 6 ? 13 : slot;
+                    if (!(armor->mArmorFlags & (1u << nativeSlot)))
+                        continue;
+                    if (slot == 6)
+                    {
+                        const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                        if (values->mProcess != ESM4::ActorValueProcess::Active
+                            || carried == inventory.end() || *carried != *item)
+                            continue;
+                    }
+                    if (candidates[slot].mBase)
+                        throw std::invalid_argument("overlapping native equipped armor wear slots");
+                    candidates[slot] = {armor, *item};
+                }
+            }
+            std::array<bool, 7> available{};
+            for (unsigned i = 0; i < available.size(); ++i)
+                available[i] = candidates[i].mBase != nullptr;
+            const auto selected = ESM4::selectArmorWear(service.combatRandomState(), available,
+                ESM4::buildArmorWearSelectionSettings(settings));
+            result.mRandom = service.prepareCombatRandom(selected.mDraws);
+            if (result.mRandom->mNextState != selected.mNextState)
+                throw std::logic_error("native armor selection random preparation mismatch");
+            if (!selected.mSlot)
+                return result; // All seven failed draws still belong to this contact.
+            const auto& candidate = candidates[static_cast<unsigned>(*selected.mSlot)];
+            const auto& ref = candidate.mItem.getCellRef();
+            const double current = ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())
+                : ref.getCharge() < 0 ? double(candidate.mBase->mData.health)
+                : double(ref.getCharge()) + ref.getChargeIntRemainder();
+            const bool heavy = candidate.mBase->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor;
+            const auto skill = player ? service.getPlayerBaseValue(heavy ? 18 : 27)
+                : service.getNonPlayerBaseValue(key, heavy ? 18 : 27, world.getStore());
+            const auto condition = ESM4::nativeArmorConditionAfterWear(current, wear, skill,
+                heavy ? ESM4::ArmorWeight::Heavy : ESM4::ArmorWeight::Light,
+                ESM4::buildArmorWearMasterySettings(settings), ESM4::buildCombatMasterySettings(settings));
+            if (!condition)
+                throw std::logic_error("admitted native armor wear did not prepare a condition");
+            if (*condition == 0)
+                return std::nullopt; // Break unequip/drop/reactions require their own atomic policy.
+            result.mConditions.push_back(captureOblivionPhysicalConditionChange(victim, candidate.mItem, *condition));
+            return result;
+        }
+    }
+
     std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking)
@@ -456,8 +545,6 @@ namespace MWMechanics
         }
         const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
-        if (armor.mAbsorbedFraction > 0 && ESM4::armorWear(incoming, armor.mAbsorbedFraction, durability) > 0)
-            return std::nullopt; // Native positive armor wear selects a piece with its own RNG.
         if (oblivionBlockingPosture(world, victim) && !oblivionParalyzed(world, victim))
         {
             const auto& from = attacker.getRefData().getPosition();
@@ -471,7 +558,10 @@ namespace MWMechanics
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
         const auto damage = ESM4::physicalContactDamage({incoming, 0}, armor.mHealthDamage,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
-        return OblivionWeaponContactDamage{damage.mHealth, condition};
+        auto wear = prepareOrdinaryArmorWear(world, *service, victim, incoming, armor.mAbsorbedFraction, settings);
+        if (!wear)
+            return std::nullopt;
+        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom};
     }
 
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
