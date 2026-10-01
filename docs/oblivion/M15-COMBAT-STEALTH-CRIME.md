@@ -9428,3 +9428,75 @@ strike action publication, acquired-victim damage, condition/reactions, console
 command support and all remaining plan gates. Previous checkpoint84 commit
 120ae4e8670de62cd2ec5363ea9b645f65e431b5; verified bundle62 SHA256
 145c82f790a668b28ead9eda7cab5e03d707de95bda39fcfec9a703c7e513d13.
+
+### Checkpoint86 — held native block posture and cyclic playback
+
+Concrete native NPC/Player melee controllers consume transient Lua block intent.
+A valid family BlockIdle sequence with native cycle0 and valid start/stop range
+admits Alive Active actors with known knocked0, integer Paralysis0, idle/block
+raw action and no owned strike. Admission publishes action6 and clears queued
+attack input before animation callbacks. Upper-body playback cycles the complete
+native sequence range. Release publishes-1 before disabling playback; foreign
+raw actions remain unchanged. Existing-script/equipment/mount/life/reaction
+interruptions cancel input/owned strikes and playback before observers. Raw
+native knocked/paralysis now also interrupt native melee playback. Paused
+mechanics cancel the Player without advancing simulation/NPC animation clocks.
+A fresh process with saved posture6 and absent transient held input releases it
+rather than replaying block. CREA natural/block policy and followthrough/block-
+attack transitions remain separate, open work; admission does not establish all
+original animation-context eligibility, angle, mitigation or timing rules.
+
+Original caller5F4D55 selects group27 (BlockIdle), and5F4D7D/5F4DC6 pass raw6 to
+actor transition5EFFD0. Actual original transition probe S4/native-actor-action-
+transition-oracle-01 passes262156 executions:65535 signed prior High words to
+-1/2/3/6,12 Lower no-ops and4 null-process no-ops. Prior bow action5 is explicitly
+excluded because its animation side effects require context absent here. Null
+sequence/unarmed weapon/absent animation context; actual NPC actor/process
+virtuals and4D8370 execute, no invoked game-function stubs. This is transition
+storage evidence, not complete animation selection or action-data lifetime.
+Corpus SHA2567f2684b9caaa43672b9738b4e80aecd0adc841f8d2c9178305f77b21e71a5300;
+original PE identity unchanged. Two retained failed probes found the bow context
+boundary. Bounded original caller audit distinguishes attack2/followthrough3/
+bow4/arrow5/block6 from group subtype4/5; no ordinary/power mapping to raw4/5.
+
+S4/native-block-cycle-inspection-01 reopens all six installed _male/_1stperson
+handtohand/onehand/twohand BlockIdle KF assets. All declare native cycle0, start0,
+stop approximately1.3 and start/end keys without loop keys. Hashes, editable
+inspection driver, compiler/link commands and metadata retained outside Git.
+These metadata are consumed through the existing native sequence adapter.
+
+Three new engine cases cover8960 knocked/action/paralysis admission combinations,
+all65536 signed release actions, missing/unknown/Low/Dead/owned-strike rejection,
+read-only rejection and typed binary/content restore of accepted posture. Main
+S3/native-block-controller-main-03 and sanitized-04 each pass747 exact engine
+cases, zero failures/skips/source drift. Tested fingerprint
+996892f03c56a92f3472825e0a52fd8c491296775dfeab298a335b41e1065c51.
+ASan/UBSan halt on errors with leaks disabled. Sanitized-03 also passes but its
+UBSAN_OPTIONS variable was misspelled; -04 supplies the correct environment.
+Retained main/sanitized-01 reject an invalid Low fixture with Active-only raw
+fields; corrected-02 passes. Passing-02 precedes the pause-time production fix
+and is not its final acceptance evidence. Prior Python/component evidence is
+unchanged85/80 respectively.
+
+S4/native-block-controller-offscreen-02 observes normal remapped held input,
+menu/release, and scheduled native Script paralysis+.75→1.75→.75 interruption.
+Renderer trace begin/release repeats exactly three times; Lua held transitions
+false→true→false→true→false→true→false. The save taken while held contains raw6;
+fresh load/resave contains-1, no block begin/held replay. Remaining AV/life/
+breath/base/death/engagement/action authority and staged+.75 remain exact, apart
+from constructor0/-1 in previously unknown actors. Independent schema26 decode,
+input/pristine hashes, script/scenario reports and distinct epochs pass. Engine
+SHA2566dbe44c46e78f1e2dd5a9b7e498023c6baf004ca924842eb042bdf0de5bb7aac;
+PID12/start15228155→PID12/start15243573; refs34674→34904→35005 are legitimate
+discoveries. Three captures directly reviewed: raised stock fists while held,
+cleared pose on release and fresh process, full HUD. This accepts first-person
+unarmed posture/playback only; other families/views/devices/audio and contacts
+remain open. Retained offscreen-01 passes its generic scenario but independent
+semantic check fails the menu renderer transition: mechanics skipped the paused
+controller. That concrete failure led to the pause-time cancellation fix.
+
+S2/S3 remain in progress and S4–S14 open. Next: verified attack action publication,
+acquired-victim damage, block/contact eligibility, condition/reactions, remaining
+family/view/input/interruption courses, console support and all later plan gates.
+Previous checkpoint85 commit13fd23cae9eefd3ba8c39085d0ffbd2052bf9326; verified
+bundle63 SHA25688ff199369bbadf7aeef94220a07b5e004514e54c8620ddfc0bf8dc41456d696.

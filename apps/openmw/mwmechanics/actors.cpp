@@ -1638,6 +1638,17 @@ namespace MWMechanics
 
     void Actors::update(float duration, bool paused)
     {
+        if (paused)
+        {
+            auto* world = MWBase::Environment::get().getWorld().operator MWBase::World*();
+            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                const auto player = world->getPlayerPtr();
+                const auto it = mIndex.find(player.mRef);
+                if (it != mIndex.end())
+                    it->second->getCharacterController().cancelOblivionCombatInput();
+            }
+        }
         if (!paused)
         {
             const float updateEquippedLightInterval = 1.0f;

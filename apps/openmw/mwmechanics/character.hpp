@@ -222,6 +222,7 @@ namespace MWMechanics
         void dispatchOblivionMeleeContact();
         void advanceOblivionMeleePlayback(float duration);
         void finishOblivionMeleePlayback();
+        std::string mOblivionBlockGroup; // Render binding; held input is not saved.
         std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
         void updateIdleStormState(bool inwater) const;
 
@@ -286,6 +287,8 @@ namespace MWMechanics
         void updatePtr(const MWWorld::Ptr& ptr);
 
         void update(float duration);
+        // Menu/pause cancellation without advancing simulation or NPC clocks.
+        void cancelOblivionCombatInput();
 
         bool onOpen() const;
         void onClose() const;

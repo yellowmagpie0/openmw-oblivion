@@ -2675,6 +2675,100 @@ namespace
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
     }
 
+    TEST(OblivionWorldTest, NativeBlockingAdmissionUsesRawPostureKnockedAndIntegerParalysis)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        auto& world = fixture.mWorld;
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        const auto source = captureNativeActorState(fixture, actor);
+        for (int knocked = -128; knocked <= 127; ++knocked)
+            for (int action : {-32768, -1, 0, 2, 3, 6, 32767})
+                for (float paralysis : {-.75f, -1.25f, 0.f, .75f, 1.25f})
+                {
+                    auto state = source;
+                    auto& values = state.mNativeActorValues[0];
+                    values.mProcessKnockedState = static_cast<std::int8_t>(knocked);
+                    values.mProcessAction = static_cast<std::int16_t>(action);
+                    values.mValues[48].mModifiers[1] = paralysis;
+                    service.restore(state, world.getStore());
+                    const bool allowed = knocked == 0 && (action == -1 || action == 6)
+                        && std::abs(paralysis) < 1;
+                    EXPECT_EQ(service.beginBlocking(key), allowed);
+                    if (allowed)
+                        state.mNativeActorValues[0].mProcessAction = 6;
+                    EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), state.serializeBinary());
+                }
+    }
+
+    TEST(OblivionWorldTest, NativeBlockingReleasePreservesForeignActionsAndOtherAuthority)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        auto& world = fixture.mWorld;
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        const auto source = captureNativeActorState(fixture, actor);
+        for (int action = -32768; action <= 32767; ++action)
+        {
+            service.setProcessAction(key, static_cast<std::int16_t>(action));
+            EXPECT_EQ(service.endBlocking(key), action == 6);
+            EXPECT_EQ(service.getProcessAction(key), action == 6 ? -1 : action);
+        }
+        service.restore(source, world.getStore());
+        service.initializeConstructedActorProcess(key);
+        ASSERT_TRUE(service.beginBlocking(key));
+        auto blocked = captureNativeActorState(fixture, actor);
+        service.restore(ESM4::RuntimeState::deserializeBinary(blocked.serializeBinary()), world.getStore());
+        EXPECT_EQ(service.getProcessAction(key), 6);
+        ASSERT_TRUE(service.endBlocking(key));
+        blocked.mNativeActorValues[0].mProcessAction = -1;
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), blocked.serializeBinary());
+        EXPECT_FALSE(service.endBlocking(key));
+        EXPECT_FALSE(service.endBlocking(ESM::FormKey::dynamic("missing", 1)));
+    }
+
+    TEST(OblivionWorldTest, NativeBlockingRejectsMissingLegacyLowDeadAndOwnedStrike)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        auto& world = fixture.mWorld;
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        auto source = captureNativeActorState(fixture, actor);
+        source.mNativeActorValues[0].mProcessKnockedState = 0;
+        source.mNativeActorValues[0].mProcessAction = -1;
+        EXPECT_FALSE(service.beginBlocking(ESM::FormKey::dynamic("missing", 1)));
+        for (int fault = 0; fault != 4; ++fault)
+        {
+            auto state = source;
+            if (fault == 0) state.mNativeActorValues[0].mProcessKnockedState.reset();
+            if (fault == 1) state.mNativeActorValues[0].mProcessAction.reset();
+            if (fault == 2)
+            {
+                state.mNativeActorValues[0].mProcess = ESM4::ActorValueProcess::Low;
+                state.mNativeActorValues[0].mProcessKnockedState.reset();
+                state.mNativeActorValues[0].mProcessAction.reset();
+            }
+            if (fault == 3) state.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::Dead;
+            service.restore(state, world.getStore());
+            EXPECT_FALSE(service.beginBlocking(key));
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), state.serializeBinary());
+        }
+        service.restore(source, world.getStore());
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft", 1, {});
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_FALSE(service.beginBlocking(key));
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        ASSERT_TRUE(service.cancelMeleeStrike(id, key));
+        ASSERT_TRUE(service.beginBlocking(key));
+        EXPECT_EQ(service.getProcessAction(key), 6);
+    }
+
     TEST(OblivionWorldTest, ConstructedActiveProcessInitializesUnknownWithoutChangingOtherAuthority)
     {
         NativeWorldFixture fixture;

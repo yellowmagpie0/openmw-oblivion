@@ -564,6 +564,10 @@ namespace MWMechanics
         // does not expose or import an arbitrary warm/stale High cache word.
         std::int32_t getProcessParalysis(const ESM::FormKey& actor) const;
         void setProcessAction(const ESM::FormKey& actor, std::int16_t action);
+        // Renderer validates the concrete block group before admission. Held
+        // intent is transient; only the accepted native posture is persisted.
+        bool beginBlocking(const ESM::FormKey& actor);
+        bool endBlocking(const ESM::FormKey& actor);
         // A real animated actor has constructed an Active process. Apply its
         // native defaults only where an older save has no restored field.
         // Headless restore and same-process activation must not call this.

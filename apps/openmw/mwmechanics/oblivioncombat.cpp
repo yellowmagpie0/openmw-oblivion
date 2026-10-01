@@ -2392,6 +2392,32 @@ namespace MWMechanics
         found->second.mProcessAction = action;
     }
 
+    bool OblivionCombatService::beginBlocking(const ESM::FormKey& actor)
+    {
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        const auto* melee = findMeleeState(actor);
+        if (!values || values->mProcess != ESM4::ActorValueProcess::Active
+            || !values->mProcessKnockedState || *values->mProcessKnockedState != 0
+            || !values->mProcessAction || (*values->mProcessAction != -1 && *values->mProcessAction != 6)
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive || (melee && melee->mStrike)
+            || getProcessParalysis(actor) != 0)
+            return false;
+        setProcessAction(actor, 6);
+        clearMeleeInput(actor);
+        return true;
+    }
+
+    bool OblivionCombatService::endBlocking(const ESM::FormKey& actor)
+    {
+        const auto* values = findActorValues(actor);
+        if (!values || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mProcessAction != 6)
+            return false;
+        setProcessAction(actor, -1);
+        return true;
+    }
+
     void OblivionCombatService::initializeConstructedActorProcess(const ESM::FormKey& actor)
     {
         const auto found = mActorValues.find(actor);

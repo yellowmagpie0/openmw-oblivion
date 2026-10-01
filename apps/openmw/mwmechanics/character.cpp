@@ -1570,6 +1570,43 @@ namespace MWMechanics
         mAnimation->disable(strike.mAnimationGroup);
     }
 
+    void CharacterController::cancelOblivionCombatInput()
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation)
+            return;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        std::string strikeGroup;
+        if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
+        {
+            const auto strike = *state->mStrike;
+            strikeGroup = strike.mAnimationGroup;
+            service->cancelMeleeStrike(strike.mActionId, actor);
+            Log(Debug::Verbose) << "M15 melee interrupt: actor=" << actor.serialize()
+                                << " id=" << strike.mActionId << " group=" << strikeGroup;
+        }
+        service->endBlocking(actor);
+        service->clearMeleeInput(actor);
+        const std::string blockGroup = std::exchange(mOblivionBlockGroup, {});
+        mOblivionRenderedStrike = 0;
+        mCurrentWeapon.clear();
+        const bool drawn = mPtr.getClass().getCreatureStats(mPtr).getDrawState() == DrawState::Weapon
+            || mPtr.getType() == ESM::REC_CREA4;
+        mUpperBodyState = drawn ? UpperBodyState::WeaponEquipped : UpperBodyState::None;
+        // All authority and renderer identities are cleared before either
+        // disable can emit an animation-end observer.
+        if (!strikeGroup.empty())
+            mAnimation->disable(strikeGroup);
+        if (!blockGroup.empty())
+        {
+            Log(Debug::Verbose) << "M15 block release: actor=" << actor.serialize() << " group=" << blockGroup;
+            mAnimation->disable(blockGroup);
+        }
+    }
+
     bool CharacterController::updateOblivionWeaponState(float duration)
     {
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
@@ -1582,33 +1619,24 @@ namespace MWMechanics
         const auto& cls = mPtr.getClass();
         const auto& stats = cls.getCreatureStats(mPtr);
         const bool drawn = stats.getDrawState() == DrawState::Weapon || mPtr.getType() == ESM::REC_CREA4;
-        const auto interrupt = [&] {
-            std::string interruptedGroup;
-            if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
+        const auto releaseBlock = [&] {
+            // Clear posture before animation-end observers can query/save it.
+            service->endBlocking(actor);
+            const std::string group = std::exchange(mOblivionBlockGroup, {});
+            if (!group.empty())
             {
-                const auto strike = *state->mStrike;
-                interruptedGroup = strike.mAnimationGroup;
-                service->cancelMeleeStrike(strike.mActionId, actor);
-                Log(Debug::Verbose) << "M15 melee interrupt: actor=" << actor.serialize()
-                                    << " id=" << strike.mActionId << " group=" << interruptedGroup;
+                Log(Debug::Verbose) << "M15 block release: actor=" << actor.serialize() << " group=" << group;
+                mAnimation->disable(group);
             }
-            // Queued input can also survive after the strike was already removed
-            // by a life transition. Clear it before any animation-end observer.
-            service->clearMeleeInput(actor);
-            mOblivionRenderedStrike = 0;
-            mCurrentWeapon.clear();
-            mUpperBodyState = drawn ? UpperBodyState::WeaponEquipped : UpperBodyState::None;
-            // Publish cancellation and clear the renderer's strike identity
-            // before disable emits the Lua animation-end callback.
-            if (!interruptedGroup.empty())
-                mAnimation->disable(interruptedGroup);
         };
+        const auto interrupt = [&] { cancelOblivionCombatInput(); };
         if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
         {
             interrupt();
             return false;
         }
         if (!drawn || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
+            || oblivionKnockedState(*world, mPtr) != 0 || oblivionParalyzed(*world, mPtr)
             || mSkipAnim || (player && world->getOblivionAiService() && world->getOblivionAiService()->isRidingHorse(mPtr)))
         {
             interrupt();
@@ -1660,6 +1688,42 @@ namespace MWMechanics
         // combat must retain that intent, and an unchanged weapon needs no rebuild.
         if (equipmentChanged)
             mAnimation->showWeapons(true);
+        const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
+        const std::string blockGroup = family + "blockidle";
+        if (equipmentChanged || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
+            releaseBlock();
+        bool blockAccepted = false;
+        if (controls && controls->mBlock && mPtr.getType() != ESM::REC_CREA4
+            && mAnimation->hasAnimation(blockGroup))
+        {
+            const auto* metadata = mAnimation->getControllerSequenceMetadata(blockGroup);
+            const float start = mAnimation->getTextKeyTimeInGroup(blockGroup, blockGroup + ": start");
+            const float stop = mAnimation->getTextKeyTimeInGroup(blockGroup, blockGroup + ": stop");
+            // Stock native BlockIdle sequences cycle over their complete range;
+            // they have start/end keys and no authored loop keys.
+            if (metadata && metadata->mCycleType == 0 && start >= 0 && stop > start)
+                blockAccepted = service->beginBlocking(actor);
+            if (blockAccepted)
+            {
+                if (mOblivionBlockGroup.empty() || !mAnimation->isPlaying(blockGroup))
+                {
+                    mOblivionBlockGroup = blockGroup;
+                    Log(Debug::Verbose) << "M15 block begin: actor=" << actor.serialize() << " group=" << blockGroup;
+                    try
+                    {
+                        playBlendedAnimation(blockGroup, Priority_Weapon, MWRender::BlendMask_UpperBody,
+                            false, 1.f, "start", "stop", 0.f, std::numeric_limits<std::uint32_t>::max(), true);
+                    }
+                    catch (...)
+                    {
+                        releaseBlock();
+                        throw;
+                    }
+                }
+                return false;
+            }
+        }
+        releaseBlock(); // Also clears saved posture6 when no held input was restored.
         persistOblivionMeleeProgress();
         const auto* saved = service->findMeleeState(actor);
         auto input = saved ? saved->mInput : ESM4::RuntimeMeleeInput{};
