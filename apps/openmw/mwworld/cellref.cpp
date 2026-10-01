@@ -1,6 +1,8 @@
 #include "cellref.hpp"
 
 #include <cassert>
+#include <cmath>
+#include <stdexcept>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm/refid.hpp>
@@ -185,12 +187,39 @@ namespace MWWorld
         }
     }
 
+    std::optional<float> CellRef::getNativeItemCondition() const
+    {
+        const auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant);
+        return ref ? ref->mNativeItemCondition : std::nullopt;
+    }
+
+    float CellRef::getItemCondition(float maximum) const
+    {
+        if (const auto value = getNativeItemCondition())
+            return *value;
+        return getCharge() < 0 ? maximum
+            : static_cast<float>(double(getCharge()) + getChargeIntRemainder());
+    }
+
+    void CellRef::setNativeItemCondition(float condition)
+    {
+        if (!std::isfinite(condition) || condition < 0)
+            throw std::invalid_argument("Invalid native item condition");
+        auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant);
+        if (!ref)
+            throw std::invalid_argument("Native condition requires a projected inventory instance");
+        ref->mNativeItemCondition = condition;
+        mChanged = true;
+    }
+
     void CellRef::setCharge(int charge)
     {
         std::visit(ESM::VisitOverload{
                        [&](ESM4::Reference& /*ref*/) {},
                        [&](ESM4::ActorCharacter&) {},
-                       [&](ESM::CellRef& ref) { ref.mChargeInt = charge; },
+                       [&](ESM::CellRef& ref) { ref.mChargeInt = charge;
+                           if (ref.mNativeItemCondition) ref.mChargeIntRemainder = 0;
+                           ref.mNativeItemCondition.reset(); },
                    },
             mCellRef.mVariant);
     }

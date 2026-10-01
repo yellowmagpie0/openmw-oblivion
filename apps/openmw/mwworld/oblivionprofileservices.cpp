@@ -746,6 +746,9 @@ namespace MWWorld
         result.reserve(items.size());
         for (const auto& item : items)
         {
+            if (!std::isfinite(item.mCondition) || (item.mCondition < 0 && item.mCondition != -1)
+                || item.mCondition > std::numeric_limits<float>::max())
+                throw std::invalid_argument("Invalid native inventory condition");
             const auto itemId = resolver.toFormId(item.mBase);
             if (!itemId || !itemDefinition(store, ESM::RefId(*itemId)))
                 throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
@@ -753,7 +756,7 @@ namespace MWWorld
             ManualRef source(store, sharedItemId(store, ESM::RefId(*itemId)), item.mCount);
             const Ptr ptr = source.getPtr();
             if (item.mCondition >= 0)
-                ptr.getCellRef().setCharge(item.mCondition);
+                ptr.getCellRef().setNativeItemCondition(static_cast<float>(item.mCondition));
             if (item.mCharge >= 0.f)
                 ptr.getCellRef().setEnchantmentCharge(item.mCharge);
             if (item.mRemainingUsageTime >= 0.f)

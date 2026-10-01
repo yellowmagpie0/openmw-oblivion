@@ -1436,5 +1436,32 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         overflow = bytearray(payload); struct.pack_into("<I", overflow, start, 0xffffffff)
         with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(overflow)
 
+    def test_condition24_native_bits_legacy_limits_and_invalid_metadata(self):
+        for bits in [0, 0x80000000, 1, 0x33800000, 0x3eaaaaab, 0x42c7ffff, 0x43000000, 0x7f7fffff]:
+            value = struct.unpack("<f", struct.pack("<I", bits))[0]
+            state = make_state()
+            state["ai_rng_state"] = 1
+            state["schema_version"] = 24
+            state["player"]["inventory"][0]["condition"] = value
+            payload = state_io.encode_payload(state)
+            restored = state_io.decode_payload(payload)
+            result = restored["player"]["inventory"][0]["condition"]
+            self.assertEqual(struct.unpack("<I", struct.pack("<f", result))[0], bits)
+            self.assertEqual(state_io.encode_payload(restored), payload)
+            if bits not in [0, 0x43000000]:
+                state["schema_version"] = 23
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = make_state()
+        state["ai_rng_state"] = 1
+        state["schema_version"] = 23
+        state["player"]["inventory"][0]["condition"] = 2147483647
+        payload = state_io.encode_payload(state)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+        state["schema_version"] = 24
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["player"]["inventory"][0]["condition"], 2147483648.)
+        for bad in [-.5, -2., float("nan"), float("inf"), True, 1e40]:
+            state["player"]["inventory"][0]["condition"] = bad
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
 if __name__ == "__main__":
     unittest.main()

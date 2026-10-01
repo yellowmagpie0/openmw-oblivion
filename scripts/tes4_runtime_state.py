@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 23
+CURRENT_VERSION = 24
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -257,7 +257,7 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
         item: dict[str, Any] = {"base": reader.string(), "count": reader.unpack("<i")}
         if version >= 4:
             item.update({
-                "condition": reader.unpack("<i"),
+                "condition": reader.unpack("<f" if version >= 24 else "<i"),
                 "charge": reader.unpack("<f"),
                 "equipped_slots": reader.unpack("<I"),
                 "hotkey": reader.unpack("<b"),
@@ -274,7 +274,9 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
         writer.string(str(item["base"]))
         writer.pack("<i", int(item["count"]))
         if version >= 4:
-            writer.pack("<i", int(item.get("condition", -1)))
+            writer.pack("<f" if version >= 24 else "<i",
+                        float(item.get("condition", -1)) if version >= 24
+                        else int(item.get("condition", -1)))
             writer.pack("<f", float(item.get("charge", -1.0)))
             writer.pack("<I", int(item.get("equipped_slots", 0)))
             writer.pack("<b", int(item.get("hotkey", -1)))
@@ -1121,12 +1123,16 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
             if metadata.intersection(item):
                 raise RuntimeStateError("TES4 runtime-state version 1/2/3 cannot contain M13 item state")
             continue
-        condition = int(item.get("condition", -1))
+        condition = float(item.get("condition", -1))
         charge = float(item.get("charge", -1.0))
         usage = float(item.get("remaining_usage_time", -1.0))
         slots = int(item.get("equipped_slots", 0))
         hotkey = int(item.get("hotkey", -1))
-        if (condition < -1 or not math.isfinite(charge) or charge < -1.0
+        if (not math.isfinite(condition) or condition > 3.4028234663852886e38
+                or isinstance(item.get("condition"), bool) or (condition < 0 and condition != -1)
+                or (version < 24 and (condition != math.trunc(condition) or condition > 2147483647
+                                    or (condition == 0 and math.copysign(1., condition) < 0)))
+                or not math.isfinite(charge) or charge < -1.0
                 or not math.isfinite(usage) or usage < -1.0 or slots & ~0x7FFFF
                 or hotkey < -1 or hotkey > 7):
             raise RuntimeStateError("Invalid TES4 runtime-state inventory metadata")

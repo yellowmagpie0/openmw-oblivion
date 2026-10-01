@@ -432,8 +432,12 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2)
 
         // item that is already partly used up never stacks
         && (!cls1.hasItemHealth(ptr1)
-            || (cls1.getItemHealth(ptr1) == cls1.getItemMaxHealth(ptr1)
-                && cls2.getItemHealth(ptr2) == cls2.getItemMaxHealth(ptr2)));
+            || ((ptr1.getCellRef().getNativeItemCondition()
+                    ? *ptr1.getCellRef().getNativeItemCondition() == cls1.getItemMaxHealth(ptr1)
+                    : cls1.getItemHealth(ptr1) == cls1.getItemMaxHealth(ptr1))
+                && (ptr2.getCellRef().getNativeItemCondition()
+                    ? *ptr2.getCellRef().getNativeItemCondition() == cls2.getItemMaxHealth(ptr2)
+                    : cls2.getItemHealth(ptr2) == cls2.getItemMaxHealth(ptr2))));
 }
 
 MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(const ESM::RefId& id, int count, bool allowAutoEquip)

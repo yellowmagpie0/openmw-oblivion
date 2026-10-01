@@ -890,8 +890,7 @@ namespace MWWorld
             if (auto definition = OblivionProfileServices::itemDefinition(mStore, baseId))
             {
                 item.mCondition = definition->mMaxCondition < 0 ? -1
-                    : itemPtr.getCellRef().getCharge() < 0 ? definition->mMaxCondition
-                                                          : itemPtr.getCellRef().getCharge();
+                    : itemPtr.getCellRef().getItemCondition(static_cast<float>(definition->mMaxCondition));
                 item.mCharge = definition->mMaxCharge < 0.f ? -1.f
                     : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
                                                                        : itemPtr.getCellRef().getEnchantmentCharge();
@@ -974,8 +973,7 @@ namespace MWWorld
                 if (const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId))
                 {
                     item.mCondition = definition->mMaxCondition < 0 ? -1
-                        : itemPtr.getCellRef().getCharge() < 0 ? definition->mMaxCondition
-                                                              : itemPtr.getCellRef().getCharge();
+                        : itemPtr.getCellRef().getItemCondition(static_cast<float>(definition->mMaxCondition));
                     item.mCharge = definition->mMaxCharge < 0.f ? -1.f
                         : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
                                                                            : itemPtr.getCellRef().getEnchantmentCharge();

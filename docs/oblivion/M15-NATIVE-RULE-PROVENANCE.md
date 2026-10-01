@@ -4790,3 +4790,43 @@ condition, reactions, opponent policy and all official-content campaigns.
 Previous checkpoint69 commit db5d94273fa6ca531aea09d7cf9bbbfa808db819;
 verified bundle47 SHA256
 3c1acb5b5542d1f080bf04a00b88b953bb7908ea3e51b0d0f52966b786554ca8.
+
+### Checkpoint71 — fractional native inventory condition
+
+Projected TES4 inventory health now has an authoritative optional float, separate
+from legacy integer/light charge, enchantment charge and TES3 remainder. NCHL
+persists its exact float bits in shared reference saves. Integer display derives
+ceil with saturation; stack eligibility compares exact health. Actor hydration,
+player/native actor capture and native add-item preserve fractional health.
+Runtime schema24 stores float32 condition; the double envelope preserves legacy
+int32 schema4–23 values exactly. Downgrade rejects fractional, oversized and
+negative-zero values; current conversion deliberately rounds legacy INT_MAX to
+native float. Invalid nonfinite/negative health fails before inventory mutation.
+
+Normal checks pass2031 components,723 engine and227 Python cases; ASan/UBSan
+passes487 TES4 components and723 engine cases, plus19 explicit NCHL save-format
+parser cases. Inventories/XML match without skips or source drift; leaks disabled.
+Tested fingerprint3f49f7636ed2bc72166d1c389a8093ba8668e73f983daa8b64c610746f525ff3.
+Current openmw SHA2562bf6efb218748890085c5db48992ecdc8461965f34bfd162fe8a95cf87fb5a1d.
+S3/native-inventory-condition-cross-codec-02 verifies30 C++ binary/JSON to Python
+byte-exact cases including signed zero, subnormal, near-full, overrepair and old
+large integers. Copy/storage tests use protected stack insertion and public
+stack predicates; they do not prove public GUI inventory transfers.
+
+S4/native-inventory-condition-state-offscreen-04 completes saved schema23 ordinary
+action1 through phases1/2/3, saving schema24 without an active action, then runs a
+fresh idle process. Both scenarios and reviewed prison/HUD captures succeed.
+The strict full-reference inventory verifier FAILS: first load adds78 references
+(19 nonempty inventories), second adds146 (17 nonempty); none of the existing
+first-save inventories changes or disappears. This retained failure is not a
+full restart acceptance. No fractional wear, public transfer, contact, audio or
+measured FPS acceptance is claimed. Contact/wear/breakage and S4–S14 remain open.
+
+Retain earlier compile/fixture/runtime failures. Public headless inventory add
+hit an unavailable WindowManager; the repaired fixture narrows its coverage.
+GDB ptrace was unavailable and the attempted ASan preload targeted a linker
+script, so neither diagnostic supplies sanitizer coverage. Interrupted builds
+left two zero-byte generated objects; deleting only those objects and rebuilding
+produced the passing fresh sanitized-07 run. Warning cleanliness remains open.
+Previous checkpoint70 commit099fe16fe2e5bec394349d3160d277800db4778a;
+verified bundle48 SHA2560dcd4bcfa1778ed09a50659d8f145f959ae421449cd127591f1a5e1fe3331073.

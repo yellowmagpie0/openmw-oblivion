@@ -2,6 +2,9 @@
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwworld/manualref.hpp"
 #include <array>
+#include <bit>
+#include <cmath>
+#include <components/esm3/objectstate.hpp>
 #include <limits>
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/cellref.hpp"
@@ -353,4 +356,42 @@ namespace MWWorld
             EXPECT_EQ(other.getState(), CellStore::State_Unloaded);
         }
     }
+}
+
+TEST(MWWorldPtrTest, NativeConditionSurvivesCopyObjectStateAndLegacyDisplayWithoutChargeAliasing)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store;
+    ESM::Weapon base;
+    base.blank();
+    base.mId = ESM::RefId::stringRefId("native_condition_weapon");
+    base.mData.mHealth = 100;
+    store.insertStatic(base);
+    MWWorld::ManualRef source(store, base.mId);
+    auto ptr = source.getPtr();
+    ptr.getCellRef().setCharge(73);
+    ptr.getCellRef().setEnchantmentCharge(17.5f);
+    for (const std::uint32_t bits : {0u, 0x80000000u, 1u, 0x33800000u, 0x42c7ffffu, 0x43000000u})
+    {
+        const float value = std::bit_cast<float>(bits);
+        ptr.getCellRef().setNativeItemCondition(value);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ptr.getCellRef().getItemCondition(100)), bits);
+        EXPECT_EQ(ptr.getCellRef().getEnchantmentCharge(), 17.5f);
+        EXPECT_EQ(ptr.getClass().getItemHealth(ptr), static_cast<int>(std::ceil(value)));
+        EXPECT_EQ(ptr.getClass().getItemNormalizedHealth(ptr), value / 100.f);
+        ESM::ObjectState state;
+        ptr.getCellRef().writeState(state);
+        MWWorld::CellRef restored(state.mRef);
+        auto copied = restored;
+        ASSERT_TRUE(copied.getNativeItemCondition());
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*copied.getNativeItemCondition()), bits);
+        for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            EXPECT_THROW(ptr.getCellRef().setNativeItemCondition(bad), std::invalid_argument);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*ptr.getCellRef().getNativeItemCondition()), bits);
+        }
+    }
+    ptr.getCellRef().setCharge(51);
+    EXPECT_FALSE(ptr.getCellRef().getNativeItemCondition());
+    EXPECT_EQ(ptr.getClass().getItemHealth(ptr), 51);
 }

@@ -19,6 +19,8 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <bit>
+#include <cmath>
 #include <array>
 #include <iterator>
 #include <limits>
@@ -333,6 +335,28 @@ namespace ESM
             EXPECT_THAT(record.mMarkedPosition.rot, ElementsAreArray(result.mMarkedPosition.rot));
             EXPECT_EQ(record.mCurrentCrimeId, result.mCurrentCrimeId);
             EXPECT_EQ(record.mPaidCrimeId, result.mPaidCrimeId);
+        }
+
+        TEST_P(Esm3SaveLoadRecordTest, nativeConditionRetainsBitsAndDoesNotAliasCharges)
+        {
+            for (const std::uint32_t bits : {0u, 0x80000000u, 1u, 0x33800000u,
+                    0x3eaaaaabu, 0x42c7ffffu, 0x43000000u, 0x7f7fffffu})
+            {
+                CellRef record;
+                record.blank();
+                record.mRefID = ESM::RefId::stringRefId("native_condition");
+                record.mChargeInt = 73;
+                record.mEnchantmentCharge = 17.5f;
+                record.mNativeItemCondition = std::bit_cast<float>(bits);
+                CellRef restored;
+                saveAndLoadRecord(record, GetParam(), restored);
+                ASSERT_TRUE(restored.mNativeItemCondition);
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(*restored.mNativeItemCondition), bits);
+                EXPECT_EQ(restored.mChargeInt, 73);
+                EXPECT_EQ(restored.mEnchantmentCharge, 17.5f);
+                restored.blank();
+                EXPECT_FALSE(restored.mNativeItemCondition);
+            }
         }
 
         TEST_P(Esm3SaveLoadRecordTest, cellRefShouldNotChange)

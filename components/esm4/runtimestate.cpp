@@ -288,7 +288,8 @@ namespace ESM4
                 writer.integer(item.mCount);
                 if (version >= 4)
                 {
-                    writer.integer(item.mCondition);
+                    if (version >= 24) writer.floating(static_cast<float>(item.mCondition));
+                    else writer.integer(static_cast<std::int32_t>(item.mCondition));
                     writer.floating(item.mCharge);
                     writer.integer(item.mEquippedSlots);
                     writer.integer(item.mHotkey);
@@ -310,7 +311,8 @@ namespace ESM4
                 item.mCount = reader.integer<std::int32_t>();
                 if (version >= 4)
                 {
-                    item.mCondition = reader.integer<std::int32_t>();
+                    item.mCondition = version >= 24 ? reader.float32()
+                        : static_cast<double>(reader.integer<std::int32_t>());
                     item.mCharge = reader.float32();
                     item.mEquippedSlots = reader.integer<std::uint32_t>();
                     item.mHotkey = reader.integer<std::int8_t>();
@@ -334,12 +336,18 @@ namespace ESM4
                 stream << "{\"base\":\"" << escapeJson(item.mBase.serialize()) << "\",\"count\":"
                        << item.mCount;
                 if (version >= 4)
-                    stream << ",\"condition\":" << item.mCondition << ",\"charge\":"
+                {
+                    const double condition = version >= 24 ? static_cast<float>(item.mCondition) : item.mCondition;
+                    stream << ",\"condition\":" << std::setprecision(17);
+                    if (condition == 0 && std::signbit(condition)) stream << "-0.0";
+                    else stream << condition;
+                    stream << ",\"charge\":"
                            << std::setprecision(17) << item.mCharge << ",\"equipped_slots\":"
                            << item.mEquippedSlots << ",\"hotkey\":" << static_cast<int>(item.mHotkey)
                            << ",\"owner\":\"" << escapeJson(item.mOwner.serialize())
                            << "\",\"remaining_usage_time\":" << std::setprecision(17)
                            << item.mRemainingUsageTime;
+                }
                 stream << '}';
             }
             stream << ']';
@@ -814,10 +822,16 @@ namespace ESM4
                         throw std::runtime_error("TES4 runtime-state version 1/2/3 cannot contain M13 item state");
                     continue;
                 }
-                if (item.mCondition < -1 || !std::isfinite(item.mCharge) || item.mCharge < -1.f
+                if (!std::isfinite(item.mCondition) || (item.mCondition < 0 && item.mCondition != -1.f)
+                    || item.mCondition > std::numeric_limits<float>::max()
+                    || !std::isfinite(item.mCharge) || item.mCharge < -1.f
                     || !std::isfinite(item.mRemainingUsageTime) || item.mRemainingUsageTime < -1.f
                     || (item.mEquippedSlots & ~0x7ffffu) != 0 || item.mHotkey < -1 || item.mHotkey > 7)
                     throw std::runtime_error("Invalid TES4 runtime-state " + std::string(label) + " metadata");
+                if (mVersion < 24 && (double(item.mCondition) > std::numeric_limits<std::int32_t>::max()
+                    || std::trunc(item.mCondition) != item.mCondition
+                    || (item.mCondition == 0 && std::signbit(item.mCondition))))
+                    throw std::runtime_error("Fractional TES4 condition requires runtime-state version24");
                 if (!actorInventory && item.mHotkey != -1)
                     throw std::runtime_error("TES4 reference inventory cannot contain player hotkeys");
                 if ((occupiedSlots & item.mEquippedSlots) != 0)

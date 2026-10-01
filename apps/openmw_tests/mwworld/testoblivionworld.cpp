@@ -1,3 +1,8 @@
+#include <components/esm3/inventorystate.hpp>
+#include <bit>
+#include <components/esm4/loadweap.hpp>
+#include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwworld/oblivionprofileservices.hpp"
 #include "apps/openmw/mwrender/animation.hpp"
 #include "apps/openmw/mwmechanics/character.hpp"
 #include "apps/openmw/mwsound/nativeaudioutils.hpp"
@@ -2942,5 +2947,63 @@ namespace
             false, 1, "start", "stop", 0, 1);
         EXPECT_THROW(animation->setAnimationFrameTime(group, .2f), std::invalid_argument);
         animation->setTextKeyListener(nullptr);
+    }
+}
+
+namespace
+{
+    TEST(OblivionWorldTest, NativeInventoryHydrationAndStackCopiesRetainFractionalHealth)
+    {
+        NativeWorldFixture fixture;
+        auto& store = fixture.mWorld.getStore();
+        MWClass::Weapon::registerSelf();
+        const auto key = ESM::FormKey::content("headless.esm", 0x940);
+        ESM4::Weapon native{};
+        native.mId = {0x940, 0};
+        native.mData.health = 100;
+        native.mData.speed = native.mData.reach = 1;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, key);
+        ESM::Weapon projected;
+        projected.blank();
+        projected.mId = ESM::RefId(native.mId);
+        projected.mData.mHealth = 100;
+        store.insertStatic(projected);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = key;
+        item.mCount = 2;
+        item.mCondition = std::bit_cast<float>(0x42c7ffffu); // ceil is100, actual health is below full.
+        const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+            store, ESM::FormKeyResolver({"headless.esm"}), {item});
+        auto source = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+        ASSERT_NE(source->begin(), source->end());
+        const auto original = *source->begin();
+        ASSERT_TRUE(original.getCellRef().getNativeItemCondition());
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*original.getCellRef().getNativeItemCondition()), 0x42c7ffffu);
+        EXPECT_EQ(original.getClass().getItemHealth(original), 100);
+        EXPECT_EQ(original.getCellRef().getCount(), 2);
+        // Headless structural test: use the production clone/stack path below
+        // public add/remove presentation callbacks, which require a live GUI.
+        struct CopyInventory : MWWorld::InventoryStore
+        {
+            CopyInventory() { readState({}); }
+            MWWorld::ContainerStoreIterator copyStack(const MWWorld::ConstPtr& ptr, int count)
+            { return addNewStack(ptr, count); }
+        };
+        CopyInventory destination;
+        const auto transferred = *destination.copyStack(original, 1);
+        EXPECT_EQ(original.getCellRef().getCount(), 2);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*transferred.getCellRef().getNativeItemCondition()), 0x42c7ffffu);
+        const auto another = *destination.copyStack(original, 1);
+        EXPECT_FALSE(destination.stacks(transferred, another)); // Exact health, not rounded display.
+        another.getCellRef().setNativeItemCondition(std::bit_cast<float>(1u));
+        CopyInventory tinyStore;
+        const auto tiny = *tinyStore.copyStack(another, 1);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*tiny.getCellRef().getNativeItemCondition()), 1u);
+        EXPECT_EQ(tiny.getClass().getItemHealth(tiny), 1); // Positive native health is not a broken item.
+        auto bad = item;
+        bad.mCondition = std::numeric_limits<double>::quiet_NaN();
+        EXPECT_THROW(MWWorld::OblivionProfileServices::prepareActorInventory(
+            store, ESM::FormKeyResolver({"headless.esm"}), {bad}), std::invalid_argument);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*transferred.getCellRef().getNativeItemCondition()), 0x42c7ffffu);
     }
 }

@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <bit>
 #include <algorithm>
 #include <limits>
 #include <memory>
@@ -1864,4 +1865,48 @@ TEST(ESM4RuntimeState, NativeAnimationTimingRejectsDanglingPartialAndNonfiniteSt
         auto truncated = bytes; truncated.resize(bytes.size()-cut);
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
     }
+}
+
+TEST(ESM4RuntimeState, Condition24PreservesNativeFloatBitsAndRejectsLossyDowngrade)
+{
+    for (const std::uint32_t bits : {0u, 0x80000000u, 1u, 0x33800000u,
+            0x3eaaaaabu, 0x42c7ffffu, 0x43000000u, 0x7f7fffffu})
+    {
+        auto state = makeState();
+        state.mPlayer.mInventory.front().mCondition = std::bit_cast<float>(bits);
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(static_cast<float>(restored.mPlayer.mInventory.front().mCondition)), bits);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        if (bits == 0x80000000u)
+            EXPECT_NE(restored.canonicalJson().find("\"condition\":-0.0"), std::string::npos);
+        if (bits != 0u && bits != 0x43000000u)
+        {
+            state.mVersion = 23;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+    }
+    auto state = makeState();
+    for (const double value : {-0.5, -2., std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::infinity(), std::numeric_limits<double>::max()})
+    {
+        state.mPlayer.mInventory.front().mCondition = value;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, LegacyConditionKeepsFullSignedIntegerRangeBeforePromotion)
+{
+    auto state = makeState();
+    state.mActorAi.clear();
+    state.mPlayer.mInventory.front().mCondition = std::numeric_limits<std::int32_t>::max();
+    state.mVersion = 23;
+    const auto bytes = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored.mPlayer.mInventory.front().mCondition, 2147483647.);
+    EXPECT_EQ(restored.serializeBinary(), bytes);
+    auto promoted = restored;
+    promoted.mVersion = 24;
+    const auto native = ESM4::RuntimeState::deserializeBinary(promoted.serializeBinary());
+    EXPECT_EQ(native.mPlayer.mInventory.front().mCondition, 2147483648.);
 }

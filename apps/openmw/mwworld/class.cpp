@@ -1,3 +1,5 @@
+#include <cmath>
+#include <limits>
 #include "class.hpp"
 
 #include <stdexcept>
@@ -85,6 +87,8 @@ namespace MWWorld
 
     int Class::getItemHealth(const ConstPtr& ptr) const
     {
+        if (const auto condition = ptr.getCellRef().getNativeItemCondition())
+            return static_cast<int>(std::min(double(std::numeric_limits<int>::max()), std::ceil(double(*condition))));
         if (ptr.getCellRef().getCharge() == -1)
             return getItemMaxHealth(ptr);
         else
@@ -99,6 +103,8 @@ namespace MWWorld
         }
         else
         {
+            if (const auto condition = ptr.getCellRef().getNativeItemCondition())
+                return *condition / static_cast<float>(getItemMaxHealth(ptr));
             return getItemHealth(ptr) / static_cast<float>(getItemMaxHealth(ptr));
         }
     }

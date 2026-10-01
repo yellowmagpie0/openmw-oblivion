@@ -1,6 +1,8 @@
 #include "cellref.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <stdexcept>
 #include <limits>
 
 #include <components/debug/debuglog.hpp>
@@ -105,6 +107,17 @@ namespace ESM
                         break;
                     case fourCC("INTV"):
                         getHTOrSkip(cellRef.mChargeInt);
+                        break;
+                    case fourCC("NCHL"):
+                        if constexpr (load)
+                        {
+                            float value;
+                            esm.getHT(value);
+                            if (cellRef.mNativeItemCondition || !std::isfinite(value) || value < 0)
+                                throw std::runtime_error("Invalid native item condition");
+                            cellRef.mNativeItemCondition = value;
+                        }
+                        else esm.skipHT<float>();
                         break;
                     case fourCC("NAM9"):
                         getHTOrSkip(cellRef.mCount);
@@ -219,6 +232,13 @@ namespace ESM
         if (mChargeInt != -1)
             esm.writeHNT("INTV", mChargeInt);
 
+        if (mNativeItemCondition)
+        {
+            if (!std::isfinite(*mNativeItemCondition) || *mNativeItemCondition < 0)
+                throw std::runtime_error("Invalid native item condition");
+            esm.writeHNT("NCHL", *mNativeItemCondition);
+        }
+
         if (mCount != 1)
             esm.writeHNT("NAM9", mCount);
 
@@ -260,6 +280,7 @@ namespace ESM
         mFactionRank = -2;
         mChargeInt = -1;
         mChargeIntRemainder = 0.0f;
+        mNativeItemCondition.reset();
         mEnchantmentCharge = -1;
         mCount = 1;
         mDestCell.clear();

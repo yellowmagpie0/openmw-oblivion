@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <limits>
 #include <sstream>
 
@@ -194,7 +195,9 @@ namespace MWWorld
 
     int World::oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item)
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || item.mBase.isNull() || item.mCount <= 0)
+        if (mGameProfile != ESM::GameProfile::Oblivion || item.mBase.isNull() || item.mCount <= 0
+            || !std::isfinite(item.mCondition) || (item.mCondition < 0 && item.mCondition != -1)
+            || item.mCondition > std::numeric_limits<float>::max())
             return 0;
         const std::optional<ESM::FormId> id = ESM::FormKeyResolver(mContentFiles).toFormId(item.mBase);
         if (!id)
@@ -206,12 +209,13 @@ namespace MWWorld
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
 
+        item.mCondition = static_cast<float>(item.mCondition);
         item.mCount = std::min(item.mCount, std::numeric_limits<int>::max());
         item.mEquippedSlots = 0;
         item.mHotkey = -1;
         ManualRef source(mStore, OblivionProfileServices::sharedItemId(mStore, nativeId), item.mCount);
         if (item.mCondition >= 0)
-            source.getPtr().getCellRef().setCharge(item.mCondition);
+            source.getPtr().getCellRef().setNativeItemCondition(static_cast<float>(item.mCondition));
         if (item.mCharge >= 0.f)
             source.getPtr().getCellRef().setEnchantmentCharge(item.mCharge);
         if (item.mRemainingUsageTime >= 0.f)

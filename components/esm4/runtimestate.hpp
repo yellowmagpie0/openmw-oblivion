@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 23;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 24;
 
     struct RuntimeContentIdentity
     {
@@ -47,7 +47,7 @@ namespace ESM4
         std::int32_t mCount = 0;
         // -1 identifies an item category without condition/charge. A value of
         // zero is a valid broken or discharged item.
-        std::int32_t mCondition = -1;
+        double mCondition = -1; // Envelope: legacy int32 exact; version24 stores native binary32.
         float mCharge = -1.f;
         // TES4 biped bits occupy the low 16 bits. M13 reserves the next three
         // bits for the weapon, ammunition, and portable-light pseudo-slots.

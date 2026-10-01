@@ -2,6 +2,7 @@
 #define OPENMW_ESM_CELLREF_H
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include <components/esm/defs.hpp>
@@ -62,6 +63,7 @@ namespace ESM
             float mChargeFloat; // Used only by lights
         };
         float mChargeIntRemainder; // Fractional part of mChargeInt
+        std::optional<float> mNativeItemCondition; // TES4 live inventory authority; not light/enchantment charge.
 
         // Remaining enchantment charge. This could be -1 if the charge was not touched yet (i.e. full).
         float mEnchantmentCharge;
