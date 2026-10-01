@@ -543,7 +543,8 @@ namespace ESM4
         if (mActionId == 0 || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
             || mAnimationGroup.find('\0') != std::string::npos || !std::isfinite(mPlaybackSpeed) || mPlaybackSpeed <= 0
             || !std::isfinite(mAnimationTime) || mAnimationTime < 0
-            || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::RightPower))
+            || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::RightPower)
+            || static_cast<unsigned>(mOrdinaryPhase) > static_cast<unsigned>(OrdinaryMeleePhase::End))
             throw std::runtime_error("Invalid TES4 melee strike state");
     }
 
@@ -731,6 +732,8 @@ namespace ESM4
             if (melee.mStrike)
             {
                 const auto& strike = *melee.mStrike;
+                if (mVersion < 22 && strike.mOrdinaryPhase != OrdinaryMeleePhase::Start)
+                    throw std::runtime_error("TES4 ordinary melee phase requires runtime-state version 22");
                 const auto owner = mPhysicalActionOwners.find(strike.mActionId);
                 const bool pending = pendingActions.contains(strike.mActionId);
                 if (!meleeIds.insert(strike.mActionId).second || strike.mActionId >= mPhysicalActions.mNext
@@ -1461,6 +1464,8 @@ namespace ESM4
                     writer.floating(strike.mPlaybackSpeed);
                     writer.floating(strike.mAnimationTime);
                     writer.integer<std::uint8_t>(strike.mContactCommitted);
+                    if (mVersion >= 22)
+                        writer.integer<std::uint8_t>(static_cast<std::uint8_t>(strike.mOrdinaryPhase));
                 }
             }
         }
@@ -2041,6 +2046,8 @@ namespace ESM4
                     strike.mPlaybackSpeed = reader.float32();
                     strike.mAnimationTime = reader.float32();
                     strike.mContactCommitted = boolean();
+                    if (result.mVersion >= 22)
+                        strike.mOrdinaryPhase = static_cast<OrdinaryMeleePhase>(reader.integer<std::uint8_t>());
                     melee.mStrike = std::move(strike);
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
@@ -2624,7 +2631,10 @@ namespace ESM4
                         << "\",\"animation_group\":\"" << escapeJson(strike.mAnimationGroup)
                         << "\",\"playback_speed\":" << std::setprecision(17) << strike.mPlaybackSpeed
                         << ",\"animation_time\":" << std::setprecision(17) << strike.mAnimationTime
-                        << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false") << '}';
+                        << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false");
+                    if (mVersion >= 22)
+                        stream << ",\"ordinary_phase\":" << static_cast<unsigned>(strike.mOrdinaryPhase);
+                    stream << '}';
                 }
                 stream << '}';
             }

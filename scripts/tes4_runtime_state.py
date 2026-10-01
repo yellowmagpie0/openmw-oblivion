@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 21
+CURRENT_VERSION = 22
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -956,8 +956,13 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         strike = entry["strike"]
         if strike is None:
             continue
-        if not isinstance(strike, dict) or set(strike) != {"id", "kind", "weapon_base", "animation_group", "playback_speed", "animation_time", "contact_committed"}:
+        strike_fields = {"id", "kind", "weapon_base", "animation_group", "playback_speed", "animation_time", "contact_committed"}
+        if version >= 22:
+            strike_fields.add("ordinary_phase")
+        if not isinstance(strike, dict) or set(strike) != strike_fields:
             raise RuntimeStateError("Invalid TES4 melee strike")
+        if version >= 22 and (type(strike["ordinary_phase"]) is not int or not 0 <= strike["ordinary_phase"] <= 3):
+            raise RuntimeStateError("Invalid TES4 ordinary melee phase")
         identity, kind, committed = strike["id"], strike["kind"], strike["contact_committed"]
         if (type(identity) is not int or not 0 < identity < next_action or identity in melee_ids
                 or type(kind) is not int or not 0 <= kind <= 6 or type(committed) is not bool
@@ -1403,6 +1408,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     "weapon_base": reader.string(), "animation_group": reader.string(),
                     "playback_speed": reader.unpack("<f"), "animation_time": reader.unpack("<f"),
                     "contact_committed": melee_boolean()}
+                if version >= 22:
+                    entry["strike"]["ordinary_phase"] = reader.unpack("<B")
             result["native_melee_states"].append(entry)
     _validate_basic_state(result)
     if reader.offset != len(payload):
@@ -1678,6 +1685,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<f", strike["playback_speed"])
                 writer.pack("<f", strike["animation_time"])
                 writer.pack("<B", int(strike["contact_committed"]))
+                if version >= 22:
+                    writer.pack("<B", strike["ordinary_phase"])
     return writer.finish()
 
 
@@ -1724,10 +1733,18 @@ def load_save(path: Path) -> dict[str, Any]:
     return decode_payload(_find_runtime_record(path.read_bytes())[3])
 
 
+def _upgrade_melee_phases(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 22:
+        for entry in state.get("native_melee_states", []):
+            if entry["strike"] is not None:
+                entry["strike"]["ordinary_phase"] = 0
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
     state = copy.deepcopy(state)
+    _upgrade_melee_phases(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -1779,6 +1796,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     """Apply deterministic changes spanning every M4 state family."""
 
     result = copy.deepcopy(state)
+    _upgrade_melee_phases(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])

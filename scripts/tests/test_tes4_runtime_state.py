@@ -1273,6 +1273,61 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         promoted = copy.deepcopy(legacy); promoted["schema_version"] = 21
         self.assertEqual(state_io.encode_payload(promoted), prefix + bytes(4))
 
+    def test_melee_v22_phase_wire_old_save_promotion_and_corruption(self):
+        old = self.melee_state()
+        old_payload = state_io.encode_payload(old)
+        state = copy.deepcopy(old)
+        state_io._upgrade_melee_phases(state)
+        state["schema_version"] = 22
+        expected = bytearray(old_payload)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 22)
+        expected.append(0)
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        for phase in range(4):
+            for committed in (False, True):
+                candidate = copy.deepcopy(state)
+                candidate["native_melee_states"][0]["strike"].update(ordinary_phase=phase, contact_committed=committed)
+                if committed:
+                    candidate["physical_actions"]["pending"].remove(2)
+                    candidate["physical_action_owners"] = [x for x in candidate["physical_action_owners"] if x["id"] != 2]
+                payload = state_io.encode_payload(candidate)
+                self.assertEqual(payload[-1], phase)
+                self.assertEqual(state_io.decode_payload(payload)["native_melee_states"], candidate["native_melee_states"])
+        for value in (-1, 4, 255, True, 1., None):
+            bad = copy.deepcopy(state)
+            bad["native_melee_states"][0]["strike"]["ordinary_phase"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        bad = copy.deepcopy(state); del bad["native_melee_states"][0]["strike"]["ordinary_phase"]
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(bad)
+        state_io._upgrade_melee_phases(bad) # Current malformed fields must not be repaired.
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(bad)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(expected[:-1]))
+        expected[-1] = 255
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(expected))
+        self.assertEqual(state_io.encode_payload(old), old_payload)
+        body = (struct.pack("<4sII", b"VERS", 4, 21)
+                + struct.pack("<4sI", b"DATA", len(old_payload)) + old_payload)
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "old.omwsave"
+            target = Path(directory) / "new.omwsave"
+            untouched = struct.pack("<4sIII", b"TEST", 4, 0, 0) + b"keep"
+            source.write_bytes(untouched + struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
+            state_io.write_save(source, target, state_io.load_save(source))
+            saved = state_io.load_save(target)
+            self.assertEqual(saved["schema_version"], 22)
+            self.assertEqual(saved["native_melee_states"][0]["strike"]["ordinary_phase"], 0)
+            self.assertEqual(saved["physical_actions"]["pending"], [1, 2, 5])
+            self.assertEqual(target.read_bytes()[:len(untouched)], untouched)
+        promoted = copy.deepcopy(old); state_io._upgrade_melee_phases(promoted)
+        self.assertEqual(promoted["native_melee_states"][0]["strike"]["ordinary_phase"], 0)
+        self.assertEqual(promoted["physical_actions"], old["physical_actions"])
+        self.assertEqual(promoted["physical_action_owners"], old["physical_action_owners"])
+
     def test_melee_v21_rejects_malformed_duplicate_replay_and_corrupt_tail(self):
         state = self.melee_state()
         changes = [lambda x: x.update(schema_version=20),

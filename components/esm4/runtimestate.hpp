@@ -19,6 +19,7 @@
 #include "aiphase.hpp"
 #include "actionledger.hpp"
 #include "actorvalues.hpp"
+#include "physicalcombat.hpp"
 
 namespace ESM
 {
@@ -28,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 21;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 22;
 
     struct RuntimeContentIdentity
     {
@@ -337,6 +338,9 @@ namespace ESM4
         float mPlaybackSpeed = 1;
         float mAnimationTime = 0;
         bool mContactCommitted = false;
+        // v22: authoritative ordinary phase; v21 migrates to Start without
+        // inferring it from a renderer time or changing contact consumption.
+        OrdinaryMeleePhase mOrdinaryPhase = OrdinaryMeleePhase::Start;
         void validate() const;
         friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
     };

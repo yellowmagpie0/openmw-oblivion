@@ -4219,3 +4219,69 @@ start/attack/block/contact/damage acceptance. S2/S3 remain in progress;
 S4–S14 remain open. Previous checkpoint59 commit
 `3bcaac7686280ed738f2292ad1f1f8f0bcd79b94`; verified bundle37 SHA256
 `7b5879455bfe9e3404537cccb68366b322eaa55f343aac5ecca3945b6d3ff5d6`.
+
+## Durable ordinary melee phase authority and clock evidence (checkpoint61)
+
+Runtime schema22 adds a validated byte ordinary_phase (Start0/Contact1/Queue2/End3)
+to an active strike after its schema21 fields. C++ binary/canonical JSON and
+Python readers/writers agree. Historical schema21 wire bytes stay unchanged;
+missing historical phase deliberately defaults to Start without inferring it
+from animation time or changing consumed contact/action ownership. Current
+missing/malformed phase fields, invalid bytes, truncation and lossy downgrade
+of an advanced phase fail. Python old-save promotion retains unrelated records.
+Power key layouts are not interpreted as ordinary phases by the service.
+
+The real native combat service now exposes a validated owned-strike ordinary
+phase update using checkpoint57's independently verified immutable rule. Equality
+at Hit does not advance; crossing multiple keys advances only one phase per
+call. Wrong actor/ID and power kind do not update; malformed clocks/keys fail
+before publication. Phase survives binary restore with its action still pending;
+advancement alone never consumes contact or applies damage. Tests also retain
+committed follow-through and reject lossy old-version capture atomically.
+This service method is not called by the renderer/controller yet: phase0 in the
+runtime course is explicitly unadvanced, not a claim of native phase timing.
+
+S4/native-melee-phase-state-main-03 passes all1999 component/719 engine/223 Python
+cases. Sanitized-02 passes474 ESM4/719 engine cases under ASan/UBSan (leak checking
+disabled). Exact C++ inventories have no failures/skips. Tested fingerprint:
+`9cd32fdaa1d784aee4daddc08912ee757dbc71fb88f120aa962e5355d56a004c`.
+Main-01 retains two test-only compiler errors (vector erasure by ID and incorrect
+JSON method name). Main-02 and sanitized-01 retain an incorrect test assertion
+comparing canonical sorted action IDs with an unsorted fixture; corrected to the
+explicit sorted expectation. No failure is replaced or hidden. Existing aggregate
+initializer and shared animation-queue compiler warnings remain visible; this is
+not the full compiler gate.
+
+Actual S4/native-melee-phase-state-offscreen-01 starts from pristine schema21,
+saves schema22 ordinary ID1/time.4000000059604645/phase0, and resumes in a distinct
+fresh process before completing with nextID2/pendingempty/no new selection.
+Both normal configured keyboard courses exit normally, preserve all nine native
+actors/AVs/life/breath/bases/death/combat membership and public80/80/140 pools.
+Both captures were directly inspected: textured prison/full bars, first later
+fist playback and second idle. They do not prove the earlier saved strike phase.
+Runtime executable SHA256
+`205c2d7639e510c8668425e688bc3498aea0c8186c14d9524189349dfa8d6548`.
+Phase/clock production, contact/damage/block/FPS and full S4 remain open.
+
+Independent additional clock research is retained in
+S4/native-sequence-clock-inspection-01 and native-sequence-clock-prefix-oracle-01.
+RTTI identifies NiControllerManager vtableA79804/+54 target6C4200, which dispatches
+sequence6CA950. Its exact update prefix6CA950→6CA99F (inactive exit6CAC36), with
+no calls/stubs, passes1344 observations across states0–6, signed/large clocks,
+sentinel/custom offsets, initial/existing ease start, two ease durations and
+both x87 modes. For active sequences a sentinel offset becomes negative current
+clock; a sentinel ease-start becomes current clock and adds it to ease-end with
+float store. Supplied sequence/state/clock are boundaries; activation, blending,
+scaling/controller body and actor caller ordering are outside this prefix.
+No new production clock initialization rule is claimed from read-only inspection.
+The first constants read omitted the emulator module search path and failed
+before image loading; corrected read records that failure. RTTI slot inventories
+stop at the first non-code value and do not label adjacent strings as methods.
+
+S2/S3 remain in progress; S4–S14 remain open. Previous checkpoint60 commit
+`2c4eba7b59ac974ad2e2504b671b7769e13cc16a` and verified bundle38 SHA256
+`5c1ad7ec0629d7fdf0462d71b97c8f35c9c19296feaa4751c2fdd4cfac492c17`.
+
+native-sequence-clock-prefix-oracle-01/report.json SHA256 `ff3cd8c4b47f831ae1800fa9d19774948b0d55bb8a8b5ab1774392283b4e818d`.
+
+native-sequence-clock-inspection-01/controller-vtables.json SHA256 `f9e012eafb1ce268fc48d6d745d778b358f72f91f52bdcfe4665f5268c2d347e`.

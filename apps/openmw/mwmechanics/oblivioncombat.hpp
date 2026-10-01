@@ -270,6 +270,10 @@ namespace MWMechanics
         std::uint64_t beginMeleeStrike(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
             std::string_view animationGroup, float playbackSpeed = 1, const ESM::FormKey& weaponBase = {});
         bool updateMeleeAnimation(std::uint64_t id, const ESM::FormKey& actor, float time);
+        // One original ordinary phase step per caller animation update. No
+        // inferred contact or renderer clock mutation occurs here.
+        bool advanceOrdinaryMeleePhase(std::uint64_t id, const ESM::FormKey& actor,
+            float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes);
         bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
         std::uint64_t allocateAction();
         // An owned intent requires initialized Alive authority. Allocation

@@ -6640,10 +6640,41 @@ namespace
         after.capture(saved); EXPECT_EQ(saved.serializeBinary(), stable);
         const auto next = after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
         EXPECT_EQ(next, id+1);
+        const std::array<float, 4> keys{0, 1, 2, 3};
+        using Phase = ESM4::OrdinaryMeleePhase;
+        const auto phase = [&] { return after.findMeleeState(values.mActor)->mStrike->mOrdinaryPhase; };
+        EXPECT_EQ(phase(), Phase::Start);
+        EXPECT_FALSE(after.advanceOrdinaryMeleePhase(next, foreign, 0, 4, keys));
+        EXPECT_FALSE(after.advanceOrdinaryMeleePhase(next+1, values.mActor, 0, 4, keys));
+        EXPECT_TRUE(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, 1, keys));
+        EXPECT_EQ(phase(), Phase::Start); // Equality does not dispatch contact.
+        after.capture(saved); const auto phaseStart = saved.serializeBinary();
+        EXPECT_THROW(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, 4, {0, 2, 1, 3}), std::invalid_argument);
+        EXPECT_THROW(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, std::numeric_limits<float>::quiet_NaN(), keys), std::invalid_argument);
+        after.capture(saved); EXPECT_EQ(saved.serializeBinary(), phaseStart);
+        EXPECT_TRUE(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, 4, keys));
+        EXPECT_EQ(phase(), Phase::Contact); // One phase despite crossing three keys.
+        EXPECT_TRUE(after.isActionPending(next, values.mActor));
+        after.capture(saved); const auto phaseContact = saved.serializeBinary();
+        auto downgraded = saved; downgraded.mVersion = 21;
+        EXPECT_THROW(after.capture(downgraded), std::invalid_argument);
+        EXPECT_EQ(downgraded.mNativeMeleeStates, saved.mNativeMeleeStates);
+        MWMechanics::OblivionCombatService phaseRestored;
+        phaseRestored.restore(ESM4::RuntimeState::deserializeBinary(phaseContact));
+        EXPECT_EQ(phaseRestored.findMeleeState(values.mActor)->mStrike->mOrdinaryPhase, Phase::Contact);
+        EXPECT_TRUE(phaseRestored.isActionPending(next, values.mActor));
+        EXPECT_TRUE(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, 4, keys));
+        EXPECT_EQ(phase(), Phase::Queue);
+        EXPECT_TRUE(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, 4, keys));
+        EXPECT_EQ(phase(), Phase::End);
+        EXPECT_TRUE(after.advanceOrdinaryMeleePhase(next, values.mActor, 0, 4, keys));
+        EXPECT_EQ(phase(), Phase::End);
         EXPECT_TRUE(after.finishMeleeStrike(next, values.mActor));
         EXPECT_TRUE(after.isActionConsumed(next));
         EXPECT_EQ(after.findMeleeState(values.mActor)->mInput.mQueued, ESM4::MeleeQueuedStrike::Power);
         const auto cancelled = after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::StandingPower, "handtohandattackpower");
+        EXPECT_FALSE(after.advanceOrdinaryMeleePhase(cancelled, values.mActor, 0, 4, keys));
+        EXPECT_EQ(phase(), Phase::Start); // Ordinary stepping never interprets power keys.
         EXPECT_TRUE(after.consumeAction(cancelled, values.mActor));
         EXPECT_FALSE(after.findMeleeState(values.mActor)->mStrike);
         const auto incapacitated = after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::ForwardPower, "handtohandattackforwardpower");

@@ -1722,3 +1722,52 @@ namespace
         EXPECT_EQ(empty.serializeBinary(), expected);
     }
 }
+
+namespace
+{
+    TEST(ESM4RuntimeState, ordinaryMeleePhaseVersionTwentyTwoWireMigrationAndCorruption)
+    {
+        auto old = meleeState();
+        const auto actor = old.mReferences.front().mKey;
+        const auto oldBytes = old.serializeBinary();
+        auto expected = oldBytes;
+        expected[std::string_view("OMW4STATE").size()] = 22;
+        expected.push_back(0);
+        auto current = ESM4::RuntimeState::deserializeBinary(oldBytes);
+        current.mVersion = 22;
+        EXPECT_EQ(current.serializeBinary(), expected);
+        EXPECT_EQ(current.mNativeMeleeStates.at(actor).mStrike->mOrdinaryPhase, ESM4::OrdinaryMeleePhase::Start);
+        auto sortedActions = old.mPhysicalActions;
+        std::sort(sortedActions.mPending.begin(), sortedActions.mPending.end());
+        EXPECT_EQ(current.mPhysicalActions, sortedActions);
+        EXPECT_EQ(current.mPhysicalActionOwners, old.mPhysicalActionOwners);
+        for (unsigned phase = 0; phase <= 3; ++phase)
+        for (bool committed : {false, true})
+        {
+            auto candidate = current;
+            auto& strike = *candidate.mNativeMeleeStates.at(actor).mStrike;
+            strike.mOrdinaryPhase = static_cast<ESM4::OrdinaryMeleePhase>(phase);
+            strike.mContactCommitted = committed;
+            if (committed)
+            {
+                std::erase(candidate.mPhysicalActions.mPending, strike.mActionId);
+                candidate.mPhysicalActionOwners.erase(strike.mActionId);
+            }
+            const auto bytes = candidate.serializeBinary();
+            EXPECT_EQ(bytes.back(), phase);
+            EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mNativeMeleeStates, candidate.mNativeMeleeStates);
+            EXPECT_NE(candidate.canonicalJson().find("\"ordinary_phase\":" + std::to_string(phase)), std::string::npos);
+        }
+        auto bad = current;
+        bad.mNativeMeleeStates.at(actor).mStrike->mOrdinaryPhase = static_cast<ESM4::OrdinaryMeleePhase>(4);
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        auto corrupt = expected; corrupt.back() = 255;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        auto truncated = expected; truncated.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        bad = current; bad.mVersion = 21;
+        bad.mNativeMeleeStates.at(actor).mStrike->mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Contact;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        EXPECT_EQ(old.serializeBinary(), oldBytes); // Historical v21 remains byte-identical.
+    }
+}

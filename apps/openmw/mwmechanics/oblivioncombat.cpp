@@ -769,6 +769,23 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::advanceOrdinaryMeleePhase(std::uint64_t id,
+        const ESM::FormKey& actor, float sequenceOffset, float animationClock,
+        const std::array<float, 4>& keyTimes)
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mStrike
+            || found->second.mStrike->mActionId != id)
+            return false;
+        auto& strike = *found->second.mStrike;
+        if (strike.mKind != ESM4::MeleeStrikeKind::Left && strike.mKind != ESM4::MeleeStrikeKind::Right)
+            return false; // Power variants use a different native key layout.
+        const auto next = ESM4::advanceOrdinaryMeleePhase(
+            strike.mOrdinaryPhase, sequenceOffset, animationClock, keyTimes);
+        strike.mOrdinaryPhase = next; // All validation precedes publication.
+        return true;
+    }
+
     bool OblivionCombatService::finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
     {
         const auto found = mMeleeStates.find(actor);
@@ -2725,6 +2742,10 @@ namespace MWMechanics
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
         if (state.mVersion < 21 && !mMeleeStates.empty())
             throw std::invalid_argument("native melee state requires an Oblivion v21+ save");
+        if (state.mVersion < 22)
+            for (const auto& [actor, melee] : mMeleeStates)
+                if (melee.mStrike && melee.mStrike->mOrdinaryPhase != ESM4::OrdinaryMeleePhase::Start)
+                    throw std::invalid_argument("native ordinary melee phase requires an Oblivion v22+ save");
         if (state.mVersion < 20 && !mActionOwners.empty())
             throw std::invalid_argument("native physical action owners require an Oblivion v20+ save");
         if (state.mVersion < 9 && !mActorValues.empty())
