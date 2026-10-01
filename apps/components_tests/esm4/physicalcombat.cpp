@@ -2731,3 +2731,57 @@ TEST(ESM4PhysicalCombat, CombatRandomNativePercentileDistributionAndArmorSelecti
     for (unsigned i = 0; i < slots.size(); ++i)
         EXPECT_NEAR(slots[i], expectedSlots[i], i == 1 ? 0 : 700);
 }
+
+TEST(ESM4PhysicalCombat, ArmorSelectionRetrySequenceMatchesFullOriginalLoop)
+{
+    // Every slot mask, four chance tuples, four seeds, both original x87
+    // precision words. Frozen results include selected slot, draw count and
+    // final stream state; no production helper generated these expectations.
+    struct Row
+    {
+        unsigned settings, mask;
+        std::uint32_t seed;
+        int slot;
+        std::uint32_t next;
+        unsigned draws;
+    };
+    const Row rows[]{
+#include "armorselection_expected.inc"
+    };
+    const ESM4::ArmorWearSelectionSettings settings[]{
+        {10, 25, 15, 10, 10}, {0, 0, 0, 0, 0},
+        {100, 100, 100, 100, 100}, {20, 0, 0, 0, 0}};
+    for (const auto& row : rows)
+    {
+        std::array<bool, 7> available{};
+        for (unsigned i = 0; i < available.size(); ++i)
+            available[i] = row.mask & (1u << i);
+        const auto result = ESM4::selectArmorWear(row.seed, available, settings[row.settings]);
+        EXPECT_EQ(result.mSlot ? static_cast<int>(*result.mSlot) : -1, row.slot)
+            << row.settings << ':' << row.mask << ':' << row.seed;
+        EXPECT_EQ(result.mNextState, row.next);
+        EXPECT_EQ(result.mDraws, row.draws);
+    }
+}
+
+TEST(ESM4PhysicalCombat, ArmorSelectionRetryBoundsAndInvalidSettings)
+{
+    const ESM4::ArmorWearSelectionSettings settings{10, 25, 15, 10, 10};
+    const auto empty = ESM4::selectArmorWear(1, {}, settings);
+    EXPECT_FALSE(empty.mSlot);
+    EXPECT_EQ(empty.mDraws, ESM4::ArmorWearSelectionAttempts);
+    const auto equipped = ESM4::selectArmorWear(1, {true, true, true, true, true, true, true}, settings);
+    EXPECT_TRUE(equipped.mSlot);
+    EXPECT_EQ(equipped.mDraws, 1u);
+    EXPECT_EQ(equipped.mNextState, ESM4::combatRandomDraw(1).mNextState);
+    for (std::int32_t ESM4::ArmorWearSelectionSettings::* member : {
+        &ESM4::ArmorWearSelectionSettings::mHeadChance, &ESM4::ArmorWearSelectionSettings::mUpperBodyChance,
+        &ESM4::ArmorWearSelectionSettings::mLowerBodyChance, &ESM4::ArmorWearSelectionSettings::mHandsChance,
+        &ESM4::ArmorWearSelectionSettings::mFeetChance})
+        for (const int invalid : {-1, 101})
+        {
+            auto bad = settings;
+            bad.*member = invalid;
+            EXPECT_THROW(ESM4::selectArmorWear(1, {}, bad), std::invalid_argument);
+        }
+}

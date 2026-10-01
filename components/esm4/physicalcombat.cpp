@@ -761,6 +761,20 @@ namespace ESM4
         return has(ArmorWearSlot::Shield) ? std::optional{ArmorWearSlot::Shield} : std::nullopt;
     }
 
+    ArmorWearSelection selectArmorWear(std::uint32_t state,
+        const std::array<bool, 7>& available, const ArmorWearSelectionSettings& settings)
+    {
+        validateArmorWearSelectionSettings(settings);
+        for (unsigned attempt = 1; attempt <= ArmorWearSelectionAttempts; ++attempt)
+        {
+            const auto draw = combatRandomDraw(state);
+            state = draw.mNextState;
+            if (const auto slot = selectArmorWearSlot(draw.mValue % 100, available, settings))
+                return {slot, state, attempt};
+        }
+        return {std::nullopt, state, ArmorWearSelectionAttempts};
+    }
+
     void validateArmorWearMasterySettings(const ArmorWearMasterySettings& settings)
     {
         for (float value : {settings.mLightNoviceMultiplier, settings.mHeavyNoviceMultiplier,

@@ -10063,3 +10063,28 @@ tested source fingerprint `93c49dc4747a6c20ed098faf9c52ee92941ba98f138be7ef996e7
 disabled; no sanitizer findings. Existing aggregate-initializer/dangling-else
 test warnings remain. No engine/Python changes or new runtime acceptance
 claim in this chunk. S3 and later gates remain open.
+
+### Checkpoint96 — native armor-selection retry loop
+
+`selectArmorWear` prepares a selection, final unsigned32 random state and
+draw count without mutating any authority. It preserves the original
+seven-attempt bound, first-success stop and consumed draws when every candidate
+is absent. Existing single-attempt fall-forward/head-hair/feet-shield rules
+are reused with original15-bit draws modulo100. Invalid settings reject
+before preparation. This is an intermediate rule, not live armor mutation.
+
+`S4/native-armor-selection-oracle-01` runs the full original5E5A00 loop and
+47DF80/9859DD draws.128 slot masks×four chance tuples×four seeds give2048
+profiles, each agreeing under027F/037F (4096 executions). The independently
+frozen corpus records selection, draw count and final state; SHA-256
+`26b61cc8ef610f72aa359c86741442682c1c6dcd8ab095f2ffafc7c7675a11fc`.
+TLS/inventory lookups and shield process retrieval/temporary allocation/
+construction/count/reference attachment are supplied boundaries; allocation
+succeeds, no live inventory or condition mutation is claimed. Full function
+returns are checked against sentinel EIP/ESP. No retries or corrected corpora.
+
+`S4/native-armor-selection-main-01` and `-sanitized-01` each pass all2047
+component tests with exact inventory/XML, zero skips/failures and stable
+tested fingerprint `c42231392a508140ea9074cbc383dad1ccd7453b83d8dbb3996d243e7e31e944`. No sanitizer findings (ASan leaks disabled).
+No engine/Python changes. Combat-owned RNG persistence, atomic publication,
+actual armor wear, block/break/reactions and remaining stages stay open.

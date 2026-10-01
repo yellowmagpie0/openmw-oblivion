@@ -5381,3 +5381,24 @@ Armor caller5E5A00 divides by100 with IDIV and uses remainder. This confirms
 native sequence/modulo bias; own combat stream publication/save ownership,
 automatic wall-clock initialization and global world call interleaving are
 separate claims. No armor mutation, contact, reaction or gameplay gate closed.
+
+### Complete armor-selection loop (checkpoint96)
+
+Pinned original executable SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+5E5A00 initializes attempt0, checks >=7 at5E5A40, obtains47DF80(0) draw,
+uses IDIV100 remainder, falls through missing head/hair/upper/lower/hands
+within ordered cumulative thresholds; missing feet retries without choosing
+shield at that threshold. Each no-selection increments and retries; first
+selection exits. Shader/rendering is unrelated. Original47DF80/9859DD
+executes on every draw, with only98C0F5 TLS accessor supplied.41E6F0 RET0
+and486790 RET8 provide fixture inventory/equipment, process+F8 RET4 supplies
+shield entry,401F00 allocator/41E860 count/484420 RET8 constructor/446CB0
+RET4 attachment supply successful temporary shield construction. FS exception
+chain storage is mapped; final EIP/ESP verified. Full original loop tested
+for128 availability masks, four chance tuples and four seeds, bothCW:2048
+profiles/4096 executions. Corpus
+`26b61cc8ef610f72aa359c86741442682c1c6dcd8ab095f2ffafc7c7675a11fc`
+at `S4/native-armor-selection-oracle-01`. Slot, final RNG state and actual draw
+count become frozen C++ expectations. Wear application, mastery, broken-item
+unequip, live callbacks/save scheduling and gameplay acceptance are separate.

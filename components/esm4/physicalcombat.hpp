@@ -463,6 +463,16 @@ namespace ESM4
     std::optional<ArmorWearSlot> selectArmorWearSlot(unsigned draw,
         const std::array<bool, 7>& available, const ArmorWearSelectionSettings& settings);
     void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings);
+    struct ArmorWearSelection
+    {
+        std::optional<ArmorWearSlot> mSlot;
+        std::uint32_t mNextState;
+        unsigned mDraws;
+    };
+    // Prepare up to seven native draws without publishing stream state. A
+    // caller commits mNextState alongside the contact, even if no slot wins.
+    ArmorWearSelection selectArmorWear(std::uint32_t state,
+        const std::array<bool, 7>& available, const ArmorWearSelectionSettings& settings);
 
     struct HandToHandInput
     {
