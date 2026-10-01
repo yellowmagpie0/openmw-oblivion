@@ -551,6 +551,18 @@ namespace ESM4
     // original victim-player branch; unknown sources select Unaffected.
     enum class PlayerDamageRole { Unaffected, Attacker, Victim };
 
+    struct PhysicalContactDamage
+    {
+        float mHealth;
+        float mFatigue;
+    };
+    // Resource amounts selected for native damage writers after armor/block.
+    // Rescale Fatigue with the pre-difficulty Health ratio, then apply difficulty
+    // to Health only. A zero/zero ratio produces no Fatigue writer in the native
+    // sink. Nonfinite writer amounts remain outside finite runtime storage.
+    PhysicalContactDamage physicalContactDamage(const PhysicalContactDamage& incoming,
+        float remainingHealth, float difficulty, float difficultyMultiplier, PlayerDamageRole role);
+
     HandToHandDamage handToHandDamage(const HandToHandInput& input,
         const HandToHandSettings& settings, const PhysicalCombatSettings& physical);
     HandToHandDamage handToHandContactDamage(const HandToHandContactInput& input,

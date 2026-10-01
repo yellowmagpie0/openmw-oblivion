@@ -2248,3 +2248,64 @@ TEST(ESM4PhysicalCombat, ContactFatigueDiagnosesInvalidInputsAndNonfiniteNativeI
     EXPECT_EQ(ESM4::mitigateContactFatigue(0, 0, 0), 0);
     EXPECT_EQ(ESM4::mitigateContactFatigue(1, 0, 1), 0);
 }
+
+TEST(ESM4PhysicalCombat, ContactPipelineMatchesOriginalRatioDifficultyAndWriterSelection)
+{
+    using Role = ESM4::PlayerDamageRole;
+    struct Case
+    {
+        float health, fatigue, remaining, difficulty;
+        Role role;
+        std::uint32_t healthBits, fatigueBits;
+        bool unsupported;
+    };
+    const Case cases[] = {
+#include "contactpipeline_expected.inc"
+    };
+    for (const auto& row : cases)
+    {
+        SCOPED_TRACE(::testing::Message() << row.health << "/" << row.remaining << " Fatigue="
+            << row.fatigue << " difficulty=" << row.difficulty << " role=" << int(row.role));
+        if (row.unsupported)
+        {
+            EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{row.health, row.fatigue}),
+                row.remaining, row.difficulty, 5, row.role), std::invalid_argument);
+            continue;
+        }
+        const auto result = ESM4::physicalContactDamage({row.health, row.fatigue},
+            row.remaining, row.difficulty, 5, row.role);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mHealth), row.healthBits);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mFatigue), row.fatigueBits);
+    }
+    const auto zeros = ESM4::physicalContactDamage({-0.f, -0.f}, -0.f, 0, 5, Role::Victim);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(zeros.mHealth), 0u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(zeros.mFatigue), 0u);
+}
+
+TEST(ESM4PhysicalCombat, ContactPipelineValidatesEvenNoWriterBranches)
+{
+    using Role = ESM4::PlayerDamageRole;
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{bad, 0}), 0, 0, 5,
+            Role::Victim), std::invalid_argument);
+        EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{0, bad}), 0, 0, 5,
+            Role::Victim), std::invalid_argument);
+        EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{0, 0}), bad, 0, 5,
+            Role::Victim), std::invalid_argument);
+        EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{0, 0}), 0, 0, bad,
+            Role::Victim), std::invalid_argument);
+    }
+    for (float bad : {-2.f, 2.f, std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{0, 1}), 0, bad, 5,
+            Role::Victim), std::invalid_argument);
+    EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{0, 1}), 0, 0, 5,
+        static_cast<Role>(99)), std::invalid_argument);
+    const float max = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{1, max}), 2, 0, 5,
+        Role::Victim), std::invalid_argument);
+    EXPECT_THROW(ESM4::physicalContactDamage((ESM4::PhysicalContactDamage{max, 0}), max, 1, 5,
+        Role::Victim), std::invalid_argument);
+}

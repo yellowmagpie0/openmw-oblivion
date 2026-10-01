@@ -1014,6 +1014,20 @@ namespace ESM4
         return rounded(double(incomingFatigue) * ratio);
     }
 
+    PhysicalContactDamage physicalContactDamage(const PhysicalContactDamage& incoming,
+        float remainingHealth, float difficulty, float difficultyMultiplier, PlayerDamageRole role)
+    {
+        nonnegative(incoming.mHealth);
+        nonnegative(incoming.mFatigue);
+        nonnegative(remainingHealth);
+        // Original zero/zero produces NaN; the sink's positive comparison then
+        // skips Fatigue. Keep that writer selection without publishing NaN AVs.
+        const float fatigue = incoming.mHealth == 0.f && remainingHealth == 0.f ? 0.f
+            : mitigateContactFatigue(incoming.mFatigue, remainingHealth, incoming.mHealth);
+        const float health = difficultyDamage(remainingHealth, difficulty, difficultyMultiplier, role);
+        return {health > 0.f ? health : 0.f, fatigue > 0.f ? fatigue : 0.f};
+    }
+
     float blockFraction(const BlockInput& input, const BlockSettings& settings, const PhysicalCombatSettings& physical)
     {
         validatePhysicalCombatSettings(physical);

@@ -5154,3 +5154,47 @@ mitigation/sink pipeline, difficulty binding, block intent, gear/reactions and
 acquired-victim runtime publication. Previous checkpoint77 commit
 bd44e2742dfd202b601bb5628922d955f6088b35; verified bundle55 SHA256
 60d7954ba9f433f04985e0f3b186259a39a0005710f12f6843b0ccb2205751d2.
+
+### Checkpoint79 — native contact resource writer selection
+
+Added physicalContactDamage: rescale incoming Fatigue using post-armor/block
+Health divided by pre-armor Health, then apply difficulty to Health only and
+select positive resource writer amounts. Zero original and remaining Health
+with nonzero Fatigue follows native NaN suppression and produces no Fatigue
+writer, without putting NaN in saved AVs. Positive remaining Health with zero
+original produces native infinite Fatigue; that nonfinite writer domain is
+still diagnosed, as are overflowing finite inputs. The raw ratio-store helper
+retains its stricter intermediate contract. Signed-zero amounts select no
+writers. Actual engine contact publication, gear/block/reactions remain open.
+
+S4/native-contact-sink-oracle-01 executes the full original common sink5E58F0
+and difficulty5E2560:600 cases/300 unique inputs in both x87 modes, covering
+Player source, victim, self, neither and null source across difficulty and
+zero/positive/NaN/infinite Fatigue. Fatigue is never difficulty-scaled. Corpus
+SHA256e8928f0511aa3c65986b2cd500c04a359411abc1e908ef73d62c5f0f74808a92.
+Score-context getters return null, AV writers record arguments, and the dead
+getter returns false; opponent maintenance and actual lifecycle writes are
+not established. S4/native-contact-fatigue-oracle-02 extends the original ratio
+probe to166 cases/83 inputs including zero denominator, corpus SHA256
+12a0ae8646ab70466aa69ed4e68f2c3d63bcf9c560f9ecdad448dfae45a3a296.
+No game-function stubs are invoked in the ratio probe.
+
+S4/native-contact-pipeline-oracle-01 carries exact original ratio-store bits
+into the full sink/difficulty path:250 cases/125 inputs, both x87 modes, corpus
+SHA256fcd35fa6ad485dfdba106a6a2678f7d5a1a1e3c68034f683d4fc420c04b50696.
+It uses the same explicitly supplied score/writer/dead boundaries as the sink
+probe. The checked-in125-row immutable expectations record actual resource
+writer arguments; all25 infinite-writer rows explicitly expect the finite
+runtime diagnostic, rather than claiming parity over unsupported storage.
+Additional tests cover malformed values, zero-writer validation, signed zero,
+invalid roles/sliders/settings and overflow. S2/contact-pipeline-main-01 passes
+all2038 component cases and494 ESM4 ASan/UBSan cases, exact inventories,
+no skips/failures/source drift; leak detection disabled. Tested fingerprint
+b5f4e70aa6511e82c01082eb0cdc9919f3271c0bf6624f5fa727977ab649c8c8.
+Unchanged engine/Python checks remain78/75 evidence; no new runtime gate.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: native held-block control
+and process authority, difficulty binding and acquired-victim damage with
+condition/reaction consequences. Previous checkpoint78 commit
+6ea4635e484bbc41787ebaed3df939ed3bc13211; verified bundle56 SHA256
+1f40b902a62191332258670fbeba3789d6c482790ca8c0e17835d69acdfe6782.
