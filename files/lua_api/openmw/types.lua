@@ -107,6 +107,13 @@
 -- @field [parent=#Actor] #STANCE STANCE
 
 ---
+-- Returns whether an actor is paralyzed. Native Oblivion uses integer actor
+-- value48: fractional float magnitude alone does not establish paralysis.
+-- @function [parent=#Actor] isParalyzed
+-- @param openmw.core#GameObject object
+-- @return #boolean
+
+---
 -- Returns true if the object is an actor and is able to move. For dead, paralyzed,
 -- or knocked down actors it returns false.
 -- @function [parent=#Actor] canMove

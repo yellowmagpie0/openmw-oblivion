@@ -2531,6 +2531,150 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionProcessAction(foreign, actor), std::invalid_argument);
     }
 
+    TEST(OblivionWorldTest, NativeParalysisIntegerAuthorityMatchesOriginalProfilesForPlayerAndNpc)
+    {
+        struct Case
+        {
+            std::int32_t mBase;
+            float mMaximum, mScript, mDamage;
+            std::int32_t mLow, mHigh, mPlayer;
+            bool mCommonHigh;
+        };
+        static constexpr Case cases[] = {
+#include "paralysis_expected.inc"
+        };
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 1}; native.mFormKey = base; native.mIsTES4 = true; native.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto actor = addNativeNpc(fixture, 0x801), player = world.getPlayerPtr();
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto npcKey = actor.getCellRef().getFormKey(), playerKey = ESM::FormKey::dynamic("player", 1);
+        const auto source = captureNativeActorState(fixture, actor);
+        for (const auto& test : cases)
+            for (auto process : {ESM4::ActorValueProcess::Low, ESM4::ActorValueProcess::Active})
+            {
+                auto state = source;
+                for (auto& values : state.mNativeActorValues)
+                {
+                    values.mValues[48] = {static_cast<float>(test.mBase),
+                        {test.mMaximum, test.mScript, test.mDamage}};
+                    if (values.mActor == npcKey)
+                    {
+                        values.mProcess = process;
+                        if (process == ESM4::ActorValueProcess::Low)
+                        {
+                            values.mProcessAction.reset();
+                            values.mProcessKnockedState.reset();
+                        }
+                    }
+                }
+                service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), store);
+                const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+                const auto expected = process == ESM4::ActorValueProcess::Low ? test.mLow : test.mHigh;
+                ASSERT_EQ(service.getProcessParalysis(npcKey), expected);
+                EXPECT_EQ(MWMechanics::oblivionParalyzed(world, actor), expected != 0);
+                if (process == ESM4::ActorValueProcess::Active)
+                {
+                    EXPECT_EQ(MWMechanics::oblivionParalyzed(world, actor), test.mCommonHigh);
+                }
+                ASSERT_EQ(service.getProcessParalysis(playerKey), test.mPlayer);
+                EXPECT_EQ(MWMechanics::oblivionParalyzed(world, player), test.mPlayer != 0);
+                EXPECT_FLOAT_EQ(service.getPlayerValue(48),
+                    static_cast<float>(double(test.mBase) + test.mMaximum + test.mScript + test.mDamage));
+                EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+            }
+    }
+
+    TEST(OblivionWorldTest, NativeParalysisQueryRequiresActualBindingAndDoesNotInventActorState)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        EXPECT_THROW(MWMechanics::oblivionParalyzed(world, actor), std::invalid_argument);
+        EXPECT_THROW(service.getProcessParalysis(key), std::invalid_argument);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto state = captureNativeActorState(fixture, actor);
+        state.mNativeActorValues[0].mValues[48] = {0, {std::nullopt, .75f, std::nullopt}};
+        state.mNativeActorValues[0].mProcessAction.reset();
+        state.mNativeActorValues[0].mProcessKnockedState.reset();
+        service.restore(state, world.getStore());
+        EXPECT_FALSE(MWMechanics::oblivionParalyzed(world, actor));
+        EXPECT_FALSE(service.findActorValues(key)->mProcessAction);
+        EXPECT_FALSE(service.findActorValues(key)->mProcessKnockedState);
+        state.mNativeActorValues[0].mValues[48].mModifiers[1] = -1.25f;
+        service.restore(state, world.getStore());
+        EXPECT_TRUE(MWMechanics::oblivionParalyzed(world, actor));
+        EXPECT_EQ(service.getProcessParalysis(key), -1);
+        EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Alive);
+        EXPECT_THROW(MWMechanics::oblivionParalyzed(world, {}), std::invalid_argument);
+        MWWorld::World foreign(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_THROW(MWMechanics::oblivionParalyzed(foreign, actor), std::invalid_argument);
+        state.mNativeActorValues[0].mValues[48].mBase = 3e38f;
+        service.restore(state, world.getStore());
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_THROW(MWMechanics::oblivionParalyzed(world, actor), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+    }
+
+    TEST(OblivionWorldTest, NativeCreatureParalysisUsesIntegerCompositionAndSharedBaseOverride)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{};
+        creature.mId = {0x820, 0}; creature.mFormKey = ESM::FormKey::content("headless.esm", 0x820);
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 1; creature.mData.health = 99;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{};
+        reference.mId = {0x920, 0}; reference.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        auto state = captureNativeActorState(fixture, actor);
+        state.mNativeActorValues[0].mValues[48] = {0, {.75f, -.75f, -.75f}};
+        service.restore(state, store);
+        EXPECT_EQ(service.getProcessParalysis(reference.mFormKey), 0);
+        EXPECT_FALSE(MWMechanics::oblivionParalyzed(world, actor));
+        auto base = std::find_if(state.mNativeActorBases.begin(), state.mNativeActorBases.end(),
+            [&](const auto& value) { return value.mBase == creature.mFormKey; });
+        if (base == state.mNativeActorBases.end())
+        {
+            state.mNativeActorBases.push_back({creature.mFormKey, ESM4::ActorBaseKind::Creature, {}});
+            base = std::prev(state.mNativeActorBases.end());
+        }
+        auto entry = std::find_if(base->mValues.begin(), base->mValues.end(),
+            [](const auto& value) { return value.mActorValue == 48; });
+        if (entry == base->mValues.end()) base->mValues.push_back({48, 3.25f});
+        else entry->mValue = 3.25f;
+        std::sort(base->mValues.begin(), base->mValues.end(),
+            [](const auto& lhs, const auto& rhs) { return lhs.mActorValue < rhs.mActorValue; });
+        EXPECT_THROW(service.restore(state, store), std::invalid_argument);
+        EXPECT_EQ(service.getProcessParalysis(reference.mFormKey), 0);
+        // The stored float base override is queried as integer3. Both the
+        // shared override and the resolved actor snapshot must agree.
+        state.mNativeActorValues[0].mValues[48].mBase = 3;
+        service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), store);
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_EQ(service.getProcessParalysis(reference.mFormKey), 1);
+        EXPECT_TRUE(MWMechanics::oblivionParalyzed(world, actor));
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+    }
+
     TEST(OblivionWorldTest, ConstructedActiveProcessInitializesUnknownWithoutChangingOtherAuthority)
     {
         NativeWorldFixture fixture;

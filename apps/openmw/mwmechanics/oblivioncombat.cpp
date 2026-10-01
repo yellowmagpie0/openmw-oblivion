@@ -161,10 +161,9 @@ namespace MWMechanics
             return ESM4::scaleNpcMagicka(current, multiplier);
         }
 
-        std::int32_t nonPlayerInteger(const ESM4::RuntimeActorValues& values, std::uint8_t value,
+        std::int32_t composeNonPlayerInteger(const ESM4::RuntimeActorValues& values, std::uint8_t value,
             const ESM4::RuntimeActorBaseOverride* base)
         {
-            validateNonPlayerQuery(value);
             const auto& state = values.mValues[value];
             const auto override = integerBaseOverride(base, value);
             const auto integerBase = override ? *override : value == 8 && values.mNonPlayerFormHealth
@@ -175,6 +174,13 @@ namespace MWMechanics
                 return current;
             const auto multiplier = ESM4::composeActorValue(values.mValues[40], values.mOwner, values.mProcess);
             return ESM4::scaleNpcIntegerMagicka(current, multiplier);
+        }
+
+        std::int32_t nonPlayerInteger(const ESM4::RuntimeActorValues& values, std::uint8_t value,
+            const ESM4::RuntimeActorBaseOverride* base)
+        {
+            validateNonPlayerQuery(value);
+            return composeNonPlayerInteger(values, value, base);
         }
 
         void validatePlayerIdentity(const ESM4::RuntimeActorValues& values)
@@ -2361,6 +2367,19 @@ namespace MWMechanics
         if (!values->mProcessAction)
             throw std::invalid_argument("native action query has unknown legacy Active state");
         return *values->mProcessAction;
+    }
+
+    std::int32_t OblivionCombatService::getProcessParalysis(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        if (!values)
+            throw std::invalid_argument("native paralysis query requires actor authority");
+        // Common native paralysis tests integer AV48, not its float magnitude.
+        // The High cache's fresh result is the same integer composition as
+        // Middle; authoritative channels invalidate derived results on writes.
+        if (values->mOwner == ESM4::ActorValueOwner::Player)
+            return getPlayerIntegerValue(48);
+        return composeNonPlayerInteger(*values, 48, findActorBase(values->mBase));
     }
 
     void OblivionCombatService::setProcessAction(const ESM::FormKey& actor, std::int16_t action)

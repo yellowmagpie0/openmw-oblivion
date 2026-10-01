@@ -14,6 +14,7 @@
 #include "apps/openmw/mwmechanics/actorutil.hpp"
 #include "apps/openmw/mwmechanics/creaturestats.hpp"
 #include "apps/openmw/mwmechanics/drawstate.hpp"
+#include "apps/openmw/mwmechanics/oblivionmelee.hpp"
 #include "apps/openmw/mwworld/class.hpp"
 #include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/worldmodel.hpp"
@@ -285,6 +286,16 @@ namespace MWLua
                 "setSelectedEnchantedItemAction");
         };
 
+        actor["isParalyzed"] = [](const Object& o) {
+            const auto ptr = o.ptr();
+            const auto& cls = ptr.getClass();
+            if (!cls.isActor())
+                return false;
+            const auto world = MWBase::Environment::get().getWorld();
+            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+                return MWMechanics::oblivionParalyzed(*world, ptr);
+            return cls.getCreatureStats(ptr).isParalyzed();
+        };
         actor["canMove"] = [](const Object& o) {
             const MWWorld::Class& cls = o.ptr().getClass();
             return cls.getMaxSpeed(o.ptr()) > 0;

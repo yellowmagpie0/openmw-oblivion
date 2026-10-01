@@ -45,6 +45,7 @@ namespace MWMechanics
     // Resolve actual native actor binding before reading its process byte.
     std::int16_t oblivionProcessAction(MWBase::World& world, const MWWorld::Ptr& actor);
     bool oblivionBlockingPosture(MWBase::World& world, const MWWorld::Ptr& actor);
+    bool oblivionParalyzed(MWBase::World& world, const MWWorld::Ptr& actor);
 
     std::int8_t oblivionKnockedState(MWBase::World& world, const MWWorld::Ptr& actor);
 

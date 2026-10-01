@@ -560,6 +560,9 @@ namespace MWMechanics
         // Raw High action authority. Low getter returns -1; unknown legacy
         // Active state is diagnosed. Selection/render scheduling is separate.
         std::int16_t getProcessAction(const ESM::FormKey& actor) const;
+        // Integer AV48 used by the native common paralysis predicate. This
+        // does not expose or import an arbitrary warm/stale High cache word.
+        std::int32_t getProcessParalysis(const ESM::FormKey& actor) const;
         void setProcessAction(const ESM::FormKey& actor, std::int16_t action);
         // A real animated actor has constructed an Active process. Apply its
         // native defaults only where an older save has no restored field.

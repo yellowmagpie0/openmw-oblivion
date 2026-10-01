@@ -9370,3 +9370,61 @@ strike action publication, acquired-victim damage, condition/reactions and all
 later acceptance gates. Previous checkpoint83 commit
 befa3ba03ea02ca69e6eec1af8767a529a0d11b7; verified bundle61 SHA256
 18e27891cc741c42845a890f0e49ca7c77269557de0acbd52c0171167f21082c.
+
+### Checkpoint85 — native integer paralysis in live Lua control gates
+
+The native process paralysis query composes integer AV48 from authoritative
+Player/NPC/CREA base and modifier channels. The common predicate is integer
+nonzero, including negative integers; a positive fractional float magnitude
+alone does not imply paralysis. Actual binding validation precedes the query.
+Actor.isParalyzed exposes this predicate to the shipped player controls while
+TES3 keeps its existing magic-effect predicate and god-mode behavior. Reads do
+not materialize raw process action/knocked fields or mutate resource/life state.
+Generic NPC float/command AV48 support and arbitrary warm/stale original High
+cache words remain outside this dedicated predicate implementation.
+
+S4/native-paralysis-query-oracle-01 executes original Low643340, Middle658790,
+High628940, Player65E030 integer getters, High6289F0 fresh cached-float getter,
+and common5E17E0 using actor virtual+284. Original executable SHA256 remains
+ a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+500 base/modifier profiles, both x87 precision controls, six paths produce6000
+passed cases. Boundaries provide resolved integer bases, valid Player base
+presence and sparse modifier lookup; actual composition, cache conversion and
+predicate execute independently of C++. Common reads use independently executed
+High results. Corpus SHA256
+ac72163a9c72e7d45f8c4da02d59f024178039249d55a4515fb0d7a047be437f.
+The immutable500-row expected include is tested against actual World Player,
+NPC Low/Active and CREA bindings. Additional cases cover missing/foreign
+bindings, negative/fractional values, unsupported integer overflow, shared base
+overrides and rejection of inconsistent snapshots without mutation.
+
+S3/native-paralysis-live-main-03 and native-paralysis-live-sanitized-03 each
+pass744 engine cases; main additionally passes231 Python cases, including shipped
+Lua control behavior. Exact inventories, zero failures/skips/source drift;
+ASan/UBSan leaks disabled. Tested fingerprint
+72f46ccfa7b76ff5d36446b9cb42f130153c6c5e8dac86d0aa0759aab22ab09a.
+Retained main/sanitized-01 compile failures identify incorrect NotNullPtr use;
+-02 rejects the deliberately inconsistent CREA fixture before the corrected
+-03 valid-base assertion. Retained oracle-failed-01 used the wrong virtual slot.
+
+S4/native-paralysis-input-offscreen-02 stages Player Script+.75, exercises the
+actual Lua binding and shipped held-input gate, then scheduled native Script
++1/-1 commands: paralysis false→true→false; held block false→true→false→true→false.
+Both schema26 saves preserve the final+.75 exactly, remaining AV/life/breath/
+base/death/engagement/action authority, and no fresh-process held-input replay.
+The only raw process changes are the declared constructor defaults0/-1. Input
+and pristine hashes, logs, reports and independent save checks pass. Epochs
+PID13/start15077679 andPID12/start15089810 on the recorded boot ID; reference
+counts34674→39286→39286 include discoveries. Engine SHA256
+ e4ca1b82d7b4ddd325e19fa0eb7633556d44187dce81e4e8e9a99b42e5d5f4be.
+Both captures were directly reviewed: ordinary dungeon/full HUD, no rendered
+block/paralysis pose acceptance. Retained offscreen-01 proves current normal
+console rejects generic TES4 ModAV syntax; scheduled commands do not close that
+normal-console gate or spell application. An initial launcher path error stopped
+before launching and did not alter prior evidence.
+
+S2/S3 remain in progress and S4–S14 open. Next: actual block posture/animation,
+strike action publication, acquired-victim damage, condition/reactions, console
+command support and all remaining plan gates. Previous checkpoint84 commit
+120ae4e8670de62cd2ec5363ea9b645f65e431b5; verified bundle62 SHA256
+145c82f790a668b28ead9eda7cab5e03d707de95bda39fcfec9a703c7e513d13.

@@ -112,8 +112,7 @@ local function controlsAllowed()
     if not Player.getControlSwitch(self, Player.CONTROL_SWITCH.Controls) then return false end
     if I.UI.getMode() then return false end
     if debug.isGodMode() then return true end
-    local paralysis = Actor.activeEffects(self):getEffect(core.magic.EFFECT_TYPE.Paralyze)
-    return paralysis.magnitude <= 0
+    return not Actor.isParalyzed(self)
 end
 
 local function movementAllowed()

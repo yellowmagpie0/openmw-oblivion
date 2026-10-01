@@ -203,6 +203,24 @@ namespace MWMechanics
         return ESM4::nativeBlockingPosture(oblivionProcessAction(world, actor));
     }
 
+    bool oblivionParalyzed(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || actor.isEmpty())
+            throw std::invalid_argument("native paralysis query requires a native actor");
+        const bool player = actor == world.getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+            throw std::invalid_argument("native paralysis query requires a native actor");
+        if (player)
+            service->getPlayerValue(8);
+        else
+            service->getNonPlayerValue(actor, 8);
+        return service->getProcessParalysis(player ? ESM::FormKey::dynamic("player", 1)
+            : actor.getCellRef().getFormKey()) != 0;
+    }
+
     std::int8_t oblivionKnockedState(MWBase::World& world, const MWWorld::Ptr& actor)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion

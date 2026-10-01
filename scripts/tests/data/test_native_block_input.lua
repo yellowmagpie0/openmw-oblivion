@@ -35,6 +35,7 @@ package.preload['openmw.types'] = function() return {
     Actor = {
         STANCE = { Weapon = 1, Spell = 2, Nothing = 0 },
         getStance = function() return stance end,
+        isParalyzed = function() return paralysis ~= 0 end,
         activeEffects = function() return { getEffect = function() return { magnitude = paralysis } end } end,
     },
     Player = {
