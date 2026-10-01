@@ -3687,6 +3687,123 @@ namespace
         EXPECT_EQ(paralyzed->mBlockAbsorbedFraction, 0); EXPECT_EQ(paralyzed->mBlockFatigueDebit, 0);
     }
 
+    TEST(OblivionWorldTest, OrdinaryWeaponPolicyPreparesNativeWearBeforeOwnedResourcePublication)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); MWClass::Weapon::registerSelf(); world.setupPlayer();
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc nativePlayer{}; nativePlayer.mId = {7, 1}; nativePlayer.mFormKey = base;
+        nativePlayer.mIsTES4 = true; nativePlayer.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(nativePlayer, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr(), npc = addNativeNpc(fixture, 0x801);
+        const auto victim = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(npc)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", .5f},
+            {"fDamageWeaponMult", .5f}, {"fDamageSkillBase", .2f}, {"fDamageSkillMult", 1.5f},
+            {"fDamageWeaponConditionBase", .5f}, {"fDamageWeaponConditionMult", .5f},
+            {"fDamageStrengthBase", .75f}, {"fDamageStrengthMult", .5f}, {"fActorLuckSkillMult", .4f},
+            {"fDamageToWeaponPercentage", .06f}, {"fDamageToArmorPercentage", 9.f},
+            {"fArmorRatingMax", .85f}, {"fDifficultyDamageMultiplier", 5.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+        }
+        ESM4::Weapon native{}; native.mId = {0x940, 0}; native.mData.health = 1000;
+        native.mData.damage = 100; native.mData.speed = native.mData.reach = 1;
+        const auto weaponBase = ESM::FormKey::content("headless.esm", 0x940);
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        ESM::Weapon projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+        projected.mData.mHealth = 1; projected.mData.mChop[0] = projected.mData.mChop[1] = 255;
+        store.insertStatic(projected);
+        const auto install = [&](const MWWorld::Ptr& owner) {
+            ESM4::RuntimeInventoryItem item; item.mBase = weaponBase; item.mCount = 1;
+            item.mCondition = 1000; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {item});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = owner.getClass().getInventoryStore(owner);
+            inventory.swapPreparedContents(*staged);
+            return *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        };
+        auto state = captureNativeActorState(fixture, npc);
+        state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+        for (auto& values : state.mNativeActorValues)
+            for (auto [av, amount] : {std::pair{0, 40.f}, {7, 50.f}, {14, 10.f}, {10, 140.f}, {42, 0.f}, {43, 0.f}})
+            { values.mValues[av] = {}; values.mValues[av].mBase = amount; }
+        service.restore(state, store);
+        const auto source = install(npc);
+        const auto snapshot = [&] {
+            auto saved = captureNativeActorState(fixture, npc);
+            saved.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            return saved.serializeBinary();
+        };
+        const auto before = snapshot();
+        const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 1, false);
+        ASSERT_TRUE(prepared);
+        EXPECT_EQ(prepared->mHealth, 16.625f); // Original sword control, NPC role ignores difficulty.
+        ASSERT_TRUE(prepared->mConditionAfterWear);
+        EXPECT_EQ(*prepared->mConditionAfterWear, 994.f); // Native damage100 * .06, before mitigation.
+        EXPECT_EQ(snapshot(), before); EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 1000.f);
+        const auto attack = world.beginOblivionPhysicalAction(npc);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -prepared->mHealth, 0, 0, {
+            MWMechanics::captureOblivionPhysicalConditionChange(npc, source, *prepared->mConditionAfterWear)}};
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(attack, npc, victim, deltas));
+        EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 994.f);
+        EXPECT_EQ(service.findActorValues(victim.getCellRef().getFormKey())->mValues[8].mModifiers[2], -16.625f);
+        EXPECT_EQ(service.findActorValues(npc.getCellRef().getFormKey())->mValues[10].mModifiers[2], -7.f);
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(attack, npc, victim, deltas));
+
+        service.restore(state, store); source.getCellRef().setNativeItemCondition(1000);
+        const auto playerSource = install(player);
+        const auto out = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, victim, playerSource, 1, false);
+        ASSERT_TRUE(out); EXPECT_EQ(std::bit_cast<std::uint32_t>(out->mHealth), 1076974933u); EXPECT_EQ(out->mConditionAfterWear, 994.f);
+        const auto in = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 1, false);
+        ASSERT_TRUE(in); EXPECT_EQ(std::bit_cast<std::uint32_t>(in->mHealth), 1120370688u); EXPECT_EQ(in->mConditionAfterWear, 994.f);
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, true));
+        source.getCellRef().setNativeItemCondition(6);
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false));
+        source.getCellRef().setNativeItemCondition(1000);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, 25));
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false));
+        ESM4::GameSetting noArmorWear{}; noArmorWear.mId = {0x95b, 0};
+        noArmorWear.mEditorId = "fDamageToArmorPercentage"; noArmorWear.mData = 0.f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(noArmorWear,
+            ESM::FormKey::content("headless.esm", 0x95b));
+        const auto noSelection = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+        ASSERT_TRUE(noSelection); EXPECT_EQ(noSelection->mHealth, 12.46875f);
+        EXPECT_EQ(noSelection->mConditionAfterWear, 994.f);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, -33));
+        const auto amplified = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+        ASSERT_TRUE(amplified); EXPECT_EQ(amplified->mHealth, 17.955f);
+        EXPECT_EQ(amplified->mConditionAfterWear, 994.f);
+        // The runtime rusty shortsword profile is independently frozen in
+        // S4/native-weapon-runtime-oracle-01 (both original x87 words).
+        source.getCellRef().setNativeItemCondition(55.875f);
+        native.mData.health = 56; native.mData.damage = 5;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        const auto rusty = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 0, false);
+        ASSERT_TRUE(rusty);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(rusty->mHealth), 1062506496u);
+        ASSERT_TRUE(rusty->mConditionAfterWear);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*rusty->mConditionAfterWear), 1113476301u);
+        const auto noEnchantment = native.mEnchantment;
+        native.mEnchantment = {0x944, 0};
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 0, false));
+        native.mEnchantment = noEnchantment;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        ASSERT_TRUE(world.toggleGodMode());
+        const auto god = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, npc, playerSource, 0, false);
+        ASSERT_TRUE(god); EXPECT_FALSE(god->mConditionAfterWear);
+    }
+
     TEST(OblivionWorldTest, NativeContactPublishesPreparedConditionsAtomicallyAndOnce)
     {
         NativeWorldFixture fixture;

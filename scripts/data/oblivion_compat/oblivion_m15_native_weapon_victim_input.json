@@ -1,0 +1,31 @@
+{
+  "source": "build/oblivion-compat/m15/S3/melee-state-offscreen-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+  "source_sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e",
+  "victim": "content:oblivion.esm:01fc43",
+  "reference_position": [
+    672,
+    60,
+    -109.68915557861328,
+    0,
+    0,
+    3.1415927410125732
+  ],
+  "native_ai_restrained": true,
+  "purpose": "Isolated equipped rusty-short-sword acquired-victim course; declared weapon/position/AI staging, physical hit and wear solely from normal attack input.",
+  "version": 2,
+  "weapon": {
+    "base": "content:oblivion.esm:090615",
+    "count": 1,
+    "condition": 55.875,
+    "charge": -1.0,
+    "equipped_slots": 65536,
+    "hotkey": -1,
+    "owner": "null",
+    "remaining_usage_time": -1.0
+  },
+  "oracle": "S4/native-weapon-runtime-oracle-01/report.json",
+  "expected_health_bits": 1062506496,
+  "expected_condition_bits": 1113476301,
+  "expected_wear_bits": 1050253721,
+  "expected_attack_fatigue": 7.800000190734863
+}

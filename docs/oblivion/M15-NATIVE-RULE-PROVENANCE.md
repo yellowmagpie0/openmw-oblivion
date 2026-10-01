@@ -5339,3 +5339,28 @@ this probe.41E6F0 is RET0; the four pending arguments are consumed by488830 RET1
 The first two probes supplied wrong cleanup and are explicitly invalidated;
 their zero corpora must not be reused as expected values. A corrected red test
 fails12 comparisons on the premature Float reader before the new helper fixes it.
+
+
+## Ordinary weapon contact runtime controls
+
+`S4/native-weapon-runtime-oracle-01` uses installed WEAP090615 rusty shortsword
+(native damage5/max56/weight8) and original484F80/547240/5F3870/484850 at ordinary
+multiplier1. Condition55.875, Blade10/Luck50/Strength40/current and base Fatigue140
+produce Health bits1062506496, wear bits1050253721 and condition bits1113476301
+in both x87 modes. Entry AV/base/damage/condition and publication boundaries
+are supplied as explicitly documented in checkpoints91/93; collision, armor,
+block/reactions and attack debit are not emulated here. Normal and sanitizer
+engine courses then independently verify exact Health and condition saves once
+and no fresh-process replay with actual collision/LOS and normal attack input.
+
+`S4/native-weapon-difficulty-oracle-01` executes full5E58F0/5E2560 with Health16.625,
+Fatigue0, normalized difficulty1 and winning multiplier5: Player-source Health
+bits1076974933 (2.7708332538604736), Player-victim1120370688 (99.75), neither
+1099235328 (16.625), both precision modes/six observations. Difficulty factor
+is1+scaled=6; the first engine expectations incorrectly used5 and are retained
+as failed tests. Source snapshot/ENAM baseline failures and the corrected red
+resolver assertion remain separately identified in the milestone report.
+Physical weapon contact now publishes prepared condition and damage atomically;
+unsupported positive armor selection/block/break/stealth/resistance/ENAM and
+later gates stay open. Post-hit HUD captures do not prove contact-frame held
+weapon rendering or sound.

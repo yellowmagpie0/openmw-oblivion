@@ -9952,3 +9952,87 @@ signed int32, which remains a separate integration boundary.
 - `S4/native-condition-reader-main-01`: **2043/2043 component tests passed**.
 - `S4/native-condition-reader-sanitize-01`: **2043/2043 component tests passed**, ASan leaks disabled, both sanitizers halt on error; no sanitizer findings.
 - Exact inventories/XML, zero skips/failures and stable shared-source fingerprint `ecaef073870b9f24ebd24406a8a131ac0de21c0476a91aa7c888b667e0e0a9e0` verified in both runs. Engine/Python implementation does not change here; engine wiring and runtime wear acceptance remain open.
+
+
+### Acquired ordinary equipped-WEAP contact — checkpoint 94
+
+Checkpoint 93 is committed as `43fe49a8afa5d4281ad89354909ece23a43b6fcf`
+(tree `54b57b7e516d19f3642ab8f67d7c87ab474be6ff`). Its verified fresh-clone
+bundle `S3/isolated-git-progress-71/m15-progress.bundle` has SHA-256
+`fb17c3f43738ec48f111fcdeb9950b1c9115aa1ee38eed90337147eab8055f01`.
+
+Actual ordinary native WEAP contacts now use the acquired collision/LOS victim,
+the owned strike's currently equipped native base, and the native damage query
+from checkpoint91. Damage and weapon wear prepare before attack Fatigue changes;
+prepared item condition, actor resources and action consumption publish together
+through checkpoint92. Weapon wear uses native base damage, winning settings and
+the double condition reader from checkpoint93. Shared projected health/chop
+values do not supply the calculation. The result logs requested condition
+publication separately from damage and attack debit.
+
+The current branch admits Player/NPC ordinary melee types0..3, unblocked and
+nonbreaking contacts with no positive armor-selection wear. Negative Defense
+amplification and explicitly zero armor-wear settings are admitted. Unsupported
+sneak, nonzero normal-weapon resistance, positive armor selection, inside-cone
+blocking, zero-condition break and enchantment execution remain explicit
+non-admission branches. The enchantment guard avoids consuming an enchanted hit
+before its typed M16 effect hook exists. Creature/power/ranged paths and reactions
+remain separate work. This does not close any incomplete stage or campaign gate.
+
+The headless engine case tests16.625 original sword control, native wear100*.06→6,
+pre-wear/pre-debit damage, read-only preparation, owned resource/condition
+publication once, actual Player difficulty identities, unsupported branches,
+zero armor-wear selection, negative Defense, god mode and the exact runtime
+rusty-sword profile. The initial baseline and main/sanitizer01 attempts contain
+an invalid snapshot fixture: both NPCs' native state but one reference row.
+They are retained as fixture failures. Corrected `native-weapon-contact-baseline-02`
+actually fails at the unimplemented resolver assertion. Main/sanitizer02 then
+fail only two mistaken test expectations: original maximum difficulty factor is
+1+5=6, not5. Independent `S4/native-weapon-difficulty-oracle-01` confirms six
+observations/three roles:16.625→2.7708332538604736 for a Player attacker,
+99.75 for a Player victim and16.625 for NPC-to-NPC. The separate
+`native-weapon-effect-admission-baseline-01` fails the missing ENAM guard before
+it is implemented. No failing attempt is relabeled as passing evidence.
+
+- `S3/native-weapon-contact-main-03`: **758/758 engine and234 Python tests passed**.
+- `S3/native-weapon-contact-sanitize-03`: **758/758 engine tests passed**, no ASan/UBSan findings; leaks disabled, both halt on error.
+- Both validate exact inventories/XML, no skips/failures and stable source fingerprint `91b27b7a194f3ace0f5a35f9dc29aa64a78d5e1e35ab7e7e386497659590ca3c`.
+
+Independent `S4/native-weapon-runtime-oracle-01` executes original484F80 product/
+bonus,547240 wear and5F3870/484850 publication under both x87 precision words for
+the installed rusty shortsword090615: native damage5, health56, weight8,
+condition55.875, Blade10/Luck50/Strength40/Fatigue140. Health bits1062506496,
+wear bits1050253721 and final condition bits1113476301 agree in both modes.
+Reader/publication boundary stubs are documented; this is arithmetic evidence,
+not emulated collision or gameplay. Installed master SHA-256 remains
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+
+Normal `S4/native-weapon-victim-offscreen-01` and instrumented
+`S4/native-weapon-victim-sanitized-01` each pass the first attack, distinct-process
+continuation and independent semantic save verification. Authored setup adds one
+equipped rusty shortsword, geometry and restrained target AI to the hash-pinned
+idle source; damage/wear come solely from normal `f`/`u` input. Saved Dreth
+Health modifier is exactly **-0.830322265625**. Condition changes exactly
+**55.875→55.57500076293945** once and remains unchanged on continuation, with
+count/slot/charge/hotkey/owner/usage metadata preserved. Attack1 enters raw2,
+contact consumes to3 and completion reaches-1; next action remains2 with no
+pending owners/strikes or replay. No victim Fatigue changes. Immediate attack
+Fatigue140→132.2 is logged; final Player Fatigue is fully capped in both normal
+and instrumented saves. The sanitizer expectation was declared as the once-debit
+bound[-7.800000190734863,0] with nondecreasing continuation before execution,
+so no wall-clock deadline was assumed to guarantee regeneration.
+
+Both semantic verifiers preserve all nine prior actors' other native AV/life/
+breath/base/death/engagement state and every prior reference inventory, allowing
+only declared process constructor fields and the victim Health change. Four
+post-contact/continuation captures were directly reviewed: named Dreth and full
+HUD with rusty shortsword name/icon. They are not contact-frame, held-mesh
+visibility, sound, normal inventory-equipping or campaign acceptance evidence.
+Normal executable SHA-256 `66cbad9fa54025028d127a69eb663907f9a2e884f45d792b196c30cce2701160`;
+instrumented executable SHA-256 `3e2964ec2630fce83262968f6205a3ed937f0d87a9be60409bcda414d468af39`.
+Epochs: normal12/17017615→12/17027290; instrumented13/17094434→12/17167556,
+all on boot `a80f9d5d-d691-4275-a06f-c8a6dcb4a3f8`. Normal references
+34674→35522→36289; instrumented34674→35427→35427. Scripts compile without
+failures/diagnostics. SDL receipt300 and actual ASan shared object first in
+LD_PRELOAD are used for the instrumented course. **S3 remains in progress;
+armor/block/break/RNG/reactions and every later open gate still require work.**

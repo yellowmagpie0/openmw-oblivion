@@ -39,6 +39,7 @@ namespace MWMechanics
         ESM4::PhysicalContactDamage mDamage{0, 0};
         float mBlockFatigueDebit = 0;
         float mBlockAbsorbedFraction = 0;
+        std::optional<float> mWeaponConditionAfterWear{};
     };
     // Acquire actual collision/LOS contact, prepare native damage, then publish
     // one owned transaction. Unavailable and unsupported contexts do not spend.
@@ -82,6 +83,17 @@ namespace MWMechanics
 
     // Read-only pre-mitigation ordinary melee WEAP query on the actual equipped
     // instance. Native float AV conversions and integer AttackBonus are distinct.
+    struct OblivionWeaponContactDamage
+    {
+        float mHealth;
+        std::optional<float> mConditionAfterWear;
+    };
+    // Read-only ordinary weapon contact preparation. Armor selection, equipped
+    // blocking, broken-item reactions and enchantment hooks gate admission.
+    std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking);
+
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& item);
 

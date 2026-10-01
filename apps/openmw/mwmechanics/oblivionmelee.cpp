@@ -178,21 +178,53 @@ namespace MWMechanics
         if (!contact)
             return std::nullopt;
         OblivionOrdinaryContactResult result{*contact, {0, 0}};
+        OblivionPhysicalContactDeltas deltas{-cost, 0, 0, 0};
         if (!contact->isEmpty())
         {
             const auto* state = service->findMeleeState(actor);
-            if (!state || !state->mStrike || !state->mStrike->mWeaponBase.isNull())
-                return std::nullopt; // Weapon damage/wear has its own contact branch.
-            const auto damage = resolveOblivionOrdinaryUnarmedContact(world, attacker,
-                *contact, normalizedDifficulty, sneaking);
-            if (!damage)
+            if (!state || !state->mStrike)
                 return std::nullopt;
-            result.mDamage = {damage->mHealth, damage->mFatigue};
-            result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
-            result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+            if (state->mStrike->mWeaponBase.isNull())
+            {
+                const auto damage = resolveOblivionOrdinaryUnarmedContact(world, attacker,
+                    *contact, normalizedDifficulty, sneaking);
+                if (!damage)
+                    return std::nullopt;
+                result.mDamage = {damage->mHealth, damage->mFatigue};
+                result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
+                result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+            }
+            else
+            {
+                auto& inventory = attacker.getClass().getInventoryStore(attacker);
+                const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                if (equipped == inventory.end() || equipped->getType() != ESM::REC_WEAP)
+                    return std::nullopt;
+                const auto item = *equipped;
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                    world.getStore(), item.getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                if (!form || ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*form)
+                    != state->mStrike->mWeaponBase)
+                    return std::nullopt;
+                auto condition = captureOblivionPhysicalConditionChange(attacker, item, 0);
+                const auto damage = resolveOblivionOrdinaryWeaponContact(world, attacker,
+                    *contact, item, normalizedDifficulty, sneaking);
+                if (!damage)
+                    return std::nullopt;
+                result.mDamage = {damage->mHealth, 0};
+                result.mWeaponConditionAfterWear = damage->mConditionAfterWear;
+                if (damage->mConditionAfterWear)
+                {
+                    condition.mCondition = *damage->mConditionAfterWear;
+                    deltas.mConditionChanges.push_back(std::move(condition));
+                }
+            }
         }
-        if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact,
-            {-cost, -result.mDamage.mHealth, -result.mDamage.mFatigue, -result.mBlockFatigueDebit}))
+        deltas.mVictimHealth = -result.mDamage.mHealth;
+        deltas.mVictimFatigue = -result.mDamage.mFatigue;
+        deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
+        if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact, deltas))
             return std::nullopt;
         return result;
     }
@@ -374,6 +406,72 @@ namespace MWMechanics
         const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, remaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction};
+    }
+
+    std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking)
+    {
+        if (!std::isfinite(normalizedDifficulty) || normalizedDifficulty < -1 || normalizedDifficulty > 1)
+            throw std::invalid_argument("native weapon contact difficulty outside normalized slider domain");
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        const auto player = world.getPlayerPtr();
+        const auto eligible = [&](const MWWorld::Ptr& ptr) {
+            return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_NPC_4);
+        };
+        if (!service || !eligible(attacker) || !eligible(victim) || attacker == victim || sneaking)
+            return std::nullopt;
+        // Validate authority before class queries can initialize shared caches.
+        if (victim == player) (void)service->getPlayerValue(8);
+        else (void)service->getNonPlayerValue(victim, 8);
+        const auto resistance = victim == player ? service->getPlayerIntegerValue(65)
+            : service->getNonPlayerIntegerValue(victim, 65);
+        if (resistance != 0)
+            return std::nullopt;
+        const float incoming = oblivionOrdinaryWeaponContactDamage(world, attacker, item);
+        if (incoming < 0)
+            return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
+        const auto* weapon = world.getStore().get<ESM4::Weapon>().search(*id.getIf<ESM::FormId>());
+        if (!weapon->mEnchantment.isZeroOrUnset())
+            return std::nullopt; // Do not consume an enchanted hit before its typed M16 effect hook exists.
+        const auto durability = ESM4::buildDurabilitySettings(settings);
+        std::optional<float> condition;
+        if (!(attacker == player && world.getGodModeState()))
+        {
+            const auto& ref = item.getCellRef();
+            const double current = ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())
+                : ref.getCharge() < 0 ? double(weapon->mData.health)
+                : double(ref.getCharge()) + ref.getChargeIntRemainder();
+            condition = ESM4::nativeConditionAfterWear(current, ESM4::weaponWear(weapon->mData.damage, durability));
+            if (condition && *condition == 0)
+                return std::nullopt; // Native broken-item unequip/reactions remain a separate policy.
+        }
+        const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
+            ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
+        if (armor.mAbsorbedFraction > 0 && ESM4::armorWear(incoming, armor.mAbsorbedFraction, durability) > 0)
+            return std::nullopt; // Native positive armor wear selects a piece with its own RNG.
+        if (oblivionBlockingPosture(world, victim) && !oblivionParalyzed(world, victim))
+        {
+            const auto& from = attacker.getRefData().getPosition();
+            const auto& to = victim.getRefData().getPosition();
+            const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
+            const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
+            if (ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy), ESM4::buildCombatHitConeAngle(settings)).mInside)
+                return std::nullopt; // Weapon hits also require block reactions when absorption is zero.
+        }
+        const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
+            : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
+        const auto damage = ESM4::physicalContactDamage({incoming, 0}, armor.mHealthDamage,
+            normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
+        return OblivionWeaponContactDamage{damage.mHealth, condition};
     }
 
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
