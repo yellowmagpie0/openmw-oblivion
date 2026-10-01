@@ -401,7 +401,8 @@ namespace ESM4
         float mArmorDamageMultiplier;
     };
     // Pure wear amounts. Contact eligibility, armor-piece selection and
-    // condition mutation are caller responsibilities.
+    // condition mutation are caller responsibilities. Signed armor fractions can
+    // produce nonpositive wear, which must not repair an item.
     float weaponWear(std::uint16_t baseDamage, const DurabilitySettings& settings);
     float armorWear(float incomingDamage, float absorbedFraction, const DurabilitySettings& settings);
     void validateDurabilitySettings(const DurabilitySettings& settings);
@@ -419,6 +420,7 @@ namespace ESM4
     void validateArmorWearMasterySettings(const ArmorWearMasterySettings& settings);
     // Caller supplies final wear after mastery/block policy. Positive wear
     // snaps remaining condition below one to zero; repaired excess is retained.
+    // Nonpositive wear preserves the current condition exactly.
     float conditionAfterWear(float current, float wear);
 
     struct ArmorMitigation
@@ -427,6 +429,7 @@ namespace ESM4
         float mAbsorbedFraction;
     };
     // Total rating already includes the actor's aggregation/mastery/cap policy.
+    // Rating includes signed Defense; negative values amplify damage.
     // The caller resolves armor bypass eligibility; this helper only applies it.
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass);
 

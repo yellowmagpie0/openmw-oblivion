@@ -782,8 +782,8 @@ namespace ESM4
     float conditionAfterWear(float current, float wear)
     {
         nonnegative(current);
-        nonnegative(wear);
-        if (wear == 0.f)
+        finite(wear);
+        if (wear <= 0.f)
             return current;
         const float remaining = rounded(double(current) - wear);
         return remaining < 1.f ? 0.f : remaining;
@@ -792,7 +792,7 @@ namespace ESM4
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass)
     {
         nonnegative(damage);
-        nonnegative(rating);
+        finite(rating);
         nonnegative(maximumFraction);
         const float fraction = bypass ? 0.f : std::min(rounded(std::min(double(rating), 100.0) / 100.0), maximumFraction);
         return {rounded(double(damage) * (1.0 - fraction)), fraction};
@@ -814,7 +814,7 @@ namespace ESM4
     {
         validateDurabilitySettings(settings);
         nonnegative(incomingDamage);
-        nonnegative(absorbedFraction);
+        finite(absorbedFraction);
         if (absorbedFraction > 1.f)
             throw std::invalid_argument("invalid native absorbed damage fraction");
         return rounded(double(incomingDamage) * absorbedFraction * settings.mArmorDamageMultiplier);

@@ -4941,3 +4941,44 @@ S2/S3 remain in progress; acquired-victim damage, mitigation ordering, block,
 knocked/reaction authority, powers/creatures and S4–S14 remain open. Previous
 checkpoint72 commit5955b999ecfcdf619fd6353322b61e08d5d1ebe2; bundle50 SHA256
 021d3408af2d6643f6eb361e84bb5a8025ea39484aefe8264f650acd94bab0b4.
+
+### Checkpoint74 — signed armor mitigation and nonpositive condition wear
+
+The native armor query introduced in checkpoint73 can return negative Defense.
+Physical mitigation now accepts finite signed ratings and applies the original
+upper-only fraction cap. Negative fractions amplify incoming damage and can
+produce negative wear; condition mutation accepts finite signed wear and
+preserves current condition exactly for nonpositive wear rather than repairing
+it or snapping an existing sub-one condition to zero. Negative damage/current
+condition/settings and nonfinite inputs remain rejected in their own domains.
+
+S2/signed-armor-baseline-01 retains the failing newly introduced regression.
+S2/signed-armor-main-01 passes all 2,032 normal component tests and 488 ESM4
+ASan/UBSan tests, with exact inventory/XML agreement, zero skips and no source
+drift. Sanitizer leak detection is disabled. Tested source fingerprint:
+cb63b6035a9d69161e6490bc62cef0cd5f807e29a419639a7f1fb96e4a41763b.
+Existing missing-initializer/dangling-else warnings remain recorded. Unchanged
+Python/engine results are retained from their previous checkpoints; no new
+engine or normal-input hit/wear acceptance is claimed for this pure change.
+
+S4/native-signed-armor-oracle-02 independently executes the pinned original
+5FF712..5FF7BD mitigation/bypass/cap continuation and full 547260 wear helper,
+plus the 5F3870 nonpositive condition prefix: 1,306 cases pass in both x87
+precision modes. Virtual armor-query values and signed contact sentinel are
+supplied boundaries; sentinel negative/zero/positive branches are all checked.
+Corpus SHA256: 2eb9a7067285ecf6a6497c502ce43e1b923dc38a8a980827508cc6ed502b9c69.
+Literal outcomes include damage100/rating-8 -> fraction-.08, damage108 and
+wear-72 with wear multiplier9; condition100 remains100. Signed-zero results
+are bit checked in the oracle. The loader's unrelated hooks are not invoked.
+Oracle01's 442-case narrower successful course is retained alongside two
+failed harness setups: a positive signed sentinel skipped wear, and the first
+condition setup also used a null entry. Corrected entry/sentinel inputs precede
+successful execution; these failures did not cause a production relaxation.
+Positive condition/inventory writing, wear selection and the full hit caller
+remain separate gates.
+
+S2/S3 remain in progress and S4–S14 remain open. Next: acquired-victim native
+damage, difficulty/profile policy, block intent, reaction authority and actual
+equipment wear consequences. Previous checkpoint73 commit:
+0ceea06fdb8071ed00be42c806536c7534c292b6. Verified bundle51 SHA256:
+39bbfea2af57c2855fce26b98ff61930ea2d3248371951e956c7453ccd022592.

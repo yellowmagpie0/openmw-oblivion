@@ -940,7 +940,8 @@ TEST(ESM4PhysicalCombat, DurabilityRejectsInvalidInputsAndOverflow)
         EXPECT_THROW(ESM4::weaponWear(1, {invalid, 9}), std::invalid_argument);
         EXPECT_THROW(ESM4::armorWear(1, 1, {.06f, invalid}), std::invalid_argument);
         EXPECT_THROW(ESM4::armorWear(invalid, 1, settings), std::invalid_argument);
-        EXPECT_THROW(ESM4::armorWear(1, invalid, settings), std::invalid_argument);
+        if (invalid != -1.f)
+            EXPECT_THROW(ESM4::armorWear(1, invalid, settings), std::invalid_argument);
     }
     EXPECT_THROW(ESM4::armorWear(1, std::nextafter(1.f, 2.f), settings), std::invalid_argument);
     EXPECT_THROW(ESM4::weaponWear(65535, {std::numeric_limits<float>::max(), 9}), std::invalid_argument);
@@ -984,6 +985,28 @@ TEST(ESM4PhysicalCombat, ArmorMitigationUsesFractionStoreAndBypass)
     EXPECT_EQ(ESM4::mitigateArmor(100, std::nextafter(100.f, 101.f), 1, false).mHealthDamage, 0);
 }
 
+TEST(ESM4PhysicalCombat, SignedArmorRatingAmplifiesDamageAndNonpositiveWearDoesNotRepair)
+{
+    const auto result = ESM4::mitigateArmor(100, -8, 1, false);
+    EXPECT_EQ(result.mAbsorbedFraction, -.08f);
+    EXPECT_EQ(result.mHealthDamage, 108.f);
+    const float wear = ESM4::armorWear(100, result.mAbsorbedFraction, {.06f, 9.f});
+    EXPECT_EQ(wear, -72.f);
+    EXPECT_EQ(ESM4::conditionAfterWear(100, wear), 100.f);
+    EXPECT_EQ(ESM4::conditionAfterWear(.5f, wear), .5f);
+    EXPECT_EQ(ESM4::mitigateArmor(100, -100, 0, false).mHealthDamage, 200.f);
+    EXPECT_EQ(ESM4::mitigateArmor(100, -100, 1, true).mHealthDamage, 100.f);
+    // Literal original-instruction outcomes for both x87 precision words.
+    EXPECT_EQ(ESM4::mitigateArmor(1, -1, 1, false).mHealthDamage, 1.01f);
+    EXPECT_EQ(ESM4::mitigateArmor(100, -100, .5f, false).mAbsorbedFraction, -1.f);
+    EXPECT_EQ(ESM4::armorWear(1, -1.f, {0, 9}), -9.f);
+    EXPECT_EQ(ESM4::armorWear(100, -1.f, {0, 9}), -900.f);
+    EXPECT_EQ(ESM4::conditionAfterWear(0, -100), 0.f);
+    EXPECT_EQ(ESM4::conditionAfterWear(.5f, -1), .5f);
+    EXPECT_TRUE(std::signbit(ESM4::conditionAfterWear(-0.f, -1.f)));
+    EXPECT_TRUE(std::signbit(ESM4::armorWear(0, -1.f, {0, 9})));
+}
+
 TEST(ESM4PhysicalCombat, PositiveWearSnapsConditionBelowOne)
 {
     EXPECT_EQ(ESM4::conditionAfterWear(1000, 6), 994);
@@ -1021,11 +1044,14 @@ TEST(ESM4PhysicalCombat, ArmorMutationArithmeticRejectsInvalidDomains)
     for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
     {
         EXPECT_THROW(ESM4::conditionAfterWear(bad, 1), std::invalid_argument);
-        EXPECT_THROW(ESM4::conditionAfterWear(1, bad), std::invalid_argument);
+        if (bad != -1.f)
+            EXPECT_THROW(ESM4::conditionAfterWear(1, bad), std::invalid_argument);
         EXPECT_THROW(ESM4::mitigateArmor(bad, 50, 1, false), std::invalid_argument);
-        EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, false), std::invalid_argument);
+        if (bad != -1.f)
+            EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, false), std::invalid_argument);
         EXPECT_THROW(ESM4::mitigateArmor(1, 50, bad, false), std::invalid_argument);
-        EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, true), std::invalid_argument);
+        if (bad != -1.f)
+            EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, true), std::invalid_argument);
         for (float ESM4::ArmorWearMasterySettings::* member : {&ESM4::ArmorWearMasterySettings::mLightNoviceMultiplier,
                  &ESM4::ArmorWearMasterySettings::mHeavyNoviceMultiplier,
                  &ESM4::ArmorWearMasterySettings::mLightJourneymanMultiplier,
