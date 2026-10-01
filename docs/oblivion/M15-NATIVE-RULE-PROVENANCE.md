@@ -4982,3 +4982,47 @@ damage, difficulty/profile policy, block intent, reaction authority and actual
 equipment wear consequences. Previous checkpoint73 commit:
 0ceea06fdb8071ed00be42c806536c7534c292b6. Verified bundle51 SHA256:
 39bbfea2af57c2855fce26b98ff61930ea2d3248371951e956c7453ccd022592.
+
+### Checkpoint75 — versioned native process knocked byte
+
+Runtime schema25 adds an optional signed int8 process knocked byte to native
+actor values, with identical C++/Python presence and value encoding. Known zero
+is distinct from unknown. Legacy schemas1–24 do not invent a lost process byte;
+24 binary decode/reencode remains exact, and promotion to25 retains unknown.
+Known values require25 and an Active process; lossy downgrade, invalid presence
+markers, Python bool/float/string/out-of-range inputs and known Low-process
+bytes are rejected. JSON uses signed integer output rather than character text.
+The new field is an immutable snapshot member at this checkpoint: live service
+construction, process changes, reactions and contact queries are the next work,
+so no new gameplay knocked-state authority or hit acceptance is claimed yet.
+
+S2/native-knocked-baseline-01 retains a failed new assertion showing the declared
+byte was lost by the unimplemented codec. S2/native-knocked-codec-main-01 passes
+all 2,034 normal component tests, 490 ESM4 ASan/UBSan cases and 228 Python tests,
+with matching inventories, zero skips and no source drift. Leak checks disabled;
+existing initializer/dangling-else warnings remain recorded. Tested fingerprint:
+5c6edea41fcd077f20cafac5aad441d59fc62b669ded031615982864b98ed758.
+S3/native-knocked-cross-codec-01 passes 516 C++ binary/JSON -> Python reencode
+byte-equality cases: both actor owners, all256 signed bytes and unknown in25,
+plus legacy24 unknown. Probe binary SHA256:
+f19c60d080bc356498ae41e69091e2a625b98510075c46b01c1af55ce84e2071.
+Codec tests do not establish process adoption or normal-input runtime acceptance.
+
+S4/native-knocked-state-oracle-02 passes 1,281 independent original-instruction
+cases using actual process vtables High A71814, MiddleHigh A72684, MiddleLow
+A72D64 and Low A720A4 with synthetic actor/process objects. High/MiddleHigh
++2E8 dispatch to629440 (low-byte setter), +2E4 to64B080 (signed getter);
+Low/MiddleLow dispatch to68F970 (no-op setter),6F7070 (zero getter).
+Common actor5E04F0 tests any nonzero result. Every raw byte is checked for each
+process tier, plus256 constructor-store cases at64B52D with EBX zero as set by
+64B42F and a null-process false query. No hooked game functions execute.
+Corpus SHA256: 72183631c01f7a1a8749af2f75f5e91eb71c9f341b73b9a55fa79b8d5544a8fb.
+Oracle01's narrower513-case course is retained. The constructor slice does not
+prove full allocation/base construction, process replacement/save, or meanings
+of individual nonzero states; no TES3 animation enum is substituted.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: wire the native process byte
+into live construction/query/reset/restore before unarmed fatigue contact, then
+acquired-victim damage and gear consequences. Previous checkpoint74 commit:
+b8c99947820194adf70969da81f73bfeea9cb755. Verified bundle52 SHA256:
+f1d88b09c68566ad8b66a1f3b6477d10dfebffb6ebc27be5f3f7c799b579d7be.

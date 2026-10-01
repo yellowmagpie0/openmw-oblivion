@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 24;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 25;
 
     struct RuntimeContentIdentity
     {
@@ -284,6 +284,10 @@ namespace ESM4
         // Null means unknown legacy ownership. An empty vector means known
         // no applied abilities; neither state permits guessing from AV bases.
         std::optional<std::vector<RuntimePassiveAbility>> mPassiveAbilities;
+
+        // v25: signed native High/MiddleHigh process knocked byte. Absence
+        // retains unknown legacy Active-process state; Low queries return zero.
+        std::optional<std::int8_t> mProcessKnockedState;
 
         void validate() const;
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;

@@ -1463,5 +1463,40 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             state["player"]["inventory"][0]["condition"] = bad
             with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
+    def test_native_process_knocked25_signed_wire_and_legacy_unknown(self):
+        state = make_state()
+        state["schema_version"] = 24
+        state["ai_rng_state"] = 1
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 1, "values": [[0.0, None, None, None] for _ in range(72)]}
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        restored = state_io.decode_payload(legacy)
+        self.assertNotIn("process_knocked_state", restored["native_actor_values"][0])
+        self.assertEqual(state_io.encode_payload(restored), legacy)
+        state["schema_version"] = 25
+        unknown = state_io.encode_payload(state)
+        self.assertIsNone(state_io.decode_payload(unknown)["native_actor_values"][0]["process_knocked_state"])
+        for raw in range(-128, 128):
+            actor["process_knocked_state"] = raw
+            payload = state_io.encode_payload(state)
+            decoded = state_io.decode_payload(payload)
+            self.assertEqual(decoded["native_actor_values"][0]["process_knocked_state"], raw)
+            self.assertEqual(state_io.encode_payload(decoded), payload)
+            marker = next(i for i, (a, b) in enumerate(zip(unknown, payload)) if a != b)
+            self.assertEqual(payload, unknown[:marker] + b"\x01" + struct.pack("<b", raw) + unknown[marker+1:])
+            corrupt = bytearray(payload)
+            corrupt[marker] = 2
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(corrupt)
+        for bad in [-129, 128, 0.0, True, False, "1"]:
+            actor["process_knocked_state"] = bad
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        actor["process_knocked_state"] = 0
+        actor["process"] = 0
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        actor["process"] = 1
+        state["schema_version"] = 24
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
 if __name__ == "__main__":
     unittest.main()

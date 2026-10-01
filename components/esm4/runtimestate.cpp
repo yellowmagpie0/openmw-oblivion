@@ -472,6 +472,8 @@ namespace ESM4
     {
         if (mActor.isNull() || mBase.isNull())
             throw std::runtime_error("Invalid TES4 native actor-value identity");
+        if (mProcessKnockedState && mProcess != ActorValueProcess::Active)
+            throw std::runtime_error("TES4 native knocked byte requires an Active process");
         if (mPlayerFormValues && mOwner != ActorValueOwner::Player)
             throw std::runtime_error("TES4 player form values require player ownership");
         if (mNonPlayerFormHealth && (mOwner != ActorValueOwner::NonPlayer
@@ -626,6 +628,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 25 && actor.mProcessKnockedState)
+                throw std::runtime_error("TES4 native knocked byte requires runtime-state version 25");
             if (mVersion < 10 && actor.mPlayerFormValues)
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
             if (mVersion < 18 && actor.mPassiveAbilities)
@@ -1345,6 +1349,12 @@ namespace ESM4
                         if (modifier)
                             writer.floating(*modifier);
                 }
+                if (mVersion >= 25)
+                {
+                    writer.integer<std::uint8_t>(actor.mProcessKnockedState.has_value());
+                    if (actor.mProcessKnockedState)
+                        writer.integer<std::int8_t>(*actor.mProcessKnockedState);
+                }
                 if (mVersion >= 10)
                 {
                     writer.integer<std::uint8_t>(actor.mPlayerFormValues.has_value());
@@ -1861,6 +1871,14 @@ namespace ESM4
                     for (std::size_t j = 0; j < value.mModifiers.size(); ++j)
                         if (mask & (1 << j))
                             value.mModifiers[j] = reader.float32();
+                }
+                if (result.mVersion >= 25)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 native knocked byte presence");
+                    if (present)
+                        actor.mProcessKnockedState = reader.integer<std::int8_t>();
                 }
                 if (result.mVersion >= 10)
                 {
@@ -2512,6 +2530,14 @@ namespace ESM4
                     stream << ']';
                 }
                 stream << ']';
+                if (mVersion >= 25)
+                {
+                    stream << ",\"process_knocked_state\":";
+                    if (actor.mProcessKnockedState)
+                        stream << static_cast<int>(*actor.mProcessKnockedState);
+                    else
+                        stream << "null";
+                }
                 if (mVersion >= 10)
                 {
                     stream << ",\"player_form_values\":";

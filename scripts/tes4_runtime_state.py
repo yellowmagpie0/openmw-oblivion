@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 24
+CURRENT_VERSION = 25
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -760,6 +760,10 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("TES4 native actor-value player identity mismatch")
         if not is_player and bases.get(key) != base:
             raise RuntimeStateError("Dangling or mismatched TES4 native actor-value reference")
+        knocked = actor.get("process_knocked_state")
+        if knocked is not None and (version < 25 or process != 1 or type(knocked) is not int
+                                   or not -128 <= knocked <= 127):
+            raise RuntimeStateError("TES4 native knocked byte requires Active process, signed int8 and version 25")
         form_values = actor.get("player_form_values")
         if form_values is not None:
             if version < 10 or owner != 0:
@@ -1353,6 +1357,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if mask > 7:
                     raise RuntimeStateError("Invalid TES4 native actor-value modifier mask")
                 actor["values"].append([base] + [reader.unpack("<f") if mask & (1 << i) else None for i in range(3)])
+            if version >= 25:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 native knocked byte presence")
+                actor["process_knocked_state"] = reader.unpack("<b") if present else None
             if version >= 10:
                 present = reader.unpack("<B")
                 if present > 1:
@@ -1629,6 +1638,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for modifier in value[1:]:
                     if modifier is not None:
                         writer.pack("<f", modifier)
+            if version >= 25:
+                knocked = actor.get("process_knocked_state")
+                writer.pack("<B", knocked is not None)
+                if knocked is not None:
+                    writer.pack("<b", knocked)
             if version >= 10:
                 form_values = actor.get("player_form_values")
                 writer.pack("<B", form_values is not None)
