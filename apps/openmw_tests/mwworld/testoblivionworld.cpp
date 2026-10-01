@@ -2,6 +2,7 @@
 #include <bit>
 #include <components/esm4/loadweap.hpp>
 #include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwclass/armor.hpp"
 #include "apps/openmw/mwworld/oblivionprofileservices.hpp"
 #include "apps/openmw/mwrender/animation.hpp"
 #include "apps/openmw/mwmechanics/character.hpp"
@@ -2434,6 +2435,132 @@ namespace
         EXPECT_EQ(legacy.beginOblivionPhysicalAction({}), 0);
         EXPECT_FALSE(legacy.cancelOblivionPhysicalAction(1, {}));
         EXPECT_FALSE(legacy.commitOblivionPhysicalContact(1, {}, {}, {}));
+    }
+
+    TEST(OblivionWorldTest, NativeArmorQueryReadsDefenseAuthorityWithoutProjectedItemRatings)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(fixture.mWorld.activateOblivionActor(actor));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 0);
+        ASSERT_TRUE(fixture.mWorld.executeOblivionActorValueCommand(actor, 43,
+            ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, 12));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 12);
+        ASSERT_TRUE(fixture.mWorld.executeOblivionActorValueCommand(actor, 43,
+            ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, -20));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), -8);
+    }
+
+    TEST(OblivionWorldTest, NativeArmorQueryUsesFractionalHealthCoverageMasteryAndWinningSettings)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Armor::registerSelf();
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        for (auto [value, amount] : {std::pair{std::uint8_t{7}, 50}, {std::uint8_t{27}, 50}, {std::uint8_t{18}, 50}})
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, value, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, amount));
+        const auto armor = [&](std::uint32_t id, std::uint32_t mask, bool heavy, int type, std::uint16_t rating) {
+            ESM4::Armor native{};
+            native.mId = {id, 0}; native.mArmorFlags = mask;
+            native.mGeneralFlags = ESM4::Armor::TYPE_TES4 | (heavy ? ESM4::Armor::TES4_HeavyArmor : 0);
+            native.mData.health = 100; native.mData.armor = rating;
+            store.getWritable<ESM4::Armor>().insertStatic(native, ESM::FormKey::content("headless.esm", id));
+            ESM::Armor projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+            projected.mData.mType = type; projected.mData.mHealth = 100;
+            // Deliberately incompatible projected rating: the native query must ignore it.
+            projected.mData.mArmor = 60000; store.insertStatic(projected);
+        };
+        armor(0x940, ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody, false, ESM::Armor::Cuirass, 1499);
+        armor(0x941, ESM4::Armor::TES4_Feet, true, ESM::Armor::Boots, 1000);
+        ESM4::RuntimeInventoryItem body;
+        body.mBase = ESM::FormKey::content("headless.esm", 0x940); body.mCount = 1;
+        body.mCondition = 50; body.mEquippedSlots = ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody;
+        const auto install = [&](std::vector<ESM4::RuntimeInventoryItem> items) {
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), items);
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            // Headless structural publication below GUI/pointer registration;
+            // actual class/inventory query, not gameplay equipment acceptance.
+            actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
+        };
+        install({body});
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 4.5f);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        auto item = inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass);
+        ASSERT_NE(item, inventory.end());
+        item->getCellRef().setNativeItemCondition(std::bit_cast<float>(0x42c7ffffu));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actor.getClass().getArmorRating(actor, false)), 0x410fffffu);
+        item->getCellRef().setNativeItemCondition(100);
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 9);
+        // Float AV composition truncates after summing modifiers for armor.
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, 27, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 56));
+        world.getOblivionCombatService()->changeNonPlayerValue(actor, 27, ESM4::ActorValueModifier::Script, .75f);
+        ASSERT_TRUE(world.requestOblivionStatModifier(actor, 27, false, .75f));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 10);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, 27, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 100));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 21);
+        ESM4::RuntimeInventoryItem boots;
+        boots.mBase = ESM::FormKey::content("headless.esm", 0x941); boots.mCount = 1;
+        boots.mCondition = 100; boots.mEquippedSlots = ESM4::Armor::TES4_Feet;
+        body.mCondition = 100; install({body, boots});
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 20); // Heavy coverage denies Light Master.
+        ESM4::GameSetting cap{}; cap.mId = {0x942, 0}; cap.mEditorId = "fMaxArmorRating"; cap.mData = 12.f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(cap, ESM::FormKey::content("headless.esm", 0x942));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 12);
+        cap.mData = 0.f; store.getWritable<ESM4::GameSetting>().insertStatic(cap,
+            ESM::FormKey::content("headless.esm", 0x942));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 20);
+        body.mCondition = boots.mCondition = 0; install({body, boots});
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 0);
+    }
+
+    TEST(OblivionWorldTest, NativeArmorQuerySeparatesPlayerCapCreatureDefenseAndForeignProfile)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc native{};
+        native.mId = {7, 1}; native.mFormKey = base; native.mIsTES4 = true; native.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(native, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr();
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, 100));
+        EXPECT_FLOAT_EQ(player.getClass().getArmorRating(player, false), 90);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, -200));
+        EXPECT_FLOAT_EQ(player.getClass().getArmorRating(player, false), -100);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{};
+        creature.mId = {0x820, 0}; creature.mFormKey = ESM::FormKey::content("headless.esm", 0x820);
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 1; creature.mData.health = 99;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{};
+        reference.mId = {0x920, 0}; reference.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, 100));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 100); // Creature getter has no NPC total cap.
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, 43, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, -200));
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), -100);
+        EXPECT_THROW(MWMechanics::oblivionArmorRating(world, {}), std::invalid_argument);
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_THROW(MWMechanics::oblivionArmorRating(legacy, actor), std::invalid_argument);
     }
 
     TEST(OblivionWorldTest, OrdinaryContactGateUsesPriorPhaseAndCannotReplayAfterMiss)

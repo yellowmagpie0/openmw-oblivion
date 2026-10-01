@@ -33,6 +33,7 @@
 
 #include "../mwlua/localscripts.hpp"
 
+#include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/aisetting.hpp"
 #include "../mwmechanics/autocalcspell.hpp"
@@ -1067,6 +1068,9 @@ namespace MWClass
 
     float Npc::getArmorRating(const MWWorld::Ptr& ptr, bool useLuaInterfaceIfAvailable) const
     {
+        auto& world = *MWBase::Environment::get().getWorld();
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion && ptr == world.getPlayerPtr())
+            return MWMechanics::oblivionArmorRating(world, ptr);
         if (useLuaInterfaceIfAvailable && ptr == MWMechanics::getPlayer())
         {
             auto res = MWLua::LocalScripts::callPlayerInterface<float>("Combat", "getArmorRating");

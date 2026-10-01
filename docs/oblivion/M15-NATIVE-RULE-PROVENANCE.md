@@ -4878,3 +4878,66 @@ mitigation and reaction authority, remaining power/creature timing variants,
 block intent and equipment condition consequences. Previous checkpoint71
 commitb4ecf10ee5b40bcc1623491efdd7e21215d403e0; verified bundle49 SHA256
 d2b2ba2d138bd24dcdfce1f375d8bc7f7a434d68dafb33f28c414d322838e813.
+
+### Checkpoint73 — native live armor query
+
+Native NPC and Player class armor queries now read actual native equipped armor,
+condition and actor values, bypassing projected TES3 item ratings/Lua combat
+formulas. Items are visited in native slot order with base-form deduplication
+(the process shield slot is separate), light/heavy totals stored separately,
+then native coverage/base-Light mastery, signed Defense AV43 and the winning
+upper-only cap. Zero item maximum health gives condition ratio0. Fractional
+condition and overrepair remain live inputs. Float skill/luck composition is
+truncated once at armor's original caller boundary; per-modifier integer
+queries and base/mastery flooring do not replace that read. Current supported
+conversion domain is finite int32; native CPU overflow handling remains open.
+Creature's distinct virtual query returns Defense directly, without NPC items,
+mastery or total cap. Unknown projected armor, overlapping native slots and
+unrepresentable projected armor-ring selection diagnose explicitly. Full native
+equipment adoption/public transfer and all armor-slot projection domains remain
+open; this read-only query introduces no second mutable inventory or cache.
+
+The no-armor native Defense query fails against the retained baseline. Final
+native-armor-query-main-04 and native-armor-query-sanitized-03 each pass727 engine
+cases with exact inventories/XML, no skips/source drift; leaks disabled.
+Fingerprint716c9c8f5a4c739ebab19dfc3cffd1c410756b3244775c60de807b139e1880ae.
+Tests cover NPC signed Defense, near-full exact health, combined-slot armor,
+float skill composition, Light Master/heavy denial, broken armor, winning cap
+and disabled cap, Player versus Creature behavior and foreign/empty rejection.
+The equipment fixture stages structural contents below GUI and pointer
+registration callbacks, so it is not gameplay equip/wear acceptance.
+Main-01 retains a fixture signature compile failure; main-03/sanitized-02
+retain Creature fixture admission failure from missing RNAM reach. Corrected
+fixture supplies reach64. Earlier main-02/sanitized-01 pass the narrower tests.
+Unchanged component/Python coverage retains checkpoint71 evidence.
+
+Original native-shield-query-inspection-01 executes100 getter/list/wear-bit cases
+without executed function stubs: High-process64B2D0 arg1 calls484E80 and41DF10;
+actually worn extra-data bits determine the shield entry, not weapon draw state.
+Cached native-armor-cached-aggregate-oracle-01 executes2592 cases in both x87
+modes through60E580's cache branch, Master multiplication, full5E0CD0 dispatch,
+signed Defense addition and upper-only cap. Rank/coverage/Defense reads are
+supplied boundaries; zero-cache inventory is explicitly empty. This is not
+full item accumulation or actor/equipment adoption parity. Corpus SHA256
+9e421f82baf0682fec6b5868a98cf70a50c56389b4911314293cfa20ad4c9860.
+
+S4/native-armor-query-ui-offscreen-02 passes real inventory UI/save/restart.
+Legitimate Console SetAV stages Defense12 once; normal Tab opens the actual
+Player class query, visibly Armor12; Escape closes GUI and F5 saves. A distinct
+process repeats Armor12 and saves without SetAV or any action/contact replay.
+Only staged Player AV43/native base entry changes; all other native resource/
+life fields, player inventory and every existing reference inventory remain
+unchanged. New captured references322/28 nonempty then473/27 are reported;
+whole-map equality is not claimed. Binary SHA256
+7d7d75e7a949e7fefe5867b1a5cab55a617af09eb7dc2b2dd6737623a5f5e491.
+All four captures directly reviewed: Armor12/readable pools and closed textured
+prison HUD. Inventory icons have magenta backgrounds and preview is incomplete;
+visual parity remains open. Audio muted, no measured FPS claim. This is a
+staged stat/UI query diagnostic, not worn armor, mastery, wear or hit acceptance.
+Course01 retains the failed save after Tab navigated focus instead of closing
+GUI; source KeyboardNavigation/ActionManager establishes Escape's actual exit.
+
+S2/S3 remain in progress; acquired-victim damage, mitigation ordering, block,
+knocked/reaction authority, powers/creatures and S4–S14 remain open. Previous
+checkpoint72 commit5955b999ecfcdf619fd6353322b61e08d5d1ebe2; bundle50 SHA256
+021d3408af2d6643f6eb361e84bb5a8025ea39484aefe8264f650acd94bab0b4.

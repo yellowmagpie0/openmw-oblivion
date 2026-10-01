@@ -23,6 +23,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/movement.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
+#include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwworld/actionopen.hpp"
 #include "../mwworld/actiontalk.hpp"
 #include "../mwworld/failedaction.hpp"
@@ -298,15 +299,7 @@ namespace MWClass
 
     float ESM4Npc::getArmorRating(const MWWorld::Ptr& ptr, bool) const
     {
-        float result = 0.f;
-        MWWorld::InventoryStore& inventory = getInventoryStore(ptr);
-        for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
-        {
-            const MWWorld::ContainerStoreIterator item = inventory.getSlot(slot);
-            if (item != inventory.end())
-                result += item->getClass().getArmorRating(*item);
-        }
-        return result;
+        return MWMechanics::oblivionArmorRating(*MWBase::Environment::get().getWorld(), ptr);
     }
 
     bool ESM4Npc::isEssential(const MWWorld::ConstPtr& ptr) const

@@ -7,6 +7,9 @@
 #include "../mwphysics/actor.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwworld/class.hpp"
+#include "../mwworld/inventorystore.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
+#include <components/esm4/loadarmo.hpp>
 #include "../mwworld/worldimp.hpp"
 #include <components/esm/records.hpp>
 #include <components/esm4/combatsettings.hpp>
@@ -173,6 +176,122 @@ namespace MWMechanics
         if (!contact || !contact->isEmpty())
             return false;
         return world.commitOblivionPhysicalContact(actionId, attacker, {}, {-cost, 0, 0});
+    }
+
+    float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || actor.isEmpty())
+            throw std::invalid_argument("native armor query requires a native actor");
+        const bool player = actor == world.getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+            throw std::invalid_argument("native armor query requires a native actor");
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* values = service->findActorValues(key);
+        if (!values)
+            throw std::invalid_argument("native armor query requires actor-value authority");
+        const auto value = [&](std::uint8_t index) { return player ? service->getPlayerValue(index)
+            : service->getNonPlayerValue(actor, index); };
+        const float defense = value(43);
+        if (actor.getType() == ESM::REC_CREA4)
+            return defense; // Original Creature virtual5E0CD0 reads AV2B directly.
+        const auto integer = [&](std::uint8_t index) {
+            // Armor's caller uses float AV queries then9828C0, rather than
+            // the per-modifier integer actor-value getter or mastery flooring.
+            const double current = std::trunc(double(value(index)));
+            if (!std::isfinite(current) || current < std::numeric_limits<std::int32_t>::min()
+                || current > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("native armor AV conversion exceeds supported int32 domain");
+            return static_cast<std::int32_t>(current);
+        };
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seenSettings;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seenSettings.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const auto physical = ESM4::buildPhysicalCombatSettings(settings);
+        const auto rating = ESM4::buildArmorRatingSettings(settings);
+        const auto mastery = ESM4::buildCombatMasterySettings(settings);
+        const auto armorMastery = ESM4::buildArmorMasterySettings(settings);
+        const float maximum = ESM4::buildMaximumArmorRating(settings);
+        struct EquippedArmor { const ESM4::Armor* mBase = nullptr; MWWorld::Ptr mItem; };
+        std::array<EquippedArmor, 16> slots{};
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        for (auto item = inventory.begin(); item != inventory.end(); ++item)
+        {
+            if (!inventory.isEquipped(*item))
+                continue;
+            const auto nativeId = MWWorld::OblivionProfileServices::nativeItemId(
+                world.getStore(), item->getCellRef().getRefId());
+            const auto* form = nativeId.getIf<ESM::FormId>();
+            const auto* armor = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
+            if (!armor)
+            {
+                if (item->getType() == ESM::REC_ARMO)
+                    throw std::invalid_argument("projected armor has no winning native definition");
+                continue;
+            }
+            std::uint32_t mask = armor->mArmorFlags & 0xffffu;
+            if (mask == (ESM4::Armor::TES4_LeftRing | ESM4::Armor::TES4_RightRing))
+            {
+                const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_LeftRing);
+                const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_RightRing);
+                if (left != inventory.end() && *left == *item) mask = ESM4::Armor::TES4_LeftRing;
+                else if (right != inventory.end() && *right == *item) mask = ESM4::Armor::TES4_RightRing;
+                else throw std::invalid_argument("native armor ring lacks its projected selected slot");
+            }
+            for (unsigned slot = 0; slot < slots.size(); ++slot)
+                if (mask & (1u << slot))
+                {
+                    if (slots[slot].mBase)
+                        throw std::invalid_argument("overlapping native equipped armor slots");
+                    slots[slot] = {armor, *item};
+                }
+        }
+        // Native slot13 uses the process's actually worn shield entry. Low
+        // processes expose no shield entry; drawing/held block is not this test.
+        const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+        if (values->mProcess != ESM4::ActorValueProcess::Active || carried == inventory.end()
+            || slots[13].mItem != *carried)
+            slots[13] = {};
+        std::array<bool, 7> light{}, heavy{};
+        for (unsigned i = 0; i < light.size(); ++i)
+        {
+            const auto* armor = slots[i == 6 ? 13 : i].mBase;
+            if (armor)
+                ((armor->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? heavy : light)[i] = true;
+        }
+        float lightRating = 0, heavyRating = 0;
+        std::set<ESM::FormId> seenArmor;
+        const auto luck = integer(7);
+        for (unsigned slot = 0; slot < slots.size(); ++slot)
+        {
+            const auto& equipped = slots[slot];
+            if (!equipped.mBase || (slot != 13 && !seenArmor.insert(equipped.mBase->mId).second))
+                continue;
+            const auto& armor = *equipped.mBase;
+            const bool isHeavy = armor.mGeneralFlags & ESM4::Armor::TES4_HeavyArmor;
+            const float full = static_cast<float>(armor.mData.health);
+            const float condition = equipped.mItem.getCellRef().getItemCondition(full);
+            const float ratio = full == 0 ? 0 : static_cast<float>(double(condition) / full);
+            const float amount = ESM4::armorRating({armor.mData.armor, integer(isHeavy ? 18 : 27), luck, ratio},
+                rating, physical);
+            auto& total = isHeavy ? heavyRating : lightRating;
+            total = static_cast<float>(double(total) + amount);
+        }
+        const float itemRating = static_cast<float>(double(lightRating) + heavyRating);
+        const auto baseLight = player ? service->getPlayerBaseValue(27)
+            : service->getNonPlayerBaseValue(key, 27, world.getStore());
+        const float mastered = ESM4::masteryArmorRating(itemRating, 0, baseLight,
+            ESM4::armorCoverage(light, armorMastery), ESM4::armorCoverage(heavy, armorMastery),
+            0, armorMastery, mastery);
+        const float total = static_cast<float>(double(mastered) + defense);
+        if (!std::isfinite(total))
+            throw std::invalid_argument("nonfinite native armor aggregate");
+        // Original total cap has no lower clamp; signed DefendBonus is valid.
+        return maximum > 0 ? std::min(total, maximum) : total;
     }
 
 }

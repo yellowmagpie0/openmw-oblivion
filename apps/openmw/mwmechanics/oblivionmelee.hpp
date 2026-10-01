@@ -40,5 +40,9 @@ namespace MWMechanics
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
         float reach, float weaponWeight);
 
+    // Read native equipped condition and AV authority. This is a query, not
+    // damage, block, wear or effect execution; shared TES3 ratings are not used.
+    float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor);
+
 }
 #endif
