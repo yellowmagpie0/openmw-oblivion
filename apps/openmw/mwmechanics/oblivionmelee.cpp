@@ -724,7 +724,7 @@ namespace MWMechanics
             const float full = static_cast<float>(armor.mData.health);
             const float condition = equipped.mItem.getCellRef().getItemCondition(full);
             const float ratio = full == 0 ? 0 : static_cast<float>(double(condition) / full);
-            const float amount = ESM4::armorRating({armor.mData.armor, integer(isHeavy ? 18 : 27), luck, ratio},
+            const float amount = ESM4::nativeEquippedArmorRating({armor.mData.armor, integer(isHeavy ? 18 : 27), luck, ratio},
                 rating, physical);
             auto& total = isHeavy ? heavyRating : lightRating;
             total = static_cast<float>(double(total) + amount);

@@ -1198,6 +1198,18 @@ namespace ESM4
         return rounded(double(floored) * condition);
     }
 
+    float nativeEquippedArmorRating(const ArmorRatingInput& input, const ArmorRatingSettings& settings,
+        const PhysicalCombatSettings& physical)
+    {
+        const float amount = armorRating(input, settings, physical);
+        // Original caller truncates using9828C0 and rounds halves upwards.
+        // Keep unsupported native conversion overflow explicit.
+        if (double(amount) > std::numeric_limits<std::int32_t>::max())
+            throw std::invalid_argument("native equipped armor rating exceeds supported int32 domain");
+        const double whole = std::trunc(double(amount));
+        return rounded(whole + (double(amount) - whole < .5 ? 0 : 1));
+    }
+
     float capArmorRating(float total, float maximum)
     {
         nonnegative(total);

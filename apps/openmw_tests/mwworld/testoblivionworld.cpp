@@ -3309,12 +3309,14 @@ namespace
             actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
         };
         install({body});
-        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 4.5f);
+        // Full original488CB0 entry rounds4.5 upwards before aggregation.
+        EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 5.f);
         auto& inventory = actor.getClass().getInventoryStore(actor);
         auto item = inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass);
         ASSERT_NE(item, inventory.end());
         item->getCellRef().setNativeItemCondition(std::bit_cast<float>(0x42c7ffffu));
-        EXPECT_EQ(std::bit_cast<std::uint32_t>(actor.getClass().getArmorRating(actor, false)), 0x410fffffu);
+        // Full original entry rounds8.999999 to9, not a fractional aggregate.
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actor.getClass().getArmorRating(actor, false)), 0x41100000u);
         item->getCellRef().setNativeItemCondition(100);
         EXPECT_FLOAT_EQ(actor.getClass().getArmorRating(actor, false), 9);
         // Float AV composition truncates after summing modifiers for armor.

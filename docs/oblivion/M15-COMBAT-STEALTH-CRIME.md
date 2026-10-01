@@ -10216,3 +10216,61 @@ open: independent full488CB0 entry probes discovered missing outer rounding
 in the existing equipped-item query. The next chunk corrects that omission
 before freezing actual armor-contact expectations. S4 and all later gates
 remain open; no full gameplay acceptance is claimed here.
+
+### Checkpoint100 — equipped armor rounding and actual wear/restart acceptance
+
+The native equipped-item query now applies full488CB0 rounding after the
+547370 formula and before per-item aggregation. Half cases round upwards.
+Existing integration expectations4.5 and8.999999 were corrected to original
+entry results5 and9; formula tests retain their fractional results. A new
+component case compares12 frozen original entry rows and conversion/domain
+boundaries. Independent originals and hashes are in the native provenance.
+
+`S4/native-armor-entry-main-01` and `-sanitized-01` each pass all760 engine
+and2050 component cases, exact inventories/XML, zero skips/failures and stable
+tested source fingerprint `af9bbe639720e4f6e0865fe5a7d045fdb425a36ad2f80bf63c16c476664e8a49`.
+No sanitizer findings; leaks disabled. No Python changes or new compiler
+configuration claims.
+
+`S4/native-armor-contact-offscreen-01` and `-sanitized-01` pass actual ordinary
+shortsword input, physical acquisition/LOS, native condition writes, save and
+distinct-process load/resave. Declared setup: pristine21 save, source weapon
+55.875, Dreth position/restraint, prisoner shirt unequipped, official Iron
+Cuirass250.125 equipped, combat seed1. Installed master SHA-256
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`; audited native armor1000
+hundredths/max300, Heavy base skill5/Luck50. Original expectations froze before
+launch. One Health modifier -0.8054125905036926, weapon55.875→55.57500076293945,
+armor250.125→249.78872680664062, three draws1→415139642. Restart preserves exact
+conditions and seed, consumed ledger and no pending strike/no replay. All nine
+prior native actors, life/base/breath/death/engagements and exact item fields
+are checked. Player AV fields preserve except declared weapon weight8 and the
+existing checkpoint94 single-debit/regen Fatigue bounds. Input migration is27.
+Background AI/new references continue normally; no frozen world-time claim.
+
+Retained invalid verifier `verify-invalid-input-order.py`: appended fixture
+armor followed clothing, while ContainerStore native capture groups armor
+before clothing. Both actual saves have identical item lists and fields.
+`setup-correction.json` identifies World capture/ContainerStore type order;
+the recipe now declares those exact three identities/order. Every field and
+all other inventories remain exact. No resource, damage, condition or RNG
+expectation changed. Three negative controls independently reject one-bit
+wrong Health, armor-condition and next-RNG expectations from the same saves.
+No engine rerun was used to conceal the invalid verifier.
+
+Normal executable SHA-256 `d96a194250368c904e99cdc86a3e9cc06be86ebf5d6006093ccad7b328274b6d`;
+sanitizer executable `e306b6f11d9a0f1fc0245420c84650073d1a73949ba0a1851167244a270b2e0c`.
+Input SHA-256 `9588da6db0a1e000739cd25dc7e5212829c4ee77214d59e1983f2003061606aa`.
+Normal saves `20a434ed9567fddb041285684319bef833df51f5c8d2c30277e305caefd723d4` and
+`6268f8f1d4b342d2c2936b6f612e7d78489e25da02a2793bc9a223cab6410a4b`; sanitizer saves
+`2f40c0e0a4fcca87088ded6b77c36b42fe855f99531beed7d50fee971bcbc691` and
+`9e8669f771ed260826510f1c6a9a8d89ff7856cef6a62af19dd2ff9a1baace8a`.
+Normal epochs12/17799354→12/17807990; sanitizer12/17826518→12/17856312,
+boot a80f9d5d-d691-4275-a06f-c8a6dcb4a3f8. Normal references34674→35522→36289,
+sanitizer34674→35427→35427. Both first/restart captures in each configuration
+were directly viewed: named Dreth wears the staged cuirass, full HUD/weapon
+name-icon. No held weapon/contact-frame/audio acceptance claim; no-sound used.
+Script compilation/diagnostics/unexpected log findings and sanitizer findings
+are empty. Ordinary positive nonbreaking armor wear is now demonstrated for
+one Upper-body seed/course; other slots, equip flow, valid weapon blocks,
+break/reactions, Player god admission and all later open stages still require
+completion. S4 remains open.

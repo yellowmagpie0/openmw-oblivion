@@ -2830,3 +2830,27 @@ TEST(ESM4PhysicalCombat, NativeArmorWearPreservesMasteryAdmissionAndOriginalFloa
         EXPECT_THROW(ESM4::nativeArmorConditionAfterWear(50.125, wear, 50,
             ESM4::ArmorWeight::Light, {1.5f, 2.f, .5f, .25f}, mastery), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, EquippedArmorEntryRoundsOriginalFormulaBeforeAggregation)
+{
+    const ESM4::ArmorRatingSettings settings{.35f, 1.f, 0.f, 1.f};
+    struct Row { unsigned hundredths, maximum; int skill; float condition; std::uint32_t expected; };
+    // Frozen full488CB0/4B4C80/484850/547370/9828C0 results, both x87 words:
+    // S4/native-armor-entry-oracle-01 and -02. Readers/actor AV are supplied.
+    for (const auto row : {Row{1000,300,5,0,0}, Row{1000,300,5,50,1065353216},
+        Row{1000,300,5,100,1065353216}, Row{1000,300,5,150,1073741824},
+        Row{1000,300,5,250.125f,1077936128}, Row{1000,300,5,300,1077936128},
+        Row{1000,300,5,350,1082130432}, Row{1499,100,50,50,1084227584},
+        Row{1499,100,50,std::bit_cast<float>(0x42c7ffffu),1091567616},
+        Row{1499,100,50,100,1091567616}, Row{1499,100,56,50,1084227584},
+        Row{1499,100,100,100,1096810496}})
+    {
+        const float ratio = static_cast<float>(double(row.condition) / row.maximum);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::nativeEquippedArmorRating(
+            {static_cast<std::uint16_t>(row.hundredths), row.skill, 50, ratio}, settings, installed)), row.expected);
+    }
+    for (float ratio : {std::nextafter(.5f, 0.f), .5f, std::nextafter(.5f, 1.f)})
+        EXPECT_EQ(ESM4::nativeEquippedArmorRating({100, 0, 50, ratio}, settings, installed), ratio < .5f ? 0 : 1);
+    EXPECT_THROW(ESM4::nativeEquippedArmorRating({65535, 100, 50, 1e9f}, settings, installed), std::invalid_argument);
+    EXPECT_THROW(ESM4::nativeEquippedArmorRating({100, 0, 50, -1}, settings, installed), std::invalid_argument);
+}

@@ -578,6 +578,10 @@ namespace ESM4
     };
     float armorRating(const ArmorRatingInput& input, const ArmorRatingSettings& settings,
         const PhysicalCombatSettings& physical);
+
+    // Original488CB0 rounds each equipped entry after547370, before aggregation.
+    float nativeEquippedArmorRating(const ArmorRatingInput& input, const ArmorRatingSettings& settings,
+        const PhysicalCombatSettings& physical);
     float capArmorRating(float total, float maximum);
     void validateArmorRatingSettings(const ArmorRatingSettings& settings);
 

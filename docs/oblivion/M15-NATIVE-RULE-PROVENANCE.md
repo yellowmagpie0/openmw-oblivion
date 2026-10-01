@@ -5445,3 +5445,39 @@ and conflict precedence unverified. Corpus
 `8892d97c057bcabebed1c1ca6c68218010deea1fe95a2433c0a38990b778d87d`.
 This audit defines the availability boundary for later live selection; it is
 not a claim that condition publication is already integrated there.
+
+### Equipped armor entry rounds before aggregation (checkpoint100)
+
+The existing547370 formula returns fractional armor after condition scaling.
+Full caller488CB0 additionally converts that float with9828C0, compares the
+fraction with Double.5, and adds one at/above half before publishing an
+integer-valued float. Every equipped entry is rounded separately before
+60E580 accumulation, mastery and signed Defense. Applying rounding only to
+the total or preserving the raw formula fraction changes live mitigation.
+`nativeEquippedArmorRating` models this wrapper; `armorRating` remains the
+independently verified formula. Unsupported conversion overflow remains an
+explicit rejection, not a guessed original int32 overflow policy.
+
+`S4/native-armor-entry-oracle-01` executes14 cases (7 profiles × both x87
+words): official Iron Cuirass parameters1000 hundredths/max300, Heavy skill5,
+Luck50 and conditions0/50/100/150/250.125/300/350. Results0/1/1/2/3/3/4.
+Corpus SHA-25677e281752ff2ff33e2d68c0b2d737002a1bf4cb516944356f91e73425e9058d0.
+`-02` adds the existing Light1499/max100 fixtures, half/fractional/full
+condition and skill50/56.5/100: 12 executions,6 profiles. Half condition
+produces5, just-below-full produces9. Corpus SHA-256
+0e82e0d6ca2ab413183b538d0978794a42726e55d3a8e97c408040253006eb86.
+Full488CB0,4B4C80,484850,547370/547B90 and9828C0 execute. Supplied boundaries
+are native max-health reader, actor float getter and ExtraHealth float reader;
+all original conversions and final rounding execute. Actor Luck is50. Both
+control words agree and EIP/ESP returns are checked. No whole hit/equipment
+flow is implied by these instruction paths.
+
+`S4/native-armor-contact-runtime-oracle-01` concatenates original mitigation,
+wear, selection and Heavy base mastery publication using independently
+established RustyShortSword incoming.830322265625 and full488CB0 rating3.
+Current Iron Cuirass250.125/max300 yields Health bits1062088581, incoming
+armor wear bits1046843719 and remaining armor bits1132055018. Seeds0/1/15A4
+use2/3/1 draws respectively, agreeing under both x87 words. Corpus SHA-256
+6246a3ca1c7590a7bca5f5e0155f725f6fa7d0226ec0540c10fbb061c4c4f8b8.
+The actual normal and sanitizer contacts/restarts are recorded separately in
+M15-COMBAT-STEALTH-CRIME.md; these expectations were frozen before launch.
