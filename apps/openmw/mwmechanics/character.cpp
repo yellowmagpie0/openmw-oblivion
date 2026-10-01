@@ -1429,7 +1429,17 @@ namespace MWMechanics
         const auto fatigue = [&] { return mPtr == world->getPlayerPtr()
             ? service->getPlayerValue(10) : service->getNonPlayerValue(mPtr, 10); };
         const float before = fatigue();
-        const auto contact = commitOblivionOrdinaryMeleeContact(*world, strike.mActionId, mPtr, {},
+        MWWorld::Ptr selectedTarget;
+        if (const auto* melee = service->findMeleeState(actor); melee && melee->mAiIntent)
+        {
+            const auto key = melee->mAiIntent->mTarget;
+            auto* ai = world->getOblivionAiService();
+            selectedTarget = key == ESM::FormKey::dynamic("player", 1) ? world->getPlayerPtr()
+                : ai ? ai->resolveReference(key) : MWWorld::Ptr{};
+            if (selectedTarget.isEmpty())
+                return; // An unavailable owned target must never enumerate substitutes.
+        }
+        const auto contact = commitOblivionOrdinaryMeleeContact(*world, strike.mActionId, mPtr, selectedTarget,
             reach, weaponWeight, oblivionNormalizedDifficulty(Settings::game().mDifficulty), isSneaking());
         if (contact)
             Log(Debug::Verbose) << (contact->mVictim.isEmpty() ? "M15 melee miss committed: actor="

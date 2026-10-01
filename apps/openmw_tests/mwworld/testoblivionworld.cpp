@@ -5058,3 +5058,182 @@ namespace
     }
 
 }
+
+namespace
+{
+    ESM::FormKey installMeleeAiStyle(NativeWorldFixture& fixture)
+    {
+        auto& store = fixture.mWorld.getStore();
+        ESM4::CombatStyle style{};
+        style.mId = {0x880, 0};
+        style.mStandard.emplace();
+        style.mStandard->mAttackChance = 100;
+        style.mStandard->mFlags = 34;
+        style.mStandard->mDoNotAcquire = true;
+        const auto key = ESM::FormKey::content("headless.esm", 0x880);
+        store.getWritable<ESM4::CombatStyle>().insertStatic(style, key);
+        const auto base = ESM::FormKey::content("headless.esm", 0x800);
+        auto npc = *store.search<ESM4::Npc>(base);
+        npc.mCombatStyle = style.mId;
+        store.getWritable<ESM4::Npc>().insertStatic(npc, base);
+        return key;
+    }
+
+    TEST(OblivionWorldTest, MeleeAiIntentBindsWinningContentAndCancelsRetargetWithoutSpending)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto style = installMeleeAiStyle(fixture);
+        const auto a = addNativeNpc(fixture, 0x801), b = addNativeNpc(fixture, 0x802), c = addNativeNpc(fixture, 0x803);
+        for (auto actor : {a, b, c}) ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = a.getCellRef().getFormKey(), target = b.getCellRef().getFormKey(), other = c.getCellRef().getFormKey();
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, a);
+            for (auto actor : {b, c}) state.mReferences.push_back(captureNativeActorState(fixture, actor).mReferences[0]);
+            return state;
+        };
+        const auto idle = snapshot().serializeBinary();
+        EXPECT_THROW(service.setMeleeAiIntent(key, {target, style}, world.getStore()), std::invalid_argument);
+        EXPECT_EQ(snapshot().serializeBinary(), idle);
+        ASSERT_TRUE(service.engage(key, target));
+        ASSERT_TRUE(service.engage(key, other));
+        const auto before = snapshot();
+        EXPECT_THROW(service.setMeleeAiIntent(key, {key, style}, world.getStore()), std::invalid_argument);
+        EXPECT_THROW(service.setMeleeAiIntent(key, {target, ESM::FormKey::content("missing.esm", 1)}, world.getStore()), std::invalid_argument);
+        EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
+        ASSERT_NO_THROW(service.setMeleeAiIntent(key, {target, style}, world.getStore()));
+        // The selected melee target does not capture unrelated physical actions.
+        const auto unrelated = service.allocateAction(key);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(unrelated, a, c, {0, 0, 0, 0}));
+        EXPECT_TRUE(service.isActionConsumed(unrelated));
+        EXPECT_EQ(service.findMeleeState(key)->mAiIntent->mTarget, target);
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        service.setMeleeInput(key, {.5f, true, false, ESM4::MeleeQueuedStrike::Power});
+        ASSERT_TRUE(service.bindMeleePlayback(id, key));
+        const auto owned = snapshot();
+        ASSERT_NO_THROW(service.setMeleeAiIntent(key, {target, style}, world.getStore()));
+        EXPECT_EQ(snapshot().serializeBinary(), owned.serializeBinary());
+        EXPECT_THROW(world.commitOblivionPhysicalContact(id, a, c, {-7, -1, 0, 0}), std::invalid_argument);
+        EXPECT_EQ(snapshot().serializeBinary(), owned.serializeBinary());
+        auto lossy = owned; lossy.mVersion = 27;
+        const auto lossyBefore = lossy;
+        EXPECT_THROW(service.capture(lossy), std::invalid_argument);
+        EXPECT_EQ(lossy, lossyBefore);
+        ASSERT_NO_THROW(service.restore(ESM4::RuntimeState::deserializeBinary(owned.serializeBinary()), world.getStore()));
+        EXPECT_EQ(snapshot().serializeBinary(), owned.serializeBinary());
+        auto wrongStyle = owned;
+        wrongStyle.mNativeMeleeStates.at(key).mAiIntent->mStyle = ESM::FormKey::content("missing.esm", 1);
+        EXPECT_THROW(service.restore(wrongStyle, world.getStore()), std::invalid_argument);
+        EXPECT_EQ(snapshot().serializeBinary(), owned.serializeBinary());
+        ASSERT_NO_THROW(service.setMeleeAiIntent(key, {other, style}, world.getStore()));
+        EXPECT_TRUE(service.isActionConsumed(id));
+        ASSERT_TRUE(service.findMeleeState(key)->mAiIntent);
+        EXPECT_EQ(service.findMeleeState(key)->mAiIntent->mTarget, other);
+        EXPECT_FALSE(service.findMeleeState(key)->mStrike);
+        EXPECT_EQ(service.findMeleeState(key)->mInput, ESM4::RuntimeMeleeInput{});
+        EXPECT_EQ(service.getProcessAction(key), -1);
+        const auto changed = snapshot();
+        EXPECT_EQ(changed.mPhysicalActions.mNext, owned.mPhysicalActions.mNext);
+        EXPECT_EQ(changed.mCombatRngState, owned.mCombatRngState);
+        for (std::size_t i = 0; i < changed.mNativeActorValues.size(); ++i)
+            EXPECT_EQ(changed.mNativeActorValues[i].mValues, owned.mNativeActorValues[i].mValues);
+        EXPECT_TRUE(service.clearMeleeAiIntent(key));
+        EXPECT_FALSE(service.clearMeleeAiIntent(key));
+        EXPECT_FALSE(service.clearMeleeAiIntent(ESM::FormKey::content("missing.esm", 1)));
+        const auto scripted = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        const auto scriptedBefore = snapshot().serializeBinary();
+        EXPECT_THROW(service.setMeleeAiIntent(key, {target, style}, world.getStore()), std::invalid_argument);
+        EXPECT_EQ(snapshot().serializeBinary(), scriptedBefore);
+        EXPECT_TRUE(service.isActionPending(scripted, key));
+    }
+
+    TEST(OblivionWorldTest, MeleeAiStopAndTargetIncapacitationCancelAllOwnedInputsWithoutReplay)
+    {
+        for (int mode : {0, 1, 2})
+        {
+            SCOPED_TRACE(mode); // stop, death, essential knockout
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto style = installMeleeAiStyle(fixture);
+            const auto a = addNativeNpc(fixture, 0x801), b = addNativeNpc(fixture, 0x802), c = addNativeNpc(fixture, 0x803);
+            for (auto actor : {a, b, c}) ASSERT_TRUE(world.activateOblivionActor(actor));
+            auto& service = *world.getOblivionCombatService();
+            const auto key = a.getCellRef().getFormKey(), target = b.getCellRef().getFormKey(), other = c.getCellRef().getFormKey();
+            const auto snapshot = [&] {
+                auto state = captureNativeActorState(fixture, a);
+                for (auto actor : {b, c}) state.mReferences.push_back(captureNativeActorState(fixture, actor).mReferences[0]);
+                return state;
+            };
+            ASSERT_TRUE(service.engage(key, target)); ASSERT_TRUE(service.engage(other, target));
+            service.setMeleeAiIntent(key, {target, style}, world.getStore());
+            service.setMeleeAiIntent(other, {target, style}, world.getStore());
+            const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+            const auto peer = service.beginMeleeStrike(other, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+            service.setMeleeInput(key, {.2f, true, false, ESM4::MeleeQueuedStrike::Power});
+            service.setMeleeInput(other, {.2f, true, false, ESM4::MeleeQueuedStrike::Power});
+            ASSERT_TRUE(service.bindMeleePlayback(id, key)); ASSERT_TRUE(service.bindMeleePlayback(peer, other));
+            const auto before = snapshot();
+            if (mode == 0)
+                ASSERT_TRUE(service.stopCombat(target));
+            else
+                ASSERT_TRUE(service.commitPhysicalContact(id, a, b, {-7, -100, 0, 0}, nullptr,
+                    mode == 2, {10.f, .2f}, {}));
+            for (auto owner : {key, other})
+            {
+                const auto* melee = service.findMeleeState(owner);
+                ASSERT_NE(melee, nullptr);
+                EXPECT_FALSE(melee->mAiIntent); EXPECT_FALSE(melee->mStrike);
+                EXPECT_EQ(melee->mInput, ESM4::RuntimeMeleeInput{});
+                EXPECT_EQ(service.getProcessAction(owner), -1);
+            }
+            EXPECT_TRUE(service.isActionConsumed(id)); EXPECT_TRUE(service.isActionConsumed(peer));
+            const auto after = snapshot();
+            EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+            EXPECT_EQ(after.mPhysicalActions.mNext, before.mPhysicalActions.mNext);
+            const auto previousPeer = std::find_if(before.mNativeActorValues.begin(), before.mNativeActorValues.end(),
+                [&](const auto& actor) { return actor.mActor == other; });
+            ASSERT_NE(previousPeer, before.mNativeActorValues.end());
+            EXPECT_EQ(service.findActorValues(other)->mValues, previousPeer->mValues);
+            if (mode == 0)
+                for (std::size_t i = 0; i < after.mNativeActorValues.size(); ++i)
+                    EXPECT_EQ(after.mNativeActorValues[i].mValues, before.mNativeActorValues[i].mValues);
+            else
+                EXPECT_EQ(service.findActorLife(target)->mPhase, mode == 2
+                    ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead);
+            ASSERT_NO_THROW(service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore()));
+            EXPECT_FALSE(world.commitOblivionPhysicalContact(id, a, b, {-7, -100, 0, 0}));
+            EXPECT_EQ(snapshot().serializeBinary(), after.serializeBinary());
+        }
+    }
+
+    TEST(OblivionWorldTest, StationaryMeleeAiRejectsUnsupportedStyleAndNeverInventsHeadlessContact)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto style = installMeleeAiStyle(fixture);
+        const auto a = addNativeNpc(fixture, 0x801), b = addNativeNpc(fixture, 0x802);
+        for (auto actor : {a, b}) { world.getWorldModel().registerPtr(actor); ASSERT_TRUE(world.activateOblivionActor(actor)); }
+        auto& service = *world.getOblivionCombatService();
+        const auto key = a.getCellRef().getFormKey(), target = b.getCellRef().getFormKey();
+        ASSERT_TRUE(service.engage(key, target));
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, a);
+            state.mReferences.push_back(captureNativeActorState(fixture, b).mReferences[0]);
+            return state;
+        };
+        const auto before = snapshot();
+        EXPECT_TRUE(MWMechanics::updateOblivionStationaryMeleeAi(world, a, true));
+        EXPECT_FALSE(a.getClass().getCreatureStats(a).getAttackingOrSpell());
+        EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
+        EXPECT_FALSE(MWMechanics::canReachOblivionMeleeTarget(world, a, b, 128));
+        EXPECT_FALSE(MWMechanics::canReachOblivionMeleeTarget(world, a, {}, 128));
+        auto record = *world.getStore().search<ESM4::CombatStyle>(style);
+        record.mStandard->mAttackChance = 50;
+        world.getStore().getWritable<ESM4::CombatStyle>().insertStatic(record, style);
+        EXPECT_THROW(MWMechanics::updateOblivionStationaryMeleeAi(world, a, true), std::runtime_error);
+        EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
+        EXPECT_TRUE(MWMechanics::updateOblivionStationaryMeleeAi(world, a, false));
+        EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
+    }
+}

@@ -305,6 +305,11 @@ namespace MWMechanics
         // These methods do not choose groups, advance animation or resolve damage.
         const ESM4::RuntimeMeleeState* findMeleeState(const ESM::FormKey& actor) const;
         void setMeleeInput(const ESM::FormKey& actor, const ESM4::RuntimeMeleeInput& input);
+        // Native NPC/CSTY content and membership bind the AI's selected target.
+        // Replacing ownership cancels the previous owned strike without spending.
+        void setMeleeAiIntent(const ESM::FormKey& actor, const ESM4::RuntimeMeleeAiIntent& intent,
+            const MWWorld::ESMStore& store);
+        bool clearMeleeAiIntent(const ESM::FormKey& actor) noexcept;
         float animationClock(const ESM::FormKey& actor) const;
         float advanceAnimationClock(const ESM::FormKey& actor, float duration);
         bool setMeleeSequenceTiming(std::uint64_t id, const ESM::FormKey& actor,

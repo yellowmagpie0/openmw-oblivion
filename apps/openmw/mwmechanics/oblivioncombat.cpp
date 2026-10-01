@@ -27,6 +27,7 @@
 #include "creaturestats.hpp"
 #include "npcstats.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivioncombatdata.hpp"
 
 namespace MWMechanics
 {
@@ -686,6 +687,9 @@ namespace MWMechanics
 
     bool OblivionCombatService::stopCombat(const ESM::FormKey& actor) noexcept
     {
+        for (const auto& [owner, melee] : mMeleeStates)
+            if (melee.mAiIntent && (owner == actor || melee.mAiIntent->mTarget == actor))
+                clearMeleeAiIntent(owner);
         const auto found = mCombatOpponents.find(actor);
         if (found == mCombatOpponents.end())
             return false;
@@ -754,6 +758,64 @@ namespace MWMechanics
         candidate.mSequenceTiming = timing;
         candidate.validate();
         found->second.mStrike->mSequenceTiming = timing;
+        return true;
+    }
+
+    void OblivionCombatService::setMeleeAiIntent(const ESM::FormKey& actor,
+        const ESM4::RuntimeMeleeAiIntent& intent, const MWWorld::ESMStore& store)
+    {
+        intent.validate();
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        const auto* targetValues = findActorValues(intent.mTarget);
+        const auto* targetLife = findActorLife(intent.mTarget);
+        if (!values || !life || values->mOwner != ESM4::ActorValueOwner::NonPlayer
+            || values->mBase != life->mBase || life->mPhase != ESM4::ActorLifePhase::Alive
+            || !targetValues || !targetLife || targetValues->mBase != targetLife->mBase
+            || targetLife->mPhase != ESM4::ActorLifePhase::Alive || !isInCombatWith(actor, intent.mTarget))
+            throw std::invalid_argument("native melee AI requires Alive NPC and engaged target authority");
+        if (nonPlayerContentIsCreature(*values, store)
+            || MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
+                MWWorld::buildOblivionCombatDefaults(store)).mStyle != intent.mStyle)
+            throw std::invalid_argument("native melee AI style does not match winning NPC content");
+        const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end() && found->second.mAiIntent == intent)
+            return;
+        if (found != mMeleeStates.end() && found->second.mStrike && !found->second.mAiIntent)
+            throw std::invalid_argument("native melee AI cannot take over another owned strike");
+        // Allocate and copy the complete candidate before consuming old ownership.
+        auto candidate = found == mMeleeStates.end() ? ESM4::RuntimeMeleeState{} : found->second;
+        candidate.mAiIntent = intent;
+        candidate.mInput = {};
+        candidate.mStrike.reset();
+        decltype(mMeleeStates) prepared;
+        prepared.emplace(actor, std::move(candidate));
+        auto node = prepared.extract(prepared.begin());
+        if (found == mMeleeStates.end())
+            mMeleeStates.insert(std::move(node));
+        else
+        {
+            clearMeleeAiIntent(actor);
+            static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+            std::swap(found->second, node.mapped());
+        }
+    }
+
+    bool OblivionCombatService::clearMeleeAiIntent(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mAiIntent)
+            return false;
+        if (found->second.mStrike)
+        {
+            const auto id = found->second.mStrike->mActionId;
+            mActions.consume(id);
+            mActionOwners.erase(id);
+            clearMeleePlaybackAction(actor);
+            found->second.mStrike.reset();
+        }
+        found->second.mInput = {};
+        found->second.mAiIntent.reset();
         return true;
     }
 
@@ -986,6 +1048,11 @@ namespace MWMechanics
 
     std::size_t OblivionCombatService::cancelActorActions(const ESM::FormKey& actor) noexcept
     {
+        // Incapacitation invalidates the selected target even if combat
+        // membership is retained for essential recovery.
+        for (const auto& [owner, melee] : mMeleeStates)
+            if (owner != actor && melee.mAiIntent && melee.mAiIntent->mTarget == actor)
+                clearMeleeAiIntent(owner);
         std::size_t count = 0;
         for (auto it = mActionOwners.begin(); it != mActionOwners.end();)
         {
@@ -1074,6 +1141,10 @@ namespace MWMechanics
                 validateNonPlayerIdentity(ptr, *values);
             return values;
         };
+        if (const auto* melee = findMeleeState(attackerKey); melee && melee->mAiIntent && melee->mStrike
+            && melee->mStrike->mActionId == id && !victim.isEmpty()
+            && actorKey(victim) != melee->mAiIntent->mTarget)
+            throw std::invalid_argument("native melee AI contact does not match its owned target");
         auto attacking = *validateActor(attacker, attackerKey);
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
             return false;
@@ -3064,6 +3135,9 @@ namespace MWMechanics
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
+        if (state.mVersion < 28 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
+                [](const auto& entry) { return entry.second.mAiIntent.has_value(); }))
+            throw std::invalid_argument("native melee AI intent requires an Oblivion v28+ save");
         if (state.mVersion < 27 && mCombatRngState != 1)
             throw std::invalid_argument("native combat random state requires an Oblivion v27+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
@@ -3248,6 +3322,16 @@ namespace MWMechanics
         }
         for (const auto& event : state.mPendingDeathEvents)
             validateSource(event.mKiller);
+        for (const auto& [owner, melee] : state.mNativeMeleeStates)
+            if (melee.mAiIntent)
+            {
+                const auto values = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& actor) { return actor.mActor == owner; });
+                if (values == state.mNativeActorValues.end() || nonPlayerContentIsCreature(*values, store)
+                    || MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
+                        MWWorld::buildOblivionCombatDefaults(store)).mStyle != melee.mAiIntent->mStyle)
+                    throw std::invalid_argument("restored native melee AI style does not match winning NPC content");
+            }
         restore(state);
     }
 

@@ -34,6 +34,14 @@ namespace MWMechanics
     std::optional<MWWorld::Ptr> acquireOblivionMeleeContact(MWBase::World& world,
         std::uint64_t actionId, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& selectedTarget, float reach);
+    // Readiness uses the same selected-target collision/LOS query without
+    // allocating an action or publishing a contact.
+    bool canReachOblivionMeleeTarget(MWBase::World& world, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& target, float reach);
+    // S4's explicit deterministic stationary CSTY profile. Returns true while
+    // combat owns package execution. Full movement/style policy belongs to S7.
+    bool updateOblivionStationaryMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled);
+
     struct OblivionOrdinaryContactResult
     {
         MWWorld::Ptr mVictim; // Empty means an acquired physical miss.

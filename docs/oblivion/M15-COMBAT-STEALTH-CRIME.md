@@ -10346,3 +10346,77 @@ combat interruption, rendering, or actual save/restart acceptance is closed by
 this codec chunk. S4 and the full S0–S14 completion gates remain open. The next
 chunk must bind the saved intent to winning NPC/CSTY content and reconcile its
 input/cancellation through the actual native actor/controller path.
+
+
+### Checkpoint 103 — native selected-target NPC melee driver and cancellation
+
+The combat service now binds a melee AI intent to initialized Alive NPC/target
+authority, an existing engagement, and the actual winning NPC/CSTY policy.
+Typed restore revalidates that content before publishing temporary maps;
+pre-v28 capture rejects ownership before changing the destination. Reapplying
+the same intent retains its strike/input. Retargeting prepares a replacement
+before consuming the prior owned strike. Explicit clearing cancels only that
+melee input/strike, preserves unrelated action ownership, and spends no actor
+resources or combat random draws. A pending owned melee strike rejects a
+nonempty victim different from its selected target; unrelated physical actions
+retain their independent target authority.
+
+StopCombat and target incapacitation clear every dependent AI intent and its
+held/queued strike. Essential knockout retains the established membership policy
+but cannot leave an Alive-only selected target dangling. The hit that causes
+incapacitation may itself lose its melee renderer intent after publication;
+its action stays consumed, and neither that hit nor peer canceled strikes can
+replay after codec/typed restore. Death retains the existing one-event/count
+transaction. These cancellation operations add no allocation after publication.
+
+The S4 stationary driver supports an **explicit authored deterministic CSTY**:
+ChooseAttackChance/DisableFleeing flags, attack100, block/dodge/power0, zero
+attack bonuses/idle/hold timers, and DoNotAcquire. It requires one explicit
+opponent, active resident collision bodies, and valid lifecycle/control state.
+It reads the same selected-body distance/cone/reach/LOS query as contact,
+without allocating a fake action or supplying damage. It pulses C++ attack
+input only while idle and ready, then releases it during controller playback.
+CharacterController still owns primitive IDs, native animation phases and real
+contact publication; its contact call now resolves the owned target exclusively.
+Unavailable targets cannot fall back to another nearby actor.
+
+The native Actors branch pauses package updates while this combat driver owns
+execution, respects reserved package actions, and clears AI-owned input on
+AI/Lua disable, pause, unavailable residence, incapacitation, or update errors.
+C++ held input is released before renderer cancellation observers. The Player
+acquisition path and TES3 AI branch retain their established behavior. This
+fixed stationary profile does **not** establish general/native CSTY decisions,
+AI RNG interleaving, movement, acquisition, flee, full package timer resumption,
+or CREATURE attacks; those S7/S4 branches remain open.
+
+Three added engine cases cover content/engagement rejection with rollback,
+same-intent preservation, wrong-target rejection, independent physical action
+targeting, retarget cancellation, strict downgrade/typed restart, refusal to
+steal another active strike, stop/death/essential dependency cancellation,
+no resource/RNG debit on canceled peer strikes, and no replay. The headless
+driver case deliberately has no physics and proves it invents no contact,
+input, action ID or resource mutation; it rejects an unsupported style.
+
+Fresh `S4/native-stationary-opponent-main-01` and
+`S4/native-stationary-opponent-sanitized-01` both pass all **764 engine tests**
+with exact inventories/XML, zero failures/skips, and stable source fingerprint
+`9ee4c124d764847261fe6f2b4e2b4c43c2792f7224f5d54f1f91ef4a41a3b388`. The instrumented run uses ASan/UBSan with leak checks
+disabled, halt-on-error and UBSan stacktraces, and reports no findings.
+Component/Python source is unchanged from checkpoint102's full passing runs.
+Preliminary three-case output and both development build attempts are retained
+under `S4/native-stationary-opponent-development-01`. The first compile failed
+writing assembly because /tmp's disk quota was exhausted; 76 historical
+workflow-created review clones were verified clean (including ignored/untracked
+files), matched known committed heads, and removed. The latest review clone,
+independent progress repository, **all bundles and all evidence** remain;
+`S3/review-clone-cleanup-01.json` records those checks and reclaimed space.
+The infrastructure correction changes no expected gameplay or test budget.
+
+This code chunk is not actual NPC attack acceptance. Next: an editable,
+reproducible synthetic NPC CSTY/activation-script plugin, an independently
+frozen original-executable contact oracle using the NPC's unchanged native
+stats, ordinary activation/animation/contact, exact saved resource/condition/
+RNG deltas and fresh-process continuation in normal and instrumented engines.
+The native NPC renderer currently has no carried-weapon visibility override;
+held-weapon visuals, contact/reaction frames and audio also remain S4 work.
+All full M15 completion gates remain open.

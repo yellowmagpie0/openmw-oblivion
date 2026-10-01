@@ -43,6 +43,7 @@
 #include "oblivionai.hpp"
 #include "oblivionaigait.hpp"
 #include "oblivioncombat.hpp"
+#include "oblivionmelee.hpp"
 
 #include "../mwrender/vismask.hpp"
 
@@ -1647,6 +1648,20 @@ namespace MWMechanics
                 const auto it = mIndex.find(player.mRef);
                 if (it != mIndex.end())
                     it->second->getCharacterController().cancelOblivionCombatInput();
+                if (auto* nativeWorld = dynamic_cast<MWWorld::World*>(world))
+                    if (auto* combat = nativeWorld->getOblivionCombatService())
+                        for (auto& actor : mActors)
+                        {
+                            const auto ptr = actor.getPtr();
+                            if (actor.isInvalid() || ptr == player || ptr.getType() != ESM::REC_NPC_4)
+                                continue;
+                            const auto* melee = combat->findMeleeState(ptr.getCellRef().getFormKey());
+                            if (melee && melee->mAiIntent)
+                            {
+                                ptr.getClass().getCreatureStats(ptr).setAttackingOrSpell(false);
+                                actor.getCharacterController().cancelOblivionCombatInput();
+                            }
+                        }
             }
         }
         if (!paused)
@@ -1753,14 +1768,31 @@ namespace MWMechanics
                     {
                         try
                         {
-                            oblivionAi->update(actorPtr, duration, inProcessingRange);
+                            if (!updateOblivionStationaryMeleeAi(*world, actorPtr, inProcessingRange))
+                                oblivionAi->update(actorPtr, duration, inProcessingRange);
                         }
                         catch (const std::exception& error)
                         {
+                            if (auto* combat = nativeWorld->getOblivionCombatService(); combat
+                                && combat->clearMeleeAiIntent(actorPtr.getCellRef().getFormKey()))
+                            {
+                                actorPtr.getClass().getCreatureStats(actorPtr).setAttackingOrSpell(false);
+                                ctrl.cancelOblivionCombatInput();
+                            }
                             Log(Debug::Error) << "TES4 AI update failed for " << actorPtr.toString() << ": "
                                               << error.what();
                         }
                     }
+
+                    if (nativeAi && (!aiActive || (luaControls && luaControls->mDisableAI)))
+                        if (auto* combat = nativeWorld->getOblivionCombatService(); combat
+                            && combat->clearMeleeAiIntent(actorPtr.getCellRef().getFormKey()))
+                        {
+                            // Clear our held input before cancellation observers;
+                            // updateLuaControls can then import explicit Lua input.
+                            actorPtr.getClass().getCreatureStats(actorPtr).setAttackingOrSpell(false);
+                            ctrl.cancelOblivionCombatInput();
+                        }
 
                     // Looping magic VFX update
                     // Note: we need to do this before any of the animations are updated.
