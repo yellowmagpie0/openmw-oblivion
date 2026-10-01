@@ -980,6 +980,25 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertEqual(result["actions"][0]["error"], "ValueError: missing save")
             self.assertFalse(json.loads((root / "output/scenario.json").read_text())["passed"])
 
+    def test_action_receipt_timeout_cannot_pass_expected_scenario_timeout(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "receipt.json"
+            manifest.write_text(json.dumps({
+                "schema_version": 1, "name": "receipt-failure",
+                "command": [sys.executable, "-c", "import time; time.sleep(10)"],
+                "actions": [{"type": "sleep", "seconds": 0}],
+                "timeout_seconds": 5, "expected_exit": "timeout",
+                "terminate_after_actions": True,
+            }))
+            with mock.patch.object(MODULE, "_run_action", side_effect=TimeoutError("missing SDL receipt")):
+                result = MODULE.run_scenario(manifest, root / "output", {})
+            self.assertFalse(result["passed"])
+            self.assertFalse(result["timed_out"])
+            self.assertFalse(result["actions"][0]["passed"])
+            self.assertEqual(result["actions"][0]["error"], "TimeoutError: missing SDL receipt")
+            self.assertNotIn("deadline_exceeded", result["actions"][0])
+
     def test_scenario_clean_early_exit_does_not_pass_unexecuted_actions(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

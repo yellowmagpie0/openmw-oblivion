@@ -2000,6 +2000,10 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
     return result
 
 
+class _ScenarioDeadlineExceeded(TimeoutError):
+    """The scenario alarm fired, independently of action-specific deadlines."""
+
+
 def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                  restart_from: tuple[Path, str] | None = None) -> dict[str, Any]:
     global _VIRTUAL_GAMEPAD
@@ -2043,7 +2047,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
         userdata = re.findall(r'^user-data=(.*)$', config, re.MULTILINE)
         if userdata != ['"' + str(output.resolve() / "userdata") + '"']:
             raise ValueError("Offscreen scenarios require private output/userdata")
-        offscreen_input = sdl_offscreen_replay.Replay(output, environment)
+        offscreen_input = sdl_offscreen_replay.Replay(
+            output, environment, manifest.get("sdl_input_timeout_seconds", 10))
     m14_config = manifest.get("m14")
     if isinstance(m14_config, dict):
         event_path = _scenario_output_path(output, m14_config.get("event_file", "ai-events.jsonl"), "M14 event file")
@@ -2095,7 +2100,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                     break
 
                 def scenario_alarm(_signum: int, _frame: Any) -> None:
-                    raise TimeoutError("scenario deadline exceeded during action")
+                    raise _ScenarioDeadlineExceeded("scenario deadline exceeded during action")
 
                 previous_alarm = signal.getsignal(signal.SIGALRM)
                 signal.signal(signal.SIGALRM, scenario_alarm)
@@ -2112,7 +2117,7 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                                                     m15_session=m15_session)
                         m15_session.record_action(action, action_result)
                         action_results.append(action_result)
-                except TimeoutError:
+                except _ScenarioDeadlineExceeded:
                     timed_out = True
                     action_results.append({
                         "type": action.get("type"),
@@ -2138,7 +2143,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                     process.send_signal(signal.SIGTERM)
                 else:
                     try:
-                        offscreen_input.send("quit", timeout=min(10, max(.001, deadline - time.monotonic())))
+                        offscreen_input.send("quit", timeout=min(offscreen_input.receipt_timeout_seconds,
+                                                                 max(.001, deadline - time.monotonic())))
                     except Exception as error:
                         action_results.append({"type": "offscreen_shutdown", "passed": False,
                                                "error": f"{type(error).__name__}: {error}"})

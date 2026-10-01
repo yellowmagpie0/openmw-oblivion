@@ -9749,3 +9749,60 @@ S2/S3 remain in progress and S4–S14 open. Next: shield/weapon wear, WEAP/power
 CREA damage, reactions and native opponent policy, then all remaining M15
 acceptance gates. Previous checkpoint88 commit088270d4dc299e2367be4235294ba8d1f2be5c37;
 verified bundle66 SHA2565ae40866282a20cceabb8d01c0069e695d68d7d93a54700205fe3094681cbdc2.
+
+### Checkpoint90 — distinguish scenario alarms from input receipt failures
+
+Offscreen replay now accepts sdl_input_timeout_seconds, a finite positive numeric
+manifest setting with default10. The effective receipt deadline is recorded in
+input provenance and applies to input, screenshot key delivery and clean quit;
+the whole-scenario alarm still bounds all actions. A dedicated scenario alarm
+exception preserves intentional deadline courses, while local action timeouts
+are failed evidence with their actual error. They cannot pass an expected-exit
+"timeout" course. The previous runner could report passed=true for such a
+receipt failure; the new regression proves that baseline defect before fixing.
+
+Three new Python tests retain the red baseline: delayed receipts arriving
+beyond10 seconds under a30-second configured deadline, nonfinite/nonpositive/
+wrong-type settings, and a local receipt failure under expected scenario timeout.
+Focused77 tests pass; S3/native-input-receipt-main-01 passes754 unchanged engine
+and234 Python cases with exact inventory/XML, zero failures/skips and stable
+fingerprintadafa205ef8e7621d9aefa549c0c36ac1475f49cab86b9f8360d34afa75e9a6a.
+C++ remains identical to checkpoint89's full2042 component and754 engine
+sanitizer checks; no new compiler, component or leak-coverage claim is made.
+
+For an instrumented offscreen course, prepend the actual shared ASan runtime
+to manifest.environment.LD_PRELOAD before the replay shim. On this host that is
+/usr/lib64/libasan.so.8.0.0; c++ -print-file-name=libasan.so instead points to a
+linker script and cannot be preloaded. Keep ASAN_OPTIONS=detect_leaks=0:
+halt_on_error=1 and UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1. Set
+sdl_input_timeout_seconds=300 and explicit startup/action/screenshot and overall
+deadlines appropriate to the instrumented world. Hash/monitor the sanitizer
+executable rather than the ordinary build. None of these settings changes the
+gameplay assertions or permits missing receipts/captures/saves.
+
+S4/native-unarmed-block-victim-sanitized-05 passes the instrumented normal-input
+Novice hit and fresh no-attack continuation, including precise Health once,
+separate costs/fraction logs, action2→3→-1, consumed ledger, explicit target
+block6 and unchanged prior native state/inventories except declared setup and
+resource changes. Engine SHA2560e0b51703b4f3cd07594b8a96b036a1232f4a0abf3647a4d980af8cecc6a17e4;
+epochs13/start16254083→12/start16282615. Both runtime logs have no ASan/UBSan
+finding; this is leaks-disabled coverage. The first strict verifier incorrectly
+expected20 wall seconds to cap NPC Fatigue in the instrumented world. Its
+failed capped verifier is retained: actual Damage is-7.701139450073242 then
+-5.701141357421875. The corrected verifier requires depletion within the
+original once-only debit bound-21.701126098632812..0, monotonic native
+regeneration between saves, exact other channels and no fresh attack/hit.
+Immediate NPC debits remain log/oracle/engine-test evidence, not an independent
+before-regeneration runtime query. Player Fatigue is capped in both saves.
+Refs34674→35427→35427; nonempty inventories2021→2092→2092; prior actors9.
+First save8aec0ee0800750bb1a66ddc6b2e2bbba0cfd6c2c76015d9af2f50a7d1c5e3cbc;
+second9823af14a29780dfbca97a7087cd677dd13cb1caaf3a9ad42e77d062e99f42b3.
+Both final captures directly reviewed, target blocking and full HUD. No audio,
+reaction/contact-frame or campaign acceptance. Attempts01–04 remain failed
+controls; the bounded sanitized hit/restart gate now passes with its stated
+resource-observation limits. Broader M15 runtime sanitizer gates remain open.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: native weapon query/contact,
+condition wear and reactions, opponent policy and all remaining plan gates.
+Previous checkpoint89 commit90248d3cd5ce8917222dc2b672029daf23304ff4; verified
+bundle67 SHA256374e466af9c44511df642335230577d8f73e176af7a6bf6c2b691b0adf0df9f1.

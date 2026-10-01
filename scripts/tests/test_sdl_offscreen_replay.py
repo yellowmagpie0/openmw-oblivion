@@ -24,6 +24,7 @@ class SdlOffscreenReplayTest(unittest.TestCase):
             control.path = Path(directory) / "input"
             control.path.write_bytes(b"")
             control.sequence, control.expected = 0, b""
+            control.receipt_timeout_seconds = 10
             receipt = Path(str(control.path) + ".delivered")
             with mock.patch.object(replay.time, "sleep", side_effect=lambda _: receipt.write_bytes(
                     control.path.read_bytes())):
@@ -34,12 +35,34 @@ class SdlOffscreenReplayTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "differs"):
                 control.send("quit")
 
+    def test_slow_frame_receipt_uses_configured_timeout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            control = object.__new__(replay.Replay)
+            control.path = Path(directory) / "input"
+            control.path.write_bytes(b"")
+            control.sequence, control.expected = 0, b""
+            control.receipt_timeout_seconds = 10
+            control.receipt_timeout_seconds = 30
+            receipt = Path(str(control.path) + ".delivered")
+            with mock.patch.object(replay.time, "monotonic", side_effect=[0, 11, 12]), \
+                    mock.patch.object(replay.time, "sleep", side_effect=lambda _: receipt.write_bytes(
+                        control.path.read_bytes())):
+                self.assertEqual(control.send("down", 62), 1)
+            self.assertEqual(receipt.read_bytes(), b"1 down 62\n")
+
+    def test_manifest_receipt_timeout_rejects_nonfinite_or_nonpositive(self):
+        for value in [0, -1, True, "30", float("nan"), float("inf")]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                replay.validate({"sdl_offscreen_input": True, "sdl_input_timeout_seconds": value})
+        replay.validate({"sdl_offscreen_input": True, "sdl_input_timeout_seconds": 300})
+
     def test_missing_delivery_times_out(self):
         with tempfile.TemporaryDirectory() as directory:
             control = object.__new__(replay.Replay)
             control.path = Path(directory) / "input"
             control.path.write_bytes(b"")
             control.sequence, control.expected = 0, b""
+            control.receipt_timeout_seconds = 10
             with self.assertRaises(TimeoutError):
                 control.send("quit", timeout=0)
 

@@ -33,6 +33,12 @@ def scancode(value):
     raise ValueError(f"Unsupported offscreen key: {value!r}")
 
 
+def receipt_timeout(value):
+    if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+        raise ValueError("SDL input receipt timeout must be a finite positive number")
+    return float(value)
+
+
 def validate(manifest):
     if type(manifest.get("sdl_offscreen_input", False)) is not bool:
         raise ValueError("sdl_offscreen_input must be a boolean")
@@ -40,6 +46,7 @@ def validate(manifest):
         return
     if manifest.get("xvfb") or manifest.get("virtual_gamepad") or "m14" in manifest or "m15" in manifest:
         raise ValueError("SDL offscreen controls currently support isolated diagnostic scenarios only")
+    receipt_timeout(manifest.get("sdl_input_timeout_seconds", 10))
     for action in manifest.get("actions", []):
         if action.get("type") not in INPUT_ACTIONS | PASSIVE_ACTIONS:
             raise ValueError(f"Unsupported offscreen action: {action.get('type')!r}")
@@ -48,7 +55,8 @@ def validate(manifest):
 
 
 class Replay:
-    def __init__(self, output, environment):
+    def __init__(self, output, environment, receipt_timeout_seconds=10):
+        self.receipt_timeout_seconds = receipt_timeout(receipt_timeout_seconds)
         self.output = Path(output).resolve()
         self.path = self.output / "sdl-input.txt"
         with self.path.open("xb"):
@@ -68,7 +76,8 @@ class Replay:
                            MESA_SHADER_CACHE_DISABLE="true", OPENMW_SDL_INPUT=str(self.path))
         previous = environment.get("LD_PRELOAD", "")
         environment["LD_PRELOAD"] = (previous + ":" if previous else "") + str(library)
-        self.provenance = {"source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        self.provenance = {"receipt_timeout_seconds": self.receipt_timeout_seconds,
+                           "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                            "library_sha256": hashlib.sha256(library.read_bytes()).hexdigest(),
                            "compile_command": command,
                            "environment": {key: environment[key] for key in
@@ -77,7 +86,9 @@ class Replay:
                            "scope": "SDL input delivery; gameplay results require separate observations"}
         (self.output / "sdl-input-provenance.json").write_text(json.dumps(self.provenance, indent=2) + "\n")
 
-    def send(self, operation, argument=None, timeout=10):
+    def send(self, operation, argument=None, timeout=None):
+        if timeout is None:
+            timeout = self.receipt_timeout_seconds
         self.sequence += 1
         line = f"{self.sequence} {operation}" + (f" {argument}" if argument is not None else "") + "\n"
         data = line.encode("ascii")
