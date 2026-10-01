@@ -549,6 +549,11 @@ namespace MWMechanics
         bool advancePlayerEssentialRecovery(MWWorld::Player& player, float frameSeconds,
             std::int8_t knockedState, bool essential, const ESM4::EssentialRecoverySettings& settings,
             bool godMode = false);
+        // Native process byte, independent of shared animation/recoil flags.
+        // Low processes return zero and ignore writes. Unknown Active legacy
+        // state is diagnosed until a real native process transition supplies it.
+        std::int8_t getProcessKnockedState(const ESM::FormKey& actor) const;
+        void setProcessKnockedState(const ESM::FormKey& actor, std::int8_t state);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
         std::optional<float> findActorBreath(const ESM::FormKey& actor) const;
         // Pop before invoking the callback. Callback-triggered saves retain

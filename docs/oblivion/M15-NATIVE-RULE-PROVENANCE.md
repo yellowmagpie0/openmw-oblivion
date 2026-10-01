@@ -5026,3 +5026,62 @@ into live construction/query/reset/restore before unarmed fatigue contact, then
 acquired-victim damage and gear consequences. Previous checkpoint74 commit:
 b8c99947820194adf70969da81f73bfeea9cb755. Verified bundle52 SHA256:
 f1d88b09c68566ad8b66a1f3b6477d10dfebffb6ebc27be5f3f7c799b579d7be.
+
+### Checkpoint76 — live native process knocked-state authority
+
+Fresh native NPC/Creature/Player Active construction now initializes the signed
+process byte to zero. The combat service owns raw-byte queries and transitions:
+Low returns zero and ignores writes; Active returns the stored signed byte;
+missing authority and unknown legacy Active state are diagnosed. The world
+adapter validates the actual Player/NPC/Creature binding before querying.
+No shared animation/recoil flag is imported. Low-to-Active construction supplies
+zero; same-process activation preserves known or unknown restored state. Full
+resurrection reset clears nonplayer state with its Low process and recreates
+Player Active state at zero. Capture rejects known bytes below schema25.
+Raw-byte writes preserve AV channels and lifecycle rather than inventing the
+meanings of nonzero values. Actual knockdown/essential-entry/recovery reaction
+transitions and renderer/controller responses remain separate work.
+
+S3/native-knocked-live-baseline-01 retains the expected failures against fresh
+construction and first signed transition. Main01 retains two failed old whole-
+snapshot assertions at Player full reset and restored Low-to-Active promotion.
+Both expected snapshots now include the independently established constructor
+zero; their AV/lifecycle/death-history assertions remain. Player reset is also
+staged with raw-128 to verify clearing an actual known nonzero byte.
+S3/native-knocked-live-main-02 and native-knocked-live-sanitized-01 each pass all
+730 engine cases, with exact inventories/XML, zero skips and no source drift.
+ASan/UBSan engine leak detection is disabled. Tested source fingerprint:
+a0919f55f23a097ac1f6f9ba8da1c0b69b0a28b4d973b26f9434bb723727e882.
+Tests cover every signed NPC byte, actual Player/Creature aliases, Low no-op
+writes, typed binary/content restore, unknown legacy state without inference,
+activation/reset, missing actors, foreign profiles and lossless captured state.
+Unchanged component/Python/original-process results remain checkpoint75 evidence.
+Existing compiler warnings are retained; no fresh compiler/editor/full campaign
+or performance acceptance is inferred from these incremental checks.
+
+S4/native-knocked-save-ui-offscreen-01 passes a staged persistence diagnostic.
+An editable isolated schema25 fixture supplies Player raw-128 and retains null
+for all other legacy bytes. Legitimate Console SetAV stages Defense12, native
+inventory UI reads Armor12, Escape closes it and F5 saves. A distinct process
+loads that save, repeats read-only queries/UI and saves without another SetAV
+or combat action. Both saves preserve raw-128 and every other unknown byte;
+only the declared Defense/base-extra writes change. All other resource/life/
+death/engagement fields, Player inventory and every existing reference inventory
+remain unchanged. New captured references322/28 nonempty then473/27 are reported;
+whole-map equality is not claimed. Idle action namespace stays next2 with no
+pending owners/strikes, and no contact/selection/restore replay is logged.
+Executable SHA256: 4babe7beb0e3347b0fd608a6d902c20f64d4243a01c6e89222804212b36babd7.
+Distinct epochs: PID13/start13884707 then PID12/start13896397, boot
+ a80f9d5d-d691-4275-a06f-c8a6dcb4a3f8. All four captures directly reviewed:
+readable Armor12/pools and textured closed prison HUD; magenta icon backgrounds
+and incomplete body preview remain open. Audio muted; no measured FPS claim.
+The first preparation's nonexistent validate_state call failed before any engine
+launch; the retained explanation records correction to encode_payload/write_save.
+The staged byte is not a normal-input knockdown and does not establish its
+animation, reaction, fatigue-contact suppression or recovery gameplay acceptance.
+
+S2/S3 remain in progress and S4–S14 remain open. Next: native acquired-victim
+contact damage and mitigation ordering, then block/gear/reaction consequences
+and remaining power/creature animation paths. Previous checkpoint75 commit:
+23f2065c1bb6bfc841f048f07bc38635f5aa395d. Verified bundle53 SHA256:
+25c4923effae2ebfeef4a9dd231608428c132b27dd06a6336672e6b0d1931539.

@@ -323,6 +323,8 @@ namespace MWMechanics
                 values.mValues[av] = ESM4::resetResurrectionModifiers(values.mValues[av], values.mOwner, av);
             values.mProcess = values.mOwner == ESM4::ActorValueOwner::Player
                 ? ESM4::ActorValueProcess::Active : ESM4::ActorValueProcess::Low;
+            values.mProcessKnockedState = values.mProcess == ESM4::ActorValueProcess::Active
+                ? std::optional<std::int8_t>{0} : std::nullopt;
             life.mPhase = ESM4::ActorLifePhase::Alive;
             life.mRecoveryRemaining = 0;
             life.mKiller = {};
@@ -1144,6 +1146,9 @@ namespace MWMechanics
             throw std::logic_error("native construction snapshot disagrees with shared base authority");
         if (activate)
         {
+            if (values.mProcess != process)
+                values.mProcessKnockedState = process == ESM4::ActorValueProcess::Active
+                    ? std::optional<std::int8_t>{0} : std::nullopt;
             values.mProcess = process;
             values.validate();
         }
@@ -2325,6 +2330,28 @@ namespace MWMechanics
             ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
     }
 
+    std::int8_t OblivionCombatService::getProcessKnockedState(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        if (!values)
+            throw std::invalid_argument("native knocked query requires actor authority");
+        if (values->mProcess == ESM4::ActorValueProcess::Low)
+            return 0;
+        if (!values->mProcessKnockedState)
+            throw std::invalid_argument("native knocked query has unknown legacy Active state");
+        return *values->mProcessKnockedState;
+    }
+
+    void OblivionCombatService::setProcessKnockedState(const ESM::FormKey& actor, std::int8_t state)
+    {
+        const auto found = mActorValues.find(actor);
+        if (found == mActorValues.end())
+            throw std::invalid_argument("native knocked transition requires actor authority");
+        if (found->second.mProcess == ESM4::ActorValueProcess::Low)
+            return; // Original Low/MiddleLow virtual68F970 is a no-op.
+        found->second.mProcessKnockedState = state;
+    }
+
     const ESM4::RuntimeActorValues* OblivionCombatService::findActorValues(const ESM::FormKey& actor) const
     {
         const auto found = mActorValues.find(actor);
@@ -2861,6 +2888,8 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 25 && actor.mProcessKnockedState)
+                throw std::invalid_argument("native process knocked state requires an Oblivion v25+ save");
             if (state.mVersion < 10 && actor.mPlayerFormValues)
                 throw std::invalid_argument("native player form values require an Oblivion v10+ save");
             if (state.mVersion < 17 && actor.mNonPlayerFormHealth)

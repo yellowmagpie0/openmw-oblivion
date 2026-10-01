@@ -199,6 +199,8 @@ namespace MWWorld
         result.mActor = actor;
         result.mBase = actorBase;
         result.mProcess = process;
+        if (process == ESM4::ActorValueProcess::Active)
+            result.mProcessKnockedState = 0; // Original High/MiddleHigh constructor64B52D.
         for (std::size_t i = 0; i < stats.mAttributes.size(); ++i)
             result.mValues[i].mBase = stats.mAttributes[i];
         result.mNonPlayerFormHealth = std::bit_cast<std::int32_t>(stats.mHealth);
@@ -391,6 +393,7 @@ namespace MWWorld
         result.mBase = ESM::FormKey::dynamic("player-base", 1);
         result.mOwner = ESM4::ActorValueOwner::Player;
         result.mProcess = ESM4::ActorValueProcess::Active;
+        result.mProcessKnockedState = 0;
         const auto a = attributes(npc->mData.attribs);
         for (std::size_t i = 0; i < a.size(); ++i)
             result.mValues[i].mBase = a[i];
