@@ -789,6 +789,17 @@ namespace ESM4
         return remaining < 1.f ? 0.f : remaining;
     }
 
+    std::optional<float> nativeConditionAfterWear(double current, float wear)
+    {
+        finite(wear);
+        if (!std::isfinite(current) || current < 0)
+            throw std::invalid_argument("invalid native condition reader result");
+        if (wear <= 0)
+            return std::nullopt;
+        const float remaining = rounded(current - double(wear));
+        return remaining < 1.f ? 0.f : remaining;
+    }
+
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass)
     {
         nonnegative(damage);

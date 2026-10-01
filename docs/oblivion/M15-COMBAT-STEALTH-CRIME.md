@@ -9909,3 +9909,46 @@ of S3–S14's incomplete gates.
 - `S3/native-contact-condition-main-01`: **757/757 engine tests passed**.
 - `S3/native-contact-condition-sanitize-01`: **757/757 engine tests passed**, ASan leak detection disabled and both ASan/UBSan halt on error; no sanitizer findings.
 - Both runs validated exact inventories/XML, zero skips/failures and stable shared-source fingerprint `102c685c23c953de12249f113890606e3eea8920b3e3e288989620318a69a7c0`. No component/Python implementation changed in this chunk; their preceding evidence remains separate.
+
+### Native condition reader precision — checkpoint 93
+
+Checkpoint 92 is committed as `0e09ff6c9fc3fb0c02a7e6dde4d1ea2caba67fbb`
+(tree `b00352d0541192dff0aec19f48cbcbe13b4807fd`), with 89 local progress commits.
+The verified fresh-clone bundle `S3/isolated-git-progress-70/m15-progress.bundle`
+has SHA-256 `48b5fe0e6af5e1e97c697f7a7978cb1e4b26b0c5fdddbf29bce0207f08c96b9b`.
+
+`nativeConditionAfterWear(double, float)` preserves the original condition
+reader until subtraction and the single float store. Positive wear snaps a
+remaining float below one to zero. Nonpositive wear returns no publication, so
+callers retain absent condition or exact existing fractional storage. Invalid
+reader/wear values and float-result overflow are diagnosed. Existing float-only
+`conditionAfterWear` callers keep their behavior. This new arithmetic helper is
+not yet a contact/wear dispatcher.
+
+Independent `S4/native-condition-write-oracle-03` passes 160 observations/80
+profiles across x87 words 027F/037F, plus two nonpositive no-read/no-write controls.
+It executes full original5F3870's weapon branch and full484850, including missing
+condition's unsigned-maximum conversion and present float paths. The supplied
+boundaries are RTTI health-component identity, maximum virtual, extra-data float
+reader, reference bookkeeping and condition publication recorder. No process is
+supplied at break zero, so actual unequip/drop/audio/reaction acceptance remains
+open. Corpus SHA-256 `809a388c6e180c97281873d933520bb28475a3b0b463985c0d4d1e59ca2e817c`;
+the original executable remains pinned to
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+The first two oracle setups incorrectly cleaned eight bytes at41E6F0, reading
+the wrong publication argument. Its actual RET has no cleanup; the previously
+pushed arguments belong to488830's four-argument RET16. Their original logs,
+corpora and reports remain preserved with explicit invalid-oracle correction
+records. `native-condition-reader-baseline-01` used that invalid corpus; it is
+setup failure evidence, not a valid comparison. After correcting the independent
+corpus, `native-condition-reader-baseline-02` fails 12 assertions with the old
+premature float conversion. The literal16777217-minus1 case correctly expects
+16777216, versus the premature path's16777215. The corrected helper passes every
+frozen original profile. The wide pure cases do not establish full-range item
+hydration: the existing generic item-definition bridge still clamps maxima to
+signed int32, which remains a separate integration boundary.
+
+- `S4/native-condition-reader-main-01`: **2043/2043 component tests passed**.
+- `S4/native-condition-reader-sanitize-01`: **2043/2043 component tests passed**, ASan leaks disabled, both sanitizers halt on error; no sanitizer findings.
+- Exact inventories/XML, zero skips/failures and stable shared-source fingerprint `ecaef073870b9f24ebd24406a8a131ac0de21c0476a91aa7c888b667e0e0a9e0` verified in both runs. Engine/Python implementation does not change here; engine wiring and runtime wear acceptance remain open.

@@ -1022,6 +1022,109 @@ TEST(ESM4PhysicalCombat, PositiveWearSnapsConditionBelowOne)
     EXPECT_EQ(ESM4::conditionAfterWear(1, std::numeric_limits<float>::max()), 0);
 }
 
+TEST(ESM4PhysicalCombat, NativeConditionWearRetainsDoubleReaderUntilOriginalFloatStore)
+{
+    struct Row { double current; float wear; std::uint32_t result; };
+    const Row rows[] = {
+        {0, 5.960464477539063e-08f, 0x00000000u},
+        {0, 0.125f, 0x00000000u},
+        {0, 0.5f, 0x00000000u},
+        {0, 1.f, 0x00000000u},
+        {0, 2.f, 0x00000000u},
+        {0, 100.f, 0x00000000u},
+        {0, 16777216.f, 0x00000000u},
+        {0, 4294967296.f, 0x00000000u},
+        {1, 5.960464477539063e-08f, 0x00000000u},
+        {1, 0.125f, 0x00000000u},
+        {1, 0.5f, 0x00000000u},
+        {1, 1.f, 0x00000000u},
+        {1, 2.f, 0x00000000u},
+        {1, 100.f, 0x00000000u},
+        {1, 16777216.f, 0x00000000u},
+        {1, 4294967296.f, 0x00000000u},
+        {1.0000001192092896, 5.960464477539063e-08f, 0x3f800000u},
+        {1.0000001192092896, 0.125f, 0x00000000u},
+        {1.0000001192092896, 0.5f, 0x00000000u},
+        {1.0000001192092896, 1.f, 0x00000000u},
+        {1.0000001192092896, 2.f, 0x00000000u},
+        {1.0000001192092896, 100.f, 0x00000000u},
+        {1.0000001192092896, 16777216.f, 0x00000000u},
+        {1.0000001192092896, 4294967296.f, 0x00000000u},
+        {1.5, 5.960464477539063e-08f, 0x3fc00000u},
+        {1.5, 0.125f, 0x3fb00000u},
+        {1.5, 0.5f, 0x3f800000u},
+        {1.5, 1.f, 0x00000000u},
+        {1.5, 2.f, 0x00000000u},
+        {1.5, 100.f, 0x00000000u},
+        {1.5, 16777216.f, 0x00000000u},
+        {1.5, 4294967296.f, 0x00000000u},
+        {50.125, 5.960464477539063e-08f, 0x42488000u},
+        {50.125, 0.125f, 0x42480000u},
+        {50.125, 0.5f, 0x42468000u},
+        {50.125, 1.f, 0x42448000u},
+        {50.125, 2.f, 0x42408000u},
+        {50.125, 100.f, 0x00000000u},
+        {50.125, 16777216.f, 0x00000000u},
+        {50.125, 4294967296.f, 0x00000000u},
+        {100, 5.960464477539063e-08f, 0x42c80000u},
+        {100, 0.125f, 0x42c7c000u},
+        {100, 0.5f, 0x42c70000u},
+        {100, 1.f, 0x42c60000u},
+        {100, 2.f, 0x42c40000u},
+        {100, 100.f, 0x00000000u},
+        {100, 16777216.f, 0x00000000u},
+        {100, 4294967296.f, 0x00000000u},
+        {16777216, 5.960464477539063e-08f, 0x4b800000u},
+        {16777216, 0.125f, 0x4b800000u},
+        {16777216, 0.5f, 0x4b800000u},
+        {16777216, 1.f, 0x4b7fffffu},
+        {16777216, 2.f, 0x4b7ffffeu},
+        {16777216, 100.f, 0x4b7fff9cu},
+        {16777216, 16777216.f, 0x00000000u},
+        {16777216, 4294967296.f, 0x00000000u},
+        {16777217, 5.960464477539063e-08f, 0x4b800000u},
+        {16777217, 0.125f, 0x4b800000u},
+        {16777217, 0.5f, 0x4b800000u},
+        {16777217, 1.f, 0x4b800000u},
+        {16777217, 2.f, 0x4b7fffffu},
+        {16777217, 100.f, 0x4b7fff9du},
+        {16777217, 16777216.f, 0x3f800000u},
+        {16777217, 4294967296.f, 0x00000000u},
+        {16777219, 5.960464477539063e-08f, 0x4b800001u},
+        {16777219, 0.125f, 0x4b800001u},
+        {16777219, 0.5f, 0x4b800001u},
+        {16777219, 1.f, 0x4b800001u},
+        {16777219, 2.f, 0x4b800000u},
+        {16777219, 100.f, 0x4b7fff9fu},
+        {16777219, 16777216.f, 0x40400000u},
+        {16777219, 4294967296.f, 0x00000000u},
+        {4294967295, 5.960464477539063e-08f, 0x4f800000u},
+        {4294967295, 0.125f, 0x4f800000u},
+        {4294967295, 0.5f, 0x4f800000u},
+        {4294967295, 1.f, 0x4f800000u},
+        {4294967295, 2.f, 0x4f800000u},
+        {4294967295, 100.f, 0x4f800000u},
+        {4294967295, 16777216.f, 0x4f7f0000u},
+        {4294967295, 4294967296.f, 0x00000000u},
+    };
+    for (const auto& row : rows)
+    {
+        SCOPED_TRACE(::testing::Message() << row.current << ',' << row.wear);
+        const auto condition = ESM4::nativeConditionAfterWear(row.current, row.wear);
+        ASSERT_TRUE(condition);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*condition), row.result);
+    }
+    EXPECT_EQ(ESM4::nativeConditionAfterWear(16777217., 1.f), 16777216.f);
+    for (double current : {0., .5, 16777217., 4294967295.})
+        for (float wear : {0.f, -0.f, -1.f})
+            EXPECT_FALSE(ESM4::nativeConditionAfterWear(current, wear));
+    for (double bad : {-1., std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()})
+        EXPECT_THROW(ESM4::nativeConditionAfterWear(bad, 1), std::invalid_argument);
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::nativeConditionAfterWear(1, bad), std::invalid_argument);
+    EXPECT_THROW(ESM4::nativeConditionAfterWear(std::numeric_limits<double>::max(), 1), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, ArmorWearMasteryUsesNoviceAndJourneymanBranches)
 {
     const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};

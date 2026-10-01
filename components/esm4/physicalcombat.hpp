@@ -422,6 +422,11 @@ namespace ESM4
     // snaps remaining condition below one to zero; repaired excess is retained.
     // Nonpositive wear preserves the current condition exactly.
     float conditionAfterWear(float current, float wear);
+    // Native item readers retain an unsigned maximum or a stored float in
+    // double until subtraction. No value means no condition publication;
+    // nonpositive wear must preserve an absent/fractional condition unchanged.
+    std::optional<float> nativeConditionAfterWear(double current, float wear);
+
 
     struct ArmorMitigation
     {

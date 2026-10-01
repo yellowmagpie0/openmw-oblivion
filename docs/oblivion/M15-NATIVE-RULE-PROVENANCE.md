@@ -5318,3 +5318,24 @@ and winning definitions instead of the TES3 projection. It does not dispatch
 contact, mutate condition, resolve immunity/block/reactions or execute magic.
 The repeated-query/state tests and sanitizer checks are engine integration
 evidence; actual normal-input sword/contact/wear campaigns remain open.
+
+## Condition wear reads before float publication
+
+Original5F3870 skips nonpositive wear before reading condition. Its weapon branch
+calls full484850 with argument0, subtracts the float wear in x87, stores the result
+once at5F393C, then replaces a stored result below1 with0. Full484850's absent
+condition path FILDs the maximum and corrects unsigned values with2^32 before
+return; present condition retains its loaded float. Therefore an unsigned maximum
+16777217 with wear1 publishes16777216, not16777215 from an early float conversion.
+Nonpositive wear does not turn an absent full-condition instance into an explicit
+float condition.
+
+`S4/native-condition-write-oracle-03` executes these paths in the pinned original
+exe under both precision words:160 cases/80 profiles and two nonpositive controls.
+Corpus SHA256809a388c6e180c97281873d933520bb28475a3b0b463985c0d4d1e59ca2e817c.
+RTTI/maximum/extra-data and publication boundaries are supplied. Actual armor
+mastery, equipment break/drop/unequip/audio and runtime acceptance are outside
+this probe.41E6F0 is RET0; the four pending arguments are consumed by488830 RET16.
+The first two probes supplied wrong cleanup and are explicitly invalidated;
+their zero corpora must not be reused as expected values. A corrected red test
+fails12 comparisons on the premature Float reader before the new helper fixes it.
