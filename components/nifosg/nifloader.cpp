@@ -498,6 +498,20 @@ namespace NifOsg
                     // names and can still contain multiple independent groups.
                     if (nif.getFilename().extension() == VFS::Path::ExtensionView("kf"))
                         group = std::string(nif.getFilename().stem());
+                    SceneUtil::ControllerSequenceMetadata metadata;
+                    metadata.mGroup = group;
+                    metadata.mStartTime = embedded.mStartTime;
+                    metadata.mStopTime = embedded.mStopTime;
+                    metadata.mFrequency = embedded.mFrequency;
+                    if (!embedded.mTextKeys.empty()
+                        && embedded.mTextKeys->mRecordType == Nif::RC_NiTextKeyExtraData)
+                    {
+                        const auto* keys = static_cast<const Nif::NiTextKeyExtraData*>(embedded.mTextKeys.getPtr());
+                        metadata.mTextKeys.reserve(keys->mList.size());
+                        for (const auto& key : keys->mList)
+                            metadata.mTextKeys.emplace_back(key.mTime, key.mText);
+                    }
+                    target.mControllerSequences.push_back(std::move(metadata));
                     target.mTextKeys.emplace(timeline.mTimelineStart, group + ": start");
                     target.mTextKeys.emplace(timeline.mTimelineStop, group + ": stop");
                     if (!embedded.mTextKeys.empty()

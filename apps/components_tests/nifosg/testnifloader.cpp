@@ -1,6 +1,8 @@
 #include "../nif/node.hpp"
 
 #include <components/nif/node.hpp>
+#include <components/nif/extra.hpp>
+#include <components/sceneutil/keyframe.hpp>
 #include <components/nif/property.hpp>
 #include <components/nifosg/nifloader.hpp>
 #include <components/nifosg/autotransform.hpp>
@@ -763,4 +765,52 @@ osg::Group {
 
     INSTANTIATE_TEST_SUITE_P(
         Params, NifOsgLoaderBSLightingShaderPrefixTest, ValuesIn(NifOsgLoaderBSLightingShaderPrefixTest::sParams));
+}
+
+namespace
+{
+    TEST(ESM4NativeAnimationMetadata, OriginalSequenceCoordinatesAndCopies)
+    {
+        Nif::NIFFile file(VFS::Path::Normalized("handtohandattackleft.kf"));
+        file.mVersion = Nif::NIFFile::VER_OB;
+        auto keys = std::make_unique<Nif::NiTextKeyExtraData>();
+        keys->mRecordType = Nif::RC_NiTextKeyExtraData;
+        keys->mList = {{10.f, "Start"}, {10.25f, "HiT"}, {11.f, "a:R"},
+            {12.f, "End"}, {10.5f, " Hit\r\nSound: RawName "}};
+        auto sequence = std::make_unique<Nif::NiControllerSequence>();
+        sequence->mRecordType = Nif::RC_NiControllerSequence;
+        sequence->mName = "InternalLabel";
+        sequence->mStartTime = 10;
+        sequence->mStopTime = 12;
+        sequence->mFrequency = 1.25f;
+        sequence->mTextKeys = keys.get();
+        file.mRecords.push_back(std::move(sequence));
+        file.mRecords.push_back(std::move(keys));
+        osg::ref_ptr<SceneUtil::KeyframeHolder> holder = new SceneUtil::KeyframeHolder;
+        NifOsg::Loader::loadKf(file, *holder);
+        ASSERT_EQ(holder->mControllerSequences.size(), 1);
+        const auto& original = holder->mControllerSequences.front();
+        EXPECT_EQ(original.mGroup, "handtohandattackleft");
+        EXPECT_EQ(original.mStartTime, 10);
+        EXPECT_EQ(original.mStopTime, 12);
+        EXPECT_EQ(original.mFrequency, 1.25f);
+        const std::vector<std::pair<float, std::string>> expected{{10.f, "Start"}, {10.25f, "HiT"},
+            {11.f, "a:R"}, {12.f, "End"}, {10.5f, " Hit\r\nSound: RawName "}};
+        EXPECT_EQ(original.mTextKeys, expected); // Original order, text and absolute times.
+        EXPECT_EQ(holder->mTextKeys.findGroupStart("handtohandattackleft")->first, 0);
+        bool normalizedHit = false;
+        for (const auto& [time, text] : holder->mTextKeys)
+            if (text == "hit" && time == .25f) normalizedHit = true;
+        EXPECT_TRUE(normalizedHit); // Shared renderer behavior retains its coordinates.
+        osg::ref_ptr<SceneUtil::KeyframeHolder> copied
+            = new SceneUtil::KeyframeHolder(*holder, osg::CopyOp::SHALLOW_COPY);
+        EXPECT_EQ(copied->mControllerSequences, holder->mControllerSequences);
+        copied->mControllerSequences[0].mTextKeys[0].second = "changed";
+        EXPECT_EQ(holder->mControllerSequences[0].mTextKeys[0].second, "Start");
+        Nif::NIFFile noSequence(VFS::Path::Normalized("empty.kf"));
+        noSequence.mVersion = Nif::NIFFile::VER_MW;
+        osg::ref_ptr<SceneUtil::KeyframeHolder> empty = new SceneUtil::KeyframeHolder;
+        NifOsg::Loader::loadKf(noSequence, *empty);
+        EXPECT_TRUE(empty->mControllerSequences.empty());
+    }
 }

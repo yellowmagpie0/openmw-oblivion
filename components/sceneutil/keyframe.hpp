@@ -3,6 +3,9 @@
 
 #include <map>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <osg/Object>
 
@@ -56,6 +59,19 @@ namespace SceneUtil
     };
 
     /// Wrapper object containing the animation track and its KeyframeControllers.
+    // Original controller-sequence coordinates, before renderer normalization.
+    // Raw keys retain their authored order/text; interpretation belongs to the
+    // consuming game profile, not the shared renderer.
+    struct ControllerSequenceMetadata
+    {
+        std::string mGroup;
+        float mStartTime = 0;
+        float mStopTime = 0;
+        float mFrequency = 1;
+        std::vector<std::pair<float, std::string>> mTextKeys;
+        friend bool operator==(const ControllerSequenceMetadata&, const ControllerSequenceMetadata&) = default;
+    };
+
     class KeyframeHolder : public osg::Object
     {
     public:
@@ -63,6 +79,7 @@ namespace SceneUtil
         KeyframeHolder(const KeyframeHolder& copy, const osg::CopyOp& copyop)
             : mTextKeys(copy.mTextKeys)
             , mKeyframeControllers(copy.mKeyframeControllers)
+            , mControllerSequences(copy.mControllerSequences)
         {
         }
 
@@ -73,6 +90,7 @@ namespace SceneUtil
         /// Controllers mapped to node name.
         typedef std::map<std::string, osg::ref_ptr<const KeyframeController>> KeyframeControllerMap;
         KeyframeControllerMap mKeyframeControllers;
+        std::vector<ControllerSequenceMetadata> mControllerSequences;
     };
 
 }

@@ -4331,3 +4331,41 @@ freeze/eligibility and full S4 remain open. S2/S3 remain in progress and S4–S1
 remain open. Previous checkpoint61 commit
 `e26cee7a9c5b96a6fabea82cc4d490a110e14e9a`; verified bundle39 SHA256
 `b669b6e9106f629bfd0a14a7b9f053d58e3987addd3777541f750e7633164189`.
+
+## Original controller-sequence metadata boundary (checkpoint63)
+
+The KF loader now preserves each native NiControllerSequence's original begin,
+stop, frequency and authored text-key times/text/order before renderer timeline
+normalization. Shared KeyframeHolder copies preserve this metadata independently.
+Animation resolves metadata from the actually playing source, otherwise the
+latest source supporting the requested group, including lazy sources and aliases.
+A winning source without native metadata does not borrow older coordinates;
+duplicate native sequences for that group return no metadata. Alias copies rename
+the group without mutating cached source metadata or raw key text. TES3 sequence
+stream helpers continue to have no native controller-sequence metadata.
+
+The loader regression preserves nonzero source anchors, case, surrounding spaces,
+CRLF, out-of-order authored keys and copy isolation. The engine regression writes
+an editable synthetic Gamebryo20.0.0.5 KF binary and uses the real NIF parser,
+resource manager and animation source selection: original Hit10.25 remains10.25
+in metadata while the existing renderer projects it to.25. A playing old source
+remains authoritative after replacement; disabling it selects the replacement's
+begin20/frequency.75/raw spaced Hit. Actual generated legacy and duplicate-native
+binaries exercise the missing/ambiguous negative controls. Lazy lookup and alias
+isolation are also checked.
+
+S4/native-animation-metadata-main-02 passes all2001 component and720 engine
+cases. Sanitized-02 passes476 ESM4 and720 engine cases under ASan/UBSan with
+leak detection disabled. Inventories exactly match executed XML; no failures or
+skips. Both runs preserve tested source fingerprint `32dd3a2c0964c9af149fff206c0df00df2ae9a5f07931b22ce4bd10d66f0e577`. First runs
+main-01/sanitized-01 also passed before the negative controls were added. Python
+source is unchanged from checkpoint61's223 checks. This checkpoint changes no
+save schema, damage authority or gameplay phase advancement. Original metadata
+is now available for the next integration, but native clock lifecycle, raw-key
+interpretation, contact dispatch, damage/block/condition/reactions and full S4
+remain open. No normal-input runtime acceptance is claimed for this boundary.
+S2/S3 remain in progress and S4–S14 remain open.
+
+Previous checkpoint62 commit `b62c6fe024786744110f3da4ab786a3baaaef0d5`;
+verified bundle40 SHA256
+`615a62b2ddfa307ca2218f101dc03f43d71a73548d8ad41add51c7d49a005210`.

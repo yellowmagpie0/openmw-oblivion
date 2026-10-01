@@ -782,6 +782,10 @@ namespace MWRender
                     keys.emplace(time, std::string(text));
             }
             renamed->mTextKeys = std::move(keys);
+            for (auto& sequence : renamed->mControllerSequences)
+                if (Misc::StringUtils::ciEqual(sequence.mGroup, sourceGroup))
+                    sequence.mGroup = groupAlias;
+
             keyframes = std::move(renamed);
         }
 
@@ -997,6 +1001,32 @@ namespace MWRender
                 return inspect(keys, bounds);
         }
         return -1.f;
+    }
+
+    const SceneUtil::ControllerSequenceMetadata* Animation::getControllerSequenceMetadata(std::string_view group)
+    {
+        ensureAnimSource(group);
+        const auto inspect = [&](const AnimSource& source) -> const SceneUtil::ControllerSequenceMetadata* {
+            const SceneUtil::ControllerSequenceMetadata* result = nullptr;
+            for (const auto& sequence : source.mKeyframes->mControllerSequences)
+                if (Misc::StringUtils::ciEqual(sequence.mGroup, group))
+                {
+                    if (result)
+                        return nullptr; // Ambiguous native sequence, not an arbitrary winner.
+                    result = &sequence;
+                }
+            return result;
+        };
+        const auto playing = mStates.find(group);
+        if (playing != mStates.end())
+            return inspect(*playing->second.mSource);
+        for (auto it = mAnimSources.rbegin(); it != mAnimSources.rend(); ++it)
+        {
+            AnimState bounds;
+            if (reset(bounds, (*it)->getTextKeys(), group, "start", "stop", 0, false))
+                return inspect(**it);
+        }
+        return nullptr;
     }
 
     void Animation::handleTextKey(AnimState& state, std::string_view groupname,
