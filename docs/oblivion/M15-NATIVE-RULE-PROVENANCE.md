@@ -4590,3 +4590,64 @@ S4–S14 remain open. Next: wire ordinary frame timing and native contact dispat
 Previous checkpoint66 commit d654f6211f803942731cbc859a783a69db621f0d;
 verified bundle44 SHA256
 74f898c117c678e89a978b9543adbe43172e63e523a215636e694e0879d27455.
+
+## Exact renderer frame time and sequence timeline metadata (checkpoint68)
+
+Native sequence time must reach the shared renderer without subtracting and
+readding float remainders at intervening text keys. Animation now accepts one
+absolute, monotonic renderer-track time for the next runAnimation call. The
+supplied float remains intact across text-key traversal, takes precedence over
+shared duration/speed multiplication for that group only, and is consumed once.
+The existing callback and root-motion traversal remains in place. Absent groups
+return false; nonfinite times, rewinds, times beyond stop and looping groups
+reject before publication. The retained final pose emits no duplicate keys.
+Default groups retain duration/speed progression. Scripted-only suppression
+leaves an unprocessed group's pending time intact until it can be updated.
+
+Controller-sequence metadata now exposes the original serialized cycle type and
+actual normalized renderer timeline start/stop, alongside existing raw times,
+frequency and authored keys. The loader records the actual multiplexed timeline;
+alias/resource copies retain these values. This is needed to map native output
+coordinates onto the renderer track and to reject unsupported cycle types.
+Parser/component tests preserve a nondefault cycle and native coordinates;
+actual parser/winning/playing/alias/lazy renderer tests cover timeline metadata.
+The real renderer test crosses a small Hit timestamp where remainder/readdition
+would change the result by one float bit; exact equality, one-call behavior,
+invalid-state atomicity, repeated timestamps, once-only callbacks, final-pose
+retention and looping rejection pass. There is no Character caller yet, no
+nonnull native timing runtime course and no gameplay contact claim.
+
+Normal checks pass2008 component and720 engine tests; ASan/UBSan checks pass483
+TES4 component and720 engine tests, with exact inventory/XML, no skips, failures
+or source drift; leaks disabled. Tested source fingerprint
+`18b15ef19e909c64b81cd887207a343eb4359e02871d5d929a17b6db744bb1c3`; normal openmw SHA256
+`9ae6d74e6b896825f35ce91b2f98408ce0528f7ff2733faaf9d0a5955734425b`. A GCC maybe-uninitialized warning remains in the preexisting
+unpersistAnimationState/std::min path; its log is retained and the final warning
+gate remains open. Python codecs are unchanged by this chunk, so their prior226
+passing cases are prior-source evidence, not a new Python run.
+
+Pinned-original caller audit S4/native-contact-caller-identity-inspection-03
+resolves Player/Character/Creature virtual+304 to601790, with contact60193E before
+animation60195C. The separate Player routine containing66CB49 starts66C6F0;
+all three inspected direct callers load globalB333C4 as this. Its contact also
+precedes its two animation calls. This is a bounded static/vtable audit, not
+execution of full actor updates or proof of menu/first-person semantics. It
+provides no reversed Player frame-order exception.
+
+Original authored-blend probes identify byte storage and last matching Blend:
+key wins. S4/native-blend-key-oracle-01 executes32 full raw loops with actual
+integer parsing, including signed/modulo byte examples and CRLF duplicates;
+only the existing diagnostic logger is supplied. Expanded oracle02 retains a
+native fault for a leading bare CR without LF; no additional native function
+stub was introduced. The malformed case remains outside its completed scope.
+S4/native-blend-duration-prefix-oracle-01 executes3072 cases with no called
+function stubs, full new-byte range, six prior-byte/null courses and both x87
+words. Original474852→47488D uses max(prior,new)/30, or compiled default
+0.10000000149011612 when zero. The divisor read at A3AA50 is30, correcting a
+preliminary inspection assumption of100. These probes stop before special
+context/override/global-speed/manager branches and do not implement or prove
+live blend acceptance. Full normal-input contact, timing, interruptions and
+S4–S14 remain open. Next: native ordinary timing/controller/contact integration.
+Previous checkpoint67 commit21d7c7c5c1b515fab79f78eaa579f8e223a205b2;
+verified bundle45 SHA256
+828e6eb2fe2ad5a258a52635b53dcbcc21369e9b44ef30bed61d5b72f1c06c80.

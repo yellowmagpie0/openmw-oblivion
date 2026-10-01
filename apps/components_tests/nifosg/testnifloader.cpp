@@ -783,6 +783,7 @@ namespace
         sequence->mStartTime = 10;
         sequence->mStopTime = 12;
         sequence->mFrequency = 1.25f;
+        sequence->mExtrapolationMode = static_cast<Nif::NiTimeController::ExtrapolationMode>(1);
         sequence->mTextKeys = keys.get();
         file.mRecords.push_back(std::move(sequence));
         file.mRecords.push_back(std::move(keys));
@@ -794,6 +795,9 @@ namespace
         EXPECT_EQ(original.mStartTime, 10);
         EXPECT_EQ(original.mStopTime, 12);
         EXPECT_EQ(original.mFrequency, 1.25f);
+        EXPECT_EQ(original.mCycleType, 1u);
+        EXPECT_EQ(original.mTimelineStart, 0);
+        EXPECT_EQ(original.mTimelineStop, 2);
         const std::vector<std::pair<float, std::string>> expected{{10.f, "Start"}, {10.25f, "HiT"},
             {11.f, "a:R"}, {12.f, "End"}, {10.5f, " Hit\r\nSound: RawName "}};
         EXPECT_EQ(original.mTextKeys, expected); // Original order, text and absolute times.

@@ -1,6 +1,7 @@
 #ifndef OPENMW_COMPONENTS_SCENEUTIL_KEYFRAME_HPP
 #define OPENMW_COMPONENTS_SCENEUTIL_KEYFRAME_HPP
 
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <string>
@@ -68,6 +69,11 @@ namespace SceneUtil
         float mStartTime = 0;
         float mStopTime = 0;
         float mFrequency = 1;
+        // Serialized NiControllerSequence cycle type and the coordinates used
+        // by the multiplexed renderer track. These are not the raw key times.
+        std::uint32_t mCycleType = 2;
+        float mTimelineStart = 0;
+        float mTimelineStop = 0;
         std::vector<std::pair<float, std::string>> mTextKeys;
         friend bool operator==(const ControllerSequenceMetadata&, const ControllerSequenceMetadata&) = default;
     };

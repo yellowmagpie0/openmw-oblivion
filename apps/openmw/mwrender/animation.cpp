@@ -1,8 +1,11 @@
 #include "animation.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <numeric>
+#include <stdexcept>
+#include <utility>
 
 #include <osg/BlendFunc>
 #include <osg/Material>
@@ -1523,6 +1526,20 @@ namespace MWRender
         position += off - osg::componentMultiply(mAccumCtrl->getTranslation(oldtime), mAccumulate);
     }
 
+    bool Animation::setAnimationFrameTime(std::string_view groupname, float time)
+    {
+        if (!std::isfinite(time))
+            throw std::invalid_argument("animation frame time must be finite");
+        const auto found = mStates.find(groupname);
+        if (found == mStates.end())
+            return false;
+        auto& state = found->second;
+        if (state.mLoopCount != 0 || time < state.getTime() || time > state.mStopTime)
+            throw std::invalid_argument("animation frame time requires a monotonic nonlooping track");
+        state.mFrameTime = time;
+        return true;
+    }
+
     osg::Vec3f Animation::runAnimation(float duration)
     {
         osg::Vec3f movement(0.f, 0.f, 0.f);
@@ -1539,12 +1556,15 @@ namespace MWRender
             const SceneUtil::TextKeyMap& textkeys = state.mSource->getTextKeys();
             auto textkey = textkeys.upperBound(state.getTime());
 
+            const auto frameTime = std::exchange(state.mFrameTime, std::nullopt);
             float timepassed = duration * state.mSpeedMult;
             while (state.mPlaying)
             {
                 if (!state.shouldLoop())
                 {
-                    float targetTime = state.getTime() + timepassed;
+                    // Keep the supplied float intact across intermediate keys;
+                    // subtracting and readding a remainder can change one bit.
+                    const float targetTime = frameTime.value_or(state.getTime() + timepassed);
                     if (textkey == textkeys.end() || textkey->first > targetTime)
                     {
                         if (mAccumCtrl && state.mTime == mAnimationTimePtr[0]->getTimePtr())

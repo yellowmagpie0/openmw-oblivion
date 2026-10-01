@@ -2804,6 +2804,7 @@ namespace
         writeNative("handtohandattackleft.kf", 10, 10.25f, 1.25f, "HiT");
         writeNative("override/handtohandattackleft.kf", 20, 20.5f, .75f, " Hit ");
         writeNative("duplicate/handtohandattackleft.kf", 30, 30.25f, 1, "Hit", true);
+        writeNative("exact/handtohandattackleft.kf", 0, .00007f, 1, "Hit");
         writeKeys("legacy/handtohandattackleft.kf", "handtohandattackleft", .2f, .6f);
         fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
         fixture.mVfs.buildIndex();
@@ -2836,6 +2837,9 @@ namespace
         EXPECT_EQ(original->mStartTime, 10);
         EXPECT_EQ(original->mStopTime, 12);
         EXPECT_EQ(original->mFrequency, 1.25f);
+        EXPECT_EQ(original->mCycleType, 2u);
+        EXPECT_EQ(original->mTimelineStart, 0);
+        EXPECT_EQ(original->mTimelineStop, 2);
         EXPECT_EQ(original->mTextKeys[1], (std::pair<float, std::string>{10.25f, "HiT"}));
         const auto rawOrdinaryKeys = [](const SceneUtil::ControllerSequenceMetadata& metadata) {
             std::vector<ESM4::MeleeTextKey> keys;
@@ -2861,6 +2865,9 @@ namespace
         ASSERT_NE(alias, nullptr);
         EXPECT_EQ(alias->mGroup, "aliasattack");
         EXPECT_EQ(alias->mTextKeys, original->mTextKeys);
+        EXPECT_EQ(alias->mTimelineStart, original->mTimelineStart);
+        EXPECT_EQ(alias->mTimelineStop, original->mTimelineStop);
+        EXPECT_EQ(alias->mCycleType, original->mCycleType);
         EXPECT_EQ(original->mGroup, "handtohandattackleft"); // Resource metadata remains immutable.
         EXPECT_EQ(animation->getControllerSequenceMetadata("missing"), nullptr);
         animation->play("handtohandattackleft", MWRender::AnimPriority(1), MWRender::BlendMask_All,
@@ -2881,5 +2888,51 @@ namespace
         ASSERT_NE(lazyMetadata, nullptr);
         EXPECT_EQ(*lazyMetadata, *original);
 
+        // Exercise the real renderer with parser-loaded tracks and callbacks.
+        // The small hit time exposes float remainder/readdition drift.
+        struct Listener : MWRender::Animation::TextKeyListener
+        {
+            std::vector<std::string> mKeys;
+            void handleTextKey(std::string_view, SceneUtil::TextKeyMap::ConstIterator key,
+                const SceneUtil::TextKeyMap&) override { mKeys.push_back(key->second); }
+        } listener;
+        animation->source("exact/handtohandattackleft.kf");
+        animation->setTextKeyListener(&listener);
+        const std::string group = "handtohandattackleft";
+        animation->play(group, MWRender::AnimPriority(1), MWRender::BlendMask_All,
+            false, 2, "start", "stop", 0, 0);
+        listener.mKeys.clear();
+        EXPECT_FALSE(animation->setAnimationFrameTime("missing", .1f));
+        EXPECT_TRUE(animation->setAnimationFrameTime(group, .0002f));
+        EXPECT_EQ(animation->getCurrentTime(group), 0); // Publication is deferred.
+        EXPECT_THROW(animation->setAnimationFrameTime(group, -.1f), std::invalid_argument);
+        EXPECT_THROW(animation->setAnimationFrameTime(group, 3), std::invalid_argument);
+        EXPECT_THROW(animation->setAnimationFrameTime(group,
+            std::numeric_limits<float>::infinity()), std::invalid_argument);
+        EXPECT_THROW(animation->setAnimationFrameTime(group,
+            std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+        animation->runAnimation(.5f); // Supplied time takes precedence over duration and speed.
+        EXPECT_EQ(animation->getCurrentTime(group), .0002f);
+        EXPECT_EQ(listener.mKeys, (std::vector<std::string>{"hit"}));
+        EXPECT_TRUE(animation->setAnimationFrameTime(group, .0002f));
+        animation->runAnimation(.5f);
+        EXPECT_EQ(animation->getCurrentTime(group), .0002f);
+        EXPECT_EQ(listener.mKeys, (std::vector<std::string>{"hit"}));
+        animation->runAnimation(.01f); // One-call override, then shared progression resumes.
+        EXPECT_EQ(animation->getCurrentTime(group), .0002f + .02f);
+        EXPECT_THROW(animation->setAnimationFrameTime(group, .0002f), std::invalid_argument);
+        EXPECT_TRUE(animation->setAnimationFrameTime(group, 2));
+        animation->runAnimation(0);
+        EXPECT_EQ(animation->getCurrentTime(group), 2);
+        EXPECT_EQ(listener.mKeys, (std::vector<std::string>{"hit", "a:r", group + ": stop", "end"}));
+        EXPECT_TRUE(animation->setAnimationFrameTime(group, 2));
+        animation->runAnimation(.1f);
+        EXPECT_EQ(listener.mKeys.size(), 4u); // The retained final pose replays no keys.
+        animation->disable(group);
+        EXPECT_FALSE(animation->setAnimationFrameTime(group, 0));
+        animation->play(group, MWRender::AnimPriority(1), MWRender::BlendMask_All,
+            false, 1, "start", "stop", 0, 1);
+        EXPECT_THROW(animation->setAnimationFrameTime(group, .2f), std::invalid_argument);
+        animation->setTextKeyListener(nullptr);
     }
 }

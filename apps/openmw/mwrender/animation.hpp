@@ -158,6 +158,7 @@ namespace MWRender
 
             std::shared_ptr<float> mTime = std::make_shared<float>(0.0f);
             float mSpeedMult = 1;
+            std::optional<float> mFrameTime;
 
             bool mPlaying = false;
             bool mLoopingEnabled = true;
@@ -460,6 +461,11 @@ namespace MWRender
         /// Get the current absolute position in the animation track for the animation that is currently playing from
         /// the given group.
         float getCurrentTime(std::string_view groupname) const;
+
+        // Supply one monotonic, absolute renderer-track time for the next
+        // runAnimation call. Text keys and root motion still traverse normally.
+        // Missing groups return false; invalid times or looping groups throw.
+        bool setAnimationFrameTime(std::string_view groupname, float time);
 
         /** Disables the specified animation group;
          * \param groupname Animation group to disable.

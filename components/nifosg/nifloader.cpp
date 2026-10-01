@@ -503,6 +503,9 @@ namespace NifOsg
                     metadata.mStartTime = embedded.mStartTime;
                     metadata.mStopTime = embedded.mStopTime;
                     metadata.mFrequency = embedded.mFrequency;
+                    metadata.mCycleType = static_cast<std::uint32_t>(embedded.mExtrapolationMode);
+                    metadata.mTimelineStart = timeline.mTimelineStart;
+                    metadata.mTimelineStop = timeline.mTimelineStop;
                     if (!embedded.mTextKeys.empty()
                         && embedded.mTextKeys->mRecordType == Nif::RC_NiTextKeyExtraData)
                     {
