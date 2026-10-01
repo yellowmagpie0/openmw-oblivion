@@ -4475,3 +4475,56 @@ S2/S3 remain in progress; S4–S14 remain open. Native phase clock/speed correct
 and contact dispatch remain unwired. Previous checkpoint64 commit
 6975e66b4f5c9c24b2dacda1708c4f6ced29bd23; verified bundle42 SHA256
 6f526cf922446f38c509192aa91dbe79014fde992ee1b0ff1341991bed80f728.
+
+## Native unsynchronized clamp sequence timing (checkpoint66)
+
+An immutable sequence timing rule now models the native uninitialized offset,
+ease-start and previous-input states explicitly, initializes them from the
+caller-supplied global animation clock, and preserves the native state2→state1
+inclusive ease threshold. A transitioning update does not enter state1's separate
+previous-output assignment until the following update. Weighted time keeps its
+unclamped history; the displayed result clamps to the authored begin/end bounds.
+Frequency multiplication and delta/history stores follow original6CA950/6C5FC0.
+The supported scope is unsynchronized clamp-cycle timing, with finite values and
+positive frequency. Activation, synchronization/other cycles, transforms, native
+actor state persistence, caller phase order and contact dispatch are not supplied
+by this rule and are still open in production.
+
+S4/native-sequence-lifecycle-oracle-02 runs1920 original activation courses and
+28800 full sequence updates, executing actual6C9BA0,6C6A50,73A5E0,6CA950,6C5FC0
+and6C6DC0 with empty controlled blocks and preallocated manager capacity. No
+called-function stub is used. Sequence+54 remains the native sentinel and there
+is no synchronization source; actor caller and nonempty transforms remain outside
+the probe. Pinned executable SHA256
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+The production rule matches all six float fields and state at every update
+(S4/native-sequence-timing-comparison-01), including signed zero, clock origins
+0/1000/1000000, zero/tiny/nonzero easing, nonunit frequency, negative/nonzero
+begin anchors and retained weighted history beyond end. Original report SHA256
+7bae34518d951974213e50fac89f8ee77341cb71f59ce82bf5c36d7fad046615;
+independent corpus SHA256
+b9d9ba1ca097bf429caf5e219082e614f016f9efd027bb41411a83a52c7fc931.
+The earlier144-course/2160-update original run remains separate evidence.
+
+S4/native-ordinary-frame-prefix-oracle-01 independently verifies two original
+constructor-prefix clock initializations to positive zero and2304 frame cases.
+Actual clock addition, native group decoding, freeze/sequence-state eligibility,
+speed offset correction and ordinary phase branches execute without function
+stubs. A hook selects slot3 after clock addition; other slots/full caller/contact
+ordering/NiManager update are explicitly outside this frame prefix. This informs
+future controller integration and does not establish gameplay acceptance.
+
+The new tests first fail compilation on the missing baseline API
+(S4/native-sequence-timing-baseline-01). Main-01 then retained one unit fixture
+failure: literal1000.2f is not the clock accumulated from1000 with two float
+frame additions. The corrected test uses the independently observed accumulated
+clock1000.199951171875 and does not alter the already bit-matching rule.
+Main-02 passes2006 component tests and481 TES4 ASan/UBSan cases, with exact
+inventories/XML, no skips/failures/source drift; leaks disabled. Tested fingerprint
+`ff76b838f0478d416073aa1d358472502fc94c6888601585f1a0fa0a9f12a072`. Runtime source is unchanged
+from checkpoint65's720 engine/224 Python checks and four normal-input courses;
+this helper is not yet called by the controller. S2/S3 remain in progress,
+S4–S14 open. Next: persist the native global clock and sequence state, then wire
+actual ordinary frame phases/contact in the verified order. Previous checkpoint65
+commit7becfd8327962f51cfe076ecf6db27b419e7eb7e; verified bundle43 SHA256
+62de8416be85f6be2012d10c70b7baf8a7b94952397db1ebe357948a8390ab61.

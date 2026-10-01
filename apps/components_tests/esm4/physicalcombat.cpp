@@ -2048,3 +2048,76 @@ TEST(ESM4PhysicalCombat, OrdinaryKeyParserRejectsNonfiniteTimesInSupportedDomain
         EXPECT_THROW(ESM4::ordinaryMeleeKeyTimes(input), std::invalid_argument);
     }
 }
+
+TEST(ESM4PhysicalCombat, NativeSequenceEaseAndClampClockFollowOriginalLifecycle)
+{
+    ESM4::MeleeSequenceTiming state;
+    state.mEasing = true;
+    state.mEaseEnd = .1f;
+    auto first = ESM4::updateMeleeSequenceTiming(state, .1f, 1, 0, 1);
+    EXPECT_TRUE(first.mEasing);
+    EXPECT_EQ(first.mOffset, -.1f);
+    EXPECT_EQ(first.mEaseStart, .1f);
+    EXPECT_EQ(first.mEaseEnd, .2f);
+    EXPECT_EQ(first.mLastInput, 0);
+    EXPECT_EQ(first.mWeightedTime, 0);
+    EXPECT_EQ(first.mOutputTime, 0);
+    const auto equal = ESM4::updateMeleeSequenceTiming(first, .2f, 1, 0, 1);
+    EXPECT_FALSE(equal.mEasing); // Ease completion is inclusive, unlike Hit.
+    EXPECT_EQ(equal.mEaseStart, .1f);
+    EXPECT_EQ(equal.mOutputTime, .1f);
+    const auto third = ESM4::updateMeleeSequenceTiming(equal, .3f, 1, 0, 1);
+    EXPECT_EQ(third.mEaseStart, equal.mOutputTime);
+    EXPECT_EQ(third.mOutputTime, .20000001788139343f);
+    const auto complete = ESM4::updateMeleeSequenceTiming(third, 2, 1, 0, 1);
+    EXPECT_EQ(complete.mOutputTime, 1);
+    EXPECT_GT(complete.mWeightedTime, 1); // Preserve unclamped history.
+    EXPECT_EQ(state.mOffset, std::nullopt); // Rules don't mutate the caller.
+
+    state.mEasing = false;
+    state.mEaseEnd = 0;
+    const auto anchored = ESM4::updateMeleeSequenceTiming(state, 1000.1f, 2, 10, 11);
+    const auto advanced = ESM4::updateMeleeSequenceTiming(anchored, 1000.199951171875f, 2, 10, 11);
+    EXPECT_EQ(anchored.mOutputTime, 10);
+    EXPECT_EQ(advanced.mWeightedTime, .199951171875f);
+    EXPECT_EQ(advanced.mOutputTime, 10); // Begin isn't added to weighted time.
+}
+
+TEST(ESM4PhysicalCombat, NativeSequenceTimingRejectsUnsupportedInputsWithoutMutation)
+{
+    const ESM4::MeleeSequenceTiming state;
+    EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, 0, 0, 0, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, 0, -1, 0, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, 0, 1, 2, 1), std::invalid_argument);
+    for (const float bad : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, bad, 1, 0, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, 0, bad, 0, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, 0, 1, bad, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(state, 0, 1, 0, bad), std::invalid_argument);
+        auto invalid = state;
+        invalid.mOffset = bad;
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(invalid, 0, 1, 0, 1), std::invalid_argument);
+        invalid = state;
+        invalid.mLastInput = bad;
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(invalid, 0, 1, 0, 1), std::invalid_argument);
+        invalid = state;
+        invalid.mEaseStart = bad;
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(invalid, 0, 1, 0, 1), std::invalid_argument);
+        invalid = state;
+        invalid.mEaseEnd = bad;
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(invalid, 0, 1, 0, 1), std::invalid_argument);
+        invalid = state;
+        invalid.mWeightedTime = bad;
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(invalid, 0, 1, 0, 1), std::invalid_argument);
+        invalid = state;
+        invalid.mOutputTime = bad;
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming(invalid, 0, 1, 0, 1), std::invalid_argument);
+    }
+    auto huge = state;
+    huge.mOffset = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::updateMeleeSequenceTiming(huge, std::numeric_limits<float>::max(), 1, 0, 1),
+        std::invalid_argument);
+    EXPECT_EQ(state, ESM4::MeleeSequenceTiming{});
+}

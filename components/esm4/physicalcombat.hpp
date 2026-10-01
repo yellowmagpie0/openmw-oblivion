@@ -63,6 +63,26 @@ namespace ESM4
         float playbackSpeed, float frameDuration);
 
 
+    // Timing for an unsynchronized clamp-cycle sequence (native states1/2).
+    // Optional values represent the original uninitialized sentinel, without
+    // importing a magic float into supported runtime data.
+    struct MeleeSequenceTiming
+    {
+        bool mEasing = false;
+        std::optional<float> mOffset;
+        std::optional<float> mEaseStart;
+        float mEaseEnd = 0;
+        std::optional<float> mLastInput;
+        float mWeightedTime = 0;
+        float mOutputTime = 0;
+        friend bool operator==(const MeleeSequenceTiming&, const MeleeSequenceTiming&) = default;
+    };
+    // Original6CA950/6C5FC0. Caller supplies the global animation clock and
+    // owns activation, synchronization/cycle selection, phase ordering and
+    // actual controlled transforms. Does not change its input state.
+    MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
+        float animationClock, float frequency, float begin, float end);
+
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings
     {

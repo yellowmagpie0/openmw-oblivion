@@ -150,6 +150,50 @@ namespace ESM4
         return rounded(double(corrected) + sequenceBegin);
     }
 
+    MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
+        float animationClock, float frequency, float begin, float end)
+    {
+        finite(animationClock);
+        finite(frequency);
+        finite(begin);
+        finite(end);
+        finite(state.mEaseEnd);
+        finite(state.mWeightedTime);
+        finite(state.mOutputTime);
+        for (const auto value : {state.mOffset, state.mEaseStart, state.mLastInput})
+            if (value)
+                finite(*value);
+        if (frequency <= 0 || end < begin)
+            throw std::invalid_argument("unsupported native melee sequence bounds or frequency");
+        auto result = state;
+        if (!result.mOffset)
+            result.mOffset = initialMeleeSequenceOffset(animationClock);
+        if (!result.mEaseStart)
+        {
+            result.mEaseStart = animationClock;
+            result.mEaseEnd = rounded(double(animationClock) + result.mEaseEnd);
+        }
+        float clock = animationClock;
+        if (result.mEasing)
+        {
+            // A completed state2 changes to1 on this update, but doesn't
+            // enter state1's separate previous-output assignment until next.
+            if (clock >= result.mEaseEnd)
+                result.mEasing = false;
+            else if (clock < *result.mEaseStart)
+                clock = *result.mEaseStart;
+        }
+        else
+            result.mEaseStart = state.mOutputTime;
+        const float input = rounded(double(clock) + *result.mOffset);
+        const float delta = state.mLastInput ? rounded(double(input) - *state.mLastInput) : input;
+        const float previous = state.mLastInput ? state.mWeightedTime : 0.f;
+        result.mWeightedTime = rounded(double(frequency) * delta + previous);
+        result.mLastInput = input;
+        result.mOutputTime = std::clamp(result.mWeightedTime, begin, end);
+        return result;
+    }
+
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)
     {
         finite(positionZ);
