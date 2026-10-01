@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 22;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 23;
 
     struct RuntimeContentIdentity
     {
@@ -341,6 +341,7 @@ namespace ESM4
         // v22: authoritative ordinary phase; v21 migrates to Start without
         // inferring it from a renderer time or changing contact consumption.
         OrdinaryMeleePhase mOrdinaryPhase = OrdinaryMeleePhase::Start;
+        std::optional<MeleeSequenceTiming> mSequenceTiming = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
     };
@@ -397,6 +398,8 @@ namespace ESM4
         // follow-through of an already consumed strike. Older IDs do not imply
         // an animation; old snapshots deliberately start with no melee state.
         std::map<ESM::FormKey, RuntimeMeleeState> mNativeMeleeStates;
+        // v23: AnimData clock survives strike cancellation/incapacitation.
+        std::map<ESM::FormKey, float> mNativeAnimationClocks;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

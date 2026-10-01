@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 22
+CURRENT_VERSION = 23
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -932,6 +932,18 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or actor not in native_keys or phases.get(actor) != 0):
             raise RuntimeStateError("Invalid, duplicate, dangling or incapacitated TES4 physical action owner")
         owned_ids.add(identity)
+    clocks = check_collection(state.get("native_animation_clocks", []), "native animation clocks")
+    if version < 23 and clocks:
+        raise RuntimeStateError("TES4 animation clocks require version23")
+    clock_actors: set[str] = set()
+    for entry in clocks:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "clock"}:
+            raise RuntimeStateError("Invalid TES4 native animation clock")
+        actor = entry["actor"]
+        native_key(actor)
+        if actor in clock_actors or actor not in native_keys or actor not in phases or native_float(entry["clock"]) < 0:
+            raise RuntimeStateError("Duplicate, dangling or invalid TES4 animation clock")
+        clock_actors.add(actor)
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -959,10 +971,26 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         strike_fields = {"id", "kind", "weapon_base", "animation_group", "playback_speed", "animation_time", "contact_committed"}
         if version >= 22:
             strike_fields.add("ordinary_phase")
+        if version >= 23:
+            strike_fields.add("sequence_timing")
         if not isinstance(strike, dict) or set(strike) != strike_fields:
             raise RuntimeStateError("Invalid TES4 melee strike")
         if version >= 22 and (type(strike["ordinary_phase"]) is not int or not 0 <= strike["ordinary_phase"] <= 3):
             raise RuntimeStateError("Invalid TES4 ordinary melee phase")
+        if version >= 23 and strike["sequence_timing"] is not None:
+            timing = strike["sequence_timing"]
+            if (actor not in clock_actors or not isinstance(timing, dict)
+                    or set(timing) != {"easing", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"}
+                    or type(timing["easing"]) is not bool):
+                raise RuntimeStateError("Invalid TES4 melee sequence timing or missing actor clock")
+            optional = [timing[k] for k in ("offset", "ease_start", "last_input")]
+            if any(v is None for v in optional) and not all(v is None for v in optional):
+                raise RuntimeStateError("Partial TES4 melee sequence initialization")
+            for value in optional:
+                if value is not None:
+                    native_float(value)
+            for key in ("ease_end", "weighted_time", "output_time"):
+                native_float(timing[key])
         identity, kind, committed = strike["id"], strike["kind"], strike["contact_committed"]
         if (type(identity) is not int or not 0 < identity < next_action or identity in melee_ids
                 or type(kind) is not int or not 0 <= kind <= 6 or type(committed) is not bool
@@ -1410,7 +1438,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     "contact_committed": melee_boolean()}
                 if version >= 22:
                     entry["strike"]["ordinary_phase"] = reader.unpack("<B")
+                if version >= 23:
+                    timing = None
+                    if melee_boolean():
+                        timing = {"easing": melee_boolean()}
+                        for key in ("offset", "ease_start", "last_input"):
+                            timing[key] = reader.unpack("<f") if melee_boolean() else None
+                        for key in ("ease_end", "weighted_time", "output_time"):
+                            timing[key] = reader.unpack("<f")
+                    entry["strike"]["sequence_timing"] = timing
             result["native_melee_states"].append(entry)
+    if version >= 23:
+        result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
+                                              for _ in range(reader.count())]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1687,6 +1727,24 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", int(strike["contact_committed"]))
                 if version >= 22:
                     writer.pack("<B", strike["ordinary_phase"])
+                if version >= 23:
+                    timing = strike["sequence_timing"]
+                    writer.pack("<B", int(timing is not None))
+                    if timing is not None:
+                        writer.pack("<B", int(timing["easing"]))
+                        for key in ("offset", "ease_start", "last_input"):
+                            value = timing[key]
+                            writer.pack("<B", int(value is not None))
+                            if value is not None:
+                                writer.pack("<f", value)
+                        for key in ("ease_end", "weighted_time", "output_time"):
+                            writer.pack("<f", timing[key])
+    if version >= 23:
+        clocks = sorted(state.get("native_animation_clocks", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(clocks))
+        for entry in clocks:
+            writer.string(entry["actor"])
+            writer.pack("<f", entry["clock"])
     return writer.finish()
 
 
@@ -1733,6 +1791,14 @@ def load_save(path: Path) -> dict[str, Any]:
     return decode_payload(_find_runtime_record(path.read_bytes())[3])
 
 
+def _upgrade_melee_timing(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 23:
+        for entry in state.get("native_melee_states", []):
+            if entry["strike"] is not None:
+                entry["strike"]["sequence_timing"] = None
+        state.setdefault("native_animation_clocks", [])
+
+
 def _upgrade_melee_phases(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 22:
         for entry in state.get("native_melee_states", []):
@@ -1745,6 +1811,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     start, end, _, _ = _find_runtime_record(data)
     state = copy.deepcopy(state)
     _upgrade_melee_phases(state)
+    _upgrade_melee_timing(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -1797,6 +1864,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
 
     result = copy.deepcopy(state)
     _upgrade_melee_phases(result)
+    _upgrade_melee_timing(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])

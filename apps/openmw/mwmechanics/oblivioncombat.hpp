@@ -186,6 +186,7 @@ namespace MWMechanics
         ESM4::ActionLedger mActions;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
+        std::map<ESM::FormKey, float> mAnimationClocks;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
@@ -267,6 +268,10 @@ namespace MWMechanics
         // These methods do not choose groups, advance animation or resolve damage.
         const ESM4::RuntimeMeleeState* findMeleeState(const ESM::FormKey& actor) const;
         void setMeleeInput(const ESM::FormKey& actor, const ESM4::RuntimeMeleeInput& input);
+        float animationClock(const ESM::FormKey& actor) const;
+        float advanceAnimationClock(const ESM::FormKey& actor, float duration);
+        bool setMeleeSequenceTiming(std::uint64_t id, const ESM::FormKey& actor,
+            const ESM4::MeleeSequenceTiming& timing);
         std::uint64_t beginMeleeStrike(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
             std::string_view animationGroup, float playbackSpeed = 1, const ESM::FormKey& weaponBase = {});
         bool updateMeleeAnimation(std::uint64_t id, const ESM::FormKey& actor, float time);

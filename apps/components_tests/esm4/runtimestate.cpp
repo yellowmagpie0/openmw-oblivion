@@ -1771,3 +1771,97 @@ namespace
         EXPECT_EQ(old.serializeBinary(), oldBytes); // Historical v21 remains byte-identical.
     }
 }
+
+TEST(ESM4RuntimeState, NativeAnimationClockAndSequenceTimingPersistIndependentlyOfMeleeInput)
+{
+    auto state = meleeState();
+    state.mVersion = 23;
+    const auto actor = state.mReferences.front().mKey;
+    state.mNativeAnimationClocks.emplace(actor, 1000.199951171875f);
+    ESM4::MeleeSequenceTiming timing;
+    timing.mEasing = true;
+    timing.mEaseEnd = .1f;
+    state.mNativeMeleeStates.at(actor).mStrike->mSequenceTiming = timing;
+    auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(restored.mNativeAnimationClocks, state.mNativeAnimationClocks);
+    EXPECT_EQ(restored.mNativeMeleeStates, state.mNativeMeleeStates);
+    timing = ESM4::updateMeleeSequenceTiming(timing, 1000.199951171875f, 1, 0, 1);
+    state.mNativeMeleeStates.at(actor).mStrike->mSequenceTiming = timing;
+    restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(restored.mNativeMeleeStates, state.mNativeMeleeStates);
+    EXPECT_NE(restored.canonicalJson().find("\"sequence_timing\":{"), std::string::npos);
+    EXPECT_NE(restored.canonicalJson().find("\"native_animation_clocks\":["), std::string::npos);
+    state.mNativeAnimationClocks.at(actor) = -0.f;
+    timing.mOffset = -0.f; timing.mEaseStart = -0.f; timing.mLastInput = -0.f;
+    timing.mEaseEnd = -0.f; timing.mWeightedTime = -0.f; timing.mOutputTime = -0.f;
+    state.mNativeMeleeStates.at(actor).mStrike->mSequenceTiming = timing;
+    const auto json = state.canonicalJson();
+    for (const std::string name : {"clock", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"})
+        EXPECT_NE(json.find("\"" + name + "\":-0.0"), std::string::npos);
+    restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(std::signbit(restored.mNativeAnimationClocks.at(actor)));
+    EXPECT_TRUE(std::signbit(*restored.mNativeMeleeStates.at(actor).mStrike->mSequenceTiming->mOffset));
+    state.mNativeMeleeStates.clear();
+    state.mPhysicalActionOwners.clear();
+    state.mPhysicalActions.mPending.clear();
+    state.mNativeActorLife.front().mPhase = ESM4::ActorLifePhase::Dead;
+    state.mNativeCombatEngagements.clear();
+    state.mNativeActorLife.front().mRecoveryRemaining = 0;
+    EXPECT_NO_THROW(state.validate()); // Global clock survives incapacitation.
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeAnimationClocks,
+        state.mNativeAnimationClocks);
+    state.mVersion = 22;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeAnimationClocks.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeAnimationClocks.empty());
+}
+
+TEST(ESM4RuntimeState, NativeAnimationTimingRejectsDanglingPartialAndNonfiniteState)
+{
+    auto state = meleeState(); state.mVersion = 23;
+    const auto actor = state.mReferences.front().mKey;
+    state.mNativeAnimationClocks[actor] = 0;
+    state.mNativeMeleeStates.at(actor).mStrike->mSequenceTiming.emplace();
+    auto bad = state;
+    bad.mNativeAnimationClocks.clear();
+    EXPECT_THROW(bad.validate(), std::runtime_error);
+    bad = state;
+    bad.mNativeAnimationClocks[ESM::FormKey::dynamic("missing", 1)] = 0;
+    EXPECT_THROW(bad.validate(), std::runtime_error);
+    bad = state; bad.mVersion = 22;
+    EXPECT_THROW(bad.validate(), std::runtime_error);
+    for (float value : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -1.f})
+    {
+        bad = state; bad.mNativeAnimationClocks[actor] = value;
+        EXPECT_THROW(bad.validate(), std::runtime_error);
+    }
+    bad = state;
+    bad.mNativeMeleeStates.at(actor).mStrike->mSequenceTiming->mOffset = 0;
+    EXPECT_THROW(bad.validate(), std::runtime_error); // Partial initialization isn't canonical.
+    const auto bytes = state.serializeBinary();
+    const auto text = actor.serialize();
+    const auto clockStart = bytes.size() - (4 + 4 + text.size() + 4);
+    auto duplicate = bytes;
+    duplicate[clockStart] = 2;
+    duplicate.insert(duplicate.end(), bytes.begin() + clockStart + 4, bytes.end());
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(duplicate), std::runtime_error);
+    auto excessive = bytes;
+    std::fill_n(excessive.begin() + clockStart, 4, 255);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(excessive), std::runtime_error);
+    auto noncanonical = bytes;
+    noncanonical[clockStart + 8 + std::string_view("content:").size()] = 'O';
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(noncanonical), std::runtime_error);
+    const auto timingStart = clockStart - 17;
+    for (unsigned flag = 0; flag < 5; ++flag)
+    {
+        auto invalidBoolean = bytes;
+        invalidBoolean[timingStart + flag] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalidBoolean), std::runtime_error);
+    }
+    for (std::size_t cut = 1; cut <= 20; ++cut)
+    {
+        auto truncated = bytes; truncated.resize(bytes.size()-cut);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    }
+}

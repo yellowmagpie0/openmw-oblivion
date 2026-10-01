@@ -8474,3 +8474,65 @@ S4–S14 open. Next: persist the native global clock and sequence state, then wi
 actual ordinary frame phases/contact in the verified order. Previous checkpoint65
 commit7becfd8327962f51cfe076ecf6db27b419e7eb7e; verified bundle43 SHA256
 62de8416be85f6be2012d10c70b7baf8a7b94952397db1ebe357948a8390ab61.
+
+### Checkpoint67 — durable native animation clock and sequence timing
+
+Runtime schema23 stores each native actor's float animation clock independently
+of melee input/strike state, plus nullable per-strike sequence timing. The latter
+keeps easing, optional offset/ease-start/previous-input initialization, ease end,
+weighted history and displayed time. Clock ownership requires the existing native
+actor/life authority, allowing Alive, Dead and EssentialUnconscious actors; clocks
+survive strike cancellation/incapacitation and clear with the service. A timing
+record requires its actor clock and canonical all-present/all-absent initialization.
+Finite values, nonnegative clocks, identities, duplicates, bounds and flags are
+validated before restoring or publishing state. Binary and canonical JSON and
+the Python codec/migration change together. Legacy schemas retain null timing and
+empty clocks; old-version downgrade rejects owned timing before capture mutation.
+
+The combat service exposes validated clock reads/frame additions and owned-strike
+timing publication. Actual service tests cover exact float additions, wrong actor/
+action rejection, invalid duration/timing without mutation, save/restore, clock
+survival through essential incapacitation and failed restore/capture atomicity.
+These APIs are not yet called by Character; they do not advance ordinary phases,
+dispatch contact, freeze a live sequence or synchronize rendered transforms.
+
+A separate production C++→JSON/binary→Python exact-byte check revealed a genuine
+signed-zero bug despite broad checks passing: integer-looking -0 lost its sign
+through JSON parsing. Cross-codec-01 retains10 failed JSON cases out of16 (all16
+binary round trips passed). New timing/clock JSON emits -0.0 for signed zeros;
+cross-codec-02 passes all16 binary and JSON cases, with source and driver hashes.
+Its driver SHA256
+fb23b26bb0d2f587778eb12072b96491926f7812248ae0f345c34208c6e03d64.
+Component tests exercise explicit signed-zero JSON and binary state, partial/
+nonfinite/dangling timing, duplicate/overflow/noncanonical clock identities,
+malformed boolean flags and bounded truncations. Python exact-wire and malformed
+state cases independently cover the same new fields and old-schema promotion.
+
+Baseline-01 preserves missing-state API build failure and two preliminary Python
+fixture failures (obsolete current-version expectation; a terminal actor left in
+an engagement). Main/sanitized-01 preserve a test API-name compile error. Checks02
+passed2008 component/483 TES4 sanitizer/720 engine/226 Python before the cross-codec
+bug was found and are prior-source evidence only. Corrected checks03 pass2008
+component,720 engine,226 Python and ASan/UBSan483 TES4 component/720 engine cases
+with exact inventory/XML, no skips/failures/source drift; leaks disabled. Tested
+fingerprint `6e99b2cf8aafb0ae4b981e3bc73e5fe2532716197250c6a6a8707ea2238f3600`. Older missing-owner
+initializer warnings remain within the open final warning gate.
+
+S3/native-animation-timing-state-offscreen-01 uses normal configured keyboard
+input, saves action1/ordinary Start/time0.4000000059604645, then resumes and finishes
+it in a distinct process without another ID. Pristine schema21→23 migration
+preserves all nine native actor value/life/breath/base/death/combat fields and
+public80/80/140/alive queries. The new clock collection remains empty and timing
+null, accurately reflecting unwired APIs; saved phases remain unadvanced. Both
+captures were directly reviewed: textured prison and readable full HUD bars, a
+later hand/forearm pose then idle, not saved-phase/damage evidence. Input copies,
+source hash, process epochs and runtime binary SHA256
+ec222722b37cca96070abc05704bfc7036e534e982b7621a5051b7efc1d3a9f1 verify.
+The first verifier omitted sequence_timing=None in its complete expected strike
+dictionary; verify-01.py/failure note remain and corrected verification includes
+the predeclared nullable-field expectation. This is migration/continuation, not
+nonnull clock/timing gameplay acceptance or full S4. S2/S3 remain in progress;
+S4–S14 remain open. Next: wire ordinary frame timing and native contact dispatch.
+Previous checkpoint66 commit d654f6211f803942731cbc859a783a69db621f0d;
+verified bundle44 SHA256
+74f898c117c678e89a978b9543adbe43172e63e523a215636e694e0879d27455.

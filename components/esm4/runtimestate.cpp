@@ -546,6 +546,18 @@ namespace ESM4
             || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::RightPower)
             || static_cast<unsigned>(mOrdinaryPhase) > static_cast<unsigned>(OrdinaryMeleePhase::End))
             throw std::runtime_error("Invalid TES4 melee strike state");
+        if (mSequenceTiming)
+        {
+            const auto& timing = *mSequenceTiming;
+            if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
+                || !std::isfinite(timing.mOutputTime)
+                || timing.mOffset.has_value() != timing.mEaseStart.has_value()
+                || timing.mOffset.has_value() != timing.mLastInput.has_value())
+                throw std::runtime_error("Invalid TES4 melee sequence timing");
+            for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
+                if (value && !std::isfinite(*value))
+                    throw std::runtime_error("Nonfinite TES4 melee sequence timing");
+        }
     }
 
     void RuntimeMeleeState::validate() const
@@ -585,6 +597,7 @@ namespace ESM4
         checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
         checkSize(mPhysicalActionOwners.size(), "physical action owner list");
         checkSize(mNativeMeleeStates.size(), "native melee state list");
+        checkSize(mNativeAnimationClocks.size(), "native animation clock list");
         checkSize(mNativeActorValues.size(), "native actor-value list");
         checkSize(mNativeActorBases.size(), "native actor-base list");
         if (mVersion < 11 && !mNativeActorBases.empty())
@@ -722,6 +735,11 @@ namespace ESM4
         }
         if (mVersion < 21 && !mNativeMeleeStates.empty())
             throw std::runtime_error("TES4 melee state requires runtime-state version 21");
+        if (mVersion < 23 && !mNativeAnimationClocks.empty())
+            throw std::runtime_error("TES4 animation clocks require runtime-state version23");
+        for (const auto& [actor, clock] : mNativeAnimationClocks)
+            if (!nativeActors.contains(actor) || !lives.contains(actor) || !std::isfinite(clock) || clock < 0)
+                throw std::runtime_error("Invalid or dangling TES4 native animation clock");
         std::set<std::uint64_t> meleeIds;
         for (const auto& [actor, melee] : mNativeMeleeStates)
         {
@@ -734,6 +752,8 @@ namespace ESM4
                 const auto& strike = *melee.mStrike;
                 if (mVersion < 22 && strike.mOrdinaryPhase != OrdinaryMeleePhase::Start)
                     throw std::runtime_error("TES4 ordinary melee phase requires runtime-state version 22");
+                if (strike.mSequenceTiming && (mVersion < 23 || !mNativeAnimationClocks.contains(actor)))
+                    throw std::runtime_error("TES4 sequence timing requires version23 and an actor clock");
                 const auto owner = mPhysicalActionOwners.find(strike.mActionId);
                 const bool pending = pendingActions.contains(strike.mActionId);
                 if (!meleeIds.insert(strike.mActionId).second || strike.mActionId >= mPhysicalActions.mNext
@@ -1466,7 +1486,33 @@ namespace ESM4
                     writer.integer<std::uint8_t>(strike.mContactCommitted);
                     if (mVersion >= 22)
                         writer.integer<std::uint8_t>(static_cast<std::uint8_t>(strike.mOrdinaryPhase));
+                    if (mVersion >= 23)
+                    {
+                        writer.integer<std::uint8_t>(strike.mSequenceTiming.has_value());
+                        if (strike.mSequenceTiming)
+                        {
+                            const auto& timing = *strike.mSequenceTiming;
+                            writer.integer<std::uint8_t>(timing.mEasing);
+                            for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
+                            {
+                                writer.integer<std::uint8_t>(value.has_value());
+                                if (value) writer.floating(*value);
+                            }
+                            writer.floating(timing.mEaseEnd);
+                            writer.floating(timing.mWeightedTime);
+                            writer.floating(timing.mOutputTime);
+                        }
+                    }
                 }
+            }
+        }
+        if (mVersion >= 23)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeAnimationClocks.size()));
+            for (const auto& [actor, clock] : mNativeAnimationClocks)
+            {
+                writeKey(writer, actor);
+                writer.floating(clock);
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -2048,10 +2094,37 @@ namespace ESM4
                     strike.mContactCommitted = boolean();
                     if (result.mVersion >= 22)
                         strike.mOrdinaryPhase = static_cast<OrdinaryMeleePhase>(reader.integer<std::uint8_t>());
+                    if (result.mVersion >= 23 && boolean())
+                    {
+                        MeleeSequenceTiming timing;
+                        timing.mEasing = boolean();
+                        for (auto* value : {&timing.mOffset, &timing.mEaseStart, &timing.mLastInput})
+                            if (boolean()) *value = reader.float32();
+                        timing.mEaseEnd = reader.float32();
+                        timing.mWeightedTime = reader.float32();
+                        timing.mOutputTime = reader.float32();
+                        strike.mSequenceTiming = timing;
+                    }
                     melee.mStrike = std::move(strike);
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
+            }
+        }
+        if (result.mVersion >= 23)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                ESM::FormKey actor;
+                try { actor = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&) { throw std::runtime_error("Invalid TES4 native animation clock actor"); }
+                if (actor.serialize() != text)
+                    throw std::runtime_error("Noncanonical TES4 native animation clock actor");
+                const auto clock = reader.float32();
+                if (!result.mNativeAnimationClocks.emplace(std::move(actor), clock).second)
+                    throw std::runtime_error("Duplicate TES4 native animation clock");
             }
         }
         if (!reader.eof())
@@ -2634,8 +2707,49 @@ namespace ESM4
                         << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false");
                     if (mVersion >= 22)
                         stream << ",\"ordinary_phase\":" << static_cast<unsigned>(strike.mOrdinaryPhase);
+                    if (mVersion >= 23)
+                    {
+                        const auto floating = [&](float value) {
+                            if (value == 0 && std::signbit(value)) stream << "-0.0";
+                            else stream << std::setprecision(17) << value;
+                        };
+                        stream << ",\"sequence_timing\":";
+                        if (!strike.mSequenceTiming) stream << "null";
+                        else
+                        {
+                            const auto& timing = *strike.mSequenceTiming;
+                            stream << "{\"easing\":" << (timing.mEasing ? "true" : "false");
+                            const auto optional = [&](std::string_view name, std::optional<float> value) {
+                                stream << ",\"" << name << "\":";
+                                if (value) floating(*value);
+                                else stream << "null";
+                            };
+                            optional("offset", timing.mOffset);
+                            optional("ease_start", timing.mEaseStart);
+                            optional("last_input", timing.mLastInput);
+                            stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
+                            stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
+                            stream << ",\"output_time\":"; floating(timing.mOutputTime);
+                            stream << '}';
+                        }
+                    }
                     stream << '}';
                 }
+                stream << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 23)
+        {
+            stream << ",\"native_animation_clocks\":[";
+            bool first = true;
+            for (const auto& [actor, clock] : mNativeAnimationClocks)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << "\",\"clock\":";
+                if (clock == 0 && std::signbit(clock)) stream << "-0.0";
+                else stream << std::setprecision(17) << clock;
                 stream << '}';
             }
             stream << ']';

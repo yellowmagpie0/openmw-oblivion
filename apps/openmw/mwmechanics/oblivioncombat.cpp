@@ -622,6 +622,7 @@ namespace MWMechanics
         mActions = {};
         mActionOwners.clear();
         mMeleeStates.clear();
+        mAnimationClocks.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -710,6 +711,38 @@ namespace MWMechanics
     {
         const auto found = mMeleeStates.find(actor);
         return found == mMeleeStates.end() ? nullptr : &found->second;
+    }
+
+    float OblivionCombatService::animationClock(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!values || !life || values->mBase != life->mBase)
+            throw std::invalid_argument("native animation clock requires initialized actor authority");
+        const auto found = mAnimationClocks.find(actor);
+        return found == mAnimationClocks.end() ? 0.f : found->second;
+    }
+
+    float OblivionCombatService::advanceAnimationClock(const ESM::FormKey& actor, float duration)
+    {
+        const auto clock = ESM4::advanceMeleeAnimationClock(animationClock(actor), duration);
+        mAnimationClocks.insert_or_assign(actor, clock);
+        return clock;
+    }
+
+    bool OblivionCombatService::setMeleeSequenceTiming(std::uint64_t id,
+        const ESM::FormKey& actor, const ESM4::MeleeSequenceTiming& timing)
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mStrike || found->second.mStrike->mActionId != id)
+            return false;
+        if (!mAnimationClocks.contains(actor))
+            throw std::invalid_argument("native sequence timing requires an initialized animation clock");
+        auto candidate = *found->second.mStrike;
+        candidate.mSequenceTiming = timing;
+        candidate.validate();
+        found->second.mStrike->mSequenceTiming = timing;
+        return true;
     }
 
     void OblivionCombatService::setMeleeInput(const ESM::FormKey& actor, const ESM4::RuntimeMeleeInput& input)
@@ -2740,6 +2773,11 @@ namespace MWMechanics
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
+        if (state.mVersion < 23 && (!mAnimationClocks.empty()
+                || std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
+                    return entry.second.mStrike && entry.second.mStrike->mSequenceTiming.has_value();
+                })))
+            throw std::invalid_argument("native animation timing requires an Oblivion v23+ save");
         if (state.mVersion < 21 && !mMeleeStates.empty())
             throw std::invalid_argument("native melee state requires an Oblivion v21+ save");
         if (state.mVersion < 22)
@@ -2799,11 +2837,13 @@ namespace MWMechanics
         auto actions = mActions.capture();
         auto actionOwners = mActionOwners;
         auto meleeStates = mMeleeStates;
+        auto animationClocks = mAnimationClocks;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
         state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeMeleeStates.swap(meleeStates);
+        state.mNativeAnimationClocks.swap(animationClocks);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -2920,6 +2960,7 @@ namespace MWMechanics
         actions.restore(state.mPhysicalActions);
         auto actionOwners = state.mPhysicalActionOwners;
         auto meleeStates = state.mNativeMeleeStates;
+        auto animationClocks = state.mNativeAnimationClocks;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -2958,6 +2999,7 @@ namespace MWMechanics
         mActions = std::move(actions);
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
+        mAnimationClocks.swap(animationClocks);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);

@@ -1319,7 +1319,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             source.write_bytes(untouched + struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
             state_io.write_save(source, target, state_io.load_save(source))
             saved = state_io.load_save(target)
-            self.assertEqual(saved["schema_version"], 22)
+            self.assertEqual(saved["schema_version"], state_io.CURRENT_VERSION)
             self.assertEqual(saved["native_melee_states"][0]["strike"]["ordinary_phase"], 0)
             self.assertEqual(saved["physical_actions"]["pending"], [1, 2, 5])
             self.assertEqual(target.read_bytes()[:len(untouched)], untouched)
@@ -1363,6 +1363,78 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             with self.subTest(boolean=index), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(broken)
         duplicate = bytearray(payload); struct.pack_into("<I", duplicate, start, 2); duplicate += payload[start+4:]
         with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(duplicate)
+
+    def test_animation_v23_exact_wire_and_independent_clock_lifetime(self):
+        state = self.melee_state()
+        state_io._upgrade_melee_phases(state)
+        state["schema_version"] = 22
+        old = state_io.encode_payload(state)
+        actor = state["native_actor_values"][0]["actor"]
+        state_io._upgrade_melee_timing(state)
+        state["schema_version"] = 23
+        state["native_animation_clocks"] = [{"actor": actor, "clock": 1000.25}]
+        timing = {"easing": True, "offset": None, "ease_start": None, "last_input": None,
+                  "ease_end": .125, "weighted_time": 0., "output_time": 0.}
+        state["native_melee_states"][0]["strike"]["sequence_timing"] = timing
+        expected = bytearray(old)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 23)
+        expected += bytes([1, 1, 0, 0, 0]) + struct.pack("<fff", .125, 0, 0)
+        expected += struct.pack("<II", 1, len(actor.encode())) + actor.encode() + struct.pack("<f", 1000.25)
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, expected)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_animation_clocks"], state["native_animation_clocks"])
+        self.assertEqual(decoded["native_melee_states"], state["native_melee_states"])
+        timing.update(offset=-1000.25, ease_start=1000.25, last_input=.25, weighted_time=.25, output_time=.25)
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_melee_states"], state["native_melee_states"])
+        state["native_melee_states"] = []
+        state["physical_actions"]["pending"] = []
+        state["physical_action_owners"] = []
+        state["native_actor_life"][0]["phase"] = 1
+        state["native_combat_engagements"] = []
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_animation_clocks"], state["native_animation_clocks"])
+        migrated = state_io.decode_payload(old)
+        state_io._upgrade_melee_timing(migrated)
+        migrated["schema_version"] = state_io.CURRENT_VERSION
+        migrated = state_io.decode_payload(state_io.encode_payload(migrated))
+        self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)
+        self.assertEqual(migrated["native_animation_clocks"], [])
+        self.assertIsNone(migrated["native_melee_states"][0]["strike"]["sequence_timing"])
+
+    def test_animation_v23_rejects_bad_clocks_timing_and_bounded_wire_mutations(self):
+        state = self.melee_state()
+        state_io._upgrade_melee_phases(state)
+        state_io._upgrade_melee_timing(state)
+        state["schema_version"] = 23
+        actor = state["native_actor_values"][0]["actor"]
+        state["native_animation_clocks"] = [{"actor": actor, "clock": 0.}]
+        state["native_melee_states"][0]["strike"]["sequence_timing"] = {
+            "easing": True, "offset": None, "ease_start": None, "last_input": None,
+            "ease_end": .125, "weighted_time": 0., "output_time": 0.}
+        mutations = [lambda x: x["native_animation_clocks"].clear(),
+            lambda x: x["native_animation_clocks"].append(copy.deepcopy(x["native_animation_clocks"][0])),
+            lambda x: x["native_animation_clocks"][0].update(actor="null"),
+            lambda x: x["native_animation_clocks"][0].update(actor="dynamic:missing:0000000000000001"),
+            lambda x: x["native_melee_states"][0]["strike"]["sequence_timing"].update(offset=0),
+            lambda x: x["native_melee_states"][0]["strike"]["sequence_timing"].update(easing=1)]
+        for value in [-1., float("nan"), float("inf"), float("-inf"), True, 1e40]:
+            mutations.append(lambda x, v=value: x["native_animation_clocks"][0].update(clock=v))
+        for key in ["offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"]:
+            for value in [float("nan"), float("inf"), True, 1e40]:
+                mutations.append(lambda x, k=key, v=value: x["native_melee_states"][0]["strike"]["sequence_timing"].update({k:v}))
+        for i, mutate in enumerate(mutations):
+            bad = copy.deepcopy(state); mutate(bad)
+            with self.subTest(mutation=i), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        payload = state_io.encode_payload(state)
+        for cut in range(1, 40):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-cut])
+        tail = 4 + 4 + len(actor.encode()) + 4
+        start = len(payload)-tail
+        duplicate = bytearray(payload); struct.pack_into("<I", duplicate, start, 2)
+        duplicate += payload[start+4:]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(duplicate)
+        overflow = bytearray(payload); struct.pack_into("<I", overflow, start, 0xffffffff)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(overflow)
 
 if __name__ == "__main__":
     unittest.main()
