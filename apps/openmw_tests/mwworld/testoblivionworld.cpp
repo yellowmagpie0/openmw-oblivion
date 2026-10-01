@@ -2531,6 +2531,88 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionProcessAction(foreign, actor), std::invalid_argument);
     }
 
+    TEST(OblivionWorldTest, ConstructedActiveProcessInitializesUnknownWithoutChangingOtherAuthority)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        auto old = captureNativeActorState(fixture, actor);
+        old.mVersion = 24;
+        old.mNativeActorValues[0].mProcessKnockedState.reset();
+        old.mNativeActorValues[0].mProcessAction.reset();
+        service.restore(ESM4::RuntimeState::deserializeBinary(old.serializeBinary()), world.getStore());
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        EXPECT_THROW(service.getProcessAction(key), std::invalid_argument);
+        EXPECT_THROW(service.getProcessKnockedState(key), std::invalid_argument);
+        auto expected = captureNativeActorState(fixture, actor);
+        expected.mNativeActorValues[0].mProcessAction = -1;
+        expected.mNativeActorValues[0].mProcessKnockedState = 0;
+        service.initializeConstructedActorProcess(key);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), expected.serializeBinary());
+        service.initializeConstructedActorProcess(key);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), expected.serializeBinary());
+        service.restore(ESM4::RuntimeState::deserializeBinary(expected.serializeBinary()), world.getStore());
+        EXPECT_EQ(MWMechanics::oblivionProcessAction(world, actor), -1);
+        EXPECT_EQ(MWMechanics::oblivionKnockedState(world, actor), 0);
+    }
+
+    TEST(OblivionWorldTest, ConstructedActiveProcessOverlaysAllKnownKnockedBytesAndSignedActions)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        const auto source = captureNativeActorState(fixture, actor);
+        for (int knocked = -128; knocked <= 127; ++knocked)
+            for (int action : {-32768, -1, 0, 2, 3, 6, 32767})
+                for (int absent = 0; absent != 3; ++absent)
+                {
+                    auto state = source;
+                    state.mNativeActorValues[0].mProcessKnockedState = static_cast<std::int8_t>(knocked);
+                    state.mNativeActorValues[0].mProcessAction = static_cast<std::int16_t>(action);
+                    if (absent == 1) state.mNativeActorValues[0].mProcessKnockedState.reset();
+                    if (absent == 2) state.mNativeActorValues[0].mProcessAction.reset();
+                    service.restore(state, world.getStore());
+                    auto expected = state;
+                    if (absent == 1) expected.mNativeActorValues[0].mProcessKnockedState = 0;
+                    if (absent == 2) expected.mNativeActorValues[0].mProcessAction = -1;
+                    service.initializeConstructedActorProcess(key);
+                    ASSERT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), expected.serializeBinary())
+                        << knocked << ' ' << action << ' ' << absent;
+                }
+    }
+
+    TEST(OblivionWorldTest, ConstructedProcessRejectsLowOrMissingAndDoesNotInferLifeOrResources)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Low));
+        const auto low = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_THROW(service.initializeConstructedActorProcess(key), std::invalid_argument);
+        EXPECT_THROW(service.initializeConstructedActorProcess(ESM::FormKey::dynamic("missing", 1)), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), low);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        ASSERT_TRUE(world.killOblivionActor(actor, {}));
+        auto dead = captureNativeActorState(fixture, actor);
+        dead.mNativeActorValues[0].mProcessAction.reset();
+        dead.mNativeActorValues[0].mProcessKnockedState.reset();
+        service.restore(dead, world.getStore());
+        auto expected = dead;
+        expected.mNativeActorValues[0].mProcessAction = -1;
+        expected.mNativeActorValues[0].mProcessKnockedState = 0;
+        service.initializeConstructedActorProcess(key);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), expected.serializeBinary());
+        EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Dead);
+    }
+
     TEST(OblivionWorldTest, NativeKnockedStateLowResetAndLegacyUnknownStayExplicit)
     {
         NativeWorldFixture fixture;

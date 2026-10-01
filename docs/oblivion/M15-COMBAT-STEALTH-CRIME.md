@@ -9319,3 +9319,54 @@ all remaining plan gates. Full Lua/API/editor/Morrowind/performance gates remain
 open; this input test is deliberately smaller. Previous checkpoint82 commit
 5ef71db4d28feb9bdef00859737868ed4b135a78; verified bundle60 SHA256
 62a6b975d231a837a2769637ad23980083a8eba8880883dd06b3bd5108a69979.
+
+### Checkpoint84 — initialize fields at real animated process construction
+
+Actual Actors::addActor admission, after native binding/activation and a valid
+world animation, initializes missing Active process knocked/action fields to
+native constructor0/-1. Known saved signed fields overlay those defaults and
+remain unchanged. Headless restore, same-process activation, actors without an
+animation and Low/missing authority do not acquire guessed process fields.
+This is an explicit process-construction boundary, not a Life/Fatigue/animation-
+pose inference. Constructor rules remain independently verified in S4/native-
+knocked-state-oracle-02 and native-process-action-oracle-02. Shared TES3 actor
+admission has no native service and does not run this transition.
+
+Three new engine cases verify legacy24 restore still unknown until explicit
+construction; idempotent initialization and typed restore;5376 known/absent
+combinations (all256 knocked bytes, seven signed action boundaries, three field
+presence configurations); and Low/missing rejection with no mutation, including
+Dead process construction without changing life/death/resource authority.
+S3/native-process-construction-main-01 and native-process-construction-
+sanitized-01 each pass741 engine cases, exact inventories and no failures/skips/
+source drift. ASan/UBSan leak detection is disabled. Tested fingerprint:
+35f233abd132d7cca82778859a8a3481661be2bd0899ec5c22a8a786dbe85d2c.
+Unchanged component/Python evidence remains80/83 respectively.
+
+S4/native-process-construction-legacy-offscreen-01 loads untouched schema21
+with nine unknown entries. Real Player/eight NPC construction sets only raw
+knocked0/action-1, then schema26 save/quit/fresh-load/resave preserves them.
+All remaining actor-value/life/breath/base/death/engagement/action authority is
+unchanged; normal block-input menu/release trace remains correct and is not
+replayed. Both captures were directly reviewed. Epoch start_ticks14757293 and
+14764263, PID12; reference counts34674→34896→34904 include legitimate discoveries.
+
+S4/native-process-construction-known-offscreen-01 stages schema26 Player
+knocked-128/action32767 before construction. Both known values survive actual
+admission, native Armor query UI, save and fresh process. Other admitted actors
+initialize unknown fields. The declared Player Defense43 base12/base-extra12
+are the only AV/base mutations. Existing Player/reference inventories and all
+life/breath/death/engagement/action fields remain unchanged; newly discovered
+references322/28nonempty and473/27 are reported separately. All four captures
+were directly reviewed: Armor12 and numeric pools are readable; magenta icons
+and incomplete body preview remain open. Epoch start_ticks14777613 and14795729,
+PID12. Both courses use engine SHA256
+f767134937a9c710a1818d13125e202a30b290f6b8683ba6601cbfc9e8b328c4.
+Known signed staging is not actual knockdown/block/recovery acceptance.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: block action/pose scheduling
+and live contact eligibility (including native integer Paralysis), verified
+strike action publication, acquired-victim damage, condition/reactions and all
+later acceptance gates. Previous checkpoint83 commit
+befa3ba03ea02ca69e6eec1af8767a529a0d11b7; verified bundle61 SHA256
+18e27891cc741c42845a890f0e49ca7c77269557de0acbd52c0171167f21082c.

@@ -561,6 +561,10 @@ namespace MWMechanics
         // Active state is diagnosed. Selection/render scheduling is separate.
         std::int16_t getProcessAction(const ESM::FormKey& actor) const;
         void setProcessAction(const ESM::FormKey& actor, std::int16_t action);
+        // A real animated actor has constructed an Active process. Apply its
+        // native defaults only where an older save has no restored field.
+        // Headless restore and same-process activation must not call this.
+        void initializeConstructedActorProcess(const ESM::FormKey& actor);
         std::int8_t getProcessKnockedState(const ESM::FormKey& actor) const;
         void setProcessKnockedState(const ESM::FormKey& actor, std::int8_t state);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;

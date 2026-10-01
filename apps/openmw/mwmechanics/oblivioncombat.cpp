@@ -2373,6 +2373,19 @@ namespace MWMechanics
         found->second.mProcessAction = action;
     }
 
+    void OblivionCombatService::initializeConstructedActorProcess(const ESM::FormKey& actor)
+    {
+        const auto found = mActorValues.find(actor);
+        if (found == mActorValues.end() || found->second.mProcess != ESM4::ActorValueProcess::Active)
+            throw std::invalid_argument("native process construction requires Active actor authority");
+        // The constructor initializes these fields before saved process data
+        // is overlaid. Preserve all known bytes, including nonzero/signed ones.
+        if (!found->second.mProcessKnockedState)
+            found->second.mProcessKnockedState = 0;
+        if (!found->second.mProcessAction)
+            found->second.mProcessAction = -1;
+    }
+
     std::int8_t OblivionCombatService::getProcessKnockedState(const ESM::FormKey& actor) const
     {
         const auto* values = findActorValues(actor);

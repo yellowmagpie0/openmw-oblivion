@@ -42,6 +42,7 @@
 
 #include "oblivionai.hpp"
 #include "oblivionaigait.hpp"
+#include "oblivioncombat.hpp"
 
 #include "../mwrender/vismask.hpp"
 
@@ -1250,6 +1251,15 @@ namespace MWMechanics
         MWRender::Animation* anim = MWBase::Environment::get().getWorld()->getAnimation(ptr);
         if (!anim)
             return;
+        if (auto* world = dynamic_cast<MWWorld::World*>(baseWorld))
+            if (auto* service = world->getOblivionCombatService())
+            {
+                const auto actor = ptr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                                                               : ptr.getCellRef().getFormKey();
+                if (const auto* values = service->findActorValues(actor);
+                    values && values->mProcess == ESM4::ActorValueProcess::Active)
+                    service->initializeConstructedActorProcess(actor);
+            }
         const auto it = mActors.emplace(mActors.end(), ptr, *anim);
         mIndex.emplace(ptr.mRef, it);
 
