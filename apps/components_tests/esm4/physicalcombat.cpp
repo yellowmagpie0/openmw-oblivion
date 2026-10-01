@@ -2785,3 +2785,48 @@ TEST(ESM4PhysicalCombat, ArmorSelectionRetryBoundsAndInvalidSettings)
             EXPECT_THROW(ESM4::selectArmorWear(1, {}, bad), std::invalid_argument);
         }
 }
+
+TEST(ESM4PhysicalCombat, NativeArmorWearPreservesMasteryAdmissionAndOriginalFloatPublication)
+{
+    struct Row
+    {
+        double current;
+        float wear;
+        bool heavy;
+        float skill;
+        bool bypass, zeroMultipliers;
+        std::uint32_t bits;
+        bool broken;
+    };
+    const Row rows[]{
+#include "armorcondition_expected.inc"
+    };
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    for (const auto& row : rows)
+    {
+        const ESM4::ArmorWearMasterySettings settings = row.zeroMultipliers
+            ? ESM4::ArmorWearMasterySettings{0, 0, 0, 0}
+            : ESM4::ArmorWearMasterySettings{1.5f, 2.f, .5f, .25f};
+        const auto result = ESM4::nativeArmorConditionAfterWear(row.current, row.wear,
+            static_cast<std::int32_t>(std::floor(row.skill)),
+            row.heavy ? ESM4::ArmorWeight::Heavy : ESM4::ArmorWeight::Light,
+            settings, mastery, row.bypass);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*result), row.bits);
+        EXPECT_EQ(*result == 0, row.broken);
+    }
+    // Admission is on incoming wear. A zero mastery multiplier still writes
+    // the rounded full condition, including a missing uint32 maximum reader.
+    EXPECT_EQ(ESM4::nativeArmorConditionAfterWear(16777217., 1.f, 50,
+        ESM4::ArmorWeight::Light, {0, 0, 0, 0}, mastery), 16777216.f);
+    for (const float wear : {0.f, -0.f, -1.f})
+        EXPECT_FALSE(ESM4::nativeArmorConditionAfterWear(50.125, wear, 50,
+            ESM4::ArmorWeight::Light, {1.5f, 2.f, .5f, .25f}, mastery));
+    for (const double current : {-1., std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::quiet_NaN()})
+        EXPECT_THROW(ESM4::nativeArmorConditionAfterWear(current, 1, 50,
+            ESM4::ArmorWeight::Light, {1.5f, 2.f, .5f, .25f}, mastery), std::invalid_argument);
+    for (const float wear : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::nativeArmorConditionAfterWear(50.125, wear, 50,
+            ESM4::ArmorWeight::Light, {1.5f, 2.f, .5f, .25f}, mastery), std::invalid_argument);
+}

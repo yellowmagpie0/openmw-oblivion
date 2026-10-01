@@ -820,6 +820,26 @@ namespace ESM4
         return remaining < 1.f ? 0.f : remaining;
     }
 
+    std::optional<float> nativeArmorConditionAfterWear(double current, float wear,
+        std::int32_t baseSkill, ArmorWeight weight, const ArmorWearMasterySettings& settings,
+        const CombatMasterySettings& mastery, bool bypassMastery)
+    {
+        finite(wear);
+        if (!std::isfinite(current) || current < 0)
+            throw std::invalid_argument("invalid native armor condition reader result");
+        validateArmorWearMasterySettings(settings);
+        validateCombatMasterySettings(mastery);
+        if (weight != ArmorWeight::Light && weight != ArmorWeight::Heavy)
+            throw std::invalid_argument("invalid native armor weight class");
+        if (wear <= 0)
+            return std::nullopt;
+        const float multiplier = bypassMastery ? 1.f
+            : armorWearMasteryMultiplier(baseSkill, weight, settings, mastery);
+        const float adjusted = rounded(double(wear) * multiplier);
+        const float remaining = rounded(current - double(adjusted));
+        return remaining < 1.f ? 0.f : remaining;
+    }
+
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass)
     {
         nonnegative(damage);

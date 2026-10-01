@@ -10149,3 +10149,33 @@ second save `a03e9aa72655d791c23881bb605cec75c8a01fe30fb7a415eb0c69b4d4846807`. 
 nonempty inventories2021→2093→2151. Compiler/script diagnostics and unexpected
 log findings remain empty. S3 remains in progress and all later open gates
 require completion; this is not full armor/contact/campaign acceptance.
+
+### Checkpoint98 — native armor condition publication with mastery
+
+`nativeArmorConditionAfterWear` admits incoming positive wear before applying
+light/heavy base-skill mastery. It preserves the float store of scaled wear,
+double condition reader, final float publication and below-one break snap.
+A zero multiplier still publishes the rounded condition; e.g. absent maximum
+16777217 with positive wear and zero multiplier writes16777216. Incoming
+nonpositive wear publishes nothing. Explicit mastery bypass uses multiplier1.
+The caller supplies the original floored base skill; current skill is not used.
+This rule prepares condition only; live selection/ownership/unequip/reactions
+remain separate integration.
+
+`S4/native-armor-condition-oracle-01` executes original5F3870 body armor path,
+484850 double reader,4B4C70 weight,5F23B0/5F1910 base flooring,56A300 mastery
+and9828C0 truncation.896 profiles agree under027F/037F (1792 executions),
+including unsigned maximum, fractional current condition, fractional mastery
+boundaries, asymmetric multipliers, zero multipliers and bypass. Frozen corpus
+SHA-256 `6e8dae964d09de8d31c1578f10fad472ae1b3ce8024c98b71bdaa0e0a1ef3d42`.
+Supplied boundaries: health-component RTTI/max/extra float readers, actor
+5EAD00 baseFloat,403C00 settings storage,41E6F0 bookkeeping,488830 writer,
+actor+2C0 refresh and468FF0 nonshield membership. Debug output disabled.
+Break returns a flag; body caller unequip/drop/render/audio not executed.
+Every execution checks return sentinel EIP and ESP.
+
+`S4/native-armor-condition-main-01` and `-sanitized-01` each pass all2049
+component tests with exact inventories/XML, zero skips/failures and stable
+tested source fingerprint `c3bc5c57c732969533086bf8df43e5a05df0d7248800438f80e7f9584fb42083`. No sanitizer findings; leaks disabled.
+No engine/Python source changes or new runtime armor acceptance. S3 and later
+open gates remain open.

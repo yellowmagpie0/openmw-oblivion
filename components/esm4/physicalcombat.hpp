@@ -426,6 +426,12 @@ namespace ESM4
     // double until subtraction. No value means no condition publication;
     // nonpositive wear must preserve an absent/fractional condition unchanged.
     std::optional<float> nativeConditionAfterWear(double current, float wear);
+    // Admission precedes the armor mastery multiplier. Positive incoming wear
+    // still publishes the native float store when the multiplier is zero.
+    // The caller supplies the original floored base skill, not current AV.
+    std::optional<float> nativeArmorConditionAfterWear(double current, float wear,
+        std::int32_t baseSkill, ArmorWeight weight, const ArmorWearMasterySettings& settings,
+        const CombatMasterySettings& mastery, bool bypassMastery = false);
 
 
     struct ArmorMitigation

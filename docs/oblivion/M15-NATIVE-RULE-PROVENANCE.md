@@ -5416,3 +5416,32 @@ The normal input/restart seed0 course makes no combat draw (armor0) and shows
 independent AI progression, while unit integration covers actual draw publication
 and duplicate/restart rejection. Native armor selection/draw policy and other
 reaction/crime random consumers remain separate integration work.
+
+### Armor wear admission and float publication (checkpoint98)
+
+Pinned original executable SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+5F3870 checks incoming wear>0 before ARMO type20/mastery handling.4B4C70
+reads armor+6A heavy bit;5F23B0 queries original floored base skill via
+5F1910/5EAD00, then56A300 gates25/50/75/100. Novice uses B374F0(light)/
+B374F8(heavy), Journeyman+ B37508(light)/B37500(heavy), Apprentice1.
+5F3927 stores scaled wear as float, then484850 double current reader precedes
+subtraction/final float store and below-one snap. Mastery bypass skips scaling.
+Zero multiplier does not undo incoming-wear admission: the condition writer
+still runs. `S4/native-armor-condition-oracle-01` records896 profiles/bothCW,
+corpus `6e8dae964d09de8d31c1578f10fad472ae1b3ce8024c98b71bdaa0e0a1ef3d42`;
+readers/settings/reference/writer/refresh/nonshield boundaries declared in
+its report. Original complete body helper returns broken flag; live caller
+unequip/drop/render/audio remains unexecuted.
+
+An additional read-only boundary audit for upcoming integration,
+`S4/native-armor-slot-lookup-oracle-01`, executes full486790,4691B0 and468FF0
+for3072 integer-path cases: six body slots, every6-bit mask, ARMO/CLOT,
+worn/unworn and armor-only flag.486921 checks flag1 then requires base type20,
+so matching worn clothing returns absent. Full successful temporary allocation
+and original copy code execute; supplied worn predicates/allocator/reference
+attachment recorder/count getter are declared. Single-count entry; stack split
+and conflict precedence unverified. Corpus
+`8892d97c057bcabebed1c1ca6c68218010deea1fe95a2433c0a38990b778d87d`.
+This audit defines the availability boundary for later live selection; it is
+not a claim that condition publication is already integrated there.
