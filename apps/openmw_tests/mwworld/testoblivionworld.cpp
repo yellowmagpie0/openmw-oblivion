@@ -4716,4 +4716,70 @@ namespace
             store, ESM::FormKeyResolver({"headless.esm"}), {bad}), std::invalid_argument);
         EXPECT_EQ(std::bit_cast<std::uint32_t>(*transferred.getCellRef().getNativeItemCondition()), 0x42c7ffffu);
     }
+    TEST(OblivionWorldTest, NativeContactRandomStateIsAtomicOwnedAndRestartSafe)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, actor);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
+            return state;
+        };
+        auto initial = snapshot();
+        initial.mCombatRngState = 0xffffffffu;
+        initial.mAiRngState = 0x123456789abcdef0ull;
+        service.restore(initial, world.getStore());
+        EXPECT_EQ(service.combatRandomState(), 0xffffffffu);
+        EXPECT_THROW(service.prepareCombatRandom(0), std::invalid_argument);
+        EXPECT_THROW(service.prepareCombatRandom(MWMechanics::MaxPhysicalContactRandomDraws + 1), std::invalid_argument);
+        const auto id = service.allocateAction(actor.getCellRef().getFormKey());
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -1, 0};
+        deltas.mRandomTransition = service.prepareCombatRandom(7);
+        const auto before = snapshot().serializeBinary();
+        EXPECT_EQ(service.combatRandomState(), 0xffffffffu); // preparation is read-only
+        for (unsigned bad = 0; bad < 6; ++bad)
+        {
+            auto request = deltas;
+            if (bad == 0) ++request.mRandomTransition->mExpectedState;
+            if (bad == 1) ++request.mRandomTransition->mNextState;
+            if (bad == 2) request.mRandomTransition->mDraws = 0;
+            if (bad == 3) request.mRandomTransition->mDraws = MWMechanics::MaxPhysicalContactRandomDraws + 1;
+            if (bad == 4) request.mVictimHealth = std::numeric_limits<float>::quiet_NaN();
+            if (bad == 5) request.mConditionChanges.push_back({actor, {}, std::nullopt, -1, 0, 1, 1.f});
+            EXPECT_THROW(world.commitOblivionPhysicalContact(id, actor, victim, request), std::invalid_argument);
+            EXPECT_EQ(snapshot().serializeBinary(), before);
+            EXPECT_TRUE(service.isActionPending(id, actor.getCellRef().getFormKey()));
+        }
+        EXPECT_THROW(world.commitOblivionPhysicalContact(id, actor, {}, deltas), std::invalid_argument);
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, victim, actor, deltas));
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, actor, victim, deltas));
+        EXPECT_EQ(service.combatRandomState(), deltas.mRandomTransition->mNextState);
+        const auto committed = snapshot();
+        EXPECT_EQ(committed.mNativeActorValues[0].mValues[10].mModifiers[2], -7.f);
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, actor, victim, deltas));
+        EXPECT_EQ(snapshot().serializeBinary(), committed.serializeBinary());
+        service.clear();
+        EXPECT_EQ(service.combatRandomState(), 1u);
+        service.restore(ESM4::RuntimeState::deserializeBinary(committed.serializeBinary()), world.getStore());
+        EXPECT_EQ(service.combatRandomState(), committed.mCombatRngState);
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, actor, victim, deltas));
+        EXPECT_EQ(snapshot().serializeBinary(), committed.serializeBinary());
+        const auto nextId = service.allocateAction(actor.getCellRef().getFormKey());
+        EXPECT_THROW(world.commitOblivionPhysicalContact(nextId, actor, victim, deltas), std::invalid_argument);
+        deltas.mRandomTransition = service.prepareCombatRandom(1);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(nextId, actor, victim, deltas));
+        auto lossy = initial;
+        lossy.mCombatRngState = 1;
+        lossy.mVersion = 26;
+        const auto untouched = lossy.serializeBinary();
+        EXPECT_THROW(service.capture(lossy), std::invalid_argument);
+        EXPECT_EQ(lossy.serializeBinary(), untouched);
+    }
+
 }

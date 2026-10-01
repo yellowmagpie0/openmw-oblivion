@@ -1552,35 +1552,45 @@ namespace
 
     TEST(ESM4RuntimeState, actorClockWireRejectsDuplicateNoncanonicalOversizedAndTruncatedData)
     {
-        auto state = engagedState();
-        const auto actor = state.mNativeActorValues.front().mActor;
-        state.mNativeActorManagerTime = 99999.5f;
-        state.mNativeActorUpdateTimes = {{actor, 99999.f}};
-        const auto bytes = state.serializeBinary();
-        const auto entrySize = 8 + actor.serialize().size();
-        const auto countOffset = bytes.size() - entrySize - 4;
-        auto invalid = bytes;
-        invalid[countOffset] = 2;
-        invalid.insert(invalid.end(), bytes.begin() + countOffset + 4, bytes.end());
-        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
-        invalid = bytes;
-        std::fill_n(invalid.begin() + countOffset, 4, 0xff);
-        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
-        invalid = bytes;
-        invalid[countOffset + 8] = 'C';
-        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
-        for (const auto offset : {bytes.size() - 4, countOffset - 4})
+        for (unsigned version = 16; version <= ESM4::CurrentRuntimeStateVersion; ++version)
         {
+            SCOPED_TRACE(version);
+            auto state = engagedState();
+            state.mVersion = version;
+            const auto actor = state.mNativeActorValues.front().mActor;
+            state.mNativeActorManagerTime = 99999.5f;
+            state.mNativeActorUpdateTimes = {{actor, 99999.f}};
+            const auto bytes = state.serializeBinary();
+            // Later schemas append empty ownership/melee/animation collections
+            // and the combat seed. Locate the clock section, not payload end.
+            const unsigned suffix = (version >= 20 ? 4 : 0) + (version >= 21 ? 4 : 0)
+                + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0);
+            const auto clockEnd = bytes.size() - suffix;
+            const auto entrySize = 8 + actor.serialize().size();
+            const auto countOffset = clockEnd - entrySize - 4;
+            auto invalid = bytes;
+            invalid[countOffset] = 2;
+            invalid.insert(invalid.begin() + clockEnd, bytes.begin() + countOffset + 4, bytes.begin() + clockEnd);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
             invalid = bytes;
-            const std::array<std::uint8_t, 4> infinity{0, 0, 0x80, 0x7f};
-            std::copy(infinity.begin(), infinity.end(), invalid.begin() + offset);
+            std::fill_n(invalid.begin() + countOffset, 4, 0xff);
             EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
-        }
-        for (std::size_t cut = 1; cut <= entrySize + 8; ++cut)
-        {
-            SCOPED_TRACE(cut);
-            invalid.assign(bytes.begin(), bytes.end() - cut);
+            invalid = bytes;
+            invalid[countOffset + 8] = 'C';
             EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+            for (const auto offset : {clockEnd - 4, countOffset - 4})
+            {
+                invalid = bytes;
+                const std::array<std::uint8_t, 4> infinity{0, 0, 0x80, 0x7f};
+                std::copy(infinity.begin(), infinity.end(), invalid.begin() + offset);
+                EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+            }
+            for (std::size_t cut = 1; cut <= entrySize + 8; ++cut)
+            {
+                SCOPED_TRACE(cut);
+                invalid.assign(bytes.begin(), bytes.begin() + clockEnd - cut);
+                EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+            }
         }
     }
 
@@ -2018,4 +2028,53 @@ TEST(ESM4RuntimeState, NativeProcessKnockedByteRetainsUnknownLegacyAndRejectsLos
     EXPECT_THROW(restored.serializeBinary(), std::runtime_error);
     restored.mNativeActorValues[0].mProcessKnockedState.reset();
     EXPECT_NO_THROW(restored.serializeBinary());
+}
+
+TEST(ESM4RuntimeState, CombatRandom27PreservesUnsignedSeedsAndRejectsLossyDowngrade)
+{
+    for (const std::uint32_t seed : {0u, 1u, 0x7fffffffu, 0x80000000u, 0xffffffffu})
+    {
+        auto state = makeState();
+        state.mCombatRngState = seed;
+        state.mAiRngState = 0x123456789abcdef0ull;
+        const auto bytes = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.mCombatRngState, seed);
+        EXPECT_EQ(loaded.mAiRngState, state.mAiRngState);
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_NE(loaded.canonicalJson().find("\"combat_rng_state\":" + std::to_string(seed)), std::string::npos);
+        auto truncated = bytes;
+        truncated.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        state.mVersion = 26;
+        if (seed != 1)
+        {
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+        else
+        {
+            const auto legacy = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_EQ(legacy.mCombatRngState, 1u);
+            EXPECT_EQ(legacy.canonicalJson().find("combat_rng_state"), std::string::npos);
+        }
+    }
+    for (unsigned version = 1; version < 27; ++version)
+    {
+        auto state = makeState();
+        state.mVersion = version;
+        state.mPlayer.mInventory.clear();
+        state.mReferences.clear();
+        state.mScriptEventSequence = 0;
+        state.mScriptInstances.clear();
+        state.mQuests.clear();
+        if (version < 3)
+        {
+            state.mPlayer.mName.clear();
+            state.mPlayer.mRace = {};
+            state.mPlayer.mClass = {};
+            state.mPlayer.mBirthSign = {};
+            state.mPlayer.mCharacterGenerationFlags = 0;
+        }
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mCombatRngState, 1u);
+    }
 }

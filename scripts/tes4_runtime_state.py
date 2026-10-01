@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 26
+CURRENT_VERSION = 27
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -547,6 +547,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("TES4 runtime-state dynamic serial must be non-zero")
     except (TypeError, ValueError, OverflowError) as error:
         raise RuntimeStateError("Invalid TES4 runtime-state dynamic serial") from error
+
+    combat_rng = state.get("combat_rng_state", 1)
+    if type(combat_rng) is not int or not 0 <= combat_rng <= 0xFFFFFFFF:
+        raise RuntimeStateError("Invalid TES4 combat random state")
+    if version < 27 and combat_rng != 1:
+        raise RuntimeStateError("Native combat random state requires runtime schema27")
 
     clock = state.get("clock")
     if not isinstance(clock, dict):
@@ -1475,6 +1481,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
     if version >= 23:
         result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
                                               for _ in range(reader.count())]
+    if version >= 27:
+        result["combat_rng_state"] = reader.unpack("<I")
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1779,6 +1787,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in clocks:
             writer.string(entry["actor"])
             writer.pack("<f", entry["clock"])
+    if version >= 27:
+        writer.pack("<I", state.get("combat_rng_state", 1))
     return writer.finish()
 
 
@@ -1861,6 +1871,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("script_instances", [])
     state.setdefault("quests", [])
     state.setdefault("ai_rng_state", 1)
+    state.setdefault("combat_rng_state", 1)
     state.setdefault("actor_ai", [])
     state.setdefault("path_points", [])
     state.setdefault("companions", [])
@@ -1904,6 +1915,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("script_instances", [])
     result.setdefault("quests", [])
     result.setdefault("ai_rng_state", 1)
+    result.setdefault("combat_rng_state", 1)
     result.setdefault("actor_ai", [])
     result.setdefault("path_points", [])
     result.setdefault("companions", [])

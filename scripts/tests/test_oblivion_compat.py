@@ -1308,6 +1308,7 @@ class OblivionCompatTests(unittest.TestCase):
             source.write_bytes(record + b"TAIL" + (0).to_bytes(4, "little") + b"\0" * 8)
             loaded = MODULE.tes4_state.load_save(source)
             mutated = MODULE.tes4_state.mutate_for_acceptance(loaded, "unit")
+            self.assertEqual(mutated["combat_rng_state"], 1)
             MODULE.tes4_state.write_save(source, rewritten, mutated)
             self.assertEqual(MODULE.tes4_state.load_save(rewritten), mutated)
             self.assertTrue(rewritten.read_bytes().endswith(b"TAIL" + (0).to_bytes(4, "little") + b"\0" * 8))

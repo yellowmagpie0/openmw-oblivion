@@ -631,6 +631,7 @@ namespace MWMechanics
     void OblivionCombatService::clear()
     {
         mActions = {};
+        mCombatRngState = 1;
         mActionOwners.clear();
         mMeleeStates.clear();
         mAnimationClocks.clear();
@@ -1033,6 +1034,16 @@ namespace MWMechanics
         return {owner, item, native, ref.getCharge(), ref.getChargeIntRemainder(), ref.getCount(), condition};
     }
 
+    OblivionCombatRandomTransition OblivionCombatService::prepareCombatRandom(unsigned draws) const
+    {
+        if (draws == 0 || draws > MaxPhysicalContactRandomDraws)
+            throw std::invalid_argument("invalid native physical contact random draw count");
+        std::uint32_t next = mCombatRngState;
+        for (unsigned i = 0; i < draws; ++i)
+            next = ESM4::combatRandomDraw(next).mNextState;
+        return {mCombatRngState, next, draws};
+    }
+
     bool OblivionCombatService::commitPhysicalContact(std::uint64_t id,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
@@ -1070,6 +1081,13 @@ namespace MWMechanics
                  deltas.mVictimFatigue, deltas.mVictimBlockFatigue})
             if (!std::isfinite(delta))
                 throw std::invalid_argument("native physical contact requires finite resource deltas");
+        if (deltas.mRandomTransition)
+        {
+            const auto& request = *deltas.mRandomTransition;
+            if (victim.isEmpty() || request.mExpectedState != mCombatRngState
+                || prepareCombatRandom(request.mDraws).mNextState != request.mNextState)
+                throw std::invalid_argument("invalid or stale native physical contact random transition");
+        }
         ESM4::validateEssentialRecoverySettings(recovery);
         const auto change = [&](ESM4::RuntimeActorValues& values, std::uint8_t av, float delta) {
             if (delta != 0 && !(playerGodMode && values.mOwner == ESM4::ActorValueOwner::Player && delta < 0))
@@ -1173,6 +1191,8 @@ namespace MWMechanics
         for (auto& prepared : conditions)
             if (prepared.mApply)
                 std::swap(prepared.mItem.getCellRef(), prepared.mReference);
+        if (deltas.mRandomTransition)
+            mCombatRngState = deltas.mRandomTransition->mNextState;
         std::swap(mActorValues.at(attackerKey), attacking);
         if (receiving)
         {
@@ -2147,6 +2167,7 @@ namespace MWMechanics
     {
         prepared.publishPlayerValues(player, std::move(values), settings);
         std::swap(mActions, prepared.mActions);
+        std::swap(mCombatRngState, prepared.mCombatRngState);
         mActionOwners.swap(prepared.mActionOwners);
         mActorValues.swap(prepared.mActorValues);
         mActorBases.swap(prepared.mActorBases);
@@ -3043,6 +3064,8 @@ namespace MWMechanics
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
+        if (state.mVersion < 27 && mCombatRngState != 1)
+            throw std::invalid_argument("native combat random state requires an Oblivion v27+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
                 || std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
                     return entry.second.mStrike && entry.second.mStrike->mSequenceTiming.has_value();
@@ -3112,6 +3135,7 @@ namespace MWMechanics
         auto actionOwners = mActionOwners;
         auto meleeStates = mMeleeStates;
         auto animationClocks = mAnimationClocks;
+        state.mCombatRngState = mCombatRngState;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
@@ -3271,6 +3295,7 @@ namespace MWMechanics
             lives.emplace(life.mActor, life);
         std::deque<ESM4::RuntimeActorDeathEvent> events(state.mPendingDeathEvents.begin(), state.mPendingDeathEvents.end());
         mActions = std::move(actions);
+        mCombatRngState = state.mCombatRngState;
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
         mAnimationClocks.swap(animationClocks);

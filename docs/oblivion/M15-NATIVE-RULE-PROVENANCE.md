@@ -5402,3 +5402,17 @@ profiles/4096 executions. Corpus
 at `S4/native-armor-selection-oracle-01`. Slot, final RNG state and actual draw
 count become frozen C++ expectations. Wear application, mastery, broken-item
 unequip, live callbacks/save scheduling and gameplay acceptance are separate.
+
+### Dedicated combat stream ownership (checkpoint97)
+
+The plan permits a dedicated reproducible stream. The combat service uses the
+original initialized CRT sequence established in checkpoint95, independently
+of AI scheduling, with declared seed1 for new/legacy state and full uint32
+including0 in schema27. Owned contact preparation validates its full1–32 draw
+transition and publishes it atomically with wear/resources/lifecycle/action
+consumption. This is an OpenMW ownership/save contract, not a claim that the
+original game's shared global world random-call interleaving is replicated.
+The normal input/restart seed0 course makes no combat draw (armor0) and shows
+independent AI progression, while unit integration covers actual draw publication
+and duplicate/restart rejection. Native armor selection/draw policy and other
+reaction/crime random consumers remain separate integration work.

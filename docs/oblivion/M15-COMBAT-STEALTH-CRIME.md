@@ -10088,3 +10088,64 @@ component tests with exact inventory/XML, zero skips/failures and stable
 tested fingerprint `c42231392a508140ea9074cbc383dad1ccd7453b83d8dbb3996d243e7e31e944`. No sanitizer findings (ASan leaks disabled).
 No engine/Python changes. Combat-owned RNG persistence, atomic publication,
 actual armor wear, block/break/reactions and remaining stages stay open.
+
+### Checkpoint97 — atomic combat RNG ownership and schema27
+
+A dedicated unsigned32 CRT state belongs to the native combat service. It
+starts at1, accepts0, resets on clear, and is independent of the existing AI
+stream. Read-only preparation accepts1–32 draws; owned contacts validate the
+expected state, draw count and recomputed next state before any publication.
+The checked state publishes with prepared conditions, resources, lifecycle
+and action consumption. Malformed/stale/wrong-owner/missed/duplicate contacts
+leave the state unchanged. Resource or late condition preparation failure
+rolls back the entire contact; restart preserves consumed ownership. Contact
+policy still owns whether/how many draws are required; existing ordinary
+zero-armor-wear contact makes none. Live armor/block/reaction draw policy is
+not closed by this transaction contract.
+
+Runtime schema27 appends combat uint32 state in C++/Python binary codecs and
+canonical JSON. Versions1–26 migrate to1; nondefault state cannot be silently
+downgraded. Python rejects bool/string/float/negative/overflow seeds; truncated
+current records reject. Player preparation/capture/restore retain the native
+authority. Current save and acceptance-mutation migration helpers include the
+new default. Tests cover unsigned boundaries, independent AI value, atomic
+failure, exactly-once consumption and restore/clear. Clock corruption tests
+now target the clock section across schemas16–27, rather than assuming payload
+end is a float.
+
+Retained failures: `native-combat-rng-persistence-main-01` and `-sanitized-01`
+each passed758/759 engine cases; the new lossy-save fixture lacked required
+player race/class. Fixtures were corrected, along with a reviewed component
+test API name before its first compilation. `-main-02`/`-sanitized-02` passed
+all759 engine cases and failed only the old clock-wire test because its end
+offset addressed a valid uint32 seed in27. The test now covers all16–27 clock
+layouts. `-main-03` passed759 engine/2048 components but failed one of235
+Python cases: the acceptance mutator omitted the new migration default.
+`-sanitized-03` passed both C++ suites. The actual helper was fixed. Final
+`-main-04`, `-sanitized-04`, `-python-04` pass759 engine,2048 components and
+235 Python cases with exact inventories/XML, zero skips/failures and stable
+final tested source fingerprint `36ac0e56c19551d247be99550f858c816b8a3bdfa429d2a735871c9e275174f1`. No sanitizer findings; leaks disabled.
+
+`S3/native-combat-rng-offscreen-01` passes normal ordinary shortsword input
+and distinct-process save/load/resave with seed0 in all three saves. The
+independent AI states are[9495, 14513, 18345]; background AI continues. An initially prepared
+verifier incorrectly assumed AI was frozen; its exact script and correction
+are retained as `verify-invalid-ai-invariance.py`/`setup-correction.json`,
+using already completed checkpoint94 saves to demonstrate that assumption
+was invalid before semantic verification. Only the false AI-invariance
+assertion changed; combat0, exact damage/wear, resources, all nine prior
+actors/life/death/breath and reference inventories remain checked. Source21
+migrates to27 with explicitly staged weapon/position/restraint/seed; all other
+input state is exact apart from declared absent timing/process fields. One
+Health write `-0.830322265625`, weapon55.875→55.57500076293945, one attack
+Fatigue debit140→132.2, no replay. Both post-contact images were directly
+reviewed: named Dreth/full HUD/weapon name-icon; no held-mesh/contact-frame or
+audio acceptance claim. No runtime combat draw occurs in this branch.
+
+Normal executable SHA-256 `409e3b65ae4356674dfc4881f776c77a9c895f1b138fd9447d6fa427f8459587`. Epochs12/17401882→13/17416942 on boot
+`a80f9d5d-d691-4275-a06f-c8a6dcb4a3f8`. Input SHA-256
+`6c36bb0ace92571a8941ba101e30aed2c8f6d6b5c76be44174fc16d0ddf7ba2c`; first save `f8b702ad3c69885f60ea92c2b6c18ad6810cbff5ca75f640df3a4b0afb3a8e89`;
+second save `a03e9aa72655d791c23881bb605cec75c8a01fe30fb7a415eb0c69b4d4846807`. References34674→35522→36289;
+nonempty inventories2021→2093→2151. Compiler/script diagnostics and unexpected
+log findings remain empty. S3 remains in progress and all later open gates
+require completion; this is not full armor/contact/campaign acceptance.

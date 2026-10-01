@@ -584,6 +584,8 @@ namespace ESM4
             throw std::runtime_error("Unsupported TES4 runtime-state version " + std::to_string(mVersion));
         if (mProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state requires the Oblivion game profile");
+        if (mVersion < 27 && mCombatRngState != 1)
+            throw std::runtime_error("Native combat random state requires runtime schema27");
         if (mNextDynamicSerial == 0)
             throw std::runtime_error("TES4 runtime-state dynamic serial must be non-zero");
         if (!validCalendar(CalendarInstant{ mClock.mYear, mClock.mMonth, mClock.mDay, mClock.mHour })
@@ -1549,6 +1551,8 @@ namespace ESM4
                 writer.floating(clock);
             }
         }
+        if (mVersion >= 27)
+            writer.integer(mCombatRngState);
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2177,6 +2181,8 @@ namespace ESM4
                     throw std::runtime_error("Duplicate TES4 native animation clock");
             }
         }
+        if (result.mVersion >= 27)
+            result.mCombatRngState = reader.integer<std::uint32_t>();
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();
@@ -2820,6 +2826,8 @@ namespace ESM4
             }
             stream << ']';
         }
+        if (mVersion >= 27)
+            stream << ",\"combat_rng_state\":" << mCombatRngState;
         stream << "}";
         return stream.str();
     }

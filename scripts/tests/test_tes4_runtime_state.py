@@ -1533,5 +1533,30 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state["schema_version"] = 25
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
+    def test_combat_random27_unsigned_seed_wire_and_legacy_migration(self):
+        for seed in (0, 1, 0x7fffffff, 0x80000000, 0xffffffff):
+            state = make_m14_state()
+            state["schema_version"] = 27
+            state["combat_rng_state"] = seed
+            payload = state_io.encode_payload(state)
+            self.assertEqual(payload[-4:], struct.pack("<I", seed))
+            loaded = state_io.decode_payload(payload)
+            self.assertEqual(loaded["combat_rng_state"], seed)
+            self.assertEqual(loaded["ai_rng_state"], state["ai_rng_state"])
+            self.assertEqual(state_io.encode_payload(loaded), payload)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-1])
+            state["schema_version"] = 26
+            if seed == 1:
+                old = state_io.decode_payload(state_io.encode_payload(state))
+                self.assertNotIn("combat_rng_state", old)
+            else:
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for bad in (-1, 1 << 32, 1.0, True, "1", None):
+            state = make_state()
+            state["schema_version"] = 27
+            state["combat_rng_state"] = bad
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
 if __name__ == "__main__":
     unittest.main()

@@ -182,6 +182,14 @@ namespace MWMechanics
     // Signed native Damage-channel deltas, already resolved by contact policy.
     // Geometry, mitigation, wear quantities and reactions are caller contracts.
     // Prepared instance conditions publish atomically with resource deltas.
+    struct OblivionCombatRandomTransition
+    {
+        std::uint32_t mExpectedState;
+        std::uint32_t mNextState;
+        unsigned mDraws;
+    };
+    inline constexpr unsigned MaxPhysicalContactRandomDraws = 32;
+
     struct OblivionPhysicalContactDeltas
     {
         float mAttackerFatigue = 0;
@@ -191,6 +199,7 @@ namespace MWMechanics
         // the distinct float store rather than adding the two Fatigue deltas.
         float mVictimBlockFatigue = 0;
         std::vector<OblivionPhysicalConditionChange> mConditionChanges{};
+        std::optional<OblivionCombatRandomTransition> mRandomTransition{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -206,6 +215,7 @@ namespace MWMechanics
         friend class OblivionActorLifeAdoption;
         class PreparedNonPlayerView;
         ESM4::ActionLedger mActions;
+        std::uint32_t mCombatRngState = 1;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
@@ -276,6 +286,10 @@ namespace MWMechanics
     public:
         OblivionActorLifeAdoption guardLifeAdoption(const MWWorld::Ptr& actor, MWWorld::Player* player = nullptr);
         void clear();
+        std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
+        // Preparation does not advance live state. The owned contact publishes
+        // the checked transition with all resources/conditions and consumption.
+        OblivionCombatRandomTransition prepareCombatRandom(unsigned draws) const;
         float actorManagerTime() const noexcept { return mActorManagerTime; }
         void advanceFrameClock(float duration);
         float elapsedSinceActorUpdate(const ESM::FormKey& actor, float time) const;

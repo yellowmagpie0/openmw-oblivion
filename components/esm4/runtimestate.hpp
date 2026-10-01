@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 26;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 27;
 
     struct RuntimeContentIdentity
     {
@@ -387,6 +387,9 @@ namespace ESM4
         std::vector<RuntimeScriptInstance> mScriptInstances;
         std::vector<RuntimeQuestState> mQuests;
         std::uint64_t mAiRngState = 1;
+        // v27: profile-owned combat stream, independent of AI/world scheduling.
+        // Zero is a valid CRT seed. Older saves initialize this stream at one.
+        std::uint32_t mCombatRngState = 1;
         std::vector<RuntimeActorAiState> mActorAi;
         std::vector<RuntimePathPointState> mPathPoints;
         std::vector<RuntimeCompanionRelation> mCompanions;
