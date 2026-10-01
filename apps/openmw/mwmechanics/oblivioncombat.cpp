@@ -869,11 +869,39 @@ namespace MWMechanics
             && life && life->mPhase == ESM4::ActorLifePhase::Alive;
     }
 
+    bool OblivionCombatService::bindMeleePlayback(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto* state = findMeleeState(actor);
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!state || !state->mStrike || state->mStrike->mActionId != id
+            || !values || values->mProcess != ESM4::ActorValueProcess::Active
+            || !values->mProcessAction || (*values->mProcessAction != -1
+                && *values->mProcessAction != 2 && *values->mProcessAction != 3)
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive)
+            return false;
+        const std::int16_t code = state->mStrike->mContactCommitted ? 3 : 2;
+        const auto previous = *values->mProcessAction;
+        setProcessAction(actor, code);
+        if (previous != code)
+            Log(Debug::Verbose) << "M15 melee action: actor=" << actor.serialize() << " id=" << id << " action=" << code;
+        return true;
+    }
+
+    void OblivionCombatService::clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mActorValues.find(actor);
+        if (found != mActorValues.end() && found->second.mProcess == ESM4::ActorValueProcess::Active
+            && (found->second.mProcessAction == 2 || found->second.mProcessAction == 3))
+            found->second.mProcessAction = -1;
+    }
+
     bool OblivionCombatService::finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
     {
         const auto found = mMeleeStates.find(actor);
         if (found == mMeleeStates.end() || !found->second.mStrike || found->second.mStrike->mActionId != id)
             return false;
+        clearMeleePlaybackAction(actor);
         if (isActionPending(id, actor))
             consumeAction(id, actor);
         else
@@ -902,7 +930,13 @@ namespace MWMechanics
         mActionOwners.erase(id);
         const auto found = mMeleeStates.find(actor);
         if (found != mMeleeStates.end() && found->second.mStrike && found->second.mStrike->mActionId == id)
+        {
             found->second.mStrike->mContactCommitted = true;
+            const auto values = mActorValues.find(actor);
+            if (values != mActorValues.end() && values->second.mProcess == ESM4::ActorValueProcess::Active
+                && values->second.mProcessAction == 2)
+                values->second.mProcessAction = 3;
+        }
     }
 
     std::uint64_t OblivionCombatService::allocateAction()
@@ -941,7 +975,10 @@ namespace MWMechanics
         mActionOwners.erase(id);
         const auto melee = mMeleeStates.find(actor);
         if (melee != mMeleeStates.end() && melee->second.mStrike && melee->second.mStrike->mActionId == id)
+        {
+            clearMeleePlaybackAction(actor);
             melee->second.mStrike.reset();
+        }
         return true;
     }
 
@@ -959,6 +996,9 @@ namespace MWMechanics
             it = mActionOwners.erase(it);
             ++count;
         }
+        const auto melee = mMeleeStates.find(actor);
+        if (melee != mMeleeStates.end() && melee->second.mStrike)
+            clearMeleePlaybackAction(actor);
         mMeleeStates.erase(actor);
         return count;
     }

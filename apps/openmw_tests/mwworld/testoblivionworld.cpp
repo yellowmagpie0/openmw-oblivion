@@ -2675,6 +2675,106 @@ namespace
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
     }
 
+    TEST(OblivionWorldTest, NativeMeleePlaybackPublishesAttackContactFollowthroughAndCompletion)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        service.initializeConstructedActorProcess(key);
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft", 1, {});
+        auto expected = captureNativeActorState(fixture, actor);
+        ASSERT_TRUE(service.bindMeleePlayback(id, key));
+        expected.mNativeActorValues[0].mProcessAction = 2;
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), expected.serializeBinary());
+        const auto before = expected.serializeBinary();
+        EXPECT_THROW(world.commitOblivionPhysicalContact(id, actor, {},
+            {std::numeric_limits<float>::quiet_NaN(), 0, 0}), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, actor, {}, {-7, 0, 0}));
+        EXPECT_EQ(service.getProcessAction(key), 3);
+        const auto contact = captureNativeActorState(fixture, actor);
+        service.restore(ESM4::RuntimeState::deserializeBinary(contact.serializeBinary()), world.getStore());
+        ASSERT_TRUE(service.bindMeleePlayback(id, key));
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), contact.serializeBinary());
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, actor, {}, {-7, 0, 0}));
+        ASSERT_TRUE(service.finishMeleeStrike(id, key));
+        EXPECT_EQ(service.getProcessAction(key), -1);
+        EXPECT_FALSE(service.bindMeleePlayback(id, key));
+        EXPECT_FALSE(service.finishMeleeStrike(id, key));
+    }
+
+    TEST(OblivionWorldTest, NativeMeleePlaybackRejectsForeignBindingsAndPreservesEveryOtherRawAction)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        const auto peer = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        ASSERT_TRUE(world.activateOblivionActor(peer));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        service.initializeConstructedActorProcess(key);
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft", 1, {});
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, actor);
+            state.mReferences.push_back(captureNativeActorState(fixture, peer).mReferences.front());
+            return state;
+        };
+        const auto source = snapshot();
+        EXPECT_FALSE(service.bindMeleePlayback(id + 1, key));
+        EXPECT_FALSE(service.bindMeleePlayback(id, peer.getCellRef().getFormKey()));
+        EXPECT_FALSE(service.bindMeleePlayback(id, ESM::FormKey::dynamic("missing", 1)));
+        EXPECT_EQ(snapshot().serializeBinary(), source.serializeBinary());
+        for (int code = -32768; code <= 32767; ++code)
+        {
+            service.setProcessAction(key, static_cast<std::int16_t>(code));
+            const bool allowed = code == -1 || code == 2 || code == 3;
+            EXPECT_EQ(service.bindMeleePlayback(id, key), allowed);
+            EXPECT_EQ(service.getProcessAction(key), allowed ? 2 : code);
+        }
+        for (int code : {-32768, 0, 2, 3, 4, 5, 6, 32767})
+        {
+            service.restore(source, world.getStore());
+            service.setProcessAction(key, static_cast<std::int16_t>(code));
+            ASSERT_TRUE(service.cancelMeleeStrike(id, key));
+            EXPECT_EQ(service.getProcessAction(key), code == 2 || code == 3 ? -1 : code);
+        }
+    }
+
+    TEST(OblivionWorldTest, NativeMeleePlaybackCancellationClearsOnlyAnOwnedPublishedAction)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        service.initializeConstructedActorProcess(key);
+        for (int transition = 0; transition != 3; ++transition)
+        {
+            const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Right, "handtohandattackright", 1, {});
+            ASSERT_TRUE(service.bindMeleePlayback(id, key));
+            EXPECT_EQ(service.getProcessAction(key), 2);
+            if (transition == 0) { ASSERT_TRUE(service.consumeAction(id, key)); }
+            if (transition == 1) { EXPECT_EQ(service.cancelActorActions(key), 1); }
+            if (transition == 2) { ASSERT_TRUE(service.cancelMeleeStrike(id, key)); }
+            EXPECT_EQ(service.getProcessAction(key), -1);
+        }
+        service.setProcessAction(key, 3);
+        EXPECT_EQ(service.cancelActorActions(key), 0);
+        EXPECT_EQ(service.getProcessAction(key), 3); // No owned strike: do not infer ownership.
+        auto unknown = captureNativeActorState(fixture, actor);
+        unknown.mNativeActorValues[0].mProcessAction.reset();
+        service.restore(unknown, world.getStore());
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft", 1, {});
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_FALSE(service.bindMeleePlayback(id, key));
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+    }
+
     TEST(OblivionWorldTest, NativeBlockingAdmissionUsesRawPostureKnockedAndIntegerParalysis)
     {
         NativeWorldFixture fixture;

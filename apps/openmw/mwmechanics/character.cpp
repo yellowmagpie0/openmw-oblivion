@@ -1432,7 +1432,8 @@ namespace MWMechanics
         if (commitOblivionOrdinaryMeleeMiss(*world, strike.mActionId, mPtr, {}, reach, weaponWeight))
             Log(Debug::Verbose) << "M15 melee miss committed: actor=" << actor.serialize()
                                 << " id=" << strike.mActionId << " fatigue_cost=" << cost
-                                << " before=" << before << " after=" << fatigue();
+                                << " before=" << before << " after=" << fatigue()
+                                << " action=" << service->getProcessAction(actor);
     }
 
     void CharacterController::advanceOblivionMeleePlayback(float duration)
@@ -1562,6 +1563,8 @@ namespace MWMechanics
             return;
         const auto strike = *state->mStrike;
         service->finishMeleeStrike(strike.mActionId, actor);
+        Log(Debug::Verbose) << "M15 melee finished: actor=" << actor.serialize() << " id=" << strike.mActionId
+                            << " action=" << service->getProcessAction(actor);
         mOblivionRenderedStrike = 0;
         mCurrentWeapon.clear();
         mUpperBodyState = UpperBodyState::WeaponEquipped;
@@ -1736,7 +1739,8 @@ namespace MWMechanics
             mCurrentWeapon = strike.mAnimationGroup;
             const float start = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, strike.mAnimationGroup + ": start");
             const float stop = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, strike.mAnimationGroup + ": stop");
-            if (start < 0 || stop <= start || strike.mAnimationTime > stop)
+            if (start < 0 || stop <= start || strike.mAnimationTime > stop
+                || !service->bindMeleePlayback(strike.mActionId, actor))
             {
                 interrupt();
                 active = false;
@@ -1749,8 +1753,16 @@ namespace MWMechanics
                     Log(Debug::Verbose) << "M15 melee restore: actor=" << actor.serialize()
                                         << " id=" << strike.mActionId << " time=" << strike.mAnimationTime;
                     const float fraction = (std::max(start, strike.mAnimationTime) - start) / (stop - start);
-                    playBlendedAnimation(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
-                        false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);
+                    try
+                    {
+                        playBlendedAnimation(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
+                            false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);
+                    }
+                    catch (...)
+                    {
+                        interrupt();
+                        throw;
+                    }
                 }
                 const float window = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, "a:");
                 queueWindow = !power && (strike.mSequenceTiming
@@ -1891,13 +1903,22 @@ namespace MWMechanics
                             service->setMeleeSequenceTiming(id, actor, timing);
                             service->updateMeleeAnimation(id, actor, nativePlayback->mTimelineBegin);
                         }
+                        if (!service->bindMeleePlayback(id, actor))
+                        {
+                            service->cancelMeleeStrike(id, actor);
+                            mOblivionRenderedStrike = 0;
+                            mCurrentWeapon.clear();
+                            return false;
+                        }
                         playBlendedAnimation(group, Priority_Weapon, MWRender::BlendMask_All,
                             false, speed, "start", "stop", 0, 0);
                     }
                     catch (...)
                     {
-                        service->finishMeleeStrike(id, actor);
+                        service->cancelMeleeStrike(id, actor);
                         mOblivionRenderedStrike = 0;
+                        mCurrentWeapon.clear();
+                        mAnimation->disable(group);
                         throw;
                     }
                     if (*selected == ESM4::MeleeStrikeKind::Left || *selected == ESM4::MeleeStrikeKind::Right)

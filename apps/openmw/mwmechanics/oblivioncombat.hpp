@@ -188,6 +188,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
+        void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
@@ -290,6 +291,9 @@ namespace MWMechanics
         // Hard interruption clears held/queued input as well as the owned strike.
         // It is distinct from normal animation completion, which retains queues.
         bool cancelMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
+        // Accepted renderer binding publishes attack2, or followthrough3 for
+        // an already committed contact. It never imports an animation pointer.
+        bool bindMeleePlayback(std::uint64_t id, const ESM::FormKey& actor);
         // No allocation or Alive precondition: safe after death/life cancellation.
         void clearMeleeInput(const ESM::FormKey& actor) noexcept;
         std::uint64_t allocateAction();

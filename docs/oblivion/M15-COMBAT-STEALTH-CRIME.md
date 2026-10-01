@@ -9500,3 +9500,74 @@ acquired-victim damage, block/contact eligibility, condition/reactions, remainin
 family/view/input/interruption courses, console support and all later plan gates.
 Previous checkpoint85 commit13fd23cae9eefd3ba8c39085d0ffbd2052bf9326; verified
 bundle63 SHA25688ff199369bbadf7aeef94220a07b5e004514e54c8620ddfc0bf8dc41456d696.
+
+### Checkpoint87 — owned melee attack/followthrough action publication
+
+An accepted native renderer binding publishes attack2 for its owned strike,
+or followthrough3 for a restored committed contact. Missing/foreign/stale IDs,
+unknown legacy fields, Low/terminal actors and other raw action codes reject
+binding without mutation. Physical contact publishes3 with once-only contact
+consumption after resource preparation/publication; the no-throw transaction
+still has no fallible calculations/callbacks after publication begins. Owned
+completion, explicit consumption, cancellation and actor-action cancellation
+clear2/3 to-1 before renderer observers. Without an owned strike these raw codes
+are preserved. Other signed codes are never treated as ordinary/power subtypes.
+Restore/new-play exceptions cancel ownership/input before disabling playback.
+Logical strike ID/group ownership is persisted separately from original opaque
+process action-data pointers; no pointer-lifetime equivalence is claimed.
+
+S4/native-contact-action-caller-oracle-01 executes original contact caller
+5FD53E..5FD555, actual High action-data getter and full5EFFD0 transition for
+NPC/Player/CREA vtables and seven signed prior codes:21 cases pass and caller
+supplies3. Null action-data/weapon/animation context, no invoked game-function
+stubs. Earlier damage/event-selection and nonnull sequence lifetime are outside
+this bounded slice. Corpus SHA256
+9bfa5f5358e5e93683bbe0027813e5e258c938dd16c19cdce8ca36cd23640b28;
+original executable SHA256 unchanged. Attack2 caller and full raw transition
+matrix remain independently audited at86; no group subtype4/5 maps to raw4/5.
+
+Three new engine cases verify accepted binding, failed resource publication,
+atomic miss/contact followthrough, binary/content restore after consumption,
+no double debit, completion, stale/foreign binding, all65536 signed admission
+codes, other-code preservation, explicit/actor/strike cancellation and unknown
+legacy rejection. S3/native-melee-action-main-02 and sanitized-02 each pass750
+exact engine cases, zero failures/skips/source drift. Tested fingerprint
+528b66fcce0f9de9860adb841de051ecc484837a56d3a51c10e695c36013bbb1.
+ASan/UBSan halt with leak detection disabled. Main/sanitized-01 failures retained:
+the peer fixture omitted its registered reference row, correctly rejected as
+dangling authority; -02 includes both references and removes new dangling-else
+warnings. Earlier Python/component evidence unchanged85/80.
+
+S4/native-melee-action-offscreen-02 loads original schema23 initialized windup.
+Actual accepted playback publishes2; physical miss acquisition debits Fatigue
+140→133 exactly once with action3 before Queue; normal completion publishes-1.
+Both schema26 idle saves recover Fatigue140 through native regeneration and
+retain next2/empty pending/owners. All remaining AV/life/breath/base/death/
+engagement authority and existing inventories are unchanged except declared
+constructor0/-1 for previously unknown raw fields. No fresh-process selection,
+restore or contact replay. New references1287/99nonempty then176/11 are reported
+separately. EpochsPID13/start15398754→PID12/start15422319. Retained offscreen-01
+has correct contact/action behavior but its verifier incorrectly required the
+initial140 from a scheduled at1 query during regeneration (observed137).
+Offscreen-02 schedules queries at0 and proves140 query precedes contact.
+
+S4/native-melee-action-cancel-offscreen-01 uses normal remapped attack input,
+then hides the weapon during windup while attack remains held. Accepted binding
+publishes2 before interruption; no miss/contact or Fatigue debit occurs. Both
+schema26 saves contain raw-1, absent strikes, cleared held/queued input, consumed
+ID1/next2 and no fresh selection/restore. Other authority is preserved apart
+from constructor raw defaults. EpochsPID13/start15409933→PID12/start15422317.
+The first verifier's local expected-actor variable shadowed scenario expectations;
+failed verifier is retained and corrected assertion names pass without rerunning
+or altering engine evidence. Actual animation-callback saves remain open.
+
+Both courses use engine SHA256
+2436ad6fea1aff9c9f9ab467a045c4cf97455691f1ec29d6bf561bef4997d34f.
+Independent reports, input/pristine hashes, typed save decode and distinct epochs
+pass. All four final-course captures were directly reviewed: idle/cleared-weapon
+prison scene and full HUD. This is not successful-hit mitigation, power/CREA
+contact, opponent policy, perception/audio or full S4 acceptance. S2/S3 remain
+in progress and S4–S14 open. Next: acquired-victim native damage, block/armor/
+condition/reactions and all remaining plan gates. Previous checkpoint86 commit
+2a247600a6210e880af671e679843bbdd5e56438; verified bundle64 SHA256
+1b3738434062392cf2e233224ea6aa4e4954a9645ba771e140be9b71d1daad6f.
