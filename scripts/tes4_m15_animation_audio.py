@@ -29,10 +29,12 @@ DEFAULT_EXPECTATIONS = {
 }
 
 
-def write_fixture(output: Path, key_editor_id: str) -> dict:
+def write_fixture(output: Path, key_editor_id: str, phase_keys: str = "complete") -> dict:
     """Create a tone SOUN and an ordinary group with a positive/missing Sound key."""
     if not isinstance(key_editor_id, str) or not re.fullmatch(r"[A-Za-z0-9_]{1,64}", key_editor_id):
         raise ValueError("fixture key editor ID must be 1–64 ASCII letters, digits or underscores")
+    if not isinstance(phase_keys, str) or phase_keys not in ("complete", "missing-hit"):
+        raise ValueError("fixture phase keys must be complete or missing-hit")
     output.mkdir(parents=True, exist_ok=False)
     unsigned = lambda value: struct.pack("<I", value)
     integer = lambda value: struct.pack("<i", value)
@@ -50,16 +52,32 @@ def write_fixture(output: Path, key_editor_id: str) -> dict:
 
     mesh = output / "meshes/characters/_1stperson/handtohandattackleft.kf"
     mesh.parent.mkdir(parents=True)
-    data = b"NetImmerse File Format, Version 4.0.0.2\n" + unsigned(0x04000002) + unsigned(5)
-    data += string("NiSequenceStreamHelper") + string("SyntheticM15Audio") + integer(1) + integer(3)
-    data += string("NiTextKeyExtraData") + integer(2) + unsigned(0) + unsigned(5)
-    for time, key in [(0, "handtohandattackleft: start"), (.15, "Sound: " + key_editor_id),
-                      (.2, "hit"), (.6, "a:r"), (1, "handtohandattackleft: stop")]:
+    # A real TES4-format controller sequence retains original key coordinates.
+    # The parser regression uses the same 20.0.0.5/Bethesda0 record layout.
+    data = b"Gamebryo File Format, Version 20.0.0.5\n" + unsigned(0x14000005)
+    data += b"\x01" + unsigned(10) + unsigned(4) + unsigned(0) + bytes(3)
+    data += struct.pack("<H", 4)
+    for kind in ("NiControllerSequence", "NiTextKeyExtraData", "NiTransformInterpolator", "NiStringPalette"):
+        data += string(kind)
+    data += struct.pack("<4H", 0, 1, 2, 3) + unsigned(0)
+    data += string("HandToHandAttackLeft") + unsigned(1) + unsigned(1)
+    data += integer(2) + integer(-1) + integer(3) + unsigned(0)
+    data += unsigned(0xffffffff) * 4
+    data += floating(1) + integer(1) + unsigned(2) + floating(1) + floating(0) + floating(1)
+    data += integer(-1) + string("Bip01") + integer(3)
+    keys = [(0, "Start"), (.15, "Sound: " + key_editor_id)]
+    if phase_keys == "complete":
+        keys.append((.2, "Hit"))
+    keys += [(.6, "a:R"), (1, "End")]
+    data += string("") + unsigned(len(keys))
+    for time, key in keys:
         data += floating(time) + string(key)
-    data += string("NiStringExtraData") + integer(-1) + unsigned(0) + string("Bip01")
-    data += string("NiKeyframeController") + integer(-1) + struct.pack("<H", 8)
-    data += floating(1) + floating(0) + floating(0) + floating(1) + integer(-1) + integer(4)
-    data += string("NiKeyframeData") + unsigned(0) + unsigned(0) + unsigned(0) + unsigned(1) + integer(0)
+    for value in (0, 0, 0, 1, 0, 0, 0, 1):
+        data += floating(value)
+    data += integer(-1)
+    palette = b"Bip01\0"
+    data += unsigned(len(palette)) + palette + unsigned(len(palette))
+    data += unsigned(1) + integer(0)
     mesh.write_bytes(data)
     header = record("TES4", 0, subrecord("HEDR", floating(1) + unsigned(1) + unsigned(0x801)))
     sound = record("SOUN", 0x800, subrecord("EDID", b"M15FixtureTone\0")
@@ -74,13 +92,15 @@ def write_fixture(output: Path, key_editor_id: str) -> dict:
         stream.writeframes(b"".join(struct.pack("<h", round(16000 * math.sin(2 * math.pi * 1000 * n / 48000)))
                                   for n in range(12000)))
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "phase_keys": phase_keys,
+        "keyframe_version": "20.0.0.5",
         "key_editor_id": key_editor_id,
         "sound_editor_id": "M15FixtureTone",
         "local_sound_form_id": "00000800",
         "tone_frequency_hz": 1000,
         "tone_seconds": .25,
-        "scope": "Synthetic native SOUN and shared NetImmerse4 loader; no stock TES4 KF or contact/audio acceptance.",
+        "scope": "Synthetic native SOUN and Gamebryo20 controller-sequence fixture; no stock KF or contact/audio acceptance.",
         "files": {str(path.relative_to(output)): hashlib.sha256(path.read_bytes()).hexdigest()
                   for path in (mesh, output / "M15AudioFixture.esp", tone)},
     }
@@ -158,6 +178,7 @@ def main() -> int:
     fixture = commands.add_parser("fixture")
     fixture.add_argument("--output", type=Path, required=True)
     fixture.add_argument("--key-editor-id", required=True)
+    fixture.add_argument("--phase-keys", choices=("complete", "missing-hit"), default="complete")
     check = commands.add_parser("check")
     check.add_argument("--wave", type=Path, required=True)
     check.add_argument("--expectations", type=Path, required=True)
@@ -165,7 +186,7 @@ def main() -> int:
     check.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "fixture":
-        result = write_fixture(args.output, args.key_editor_id)
+        result = write_fixture(args.output, args.key_editor_id, args.phase_keys)
     else:
         if args.output.exists():
             raise FileExistsError(args.output)

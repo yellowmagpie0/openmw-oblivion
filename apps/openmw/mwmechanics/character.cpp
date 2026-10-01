@@ -35,6 +35,7 @@
 #include <components/settings/values.hpp>
 
 #include <components/sceneutil/positionattitudetransform.hpp>
+#include <components/sceneutil/keyframe.hpp>
 
 #include "../mwrender/animation.hpp"
 
@@ -1555,7 +1556,35 @@ namespace MWMechanics
             {
                 const float start = mAnimation->getTextKeyTimeInGroup(group, group + ": start");
                 const float stop = mAnimation->getTextKeyTimeInGroup(group, group + ": stop");
-                if (start >= 0 && stop > start)
+                bool nativeKeysValid = true;
+                if (*selected <= ESM4::MeleeStrikeKind::Right && mPtr.getType() != ESM::REC_CREA4)
+                {
+                    const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
+                    nativeKeysValid = metadata != nullptr;
+                    if (metadata)
+                    {
+                        std::vector<ESM4::MeleeTextKey> rawKeys;
+                        rawKeys.reserve(metadata->mTextKeys.size());
+                        for (const auto& [time, text] : metadata->mTextKeys)
+                            rawKeys.push_back({time, text});
+                        try
+                        {
+                            const auto keys = ESM4::ordinaryMeleeKeyTimes(rawKeys);
+                            nativeKeysValid = keys.mMatchedCount == 4;
+                            if (nativeKeysValid)
+                                (void)ESM4::advanceOrdinaryMeleePhase(
+                                    ESM4::OrdinaryMeleePhase::Start, 0, 0, keys.mTimes);
+                        }
+                        catch (const std::invalid_argument&)
+                        {
+                            nativeKeysValid = false;
+                        }
+                    }
+                    if (!nativeKeysValid)
+                        Log(Debug::Verbose) << "M15 melee start rejected: actor=" << actor.serialize()
+                                            << " reason=native-ordinary-keys group=" << group;
+                }
+                if (start >= 0 && stop > start && nativeKeysValid)
                 {
                     const auto id = service->beginMeleeStrike(actor, *selected, group, speed, weaponBase);
                     service->setMeleeInput(actor, input); // Publish input before text-key/Lua callbacks.

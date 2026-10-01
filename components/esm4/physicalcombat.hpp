@@ -6,6 +6,7 @@
 #include <optional>
 #include <span>
 #include <cstddef>
+#include <string_view>
 
 namespace ESM4
 {
@@ -30,6 +31,22 @@ namespace ESM4
     // then resolved character context state2. Missing objects stay missing.
     bool nativeAttackAirborne(std::optional<std::uint8_t> animationGroup,
         std::optional<std::uint32_t> characterState);
+
+    struct MeleeTextKey
+    {
+        float mTime;
+        std::string_view mText;
+    };
+    struct OrdinaryMeleeKeys
+    {
+        std::array<float, 4> mTimes{};
+        std::uint8_t mMatchedCount = 0;
+        friend bool operator==(const OrdinaryMeleeKeys&, const OrdinaryMeleeKeys&) = default;
+    };
+    // Original51B688: consume Start/Hit/a:/End in authored order, rather
+    // than collecting independently named keys or sorting a renderer map.
+    // Missing/unwritten slots retain the original zero initialization.
+    OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
 
     enum class OrdinaryMeleePhase : std::uint8_t { Start, Contact, Queue, End };
     // Original ordinary subtype4 slots: Start, Hit, a:, End. Advance at most

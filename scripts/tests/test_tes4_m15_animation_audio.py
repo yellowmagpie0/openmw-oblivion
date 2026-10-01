@@ -88,3 +88,24 @@ class NativeAnimationAudioTest(unittest.TestCase):
         changed = [name for name in left["files"] if left["files"][name] != right["files"][name]]
         self.assertEqual(changed, ["meshes/characters/_1stperson/handtohandattackleft.kf"])
         self.assertEqual(left["sound_editor_id"], right["sound_editor_id"])
+
+    def test_native_fixture_phase_negative_changes_only_kf_and_rejects_options_before_write(self):
+        output = self.root / "bad-argument"
+        for value in ("", "unknown", None, 1, []):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    audio.write_fixture(output, "M15FixtureTone", value)
+                self.assertFalse(output.exists())
+        positive = self.root / "complete"
+        negative = self.root / "missing-hit"
+        left = audio.write_fixture(positive, "M15FixtureTone")
+        right = audio.write_fixture(negative, "M15FixtureTone", "missing-hit")
+        changed = [name for name in left["files"] if left["files"][name] != right["files"][name]]
+        self.assertEqual(changed, ["meshes/characters/_1stperson/handtohandattackleft.kf"])
+        self.assertEqual(left["keyframe_version"], "20.0.0.5")
+        self.assertEqual(right["phase_keys"], "missing-hit")
+        data = (positive / changed[0]).read_bytes()
+        self.assertTrue(data.startswith(b"Gamebryo File Format, Version 20.0.0.5\n"))
+        self.assertIn(b"NiControllerSequence", data)
+        self.assertIn(b"\x03\0\0\0Hit", data)
+        self.assertNotIn(b"\x03\0\0\0Hit", (negative / changed[0]).read_bytes())

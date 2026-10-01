@@ -2837,6 +2837,12 @@ namespace
         EXPECT_EQ(original->mStopTime, 12);
         EXPECT_EQ(original->mFrequency, 1.25f);
         EXPECT_EQ(original->mTextKeys[1], (std::pair<float, std::string>{10.25f, "HiT"}));
+        const auto rawOrdinaryKeys = [](const SceneUtil::ControllerSequenceMetadata& metadata) {
+            std::vector<ESM4::MeleeTextKey> keys;
+            for (const auto& [time, text] : metadata.mTextKeys) keys.push_back({time, text});
+            return ESM4::ordinaryMeleeKeyTimes(keys);
+        };
+        EXPECT_EQ(rawOrdinaryKeys(*original), (ESM4::OrdinaryMeleeKeys{{10, 10.25f, 11, 12}, 4}));
         EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "hit"), .25f);
         animation->play("handtohandattackleft", MWRender::AnimPriority(1), MWRender::BlendMask_All,
             false, 1, "start", "stop", 0, 0);
@@ -2849,6 +2855,7 @@ namespace
         EXPECT_EQ(winning->mStartTime, 20);
         EXPECT_EQ(winning->mFrequency, .75f);
         EXPECT_EQ(winning->mTextKeys[1], (std::pair<float, std::string>{20.5f, " Hit "}));
+        EXPECT_EQ(rawOrdinaryKeys(*winning), (ESM4::OrdinaryMeleeKeys{{20, 0, 0, 0}, 1}));
         animation->source("handtohandattackleft.kf", "aliasattack");
         const auto alias = animation->getControllerSequenceMetadata("aliasattack");
         ASSERT_NE(alias, nullptr);

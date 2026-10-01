@@ -4412,3 +4412,66 @@ cancellation types, first/third-person/device/FPS campaigns or full S4. S2/S3
 remain in progress and S4–S14 remain open. Previous checkpoint63 commit
 `05cf9e0cd070cfc848f4e46180faed4bf1bf6b36`; verified bundle41 SHA256
 `5ceb9d7df5d2cb9410a4a37de7e69101897c272e48adee3381392f98789546be`.
+
+## Ordered native ordinary-key ingestion and admission (checkpoint65)
+
+The pure raw-key reader follows the original authored counter: Start, Hit, a:,
+End must be consumed in that order. Case-insensitive prefix matches retain suffix
+semantics, whitespace is not trimmed, and the original LF/CRLF and NUL behavior
+is preserved. Missing slots start at zero; a matched key advances the counter
+even when its time is <=-1 and is not stored. Supported raw times are finite;
+nonfinite inputs explicitly reject rather than claiming original equivalence.
+The winning native controller metadata now gates new NPC/player ordinary L/R
+strike admission before action allocation/playback. Missing, ambiguous, malformed
+or unsupported phase keys reject. Powers and native creature groups remain on
+their existing paths. This does not validate restored strike metadata, advance
+phases, dispatch contact or prove all queued replacement/cancellation ordering.
+
+Independent pinned original executable a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+ran1728 full raw-key ingestion loops (S4/native-attack-key-full-loop-oracle-04)
+and the production helper matches every stored float bit and authored counter
+(S4/native-ordinary-key-comparison-01). The original loop runs51B688–51BA50,
+using preallocated group20/count4 storage and only a diagnostic logger stub;
+KF parsing/allocation, terminal group validation and actual actor playback are
+outside this probe. Report SHA256
+9626c0d85c902bf2d3c2873459fdff9553038bbd4ec5561d740132271394f119;
+comparison corpus SHA256
+34c07fdf704734b955eadf822cd3ea34137c29af1e3e96ce953ee68b33aa27d8.
+Earlier loops01/02 retain content-lookup faults rather than hiding them with a
+Sound stub. A separate20-case allocation probe proves zero initialization;
+480 activation cases characterize empty-controlled native sequence activation,
+including positive-ease state2, for future clock wiring, not production timing.
+
+The editable synthetic audio writer now generates genuine Gamebryo20.0.0.5
+NiControllerSequence metadata, plus an explicit missing-Hit fixture option.
+This independent TES4 writer is not TES4 support in the imported TES3 MCP.
+Stock ordinary admission/save/restart passes with action1, unadvanced Start
+phase and saved time0.4000000059604645; restart completes without a new ID.
+Missing-Hit normal keyboard admission rejects before allocation, leaves next1
+with no pending action/owner/strike, and fresh restart does not reselect/restore.
+Both courses preserve all nine native actors' value/life/breath/base/death/combat
+fields and public80/80/140/alive values. Schemas21 migrate to22. Reviewed captures
+show textured geometry and readable full HUD bars; post-save imagery does not
+establish the earlier saved phase. Evidence: S4/native-ordinary-key-admission-
+offscreen-01 and S4/native-ordinary-key-rejection-offscreen-01.
+
+S4/native-animation-sound-wave-03 repeats real OpenAL stereo PCM mixing with
+complete native phase keys. Positive RMS0.20566245777217138 and tone energy
+fraction0.9999999940007696 pass declared thresholds; missing-editor-ID negative
+tone RMS6.674746935512792e-7 passes its <=0.001 limit. Only the fixture Sound
+text-key editor ID differs. Separate fresh-process epochs, input copies,
+fixture hashes, native saved state and playback logs verify. Both images were
+directly reviewed. Audio input is unsupported in this session; numeric PCM
+verification passes without perceptual listening acceptance. This is synthetic
+sound routing, not stock sound or contact/damage acceptance.
+
+Main checks pass2004 component,720 engine and224 Python cases; ASan/UBSan checks
+pass479 TES4 component and720 engine cases with leaks disabled. Exact inventories
+and XML agree with no failures/skips or source drift. Tested source fingerprint
+`3b6dfa4a1daefd496bbe3687ee94da191786e2088e155ca88a35a9c5dd5e16fd`; runtime binary SHA256
+85db68e3b5d15078177c624c03804486da579ddf2358472a8f6b69856d1706c3.
+Known older compiler warnings remain part of the open final warning gate.
+S2/S3 remain in progress; S4–S14 remain open. Native phase clock/speed correction
+and contact dispatch remain unwired. Previous checkpoint64 commit
+6975e66b4f5c9c24b2dacda1708c4f6ced29bd23; verified bundle42 SHA256
+6f526cf922446f38c509192aa91dbe79014fde992ee1b0ff1341991bed80f728.

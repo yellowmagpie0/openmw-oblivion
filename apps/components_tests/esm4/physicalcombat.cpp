@@ -9,6 +9,8 @@
 #include <cmath>
 #include <limits>
 #include <random>
+#include <vector>
+#include <string_view>
 
 namespace
 {
@@ -1983,5 +1985,66 @@ TEST(ESM4PhysicalCombat, MeleeSequenceOffsetPreservesNativeStoresAndSignedZeroIn
         EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, bad, 1, .1f), std::invalid_argument);
         EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, bad, .1f), std::invalid_argument);
         EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, 1, bad), std::invalid_argument);
+    }
+}
+
+TEST(ESM4PhysicalCombat, OrdinaryKeyLoopConsumesAuthoredSequenceRatherThanIndependentNames)
+{
+    const auto parse = [](const std::vector<std::string_view>& texts) {
+        std::vector<ESM4::MeleeTextKey> keys;
+        for (std::size_t i = 0; i < texts.size(); ++i)
+            keys.push_back({static_cast<float>((i + 1) * .25), texts[i]});
+        return ESM4::ordinaryMeleeKeyTimes(keys);
+    };
+    // Literal observations from original51B688 raw-key loop (both x87 modes).
+    EXPECT_EQ(parse({"Start", "Hit", "a:R", "End"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, .5f, .75f, 1.f}, 4}));
+    EXPECT_EQ(parse({"Hit", "Start", "a:R", "End"}),
+        (ESM4::OrdinaryMeleeKeys{{.5f, 0, 0, 0}, 1}));
+    EXPECT_EQ(parse({"Start", "Start", "Hit", "a:R", "End"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, .75f, 1.f, 1.25f}, 4}));
+    EXPECT_EQ(parse({"Start", "Hit", "Hit", "a:R", "End"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, .5f, 1.f, 1.25f}, 4}));
+    EXPECT_EQ(parse({"Start", "Hit", "End", "a:R"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, .5f, 1.f, 0}, 3}));
+    EXPECT_EQ(parse({" Start", "Hit", "a:R", "End"}), ESM4::OrdinaryMeleeKeys{});
+    EXPECT_EQ(parse({"START suffix", "hitter", "A:L suffix", "ending"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, .5f, .75f, 1.f}, 4}));
+    EXPECT_EQ(parse({"Start", "Hit", "a:R", "End", "End"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, .5f, .75f, 1.f}, 4}));
+    for (const auto text : {"Start\r\nHit\r\na:R\r\nEnd",
+             "\r\nStart\r\nHit\r\na:L\r\nEnd", "Start\nHit\na:R\nEnd"})
+        EXPECT_EQ(parse({text}), (ESM4::OrdinaryMeleeKeys{{.25f, .25f, .25f, .25f}, 4}));
+    EXPECT_EQ(parse({"Start\rHit\ra:R\rEnd"}),
+        (ESM4::OrdinaryMeleeKeys{{.25f, 0, 0, 0}, 1}));
+    EXPECT_EQ(ESM4::ordinaryMeleeKeyTimes({}), ESM4::OrdinaryMeleeKeys{});
+    const std::array nulKeys{ESM4::MeleeTextKey{.25f, std::string_view("Start\0\nHit", 10)},
+        ESM4::MeleeTextKey{.5f, "a:R"}, ESM4::MeleeTextKey{1, "End"}};
+    EXPECT_EQ(ESM4::ordinaryMeleeKeyTimes(nulKeys),
+        (ESM4::OrdinaryMeleeKeys{{.25f, 0, 0, 0}, 1}));
+}
+
+TEST(ESM4PhysicalCombat, OrdinaryKeyMatchingAdvancesWithoutStoringAtOrBelowNegativeOne)
+{
+    for (float time : {-2.f, -1.f, std::nextafter(-1.f, 0.f), -.5f, -0.f, 0.f,
+             std::numeric_limits<float>::denorm_min(), .25f})
+    {
+        const std::array input{ESM4::MeleeTextKey{time, "Start"},
+            ESM4::MeleeTextKey{time, "Hit"}, ESM4::MeleeTextKey{time, "a:R"}, ESM4::MeleeTextKey{time, "End"}};
+        const auto result = ESM4::ordinaryMeleeKeyTimes(input);
+        EXPECT_EQ(result.mMatchedCount, 4);
+        for (const auto stored : result.mTimes)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(stored), std::bit_cast<std::uint32_t>(time > -1 ? time : 0.f));
+    }
+}
+
+TEST(ESM4PhysicalCombat, OrdinaryKeyParserRejectsNonfiniteTimesInSupportedDomain)
+{
+    for (float bad : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+    {
+        const std::array input{ESM4::MeleeTextKey{0, "Start\nHit\na:R\nEnd"},
+            ESM4::MeleeTextKey{bad, "unrelated"}};
+        EXPECT_THROW(ESM4::ordinaryMeleeKeyTimes(input), std::invalid_argument);
     }
 }
