@@ -875,6 +875,21 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::cancelMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        if (!finishMeleeStrike(id, actor))
+            return false;
+        clearMeleeInput(actor);
+        return true;
+    }
+
+    void OblivionCombatService::clearMeleeInput(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end())
+            found->second.mInput = {};
+    }
+
     void OblivionCombatService::consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept
     {
         mActions.consume(id);

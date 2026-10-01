@@ -1588,10 +1588,13 @@ namespace MWMechanics
             {
                 const auto strike = *state->mStrike;
                 interruptedGroup = strike.mAnimationGroup;
-                service->finishMeleeStrike(strike.mActionId, actor);
+                service->cancelMeleeStrike(strike.mActionId, actor);
                 Log(Debug::Verbose) << "M15 melee interrupt: actor=" << actor.serialize()
                                     << " id=" << strike.mActionId << " group=" << interruptedGroup;
             }
+            // Queued input can also survive after the strike was already removed
+            // by a life transition. Clear it before any animation-end observer.
+            service->clearMeleeInput(actor);
             mOblivionRenderedStrike = 0;
             mCurrentWeapon.clear();
             mUpperBodyState = drawn ? UpperBodyState::WeaponEquipped : UpperBodyState::None;
@@ -1615,8 +1618,6 @@ namespace MWMechanics
                 mWeaponType = ESM::Weapon::None;
                 mWeapon = {};
             }
-            if (service->findMeleeState(actor))
-                service->setMeleeInput(actor, {});
             return false;
         }
         MWWorld::Ptr weapon;
@@ -1639,7 +1640,6 @@ namespace MWMechanics
                     || record->mData.speed <= 0)
                 {
                     interrupt();
-                    service->setMeleeInput(actor, {});
                     return false; // Bow/staff have their own native controller path.
                 }
                 family = record->mData.type % 2 ? "twohand" : "onehand";

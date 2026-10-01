@@ -287,6 +287,11 @@ namespace MWMechanics
         // Read the prior animation phase before its next frame update.
         bool isOrdinaryMeleeContactPending(std::uint64_t id, const ESM::FormKey& actor) const;
         bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
+        // Hard interruption clears held/queued input as well as the owned strike.
+        // It is distinct from normal animation completion, which retains queues.
+        bool cancelMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
+        // No allocation or Alive precondition: safe after death/life cancellation.
+        void clearMeleeInput(const ESM::FormKey& actor) noexcept;
         std::uint64_t allocateAction();
         // An owned intent requires initialized Alive authority. Allocation
         // publishes ID and owner together; animation handles are never stored.

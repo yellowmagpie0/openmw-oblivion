@@ -2965,6 +2965,79 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionArmorRating(legacy, actor), std::invalid_argument);
     }
 
+    TEST(OblivionWorldTest, MeleeCancellationClearsHeldAndQueuedInputWithoutSpendingResources)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801), other = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(actor)); ASSERT_TRUE(world.activateOblivionActor(other));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey(), peer = other.getCellRef().getFormKey();
+        const ESM4::RuntimeMeleeInput held{.35f, true, false, ESM4::MeleeQueuedStrike::Power};
+        service.setMeleeInput(key, held); service.setMeleeInput(peer, held);
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        const auto peerId = service.beginMeleeStrike(peer, ESM4::MeleeStrikeKind::Right, "handtohandattackright");
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, actor);
+            state.mReferences.push_back(captureNativeActorState(fixture, other).mReferences[0]);
+            return state;
+        };
+        const auto before = snapshot();
+        EXPECT_FALSE(service.cancelMeleeStrike(peerId, key));
+        EXPECT_FALSE(service.cancelMeleeStrike(id, peer));
+        EXPECT_FALSE(service.cancelMeleeStrike(0, key));
+        EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
+        ASSERT_TRUE(service.cancelMeleeStrike(id, key));
+        ASSERT_NE(service.findMeleeState(key), nullptr);
+        EXPECT_FALSE(service.findMeleeState(key)->mStrike);
+        EXPECT_EQ(service.findMeleeState(key)->mInput, ESM4::RuntimeMeleeInput{});
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_TRUE(service.isActionPending(peerId, peer));
+        EXPECT_EQ(service.findMeleeState(peer)->mInput, held);
+        const auto after = snapshot();
+        EXPECT_EQ(after.mNativeActorValues, before.mNativeActorValues);
+        EXPECT_EQ(after.mNativeActorLife, before.mNativeActorLife);
+        EXPECT_EQ(after.mPendingDeathEvents, before.mPendingDeathEvents);
+        EXPECT_EQ(after.mPhysicalActions.mNext, before.mPhysicalActions.mNext);
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(service.findMeleeState(key)->mInput, ESM4::RuntimeMeleeInput{});
+        EXPECT_FALSE(service.findMeleeState(key)->mStrike);
+        EXPECT_TRUE(service.isActionPending(peerId, peer));
+        EXPECT_FALSE(service.cancelMeleeStrike(id, key));
+        EXPECT_EQ(snapshot().serializeBinary(), after.serializeBinary());
+    }
+
+    TEST(OblivionWorldTest, MeleeCancellationAfterCommittedContactDoesNotDebitAgainOrCreateInput)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        ASSERT_TRUE(service.advanceOrdinaryMeleePhase(id, key, 0, .3f, {0, .2f, .6f, 1}));
+        service.setMeleeInput(key, {.35f, true, false, ESM4::MeleeQueuedStrike::Power});
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, actor, {}, {-7, 0, 0}));
+        ASSERT_TRUE(service.findMeleeState(key)->mStrike->mContactCommitted);
+        const auto values = *service.findActorValues(key);
+        const auto life = *service.findActorLife(key);
+        ASSERT_TRUE(service.cancelMeleeStrike(id, key));
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_FALSE(service.findMeleeState(key)->mStrike);
+        EXPECT_EQ(service.findMeleeState(key)->mInput, ESM4::RuntimeMeleeInput{});
+        EXPECT_EQ(*service.findActorValues(key), values);
+        EXPECT_EQ(*service.findActorLife(key), life);
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_FALSE(service.cancelMeleeStrike(id, key));
+        service.clearMeleeInput(ESM::FormKey::dynamic("missing", 1));
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        ASSERT_TRUE(world.killOblivionActor(actor, {}));
+        const auto dead = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_NO_THROW(service.clearMeleeInput(key));
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), dead);
+    }
+
     TEST(OblivionWorldTest, OrdinaryContactGateUsesPriorPhaseAndCannotReplayAfterMiss)
     {
         NativeWorldFixture fixture;

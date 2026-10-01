@@ -9234,3 +9234,44 @@ all later gates. Existing ordinary strike begin/end also need to publish the
 appropriate native process action; raw action getters alone do not establish
 that dispatcher. Previous checkpoint80 commitd3ac10ac4649c04caea739156b37d5b66221beec;
 verified bundle58 SHA256b499415579dcfd485f6a940de0239d8ac032585c54333910d2f496820d9d8f28.
+
+### Checkpoint82 — clear interrupted melee input before animation callbacks
+
+Hard cancellation now consumes the matching owned strike and clears held/queued
+input. Normal completion retains queues. A separate nonallocating clear helper
+works after death has removed the strike, without the Alive precondition of the
+input setter. Character interruption clears authority/input/renderer identity
+before disabling animation and emitting its end notification. Wrong-owner or
+stale cancellation remains a no-op; cancellation after committed contact does
+not spend resources again.
+
+Two new engine cases verify these contracts, complete two-actor binary/content
+restore, unrelated pending action preservation, resource/life/death-event
+stability and missing/dead cleanup. S3/native-melee-cancel-main-02 and
+native-melee-cancel-sanitized-01 each pass all738 cases with exact inventories,
+zero failures/skips/source drift. ASan/UBSan leak detection is disabled. Tested
+fingerprint47cb33c1ef00b32fd5c3e00c1d10a06ae3c31675ae80ec6087f1be395411b880.
+The retained main-01 compile failure was confined to three new test API names;
+corrected production code was unchanged.
+
+S4/native-melee-cancel-input-offscreen-02 passes actual draw/held attack/weapon
+hide during ordinary windup, save/quit/fresh-load/resave. Both schema26 saves
+have consumed action1, next2, no pending owners/strikes, empty held/queued input,
+and Fatigue140. All nine actor values and other native life/breath/base/death/
+engagement fields are preserved (legacy21 absent process fields normalize to
+unknown, never inferred). Fresh process emits no melee selection or restore.
+Engine SHA256b98048fe3431fc180ddabde01463402d2eb730944d91a4ee9e43de9d6e57450a;
+epochs start_ticks14570399 and14577229, PID12, same recorded boot ID. Both captures
+were directly reviewed: weapon hidden, dungeon scene and full resource bars.
+The first course01 reached contact before hide and correctly failed; it remains
+retained. Course02 uses a declared1fps input window and hides while attack is
+still held, releasing after cancellation. Its first verifier wrongly compared
+absent legacy fields to explicit null; verify-02 retains every value assertion
+and checks those fields as unknown. This is normal-input cancellation/restart
+evidence, not callback-triggered save acceptance or a full combat stage gate.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: held-block input and native
+posture/animation scheduling, actual strike action publication, acquired-victim
+damage/condition/reactions and the remaining plan gates. Previous checkpoint81
+commitc3a24c29b99be9f964d7102914864c8f4dc2f563; verified bundle59 SHA256
+e3ccc6ca2fc60216c0f09fa69a5d849f3de4079deeb9aa289364c2fcfcecc873.
