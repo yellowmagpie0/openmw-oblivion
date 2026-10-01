@@ -5288,3 +5288,33 @@ all later gates. Existing ordinary strike begin/end also need to publish the
 appropriate native process action; raw action getters alone do not establish
 that dispatcher. Previous checkpoint80 commitd3ac10ac4649c04caea739156b37d5b66221beec;
 verified bundle58 SHA256b499415579dcfd485f6a940de0239d8ac032585c54333910d2f496820d9d8f28.
+
+## Ordinary WEAP entry and separate AttackBonus query
+
+Full original484F80 takes the actor and a float attack multiplier, not an actor
+and a boolean. Its weapon branch calls float AV virtual+288 for Luck7,
+Strength0 (Agility3 for bow), and type-selected skill. Actual4BB060 maps types
+0/1→Blade14,2/3/4→Blunt16,5→Marksman28. Each float is stored and9828C0
+converts it before full547070. Current item condition is read as double and
+divided by the unsigned original maximum before its float ratio store.
+485125 then queries integer virtual+284 for AttackBonus42 and adds that signed
+integer to the stored product. A zero supplied multiplier leaves only that
+bonus; it is not an ordinary damage outcome.
+
+S4/native-weapon-entry-oracle-02 runs the full entry/product with ordinary1 in
+both x87 modes,1152 observations/576 profiles and two16.625 original sword
+controls. Boundary readers supply current float AVs, base Fatigue, damage and
+condition; skill selection/conversion/ratio/product/bonus addition execute in
+the pinned original executable. Corpus SHA256
+9d26ff1d49f3756c612dd5f6548f47c15b8ca43027845da9b1d4ac773bbdf51f.
+Oracle-01 supplies multiplier0 and is retained solely as a corrected-context
+control; the first C++ corpus comparison fails, exposing that setup mistake.
+
+The new actual World query supports only ordinary melee WEAP types0..3,
+Player/NPC equipped-instance bindings and finite original maximum>0. NPC
+float and integer modifier paths remain distinct, including signed bonuses.
+It validates authority before inventory caching and reads native condition
+and winning definitions instead of the TES3 projection. It does not dispatch
+contact, mutate condition, resolve immunity/block/reactions or execute magic.
+The repeated-query/state tests and sanitizer checks are engine integration
+evidence; actual normal-input sword/contact/wear campaigns remain open.

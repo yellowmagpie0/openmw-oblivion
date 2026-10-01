@@ -3498,6 +3498,135 @@ namespace
         EXPECT_FALSE(service.isOrdinaryMeleeContactPending(queued, key));
     }
 
+    TEST(OblivionWorldTest, NativeOrdinaryWeaponQueryMatchesOriginalEntryOnPlayerAndNpcBindings)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); MWClass::Weapon::registerSelf(); world.setupPlayer();
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc nativePlayer{}; nativePlayer.mId = {7, 1}; nativePlayer.mFormKey = base;
+        nativePlayer.mIsTES4 = true; nativePlayer.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(nativePlayer, base);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr(), npc = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", .5f},
+            {"fDamageWeaponMult", .5f}, {"fDamageSkillBase", .2f}, {"fDamageSkillMult", 1.5f},
+            {"fDamageWeaponConditionBase", .5f}, {"fDamageWeaponConditionMult", .5f},
+            {"fDamageStrengthBase", .75f}, {"fDamageStrengthMult", .5f}, {"fActorLuckSkillMult", .4f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+        }
+        for (unsigned type = 0; type < 4; ++type)
+        {
+            ESM4::Weapon native{}; native.mId = {0x940 + type, 0}; native.mData.type = type;
+            native.mData.health = 100; native.mData.damage = 20; native.mData.speed = native.mData.reach = 1;
+            store.getWritable<ESM4::Weapon>().insertStatic(native,
+                ESM::FormKey::content("headless.esm", 0x940 + type));
+            ESM::Weapon projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+            projected.mData.mType = ESM::Weapon::ShortBladeOneHand;
+            projected.mData.mHealth = 1; // Deliberately wrong: native definition must supply maximum/damage/type.
+            projected.mData.mChop[0] = projected.mData.mChop[1] = 255;
+            store.insertStatic(projected);
+        }
+        struct Row { unsigned type; float skill, luck, strength, condition, fatigue; int bonus; std::uint32_t health; };
+        const Row rows[] = {
+#include "weaponentry_expected.inc"
+        };
+        const auto initial = captureNativeActorState(fixture, npc);
+        for (const auto actor : {player, npc})
+        {
+            unsigned installed = 4;
+            for (const auto& row : rows)
+            {
+                SCOPED_TRACE(::testing::Message() << (actor == player ? "Player" : "NPC") << ','
+                    << row.type << ',' << row.skill << ',' << row.luck << ',' << row.strength << ','
+                    << row.condition << ',' << row.fatigue << ',' << row.bonus);
+                if (row.type != installed)
+                {
+                    ESM4::RuntimeInventoryItem item;
+                    item.mBase = ESM::FormKey::content("headless.esm", 0x940 + row.type);
+                    item.mCount = 1; item.mCondition = row.condition; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+                    const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                        store, ESM::FormKeyResolver({"headless.esm"}), {item});
+                    auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+                    actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
+                    installed = row.type;
+                }
+                auto state = initial;
+                const auto key = actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+                auto& values = *std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& x) { return x.mActor == key; });
+                for (auto [av, amount] : {std::pair{0, row.strength}, {7, row.luck}, {14, row.skill}, {16, row.skill}})
+                {
+                    values.mValues[av] = {};
+                    values.mValues[av].mBase = std::trunc(amount) - 1;
+                    // Split across native modifier channels: NPC integer AV
+                    // truncation differs from float composition then conversion.
+                    const float part = (amount - std::trunc(amount) + 1) / 2;
+                    values.mValues[av].mModifiers[0] = part;
+                    values.mValues[av].mModifiers[1] = part;
+                }
+                values.mValues[10] = {}; values.mValues[10].mBase = 140;
+                values.mValues[10].mModifiers[2] = row.fatigue - 140;
+                values.mValues[42] = {};
+                if (actor == npc)
+                {
+                    const float part = row.bonus < 0 ? -.875f : .875f;
+                    values.mValues[42].mModifiers[0] = part;
+                    values.mValues[42].mModifiers[1] = static_cast<float>(row.bonus) + part;
+                }
+                else values.mValues[42].mModifiers[1] = static_cast<float>(row.bonus);
+                service.restore(state, store);
+                ASSERT_EQ(actor == player ? service.getPlayerIntegerValue(42)
+                    : service.getNonPlayerIntegerValue(actor, 42), row.bonus);
+                ASSERT_EQ(actor == player ? service.getPlayerValue(14) : service.getNonPlayerValue(actor, 14), row.skill);
+                ASSERT_EQ(actor == player ? service.getPlayerValue(7) : service.getNonPlayerValue(actor, 7), row.luck);
+                ASSERT_EQ(actor == player ? service.getPlayerValue(0) : service.getNonPlayerValue(actor, 0), row.strength);
+                auto& inventory = actor.getClass().getInventoryStore(actor);
+                const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                ASSERT_NE(weapon, inventory.end()); weapon->getCellRef().setNativeItemCondition(row.condition);
+                const auto before = captureNativeActorState(fixture, npc).serializeBinary();
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(MWMechanics::oblivionOrdinaryWeaponContactDamage(
+                    world, actor, *weapon)), row.health);
+                EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before);
+                EXPECT_EQ(weapon->getCellRef().getNativeItemCondition(), row.condition);
+            }
+        }
+        const auto playerWeapon = *player.getClass().getInventoryStore(player).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto npcWeapon = *npc.getClass().getInventoryStore(npc).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, playerWeapon), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, player, npcWeapon), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, {}, npcWeapon), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, {}), std::invalid_argument);
+        const auto unavailable = addNativeNpc(fixture, 0x803);
+        ASSERT_EQ(unavailable.getRefData().getCustomData(), nullptr);
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, unavailable, npcWeapon), std::invalid_argument);
+        EXPECT_EQ(unavailable.getRefData().getCustomData(), nullptr);
+        const auto beforeErrors = captureNativeActorState(fixture, npc).serializeBinary();
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, npc), std::invalid_argument);
+        auto invalid = *store.get<ESM4::Weapon>().search(ESM::FormId{0x943, 0});
+        invalid.mData.health = 0;
+        store.getWritable<ESM4::Weapon>().insertStatic(invalid, ESM::FormKey::content("headless.esm", 0x943));
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, npcWeapon), std::invalid_argument);
+        invalid.mData.health = 100; invalid.mData.type = 5;
+        store.getWritable<ESM4::Weapon>().insertStatic(invalid, ESM::FormKey::content("headless.esm", 0x943));
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, npcWeapon), std::invalid_argument);
+        invalid.mData.type = 3;
+        store.getWritable<ESM4::Weapon>().insertStatic(invalid, ESM::FormKey::content("headless.esm", 0x943));
+        ESM4::GameSetting bad{}; bad.mId = {0x952, 0}; bad.mEditorId = "fDamageWeaponMult";
+        bad.mData = std::int32_t{1};
+        store.getWritable<ESM4::GameSetting>().insertStatic(bad, ESM::FormKey::content("headless.esm", 0x952));
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, npcWeapon), std::invalid_argument);
+        EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), beforeErrors);
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(legacy, npc, npcWeapon), std::invalid_argument);
+    }
+
     TEST(OblivionWorldTest, OrdinaryUnarmedBlockMitigatesAfterArmorAndPreparesSeparateNoviceCost)
     {
         NativeWorldFixture fixture;

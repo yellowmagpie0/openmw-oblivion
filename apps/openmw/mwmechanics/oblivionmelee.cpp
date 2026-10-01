@@ -10,6 +10,7 @@
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadweap.hpp>
 #include "../mwworld/worldimp.hpp"
 #include <components/esm/records.hpp>
 #include <components/esm4/combatsettings.hpp>
@@ -373,6 +374,68 @@ namespace MWMechanics
         const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, remaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction};
+    }
+
+    float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& item)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        const auto player = world.getPlayerPtr();
+        if (!service || attacker.isEmpty() || (attacker != player && attacker.getType() != ESM::REC_NPC_4)
+            || item.isEmpty() || item.getType() != ESM::REC_WEAP)
+            throw std::invalid_argument("native ordinary weapon query requires a Player/NPC and equipped weapon");
+        // Reject absent or mismatched authority before the shared class can
+        // lazily construct its inventory/custom-data cache.
+        if (attacker == player)
+            (void)service->getPlayerValue(8);
+        else
+            (void)service->getNonPlayerValue(attacker, 8);
+        auto& inventory = attacker.getClass().getInventoryStore(attacker);
+        const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        if (item.getContainerStore() != &inventory || carried == inventory.end() || *carried != item)
+            throw std::invalid_argument("native ordinary weapon query requires the attacker's equipped instance");
+        const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
+        const auto* form = id.getIf<ESM::FormId>();
+        const auto* weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+        if (!weapon || weapon->mData.type > 3 || weapon->mData.health == 0)
+            throw std::invalid_argument("native ordinary weapon query requires a finite-domain melee definition");
+        const auto current = [&](std::uint8_t av) { return attacker == player ? service->getPlayerValue(av)
+            : service->getNonPlayerValue(attacker, av); };
+        const auto integer = [&](std::uint8_t av) {
+            const double value = std::trunc(double(current(av)));
+            if (!std::isfinite(value) || value < std::numeric_limits<std::int32_t>::min()
+                || value > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("native weapon float AV conversion exceeds int32 domain");
+            return static_cast<std::int32_t>(value);
+        };
+        // Original item reader returns double. Missing condition means the
+        // unsigned original maximum, before division and the float ratio store.
+        const auto& ref = item.getCellRef();
+        const double condition = ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())
+            : ref.getCharge() < 0 ? double(weapon->mData.health)
+            : double(ref.getCharge()) + ref.getChargeIntRemainder();
+        if (!std::isfinite(condition) || condition < 0)
+            throw std::invalid_argument("invalid native weapon condition");
+        const float ratio = static_cast<float>(condition / weapon->mData.health);
+        const auto key = attacker == player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
+        const auto baseFatigue = attacker == player ? service->getPlayerBaseValue(10)
+            : service->getNonPlayerBaseValue(key, 10, world.getStore());
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const float damage = ESM4::weaponDamage({integer(weapon->mData.type < 2 ? 14 : 16), integer(7),
+            integer(0), weapon->mData.damage, ratio, ESM4::combatFatigueRatio(current(10), baseFatigue)},
+            ESM4::buildPhysicalCombatSettings(settings));
+        const auto bonus = attacker == player ? service->getPlayerIntegerValue(42)
+            : service->getNonPlayerIntegerValue(attacker, 42);
+        const float total = static_cast<float>(double(damage) + bonus);
+        if (!std::isfinite(total))
+            throw std::invalid_argument("nonfinite native weapon damage");
+        return total;
     }
 
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)

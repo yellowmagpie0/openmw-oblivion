@@ -80,6 +80,11 @@ namespace MWMechanics
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         float normalizedDifficulty, bool sneaking);
 
+    // Read-only pre-mitigation ordinary melee WEAP query on the actual equipped
+    // instance. Native float AV conversions and integer AttackBonus are distinct.
+    float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& item);
+
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor);
 
 }

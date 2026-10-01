@@ -9806,3 +9806,61 @@ S2/S3 remain in progress; S4–S14 remain open. Next: native weapon query/contac
 condition wear and reactions, opponent policy and all remaining plan gates.
 Previous checkpoint89 commit90248d3cd5ce8917222dc2b672029daf23304ff4; verified
 bundle67 SHA256374e466af9c44511df642335230577d8f73e176af7a6bf6c2b691b0adf0df9f1.
+
+### Checkpoint91 — native ordinary weapon entry query
+
+A read-only ordinary melee WEAP adapter now resolves the actual Player/NPC,
+its equipped carried-right instance and winning native definition. Blade types
+0/1 use AV14, Blunt2/3 use AV16; float current Skill/Luck/Strength queries are
+converted to integers after composition, unlike the separate integer
+AttackBonus42 getter. Native current condition/original unsigned maximum,
+current/base Fatigue and winning settings feed the original damage product at
+ordinary multiplier1, followed by the signed AttackBonus float store. The
+shared projected health/damage/type values do not supply native arithmetic.
+Absent condition uses the original maximum before the ratio store. Missing or
+mismatched authority is rejected before the class can lazily construct shared
+inventory/custom data. Unowned/wrong items, non-melee types, zero original
+maximum, invalid setting types and out-of-finite-domain inputs diagnose.
+
+S4/native-weapon-entry-oracle-02 executes full original484F80,4BB060 type/skill
+mapping,5F4880 ratio,9828C0 conversions, full547070/luck/fatigue product and
+485125 integer AttackBonus addition. Supplied virtual AV/base-Fatigue, damage
+and item-condition readers are documented boundaries. All1152 observations/
+576 profiles pass in both x87 modes, plus two sword controls at16.625 matching
+the independently observed original-12 first-hit result. Corpus SHA256
+9d26ff1d49f3756c612dd5f6548f47c15b8ca43027845da9b1d4ac773bbdf51f.
+The initial oracle-01 mistakenly supplied zero as the second argument to484F80,
+which is the attack multiplier rather than a boolean. Those consistent
+zero-multiplier/AttackBonus-only observations are retained with an explicit
+context correction and cannot serve as ordinary-hit expected values.
+Main-01 correctly rejected that wrongly selected corpus (754 pass/one fail).
+The diagnostic argument trace and corrected oracle prevent changing production
+math merely to match a mistaken emulator boundary.
+
+One new engine case reads every frozen profile on both actual Player and NPC
+bindings:1152 queries over all four melee types, fractional Skill/Luck/Strength,
+condition50.5/100/125.5, Fatigue0/140 and bonus-3/0/7. Native modifier splits
+make NPC float composition then conversion differ from its integer getter;
+AttackBonus splits separately distinguish the integer path. It checks actual
+getters, read-only captured authority and item condition, deliberately wrong
+projected health1/damage255, wrong-owner/empty/non-item/legacy-profile contexts,
+zero native maximum, bow exclusion and malformed winning GMST type. The initial
+zero stub fails expected outcomes. Admission-baseline-01 independently exposes
+a rejected uninitialized actor acquiring shared custom data; early native
+validation fixes this and preserves a null cache on rejection.
+
+Main/sanitize-03 passed before the admission regression; final main/sanitize-04
+include its correction. Main-04 passes755 engine and234 Python cases;
+sanitize-04 passes755 engine cases, exact inventories/XML, zero failures/skips
+and stable fingerprint 26ef0783693fe643d7035928e7698188f54cc01827130016d8beb4db4e8cdee9. ASan/UBSan halt on errors with leaks disabled.
+No component implementation changed; checkpoint89's2042 component cases are
+previous evidence, not a new run. Existing compilation warnings are retained.
+
+This query does not yet dispatch a WEAP hit, mutate condition, execute an
+enchantment, apply block/sneak/resistance/mastery, produce reactions/events or
+close campaign gates. The acquired ordinary contact still admits its supported
+unarmed branch and otherwise returns unsupported. S2/S3 remain in progress,
+S4–S14 open. Next: native condition publication and acquired weapon contacts,
+armor/block wear and reactions, opponent policy and all remaining plan gates.
+Previous checkpoint90 commit2a5b34c216df4a5f2cc7a79f479388e675d4b9a9;
+verified bundle68 SHA2561d2098e4271d520150f1c6539918bdcb93089c722d54200d8d85d97f5c77eb19.
