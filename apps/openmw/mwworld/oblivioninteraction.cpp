@@ -98,6 +98,7 @@ namespace MWWorld
         {
             switch (kind)
             {
+                case OblivionInteractionKind::Actor:
                 case OblivionInteractionKind::Activator:
                     return "activate";
                 case OblivionInteractionKind::Book:
@@ -123,7 +124,8 @@ namespace MWWorld
 
     void OblivionInteractionAction::executeImp(const Ptr& actor)
     {
-        if (actor != MWBase::Environment::get().getWorld()->getPlayerPtr())
+        if (mKind != OblivionInteractionKind::Actor
+            && actor != MWBase::Environment::get().getWorld()->getPlayerPtr())
             return;
 
         // World is the sole MWBase::World implementation in the game executable.
@@ -373,7 +375,7 @@ namespace MWWorld
         if (dispatchOblivionActivation(ptr, actor))
             return;
 
-        if (kind == OblivionInteractionKind::Door)
+        if (kind == OblivionInteractionKind::Door || kind == OblivionInteractionKind::Actor)
         {
             activateOblivionReferenceDefault(ptr, actor);
             return;
@@ -507,6 +509,7 @@ namespace MWWorld
                 report("looted");
                 break;
             }
+            case OblivionInteractionKind::Actor:
             case OblivionInteractionKind::Door:
                 break;
             case OblivionInteractionKind::Book:

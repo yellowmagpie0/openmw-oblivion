@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "purpose": "Synthetic S4 stationary NPC: ordinary activation starts one controller-driven attack; real attack Fatigue cost stops combat. No scripted damage/hit/resource writes. Unchanged winning master NPC stats.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779392,
+    "editor_id": "M15StationaryStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779393,
+    "editor_id": "M15StationaryOpponent",
+    "sha256": "076b5f86e35b3f84b7d31fa6188e2e93d6e3390b7be366d62f4f2cd1491acbaf"
+  }
+}

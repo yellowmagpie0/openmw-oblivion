@@ -10420,3 +10420,60 @@ RNG deltas and fresh-process continuation in normal and instrumented engines.
 The native NPC renderer currently has no carried-weapon visibility override;
 held-weapon visuals, contact/reaction frames and audio also remain S4 work.
 All full M15 completion gates remain open.
+
+
+### Checkpoint 104 — authored NPC activation fixture and native actor activation dispatch
+
+The editable stationary-opponent JSON/ObScript and `tes4_m15_stationary_fixture.py`
+reproduce a hash-pinned native plugin. Only Dreth's CSTY/SCRI links change;
+all other NPC subrecords retain their exact bytes, order and multiplicities.
+The authored deterministic style chooses ordinary attacks only. OnActivate
+starts combat with Player; GameMode observes the actual attack Fatigue loss,
+stops combat, and persists local `fighting=2`. No script supplies damage,
+item wear, resource loss, animation keys or random draws. Generated licensed
+payloads stay in ignored evidence. This is fork SCTX compilation; it is not
+original-game SCDA acceptance or TES4 MCP support.
+
+Ordinary NPC/CREA activation previously returned talk/open/horse actions directly,
+bypassing the existing native OnActivate hook. Their activation now returns a
+delayed native actor interaction action in the Oblivion profile. It dispatches
+OnActivate before the default action; default activation uses the existing
+recursion guard. Other profiles retain their existing activation. Actor event
+receivers may be activated by another actor, rather than inheriting the earlier
+Player-only M5 item-action restriction. The regression executes the real class
+activation twice, checks receiver-owned locals, restores and executes a third
+time, and compares the complete two-actor combat snapshot before/after.
+
+`S4/native-activation-main-01` passes all **765 engine and 239 Python tests**;
+`S4/native-activation-sanitized-01` passes all **765 engine tests**, with exact
+inventories/XML, zero skips/failures and stable source fingerprint
+`5a080536bfc0c56ef595ae7b8555187b97c61b39c15df7bac4922c519b3e699d`.
+ASan/UBSan halt on error; leak checks are disabled. Unchanged component tests
+remain checkpoint102 evidence. Three new Python fixture cases cover exact
+preservation/reproduction and malformed identity/profile/hash/source rejection.
+
+The retained `native-stationary-opponent-offscreen-01` course compiled9993
+units without failures but ordinary Space activation entered ActionTalk and
+failed on a missing legacy talk setting. It had no StartCombat/hit; the failed
+waits, peaceful early quit and logs remain. With the activation correction,
+`native-stationary-opponent-offscreen-02/first` records real Space input,
+StartCombat, one selected-target NPC animation contact (owned id1), attack
+debit155->147.2, Rust56->55.70000076293945, three owned armor-selection draws
+(seed1->415139642), StopCombat, local2 and a real F5 save. This is **not a passed
+numerical contact/restart course**: `numerical-rejection.json` preserves Health
+and Player armor-condition disagreement with the preregistered original probes.
+The original full equipped entry returns4 for Player HeavyArmor15/Iron250.125;
+the production nearest-round wrapper returns3. A direct instruction trace shows
+488DCE compares the negative fractional difference with static double0 atA2FC68,
+then adds1; the earlier checkpoint100 half-up interpretation missed this branch.
+Correct and broaden that rule next; preserve these expectations and failed
+runtime evidence. No continuation or instrumented runtime pass is claimed.
+
+Original probes `native-npc-weapon-runtime-oracle-02` (two x87 words),
+`native-player-armor-entry-oracle-03` (two), and
+`native-npc-player-armor-contact-oracle-02` (three seeds/two words) identify
+executable SHA a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Their full entry/selection/wear paths and supplied getter/condition boundaries
+are recorded separately; emulated paths alone are not gameplay acceptance.
+S4 normal/instrumented numerical save/restart, carried weapon rendering,
+contact/reaction frames/audio and the remaining M15 stages stay open.

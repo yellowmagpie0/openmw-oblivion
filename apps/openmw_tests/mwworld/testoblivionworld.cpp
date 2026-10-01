@@ -4,6 +4,7 @@
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwclass/armor.hpp"
 #include "apps/openmw/mwworld/oblivionprofileservices.hpp"
+#include "apps/openmw/mwworld/oblivioninteraction.hpp"
 #include "apps/openmw/mwrender/animation.hpp"
 #include "apps/openmw/mwmechanics/character.hpp"
 #include "apps/openmw/mwsound/nativeaudioutils.hpp"
@@ -64,7 +65,7 @@ namespace
         std::unique_ptr<MWLua::LuaManager> mLuaManager;
         std::unique_ptr<MWSound::SoundManager> mSoundManager;
 
-        explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false)
+        explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false, bool activationScript = false)
         {
             mEnvironment.setResourceSystem(mResources);
             mEnvironment.setWorld(mWorld);
@@ -94,14 +95,27 @@ namespace
             std::array<std::uint8_t, 8> attributes;
             attributes.fill(40);
             const auto header = record(ESM4::REC_TES4, 0,
-                subrecord(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x801})));
+                subrecord(ESM::fourCC("HEDR"), bytes(1.f)
+                    + bytes(std::uint32_t{activationScript ? 2u : 1u})
+                    + bytes(std::uint32_t{activationScript ? 0x881u : 0x801u})));
             const auto npc = record(ESM4::REC_NPC_, 0x800,
                 subrecord(ESM::fourCC("EDID"), std::string("Player\0", 7))
                 + subrecord(ESM::fourCC("ACBS"), bytes(config).substr(0, 16))
-                + subrecord(ESM::fourCC("DATA"), bytes(skills) + bytes(std::uint32_t{100}) + bytes(attributes)));
+                + subrecord(ESM::fourCC("DATA"), bytes(skills) + bytes(std::uint32_t{100}) + bytes(attributes))
+                + (activationScript ? subrecord(ESM::fourCC("SCRI"), bytes(std::uint32_t{0x880})) : std::string{}));
             {
                 std::ofstream stream(mDirectory / "headless.esm", std::ios::binary);
                 stream << header << npc;
+                if (activationScript)
+                {
+                    const std::array<std::uint32_t, 6> local{1, 0, 0, 0, 1, 0};
+                    stream << record(ESM4::REC_SCPT, 0x880,
+                        subrecord(ESM::fourCC("EDID"), std::string("ActivationReceiver\0", 19))
+                        + subrecord(ESM::fourCC("SLSD"), bytes(local))
+                        + subrecord(ESM::fourCC("SCVR"), std::string("calls\0", 6))
+                        + subrecord(ESM::fourCC("SCTX"), "scn ActivationReceiver\nshort calls\n"
+                            "Begin OnActivate\nset calls to calls + 1\nEnd\n"));
+                }
                 if (!stream)
                     throw std::runtime_error("failed to write native world fixture");
             }
@@ -196,6 +210,49 @@ namespace
         reader.getRecHeader();
         fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
     }
+    TEST(OblivionWorldTest, NativeNpcActivationDispatchesScriptBeforeDefaultAndPreservesReceiverOnRestore)
+    {
+        NativeWorldFixture fixture(false, false, true);
+        const auto target = addNativeNpc(fixture, 0x900);
+        const auto activator = addNativeNpc(fixture, 0x901);
+        auto& world = fixture.mWorld;
+        world.getWorldModel().registerPtr(target);
+        world.getWorldModel().registerPtr(activator);
+        ASSERT_TRUE(world.activateOblivionActor(target));
+        ASSERT_TRUE(world.activateOblivionActor(activator));
+        auto* host = world.getOblivionScriptManager();
+        ASSERT_NE(host, nullptr);
+        const auto capture = [&] {
+            auto state = captureNativeActorState(fixture, target);
+            state.mReferences.push_back(captureNativeActorState(fixture, activator).mReferences.front());
+            return state.serializeBinary();
+        };
+        const auto baseline = capture();
+        const auto execute = [&] {
+            auto action = target.getClass().activate(target, activator);
+            ASSERT_NE(dynamic_cast<MWWorld::OblivionInteractionAction*>(action.get()), nullptr);
+            action->execute(activator, true);
+        };
+        execute();
+        execute();
+        ESM4::RuntimeState state;
+        host->capture(state);
+        ASSERT_EQ(state.mScriptInstances.size(), 1u);
+        const auto& instance = state.mScriptInstances.front();
+        EXPECT_EQ(instance.mContext, target.getCellRef().getFormKey());
+        ASSERT_EQ(instance.mLocals.size(), 1u);
+        EXPECT_EQ(std::get<std::int64_t>(instance.mLocals.front()), 2);
+        EXPECT_EQ(capture(), baseline);
+        EXPECT_FALSE(world.isOblivionDefaultActivation());
+        host->restore(state);
+        execute();
+        ESM4::RuntimeState after;
+        host->capture(after);
+        ASSERT_EQ(after.mScriptInstances.size(), 1u);
+        EXPECT_EQ(std::get<std::int64_t>(after.mScriptInstances.front().mLocals.front()), 3);
+        EXPECT_EQ(capture(), baseline);
+    }
+
     TEST(OblivionWorldTest, actualReaderLegacyMarkerAdoptionIsTransactional)
     {
         NativeWorldFixture fixture;

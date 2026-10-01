@@ -8,6 +8,7 @@ namespace MWWorld
     enum class OblivionInteractionKind
     {
         Activator,
+        Actor,
         Book,
         Container,
         Door,

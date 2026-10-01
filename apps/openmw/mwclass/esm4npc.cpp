@@ -31,6 +31,7 @@
 #include "../mwworld/customdata.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/worldimp.hpp"
 
@@ -389,6 +390,11 @@ namespace MWClass
     std::unique_ptr<MWWorld::Action> ESM4Npc::activate(
         const MWWorld::Ptr& ptr, const MWWorld::Ptr&) const
     {
+        auto* nativeWorld = dynamic_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        if (nativeWorld && nativeWorld->getGameProfile() == ESM::GameProfile::Oblivion
+            && !nativeWorld->isOblivionDefaultActivation())
+            return std::make_unique<MWWorld::OblivionInteractionAction>(ptr, MWWorld::OblivionInteractionKind::Actor);
         const MWMechanics::CreatureStats& stats = getCreatureStats(ptr);
         if (stats.isDead())
             return std::make_unique<MWWorld::ActionOpen>(ptr);

@@ -5507,3 +5507,19 @@ was mislabelled victim Fatigue and a wrong stop sent execution into unconfigured
 continuation. Original5FF759 establishes that slot as absorbed armor fraction;
 zero skips selection. Corrected02 uses explicit actual branch stops and checks
 EIP/ESP. No production arithmetic or result corpus was tuned to this failure.
+
+
+Checkpoint104 independently freezes unchanged Dreth (Blade AV14=15, STR40,
+Luck50, full Fatigue155) Rust max56: original weapon query Health bits1065431859,
+weapon wear1050253721 and condition1113509069 in both x87 modes. Player full
+488CB0 Iron1000 hundredths/max300/current250.125 with HeavyArmor15 yields entry4.
+Original concatenated mitigation/selection/full Player guard/mastery wear yields
+Health1064833122, armor condition1132041335; seeds0/1/5540 consume2/3/1 draws to
+505908858/415139642/1188163031. Evidence S4 native-npc-weapon-runtime-oracle-02,
+native-player-armor-entry-oracle-03 and native-npc-player-armor-contact-oracle-02
+records supplied boundaries and original SHA. Actual normal NPC course02
+rejected the frozen Health/armor condition values while matching source wear
+and RNG. Direct original488DCE..488DDB tracing exposes the previous half-up
+wrapper error (threshold atA2FC68 is double0; positive fractional entries
+round upward). This discrepancy remains open pending expanded independent
+original cases, production correction and fresh actual contact/restart runs.
