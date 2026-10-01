@@ -323,6 +323,8 @@ namespace MWMechanics
                 values.mValues[av] = ESM4::resetResurrectionModifiers(values.mValues[av], values.mOwner, av);
             values.mProcess = values.mOwner == ESM4::ActorValueOwner::Player
                 ? ESM4::ActorValueProcess::Active : ESM4::ActorValueProcess::Low;
+            values.mProcessAction = values.mProcess == ESM4::ActorValueProcess::Active
+                ? std::optional<std::int16_t>{-1} : std::nullopt;
             values.mProcessKnockedState = values.mProcess == ESM4::ActorValueProcess::Active
                 ? std::optional<std::int8_t>{0} : std::nullopt;
             life.mPhase = ESM4::ActorLifePhase::Alive;
@@ -1147,8 +1149,12 @@ namespace MWMechanics
         if (activate)
         {
             if (values.mProcess != process)
+            {
                 values.mProcessKnockedState = process == ESM4::ActorValueProcess::Active
                     ? std::optional<std::int8_t>{0} : std::nullopt;
+                values.mProcessAction = process == ESM4::ActorValueProcess::Active
+                    ? std::optional<std::int16_t>{-1} : std::nullopt;
+            }
             values.mProcess = process;
             values.validate();
         }
@@ -2330,6 +2336,28 @@ namespace MWMechanics
             ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
     }
 
+    std::int16_t OblivionCombatService::getProcessAction(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        if (!values)
+            throw std::invalid_argument("native action query requires actor authority");
+        if (values->mProcess == ESM4::ActorValueProcess::Low)
+            return -1;
+        if (!values->mProcessAction)
+            throw std::invalid_argument("native action query has unknown legacy Active state");
+        return *values->mProcessAction;
+    }
+
+    void OblivionCombatService::setProcessAction(const ESM::FormKey& actor, std::int16_t action)
+    {
+        auto found = mActorValues.find(actor);
+        if (found == mActorValues.end())
+            throw std::invalid_argument("native action transition requires actor authority");
+        if (found->second.mProcess == ESM4::ActorValueProcess::Low)
+            return;
+        found->second.mProcessAction = action;
+    }
+
     std::int8_t OblivionCombatService::getProcessKnockedState(const ESM::FormKey& actor) const
     {
         const auto* values = findActorValues(actor);
@@ -2888,6 +2916,8 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 26 && actor.mProcessAction)
+                throw std::invalid_argument("native process action requires an Oblivion v26+ save");
             if (state.mVersion < 25 && actor.mProcessKnockedState)
                 throw std::invalid_argument("native process knocked state requires an Oblivion v25+ save");
             if (state.mVersion < 10 && actor.mPlayerFormValues)

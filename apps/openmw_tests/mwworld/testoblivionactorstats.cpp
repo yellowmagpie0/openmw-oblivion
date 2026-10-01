@@ -1219,6 +1219,7 @@ namespace
         EXPECT_EQ(stats.getFatigue().getCurrent(), 108);
         auto expected = before;
         expected.mProcessKnockedState = 0; // Full reset recreates the active process.
+        expected.mProcessAction = -1;
         for (std::uint8_t av : {8, 9, 10})
             expected.mValues[av].mModifiers[2] = 0;
         EXPECT_EQ(*service.findActorValues(values.mActor), expected);

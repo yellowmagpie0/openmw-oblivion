@@ -178,6 +178,31 @@ namespace MWMechanics
         return world.commitOblivionPhysicalContact(actionId, attacker, {}, {-cost, 0, 0});
     }
 
+    std::int16_t oblivionProcessAction(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || actor.isEmpty())
+            throw std::invalid_argument("native action query requires a native actor");
+        const bool player = actor == world.getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+            throw std::invalid_argument("native action query requires a native actor");
+        // Resolve and validate the actual actor/base binding without importing
+        // a shared animation flag or modifying its actor-value projection.
+        if (player)
+            service->getPlayerValue(8);
+        else
+            service->getNonPlayerValue(actor, 8);
+        return service->getProcessAction(player ? ESM::FormKey::dynamic("player", 1)
+            : actor.getCellRef().getFormKey());
+    }
+
+    bool oblivionBlockingPosture(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        return ESM4::nativeBlockingPosture(oblivionProcessAction(world, actor));
+    }
+
     std::int8_t oblivionKnockedState(MWBase::World& world, const MWWorld::Ptr& actor)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion

@@ -43,6 +43,9 @@ namespace MWMechanics
     // Read native equipped condition and AV authority. This is a query, not
     // damage, block, wear or effect execution; shared TES3 ratings are not used.
     // Resolve actual native actor binding before reading its process byte.
+    std::int16_t oblivionProcessAction(MWBase::World& world, const MWWorld::Ptr& actor);
+    bool oblivionBlockingPosture(MWBase::World& world, const MWWorld::Ptr& actor);
+
     std::int8_t oblivionKnockedState(MWBase::World& world, const MWWorld::Ptr& actor);
 
     // Pre-mitigation unarmed contact damage from live native integer AV getters,

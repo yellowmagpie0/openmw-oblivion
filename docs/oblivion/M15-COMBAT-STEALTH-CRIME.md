@@ -9190,3 +9190,47 @@ query/reset/restore and native held-block control/posture scheduling, followed
 by actual contact damage, condition/reactions and all later acceptance gates.
 Previous checkpoint79 commit7fd7ce33cc75cd452861ebd3a772b42a97c831dd;
 verified bundle57 SHA2565ce06ecf7873fee920dd4e914b4d1bdf1a6faba7b14ba4a68b589604c321286c.
+
+### Checkpoint81 — live native process action authority
+
+Fresh native Active Player/NPC/Creature construction initializes the signed
+process action to-1. Combat-service queries return known Active action codes,
+return-1 for Low, and diagnose missing/unknown legacy Active authority. Low
+raw-code writes do nothing. World adapters validate the actual Player/NPC/
+Creature binding before querying; native block posture compares exactly6.
+Raw-code writes do not mutate AV/life/knocked fields, select animation, or
+pretend to execute the original higher-level selector/action-data lifecycle.
+Low-to-Active construction initializes-1, same-process activation preserves
+known or unknown state. Full reset clears nonplayer action with Low process,
+and recreates Player Active action-1. Capture refuses known action below26.
+
+Three new engine cases cover all65,536 Active NPC action codes with actual
+world queries/exact-six posture and every other actor-value field unchanged;
+all65,536 Low setter no-ops; typed binary/content restore; unknown legacy25
+without inference; activation/reset/missing/foreign actors; and actual Player/
+Creature aliases at signed boundaries. Existing Player reset and restored Low
+NPC expected snapshots now include the independently verified constructor-1;
+all resource/life/death-history assertions remain. Legacy24 knocked fixtures
+explicitly remove the new action field as well, preserving their intended old
+schema rather than relaxing the downgrade validator.
+
+S4/native-process-action-oracle-02 extends checkpoint80 with actual lower-tier
+raw setters60CF60 (ret8) leaving action/data unchanged in all24 lower profiles.
+All65,577 cases pass; the expected query/constructor corpus remains identical,
+SHA25674f3a35463cb4d2410ba35a6dbc1728e4bef89e60052b9458c58fad0763e269a.
+No game-function stubs are invoked. Full higher-level action selection, action-
+data meaning, held-input scheduling, renderer and gameplay remain outside this
+probe. S3/native-action-live-main-01 and native-action-live-sanitized-01 each
+pass all736 engine cases, exact inventories, zero failures/skips/source drift.
+ASan/UBSan leak detection is disabled. Tested fingerprint:
+17b42aa5f5acf811c3f78810d36c0d93e46797604ed49f34bd7392c5e4132a03.
+Unchanged component/Python/cross-codec evidence remains80. No fresh runtime
+block/animation or campaign acceptance is claimed.
+
+S2/S3 remain in progress; S4–S14 remain open. Next: held-block input and native
+posture/animation scheduling, including release/menu/cancellation/save callback
+ordering, then acquired-victim damage with difficulty/condition/reactions and
+all later gates. Existing ordinary strike begin/end also need to publish the
+appropriate native process action; raw action getters alone do not establish
+that dispatcher. Previous checkpoint80 commitd3ac10ac4649c04caea739156b37d5b66221beec;
+verified bundle58 SHA256b499415579dcfd485f6a940de0239d8ac032585c54333910d2f496820d9d8f28.

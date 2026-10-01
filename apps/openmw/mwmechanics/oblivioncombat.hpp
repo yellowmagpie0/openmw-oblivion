@@ -552,6 +552,10 @@ namespace MWMechanics
         // Native process byte, independent of shared animation/recoil flags.
         // Low processes return zero and ignore writes. Unknown Active legacy
         // state is diagnosed until a real native process transition supplies it.
+        // Raw High action authority. Low getter returns -1; unknown legacy
+        // Active state is diagnosed. Selection/render scheduling is separate.
+        std::int16_t getProcessAction(const ESM::FormKey& actor) const;
+        void setProcessAction(const ESM::FormKey& actor, std::int16_t action);
         std::int8_t getProcessKnockedState(const ESM::FormKey& actor) const;
         void setProcessKnockedState(const ESM::FormKey& actor, std::int8_t state);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;
