@@ -1032,6 +1032,19 @@ namespace MWRender
         return nullptr;
     }
 
+    std::string_view Animation::getActiveAnimationGroup(BoneGroup group) const
+    {
+        const auto mask = static_cast<std::size_t>(group);
+        if (mask >= sNumBlendMasks)
+            throw std::invalid_argument("invalid animation body mask");
+        auto active = mStates.end();
+        for (auto state = mStates.begin(); state != mStates.end(); ++state)
+            if (state->second.blendMaskContains(mask)
+                && (active == mStates.end() || active->second.mPriority[group] < state->second.mPriority[group]))
+                active = state;
+        return active == mStates.end() ? std::string_view{} : std::string_view(active->first);
+    }
+
     void Animation::handleTextKey(AnimState& state, std::string_view groupname,
         SceneUtil::TextKeyMap::ConstIterator key, const SceneUtil::TextKeyMap& map)
     {

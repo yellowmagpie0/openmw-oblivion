@@ -219,6 +219,7 @@ namespace MWMechanics
         bool updateWeaponState(float duration);
         bool updateOblivionWeaponState(float duration);
         void persistOblivionMeleeProgress() const;
+        void advanceOblivionMeleePlayback(float duration);
         void finishOblivionMeleePlayback();
         std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
         void updateIdleStormState(bool inwater) const;

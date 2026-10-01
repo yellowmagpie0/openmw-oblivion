@@ -70,6 +70,62 @@
 
 namespace
 {
+    struct NativeOrdinaryPlayback
+    {
+        float mBegin, mEnd, mFrequency, mTimelineBegin, mTimelineEnd;
+        std::array<float, 4> mKeys;
+        std::uint8_t mBlendFrames;
+
+        float rendererTime(float output) const
+        {
+            if (output <= mBegin)
+                return mTimelineBegin;
+            if (output >= mEnd)
+                return mTimelineEnd;
+            const float fraction = (output - mBegin) / (mEnd - mBegin);
+            return mTimelineBegin + fraction * (mTimelineEnd - mTimelineBegin);
+        }
+    };
+
+    std::vector<ESM4::MeleeTextKey> nativeRawKeys(const SceneUtil::ControllerSequenceMetadata& metadata)
+    {
+        std::vector<ESM4::MeleeTextKey> keys;
+        keys.reserve(metadata.mTextKeys.size());
+        for (const auto& [time, text] : metadata.mTextKeys)
+            keys.push_back({time, text});
+        return keys;
+    }
+
+    std::optional<NativeOrdinaryPlayback> nativeOrdinaryPlayback(MWRender::Animation& animation,
+        std::string_view group)
+    {
+        const auto* metadata = animation.getControllerSequenceMetadata(group);
+        if (!metadata || metadata->mCycleType != 2)
+            return {};
+        for (float value : {metadata->mStartTime, metadata->mStopTime, metadata->mFrequency,
+                 metadata->mTimelineStart, metadata->mTimelineStop})
+            if (!std::isfinite(value))
+                return {};
+        if (metadata->mStopTime <= metadata->mStartTime || metadata->mFrequency <= 0
+            || metadata->mTimelineStart < 0 || metadata->mTimelineStop <= metadata->mTimelineStart
+            || !std::isfinite(metadata->mStopTime - metadata->mStartTime)
+            || !std::isfinite(metadata->mTimelineStop - metadata->mTimelineStart))
+            return {};
+        try
+        {
+            const auto raw = nativeRawKeys(*metadata);
+            const auto keys = ESM4::ordinaryMeleeKeyTimes(raw);
+            if (keys.mMatchedCount != 4)
+                return {};
+            (void)ESM4::advanceOrdinaryMeleePhase(ESM4::OrdinaryMeleePhase::Start, 0, 0, keys.mTimes);
+            return NativeOrdinaryPlayback{metadata->mStartTime, metadata->mStopTime, metadata->mFrequency,
+                metadata->mTimelineStart, metadata->mTimelineStop, keys.mTimes, ESM4::meleeBlendFrames(raw)};
+        }
+        catch (const std::invalid_argument&)
+        {
+            return {};
+        }
+    }
 
     const ESM::RefId wolfRun = ESM::RefId::stringRefId("WolfRun");
 
@@ -1317,10 +1373,123 @@ namespace MWMechanics
         const auto* state = service->findMeleeState(actor);
         if (state && state->mStrike && state->mStrike->mActionId == mOblivionRenderedStrike)
         {
+            // Native timing publishes its final frame target before callbacks.
+            // Intermediate shared text-key positions are not its authority.
+            if (state->mStrike->mSequenceTiming)
+                return;
             const float time = mAnimation->getCurrentTime(state->mStrike->mAnimationGroup);
             if (std::isfinite(time) && time >= state->mStrike->mAnimationTime)
                 service->updateMeleeAnimation(mOblivionRenderedStrike, actor, time);
         }
+    }
+
+    void CharacterController::advanceOblivionMeleePlayback(float duration)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation || !mPtr.getClass().isActor())
+            return;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        const auto* life = service->findActorLife(actor);
+        if (!life || !service->findActorValues(actor))
+            return;
+        const bool frozen = mSkipAnim && !isScriptedAnimPlaying();
+        const auto cancel = [&] {
+            std::string group;
+            if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
+            {
+                group = state->mStrike->mAnimationGroup;
+                service->finishMeleeStrike(state->mStrike->mActionId, actor);
+            }
+            else if (mOblivionRenderedStrike)
+                group = mCurrentWeapon;
+            mOblivionRenderedStrike = 0;
+            mCurrentWeapon.clear();
+            mUpperBodyState = UpperBodyState::WeaponEquipped;
+            if (life->mPhase == ESM4::ActorLifePhase::Alive && service->findMeleeState(actor))
+                service->setMeleeInput(actor, {});
+            if (!group.empty())
+                mAnimation->disable(group);
+        };
+        const auto* state = service->findMeleeState(actor);
+        if (frozen || life->mPhase != ESM4::ActorLifePhase::Alive)
+        {
+            cancel();
+            service->advanceAnimationClock(actor, frozen ? 0.f : duration);
+            return;
+        }
+        if (!state || !state->mStrike)
+        {
+            if (mOblivionRenderedStrike)
+                cancel();
+            service->advanceAnimationClock(actor, duration);
+            return;
+        }
+        const auto strike = *state->mStrike;
+        if (strike.mKind > ESM4::MeleeStrikeKind::Right || mPtr.getType() == ESM::REC_CREA4)
+        {
+            service->advanceAnimationClock(actor, duration);
+            return;
+        }
+        const auto metadata = nativeOrdinaryPlayback(*mAnimation, strike.mAnimationGroup);
+        if (!metadata || mOblivionRenderedStrike != strike.mActionId)
+        {
+            Log(Debug::Verbose) << "M15 melee timing rejected: actor=" << actor.serialize()
+                                << " id=" << strike.mActionId << " reason=sequence-metadata";
+            cancel();
+            service->advanceAnimationClock(actor, duration);
+            return;
+        }
+        if (!strike.mSequenceTiming)
+        {
+            // Explicit legacy migration: preserve displayed raw time and start
+            // active history on the durable actor clock, without replaying keys.
+            const float clock = service->advanceAnimationClock(actor, 0);
+            const float fraction = std::clamp((strike.mAnimationTime - metadata->mTimelineBegin)
+                / (metadata->mTimelineEnd - metadata->mTimelineBegin), 0.f, 1.f);
+            const float raw = metadata->mBegin + fraction * (metadata->mEnd - metadata->mBegin);
+            ESM4::MeleeSequenceTiming timing;
+            timing.mOffset = static_cast<float>(double(raw) / metadata->mFrequency - clock);
+            timing.mEaseStart = raw;
+            timing.mEaseEnd = clock;
+            timing.mLastInput = static_cast<float>(double(clock) + *timing.mOffset);
+            timing.mWeightedTime = raw;
+            timing.mOutputTime = raw;
+            service->setMeleeSequenceTiming(strike.mActionId, actor, timing);
+        }
+        const auto& current = *service->findMeleeState(actor)->mStrike;
+        const auto next = ESM4::advanceOrdinaryMeleeFrame(
+            {service->animationClock(actor), current.mOrdinaryPhase, *current.mSequenceTiming},
+            duration, current.mPlaybackSpeed, metadata->mFrequency, metadata->mBegin,
+            metadata->mEnd, metadata->mKeys);
+        const float target = metadata->rendererTime(next.mTiming.mOutputTime);
+        // Validate the renderer target before publishing the durable frame.
+        // The shared bridge currently admits forward playback only.
+        if (target < mAnimation->getCurrentTime(strike.mAnimationGroup))
+        {
+            Log(Debug::Verbose) << "M15 melee timing rejected: actor=" << actor.serialize()
+                                << " id=" << strike.mActionId << " reason=renderer-rewind";
+            cancel();
+            service->advanceAnimationClock(actor, duration);
+            return;
+        }
+        if (!mAnimation->setAnimationFrameTime(strike.mAnimationGroup, target))
+        {
+            cancel();
+            service->advanceAnimationClock(actor, duration);
+            return;
+        }
+        const bool initialized = !current.mSequenceTiming->mOffset;
+        const auto priorPhase = current.mOrdinaryPhase;
+        service->advanceOrdinaryMeleeSequence(strike.mActionId, actor, duration, metadata->mFrequency,
+            metadata->mBegin, metadata->mEnd, metadata->mKeys);
+        service->updateMeleeAnimation(strike.mActionId, actor, target);
+        if (initialized || priorPhase != next.mPhase)
+            Log(Debug::Verbose) << "M15 melee frame: actor=" << actor.serialize()
+                                << " id=" << strike.mActionId << " phase=" << unsigned(next.mPhase)
+                                << " clock=" << next.mClock << " output=" << next.mTiming.mOutputTime;
     }
 
     void CharacterController::finishOblivionMeleePlayback()
@@ -1335,7 +1504,9 @@ namespace MWMechanics
         const auto* state = service->findMeleeState(actor);
         float complete = 0;
         if (!state || !state->mStrike || state->mStrike->mActionId != mOblivionRenderedStrike
-            || !mAnimation->getInfo(state->mStrike->mAnimationGroup, &complete) || complete < 1)
+            || !mAnimation->getInfo(state->mStrike->mAnimationGroup, &complete)
+            || (state->mStrike->mSequenceTiming
+                ? state->mStrike->mOrdinaryPhase != ESM4::OrdinaryMeleePhase::End : complete < 1))
             return;
         const auto strike = *state->mStrike;
         service->finishMeleeStrike(strike.mActionId, actor);
@@ -1466,9 +1637,12 @@ namespace MWMechanics
                         false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);
                 }
                 const float window = mAnimation->getTextKeyTimeInGroup(strike.mAnimationGroup, "a:");
-                queueWindow = !power && window >= 0 && strike.mAnimationTime > window;
+                queueWindow = !power && (strike.mSequenceTiming
+                    ? strike.mOrdinaryPhase >= ESM4::OrdinaryMeleePhase::Queue
+                    : window >= 0 && strike.mAnimationTime > window);
                 float complete = 0;
-                if (!mAnimation->getInfo(strike.mAnimationGroup, &complete) || complete >= 1)
+                if (!mAnimation->getInfo(strike.mAnimationGroup, &complete)
+                    || (!strike.mSequenceTiming && complete >= 1))
                 {
                     interrupt();
                     active = false;
@@ -1543,8 +1717,6 @@ namespace MWMechanics
         }
         if (selected)
         {
-            if (active)
-                interrupt();
             // Exact sneak/directional/mastery variant selection is the next adapter step.
             constexpr std::array suffixes = {"attackleft", "attackright", "attackpower", "attackforwardpower",
                 "attackbackpower", "attackleftpower", "attackrightpower"};
@@ -1557,23 +1729,22 @@ namespace MWMechanics
                 const float start = mAnimation->getTextKeyTimeInGroup(group, group + ": start");
                 const float stop = mAnimation->getTextKeyTimeInGroup(group, group + ": stop");
                 bool nativeKeysValid = true;
+                std::optional<NativeOrdinaryPlayback> nativePlayback;
+                float nativeEase = 0;
                 if (*selected <= ESM4::MeleeStrikeKind::Right && mPtr.getType() != ESM::REC_CREA4)
                 {
-                    const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
-                    nativeKeysValid = metadata != nullptr;
-                    if (metadata)
+                    nativePlayback = nativeOrdinaryPlayback(*mAnimation, group);
+                    nativeKeysValid = nativePlayback.has_value();
+                    if (nativePlayback)
                     {
-                        std::vector<ESM4::MeleeTextKey> rawKeys;
-                        rawKeys.reserve(metadata->mTextKeys.size());
-                        for (const auto& [time, text] : metadata->mTextKeys)
-                            rawKeys.push_back({time, text});
                         try
                         {
-                            const auto keys = ESM4::ordinaryMeleeKeyTimes(rawKeys);
-                            nativeKeysValid = keys.mMatchedCount == 4;
-                            if (nativeKeysValid)
-                                (void)ESM4::advanceOrdinaryMeleePhase(
-                                    ESM4::OrdinaryMeleePhase::Start, 0, 0, keys.mTimes);
+                            std::optional<std::uint8_t> priorFrames;
+                            const std::string prior(mAnimation->getActiveAnimationGroup(MWRender::BoneGroup_RightArm));
+                            if (!prior.empty())
+                                if (const auto* metadata = mAnimation->getControllerSequenceMetadata(prior))
+                                    priorFrames = ESM4::meleeBlendFrames(nativeRawKeys(*metadata));
+                            nativeEase = ESM4::meleeBlendDuration(priorFrames, nativePlayback->mBlendFrames, .1f);
                         }
                         catch (const std::invalid_argument&)
                         {
@@ -1586,12 +1757,24 @@ namespace MWMechanics
                 }
                 if (start >= 0 && stop > start && nativeKeysValid)
                 {
+                    // A rejected replacement must not cancel the current strike.
+                    if (active)
+                        interrupt();
                     const auto id = service->beginMeleeStrike(actor, *selected, group, speed, weaponBase);
                     service->setMeleeInput(actor, input); // Publish input before text-key/Lua callbacks.
                     mCurrentWeapon = group;
                     mOblivionRenderedStrike = id;
                     try
                     {
+                        if (nativePlayback)
+                        {
+                            service->advanceAnimationClock(actor, 0);
+                            ESM4::MeleeSequenceTiming timing;
+                            timing.mEasing = nativeEase > 0;
+                            timing.mEaseEnd = nativeEase;
+                            service->setMeleeSequenceTiming(id, actor, timing);
+                            service->updateMeleeAnimation(id, actor, nativePlayback->mTimelineBegin);
+                        }
                         playBlendedAnimation(group, Priority_Weapon, MWRender::BlendMask_All,
                             false, speed, "start", "stop", 0, 0);
                     }
@@ -2797,6 +2980,7 @@ namespace MWMechanics
             }
         }
 
+        advanceOblivionMeleePlayback(duration);
         osg::Vec3f movementFromAnimation
             = mAnimation->runAnimation(mSkipAnim && !isScriptedAnimPlaying() ? 0.f : duration);
         persistOblivionMeleeProgress();

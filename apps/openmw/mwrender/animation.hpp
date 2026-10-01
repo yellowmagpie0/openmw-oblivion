@@ -456,6 +456,8 @@ namespace MWRender
         // Playing source wins; otherwise use the winning group source. Missing
         // or ambiguous metadata never falls back to an older source.
         const SceneUtil::ControllerSequenceMetadata* getControllerSequenceMetadata(std::string_view group);
+        // Actual currently selected group for a renderer body mask; no loading.
+        std::string_view getActiveAnimationGroup(BoneGroup group) const;
 
 
         /// Get the current absolute position in the animation track for the animation that is currently playing from

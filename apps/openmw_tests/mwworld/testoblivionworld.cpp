@@ -2848,8 +2848,11 @@ namespace
         };
         EXPECT_EQ(rawOrdinaryKeys(*original), (ESM4::OrdinaryMeleeKeys{{10, 10.25f, 11, 12}, 4}));
         EXPECT_FLOAT_EQ(animation->getTextKeyTimeInGroup("handtohandattackleft", "hit"), .25f);
+        EXPECT_TRUE(animation->getActiveAnimationGroup(MWRender::BoneGroup_RightArm).empty());
+        EXPECT_THROW(animation->getActiveAnimationGroup(static_cast<MWRender::BoneGroup>(99)), std::invalid_argument);
         animation->play("handtohandattackleft", MWRender::AnimPriority(1), MWRender::BlendMask_All,
             false, 1, "start", "stop", 0, 0);
+        EXPECT_EQ(animation->getActiveAnimationGroup(MWRender::BoneGroup_RightArm), "handtohandattackleft");
         animation->source("override/handtohandattackleft.kf");
         EXPECT_EQ(animation->getControllerSequenceMetadata("handtohandattackleft"), original);
         animation->disable("handtohandattackleft");
@@ -2869,6 +2872,11 @@ namespace
         EXPECT_EQ(alias->mTimelineStop, original->mTimelineStop);
         EXPECT_EQ(alias->mCycleType, original->mCycleType);
         EXPECT_EQ(original->mGroup, "handtohandattackleft"); // Resource metadata remains immutable.
+        animation->play("aliasattack", MWRender::AnimPriority(2), MWRender::BlendMask_LeftArm,
+            false, 1, "start", "stop", 0, 0);
+        EXPECT_EQ(animation->getActiveAnimationGroup(MWRender::BoneGroup_LeftArm), "aliasattack");
+        EXPECT_TRUE(animation->getActiveAnimationGroup(MWRender::BoneGroup_RightArm).empty());
+        animation->disable("aliasattack");
         EXPECT_EQ(animation->getControllerSequenceMetadata("missing"), nullptr);
         animation->play("handtohandattackleft", MWRender::AnimPriority(1), MWRender::BlendMask_All,
             false, 1, "start", "stop", 0, 0);

@@ -8670,3 +8670,69 @@ normal-input/restart/interruption courses.
 Previous checkpoint68 commit548e6982922cf15b44f9b12b342ea75bfb234b94;
 verified bundle46 SHA256
 816f5222258c8c2595773c804c98a26420181f0616a623f7c82323867d802f27.
+
+### Checkpoint70 — native ordinary playback in Character
+
+Character now initializes durable sequence timing before ordinary playback and
+advances the owned native actor clock, ordinary phase and full timing history
+before renderer callbacks. The renderer receives the exact mapped native frame
+output; intermediate text-key positions do not replace saved authority. The
+phase opens queuing and ends the ordinary action independently of shared elapsed
+playback. Idle clocks advance too; cancellation clears owned state before the
+new timing path's renderer callbacks. Rejected replacements preserve the prior
+strike. Powers and creatures still use legacy playback.
+
+Admission validates complete authored ordinary keys, finite positive frequency,
+ordered raw/timeline bounds and clamp cycle metadata. Blend duration uses raw
+Blend: keys from the actual active renderer RightArm group and the incoming
+sequence. This is not proof of original slot3 identity, special UI/root/forced
+zero/global-speed semantics, hot-load source replacement or slot freeze3/6.
+The read-only active-group query follows renderer mask/priority/tie selection
+and performs no lazy loading. Legacy nullable timing migrates from the stored
+pose without replaying keys; this is an engineered migration, not original
+save/load parity. Native output that would rewind the current forward-only
+renderer cancels explicitly; the full large-clock/rounding domain remains open.
+
+Normal and ASan/UBSan engine checks pass721 cases each with exact inventory/XML,
+no skips/failures/source drift; leak checking disabled. Tested fingerprint
+`70288200585fe92dfc0d308cdc598f47a4b1c0fb7b81f2539042bf30d5651417`; openmw SHA256
+`7db40c659483b6e9bfd723731737d94b52cfc841177a01f835956f8d06e8fb8c`.
+Unchanged component/Python suites retain checkpoint69/67 evidence, not new runs.
+
+S4/native-character-sequence-timing-offscreen-01 uses normal keyboard input and
+stock first-person ordinary playback: saves action1 in Start with initialized
+sequence timing and all nine actor clocks, then a distinct process resumes it
+through Contact/Queue/End without a new ID. Native actor resource/life/base/
+breath/death/engagement fields remain unchanged. Public pools80/80/140 and death0.
+Original-code replay native-character-timing-runtime-oracle-01 matches the first
+save's timing/clock and final clocks bit-for-bit in both x87 modes, using observed
+origin/dt and independently audited installed keys. This replay supplies stop as
+End; compared early outputs are below stop. It does not prove actual KF stop,
+original normal-input/save-load or full actor-caller parity. Report SHA256
+9a5cfe1f0765ff552668e165ef772401f59406cc413f5f9efbfdd1b39013e7ee.
+The first process selects a power after the snapshot while input remains held;
+that later action is outside the ordinary saved continuation. Both captures
+were directly reviewed: textured prison/readable HUD; first later forearm pose,
+second idle. Configured frame cap60; no measured render-FPS claim.
+
+Native-character-legacy-timing-offscreen-01 restores schema23 action1 with null
+timing/empty clocks, migrates and completes through phases1/2/3 without another
+ID, rejection or resource/lifecycle change. Its idle prison/HUD capture was
+reviewed directly. Native-ordinary-key-rejection-offscreen-02 reruns the genuine
+synthetic Gamebryo20 missing-Hit negative control: normal input allocates no ID,
+plays no strike; fresh-process continuation preserves next1/empty ledger and
+all nine native actor field sets. Both idle prison/HUD captures reviewed.
+Audio was muted in these courses; prior audio evidence is prior-source evidence.
+
+Native-blend-context-prefix-oracle-01 additionally executes576 original prefix
+cases including real UI singleton methods, supplied root identity/forced-zero
+flag/global speed and both x87 modes, without function stubs. It bounds the
+native context branches but does not establish engine UI/root field identity or
+whole activation. Do not label Player+5D8 a first-person root from that probe.
+
+Native contact/damage dispatch is still absent from Character. S2/S3 remain in
+progress and S4–S14 remain open, including full input variants, mastery,
+condition, reactions, opponent policy and all official-content campaigns.
+Previous checkpoint69 commit db5d94273fa6ca531aea09d7cf9bbbfa808db819;
+verified bundle47 SHA256
+3c1acb5b5542d1f080bf04a00b88b953bb7908ea3e51b0d0f52966b786554ca8.
