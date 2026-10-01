@@ -3962,3 +3962,18 @@ native-attack-input-oracle-02/report.json SHA256 `81173c83815cb13684a7c9b48aef82
 native-attack-queue-oracle-01/probe.py SHA256 `740320ace388a488a4f658cb48c8b96973dd5f03c7dee8777e8d13068020de62`.
 
 native-attack-queue-oracle-01/report.json SHA256 `a92597018ccf01c90be4799d250aa6a1f10fc9fb6f50b3a47c78c98946aeaeee`.
+
+## Persistent melee intent (checkpoint54)
+
+Schema21 stores the adapter's logical strike kind, exact animation selection,
+playback progress and owned ID separately from native input queue/held state.
+These are explicit engine save semantics, not asserted original save layout.
+The original press/hold/queue traces in checkpoint53 motivate distinct strike
+intents and queues that survive release; they do not prove controller clock
+mapping. A consumed contact retains follow-through while the ledger excludes
+its ID, preventing replay after restore. The native physical-contact service
+uses this operation; generic cancellation clears the strike instead.
+Tests pass at the source fingerprint and counts in the milestone report.
+Stock idle schema20→21→21 migration preserves nine admitted actors and has
+no melee state. Native animation start/advancement, exact gear instance,
+Hit-event physics acquisition and caller eligibility remain unimplemented.

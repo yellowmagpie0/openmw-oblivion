@@ -531,6 +531,28 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 native actor life state");
     }
 
+    void RuntimeMeleeInput::validate() const
+    {
+        if (!std::isfinite(mHeldSeconds) || mHeldSeconds < 0
+            || static_cast<unsigned>(mQueued) > static_cast<unsigned>(MeleeQueuedStrike::Power))
+            throw std::runtime_error("Invalid TES4 melee input state");
+    }
+
+    void RuntimeMeleeStrike::validate() const
+    {
+        if (mActionId == 0 || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
+            || mAnimationGroup.find('\0') != std::string::npos || !std::isfinite(mPlaybackSpeed) || mPlaybackSpeed <= 0
+            || !std::isfinite(mAnimationTime) || mAnimationTime < 0
+            || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::RightPower))
+            throw std::runtime_error("Invalid TES4 melee strike state");
+    }
+
+    void RuntimeMeleeState::validate() const
+    {
+        mInput.validate();
+        if (mStrike) mStrike->validate();
+    }
+
     void RuntimeState::validate() const
     {
         if (mVersion < 1 || mVersion > CurrentRuntimeStateVersion)
@@ -561,6 +583,7 @@ namespace ESM4
         checkSize(mPendingPackageDone.size(), "pending package completion list");
         checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
         checkSize(mPhysicalActionOwners.size(), "physical action owner list");
+        checkSize(mNativeMeleeStates.size(), "native melee state list");
         checkSize(mNativeActorValues.size(), "native actor-value list");
         checkSize(mNativeActorBases.size(), "native actor-base list");
         if (mVersion < 11 && !mNativeActorBases.empty())
@@ -695,6 +718,26 @@ namespace ESM4
             if (!pendingActions.contains(id) || !nativeActors.contains(actor) || life == lives.end()
                 || life->second->mPhase != ActorLifePhase::Alive)
                 throw std::runtime_error("Invalid, dangling or incapacitated TES4 physical action owner");
+        }
+        if (mVersion < 21 && !mNativeMeleeStates.empty())
+            throw std::runtime_error("TES4 melee state requires runtime-state version 21");
+        std::set<std::uint64_t> meleeIds;
+        for (const auto& [actor, melee] : mNativeMeleeStates)
+        {
+            melee.validate();
+            const auto life = lives.find(actor);
+            if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive)
+                throw std::runtime_error("Dangling or incapacitated TES4 melee state owner");
+            if (melee.mStrike)
+            {
+                const auto& strike = *melee.mStrike;
+                const auto owner = mPhysicalActionOwners.find(strike.mActionId);
+                const bool pending = pendingActions.contains(strike.mActionId);
+                if (!meleeIds.insert(strike.mActionId).second || strike.mActionId >= mPhysicalActions.mNext
+                    || (strike.mContactCommitted ? pending
+                        : !pending || owner == mPhysicalActionOwners.end() || owner->second != actor))
+                    throw std::runtime_error("Invalid, duplicate or replaying TES4 melee action identity");
+            }
         }
         if (mVersion < 6 && !mPendingPackageDone.empty())
             throw std::runtime_error("TES4 runtime-state versions before 6 cannot contain pending package events");
@@ -1397,6 +1440,30 @@ namespace ESM4
                 writeKey(writer, actor);
             }
         }
+        if (mVersion >= 21)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeMeleeStates.size()));
+            for (const auto& [actor, melee] : mNativeMeleeStates)
+            {
+                writeKey(writer, actor);
+                writer.floating(melee.mInput.mHeldSeconds);
+                writer.integer<std::uint8_t>(melee.mInput.mInputHeld);
+                writer.integer<std::uint8_t>(melee.mInput.mPreferLeft);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(melee.mInput.mQueued));
+                writer.integer<std::uint8_t>(melee.mStrike.has_value());
+                if (melee.mStrike)
+                {
+                    const auto& strike = *melee.mStrike;
+                    writer.integer(strike.mActionId);
+                    writer.integer<std::uint8_t>(static_cast<std::uint8_t>(strike.mKind));
+                    writeKey(writer, strike.mWeaponBase);
+                    writer.string(strike.mAnimationGroup);
+                    writer.floating(strike.mPlaybackSpeed);
+                    writer.floating(strike.mAnimationTime);
+                    writer.integer<std::uint8_t>(strike.mContactCommitted);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -1939,6 +2006,45 @@ namespace ESM4
                     throw std::runtime_error("Invalid or noncanonical TES4 physical action owner");
                 if (!result.mPhysicalActionOwners.emplace(id, std::move(actor)).second)
                     throw std::runtime_error("Duplicate TES4 physical action owner identity");
+            }
+        }
+        if (result.mVersion >= 21)
+        {
+            const auto boolean = [&reader]() {
+                const auto value = reader.integer<std::uint8_t>();
+                if (value > 1) throw std::runtime_error("Invalid TES4 melee boolean");
+                return value != 0;
+            };
+            const auto key = [&reader]() {
+                const auto text = reader.string();
+                ESM::FormKey value;
+                try { value = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&) { throw std::runtime_error("Invalid TES4 melee key"); }
+                if (value.serialize() != text) throw std::runtime_error("Noncanonical TES4 melee key");
+                return value;
+            };
+            for (std::uint32_t i = 0, count = reader.count(); i < count; ++i)
+            {
+                auto actor = key();
+                RuntimeMeleeState melee;
+                melee.mInput.mHeldSeconds = reader.float32();
+                melee.mInput.mInputHeld = boolean();
+                melee.mInput.mPreferLeft = boolean();
+                melee.mInput.mQueued = static_cast<MeleeQueuedStrike>(reader.integer<std::uint8_t>());
+                if (boolean())
+                {
+                    RuntimeMeleeStrike strike;
+                    strike.mActionId = reader.integer<std::uint64_t>();
+                    strike.mKind = static_cast<MeleeStrikeKind>(reader.integer<std::uint8_t>());
+                    strike.mWeaponBase = key();
+                    strike.mAnimationGroup = reader.string();
+                    strike.mPlaybackSpeed = reader.float32();
+                    strike.mAnimationTime = reader.float32();
+                    strike.mContactCommitted = boolean();
+                    melee.mStrike = std::move(strike);
+                }
+                if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
+                    throw std::runtime_error("Duplicate TES4 melee state owner");
             }
         }
         if (!reader.eof())
@@ -2493,6 +2599,34 @@ namespace ESM4
                 if (!first) stream << ',';
                 first = false;
                 stream << "{\"id\":" << id << ",\"actor\":\"" << escapeJson(actor.serialize()) << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 21)
+        {
+            stream << ",\"native_melee_states\":[";
+            bool first = true;
+            for (const auto& [actor, melee] : mNativeMeleeStates)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                    << "\",\"input\":{\"held_seconds\":" << std::setprecision(17) << melee.mInput.mHeldSeconds
+                    << ",\"input_held\":" << (melee.mInput.mInputHeld ? "true" : "false")
+                    << ",\"prefer_left\":" << (melee.mInput.mPreferLeft ? "true" : "false")
+                    << ",\"queued\":" << static_cast<unsigned>(melee.mInput.mQueued) << "},\"strike\":";
+                if (!melee.mStrike) stream << "null";
+                else
+                {
+                    const auto& strike = *melee.mStrike;
+                    stream << "{\"id\":" << strike.mActionId << ",\"kind\":" << static_cast<unsigned>(strike.mKind)
+                        << ",\"weapon_base\":\"" << escapeJson(strike.mWeaponBase.serialize())
+                        << "\",\"animation_group\":\"" << escapeJson(strike.mAnimationGroup)
+                        << "\",\"playback_speed\":" << std::setprecision(17) << strike.mPlaybackSpeed
+                        << ",\"animation_time\":" << std::setprecision(17) << strike.mAnimationTime
+                        << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false") << '}';
+                }
+                stream << '}';
             }
             stream << ']';
         }

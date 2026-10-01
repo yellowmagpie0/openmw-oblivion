@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 20
+CURRENT_VERSION = 21
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -932,6 +932,45 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or actor not in native_keys or phases.get(actor) != 0):
             raise RuntimeStateError("Invalid, duplicate, dangling or incapacitated TES4 physical action owner")
         owned_ids.add(identity)
+    melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
+    if version < 21 and melee_states:
+        raise RuntimeStateError("TES4 melee state requires version 21")
+    melee_actors: set[str] = set()
+    melee_ids: set[int] = set()
+    owner_map = {entry["id"]: entry["actor"] for entry in action_owners}
+    for entry in melee_states:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "input", "strike"}:
+            raise RuntimeStateError("Invalid TES4 melee state")
+        actor = entry["actor"]
+        native_key(actor)
+        if actor in melee_actors or actor not in native_keys or phases.get(actor) != 0:
+            raise RuntimeStateError("Duplicate, dangling or incapacitated TES4 melee owner")
+        melee_actors.add(actor)
+        control = entry["input"]
+        if not isinstance(control, dict) or set(control) != {"held_seconds", "input_held", "prefer_left", "queued"}:
+            raise RuntimeStateError("Invalid TES4 melee input")
+        if (native_float(control["held_seconds"]) < 0 or type(control["input_held"]) is not bool
+                or type(control["prefer_left"]) is not bool or type(control["queued"]) is not int
+                or not 0 <= control["queued"] <= 2):
+            raise RuntimeStateError("Invalid TES4 melee input state")
+        strike = entry["strike"]
+        if strike is None:
+            continue
+        if not isinstance(strike, dict) or set(strike) != {"id", "kind", "weapon_base", "animation_group", "playback_speed", "animation_time", "contact_committed"}:
+            raise RuntimeStateError("Invalid TES4 melee strike")
+        identity, kind, committed = strike["id"], strike["kind"], strike["contact_committed"]
+        if (type(identity) is not int or not 0 < identity < next_action or identity in melee_ids
+                or type(kind) is not int or not 0 <= kind <= 6 or type(committed) is not bool
+                or native_float(strike["animation_time"]) < 0 or native_float(strike["playback_speed"]) <= 0):
+            raise RuntimeStateError("Invalid or duplicate TES4 melee strike state")
+        group = strike["animation_group"]
+        if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
+            raise RuntimeStateError("Invalid TES4 melee animation group")
+        if strike["weapon_base"] != "null":
+            native_key(strike["weapon_base"])
+        if (committed and identity in seen_actions) or (not committed and owner_map.get(identity) != actor):
+            raise RuntimeStateError("Replaying or unowned TES4 melee action")
+        melee_ids.add(identity)
     previous = 0
     for event in death_events:
         if not isinstance(event, dict):
@@ -1348,6 +1387,23 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["physical_action_owners"] = [
             {"id": reader.unpack("<Q"), "actor": reader.string()} for _ in range(reader.count())
         ]
+    if version >= 21:
+        result["native_melee_states"] = []
+        def melee_boolean() -> bool:
+            value = reader.unpack("<B")
+            if value > 1:
+                raise RuntimeStateError("Invalid TES4 melee boolean")
+            return bool(value)
+        for _ in range(reader.count()):
+            entry = {"actor": reader.string(), "input": {
+                "held_seconds": reader.unpack("<f"), "input_held": melee_boolean(),
+                "prefer_left": melee_boolean(), "queued": reader.unpack("<B")}, "strike": None}
+            if melee_boolean():
+                entry["strike"] = {"id": reader.unpack("<Q"), "kind": reader.unpack("<B"),
+                    "weapon_base": reader.string(), "animation_group": reader.string(),
+                    "playback_speed": reader.unpack("<f"), "animation_time": reader.unpack("<f"),
+                    "contact_committed": melee_boolean()}
+            result["native_melee_states"].append(entry)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1605,6 +1661,23 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in owners:
             writer.pack("<Q", entry["id"])
             writer.string(entry["actor"])
+    if version >= 21:
+        melee_states = sorted(state.get("native_melee_states", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(melee_states))
+        for entry in melee_states:
+            writer.string(entry["actor"])
+            control, strike = entry["input"], entry["strike"]
+            writer.pack("<f", control["held_seconds"])
+            for value in (int(control["input_held"]), int(control["prefer_left"]), control["queued"], int(strike is not None)):
+                writer.pack("<B", value)
+            if strike is not None:
+                writer.pack("<Q", strike["id"])
+                writer.pack("<B", strike["kind"])
+                writer.string(strike["weapon_base"])
+                writer.string(strike["animation_group"])
+                writer.pack("<f", strike["playback_speed"])
+                writer.pack("<f", strike["animation_time"])
+                writer.pack("<B", int(strike["contact_committed"]))
     return writer.finish()
 
 
@@ -1678,6 +1751,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state.setdefault("pending_package_done", [])
     state.setdefault("physical_actions", {"next": 1, "pending": []})
     state.setdefault("physical_action_owners", [])
+    state.setdefault("native_melee_states", [])
     state.setdefault("native_actor_values", [])
     state.setdefault("native_actor_bases", [])
     state.setdefault("native_actor_life", [])
@@ -1718,6 +1792,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result.setdefault("pending_package_done", [])
     result.setdefault("physical_actions", {"next": 1, "pending": []})
     result.setdefault("physical_action_owners", [])
+    result.setdefault("native_melee_states", [])
     result.setdefault("native_actor_values", [])
     result.setdefault("native_actor_bases", [])
     result.setdefault("native_actor_life", [])

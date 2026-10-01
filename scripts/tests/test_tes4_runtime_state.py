@@ -1224,5 +1224,90 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             self.assertNotIn("native_actor_update_times", loaded)
 
 
+
+    def melee_state(self):
+        state = self.engagement_state()
+        state["schema_version"] = 21
+        actor = state["native_actor_values"][0]["actor"]
+        state["physical_actions"] = {"next": 7, "pending": [5, 2, 1]}
+        state["physical_action_owners"] = [{"id": 5, "actor": actor}, {"id": 2, "actor": actor}]
+        state["native_melee_states"] = [{"actor": actor,
+            "input": {"held_seconds": .25, "input_held": True, "prefer_left": False, "queued": 2},
+            "strike": {"id": 2, "kind": 3, "weapon_base": "content:oblivion.esm:000400",
+                "animation_group": "onehandattackforwardpower", "playback_speed": 1.25,
+                "animation_time": .5, "contact_committed": False}}]
+        return state
+
+    def test_melee_v21_exact_wire_and_all_kinds_queues_commit_continuation(self):
+        state = self.melee_state()
+        entry = state["native_melee_states"][0]
+        actor = entry["actor"]
+        legacy = copy.deepcopy(state); legacy["schema_version"] = 20; legacy["native_melee_states"] = []
+        prefix = bytearray(state_io.encode_payload(legacy))
+        struct.pack_into("<I", prefix, len(state_io.MAGIC), 21)
+        gear = entry["strike"]["weapon_base"]
+        group = entry["strike"]["animation_group"]
+        tail = (struct.pack("<II", 1, len(actor.encode())) + actor.encode() + struct.pack("<fBBBBQB", .25, 1, 0, 2, 1, 2, 3)
+            + struct.pack("<I", len(gear.encode())) + gear.encode()
+            + struct.pack("<I", len(group.encode())) + group.encode() + struct.pack("<ffB", 1.25, .5, 0))
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, prefix + tail)
+        for kind in range(7):
+            for queued in range(3):
+                for committed in (False, True):
+                    with self.subTest(kind=kind, queued=queued, committed=committed):
+                        candidate = copy.deepcopy(state)
+                        melee = candidate["native_melee_states"][0]
+                        melee["input"].update(queued=queued, input_held=False)
+                        melee["strike"].update(kind=kind, contact_committed=committed, weapon_base="null")
+                        if committed:
+                            candidate["physical_actions"]["pending"].remove(2)
+                            candidate["physical_action_owners"] = [x for x in candidate["physical_action_owners"] if x["id"] != 2]
+                        encoded = state_io.encode_payload(candidate)
+                        decoded = state_io.decode_payload(encoded)
+                        self.assertEqual(decoded["native_melee_states"], candidate["native_melee_states"])
+                        self.assertEqual(state_io.encode_payload(decoded), encoded)
+        entry["strike"] = None
+        self.assertIsNone(state_io.decode_payload(state_io.encode_payload(state))["native_melee_states"][0]["strike"])
+        self.assertNotIn("native_melee_states", state_io.decode_payload(state_io.encode_payload(legacy)))
+        promoted = copy.deepcopy(legacy); promoted["schema_version"] = 21
+        self.assertEqual(state_io.encode_payload(promoted), prefix + bytes(4))
+
+    def test_melee_v21_rejects_malformed_duplicate_replay_and_corrupt_tail(self):
+        state = self.melee_state()
+        changes = [lambda x: x.update(schema_version=20),
+            lambda x: x["native_melee_states"].append(copy.deepcopy(x["native_melee_states"][0])),
+            lambda x: x["native_melee_states"][0].update(actor="null"),
+            lambda x: x["native_melee_states"][0].update(actor="content:missing.esm:000001"),
+            lambda x: x["native_actor_life"][0].update(phase=2),
+            lambda x: x["physical_action_owners"].clear(),
+            lambda x: x["native_melee_states"][0]["strike"].update(contact_committed=True)]
+        for key, values in (("held_seconds", (-1, math.nan, math.inf, True, 1e100)),
+                            ("input_held", (0, 2, None)), ("prefer_left", (1, None)), ("queued", (-1, 3, True, .5))):
+            for value in values:
+                changes.append(lambda x, key=key, value=value: x["native_melee_states"][0]["input"].update({key: value}))
+        for key, values in (("id", (0, 1, 6, 7, True)), ("kind", (-1, 7, True, .5)),
+                            ("animation_time", (-1, math.nan, math.inf, True, 1e100)),
+                            ("contact_committed", (0, 2, None)), ("weapon_base", (None, "Content:oblivion.esm:000400")),
+                            ("animation_group", ("", "bad\0name", None)),
+                            ("playback_speed", (0, -1, math.nan, math.inf, True, 1e100))):
+            for value in values:
+                changes.append(lambda x, key=key, value=value: x["native_melee_states"][0]["strike"].update({key: value}))
+        for index, change in enumerate(changes):
+            with self.subTest(change=index):
+                broken = copy.deepcopy(state); change(broken)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(broken)
+        payload = state_io.encode_payload(state)
+        legacy = copy.deepcopy(state); legacy["schema_version"] = 20; legacy["native_melee_states"] = []
+        start = len(state_io.encode_payload(legacy))
+        for end in range(start, len(payload)):
+            with self.subTest(cut=end), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:end])
+        offset = start + 8 + len(state["native_melee_states"][0]["actor"].encode())
+        for index in (offset+4, offset+5, offset+7, len(payload)-1):
+            broken = bytearray(payload); broken[index] = 2
+            with self.subTest(boolean=index), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(broken)
+        duplicate = bytearray(payload); struct.pack_into("<I", duplicate, start, 2); duplicate += payload[start+4:]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(duplicate)
+
 if __name__ == "__main__":
     unittest.main()

@@ -1533,6 +1533,7 @@ namespace
     ESM4::RuntimeState ownedActionState()
     {
         auto state = makeState();
+        state.mVersion = 20; // These owner-tail tests deliberately retain the v20 wire.
         const auto& reference = state.mReferences.front();
         ESM4::RuntimeActorValues values;
         values.mActor = reference.mKey; values.mBase = reference.mBase;
@@ -1604,4 +1605,120 @@ namespace
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(noncanonical), std::runtime_error);
     }
 
+}
+
+namespace
+{
+    ESM4::RuntimeState meleeState()
+    {
+        auto state = ownedActionState();
+        state.mVersion = 21;
+        ESM4::RuntimeMeleeState melee;
+        melee.mInput = {.25f, true, false, ESM4::MeleeQueuedStrike::Power};
+        melee.mStrike = ESM4::RuntimeMeleeStrike{2, ESM4::MeleeStrikeKind::ForwardPower,
+            ESM::FormKey::content("oblivion.esm", 0x400), "onehandattackforwardpower", 1.25f, .5f, false};
+        state.mNativeMeleeStates.emplace(state.mReferences.front().mKey, melee);
+        return state;
+    }
+
+    TEST(ESM4RuntimeState, meleeStateVersionTwentyOneExactWireAndCommittedFollowThrough)
+    {
+        auto state = meleeState();
+        const auto actor = state.mReferences.front().mKey;
+        auto legacy = state;
+        legacy.mNativeMeleeStates.clear(); legacy.mVersion = 20;
+        auto expected = legacy.serializeBinary();
+        expected[std::string_view("OMW4STATE").size()] = 21;
+        const auto integer = [&](std::uint64_t value, unsigned bytes) {
+            for (unsigned i = 0; i < bytes; ++i) expected.push_back(static_cast<std::uint8_t>(value >> (8 * i)));
+        };
+        const auto text = [&](std::string_view value) {
+            integer(value.size(), 4); expected.insert(expected.end(), value.begin(), value.end());
+        };
+        integer(1, 4); text("content:oblivion.esm:000100");
+        integer(0x3e800000, 4); integer(1, 1); integer(0, 1); integer(2, 1); integer(1, 1);
+        integer(2, 8); integer(3, 1); text("content:oblivion.esm:000400");
+        text("onehandattackforwardpower"); integer(0x3fa00000, 4);
+        integer(0x3f000000, 4); integer(0, 1);
+        for (unsigned kind = 0; kind <= 6; ++kind)
+        for (unsigned queued = 0; queued <= 2; ++queued)
+        {
+            auto candidate = state;
+            auto& melee = candidate.mNativeMeleeStates.at(actor);
+            melee.mStrike->mKind = static_cast<ESM4::MeleeStrikeKind>(kind);
+            melee.mInput.mQueued = static_cast<ESM4::MeleeQueuedStrike>(queued);
+            EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(candidate.serializeBinary()).mNativeMeleeStates,
+                candidate.mNativeMeleeStates);
+        }
+        const auto bytes = state.serializeBinary();
+        EXPECT_EQ(bytes, expected);
+        auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        auto& melee = state.mNativeMeleeStates.at(actor);
+        melee.mStrike->mContactCommitted = true;
+        std::erase(state.mPhysicalActions.mPending, 2);
+        state.mPhysicalActionOwners.erase(2);
+        restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_TRUE(restored.mNativeMeleeStates.at(actor).mStrike->mContactCommitted);
+        EXPECT_EQ(restored.mNativeMeleeStates.at(actor).mStrike->mAnimationTime, .5f);
+        EXPECT_EQ(restored.mNativeMeleeStates.at(actor).mInput.mQueued, ESM4::MeleeQueuedStrike::Power);
+        melee.mInput.mInputHeld = false; // Release does not erase a queued strike.
+        melee.mStrike.reset();
+        restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_FALSE(restored.mNativeMeleeStates.at(actor).mStrike);
+        EXPECT_FALSE(restored.mNativeMeleeStates.at(actor).mInput.mInputHeld);
+        EXPECT_EQ(restored.mNativeMeleeStates.at(actor).mInput.mQueued, ESM4::MeleeQueuedStrike::Power);
+        EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary()).mNativeMeleeStates.empty());
+    }
+
+    TEST(ESM4RuntimeState, meleeStateRejectsReplayingUnownedIncapacitatedAndMalformedContinuation)
+    {
+        const auto state = meleeState();
+        const auto actor = state.mReferences.front().mKey;
+        const auto reject = [&](auto change) {
+            auto broken = state; change(broken);
+            EXPECT_THROW(broken.serializeBinary(), std::runtime_error);
+        };
+        reject([](auto& b) { b.mVersion = 20; });
+        reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mInput.mQueued = static_cast<ESM4::MeleeQueuedStrike>(3); });
+        for (float value : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mInput.mHeldSeconds = value; });
+            reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mAnimationTime = value; });
+        }
+        reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mKind = static_cast<ESM4::MeleeStrikeKind>(7); });
+        for (std::uint64_t id : {0u, 1u, 6u, 7u})
+            reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mActionId = id; });
+        reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mAnimationGroup.clear(); });
+        reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mAnimationGroup = std::string("bad\0name", 8); });
+        for (float speed : {0.f, -1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mPlaybackSpeed = speed; });
+        reject([&](auto& b) { b.mNativeMeleeStates.at(actor).mStrike->mContactCommitted = true; });
+        reject([](auto& b) { b.mPhysicalActionOwners.erase(2); });
+        reject([](auto& b) { std::erase(b.mPhysicalActions.mPending, 2); b.mPhysicalActionOwners.erase(2); });
+        reject([&](auto& b) { auto node = b.mNativeMeleeStates.extract(actor);
+            node.key() = ESM::FormKey::content("foreign.esm", 0x100); b.mNativeMeleeStates.insert(std::move(node)); });
+        reject([](auto& b) { b.mPhysicalActionOwners.clear(); b.mPhysicalActions.mPending.clear();
+            b.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::EssentialUnconscious; });
+        auto old = state; old.mNativeMeleeStates.clear(); old.mVersion = 20;
+        const auto prefix = old.serializeBinary().size();
+        const auto bytes = state.serializeBinary();
+        for (std::size_t end = prefix; end < bytes.size(); ++end)
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({bytes.begin(), bytes.begin() + end}), std::exception);
+        const auto inputOffset = prefix + 8 + actor.serialize().size();
+        for (const std::size_t offset : {inputOffset + 4, inputOffset + 5, inputOffset + 7, bytes.size() - 1})
+        {
+            auto broken = bytes; broken[offset] = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(broken), std::runtime_error);
+        }
+        auto duplicate = bytes; duplicate[prefix] = 2;
+        duplicate.insert(duplicate.end(), bytes.begin() + prefix + 4, bytes.end());
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(duplicate), std::runtime_error);
+        auto empty = old; empty.mVersion = 21;
+        auto expected = old.serializeBinary(); expected[std::string_view("OMW4STATE").size()] = 21;
+        expected.insert(expected.end(), 4, 0);
+        EXPECT_EQ(empty.serializeBinary(), expected);
+    }
 }

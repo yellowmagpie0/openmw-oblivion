@@ -14,6 +14,7 @@
 #include <deque>
 #include <span>
 #include <set>
+#include <string_view>
 
 namespace ESM4
 {
@@ -184,6 +185,8 @@ namespace MWMechanics
         class PreparedNonPlayerView;
         ESM4::ActionLedger mActions;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
+        std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
+        void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
@@ -260,6 +263,14 @@ namespace MWMechanics
         bool isInCombat(const ESM::FormKey& actor) const;
         bool isInCombatWith(const ESM::FormKey& actor, const ESM::FormKey& opponent) const;
         std::vector<ESM::FormKey> combatOpponents(const ESM::FormKey& actor) const;
+        // Controller state has the same native actor/action authority as hits.
+        // These methods do not choose groups, advance animation or resolve damage.
+        const ESM4::RuntimeMeleeState* findMeleeState(const ESM::FormKey& actor) const;
+        void setMeleeInput(const ESM::FormKey& actor, const ESM4::RuntimeMeleeInput& input);
+        std::uint64_t beginMeleeStrike(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
+            std::string_view animationGroup, float playbackSpeed = 1, const ESM::FormKey& weaponBase = {});
+        bool updateMeleeAnimation(std::uint64_t id, const ESM::FormKey& actor, float time);
+        bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
         std::uint64_t allocateAction();
         // An owned intent requires initialized Alive authority. Allocation
         // publishes ID and owner together; animation handles are never stored.

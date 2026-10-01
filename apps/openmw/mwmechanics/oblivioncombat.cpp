@@ -621,6 +621,7 @@ namespace MWMechanics
     {
         mActions = {};
         mActionOwners.clear();
+        mMeleeStates.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -705,6 +706,90 @@ namespace MWMechanics
         return {found->second.begin(), found->second.end()};
     }
 
+    const ESM4::RuntimeMeleeState* OblivionCombatService::findMeleeState(const ESM::FormKey& actor) const
+    {
+        const auto found = mMeleeStates.find(actor);
+        return found == mMeleeStates.end() ? nullptr : &found->second;
+    }
+
+    void OblivionCombatService::setMeleeInput(const ESM::FormKey& actor, const ESM4::RuntimeMeleeInput& input)
+    {
+        input.validate();
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!values || !life || values->mBase != life->mBase || life->mPhase != ESM4::ActorLifePhase::Alive)
+            throw std::invalid_argument("native melee input requires initialized Alive actor authority");
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end())
+            mMeleeStates.emplace(actor, ESM4::RuntimeMeleeState{input, {}});
+        else
+            found->second.mInput = input;
+    }
+
+    std::uint64_t OblivionCombatService::beginMeleeStrike(const ESM::FormKey& actor,
+        ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
+        const ESM::FormKey& weaponBase)
+    {
+        ESM4::RuntimeMeleeStrike strike{1, kind, weaponBase, std::string(animationGroup), playbackSpeed, 0, false};
+        strike.validate();
+        const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end() && found->second.mStrike)
+            throw std::invalid_argument("native melee strike must finish or cancel before replacement");
+        // Prepare every map node/string before allocating the action ID. The
+        // existing actor/action validation and ledger allocation remain atomic.
+        decltype(mMeleeStates) prepared;
+        auto candidate = found == mMeleeStates.end() ? ESM4::RuntimeMeleeState{} : found->second;
+        candidate.mStrike = std::move(strike);
+        prepared.emplace(actor, std::move(candidate));
+        auto node = prepared.extract(prepared.begin());
+        const auto id = allocateAction(actor);
+        node.mapped().mStrike->mActionId = id;
+        if (found == mMeleeStates.end())
+            mMeleeStates.insert(std::move(node));
+        else
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+            std::swap(found->second, node.mapped());
+        }
+        return id;
+    }
+
+    bool OblivionCombatService::updateMeleeAnimation(std::uint64_t id,
+        const ESM::FormKey& actor, float time)
+    {
+        if (!std::isfinite(time) || time < 0)
+            throw std::invalid_argument("invalid native melee animation time");
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mStrike || found->second.mStrike->mActionId != id)
+            return false;
+        auto& strike = *found->second.mStrike;
+        if (time < strike.mAnimationTime)
+            throw std::invalid_argument("native melee animation cannot rewind a strike");
+        strike.mAnimationTime = time;
+        return true;
+    }
+
+    bool OblivionCombatService::finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mStrike || found->second.mStrike->mActionId != id)
+            return false;
+        if (isActionPending(id, actor))
+            consumeAction(id, actor);
+        else
+            found->second.mStrike.reset();
+        return true;
+    }
+
+    void OblivionCombatService::consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept
+    {
+        mActions.consume(id);
+        mActionOwners.erase(id);
+        const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end() && found->second.mStrike && found->second.mStrike->mActionId == id)
+            found->second.mStrike->mContactCommitted = true;
+    }
+
     std::uint64_t OblivionCombatService::allocateAction()
     {
         return mActions.allocate();
@@ -739,6 +824,9 @@ namespace MWMechanics
             return false;
         mActions.consume(id);
         mActionOwners.erase(id);
+        const auto melee = mMeleeStates.find(actor);
+        if (melee != mMeleeStates.end() && melee->second.mStrike && melee->second.mStrike->mActionId == id)
+            melee->second.mStrike.reset();
         return true;
     }
 
@@ -756,6 +844,7 @@ namespace MWMechanics
             it = mActionOwners.erase(it);
             ++count;
         }
+        mMeleeStates.erase(actor);
         return count;
     }
 
@@ -877,7 +966,7 @@ namespace MWMechanics
             if (findActorLife(victimKey)->mPhase == ESM4::ActorLifePhase::Dead)
                 stopCombat(victimKey);
         }
-        consumeAction(id, attackerKey);
+        consumeContactAction(id, attackerKey);
         if (transition)
         {
             mPendingDeathEvents.swap(transition->mEvents);
@@ -2634,6 +2723,8 @@ namespace MWMechanics
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
+        if (state.mVersion < 21 && !mMeleeStates.empty())
+            throw std::invalid_argument("native melee state requires an Oblivion v21+ save");
         if (state.mVersion < 20 && !mActionOwners.empty())
             throw std::invalid_argument("native physical action owners require an Oblivion v20+ save");
         if (state.mVersion < 9 && !mActorValues.empty())
@@ -2686,10 +2777,12 @@ namespace MWMechanics
         }
         auto actions = mActions.capture();
         auto actionOwners = mActionOwners;
+        auto meleeStates = mMeleeStates;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
         state.mPhysicalActionOwners.swap(actionOwners);
+        state.mNativeMeleeStates.swap(meleeStates);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -2805,6 +2898,7 @@ namespace MWMechanics
         ESM4::ActionLedger actions;
         actions.restore(state.mPhysicalActions);
         auto actionOwners = state.mPhysicalActionOwners;
+        auto meleeStates = state.mNativeMeleeStates;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -2842,6 +2936,7 @@ namespace MWMechanics
         std::deque<ESM4::RuntimeActorDeathEvent> events(state.mPendingDeathEvents.begin(), state.mPendingDeathEvents.end());
         mActions = std::move(actions);
         mActionOwners.swap(actionOwners);
+        mMeleeStates.swap(meleeStates);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);

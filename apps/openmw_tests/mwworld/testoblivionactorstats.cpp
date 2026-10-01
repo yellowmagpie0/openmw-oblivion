@@ -6527,6 +6527,136 @@ namespace
     }
 
 
+
+    TEST_F(OblivionActorStatsTest, meleeAuthorityRestartsPendingAndCommittedAnimationWithoutReplayingContact)
+    {
+        autoNpc(); sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3}; reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey; values.mBase = mActorKey; values.mValues[8].mBase = 100;
+
+        values.mValues[10].mBase = 60;
+        const auto foreign = ESM::FormKey::content("different.esm", 0x900);
+        const ESM4::RuntimeMeleeInput input{.25f, true, false, ESM4::MeleeQueuedStrike::Power};
+        EXPECT_THROW(service.setMeleeInput(values.mActor, input), std::invalid_argument);
+        EXPECT_THROW(service.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft"), std::invalid_argument);
+        service.publishNonPlayerValues(ptr, values);
+        service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto anonymous = service.allocateAction();
+        service.setMeleeInput(values.mActor, input);
+        ASSERT_TRUE(service.findMeleeState(values.mActor));
+        EXPECT_EQ(service.findMeleeState(values.mActor)->mInput, input);
+        EXPECT_FALSE(service.findMeleeState(values.mActor)->mStrike);
+        EXPECT_THROW(service.setMeleeInput(foreign, input), std::invalid_argument);
+        const auto id = service.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::RightPower, "handtohandattackrightpower", 1.25f);
+        EXPECT_TRUE(service.isActionPending(id, values.mActor));
+        const auto strike = *service.findMeleeState(values.mActor)->mStrike;
+        EXPECT_EQ(strike.mKind, ESM4::MeleeStrikeKind::RightPower);
+        EXPECT_EQ(strike.mAnimationGroup, "handtohandattackrightpower");
+        EXPECT_EQ(strike.mPlaybackSpeed, 1.25f);
+        EXPECT_EQ(strike.mActionId, id); EXPECT_FALSE(strike.mContactCommitted);
+        EXPECT_THROW(service.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft"), std::invalid_argument);
+        EXPECT_FALSE(service.updateMeleeAnimation(id, foreign, .5f));
+        EXPECT_FALSE(service.updateMeleeAnimation(id+1, values.mActor, .5f));
+        EXPECT_TRUE(service.updateMeleeAnimation(id, values.mActor, .25f));
+        EXPECT_TRUE(service.updateMeleeAnimation(id, values.mActor, .25f));
+        EXPECT_THROW(service.updateMeleeAnimation(id, values.mActor, .125f), std::invalid_argument);
+        EXPECT_THROW(service.updateMeleeAnimation(id, values.mActor, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+        auto invalid = input; invalid.mHeldSeconds = -1;
+        EXPECT_THROW(service.setMeleeInput(values.mActor, invalid), std::runtime_error);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = values.mActor; savedActor.mBase = values.mBase; savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved); const auto before = saved.serializeBinary();
+        auto older = saved; older.mVersion = 20;
+        EXPECT_THROW(service.capture(older), std::invalid_argument);
+        EXPECT_EQ(older.mNativeMeleeStates, saved.mNativeMeleeStates);
+        MWMechanics::OblivionCombatService restored, candidate;
+        candidate.restore(ESM4::RuntimeState::deserializeBinary(before));
+        const std::array residents{ptr};
+        restored.installRestoredActorState(std::move(candidate), residents, nullptr);
+        ASSERT_TRUE(restored.findMeleeState(values.mActor)->mStrike);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mAnimationTime, .25f);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mAnimationGroup, "handtohandattackrightpower");
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mStrike->mPlaybackSpeed, 1.25f);
+        EXPECT_TRUE(restored.isActionPending(id, values.mActor));
+        EXPECT_THROW(restored.commitPhysicalContact(id, ptr, {}, {-7, -1, 0}, nullptr, false, {4, .5f}, {}), std::invalid_argument);
+        restored.capture(saved); EXPECT_EQ(saved.serializeBinary(), before);
+        // A valid resolved miss consumes only its strike, retaining follow-through
+        // and the queued power input. This does not execute a geometry query.
+        ASSERT_TRUE(restored.commitPhysicalContact(id, ptr, {}, {-7, 0, 0}, nullptr, false, {4, .5f}, {}));
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), 53);
+        EXPECT_TRUE(restored.isActionConsumed(id));
+        EXPECT_TRUE(restored.isActionPending(anonymous));
+        ASSERT_TRUE(restored.findMeleeState(values.mActor)->mStrike);
+        EXPECT_TRUE(restored.findMeleeState(values.mActor)->mStrike->mContactCommitted);
+        EXPECT_EQ(restored.findMeleeState(values.mActor)->mInput, input);
+        EXPECT_TRUE(restored.updateMeleeAnimation(id, values.mActor, .5f));
+        restored.capture(saved); const auto committed = saved.serializeBinary();
+        MWMechanics::OblivionCombatService after, committedCandidate;
+        committedCandidate.restore(ESM4::RuntimeState::deserializeBinary(committed));
+        after.installRestoredActorState(std::move(committedCandidate), residents, nullptr);
+        EXPECT_TRUE(after.findMeleeState(values.mActor)->mStrike->mContactCommitted);
+        EXPECT_EQ(after.findMeleeState(values.mActor)->mStrike->mAnimationTime, .5f);
+        EXPECT_FALSE(after.commitPhysicalContact(id, ptr, {}, {-7, 0, 0}, nullptr, false, {4, .5f}, {}));
+        after.capture(saved); EXPECT_EQ(saved.serializeBinary(), committed);
+        EXPECT_FALSE(after.finishMeleeStrike(id, foreign));
+        EXPECT_TRUE(after.finishMeleeStrike(id, values.mActor));
+        EXPECT_FALSE(after.finishMeleeStrike(id, values.mActor));
+        EXPECT_FALSE(after.findMeleeState(values.mActor)->mStrike);
+        EXPECT_THROW(after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, ""), std::runtime_error);
+        EXPECT_THROW(after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft", 0), std::runtime_error);
+        after.capture(saved);
+        auto exhausted = saved;
+        exhausted.mPhysicalActions.mNext = std::numeric_limits<std::uint64_t>::max();
+        MWMechanics::OblivionCombatService allocationFailure;
+        allocationFailure.restore(exhausted);
+        const auto exhaustedBytes = exhausted.serializeBinary();
+        EXPECT_THROW(allocationFailure.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft"), std::overflow_error);
+        allocationFailure.capture(exhausted);
+        EXPECT_EQ(exhausted.serializeBinary(), exhaustedBytes);
+        auto malformed = saved;
+        malformed.mNativeMeleeStates.at(values.mActor).mInput.mQueued = static_cast<ESM4::MeleeQueuedStrike>(3);
+        const auto stable = saved.serializeBinary();
+        EXPECT_THROW(after.restore(malformed), std::runtime_error);
+        after.capture(saved); EXPECT_EQ(saved.serializeBinary(), stable);
+        const auto next = after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        EXPECT_EQ(next, id+1);
+        EXPECT_TRUE(after.finishMeleeStrike(next, values.mActor));
+        EXPECT_TRUE(after.isActionConsumed(next));
+        EXPECT_EQ(after.findMeleeState(values.mActor)->mInput.mQueued, ESM4::MeleeQueuedStrike::Power);
+        const auto cancelled = after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::StandingPower, "handtohandattackpower");
+        EXPECT_TRUE(after.consumeAction(cancelled, values.mActor));
+        EXPECT_FALSE(after.findMeleeState(values.mActor)->mStrike);
+        const auto incapacitated = after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::ForwardPower, "handtohandattackforwardpower");
+        after.publishNonPlayerLife(ptr, {values.mActor, values.mBase, ESM4::ActorLifePhase::EssentialUnconscious, 4, {}});
+        EXPECT_FALSE(after.findMeleeState(values.mActor));
+        EXPECT_TRUE(after.isActionConsumed(incapacitated));
+        EXPECT_TRUE(after.isActionPending(anonymous));
+        EXPECT_THROW(after.setMeleeInput(values.mActor, input), std::invalid_argument);
+        EXPECT_THROW(after.beginMeleeStrike(values.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft"), std::invalid_argument);
+        after.clear(); EXPECT_FALSE(after.findMeleeState(values.mActor));
+        EXPECT_EQ(after.allocateAction(), 1);
+    }
+
     TEST_F(OblivionActorStatsTest, ownedPhysicalIntentsValidateCompleteOwnerConsumeOnceAndCancelWithLife)
     {
         autoNpc(); sharedStats();
@@ -6688,6 +6818,80 @@ namespace
         const auto cancelled = resumed.allocateAction(refs[0].mFormKey);
         resumed.cancelActorActions(refs[0].mFormKey);
         EXPECT_FALSE(resumed.commitPhysicalContact(cancelled, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+    }
+
+    TEST_F(OblivionActorStatsTest, meleePlayerAndZeroFatigueCreatureKeepSeparateContinuationAndCancellation)
+    {
+        sharedStats();
+        ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(facade);
+        ESM4::Creature creature{}; creature.mId = {0x800, 3}; creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+        MWWorld::Player player(playerRecord); const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{}; initial.blank(); playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCreature reference{}; reference.mId = {0x900, 3};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900); reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr creaturePtr(&live);
+        const ESM4::PlayerDynamicBaseSettings playerBase{2, 1.5f, 5};
+        for (const bool playerAttacks : {false, true})
+        for (const bool godMode : {false, true})
+        {
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues pv; pv.mActor = ESM::FormKey::dynamic("player", 1);
+            pv.mBase = ESM::FormKey::dynamic("player-base", 1); pv.mOwner = ESM4::ActorValueOwner::Player;
+            pv.mPlayerFormValues = {{0, 0, 0, 0}};
+            for (std::size_t i = 0; i < 8; ++i) pv.mValues[i].mBase = 40;
+            service.publishPlayerValues(player, pv, playerBase);
+            service.publishPlayerLife(player, {pv.mActor, pv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeActorValues cv; cv.mActor = reference.mFormKey; cv.mBase = mActorKey;
+            cv.mValues[8].mBase = 100; cv.mValues[10].mBase = 0;
+            service.publishNonPlayerValues(creaturePtr, cv);
+            service.publishNonPlayerLife(creaturePtr, {cv.mActor, cv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            for (const auto& actor : {pv.mActor, cv.mActor})
+                service.setMeleeInput(actor, {.125f, false, true, ESM4::MeleeQueuedStrike::Ordinary});
+            const auto playerId = service.beginMeleeStrike(pv.mActor, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+            const auto creatureId = service.beginMeleeStrike(cv.mActor, ESM4::MeleeStrikeKind::Right, "attackright");
+            const auto attacker = playerAttacks ? playerPtr : creaturePtr;
+            const auto key = playerAttacks ? pv.mActor : cv.mActor;
+            const auto other = playerAttacks ? cv.mActor : pv.mActor;
+            const auto id = playerAttacks ? playerId : creatureId;
+            // The caller supplies zero creature expenditure. This checks saved
+            // authority/ownership, not the unresolved controller cost policy.
+            ASSERT_TRUE(service.commitPhysicalContact(id, attacker, {}, {playerAttacks ? -7.f : 0.f, 0, 0},
+                &player, false, {4, .5f}, playerBase, godMode));
+            EXPECT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getFatigue().getCurrent(),
+                playerAttacks && !godMode ? 153 : 160);
+            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getFatigue().getCurrent(), 0);
+            EXPECT_FALSE(creaturePtr.getClass().getCreatureStats(creaturePtr).isFatigueKnockedOut());
+            EXPECT_TRUE(service.findMeleeState(key)->mStrike->mContactCommitted);
+            EXPECT_FALSE(service.findMeleeState(other)->mStrike->mContactCommitted);
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = pv.mActor; saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2); saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            ESM4::RuntimeReferenceState savedActor; savedActor.mKey = cv.mActor; savedActor.mBase = cv.mBase;
+            savedActor.mCell = saved.mPlayer.mCell; saved.mReferences.push_back(savedActor);
+            service.capture(saved); const auto bytes = saved.serializeBinary();
+            MWMechanics::OblivionCombatService restored, candidate;
+            candidate.restore(ESM4::RuntimeState::deserializeBinary(bytes));
+            const std::array residents{creaturePtr};
+            restored.installRestoredActorState(std::move(candidate), residents, &player);
+            EXPECT_FALSE(restored.commitPhysicalContact(id, attacker, {}, {-7, 0, 0}, &player,
+                false, {4, .5f}, playerBase, godMode));
+            restored.capture(saved); EXPECT_EQ(saved.serializeBinary(), bytes);
+            EXPECT_EQ(restored.cancelActorActions(key), 0);
+            EXPECT_FALSE(restored.findMeleeState(key));
+            ASSERT_TRUE(restored.findMeleeState(other)->mStrike);
+            EXPECT_TRUE(restored.isActionPending(restored.findMeleeState(other)->mStrike->mActionId, other));
+            EXPECT_EQ(restored.cancelActorActions(other), 1);
+            EXPECT_FALSE(restored.findMeleeState(other));
+            restored.capture(saved); saved.validate(); EXPECT_TRUE(saved.mNativeMeleeStates.empty());
+        }
     }
 
     TEST_F(OblivionActorStatsTest, physicalPlayerCreatureContactOwnsDeathEssentialGodModeAndEventFailure)

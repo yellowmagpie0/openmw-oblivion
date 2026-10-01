@@ -28,7 +28,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 20;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 21;
 
     struct RuntimeContentIdentity
     {
@@ -314,6 +314,40 @@ namespace ESM4
         friend bool operator==(const RuntimeActorLife&, const RuntimeActorLife&) = default;
     };
 
+    // Logical strike kinds, with stock native group selection owned by the
+    // controller adapter. These values are save enums, not raw TES4 group IDs.
+    enum class MeleeStrikeKind : std::uint8_t
+    { Left, Right, StandingPower, ForwardPower, BackwardPower, LeftPower, RightPower };
+    enum class MeleeQueuedStrike : std::uint8_t { None, Ordinary, Power };
+    struct RuntimeMeleeInput
+    {
+        float mHeldSeconds = 0;
+        bool mInputHeld = false;
+        bool mPreferLeft = true;
+        MeleeQueuedStrike mQueued = MeleeQueuedStrike::None;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleeInput&, const RuntimeMeleeInput&) = default;
+    };
+    struct RuntimeMeleeStrike
+    {
+        std::uint64_t mActionId = 0;
+        MeleeStrikeKind mKind = MeleeStrikeKind::Left;
+        ESM::FormKey mWeaponBase; // Null for hand-to-hand or a natural attack.
+        std::string mAnimationGroup; // The selected variant, not just its strike kind.
+        float mPlaybackSpeed = 1;
+        float mAnimationTime = 0;
+        bool mContactCommitted = false;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
+    };
+    struct RuntimeMeleeState
+    {
+        RuntimeMeleeInput mInput;
+        std::optional<RuntimeMeleeStrike> mStrike;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
+    };
+
     struct RuntimeActorDeathEvent
     {
         std::uint64_t mId = 0;
@@ -355,6 +389,10 @@ namespace ESM4
         // v20: pending physical intents bind to stable attacker identity. Older
         // anonymous IDs remain anonymous; no actor or contact is inferred.
         std::map<std::uint64_t, ESM::FormKey> mPhysicalActionOwners;
+        // v21: input queue and animation/contact continuation, including the
+        // follow-through of an already consumed strike. Older IDs do not imply
+        // an animation; old snapshots deliberately start with no melee state.
+        std::map<ESM::FormKey, RuntimeMeleeState> mNativeMeleeStates;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

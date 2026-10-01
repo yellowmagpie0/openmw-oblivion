@@ -7826,3 +7826,59 @@ S2/S3 stay in progress; S4–S14 remain open. Checkpoint52 is committed as
 S3/isolated-git-progress-30/m15-progress.bundle, SHA256
 4da001aabca5755351ae8f7536d91123a090805a1786ec8b2d63fdc8ca81c674.
 Checkpoint53 is exported and committed separately after both engine checks.
+
+### Checkpoint54 — owned melee intent and consumed follow-through
+
+Schema21 adds one native melee state per admitted, alive actor: held-input
+seconds, button state, ordinary/power queue and side preference, plus an optional
+strike with owned action ID, logical kind, weapon base, exact animation group,
+playback speed, animation time and contact-committed flag. Pending strikes must
+match the owned ledger; consumed follow-through must have no pending ID. Old
+snapshots adopt an empty map and never infer animations from anonymous IDs.
+This does not yet identify exact weapon instances or implement the controller.
+
+The combat service prepares strike allocations before publishing ownership,
+checks monotonic animation progress, separates cancellation from contact
+consumption, and retains consumed animation/input state until completion.
+Physical-contact publication now marks the matching strike consumed without
+allowing a second debit after restore. Actor cancellation clears both pending
+intent and consumed follow-through. Restore/capture keep the same authority.
+C++ and Python validate the exact binary/JSON fields and malformed owners,
+IDs, booleans, enums, keys, animation strings, speed and time.
+
+Two new component cases, two engine cases and two Python cases cover exact
+wire bytes, truncation, all strike/queue kinds, pending and committed restart,
+wrong-owner/replay rejection, exhausted allocation, invalid restore rollback,
+real Player/NPC/CREA bindings, god mode, independent concurrent actors and
+life cancellation. Caller-supplied miss/contact deltas test publication only;
+zero creature cost here is supplied, not a proven production policy.
+The prior-header compilation baseline is retained in melee-state-baseline-01.
+Python01 retained a writer argument failure; Python02 retained a missing
+acceptance-helper default. Both were fixed before formal acceptance checks.
+Syntax02 passes all four affected translation units.
+
+S3/melee-state-main-01 passes all1993 component,714 engine and217 Python tests.
+S3/melee-state-sanitized-01 passes468 native component and all714 engine tests
+under ASan/UBSan with leak detection disabled. Exact C++ inventories match;
+there are no failures or skips. Tested source fingerprint: `d14fa51eb4407988c060272b2e979edf084d72d7598ca2351d302247e3f799b9`.
+
+S3/melee-state-offscreen-01 independently checks a stock schema20 save loaded
+and quicksaved as21, then loaded/resaved in a distinct fresh process as21.
+Both processes terminate normally. Nine actors retain complete native values,
+life, breath, bases, death counts/events, combat membership and physical action
+ledger/owners; the new melee map is empty. Both pristine inputs match their
+sources. Public getav reports80/80/140, getdead reports0 and the saved public
+carryweight view remains200. Binary SHA256:
+`eb2c022e756a7e73c4ea57da74f460000799435a49fce7a2214b283810dcf40b`.
+Both process epochs and save hashes are recorded in verification.json.
+All four captures were directly reviewed: textured Imperial Prison arch,
+chains and bench, readable labels and full resource bars. SDL offscreen,
+no-sound and idle migration establish neither melee gameplay nor audio.
+
+Checkpoint53 is committed as43d4d94b29bb3a8464a42e20fbbcf5cf1df2d612;
+verified bundle S3/isolated-git-progress-31/m15-progress.bundle SHA256
+0573629d828b01b513d1a0f02d9a8f6a36e212cf7364777146a517215bab56fe.
+Checkpoint54 is exported/committed after these terminal checks. Next: native
+controller input, exact stock animation and bare Hit dispatch to an owned
+resolved contact. Physics acquisition and signed-delta publication exist but
+are not yet called by that controller. S2/S3 remain in progress; S4–S14 open.
