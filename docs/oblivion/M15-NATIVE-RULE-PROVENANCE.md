@@ -4099,3 +4099,35 @@ report.json SHA256 `3acf9c63a7201147d33be0eb09ce8ca6b908609f7db7ee9fb7e6c2b8f0d9
 native-melee-phase-comparison-01:
 original-observations.tsv SHA256 `e55724f138605a5aa050795e47fcbbfd7728229201cd4708ac6e47d20b130fbc`.
 verification.json SHA256 `5ba951c4e909bf97bf8679d9abfa9010f4f87099a623e360dd259e5cc8711548`.
+
+## Ordinary-contact process replay guard (checkpoint58)
+
+S4/native-contact-replay-oracle-04 executes16 cases/48 repeated dispatches
+through original5FCBB5 process-state/sequence gating and native jump table,
+ordinary phase/subtype gating, full5E4010 fatigue cost, full5E5640 attacking
+predicate and full5EFFD0 state writer, stopping at5FD7DE. Both x87 modes pass.
+Supplied process getter/sequence virtuals and setter store the native state3;
+contact/debit writers are supplied. With process state2 and ordinary phase1,
+trace is contact, fatigue debit, state3. Two further calls at the same phase
+reject contact. Initial state3 or other supplied phases produce no contact.
+The native dispatch table routes process state2 to5FCC05 and state3 to5FD7DE;
+5E5640 tests inclusive states2..5 before the post-contact transition.
+
+Full function entry/body acquisition, callback-induced state changes, animation
+update scheduling, blocking/magic/other process states and real gameplay are
+outside this bounded probe. It establishes a process-state replay guard, not a
+full original contact transaction or the production controller's contact timing.
+Attempts01/02 failed harness generation (truncated loader string/missing newline);
+03 omitted live ECX=actor at mid-function entry and faulted. Corrected04 passes;
+failed sources and explicit failure records remain in ignored evidence paths.
+
+Stock key inventory includes Sound: WPNBlockShieldHeavy/WPNBowDraw/bowShoot and
+multiline Enum: Left plus Sound: WPNHitHand. Native SOUN editor-ID routing is now
+wired in the CharacterController, with typed winner and actual handler-boundary
+regressions. No original sound dispatch execution or audible playback is inferred
+from those headless checks. Full sound selection/creature inheritance and actual
+captured audio remain acceptance work.
+
+native-contact-replay-oracle-04/probe.py SHA256 `34bbe047518de502468a7e14a07290e44fd15d55e9aa2cc3b00c19ad6b2a7826`.
+
+native-contact-replay-oracle-04/report.json SHA256 `d1d11aad950b94fc4d902fa55851c936335bae4d6b2d42f7a89799f52335aa8a`.

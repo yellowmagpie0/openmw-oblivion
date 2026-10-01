@@ -6,8 +6,15 @@
 #include <cstdint>
 #include <string_view>
 
+namespace ESM4 { struct Sound; }
+namespace MWWorld { class ESMStore; }
+
 namespace MWSound
 {
+    // Native animation keys name SOUN editor IDs, whereas playback needs the
+    // winning record's FormId. Missing keys never resolve through TES3 aliases.
+    const ESM4::Sound* resolveNativeAnimationSound(const MWWorld::ESMStore& store, std::string_view editorId);
+
     struct NativeSoundParams
     {
         float mVolume;

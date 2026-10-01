@@ -10,6 +10,7 @@
 #include <components/esm4/loadsoun.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/rng.hpp>
+#include <components/misc/strings/algorithm.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/settings/values.hpp>
 #include <components/vfs/manager.hpp>
@@ -18,9 +19,31 @@
 
 #include <algorithm>
 #include <cmath>
+#include <set>
+#include <stdexcept>
 
 namespace MWSound
 {
+    const ESM4::Sound* resolveNativeAnimationSound(const MWWorld::ESMStore& store, std::string_view editorId)
+    {
+        if (editorId.empty() || editorId.find('\0') != std::string_view::npos)
+            return nullptr;
+        const ESM4::Sound* result = nullptr;
+        std::set<ESM::RefId> seen;
+        for (const auto& record : store.get<ESM4::Sound>())
+        {
+            if (!seen.insert(ESM::RefId(record.mId)).second)
+                continue;
+            const auto* winner = store.get<ESM4::Sound>().search(record.mId);
+            if (!winner || !Misc::StringUtils::ciEqual(winner->mEditorId, editorId))
+                continue;
+            if (result)
+                throw std::invalid_argument("ambiguous native animation sound editor ID");
+            result = winner;
+        }
+        return result;
+    }
+
     namespace
     {
         constexpr VFS::Path::NormalizedView soundDir("sound");
@@ -139,9 +162,13 @@ namespace MWSound
             for (const ESM::Sound& sound : esmstore->get<ESM::Sound>())
                 insertSound(sound.mId, sound);
             for (const ESM4::Sound& sound : esmstore->get<ESM4::Sound>())
-                insertSound(sound.mId, sound);
+                if (!mBufferNameMap.contains(ESM::RefId(sound.mId)))
+                    if (const auto* winner = esmstore->get<ESM4::Sound>().search(sound.mId))
+                        insertSound(winner->mId, *winner);
             for (const ESM4::SoundReference& sound : esmstore->get<ESM4::SoundReference>())
-                insertSound(sound.mId, sound);
+                if (!mBufferNameMap.contains(ESM::RefId(sound.mId)))
+                    if (const auto* winner = esmstore->get<ESM4::SoundReference>().search(sound.mId))
+                        insertSound(winner->mId, *winner);
         }
 
         SoundBuffer* sfx;

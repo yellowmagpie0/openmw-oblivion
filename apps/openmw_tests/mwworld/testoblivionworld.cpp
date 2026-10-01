@@ -1,4 +1,7 @@
 #include "apps/openmw/mwrender/animation.hpp"
+#include "apps/openmw/mwmechanics/character.hpp"
+#include "apps/openmw/mwsound/nativeaudioutils.hpp"
+#include <components/esm4/loadsoun.hpp>
 #include <components/vfs/filesystemarchive.hpp>
 #include <osg/MatrixTransform>
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
@@ -2610,4 +2613,113 @@ namespace
         EXPECT_THROW(MWWorld::resolveOblivionMeleeInputSettings(store), std::invalid_argument);
     }
 
+}
+
+namespace
+{
+    TEST(OblivionWorldTest, AnimationSoundResolvesWinningNativeFormIdAndRenamedOverrides)
+    {
+        NativeWorldFixture fixture;
+        auto& store = fixture.mWorld.getStore();
+        ESM4::Sound sound{};
+        sound.mId = {0x3340, 0};
+        sound.mEditorId = "NativeSwing";
+        sound.mSoundFile = "fx/original.wav";
+        store.getWritable<ESM4::Sound>().insertStatic(sound);
+        const auto* first = MWSound::resolveNativeAnimationSound(store, "nAtIvEsWiNg");
+        ASSERT_NE(first, nullptr);
+        EXPECT_EQ(first->mId, sound.mId);
+        EXPECT_EQ(first->mSoundFile, "fx/original.wav");
+        sound.mSoundFile = "fx/winning.wav";
+        store.getWritable<ESM4::Sound>().insertStatic(sound);
+        const auto* winner = MWSound::resolveNativeAnimationSound(store, "NativeSwing");
+        ASSERT_NE(winner, nullptr);
+        EXPECT_EQ(winner, store.get<ESM4::Sound>().search(sound.mId));
+        EXPECT_EQ(winner->mSoundFile, "fx/winning.wav");
+        sound.mEditorId = "RenamedSwing";
+        store.getWritable<ESM4::Sound>().insertStatic(sound);
+        EXPECT_EQ(MWSound::resolveNativeAnimationSound(store, "NativeSwing"), nullptr);
+        ASSERT_NE(MWSound::resolveNativeAnimationSound(store, "RENAMEDSWING"), nullptr);
+    }
+
+    TEST(OblivionWorldTest, AnimationSoundRejectsMissingAndAmbiguousNativeEditorIds)
+    {
+        NativeWorldFixture fixture;
+        auto& store = fixture.mWorld.getStore();
+        ESM::Sound legacy{};
+        legacy.mId = ESM::RefId::stringRefId("LegacySwing");
+        legacy.mSound = "legacy.wav";
+        store.getWritable<ESM::Sound>().insertStatic(legacy);
+        EXPECT_EQ(MWSound::resolveNativeAnimationSound(store, "LegacySwing"), nullptr);
+        EXPECT_EQ(MWSound::resolveNativeAnimationSound(store, "Player"), nullptr);
+        EXPECT_EQ(MWSound::resolveNativeAnimationSound(store, "missing"), nullptr);
+        EXPECT_EQ(MWSound::resolveNativeAnimationSound(store, ""), nullptr);
+        EXPECT_EQ(MWSound::resolveNativeAnimationSound(store, std::string_view("sound\0tail", 10)), nullptr);
+        ESM4::Sound sound{};
+        sound.mId = {0x3341, 0}; sound.mEditorId = "DuplicateSwing";
+        store.getWritable<ESM4::Sound>().insertStatic(sound);
+        sound.mId = {0x3342, 0}; sound.mEditorId = "duplicateswing";
+        store.getWritable<ESM4::Sound>().insertStatic(sound);
+        EXPECT_THROW(MWSound::resolveNativeAnimationSound(store, "DuplicateSwing"), std::invalid_argument);
+    }
+}
+
+namespace
+{
+    TEST(OblivionWorldTest, CharacterTextKeysDispatchNativeSoundFormIdsWithCaseInsensitivePrefix)
+    {
+        NativeWorldFixture fixture;
+        MWClass::Npc::registerSelf();
+        fixture.mWorld.setupPlayer();
+        ESM4::Sound sound{};
+        sound.mId = {0x3343, 0}; sound.mEditorId = "NativeTextKeySwing";
+        fixture.mWorld.getStore().getWritable<ESM4::Sound>().insertStatic(sound);
+        struct ObservedSoundManager : MWSound::SoundManager
+        {
+            using MWSound::SoundManager::SoundManager;
+            std::vector<ESM::RefId> mPlayed;
+            MWSound::Sound* playSound3D(const MWWorld::ConstPtr& actor, const ESM::RefId& id,
+                float volume, float pitch, MWSound::Type type, MWSound::PlayMode mode, float offset) override
+            {
+                EXPECT_FALSE(actor.isEmpty());
+                EXPECT_EQ(volume, 1); EXPECT_EQ(pitch, 1);
+                EXPECT_EQ(type, MWSound::Type::Sfx); EXPECT_EQ(mode, MWSound::PlayMode::Normal);
+                EXPECT_EQ(offset, 0);
+                mPlayed.push_back(id);
+                return nullptr;
+            }
+        };
+        ObservedSoundManager observed(&fixture.mVfs, false);
+        fixture.mEnvironment.setSoundManager(observed);
+        // The headless fixture has no physics system. An animated native
+        // activator exercises the same profile/text-key dispatcher without
+        // invoking actor swimming/recoil during controller construction.
+        MWClass::ESM4Activator::registerSelf();
+        ESM4::Activator base{};
+        base.mId = {0x3350, 0};
+        ESM4::Reference reference{};
+        reference.mId = {0x3351, 0};
+        reference.mFormKey = ESM::FormKey::content("headless.esm", 0x3351);
+        reference.mBaseObj = base.mId;
+        reference.mBaseKey = ESM::FormKey::content("headless.esm", 0x3350);
+        MWWorld::LiveCellRef<ESM4::Activator> live(reference, &base);
+        MWWorld::Ptr animated(&live);
+        osg::ref_ptr<MWRender::Animation> animation = new MWRender::Animation(
+            animated, new osg::Group, &fixture.mResources);
+        {
+            MWMechanics::CharacterController controller(animated, *animation);
+            SceneUtil::TextKeyMap keys;
+            keys.emplace(0.f, "Sound: NATIVEtextKEYswing");
+            controller.handleTextKey("handtohandattackleft", keys.begin(), keys);
+            ASSERT_EQ(observed.mPlayed.size(), 1);
+            EXPECT_EQ(observed.mPlayed.back(), ESM::RefId(sound.mId));
+            keys = SceneUtil::TextKeyMap{}; keys.emplace(0.f, "sound: NativeTextKeySwing");
+            controller.handleTextKey("handtohandattackright", keys.begin(), keys);
+            ASSERT_EQ(observed.mPlayed.size(), 2);
+            keys = SceneUtil::TextKeyMap{}; keys.emplace(0.f, "Sound: missing");
+            controller.handleTextKey("handtohandattackright", keys.begin(), keys);
+            EXPECT_EQ(observed.mPlayed.size(), 2);
+        }
+        fixture.mEnvironment.setSoundManager(*fixture.mSoundManager);
+    }
 }

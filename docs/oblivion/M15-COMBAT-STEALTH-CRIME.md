@@ -8013,3 +8013,41 @@ physics-to-native state adaptation remains open. Checkpoint56 commit
 `26dc230ae5c4c2a9de22c062f646d136fb8e890b`; verified bundle34 SHA256
 `30174cb8b7d117095070f99f848b97b2ff1df0441d9fa36b2a73b97eae9f851c`.
 S2/S3 remain in progress and S4–S14 remain open.
+
+### Checkpoint58 — native animation sound editor-ID routing
+
+The CharacterController native Sound: branch resolves case-insensitive editor
+IDs against winning TES4 SOUN records and passes the actual FormId to 3D sound
+playback. Missing/empty/NUL names cannot fall through to TES3 string aliases;
+ambiguous native editor IDs are rejected. Native sound-buffer population now
+selects actual winning SOUN/SNDR records before insertion rather than retaining
+an earlier iterated override. The TES3 text-key branch remains unchanged.
+
+Three engine regressions cover real typed-store override/rename semantics,
+missing/wrong-type/legacy/ambiguous names, and the actual CharacterController
+text-key handler's SoundManager boundary (prefix/editor-ID case and FormId,
+volume/pitch/type/mode/offset). The handler fixture uses an animated native
+activator and an observing sound-manager subclass, not audible playback.
+An initial actor controller fixture faulted because the headless world lacks
+physics and controller construction queries swimming. Focused01 and its
+self-signal stack trace are retained; the corrected activator fixture passes
+focused02. It exercises the common profile/text-key dispatcher without claiming
+full rendered actor or audio acceptance.
+
+S4/native-animation-sound-main-02 and native-animation-sound-sanitized-02 each
+pass all719 engine tests, exact inventories, zero failures/skips; the latter
+uses ASan/UBSan with leak detection disabled. Tested fingerprint:
+`d83e4c27d6145f52c5e2e90276465704a266b561c8407cd9b5c5f8c20714c316`.
+Earlier01 reports pass718 cases before the handler fixture was added and are
+retained separately. Components and Python are unchanged from57/55; no fresh
+component/Python acceptance is claimed. The build retains an existing warning
+in unpersistAnimationState about AnimationQueueEntry; full compiler/regression
+acceptance remains open. No audible/captured stock attack sound, creature sound
+selection, block/contact or full S4 gameplay acceptance is established here.
+
+The original ordinary-contact process replay guard investigation passes and is
+recorded in provenance. Exact phase persistence/caller timing, start predicates,
+contact/condition/reactions and ranged/death/crime/justice remain open.
+Checkpoint57 commit `7d11390a3dd7974db6e57de7f5fe8b812969eef2`; verified bundle35
+SHA256 `20e1b2b537f806436b4afaf6a60514ac0c0d6a5ce0740842af1b7a297b521934`.
+S2/S3 remain in progress and S4–S14 remain open.

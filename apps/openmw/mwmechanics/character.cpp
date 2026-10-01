@@ -19,6 +19,9 @@
 
 #include "character.hpp"
 
+#include "../mwsound/nativeaudioutils.hpp"
+#include <components/esm4/loadsoun.hpp>
+
 #include <array>
 #include <unordered_set>
 
@@ -1029,6 +1032,16 @@ namespace MWMechanics
         {
             // Native contact dispatch is implemented separately from playback.
             // These stock keys must not invoke TES3 evaluateHit/hit or wind-up.
+            return;
+        }
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && Misc::StringUtils::ciStartsWith(evt, "sound: "))
+        {
+            const auto* sound = MWSound::resolveNativeAnimationSound(
+                MWBase::Environment::get().getWorld()->getStore(), evt.substr(7));
+            if (sound)
+                MWBase::Environment::get().getSoundManager()->playSound3D(mPtr, sound->mId, 1.f, 1.f);
             return;
         }
 
