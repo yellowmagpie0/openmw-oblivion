@@ -26,6 +26,13 @@ namespace ESM4
         const MeleeInputSettings& settings);
     bool heldPowerAttackAllowed(std::int32_t baseAcrobatics, bool swimming, bool airborne,
         const MeleeInputSettings& settings);
+    enum class OrdinaryMeleePhase : std::uint8_t { Start, Contact, Queue, End };
+    // Original ordinary subtype4 slots: Start, Hit, a:, End. Advance at most
+    // one phase per native animation update, strictly after its next key.
+    OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
+        float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes);
+    float advanceMeleeAnimationClock(float animationClock, float frameDuration);
+
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings
     {

@@ -39,6 +39,33 @@ namespace ESM4
         }
     }
 
+    OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
+        float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes)
+    {
+        const auto index = static_cast<unsigned>(phase);
+        if (index > 3)
+            throw std::invalid_argument("invalid native ordinary melee phase");
+        finite(sequenceOffset);
+        finite(animationClock);
+        for (float time : keyTimes)
+            nonnegative(time);
+        if (!std::is_sorted(keyTimes.begin(), keyTimes.end()))
+            throw std::invalid_argument("unordered native ordinary melee keys");
+        if (phase == OrdinaryMeleePhase::End)
+            return phase;
+        // 4770ED stores offset+clock to binary32 before comparing the next key.
+        const float groupTime = rounded(double(sequenceOffset) + animationClock);
+        return groupTime > keyTimes[index + 1]
+            ? static_cast<OrdinaryMeleePhase>(index + 1) : phase;
+    }
+
+    float advanceMeleeAnimationClock(float animationClock, float frameDuration)
+    {
+        finite(animationClock);
+        nonnegative(frameDuration);
+        return rounded(double(animationClock) + frameDuration);
+    }
+
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)
     {
         finite(positionZ);

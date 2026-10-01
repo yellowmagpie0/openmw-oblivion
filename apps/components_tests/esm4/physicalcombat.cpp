@@ -1873,3 +1873,61 @@ TEST(ESM4PhysicalCombat, MeleeSelectionRejectsMalformedInputsAndPreservesExclusi
     overlap[0].mFacingDegrees = nan;
     EXPECT_THROW(ESM4::selectMeleeContact(overlap, 0), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, OrdinaryMeleePhaseUsesStrictKeysAndOneIncrementPerUpdate)
+{
+    using Phase = ESM4::OrdinaryMeleePhase;
+    const std::array<float, 4> keys{0, .2f, .433333397f, .666666985f};
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        const auto phase = static_cast<Phase>(i);
+        const float boundary = keys[i + 1];
+        EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(phase, 0, boundary, keys), phase);
+        EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(phase, 0,
+            std::nextafter(boundary, -std::numeric_limits<float>::infinity()), keys), phase);
+        EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(phase, 0,
+            std::nextafter(boundary, std::numeric_limits<float>::infinity()), keys),
+            static_cast<Phase>(i + 1));
+        EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(phase, 0, 100, keys), static_cast<Phase>(i + 1));
+    }
+    EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(Phase::End, 0, 100, keys), Phase::End);
+    // Offset is signed. Equality after binary32 storage must not advance,
+    // even though the unrounded sum is strictly greater than the key.
+    const std::array<float, 4> roundedKeys{0, 1, 2, 3};
+    EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(Phase::Start, 0x1p-25f, 1, roundedKeys), Phase::Start);
+    EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(Phase::Start, -.1f, .3f, keys), Phase::Contact);
+    EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(Phase::Start, -1, 0, keys), Phase::Start);
+    const std::array<float, 4> equalKeys{0, 0, 0, 0};
+    EXPECT_EQ(ESM4::advanceOrdinaryMeleePhase(Phase::Start, 0, 1, equalKeys), Phase::Contact);
+}
+
+TEST(ESM4PhysicalCombat, MeleeAnimationClockStoresFloatAndRejectsMalformedPhaseInputs)
+{
+    using Phase = ESM4::OrdinaryMeleePhase;
+    const std::array<float, 4> keys{0, .2f, .4f, .6f};
+    EXPECT_EQ(ESM4::advanceMeleeAnimationClock(.2f, .1f), .300000011920928955078125f);
+    EXPECT_EQ(ESM4::advanceMeleeAnimationClock(10000, .016f), 10000.015625f);
+    EXPECT_EQ(ESM4::advanceMeleeAnimationClock(-1, .25f), -.75f);
+    EXPECT_EQ(ESM4::advanceMeleeAnimationClock(1, 0), 1);
+    EXPECT_THROW(ESM4::advanceMeleeAnimationClock(0, -.1f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceMeleeAnimationClock(std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max()), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(static_cast<Phase>(4), 0, 0, keys), std::invalid_argument);
+    const std::array<float, 4> unordered{0, .4f, .2f, .6f};
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, 0, 0, unordered), std::invalid_argument);
+    const std::array<float, 4> negative{-1, .2f, .4f, .6f};
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, 0, 0, negative), std::invalid_argument);
+    for (float bad : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::advanceMeleeAnimationClock(bad, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceMeleeAnimationClock(0, bad), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, bad, 0, keys), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, 0, bad, keys), std::invalid_argument);
+        auto malformed = keys;
+        malformed[1] = bad;
+        EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, 0, 0, malformed), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::advanceOrdinaryMeleePhase(Phase::Start, std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(), keys), std::invalid_argument);
+}

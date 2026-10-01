@@ -7985,3 +7985,31 @@ contact/damage; this checkpoint does not close S4. S2/S3 remain in progress and
 S4–S14 remain open. Checkpoint55 commit:
 `a8c16baefc42bd008b6c4632082a23c442ef6224`; bundle33 SHA256
 `e804730e4d729749e774a337c6d734d2efbb47d65859713178f46f000bfbecb4`.
+
+### Checkpoint57 — ordinary attack phase and native clock arithmetic
+
+Immutable ordinary-subtype4 phase advancement now uses Start/Hit/a:/End keys,
+a binary32 offset+clock store, strict greater-than comparison, and at most one
+increment per update. The native clock addition also stores to binary32. Signed
+finite offsets/clocks are retained; malformed phases, nonfinite/negative or
+unordered keys, negative frame durations and arithmetic overflow are rejected.
+This arithmetic is not yet called by CharacterController or persisted as a
+native phase; contact dispatch and full caller/speed ordering remain open.
+
+S4/native-melee-phase-main-01 passes all1997 component tests;
+native-melee-phase-sanitized-01 passes472 ESM4 cases under ASan/UBSan, leak
+detection disabled. Both inventories match exactly, zero failures/skips, tested
+fingerprint `eac35b0ea4b0938fbc73e35bf427fe6e23e2a46bac9a3c3c66250a99e3ce731f`.
+Two regressions cover strict adjacent-float boundaries, single-step catch-up,
+float-store equality, signed offsets/clocks and malformed inputs. No engine or
+Python implementation changed; their checkpoint56/55 evidence remains scoped
+to unchanged bytes. S4/native-melee-phase-comparison-01 compares production
+arithmetic with192 original phase and18 clock observations in both x87 modes;
+all pass. No gameplay/FPS/phase-persistence gate is inferred from this comparison.
+
+The full native airborne predicate investigation is recorded in provenance;
+its1024 independent cases pass with stated virtual/body boundaries. Exact
+physics-to-native state adaptation remains open. Checkpoint56 commit
+`26dc230ae5c4c2a9de22c062f646d136fb8e890b`; verified bundle34 SHA256
+`30174cb8b7d117095070f99f848b97b2ff1df0441d9fa36b2a73b97eae9f851c`.
+S2/S3 remain in progress and S4–S14 remain open.

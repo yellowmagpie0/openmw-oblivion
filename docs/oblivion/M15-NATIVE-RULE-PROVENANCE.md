@@ -4068,3 +4068,34 @@ report.json SHA256 `27dd82ea1b6cfd2c535db0e9625bf59317dc97bdf2a07e1701abb87f7f6b
 native-contact-phase-oracle-01:
 probe.py SHA256 `b2e1d07924e32dbcdd92250c7cd70c0b7a0e5881cc558825de1c279d6c83190b`.
 report.json SHA256 `1e636c37c53bc9a76d408a0560f5bc84cb6b1cca80e15e8a9c1192ac6aeef68a`.
+
+## Native airborne predicate and ordinary phase arithmetic (checkpoint57)
+
+S4/native-airborne-predicate-oracle-01 executes full original5EC180 in1024
+cases, including actual4706E0 slot0 sequence retrieval,51AC70 low-byte group
+retrieval,65A2C0 controller resolution and88D370 context-state retrieval. Actor
+animation and process controller virtuals supply pointers; temporary smart-pointer
+ownership is null, and body lifetimes/state production remain outside the probe.
+The predicate is true for an active slot0 sequence in groups40/41/42, otherwise
+for a resolved controller whose context at+1E0 contains state2 at+0C. Missing
+animation, sequence, process and controller paths and groups39/43, states1/3/4/5
+are covered. Cached xOBSE headers corroborate bhkCharacterController context
+layout and hkCharacterState InAir2; this is not proof of an exact Bullet state
+adapter. Prior speculation about an AI procedure is rejected.
+
+The new production ordinary phase and clock rules compare exactly with the
+checkpoint55 independently executed192 phase/18 clock observations, including
+both x87 modes. Phase uses an explicit binary32 offset+clock store before the
+strict next-key comparison and advances once per update. Clock uses a float
+store after addition. Supported typed inputs reject malformed keys/phases and
+arithmetic overflow; this does not claim original malformed-content behavior.
+Power/block subtype phase tables, speed/anchor offset correction, native caller
+ordering, saved phase and contact dispatch are still outside this implementation.
+
+native-airborne-predicate-oracle-01:
+probe.py SHA256 `9f3929bc2db8cfb5bb667403fb5ed413be440b4a02f4d8f6efef724cd65ab95f`.
+report.json SHA256 `3acf9c63a7201147d33be0eb09ce8ca6b908609f7db7ee9fb7e6c2b8f0d9750b`.
+
+native-melee-phase-comparison-01:
+original-observations.tsv SHA256 `e55724f138605a5aa050795e47fcbbfd7728229201cd4708ac6e47d20b130fbc`.
+verification.json SHA256 `5ba951c4e909bf97bf8679d9abfa9010f4f87099a623e360dd259e5cc8711548`.
