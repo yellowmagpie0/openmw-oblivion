@@ -1395,6 +1395,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_animation_clocks"], state["native_animation_clocks"])
         migrated = state_io.decode_payload(old)
         state_io._upgrade_melee_timing(migrated)
+        state_io._upgrade_melee_ai(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)
@@ -1557,6 +1558,58 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             state["schema_version"] = 27
             state["combat_rng_state"] = bad
             with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_melee_ai28_exact_wire_validation_and_legacy_migration(self):
+        state = self.melee_state()
+        state_io._upgrade_melee_phases(state)
+        state_io._upgrade_melee_timing(state)
+        state_io._upgrade_melee_ai(state)
+        state["schema_version"] = 28
+        entry = state["native_melee_states"][0]
+        entry["strike"] = None
+        target = state["player"]["reference"]
+        style = "content:oblivion.esm:000600"
+        entry["ai_intent"] = {"target": target, "style": style}
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_melee_states"], state["native_melee_states"])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        old = copy.deepcopy(state)
+        old["schema_version"] = 27
+        del old["native_melee_states"][0]["ai_intent"]
+        prefix = bytearray(state_io.encode_payload(old))
+        struct.pack_into("<I", prefix, len(state_io.MAGIC), 28)
+        tail = b"\x01" + struct.pack("<I", len(target)) + target.encode() + struct.pack("<I", len(style)) + style.encode()
+        self.assertEqual(payload, bytes(prefix[:-8]) + tail + bytes(prefix[-8:]))
+        offset = len(prefix) - 8
+        bad = bytearray(payload); bad[offset] = 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bytes(bad))
+        for cut in range(1, len(tail) + 9):
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:-cut])
+        for changes in [
+                lambda x: x["native_melee_states"][0]["ai_intent"].update(target=entry["actor"]),
+                lambda x: x["native_melee_states"][0]["ai_intent"].update(target="content:missing.esm:000001"),
+                lambda x: x["native_melee_states"][0]["ai_intent"].update(style="null"),
+                lambda x: x["native_melee_states"][0]["ai_intent"].update(extra=1),
+                lambda x: x["native_melee_states"][0].update(ai_intent=False),
+                lambda x: x.update(native_combat_engagements=[]),
+                lambda x: x.update(schema_version=27),
+                lambda x: x["native_melee_states"][0].update(actor=target)]:
+            invalid = copy.deepcopy(state); changes(invalid)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(invalid)
+        downgrade = copy.deepcopy(state); downgrade["schema_version"] = 27
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io._upgrade_melee_ai(downgrade)
+        for version in range(21, 28):
+            legacy = copy.deepcopy(old); legacy["schema_version"] = version
+            restored = state_io.decode_payload(state_io.encode_payload(legacy))
+            self.assertNotIn("ai_intent", restored["native_melee_states"][0])
+            state_io._upgrade_melee_ai(restored)
+            self.assertIsNone(restored["native_melee_states"][0]["ai_intent"])
+
 
 if __name__ == "__main__":
     unittest.main()

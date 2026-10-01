@@ -572,10 +572,17 @@ namespace ESM4
         }
     }
 
+    void RuntimeMeleeAiIntent::validate() const
+    {
+        if (mTarget.isNull() || mStyle.isNull())
+            throw std::runtime_error("Null TES4 melee AI target or style");
+    }
+
     void RuntimeMeleeState::validate() const
     {
         mInput.validate();
         if (mStrike) mStrike->validate();
+        if (mAiIntent) mAiIntent->validate();
     }
 
     void RuntimeState::validate() const
@@ -765,6 +772,17 @@ namespace ESM4
             const auto life = lives.find(actor);
             if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive)
                 throw std::runtime_error("Dangling or incapacitated TES4 melee state owner");
+            if (melee.mAiIntent)
+            {
+                const auto& target = melee.mAiIntent->mTarget;
+                const auto targetLife = lives.find(target);
+                const auto pair = actor < target ? std::make_pair(actor, target) : std::make_pair(target, actor);
+                if (mVersion < 28 || actor == mPlayer.mReference || target == actor
+                    || !nativeActors.contains(target) || targetLife == lives.end()
+                    || targetLife->second->mPhase != ActorLifePhase::Alive
+                    || !mNativeCombatEngagements.contains(pair))
+                    throw std::runtime_error("Invalid, dangling or unsupported TES4 melee AI intent");
+            }
             if (melee.mStrike)
             {
                 const auto& strike = *melee.mStrike;
@@ -1540,6 +1558,15 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 28)
+                {
+                    writer.integer<std::uint8_t>(melee.mAiIntent.has_value());
+                    if (melee.mAiIntent)
+                    {
+                        writeKey(writer, melee.mAiIntent->mTarget);
+                        writeKey(writer, melee.mAiIntent->mStyle);
+                    }
+                }
             }
         }
         if (mVersion >= 23)
@@ -2161,6 +2188,8 @@ namespace ESM4
                     }
                     melee.mStrike = std::move(strike);
                 }
+                if (result.mVersion >= 28 && boolean())
+                    melee.mAiIntent = RuntimeMeleeAiIntent{key(), key()};
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
             }
@@ -2762,8 +2791,15 @@ namespace ESM4
             {
                 if (!first) stream << ',';
                 first = false;
-                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
-                    << "\",\"input\":{\"held_seconds\":" << std::setprecision(17) << melee.mInput.mHeldSeconds
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << '\"';
+                if (mVersion >= 28)
+                {
+                    stream << ",\"ai_intent\":";
+                    if (!melee.mAiIntent) stream << "null";
+                    else stream << "{\"target\":\"" << escapeJson(melee.mAiIntent->mTarget.serialize())
+                        << "\",\"style\":\"" << escapeJson(melee.mAiIntent->mStyle.serialize()) << "\"}";
+                }
+                stream << ",\"input\":{\"held_seconds\":" << std::setprecision(17) << melee.mInput.mHeldSeconds
                     << ",\"input_held\":" << (melee.mInput.mInputHeld ? "true" : "false")
                     << ",\"prefer_left\":" << (melee.mInput.mPreferLeft ? "true" : "false")
                     << ",\"queued\":" << static_cast<unsigned>(melee.mInput.mQueued) << "},\"strike\":";

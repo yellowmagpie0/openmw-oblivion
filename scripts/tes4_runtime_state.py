@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 27
+CURRENT_VERSION = 28
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -967,13 +967,27 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     melee_ids: set[int] = set()
     owner_map = {entry["id"]: entry["actor"] for entry in action_owners}
     for entry in melee_states:
-        if not isinstance(entry, dict) or set(entry) != {"actor", "input", "strike"}:
+        fields = {"actor", "input", "strike"}
+        if version >= 28:
+            fields.add("ai_intent")
+        if not isinstance(entry, dict) or set(entry) != fields:
             raise RuntimeStateError("Invalid TES4 melee state")
         actor = entry["actor"]
         native_key(actor)
         if actor in melee_actors or actor not in native_keys or phases.get(actor) != 0:
             raise RuntimeStateError("Duplicate, dangling or incapacitated TES4 melee owner")
         melee_actors.add(actor)
+        intent = entry.get("ai_intent")
+        if intent is not None:
+            if not isinstance(intent, dict) or set(intent) != {"target", "style"}:
+                raise RuntimeStateError("Invalid TES4 melee AI intent")
+            target, style = intent["target"], intent["style"]
+            native_key(target)
+            native_key(style)
+            if (actor == state["player"]["reference"] or target == actor
+                    or target not in native_keys or phases.get(target) != 0
+                    or tuple(sorted((actor, target))) not in seen_engagements):
+                raise RuntimeStateError("Dangling or invalid TES4 melee AI target")
         control = entry["input"]
         if not isinstance(control, dict) or set(control) != {"held_seconds", "input_held", "prefer_left", "queued"}:
             raise RuntimeStateError("Invalid TES4 melee input")
@@ -1477,6 +1491,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         for key in ("ease_end", "weighted_time", "output_time"):
                             timing[key] = reader.unpack("<f")
                     entry["strike"]["sequence_timing"] = timing
+            if version >= 28:
+                entry["ai_intent"] = {"target": reader.string(), "style": reader.string()} if melee_boolean() else None
             result["native_melee_states"].append(entry)
     if version >= 23:
         result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
@@ -1781,6 +1797,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                                 writer.pack("<f", value)
                         for key in ("ease_end", "weighted_time", "output_time"):
                             writer.pack("<f", timing[key])
+            if version >= 28:
+                intent = entry["ai_intent"]
+                writer.pack("<B", int(intent is not None))
+                if intent is not None:
+                    writer.string(intent["target"])
+                    writer.string(intent["style"])
     if version >= 23:
         clocks = sorted(state.get("native_animation_clocks", []), key=lambda item: item["actor"])
         writer.pack("<I", len(clocks))
@@ -1835,6 +1857,14 @@ def load_save(path: Path) -> dict[str, Any]:
     return decode_payload(_find_runtime_record(path.read_bytes())[3])
 
 
+def _upgrade_melee_ai(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 28:
+        for entry in state.get("native_melee_states", []):
+            if entry.get("ai_intent") is not None:
+                raise RuntimeStateError("Legacy TES4 save cannot carry melee AI intent")
+            entry["ai_intent"] = None
+
+
 def _upgrade_melee_timing(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 23:
         for entry in state.get("native_melee_states", []):
@@ -1856,6 +1886,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     state = copy.deepcopy(state)
     _upgrade_melee_phases(state)
     _upgrade_melee_timing(state)
+    _upgrade_melee_ai(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -1910,6 +1941,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     result = copy.deepcopy(state)
     _upgrade_melee_phases(result)
     _upgrade_melee_timing(result)
+    _upgrade_melee_ai(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])

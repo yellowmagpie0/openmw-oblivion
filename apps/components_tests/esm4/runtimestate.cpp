@@ -2078,3 +2078,82 @@ TEST(ESM4RuntimeState, CombatRandom27PreservesUnsignedSeedsAndRejectsLossyDowngr
         EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mCombatRngState, 1u);
     }
 }
+
+TEST(ESM4RuntimeState, MeleeAi28PersistsOwnedTargetAndRejectsDanglingOrLossyState)
+{
+    auto state = meleeState();
+    state.mVersion = 28;
+    std::sort(state.mPhysicalActions.mPending.begin(), state.mPhysicalActions.mPending.end());
+    const auto actor = state.mReferences.front().mKey;
+    const auto target = state.mPlayer.mReference;
+    ESM4::RuntimeActorValues playerValues;
+    playerValues.mActor = target;
+    playerValues.mBase = ESM::FormKey::dynamic("player-base", 1);
+    playerValues.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues.push_back(playerValues);
+    state.mNativeActorLife.push_back({target, playerValues.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+    state.mNativeCombatEngagements.emplace(actor, target);
+    auto& melee = state.mNativeMeleeStates.at(actor);
+    melee.mStrike.reset();
+    melee.mAiIntent = ESM4::RuntimeMeleeAiIntent{target, ESM::FormKey::content("oblivion.esm", 0x600)};
+    const auto bytes = state.serializeBinary();
+    auto legacyWire = state;
+    legacyWire.mVersion = 27;
+    legacyWire.mNativeMeleeStates.at(actor).mAiIntent.reset();
+    auto expected = legacyWire.serializeBinary();
+    expected[std::string_view("OMW4STATE").size()] = 28;
+    std::vector<std::uint8_t> intentWire{1};
+    for (const auto& key : {target, melee.mAiIntent->mStyle})
+    {
+        const auto text = key.serialize();
+        for (unsigned byte = 0; byte < 4; ++byte)
+            intentWire.push_back(static_cast<std::uint8_t>(text.size() >> (8 * byte)));
+        intentWire.insert(intentWire.end(), text.begin(), text.end());
+    }
+    expected.insert(expected.end() - 8, intentWire.begin(), intentWire.end());
+    EXPECT_EQ(bytes, expected);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes), state);
+    EXPECT_NE(state.canonicalJson().find("ai_intent"), std::string::npos);
+    auto invalid = state;
+    invalid.mVersion = 27;
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeMeleeStates.at(actor).mAiIntent->mTarget = actor;
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeMeleeStates.at(actor).mAiIntent->mTarget = ESM::FormKey::content("missing.esm", 1);
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeMeleeStates.at(actor).mAiIntent->mStyle = {};
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeCombatEngagements.clear();
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeMeleeStates.clear();
+    invalid.mNativeMeleeStates.emplace(target, melee);
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state;
+    for (auto& life : invalid.mNativeActorLife)
+        if (life.mActor == target) life.mPhase = ESM4::ActorLifePhase::EssentialUnconscious;
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    for (unsigned version = 21; version < 28; ++version)
+    {
+        auto legacy = state;
+        legacy.mVersion = version;
+        legacy.mNativeMeleeStates.at(actor).mAiIntent.reset();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+        EXPECT_FALSE(restored.mNativeMeleeStates.at(actor).mAiIntent);
+        EXPECT_EQ(restored.canonicalJson().find("ai_intent"), std::string::npos);
+    }
+    const auto tailSize = 1 + 8 + target.serialize().size() + melee.mAiIntent->mStyle.serialize().size();
+    auto malformed = bytes;
+    malformed[bytes.size() - 8 - tailSize] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(malformed), std::runtime_error);
+    for (std::size_t cut = 1; cut <= tailSize + 8; ++cut)
+    {
+        auto truncated = bytes;
+        truncated.resize(bytes.size() - cut);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    }
+}

@@ -10301,3 +10301,48 @@ stable tested source fingerprint `8401c65851b7b4fbb80101404d201a438cbfd1e16d4909
 No sanitizer findings; leaks disabled. Component/Python source unchanged.
 Normal-input NPC attacks, other armor slots, blocking equipment, breaks,
 reactions, audio and all later open gates still require completion. S4 is open.
+
+
+### Checkpoint 102 — durable selected-target ownership for NPC melee input
+
+Runtime-state version 28 adds an optional `ai_intent` to each native melee
+state: stable target and explicit combat-style FormKeys. Versions 1–27 retain
+their exact layouts and migrate to no owned AI input. The new boolean and keys
+follow each melee entry's optional strike/timing; the animation-clock section
+and terminal combat RNG retain their established order. C++ canonical JSON and
+Python decode/encode, save rewriting, and acceptance mutation agree. This is
+architecture for the S4 opponent, not evidence of autonomous attacks yet.
+
+Validation requires a non-Player initialized Alive source, a distinct initialized
+Alive target, nonnull style identity, and an existing combat engagement. Self,
+dangling, incapacitated, unengaged, malformed boolean/shape, truncated payload,
+and lossy downgrade cases fail closed. The Python upgrade helper refuses an
+active AI intent mislabeled as a legacy save rather than silently discarding it.
+Both codecs have independently assembled byte-layout assertions, round trips,
+wire corruptions and v21–27 empty-intent migration cases.
+
+Fresh `S3/native-melee-ai-intent-main-03` passes all **2,051 component,
+761 engine and 236 Python tests**; `S3/native-melee-ai-intent-sanitized-03`
+passes all **2,051 component and 761 engine tests** under ASan/UBSan
+(`detect_leaks=0:halt_on_error=1`, UBSan halt/stacktrace). Inventories match XML,
+with no failures/skips or sanitizer findings. Both full reports identify tested
+source fingerprint
+`bacb599f593f05e73051613619887fc345507564a261677b1a2507ce68fbd9ff`.
+
+Retained first normal/sanitizer runs fail only the new fixture because its
+selected Player target lacked native values/life and engagement; those missing
+prerequisites were added. Retained second runs fail only its whole-state equality
+because the reused action fixture stores pending IDs in noncanonical order;
+the new fixture now sorts those IDs before comparison, consistent with the
+existing codec's documented canonical writer. Neither correction weakens the
+byte-layout or ownership assertions. The corrected focused C++ and Python cases
+passed before the fresh full runs. The original Python discovery failure for a
+manual v23-to-current test missing the new upgrade is retained in
+`/tmp/m15_schema28_python_initial.log`; the fixture now calls the same migration
+helper as real save rewriting.
+
+No runtime attack policy, target acquisition, content binding, script controls,
+combat interruption, rendering, or actual save/restart acceptance is closed by
+this codec chunk. S4 and the full S0–S14 completion gates remain open. The next
+chunk must bind the saved intent to winning NPC/CSTY content and reconcile its
+input/cancellation through the actual native actor/controller path.

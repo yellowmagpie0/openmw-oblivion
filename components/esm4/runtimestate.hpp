@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 27;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 28;
 
     struct RuntimeContentIdentity
     {
@@ -352,10 +352,19 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
     };
+    struct RuntimeMeleeAiIntent
+    {
+        ESM::FormKey mTarget;
+        ESM::FormKey mStyle;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleeAiIntent&, const RuntimeMeleeAiIntent&) = default;
+    };
     struct RuntimeMeleeState
     {
         RuntimeMeleeInput mInput;
         std::optional<RuntimeMeleeStrike> mStrike;
+        // v28: combat service owns the NPC input and its selected target.
+        std::optional<RuntimeMeleeAiIntent> mAiIntent = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };
