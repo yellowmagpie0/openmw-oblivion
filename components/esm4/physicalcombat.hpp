@@ -555,6 +555,12 @@ namespace ESM4
         const HandToHandSettings& settings, const PhysicalCombatSettings& physical);
     HandToHandDamage handToHandContactDamage(const HandToHandContactInput& input,
         const HandToHandSettings& settings, const PhysicalCombatSettings& physical);
+    // Original contact rescales Fatigue by the stored post-armor/block Health
+    // ratio before difficulty affects Health. Caller supplies both Health stores.
+    // Nonzero incoming Fatigue requires a nonzero Health denominator; singular
+    // or overflowing native intermediates are diagnosed rather than published.
+    float mitigateContactFatigue(float incomingFatigue, float remainingHealthDamage,
+        float unmitigatedHealthDamage);
     float blockFraction(const BlockInput& input, const BlockSettings& settings,
         const PhysicalCombatSettings& physical);
     float difficultyDamage(float damage, float difficulty, float multiplier, PlayerDamageRole role);

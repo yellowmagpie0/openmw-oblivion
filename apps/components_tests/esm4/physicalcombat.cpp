@@ -2215,3 +2215,36 @@ TEST(ESM4PhysicalCombat, OrdinaryFrameOrdersActivationEasePhaseAndManagerTime)
     auto partial = initial; partial.mTiming.mOffset = 0;
     EXPECT_THROW(ESM4::advanceOrdinaryMeleeFrame(partial, .1f, 1, 1, 0, 1, keys), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, ContactFatigueUsesPostMitigationHealthRatioStore)
+{
+    struct Case { float mFatigue, mHealth, mOriginal; std::uint32_t mExpected; };
+    constexpr Case cases[] = {
+#include "contactfatigue_expected.inc"
+    };
+    for (const auto& c : cases)
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::mitigateContactFatigue(c.mFatigue, c.mHealth, c.mOriginal)),
+            c.mExpected) << c.mFatigue << "," << c.mHealth << "," << c.mOriginal;
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::mitigateContactFatigue(100, 1, 3)), 0x42055556u);
+    EXPECT_TRUE(std::signbit(ESM4::mitigateContactFatigue(-0.f, 0, 0)));
+}
+
+TEST(ESM4PhysicalCombat, ContactFatigueDiagnosesInvalidInputsAndNonfiniteNativeIntermediates)
+{
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::mitigateContactFatigue(bad, 1, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateContactFatigue(1, bad, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateContactFatigue(1, 1, bad), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateContactFatigue(0, bad, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::mitigateContactFatigue(0, 1, bad), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::mitigateContactFatigue(1, 0, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::mitigateContactFatigue(1, 1, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::mitigateContactFatigue(std::numeric_limits<float>::max(), 2, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::mitigateContactFatigue(1, std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::denorm_min()), std::invalid_argument);
+    EXPECT_EQ(ESM4::mitigateContactFatigue(0, 0, 0), 0);
+    EXPECT_EQ(ESM4::mitigateContactFatigue(1, 0, 1), 0);
+}

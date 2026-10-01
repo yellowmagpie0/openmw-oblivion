@@ -5085,3 +5085,33 @@ contact damage and mitigation ordering, then block/gear/reaction consequences
 and remaining power/creature animation paths. Previous checkpoint75 commit:
 23f2065c1bb6bfc841f048f07bc38635f5aa395d. Verified bundle53 SHA256:
 25c4923effae2ebfeef4a9dd231608428c132b27dd06a6336672e6b0d1931539.
+
+### Checkpoint77 — native post-mitigation contact fatigue
+
+Added the explicit native contact Fatigue rescale: store the post-armor/block
+Health divided by pre-armor Health ratio as float, then store incoming Fatigue
+times that ratio. Difficulty follows this step and changes Health only. Zero
+incoming Fatigue skips division and preserves signed zero. Invalid inputs and
+nonfinite/singular intermediates are diagnosed; native singular sink behavior
+and its eventual caller policy remain open. This helper is not yet wired to
+acquired-victim contact or claimed as a completed gameplay gate.
+
+S4/native-contact-fatigue-oracle-01 executes the hash-identified original
+5FFEB5 branch and 6000CC ratio/product stores, with explicit no-damage exits,
+without invoked game-function stubs: 81 unique inputs, 162 cases across x87
+precision controls027F/037F, all pass. Corpus SHA256:
+52edf523ee15568ae87f7896cdcf57c474411a434f791d1f4e9633a207f13020.
+The checked-in immutable expectations come from those original instructions.
+Fatigue100 times Health1/3 yields float bits42055556 because the ratio is
+stored before multiplication. Tests also cover full mitigation, zero Fatigue,
+signed zero, malformed input and overflow. S2/contact-fatigue-baseline-01 retains
+expected failures against the stub. S2/contact-fatigue-main-01 passes all2036
+component cases and492 ESM4 ASan/UBSan cases, exact inventories, no skips,
+failures or source drift; sanitizer leak detection remains disabled. Tested
+fingerprint44fc3b9b9d82f65f9e2eb76b6c1554bb75ba6465eb9b16174301096af015703a.
+Unchanged engine/Python evidence remains in checkpoints75/76.
+
+S2/S3 remain in progress and S4–S14 remain open. Next: acquired-victim damage
+integration, native mitigation/block/gear/reaction policy and the remaining
+stages. Previous checkpoint76 commit cdb1715f9704081625b7174adeafbdbcb29ad154;
+verified bundle54 SHA256 d5c99e9ede095068386e8d0fd4d825578fc10c3792e2df6b2ae8df5f63d3b197.

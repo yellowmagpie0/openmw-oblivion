@@ -1000,6 +1000,20 @@ namespace ESM4
             input.mVictimKnockedState && *input.mVictimKnockedState != 0}, settings, physical);
     }
 
+    float mitigateContactFatigue(float incomingFatigue, float remainingHealthDamage,
+        float unmitigatedHealthDamage)
+    {
+        nonnegative(incomingFatigue);
+        nonnegative(remainingHealthDamage);
+        nonnegative(unmitigatedHealthDamage);
+        if (incomingFatigue == 0.f)
+            return incomingFatigue;
+        if (unmitigatedHealthDamage == 0.f)
+            throw std::invalid_argument("native contact fatigue ratio has zero Health denominator");
+        const float ratio = rounded(double(remainingHealthDamage) / unmitigatedHealthDamage);
+        return rounded(double(incomingFatigue) * ratio);
+    }
+
     float blockFraction(const BlockInput& input, const BlockSettings& settings, const PhysicalCombatSettings& physical)
     {
         validatePhysicalCombatSettings(physical);
