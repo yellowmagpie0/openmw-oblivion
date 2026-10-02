@@ -261,10 +261,13 @@ namespace MWClass
         // Rebuild the view of already restored authority after lazy class
         // construction. Fresh actors still await explicit initialization.
         if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+        {
+            world->restoreOblivionActorDrawState(mutablePtr);
             if (auto* combat = world->getOblivionCombatService())
                 if (const auto* values = combat->findActorValues(mutablePtr.getCellRef().getFormKey());
                     values && combat->findActorLife(values->mActor))
                     world->initializeOblivionNonPlayerActor(mutablePtr, values->mProcess);
+        }
         return res;
     }
 

@@ -210,6 +210,124 @@ namespace
         reader.getRecHeader();
         fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
     }
+    TEST(OblivionWorldTest, NativeNpcDrawRestoresThroughRecordAndLazyClassWithoutCombatDeltas)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& world = fixture.mWorld;
+        EXPECT_FALSE(world.captureOblivionActorDrawState(actor));
+        EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        const auto baseline = captureNativeActorState(fixture, actor).serializeBinary();
+        const std::array states{MWMechanics::DrawState::Nothing, MWMechanics::DrawState::Weapon,
+            MWMechanics::DrawState::Spell};
+        for (const auto draw : states)
+        {
+            SCOPED_TRACE(static_cast<int>(draw));
+            actor.getClass().getCreatureStats(actor).setDrawState(draw);
+            auto saved = captureNativeActorState(fixture, actor);
+            saved.mReferences.front().mActorDrawState = world.captureOblivionActorDrawState(actor);
+            ASSERT_TRUE(saved.mReferences.front().mActorDrawState);
+            EXPECT_EQ(static_cast<int>(*saved.mReferences.front().mActorDrawState), static_cast<int>(draw));
+            readNativeSnapshot(fixture, saved);
+            const auto opposite = draw == MWMechanics::DrawState::Weapon
+                ? MWMechanics::DrawState::Nothing : MWMechanics::DrawState::Weapon;
+            actor.getClass().getCreatureStats(actor).setDrawState(opposite);
+            ASSERT_TRUE(world.restoreOblivionActorDrawState(actor));
+            EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), draw);
+            actor.getRefData().setCustomData(nullptr);
+            EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), draw);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+        }
+        auto legacy = captureNativeActorState(fixture, actor);
+        legacy.mVersion = 28;
+        readNativeSnapshot(fixture, legacy);
+        actor.getClass().getCreatureStats(actor).setDrawState(MWMechanics::DrawState::Weapon);
+        EXPECT_FALSE(world.restoreOblivionActorDrawState(actor));
+        EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Weapon);
+        actor.getRefData().setCustomData(nullptr);
+        EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Nothing);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+    }
+
+    TEST(OblivionWorldTest, NativeCreatureDrawRestoresThroughRecordAndLazyClassWithoutCombatDeltas)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{};
+        creature.mId = {0x820, 0};
+        creature.mFormKey = ESM::FormKey::content("headless.esm", 0x820);
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 1;
+        creature.mBaseConfig.tes4.baseSpell = 20;
+        creature.mBaseConfig.tes4.fatigue = 40;
+        creature.mData.health = 99;
+        creature.mData.combat = 10;
+        creature.mData.magic = 20;
+        creature.mData.stealth = 30;
+        creature.mData.damage = 40;
+        creature.mData.attribs.strength = 37;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{};
+        reference.mId = {0x920, 0};
+        reference.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        EXPECT_FALSE(world.captureOblivionActorDrawState(actor));
+        EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+        const auto baseline = captureNativeActorState(fixture, actor).serializeBinary();
+        for (const auto draw : {MWMechanics::DrawState::Nothing, MWMechanics::DrawState::Weapon,
+                 MWMechanics::DrawState::Spell})
+        {
+            actor.getClass().getCreatureStats(actor).setDrawState(draw);
+            auto saved = captureNativeActorState(fixture, actor);
+            saved.mReferences.front().mActorDrawState = world.captureOblivionActorDrawState(actor);
+            readNativeSnapshot(fixture, saved);
+            actor.getRefData().setCustomData(nullptr);
+            EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), draw);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+        }
+    }
+
+    TEST(OblivionWorldTest, NativeDrawRejectsWrongLiveBaseAndWinningKindBeforeBuildingAView)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        const auto baseline = captureNativeActorState(fixture, actor).serializeBinary();
+        auto saved = captureNativeActorState(fixture, actor);
+        saved.mReferences.front().mActorDrawState = ESM4::ActorDrawState::Weapon;
+        readNativeSnapshot(fixture, saved);
+        auto otherBase = *store.search<ESM4::Npc>(saved.mReferences.front().mBase);
+        otherBase.mId = {0x821, 0};
+        otherBase.mFormKey = ESM::FormKey::content("headless.esm", 0x821);
+        store.getWritable<ESM4::Npc>().insertStatic(otherBase, otherBase.mFormKey);
+        const auto* reference = store.search<ESM4::ActorCharacter>(actor.getCellRef().getFormKey());
+        ASSERT_NE(reference, nullptr);
+        MWWorld::LiveCellRef<ESM4::Npc> wrongLive(*reference, store.search<ESM4::Npc>(otherBase.mFormKey));
+        const MWWorld::Ptr wrong(&wrongLive, actor.getCell());
+        EXPECT_THROW(world.oblivionSavedActorDrawState(wrong), std::invalid_argument);
+        EXPECT_THROW(world.captureOblivionActorDrawState(wrong), std::invalid_argument);
+        EXPECT_EQ(wrong.getRefData().getCustomData(), nullptr);
+        ESM4::Creature conflicting{};
+        conflicting.mId = {0x800, 0};
+        conflicting.mFormKey = saved.mReferences.front().mBase;
+        conflicting.mAttackReach = 64;
+        store.getWritable<ESM4::Creature>().insertStatic(conflicting, conflicting.mFormKey);
+        EXPECT_THROW(world.oblivionSavedActorDrawState(actor), std::invalid_argument);
+        EXPECT_THROW(world.captureOblivionActorDrawState(actor), std::invalid_argument);
+        EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Nothing);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+    }
+
     TEST(OblivionWorldTest, NativeNpcActivationDispatchesScriptBeforeDefaultAndPreservesReceiverOnRestore)
     {
         NativeWorldFixture fixture(false, false, true);

@@ -58,6 +58,7 @@ namespace ESM
 
 namespace ESM4
 {
+    enum class ActorDrawState : std::uint8_t;
     struct RuntimeInventoryItem;
     struct RuntimeReferenceState;
     struct RuntimeState;
@@ -295,6 +296,9 @@ namespace MWWorld
         bool oblivionSetPlayerHotkey(const ESM::RefId& sharedId, int hotkey);
         std::optional<std::vector<std::pair<ESM::RefId, std::uint32_t>>>
             oblivionReferenceEquipment(const ESM::FormKey& key) const;
+        std::optional<ESM4::ActorDrawState> captureOblivionActorDrawState(const Ptr& actor) const;
+        std::optional<ESM4::ActorDrawState> oblivionSavedActorDrawState(const Ptr& actor) const;
+        bool restoreOblivionActorDrawState(const Ptr& actor) const;
 
         void loadData(const Files::Collections& fileCollections, const std::vector<std::string>& contentFiles,
             const std::vector<std::string>& groundcoverFiles, ToUTF8::Utf8Encoder* encoder,

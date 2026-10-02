@@ -5561,3 +5561,17 @@ round-trip and schema1-28 migration tests. Absence is not a derived combat pose.
 World capture, native class hydration, store-kind validation and actual rendered
 restoration remain subsequent acceptance work; the codec alone does not resolve
 the107 draw-state or initial-scene failures.
+
+Checkpoint109 integrates the profile-owned schema29 draw contract with actual
+native NPC/CREA world capture, class/base preflight and lazy/resident view
+restoration. No new original-executable numerical rule is introduced. Three
+integration cases preserve resource/action/life/RNG authority through typed
+record restoration. Normal and instrumented ordinary NPC contact/F5/distinct
+fresh-load courses both restore the carried Rust model before input and retain
+all frozen105 results; nine verifier rejection controls include missing draw.
+Direct captures show the actual prison/NPC/held mesh in both fresh processes,
+under unchanged image criteria. Prior107 visual failures remain historical;
+general screenshot-pipeline causality, full grip/reaction/audio and wider stage
+acceptance are not inferred. Staged geometry/equipment and authored deterministic
+combat style remain declared setup; ordinary script equipment publication is
+still a separate unfinished adapter.

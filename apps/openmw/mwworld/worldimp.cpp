@@ -769,6 +769,93 @@ namespace MWWorld
         }
     }
 
+    namespace
+    {
+        ESM::FormKey nativeDrawBase(const Ptr& actor)
+        {
+            if (!actor.isEmpty() && actor.getType() == ESM::REC_NPC_4)
+            {
+                const auto* base = actor.get<ESM4::Npc>()->mBase;
+                if (base && base->mIsTES4)
+                    return base->mFormKey;
+            }
+            else if (!actor.isEmpty() && actor.getType() == ESM::REC_CREA4)
+            {
+                const auto* base = actor.get<ESM4::Creature>()->mBase;
+                if (base && base->mAttackReach)
+                    return base->mFormKey;
+            }
+            return {};
+        }
+    }
+
+    std::optional<ESM4::ActorDrawState> World::captureOblivionActorDrawState(const Ptr& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat)
+            return std::nullopt;
+        const auto base = nativeDrawBase(actor);
+        if (base.isNull())
+            return std::nullopt;
+        const auto key = actor.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(key);
+        const auto* life = mOblivionCombat->findActorLife(key);
+        if (!values || !life)
+            return std::nullopt; // Do not create resource authority during a pose read.
+        if (values->mOwner != ESM4::ActorValueOwner::NonPlayer || values->mBase != base || life->mBase != base)
+            throw std::invalid_argument("native actor draw capture has conflicting ownership");
+        const auto* npc = mStore.search<ESM4::Npc>(base);
+        const auto* creature = mStore.search<ESM4::Creature>(base);
+        if ((npc != nullptr) == (creature != nullptr)
+            || (npc && (!npc->mIsTES4 || actor.getType() != ESM::REC_NPC_4))
+            || (creature && (!creature->mAttackReach || actor.getType() != ESM::REC_CREA4)))
+            throw std::invalid_argument("native actor draw capture has an invalid winning class/base");
+        switch (actor.getClass().getCreatureStats(actor).getDrawState())
+        {
+            case MWMechanics::DrawState::Nothing: return ESM4::ActorDrawState::Nothing;
+            case MWMechanics::DrawState::Weapon: return ESM4::ActorDrawState::Weapon;
+            case MWMechanics::DrawState::Spell: return ESM4::ActorDrawState::Spell;
+        }
+        throw std::invalid_argument("native actor draw capture has an invalid view state");
+    }
+
+    std::optional<ESM4::ActorDrawState> World::oblivionSavedActorDrawState(const Ptr& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || actor.isEmpty())
+            return std::nullopt;
+        const auto key = actor.getCellRef().getFormKey();
+        const auto saved = std::find_if(mOblivionRuntimeState->mReferences.begin(),
+            mOblivionRuntimeState->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
+        if (saved == mOblivionRuntimeState->mReferences.end() || !saved->mActorDrawState)
+            return std::nullopt;
+        const auto base = nativeDrawBase(actor);
+        const auto* npc = mStore.search<ESM4::Npc>(saved->mBase);
+        const auto* creature = mStore.search<ESM4::Creature>(saved->mBase);
+        if (base.isNull() || base != saved->mBase || (npc != nullptr) == (creature != nullptr)
+            || (npc && (!npc->mIsTES4 || actor.getType() != ESM::REC_NPC_4))
+            || (creature && (!creature->mAttackReach || actor.getType() != ESM::REC_CREA4)))
+            throw std::invalid_argument("native actor draw restore has an invalid class/base binding");
+        return saved->mActorDrawState;
+    }
+
+    bool World::restoreOblivionActorDrawState(const Ptr& actor) const
+    {
+        const auto saved = oblivionSavedActorDrawState(actor);
+        if (!saved)
+            return false;
+        MWMechanics::DrawState draw;
+        switch (*saved)
+        {
+            case ESM4::ActorDrawState::Nothing: draw = MWMechanics::DrawState::Nothing; break;
+            case ESM4::ActorDrawState::Weapon: draw = MWMechanics::DrawState::Weapon; break;
+            case ESM4::ActorDrawState::Spell: draw = MWMechanics::DrawState::Spell; break;
+            default: throw std::invalid_argument("native actor draw restore has an invalid state");
+        }
+        // Native class constructors call this only after publishing their
+        // custom-data cache, so this access cannot recurse into construction.
+        actor.getClass().getCreatureStats(actor).setDrawState(draw);
+        return true;
+    }
+
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
     {
         ESM4::RuntimeState state;
@@ -1055,6 +1142,7 @@ namespace MWWorld
                     {
                         reference.mInventory = previous->second->mInventory;
                         reference.mCustomState = previous->second->mCustomState;
+                        reference.mActorDrawState = previous->second->mActorDrawState;
                         if (mOblivionRuntimeState->mVersion < 4
                             && (ptr.getClass().getType() == ESM::REC_NPC_4
                                 || ptr.getClass().getType() == ESM::REC_CREA4))
@@ -1171,7 +1259,10 @@ namespace MWWorld
                         }
                     }
                     if (actorReference)
+                    {
                         reference.mInventory = captureNativeActorInventory(mutablePtr);
+                        reference.mActorDrawState = captureOblivionActorDrawState(mutablePtr);
+                    }
                     reference.mCustomState["count"]
                         = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
                     reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
@@ -2003,6 +2094,8 @@ namespace MWWorld
             const auto* actualBase = actualBaseId.getIf<ESM::FormId>();
             if (!baseId || actualBase == nullptr || *baseId != *actualBase)
                 throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
+            if (reference.mActorDrawState)
+                oblivionSavedActorDrawState(found->second); // Class/winning-kind preflight, before publication.
             std::optional<ESM::RefId> owner;
             if (reference.mOwner)
             {
@@ -2317,8 +2410,11 @@ namespace MWWorld
                 ptr.getCellRef().setScale(*binding.mScale);
 
             if (ptr.getClass().getType() == ESM::REC_NPC_4 || ptr.getClass().getType() == ESM::REC_CREA4)
+            {
                 applyPreparedInventory(ptr.getClass().getInventoryStore(ptr),
                     preparedActorInventories.at(reference.mKey));
+                restoreOblivionActorDrawState(ptr);
+            }
 
             if (binding.mAnimation)
             {

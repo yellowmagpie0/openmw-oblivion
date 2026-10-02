@@ -10700,3 +10700,63 @@ hydration do not yet populate/apply the field, so checkpoint107's drawn-pose
 restart gap and failed sanitized initial-scene captures remain open. Next wire
 actual native NPC/CREA capture/restoration and repeat real rendered restarts.
 S3/S4 and later M15 stages are not declared complete.
+
+### Checkpoint 109 — world capture and native draw restoration
+
+Registered native NPC/CREA views now populate schema29 `actor_draw_state` from
+actual CreatureStats. Reading an unregistered view does not create AV/life
+resource authority. Capture and restoration check the actual native class,
+matching reference/base and exactly one winning native NPC/CREA base kind.
+World load preflights saved draw bindings before publishing globals; resident
+views restore after inventory application. Lazy NPC/CREA constructors hydrate
+saved draw only after publishing their custom-data cache, avoiding constructor
+recursion. Previous unloaded reference fields are retained. An older save's
+absence leaves an existing view untouched and a newly constructed view at its
+normal default; combat/equipment are not used to invent a drawn pose.
+
+Three integration tests exercise all Nothing/Weapon/Spell states through real
+T4ST record reading and lazy class recreation for both NPC and CREA, older-save
+absence, wrong live bases and conflicting winning kinds. Exact authority
+serialization remains unchanged: pose restoration adds no resource, action,
+input, life or RNG mutation. `S3/native-actor-draw-world-01` passes all768 engine
+and242 Python tests; `native-actor-draw-world-sanitized-01` passes all768 engine
+tests. Inventories match XML, zero failures/skips, stable tested fingerprint
+f423cb0ca01b56ebfe1738467f9d9f8fb2811b0f0d352515b6c5109b548bbbbe.
+ASan/UBSan halt on errors; leak detection is disabled. Unchanged component/codec
+checks remain checkpoint108 evidence, not newly repeated coverage.
+
+`S4/native-actor-draw-restart-01` and
+`native-actor-draw-runtime-sanitized-01` both pass real ordinary activation,
+NPC-owned contact, F5, quit and a distinct fresh-process load/F5/quit. Historical
+schema28 stage bytes are unchanged; actual first and continuation saves are29.
+The source saves draw enum1 and restores the carried Rust attachment before any
+continuation input. The other saved native draw views also persist exactly.
+The frozen105 results remain Health1064833122, Rust1113509069, Iron1132041335,
+Fatigue155->147.2, seed1/three draws->415139642. Independent checks retain exact
+other authority channels/inventories, first combat/restraint/local2, subsequent
+StopCombat/unrestrained/local3, no action/input/AI/strike replay, unique changed
+saves and distinct binary-linked process epochs. Nine rejection controls include
+loss of drawn state as well as the eight earlier numeric/ownership controls.
+The added draw control and first/second draw-map equality strengthen verification;
+no outcome expectations or production code changed after the courses.
+
+All eight captures across both courses were directly inspected: named Dreth,
+actual prison scene, Hand to Hand HUD and Rust mesh at the NPC's right hand,
+including each initial fresh-load capture. Normal executable SHA256
+5825442bbf88281248f5aa2b9c226ba2810172ff7c9285c0fd9105e2c084b915;
+instrumented SHA256
+35c3a6c4ee1e5ff7235bf6823a5fd847964637ffaf975798019359f4dafd0cc4.
+The lower blade remains clipped by this close framing and the idle hand remains
+open: grip, strike/reaction frames and audio are not accepted. StopCombat does
+not request sheathing in this authored fixture; draw1 remains deliberate.
+The current instrumented fresh-load scene passes unchanged minimum entropy0.03;
+checkpoint107's two failed blank-scene courses remain retained. No independent
+general blank-scene root cause or renderer pipeline fix is claimed. An initial
+copied launcher path refused an existing historical output before engine launch;
+its log/source are retained and the fresh output path was corrected.
+
+This closes the native draw world adapter chunk, not the entire S3/S4 gates.
+Next make native script equipment changes publish to the live InventoryStore;
+NPC Add/Remove and queries must also agree with physical instances. Block,
+breakage, mastery, other melee branches/views/input/restarts, grip/reactions/
+audio and the S5-S14 work remain open. Full M15 is not complete.

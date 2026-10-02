@@ -218,10 +218,13 @@ namespace MWClass
         MWWorld::OblivionProfileServices::equipNativeApparel(initialized.mInventoryStore, *store);
         initialized.mInventoryStore.setPtr(ptr);
         if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+        {
+            world->restoreOblivionActorDrawState(ptr);
             if (auto* combat = world->getOblivionCombatService())
                 if (const auto* values = combat->findActorValues(ptr.getCellRef().getFormKey());
                     values && combat->findActorLife(values->mActor))
                     world->initializeOblivionNonPlayerActor(ptr, values->mProcess);
+        }
     }
 
     MWWorld::Ptr ESM4Creature::copyToCellImpl(const MWWorld::ConstPtr& ptr, MWWorld::CellStore& cell) const
