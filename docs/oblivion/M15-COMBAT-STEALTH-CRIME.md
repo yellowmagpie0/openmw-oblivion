@@ -12282,3 +12282,71 @@ is unchanged and checkpoint124's243 cases are reused. Documentation changes
 follow the implementation checks. All previously open M15 gates remain open.
 Next: implement friction and independently establish malleability, admit the
 stock graph, then wire the existing world scheduler and posed actor lifecycle.
+
+
+### Checkpoint129 — bounded native joint friction in the live bridge (S4 open)
+
+Checkpoint128 is committed as `fec3ac862588d8898a60884cb647dc2c35909e47`, tree
+`f155eccd5fff23720137b9c5f983840d5823e1fa`. Its125-commit verified bundle is
+`S3/isolated-git-progress-106/m15-progress.bundle`, SHA256
+`b4e0132d08a376f7f12fc83e6dec82ea9f1c8d26274395f61a2a587f0ebbc464`.
+
+The live bridge admits nonnegative friction for nonmalleable cone and hinge
+joints. Cone friction supplies three angular rows along body A's shape-frame
+axes, with principal-inertia orientation accounted for. Hinge friction supplies
+one row along its native hinge axis. The target relative angular velocity is
+zero, with impulse bounded in both directions. The native torque*frame-duration
+binary32 store precedes world torque-unit conversion by lengthScale squared.
+Finite inputs and finite native/scaled caps are required. Zero friction leaves
+rotation free inside the angular limits. This remains a Bullet solver adaptation;
+full original iterative-solver trajectories are not accepted by these checks.
+Malleability still rejects before world publication, so complete stock skeleton
+admission, actor/world wiring and ragdoll saved lifecycle remain open.
+
+Original builders911480 (ragdoll) and8b2820 (limited hinge) execute fully,
+including actual friction builder8f1460, without boundary stubs and with verified
+ret8 stack cleanup. Each produces96 cases under control words027f/037f, covering
+zero/positive torque, zero/positive frame durations and parallel/opposite axes.
+The cone emits three friction rows and the hinge one. Store8f15ba writes
+`torque * query.frameDuration` to its schema as binary32. The zero-duration
+query's inverse-duration fixture is60; it is not a real game zero-duration step.
+The original hinge basis layout is pivot, axis, perpendicular1, perpendicular2
+for A and pivot, axis, perpendicular2 for B. The first hinge fixture mistakenly
+put axis in pivot and plane in axis, producing a retained failed comparison.
+Corrected hinge oracle02 supplies the independently read proper layout; its
+original outputs are not adjusted to production values. Original hinge oracle01
+and both failed comparison01 directories remain, with the fixture error recorded.
+
+Independent evidence is `S4/native-ragdoll-friction-row-oracle-01`,
+`S4/native-hinge-friction-row-oracle-02`, and
+`S4/native-ragdoll-friction-comparison-{normal,sanitized}-02`.
+All192 native cap stores match exact binary32 values. Positive-friction,
+positive-duration cases also inspect actual published Bullet constraints'
+angular axes and lower/upper bounds:120 cases across the two builders.
+Zero-duration cases compare the cap helper only and do not invoke a dynamics
+step. Every comparison rejects wrong-bit, missing-row, duplicate-row and
+malformed-input controls. Original executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Corpus hashes are `2bc7580e74d2048a3f3d72c6c4277b9607461346bc3887a947a46d4ff5d246b2` and
+`61479f92c9fa741d5d49e809c2e7aca5f72836e83875f1089138a978e9ee8fc1`; generator hashes
+`b1fcab66021192985f832da1a3b9a60b9daf64df07e7a0cd7b557564106958cf` and `c295776fdb8b93df021b3ca122ee8a9c25d8a8b2b9cd3a7ebec5871a417c2a14`;
+comparator `af6e1d2a0b33f91d40710a2b193a2e6aeaa10add574c1eda128456ebfa03cde6`. Private original-derived
+corpora remain ignored. These comparisons do not establish collision,
+Havok effective-mass/iteration parity, NPC gameplay or persistence.
+
+The actual dynamics tests exercise hinge and cone friction at a shared anchor:
+a first0.01-second step transfers the bounded0.02 angular impulse between two
+unit-inertia bodies within1e-6; subsequent steps stop relative rotation and
+preserve total angular momentum within1e-6. A separate zero-friction case retains
+its free interior angular velocity within1e-12. Cap unit conversion uses an
+independent literal from the original schema store; invalid inputs reject.
+`S4/native-ragdoll-friction-green-01` passes the initial focused suites. Final
+full runs `S4/native-ragdoll-friction-normal-01` and `S4/native-ragdoll-friction-sanitized-01` each execute2,096 component
+cases and797 engine cases with matching inventories, no failures/skips, and
+openmw/esmtool built. Tested source fingerprint
+`3408fdcd196e9187f07fc4d818d24735d1cd5ade3810944b817b568ebfb39160` stays unchanged through both runs. The final runs include
+the later zero-friction control. ASan detect_leaks=0:halt_on_error=1 and UBSan
+halt_on_error=1:print_stacktrace=1 are explicit; this is not leak coverage.
+Python is unchanged; checkpoint124's243 cases are explicitly reused. No M15
+stage gate closes. Next: establish malleability, admit the full stock graph,
+then connect physics scheduling, posed bones, reactions and fresh-process state.

@@ -12,6 +12,10 @@ class btDynamicsWorld;
 
 namespace NifBullet
 {
+    // Original torque*dt binary32 store, then torque-unit conversion to the
+    // caller's world units (mass is unchanged, lengths use lengthScale).
+    btScalar ragdollFrictionImpulse(float torque, float frameSeconds, float lengthScale);
+
     struct RagdollBodyState
     {
         std::uint32_t mRecord;

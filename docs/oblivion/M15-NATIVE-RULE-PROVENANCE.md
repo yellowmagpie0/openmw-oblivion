@@ -6080,3 +6080,19 @@ world frames; supplying pre-transform local axes produced a retained harness
 failure. Full hashes, controls and scope are in checkpoint127's milestone
 entry. This establishes angular coordinates only, not impulse solving,
 friction/malleability, complete ragdoll admission or normal-input gameplay.
+
+
+### Checkpoint129: original joint friction rows
+
+Full original ragdoll911480 and limited-hinge8b2820 builders execute actual
+friction builder8f1460 without boundary stubs in96 cases each. Schema store
+8f15ba writes the torque*frame-duration product as binary32. Cone axes use
+body A's shape basis (three rows); hinge uses its axis (one). Proper hinge
+basis layout is pivot/axis/perpendicular1/perpendicular2 for A and
+pivot/axis/perpendicular2 for B; the initial reversed fixture was retained
+as a failed comparison, then independently corrected. Normal and sanitizer
+comparisons match192 cap stores and inspect120 positive-duration actual
+Bullet friction-row cases, with four corruption controls each. Zero-duration
+checks cover the cap only. Full hashes and bounded scope are in checkpoint129's
+milestone entry. Original effective-mass/iteration parity, malleability,
+stock graph admission, gameplay and saved continuation remain open.

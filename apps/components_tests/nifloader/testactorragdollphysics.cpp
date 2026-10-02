@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 
 #include <limits>
+#include <bit>
 
 namespace
 {
@@ -267,6 +268,74 @@ namespace
         }
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
         EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, JointFrictionTransfersBoundedImpulseAndStopsRelativeRotation)
+    {
+        addHinge();
+        mPoses[1] = mPoses[0];
+        auto& hinge = std::get<NifBullet::RagdollHingeJoint>(mGraph.mJoints[0].mJoint);
+        hinge.mA.mPivot = hinge.mB.mPivot = {0, 0, 0};
+        hinge.mFriction = 2;
+        for (bool cone : {false, true})
+        {
+            if (cone)
+            {
+                auto limits = coneLimits();
+                limits.mA = hinge.mA;
+                limits.mB = hinge.mB;
+                limits.mFriction = 2;
+                mGraph.mJoints[0].mJoint = limits;
+            }
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+            auto states = actor.capture();
+            states[0].mAngularVelocity = btVector3(1, 0, 0);
+            actor.restore(states);
+            mWorld.stepSimulation(btScalar(0.01), 0);
+            states = actor.capture();
+            // Unit angular inertia: the original torque*dt cap is .02.
+            EXPECT_NEAR(states[0].mAngularVelocity.x(), 0.98, 1e-6);
+            EXPECT_NEAR(states[1].mAngularVelocity.x(), 0.02, 1e-6);
+            for (unsigned step = 0; step < 120; ++step)
+                mWorld.stepSimulation(btScalar(0.01), 0);
+            states = actor.capture();
+            EXPECT_LT((states[0].mAngularVelocity - states[1].mAngularVelocity).length(), 1e-6);
+            EXPECT_NEAR(states[0].mAngularVelocity.x() + states[1].mAngularVelocity.x(), 1, 1e-6);
+        }
+    }
+
+    TEST(ActorRagdollFriction, NativeFloatStorePrecedesWorldTorqueUnitConversion)
+    {
+        const float duration = 1.0f / 60;
+        // Original full builder friction schema store, duration1/60/torque2.
+        const float stored = std::bit_cast<float>(std::uint32_t(0x3d088889));
+        EXPECT_EQ(NifBullet::ragdollFrictionImpulse(2, duration, 1), btScalar(stored));
+        EXPECT_EQ(NifBullet::ragdollFrictionImpulse(2, duration, 7), btScalar(stored) * 49);
+        EXPECT_EQ(NifBullet::ragdollFrictionImpulse(2, 0, 7), 0);
+        EXPECT_THROW(NifBullet::ragdollFrictionImpulse(-1, duration, 1), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollFrictionImpulse(2, -1, 1), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollFrictionImpulse(2, duration, 0), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollFrictionImpulse(std::numeric_limits<float>::infinity(), duration, 1),
+            std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, ZeroJointFrictionAllowsRotationInsideAngularLimits)
+    {
+        addHinge();
+        mPoses[1] = mPoses[0];
+        auto cone = coneLimits();
+        cone.mA = cone.mB = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        mGraph.mJoints[0].mJoint = cone;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto states = actor.capture();
+        states[0].mAngularVelocity = btVector3(0.1, 0, 0);
+        actor.restore(states);
+        for (unsigned step = 0; step < 10; ++step)
+            mWorld.stepSimulation(btScalar(0.01), 0);
+        states = actor.capture();
+        EXPECT_NEAR(states[0].mAngularVelocity.x(), 0.1, 1e-12);
+        EXPECT_NEAR(states[1].mAngularVelocity.x(), 0, 1e-12);
+        EXPECT_GT(states[0].mPose.getRotation().x(), 0.004);
     }
 
     TEST_F(ActorRagdollPhysicsTest, FallsAndSettlesAgainstActualWorldCollision)

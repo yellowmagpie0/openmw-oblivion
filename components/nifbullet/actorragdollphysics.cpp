@@ -71,10 +71,60 @@ namespace NifBullet
             return btTransform(basis, vector(frame.mPivot) * scale);
         }
 
+        void frictionRow(btTypedConstraint::btConstraintInfo2* info, int index,
+            const btVector3& axis, btScalar maximum)
+        {
+            const int offset = index * info->rowskip;
+            for (int component = 0; component < 3; ++component)
+            {
+                info->m_J1angularAxis[offset + component] = axis[component];
+                info->m_J2angularAxis[offset + component] = -axis[component];
+            }
+            info->m_constraintError[offset] = 0;
+            info->m_lowerLimit[offset] = -maximum;
+            info->m_upperLimit[offset] = maximum;
+        }
+
+        class NativeHingeConstraint final : public btHingeConstraint
+        {
+            float mFriction, mLengthScale;
+            int mFrictionRow = 0;
+
+        public:
+            NativeHingeConstraint(btRigidBody& a, btRigidBody& b, const btTransform& frameA,
+                const btTransform& frameB, float friction, float scale)
+                : btHingeConstraint(a, b, frameA, frameB, true)
+                , mFriction(friction)
+                , mLengthScale(scale)
+            {
+            }
+
+            void getInfo1(btConstraintInfo1* info) override
+            {
+                btHingeConstraint::getInfo1(info);
+                mFrictionRow = info->m_numConstraintRows;
+                if (mFriction > 0)
+                    ++info->m_numConstraintRows;
+            }
+
+            void getInfo2(btConstraintInfo2* info) override
+            {
+                btHingeConstraint::getInfo2(info);
+                if (mFriction > 0)
+                {
+                    const auto axis = (m_rbA.getCenterOfMassTransform() * getAFrame()).getBasis().getColumn(2);
+                    frictionRow(info, mFrictionRow, axis,
+                        ragdollFrictionImpulse(mFriction, float(1 / info->fps), mLengthScale));
+                }
+            }
+        };
+
         class NativeConeConstraint final : public btPoint2PointConstraint
         {
             RagdollConeJoint mJoint;
             btVector3 mAxisA, mPlaneA, mAxisB, mPlaneB;
+            btMatrix3x3 mShapeToCenterA;
+            float mLengthScale;
             std::vector<RagdollAngularLimit> mRows;
 
             static osg::Vec3f native(const btVector3& value)
@@ -101,6 +151,8 @@ namespace NifBullet
                 , mPlaneA(centerA.getBasis().transpose() * vector(joint.mA.mPlane))
                 , mAxisB(centerB.getBasis().transpose() * vector(joint.mB.mAxis))
                 , mPlaneB(centerB.getBasis().transpose() * vector(joint.mB.mPlane))
+                , mShapeToCenterA(centerA.getBasis().transpose())
+                , mLengthScale(float(scale))
             {
                 mRows = coordinates();
             }
@@ -110,7 +162,7 @@ namespace NifBullet
                 mRows = coordinates();
                 // Three bilateral anchor rows, plus a lower and upper
                 // unilateral velocity bound for each native angular coordinate.
-                info->m_numConstraintRows = 3 + 2 * int(mRows.size());
+                info->m_numConstraintRows = 3 + 2 * int(mRows.size()) + (mJoint.mFriction > 0 ? 3 : 0);
                 info->nub = 3;
             }
 
@@ -137,6 +189,13 @@ namespace NifBullet
                         info->m_lowerLimit[offset] = lower ? 0 : -SIMD_INFINITY;
                         info->m_upperLimit[offset] = lower ? SIMD_INFINITY : 0;
                     }
+                }
+                if (mJoint.mFriction > 0)
+                {
+                    const auto basis = m_rbA.getCenterOfMassTransform().getBasis() * mShapeToCenterA;
+                    const auto maximum = ragdollFrictionImpulse(mJoint.mFriction, float(1 / info->fps), mLengthScale);
+                    for (int axis = 0; axis < 3; ++axis)
+                        frictionRow(info, index++, basis.getColumn(axis), maximum);
                 }
             }
         };
@@ -168,6 +227,18 @@ namespace NifBullet
                 mWorld.removeRigidBody(mBodies[--mRegisteredBodies].mBody.get());
         }
     };
+
+    btScalar ragdollFrictionImpulse(float torque, float frameSeconds, float lengthScale)
+    {
+        coefficient(torque);
+        coefficient(frameSeconds);
+        require(std::isfinite(lengthScale) && lengthScale > 0, "invalid friction length scale");
+        const float native = float(double(torque) * double(frameSeconds));
+        require(std::isfinite(native), "nonfinite friction impulse");
+        const btScalar result = btScalar(native) * btScalar(lengthScale) * btScalar(lengthScale);
+        require(std::isfinite(result), "nonfinite scaled friction impulse");
+        return result;
+    }
 
     ActorRagdollPhysics::ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
         float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask)
@@ -253,18 +324,18 @@ namespace NifBullet
             auto& b = mImpl->mBodies[input.mBodyB];
             if (const auto* cone = std::get_if<RagdollConeJoint>(&input.mJoint))
             {
-                require(cone->mFriction == 0, "cone friction solver is not implemented");
+                coefficient(cone->mFriction);
                 mImpl->mConstraints.push_back(std::make_unique<NativeConeConstraint>(*a.mBody, *b.mBody,
                     *cone, a.mCenterFrame, b.mCenterFrame, lengthScale));
                 continue;
             }
             const auto* hinge = std::get_if<RagdollHingeJoint>(&input.mJoint);
-            require(hinge->mFriction == 0, "hinge friction solver is not implemented");
+            coefficient(hinge->mFriction);
             require(std::isfinite(hinge->mMin) && std::isfinite(hinge->mMax)
                 && hinge->mMin <= hinge->mMax, "invalid hinge limits");
-            auto constraint = std::make_unique<btHingeConstraint>(*a.mBody, *b.mBody,
+            auto constraint = std::make_unique<NativeHingeConstraint>(*a.mBody, *b.mBody,
                 a.mCenterFrame.inverse() * hingeFrame(hinge->mA, lengthScale),
-                b.mCenterFrame.inverse() * hingeFrame(hinge->mB, lengthScale), true);
+                b.mCenterFrame.inverse() * hingeFrame(hinge->mB, lengthScale), hinge->mFriction, lengthScale);
             constraint->setLimit(hinge->mMin, hinge->mMax);
             mImpl->mConstraints.push_back(std::move(constraint));
         }
