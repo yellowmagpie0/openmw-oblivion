@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "source": "build/oblivion-compat/m15/S3/melee-state-offscreen-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+  "source_sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e",
+  "actor": "content:oblivion.esm:01fc43",
+  "target": "dynamic:player:0000000000000001",
+  "reference_position": [
+    672,
+    60,
+    -109.68915557861328,
+    0,
+    0,
+    3.1415927410125732
+  ],
+  "native_ai_restrained": false,
+  "weapon": {
+    "base": "content:oblivion.esm:090615",
+    "count": 1,
+    "condition": -1.0,
+    "charge": -1.0,
+    "equipped_slots": 65536,
+    "hotkey": -1,
+    "owner": "null",
+    "remaining_usage_time": -1.0
+  },
+  "armor": {
+    "base": "content:oblivion.esm:01c6d1",
+    "count": 1,
+    "condition": 250.125,
+    "charge": -1.0,
+    "equipped_slots": 4,
+    "hotkey": -1,
+    "owner": "null",
+    "remaining_usage_time": -1.0
+  },
+  "unequipped_shirt": "content:oblivion.esm:027319",
+  "plugin_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+  "expected_health_bits": 1064833122,
+  "expected_weapon_condition_bits": 1113509069,
+  "expected_armor_condition_bits": 1132041335,
+  "expected_attack_fatigue": 7.800000190734863,
+  "purpose": "S4 stationary NPC activation/contact/save/restart matrix. Freeze original oracle outcomes before every run. Geometry/equipment/authored deterministic CSTY are declared setup; this does not close normal equip, general AI, reactions, sound or in-action restart gates.",
+  "oracles": [
+    "S4/native-npc-weapon-runtime-oracle-02/report.json",
+    "S4/native-player-armor-entry-oracle-03/report.json",
+    "S4/native-npc-player-armor-contact-oracle-02/report.json"
+  ],
+  "framerate_caps": [
+    30,
+    60,
+    120
+  ],
+  "seed_profiles": [
+    {
+      "seed": 0,
+      "draws": 2,
+      "next_state": 505908858
+    },
+    {
+      "seed": 1,
+      "draws": 3,
+      "next_state": 415139642
+    },
+    {
+      "seed": 5540,
+      "draws": 1,
+      "next_state": 1188163031
+    }
+  ],
+  "fixture_recipe": "m15_stationary_opponent_fixture.json",
+  "fixture_script": "m15_stationary_opponent.obscript",
+  "profile": "tes4",
+  "initial_save_schema": 21,
+  "staged_save_schema": 28,
+  "expected_script_local": {
+    "name": "fighting",
+    "saved_type": "number",
+    "value": 2
+  },
+  "source_script_bytecode": "Fork compiles authored SCTX; no original-game SCDA claim."
+}

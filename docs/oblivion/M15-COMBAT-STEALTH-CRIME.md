@@ -10545,3 +10545,54 @@ llvmpipe. Six further prepared pairs remain to complete the full three-seed /
 course, not the complete S4 gate: block, mastery/consequences, other attacks,
 input modes/views, in-action restarts, actual visuals/reactions/audio and later
 S5-S14 work remain open. Next complete that matrix and carried-weapon rendering.
+
+
+### Checkpoint 106 — complete stationary NPC fixed-seed/FPS-cap matrix
+
+`m15_stationary_opponent_course.json` is the editable recipe for the declared
+source save/hash, actor/target, geometry/equipment, fixture links and frozen
+original Health/condition/debit expectations. Its three seed profiles and
+30/60/120 caps are reviewed input, not values inferred from engine logs.
+`S4/native-stationary-matrix-acceptance-01/verification.json` checks every
+case's recipe and actual generated settings against it, binary hashes,
+expected seed-dependent selection counts/states, save hashes, captures and
+**18 distinct process epochs**. All **nine pairs** pass contact, F5 save,
+fresh-process continuation and independent whole-inventory/native-actor
+checks with eight negative controls each:
+
+| Combat seed | Requested caps | Draws | Final combat RNG |
+| --- | --- | --- | --- |
+| 0 | 30,60,120 | 2 | 505908858 |
+| 1 | 30,60,120 | 3 | 415139642 |
+| 5540 | 30,60,120 | 1 | 1188163031 |
+
+Seed1/cap30 is `native-stationary-opponent-offscreen-03`; the other eight are
+`native-stationary-matrix-seed{seed}-cap{cap}-01`. Every first phase has exactly
+one source-owned id1 contact, original frozen Health/weapon/Player armor values,
+script StopCombat and local2. Every actual changed continuation save preserves
+those effects, next action2 and no pending/replayed strike, held input or AI
+intent. Launchers select the unique changed save, and a recursive unchanged
+input check confirms which bytes each continuation actually loaded. The source
+master, authored plugin and actor authority/equipment inputs stay fixed.
+All nine first-phase captures were directly inspected for named Dreth, prison
+scene and Player hand-to-hand HUD. The harness also checks continuation capture
+entropy/provenance; static captures do not establish reaction/contact frames.
+
+`native-stationary-matrix-python-01` freshly passes all **239 Python tests**,
+zero failures/skips, stable fingerprint
+13abd41b3b2a872e762631cf5e5effd684edeec740e9de407b2e749a28b7d694.
+`native-stationary-matrix-code-identity-01.json` verifies current changed code
+bytes against checkpoint105 and both runtime executable hashes. Its full
+2052-component/765-engine normal and instrumented regressions are reused;
+no unchanged C++ checks are repeated. The only new source is the editable
+course recipe. Checkpoint105's instrumented seed1/cap30 contact/continuation
+remains separate runtime evidence; this nine-pair expansion is normal-engine
+coverage, not nine instrumented pairs.
+
+The settings request the declared caps; achieved30/60/120 rendering is **not
+measured or claimed** on llvmpipe. This closes this basic stationary course's
+fixed-seed/cap cross product, not S14 frame-rate/performance acceptance or the
+full S4 contract. Held-weapon models, block/reactions/mastery, other melee
+branches, views/input modes, in-action restart and audible outcomes remain.
+Next: carried-weapon visibility through the native actor renderer, preserving
+body/face parts and normal character-controller ownership.
