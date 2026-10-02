@@ -1,0 +1,143 @@
+{
+  "source_sha256": "9b3a81c4059eae8812ed0b4dc18985e2785c156e3ddd5128ba70f40d03b686fb",
+  "assets": [
+    {
+      "family": "body",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/phy_dmgflesh_01.wav",
+      "sha256": "e8a36f39bad96295cfdf52c2c5c31fc3939069bb17afff4e45b216d8d3d4001b",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        30336,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "body",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/phy_dmgflesh_02.wav",
+      "sha256": "b1a299fb6e133014865863dc88f370c783b52252083dac67389c925e305df3f8",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        21379,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "body",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/phy_dmgflesh_03.wav",
+      "sha256": "fae8baa883ebf642e403baadf8b4cd9dbccfea967e5be40cd133a476d2396c84",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        38141,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "body",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/phy_dmgflesh_04.wav",
+      "sha256": "1797985f60e7f4fea2eb40ac73b2ff1a4108377b89bbc74a13c0276ece5f8f79",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        46406,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "body",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/phy_dmgflesh_05.wav",
+      "sha256": "78a0e9583d920e6dee5da6ad129cf4b3c4e903538f45f03a987dbd92c4020e40",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        36281,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "weapon",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/wpn_hit_hand_01.wav",
+      "sha256": "e1fd1c34267c078a10dcc35115a56ec1aef19e2b50a4ed5b3e216d37a4fd45a1",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        25683,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "weapon",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/wpn_hit_hand_02.wav",
+      "sha256": "52f535569d001007e4f70bd65f77c71d3feb320197c56260b08787dba32f5dc3",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        17928,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "weapon",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/wpn_hit_hand_03.wav",
+      "sha256": "9b634d13d258adce9831ca86287c6383ff1a82d8e1cd911df633ff1147ff0a52",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        18791,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "family": "weapon",
+      "path": "build/oblivion-compat/m15/S4/native-npc-hit-sound-assets-01/wpn_hit_hand_04.wav",
+      "sha256": "0e624e25ba31513fd6c1c17d776552316e12ff8ee1175dbfcbac1256f353ab98",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        17593,
+        "NONE",
+        "not compressed"
+      ]
+    }
+  ],
+  "expected_layers": [
+    "PHYDamageFlesh",
+    "WPNHitHand"
+  ],
+  "expected_contacts": 1,
+  "expected_restart_contacts": 0,
+  "scope": "Ordinary first-person unarmed Player contact on original unarmored restrained Valen Dreth, fresh-process persistence and stock layered audio. No source gameplay fields edited.",
+  "audio_method": "12kHz normalized correlations locate independent asset lags; positive two-template least squares with common gain per template accepts one simultaneous body/hand mix. Each layer must explain at least 5% of fitted energy, joint normalized correlation >= .90, relative onset <= .05s; duplicate clusters separated by1s fail. Stereo16/48000 required. Frozen before any runtime PCM.",
+  "minimum_joint_correlation": 0.9,
+  "minimum_layer_energy_fraction": 0.05,
+  "maximum_layer_onset_difference_seconds": 0.05,
+  "candidate_minimum_correlation": 0.15,
+  "analyser_sha256": "e4904498050979711058a71a9151230f1a0b8268b169a14def173ebfc07c9d34",
+  "source_staging": "Copy the checkpoint122 staged unactivated NPC shortsword save unchanged, preserving all original gameplay state. Its equip-only script is never activated in this course.",
+  "expected_damage": {
+    "health": 1.4199999570846558,
+    "fatigue": 1.7100000381469727,
+    "attack_fatigue_cost": 7,
+    "post_save_victim_health_damage_modifier": -1.4199999570846558
+  },
+  "oracle": "Pinned original6AFB48..6AFD28 NPC palette, with real position/base/Creature predicate getters and only absent-SOUN lookup supplied;800 cases. Original hand caller and live punch observations predate this integration."
+}

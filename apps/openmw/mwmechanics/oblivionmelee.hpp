@@ -51,6 +51,7 @@ namespace MWMechanics
         std::optional<float> mWeaponConditionAfterWear{};
         unsigned mArmorConditionWrites = 0;
         unsigned mRandomDraws = 0;
+        std::optional<std::array<std::string_view, 3>> mHitSounds{};
     };
     // Acquire actual collision/LOS contact, prepare native damage, then publish
     // one owned transaction. Unavailable and unsupported contexts do not spend.

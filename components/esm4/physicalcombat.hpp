@@ -30,6 +30,22 @@ namespace ESM4
     std::string_view nativeMeleeSwishSound(std::optional<WeaponSwishInput> weapon,
         const WeaponSwishSettings& settings = {});
 
+    // Original6AFB48 hit palette for an NPC source and NPC target. Classes
+    // are caller-resolved native arguments: negative means no material layer,
+    // armor zero/light and positive/heavy; shield accepts only zero/one.
+    // These flags describe the selector branches, not inferred actor states.
+    struct NpcMeleeHitSoundInput
+    {
+        std::int32_t mWeaponType = -1;
+        std::int32_t mArmorClass = -1;
+        std::int32_t mShieldClass = -1;
+        bool mSuppressBodySound = false;
+        bool mEnchantedWeaponSound = false;
+    };
+    // Material, body and weapon layers in native lookup order; absent layers
+    // are empty. Creature sources/targets require their separate native paths.
+    std::array<std::string_view, 3> nativeNpcMeleeHitSounds(const NpcMeleeHitSoundInput& input);
+
     enum class CombatMastery { Novice, Apprentice, Journeyman, Expert, Master };
     struct CombatMasterySettings
     {

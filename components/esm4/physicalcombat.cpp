@@ -67,6 +67,42 @@ namespace ESM4
         return "WPNSwishLarge";
     }
 
+    std::array<std::string_view, 3> nativeNpcMeleeHitSounds(const NpcMeleeHitSoundInput& input)
+    {
+        std::array<std::string_view, 3> result{};
+        bool shield = false;
+        if (input.mArmorClass >= 0)
+            result[0] = input.mArmorClass == 0 ? "PHYArmorHitLight" : "PHYArmorHitHeavy";
+        else if (input.mShieldClass == 0 || input.mShieldClass == 1)
+        {
+            result[0] = input.mShieldClass == 0 ? "WPNBlockShieldLight" : "WPNBlockShieldHeavy";
+            shield = true;
+        }
+        if (!input.mSuppressBodySound)
+            result[1] = "PHYDamageFlesh";
+        const bool flesh = !input.mSuppressBodySound && !shield;
+        switch (input.mWeaponType)
+        {
+            case 0:
+            case 1:
+                result[2] = input.mEnchantedWeaponSound ? "WPNHitBladeFleshEnchanted"
+                    : flesh ? "WPNHitBladeFlesh" : "WPNHitBlade";
+                break;
+            case 2:
+            case 3:
+                result[2] = input.mEnchantedWeaponSound ? "WPNHitBluntFleshEnchanted"
+                    : flesh ? "WPNHitBluntFlesh" : "WPNHitBlunt";
+                break;
+            case 5:
+                result[2] = "WPNHitArrow";
+                break;
+            default:
+                result[2] = "WPNHitHand";
+                break;
+        }
+        return result;
+    }
+
     bool nativeAttackAirborne(std::optional<std::uint8_t> animationGroup,
         std::optional<std::uint32_t> characterState)
     {

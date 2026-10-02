@@ -301,6 +301,7 @@ namespace MWMechanics
         if (!contact)
             return std::nullopt;
         OblivionOrdinaryContactResult result{*contact, {0, 0}};
+        std::int32_t soundWeaponType = -1;
         OblivionPhysicalContactDeltas deltas{-cost, 0, 0, 0};
         if (!contact->isEmpty())
         {
@@ -330,6 +331,10 @@ namespace MWMechanics
                 if (!form || ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*form)
                     != state->mStrike->mWeaponBase)
                     return std::nullopt;
+                const auto* weapon = world.getStore().get<ESM4::Weapon>().search(*form);
+                if (!weapon || weapon->mData.type > 3)
+                    return std::nullopt;
+                soundWeaponType = static_cast<std::int32_t>(weapon->mData.type);
                 auto condition = captureOblivionPhysicalConditionChange(attacker, item, 0);
                 const auto damage = resolveOblivionOrdinaryWeaponContact(world, attacker,
                     *contact, item, normalizedDifficulty, sneaking);
@@ -350,6 +355,19 @@ namespace MWMechanics
             }
         }
         deltas.mVictimHealth = -result.mDamage.mHealth;
+        if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4)
+            && !oblivionBlockingPosture(world, *contact))
+        {
+            // Unarmored ordinary NPC contacts reach original5FFD61 with no
+            // armor/shield material and neither selector flag. Armor-hit
+            // selection and Creature sound families remain separate adapters.
+            auto& inventory = contact->getClass().getInventoryStore(*contact);
+            const bool armored = std::any_of(inventory.begin(), inventory.end(), [&](const auto& item) {
+                return item.getType() == ESM::REC_ARMO && inventory.isEquipped(item);
+            });
+            if (!armored)
+                result.mHitSounds = ESM4::nativeNpcMeleeHitSounds({soundWeaponType});
+        }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
         if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact, deltas))

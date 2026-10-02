@@ -5941,3 +5941,47 @@ or original-game pose/motion parity. Audit identities and bounded fork grip/
 fresh-reload acceptance are recorded in checkpoint122's milestone entry and
 `S4/native-npc-shortsword-final-acceptance-01/verification.json`. No new
 physical formula, state authority or schema is introduced.
+
+
+### Checkpoint123 — original ordered NPC impact sound layers
+
+Pinned original1.2.0416 executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes6AFB48..6AFD28 for800 combinations of signed weapon/material classes
+and selector booleans. NPC fixtures use the actual Character vtableA6FC9C;
+position getter5F10E0 executes its absent-process fallback, base getter4D9B40
+executes actor+1C, and5E3270 compares the base form kind to Creature24. Only
+SOUN lookup447490 is supplied: it records requested editor IDs and returns an
+absent record, leaving allocation/playback outside this original probe. All
+stack returns and the final stop are asserted. The dispatcher prefix locals
+are initialized explicitly. No whole original hit, original audio playback or
+Creature source custom-sound branch is accepted by this bounded experiment.
+
+Armor class>=0 chooses Light at0 or Heavy otherwise. Only absent armor permits
+shield class0/1. The shield branch sets its local material flag even if lookup
+fails. False argument8 enables NPC PHYDamageFlesh and its flesh variant flag.
+Argument9 chooses the enchanted blade/blunt variant independently of that
+body flag. The original jump table6AFFD4 maps0/1 blade,2/3 blunt,4 Hand,5 Arrow;
+all other signed values use Hand. Up to three requests occur in this order.
+Caller5FFB89 supplies shield class;5FFCE5 supplies armor class;5FFD61 supplies
+neither, with argument8 false. Original4B4C70 returns armor byte+6A bit7, the
+heavy flag. Argument9's full caller semantics are not inferred from its branch
+name; the runtime slice accepts only unenchanted ordinary contacts already
+admitted by the damage adapter. Creature target Bone/Fur and unarmed Creature
+source custom family9 remain outside the NPC palette.
+
+Winning installed SOUNs are025418/PHYDamageFlesh(folder
+fx\phy\combat\damage\flesh\, SNDX3c16000001000000e5010000) and
+025413/WPNHitHand(folderfx\wpn\weaponhit\hand\,
+SNDX3c12010001000000ed020000). Master identity remains
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`;
+original Sounds BSA identity
+`f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec`.
+Five Flesh and four Hand clips have individually retained SHA256 hashes and
+mono16/44100 formats. Corpus SHA256
+`c499ac640abc5a3002e7c15149ea7aaa02749caa7a13515eb286b06b0fe9e5fe`.
+Original audits/comparisons stay ignored in
+`S4/native-npc-hit-sound-oracle-01` and `native-npc-hit-sound-assets-01`.
+Normal/SAN actual once-only contact/PCM/fresh-reload acceptance is documented
+in checkpoint123's milestone entry; it does not close the full reaction/audio
+or original hardware gameplay gates.

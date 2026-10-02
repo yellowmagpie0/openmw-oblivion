@@ -2938,3 +2938,32 @@ TEST(ESM4PhysicalCombat, NativeWeaponSwishPreservesNullAndPolicyIsolation)
     settings.mMediumSpeedMaximum = nan;
     EXPECT_THROW(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{1, 1}, settings), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeNpcHitSoundLayersFollowOriginalLookupOrder)
+{
+    using Sounds = std::array<std::string_view, 3>;
+    // Independently executed original6AFB48..6AFD28 cases. Armor takes
+    // precedence over a shield and does not suppress the flesh weapon layer.
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({}), (Sounds{"", "PHYDamageFlesh", "WPNHitHand"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({0}), (Sounds{"", "PHYDamageFlesh", "WPNHitBladeFlesh"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({1, 0, 1}),
+        (Sounds{"PHYArmorHitLight", "PHYDamageFlesh", "WPNHitBladeFlesh"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({2, 1, 0}),
+        (Sounds{"PHYArmorHitHeavy", "PHYDamageFlesh", "WPNHitBluntFlesh"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({3, -1, 0}),
+        (Sounds{"WPNBlockShieldLight", "PHYDamageFlesh", "WPNHitBlunt"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({0, -1, 1}),
+        (Sounds{"WPNBlockShieldHeavy", "PHYDamageFlesh", "WPNHitBlade"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({0, -1, -1, true, false}),
+        (Sounds{"", "", "WPNHitBlade"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({2, -1, -1, true, true}),
+        (Sounds{"", "", "WPNHitBluntFleshEnchanted"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({0, -1, 1, false, true}),
+        (Sounds{"WPNBlockShieldHeavy", "PHYDamageFlesh", "WPNHitBladeFleshEnchanted"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({5}), (Sounds{"", "PHYDamageFlesh", "WPNHitArrow"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({4}), (Sounds{"", "PHYDamageFlesh", "WPNHitHand"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({6, -1, 2}), (Sounds{"", "PHYDamageFlesh", "WPNHitHand"}));
+    EXPECT_EQ(ESM4::nativeNpcMeleeHitSounds({std::numeric_limits<std::int32_t>::min(),
+        std::numeric_limits<std::int32_t>::max(), -1}),
+        (Sounds{"PHYArmorHitHeavy", "PHYDamageFlesh", "WPNHitHand"}));
+}

@@ -1473,6 +1473,21 @@ namespace MWMechanics
                                     << " id=" << strike.mActionId << " sound=" << editorId;
             }
         }
+        if (contact && contact->mHitSounds)
+        {
+            for (const auto editorId : *contact->mHitSounds)
+            {
+                if (editorId.empty())
+                    continue;
+                if (const auto* sound = MWSound::resolveNativeAnimationSound(world->getStore(), editorId))
+                {
+                    MWBase::Environment::get().getSoundManager()->playSound3D(
+                        contact->mVictim, sound->mId, 1.f, 1.f);
+                    Log(Debug::Verbose) << "M15 melee hit sound requested: actor=" << actor.serialize()
+                                        << " id=" << strike.mActionId << " sound=" << editorId;
+                }
+            }
+        }
         if (contact)
             Log(Debug::Verbose) << (contact->mVictim.isEmpty() ? "M15 melee miss committed: actor="
                 : "M15 melee hit committed: actor=") << actor.serialize()

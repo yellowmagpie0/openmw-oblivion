@@ -17,7 +17,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
-| S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock hand-swish recordings below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
+| S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
@@ -11840,3 +11840,76 @@ original-game SCDA acceptance and live pose comparison are not implied.
 This is the stock human NPC ready/reload weapon case. Actual attack motion,
 other weapons and skeletons, aiming/views/controls, hit/block audio, real
 reactions, mastery consequences and full M15 completion remain open.
+
+
+### Checkpoint123 — native NPC hit palette and once-only layered impact audio
+
+Ordinary unarmored, unblocked NPC/Player contacts now select and request stock
+body and weapon impact sounds after the owned contact commits. Sound positions
+belong to the victim. Rejected or already consumed contacts cannot replay the
+requests. The native SOUN lookup/3D playback path is shared with M10. Creature
+sources/targets, armor/shield hit-material selection, other contact callers and
+original live audio parity remain separate work; there is no fallback to TES3
+hit sounds. Existing enchanted weapon contacts remain unsupported by the
+ordinary damage adapter, so this integration does not infer its selector flag.
+
+The immutable NPC palette preserves three ordered slots: material, body and
+weapon. Armor precedes shield material; shield suppresses the ordinary flesh
+weapon variant, while armor does not. Suppressed body sound does not suppress
+an explicitly requested enchanted weapon variant. Native types0/1 choose
+blade,2/3 blunt,5 arrow;4 and other signed values select Hand. These are selector
+outputs, not admission of ranged/staff attacks to the ordinary melee adapter.
+800 original instruction cases match C++ in normal and ASan/UBSan comparers;
+each also rejects wrong-layer, missing-row and malformed-flag corpora.
+
+`S3/native-npc-hit-sound-world-01` and its `-sanitized-01` counterpart freshly
+pass all2062 component and796 engine cases, exact inventories, zero failures/
+skips and unchanged source fingerprint
+`d0ca0395ec8c10cac860aeb4cd8befc62828ec6a01997e58b893def2d8027d8b`.
+Normal also passes242 Python tests. Subsequent source additions contain only
+editable JSON courses/expectations; fresh242 Python tests pass in
+`S4/native-npc-unarmored-hit-python-01` at fingerprint `fa9f12203ee69b460b3146fc5cb1e54c236d78048be0f618f6ad02fadb4d7f4c`.
+No C++ implementation changes after the full builds are accepted by reuse.
+
+`S4/native-npc-unarmored-hit-restart-01` and
+`native-npc-unarmored-hit-runtime-sanitized-01` copy the actual122 staged save
+byte-for-byte. No gameplay state, poses, inventory, outcomes or plugin bindings
+are edited. The existing equip-only OnActivate script is never activated.
+Ordinary F/U/F5 input draws fists, punches named Valen Dreth once and saves;
+a distinct process loads/resaves. Original10/40/50/full140 inputs independently
+predict Health1.4199999570846558 and Fatigue1.7100000381469727. Actual contact
+logs1.42/1.71, spends attack Fatigue7(140->133), and the saved victim Health
+Damage modifier is exactly-1.4199999570846558. Fatigue regenerates to the caps
+before saving. Inventories, all poses, native lifecycle and combat RNG remain
+exact. The action counter becomes3 with no pending contact; input/strike are
+cleared. Fresh loads preserve the Health modifier without damage or sound
+replay. Both engines have four real epochs, eight directly reviewed required
+captures and18 saved-state corruption controls, consolidated in
+`S4/native-npc-unarmored-hit-final-acceptance-01`.
+
+The recorded stereo16/48000 PCM contains one stock Flesh+Hand mix per first
+process, zero after reload. Thresholds were frozen before actual PCM: joint
+correlation>=.90, both positive fitted gains, each layer>=5% fitted energy and
+onsets within.05s. Twenty synthetic stock pairs and missing-layer/silence/
+duplicate controls qualified the checker first. Actual normal mixture is
+phy_dmgflesh_01+wpn_hit_hand_03(correlation .9992528868734998); sanitizer is
+phy_dmgflesh_02+wpn_hit_hand_04(.9997556892845909), with .02s onset separation.
+Three corruptions of actual PCM reject silence, duplicated contact and mono
+header. The analyzer hash, all nine original clip hashes, winning SOUN fields,
+preregistration, terminal PCM hashes and raw reports are retained in ignored
+S4 evidence. Log requests alone are not audio acceptance.
+
+Actual normal engine SHA256
+`27a4aacce5f1db0e31428765489fe8336e2e74cf5d1646f9021968f73deae7a1`;
+sanitized engine `eaa0a4fc9dec755bf1386f90d6f84a6165f7477b531a1be19c31f2d2fb432c71`.
+Editable sources are `oblivion_m15_native_npc_unarmored_hit*.json`, using the
+existing NPC shortsword fixture before activation. Structural/semantic fixture
+reinspection, fork script compilation, actual native contact and recorded audio
+are distinct layers. The post-contact capture occurs10s later and does not
+prove recoil, stagger, knockdown or motion parity. S4 remains in progress and
+S5–S14 remain open. Next: native reactions and their persistence/cancellation,
+remaining block/armor/Creature/power/mastery/view/control acceptance.
+
+Previous123 preparation checkpoint122 commit
+`df164c44cc730b820a8c0574e1e6e027da90f624`; verified bundle100 SHA256
+`490d6882b19ed53b8fa897e982a0c1e1282173c3571911c328233a98a1a4db5f`.
