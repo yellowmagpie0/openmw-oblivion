@@ -66,6 +66,16 @@ namespace ESM4
         float mLuck = 50.f;
     };
 
+    // Original signed base/change representation, not physical stack totals.
+    // Caller resolves the base and change-entry presence before querying.
+    std::int32_t nativeInventoryCountMagnitude(std::int32_t count);
+    std::int32_t nativeInventoryCount(
+        std::int32_t rawBaseCount, std::int32_t changeDelta, bool hasChangeEntry);
+    // Update an existing native change entry. The AddItem command separately
+    // excludes zero requests; entry creation and instance handling are external.
+    std::int32_t nativeAddItemChangeDelta(
+        std::int32_t rawBaseCount, std::int32_t changeDelta, std::int32_t requested);
+
     void normalizeInventory(std::vector<RuntimeInventoryItem>& inventory);
     std::int32_t inventoryCount(
         const std::vector<RuntimeInventoryItem>& inventory, const ESM::FormKey& base);

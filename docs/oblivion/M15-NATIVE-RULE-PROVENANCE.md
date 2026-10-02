@@ -5733,3 +5733,34 @@ compiler setup failures and pre-correction red test remain retained. Original
 actor/base/change resolution boundary limits, signed mutation/creation,
 unavailable counting and the full M15 gates remain open. Checkpoint114 in the
 milestone records identities and the full acceptance scope.
+
+
+### Checkpoint 115 — original inventory base/change and AddItem delta rules
+
+Pinned originala8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6:
+actual AddItem change core48FB31..48FB5A plus raw base-list lookup469CA0
+execute2916 signed base/delta/request/presence/x87 cases without game-function
+stubs. `S4/native-additem-change-delta-oracle-01` corpus
+1baeb8645a6f284742517c9473353a93cad8b97477b17555db3f9b060caef1f1.
+Existing negative delta and nonpositive raw original base select replacement;
+otherwise int32 wrapped addition. Fixture entry/base-list/register/stack inputs
+are explicit; creation/cleanup/instances/ownership/callback/physical semantics
+are outside the slice. The command's zero gate remains a distinct rule.
+
+Shared native magnitude/base-change-query/existing-add-delta C++ rules match
+1280 numerical GetItemCount rows and all2916 new delta rows in normal and
+ASan/UBSan comparison binaries:4196 exact comparisons per binary and three
+corrupt-evidence rejection controls. Ten original GetItemCount eligibility/
+null/resolution cases are outside the numerical API and are excluded. Forty-eight
+compact frozen rows form three new component tests. Full normal/instrumented
+2058-component/785-engine inventories pass at fingerprint
+53e7adf25bff70f89dc32a0a7c25e44e54af8060d9870bc5e7824f4df3795726;
+242 unchanged Python results from114 are explicitly reused.
+
+The live Player/NPC/CREA physical query uses the shared magnitude rule; repeated
+ordinary Player query/save/quit/distinct-load/resave passes four epochs/six
+directly reviewed required captures/sixteen controls. Consolidated evidence:
+`S4/native-inventory-count-rules-final-acceptance-01`. Signed delta persistence
+and full physical negative AddItem remain open, rather than being inferred
+from query absolute values. See checkpoint115 for identities and all limits;
+M15 and its outstanding stage gates remain in progress.

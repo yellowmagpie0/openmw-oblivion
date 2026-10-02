@@ -10,6 +10,91 @@
 
 namespace
 {
+
+    TEST(ESM4InventoryMechanics, NativeQueryMagnitudePreservesWrappedMinimum)
+    {
+        // Original script wrapper 4F48F0, frozen native-getitemcount-oracle-02.
+        const std::pair<std::int32_t, std::int32_t> rows[]{
+            { -2147483648, -2147483648 }, { -999, 999 }, { -3, 3 },
+            { 0, 0 }, { 1, 1 }, { 3, 3 }, { 999, 999 }, { 2147483647, 2147483647 },
+        };
+        for (const auto& [input, expected] : rows)
+        {
+            SCOPED_TRACE(input);
+            EXPECT_EQ(ESM4::nativeInventoryCountMagnitude(input), expected);
+        }
+    }
+
+    TEST(ESM4InventoryMechanics, NativeBaseChangeQueryMatchesOriginalSignedBoundaries)
+    {
+        struct Row { std::int32_t base; std::int32_t delta; bool present; std::int32_t expected; };
+        // Frozen original GetItemCount 4F48F0/4869C0/469CA0 outputs.
+        const Row rows[]{
+            { 0, 0, false, 0 },
+            { 0, 0, true, 1 },
+            { 0, 3, true, 3 },
+            { 0, -3, true, 3 },
+            { 3, 0, false, 3 },
+            { 3, 0, true, 3 },
+            { 3, -3, true, 0 },
+            { 3, 3, true, 6 },
+            { -3, 0, false, 3 },
+            { -3, -3, true, 0 },
+            { -3, 3, true, 6 },
+            { 2147483647, 1, true, -2147483648 },
+            { 2147483647, 3, true, 2147483646 },
+            { 2147483647, 2147483647, true, 2 },
+            { -2147483648, 0, false, -2147483648 },
+            { -2147483648, 0, true, -2147483648 },
+            { -2147483648, 1, true, 2147483647 },
+            { -2147483648, -2147483648, true, 0 },
+            { -2147483648, 2147483647, true, 1 },
+            { 1, -2147483648, true, 2147483647 },
+        };
+        for (const auto& row : rows)
+        {
+            SCOPED_TRACE(row.base);
+            SCOPED_TRACE(row.delta);
+            SCOPED_TRACE(row.present);
+            EXPECT_EQ(ESM4::nativeInventoryCount(row.base, row.delta, row.present), row.expected);
+        }
+    }
+
+    TEST(ESM4InventoryMechanics, NativeExistingAddDeltaMatchesOriginalResetAndWrapBranches)
+    {
+        struct Row { std::int32_t base; std::int32_t delta; std::int32_t requested; std::int32_t expected; };
+        // Original 48FB31..48FB5A and actual raw base lookup469CA0.
+        const Row rows[]{
+            { 0, -999, 1, 1 },
+            { 0, -999, -1, -1 },
+            { 0, -999, 0, 0 },
+            { 0, 0, -999, -999 },
+            { 0, 1, -999, -998 },
+            { 0, 2147483647, 1, -2147483648 },
+            { 0, -2147483648, -1, -1 },
+            { 1, -999, 1, -998 },
+            { 1, -999, -1, -1000 },
+            { 1, -999, 0, -999 },
+            { -1, -999, 1, 1 },
+            { -1, -999, -1, -1 },
+            { -2147483648, -2147483648, -2147483648, -2147483648 },
+            { 2147483647, 2147483647, 2147483647, -2 },
+            { 2147483647, -1, 1, 0 },
+            { -2147483648, 1, -2147483648, -2147483647 },
+            { 0, 2147483647, 2147483647, -2 },
+            { -1, 2147483647, 2147483647, -2 },
+            { 1, -2147483648, -2147483648, 0 },
+            { 2147483647, -2147483648, -1, 2147483647 },
+        };
+        for (const auto& row : rows)
+        {
+            SCOPED_TRACE(row.base);
+            SCOPED_TRACE(row.delta);
+            SCOPED_TRACE(row.requested);
+            EXPECT_EQ(ESM4::nativeAddItemChangeDelta(row.base, row.delta, row.requested), row.expected);
+        }
+    }
+
     TEST(ESM4InventoryMechanics, SignedNativeStockCountsHaveFinitePositiveQuantities)
     {
         static_assert(sizeof(ESM4::InventoryItem) == 8);

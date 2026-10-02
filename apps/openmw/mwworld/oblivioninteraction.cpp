@@ -1,6 +1,7 @@
 #include "oblivioninteraction.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cctype>
 #include <cmath>
 #include <limits>
@@ -142,13 +143,9 @@ namespace MWWorld
                 const auto count = static_cast<std::uint32_t>(raw);
                 total += raw < 0 ? 0u - count : count;
             }
-        // Original GetItemCount (4F48F0/4869C0) takes the magnitude
-        // of its int32 total. Preserve wrap and INT_MIN without C++
-        // signed overflow or abs(INT_MIN).
-        constexpr std::uint32_t sign = std::uint32_t{1} << 31;
-        if (total == sign)
-            return std::numeric_limits<std::int32_t>::min();
-        return static_cast<std::int32_t>(total > sign ? 0u - total : total);
+        // The physical view supplies an already composed wrapped total.
+        // Original base/change-entry composition is a separate native rule.
+        return ESM4::nativeInventoryCountMagnitude(std::bit_cast<std::int32_t>(total));
     }
 
     OblivionInteractionAction::OblivionInteractionAction(const Ptr& target, OblivionInteractionKind kind)

@@ -11242,3 +11242,101 @@ remaining combat/ranged/death/stealth/crime/jail/campaign/universal gate still
 require implementation and acceptance. Next: independently verified original
 base/change-count composition and signed AddItem delta rules, followed by their
 persistent live adapter. Do not replace these gates with physical abs-counts.
+
+
+### Checkpoint 115 — original signed inventory numerical rules
+
+Three native numerical rules now live in `components/esm4/inventorymechanics`:
+`nativeInventoryCountMagnitude`, `nativeInventoryCount` and
+`nativeAddItemChangeDelta`. Magnitude retains signed INT_MIN. Count composition
+uses the authored raw base's magnitude plus a matching signed change delta,
+with int32 wrap; a present zero-base/zero-delta entry yields1. An absent change
+entry ignores delta. Updating an existing AddItem entry replaces a negative
+old delta when the raw original base is nonpositive; other branches add the
+requested raw int32 with wrap. This raw-base predicate must not use the
+positive stock magnitude. The command's independently verified zero-count gate
+is separate; these internal rules do not implement entry creation/cleanup or
+physical item semantics. Unsigned operations and bit_cast avoid C++ overflow.
+The live Player/NPC/CREA physical-stack query adapter now calls the shared
+magnitude rule; its supplied total is already composed, and it must not infer
+original change-entry presence from visible physical stacks.
+
+Pinned original executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`:
+`S4/native-additem-change-delta-oracle-01` executes actual48FB31..48FB5A and
+raw base lookup469CA0, with no game-function hooks. It passes2916 cases across
+nine signed boundaries for base/delta/request, base-list presence/absence and
+both x87 control words; corpus
+`1baeb8645a6f284742517c9473353a93cad8b97477b17555db3f9b060caef1f1`.
+The existing entry, base-list structures, registers and caller stack are
+explicit fixture inputs. Entry search/allocation/creation, ExtraData instance
+selection, ownership, observers, cleanup, complete command resolution and
+physical availability remain outside this narrow instruction slice.
+
+The1290-case original GetItemCount probe from111 is reused with its declared
+eligibility/actor/base/change-resolution boundaries. Its1280 numerical rows
+and all2916 new delta rows form an ignored frozen4196-row expected table.
+`S4/native-inventory-count-rule-comparison-01` compiles the actual production
+C++ and compares every row in both normal and ASan/UBSan binaries, all exact.
+The ten original null/eligibility/resolution cases are not numerical API inputs
+and are explicitly excluded from this4196 count. Expected outputs come from
+original instruction execution, not the production helpers. Three comparison
+negative controls reject altered original output, a missing row, and malformed
+input. Reports hash the original corpora, expected table, production sources,
+comparison code and both binaries. Bulk corpora/executable instructions stay
+ignored; only48 compact frozen regression rows are versioned. An initial
+expected-row selection requested delta-3 outside the new oracle's nine-value
+input list; the preflight rejected it before source editing. The corrected
+selection uses independently executed -999; no original expectation changes.
+
+Three new component cases cover magnitude, base/change presence and signed
+AddItem reset/wrap branches. `S3/native-inventory-count-rules-world-01` and
+`native-inventory-count-rules-world-sanitized-01` each pass all2058 component
+and785 engine tests, with exact unfiltered inventories/XML, zero failures/
+skips and unchanged fingerprint
+`53e7adf25bff70f89dc32a0a7c25e44e54af8060d9870bc5e7824f4df3795726`.
+The242 Python checks from114 are explicitly reused: Python code and editable
+fixture bytes did not change. They were not rerun at this C++ fingerprint.
+Normal/instrumented comparison, full checks and runtime runs halt on sanitizer
+errors with leak detection disabled; this is not leak coverage. Existing
+CharacterController animation-entry warnings remain in build logs.
+
+Final`S4/native-inventory-count-rules-restart-01` and
+`native-inventory-count-rules-runtime-sanitized-01` repeat the frozen ordinary
+Space Player.GetItemCount IronCuirass/F5/quit and distinct fresh-load/F5/quit
+course through the newly shared magnitude rule. Both preserve exact short1,
+all Player/reference inventory metadata, native resource/life/breath/base/
+death/queues/action/RNG and draw state, with no declared query replay. Eight
+semantic controls per lane reject count, condition, owner, health, RNG, action,
+draw and local corruption. All six required scene captures were directly
+viewed and hash-recorded: named Dreth, real dungeon, apparel, empty hands and
+Player HUD. Counts/metadata come from actual saves, not pixels. Startup samples,
+full grip, reactions and audio acceptance are excluded. The unchanged actual113
+source save, own plugin and staged binding from114 are reused exactly; no new
+inventory, signed-delta mutation or native outcome is injected. The existing
+editable Player query fixture remains the source of the generated plugin.
+
+Normal executable
+`8148ebdcdea38e2036a7c7bea868d298bb19870d20dfa6946ef506669882a955`;
+instrumented`cad1a00ef4e7da2972f7acd061c1af2e264f950018936a4fe68f92f1bd33542b`.
+Staged save remains
+`ee882a1443d5fbbc15aedabedd1bdab8296c0792cc3234713035437caa8281e0`,
+generated plugin
+`fe815dcb4017af054cf3b1e20c29977cf8d04e088ab42f408344f930bf48a277`;
+script`9c41a8d1ecdeaaab31fdb597bf91ed9cb46b83d5ce92245d3f8415f080235086`.
+Consolidated proof:`S4/native-inventory-count-rules-final-acceptance-01`:
+4196-case comparison in two binaries/three comparison controls, full normal/
+instrumented component/engine inventories, four game epochs/six required
+captures/sixteen runtime semantic controls.
+
+No stage is closed. The native signed base/change model must still gain a
+persistent live adapter, including original physical availability, entry
+creation/cleanup/metadata/callback behavior; negative AddItem remains explicitly
+unsupported and physical overflow still rejects. The numerical query magnitude
+alone cannot establish how many visible physical items should exist. Lazy
+saved-inventory restoration, Player removal adapters, partial-stack ordering/
+windup/callbacks, unloaded/container queries, Creature actual additions,
+weapon-ready binding and all remaining combat/ranged/death/stealth/crime/jail/
+script/campaign/universal gates remain open. Next bounded integration fixes
+lazy NPC/CREA inventory hydration without authority birth, preserving saved
+condition, ownership and equipment instead of reconstructing base stock.

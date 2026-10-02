@@ -1,6 +1,7 @@
 #include "inventorymechanics.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <tuple>
@@ -28,6 +29,31 @@ namespace ESM4
         {
             return value & (~value + 1u);
         }
+    }
+
+    std::int32_t nativeInventoryCountMagnitude(std::int32_t count)
+    {
+        const auto bits = static_cast<std::uint32_t>(count);
+        return std::bit_cast<std::int32_t>(count < 0 ? 0u - bits : bits);
+    }
+
+    std::int32_t nativeInventoryCount(
+        std::int32_t rawBaseCount, std::int32_t changeDelta, bool hasChangeEntry)
+    {
+        const auto base = static_cast<std::uint32_t>(nativeInventoryCountMagnitude(rawBaseCount));
+        const auto total = hasChangeEntry
+            ? (base == 0 && changeDelta == 0 ? 1u : base + static_cast<std::uint32_t>(changeDelta))
+            : base;
+        return nativeInventoryCountMagnitude(std::bit_cast<std::int32_t>(total));
+    }
+
+    std::int32_t nativeAddItemChangeDelta(
+        std::int32_t rawBaseCount, std::int32_t changeDelta, std::int32_t requested)
+    {
+        if (changeDelta < 0 && rawBaseCount <= 0)
+            return requested;
+        return std::bit_cast<std::int32_t>(
+            static_cast<std::uint32_t>(changeDelta) + static_cast<std::uint32_t>(requested));
     }
 
     void normalizeInventory(std::vector<RuntimeInventoryItem>& inventory)
