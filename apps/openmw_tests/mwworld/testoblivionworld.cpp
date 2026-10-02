@@ -499,6 +499,61 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, NativePlayerItemCountMatchesOriginalSignedBoundariesWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto player = world.getPlayerPtr();
+        const auto weapon = addEquipmentWeapon(fixture);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context; context.mSelf = ESM::FormKey::dynamic("player", 1);
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
+        // Frozen original 4F48F0/4869C0 rows, both x87 precision modes.
+        // Physical stack composition is setup, not AddItem overflow acceptance.
+        struct Row { int first; int second; std::int64_t expected; };
+        constexpr int max = std::numeric_limits<std::int32_t>::max();
+        const std::array rows{Row{0, 0, 0}, Row{1, 0, 1}, Row{3, 1, 4},
+            Row{999, 3, 1002}, Row{max, 0, max},
+            Row{max, 1, std::numeric_limits<std::int32_t>::min()},
+            Row{max, 3, 2147483646}, Row{max, max, 2}};
+        for (const auto& row : rows)
+        {
+            SCOPED_TRACE(row.first);
+            SCOPED_TRACE(row.second);
+            std::vector<ESM4::RuntimeInventoryItem> items;
+            for (const auto& [count, condition] : std::array{std::pair{row.first, 43.125f},
+                     std::pair{row.second, 99.125f}})
+                if (count != 0)
+                {
+                    ESM4::RuntimeInventoryItem item;
+                    item.mBase = weapon; item.mCount = count; item.mCondition = condition;
+                    item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+                    items.push_back(item);
+                }
+            installEquipmentInventory(fixture, player, items);
+            EXPECT_EQ(world.oblivionPlayerItemCount(weapon), row.expected);
+            EXPECT_EQ(ObScript::asInteger(host.call("GetItemCount", {}, args, context, {})), row.expected);
+            auto& inventory = player.getClass().getInventoryStore(player);
+            std::size_t i = 0;
+            for (const auto& entry : inventory)
+            {
+                ASSERT_LT(i, items.size());
+                EXPECT_EQ(entry.getCellRef().getCount(false), items[i].mCount);
+                EXPECT_EQ(entry.getCellRef().getNativeItemCondition(), items[i].mCondition);
+                EXPECT_EQ(entry.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x800, 0}));
+                ++i;
+            }
+            EXPECT_EQ(i, items.size());
+            EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+        }
+        EXPECT_EQ(world.oblivionPlayerItemCount(ESM::FormKey{}), 0);
+        EXPECT_EQ(world.oblivionPlayerItemCount(ESM::FormKey::content("headless.esm", 0x999)), 0);
+        EXPECT_EQ(world.oblivionPlayerItemCount(ESM::FormKey::content("unavailable.esm", 0x940)), 0);
+    }
+
     TEST(OblivionWorldTest, NativeScriptItemCountUsesCreatureInventoryWithoutAuthorityBirth)
     {
         NativeWorldFixture fixture;

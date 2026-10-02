@@ -1,4 +1,5 @@
 #include "oblivionscriptmanager.hpp"
+#include "oblivioninteraction.hpp"
 #include <components/esm4/observation.hpp>
 
 #include <algorithm>
@@ -93,25 +94,6 @@ namespace MWWorld
                 return actor.get<ESM4::Creature>()->mBase
                     && actor.get<ESM4::Creature>()->mBase->mAttackReach.has_value();
             return false;
-        }
-
-        std::int64_t nativeLiveItemCount(const Ptr& actor, const ESM::RefId& item)
-        {
-            std::uint32_t total = 0;
-            for (const auto& entry : actor.getClass().getContainerStore(actor))
-                if (entry.getCellRef().getRefId() == item)
-                {
-                    const auto raw = entry.getCellRef().getCount(false);
-                    const auto count = static_cast<std::uint32_t>(raw);
-                    total += raw < 0 ? 0u - count : count;
-                }
-            // Original GetItemCount (4F48F0/4869C0) takes the magnitude
-            // of its int32 total. Preserve wrap and INT_MIN without C++
-            // signed overflow or abs(INT_MIN).
-            constexpr std::uint32_t sign = std::uint32_t{1} << 31;
-            if (total == sign)
-                return std::numeric_limits<std::int32_t>::min();
-            return total > sign ? 0u - total : total;
         }
 
         std::string lower(std::string_view value)
@@ -1426,7 +1408,12 @@ namespace MWWorld
             if (owner == ESM::FormKey::dynamic("player", 1))
             {
                 if (name == "getitemcount")
-                    return std::int64_t(mWorld.oblivionPlayerItemCount(*item));
+                {
+                    const auto count = mWorld.oblivionPlayerItemCount(*item);
+                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
+                        + " count=" + std::to_string(count));
+                    return std::int64_t(count);
+                }
                 const std::int32_t count = std::max<std::int32_t>(1, boundedCount(argument(itemArg + 1)));
                 mWorld.oblivionChangePlayerInventory(*item, name == "additem" ? count : -count);
                 trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
@@ -1441,7 +1428,7 @@ namespace MWWorld
                 if (nativeInventoryActor(actor))
                 {
                     const auto id = mResolver.toFormId(*item);
-                    const auto count = id ? nativeLiveItemCount(actor,
+                    const auto count = id ? oblivionInventoryItemCount(actor.getClass().getContainerStore(actor),
                                                 OblivionProfileServices::sharedItemId(mWorld.mStore, ESM::RefId(*id)))
                                           : std::int64_t(0);
                     trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()

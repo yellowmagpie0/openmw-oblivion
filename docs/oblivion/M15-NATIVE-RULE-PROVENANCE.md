@@ -5712,3 +5712,24 @@ viewed captures/sixteen controls, consolidated under
 negative-count rejection are explicit unsupported-domain guards, not claimed
 original parity. See checkpoint113 in the milestone for all identities,
 failed attempts and remaining stage gates.
+
+
+### Checkpoint 114 — Player physical-stack query arithmetic
+
+No new original rule is inferred. The1290-case original GetItemCount corpus
+from111 supplies frozen signed wrap/magnitude rows for actual Player World and
+script queries. The previous shared signed count accumulator is red for MAX+3
+and MAX+MAX; the common Player/NPC/CREA unsigned reduction is green without
+item metadata mutation or AV/life authority birth. Full normal/SAN785-test
+engine inventories and242 Python tests pass at fingerprint
+ce977f34a045944b7df7c526e12ae725199fe66b3e3fd06aa5cc2772ee085f90.
+
+Ordinary NPC activation of Player.GetItemCount on verified native EDID
+IronCuirass01c6d1 passes normal/instrumented save/quit/distinct-load/resave,
+exact local1 and all inventory/native authority:four epochs, six directly
+reviewed captures, sixteen controls, consolidated in
+`S4/native-player-item-count-final-acceptance-01`. The initial wrong editor ID,
+compiler setup failures and pre-correction red test remain retained. Original
+actor/base/change resolution boundary limits, signed mutation/creation,
+unavailable counting and the full M15 gates remain open. Checkpoint114 in the
+milestone records identities and the full acceptance scope.

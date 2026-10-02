@@ -1,0 +1,5 @@
+scn M15PlayerItemCountOpponent
+short fighting
+Begin OnActivate
+    set fighting to Player.GetItemCount IronCuirass
+End

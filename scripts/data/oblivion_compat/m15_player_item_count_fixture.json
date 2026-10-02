@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "purpose": "Ordinary NPC activation queries the actual Player iron cuirass quantity without inventory mutation, then saves and loads in a distinct process. All native authority and both inventories must stay exact.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779440,
+    "editor_id": "M15PlayerItemCountStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779441,
+    "editor_id": "M15PlayerItemCountOpponent",
+    "sha256": "9c41a8d1ecdeaaab31fdb597bf91ed9cb46b83d5ce92245d3f8415f080235086"
+  }
+}

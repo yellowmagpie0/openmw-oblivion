@@ -11157,3 +11157,88 @@ lazy inventory hydration, weapon-ready host query, remaining combat/ranged/
 death/stealth/crime/jail/campaign/regression gates. No stage is closed by this
 bounded positive inventory adapter. Continue these requirements without
 narrowing M15 scope.
+
+
+### Checkpoint 114 — Player native GetItemCount signed boundaries
+
+Player GetItemCount now shares `oblivionInventoryItemCount` with live native
+NPC/CREA queries. It accumulates physical magnitudes using uint32 wrapping and
+returns the native signed magnitude, retaining INT_MIN, without signed overflow
+or abs(INT_MIN). The old shared ContainerStore::count used signed accumulation
+and returned negative wrapped totals for two frozen cases. The new actual
+Player World/script regression failed before correction (exit1/XML failure):
+MAX+3 returned -2147483646 rather than2147483646; MAX+MAX returned -2 rather
+than2. Logs/XML are`/tmp/m15_playercount114_red01.*`. Eight boundary pairs now
+pass through both World and script adapters, preserving count/condition/owner
+and creating neither native AV nor life authority. Null, unavailable and
+unresolved item keys return0. This is count representation evidence, not
+permission to create arbitrary overflowing physical inventories.
+
+Expected rows reuse the independently executed pinned-original
+`S4/native-getitemcount-oracle-02`:1290 cases, corpus
+`0150356c3579076f3b8c795cc652b5608652df6acb15e6d59ac2e9504a6d1894`.
+Its eligibility/base-container/change-container boundaries remain declared;
+actual4F48F0/4869C0/469CA0 execute. No new original mutation/creation behavior
+is inferred. Four focused Player/NPC/CREA regressions pass. Final
+`S3/native-player-item-count-world-02` passes785 engine tests and242 Python
+tests; `native-player-item-count-world-sanitized-02` passes785 engine tests,
+with exact inventories/XML, zero failures/skips and fingerprint
+`ce977f34a045944b7df7c526e12ae725199fe66b3e3fd06aa5cc2772ee085f90`.
+Earlier`world-01`/SAN01 also passed but precede the corrected editable script.
+Unchanged component results from108 are reused. ASan/UBSan halt on errors;
+leak detection is disabled, so leak coverage is not claimed.
+
+The first red-build attempt retained a GoogleTest SCOPED_TRACE same-line macro
+collision; the corrected test compiles before its genuine red result. The first
+green build retained a missing helper-header declaration; adding the explicit
+include corrected it. These are compiler setup failures, not native behavior.
+
+The first runtime fixture mistakenly named `ArmorIronCuirass`; independent
+master record reinspection established EDID `IronCuirass` for01c6d1. The script
+compiled but its unknown item did not produce the required query trace; normal
+`S4/native-player-item-count-restart-01` is retained as failed scenario/launcher
+exit1, without save acceptance. Its SAN sibling was prepared but unlaunched.
+The expectation stays exactly one original iron cuirass. The corrected verifier
+selects the declared Player/item query rather than every unrelated official
+Player inventory query now exposed by the new trace. The corrected manifests
+and verifier were frozen before the new courses launched. Full inventory/native
+authority comparisons and negative controls remain strict; no outcome was tuned.
+
+Final`S4/native-player-item-count-restart-02` and
+`native-player-item-count-runtime-sanitized-02` each execute ordinary NPC Space
+activation of `Player.GetItemCount IronCuirass`, F5/quit, then a distinct fresh
+load/F5/quit without that query replay. The saved short local is exactly integer1.
+All Player/reference inventory metadata, native resources/life/breath/base/
+death/queues/action/RNG and draw views remain exact. The original equipped
+cuirass retains condition249.57994079589844 and slot4. Eight semantic corruption
+controls per lane reject Player count, condition, owner, health, RNG, action,
+draw and local changes. All six required captures were directly inspected and
+hash-recorded: named Dreth, dungeon, apparel, empty hands and Player HUD.
+Counts/metadata come from actual decoded saves, not pixels. Startup samples,
+full grip, reactions and audio are excluded from acceptance.
+
+Normal executable SHA256
+`01b8c48f33c91e42af6446c18eadee2a313b9d139bb07fa79392eb9438455da0`;
+sanitized`202567e32d691e5fc0e57a69720277c5f68e48997468673d644bace67fab6fca`.
+Both use staged save
+`ee882a1443d5fbbc15aedabedd1bdab8296c0792cc3234713035437caa8281e0`
+and generated plugin
+`fe815dcb4017af054cf3b1e20c29977cf8d04e088ab42f408344f930bf48a277`.
+Editable sources:`m15_player_item_count_fixture.json` and
+`m15_player_item_count_opponent.obscript`; script SHA256
+`9c41a8d1ecdeaaab31fdb597bf91ed9cb46b83d5ce92245d3f8415f080235086`.
+Staging only rebinds own plugin/script/style identities/fingerprints in the
+actual113 second-process save, without inventory/outcome edits. The unchanged
+native builder verifies the declared original NPC SCRI/ZNAM overrides; SCTX
+fork compilation does not prove original compiled-bytecode acceptance.
+Consolidated acceptance:`S4/native-player-item-count-final-acceptance-01`:
+four distinct process epochs, six reviewed captures, sixteen controls.
+
+S3/S4 and M15 stay open. Signed original AddItem delta/overflow mutation,
+Player removal cancellation/metadata/cache adapters, absent/unloaded/container
+queries, lazy inventory hydration, partial instance order/callbacks/windup
+removal, Creature positive addition runtime, weapon-ready query, and every
+remaining combat/ranged/death/stealth/crime/jail/campaign/universal gate still
+require implementation and acceptance. Next: independently verified original
+base/change-count composition and signed AddItem delta rules, followed by their
+persistent live adapter. Do not replace these gates with physical abs-counts.

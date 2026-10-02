@@ -3,8 +3,15 @@
 
 #include "action.hpp"
 
+#include <cstdint>
+
 namespace MWWorld
 {
+    class ContainerStore;
+
+    // Native script count over physical stacks, including signed int32 wrap.
+    std::int32_t oblivionInventoryItemCount(const ContainerStore& inventory, const ESM::RefId& item);
+
     enum class OblivionInteractionKind
     {
         Activator,

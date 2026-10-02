@@ -132,6 +132,25 @@ namespace MWWorld
         }
     }
 
+    std::int32_t oblivionInventoryItemCount(const ContainerStore& inventory, const ESM::RefId& item)
+    {
+        std::uint32_t total = 0;
+        for (const auto& entry : inventory)
+            if (entry.getCellRef().getRefId() == item)
+            {
+                const auto raw = entry.getCellRef().getCount(false);
+                const auto count = static_cast<std::uint32_t>(raw);
+                total += raw < 0 ? 0u - count : count;
+            }
+        // Original GetItemCount (4F48F0/4869C0) takes the magnitude
+        // of its int32 total. Preserve wrap and INT_MIN without C++
+        // signed overflow or abs(INT_MIN).
+        constexpr std::uint32_t sign = std::uint32_t{1} << 31;
+        if (total == sign)
+            return std::numeric_limits<std::int32_t>::min();
+        return static_cast<std::int32_t>(total > sign ? 0u - total : total);
+    }
+
     OblivionInteractionAction::OblivionInteractionAction(const Ptr& target, OblivionInteractionKind kind)
         : Action(false, target)
         , mKind(kind)
@@ -171,7 +190,7 @@ namespace MWWorld
             return 0;
         const Ptr player = getPlayerPtr();
         const ESM::RefId sharedId = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
-        return player.getClass().getContainerStore(player).count(sharedId);
+        return oblivionInventoryItemCount(player.getClass().getContainerStore(player), sharedId);
     }
 
     int World::oblivionChangePlayerInventory(
