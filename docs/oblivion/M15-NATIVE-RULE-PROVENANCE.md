@@ -5575,3 +5575,44 @@ general screenshot-pipeline causality, full grip/reaction/audio and wider stage
 acceptance are not inferred. Staged geometry/equipment and authored deterministic
 combat style remain declared setup; ordinary script equipment publication is
 still a separate unfinished adapter.
+
+
+Checkpoint110 publishes ordinary native script equipment to physical NPC/CREA
+instances, and cancels owned weapon/block input before observers. It introduces
+no new original numerical rule. Five world cases and complete normal/instrumented
+773-test engine inventories pass, with242 Python tests. Final equipment,
+ring-stack and windup-cancellation runtime courses pass in both lanes:16 distinct
+processes,24 directly inspected required scenes and52 rejected semantic controls.
+Gear/quantity/condition/ownership and all unrelated native authority remain exact
+except declared script requests and legacy normalization. Reentrant observer
+equip requests terminate and retain their later result; the prior loop fails its
+bounded regression before correction.
+
+The original plain silver ring03801f has winning BMDT bit64, not192. One ordinary
+ring equip from quantity2 is accepted; synthetic dual-slot tests do not prove
+vanilla two-ring choice. The initial windup fixture's GetAnimAction was a foreign
+command absent from the pinned TES4 table and remains a rejected fixture. A
+corrected authored tick delay requires actual owned action2/id1 before interruption;
+it injects no contact or outcome. SCTX fork compilation is separate from original
+compiled-bytecode acceptance. Fixture style/script overrides and staged gear/
+geometry are declared inputs.
+
+The first final instrumented equipment attempt's initial HUD-only capture fails
+unchanged entropy0.03; numeric-only comparison does not accept that course. The
+fresh accepted instrumented retry retains an extra startup sample before input,
+excludes it from scene acceptance, and requires all original captures at0.03.
+Its first sample remains HUD-only while the next required capture shows the
+scene before any equipment command. No general screenshot cause/pipeline fix is
+claimed. Prior compilation, headless-unstack, dependency, unsupported-command,
+reentry and visual failures are retained. Full grip, ring appearance, reaction/
+audio, complete live inventory scripts/hydration and wider M15 gates remain open.
+
+Checkpoint110 generated fixture hashes (editable manifests/scripts are committed,
+generated plugins remain ignored): M15ScriptEquipmentOpponent.esp
+25f5aa60b34914063487679eb3db74875fa9053f44fad1d00efbaaa667d82b9b;
+M15RingStackOpponent.esp
+04aaa13412747ec9b2c227e74ffa391b563ebddd0a577a4daa245b888b9b91cb;
+M15WeaponChangeOpponent.esp
+b4f47b07e52de1cf289bfedb1c99b8754ad293b32404af8c4bd664902e57ebd4.
+The winning record audit pins original Oblivion.esm SHA256
+a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70.

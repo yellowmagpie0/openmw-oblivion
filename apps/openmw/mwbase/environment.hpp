@@ -111,6 +111,7 @@ namespace MWBase
         Misc::NotNullPtr<WindowManager> getWindowManager() const { return mWindowManager; }
 
         Misc::NotNullPtr<MechanicsManager> getMechanicsManager() const { return mMechanicsManager; }
+        MechanicsManager* getMechanicsManagerOrNull() const noexcept { return mMechanicsManager; }
 
         Misc::NotNullPtr<DialogueManager> getDialogueManager() const { return mDialogueManager; }
 

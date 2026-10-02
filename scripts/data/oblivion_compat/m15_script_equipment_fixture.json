@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "purpose": "Synthetic S4 live script equipment course: normal activation starts one controller-owned attack, actual Fatigue spending restrains the still-engaged drawn actor, then ordinary activations unequip and equip the same Rust weapon. No damage/contact/mesh injection. Condition and every unrelated winning NPC field must remain unchanged.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779392,
+    "editor_id": "M15ScriptEquipmentStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779393,
+    "editor_id": "M15ScriptEquipmentOpponent",
+    "sha256": "949d171cf699e124485a973657485d949f28d732b0657240b07aec47ae927163"
+  }
+}

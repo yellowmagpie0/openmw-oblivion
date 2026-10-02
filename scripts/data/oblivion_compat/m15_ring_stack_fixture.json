@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "purpose": "Synthetic S4 actual inventory stack splitting: a restrained actor uses ordinary activation to equip one original plain silver ring from a quantity2 stack, then unequips that ring. Actual GUI inventory callbacks and F5/fresh-process conservation must pass. No contact/resource/RNG changes or original dual-ring order acceptance claim.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779392,
+    "editor_id": "M15RingStackStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779393,
+    "editor_id": "M15RingStackOpponent",
+    "sha256": "7e7d626114a7ef1f947794d5f46a992707eca25a367e050e15871b4fbfdfdd0a"
+  }
+}

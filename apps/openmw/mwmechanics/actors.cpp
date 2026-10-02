@@ -2245,6 +2245,15 @@ namespace MWMechanics
         return 0;
     }
 
+    bool Actors::cancelOblivionCombatInput(const MWWorld::Ptr& ptr) const
+    {
+        const auto found = mIndex.find(ptr.mRef);
+        if (found == mIndex.end())
+            return false;
+        found->second->getCharacterController().cancelOblivionCombatInput();
+        return true;
+    }
+
     void Actors::forceStateUpdate(const MWWorld::Ptr& ptr) const
     {
         const auto iter = mIndex.find(ptr.mRef);

@@ -166,6 +166,10 @@ namespace MWBase
             = 0;
         ///< Perform a persuasion action on NPC
 
+        // Cancel native owned input/playback before an equipment observer can run.
+        // Returns false when the actor has no resident controller.
+        virtual bool cancelOblivionCombatInput(const MWWorld::Ptr& ptr) = 0;
+
         virtual void forceStateUpdate(const MWWorld::Ptr& ptr) = 0;
         ///< Forces an object to refresh its animation state.
 

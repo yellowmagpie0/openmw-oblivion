@@ -753,7 +753,7 @@ namespace MWRender
         std::vector<Equipment> equipment;
         const auto runtimeEquipment
             = static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
-                  ->oblivionReferenceEquipment(mPtr.getCellRef().getFormKey());
+                  ->oblivionReferenceEquipment(mPtr);
         if (runtimeEquipment)
         {
             const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();

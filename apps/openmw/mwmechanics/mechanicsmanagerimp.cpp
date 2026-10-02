@@ -818,6 +818,11 @@ namespace MWMechanics
         }
     }
 
+    bool MechanicsManager::cancelOblivionCombatInput(const MWWorld::Ptr& ptr)
+    {
+        return !ptr.isEmpty() && ptr.getClass().isActor() && mActors.cancelOblivionCombatInput(ptr);
+    }
+
     void MechanicsManager::forceStateUpdate(const MWWorld::Ptr& ptr)
     {
         if (ptr.getClass().isActor())

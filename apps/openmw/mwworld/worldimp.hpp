@@ -291,11 +291,13 @@ namespace MWWorld
             const ESM::FormKey& key, int delta, const ESM::FormKey& owner = {});
         int oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item);
         bool oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip);
+        bool oblivionEquipActorItem(const Ptr& actor, const ESM::FormKey& key, bool equip);
+        bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;
         std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
         void oblivionPlayerEquipmentChanged();
         bool oblivionSetPlayerHotkey(const ESM::RefId& sharedId, int hotkey);
         std::optional<std::vector<std::pair<ESM::RefId, std::uint32_t>>>
-            oblivionReferenceEquipment(const ESM::FormKey& key) const;
+            oblivionReferenceEquipment(const Ptr& actor) const;
         std::optional<ESM4::ActorDrawState> captureOblivionActorDrawState(const Ptr& actor) const;
         std::optional<ESM4::ActorDrawState> oblivionSavedActorDrawState(const Ptr& actor) const;
         bool restoreOblivionActorDrawState(const Ptr& actor) const;

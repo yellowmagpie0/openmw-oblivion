@@ -10760,3 +10760,95 @@ Next make native script equipment changes publish to the live InventoryStore;
 NPC Add/Remove and queries must also agree with physical instances. Block,
 breakage, mastery, other melee branches/views/input/restarts, grip/reactions/
 audio and the S5-S14 work remain open. Full M15 is not complete.
+
+### Checkpoint 110 — live native script equipment and owned-action cancellation
+
+Native NPC/CREA script EquipItem, UnequipItem and GetEquipped now use actual
+InventoryStore instances. Condition, charge, owner, quantity and Ptr identity
+survive ordinary unequip/re-equip. TES4 apparel presentation reads the same live
+slots; stale runtime masks and constructor armor caches no longer override the
+live query/render view. Player paths retain their existing adapter. A valid
+headless/nonresident view does not create a controller or resource authority.
+
+Weapon/shield/light changes cancel the owning controller's strike, blocking and
+held/queued input before equipment or animation-end callbacks. The nonresident
+fallback cancels the same existing service fields without constructing authority.
+Idempotent equipment requests preserve playback. Unequip visits each slot once:
+a reentrant observer's later equip request remains effective, rather than causing
+an unbounded repeated unequip/re-equip loop. The new bounded reentry regression
+failed against the previous implementation before this correction. Peers' pending
+actions remain owned and unchanged.
+
+Five world cases cover stale saved masks, actual instance/metadata preservation,
+pre-observer cancellation, reentrant equipment requests, two synthetic dual-slot
+ring instances/apparel overlap, and creature authority isolation. Full final
+`S3/native-script-equipment-world-02` passes all773 engine and242 Python tests;
+`native-script-equipment-world-sanitized-02` passes all773 engine tests under
+halting ASan/UBSan, with leak detection disabled. Exact unfiltered inventories
+match XML, zero failures/skips, stable tested source fingerprint
+b58a74134c06e69c50a864bedfd9b28699306e810ff06a51d24a5f21a5466935.
+Unchanged component/codec coverage remains checkpoint108's2055 normal and
+instrumented tests. Earlier772-test checks predate the final reentry correction.
+
+Three authored fixtures preserve original Dreth records except declared style
+and script overrides. The equipment fixture issues ordinary script unequip and
+later equip from activation. The ring fixture equips/unequips one unenchanted
+winning original silver ring from a declared quantity-two stack. The windup
+fixture starts the existing stationary production policy and, on a later
+GameMode tick, unequips/restrains the actor. It supplies no contact or outcome.
+Fork SCTX compilation is exercised; original-game compiled bytecode acceptance
+is not claimed.
+
+`S4/native-script-equipment-restart-02`, `native-ring-stack-restart-02` and
+`native-weapon-change-restart-03` pass the final normal build. The instrumented
+counterparts `native-script-equipment-runtime-sanitized-03`,
+`native-ring-stack-runtime-sanitized-03` and
+`native-weapon-change-runtime-sanitized-04` also pass. Each lane has eight distinct
+process epochs, twelve directly inspected required scene captures and26 rejected
+semantic corruption controls (9 equipment,9 ring,8 cancellation). Equipment
+unequip/re-equip and command-free third restoration agree with saved physical
+masks; ring equip splits2 into1 equipped/1 unequipped, unequip restacks2 and the
+third process does not replay the command. The cancellation log records native
+strike id1/action2, interruption of that same id before successful unequip,
+then F5 and a distinct process without strike/contact replay. All unrelated
+Native AV/life/ownership/inventories/RNG remain exact, with only declared gear,
+script-local and legacy condition/process normalization changes allowed. No hit
+or miss is committed by equipment/stack/cancellation courses.
+
+Consolidated evidence is `S4/native-script-equipment-final-acceptance-01`.
+Final normal executable SHA256
+c92dd259eaf95711f7291a634e6720579a036ef41b6cd111527774f91e7502f4;
+instrumented938bad3a218e9f6d3cce6037874f463523150efaaf7edb3d54cf8227109193c3.
+Additional startup samples in the accepted instrumented retry are retained but
+excluded from its twelve required scene captures. Earlier normal courses pass
+but predate the final reentry fix and are not the final binary evidence.
+
+Retained failed attempts include the original stale-mask equipment behavior,
+initial missing staged dependency, copied launcher output-path refusal, a
+headless public-unstack crash requiring a real GUI environment, initial creature
+union/enum test compilation errors, and the reentry regression's expected red
+failure. The first windup fixture incorrectly used GetAnimAction, a foreign
+command absent from the original TES4 command table; its failed runtime is
+retained. The corrected editable fixture uses a declared script-tick delay and
+requires an actual owned strike before cancellation. No native GetAnimAction
+binding was added.
+
+The first final instrumented equipment attempt
+`native-script-equipment-runtime-sanitized-02/first` failed visual acceptance:
+initial entropy0.0177256 against unchanged0.03, HUD only. Its later unequipped
+scene was visible, and exact save comparisons passed, but numeric-only evidence
+explicitly retains visual/course failure. The fresh readiness experiment records
+an additional startup sample before gameplay, excludes that sample from scene
+acceptance, and keeps0.03 on every required scene capture. Its first startup
+sample is also HUD only; its next required capture shows the room/actor/sword
+before any equipment command. No general first-capture root cause or production
+renderer fix is claimed.
+
+Real ring evidence covers one ordinary equip splitting count2 into equipped1
+and unequipped1, then ordinary unequip/restacking and fresh restoration. The
+winning original ring has only RightRing bit64; the synthetic C++ dual-slot
+bit192 test does not establish vanilla two-ring slot-choice semantics. Ring
+appearance, full weapon grip, visible strike/reaction frames and audio remain
+open. Current live AddItem/RemoveItem/GetItemCount, exact cached metadata refresh,
+unloaded actor inventory hydration and broader S3/S4 acceptance still require
+work. S5-S14 remain open; full M15 is not complete.

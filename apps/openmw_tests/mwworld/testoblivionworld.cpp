@@ -2,6 +2,8 @@
 #include <bit>
 #include <components/esm4/loadweap.hpp>
 #include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwclass/clothing.hpp"
+#include <components/esm4/loadclot.hpp>
 #include "apps/openmw/mwclass/armor.hpp"
 #include "apps/openmw/mwworld/oblivionprofileservices.hpp"
 #include "apps/openmw/mwworld/oblivioninteraction.hpp"
@@ -210,6 +212,261 @@ namespace
         reader.getRecHeader();
         fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
     }
+    ESM::FormKey addEquipmentWeapon(NativeWorldFixture& fixture, std::uint32_t id = 0x940)
+    {
+        auto& store = fixture.mWorld.getStore();
+        MWClass::Weapon::registerSelf();
+        ESM4::Weapon native{}; native.mId = {id, 0};
+        native.mData.health = 100; native.mData.speed = native.mData.reach = 1;
+        const auto key = ESM::FormKey::content("headless.esm", id);
+        store.getWritable<ESM4::Weapon>().insertStatic(native, key);
+        ESM::Weapon projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+        projected.mData.mType = ESM::Weapon::LongBladeOneHand; projected.mData.mHealth = 100;
+        store.insertStatic(projected);
+        return key;
+    }
+
+    void installEquipmentInventory(NativeWorldFixture& fixture, const MWWorld::Ptr& actor,
+        const std::vector<ESM4::RuntimeInventoryItem>& items)
+    {
+        const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+            fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), items);
+        auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+        actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
+    }
+
+    TEST(OblivionWorldTest, NativeScriptEquipmentUsesLiveInstancesAndPreservesConditionOwnership)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1;
+        item.mCondition = std::bit_cast<float>(1113509069u); item.mCharge = 7.25f;
+        item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, actor, {item});
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        const auto original = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto baseline = captureNativeActorState(fixture, actor).serializeBinary();
+        auto cached = captureNativeActorState(fixture, actor);
+        cached.mReferences.front().mInventory = {item};
+        readNativeSnapshot(fixture, cached);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
+        EXPECT_EQ(ObScript::asInteger(host.call("GetEquipped", {}, args, context, {})), 1);
+        EXPECT_EQ(ObScript::asInteger(host.call("UnequipItem", {}, args, context, {})), 1);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        EXPECT_EQ(ObScript::asInteger(host.call("GetEquipped", {}, args, context, {})), 0);
+        // A stale, structurally valid saved mask must not drive either query
+        // or the renderer's equipment view for this already-live inventory.
+        readNativeSnapshot(fixture, cached);
+        EXPECT_EQ(ObScript::asInteger(host.call("GetEquipped", {}, args, context, {})), 0);
+        const auto empty = world.oblivionReferenceEquipment(actor);
+        ASSERT_TRUE(empty); EXPECT_TRUE(empty->empty());
+        EXPECT_EQ(ObScript::asInteger(host.call("EquipItem", {}, args, context, {})), 1);
+        ASSERT_NE(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        const auto equipped = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        EXPECT_EQ(equipped, original);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*equipped.getCellRef().getNativeItemCondition()), 1113509069u);
+        EXPECT_EQ(equipped.getCellRef().getEnchantmentCharge(), 7.25f);
+        EXPECT_EQ(equipped.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x800, 0}));
+        EXPECT_EQ(equipped.getCellRef().getCount(), 1);
+        EXPECT_EQ(ObScript::asInteger(host.call("GetEquipped", {}, args, context, {})), 1);
+        const auto visible = world.oblivionReferenceEquipment(actor);
+        ASSERT_TRUE(visible); ASSERT_EQ(visible->size(), 1u);
+        EXPECT_EQ(visible->front().second, ESM4::InventorySlotWeapon);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+        EXPECT_FALSE(world.oblivionEquipActorItem(actor, ESM::FormKey::content("headless.esm", 0x999), true));
+        EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), original);
+        MWWorld::World foreign(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_FALSE(foreign.oblivionEquipActorItem(actor, weapon, false));
+        EXPECT_FALSE(foreign.oblivionActorItemEquipped(actor, weapon));
+        EXPECT_FALSE(foreign.oblivionReferenceEquipment(actor));
+        EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), original);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+    }
+
+    TEST(OblivionWorldTest, NativeEquipmentCancelsOwnedWeaponActionBeforeEquipmentCallbacks)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900), peer = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(actor)); ASSERT_TRUE(world.activateOblivionActor(peer));
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1;
+        item.mCondition = 99.125; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, actor, {item});
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        auto& service = *world.getOblivionCombatService();
+        const auto owner = actor.getCellRef().getFormKey(), other = peer.getCellRef().getFormKey();
+        const auto values = *service.findActorValues(owner); const auto rng = service.combatRandomState();
+        ESM4::RuntimeMeleeInput input; input.mInputHeld = true;
+        service.setMeleeInput(owner, input);
+        const auto id = service.beginMeleeStrike(owner, ESM4::MeleeStrikeKind::Left, "onehandattackleft", 1, weapon);
+        const auto peerId = service.beginMeleeStrike(other, ESM4::MeleeStrikeKind::Right, "handtohandattackright");
+        struct Observer final : MWWorld::InventoryStoreListener
+        {
+            MWMechanics::OblivionCombatService& service;
+            ESM::FormKey owner; std::uint64_t id; int calls = 0;
+            Observer(MWMechanics::OblivionCombatService& s, ESM::FormKey key, std::uint64_t action)
+                : service(s), owner(std::move(key)), id(action) {}
+            void equipmentChanged() override
+            {
+                ++calls;
+                EXPECT_FALSE(service.isActionPending(id, owner));
+                const auto* state = service.findMeleeState(owner);
+                ASSERT_NE(state, nullptr); EXPECT_FALSE(state->mStrike);
+                EXPECT_FALSE(state->mInput.mInputHeld); EXPECT_EQ(state->mInput.mQueued, ESM4::MeleeQueuedStrike::None);
+            }
+        } observer(service, owner, id);
+        inventory.setInvListener(&observer);
+        EXPECT_TRUE(world.oblivionEquipActorItem(actor, weapon, true)); // Same instance is a no-op.
+        EXPECT_EQ(observer.calls, 0); EXPECT_TRUE(service.isActionPending(id, owner));
+        EXPECT_FALSE(world.oblivionEquipActorItem(actor, ESM::FormKey::content("headless.esm", 0x999), false));
+        EXPECT_TRUE(service.isActionPending(id, owner));
+        EXPECT_TRUE(world.oblivionEquipActorItem(actor, weapon, false));
+        EXPECT_EQ(observer.calls, 1); EXPECT_TRUE(service.isActionPending(peerId, other));
+        EXPECT_EQ(service.combatRandomState(), rng);
+        EXPECT_EQ(*service.findActorValues(owner), values);
+        EXPECT_EQ(inventory.begin()->getCellRef().getNativeItemCondition(), std::optional<float>(99.125f));
+        inventory.setInvListener(nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeEquipmentReentrantEquipDoesNotRepeatUnequipOrReplayOwnedAction)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1;
+        item.mCondition = 99.125; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, actor, {item});
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        const MWWorld::Ptr physical = *inventory.begin();
+        auto& service = *world.getOblivionCombatService();
+        const auto owner = actor.getCellRef().getFormKey();
+        const auto values = *service.findActorValues(owner);
+        const auto rng = service.combatRandomState();
+        const auto id = service.beginMeleeStrike(owner, ESM4::MeleeStrikeKind::Left, "onehandattackleft", 1, weapon);
+        struct Observer final : MWWorld::InventoryStoreListener
+        {
+            MWWorld::World& world; MWWorld::Ptr actor; ESM::FormKey weapon;
+            MWMechanics::OblivionCombatService& service; ESM::FormKey owner; std::uint64_t id;
+            int calls = 0;
+            Observer(MWWorld::World& w, MWWorld::Ptr ptr, ESM::FormKey item,
+                MWMechanics::OblivionCombatService& s, ESM::FormKey key, std::uint64_t action)
+                : world(w), actor(ptr), weapon(std::move(item)), service(s), owner(std::move(key)), id(action) {}
+            void equipmentChanged() override
+            {
+                ++calls;
+                // Bound the old implementation's repeated callbacks so the
+                // regression fails promptly instead of hanging the test suite.
+                if (calls > 2)
+                    throw std::runtime_error("native unequip repeated a reentrant equipment request");
+                EXPECT_FALSE(service.isActionPending(id, owner));
+                if (!world.oblivionActorItemEquipped(actor, weapon))
+                {
+                    EXPECT_TRUE(world.oblivionEquipActorItem(actor, weapon, true));
+                }
+            }
+        } observer(world, actor, weapon, service, owner, id);
+        struct ListenerGuard
+        {
+            MWWorld::InventoryStore& inventory;
+            ~ListenerGuard() { inventory.setInvListener(nullptr); }
+        } guard{inventory};
+        inventory.setInvListener(&observer);
+        EXPECT_TRUE(world.oblivionEquipActorItem(actor, weapon, false));
+        EXPECT_EQ(observer.calls, 2);
+        EXPECT_TRUE(world.oblivionActorItemEquipped(actor, weapon)); // The observer's later request wins.
+        EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), physical);
+        EXPECT_EQ(physical.getCellRef().getNativeItemCondition(), std::optional<float>(99.125f));
+        EXPECT_EQ(physical.getCellRef().getCount(), 1);
+        EXPECT_FALSE(service.isActionPending(id, owner));
+        EXPECT_EQ(*service.findActorValues(owner), values);
+        EXPECT_EQ(service.combatRandomState(), rng);
+        inventory.setInvListener(nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeEquipmentRingCopiesAndApparelOverlapConserveItems)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        MWClass::Clothing::registerSelf();
+        const auto add = [&](std::uint32_t id, int type, std::uint32_t masks) {
+            ESM4::Clothing native{}; native.mId = {id, 0}; native.mClothingFlags = masks;
+            const auto key = ESM::FormKey::content("headless.esm", id);
+            store.getWritable<ESM4::Clothing>().insertStatic(native, key);
+            ESM::Clothing projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+            projected.mData.mType = type; store.insertStatic(projected); return key;
+        };
+        const auto ring = add(0x940, ESM::Clothing::Ring, ESM4::Armor::TES4_RightRing | ESM4::Armor::TES4_LeftRing);
+        const auto robe = add(0x941, ESM::Clothing::Robe, ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody);
+        const auto shirt = add(0x942, ESM::Clothing::Shirt, ESM4::Armor::TES4_UpperBody);
+        // Two existing physical copies: splitting a count2 stack calls the
+        // real GUI inventory-update path, which this headless fixture lacks.
+        // Real stacked script equipment remains a rendered acceptance case.
+        ESM4::RuntimeInventoryItem a; a.mBase = ring; a.mCount = 1;
+        ESM4::RuntimeInventoryItem b; b.mBase = robe; b.mCount = 1;
+        ESM4::RuntimeInventoryItem c; c.mBase = shirt; c.mCount = 1;
+        installEquipmentInventory(fixture, actor, {a,a,b,c});
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        ASSERT_TRUE(world.oblivionEquipActorItem(actor, ring, true));
+        ASSERT_TRUE(world.oblivionEquipActorItem(actor, ring, true));
+        auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_RightRing);
+        auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_LeftRing);
+        ASSERT_NE(right, inventory.end()); ASSERT_NE(left, inventory.end()); EXPECT_NE(*right, *left);
+        EXPECT_EQ(right->getCellRef().getCount(), 1); EXPECT_EQ(left->getCellRef().getCount(), 1);
+        EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 2);
+        ASSERT_TRUE(world.oblivionEquipActorItem(actor, robe, true));
+        ASSERT_TRUE(world.oblivionEquipActorItem(actor, shirt, true));
+        const auto gear = world.oblivionReferenceEquipment(actor); ASSERT_TRUE(gear);
+        EXPECT_EQ(gear->size(), 3u); // Two rings plus shirt; robe conflicts across its whole native mask.
+        EXPECT_FALSE(world.oblivionActorItemEquipped(actor, robe));
+        EXPECT_TRUE(world.oblivionActorItemEquipped(actor, shirt));
+        EXPECT_TRUE(world.oblivionEquipActorItem(actor, ring, false));
+        EXPECT_FALSE(world.oblivionActorItemEquipped(actor, ring));
+        EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 2);
+        EXPECT_FALSE(world.oblivionEquipActorItem(actor, ring, false));
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeCreatureEquipmentDoesNotCreateResourceAuthority)
+    {
+        NativeWorldFixture fixture; auto& world = fixture.mWorld; auto& store = world.getStore();
+        ESM4::Creature base{}; base.mId = {0x820, 0};
+        base.mFormKey = ESM::FormKey::content("headless.esm", 0x820); base.mAttackReach = 64;
+        base.mData.health = 19; base.mData.combat = 10;
+        base.mBaseConfig.tes4.levelOrOffset = 1; base.mBaseConfig.tes4.fatigue = 35;
+        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature placed{}; placed.mId = {0x920, 0};
+        placed.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        placed.mBaseObj = base.mId; placed.mBaseKey = base.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(placed, placed.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(placed, store.search<ESM4::Creature>(base.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell(); const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        world.getWorldModel().registerPtr(actor);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1; item.mCondition = 43.125;
+        installEquipmentInventory(fixture, actor, {item});
+        ASSERT_TRUE(world.oblivionEquipActorItem(actor, weapon, true));
+        EXPECT_TRUE(world.oblivionActorItemEquipped(actor, weapon));
+        ASSERT_TRUE(world.oblivionReferenceEquipment(actor));
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(placed.mFormKey), nullptr);
+        EXPECT_FALSE(world.captureOblivionActorDrawState(actor));
+        EXPECT_TRUE(world.oblivionEquipActorItem(actor, weapon, false));
+        EXPECT_FALSE(world.oblivionActorItemEquipped(actor, weapon));
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(placed.mFormKey), nullptr);
+    }
+
     TEST(OblivionWorldTest, NativeNpcDrawRestoresThroughRecordAndLazyClassWithoutCombatDeltas)
     {
         NativeWorldFixture fixture;

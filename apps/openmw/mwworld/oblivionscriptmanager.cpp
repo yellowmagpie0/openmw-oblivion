@@ -1425,9 +1425,17 @@ namespace MWWorld
         if (name == "getequipped")
         {
             const auto item = keyFromValue(argument(0));
-            if (!item || !mWorld.mOblivionRuntimeState)
+            if (!item)
                 return std::int64_t(0);
             const ESM::FormKey owner = objectKey();
+            if (owner != ESM::FormKey::dynamic("player", 1))
+            {
+                const Ptr actor = ptrFor(owner);
+                if (!actor.isEmpty() && (actor.getType() == ESM::REC_NPC_4 || actor.getType() == ESM::REC_CREA4))
+                    return std::int64_t(mWorld.oblivionActorItemEquipped(actor, *item));
+            }
+            if (!mWorld.mOblivionRuntimeState)
+                return std::int64_t(0);
             const std::vector<ESM4::RuntimeInventoryItem>* inventory = nullptr;
             if (owner == ESM::FormKey::dynamic("player", 1))
                 inventory = &mWorld.mOblivionRuntimeState->mPlayer.mInventory;
@@ -1451,21 +1459,37 @@ namespace MWWorld
                 changed = mWorld.oblivionEquipPlayerItem(*item, equip);
             else if (ESM4::RuntimeReferenceState* state = referenceState(owner))
             {
-                if (equip)
+                const Ptr actor = ptrFor(owner);
+                const bool liveNativeActor = !actor.isEmpty()
+                    && (actor.getType() == ESM::REC_NPC_4 || actor.getType() == ESM::REC_CREA4);
+                if (liveNativeActor)
+                {
+                    changed = mWorld.oblivionEquipActorItem(actor, *item, equip);
+                    // Controller/equipment callbacks may reenter native state.
+                    state = referenceState(owner);
+                    if (!state)
+                        throw ObScript::RuntimeError("OBSV118", "Native equipment owner disappeared", name);
+                }
+                if (equip && (!liveNativeActor || changed))
                 {
                     if (const std::optional<ESM::FormId> id = mResolver.toFormId(*item))
                         if (auto definition
                             = OblivionProfileServices::itemDefinition(mWorld.mStore, ESM::RefId(*id)))
                         {
                             definition->mBase = *item;
-                            changed = ESM4::equipInventoryItem(state->mInventory, *definition);
+                            const bool projected = ESM4::equipInventoryItem(state->mInventory, *definition);
+                            if (!liveNativeActor)
+                                changed = projected;
                         }
                 }
-                else
-                    changed = ESM4::unequipInventoryItem(state->mInventory, *item);
+                else if (!equip && (!liveNativeActor || changed))
+                {
+                    const bool projected = ESM4::unequipInventoryItem(state->mInventory, *item);
+                    if (!liveNativeActor)
+                        changed = projected;
+                }
                 if (changed)
                 {
-                    const Ptr actor = ptrFor(owner);
                     if (!actor.isEmpty() && mWorld.mRendering != nullptr)
                         if (auto* animation
                             = dynamic_cast<MWRender::ESM4NpcAnimation*>(mWorld.mRendering->getAnimation(actor)))

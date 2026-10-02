@@ -136,6 +136,7 @@ namespace MWMechanics
         /// @return was it illegal, and someone saw you doing it? Also returns fail when enemies are nearby
         bool sleepInBed(const MWWorld::Ptr& ptr, const MWWorld::Ptr& bed) override;
 
+        bool cancelOblivionCombatInput(const MWWorld::Ptr& ptr) override;
         void forceStateUpdate(const MWWorld::Ptr& ptr) override;
 
         /// Attempt to play an animation group

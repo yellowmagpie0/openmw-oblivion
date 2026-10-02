@@ -15,6 +15,8 @@
 #include <components/esm4/loadbook.hpp>
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadcont.hpp>
+#include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadflor.hpp>
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/inventorymechanics.hpp>
@@ -28,10 +30,12 @@
 #include <components/misc/rng.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
 
 #include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 
 #include "class.hpp"
 #include "datetimemanager.hpp"
@@ -44,6 +48,17 @@ namespace MWWorld
 {
     namespace
     {
+        bool nativeEquipmentActor(const Ptr& actor)
+        {
+            if (actor.isEmpty())
+                return false;
+            if (actor.getType() == ESM::REC_NPC_4)
+                return actor.get<ESM4::Npc>()->mBase && actor.get<ESM4::Npc>()->mBase->mIsTES4;
+            if (actor.getType() == ESM::REC_CREA4)
+                return actor.get<ESM4::Creature>()->mBase && actor.get<ESM4::Creature>()->mBase->mAttackReach.has_value();
+            return false;
+        }
+
         template <class T>
         std::string findName(const ESMStore& store, const ESM::RefId& id)
         {
@@ -284,6 +299,126 @@ namespace MWWorld
         return true;
     }
 
+    bool World::oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor) || key.isNull())
+            return false;
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
+        if (!id)
+            return false;
+        const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        for (auto it = inventory.begin(); it != inventory.end(); ++it)
+            if (it->getCellRef().getCount() > 0 && it->getCellRef().getRefId() == shared
+                && inventory.isEquipped(*it))
+                return true;
+        return false;
+    }
+
+    bool World::oblivionEquipActorItem(const Ptr& actor, const ESM::FormKey& key, bool equip)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor) || key.isNull())
+            return false;
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
+        if (!id)
+            return false;
+        const auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id));
+        if (!definition || definition->mSlots == 0)
+            return false;
+        const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        const auto matches = [&](const Ptr& item) {
+            return item.getCellRef().getCount() > 0 && item.getCellRef().getRefId() == shared;
+        };
+        const auto cancel = [&] {
+            if ((definition->mSlots & (ESM4::InventorySlotWeapon | ESM4::Armor::TES4_Shield
+                    | ESM4::InventorySlotLight)) == 0 || !mOblivionCombat)
+                return;
+            if (auto* mechanics = MWBase::Environment::get().getMechanicsManagerOrNull();
+                mechanics && mechanics->cancelOblivionCombatInput(actor))
+                return;
+            // A nonresident/headless view has no controller/animation observer.
+            // Cancel the same authority fields without constructing a controller.
+            const auto owner = actor.getCellRef().getFormKey();
+            if (const auto* state = mOblivionCombat->findMeleeState(owner); state && state->mStrike)
+                mOblivionCombat->cancelMeleeStrike(state->mStrike->mActionId, owner);
+            mOblivionCombat->endBlocking(owner);
+            mOblivionCombat->clearMeleeInput(owner);
+        };
+        if (!equip)
+        {
+            bool changed = false;
+            // Re-find after restacking/cancellation callbacks. Visit each slot
+            // once: an equipment observer can issue a new equip request, and
+            // this outer request must not repeatedly undo it or loop forever.
+            for (int slot = 0; slot < InventoryStore::Slots; ++slot)
+            {
+                auto found = inventory.getSlot(slot);
+                if (found == inventory.end() || !matches(*found))
+                    continue;
+                if (!changed)
+                {
+                    cancel(); // Before equipment/animation-end observers.
+                    changed = true;
+                    found = inventory.getSlot(slot);
+                    if (found == inventory.end() || !matches(*found))
+                        continue; // A cancellation observer completed this slot.
+                }
+                inventory.unequipSlot(slot);
+            }
+            return changed;
+        }
+        auto found = inventory.end();
+        auto alreadyEquipped = inventory.end();
+        for (auto it = inventory.begin(); it != inventory.end(); ++it)
+        {
+            if (!matches(*it))
+                continue;
+            if (!inventory.isEquipped(*it))
+            {
+                found = it;
+                break;
+            }
+            if (alreadyEquipped == inventory.end())
+                alreadyEquipped = it;
+        }
+        if (found == inventory.end())
+            found = alreadyEquipped;
+        if (found == inventory.end())
+            return false;
+        const auto slots = found->getClass().getEquipmentSlots(*found).first;
+        if (slots.empty())
+            return false;
+        int selected = slots.front();
+        if (definition->mChooseOneSlot)
+        {
+            // Follow the typed inventory's native RightRing/LeftRing order,
+            // rather than the shared facade's opposite slot enumeration.
+            if (std::ranges::find(slots, InventoryStore::Slot_RightRing) == slots.end()
+                || std::ranges::find(slots, InventoryStore::Slot_LeftRing) == slots.end())
+                return false;
+            selected = InventoryStore::Slot_RightRing;
+            if (inventory.getSlot(selected) != inventory.end()
+                && inventory.getSlot(InventoryStore::Slot_LeftRing) == inventory.end())
+                selected = InventoryStore::Slot_LeftRing;
+            if (inventory.isEquipped(*found) && inventory.getSlot(selected) != found)
+                return false; // One physical ring cannot occupy both slots.
+        }
+        if (inventory.getSlot(selected) == found)
+            return true; // Idempotent: retain playback and the physical instance.
+        const Ptr requested = *found;
+        cancel();
+        // Animation-end observers can change inventory. Re-find the physical
+        // instance rather than equipping a removed/restacked iterator.
+        found = std::find(inventory.begin(), inventory.end(), requested);
+        if (found == inventory.end() || !matches(*found))
+            return false;
+        if (inventory.getSlot(selected) == found)
+            return true;
+        inventory.equip(selected, found);
+        return true;
+    }
+
     std::uint32_t World::oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || item.isEmpty())
@@ -350,20 +485,24 @@ namespace MWWorld
     }
 
     std::optional<std::vector<std::pair<ESM::RefId, std::uint32_t>>>
-    World::oblivionReferenceEquipment(const ESM::FormKey& key) const
+    World::oblivionReferenceEquipment(const Ptr& actor) const
     {
-        if (!mOblivionRuntimeState || key.isNull())
+        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor))
             return std::nullopt;
-        const auto found = std::ranges::find(mOblivionRuntimeState->mReferences, key,
-            &ESM4::RuntimeReferenceState::mKey);
-        if (found == mOblivionRuntimeState->mReferences.end())
-            return std::nullopt;
-        const ESM::FormKeyResolver resolver(mContentFiles);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
         std::vector<std::pair<ESM::RefId, std::uint32_t>> result;
-        for (const ESM4::RuntimeInventoryItem& item : found->mInventory)
-            if (item.mCount > 0 && item.mEquippedSlots != 0)
-                if (const std::optional<ESM::FormId> id = resolver.toFormId(item.mBase))
-                    result.emplace_back(ESM::RefId(*id), item.mEquippedSlots);
+        for (auto it = inventory.begin(); it != inventory.end(); ++it)
+        {
+            const Ptr item = *it;
+            if (item.getCellRef().getCount() <= 0 || !inventory.isEquipped(item))
+                continue;
+            std::uint32_t masks = 0;
+            for (int slot = 0; slot < InventoryStore::Slots; ++slot)
+                if (inventory.getSlot(slot) == it)
+                    masks |= oblivionEquipmentSlots(item, slot);
+            if (masks != 0)
+                result.emplace_back(OblivionProfileServices::nativeItemId(mStore, item.getCellRef().getRefId()), masks);
+        }
         return result;
     }
 

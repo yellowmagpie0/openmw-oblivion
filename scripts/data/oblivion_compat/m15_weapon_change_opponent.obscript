@@ -1,0 +1,17 @@
+scn M15WeaponChangeOpponent
+short fighting
+Begin OnActivate
+    if fighting == 0
+        StartCombat Player
+        set fighting to 1
+    endif
+End
+Begin GameMode
+    if fighting == 1
+        set fighting to 2
+    elseif fighting == 2
+        UnequipItem WeapIronShortswordRusty
+        SetRestrained 1
+        set fighting to 3
+    endif
+End

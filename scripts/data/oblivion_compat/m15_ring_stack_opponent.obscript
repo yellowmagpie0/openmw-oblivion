@@ -1,0 +1,11 @@
+scn M15RingStackOpponent
+short fighting
+Begin OnActivate
+    if fighting == 2
+        EquipItem JewelryRing4Silver
+        set fighting to 3
+    elseif fighting == 3
+        UnequipItem JewelryRing4Silver
+        set fighting to 4
+    endif
+End

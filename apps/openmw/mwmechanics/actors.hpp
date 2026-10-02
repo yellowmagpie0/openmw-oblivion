@@ -110,6 +110,7 @@ namespace MWMechanics
         bool isRunning(const MWWorld::Ptr& ptr) const;
         bool isSneaking(const MWWorld::Ptr& ptr) const;
 
+        bool cancelOblivionCombatInput(const MWWorld::Ptr& ptr) const;
         void forceStateUpdate(const MWWorld::Ptr& ptr) const;
 
         bool playAnimationGroup(const MWWorld::Ptr& ptr, std::string_view groupName, int mode, uint32_t number,
