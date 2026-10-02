@@ -6064,3 +6064,19 @@ checkpoint126's milestone entry. Normal and sanitized live Bullet bodies match
 all damping cases. Neither final transforms retained by the oracle nor native
 velocity caps, gravity, alternate motion types, collision/constraint solver
 rows or actual ragdoll gameplay are accepted by this evidence alone.
+
+
+### Checkpoint127: original ragdoll angular coordinates
+
+Native buildJacobian911480 and all its real initialization/angular/ball-socket
+callees execute without boundary stubs for118 cases; modern constructor911000
+and Ni adapter8c0b70 establish frame/angle layout. Cone and plane cross-squared
+admission is strict >binary32 epsilon. Twist normalizes the sum of axes and
+uses body B on the original length threshold. Angle helper8ecbb0 uses a
+bounded polynomial with binary32 constants, x87 intermediates and float stores.
+The normal and sanitizer coordinate helper matches every recorded parameter
+bit exactly, including signed zero. Inputs must be the original transformed
+world frames; supplying pre-transform local axes produced a retained harness
+failure. Full hashes, controls and scope are in checkpoint127's milestone
+entry. This establishes angular coordinates only, not impulse solving,
+friction/malleability, complete ragdoll admission or normal-input gameplay.

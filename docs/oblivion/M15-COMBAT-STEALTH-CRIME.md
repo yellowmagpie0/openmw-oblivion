@@ -12170,3 +12170,67 @@ Next: implement native cone/malleable/friction constraint semantics against
 independent original rows, then connect this ownership model to the existing
 physics scheduler, posed skeletons, native reaction/controller lifecycle and
 fresh-process continuation. There is no ragdoll gameplay acceptance yet.
+
+
+### Checkpoint127 — independent native cone, plane and twist coordinates (S4 open)
+
+Checkpoint126 is committed as `ae756d7870337fd402cc31fd2699486ab3a4fb28`, tree
+`c00a1484dc40b3439275f3904e6c2ad1d9b2fd39`. The verified 123-commit bundle is
+`S3/isolated-git-progress-104/m15-progress.bundle`, SHA256
+`6309ed663072cf17d213a3b20d63e09de77a40e27faac259f95993498f9ac73a`.
+
+`components/nifbullet/ragdollconecoordinates.*` evaluates the native angular
+row coordinates from already-transformed world frames. Cone, asymmetric plane
+and asymmetric twist limits remain separate. Cone and plane rows are omitted
+when their cross product squared is at most binary32 epsilon; twist uses the
+normalized sum of the two twist axes, falling back to body B's twist axis when
+its length is at most the original stored threshold. Cone angles use the
+negative swing coordinate and bounds `[-coneAngle, 100]`. The helper reproduces
+the original bounded angle polynomial, explicit float products and SSE dot
+accumulation order instead of substituting CRT atan2 or symmetric Bullet cone
+limits. Invalid nonfinite vectors, zero axes and reversed limits are rejected.
+This helper does not solve impulses or enable any formerly rejected graph;
+complete stock skeleton admission and game-world integration remain open.
+
+The original reflected ragdoll data is 0x90 bytes with world-frame input basis
+at offsets10/40 and angular parameters70–84. Its constructor911000 sets the
+modern angle-format flag; Ni adapter8c0b70 copies those frames/limits into the
+Havok data. The old finish-loaded conversion9113d0 is conditional and is not
+applied to this modern data path. Full original buildJacobian911480 executes
+its actual initialization predicate9246e0 and real row builders911060,
+8f1b60 and8f1cc0, with no boundary stubs, for118 cases under x87 control words
+027f/037f. Every run returns through ret8 with verified stack cleanup. The
+cases exercise rotated frames, exact parallel/opposite axes and adjacent
+float inputs around the row-admission threshold. Scope is observed angular
+row parameters, not the Havok impulse solver, friction, malleability, collision
+parity, runtime NPC reactions or persistence.
+
+Evidence: `S4/native-ragdoll-cone-coordinate-oracle-02` and
+`S4/native-ragdoll-cone-coordinate-comparison-{normal,sanitized}-02`.
+All118 coordinate outputs match exact binary32 bits, including signed zero.
+Both comparisons reject wrong-bit, missing-row, duplicate-row and malformed
+input controls. Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+corpus `4202423ea18a4f3608cf8d3ab376e7bf7e6c3cbd12a97a2398cb0ff90ef7d08b`; generator `94a692b0f45c83c5222140b8b216b0248028aa3a934efd19ff92ef556be0a08b`;
+comparator `227fd91606df5a0a28aa79c3c9dd227dd1fd7241ca16fec45c263cf897daedd6`.
+The retained first comparison failed because its input supplied local axes
+to a world-frame API; the original identity SSE transform changes signed
+zeros. Oracle02 records the actual original world-frame stores, while retaining
+the original row outputs. No tolerance was relaxed or expected coordinate
+replaced by production C++. Oracle01 and failed comparison-normal01 remain
+ignored evidence, with the boundary error explicitly recorded.
+
+Full normal and sanitizer component checks are `S4/native-ragdoll-cone-coordinates-normal-01` and
+`S4/native-ragdoll-cone-coordinates-sanitized-01`:2,092 executed cases from215 suites, no failures/skips,
+matching inventories and unchanged tested source fingerprint
+`22aa626bae0e455a79e12aeb9226922bbad0e2677ebf8461fe718806b6f85919`. Three focused tests cover original parallel/opposite
+fallback, asymmetric limits/angle outputs and invalid inputs. Sanitizer options
+are ASan detect_leaks=0:halt_on_error=1 and UBSan halt_on_error=1:print_stacktrace=1;
+this is not leak coverage. Engine integration is unchanged, so checkpoint126's
+797 engine cases are explicitly reused; Python is unchanged and checkpoint124's
+243 cases are reused. No new engine/Python execution is claimed. Documentation
+was appended after implementation checks, then the exact shared bytes exported
+for an isolated commit. S4 and all other previously open M15 gates remain open.
+Next: feed these independent coordinates into live angular constraint rows,
+verify limits and friction/malleability, then connect physics ownership to the
+actor scheduler, renderer and saved lifecycle.

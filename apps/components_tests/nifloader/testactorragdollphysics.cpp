@@ -1,4 +1,5 @@
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/nifbullet/ragdollconecoordinates.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
@@ -13,6 +14,68 @@
 
 namespace
 {
+    NifBullet::RagdollConeJoint coneLimits()
+    {
+        NifBullet::RagdollConeJoint result{};
+        result.mConeAngle = 0.5f;
+        result.mPlaneMin = -0.2f;
+        result.mPlaneMax = 0.3f;
+        result.mTwistMin = -0.4f;
+        result.mTwistMax = 0.6f;
+        return result;
+    }
+
+    TEST(RagdollConeCoordinates, ParallelAndOppositeTwistsUseNativeRowAdmissionAndFallback)
+    {
+        const NifBullet::RagdollJointFrame a{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        auto b = a;
+        auto rows = NifBullet::ragdollConeCoordinates(coneLimits(), a, b);
+        ASSERT_EQ(rows.size(), 2);
+        EXPECT_EQ(rows[0].mAxis, osg::Vec3f(0, 0, 1));
+        EXPECT_FLOAT_EQ(rows[0].mAngle, 0);
+        EXPECT_FLOAT_EQ(rows[0].mMin, -0.2f);
+        EXPECT_FLOAT_EQ(rows[0].mMax, 0.3f);
+        EXPECT_EQ(rows[1].mAxis, osg::Vec3f(1, 0, 0));
+        b.mAxis = {-1, 0, 0};
+        rows = NifBullet::ragdollConeCoordinates(coneLimits(), a, b);
+        ASSERT_EQ(rows.size(), 2);
+        EXPECT_EQ(rows[1].mAxis, osg::Vec3f(-1, 0, 0));
+        EXPECT_FLOAT_EQ(rows[1].mAngle, 0);
+    }
+
+    TEST(RagdollConeCoordinates, PreservesIndependentAsymmetricLimitsAndOriginalAnglePolynomial)
+    {
+        // Original full builder corpus case 4, generated before this helper.
+        const NifBullet::RagdollJointFrame a{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        const NifBullet::RagdollJointFrame b{{0, 0, 0},
+            {0.5849835872650146f, -0.49272486567497253f, 0.6442176699638367f},
+            {0.8101469278335571f, 0.31762266159057617f, -0.49272486567497253f}};
+        const auto rows = NifBullet::ragdollConeCoordinates(coneLimits(), a, b);
+        ASSERT_EQ(rows.size(), 3);
+        EXPECT_FLOAT_EQ(rows[0].mAngle, -0.9476068019866943f);
+        EXPECT_FLOAT_EQ(rows[1].mAngle, 0.946022629737854f);
+        EXPECT_FLOAT_EQ(rows[2].mAngle, 1.0299757719039917f);
+        EXPECT_FLOAT_EQ(rows[0].mMin, -0.5f);
+        EXPECT_FLOAT_EQ(rows[0].mMax, 100);
+        EXPECT_FLOAT_EQ(rows[2].mMin, -0.4f);
+        EXPECT_FLOAT_EQ(rows[2].mMax, 0.6f);
+    }
+
+    TEST(RagdollConeCoordinates, RejectsNonfiniteAndInvalidFramesOrLimits)
+    {
+        NifBullet::RagdollJointFrame a{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        auto b = a;
+        auto limits = coneLimits();
+        b.mAxis.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollConeCoordinates(limits, a, b), std::invalid_argument);
+        b = a;
+        limits.mTwistMin = 1;
+        EXPECT_THROW(NifBullet::ragdollConeCoordinates(limits, a, b), std::invalid_argument);
+        limits = coneLimits();
+        a.mAxis = {0, 0, 0};
+        EXPECT_THROW(NifBullet::ragdollConeCoordinates(limits, a, b), std::invalid_argument);
+    }
+
     struct ActorRagdollPhysicsTest : ::testing::Test
     {
         btDefaultCollisionConfiguration mConfiguration;
