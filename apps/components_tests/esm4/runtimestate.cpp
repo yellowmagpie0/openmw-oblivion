@@ -1858,6 +1858,49 @@ namespace
     }
 }
 
+TEST(ESM4RuntimeState, NativeKnockbackVersionThirtyWireAndIndependentLifetime)
+{
+    auto old = meleeState();
+    old.mVersion = 29;
+    const auto actor = old.mReferences.front().mKey;
+    const auto legacyBytes = old.serializeBinary();
+    auto state = old;
+    state.mVersion = 30;
+    auto expected = legacyBytes;
+    expected[std::string_view("OMW4STATE").size()] = 30;
+    expected.insert(expected.end(), 4, 0);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(legacyBytes).mNativeActorKnockback.empty());
+    state.mNativeActorKnockback.emplace(actor, ESM4::TimedKnockbackState{{-0.f, -2, 3}, .125f});
+    const auto bytes = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored.mNativeActorKnockback, state.mNativeActorKnockback);
+    EXPECT_TRUE(std::signbit(restored.mNativeActorKnockback.at(actor).mAcceleration[0]));
+    EXPECT_NE(restored.canonicalJson().find("\"acceleration\":[-0.0,-2,3],\"remaining\":0.125"), std::string::npos);
+    state.mNativeMeleeStates.clear();
+    state.mPhysicalActionOwners.clear();
+    state.mPhysicalActions.mPending.clear();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorKnockback,
+        state.mNativeActorKnockback);
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto malformed = state;
+        malformed.mNativeActorKnockback.at(actor).mRemaining = bad;
+        EXPECT_THROW(malformed.serializeBinary(), std::runtime_error);
+    }
+    auto malformed = state;
+    malformed.mNativeActorKnockback.emplace(ESM::FormKey{}, ESM4::TimedKnockbackState{});
+    EXPECT_THROW(malformed.serializeBinary(), std::runtime_error);
+    malformed = state;
+    malformed.mNativeActorKnockback.at(actor).mAcceleration[1] = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(malformed.serializeBinary(), std::runtime_error);
+    malformed = state; malformed.mVersion = 29;
+    EXPECT_THROW(malformed.serializeBinary(), std::runtime_error);
+    auto truncated = bytes; truncated.pop_back();
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    EXPECT_EQ(old.serializeBinary(), legacyBytes);
+}
+
 TEST(ESM4RuntimeState, NativeAnimationClockAndSequenceTimingPersistIndependentlyOfMeleeInput)
 {
     auto state = meleeState();

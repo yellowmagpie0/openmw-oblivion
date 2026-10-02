@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 29;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 30;
 
     struct RuntimeContentIdentity
     {
@@ -425,6 +425,9 @@ namespace ESM4
         std::map<ESM::FormKey, RuntimeMeleeState> mNativeMeleeStates;
         // v23: AnimData clock survives strike cancellation/incapacitation.
         std::map<ESM::FormKey, float> mNativeAnimationClocks;
+        // v30: timed native Havok pulse, independent of attack continuation.
+        // Older saves start without inferred physical forces.
+        std::map<ESM::FormKey, TimedKnockbackState> mNativeActorKnockback;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

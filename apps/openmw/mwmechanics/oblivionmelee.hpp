@@ -88,6 +88,7 @@ namespace MWMechanics
         float mFatigue;
         float mBlockFatigueDebit = 0;
         float mBlockAbsorbedFraction = 0;
+        float mPreArmorDamage = 0;
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
@@ -101,6 +102,7 @@ namespace MWMechanics
         std::optional<float> mConditionAfterWear;
         std::vector<OblivionPhysicalConditionChange> mArmorConditionChanges{};
         std::optional<OblivionCombatRandomTransition> mRandomTransition{};
+        float mPreArmorDamage = 0;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

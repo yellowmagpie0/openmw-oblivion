@@ -636,6 +636,7 @@ namespace MWMechanics
         mActionOwners.clear();
         mMeleeStates.clear();
         mAnimationClocks.clear();
+        mActorKnockback.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -1195,6 +1196,26 @@ namespace MWMechanics
             transition = prepareLifeTransition(*receivingLife);
         }
         change(attacking, 10, deltas.mAttackerFatigue);
+        std::optional<decltype(mActorKnockback)> knockback;
+        if (deltas.mKnockback)
+        {
+            if (!receiving || receiving->mOwner != ESM4::ActorValueOwner::NonPlayer
+                || victim.getType() != ESM::REC_NPC_4)
+                throw std::invalid_argument("native timed contact knockback requires an NPC victim");
+            const auto& request = *deltas.mKnockback;
+            const auto* base = findActorBase(receiving->mBase);
+            const float force = ESM4::damageKnockback(nonPlayerInteger(*receiving, 3, base),
+                nonPlayerInteger(*receiving, 7, base),
+                ESM4::combatFatigueRatio(nonPlayerFloat(*receiving, 10, base), request.mBaseFatigue),
+                request.mDamage, request.mSettings, request.mPhysical);
+            const auto vector = ESM4::nativeKnockbackVector(request.mDelta, force);
+            knockback = mActorKnockback;
+            const auto found = knockback->find(victimKey);
+            const auto previous = found == knockback->end() ? ESM4::TimedKnockbackState{} : found->second;
+            const auto pulse = ESM4::replaceNativeKnockback(previous, vector, request.mSettings.mDuration);
+            if (pulse != ESM4::TimedKnockbackState{})
+                knockback->insert_or_assign(victimKey, pulse);
+        }
         if (attacking.mOwner == ESM4::ActorValueOwner::Player)
             preparePlayerValues(attacking, playerBase);
         attacking.validate();
@@ -1264,6 +1285,8 @@ namespace MWMechanics
                 std::swap(prepared.mItem.getCellRef(), prepared.mReference);
         if (deltas.mRandomTransition)
             mCombatRngState = deltas.mRandomTransition->mNextState;
+        if (knockback)
+            mActorKnockback.swap(*knockback);
         std::swap(mActorValues.at(attackerKey), attacking);
         if (receiving)
         {
@@ -3130,6 +3153,28 @@ namespace MWMechanics
         return found == mActorBreath.end() ? std::nullopt : std::optional(found->second);
     }
 
+    std::optional<ESM4::TimedKnockbackState> OblivionCombatService::actorKnockback(const ESM::FormKey& actor) const
+    {
+        const auto found = mActorKnockback.find(actor);
+        return found == mActorKnockback.end() ? std::nullopt : std::optional(found->second);
+    }
+
+    bool OblivionCombatService::syncActorKnockback(const ESM::FormKey& actor,
+        const ESM4::TimedKnockbackState& expected, const ESM4::TimedKnockbackState& updated)
+    {
+        const auto found = mActorKnockback.find(actor);
+        if (found == mActorKnockback.end() || found->second != expected)
+            return false;
+        // Validate before publication without modifying either input.
+        auto checked = updated;
+        ESM4::advanceNativeKnockback(checked, 0);
+        if (updated.mRemaining == 0 && updated.mAcceleration == std::array<float, 3>{})
+            mActorKnockback.erase(found);
+        else
+            found->second = updated;
+        return true;
+    }
+
     void OblivionCombatService::capture(ESM4::RuntimeState& state) const
     {
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
@@ -3140,6 +3185,8 @@ namespace MWMechanics
             throw std::invalid_argument("native melee AI intent requires an Oblivion v28+ save");
         if (state.mVersion < 27 && mCombatRngState != 1)
             throw std::invalid_argument("native combat random state requires an Oblivion v27+ save");
+        if (state.mVersion < 30 && !mActorKnockback.empty())
+            throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
                 || std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
                     return entry.second.mStrike && entry.second.mStrike->mSequenceTiming.has_value();
@@ -3209,6 +3256,7 @@ namespace MWMechanics
         auto actionOwners = mActionOwners;
         auto meleeStates = mMeleeStates;
         auto animationClocks = mAnimationClocks;
+        auto knockback = mActorKnockback;
         state.mCombatRngState = mCombatRngState;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
@@ -3216,6 +3264,7 @@ namespace MWMechanics
         state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeMeleeStates.swap(meleeStates);
         state.mNativeAnimationClocks.swap(animationClocks);
+        state.mNativeActorKnockback.swap(knockback);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -3343,6 +3392,7 @@ namespace MWMechanics
         auto actionOwners = state.mPhysicalActionOwners;
         auto meleeStates = state.mNativeMeleeStates;
         auto animationClocks = state.mNativeAnimationClocks;
+        auto knockback = state.mNativeActorKnockback;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -3383,6 +3433,7 @@ namespace MWMechanics
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
         mAnimationClocks.swap(animationClocks);
+        mActorKnockback.swap(knockback);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);

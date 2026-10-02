@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <bit>
 #include <limits>
 #include <utility>
 
@@ -6882,6 +6883,96 @@ namespace
         const auto cancelled = resumed.allocateAction(refs[0].mFormKey);
         resumed.cancelActorActions(refs[0].mFormKey);
         EXPECT_FALSE(resumed.commitPhysicalContact(cancelled, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+    }
+
+    TEST_F(OblivionActorStatsTest, timedKnockbackCommitsAfterVictimFatigueAndRejectsStalePhysicsAcrossRestart)
+    {
+        autoNpc(); sharedStats(); mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        std::array<ESM4::ActorCharacter, 2> refs{};
+        std::array<std::unique_ptr<MWWorld::LiveCellRef<ESM4::Npc>>, 2> lives;
+        std::array<MWWorld::Ptr, 2> ptrs;
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        for (std::size_t i = 0; i < refs.size(); ++i)
+        {
+            refs[i].mId = {static_cast<std::uint32_t>(0x900 + i), 3};
+            refs[i].mFormKey = ESM::FormKey::content("actors.esm", 0x900 + i);
+            refs[i].mBaseKey = mActorKey;
+            mStore.getWritable<ESM4::ActorCharacter>().insertStatic(refs[i], refs[i].mFormKey);
+            lives[i] = std::make_unique<MWWorld::LiveCellRef<ESM4::Npc>>(refs[i], mStore.search<ESM4::Npc>(mActorKey));
+            ptrs[i] = MWWorld::Ptr(lives[i].get());
+            ESM4::RuntimeActorValues values;
+            values.mActor = refs[i].mFormKey; values.mBase = mActorKey;
+            values.mValues[3].mBase = 40;
+            values.mValues[7].mBase = 50;
+            values.mValues[8].mBase = 16;
+            values.mValues[10].mBase = 155;
+            service.publishNonPlayerValues(ptrs[i], values);
+            service.publishNonPlayerLife(ptrs[i], {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeReferenceState reference;
+            reference.mKey = values.mActor; reference.mBase = values.mBase; reference.mCell = saved.mPlayer.mCell;
+            saved.mReferences.push_back(reference);
+        }
+        const auto source = refs[0].mFormKey, victim = refs[1].mFormKey;
+        const ESM4::PlayerDynamicBaseSettings playerBase{2, 1.5f, 5};
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -1.42f, -1.71f};
+        deltas.mKnockback = MWMechanics::OblivionKnockbackContact{{0, 100, 1.3706893920898438f}, 1, 155,
+            {1, -.008f, 50, 10, 512, 1}, {-20, .4f, 1, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f}};
+        const auto id = service.allocateAction(source);
+        const auto snapshot = [&] { service.capture(saved); return saved.serializeBinary(); };
+        const auto before = snapshot();
+        auto bad = deltas; bad.mKnockback->mSettings.mDuration = 0;
+        EXPECT_THROW(service.commitPhysicalContact(id, ptrs[0], ptrs[1], bad, nullptr, false, {4, .5f}, playerBase), std::invalid_argument);
+        EXPECT_EQ(snapshot(), before);
+        EXPECT_TRUE(service.commitPhysicalContact(id, ptrs[0], ptrs[1], deltas, nullptr, false, {4, .5f}, playerBase));
+        ASSERT_TRUE(service.actorKnockback(victim));
+        const auto pulse = *service.actorKnockback(victim);
+        // Original contact-vector probe and full8907A0 setter, not this helper.
+        EXPECT_EQ(pulse.mAcceleration[0], 0);
+        EXPECT_EQ(pulse.mAcceleration[1], std::bit_cast<float>(1085933846u));
+        EXPECT_EQ(pulse.mAcceleration[2], std::bit_cast<float>(1034105520u));
+        EXPECT_EQ(pulse.mRemaining, 1);
+        const auto committed = snapshot();
+        EXPECT_FALSE(service.commitPhysicalContact(id, ptrs[0], ptrs[1], deltas, nullptr, false, {4, .5f}, playerBase));
+        EXPECT_EQ(snapshot(), committed);
+        MWMechanics::OblivionCombatService restarted;
+        restarted.restore(ESM4::RuntimeState::deserializeBinary(committed));
+        EXPECT_EQ(restarted.actorKnockback(victim), pulse);
+        restarted.cancelActorActions(source);
+        EXPECT_EQ(restarted.actorKnockback(victim), pulse);
+        auto step = pulse; ESM4::advanceNativeKnockback(step, .25f);
+        ASSERT_TRUE(restarted.syncActorKnockback(victim, pulse, step));
+        EXPECT_FALSE(restarted.syncActorKnockback(victim, pulse, {}));
+        EXPECT_EQ(restarted.actorKnockback(victim), step);
+        const auto next = restarted.allocateAction(source);
+        auto stronger = deltas;
+        stronger.mVictimHealth = stronger.mVictimFatigue = 0;
+        stronger.mKnockback->mDamage = 100;
+        ASSERT_TRUE(restarted.commitPhysicalContact(next, ptrs[0], ptrs[1], stronger, nullptr, false, {4, .5f}, playerBase));
+        ASSERT_TRUE(restarted.actorKnockback(victim));
+        const auto current = *restarted.actorKnockback(victim);
+        EXPECT_FALSE(restarted.syncActorKnockback(victim, step, {}));
+        EXPECT_EQ(restarted.actorKnockback(victim), current);
+        auto invalid = current; invalid.mRemaining = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(restarted.syncActorKnockback(victim, current, invalid), std::invalid_argument);
+        EXPECT_EQ(restarted.actorKnockback(victim), current);
+        auto legacy = saved; legacy.mVersion = 29;
+        EXPECT_THROW(restarted.capture(legacy), std::invalid_argument);
+        auto expired = current; ESM4::advanceNativeKnockback(expired, 2);
+        EXPECT_TRUE(restarted.syncActorKnockback(victim, current, expired));
+        EXPECT_FALSE(restarted.actorKnockback(victim));
+        restarted.capture(saved);
+        EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()).mNativeActorKnockback.empty());
     }
 
     TEST_F(OblivionActorStatsTest, meleePlayerAndZeroFatigueCreatureKeepSeparateContinuationAndCancellation)

@@ -23,6 +23,8 @@
 
 #include "../mwrender/rendermode.hpp"
 
+namespace ESM4 { struct TimedKnockbackState; }
+
 namespace osg
 {
     class Vec3f;
@@ -190,6 +192,9 @@ namespace MWBase
         virtual bool cancelOblivionPhysicalAction(std::uint64_t, const MWWorld::Ptr&) { return false; }
         virtual bool commitOblivionPhysicalContact(std::uint64_t, const MWWorld::Ptr&, const MWWorld::Ptr&,
             const MWMechanics::OblivionPhysicalContactDeltas&) { return false; }
+        virtual bool getOblivionKnockback(const MWWorld::Ptr&, ESM4::TimedKnockbackState&) const { return false; }
+        virtual void syncOblivionKnockback(const MWWorld::Ptr&, const ESM4::TimedKnockbackState&,
+            const ESM4::TimedKnockbackState&) {}
         virtual MWWorld::Ptr getPlayerPtr() = 0;
         virtual MWWorld::ConstPtr getPlayerConstPtr() const = 0;
 

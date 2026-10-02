@@ -133,6 +133,8 @@ namespace MWPhysics
         // Anything to collide with?
         if (actor.mSkipCollisionDetection)
         {
+            if (actor.mNativeKnockback)
+                ESM4::advanceNativeKnockback(*actor.mNativeKnockback, time);
             actor.mPosition += (osg::Quat(actor.mRotation.x(), osg::Vec3f(-1, 0, 0))
                                    * osg::Quat(actor.mRotation.y(), osg::Vec3f(0, 0, -1)))
                 * actor.mMovement * time;
@@ -173,6 +175,17 @@ namespace MWPhysics
                 actor.mInertia = velocity;
             else if (!actor.mIsOnGround || actor.mIsOnSlope)
                 velocity = velocity + actor.mInertia;
+        }
+
+        if (actor.mNativeKnockback)
+        {
+            // Compose in the native character's units, then convert the added
+            // world-space velocity to this solver's game units. Collision,
+            // slopes and gravity retain their existing solver ownership.
+            const auto pulse = ESM4::nativeKnockbackVelocity(*actor.mNativeKnockback, {}, 0);
+            for (std::size_t i = 0; i < pulse.size(); ++i)
+                velocity[i] += static_cast<float>(double(pulse[i]) / 0.1428767293691635);
+            ESM4::advanceNativeKnockback(*actor.mNativeKnockback, time);
         }
 
         // Now that we have the effective movement vector, apply wind forces to it

@@ -1,0 +1,66 @@
+{
+  "source": "build/oblivion-compat/m15/S4/native-npc-unarmored-hit-restart-01/staged-input.omwsave",
+  "source_sha256": "9b3a81c4059eae8812ed0b4dc18985e2785c156e3ddd5128ba70f40d03b686fb",
+  "expected_force": {
+    "damage": 1.4199999570846558,
+    "agility": 40,
+    "delta": [
+      0.0,
+      100.0,
+      1.3706893920898438
+    ],
+    "available": true,
+    "x87_control": 639,
+    "current_fatigue": 153.2899932861328,
+    "dispatch": {
+      "vector_bits": [
+        0,
+        1109574205,
+        1057933143
+      ],
+      "duration_bits": 1065353216
+    },
+    "force_bits": 1109575206
+  },
+  "expected_initial_pulse": {
+    "acceleration_bits": [
+      0,
+      1085933846,
+      1034105520
+    ],
+    "remaining_bits": 1065353216
+  },
+  "scope": "Ordinary Player unarmed hit on original unarmored Valen. Save immediately after contact, then let motion settle. Fresh process loads the real active pulse and continues without a new contact. Source gameplay fields are untouched. Complete original live Havok collision and death/mount/reaction eligibility are not accepted by this course.",
+  "expected_contacts": 1,
+  "expected_restart_contacts": 0,
+  "expected_layers": [
+    "PHYDamageFlesh",
+    "WPNHitHand"
+  ],
+  "first_save_remaining_range": [
+    0.25,
+    1
+  ],
+  "first_save_requires_active_pulse": true,
+  "final_pulse_must_be_absent": true,
+  "first_saved_y_range": [
+    60,
+    90
+  ],
+  "second_saved_y_range": [
+    68,
+    90
+  ],
+  "maximum_x_change": 0.001,
+  "motion_range_basis": "Native40.6897 game-unit initial Y velocity declines over one second; Euler displacement about20.7 units. Broad8..30 bounds reject absent movement and repeated pulses; this is an integration check, not original live Havok collision parity.",
+  "original_reports": [
+    "build/oblivion-compat/m15/S4/native-timed-knockback-contact-oracle-02/verification.json",
+    "build/oblivion-compat/m15/S4/native-timed-knockback-contact-state-oracle-01/verification.json"
+  ],
+  "minimum_displacement_after_reload": 0.5,
+  "expected_player_action_by_strike": {
+    "committed_contact_followthrough": 3,
+    "finished": -1
+  },
+  "action_check_correction": "The first verification attempt incorrectly demanded idle process_action even when accepting a committed strike. Exact phase2 ordinary kind0 action3 is required while that saved strike exists; finished/reloaded state must be idle. A wrong-action mutation is rejected. Original failed attempt is retained."
+}

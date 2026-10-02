@@ -190,6 +190,15 @@ namespace MWMechanics
     };
     inline constexpr unsigned MaxPhysicalContactRandomDraws = 32;
 
+    struct OblivionKnockbackContact
+    {
+        std::array<float, 3> mDelta;
+        std::int32_t mDamage;
+        std::int32_t mBaseFatigue;
+        ESM4::KnockbackSettings mSettings;
+        ESM4::PhysicalCombatSettings mPhysical;
+    };
+
     struct OblivionPhysicalContactDeltas
     {
         float mAttackerFatigue = 0;
@@ -200,6 +209,7 @@ namespace MWMechanics
         float mVictimBlockFatigue = 0;
         std::vector<OblivionPhysicalConditionChange> mConditionChanges{};
         std::optional<OblivionCombatRandomTransition> mRandomTransition{};
+        std::optional<OblivionKnockbackContact> mKnockback{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -219,6 +229,7 @@ namespace MWMechanics
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
+        std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
@@ -286,6 +297,11 @@ namespace MWMechanics
     public:
         OblivionActorLifeAdoption guardLifeAdoption(const MWWorld::Ptr& actor, MWWorld::Player* player = nullptr);
         void clear();
+        std::optional<ESM4::TimedKnockbackState> actorKnockback(const ESM::FormKey& actor) const;
+        // Physics snapshots state on the main thread. A newer hit prevents an
+        // older asynchronous simulation from overwriting its pulse on sync.
+        bool syncActorKnockback(const ESM::FormKey& actor, const ESM4::TimedKnockbackState& expected,
+            const ESM4::TimedKnockbackState& updated);
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
         // Preparation does not advance live state. The owned contact publishes
         // the checked transition with all resources/conditions and consumption.

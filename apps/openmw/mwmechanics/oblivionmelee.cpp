@@ -302,6 +302,7 @@ namespace MWMechanics
             return std::nullopt;
         OblivionOrdinaryContactResult result{*contact, {0, 0}};
         std::int32_t soundWeaponType = -1;
+        float preArmorDamage = 0;
         OblivionPhysicalContactDeltas deltas{-cost, 0, 0, 0};
         if (!contact->isEmpty())
         {
@@ -317,6 +318,7 @@ namespace MWMechanics
                 result.mDamage = {damage->mHealth, damage->mFatigue};
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+                preArmorDamage = damage->mPreArmorDamage;
             }
             else
             {
@@ -352,6 +354,7 @@ namespace MWMechanics
                 deltas.mConditionChanges.insert(deltas.mConditionChanges.end(),
                     damage->mArmorConditionChanges.begin(), damage->mArmorConditionChanges.end());
                 deltas.mRandomTransition = damage->mRandomTransition;
+                preArmorDamage = damage->mPreArmorDamage;
             }
         }
         deltas.mVictimHealth = -result.mDamage.mHealth;
@@ -370,6 +373,25 @@ namespace MWMechanics
         }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
+        if (!contact->isEmpty() && contact->getType() == ESM::REC_NPC_4
+            && result.mBlockAbsorbedFraction == 0 && oblivionKnockedState(world, *contact) == 0
+            && service->getNonPlayerIntegerValue(*contact, 4) > 0)
+        {
+            const auto* physics = dynamic_cast<const MWPhysics::PhysicsSystem*>(world.getRayCasting());
+            const auto* actorPhysics = physics ? physics->getActor(*contact) : nullptr;
+            if (actorPhysics && actorPhysics->getCollisionMode())
+            {
+                const auto& from = attacker.getRefData().getPosition();
+                const auto& to = contact->getRefData().getPosition();
+                std::array<float, 3> delta;
+                for (std::size_t i = 0; i < delta.size(); ++i)
+                    delta[i] = static_cast<float>(double(to.pos[i]) - from.pos[i]);
+                const auto targetKey = contact->getCellRef().getFormKey();
+                deltas.mKnockback = OblivionKnockbackContact{delta, ESM4::combatBaseValue(preArmorDamage),
+                    service->getNonPlayerBaseValue(targetKey, 10, world.getStore()),
+                    ESM4::buildKnockbackSettings(settings), ESM4::buildPhysicalCombatSettings(settings)};
+            }
+        }
         if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact, deltas))
             return std::nullopt;
         return result;
@@ -551,7 +573,7 @@ namespace MWMechanics
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
         const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, remaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
-        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction};
+        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction, incoming.mHealth};
     }
 
     namespace
@@ -702,7 +724,7 @@ namespace MWMechanics
         auto wear = prepareOrdinaryArmorWear(world, *service, victim, incoming, armor.mAbsorbedFraction, settings);
         if (!wear)
             return std::nullopt;
-        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom};
+        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom, incoming};
     }
 
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,

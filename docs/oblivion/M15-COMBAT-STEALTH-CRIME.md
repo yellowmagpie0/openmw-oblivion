@@ -17,7 +17,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
-| S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
+| S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
@@ -11913,3 +11913,83 @@ remaining block/armor/Creature/power/mastery/view/control acceptance.
 Previous123 preparation checkpoint122 commit
 `df164c44cc730b820a8c0574e1e6e027da90f624`; verified bundle100 SHA256
 `490d6882b19ed53b8fa897e982a0c1e1282173c3571911c328233a98a1a4db5f`.
+
+
+### Checkpoint124 — native timed knockback through contact, physics and restart
+
+Ordinary admitted, unblocked NPC contacts now prepare the original signed force
+from truncated pre-armor damage and the victim's post-contact Fatigue. The owned
+transaction publishes resources and the pulse together; invalid duration rejects
+before either write. The physics worker composes a local pulse with movement,
+uses the existing collision solver and advances its timer. Main-thread snapshot
+comparison preserves a stronger contact arriving during asynchronous simulation.
+This does not use gravity inertia as a second force authority or teleport actors.
+
+The original Havok unit factor is0.1428767293691635. Stored acceleration and
+remaining time have their own lifetime, independent of the attack action ledger.
+Replacement requires strictly greater squared acceleration. Equal magnitude,
+including opposite direction, preserves both old direction and remaining time.
+Schema30 appends typed canonical actor/three-float/time entries in binary, JSON
+and Python. Earlier saves migrate with no invented pulse. Duplicate, dangling,
+noncanonical, nonfinite and negative-time state rejects before world publication.
+Signed zero survives the wire and canonical JSON.
+
+504 exact-bit original instruction cases pass normal and ASan/UBSan comparers;
+each rejects wrong acceleration, missing rows and malformed operation kinds.
+The retained signed-zero RED demonstrates a real former mismatch for a negative
+force and collapsed direction. The fix preserves the original signed product.
+An earlier contact hypothesis used Agility53; the actual pristine NPC has40.
+The independently corrected contact oracle, not that hypothesis, supplies the
+accepted acceleration bits[0,1085933846,1034105520]. Original replacement equality
+was initially mislabeled in an ignored report; the actual instructions and final
+comparison explicitly require strictly stronger replacement.
+
+Fresh full checks in `S4/native-timed-knockback-world-03` and
+`native-timed-knockback-world-sanitized-02` pass2065 component/797 engine cases,
+exact unfiltered inventories, no failures/skips, at unchanged fingerprint
+`ede3b6a883ec36b5ed2de6f36c3b93d5273e17309693bd45fd76f8ee2cd4cea3`.
+Normal also passes243 Python tests. Only editable courses/expectations were added
+afterward; fresh243 Python tests in `native-timed-knockback-python-01` pass at
+unchanged fingerprint `baf488a8a102ac9456531483073d07c61ebaa946b7f9c04b96435369e34ee88d`. C++ checks are reused for identical C++ sources.
+
+`native-timed-knockback-restart-02` and
+`native-timed-knockback-runtime-sanitized-02` copy the real staged input byte for
+byte (SHA2569b3a81c4059eae8812ed0b4dc18985e2785c156e3ddd5128ba70f40d03b686fb).
+Ordinary F/U/F5 punches Valen once and saves an active pulse. Fresh engines load
+that actual save and continue it. First normal remaining time1 and Y60 become
+expired/Y77.70792388916016; sanitizer remaining0.8000243902206421 and Y68.13694763183594
+become expired/Y79.53075408935547. The victim Health Damage modifier stays exactly
+-1.4199999570846558, with no second hit or sound request. All inventory, other
+actor/reference state, RNG and pending-action checks pass. Four distinct epochs,
+eight directly reviewed captures and18 saved-state mutation controls pass in
+`native-timed-knockback-final-acceptance-01`. Original initial pulse bits are
+exact; displacement bounds are fork integration checks, not original live
+Havok collision or original save-format parity.
+
+The immediate normal save legitimately retains committed strike2/phase2 and
+Player process_action3; resumed state finishes to idle. The initial verifier
+incorrectly demanded idle while allowing that strike. Its failed attempt is
+retained; the corrected exact-state check adds a wrong-action mutation control.
+The first sanitized scenario passed but its monitor searched the normal binary,
+so required epoch evidence was missing. That failed course is retained; course02
+corrects the monitor path and reruns both actual processes. The original const
+world-query build failure and signed-zero RED are also retained.
+
+Recorded PCM reuses checkpoint123's unchanged qualified analyzer and frozen
+thresholds. First normal Flesh04+Hand02 correlation.9995157654396978 and sanitizer
+Flesh03+Hand03 correlation.9994744161219149 each identify one two-layer impact;
+both continuations identify none. Final normal engine SHA256
+`044ba7e7737e98170afc108fb0656b49786a056a47f8d7a7a98d23063a18cfd4`, sanitized
+`4d5f552e9abce179a0e174c709bf7068ed855dd586f1960138997750491a200a`.
+Editable courses are `oblivion_m15_native_timed_knockback*.json`; they use the
+existing NPC shortsword fixture before activation. Structural fixture validation,
+script compilation, contact deltas, physical displacement, state persistence,
+image review and PCM comparison are separate evidence layers.
+
+S4 remains in progress. Full contact eligibility, Creature/Player victim force,
+fatal/essential/mount/reset policies, suppression-flag mapping, complete original
+Havok caller ordering/collision, stagger/knockdown/ragdoll/recovery and remaining
+power/mastery/view/control matrices are open. Next: original reaction dispatch
+and the corresponding owned state/controller/physics cancellation semantics.
+Previous checkpoint123 commit3a642cadf2ae76950cc951be094e724f552e9cc3;
+verified bundle101 SHA256e20cbc6295cc1ed5f0837cedd3674ec181b8a237e29b4f73992108b40c59e992.

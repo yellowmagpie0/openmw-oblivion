@@ -189,6 +189,10 @@ namespace
                 const auto rotation = actor->getPtr().getRefData().getPosition().asRotationVec3();
                 frameData.mRotation = osg::Vec2f(rotation.x(), rotation.z());
                 frameData.mInertia = actor->getInertialForce();
+                ESM4::TimedKnockbackState pulse;
+                frameData.mNativeKnockback = MWBase::Environment::get().getWorld()
+                    ->getOblivionKnockback(actor->getPtr(), pulse) ? std::optional(pulse) : std::nullopt;
+                frameData.mInitialNativeKnockback = frameData.mNativeKnockback;
                 frameData.mStuckFrames = actor->getStuckFrames();
                 frameData.mLastStuckPosition = actor->getLastStuckPosition();
             }
@@ -290,6 +294,9 @@ namespace
                     actor->setOnSlope(frameData.mIsOnSlope);
                     actor->setWalkingOnWater(frameData.mWalkingOnWater);
                     actor->setInertialForce(frameData.mInertia);
+                    if (frameData.mInitialNativeKnockback && frameData.mNativeKnockback)
+                        MWBase::Environment::get().getWorld()->syncOblivionKnockback(ptr,
+                            *frameData.mInitialNativeKnockback, *frameData.mNativeKnockback);
                 }
             }
             void operator()(MWPhysics::ProjectileSimulation& sim) const

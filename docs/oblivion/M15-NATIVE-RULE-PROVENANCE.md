@@ -5985,3 +5985,48 @@ Original audits/comparisons stay ignored in
 Normal/SAN actual once-only contact/PCM/fresh-reload acceptance is documented
 in checkpoint123's milestone entry; it does not close the full reaction/audio
 or original hardware gameplay gates.
+
+
+### Checkpoint124 — original direction, timed force state and continuation
+
+The same pinned executable SHA256a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+executes547690/5F4880 and bounded5FFFAF..6000B4 contact argument composition,
+actual position getters/4121A0 subtraction/43F350 normalization/cap/duration.
+Actor integer/base AV getters and Havok availability/application are declared
+boundaries of the argument probe. Actual fixture inputs are Agility40,Luck50,
+base Fatigue155,current153.2899932861328,raw damage1.42 (truncated1),delta
+[0,100,1.3706893920898438]. Signed force40.693504333496094 yields world vector
+[0,40.6896858215332,0.557729184627533]. This is independently observed, not copied
+from the fork's resulting motion. The earlier Agility53 hypothesis is retained
+but does not supply actual-source acceptance.
+
+Full original8907A0 multiplies world components by doubleA39088's
+0.1428767293691635, stores float, then multiplies by stored float reciprocal time.
+Original SSE squared magnitude uses individual float products, then(X²+Y²)+Z²
+stores. Branch890854 rejects equality and weaker magnitude. Acceleration lives
+at+2F0; remaining time at+300. Full890970 adds stored(acceleration*remaining)
+to base velocity+2E0 only with remaining>0 and flags+1F4&1800 clear. Suppression
+preserves force/time; remaining<=0 clears acceleration. Timer896F9B..896FDB
+subtracts elapsed and clears/clamps when result<=0; an initially nonpositive
+remaining time leaves acceleration unchanged in that timer slice. Full setter/
+velocity run native CRT cookie verification with no supplied game functions;
+timer is a bounded instruction slice. Complete Havok update ordering and flag
+interpretation remain separate.
+
+43F350's binary32 epsilon9.999999974752427e-7 is inclusive: equal/below collapse,
+next representable above normalizes. Its caller still multiplies the cleared
+components by the signed force, so negative force on zero/tiny direction gives
+three negative zeros. Both x87 words27F/37F agree in the retained probes. Normal
+and sanitizer comparisons of504 actual instruction cases cover direction,
+replacement/equality, velocity/flags, elapsed/expiry, signed-zero/epsilon and the
+real contact context. Final corpus SHA256
+`d65306441ce1a3369621eb178df12f21c6e80077d3bbd4f46463ef8c6d2d8b14`;
+comparator SHA2562ead77bace46b6716f6b4c22e2752b8b2269414b9fad0fb194dfbdee97ef80f8.
+Original corpora and all failed attempts stay ignored in S4/native-timed-knockback*.
+
+This establishes original arithmetic/stores and bounded fork integration. The
+contact prefix5FFF52 still contains a separately unresolved caller flag, and
+Speed AV4 must be positive before force composition. Nothing here equates that
+AV with Health or Willpower, or closes whole contact eligibility, actual original
+reaction/ragdoll/save/collision parity. Checkpoint124's milestone entry records
+normal-input owned contacts, active-pulse fresh processes and PCM evidence.

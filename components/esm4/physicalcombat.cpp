@@ -39,6 +39,93 @@ namespace ESM4
         }
     }
 
+    std::array<float, 3> nativeKnockbackVector(const std::array<float, 3>& delta, float force)
+    {
+        finite(force);
+        for (float component : delta)
+            finite(component);
+        const float squared = rounded(double(delta[0]) * delta[0] + double(delta[1]) * delta[1]
+            + double(delta[2]) * delta[2]);
+        const float length = rounded(std::sqrt(double(squared)));
+        if (length <= 9.999999974752427e-7f)
+        {
+            // Original43F350 clears the direction first; its caller still
+            // multiplies all three zero components by the signed force.
+            const float zero = std::copysign(0.f, force);
+            return {zero, zero, zero};
+        }
+        const float reciprocal = rounded(1.0 / length);
+        std::array<float, 3> result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+            result[i] = rounded(double(rounded(double(delta[i]) * reciprocal)) * force);
+        return result;
+    }
+
+    namespace
+    {
+        void validateKnockbackState(const TimedKnockbackState& state)
+        {
+            nonnegative(state.mRemaining);
+            for (float component : state.mAcceleration)
+                finite(component);
+        }
+        float squaredKnockback(const std::array<float, 3>& vector)
+        {
+            // MULPS and ADDSS store after every operation, unlike x87 length.
+            const float xy = rounded(double(rounded(double(vector[0]) * vector[0]))
+                + rounded(double(vector[1]) * vector[1]));
+            return rounded(double(xy) + rounded(double(vector[2]) * vector[2]));
+        }
+    }
+
+    TimedKnockbackState replaceNativeKnockback(const TimedKnockbackState& previous,
+        const std::array<float, 3>& worldVector, float duration)
+    {
+        validateKnockbackState(previous);
+        nonnegative(duration);
+        if (duration == 0)
+            throw std::invalid_argument("zero native knockback duration");
+        const float reciprocal = rounded(1.0 / duration);
+        TimedKnockbackState candidate{{}, duration};
+        for (std::size_t i = 0; i < worldVector.size(); ++i)
+        {
+            finite(worldVector[i]);
+            const float scaled = rounded(double(worldVector[i]) * 0.1428767293691635);
+            candidate.mAcceleration[i] = rounded(double(scaled) * reciprocal);
+        }
+        // Original890854 skips on equality as well as a weaker magnitude.
+        return squaredKnockback(candidate.mAcceleration) > squaredKnockback(previous.mAcceleration)
+            ? candidate : previous;
+    }
+
+    std::array<float, 3> nativeKnockbackVelocity(TimedKnockbackState& state,
+        const std::array<float, 3>& baseVelocity, std::uint32_t flags)
+    {
+        validateKnockbackState(state);
+        for (float component : baseVelocity)
+            finite(component);
+        auto result = baseVelocity;
+        if (state.mRemaining <= 0)
+            state.mAcceleration = {};
+        else if ((flags & 0x1800) == 0)
+            for (std::size_t i = 0; i < result.size(); ++i)
+                result[i] = rounded(double(rounded(double(state.mAcceleration[i]) * state.mRemaining))
+                    + baseVelocity[i]);
+        return result;
+    }
+
+    void advanceNativeKnockback(TimedKnockbackState& state, float elapsed)
+    {
+        validateKnockbackState(state);
+        nonnegative(elapsed);
+        if (state.mRemaining <= 0)
+            return;
+        const float next = rounded(double(state.mRemaining) - elapsed);
+        state.mRemaining = std::max(0.f, next);
+        if (next <= 0)
+            state.mAcceleration = {};
+    }
+
     std::string_view nativeMeleeSwishSound(std::optional<WeaponSwishInput> weapon,
         const WeaponSwishSettings& settings)
     {

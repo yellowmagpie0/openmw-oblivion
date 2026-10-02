@@ -282,6 +282,23 @@ namespace ESM4
     float damageKnockback(std::int32_t agility, std::int32_t luck, float fatigueRatio,
         std::int32_t damage, const KnockbackSettings& settings, const PhysicalCombatSettings& physical);
     void validateKnockbackSettings(const KnockbackSettings& settings);
+
+    // Original Havok character storage, in its native units. This pulse is
+    // separate from gravity/inertia and is replaced only by a stronger pulse.
+    struct TimedKnockbackState
+    {
+        std::array<float, 3> mAcceleration{};
+        float mRemaining = 0;
+        friend bool operator==(const TimedKnockbackState&, const TimedKnockbackState&) = default;
+    };
+    std::array<float, 3> nativeKnockbackVector(const std::array<float, 3>& delta, float force);
+    TimedKnockbackState replaceNativeKnockback(const TimedKnockbackState& previous,
+        const std::array<float, 3>& worldVector, float duration);
+    // Composition and expiry are separate operations. The movement adapter
+    // must resolve their ordering from the original dispatcher.
+    std::array<float, 3> nativeKnockbackVelocity(TimedKnockbackState& state,
+        const std::array<float, 3>& baseVelocity, std::uint32_t flags);
+    void advanceNativeKnockback(TimedKnockbackState& state, float elapsed);
     // Mastery uses the base actor value, floored before rank lookup, not the
     // luck/effect-adjusted combat value. Fatigue divides current by this base.
     std::int32_t combatBaseValue(float value);

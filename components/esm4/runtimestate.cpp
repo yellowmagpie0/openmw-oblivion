@@ -777,6 +777,18 @@ namespace ESM4
             throw std::runtime_error("TES4 melee state requires runtime-state version 21");
         if (mVersion < 23 && !mNativeAnimationClocks.empty())
             throw std::runtime_error("TES4 animation clocks require runtime-state version23");
+        checkSize(mNativeActorKnockback.size(), "native actor knockback list");
+        if (mVersion < 30 && !mNativeActorKnockback.empty())
+            throw std::runtime_error("TES4 actor knockback requires runtime-state version30");
+        for (const auto& [actor, pulse] : mNativeActorKnockback)
+        {
+            if (!nativeActors.contains(actor) || !lives.contains(actor)
+                || !std::isfinite(pulse.mRemaining) || pulse.mRemaining < 0)
+                throw std::runtime_error("Invalid or dangling TES4 native actor knockback");
+            for (float component : pulse.mAcceleration)
+                if (!std::isfinite(component))
+                    throw std::runtime_error("Nonfinite TES4 native actor knockback");
+        }
         for (const auto& [actor, clock] : mNativeAnimationClocks)
             if (!nativeActors.contains(actor) || !lives.contains(actor) || !std::isfinite(clock) || clock < 0)
                 throw std::runtime_error("Invalid or dangling TES4 native animation clock");
@@ -1601,6 +1613,17 @@ namespace ESM4
         }
         if (mVersion >= 27)
             writer.integer(mCombatRngState);
+        if (mVersion >= 30)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorKnockback.size()));
+            for (const auto& [actor, pulse] : mNativeActorKnockback)
+            {
+                writeKey(writer, actor);
+                for (float component : pulse.mAcceleration)
+                    writer.floating(component);
+                writer.floating(pulse.mRemaining);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2241,6 +2264,25 @@ namespace ESM4
         }
         if (result.mVersion >= 27)
             result.mCombatRngState = reader.integer<std::uint32_t>();
+        if (result.mVersion >= 30)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                ESM::FormKey actor;
+                try { actor = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&) { throw std::runtime_error("Invalid TES4 native knockback actor"); }
+                if (actor.serialize() != text)
+                    throw std::runtime_error("Noncanonical TES4 native knockback actor");
+                TimedKnockbackState pulse;
+                for (float& component : pulse.mAcceleration)
+                    component = reader.float32();
+                pulse.mRemaining = reader.float32();
+                if (!result.mNativeActorKnockback.emplace(std::move(actor), pulse).second)
+                    throw std::runtime_error("Duplicate TES4 native actor knockback");
+            }
+        }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();
@@ -2902,6 +2944,30 @@ namespace ESM4
         }
         if (mVersion >= 27)
             stream << ",\"combat_rng_state\":" << mCombatRngState;
+        if (mVersion >= 30)
+        {
+            stream << ",\"native_actor_knockback\":[";
+            bool first = true;
+            for (const auto& [actor, pulse] : mNativeActorKnockback)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << "\",\"acceleration\":[";
+                const auto floating = [&](float value) {
+                    if (value == 0 && std::signbit(value)) stream << "-0.0";
+                    else stream << std::setprecision(17) << value;
+                };
+                for (std::size_t i = 0; i < pulse.mAcceleration.size(); ++i)
+                {
+                    if (i) stream << ',';
+                    floating(pulse.mAcceleration[i]);
+                }
+                stream << "],\"remaining\":";
+                floating(pulse.mRemaining);
+                stream << '}';
+            }
+            stream << ']';
+        }
         stream << "}";
         return stream.str();
     }

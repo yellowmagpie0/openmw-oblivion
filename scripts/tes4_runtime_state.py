@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 29
+CURRENT_VERSION = 30
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -974,6 +974,25 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if actor in clock_actors or actor not in native_keys or actor not in phases or native_float(entry["clock"]) < 0:
             raise RuntimeStateError("Duplicate, dangling or invalid TES4 animation clock")
         clock_actors.add(actor)
+    pulses = check_collection(state.get("native_actor_knockback", []), "native actor knockback list")
+    if version < 30 and pulses:
+        raise RuntimeStateError("TES4 actor knockback requires version30")
+    pulse_actors: set[str] = set()
+    for entry in pulses:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "acceleration", "remaining"}:
+            raise RuntimeStateError("Invalid TES4 native actor knockback")
+        actor = entry["actor"]
+        native_key(actor)
+        if actor in pulse_actors or actor not in native_keys or actor not in phases:
+            raise RuntimeStateError("Duplicate or dangling TES4 native actor knockback")
+        vector = entry["acceleration"]
+        if not isinstance(vector, list) or len(vector) != 3:
+            raise RuntimeStateError("Invalid TES4 native actor knockback vector")
+        for component in vector:
+            native_float(component)
+        if native_float(entry["remaining"]) < 0:
+            raise RuntimeStateError("Negative TES4 native actor knockback timer")
+        pulse_actors.add(actor)
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -1518,6 +1537,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                               for _ in range(reader.count())]
     if version >= 27:
         result["combat_rng_state"] = reader.unpack("<I")
+    if version >= 30:
+        result["native_actor_knockback"] = [{"actor": reader.string(),
+            "acceleration": [reader.unpack("<f") for _ in range(3)], "remaining": reader.unpack("<f")}
+            for _ in range(reader.count())]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1835,6 +1858,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<f", entry["clock"])
     if version >= 27:
         writer.pack("<I", state.get("combat_rng_state", 1))
+    if version >= 30:
+        pulses = sorted(state.get("native_actor_knockback", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(pulses))
+        for entry in pulses:
+            writer.string(entry["actor"])
+            for component in entry["acceleration"]:
+                writer.pack("<f", component)
+            writer.pack("<f", entry["remaining"])
     return writer.finish()
 
 
@@ -1888,6 +1919,12 @@ def _upgrade_actor_draw(state: dict[str, Any]) -> None:
         reference.setdefault("actor_draw_state", None)
 
 
+def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 30 and state.get("native_actor_knockback"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry native actor knockback")
+    state.setdefault("native_actor_knockback", [])
+
+
 def _upgrade_melee_ai(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 28:
         for entry in state.get("native_melee_states", []):
@@ -1919,6 +1956,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
+    _upgrade_actor_knockback(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -1975,6 +2013,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)
+    _upgrade_actor_knockback(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])

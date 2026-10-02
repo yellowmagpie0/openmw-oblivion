@@ -18,6 +18,7 @@
 #include <osg/ref_ptr>
 
 #include <components/vfs/pathutil.hpp>
+#include <components/esm4/physicalcombat.hpp>
 
 #include "../mwworld/ptr.hpp"
 
@@ -94,6 +95,8 @@ namespace MWPhysics
         const float mSlowFall;
         osg::Vec2f mRotation;
         osg::Vec3f mMovement;
+        std::optional<ESM4::TimedKnockbackState> mNativeKnockback;
+        std::optional<ESM4::TimedKnockbackState> mInitialNativeKnockback;
         osg::Vec3f mLastStuckPosition;
         const float mWaterlevel;
         const float mHalfExtentsZ;

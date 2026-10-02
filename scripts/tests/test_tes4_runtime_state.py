@@ -1364,6 +1364,42 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         duplicate = bytearray(payload); struct.pack_into("<I", duplicate, start, 2); duplicate += payload[start+4:]
         with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(duplicate)
 
+    def test_knockback_v30_wire_migration_and_rejection(self):
+        state = self.melee_state()
+        state_io._upgrade_melee_phases(state)
+        state_io._upgrade_melee_timing(state)
+        state_io._upgrade_melee_ai(state)
+        state_io._upgrade_actor_draw(state)
+        state["schema_version"] = 29
+        old = state_io.encode_payload(state)
+        state["schema_version"] = 30
+        expected = bytearray(old)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 30)
+        expected += bytes(4)
+        self.assertEqual(state_io.encode_payload(state), expected)
+        self.assertNotIn("native_actor_knockback", state_io.decode_payload(old))
+        actor = state["native_actor_values"][0]["actor"]
+        pulse = {"actor": actor, "acceleration": [-0., -2., 3.], "remaining": .125}
+        state["native_actor_knockback"] = [pulse]
+        payload = state_io.encode_payload(state)
+        expected = expected[:-4] + struct.pack("<II", 1, len(actor.encode())) + actor.encode() + struct.pack("<ffff", -0., -2., 3., .125)
+        self.assertEqual(payload, expected)
+        restored = state_io.decode_payload(payload)
+        self.assertEqual(restored["native_actor_knockback"], [pulse])
+        self.assertEqual(math.copysign(1., restored["native_actor_knockback"][0]["acceleration"][0]), -1.)
+        mutations = [lambda x: x.update(schema_version=29),
+            lambda x: x["native_actor_knockback"].append(copy.deepcopy(pulse)),
+            lambda x: x["native_actor_knockback"][0].update(actor="null"),
+            lambda x: x["native_actor_knockback"][0].update(acceleration=[1, 2]),
+            lambda x: x["native_actor_knockback"][0].update(acceleration=[1, float("inf"), 3])]
+        for value in (-1., float("nan"), float("inf"), True, None):
+            mutations.append(lambda x, v=value: x["native_actor_knockback"][0].update(remaining=v))
+        for index, mutate in enumerate(mutations):
+            bad = copy.deepcopy(state); mutate(bad)
+            with self.subTest(index=index), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-1])
+
     def test_animation_v23_exact_wire_and_independent_clock_lifetime(self):
         state = self.melee_state()
         state_io._upgrade_melee_phases(state)

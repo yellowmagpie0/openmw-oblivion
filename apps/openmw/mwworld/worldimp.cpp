@@ -1635,6 +1635,29 @@ namespace MWWorld
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
     }
 
+    bool World::getOblivionKnockback(const Ptr& actor, ESM4::TimedKnockbackState& state) const
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const auto key = actor == getPlayerConstPtr() ? ESM::FormKey::dynamic("player", 1)
+            : actor.getCellRef().getFormKey();
+        const auto pulse = mOblivionCombat->actorKnockback(key);
+        if (!pulse)
+            return false;
+        state = *pulse;
+        return true;
+    }
+
+    void World::syncOblivionKnockback(const Ptr& actor, const ESM4::TimedKnockbackState& expected,
+        const ESM4::TimedKnockbackState& updated)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return;
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : actor.getCellRef().getFormKey();
+        mOblivionCombat->syncActorKnockback(key, expected, updated);
+    }
+
     bool World::killOblivionActor(const Ptr& actor, const ESM::FormKey& killer)
     {
         if (!mOblivionCombat || actor.isEmpty())

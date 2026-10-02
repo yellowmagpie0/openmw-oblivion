@@ -19,6 +19,63 @@ namespace
     const ESM4::PhysicalCombatSettings installed{ -20, .4f, 1.f, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f };
 }
 
+TEST(ESM4PhysicalCombat, TimedKnockbackPreservesOriginalReplacementAndVelocityStores)
+{
+    // Original8907A0/890970, independently captured before implementation:
+    // S4/native-timed-knockback-state-oracle-01, both x87 precision words.
+    const ESM4::TimedKnockbackState old{{1, 0, 0}, .1f};
+    const auto pulse = ESM4::replaceNativeKnockback(old, {34, 0, 0}, 1);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(pulse.mAcceleration[0]), 1083929387u);
+    EXPECT_EQ(pulse.mRemaining, 1);
+    EXPECT_EQ(ESM4::replaceNativeKnockback(pulse, {-34, 0, 0}, .5f).mRemaining, .5f);
+    // Equal magnitude preserves direction AND time; it does not refresh.
+    EXPECT_EQ(ESM4::replaceNativeKnockback(pulse, {-34, 0, 0}, 1), pulse);
+    EXPECT_EQ(ESM4::replaceNativeKnockback(pulse, {1, 0, 0}, 1), pulse);
+    EXPECT_EQ(ESM4::replaceNativeKnockback({}, {0, 0, 0}, 1), ESM4::TimedKnockbackState{});
+
+    ESM4::TimedKnockbackState state{{1, 2, 3}, .1f};
+    const auto velocity = ESM4::nativeKnockbackVelocity(state, {4, 5, 6}, 0);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity[0]), 1082340147u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity[1]), 1084647014u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity[2]), 1086953882u);
+    for (auto flags : {0x800u, 0x1000u, 0x1800u})
+        EXPECT_EQ(ESM4::nativeKnockbackVelocity(state, {4, 5, 6}, flags), (std::array<float, 3>{4, 5, 6}));
+    EXPECT_EQ(state, (ESM4::TimedKnockbackState{{1, 2, 3}, .1f}));
+    ESM4::advanceNativeKnockback(state, .05f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(state.mRemaining), 1028443341u);
+    ESM4::advanceNativeKnockback(state, .05f);
+    EXPECT_EQ(state, ESM4::TimedKnockbackState{});
+    // The timer leaves an already expired inconsistent vector alone; velocity
+    // composition clears it. Preserve the distinction at the adapter boundary.
+    state = {{1, 2, 3}, 0};
+    ESM4::advanceNativeKnockback(state, 1);
+    EXPECT_EQ(state.mAcceleration, (std::array<float, 3>{1, 2, 3}));
+    EXPECT_EQ(ESM4::nativeKnockbackVelocity(state, {4, 5, 6}, 0), (std::array<float, 3>{4, 5, 6}));
+    EXPECT_EQ(state, ESM4::TimedKnockbackState{});
+}
+
+TEST(ESM4PhysicalCombat, TimedKnockbackDirectionHasNativeSmallVectorBoundary)
+{
+    EXPECT_EQ(ESM4::nativeKnockbackVector({0, 0, 0}, 34), (std::array<float, 3>{}));
+    EXPECT_EQ(ESM4::nativeKnockbackVector({1e-7f, 0, 0}, 34), (std::array<float, 3>{}));
+    // Original5FFFAF..6000B4 with zero Fatigue and Agility100 produces a
+    // negative force. Normalization clears tiny directions, but multiplication
+    // afterward preserves its sign even when the mathematical result is zero.
+    for (const auto direction : {std::array<float, 3>{}, std::array<float, 3>{1e-7f, 0, 0}})
+        for (float component : ESM4::nativeKnockbackVector(direction, -36.000003814697266f))
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(component), 0x80000000u);
+    const float epsilon = 9.999999974752427e-7f;
+    EXPECT_EQ(ESM4::nativeKnockbackVector({0, epsilon, 0}, 40.693504333496094f), (std::array<float, 3>{}));
+    EXPECT_EQ(ESM4::nativeKnockbackVector({0, std::nextafter(epsilon, 1.f), 0}, 40.693504333496094f),
+        (std::array<float, 3>{0, 40.693504333496094f, 0}));
+    EXPECT_EQ(ESM4::nativeKnockbackVector({0, 1, 0}, -34), (std::array<float, 3>{-0.f, -34, -0.f}));
+    const auto vector = ESM4::nativeKnockbackVector({10, 20, 30}, 34.418888092041016f);
+    EXPECT_EQ(vector, (std::array<float, 3>{9.198834419250488f, 18.397668838500977f, 27.59650421142578f}));
+    EXPECT_THROW(ESM4::replaceNativeKnockback({}, {1, 0, 0}, 0), std::invalid_argument);
+    ESM4::TimedKnockbackState state;
+    EXPECT_THROW(ESM4::advanceNativeKnockback(state, -1), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, WaterProbePreservesNativeFloatStoreAndStrictDoubleComparison)
 {
     EXPECT_FALSE(ESM4::actorWaterProbe(0, 128, .875f, 112));
