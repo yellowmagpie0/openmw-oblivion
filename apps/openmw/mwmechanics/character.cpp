@@ -844,12 +844,28 @@ namespace MWMechanics
             return;
         }
 
-        if (!force && idle == mIdleState && (mAnimation->isPlaying(mCurrentIdle) || !mAnimQueue.empty()))
+        std::string nativeIdle;
+        if (idle == CharState_Idle && mPtr.getClass().isNpc()
+            && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            switch (mWeaponType)
+            {
+                case ESM::Weapon::HandToHand: nativeIdle = "handtohandidle"; break;
+                case ESM::Weapon::LongBladeOneHand: nativeIdle = "onehandidle"; break;
+                case ESM::Weapon::LongBladeTwoHand: nativeIdle = "twohandidle"; break;
+                default: nativeIdle = "idle"; break;
+            }
+            const auto* metadata = mAnimation->getControllerSequenceMetadata(nativeIdle);
+            if (!metadata || metadata->mCycleType != 0 || !mAnimation->hasAnimation(nativeIdle))
+                nativeIdle.clear();
+        }
+        if (!force && idle == mIdleState && (mAnimation->isPlaying(mCurrentIdle) || !mAnimQueue.empty())
+            && (nativeIdle.empty() || nativeIdle == mCurrentIdle))
             return;
 
         mIdleState = idle;
 
-        std::string idleGroup = idleStateToAnimGroup(mIdleState);
+        std::string idleGroup = nativeIdle.empty() ? idleStateToAnimGroup(mIdleState) : nativeIdle;
         if (idleGroup.empty())
         {
             resetCurrentIdleState();
@@ -868,7 +884,7 @@ namespace MWMechanics
             idleGroup = idleStateToAnimGroup(CharState_Idle);
         }
 
-        if (fallback || mIdleState == CharState_Idle || mIdleState == CharState_SpecialIdle)
+        if (nativeIdle.empty() && (fallback || mIdleState == CharState_Idle || mIdleState == CharState_SpecialIdle))
         {
             std::string_view weapShortGroup = getWeaponShortGroup(mWeaponType);
             if (!weapShortGroup.empty())

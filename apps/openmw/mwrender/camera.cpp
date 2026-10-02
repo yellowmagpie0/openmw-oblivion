@@ -365,6 +365,9 @@ namespace MWRender
         {
             mAnimation->setViewMode(NpcAnimation::VM_FirstPerson);
             mTrackingNode = mAnimation->getNode("Camera");
+            if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+                if (const osg::Node* nativeCamera = mAnimation->getNode("Camera01"))
+                    mTrackingNode = nativeCamera;
             if (!mTrackingNode)
                 mTrackingNode = mAnimation->getNode("Head");
             mHeightScale = 1.f;

@@ -5860,3 +5860,35 @@ C++ unchanged. Existing1182060-component suites and1936-row comparisons are
 explicitly reused. Evidence:`S4/native-missed-swish-final-acceptance-01`;
 stock assets/PCM stay ignored. Remaining weapon/view/control/audio/reaction,
 INI import, spatial/cap, original live and full M15 gates remain open.
+
+
+### Checkpoint120 — first-person anchor and authored native idle poses
+
+Hash-pinned original executable Camera01 literal A6D448 and four native scene
+node lookups establish the name; stock first-person skeleton node has local
+translation approximately(0,-3.7408032,118), hash
+`dafcd911371f5622f8119c8503e1316b1262893415d0ac9fa8cb96d30f85903e`.
+Native first-person camera now prefers it, preserving existing incomplete-node
+fallback. Full original camera/aiming behavior remains outside this audit.
+
+Native stationary biped drawn idles route to authored handtohandidle/onehandidle/
+twohandidle, reevaluate group on draw/family changes and repeat full cycle0
+bounds without TES3 randomized weapon-suffix idle behavior. Original first-person
+handtohandidle hash
+`2e8b3adb8a1cd5ecc7e831fa1b8542b5fd48e69190f780f845786ff63f799d98`
+decodes intrinsic Idle,66 tracks,cycle0,freq1,0..float2.1999998092651367,
+start/end keys. A raw strings display misleadingly joined Idle with the next
+count byte0x42; independent sized decode is retained. No new numeric combat
+rule, saved authority or original live gameplay claim.
+
+Actual retained119 normal/SAN predecessor captures lack ready hands. New120
+normal/SAN ordinary input/save/fresh-load courses show both Player fists and
+wrist irons, bind66 idle tracks with no skips, keep once-only stock swish/no
+reload sound, and preserve native resources/inventory metadata. Four epochs,
+eight directly viewed captures and sixteen corruption controls pass.
+All796 engine tests per lane and242 Python tests pass at
+`07c470c9836ed47da0695de432e84cab8332e0770e85897ca95ae0b72cd1418a`.
+Existing118 component2060/selector1936 and119 PCM controls are explicitly reused.
+Evidence:`S4/native-firstperson-melee-idle-final-acceptance-01`.
+Onehand/twohand actual coverage, aiming/view/control/reaction/mastery/audio
+policy/original live and full M15 acceptance remain open; no stage closure.

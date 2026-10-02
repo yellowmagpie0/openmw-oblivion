@@ -11652,3 +11652,81 @@ python3 scripts/oblivion_compat.py scenario \
 The input/plugin identities, numerical expectations and PCM acceptance remain
 part of the review; a successful scenario process alone does not prove them.
 No additional M15 stage closes in this checkpoint.
+
+
+### Checkpoint120 — visible native first-person drawn melee idle
+
+Native first-person camera selection now prefers the authored Camera01 node
+for Oblivion; the existing Camera/Head/incomplete-skeleton fallback remains
+available. Original1.2.0416 literal A6D448 is Camera01, referenced by native
+node lookups at5CDE92/65F932/667CF4/667F0C; their results are stored in native
+camera globals. Independently decoded original first-person skeleton has that
+node, local translation approximately(0,-3.7408032,118), with hash
+`dafcd911371f5622f8119c8503e1316b1262893415d0ac9fa8cb96d30f85903e`.
+This is name/asset provenance, not a full original live camera/aiming oracle.
+
+Ordinary stationary native bipeds select authored handtohandidle/onehandidle/
+twohandidle according to the admitted weapon family, or idle when undrawn.
+The current idle group participates in the early-return check, so a draw or
+weapon-family change cannot retain a stale playing idle. Reviewed native cycle0
+sequences repeat the entire authored start/stop range indefinitely, without
+TES3 weapon suffix selection or randomized finite idle loops. Scripted/special
+idle handling and the remaining native control/view/asset cases are not closed.
+No new persisted authority or schema is added.
+
+Original first-person handtohandidle.kf hash
+`2e8b3adb8a1cd5ecc7e831fa1b8542b5fd48e69190f780f845786ff63f799d98`:
+independent inline metadata decodes intrinsic name Idle,66 controlled tracks,
+cycle0,frequency1,start0,stop float2.1999998092651367, and start/end keys only.
+The initial raw strings listing displayed IdleB because the next count byte
+is0x42; the length-prefixed decode establishes Idle. Audit and original
+Camera01 reference instructions stay ignored in
+`S4/native-player-firstperson-audit-01`. No additional original gameplay
+selection/camera transform claim is made from these bounded decoded assets.
+
+Actual119 normal and sanitizer recordings/captures are retained as the
+predecessor baseline: no Player handtohandidle dispatch and no visible ready
+hands. `S4/native-firstperson-melee-idle-baseline-01` hashes those directly
+reviewed predecessor captures; it is reused observed failure, not a new engine
+launch or synthetic red stub. Both lanes still use the exact unchanged117
+source save; no pose, inventory, contact, or resource outcome is injected.
+
+`S4/native-firstperson-melee-idle-restart-01` and
+`native-firstperson-melee-idle-runtime-sanitized-01` now visibly render both
+Player fists/wrist irons in ready pose, after one ordinary missed attack,
+and after a distinct fresh-load/F5. The named NPC also has native unarmed ready
+stance. All66 Player idle tracks bind with zero skips; logs identify the stock
+first-person family and complete2.2s interval. One miss still costs7 fatigue,
+140 ->133, no victim/damage/wear/random draws. Each attack recording has one
+original stock hand-swish match, each fresh reload has none. Correlations:
+0.9998782807 normal, 0.9998782870 sanitized.
+
+Four actual process epochs, eight directly viewed required captures and sixteen
+saved-state corruption controls pass; all pre-existing inventory metadata and
+native numeric authority remain exact, counter advances once to3 and no attack
+is pending. Unchanged119 PCM analyzer controls are explicitly reused, not rerun.
+
+All796 engine tests pass in each unfiltered normal/sanitized suite; all242
+Python tests and direct manifest schema checks pass normally. Reports:
+`S3/native-firstperson-melee-idle-world-01` and
+`native-firstperson-melee-idle-world-sanitized-01`; shared before/after fingerprint
+`07c470c9836ed47da0695de432e84cab8332e0770e85897ca95ae0b72cd1418a`.
+Actual normal engine SHA `bf611a7a3b31844dba9d201069a12e2fe74dccd7737c04b1ab1f7a7b58f56baa`;
+sanitized engine SHA `03e8abb2c4ee324017b2931964754d3cd93bac5f808fca184a131f1df1b76665`.
+
+The normal build reports GCC's maybe-uninitialized warning in the unchanged
+legacy unpersistAnimationState code; it is retained, not suppressed or described
+as fixed. Sanitizers halt on errors with leak detection disabled. Unchanged118
+2060-component suites and1936-row numerical selector comparison are earlier
+explicitly reused evidence. Editable replay JSON is versioned as
+`scripts/data/oblivion_compat/oblivion_m15_native_firstperson_melee_idle*.json`;
+substituted manifests are verified equal to both executed normal courses.
+Consolidated evidence: `S4/native-firstperson-melee-idle-final-acceptance-01`.
+
+This accepts visible first-person unarmed ready posture and continuation only.
+Onehand/twohand branches still need actual weapon coverage; full attack/reaction,
+aiming/pitch/control/view/mastery matrices, native sound variants/INI/spatial/cap,
+original live comparisons and remaining S4–S14 are open. No additional stage
+closes. The next bounded course uses the actual stock rusty iron shortsword:
+independently audited WEAP090615 speed1.2 selects Small under the original Audio
+speed policy, weight8 affects fatigue, and the model is Weapons/Iron/ShortSword.NIF.
