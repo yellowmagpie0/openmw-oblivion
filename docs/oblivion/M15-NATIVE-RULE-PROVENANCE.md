@@ -6113,3 +6113,24 @@ This is single-sweep evidence in synthetic unit-mass/inertia anchor fixtures,
 not full native iterative/frame/collision or gameplay parity. Full stock graph
 factory admission and240 finite Bullet steps separately pass, using source
 info rest transforms, not current actor pose binding or normal-input reaction.
+
+
+### Checkpoint131: position stores and ordinary body world-pose boundary
+
+Full original4529e0/43f3e0 execute without stubs in16,384 position conversions,
+using separately stored double constants0.1428767293691635 and6.999040126800537
+before binary32 output stores. Both x87 words and signed/subnormal/boundary
+inputs are covered; native reverse is not an exact reciprocal. Actual normal
+and sanitizer production comparisons match these cases and1,080 original
+angular damping stores at three length scales exactly. The retained RED test
+caught angular radians being length-scaled; production now keeps angular units.
+Full hashes and test evidence appear in checkpoint131's milestone entry.
+
+Mode callback tableB2E300 slot5 resolves889d20; independently RTTI-identified
+blend-collisionA9643C virtual+70 is88f880. Ordinary-bodyA5605C world sync89eae0
+copies current target Ni world transform+64, using actual7150f0/4529e0/4d6830
+rotation conversion, position conversion and quaternion normalization.
+The216-case full-return probe has collision flag40 and supplies only locking
+and final body-mutation boundaries. Corpus `44fcf26089e8162a3df3b51e8a14f16d4f55c3a77e43d30e612c0e49d21a34d9`.
+This is not actual body mutation, bhkRigidBodyT or reverse bone writeback.
+All live actor, scheduler, recovery and persistence gates remain open.

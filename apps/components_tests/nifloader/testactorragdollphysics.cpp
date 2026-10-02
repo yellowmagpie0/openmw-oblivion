@@ -77,6 +77,27 @@ namespace
         EXPECT_THROW(NifBullet::ragdollConeCoordinates(limits, a, b), std::invalid_argument);
     }
 
+    TEST(RagdollPositionUnits, UsesSeparateNativeConstantsAndPreservesSignedZero)
+    {
+        const auto native = NifBullet::ragdollWorldToNativePosition({1, -1, -0.0f});
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(native.x()), 1041387079u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(native.y()), 1041387079u | 0x80000000u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(native.z()), 0x80000000u);
+        const auto world = NifBullet::ragdollNativeToWorldPosition({1, -1, -0.0f});
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(world.x()), 1088419875u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(world.y()), 1088419875u | 0x80000000u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(world.z()), 0x80000000u);
+    }
+
+    TEST(RagdollPositionUnits, RejectsNonfinitePositionsAndWorldConversionOverflow)
+    {
+        const auto invalid = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollWorldToNativePosition({0, invalid, 0}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeToWorldPosition({0, invalid, 0}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeToWorldPosition({0, std::numeric_limits<float>::max(), 0}),
+            std::invalid_argument);
+    }
+
     struct ActorRagdollPhysicsTest : ::testing::Test
     {
         btDefaultCollisionConfiguration mConfiguration;
@@ -192,6 +213,21 @@ namespace
         const auto state = body.capture();
         EXPECT_LT((state[0].mPose.getOrigin() - mPoses[0].getOrigin()).length(), 1e-6);
         EXPECT_NEAR(state[0].mPose.getRotation().w(), 1, 1e-6);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, AngularDampingDoesNotConvertRadiansAsLengths)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7, mPoses, 1, -1);
+        auto state = actor.capture();
+        state[0].mAngularVelocity = {1, -1, 0};
+        actor.restore(state);
+        actor.applyNativeDamping(0.25f);
+        const auto after = actor.capture();
+        // Original sphere-motion stores from the independent damping corpus:
+        // angular units stay radians/time even when body lengths are scaled.
+        EXPECT_EQ(after[0].mAngularVelocity.x(), btScalar(0.5));
+        EXPECT_EQ(after[0].mAngularVelocity.y(), btScalar(-0.5));
+        EXPECT_EQ(after[0].mAngularVelocity.z(), btScalar(0));
     }
 
     TEST_F(ActorRagdollPhysicsTest, AppliesNativeDampingAboveOneWithoutBulletClamping)

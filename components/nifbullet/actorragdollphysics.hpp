@@ -12,6 +12,12 @@ class btDynamicsWorld;
 
 namespace NifBullet
 {
+    // Original bhk position adapters store binary32 after multiplying by
+    // these separately stored constants. The reverse is not computed as 1/k.
+    inline constexpr float RagdollNativeLengthScale = 6.999040126800537f;
+    osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position);
+    osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position);
+
     // Original torque*dt binary32 store, then torque-unit conversion to the
     // caller's world units (mass is unchanged, lengths use lengthScale).
     btScalar ragdollFrictionImpulse(float torque, float frameSeconds, float lengthScale);

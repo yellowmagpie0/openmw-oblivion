@@ -12427,3 +12427,74 @@ cases are explicitly reused. Documentation follows implementation checks.
 S4 and all other open M15 stages remain open. Next: bind dynamic bodies to
 posed actor bones, establish the required world/native unit conversion and
 serial scheduler ownership, and connect native reactions and persisted state.
+
+
+### Checkpoint131 — original position units and angular damping correction (S4 open)
+
+Checkpoint130 is committed as `4131dfa97fa930433100eaa3c31cbabd8df4f09c`, tree
+`e692fb475328538b38b416aa9965f8ba3865de74`. Its127-commit verified bundle is
+`S3/isolated-git-progress-108/m15-progress.bundle`, SHA256
+`b0d151567fe48f77ecdc11b5d5b54f0e4fcc2bc252248e7313f36a73e2bfd6c9`.
+
+The physics bridge now exposes explicit position converters. Original4529e0
+multiplies each world position component by stored double0.1428767293691635,
+then stores binary32. Original43f3e0 multiplies a native position by separately
+stored double6.999040126800537, then stores binary32. The reverse constant is
+not computed as the reciprocal of the forward constant. Both functions execute
+through their actual returns, including the reverse security-cookie routine,
+without boundary stubs. `S4/native-ragdoll-position-units-oracle-02` covers
+16,384 cases: the Cartesian product of16 component bit patterns for all three
+axes, both directions and both x87 control words027f/037f. Patterns include
+signed zero, subnormals, smallest normal values, signed values, adjacent floats
+and large finite supported values. Oracle01 retains the earlier64-case smoke
+probe. Inputs/outputs outside the finite supported domain reject in production.
+`RagdollNativeLengthScale` exposes the original reverse constant for body lengths;
+these conversions are not yet used by a live actor/world ragdoll owner.
+
+A regression test first failed in `S4/native-ragdoll-angular-units-red-01`:
+with lengthScale7, angular damping produced0.50000002235174179 instead of the
+original binary32 store0.5. Angular velocity is radians/time, so the bridge now
+applies the native binary32 damping stores without length conversion. Linear
+velocity retains its explicitly supplied length-scale conversion. No assertion
+or tolerance was relaxed. The existing360-case original sphere-motion damping
+corpus is reused independently at scales1,7 and6.999040126800537, producing
+1,080 angular comparisons; all match exact binary32 stores, with double world
+storage verified equal to the original float value. This does not establish
+native gravity composition, speed caps or full motion integration.
+
+`S4/native-ragdoll-position-units-comparison-{normal,sanitized}-01` passes
+all17,464 exact cases in both builds. Four controls reject a wrong bit, missing
+row, duplicate row and malformed driver input. Original executable SHA256 is
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Position corpus hash
+`5dbd895d7ac8e5993a2d90c6dc95d3f5ddc8731132fd6144411febfcee568e6f`, generator `f715cf8f9c8b3791a6b2213e179892d80607373f7eaf2e3b67b22e6654de80a6`;
+comparison source `ccf62cc912059ce91c215b9981b6cc7eb42fb11a191f24e4ef3975b9113d0db3`, comparator
+`10781323b34133f793e8e46d142d4d6bd31d949a049a77f717b03d30714eefbb`. The original damping corpus hash is
+`e00f25fc4b01464d1f2bc4cd5f09ceaa85de35ebd7b388a7ef71a82d008df34e`. Private corpora/disassembly remain
+outside Git.
+
+Original collision-mode dispatch88d070 uses callback889d20 from the initialized
+B2E300 table slot5, then the blend-collision virtual+70 resolves to88f880.
+Independent RTTI identifies bhkBlendCollisionObject vtableA9643C and ordinary
+bhkRigidBody vtableA5605C. World-to-body sync89eae0 copies the target node's
+current Ni world transform from+64; original7150f0 converts its rotation to a
+quaternion,4529e0 converts its translation and4d6830 normalizes the quaternion.
+`S4/native-ragdoll-bone-world-pose-oracle-01` executes216 complete89eae0 calls
+with collision flag40, real sphere-motion type getter and varied world
+rotations/positions. Only synchronization locks43f2e0/43f300 and the final
+bhkRigidBody virtual+A0 mutation are supplied boundaries. Full return and
+capture counts are verified. Corpus `44fcf26089e8162a3df3b51e8a14f16d4f55c3a77e43d30e612c0e49d21a34d9`, generator
+`849a70837395054c84d185149ba28d66bd5f31f3ec3fb43685f95ff8fff19e70`. This establishes arguments at that specific world-
+pose boundary, not actual body mutation, bhkRigidBodyT transforms, reverse local
+bone writes, full mode transitions or gameplay acceptance. No production bone
+pose adapter is claimed by this checkpoint.
+
+Full normal and sanitizer component runs `S4/native-ragdoll-position-units-normal-01` and `S4/native-ragdoll-position-units-sanitized-01`
+each pass2,100 cases, matching complete inventories, no failures/skips, stable
+source fingerprint `227b7fd64e18a7a57dd3bb75e29239d604ef8a96ae081d75cddab3cd85fe4189`. ASan detect_leaks=0:halt_on_error=1,
+UBSan halt_on_error=1:print_stacktrace=1; no leak coverage claimed. Engine and
+Python sources are unchanged; checkpoint130's797 engine cases in both builds
+and checkpoint124's243 Python cases are explicitly reused, not newly run or
+relinked engine binaries. Documentation follows implementation checks.
+S4 and all other open M15 stages remain open. Next: use the independently
+established current-world-bone boundary in a pose adapter, then serial world
+scheduling, native reaction/controller ownership and saved continuation.

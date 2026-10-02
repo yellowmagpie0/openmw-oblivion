@@ -247,6 +247,30 @@ namespace NifBullet
         }
     };
 
+    osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position)
+    {
+        osg::Vec3f result;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            require(std::isfinite(position[axis]), "nonfinite world position");
+            result[axis] = float(double(position[axis]) * 0.1428767293691635);
+            require(std::isfinite(result[axis]), "position exceeds native float domain");
+        }
+        return result;
+    }
+
+    osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position)
+    {
+        osg::Vec3f result;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            require(std::isfinite(position[axis]), "nonfinite native position");
+            result[axis] = float(double(position[axis]) * double(RagdollNativeLengthScale));
+            require(std::isfinite(result[axis]), "position exceeds world float domain");
+        }
+        return result;
+    }
+
     btScalar ragdollFrictionImpulse(float torque, float frameSeconds, float lengthScale)
     {
         coefficient(torque);
@@ -423,18 +447,19 @@ namespace NifBullet
         auto states = capture();
         for (std::size_t i = 0; i < states.size(); ++i)
         {
-            const auto damp = [&](btVector3& velocity, float coefficient) {
+            const auto damp = [&](btVector3& velocity, float coefficient, btScalar scale) {
                 const float factor = static_cast<float>(std::max(0.0, 1.0 - double(frameSeconds) * coefficient));
                 for (int axis = 0; axis < 3; ++axis)
                 {
-                    const float native = static_cast<float>(velocity[axis] / mImpl->mLengthScale);
+                    const float native = static_cast<float>(velocity[axis] / scale);
                     require(std::isfinite(native), "velocity exceeds native float domain");
                     const float result = native * factor;
-                    velocity[axis] = btScalar(result) * mImpl->mLengthScale;
+                    velocity[axis] = btScalar(result) * scale;
                 }
             };
-            damp(states[i].mLinearVelocity, mImpl->mBodies[i].mLinearDamping);
-            damp(states[i].mAngularVelocity, mImpl->mBodies[i].mAngularDamping);
+            damp(states[i].mLinearVelocity, mImpl->mBodies[i].mLinearDamping, mImpl->mLengthScale);
+            // Angular velocity is radians/time, independent of length units.
+            damp(states[i].mAngularVelocity, mImpl->mBodies[i].mAngularDamping, btScalar(1));
         }
         // Damping changes velocity only; retain the live contact/activation state.
         for (std::size_t i = 0; i < states.size(); ++i)
