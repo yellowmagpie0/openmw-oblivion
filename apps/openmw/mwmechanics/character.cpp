@@ -21,6 +21,7 @@
 
 #include "../mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
+#include <components/esm4/physicalcombat.hpp>
 
 #include <array>
 #include <unordered_set>
@@ -1441,6 +1442,21 @@ namespace MWMechanics
         }
         const auto contact = commitOblivionOrdinaryMeleeContact(*world, strike.mActionId, mPtr, selectedTarget,
             reach, weaponWeight, oblivionNormalizedDifficulty(Settings::game().mDifficulty), isSneaking());
+        if (contact && contact->mVictim.isEmpty())
+        {
+            // Stock TES4 melee KFs have no sound key. Emit after the contact
+            // commits so repeated frames and restored completed strikes cannot replay it.
+            // This uses the original Audio INI defaults; custom INI import is separate.
+            const auto editorId = ESM4::nativeMeleeSwishSound(weapon
+                ? std::optional<ESM4::WeaponSwishInput>{{ weapon->mData.weight, weapon->mData.speed }}
+                : std::nullopt);
+            if (const auto* sound = MWSound::resolveNativeAnimationSound(world->getStore(), editorId))
+            {
+                MWBase::Environment::get().getSoundManager()->playSound3D(mPtr, sound->mId, 1.f, 1.f);
+                Log(Debug::Verbose) << "M15 melee swish requested: actor=" << actor.serialize()
+                                    << " id=" << strike.mActionId << " sound=" << editorId;
+            }
+        }
         if (contact)
             Log(Debug::Verbose) << (contact->mVictim.isEmpty() ? "M15 melee miss committed: actor="
                 : "M15 melee hit committed: actor=") << actor.serialize()

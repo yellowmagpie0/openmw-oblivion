@@ -3,7 +3,8 @@
 Status: **in progress; not implemented or accepted**. The execution contract is
 [the staged plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md). Baseline work
 started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clean
-worktree on `master`. No M15 gameplay capability is established by this report.
+worktree on `master`. Only the bounded slices described below are verified;
+full M15 gameplay acceptance remains outstanding.
 
 ## Stage ledger
 
@@ -16,7 +17,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
-| S4 melee/block | pending | No implementation/evidence | Normal-input contact and reaction |
+| S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock hand-swish recordings below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
@@ -11551,3 +11552,103 @@ records actual PCM against independently extracted stock assets, and proves
 once-per-contact/restart behavior. Hit/block sounds, reactions, full original
 game audible comparison, user INI import, spatial/cap policy and S4–S14 remain
 open.
+
+
+### Checkpoint119 — recorded stock sound on committed melee misses
+
+The production controller now emits the reviewed native swish selection only
+when its ordinary melee transaction returns a committed miss. The existing
+pending-contact boundary prevents repeated frames and completed-strike reloads
+from requesting it again. Winning SOUN lookup and folder playback use the M10
+sound path; no TES3 alias is introduced. Native Audio INI defaults are used;
+custom Oblivion.ini import and complete native spatial/cap policy remain open.
+The hook covers the existing supported Player/NPC melee dispatch; Creature
+admission and hit/block playback are not expanded by this change.
+
+A real old117 engine baseline is retained in
+`S4/native-missed-swish-baseline-03`: ordinary F draws, a configured P camera
+key turns toward the wall, and U commits one hand-to-hand miss, action2,
+fatigue140 ->133, cost7, no victim/damage/wear/combat random draws. Its88.6s
+stereo recording has zero stock swish matches; strongest correlation0.073.
+The one-match requirement genuinely fails against that recording. Preflight
+failures01/02 are preserved separately: unsupported offscreen mouse movement
+and keypad key, both before any engine launch. P is an ordinary camera action
+binding, not a pose/contact injection. Source save bytes are copied exactly:
+`8c7c1ff8ba69869c3bbe35e7ffd863bfe5077352fabb597079fdcc797725c180`.
+No fixture activation/removal or inventory outcome is injected in this course.
+
+`S4/native-missed-swish-restart-01` and
+`native-missed-swish-runtime-sanitized-01` each prove the same ordinary miss,
+one WPNSwishHand request and one actual rendered original hand-swish waveform.
+Stock asset01 correlations are0.9998782587 normal and0.9998781214 sanitized,
+above the preregistered0.75 threshold. Actual88.2s and265.32s output lengths
+are wall-time captures, not achieved-FPS claims. Both distinct fresh-load/F5
+processes produce zero requests and zero stock matches. Four process epochs,
+eight directly viewed scene/HUD captures, sixteen saved-state corruption
+controls and three PCM controls pass. Clearing the waveform, duplicating the
+recording, and changing channel format are each rejected. Native resources,
+life, RNG and every pre-existing inventory stack's metadata remain exact;
+fatigue regenerates to140 before saves, action counter advances once to3,
+no action remains pending and Player melee input/strike is idle. Camera yaw
+comes from ordinary input and persists exactly into that lane's reload.
+
+Three original mono PCM16/44100Hz hand assets were independently extracted
+from the installed stock sound archive, identified through original winning
+SOUN088834/WPNSwishHand directory `fx\wpn\swish\hand\`. Master hash
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`;
+sounds BSA hash
+`f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec`.
+`S4/native-stock-swish-assets-01/asset-provenance.json` records all asset hashes.
+Templates are linearly resampled to12kHz; rendered stereo PCM16/48000Hz is
+averaged/decimated by4. Mean-corrected normalized sliding FFT correlation finds
+all above-threshold windows, grouped within1s. Expected assets/threshold/counts
+were frozen before the successful baseline; production never generates them.
+Proprietary sound bytes and PCM recordings remain ignored evidence.
+
+All796 engine tests pass with exact unfiltered inventories/XML, zero failures
+and skips, normally and under ASan/UBSan:
+`S3/native-missed-swish-world-01`, `native-missed-swish-world-sanitized-01`.
+Before/after production fingerprint
+`16192acb88a3e02616bd89f69c130794f3d934c42e8ca554622621ed2d89c3bc`.
+Actual normal engine SHA
+`fc326fb47cc6cf19cbfd1b02cbecf1fe02b0486dc435214012d10c374250ab71`;
+sanitized engine SHA
+`1f163559fc2a210740099e92d10ca3a1ed52b1b7d8cebe73f128e353ecffc854`.
+Existing warning categories are retained; no new controller warning appeared.
+ASan leak detection is disabled, not leak coverage. Unchanged118 component
+2060-per-lane and1936-row original selector comparisons are explicitly reused.
+
+Editable replay/continuation/expectation JSON is versioned as
+`scripts/data/oblivion_compat/oblivion_m15_native_missed_swish*.json`, with
+`miss_fixture` replacing the evidence directory. Direct schema validation and
+all242 Python checks pass after publication at fingerprint
+`a0806e017cd512d29768b84994f5f5e25300389c56aea6c59fb4dc5774976e69`;
+production C++ is unchanged from the engine/runtime fingerprint. Consolidation
+verifies that variable substitution reproduces both executed normal manifests
+exactly. `S4/native-missed-swish-final-acceptance-01` hashes all reports,
+recordings, source, assets, analyzer and verifier. This is recorded audio
+acceptance for one bounded hand-to-hand miss, not original-game live auditory
+comparison or complete sound dispatch. Captures show the scene/HUD; first-person
+hands are absent, so no grip or reaction acceptance is claimed. Weapon variants,
+first/third-person and control matrices, windup audio continuations, hit/block
+sounds, custom INI, spatial/cap semantics and remaining S4–S14 gates stay open.
+
+To replay this specific course in the current evidence workspace, preserve the
+input slot and use a fresh output directory (the saved input/stock game data
+are intentionally absent from Git):
+
+```sh
+OUT="$PWD/build/oblivion-compat/m15/S4/native-missed-swish-review-01"
+mkdir -p "$OUT/userdata/saves/M15Review"
+cp build/oblivion-compat/m15/S4/native-player-removeitem-restart-01/second/userdata/saves/M15Review/Quicksave.omwsave "$OUT/userdata/saves/M15Review/Quicksave.omwsave"
+python3 scripts/oblivion_compat.py scenario \
+  scripts/data/oblivion_compat/oblivion_m15_native_missed_swish.json \
+  --output "$OUT" --variable "openmw=$PWD/build/openmw" \
+  --variable "resources=$PWD/build/resources" \
+  --variable "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data" \
+  --variable "miss_fixture=$PWD/build/oblivion-compat/m15/S4/native-player-removeitem-restart-01/fixture"
+```
+
+The input/plugin identities, numerical expectations and PCM acceptance remain
+part of the review; a successful scenario process alone does not prove them.
+No additional M15 stage closes in this checkpoint.

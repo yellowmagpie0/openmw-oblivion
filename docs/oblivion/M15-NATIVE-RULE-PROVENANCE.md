@@ -5830,3 +5830,33 @@ Evidence:`S4/native-stock-melee-sound-audit-03`,
 `native-melee-swish-rule-comparison-01`,
 `native-melee-swish-rule-final-acceptance-01`. No runtime stock sound, INI
 import, audible original-game, reaction or M15 stage closure is inferred.
+
+
+### Checkpoint119 — stock miss playback integration and actual PCM
+
+The ordinary Player/NPC controller's once-per-contact commit boundary now
+emits nativeMeleeSwishSound only for committed misses through M10 winning SOUN
+lookup/playback, using original Audio defaults. No new arithmetic rule or
+schema. Original1181936-row selection evidence remains the numerical source;
+stock hand SOUN088834 and three independently hash-identified original WAVs
+are the waveform source. Sounds BSA hash
+`f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec`.
+
+Actual old117 engine baseline commits one ordinary miss, fatigue140 ->133,
+with no swish request/match and a genuine failing one-wave requirement.
+Normal/sanitized production recordings each contain exactly one stock asset01
+match, correlation0.99988 against preregistered threshold0.75. Both fresh-load
+recordings contain none. Four process epochs/eight directly viewed scene-HUD
+captures/sixteen state corruption controls/three PCM controls pass; native
+resources and all inventory metadata persist, no attack/sound replay. No visible
+hands/grip/reaction acceptance is inferred from these captures.
+
+All796 normal/sanitized engine tests pass at production fingerprint
+`16192acb88a3e02616bd89f69c130794f3d934c42e8ca554622621ed2d89c3bc`.
+After equivalent editable replay JSON publication, direct schema validation
+and242 fresh Python tests pass at
+`a0806e017cd512d29768b84994f5f5e25300389c56aea6c59fb4dc5774976e69`;
+C++ unchanged. Existing1182060-component suites and1936-row comparisons are
+explicitly reused. Evidence:`S4/native-missed-swish-final-acceptance-01`;
+stock assets/PCM stay ignored. Remaining weapon/view/control/audio/reaction,
+INI import, spatial/cap, original live and full M15 gates remain open.

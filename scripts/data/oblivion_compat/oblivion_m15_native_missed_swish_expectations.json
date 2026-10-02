@@ -1,0 +1,79 @@
+{
+  "source": "S4/native-player-removeitem-restart-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+  "source_sha256": "8c7c1ff8ba69869c3bbe35e7ffd863bfe5077352fabb597079fdcc797725c180",
+  "source_staging": "Exact byte copy; no changed state.",
+  "sound_edid": "WPNSwishHand",
+  "sound_id": "088834",
+  "assets": [
+    {
+      "path": "sound/fx/wpn/swish/hand/wpn_swishhand_01.wav",
+      "sha256": "dca82cd4e6e23ab9b5fbd95edc3e793ca85913d5e1d6994f8470e58c60b88a73",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        17388,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "path": "sound/fx/wpn/swish/hand/wpn_swishhand_02.wav",
+      "sha256": "705e14419ed01ae5b8d1022abc1ce56ceb19a267cc2b5320a412bec11727c31e",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        20076,
+        "NONE",
+        "not compressed"
+      ]
+    },
+    {
+      "path": "sound/fx/wpn/swish/hand/wpn_swishhand_03.wav",
+      "sha256": "0bffc8e274eea8f4ff38f7fc93e3a292074e777568528cd54891e674677daf83",
+      "wave_params": [
+        1,
+        2,
+        44100,
+        18785,
+        "NONE",
+        "not compressed"
+      ]
+    }
+  ],
+  "pcm_format": {
+    "channels": 2,
+    "sample_width": 2,
+    "rate": 48000
+  },
+  "analysis_rate": 12000,
+  "minimum_normalized_correlation": 0.75,
+  "positive_clusters_required": 1,
+  "baseline_clusters_required": 0,
+  "scope": "Stock hand swish on one committed missed ordinary attack. Hit/block sounds, INI import and original live audible comparison remain open.",
+  "retained_failed_preflight": [
+    "native-missed-swish-baseline-01: unsupported mouse_move",
+    "native-missed-swish-baseline-02: unsupported keypad key"
+  ],
+  "camera_input": "Ordinary P key configured as additional LookLeftRight increase binder; held0.8s. No transform/state injection.",
+  "course": "oblivion_m15_native_missed_swish.json",
+  "continuation": "oblivion_m15_native_missed_swish_continuation.json",
+  "variables": {
+    "miss_fixture": "Native M15PlayerRemoveItemOpponent.esp directory built from m15_player_remove_item_fixture.json; save/plugin must match input identity."
+  },
+  "expected_contact": {
+    "actor": "dynamic:player:0000000000000001",
+    "action_id": 2,
+    "fatigue_before": 140,
+    "fatigue_after": 133,
+    "fatigue_cost": 7,
+    "victim": "none",
+    "health_damage": 0,
+    "fatigue_damage": 0,
+    "random_draws": 0,
+    "saved_next_action": 3,
+    "saved_pending_actions": []
+  },
+  "saved_scope": "All source inventory metadata/native numeric authority/RNG preserved; fatigue returns to140 before both saves; Player idle melee state added, pose changes through ordinary camera key and persists. Actual achieved FPS not inferred from requested30."
+}
