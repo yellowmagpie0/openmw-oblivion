@@ -12234,3 +12234,51 @@ for an isolated commit. S4 and all other previously open M15 gates remain open.
 Next: feed these independent coordinates into live angular constraint rows,
 verify limits and friction/malleability, then connect physics ownership to the
 actor scheduler, renderer and saved lifecycle.
+
+
+### Checkpoint128 — live constraints for native cone/plane/twist limits (S4 open)
+
+Checkpoint127 is committed as `298621600f286c9560cbef52e11d92df19c5cc52`, tree
+`e5b7532f7406695c4ce155e397e745699743b2be`. Its124-commit verified bundle is
+`S3/isolated-git-progress-105/m15-progress.bundle`, SHA256
+`7439eb58dca194ec58cc7232eec1ffec7e6fd1c870f7dfb8b89b5ebdc5a15e83`.
+
+The live Bullet bridge now admits nonmalleable, zero-friction native ragdoll
+cones. A point-to-point constraint retains the native anchors, accounting for
+center/principal-inertia frames. Additional lower/upper unilateral angular
+rows enforce each independently evaluated cone, asymmetric plane and twist
+coordinate. Frame directions transform through the live center-of-mass pose;
+checkpoint127's verified native coordinate evaluator supplies row axes/limits.
+Unviolated bounds allow travel up to the boundary in the current step; existing
+penetration uses Bullet's error reduction. This is a Bullet solver adaptation,
+not a claim to reproduce the complete original Havok iterative solver or exact
+native final body trajectories. It preserves the independently verified
+coordinate convention instead of substituting a symmetric cone-twist joint.
+Friction and malleability still reject before world publication, and the full
+stock skeleton is not yet admitted. Game PhysicsSystem/actor wiring and native
+reaction/save acceptance remain open.
+
+The new live dynamics test starts outside limits in both directions around
+all three axes, with a shared anchor and angular velocity. After240 steps
+at1/120 second, each admitted native coordinate is within its independent
+bounds with predeclared0.003-radian tolerance, anchor distance is below1e-6
+and the two spherical bodies conserve total angular momentum within1e-6.
+The test exercises six newly simulated trajectories and checks cleanup after
+each instance. Existing malformed cone and unsupported malleability tests
+continue to verify failure before world mutation. These are declared synthetic
+physical fixtures, not captured native NPC trajectories or gameplay evidence.
+
+`S4/native-ragdoll-cone-solver-green-01` passes the filtered physics/coordinate
+suites. Final full runs are `S4/native-ragdoll-cone-solver-normal-01` and `S4/native-ragdoll-cone-solver-sanitized-01`:
+2,093 complete component cases from215 suites,797 complete engine cases
+from91 suites, matching inventories, zero failures/skips, openmw/esmtool built.
+Tested source fingerprint `848212e0c4c1738c72eef5ecbadb9725024a12445769cc762d93be23b59eb57a` is unchanged throughout both
+runs. Commands use run_checks.py --repo . --output FRESH --mode components
+--mode engine --jobs3, with --build-dir build/m15-sanitize for the second;
+ASan detect_leaks=0:halt_on_error=1 and UBSan halt_on_error=1:print_stacktrace=1.
+This does not provide leak coverage. Checkpoint127's118 original-coordinate
+comparisons are explicitly reused because the evaluator is unchanged; Python
+is unchanged and checkpoint124's243 cases are reused. Documentation changes
+follow the implementation checks. All previously open M15 gates remain open.
+Next: implement friction and independently establish malleability, admit the
+stock graph, then wire the existing world scheduler and posed actor lifecycle.

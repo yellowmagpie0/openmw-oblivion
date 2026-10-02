@@ -1,4 +1,5 @@
 #include "actorragdollphysics.hpp"
+#include "ragdollconecoordinates.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -11,6 +12,7 @@
 #include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletDynamics/ConstraintSolver/btHingeConstraint.h>
+#include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 
@@ -68,6 +70,76 @@ namespace NifBullet
                 plane.z(), second.z(), axis.z());
             return btTransform(basis, vector(frame.mPivot) * scale);
         }
+
+        class NativeConeConstraint final : public btPoint2PointConstraint
+        {
+            RagdollConeJoint mJoint;
+            btVector3 mAxisA, mPlaneA, mAxisB, mPlaneB;
+            std::vector<RagdollAngularLimit> mRows;
+
+            static osg::Vec3f native(const btVector3& value)
+            {
+                return {float(value.x()), float(value.y()), float(value.z())};
+            }
+
+            std::vector<RagdollAngularLimit> coordinates() const
+            {
+                const auto& a = m_rbA.getCenterOfMassTransform().getBasis();
+                const auto& b = m_rbB.getCenterOfMassTransform().getBasis();
+                return ragdollConeCoordinates(mJoint,
+                    {{0, 0, 0}, native(a * mAxisA), native(a * mPlaneA)},
+                    {{0, 0, 0}, native(b * mAxisB), native(b * mPlaneB)});
+            }
+
+        public:
+            NativeConeConstraint(btRigidBody& a, btRigidBody& b, const RagdollConeJoint& joint,
+                const btTransform& centerA, const btTransform& centerB, btScalar scale)
+                : btPoint2PointConstraint(a, b, centerA.inverse() * (vector(joint.mA.mPivot) * scale),
+                    centerB.inverse() * (vector(joint.mB.mPivot) * scale))
+                , mJoint(joint)
+                , mAxisA(centerA.getBasis().transpose() * vector(joint.mA.mAxis))
+                , mPlaneA(centerA.getBasis().transpose() * vector(joint.mA.mPlane))
+                , mAxisB(centerB.getBasis().transpose() * vector(joint.mB.mAxis))
+                , mPlaneB(centerB.getBasis().transpose() * vector(joint.mB.mPlane))
+            {
+                mRows = coordinates();
+            }
+
+            void getInfo1(btConstraintInfo1* info) override
+            {
+                mRows = coordinates();
+                // Three bilateral anchor rows, plus a lower and upper
+                // unilateral velocity bound for each native angular coordinate.
+                info->m_numConstraintRows = 3 + 2 * int(mRows.size());
+                info->nub = 3;
+            }
+
+            void getInfo2(btConstraintInfo2* info) override
+            {
+                btPoint2PointConstraint::getInfo2(info);
+                int index = 3;
+                for (const auto& row : mRows)
+                {
+                    for (bool lower : {true, false})
+                    {
+                        const int offset = index++ * info->rowskip;
+                        for (int axis = 0; axis < 3; ++axis)
+                        {
+                            info->m_J1angularAxis[offset + axis] = row.mAxis[axis];
+                            info->m_J2angularAxis[offset + axis] = -row.mAxis[axis];
+                        }
+                        const btScalar distance = (lower ? row.mMin : row.mMax) - row.mAngle;
+                        const bool violated = lower ? distance > 0 : distance < 0;
+                        // Permit travel to an unviolated boundary during this
+                        // step. Existing penetration uses Bullet's error
+                        // reduction, as do the anchor rows above.
+                        info->m_constraintError[offset] = info->fps * distance * (violated ? info->erp : 1);
+                        info->m_lowerLimit[offset] = lower ? 0 : -SIMD_INFINITY;
+                        info->m_upperLimit[offset] = lower ? SIMD_INFINITY : 0;
+                    }
+                }
+            }
+        };
     }
 
     struct ActorRagdollPhysics::Impl
@@ -176,16 +248,20 @@ namespace NifBullet
         {
             require(input.mBodyA < mImpl->mBodies.size() && input.mBodyB < mImpl->mBodies.size()
                 && input.mBodyA != input.mBodyB, "invalid joint endpoints");
-            // These require dedicated native constraint rows and must not be
-            // silently approximated by a symmetric Bullet cone or rigid hinge.
             require(!input.mMalleable, "malleable joint solver is not implemented");
+            auto& a = mImpl->mBodies[input.mBodyA];
+            auto& b = mImpl->mBodies[input.mBodyB];
+            if (const auto* cone = std::get_if<RagdollConeJoint>(&input.mJoint))
+            {
+                require(cone->mFriction == 0, "cone friction solver is not implemented");
+                mImpl->mConstraints.push_back(std::make_unique<NativeConeConstraint>(*a.mBody, *b.mBody,
+                    *cone, a.mCenterFrame, b.mCenterFrame, lengthScale));
+                continue;
+            }
             const auto* hinge = std::get_if<RagdollHingeJoint>(&input.mJoint);
-            require(hinge, "native ragdoll cone solver is not implemented");
             require(hinge->mFriction == 0, "hinge friction solver is not implemented");
             require(std::isfinite(hinge->mMin) && std::isfinite(hinge->mMax)
                 && hinge->mMin <= hinge->mMax, "invalid hinge limits");
-            auto& a = mImpl->mBodies[input.mBodyA];
-            auto& b = mImpl->mBodies[input.mBodyB];
             auto constraint = std::make_unique<btHingeConstraint>(*a.mBody, *b.mBody,
                 a.mCenterFrame.inverse() * hingeFrame(hinge->mA, lengthScale),
                 b.mCenterFrame.inverse() * hingeFrame(hinge->mB, lengthScale), true);

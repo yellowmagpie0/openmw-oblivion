@@ -209,7 +209,7 @@ namespace
         EXPECT_THROW(body.applyImpulse(4, btVector3(0, 0, 0), btVector3(0, 0, 0)), std::invalid_argument);
     }
 
-    TEST_F(ActorRagdollPhysicsTest, RejectsUnimplementedConstraintSemanticsBeforeWorldPublication)
+    TEST_F(ActorRagdollPhysicsTest, RejectsUnsupportedMalleabilityAndMalformedConeBeforeWorldPublication)
     {
         addHinge();
         mGraph.mJoints[0].mMalleable = true;
@@ -220,6 +220,53 @@ namespace
         mGraph.mJoints[0].mJoint = NifBullet::RagdollConeJoint{};
         EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, EnforcesIndependentConePlaneAndTwistLimitsInLiveDynamics)
+    {
+        auto definition = mGraph.mBodies.front();
+        definition.mRecord = 24;
+        mGraph.mBodies.push_back(definition);
+        mPoses.push_back(mPoses.front());
+        auto cone = coneLimits();
+        cone.mA = cone.mB = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        NifBullet::RagdollJointDefinition joint{};
+        joint.mRecord = 25;
+        joint.mBodyA = 0;
+        joint.mBodyB = 1;
+        joint.mJoint = cone;
+        mGraph.mJoints.push_back(joint);
+        for (const auto& axis : {btVector3(1, 0, 0), btVector3(0, 1, 0), btVector3(0, 0, 1)})
+        {
+            for (btScalar angle : {btScalar(-1), btScalar(1)})
+            {
+                NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+                auto state = actor.capture();
+                state[0].mPose.setRotation(btQuaternion(axis, angle));
+                state[0].mAngularVelocity = axis;
+                actor.restore(state);
+                for (unsigned step = 0; step < 240; ++step)
+                    mWorld.stepSimulation(btScalar(1) / 120, 0);
+                state = actor.capture();
+                const auto frame = [](const btTransform& pose) {
+                    const auto a = pose.getBasis() * btVector3(1, 0, 0);
+                    const auto p = pose.getBasis() * btVector3(0, 1, 0);
+                    return NifBullet::RagdollJointFrame{{0, 0, 0},
+                        {float(a.x()), float(a.y()), float(a.z())},
+                        {float(p.x()), float(p.y()), float(p.z())}};
+                };
+                const auto rows = NifBullet::ragdollConeCoordinates(cone, frame(state[0].mPose), frame(state[1].mPose));
+                for (const auto& row : rows)
+                {
+                    EXPECT_GE(row.mAngle, row.mMin - 0.003f);
+                    EXPECT_LE(row.mAngle, row.mMax + 0.003f);
+                }
+                EXPECT_LT((state[0].mPose.getOrigin() - state[1].mPose.getOrigin()).length(), 1e-6);
+                EXPECT_LT((state[0].mAngularVelocity + state[1].mAngularVelocity - axis).length(), 1e-6);
+            }
+        }
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
     }
 
     TEST_F(ActorRagdollPhysicsTest, FallsAndSettlesAgainstActualWorldCollision)
