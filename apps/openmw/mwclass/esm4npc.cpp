@@ -167,6 +167,8 @@ namespace MWClass
 
         const MWWorld::ESMStore* store = MWBase::Environment::get().getESMStore();
         const ESM4::Npc* const base = ptr.get<ESM4::Npc>()->mBase;
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+        auto savedInventory = world ? world->prepareOblivionSavedActorInventory(mutablePtr) : nullptr;
         auto npcRecs = withBaseTemplates<ESM4::LevelledNpc, ESM4::Npc>(base);
 
         data->mTraits = chooseTemplate(npcRecs, ESM4::Npc::Template_UseTraits);
@@ -245,7 +247,10 @@ namespace MWClass
             data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Alarm, statsRecord->mAIData.responsibility);
 
             data->mInventoryStore.setPtr(mutablePtr);
-            fillInventory(*data, statsRecord->mInventory, *store);
+            if (savedInventory)
+                data->mInventoryStore.swapPreparedContents(*savedInventory);
+            else
+                fillInventory(*data, statsRecord->mInventory, *store);
             // Inventory projection may advance the WorldModel pointer
             // registry. Refresh the owner SafePtr before native equipment
             // initialization accesses the owning actor through InventoryStore.
@@ -255,12 +260,13 @@ namespace MWClass
         refData.setCustomData(std::move(data));
         ESM4NpcCustomData& res = refData.getCustomData()->asESM4NpcCustomData();
         res.mInventoryStore.setPtr(mutablePtr);
-        MWWorld::OblivionProfileServices::equipNativeApparel(res.mInventoryStore, *store);
+        if (!savedInventory)
+            MWWorld::OblivionProfileServices::equipNativeApparel(res.mInventoryStore, *store);
         res.mInventoryStore.setPtr(mutablePtr);
         cacheEquipment(res, *store);
         // Rebuild the view of already restored authority after lazy class
         // construction. Fresh actors still await explicit initialization.
-        if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+        if (world)
         {
             world->restoreOblivionActorDrawState(mutablePtr);
             if (auto* combat = world->getOblivionCombatService())

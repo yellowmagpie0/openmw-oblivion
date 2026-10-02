@@ -11340,3 +11340,70 @@ weapon-ready binding and all remaining combat/ranged/death/stealth/crime/jail/
 script/campaign/universal gates remain open. Next bounded integration fixes
 lazy NPC/CREA inventory hydration without authority birth, preserving saved
 condition, ownership and equipment instead of reconstructing base stock.
+
+### Checkpoint116 — lazy native actor inventory hydration
+
+NPC and Creature class construction now prepares the saved inventory before
+publishing custom data. A detached, validated store replaces base stock and
+preserves count, condition, charge, usage, owner and equipment. A saved empty
+inventory is authoritative. Missing saved references retain ordinary base-stock
+construction. Subsequent reads preserve later mutations instead of replaying
+saved inventory. Malformed item/base bindings fail before cache publication;
+retries cannot expose a partially restored store. The operation does not create
+native actor-value or life authority. Existing authority/view reconstruction
+and saved draw restoration retain their prior guards.
+
+Versions1–3 deliberately use the existing legacy equipment migration; version4
+onward preserves saved unequipped state. The legacy weapon quantity3 fixture
+becomes unequipped2 plus equipped1 with the total unchanged. No schema changes.
+The initial two NPC/Creature tests genuinely fail against the old constructors:
+actual quantity0 and no captured stacks instead of quantity3 with two distinct
+condition/owner/equipment stacks. Red log/XML remain in
+`/tmp/m15_inventory116_red01.*`. Seven focused cases now pass, including both
+classes, authoritative empty state suppressing base quantity9, repeated invalid
+base/late-invalid-item rejection, absent references, no authority birth and
+versions1–4. A retained intermediate test fails because versions1/2 cannot carry
+character-generation race/class state; the fixture now deliberately omits those
+unrepresentable fields. The equipment split expectation comes from the existing
+migration policy, not a changed original-game expectation.
+
+`S3/native-lazy-inventory-world-01` and
+`native-lazy-inventory-world-sanitized-01` each pass all792 engine tests,
+with exact unfiltered inventories/XML, zero failures/skips and unchanged tested
+fingerprint `9a64989798e2dddc25153154d06deebe0751c5baf100dd244abf7e1a2586aa99`.
+Checkpoint115's2058 normal/sanitized component checks and4196-row numerical
+comparisons are explicitly reused for unchanged component sources. The242
+Python checks from114 are reused for unchanged Python and editable fixture
+sources. These are not reruns at the new engine fingerprint. Sanitizers halt
+on errors with leak detection disabled; no leak-coverage claim. Existing
+CharacterController animation-entry warnings remain; two temporary unused test
+variables were removed before the final builds.
+
+`S4/native-lazy-inventory-restart-01` and
+`native-lazy-inventory-runtime-sanitized-01` repeat the frozen ordinary Player
+IronCuirass query/F5/quit, then fresh-process load/F5/quit. Both preserve exact
+short1, all Player/reference inventory metadata, native resource/life/breath/
+base/death/queues/action/combat RNG and draw state, without declared query
+replay. Eight corruption controls per lane reject count, condition, owner,
+health, RNG, action, draw and local corruption. All six required captures were
+directly reviewed and hash-recorded: named Dreth, real dungeon, apparel, empty
+hands and HUD. Decoded saves establish metadata; startup samples are excluded.
+These are full-load integration regression courses. They do not isolate
+unloaded-cell eviction and re-entry, which remain open acceptance cases.
+
+Normal executable `3211d4f0dbad4cf5c8da3db0bec5b41e37da6972b032ddbdb39ff42fb0bb3f6d`;
+instrumented `b8b96289bb31f1c840556364cddf30c71ed7ba38ab6d0d319ce4bb97bce49a6b`.
+The actual113 source save and own editable Player query fixture/staging from114
+remain unchanged. Staged save
+`ee882a1443d5fbbc15aedabedd1bdab8296c0792cc3234713035437caa8281e0`;
+plugin `fe815dcb4017af054cf3b1e20c29977cf8d04e088ab42f408344f930bf48a277`.
+No inventory outcome, native delta or cell-transition result was injected.
+Consolidated proof: `S4/native-lazy-inventory-final-acceptance-01`.
+
+No M15 stage is closed. Player removal/capture agreement, partial-stack ordering
+and callbacks, eviction/re-entry, unloaded/container queries, full signed
+base/change persistence and negative AddItem, Creature actual additions,
+weapon-ready binding and remaining combat/ranged/death/stealth/crime/jail/script/
+campaign/universal gates remain open. Next bounded integration routes Player
+removal through the native bounded physical transaction and recaptures actual
+metadata instead of mutating a separate saved stack list.

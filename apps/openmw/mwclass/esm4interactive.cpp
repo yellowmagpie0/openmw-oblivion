@@ -175,6 +175,8 @@ namespace MWClass
 
         auto data = std::make_unique<ESM4CreatureCustomData>();
         const ESM4::Creature* base = ptr.get<ESM4::Creature>()->mBase;
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+        auto savedInventory = world ? world->prepareOblivionSavedActorInventory(ptr) : nullptr;
         const MWWorld::ESMStore* store = MWBase::Environment::get().getESMStore();
         if (base->mAttackReach)
         {
@@ -207,7 +209,10 @@ namespace MWClass
         data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Flee, base->mAIData.confidence);
         data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Alarm, base->mAIData.responsibility);
         data->mInventoryStore.setPtr(ptr);
-        fillCreatureInventory(*data, base->mInventory, *store);
+        if (savedInventory)
+            data->mInventoryStore.swapPreparedContents(*savedInventory);
+        else
+            fillCreatureInventory(*data, base->mInventory, *store);
         // Adding projected inventory stacks can advance the WorldModel pointer
         // registry. Refresh the owner SafePtr before native equipment
         // initialization accesses the owning actor.
@@ -215,9 +220,10 @@ namespace MWClass
         ptr.getRefData().setCustomData(std::move(data));
         ESM4CreatureCustomData& initialized = ptr.getRefData().getCustomData()->asESM4CreatureCustomData();
         initialized.mInventoryStore.setPtr(ptr);
-        MWWorld::OblivionProfileServices::equipNativeApparel(initialized.mInventoryStore, *store);
+        if (!savedInventory)
+            MWWorld::OblivionProfileServices::equipNativeApparel(initialized.mInventoryStore, *store);
         initialized.mInventoryStore.setPtr(ptr);
-        if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+        if (world)
         {
             world->restoreOblivionActorDrawState(ptr);
             if (auto* combat = world->getOblivionCombatService())

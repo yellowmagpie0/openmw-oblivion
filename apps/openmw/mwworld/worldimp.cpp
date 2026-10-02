@@ -771,7 +771,7 @@ namespace MWWorld
 
     namespace
     {
-        ESM::FormKey nativeDrawBase(const Ptr& actor)
+        ESM::FormKey nativeActorBase(const Ptr& actor)
         {
             if (!actor.isEmpty() && actor.getType() == ESM::REC_NPC_4)
             {
@@ -793,7 +793,7 @@ namespace MWWorld
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat)
             return std::nullopt;
-        const auto base = nativeDrawBase(actor);
+        const auto base = nativeActorBase(actor);
         if (base.isNull())
             return std::nullopt;
         const auto key = actor.getCellRef().getFormKey();
@@ -827,7 +827,7 @@ namespace MWWorld
             mOblivionRuntimeState->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
         if (saved == mOblivionRuntimeState->mReferences.end() || !saved->mActorDrawState)
             return std::nullopt;
-        const auto base = nativeDrawBase(actor);
+        const auto base = nativeActorBase(actor);
         const auto* npc = mStore.search<ESM4::Npc>(saved->mBase);
         const auto* creature = mStore.search<ESM4::Creature>(saved->mBase);
         if (base.isNull() || base != saved->mBase || (npc != nullptr) == (creature != nullptr)
@@ -854,6 +854,48 @@ namespace MWWorld
         // custom-data cache, so this access cannot recurse into construction.
         actor.getClass().getCreatureStats(actor).setDrawState(draw);
         return true;
+    }
+
+    std::unique_ptr<InventoryStore> World::prepareOblivionSavedActorInventory(const Ptr& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || actor.isEmpty())
+            return nullptr;
+        const auto base = nativeActorBase(actor);
+        if (base.isNull())
+            return nullptr;
+        const auto key = actor.getCellRef().getFormKey();
+        const auto saved = std::find_if(mOblivionRuntimeState->mReferences.begin(),
+            mOblivionRuntimeState->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
+        if (saved == mOblivionRuntimeState->mReferences.end())
+            return nullptr;
+        const auto* npc = mStore.search<ESM4::Npc>(saved->mBase);
+        const auto* creature = mStore.search<ESM4::Creature>(saved->mBase);
+        if (base != saved->mBase || (npc != nullptr) == (creature != nullptr)
+            || (npc && (!npc->mIsTES4 || actor.getType() != ESM::REC_NPC_4))
+            || (creature && (!creature->mAttackReach || actor.getType() != ESM::REC_CREA4)))
+            throw std::invalid_argument("native actor inventory restore has an invalid class/base binding");
+        // A non-null empty store is an authoritative saved empty inventory.
+        // Validate and stage before the caller publishes its new class cache.
+        // This reads existing save data without creating resource/life authority
+        // or invoking live add/equip observers during lazy reconstruction.
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        auto inventory = saved->mInventory;
+        if (mOblivionRuntimeState->mVersion < 4)
+        {
+            // Versions 1-3 have quantities but no saved equipment metadata.
+            // Match the existing deliberate legacy capture migration; current
+            // unequipped/empty inventories must never acquire default gear.
+            const auto original = inventory;
+            for (const auto& item : original)
+                if (const auto id = resolver.toFormId(item.mBase))
+                    if (auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id)))
+                    {
+                        definition->mBase = item.mBase;
+                        ESM4::equipInventoryItem(inventory, *definition);
+                    }
+        }
+        return OblivionProfileServices::stageActorInventory(
+            OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
     }
 
     std::vector<ESM4::RuntimeInventoryItem> World::captureOblivionActorInventory(const Ptr& owner) const

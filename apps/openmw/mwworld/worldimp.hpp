@@ -98,6 +98,7 @@ namespace MWWorld
 {
     enum class OblivionInteractionKind;
     class DateTimeManager;
+    class InventoryStore;
     class WeatherManager;
     class Player;
     class ProjectileManager;
@@ -295,6 +296,7 @@ namespace MWWorld
         int oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
         int oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
         std::vector<ESM4::RuntimeInventoryItem> captureOblivionActorInventory(const Ptr& actor) const;
+        std::unique_ptr<InventoryStore> prepareOblivionSavedActorInventory(const Ptr& actor) const;
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;
         std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
         void oblivionPlayerEquipmentChanged();

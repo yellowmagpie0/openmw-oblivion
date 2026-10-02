@@ -5764,3 +5764,23 @@ directly reviewed required captures/sixteen controls. Consolidated evidence:
 and full physical negative AddItem remain open, rather than being inferred
 from query absolute values. See checkpoint115 for identities and all limits;
 M15 and its outstanding stage gates remain in progress.
+
+### Checkpoint116 — saved native inventory class integration
+
+World prepares detached saved NPC/Creature inventory before lazy class cache
+publication. Empty saved state suppresses base stock, invalid base or late
+invalid item fails before publication, and subsequent reads do not replay
+saved state. This is persistence integration, not a new original-game numeric
+rule or schema. Versions1–3 retain existing equipment migration; v4+ respects
+saved slots. Seven actual-class/T4ST cases pass, including no AV/life birth.
+
+All792 engine tests pass normally and under ASan/UBSan at fingerprint
+`9a64989798e2dddc25153154d06deebe0751c5baf100dd244abf7e1a2586aa99`.
+Unchanged component2058-per-lane and original4196-row production comparisons
+from115, plus242 Python checks from114, are explicitly reused, not rerun at
+this fingerprint. Four ordinary query/save/fresh-load process epochs, six
+directly reviewed captures and sixteen semantic corruption controls pass in
+`S4/native-lazy-inventory-final-acceptance-01`. These runtime courses prove
+full-load regression behavior, not isolated cell eviction/re-entry. Original
+expected corpora and query fixture/save bytes remain unchanged. No stage
+closure or full negative AddItem/physical availability parity is claimed.

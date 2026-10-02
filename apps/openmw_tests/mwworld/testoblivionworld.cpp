@@ -255,6 +255,202 @@ namespace
         actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
     }
 
+    void checkLazyNativeInventoryRestoration(NativeWorldFixture& fixture, const MWWorld::Ptr& actor)
+    {
+        auto& world = fixture.mWorld;
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem equipped;
+        equipped.mBase = weapon; equipped.mCount = 1; equipped.mCondition = 55.125f;
+        equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+        equipped.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        auto other = equipped; other.mCount = 2; other.mCondition = 43.125f;
+        other.mEquippedSlots = 0; other.mOwner = {};
+        auto saved = captureNativeActorState(fixture, actor);
+        saved.mReferences.front().mInventory = {equipped, other};
+        readNativeSnapshot(fixture, saved);
+        ASSERT_EQ(actor.getRefData().getCustomData(), nullptr);
+        const auto authority = captureNativeActorState(fixture, actor).serializeBinary();
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 3);
+        const auto captured = world.captureOblivionActorInventory(actor);
+        ASSERT_EQ(captured.size(), 2);
+        EXPECT_EQ(captured[0].mCount, 1);
+        EXPECT_EQ(captured[0].mCondition, 55.125);
+        EXPECT_EQ(captured[0].mOwner, equipped.mOwner);
+        EXPECT_EQ(captured[0].mEquippedSlots, ESM4::InventorySlotWeapon);
+        EXPECT_EQ(captured[1].mCount, 2);
+        EXPECT_EQ(captured[1].mCondition, 43.125);
+        EXPECT_TRUE(captured[1].mOwner.isNull());
+        EXPECT_EQ(captured[1].mEquippedSlots, 0u);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), authority);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+        // Ordinary subsequent reads must keep the live view, not replay a save.
+        inventory.begin()->getCellRef().setNativeItemCondition(25.125f);
+        EXPECT_EQ(actor.getClass().getInventoryStore(actor).begin()->getCellRef().getNativeItemCondition(), 25.125f);
+    }
+
+    TEST(OblivionWorldTest, LazyNativeNpcInventoryRestoresSavedMetadataWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        fixture.mWorld.getWorldModel().registerPtr(actor);
+        checkLazyNativeInventoryRestoration(fixture, actor);
+    }
+
+    TEST(OblivionWorldTest, LazyNativeCreatureInventoryRestoresSavedMetadataWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        checkLazyNativeInventoryRestoration(fixture, addEquipmentCreature(fixture));
+    }
+
+    TEST(OblivionWorldTest, LazyNativeSavedEmptyInventorySuppressesBaseStock)
+    {
+        for (const bool creature : {false, true})
+        {
+            SCOPED_TRACE(creature);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            addEquipmentWeapon(fixture);
+            const auto actor = creature ? addEquipmentCreature(fixture) : addNativeNpc(fixture, 0x900);
+            auto& store = world.getStore();
+            if (creature)
+            {
+                auto base = *actor.get<ESM4::Creature>()->mBase;
+                base.mInventory.push_back({0x940, 9});
+                store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+                actor.get<ESM4::Creature>()->mBase = store.search<ESM4::Creature>(base.mFormKey);
+            }
+            else
+            {
+                auto base = *actor.get<ESM4::Npc>()->mBase;
+                base.mInventory.push_back({0x940, 9});
+                store.getWritable<ESM4::Npc>().insertStatic(base, base.mFormKey);
+                actor.get<ESM4::Npc>()->mBase = store.search<ESM4::Npc>(base.mFormKey);
+            }
+            auto saved = captureNativeActorState(fixture, actor);
+            ASSERT_TRUE(saved.mReferences.front().mInventory.empty());
+            readNativeSnapshot(fixture, saved);
+            const auto before = saved.serializeBinary();
+            auto prepared = world.prepareOblivionSavedActorInventory(actor);
+            ASSERT_NE(prepared, nullptr);
+            EXPECT_EQ(prepared->begin(), prepared->end());
+            EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+            EXPECT_EQ(actor.getClass().getInventoryStore(actor).begin(), actor.getClass().getInventoryStore(actor).end());
+            EXPECT_TRUE(world.captureOblivionActorInventory(actor).empty());
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        }
+    }
+
+    TEST(OblivionWorldTest, LazyNativeSavedInventoryRejectsWrongBaseBeforePublishingClass)
+    {
+        for (const bool creature : {false, true})
+        {
+            SCOPED_TRACE(creature);
+            NativeWorldFixture fixture;
+            const auto npc = addNativeNpc(fixture, 0x900);
+            const auto other = addEquipmentCreature(fixture);
+            const auto actor = creature ? other : npc;
+            auto saved = captureNativeActorState(fixture, actor);
+            saved.mReferences.front().mBase = ESM::FormKey::content("headless.esm", creature ? 0x800 : 0x820);
+            readNativeSnapshot(fixture, saved);
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            for (int attempt = 0; attempt < 2; ++attempt)
+            {
+                EXPECT_THROW(actor.getClass().getInventoryStore(actor), std::invalid_argument);
+                EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+                EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+            }
+        }
+    }
+
+    TEST(OblivionWorldTest, LazyNativeSavedInventoryRejectsLateInvalidItemWithoutPartialPublication)
+    {
+        for (const bool creature : {false, true})
+        {
+            SCOPED_TRACE(creature);
+            NativeWorldFixture fixture;
+            const auto actor = creature ? addEquipmentCreature(fixture) : addNativeNpc(fixture, 0x900);
+            const auto weapon = addEquipmentWeapon(fixture);
+            auto saved = captureNativeActorState(fixture, actor);
+            ESM4::RuntimeInventoryItem first;
+            first.mBase = weapon; first.mCount = 3; first.mCondition = 43.125f;
+            auto invalid = first;
+            invalid.mBase = ESM::FormKey::content("headless.esm", 0x999);
+            saved.mReferences.front().mInventory = {first, invalid};
+            readNativeSnapshot(fixture, saved);
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            for (int attempt = 0; attempt < 2; ++attempt)
+            {
+                EXPECT_THROW(actor.getClass().getInventoryStore(actor), std::runtime_error);
+                EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+                EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+            }
+        }
+    }
+
+    TEST(OblivionWorldTest, NativeSavedInventoryAbsenceDoesNotConstructClassOrAuthority)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        const auto other = addEquipmentCreature(fixture);
+        EXPECT_EQ(world.prepareOblivionSavedActorInventory(actor), nullptr);
+        readNativeSnapshot(fixture, captureNativeActorState(fixture, actor));
+        EXPECT_EQ(world.prepareOblivionSavedActorInventory(other), nullptr);
+        EXPECT_EQ(world.prepareOblivionSavedActorInventory({}), nullptr);
+        EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+        EXPECT_EQ(other.getRefData().getCustomData(), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(other.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(other.getCellRef().getFormKey()), nullptr);
+    }
+
+    TEST(OblivionWorldTest, LazyNativeInventoryUsesLegacyEquipmentMigrationOnlyBeforeMetadataSchema)
+    {
+        for (const bool creature : {false, true})
+            for (const std::uint32_t version : {1u, 2u, 3u, 4u})
+            {
+                SCOPED_TRACE(creature);
+                SCOPED_TRACE(version);
+                NativeWorldFixture fixture;
+                auto& world = fixture.mWorld;
+                const auto actor = creature ? addEquipmentCreature(fixture) : addNativeNpc(fixture, 0x900);
+                const auto weapon = addEquipmentWeapon(fixture);
+                auto saved = captureNativeActorState(fixture, actor);
+                saved.mVersion = version;
+                if (version < 3)
+                {
+                    // Legacy versions predate the fixture's race/class fields.
+                    saved.mPlayer.mRace = {};
+                    saved.mPlayer.mClass = {};
+                }
+                ESM4::RuntimeInventoryItem item;
+                item.mBase = weapon; item.mCount = 3;
+                saved.mReferences.front().mInventory = {item};
+                readNativeSnapshot(fixture, saved);
+                const auto inventory = world.captureOblivionActorInventory(actor);
+                // Existing legacy equip migration splits one equipped weapon
+                // from the two remaining unequipped items; it conserves three.
+                ASSERT_EQ(inventory.size(), version < 4 ? 2u : 1u);
+                if (version < 4)
+                {
+                    EXPECT_EQ(inventory[0].mCount, 2);
+                    EXPECT_EQ(inventory[0].mEquippedSlots, 0u);
+                    EXPECT_EQ(inventory[1].mCount, 1);
+                    EXPECT_EQ(inventory[1].mEquippedSlots, ESM4::InventorySlotWeapon);
+                }
+                else
+                {
+                    EXPECT_EQ(inventory.front().mCount, 3);
+                    EXPECT_EQ(inventory.front().mEquippedSlots, 0u);
+                }
+                EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+                EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+            }
+    }
+
     TEST(OblivionWorldTest, NativeScriptAddItemZeroCountDoesNotConstructInventoryOrAuthority)
     {
         NativeWorldFixture fixture;
