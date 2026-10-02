@@ -11993,3 +11993,92 @@ power/mastery/view/control matrices are open. Next: original reaction dispatch
 and the corresponding owned state/controller/physics cancellation semantics.
 Previous checkpoint123 commit3a642cadf2ae76950cc951be094e724f552e9cc3;
 verified bundle101 SHA256e20cbc6295cc1ed5f0837cedd3674ec181b8a237e29b4f73992108b40c59e992.
+
+
+### Checkpoint125 — owned native skeleton body/joint graph (S4 remains in progress)
+
+The preceding checkpoint124 is committed as
+`9edb6d88dde22d40f3c065f4dde136bb8abd954e`, tree
+`97e6d1224bbdbf42a6e7729ec25e5056f123d203`. Its verified bundle is
+`S3/isolated-git-progress-102/m15-progress.bundle`, SHA256
+`76f1ac8457d4399a6f6c8c8d645d7aac2fc7ce667412e702c4e435b872b225cd`.
+The writable independent repository preserves the shared checkout's original
+read-only Git metadata and all exact source bytes; no work was pushed.
+
+`components/nifbullet/actorragdoll.*` now decodes an owned description of
+Oblivion 20.0.0.4/20.0.0.5 skeleton bodies, target bones and joints. Body/shape/
+joint coordinates retain Havok units; global bone bind matrices retain NIF
+units. The decoder admits sphere/capsule/hull shapes, ragdoll and limited-hinge
+joints, and their malleable wrappers. It preserves body mass, center, inertia,
+rotation, damping, friction, restitution, velocity limits and joint limits.
+Damping 2 remains valid native data. It rejects foreign/orphan references,
+ambiguous/cyclic hierarchies, duplicate bone names, target disagreement,
+invalid coefficients/frames/limits and unadmitted formats/shapes/joints.
+A returned graph owns its data after all parsed records are destroyed.
+
+The stock audit exposed missing post-resolution of rigid-body constraint lists
+and malleable inner endpoints. Both now resolve through the NIF reader. Stock
+malleable wrappers have empty inner endpoint pairs; populated pairs must agree
+with the outer authoritative pair. Old hinge layouts omit B's first
+perpendicular axis, which the decoder reconstructs from the stored second axis
+and hinge axis instead of reading an uninitialized later-format field.
+An independent byte probe then exposed the existing reader's use of ordinary
+WXYZ quaternion decoding for Havok body rotations. `bhkRigidBodyCInfo::read`
+now reads XYZW explicitly, without changing ordinary NIF quaternion decoding.
+The [NifTools primary schema](https://raw.githubusercontent.com/niftools/nifxml/master/nif.xml)
+identifies `hkQuaternion` ordering and its use in `bhkRigidBodyCInfo550_660`.
+This is file-format agreement, not a claim of original Havok runtime parity.
+
+Fresh final normal evidence is `S4/native-ragdoll-graph-components-03` (2,081 component cases,
+including 16 `ActorRagdollTest` cases) and `S4/native-ragdoll-graph-engine-01` (797 engine cases,
+with openmw/esmtool built). `S4/native-ragdoll-graph-sanitized-02` passes the same complete
+2,081/797 inventories under ASan/UBSan. All XML inventories match; zero failures
+or skips. Sanitizer options are `detect_leaks=0:halt_on_error=1` and
+`halt_on_error=1:print_stacktrace=1`; this is not leak coverage. All three report
+unchanged tested source fingerprint `b2abfaffdbc355c36e0b2023d690054913b8f78b70786362d8ac7e29823f5588`. Commands use
+`run_checks.py --repo . --output FRESH --mode components` or `--mode engine`,
+and explicit `--build-dir build/m15-sanitize --mode components --mode engine`
+for the sanitizer run. Python/state wire source is unchanged from checkpoint124;
+its 243-case result is retained, not presented as a fresh run for this chunk.
+
+Stock asset SHA256 remains
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`.
+The existing-reader semantic audit `S4/native-human-ragdoll-graph-audit-04`
+now admits all 18 bodies/17 joints. The separately written byte scanner in
+`S4/native-ragdoll-stock-byte-oracle-02` reads the fingerprinted original file,
+its type table, independently located fixed-layout bodies and joint records.
+It never calls the fork reader/decoder to generate expectations. Its corpus
+SHA256 is `d39590a10329df8f2fe3133ea93ee3824f56e77100d56ceac37aa9ab08a12161`. Final normal and sanitizer
+comparisons in `S4/native-ragdoll-stock-comparison-{normal,sanitized}-03`
+match all 18 body and 17 joint cases, including exact stored float bits and
+independently reconstructed hinge axes. Each rejects wrong-bit, missing-joint
+and duplicate-body controls. Comparator SHA256
+`c5ce51c58602bb3bb672900167efaf5015eb27381359594e8915307e29933c83`; binaries respectively
+`29a85c6d0a467383d755bd36b1bc0b0c14110955da79e9e7443fe2cf04b42209` and
+`5104cf041c6417296cf97bb7125f412e42c0a675d4fa36e8d4ed4d5285800ea8`. Proprietary assets and probe data stay ignored.
+
+Retained failures: `native-ragdoll-graph-red-01` failed test compilation;
+`...red-02` compiled and failed against the throwing unimplemented decoder.
+`...green-01` caught the sphere typedef also matching capsules; subsequent
+record-tag dispatch fixes that classification. The asset audit's original
+standalone ABI/library failures remain in `native-human-ragdoll-asset-audit-*`.
+`native-human-ragdoll-graph-audit-01/02` dereferenced empty native inner pairs;
+`...audit-03` exposed unresolved body constraint pointers; `...audit-04` passes.
+`native-ragdoll-stock-byte-oracle-01` wrongly assumed all filters used flag 2;
+corrected byte selection retains the native differing flags. The normal stock
+comparison `...normal-01` rejects all 18 wrongly decoded rotations, and
+`native-ragdoll-havok-rotation-red-01` independently fails the explicit parser
+regression before the rotation fix. `...sanitized-02` fails standalone linking
+because Debug/static dependency filenames differ; final comparators derive
+link dependencies from each actual CMake link command and both pass in fresh
+`...-03` directories. Earlier green test evidence before the rotation fix is
+superseded for final acceptance. Documentation added after these checks changes
+no implementation/fixture bytes.
+
+S4 remains in progress. This chunk is a decoder prerequisite with parser/unit
+and independent byte evidence. It does not yet create dynamic bodies, drive
+rendered bones, settle/recover a ragdoll, persist its pose, or establish normal-
+input knockdown/death acceptance. S2/S3 and all remaining S4–S14 gates retain
+their existing open status. Next: consume this graph in articulated physics,
+connect original reaction dispatch and controller cancellation, then exercise
+normal-input contact, ragdoll/recovery and fresh-process save continuation.

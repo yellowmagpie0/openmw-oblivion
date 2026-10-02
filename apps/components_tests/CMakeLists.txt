@@ -30,6 +30,7 @@ file(GLOB UNITTEST_SRC_FILES
     misc/teststringops.cpp
 
     nifloader/testbulletnifloader.cpp
+    nifloader/testactorragdoll.cpp
 
     detournavigator/navigator.cpp
     detournavigator/settingsutils.cpp

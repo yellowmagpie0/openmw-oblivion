@@ -6030,3 +6030,20 @@ Speed AV4 must be positive before force composition. Nothing here equates that
 AV with Health or Willpower, or closes whole contact eligibility, actual original
 reaction/ragdoll/save/collision parity. Checkpoint124's milestone entry records
 normal-input owned contacts, active-pulse fresh processes and PCM evidence.
+
+
+### Checkpoint125: native skeleton graph and Havok rotation encoding
+
+The stock human skeleton above has 18 bodies and 17 joints (including seven
+malleable limited hinges with empty inner endpoints). The independent fixed-
+layout byte oracle `S4/native-ragdoll-stock-byte-oracle-02` and normal/sanitized
+comparisons `S4/native-ragdoll-stock-comparison-{normal,sanitized}-03` establish
+owned graph agreement without using the production decoder for expectations.
+The [NifTools schema](https://raw.githubusercontent.com/niftools/nifxml/master/nif.xml)
+defines Havok `hkQuaternion` as XYZW and uses it for rigid-body rotation;
+ordinary NIF quaternion encoding is WXYZ. The original reader's mistaken use
+of ordinary decoding failed all 18 stock rotation probes and the explicit
+parser regression before correction. These are data-format claims only;
+original world-space initialization, damping, impulses, collision, animation
+binding and recovery parity remain open. Exact hashes, negative controls,
+retained failures and test inventories are in checkpoint125's milestone entry.

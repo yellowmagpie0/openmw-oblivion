@@ -129,7 +129,10 @@ namespace Nif
         if (nif->getBethVersion() < 83)
             nif->skip(4); // Unused
         nif->read(mTranslation);
-        nif->read(mRotation);
+        // Havok quaternions are stored XYZW; ordinary NIF quaternions are WXYZ.
+        osg::Vec4f rotation;
+        nif->read(rotation);
+        mRotation.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
         nif->read(mLinearVelocity);
         nif->read(mAngularVelocity);
         // A bit hacky, but this is the only instance where a 3x3 matrix has padding.

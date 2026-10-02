@@ -769,6 +769,11 @@ namespace Nif
         uint32_t mBodyFlags;
 
         void read(NIFStream* nif) override;
+        void post(Reader& nif) override
+        {
+            bhkEntity::post(nif);
+            postRecordList(nif, mConstraints);
+        }
     };
 
     // Abstract non-physical object that receives collision events
@@ -866,6 +871,11 @@ namespace Nif
         bhkMalleableConstraintCInfo mConstraint;
 
         void read(NIFStream* nif) override;
+        void post(Reader& nif) override
+        {
+            bhkConstraint::post(nif);
+            mConstraint.mInfo.post(nif);
+        }
     };
 
     struct bhkBreakableConstraint : bhkConstraint
