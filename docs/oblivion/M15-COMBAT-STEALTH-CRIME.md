@@ -11796,3 +11796,47 @@ attachment also uses the visibility helper, but its exposed blade still needs
 its own ordinary-input course. Other weapons, aiming/views/controls, hit/block
 sound, real reactions, mastery consequences and the full S0–S14 gates remain
 open. S2/S3/S4 remain in progress; S5–S14 remain open.
+
+
+### Checkpoint122 — native NPC stock shortsword grip and stack conservation
+
+The native NPC attachment now has its own ordinary-input visual acceptance.
+The editable NPC shortsword fixture equips one already existing rusty sword on
+Space, then saves. It neither adds an item nor starts combat. The checkpoint121
+staged source already has the NPC's unequipped count2 stack; only own plugin,
+script/style bindings, fingerprint and save-header dependency names change.
+Player inventory, all poses, resources, native melee state, draw state, combat
+RNG and physical-action counter remain bit-exact. No pending action appears.
+Actual EquipItem splits the stack into equipped1(slot65536) and spare1(slot0),
+both condition56 with owner/charge/hotkey/usage metadata preserved. The script's
+GetEquipped local is1, and no equip or attack replays after fresh load.
+
+`S4/native-npc-shortsword-restart-01` and
+`native-npc-shortsword-runtime-sanitized-01` show the named Valen Dreth changing
+from fists to exposed stock blade/guard/right-hand grip in native onehandidle,
+and retain that visible grip in distinct fresh-load/F5 processes. Four epochs,
+six directly reviewed required captures and22 saved-state corruption controls
+pass, consolidated in `S4/native-npc-shortsword-final-acceptance-01`.
+The same exact checkpoint121 normal/sanitized engines run these courses; its
+2061-component/796-engine unfiltered checks are explicitly reused, not rerun.
+Fresh242 Python tests pass at unchanged before/after fixture source fingerprint
+`74eddb849ab5e3512c7d3d7148c404d06f4dbf5c7fed5c5dc8d4dbb758fbb547`.
+
+Original third-person onehandidle independently decodes73 controlled targets,
+cycle0,frequency1,start0,stop3. Runtime binds64 and reports9 skipped tracks.
+An independent inline palette/target decode finds exactly nine absent names
+in the original human skeleton: TailRoot and Tail01–Tail08. All64 other targets
+are present. Thus the observed skipped count is consistent with absent stock
+tail tracks, not a claim that every skeleton family has complete binding.
+Original asset hashes: onehandidle
+`d01bf09a3c703ae2f0f4c043abbe47dc1c0e6d3af0fedcf41ed9a50173bc17d5`, human skeleton `43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`.
+
+Audits remain ignored in `S4/native-npc-shortsword-asset-audit-01`; editable JSON
+and ObScript live in `scripts/data/oblivion_compat/m15_npc_shortsword*` and
+`oblivion_m15_native_npc_shortsword*.json`. Structural/semantic fixture success,
+fork SCTX compilation and observed fork activation/reload are separate layers;
+original-game SCDA acceptance and live pose comparison are not implied.
+
+This is the stock human NPC ready/reload weapon case. Actual attack motion,
+other weapons and skeletons, aiming/views/controls, hit/block audio, real
+reactions, mastery consequences and full M15 completion remain open.

@@ -5926,3 +5926,18 @@ versioned. Original-game SCDA acceptance remains open: this fixture uses the
 fork's SCTX compiler and ordinary fork activation. Final four-epoch/eight-
 capture/22-state-control acceptance is bounded to Player ready/reload visibility
 and one missed Small swish, not full combat or stage completion.
+
+
+### Checkpoint122 — original human one-hand idle targets
+
+Original third-person onehandidle.kf has73 inline33-byte controlled blocks,
+cycle0,start0,stop3. Its node-offset field is13 bytes into each controlled
+block; the independently bounded string palette is1107 bytes at2922. The
+73 decoded names have64 length-prefixed matches in the original human
+skeleton. The nine absent names are Bip01 TailRoot and Bip01 Tail01–Tail08.
+The actual native NPC renderer reports64 bound/9 skipped, consistent with
+that stock human inventory. This does not establish beast skeleton support
+or original-game pose/motion parity. Audit identities and bounded fork grip/
+fresh-reload acceptance are recorded in checkpoint122's milestone entry and
+`S4/native-npc-shortsword-final-acceptance-01/verification.json`. No new
+physical formula, state authority or schema is introduced.

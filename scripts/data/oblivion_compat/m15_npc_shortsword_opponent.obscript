@@ -1,0 +1,8 @@
+scn M15NpcShortswordOpponent
+short fighting
+Begin OnActivate
+    if fighting == 0
+        EquipItem WeapIronShortswordRusty
+        set fighting to GetEquipped WeapIronShortswordRusty
+    endif
+End
