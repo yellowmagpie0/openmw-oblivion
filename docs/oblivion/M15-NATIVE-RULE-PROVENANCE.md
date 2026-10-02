@@ -5523,3 +5523,20 @@ and RNG. Direct original488DCE..488DDB tracing exposes the previous half-up
 wrapper error (threshold atA2FC68 is double0; positive fractional entries
 round upward). This discrepancy remains open pending expanded independent
 original cases, production correction and fresh actual contact/restart runs.
+
+
+Checkpoint105 resolves104's actual NPC contact discrepancy without changing
+frozen expectations. Full original488CB0 entry rounds positive fractional
+547370 results upward (488DCA negative fractional difference, A2FC68 original
+double0, 488DDB add1); checkpoint100's half-up description is superseded.
+Expanded oracle04:3072 executions,1536 heavy/light profiles,both x87 words,
+768 distinct numerical rows frozen in armorratingentry_expected.inc;
+corpus903d14ea32b7b14b32b27c0876875315c6ec7ecd88567550a18ed9b1ec222b60.
+Declared native initializers/winning settings and getter/condition boundaries
+are recorded. Normal and instrumented real NPC contact/save/fresh continuation
+both preserve exact frozen Player Health1064833122, Rust1113509069,
+Iron1132041335, seed1->415139642/3 draws. Additional normal seed0 and5540
+courses confirm2/1 draws and matching Health/conditions. Exact inventories,
+actor authority channels and no replay are independently checked with eight
+negative verifier controls. No general AI, in-action restart, held mesh,
+reaction/audio or campaign acceptance is inferred from these courses.

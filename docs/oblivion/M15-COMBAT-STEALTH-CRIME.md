@@ -10477,3 +10477,71 @@ Their full entry/selection/wear paths and supplied getter/condition boundaries
 are recorded separately; emulated paths alone are not gameplay acceptance.
 S4 normal/instrumented numerical save/restart, carried weapon rendering,
 contact/reaction frames/audio and the remaining M15 stages stay open.
+
+
+### Checkpoint 105 — equipped armor ceiling and real NPC contact/restart acceptance
+
+The original equipped-item entry's rounding is a **ceiling**, superseding
+checkpoint100's nearest/half-up interpretation. At488DCA the truncated whole
+minus original amount is compared with the original static double0 atA2FC68;
+488DDB adds1 for a positive fractional amount. 547370 still floors the scaled
+skill contribution before condition multiplication. A stored result3.335000038
+therefore yields entry4, not3. No runtime expected damage or wear was adjusted.
+`nativeEquippedArmorRating` now uses this ceiling, retaining the existing
+int32 conversion-domain rejection. Prior cases where ceil and nearest coincide
+remain valid numerical evidence; their former general rounding interpretation
+does not. The fractional-boundary assertions now reject the missed branch.
+
+`S4/native-armor-entry-oracle-04` runs full488CB0/4B4C80/484850/547370/547B90/
+9828C0 in **3072 executions**, 1536 heavy/light profiles with both x87 words.
+It initializes declared native settings and winning-master overrides, preserves
+the original static threshold, and supplies only declared getter/UInt maximum/
+Float ExtraHealth boundaries. Four armor hundredths values, three maxima,
+six skills and condition boundaries below/above maximum are included. Both
+modes agree. The **768 distinct numerical rows** are frozen in the component
+regression include; corpus SHA256
+903d14ea32b7b14b32b27c0876875315c6ec7ecd88567550a18ed9b1ec222b60.
+
+Fresh `S4/native-armor-ceiling-main-01` passes all **2052 component, 765 engine,
+239 Python tests**. `S4/native-armor-ceiling-sanitized-01` passes all **2052
+component and 765 engine tests**, with ASan/UBSan halting options, leak checks
+disabled, exact inventories/XML, zero failures/skips/findings, and stable source
+fingerprint50e1eca1b251332676b89f931a8abd738ec70376b8c4d66c12bc3f5b5b9aa6ee.
+The preliminary focused two-case run includes all768 numerical subcases.
+
+Both `native-stationary-opponent-offscreen-03` and
+`native-stationary-opponent-runtime-sanitized-01` pass the actual normal-Space
+activation/contact/F5/fresh-process continuation course against the **unchanged**
+checkpoint104 frozen original expectations. One source-owned id1 contact:
+Dreth Fatigue155->147.2, Player native Health Damage channel
+-0.968999981880188 (bits1064833122), source Rust absent/full56->55.70000076293945
+(bits1113509069), Player Iron250.125->249.57994079589844 (bits1132041335),
+three combat selection draws seed1->415139642. The script stops combat and
+persists local2. The resave/restart has next action2, no pending actions/owners,
+no input/AI intent/strike replay and no second hit. All nine native actors'
+other value channels, life/breath/base/death/engagement state and all reference
+inventories remain exact; the source Fatigue bound explicitly permits ordinary
+regeneration. Source inventory order is retained; the Player's live container
+captures armor before clothing. Distinct process epochs and actual changed-save
+hashes are verified, rather than assuming the first save-directory entry.
+The instrumented continuation launcher records its stricter unique-changed-save
+selection, retaining its previous launcher. No finding or numerical tolerance
+was hidden by this save selection correction.
+
+Each verifier rejects eight faults: one-bit Health/armor changes, wrong victim,
+correct receipts with unchanged Health, wrong RNG, unworn armor/weapon and a
+pending replay. Both phases' captures were directly inspected: named Dreth,
+Player hand-to-hand HUD and prison scene. Static end captures do not establish
+contact/reaction frames, held sword rendering or sound; sound was disabled.
+Normal executable SHA256ee38e0fa7e3553bb03a17c939d75d838b1b9382b0fa6ba3f270e0bc44b113c83;
+instrumented8004b2f4aea488b1e6f88116ae2dc63d69e32d9d8d16d6ce046ee7ceef3aad46.
+
+Additional normal courses `native-stationary-matrix-seed0-cap30-01` and
+`native-stationary-matrix-seed5540-cap120-01` pass actual contact/save/restart
+and the same verifier, with independently frozen2 draws->505908858 and
+1 draw->1188163031. Requested caps are not claims of achieved frame rate on
+llvmpipe. Six further prepared pairs remain to complete the full three-seed /
+30,60,120-cap cross product. This closes the ordinary NPC-to-Player numerical
+course, not the complete S4 gate: block, mastery/consequences, other attacks,
+input modes/views, in-action restarts, actual visuals/reactions/audio and later
+S5-S14 work remain open. Next complete that matrix and carried-weapon rendering.
