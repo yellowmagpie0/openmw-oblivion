@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "purpose": "Ordinary NPC activation removes the actual Player iron cuirass with requested999 bounded to available1, queries0 and saves. Fresh-process reload must preserve every remaining stack metadata field and native authority without replay.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779456,
+    "editor_id": "M15PlayerRemoveItemStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779457,
+    "editor_id": "M15PlayerRemoveItemOpponent",
+    "sha256": "473dae5d319fc69939768c1620257904a857578d7dbdf82986d2a90507966805"
+  }
+}

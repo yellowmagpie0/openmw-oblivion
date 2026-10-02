@@ -11407,3 +11407,81 @@ weapon-ready binding and remaining combat/ranged/death/stealth/crime/jail/script
 campaign/universal gates remain open. Next bounded integration routes Player
 removal through the native bounded physical transaction and recaptures actual
 metadata instead of mutating a separate saved stack list.
+
+### Checkpoint117 — Player removal shares live native transaction/capture
+
+Player removal now uses the existing bounded native physical transaction:
+signed GetItemCount availability gates the request, snapshot iteration stays
+bounded across observers, surviving equipped instances stay equipped, and
+depleting a weapon/shield/light uses the canonical Player key for combat
+cancellation before inventory observers. Positive removal recaptures final
+live metadata into an existing cache instead of subtracting from a separate
+saved stack list. A missing item does not create cached state or native AV/life
+authority. Full world capture and transactions now use one Player/NPC/Creature
+metadata adapter; Player hotkeys retain the existing once-per-base join policy.
+ObScript traces actual accepted Player quantities, and OnAdd fires only after
+a positive accepted addition. Negative Player AddItem explicitly rejects the
+still-unsupported signed-delta model instead of normalizing it to one item,
+matching the already explicit NPC/Creature rejection. No schema changes.
+
+Four new tests cover exact Player count/condition/owner/equipment/hotkeys without
+AV/life birth, missing-item removal, signed INT_MIN availability without mutation,
+and explicit negative-add rejection before constructing a Player view. Three
+genuine baseline failures are retained in `/tmp/m15_player_remove117_red01.*`:
+shared Player capture returns empty; missing removal triggers an unnecessary
+full snapshot and invalid headless character-generation state; negative AddItem
+tries a missing Player/full snapshot instead of the explicit unsupported guard.
+The INT_MIN case was run after implementation, not counted as an old-binary red.
+All six focused tests pass, including prior signed-count and whole-world owner
+regressions. The first build failed on an incomplete Player type; it now uses
+the existing getPlayerPtr accessor. That failure remains in greenbuild01.log.
+
+`S3/native-player-removeitem-world-01` passes all796 engine and242 Python tests;
+`native-player-removeitem-world-sanitized-01` passes all796 engine tests, exact
+unfiltered inventories/XML and zero failures/skips. Both before/after source
+fingerprints equal
+`da427be3e06ad6837a8fd943f9e9c477c52a7ff0a4840585cf960e3f68677b11`.
+Checkpoint115's2058 normal/sanitized component checks and4196-row numerical
+comparisons are explicitly reused for unchanged production component sources.
+The original RemoveItem gate's112 cases from112 remain the independent
+positive request/signed availability/clamp oracle; callback/instance ordering
+is not inferred from that gate. ASan/UBSan halt on errors with leak checks off.
+
+The editable `m15_player_remove_item_fixture.json` and
+`m15_player_remove_item_opponent.obscript` generate an own NPC activation fixture
+with new style/script010008C0/C1. Only source NPC SCRI/ZNAM links change. The
+actual final116 normal second-process save is staged by rebinding only own
+plugin/script/style identities, fingerprints and two header dependencies.
+Inventory, condition, equipment and native outcomes are not injected. Ordinary
+Space executes Player.RemoveItem IronCuirass999: available1 clamps removal to1,
+then Player.GetItemCount returns0 and short fighting becomes0. F5/quit and a
+distinct fresh-load/F5 keep the removed armor absent without replaying commands.
+All four remaining Player stacks, all reference inventory metadata, native
+resource/life/breath/base/death/queues/action/combat RNG and draw state stay exact.
+
+`S4/native-player-removeitem-restart-01` and
+`native-player-removeitem-runtime-sanitized-01` pass four distinct game epochs,
+six directly reviewed/hash-recorded required captures and sixteen corruption
+controls. Controls reject restored removed armor, one-bit condition, owner,
+health, RNG, action, draw and local corruption. Scene captures show named Dreth,
+actual dungeon, unchanged opponent apparel, empty hands and HUD. Actual decoded
+saves establish Player removal; screenshots alone do not establish armor count.
+Startup samples and full grip/reaction/audio claims are excluded. Consolidated
+proof: `S4/native-player-removeitem-final-acceptance-01`.
+
+Normal executable
+`ec660a674af97ffeb2741b1803882e605a7c7817a34144f698eb799608abb1be`;
+instrumented
+`da064f8e1e6984fadde90db9ddf0e64f0c190dde6040fafacaf9fd4496072f1a`.
+Staged save
+`4d4f4438ab020f693c988a66fb1125b19b7cf96f5ec0ebefe35640715b5cb5bb`;
+plugin `0ddd0d2c96954fea0a043ee20e47fa7315e34a9e9f7067ed8e1a960183e307ea`;
+script `473dae5d319fc69939768c1620257904a857578d7dbdf82986d2a90507966805`.
+
+No M15 stage is closed. Partial-instance ordering, equipped-weapon windup and
+observer replay courses, signed negative-add persistence, Player addition
+capacity, eviction/re-entry, unloaded/container queries and the remaining
+S4–S14 gates remain open. Next bounded combat integration establishes original
+swish selection/timing and connects actual stock melee sound through M10;
+stock first/third-person onehand/hand-to-hand animation keys cannot themselves
+supply those sounds.

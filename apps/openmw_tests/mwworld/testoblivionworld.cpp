@@ -478,6 +478,90 @@ namespace
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
     }
 
+    TEST(OblivionWorldTest, NativePlayerInventoryCapturePreservesMetadataHotkeysWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        const auto weapon = addEquipmentWeapon(fixture);
+        auto saved = captureNativeActorState(fixture, actor);
+        ESM4::RuntimeInventoryItem equipped;
+        equipped.mBase = weapon; equipped.mCount = 1; equipped.mCondition = 55.125f;
+        equipped.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        equipped.mEquippedSlots = ESM4::InventorySlotWeapon; equipped.mHotkey = 5;
+        auto other = equipped; other.mCount = 2; other.mCondition = 43.125f;
+        other.mOwner = {}; other.mEquippedSlots = 0; other.mHotkey = -1;
+        saved.mPlayer.mInventory = {equipped, other};
+        readNativeSnapshot(fixture, saved);
+        const auto player = world.getPlayerPtr();
+        installEquipmentInventory(fixture, player, saved.mPlayer.mInventory);
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_EQ(world.captureOblivionActorInventory(player), saved.mPlayer.mInventory);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(key), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(key), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativePlayerMissingItemRemovalDoesNotConstructAuthority)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto weapon = addEquipmentWeapon(fixture);
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        EXPECT_NO_THROW(EXPECT_EQ(world.oblivionChangePlayerInventory(weapon, -999), 0));
+        EXPECT_TRUE(world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr()).begin()
+            == world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr()).end());
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(key), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(key), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativePlayerRemovalHonorsSignedMinimumAvailabilityWithoutMutation)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem large;
+        large.mBase = weapon; large.mCount = std::numeric_limits<std::int32_t>::max();
+        large.mCondition = 43.125f; large.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        auto one = large; one.mCount = 1; one.mCondition = 55.125f;
+        const auto player = world.getPlayerPtr();
+        installEquipmentInventory(fixture, player, {large, one});
+        const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+        EXPECT_EQ(world.oblivionPlayerItemCount(weapon), std::numeric_limits<std::int32_t>::min());
+        EXPECT_NO_THROW(EXPECT_EQ(world.oblivionChangePlayerInventory(weapon, -7), 0));
+        auto& live = player.getClass().getInventoryStore(player);
+        ASSERT_EQ(std::distance(live.begin(), live.end()), 2);
+        EXPECT_EQ(live.begin()->getCellRef().getCount(), large.mCount);
+        EXPECT_EQ(live.begin()->getCellRef().getItemCondition(100), large.mCondition);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(ESM::FormKey::dynamic("player", 1)), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(ESM::FormKey::dynamic("player", 1)), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativePlayerNegativeAddDeltaIsNotNormalizedToOnePhysicalItem)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto weapon = addEquipmentWeapon(fixture);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = ESM::FormKey::dynamic("player", 1);
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, std::int64_t(-1)};
+        // Full signed native entry persistence is still unsupported. Reject
+        // explicitly before physical mutation or constructing a Player view.
+        EXPECT_THROW(host.call("AddItem", {}, args, context, {}), std::invalid_argument);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+    }
+
     TEST(OblivionWorldTest, NativeScriptPlayerNonpositiveInventoryNoopsDoNotRequirePlayerView)
     {
         NativeWorldFixture fixture;

@@ -906,9 +906,19 @@ namespace MWWorld
         {
             if (owner.isEmpty())
                 return result;
-            const unsigned ownerType = owner.getClass().getType();
-            if (ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
+            if (mGameProfile != ESM::GameProfile::Oblivion)
                 return result;
+            const bool player = mPlayer && owner == mPlayer->getPlayer();
+            const unsigned ownerType = owner.getClass().getType();
+            if (!player && ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
+                return result;
+            // Hotkeys have no shared-store field. Join the existing Player
+            // assignment once per base, just as full world capture does.
+            std::map<ESM::FormKey, std::int8_t> previousHotkeys;
+            if (player && mOblivionRuntimeState)
+                for (const auto& item : mOblivionRuntimeState->mPlayer.mInventory)
+                    if (item.mHotkey >= 0)
+                        previousHotkeys.emplace(item.mBase, item.mHotkey);
             const ESM::FormKeyResolver inventoryResolver(mContentFiles);
             InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
             for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
@@ -947,6 +957,11 @@ namespace MWWorld
                 const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
                 if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
+                if (const auto previous = previousHotkeys.find(item.mBase); previous != previousHotkeys.end())
+                {
+                    item.mHotkey = previous->second;
+                    previousHotkeys.erase(previous);
+                }
                 ESM4::addInventoryItem(result, std::move(item));
             }
             return result;
@@ -1052,57 +1067,9 @@ namespace MWWorld
         state.mPlayer.mFemale = !playerBase->isMale();
         state.mPlayer.mCharacterGenerationFlags = mPlayer->getOblivionCharacterGenerationFlags();
 
-        // The projected InventoryStore is the live authority. TES4 metadata
-        // which has no shared-store equivalent is joined back by stable base
-        // key and written into the native v4 stack schema.
-        std::map<ESM::FormKey, std::int8_t> previousHotkeys;
-        if (mOblivionRuntimeState)
-            for (const ESM4::RuntimeInventoryItem& item : mOblivionRuntimeState->mPlayer.mInventory)
-                if (item.mHotkey >= 0)
-                    previousHotkeys.emplace(item.mBase, item.mHotkey);
-        InventoryStore& liveInventory = player.getClass().getInventoryStore(player);
-        try
-        {
-        for (auto iterator = liveInventory.begin(); iterator != liveInventory.end(); ++iterator)
-        {
-            const Ptr itemPtr = *iterator;
-            if (itemPtr.isEmpty())
-                continue;
-            const ESM::RefId baseId
-                = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
-            const ESM::FormId* formId = baseId.getIf<ESM::FormId>();
-            if (formId == nullptr || itemPtr.getCellRef().getCount() <= 0)
-                continue;
-            ESM4::RuntimeInventoryItem item;
-            item.mBase = resolver.toFormKey(*formId);
-            item.mCount = itemPtr.getCellRef().getCount();
-            if (auto definition = OblivionProfileServices::itemDefinition(mStore, baseId))
-            {
-                item.mCondition = definition->mMaxCondition < 0 ? -1
-                    : itemPtr.getCellRef().getItemCondition(static_cast<float>(definition->mMaxCondition));
-                item.mCharge = definition->mMaxCharge < 0.f ? -1.f
-                    : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
-                                                                       : itemPtr.getCellRef().getEnchantmentCharge();
-                item.mRemainingUsageTime = definition->mMaxUsageTime < 0.f ? -1.f
-                    : itemPtr.getClass().getRemainingUsageTime(itemPtr);
-                if (liveInventory.isEquipped(itemPtr))
-                    item.mEquippedSlots = getNativeEquippedSlots(liveInventory, itemPtr, *definition);
-            }
-            const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
-            if (const ESM::FormId* owner = itemOwner.getIf<ESM::FormId>())
-                item.mOwner = resolver.toFormKey(*owner);
-            if (const auto previous = previousHotkeys.find(item.mBase); previous != previousHotkeys.end())
-            {
-                item.mHotkey = previous->second;
-                previousHotkeys.erase(previous);
-            }
-            ESM4::addInventoryItem(state.mPlayer.mInventory, std::move(item));
-        }
-        }
-        catch (const std::exception& error)
-        {
-            throw std::runtime_error("TES4 runtime-state player inventory capture failed: " + std::string(error.what()));
-        }
+        // Player and native actor transactions serialize the same live
+        // metadata; preserve Player-only hotkey assignments in that adapter.
+        state.mPlayer.mInventory = captureOblivionActorInventory(player);
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
             if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))

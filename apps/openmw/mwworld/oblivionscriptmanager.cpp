@@ -1414,11 +1414,15 @@ namespace MWWorld
                         + " count=" + std::to_string(count));
                     return std::int64_t(count);
                 }
-                const std::int32_t count = std::max<std::int32_t>(1, boundedCount(argument(itemArg + 1)));
-                mWorld.oblivionChangePlayerInventory(*item, name == "additem" ? count : -count);
+                const auto requested = boundedCount(argument(itemArg + 1));
+                if (name == "additem" && requested < 0
+                    && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
+                    throw std::invalid_argument("Native AddItem negative-count delta semantics are unsupported");
+                const std::int32_t count = std::max<std::int32_t>(1, requested);
+                const int changed = mWorld.oblivionChangePlayerInventory(*item, name == "additem" ? count : -count);
                 trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
-                    + " count=" + std::to_string(count));
-                if (name == "additem")
+                    + " count=" + std::to_string(changed));
+                if (name == "additem" && changed > 0)
                     dispatchBaseEvent(*item, "onadd", owner);
                 return std::int64_t(0);
             }

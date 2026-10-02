@@ -214,16 +214,16 @@ namespace MWWorld
             item.mOwner = owner;
             return oblivionAddPlayerInventoryItem(std::move(item));
         }
-        if (!mOblivionRuntimeState)
-            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         const Ptr player = getPlayerPtr();
-        InventoryStore& live = player.getClass().getInventoryStore(player);
-        const ESM::RefId sharedId = OblivionProfileServices::sharedItemId(mStore, refId);
         const int requested = delta == std::numeric_limits<int>::min()
             ? std::numeric_limits<int>::max()
             : -delta;
-        const int removed = live.remove(sharedId, requested, false, true);
-        ESM4::removeInventoryItem(mOblivionRuntimeState->mPlayer.mInventory, key, removed);
+        const int removed = oblivionRemoveActorItem(player, key, requested);
+        // Inventory observers may change equipment or other stacks. Re-read
+        // their final live metadata rather than subtracting a parallel list.
+        // A missing item does not create cached state or native authority.
+        if (removed > 0 && mOblivionRuntimeState)
+            mOblivionRuntimeState->mPlayer.mInventory = captureOblivionActorInventory(player);
         return removed;
     }
 
@@ -370,8 +370,10 @@ namespace MWWorld
 
     int World::oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count)
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor)
-            || key.isNull() || count <= 0)
+        if (mGameProfile != ESM::GameProfile::Oblivion || actor.isEmpty() || key.isNull() || count <= 0)
+            return 0;
+        const bool player = actor == getPlayerPtr();
+        if (!player && !nativeEquipmentActor(actor))
             return 0;
         const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
         if (!id || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id)))
@@ -416,7 +418,7 @@ namespace MWWorld
                     auto* mechanics = MWBase::Environment::get().getMechanicsManagerOrNull();
                     if (!mechanics || !mechanics->cancelOblivionCombatInput(actor))
                     {
-                        const auto owner = actor.getCellRef().getFormKey();
+                        const auto owner = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
                         if (const auto* state = mOblivionCombat->findMeleeState(owner); state && state->mStrike)
                             mOblivionCombat->cancelMeleeStrike(state->mStrike->mActionId, owner);
                         mOblivionCombat->endBlocking(owner);

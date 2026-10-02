@@ -5784,3 +5784,24 @@ directly reviewed captures and sixteen semantic corruption controls pass in
 full-load regression behavior, not isolated cell eviction/re-entry. Original
 expected corpora and query fixture/save bytes remain unchanged. No stage
 closure or full negative AddItem/physical availability parity is claimed.
+
+### Checkpoint117 — Player physical removal/capture adapter
+
+Player removal reuses the native bounded snapshot transaction and canonical
+Player cancellation key, then captures actual post-observer metadata. Full
+world Player capture uses that same adapter and existing hotkey join. No new
+original rule or save schema: independent RemoveItem gate112 and original
+GetItemCount magnitudes remain the numerical sources, not proof of physical
+instance/callback ordering. Negative Player additions now share the explicit
+unsupported guard; complete signed-delta support is still open.
+
+Four new actual-World/Host cases, three genuine baseline failures, six focused
+passes, all796 normal/sanitized engine and242 fresh Python tests; fingerprint
+`da427be3e06ad6837a8fd943f9e9c477c52a7ff0a4840585cf960e3f68677b11`.
+Four ordinary activation/removal/query/save/fresh-load epochs, six directly
+reviewed captures and sixteen corruption controls pass in
+`S4/native-player-removeitem-final-acceptance-01`. Exactly one actually equipped
+Player IronCuirass disappears, requested999 clamps to1, saved query/local0 and
+all other metadata/native authority persist without replay. Own editable
+fixture changes only NPC SCRI/ZNAM and own bindings; no inventory outcomes
+injected. Partial order/windup/callback and wider stage gates remain open.

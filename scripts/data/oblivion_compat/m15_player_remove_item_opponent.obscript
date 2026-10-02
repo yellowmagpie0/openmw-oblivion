@@ -1,0 +1,6 @@
+scn M15PlayerRemoveItemOpponent
+short fighting
+Begin OnActivate
+    Player.RemoveItem IronCuirass 999
+    set fighting to Player.GetItemCount IronCuirass
+End
