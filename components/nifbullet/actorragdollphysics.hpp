@@ -18,6 +18,20 @@ namespace NifBullet
     osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position);
     osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position);
 
+    struct RagdollBoneWorldPose
+    {
+        std::uint32_t mNodeRecord;
+        osg::Matrixf mPose;
+    };
+
+    // Current bone world pose at the ordinary bhkRigidBody sync boundary.
+    // Input already includes actor/world placement and must be rigid.
+    // The single pose uses native lengths; the graph adapter returns world
+    // lengths for ActorRagdollPhysics with RagdollNativeLengthScale.
+    btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose);
+    std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
+        std::span<const RagdollBoneWorldPose> bones);
+
     // Original torque*dt binary32 store, then torque-unit conversion to the
     // caller's world units (mass is unchanged, lengths use lengthScale).
     btScalar ragdollFrictionImpulse(float torque, float frameSeconds, float lengthScale);

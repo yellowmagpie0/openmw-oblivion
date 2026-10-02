@@ -140,6 +140,7 @@ namespace NifBullet
             value.mNodeRecord = node->mRecordIndex;
             value.mBone = node->mName;
             value.mBoneBind = bind.at(node);
+            value.mUsesRigidBodyTransform = body->mRecordType == Nif::RC_bhkRigidBodyT;
             const auto& info = body->mInfo;
             value.mTranslation = xyz(info.mTranslation);
             value.mCenter = xyz(info.mCenter);

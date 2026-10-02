@@ -5,6 +5,7 @@
 #include <cmath>
 #include <type_traits>
 #include <unordered_set>
+#include <unordered_map>
 #include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
@@ -267,6 +268,49 @@ namespace NifBullet
             require(std::isfinite(position[axis]), "nonfinite native position");
             result[axis] = float(double(position[axis]) * double(RagdollNativeLengthScale));
             require(std::isfinite(result[axis]), "position exceeds world float domain");
+        }
+        return result;
+    }
+
+    btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose)
+    {
+        for (unsigned i = 0; i < 16; ++i)
+            require(std::isfinite(worldPose.ptr()[i]), "nonfinite bone world pose");
+        for (unsigned row = 0; row < 3; ++row)
+            require(worldPose(row, 3) == 0, "projective bone world pose");
+        require(worldPose(3, 3) == 1, "invalid affine bone world pose");
+        // OSG matrices multiply row vectors; Bullet matrices multiply columns.
+        const btMatrix3x3 basis(worldPose(0, 0), worldPose(1, 0), worldPose(2, 0),
+            worldPose(0, 1), worldPose(1, 1), worldPose(2, 1),
+            worldPose(0, 2), worldPose(1, 2), worldPose(2, 2));
+        validatePose(btTransform(basis, btVector3(0, 0, 0)));
+        const auto rotation = worldPose.getRotate();
+        btQuaternion quaternion(float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w()));
+        require(std::isfinite(quaternion.length2()) && quaternion.length2() > 0, "invalid bone rotation");
+        quaternion.normalize();
+        return btTransform(quaternion, vector(ragdollWorldToNativePosition(worldPose.getTrans())));
+    }
+
+    std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
+        std::span<const RagdollBoneWorldPose> bones)
+    {
+        require(!definition.mBodies.empty() && bones.size() == definition.mBodies.size(), "bone pose count");
+        std::unordered_map<std::uint32_t, const osg::Matrixf*> poses;
+        for (const auto& bone : bones)
+            require(poses.emplace(bone.mNodeRecord, &bone.mPose).second, "duplicate posed bone identity");
+        std::unordered_set<std::uint32_t> records, nodes;
+        std::vector<btTransform> result;
+        result.reserve(definition.mBodies.size());
+        for (const auto& body : definition.mBodies)
+        {
+            require(records.insert(body.mRecord).second && nodes.insert(body.mNodeRecord).second,
+                "duplicate body/bone identity");
+            require(!body.mUsesRigidBodyTransform, "unadmitted bhkRigidBodyT pose binding");
+            const auto found = poses.find(body.mNodeRecord);
+            require(found != poses.end(), "missing current bone world pose");
+            auto pose = ragdollNativePoseFromBoneWorld(*found->second);
+            pose.setOrigin(pose.getOrigin() * btScalar(RagdollNativeLengthScale));
+            result.push_back(pose);
         }
         return result;
     }

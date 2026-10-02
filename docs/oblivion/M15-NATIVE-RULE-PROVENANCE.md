@@ -6134,3 +6134,23 @@ The216-case full-return probe has collision flag40 and supplies only locking
 and final body-mutation boundaries. Corpus `44fcf26089e8162a3df3b51e8a14f16d4f55c3a77e43d30e612c0e49d21a34d9`.
 This is not actual body mutation, bhkRigidBodyT or reverse bone writeback.
 All live actor, scheduler, recovery and persistence gates remain open.
+
+
+### Checkpoint132: ordinary current-bone pose adapter
+
+Original89eae0 full-return captures now cover432 cases including stock flag1
+with actual native motion-vtableA9AE10 getter911780 returning6, alongside
+flag40/type2. Matrix-to-quaternion7150f0, position4529e0 and normalization4d6830
+execute; synchronization locks and final body mutation remain boundaries.
+Corpus `c694d414276d4349076b678a77013007cdb1525ddaa7f17f70b591e7066b48f8`; complete hashes and scope are in the
+checkpoint132 milestone entry. Normal and sanitizer pose adapters match exact
+position bits and sign-aligned quaternion components within the predeclared
+absolute2e-6 tolerance. Maximum error5.960464477539063e-08.
+
+The graph adapter uses current world bone poses by target record identity,
+without reapplying authored body info or bind offsets. It rejects unsupported
+bhkRigidBodyT binding and malformed matrices. Transformed stock bind-pose inputs
+admit all18 bodies/17 joints and run240 finite synthetic zero-gravity steps in
+both builds, then clean up. This is not rendered animated-bone writeback,
+actor/world scheduler ownership, original trajectory or normal-input gameplay.
+Failed initial API compilation and oracle02 tuple-unpacking are retained.

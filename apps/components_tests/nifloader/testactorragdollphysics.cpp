@@ -215,6 +215,56 @@ namespace
         EXPECT_NEAR(state[0].mPose.getRotation().w(), 1, 1e-6);
     }
 
+    TEST_F(ActorRagdollPhysicsTest, BindsCurrentWorldBonePoseInsteadOfAuthoredBodyInfo)
+    {
+        mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mTranslation = {1000, 2000, 3000};
+        mGraph.mBodies[0].mRotation = osg::Quat(0.7, osg::Vec3f(1, 0, 0));
+        mGraph.mBodies[0].mBoneBind = osg::Matrixf::translate(500, 600, 700);
+        const NifBullet::RagdollBoneWorldPose bone{8,
+            osg::Matrixf::rotate(0.5, osg::Vec3f(0, 0, 1)) * osg::Matrixf::translate(10, 20, 30)};
+        const auto poses = NifBullet::ragdollBodyWorldPoses(mGraph, std::span(&bone, 1));
+        ASSERT_EQ(poses.size(), 1);
+        const auto native = NifBullet::ragdollWorldToNativePosition({10, 20, 30});
+        for (int axis = 0; axis < 3; ++axis)
+            EXPECT_EQ(poses[0].getOrigin()[axis], btScalar(native[axis]) * NifBullet::RagdollNativeLengthScale);
+        EXPECT_NEAR(poses[0].getRotation().z(), std::sin(0.25), 2e-6);
+        EXPECT_NEAR(poses[0].getRotation().w(), std::cos(0.25), 2e-6);
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        const auto actual = actor.capture();
+        EXPECT_LT((actual[0].mPose.getOrigin() - poses[0].getOrigin()).length(), 1e-10);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RejectsIncompleteAmbiguousAndUnsupportedBoneBindings)
+    {
+        mGraph.mBodies[0].mNodeRecord = 8;
+        const NifBullet::RagdollBoneWorldPose bone{8, osg::Matrixf::identity()};
+        EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(mGraph, {}), std::invalid_argument);
+        auto wrong = bone;
+        wrong.mNodeRecord = 9;
+        EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(mGraph, std::span(&wrong, 1)), std::invalid_argument);
+        const std::array duplicates{bone, bone};
+        EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(mGraph, duplicates), std::invalid_argument);
+        mGraph.mBodies[0].mUsesRigidBodyTransform = true;
+        EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(mGraph, std::span(&bone, 1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST(RagdollBonePose, RejectsNonfiniteScaleShearReflectionAndProjectiveTransforms)
+    {
+        auto matrix = osg::Matrixf::identity();
+        matrix(3, 0) = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(NifBullet::ragdollNativePoseFromBoneWorld(matrix), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativePoseFromBoneWorld(osg::Matrixf::scale(2, 2, 2)), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativePoseFromBoneWorld(osg::Matrixf::scale(-1, 1, 1)), std::invalid_argument);
+        matrix.makeIdentity();
+        matrix(1, 0) = 0.2f;
+        EXPECT_THROW(NifBullet::ragdollNativePoseFromBoneWorld(matrix), std::invalid_argument);
+        matrix.makeIdentity();
+        matrix(0, 3) = 0.2f;
+        EXPECT_THROW(NifBullet::ragdollNativePoseFromBoneWorld(matrix), std::invalid_argument);
+    }
+
     TEST_F(ActorRagdollPhysicsTest, AngularDampingDoesNotConvertRadiansAsLengths)
     {
         NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7, mPoses, 1, -1);

@@ -12498,3 +12498,82 @@ relinked engine binaries. Documentation follows implementation checks.
 S4 and all other open M15 stages remain open. Next: use the independently
 established current-world-bone boundary in a pose adapter, then serial world
 scheduling, native reaction/controller ownership and saved continuation.
+
+
+### Checkpoint132 — current bone world poses for ordinary bodies (S4 open)
+
+Checkpoint131 is committed as `403ecf8a211717910c840e4d6f2f357f159e9a58`, tree
+`575d7a6144084129b977f0eccf781a8ff8736dde`. Its128-commit verified bundle is
+`S3/isolated-git-progress-109/m15-progress.bundle`, SHA256
+`7ede7b7262f61691569f979f489b17daae1ccad07fb533deb57bd66d68d6c5cc`.
+
+`ragdollNativePoseFromBoneWorld` now converts a rigid current world bone matrix
+to native body pose using the verified position stores and normalized rotation.
+`ragdollBodyWorldPoses` binds these poses by owned target-node record identity,
+returns world-unit body transforms in graph body order, and rejects missing,
+duplicate and malformed bindings before any world publication. Actor/world
+placement is already included in the supplied current bone world matrices;
+the adapter does not apply authored Havok-info transforms or bind offsets again.
+OSG row matrices are transposed at the Bullet column-matrix boundary. Normalized
+rotation is checked geometrically against original execution; exact original
+quaternion approximation bits are not claimed. Scale, shear, reflection and
+projective/nonfinite matrices are rejected rather than silently discarded.
+Uniform actor/shape scaling still needs its separate verified admission policy.
+
+The owned graph retains whether a body is bhkRigidBodyT. That record kind remains
+loadable, but this ordinary-body pose adapter rejects its unverified transformed-
+body binding explicitly. Tests verify native record identity retention, current
+pose overriding irrelevant authored info/bind matrices, actual body construction
+at the supplied pose, identity/count rejection and malformed matrices. The new
+API is initially absent in `S4/native-ragdoll-bone-pose-red-01`; its tests fail
+to compile before the implementation. No test was skipped or weakened.
+
+Original full-return world sync89eae0 is extended to actual motion vtableA9AE10
+whose real virtual+8 getter911780 returns6, with stock collision flag1. The
+previous flag40/sphere-motion-type2 fixture remains a separate admission branch.
+`S4/native-ragdoll-bone-world-pose-oracle-03` supplies432 cases over both
+branches, four axes, nine signed angles, three positions and both x87 words.
+Original rotation converter7150f0, translation converter4529e0 and quaternion
+normalizer4d6830 execute. Only locks43f2e0/43f300 and final bhkRigidBody
+virtual+A0 mutation are supplied boundaries. Native vtable dispatch, branch
+selection, outputs and full return conventions are verified in every case.
+Oracle02 retains a tuple-unpacking harness error before any case executed; its
+failed verification and original source are preserved. Oracle01's216 flag40
+cases and their first normal comparison also remain intact.
+
+Before comparison, the position requirement is frozen at exact binary32 bits;
+rotation requires quaternion geometric equivalence, allowing sign reversal,
+with absolute2e-6 per aligned component. Production normal and sanitizer
+`S4/native-ragdoll-bone-pose-comparison-{normal,sanitized}-03` each pass432
+cases, maximum component error5.960464477539063e-08,
+with four rejecting controls for wrong position bit, missing/duplicate row and
+malformed input. No tolerance was tuned. Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, corpus `c694d414276d4349076b678a77013007cdb1525ddaa7f17f70b591e7066b48f8`,
+generator `11182e6c5dbf64c93511d0033b9be021d2875331ecc02b4b49e9e57ae844fab0`. Comparator
+`15b002eac3e79d49bae124e65331ba694194bbda03ae0a072f896bf569d096d7` and C++ source
+`2216ed176b55f607bfa3ed7caaf0931bb5db1aa164b7e7a51887db99cf587114`. Corpora/disassembly stay outside Git.
+
+`S4/native-ragdoll-stock-posed-physics-{normal,sanitized}-01` loads the same
+independently fingerprinted stock human skeleton, SHA256
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`, builds current test bone matrices from its bind
+pose with actor rotation0.4 aboutZ and translation10/20/30, then uses the new
+adapter and original reverse length scale to create18 bodies/17 joints.
+Both configurations run240 actual zero-gravity steps after a pelvis impulse
+and native damping, keep all pose/velocity components finite, and clean up
+all registered bodies/joints. Maximum absolute position142.441
+is inside the predeclared coarse1,000-world-unit bound. These are transformed
+bind-pose inputs, not renderer animation data or original trajectory acceptance;
+actual game bone writeback, equipment eligibility, collision policy and
+native gravity/speedcaps still remain open. Smoke helpers and bounds are
+recorded in their reports; passing this check does not close gameplay gates.
+
+Full normal and sanitizer component suites pass2,104 cases each, matching
+complete inventories with no failures/skips, stable source fingerprint
+`889d29ec8920bece147ab87140591f5c44b261356e73b4826187a648ddbcf949`. ASan detect_leaks=0:halt_on_error=1 and UBSan
+halt_on_error=1:print_stacktrace=1; no leak coverage claimed. Engine/Python
+sources are unchanged; checkpoint130's797 engine cases in both builds and
+checkpoint124's243 Python cases are explicitly reused, not newly executed or
+relinked engine binaries. Documentation follows implementation verification.
+S4 and all other open M15 stages remain open. Next: connect the borrowed dynamics
+world to the existing serial physics scheduler, bind captured body poses back
+to rendered bones, then wire native reaction/controller state and persistence.

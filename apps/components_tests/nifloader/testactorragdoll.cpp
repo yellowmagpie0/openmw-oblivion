@@ -111,6 +111,17 @@ namespace
         EXPECT_EQ(graph.mBodies[1].mBone, "Bip01 Spine");
         EXPECT_EQ(graph.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(14, 25, 36));
     }
+    TEST_F(ActorRagdollTest, RetainsRigidBodyTransformRecordIdentityForPoseAdmission)
+    {
+        // Locate by the already owned graph rather than depending on fixtures'
+        // record ordering beyond its explicit identity.
+        const auto plain = NifBullet::loadActorRagdollDefinition(mFile);
+        auto& body = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[plain.mBodies[0].mRecord]);
+        EXPECT_FALSE(plain.mBodies[0].mUsesRigidBodyTransform);
+        body.mRecordType = Nif::RC_bhkRigidBodyT;
+        EXPECT_TRUE(NifBullet::loadActorRagdollDefinition(mFile).mBodies[0].mUsesRigidBodyTransform);
+    }
+
     TEST_F(ActorRagdollTest, RejectsUnsupportedFormat)
     {
         mFile.mVersion = Nif::NIFFile::VER_MW;

@@ -37,6 +37,7 @@ namespace NifBullet
         std::uint32_t mNodeRecord;
         std::string mBone;
         osg::Matrixf mBoneBind;
+        bool mUsesRigidBodyTransform = false;
         osg::Vec3f mTranslation;
         osg::Quat mRotation;
         osg::Vec3f mCenter;
