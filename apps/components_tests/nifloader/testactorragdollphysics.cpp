@@ -1,0 +1,197 @@
+#include <components/nifbullet/actorragdollphysics.hpp>
+
+#include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
+#include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+
+#include <gtest/gtest.h>
+
+#include <limits>
+
+namespace
+{
+    struct ActorRagdollPhysicsTest : ::testing::Test
+    {
+        btDefaultCollisionConfiguration mConfiguration;
+        btCollisionDispatcher mDispatcher{ &mConfiguration };
+        btDbvtBroadphase mBroadphase;
+        btSequentialImpulseConstraintSolver mSolver;
+        btDiscreteDynamicsWorld mWorld{ &mDispatcher, &mBroadphase, &mSolver, &mConfiguration };
+        NifBullet::ActorRagdollDefinition mGraph;
+        std::vector<btTransform> mPoses;
+
+        ActorRagdollPhysicsTest()
+        {
+            mWorld.setGravity(btVector3(0, 0, 0));
+            NifBullet::RagdollBodyDefinition body{};
+            body.mRecord = 12;
+            body.mBone = "Pelvis";
+            body.mMass = 2;
+            body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mLinearDamping = 2;
+            body.mAngularDamping = 2;
+            body.mFriction = 0.6f;
+            body.mRestitution = 0.2f;
+            body.mShape = NifBullet::RagdollSphere{0.5f};
+            mGraph.mBodies.push_back(body);
+            mPoses.push_back(btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 2)));
+        }
+        void addHinge()
+        {
+            auto body = mGraph.mBodies.front();
+            body.mRecord = 24;
+            body.mBone = "Spine";
+            mGraph.mBodies.push_back(body);
+            mPoses.push_back(btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 1)));
+            NifBullet::RagdollHingeJoint hinge{};
+            hinge.mA = {{0, 0, -0.5f}, {1, 0, 0}, {0, 1, 0}};
+            hinge.mB = {{0, 0, 0.5f}, {1, 0, 0}, {0, 1, 0}};
+            hinge.mMin = -0.2f;
+            hinge.mMax = 1.2f;
+            NifBullet::RagdollJointDefinition joint{};
+            joint.mRecord = 25;
+            joint.mBodyA = 0;
+            joint.mBodyB = 1;
+            joint.mJoint = hinge;
+            mGraph.mJoints.push_back(joint);
+        }
+    };
+
+    TEST_F(ActorRagdollPhysicsTest, OwnsLiveBodiesAndAppliesImpulseThroughDynamics)
+    {
+        {
+            NifBullet::ActorRagdollPhysics body(mGraph, mWorld, 1, mPoses, 1, -1);
+            ASSERT_EQ(mWorld.getNumCollisionObjects(), 1);
+            body.applyImpulse(0, btVector3(2, 0, 0), btVector3(0, 0, 2));
+            for (unsigned i = 0; i < 6; ++i)
+                mWorld.stepSimulation(btScalar(1) / 60, 0);
+            const auto state = body.capture();
+            ASSERT_EQ(state.size(), 1);
+            EXPECT_EQ(state[0].mRecord, 12);
+            // Factual Newtonian bridge expectation: impulse 2 / mass 2 =
+            // velocity 1, integrated for 0.1 seconds without gravity/damping.
+            EXPECT_NEAR(state[0].mPose.getOrigin().x(), 0.1, 1e-6);
+            EXPECT_NEAR(state[0].mLinearVelocity.x(), 1, 1e-6);
+        }
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+    TEST_F(ActorRagdollPhysicsTest, ConstrainsTwoBodiesAndConservesLinearMomentum)
+    {
+        addHinge();
+        {
+            NifBullet::ActorRagdollPhysics body(mGraph, mWorld, 1, mPoses, 1, -1);
+            ASSERT_EQ(mWorld.getNumCollisionObjects(), 2);
+            ASSERT_EQ(mWorld.getNumConstraints(), 1);
+            body.applyImpulse(1, btVector3(0, 2, 0), btVector3(0, 0, 1));
+            for (unsigned i = 0; i < 120; ++i)
+                mWorld.stepSimulation(btScalar(1) / 120, 0);
+            const auto states = body.capture();
+            ASSERT_EQ(states.size(), 2);
+            const auto pivotA = states[0].mPose * btVector3(0, 0, -0.5);
+            const auto pivotB = states[1].mPose * btVector3(0, 0, 0.5);
+            EXPECT_LT((pivotA - pivotB).length(), 0.01);
+            EXPECT_NEAR(2 * (states[0].mLinearVelocity.y() + states[1].mLinearVelocity.y()), 2, 1e-6);
+            EXPECT_GT(std::abs(states[1].mPose.getOrigin().y()), 0.01);
+        }
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RestoreValidatesAllBodiesBeforeChangingAny)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics body(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto states = body.capture();
+        states[0].mPose.setOrigin(btVector3(20, 30, 40));
+        states[1].mRecord = 999;
+        EXPECT_THROW(body.restore(states), std::invalid_argument);
+        EXPECT_EQ(body.capture()[0].mPose.getOrigin(), btVector3(0, 0, 2));
+        states[1].mRecord = 24;
+        states[1].mLinearVelocity.setX(std::numeric_limits<btScalar>::quiet_NaN());
+        EXPECT_THROW(body.restore(states), std::invalid_argument);
+        EXPECT_EQ(body.capture()[0].mPose.getOrigin(), btVector3(0, 0, 2));
+        states[1].mLinearVelocity.setX(1);
+        body.restore(states);
+        EXPECT_EQ(body.capture()[0].mPose.getOrigin(), btVector3(20, 30, 40));
+        EXPECT_EQ(body.capture()[1].mLinearVelocity.x(), 1);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PreservesShapePoseAcrossCenterAndPrincipalInertiaConversion)
+    {
+        mGraph.mBodies[0].mCenter = {0.1f, 0.2f, 0.3f};
+        mGraph.mBodies[0].mInertia = {2, 0.1f, 0, 0.1f, 3, 0, 0, 0, 4};
+        NifBullet::ActorRagdollPhysics body(mGraph, mWorld, 7, mPoses, 1, -1);
+        const auto state = body.capture();
+        EXPECT_LT((state[0].mPose.getOrigin() - mPoses[0].getOrigin()).length(), 1e-6);
+        EXPECT_NEAR(state[0].mPose.getRotation().w(), 1, 1e-6);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, AppliesNativeDampingAboveOneWithoutBulletClamping)
+    {
+        NifBullet::ActorRagdollPhysics body(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto states = body.capture();
+        states[0].mLinearVelocity = btVector3(10, 20, 30);
+        states[0].mAngularVelocity = btVector3(1, 2, 3);
+        body.restore(states);
+        body.applyNativeDamping(0.25f);
+        EXPECT_EQ(body.capture()[0].mLinearVelocity, btVector3(5, 10, 15));
+        EXPECT_EQ(body.capture()[0].mAngularVelocity, btVector3(0.5, 1, 1.5));
+        body.applyNativeDamping(1);
+        EXPECT_EQ(body.capture()[0].mLinearVelocity, btVector3(0, 0, 0));
+        EXPECT_THROW(body.applyNativeDamping(-1), std::invalid_argument);
+        EXPECT_THROW(body.applyImpulse(4, btVector3(0, 0, 0), btVector3(0, 0, 0)), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RejectsUnimplementedConstraintSemanticsBeforeWorldPublication)
+    {
+        addHinge();
+        mGraph.mJoints[0].mMalleable = true;
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+        mGraph.mJoints[0].mMalleable = false;
+        mGraph.mJoints[0].mJoint = NifBullet::RagdollConeJoint{};
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, FallsAndSettlesAgainstActualWorldCollision)
+    {
+        mWorld.setGravity(btVector3(0, 0, -10));
+        btBoxShape groundShape(btVector3(20, 20, 0.5));
+        btRigidBody::btRigidBodyConstructionInfo groundInfo(0, nullptr, &groundShape);
+        groundInfo.m_startWorldTransform = btTransform(btQuaternion::getIdentity(), btVector3(0, 0, -0.5));
+        btRigidBody ground(groundInfo);
+        mWorld.addRigidBody(&ground);
+        {
+            NifBullet::ActorRagdollPhysics body(mGraph, mWorld, 1, mPoses, 1, -1);
+            for (unsigned i = 0; i < 480; ++i)
+                mWorld.stepSimulation(btScalar(1) / 120, 0);
+            const auto state = body.capture();
+            ASSERT_EQ(state.size(), 1);
+            EXPECT_NEAR(state[0].mPose.getOrigin().z(), 0.5, 1e-3);
+            EXPECT_LT(state[0].mLinearVelocity.length(), 1e-3);
+        }
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 1);
+        mWorld.removeRigidBody(&ground);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RejectsInvalidGeometryAndIdentityBeforeWorldPublication)
+    {
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 0, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        mGraph.mBodies[0].mInertia[0] = -1;
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        mGraph.mBodies[0].mInertia[0] = 1;
+        addHinge();
+        mGraph.mBodies[1].mRecord = 12;
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+}

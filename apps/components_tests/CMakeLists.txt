@@ -31,6 +31,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     nifloader/testbulletnifloader.cpp
     nifloader/testactorragdoll.cpp
+    nifloader/testactorragdollphysics.cpp
 
     detournavigator/navigator.cpp
     detournavigator/settingsutils.cpp

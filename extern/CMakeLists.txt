@@ -44,7 +44,7 @@ if(NOT OPENMW_USE_SYSTEM_BULLET)
 
     # The order here is important to work around a bug in Bullet:
     # https://github.com/bulletphysics/bullet3/issues/3233
-    set(BULLET_LIBRARIES BulletCollision LinearMath PARENT_SCOPE)
+    set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath PARENT_SCOPE)
 endif()
 
 if(NOT OPENMW_USE_SYSTEM_MYGUI)

@@ -6047,3 +6047,20 @@ parser regression before correction. These are data-format claims only;
 original world-space initialization, damping, impulses, collision, animation
 binding and recovery parity remain open. Exact hashes, negative controls,
 retained failures and test inventories are in checkpoint125's milestone entry.
+
+
+### Checkpoint126: sphere-motion velocity damping
+
+Original finish-loaded constructor8e96a0 publishes sphere-motion vtablea979a8;
+virtual+10 resolves8e96c0. Full execution of that routine and its three real
+quaternion/transform callees yields 360 cases without boundary stubs and with
+verified stack cleanup. The comparison concerns only damping stores8e9775:
+`max(0, 1 - dt * coefficient)`, x87 factor store to binary32, SSE velocity
+products. The corpus distinguishes incoming linear velocity after the original
+SSE gravity-delta addition from the supplied fixture velocity. Original
+executable SHA256a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6,
+corpus SHA256e00f25fc4b01464d1f2bc4cd5f09ceaa85de35ebd7b388a7ef71a82d008df34e; complete scope/hashes/controls are in
+checkpoint126's milestone entry. Normal and sanitized live Bullet bodies match
+all damping cases. Neither final transforms retained by the oracle nor native
+velocity caps, gravity, alternate motion types, collision/constraint solver
+rows or actual ragdoll gameplay are accepted by this evidence alone.

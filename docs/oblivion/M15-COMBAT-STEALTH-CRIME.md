@@ -12082,3 +12082,91 @@ input knockdown/death acceptance. S2/S3 and all remaining S4–S14 gates retain
 their existing open status. Next: consume this graph in articulated physics,
 connect original reaction dispatch and controller cancellation, then exercise
 normal-input contact, ragdoll/recovery and fresh-process save continuation.
+
+
+### Checkpoint126 — live Bullet bodies, plain hinges and native damping (S4 open)
+
+Checkpoint125 is committed as `b68d23e0f2a41cfea7a9dcd108c99504f513f02f`, tree
+`63cae15c60910417be874e2cd0a25d9175118ff9`, with 122 isolated commits and
+verified bundle `S3/isolated-git-progress-103/m15-progress.bundle`, SHA256
+`cbce6e1c5501d1a2197972b98b4b29316f2305aa47fc7fe64f25668a497d3b73`.
+
+`components/nifbullet/actorragdollphysics.*` now owns live Bullet collision
+shapes, dynamic bodies and admitted plain hinge constraints in a borrowed
+world. It builds the complete admitted instance before publication and removes
+all registered constraints/bodies on destruction. Native sphere, two-radius
+capsule and convex-hull lengths and inertia convert once by the supplied scale.
+Center offsets and principal inertia frames are accounted for when binding
+shape poses, impulses and joint frames; capture returns the shape's world pose
+and center-of-mass velocities. Restore validates all identities, rigid poses
+and finite velocities before changing any body. Impulses wake the actual body.
+Body identity duplication, invalid scale/mass/inertia/pose and bad endpoints
+are diagnosed. BulletDynamics is now an explicit bundled/system dependency;
+the existing double-precision configuration is retained.
+
+Native cone rows, malleability and joint friction are **not implemented here**.
+Their graphs fail before any body is registered. In particular, this bridge
+cannot yet admit the complete stock human skeleton. It does not approximate
+native asymmetric ragdoll limits with a symmetric Bullet cone, or malleable
+constraints with rigid hinges. The existing game PhysicsSystem remains a
+collision-only world; actor/controller/renderer wiring, ordinary capsule
+handoff, owner/source-validated save state, sleep/recovery and actual gameplay
+remain future work. The bridge's state restore is not a new runtime save schema.
+
+Original `hkSphereMotion` finish-loaded constructor `8e96a0` establishes
+vtable `a979a8`; its virtual slot `+10` is `8e96c0`. The hash-identified
+original routine adds the supplied gravity velocity delta, then computes
+linear/angular damping factors as `max(0, 1 - dt * coefficient)` with x87
+intermediates and explicit binary32 stores, followed by SSE velocity products.
+The original full routine, including calls `889470`, `4d6830` and `8b1dd0`,
+executes and returns with verified `ret 8` cleanup in all 360 cases of
+`S4/native-ragdoll-damping-oracle-01`, under control words 027f/037f. No calls
+are stubbed. Comparisons deliberately cover the damping stores at `8e9775`;
+the corpus also retains final transforms but they are not compared/accepted
+as implementation output. Gravity/world composition, native speed caps,
+quaternion integration, other motion types and constraint/collision parity
+remain open. The implementation's damping method changes velocity only and
+leaves actual gravity/force composition and serial step ordering to its caller.
+It keeps Bullet's exponential damping at zero and admits native coefficients
+above one. The test world gravity is a declared synthetic physical fixture,
+not an inferred Oblivion gravity constant.
+
+Final normal and sanitizer evidence is `S4/native-ragdoll-physics-normal-01` and
+`S4/native-ragdoll-physics-sanitized-01`: 2,089 complete component cases (including 8 new
+`ActorRagdollPhysicsTest` cases), 797 complete engine cases, matching inventories,
+zero failures/skips; openmw/esmtool built. Tested source fingerprint
+`26b94378b7512ee92481706eb61e845f97956b077e9b547ac800e7a2e09aad6d` is unchanged throughout both runs. The commands use
+`run_checks.py --repo . --output FRESH --mode components --mode engine --jobs 3`,
+with `--build-dir build/m15-sanitize` and ASan `detect_leaks=0:halt_on_error=1`,
+UBSan `halt_on_error=1:print_stacktrace=1` for the second run. This is not leak
+coverage. Python/wire sources are unchanged; checkpoint124's 243 Python tests
+are reused explicitly, not claimed as a new run.
+
+The actual dynamics tests prove Newtonian impulse/mass motion, plain-hinge
+anchor retention and linear momentum conservation, center/principal-frame
+round trips, atomic invalid restore, native damping above one, refusal of
+unimplemented constraint semantics, and a newly falling body settling against
+an actual static ground body. They prove the Bullet bridge, not normal-input
+NPC knockdown. `S4/native-ragdoll-physics-red-01` compiled against the throwing
+constructor and failed the new actual dynamics assertion; `...green-01` passed
+the first six cases, with the final full run adding two more. No failed attempt
+was erased.
+
+Oracle executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Damping corpus SHA256 `e00f25fc4b01464d1f2bc4cd5f09ceaa85de35ebd7b388a7ef71a82d008df34e`, generator
+`cab91edc003a3b0589c19806064556285ee10eb38dff9a551e1ff393646d2a05`. Both normal and sanitizer actual-body comparisons,
+`S4/native-ragdoll-damping-comparison-{normal,sanitized}-01`, match 360 cases
+including signed zeros/subnormals and zero/saturating frame durations. Each
+rejects wrong-bit, missing-row, duplicate-row and malformed-input controls.
+Comparator SHA256 `bc2a6c2758528b2ae3a30fb935c6edb1223fa8ea63555593414a3886793abd98`; binaries
+`09bd06cb360652806029955e790b99153e219b5d23e86f15d330deb54a83580a` and
+`93882290bdfebaafcbf47611837de68f0cdfa78f83e3b3c048a7ce6c19dedc2d`. Actual CMake link commands supply each
+helper's dependencies and Bullet precision define. Proprietary probe data stays
+ignored. Documentation after these checks changes no implementation bytes.
+
+S4 remains in progress and all previous open S2/S3/S4–S14 gates remain open.
+Next: implement native cone/malleable/friction constraint semantics against
+independent original rows, then connect this ownership model to the existing
+physics scheduler, posed skeletons, native reaction/controller lifecycle and
+fresh-process continuation. There is no ragdoll gameplay acceptance yet.

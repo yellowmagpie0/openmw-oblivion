@@ -156,6 +156,7 @@ add_component_dir (nifosg
 add_component_dir (nifbullet
     bulletnifloader
     actorragdoll
+    actorragdollphysics
     )
 
 add_component_dir (toutf8
