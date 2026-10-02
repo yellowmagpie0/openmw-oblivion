@@ -10852,3 +10852,92 @@ appearance, full weapon grip, visible strike/reaction frames and audio remain
 open. Current live AddItem/RemoveItem/GetItemCount, exact cached metadata refresh,
 unloaded actor inventory hydration and broader S3/S4 acceptance still require
 work. S5-S14 remain open; full M15 is not complete.
+
+### Checkpoint 111 — live native item counts and safe ownership capture
+
+Native NPC/CREA GetItemCount reads physical ContainerStore stacks before entering
+saved-state lookup. A stale cache of99 no longer overrides live stacks totaling5.
+Queries on valid views without native resource authority do not create AV/life
+state. Aggregation uses defined unsigned arithmetic and reproduces the original
+int32-magnitude return, including aggregate INT_MIN and wrap boundaries, without
+C++ signed overflow. Player and unavailable-reference fallback adapters remain
+separate; full unloaded inventory hydration and cached count semantics are not
+closed by this change.
+
+Independent original `S4/native-getitemcount-oracle-02` executes1290 cases in both
+x87 words. The actual4F48F0 evaluator,4869C0 count helper and469CA0 base-list
+lookup execute; item eligibility, actor/base-container resolution and initialized
+container-change lookup are explicit boundary returns. Tests cover positive/
+negative base counts, change deltas, absent/matching/nonmatching/null list nodes,
+zero-base/zero-delta present-entry semantics, signed boundaries and ten unavailable
+item/actor/container branches. Corpus SHA256
+0150356c3579076f3b8c795cc652b5608652df6acb15e6d59ac2e9504a6d1894;
+original executable a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+This proves representation/evaluator behavior at declared boundaries, not live
+AddItem/RemoveItem, full actor eligibility or original command argument extraction.
+The earlier1280-case probe passes; a preliminary expanded probe's loader-string
+syntax error is retained before correction. No production rule generated these
+expectations.
+
+The first real query course returned3 correctly but failed frozen owner
+preservation: staged owner025200 became null on save. Save capture extracted a
+FormId pointer from the temporary returned by CellRef::getOwner, then dereferenced
+it after the temporary died. Both Player and NPC inventory capture now retain
+that RefId value throughout conversion. The same lifetime hazards in native AI
+door ownership and package base matching are corrected. No new AI policy or
+original numerical rule is introduced by the lifetime corrections.
+
+Four new integration cases cover live-vs-stale counts/metadata preservation,
+eight frozen original return boundaries without authority birth, native creature
+queries without authority birth, and real World capture of Player/NPC inventory
+owners through full binary serialization. The original stale-count regression
+returns99 instead of5; the ownership regression fails the old real Player capture
+with an invalid FormKey. Their red logs remain retained. Initial new-test builds
+caught two SCOPED_TRACE macros on one line; the first post-owner-fix fixture also
+needed a managed projected Player base with a native race key so full save
+validation could succeed. Validation and owner expectations were not weakened.
+All four focused cases then pass.
+
+Final `S3/native-actor-item-count-world-02` passes all777 engine and242 Python
+tests; `native-actor-item-count-world-sanitized-02` passes all777 engine tests.
+Unfiltered inventories match XML, zero failures/skips, stable tested fingerprint
+8e62b41c48bfba86308b73d068d6fbb0199e680c1bd4589770f8a81a7d1e226a.
+Instrumented tests use halting ASan/UBSan with leak detection disabled. Earlier
+776-test evidence predates ownership fixes and the fourth regression. Unchanged
+components retain checkpoint108 coverage.
+
+`S4/native-actor-item-count-restart-02` and
+`native-actor-item-count-runtime-sanitized-02` both pass ordinary Space query/F5/
+quit and a distinct fresh-process load/F5/quit without query replay. The staged
+save retains final110's equipped Rust count1/condition55.70000076293945 and adds
+one declared unequipped count2 stack at43.125, owner original NPC base025200.
+The query reports3 and stores exact short local3. Both saves preserve every
+inventory, owner, quantity, condition, equipment mask and draw view, and all
+native resources/life/action/RNG. Each lane rejects eight corrupted controls,
+including lost owner; all three required scenes per lane were directly inspected.
+Counts are established by command/save evidence, not inferred from screenshots.
+The image framing does not establish full grip or audio.
+
+Consolidated evidence is `S4/native-actor-item-count-final-acceptance-01`:
+four distinct processes, six required scene captures and sixteen rejected
+controls. Staged SHA256
+17a76123bbadcdc58e63320fc699c38b1e51092dd4c9e7eef3161a1fdbb359e9;
+generated M15ActorItemCountOpponent.esp
+ a4f49c7f57a0ec77ebb7b3ce032451d5996b2897b90244de6a76a8ddddcaaa22.
+Editable script SHA256
+2ffb32f2237b450175f427867951e3dcfefaf0e7b10ba45f4b4b406959f821d3.
+Normal executable c9236b793b23b2d4e3bbc657de19032edbd8e24e17afeafee3a357ad28597212;
+instrumented25d624e043cb67816d5bf5a04b07d05266941e7f5e28c2f34fae57d5ba18abd2.
+The native master hash and original NPC field preservation are checked by the
+existing fixture builder. Only declared style/script links change. Fork SCTX
+compilation is exercised; original compiled bytecode is not accepted here.
+
+The rejected `S4/native-actor-item-count-restart-01` retains two actual processes,
+query3, successful scene actions and the ownership mismatch. Its first required
+scene captures were inspected, but semantic rejection remains explicit. The
+corrected normal/instrumented courses reuse identical staged/plugin bytes and
+frozen owners; the failed course is not reclassified as passed. Extra startup
+samples precede input and are excluded from scene acceptance; every required
+capture keeps minimum entropy0.03. General first-capture causality, full grip/
+reaction/audio, live AddItem/RemoveItem, complete cache synchronization/hydration
+and wider S3/S4/S5-S14 acceptance remain open. Full M15 is not complete.

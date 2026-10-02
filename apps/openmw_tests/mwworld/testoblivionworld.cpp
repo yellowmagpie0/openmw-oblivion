@@ -226,6 +226,26 @@ namespace
         return key;
     }
 
+    MWWorld::Ptr addEquipmentCreature(NativeWorldFixture& fixture)
+    {
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        ESM4::Creature base{}; base.mId = {0x820, 0};
+        base.mFormKey = ESM::FormKey::content("headless.esm", 0x820); base.mAttackReach = 64;
+        base.mData.health = 19; base.mData.combat = 10;
+        base.mBaseConfig.tes4.levelOrOffset = 1; base.mBaseConfig.tes4.fatigue = 35;
+        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature placed{}; placed.mId = {0x920, 0};
+        placed.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        placed.mBaseObj = base.mId; placed.mBaseKey = base.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(placed, placed.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(placed, store.search<ESM4::Creature>(base.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell(); const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        world.getWorldModel().registerPtr(actor);
+        return actor;
+    }
+
     void installEquipmentInventory(NativeWorldFixture& fixture, const MWWorld::Ptr& actor,
         const std::vector<ESM4::RuntimeInventoryItem>& items)
     {
@@ -233,6 +253,166 @@ namespace
             fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), items);
         auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
         actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
+    }
+
+    TEST(OblivionWorldTest, NativeScriptItemCountReadsLiveStacksInsteadOfSavedInventory)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem first;
+        first.mBase = weapon; first.mCount = 2; first.mCondition = 43.125f;
+        ESM4::RuntimeInventoryItem second = first;
+        second.mCount = 3; second.mCondition = 99.125f;
+        second.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        installEquipmentInventory(fixture, actor, {first, second});
+        auto cached = captureNativeActorState(fixture, actor);
+        auto stale = first; stale.mCount = 99;
+        cached.mReferences.front().mInventory = {stale};
+        readNativeSnapshot(fixture, cached);
+        const auto authority = captureNativeActorState(fixture, actor).serializeBinary();
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
+        EXPECT_EQ(ObScript::asInteger(host.call("GetItemCount", {}, args, context, {})), 5);
+        const std::vector<ObScript::Value> absent{
+            ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x999), {}}};
+        EXPECT_EQ(ObScript::asInteger(host.call("GetItemCount", {}, absent, context, {})), 0);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), authority);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        ASSERT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 5);
+        auto it = inventory.begin();
+        ASSERT_NE(it, inventory.end());
+        EXPECT_EQ(it->getCellRef().getNativeItemCondition(), 43.125f);
+        ++it;
+        ASSERT_NE(it, inventory.end());
+        EXPECT_EQ(it->getCellRef().getNativeItemCondition(), 99.125f);
+        EXPECT_EQ(it->getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x800, 0}));
+    }
+
+    TEST(OblivionWorldTest, NativeScriptItemCountMatchesOriginalReturnBoundariesWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        const auto weapon = addEquipmentWeapon(fixture);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
+        // Frozen original GetItemCount rows: full evaluator/count/list path,
+        // native-getitemcount-oracle-02, both x87 precision words.
+        struct Row { int first; int second; std::int64_t expected; };
+        constexpr int max = std::numeric_limits<std::int32_t>::max();
+        const std::array rows{Row{0, 0, 0}, Row{1, 0, 1}, Row{3, 1, 4},
+            Row{999, 3, 1002}, Row{max, 0, max},
+            Row{max, 1, std::numeric_limits<std::int32_t>::min()},
+            Row{max, 3, 2147483646}, Row{max, max, 2}};
+        for (const auto& row : rows)
+        {
+            SCOPED_TRACE(row.first);
+            SCOPED_TRACE(row.second);
+            std::vector<ESM4::RuntimeInventoryItem> items;
+            for (const auto& [count, condition] : std::array{std::pair{row.first, 43.125f},
+                     std::pair{row.second, 99.125f}})
+                if (count != 0)
+                {
+                    ESM4::RuntimeInventoryItem item;
+                    item.mBase = weapon; item.mCount = count; item.mCondition = condition;
+                    items.push_back(item);
+                }
+            installEquipmentInventory(fixture, actor, items);
+            EXPECT_EQ(ObScript::asInteger(host.call("GetItemCount", {}, args, context, {})), row.expected);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+        }
+    }
+
+    TEST(OblivionWorldTest, NativeScriptItemCountUsesCreatureInventoryWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addEquipmentCreature(fixture);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = weapon; item.mCount = 4; item.mCondition = 67.125f;
+        installEquipmentInventory(fixture, actor, {item});
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
+        EXPECT_EQ(ObScript::asInteger(host.call("GetItemCount", {}, args, context, {})), 4);
+        auto& inventory = actor.getClass().getContainerStore(actor);
+        const auto entry = inventory.begin();
+        ASSERT_NE(entry, inventory.end());
+        EXPECT_EQ(entry->getCellRef().getCount(), 4);
+        EXPECT_EQ(entry->getCellRef().getNativeItemCondition(), 67.125f);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeWorldInventoryCapturePreservesPlayerAndActorOwnerKeys)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        auto& store = world.getStore();
+        ESM::Race race{}; race.blank(); race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+        store.getWritable<ESM::Race>().insertStatic(race);
+        ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+        cell.mCellFlags = ESM4::CELL_Interior; cell.mEditorId = "NativeOwnerCaptureCell";
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        // setupPlayer's fallback uses a string race. Give this capture fixture
+        // a managed projected base with a native race key, as a real loaded
+        // Oblivion player has; save validation must remain enabled.
+        auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        playerBase.mId = ESM::RefId::stringRefId("NativeOwnerCapturePlayer");
+        playerBase.mRace = race.mId;
+        store.insertStatic(playerBase);
+        world.getPlayerPtr().get<ESM::NPC>()->mBase = store.get<ESM::NPC>().find(playerBase.mId);
+        auto& residentCell = world.getWorldModel().getCell(cell.mId);
+        world.getPlayer().setCell(&residentCell);
+        const auto draft = addNativeNpc(fixture, 0x900);
+        const auto actor = draft.getCell()->moveTo(draft, &residentCell);
+        world.getWorldModel().registerPtr(actor);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{10, 0, 0, 0}};
+        for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
+        auto& combat = *world.getOblivionCombatService();
+        combat.publishPlayerValues(world.getPlayer(), values, settings);
+        ESM4::RuntimeActorLife life;
+        life.mActor = values.mActor; life.mBase = values.mBase;
+        combat.publishPlayerLife(world.getPlayer(), life);
+        const auto weapon = addEquipmentWeapon(fixture);
+        const auto owner = ESM::FormKey::content("headless.esm", 0x800);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = weapon; item.mCount = 2; item.mCondition = 51.125f; item.mOwner = owner;
+        installEquipmentInventory(fixture, world.getPlayerPtr(), {item});
+        item.mCount = 3; item.mCondition = 83.125f;
+        installEquipmentInventory(fixture, actor, {item});
+        const auto captured = world.captureOblivionRuntimeState();
+        ASSERT_EQ(captured.mPlayer.mInventory.size(), 1);
+        EXPECT_EQ(captured.mPlayer.mInventory[0].mOwner, owner);
+        EXPECT_EQ(captured.mPlayer.mInventory[0].mCount, 2);
+        EXPECT_EQ(captured.mPlayer.mInventory[0].mCondition, 51.125);
+        ASSERT_EQ(captured.mReferences.size(), 1);
+        ASSERT_EQ(captured.mReferences[0].mInventory.size(), 1);
+        EXPECT_EQ(captured.mReferences[0].mInventory[0].mOwner, owner);
+        EXPECT_EQ(captured.mReferences[0].mInventory[0].mCount, 3);
+        EXPECT_EQ(captured.mReferences[0].mInventory[0].mCondition, 83.125);
+        EXPECT_EQ(combat.findActorValues(actor.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(combat.findActorLife(actor.getCellRef().getFormKey()), nullptr);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(captured.serializeBinary());
+        EXPECT_EQ(decoded.mPlayer.mInventory[0].mOwner, owner);
+        EXPECT_EQ(decoded.mReferences[0].mInventory[0].mOwner, owner);
     }
 
     TEST(OblivionWorldTest, NativeScriptEquipmentUsesLiveInstancesAndPreservesConditionOwnership)
@@ -440,31 +620,19 @@ namespace
 
     TEST(OblivionWorldTest, NativeCreatureEquipmentDoesNotCreateResourceAuthority)
     {
-        NativeWorldFixture fixture; auto& world = fixture.mWorld; auto& store = world.getStore();
-        ESM4::Creature base{}; base.mId = {0x820, 0};
-        base.mFormKey = ESM::FormKey::content("headless.esm", 0x820); base.mAttackReach = 64;
-        base.mData.health = 19; base.mData.combat = 10;
-        base.mBaseConfig.tes4.levelOrOffset = 1; base.mBaseConfig.tes4.fatigue = 35;
-        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
-        MWClass::ESM4Creature::registerSelf();
-        ESM4::ActorCreature placed{}; placed.mId = {0x920, 0};
-        placed.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
-        placed.mBaseObj = base.mId; placed.mBaseKey = base.mFormKey;
-        store.getWritable<ESM4::ActorCreature>().insertStatic(placed, placed.mFormKey);
-        MWWorld::LiveCellRef<ESM4::Creature> live(placed, store.search<ESM4::Creature>(base.mFormKey));
-        auto& cell = world.getWorldModel().getDraftCell(); const MWWorld::Ptr actor(cell.insert(&live), &cell);
-        world.getWorldModel().registerPtr(actor);
+        NativeWorldFixture fixture; auto& world = fixture.mWorld;
+        const auto actor = addEquipmentCreature(fixture);
         const auto weapon = addEquipmentWeapon(fixture);
         ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1; item.mCondition = 43.125;
         installEquipmentInventory(fixture, actor, {item});
         ASSERT_TRUE(world.oblivionEquipActorItem(actor, weapon, true));
         EXPECT_TRUE(world.oblivionActorItemEquipped(actor, weapon));
         ASSERT_TRUE(world.oblivionReferenceEquipment(actor));
-        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(placed.mFormKey), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
         EXPECT_FALSE(world.captureOblivionActorDrawState(actor));
         EXPECT_TRUE(world.oblivionEquipActorItem(actor, weapon, false));
         EXPECT_FALSE(world.oblivionActorItemEquipped(actor, weapon));
-        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(placed.mFormKey), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
     }
 
     TEST(OblivionWorldTest, NativeNpcDrawRestoresThroughRecordAndLazyClassWithoutCombatDeltas)

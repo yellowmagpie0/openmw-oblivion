@@ -1407,7 +1407,8 @@ namespace MWMechanics
         const osg::Vec3f origin = actor.getRefData().getPosition().asVec3();
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         const auto baseOf = [&resolver](const MWWorld::ConstPtr& candidate) {
-            const ESM::FormId* id = candidate.getCellRef().getRefId().getIf<ESM::FormId>();
+            const ESM::RefId baseId = candidate.getCellRef().getRefId();
+            const ESM::FormId* id = baseId.getIf<ESM::FormId>();
             return id == nullptr ? ESM::FormKey{} : resolver.toFormKey(*id);
         };
         const auto matches = [&](const MWWorld::ConstPtr& candidate) {
@@ -4028,7 +4029,8 @@ namespace MWMechanics
             if (!door.getCellRef().isLocked())
                 return true;
             key = door.getCellRef().getKey();
-            if (const ESM::FormId* id = door.getCellRef().getOwner().getIf<ESM::FormId>())
+            const ESM::RefId doorOwner = door.getCellRef().getOwner();
+            if (const ESM::FormId* id = doorOwner.getIf<ESM::FormId>())
                 owner = resolver.toFormKey(*id);
         }
         bool ownsConnectedCell = false;

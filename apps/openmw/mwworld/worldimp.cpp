@@ -986,7 +986,8 @@ namespace MWWorld
                 if (liveInventory.isEquipped(itemPtr))
                     item.mEquippedSlots = getNativeEquippedSlots(liveInventory, itemPtr, *definition);
             }
-            if (const ESM::FormId* owner = itemPtr.getCellRef().getOwner().getIf<ESM::FormId>())
+            const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
+            if (const ESM::FormId* owner = itemOwner.getIf<ESM::FormId>())
                 item.mOwner = resolver.toFormKey(*owner);
             if (const auto previous = previousHotkeys.find(item.mBase); previous != previousHotkeys.end())
             {
@@ -1077,7 +1078,8 @@ namespace MWWorld
                     if (inventory.isEquipped(itemPtr))
                         item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
                 }
-                if (const ESM::FormId* ownerId = itemPtr.getCellRef().getOwner().getIf<ESM::FormId>())
+                const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
+                if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
                 ESM4::addInventoryItem(result, std::move(item));
             }

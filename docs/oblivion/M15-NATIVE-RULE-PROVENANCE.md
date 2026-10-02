@@ -5616,3 +5616,43 @@ M15WeaponChangeOpponent.esp
 b4f47b07e52de1cf289bfedb1c99b8754ad293b32404af8c4bd664902e57ebd4.
 The winning record audit pins original Oblivion.esm SHA256
 a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70.
+
+
+Checkpoint111 independently executes original GetItemCount4F48F0/count4869C0/
+base-list lookup469CA0 in1290 cases, both x87 words. Corpus SHA256
+0150356c3579076f3b8c795cc652b5608652df6acb15e6d59ac2e9504a6d1894;
+original executable a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Eligibility, base-container resolution and initialized container-change lookup
+are declared boundary returns. Original base magnitude plus signed delta,
+present zero/zero entry yielding1, first matching entry, int32 wrap/magnitude
+and unavailable item/actor/container exits execute. This is representation/
+evaluator evidence, not full original command argument extraction, live item
+mutation or arbitrary overflow-domain acceptance. Eight frozen return cases
+compare the live physical query with original results, including aggregate
+INT_MIN and wrap, without native authority birth. NPC and CREA queries now
+ignore stale runtime counts when live physical views exist; Player/unavailable
+fallback counting and full hydration remain separate adapters.
+
+The actual ordinary query course uncovered a distinct save-capture lifetime bug:
+a FormId pointer into getOwner's temporary RefId outlived that temporary. It
+lost owner025200 at F5 despite the correct count3. World Player/NPC capture now
+keeps the owner value alive; matching native AI door/base lookup temporaries
+are also retained. No new original AI/numerical rule is inferred. The new real
+World ownership regression fails the old Player path before correction, then
+preserves both Player/NPC owners through full serialization. Four new cases,
+full777-test normal/instrumented engine inventories and242 Python tests pass.
+
+Corrected normal/instrumented ordinary query/save/distinct fresh-load courses
+preserve exact item metadata, draw, resources/life/action/RNG and short local3,
+with no query replay. Both reuse identical frozen stages/plugins from the failed
+owner-losing setup; sixteen semantic corruption controls include owner loss.
+Six required captures were directly inspected at unchanged entropy0.03; extra
+startup samples are excluded. Editable fixture script SHA256
+2ffb32f2237b450175f427867951e3dcfefaf0e7b10ba45f4b4b406959f821d3;
+generated plugin a4f49c7f57a0ec77ebb7b3ce032451d5996b2897b90244de6a76a8ddddcaaa22.
+The declared extra physical stack/style/script binding is setup, not injected
+query output. Native master fields are preserved by the hash-pinned builder;
+SCTX fork compilation does not prove original-game bytecode acceptance.
+Rejected runtime ownership, red count/owner, trace-macro compilation, synthetic
+Player race validation and probe-loader syntax attempts remain retained. Wider
+M15 inventory mutation/cache/hydration and stage gates remain open.
