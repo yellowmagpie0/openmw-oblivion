@@ -10,6 +10,26 @@
 
 namespace ESM4
 {
+    struct WeaponSwishInput
+    {
+        float mWeight;
+        float mSpeed;
+    };
+    // Original Audio INI defaults, not GMST values. Both native policies
+    // remain explicit inputs; importing a user's Oblivion.ini is separate.
+    struct WeaponSwishSettings
+    {
+        bool mUseSpeed = true;
+        float mMediumWeightMinimum = 8.f;
+        float mLargeWeightMinimum = 25.f;
+        float mMediumSpeedMaximum = 1.1f;
+        float mLargeSpeedMaximum = .95f;
+    };
+    // Null weapon selects the unarmed SOUN without reading weapon/settings.
+    // Equality at either threshold selects Large in both original policies.
+    std::string_view nativeMeleeSwishSound(std::optional<WeaponSwishInput> weapon,
+        const WeaponSwishSettings& settings = {});
+
     enum class CombatMastery { Novice, Apprentice, Journeyman, Expert, Master };
     struct CombatMasterySettings
     {

@@ -39,6 +39,34 @@ namespace ESM4
         }
     }
 
+    std::string_view nativeMeleeSwishSound(std::optional<WeaponSwishInput> weapon,
+        const WeaponSwishSettings& settings)
+    {
+        if (!weapon)
+            return "WPNSwishHand";
+        if (settings.mUseSpeed)
+        {
+            nonnegative(weapon->mSpeed);
+            finite(settings.mMediumSpeedMaximum);
+            finite(settings.mLargeSpeedMaximum);
+            if (weapon->mSpeed > settings.mMediumSpeedMaximum)
+                return "WPNSwishSmall";
+            if (weapon->mSpeed < settings.mMediumSpeedMaximum && weapon->mSpeed > settings.mLargeSpeedMaximum)
+                return "WPNSwishMedium";
+        }
+        else
+        {
+            nonnegative(weapon->mWeight);
+            finite(settings.mMediumWeightMinimum);
+            finite(settings.mLargeWeightMinimum);
+            if (weapon->mWeight < settings.mMediumWeightMinimum)
+                return "WPNSwishSmall";
+            if (weapon->mWeight > settings.mMediumWeightMinimum && weapon->mWeight < settings.mLargeWeightMinimum)
+                return "WPNSwishMedium";
+        }
+        return "WPNSwishLarge";
+    }
+
     bool nativeAttackAirborne(std::optional<std::uint8_t> animationGroup,
         std::optional<std::uint32_t> characterState)
     {

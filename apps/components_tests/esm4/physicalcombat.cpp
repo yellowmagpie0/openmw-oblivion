@@ -2872,3 +2872,69 @@ TEST(ESM4PhysicalCombat, EquippedArmorEntryRoundsOriginalFormulaBeforeAggregatio
     EXPECT_THROW(ESM4::nativeEquippedArmorRating({65535, 100, 50, 1e9f}, settings, installed), std::invalid_argument);
     EXPECT_THROW(ESM4::nativeEquippedArmorRating({100, 0, 50, -1}, settings, installed), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeWeaponSwishMatchesFrozenOriginalThresholdBranches)
+{
+    struct Row { std::uint32_t weight, speed; bool useSpeed; std::string_view expected; };
+    // Frozen original6AF9DC..6AFAC0 and403C00, both x87 words.
+    // S4/native-stock-melee-sound-audit-03: no game-function stubs.
+    for (const auto& row : {
+        Row{0x00000000u, 0x00000000u, false, "WPNSwishSmall"},
+        Row{0x00000000u, 0x00000000u, true, "WPNSwishLarge"},
+        Row{0x00000000u, 0x3f000000u, true, "WPNSwishLarge"},
+        Row{0x00000000u, 0x3f733332u, true, "WPNSwishLarge"},
+        Row{0x00000000u, 0x3f733333u, true, "WPNSwishLarge"},
+        Row{0x00000000u, 0x3f733334u, true, "WPNSwishMedium"},
+        Row{0x00000000u, 0x3f8cccccu, true, "WPNSwishMedium"},
+        Row{0x00000000u, 0x3f8ccccdu, true, "WPNSwishLarge"},
+        Row{0x00000000u, 0x3f8cccceu, true, "WPNSwishSmall"},
+        Row{0x00000000u, 0x40000000u, true, "WPNSwishSmall"},
+        Row{0x00000000u, 0x42c80000u, true, "WPNSwishSmall"},
+        Row{0x00000000u, 0x7f7fffffu, true, "WPNSwishSmall"},
+        Row{0x3f800000u, 0x00000000u, false, "WPNSwishSmall"},
+        Row{0x40ffffffu, 0x00000000u, false, "WPNSwishSmall"},
+        Row{0x41000000u, 0x00000000u, false, "WPNSwishLarge"},
+        Row{0x41000001u, 0x00000000u, false, "WPNSwishMedium"},
+        Row{0x41c7ffffu, 0x00000000u, false, "WPNSwishMedium"},
+        Row{0x41c80000u, 0x00000000u, false, "WPNSwishLarge"},
+        Row{0x41c80001u, 0x00000000u, false, "WPNSwishLarge"},
+        Row{0x42c80000u, 0x00000000u, false, "WPNSwishLarge"},
+        Row{0x7f7fffffu, 0x00000000u, false, "WPNSwishLarge"},
+    })
+    {
+        SCOPED_TRACE(::testing::Message() << row.weight << '/' << row.speed << '/' << row.useSpeed);
+        ESM4::WeaponSwishSettings settings;
+        settings.mUseSpeed = row.useSpeed;
+        EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{
+            std::bit_cast<float>(row.weight), std::bit_cast<float>(row.speed)}, settings), row.expected);
+    }
+    const ESM4::WeaponSwishSettings defaults;
+    EXPECT_TRUE(defaults.mUseSpeed);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(defaults.mMediumSpeedMaximum), 0x3f8ccccdu);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(defaults.mLargeSpeedMaximum), 0x3f733333u);
+    EXPECT_EQ(defaults.mMediumWeightMinimum, 8);
+    EXPECT_EQ(defaults.mLargeWeightMinimum, 25);
+}
+
+TEST(ESM4PhysicalCombat, NativeWeaponSwishPreservesNullAndPolicyIsolation)
+{
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    ESM4::WeaponSwishSettings settings{true, nan, nan, .75f, .5f};
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(std::nullopt, {true,nan,nan,nan,nan}), "WPNSwishHand");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{nan, .8f}, settings), "WPNSwishSmall");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{nan, .75f}, settings), "WPNSwishLarge");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{nan, .6f}, settings), "WPNSwishMedium");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{nan, .5f}, settings), "WPNSwishLarge");
+    settings = {false, 3.5f, 12.25f, nan, nan};
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{3, nan}, settings), "WPNSwishSmall");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{3.5f, nan}, settings), "WPNSwishLarge");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{4, nan}, settings), "WPNSwishMedium");
+    EXPECT_EQ(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{12.25f, nan}, settings), "WPNSwishLarge");
+    EXPECT_THROW(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{nan, 1}, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{-1, 1}, settings), std::invalid_argument);
+    settings = {};
+    EXPECT_THROW(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{1, nan}, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{1, -1}, settings), std::invalid_argument);
+    settings.mMediumSpeedMaximum = nan;
+    EXPECT_THROW(ESM4::nativeMeleeSwishSound(ESM4::WeaponSwishInput{1, 1}, settings), std::invalid_argument);
+}

@@ -11485,3 +11485,69 @@ S4–S14 gates remain open. Next bounded combat integration establishes original
 swish selection/timing and connects actual stock melee sound through M10;
 stock first/third-person onehand/hand-to-hand animation keys cannot themselves
 supply those sounds.
+
+### Checkpoint118 — independently verified stock melee swish selection
+
+`ESM4::nativeMeleeSwishSound` returns the original SOUN editor ID for nullable
+weapon, speed and weight policies. Null weapon is WPNSwishHand and reads no
+weapon/config data. Speed greater than the medium maximum selects Small;
+strictly between large/medium maxima selects Medium; equality at either
+threshold selects Large. Weight below the medium minimum selects Small;
+strictly between minima selects Medium; equality or above the large minimum
+selects Large. Only the selected scalar/settings are read and validated.
+Negative/nonfinite selected weapon inputs and nonfinite selected thresholds
+are explicitly outside the helper's supported domain. Inactive policy fields
+and null-weapon fields remain irrelevant.
+
+These are Audio INI defaults, not GMSTs. Hash-identified original fields
+B162CC/D4/DC/E4/EC decode medium weight8, large weight25, medium speed float1.1,
+large speed float.95 and bUseSpeedForWeaponSwish=true. The pure settings type
+keeps both policies explicit; no user Oblivion.ini import or runtime dispatch
+is claimed. Original SOUN winner metadata independently identifies all four
+WPNSwishHand/Small/Medium/Large records and their native sound directories.
+
+Four independently extracted/hash-recorded stock first/third-person onehand
+right and hand-to-hand left KFs have only start, Hit, a:L/a:R and end keys,
+with no sound key. Audit01 accidentally used a common output basename for two
+views and was not accepted as four-file evidence. Audit02/03 preserve separate
+view directories, hashes and independently decoded length-prefixed text keys.
+Original string references locate dispatcher6AF880 and selection6AF9DC..6AFAC0;
+403C00's actual setting getter executes too. Existing weapon/process/RTTI
+resolution and hardware sound allocation/playback are declared boundaries.
+Caller traces include nullable-target swish dispatch; complete gameplay event
+timing is not established by this narrow selector.
+
+The first independent instruction prediction incorrectly treated speed equal
+to float1.1 as Small; the original selected Large. Audit02 retains the failing
+script/log/report before any production selector existed. Corrected audit03
+passes1936 original cases: unarmed, both policies, adjacent threshold floats,
+maximum finite inputs, custom/equal thresholds and both x87 words, with no
+game-function stubs in the selection slice. Corpus
+`5bf5ebec321adebf3635998ebd7c13618567777d044c64a5bb18ba89035e172e`.
+
+Two new component cases genuinely fail against an unimplemented Hand-only
+stub, then pass:21 compact frozen rows, defaults, null/inactive-field isolation,
+custom thresholds and invalid selected domains. The actual production C++
+compares all1936 frozen original rows in normal and ASan/UBSan binaries, exact.
+`S4/native-melee-swish-rule-comparison-01` rejects wrong original sound, missing
+case and malformed input. Counts are executed profiles, not claimed unique
+input vectors. Reports hash production source/header, independent corpus,
+expected table, comparison source and binaries. Proprietary KFs/executable
+instructions and bulk corpora remain ignored evidence.
+
+`S3/native-melee-swish-components-01` and
+`native-melee-swish-components-sanitized-01` pass all2060 component tests, exact
+unfiltered inventories/XML and zero failures/skips. Before/after fingerprint
+`11f4d69f9c65374ee7188100ff118a52412e5a1e82397cb53c89e211df722cbe`.
+Two focused cases pass after genuine red log/XML in `/tmp/m15_swing118_red01.*`.
+Sanitizers halt on errors with leak detection disabled. Existing missing-field
+and dangling-else warnings remain in build logs. Engine796/Python242 and runtime
+removal evidence from117 are earlier evidence, not reruns at this unused-helper
+fingerprint. Consolidated proof: `S4/native-melee-swish-rule-final-acceptance-01`.
+
+No stage closes. Next bounded integration wires stock missed-melee swing sound
+into the production controller/contact path through M10 native SOUN lookup,
+records actual PCM against independently extracted stock assets, and proves
+once-per-contact/restart behavior. Hit/block sounds, reactions, full original
+game audible comparison, user INI import, spatial/cap policy and S4–S14 remain
+open.

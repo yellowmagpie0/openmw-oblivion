@@ -5805,3 +5805,28 @@ Player IronCuirass disappears, requested999 clamps to1, saved query/local0 and
 all other metadata/native authority persist without replay. Own editable
 fixture changes only NPC SCRI/ZNAM and own bindings; no inventory outcomes
 injected. Partial order/windup/callback and wider stage gates remain open.
+
+### Checkpoint118 — original stock swish size selection
+
+Pinned1.2.0416 original6AF9DC..6AFAC0 and real403C00 setting getter execute
+without game-function stubs for1936 cases in both x87 words. Nullable winning
+weapon and raw weight+7C/speed+94 are fixtures; process/RTTI/instance lookup,
+spatial/cap checks, events, sound lookup/allocation/playback remain outside.
+Native Audio INI B162CC/D4/DC/E4/EC defaults are weights8/25, speeds float1.1/
+float.95 and useSpeed=true, not GMST values. Equality at either threshold
+selects WPNSwishLarge; null weapon selects Hand and reads no selected settings.
+An initial independent speed-equality prediction of Small failed before
+production existed; audit02 retains it. Correct audit03 corpus
+`5bf5ebec321adebf3635998ebd7c13618567777d044c64a5bb18ba89035e172e`.
+Four hash-recorded stock first/third-person onehand/hand-to-hand KFs have no
+sound keys; initial common-basename extraction was diagnostic only.
+
+Actual production nativeMeleeSwishSound matches all1936 symbolic outputs in
+normal and ASan/UBSan comparisons; three corruption controls pass. Two new
+component cases fail against a Hand-only stub, then pass. All2060 component
+tests pass in each unfiltered normal/sanitized suite at fingerprint
+`11f4d69f9c65374ee7188100ff118a52412e5a1e82397cb53c89e211df722cbe`.
+Evidence:`S4/native-stock-melee-sound-audit-03`,
+`native-melee-swish-rule-comparison-01`,
+`native-melee-swish-rule-final-acceptance-01`. No runtime stock sound, INI
+import, audible original-game, reaction or M15 stage closure is inferred.
