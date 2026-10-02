@@ -292,6 +292,7 @@ namespace MWWorld
         int oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item);
         bool oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip);
         bool oblivionEquipActorItem(const Ptr& actor, const ESM::FormKey& key, bool equip);
+        int oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
         int oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
         std::vector<ESM4::RuntimeInventoryItem> captureOblivionActorInventory(const Ptr& actor) const;
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;

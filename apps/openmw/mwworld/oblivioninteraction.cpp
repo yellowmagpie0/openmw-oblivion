@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm/formkey.hpp>
@@ -313,6 +314,42 @@ namespace MWWorld
                 && inventory.isEquipped(*it))
                 return true;
         return false;
+    }
+
+    int World::oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor)
+            || key.isNull() || count <= 0)
+            return 0;
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
+        if (!id)
+            return 0;
+        const auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id));
+        if (!definition)
+            return 0;
+        const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        std::uint32_t existing = 0;
+        const auto capacity = static_cast<std::uint32_t>(std::numeric_limits<int>::max() - count);
+        for (auto it = inventory.begin(); it != inventory.end(); ++it)
+            if (it->getCellRef().getRefId() == shared)
+            {
+                const std::int32_t raw = it->getCellRef().getCount(false);
+                const std::uint32_t quantity = raw < 0 ? 0u - static_cast<std::uint32_t>(raw)
+                                                     : static_cast<std::uint32_t>(raw);
+                if (quantity > capacity - existing)
+                    throw std::invalid_argument("Native AddItem exceeds the supported physical int32 quantity");
+                existing += quantity;
+            }
+        ManualRef source(mStore, shared, count);
+        if (definition->mMaxCondition >= 0)
+            source.getPtr().getCellRef().setNativeItemCondition(static_cast<float>(definition->mMaxCondition));
+        if (definition->mMaxCharge >= 0.f)
+            source.getPtr().getCellRef().setEnchantmentCharge(definition->mMaxCharge);
+        if (definition->mMaxUsageTime >= 0.f)
+            source.getPtr().getClass().setRemainingUsageTime(source.getPtr(), definition->mMaxUsageTime);
+        inventory.add(source.getPtr(), count, false);
+        return count;
     }
 
     int World::oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count)

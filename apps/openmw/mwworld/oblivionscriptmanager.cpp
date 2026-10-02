@@ -1414,6 +1414,15 @@ namespace MWWorld
             const auto item = keyFromValue(argument(itemArg));
             if (!item)
                 return std::int64_t(0);
+            if (mWorld.getGameProfile() == ESM::GameProfile::Oblivion && name != "getitemcount")
+            {
+                const auto count = boundedCount(argument(itemArg + 1));
+                if (count == 0 || (name == "removeitem" && count < 0))
+                {
+                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize() + " count=0");
+                    return std::int64_t(0);
+                }
+            }
             if (owner == ESM::FormKey::dynamic("player", 1))
             {
                 if (name == "getitemcount")
@@ -1438,6 +1447,28 @@ namespace MWWorld
                     trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
                         + " count=" + std::to_string(count));
                     return count;
+                }
+            }
+            if (name == "additem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                const Ptr actor = ptrFor(owner);
+                if (nativeInventoryActor(actor))
+                {
+                    const auto count = boundedCount(argument(itemArg + 1));
+                    if (count < 0)
+                        throw std::invalid_argument("Native AddItem negative-count delta semantics are unsupported");
+                    const int added = mWorld.oblivionAddActorItem(actor, *item, count);
+                    if (added > 0)
+                    {
+                        auto inventory = mWorld.captureOblivionActorInventory(actor);
+                        if (auto* current = referenceState(owner))
+                            current->mInventory = std::move(inventory);
+                    }
+                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
+                        + " count=" + std::to_string(added));
+                    if (added > 0)
+                        dispatchBaseEvent(*item, "onadd", owner);
+                    return std::int64_t(0);
                 }
             }
             if (name == "removeitem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)

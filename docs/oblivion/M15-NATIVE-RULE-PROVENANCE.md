@@ -5684,3 +5684,31 @@ selection/partial-removal order, full original command resolution/mutation/
 callbacks, active-windup removal, AddItem, Player/unavailable normalization,
 and the wider M15 gates remain open. See the milestone checkpoint112 for
 all identities, failures and boundary limits.
+
+
+### Checkpoint 113 — AddItem wrapper and fresh temporary entries
+
+Pinned original1.2.0416 executablea8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6:
+AddItem entryB0C910/opcode1002/execute507320. The executed command gate
+5073FC..507435 skips null item/count0, forwards signed nonzero counts raw;
+24 cases in`S4/native-additem-command-gate-oracle-01`, corpus
+617bb8e3bdaca53d84bdf9cdc953f041eac80fa3757649dd9146adefe1ddff25.
+Actual constructor469690/Weapon insertion469D10/empty-list insertion446CB0
+execute14 cases in`native-additem-temporary-oracle-01`, corpus
+300e885085cbec23858ecca824c893284efeb5c60beb15010e81890673ae74a8.
+Fresh signed entries retain raw counts; helper zero normalization is excluded
+by the wrapper. Declared insertion-recording, allocation, RTTI, name and logging
+boundaries are detailed in reports. Full actor apply/base-delta/ownership and
+callbacks are not established. Signed native mutation remains open.
+
+Positive live actor addition and nonpositive wrapper no-ops pass784-test normal
+and instrumented engine inventories plus242 Python tests at fingerprint
+3cfe5c63f849fa3faed5203725a12970c7b0b148b0d6b76b5ab133f448ae9c63.
+The old ordinary AddItem2/F5 course saves zero physical items and is rejected.
+Corrected normal/SAN add-two/F5/distinct-load/F5 courses preserve exact two-item
+metadata and native authority with no command replay:four epochs/six directly
+viewed captures/sixteen controls, consolidated under
+`S4/native-actor-additem-final-acceptance-01`. Physical int32 capacity and
+negative-count rejection are explicit unsupported-domain guards, not claimed
+original parity. See checkpoint113 in the milestone for all identities,
+failed attempts and remaining stage gates.

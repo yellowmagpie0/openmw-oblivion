@@ -11060,3 +11060,100 @@ lazy saved-inventory hydration, original compiled-bytecode acceptance and
 all remaining combat/ranged/death/stealth/crime/jail/campaign/regression gates
 remain open. Next bounded task: live Native AddItem with actual added-count
 reporting, ownership/condition preservation, and save/fresh-load acceptance.
+
+
+### Checkpoint 113 — positive live native AddItem and zero-count gates
+
+S3/S4 and the full M15 milestone remain in progress. Positive AddItem on a
+live native NPC/CREA now resolves a physical item definition, adds through
+InventoryStore without auto-equipping, and recaptures inventory after
+observers. The script trace and OnAdd gate use the accepted transaction
+quantity. Zero AddItem and nonpositive RemoveItem return before Player view,
+cache construction or authority capture. A preflight rejects additions beyond
+the supported physical int32 quantity before mutation. Negative native actor
+AddItem explicitly rejects unsupported delta semantics; this is a temporary
+fail-closed limitation, not original-game parity. Player negative normalization,
+unavailable/container cache-only mutation, leveled lists, negative delta and
+wrapped overflow semantics remain open.
+
+Independent original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+identifies AddItem entryB0C910/opcode1002/execute507320. Original constructor
+469690 and command gate5073FC..507435 execute in
+`S4/native-additem-command-gate-oracle-01`:24 cases, corpus
+`617bb8e3bdaca53d84bdf9cdc953f041eac80fa3757649dd9146adefe1ddff25`.
+Null item and zero count skip insertion; nonzero signed counts forward raw.
+Insertion is a declared recording boundary here, so negative semantics are
+not established. `native-additem-temporary-oracle-01` executes constructor,
+Weapon insertion469D10 and empty-list insertion446CB0:14 cases, corpus
+`300e885085cbec23858ecca824c893284efeb5c60beb15010e81890673ae74a8`.
+Fresh entries store nonzero signed counts raw. The helper's zero-to-one rule
+is excluded by the actual script wrapper. Allocation, unrelated RTTI,
+name getter and diagnostic boundaries are declared. Full original actor
+apply, base/change composition, ownership and callbacks are outside these
+probes; negative physical meaning must not be inferred from query absolute
+values. Original actor core48FB31..48FB5A has signed base/delta reset and
+wrapped addition branches that still need independently executed coverage.
+
+Four focused C++ regressions cover zero AddItem without authority birth,
+Player nonpositive no-ops without a Player view, pre-observer physical capacity
+rejection, and explicit unsupported negative rejection. The zero regression
+failed before correction with runtime-state capture lacking a Player reference;
+its retained XML/log is`/tmp/m15_add113_zero_red01.*`. The enclosing diagnostic
+shell ended zero because it subsequently printed the log, so test failure is
+established by the XML, not that shell status. Final focused four tests pass.
+`S3/native-actor-additem-world-01` passes all784 engine tests and242 Python
+tests; `native-actor-additem-world-sanitized-01` passes all784 engine tests.
+Exact inventories/XML match with zero failures/skips and unchanged fingerprint
+`3cfe5c63f849fa3faed5203725a12970c7b0b148b0d6b76b5ab133f448ae9c63`.
+Unchanged component evidence from108 is explicitly reused. ASan/UBSan halt
+on errors with leak detection disabled; no leak coverage is claimed.
+
+The retained111 executable reproduces the cache-only defect through ordinary
+Space AddItem2/GetItemCount/F5 in`S4/native-actor-additem-baseline-red-01`:
+expected two Rust weapons, actual zero; its semantic rejection is retained.
+Baseline executable`c9236b793b23b2d4e3bbc657de19032edbd8e24e17afeafee3a357ad28597212`,
+actual save`82ba3a737a847bf1f203eff4a123a970c044818ad583191e1ebb17c8f54c0901`.
+The diagnostic baseline query0 only lets the process finish; acceptance stays2.
+An attempted copy of the112 executable was rejected by a hash assertion after
+its build path had already been replaced; no new baseline copy was produced.
+The independently retained111 executable has the same relevant cache-only
+AddItem path. No baseline visual acceptance is claimed.
+
+Final normal`S4/native-actor-additem-restart-01` and instrumented
+`native-actor-additem-runtime-sanitized-01` each run ordinary activation,
+AddItem2/live GetItemCount2/F5/quit and a distinct fresh load/F5/quit with no
+command replay. Both preserve exactly two unequipped Rust weapons with
+condition56, ownerNULL, charge/hotkey/remaining-usage -1, and exact integer
+short local2. All prior inventories and native resources/life/breath/death/
+queues/action/RNG/draw remain exact. Staging changes only own script/style/
+plugin binding and content fingerprints in the actual112 second-process
+save; no inventory, command output or native outcome is injected. Eight
+semantic negative controls per lane reject count, condition, owner, Player
+health, RNG, action sequence, draw and local corruption. All six required
+captures were directly viewed and hash-recorded: named Dreth, real dungeon,
+apparel, empty hands and Player HUD. Counts are established by decoded actual
+saves, not pixels. Startup samples, full grip, reactions and audio are excluded.
+
+Normal executable`95a1a601d16c43a65e89834313996caf9c7089be2738ed6adfe0a067a891c75e`;
+sanitized`e6feaa95f734d1fc9298c5a29a07948cb9599f98f8980b63e8384e8eccc8f115`.
+Both lanes use staged save
+`1434f2b3b04d99485757a8fedf10ba0167f873ab71a06cb4fc95edc28810c6b4`
+and generated plugin
+`63f780aa9ffb1713ce9ca44744b4608f060ec4cf6995b3794832a5985cfedc15`.
+Editable sources are`m15_actor_add_item_fixture.json` and
+`m15_actor_add_item_opponent.obscript`; script SHA256
+`95853e320db7d27c831365b72c7dc14253a3244d26f53c364fe27ee4c1fadc6b`.
+The unchanged native builder reopens the plugin and validates declared NPC
+SCRI/ZNAM overrides only. Own SCTX fork compilation does not prove original
+compiled-bytecode acceptance. Consolidated acceptance is
+`S4/native-actor-additem-final-acceptance-01/verification.json`:four distinct
+process epochs, six reviewed captures, sixteen semantic negative controls.
+
+Still open: independently verified negative/overflow AddItem behavior,
+partial-removal instance ordering and callbacks, active-windup removal,
+Creature positive addition runtime, Player/unavailable/container adapters,
+lazy inventory hydration, weapon-ready host query, remaining combat/ranged/
+death/stealth/crime/jail/campaign/regression gates. No stage is closed by this
+bounded positive inventory adapter. Continue these requirements without
+narrowing M15 scope.

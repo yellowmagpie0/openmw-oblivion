@@ -1,0 +1,6 @@
+scn M15ActorAddItemOpponent
+short fighting
+Begin OnActivate
+    AddItem WeapIronShortswordRusty 2
+    set fighting to GetItemCount WeapIronShortswordRusty
+End

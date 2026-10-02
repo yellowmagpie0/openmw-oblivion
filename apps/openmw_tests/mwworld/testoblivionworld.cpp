@@ -255,6 +255,96 @@ namespace
         actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
     }
 
+    TEST(OblivionWorldTest, NativeScriptAddItemZeroCountDoesNotConstructInventoryOrAuthority)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = weapon;
+        item.mCount = 3;
+        item.mCondition = 43.125f;
+        item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        installEquipmentInventory(fixture, actor, {item});
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, std::int64_t(0)};
+        EXPECT_NO_THROW(EXPECT_EQ(ObScript::asInteger(host.call("AddItem", {}, args, context, {})), 0));
+        const auto captured = world.captureOblivionActorInventory(actor);
+        ASSERT_EQ(captured.size(), 1u);
+        EXPECT_EQ(captured.front().mCount, 3);
+        EXPECT_EQ(captured.front().mCondition, 43.125f);
+        EXPECT_EQ(captured.front().mOwner, item.mOwner);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeScriptPlayerNonpositiveInventoryNoopsDoNotRequirePlayerView)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto weapon = addEquipmentWeapon(fixture);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = ESM::FormKey::dynamic("player", 1);
+        for (const auto& [command, count] : std::array{
+                 std::pair{"AddItem", std::int64_t(0)}, std::pair{"RemoveItem", std::int64_t(0)},
+                 std::pair{"RemoveItem", std::int64_t(-1)},
+                 std::pair{"RemoveItem", std::int64_t(-2147483648LL)}})
+        {
+            const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, count};
+            EXPECT_NO_THROW(EXPECT_EQ(ObScript::asInteger(host.call(command, {}, args, context, {})), 0));
+        }
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeActorAddRejectsPhysicalCountOverflowBeforeObservers)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = weapon;
+        item.mCount = std::numeric_limits<std::int32_t>::max();
+        item.mCondition = 43.125f;
+        item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        installEquipmentInventory(fixture, actor, {item});
+        // This is explicit rejection outside the supported physical AddItem
+        // domain, not a claim of native overflow-delta parity.
+        EXPECT_THROW(world.oblivionAddActorItem(actor, weapon, 1), std::invalid_argument);
+        EXPECT_EQ(world.oblivionAddActorItem(actor, weapon, 0), 0);
+        EXPECT_EQ(world.oblivionAddActorItem({}, weapon, 2), 0);
+        const auto captured = world.captureOblivionActorInventory(actor);
+        ASSERT_EQ(captured.size(), 1u);
+        EXPECT_EQ(captured.front().mCount, item.mCount);
+        EXPECT_EQ(captured.front().mCondition, item.mCondition);
+        EXPECT_EQ(captured.front().mOwner, item.mOwner);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeActorAddNegativeDeltaFailsExplicitlyWithoutAuthorityBirth)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        const auto weapon = addEquipmentWeapon(fixture);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, std::int64_t(-1)};
+        EXPECT_THROW(host.call("AddItem", {}, args, context, {}), std::invalid_argument);
+        EXPECT_TRUE(world.captureOblivionActorInventory(actor).empty());
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+    }
+
     TEST(OblivionWorldTest, NativeScriptRemoveItemNonpositiveCountPreservesPhysicalAndSavedInventory)
     {
         NativeWorldFixture fixture;
