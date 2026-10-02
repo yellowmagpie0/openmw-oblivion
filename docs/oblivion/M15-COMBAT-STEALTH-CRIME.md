@@ -11730,3 +11730,69 @@ original live comparisons and remaining S4–S14 are open. No additional stage
 closes. The next bounded course uses the actual stock rusty iron shortsword:
 independently audited WEAP090615 speed1.2 selects Small under the original Audio
 speed policy, weight8 affects fatigue, and the model is Weapons/Iron/ShortSword.NIF.
+
+
+### Checkpoint121 — expose the drawn native shortsword blade
+
+The stock shortsword's sheath initially covered the drawn blade. A first
+visibility-only fix exposed an optimizer interaction: normal rendering hid
+both merged blade and sheath, while the sanitizer build kept the sheath under
+a different merged node name. These actual failures remain in
+`S4/native-player-shortsword-restart-01`, `native-player-shortsword-restart-02`
+and `native-player-shortsword-runtime-sanitized-02`, with directly reviewed,
+hashed captures. Their numeric/audio successes do not accept the visual gate.
+
+The NIF loader now preserves Oblivion Scb/Scb: named groups and drawables as
+dynamic geometry so optimization cannot merge them into the blade. The player
+and native NPC drawn-instance attachment paths hide that sheath geometry.
+The cached mesh remains available to other instances. No saved authority or
+schema changes. The new loader regression exercises flattening, shared states,
+redundant-node removal and geometry merging, then independently hides the
+sheath and requires the blade's original triangle to remain visible. The
+corrected pre-fix fixture fails with one merged mesh instead of two. Earlier
+fixture setup failures and overly conservative default-optimizer passes are
+retained in `/tmp/m15_weapon121_loader_*`; they are not counted as semantic reds.
+
+Editable `m15_player_shortsword_fixture.json` and its ObScript alter only the
+NPC's own CSTY/SCRI bindings. Ordinary Space runs Player.AddItem and EquipItem
+for one original WeapIronShortswordRusty, then ordinary draw/turn/attack/F5.
+The source is checkpoint117's actual second save, with only own dependency,
+script/style binding and fingerprint renames; no inventory, pose, contact or
+resource outcome is injected. The untouched four Player stacks remain exact.
+The new actual weapon instance has count1, condition56, slot65536, null owner,
+charge/hotkey/usage sentinels unchanged, and survives fresh load. Encumbrance
+changes from4 to12, matching original weight8; all native numeric authority,
+target inventory, draw states and combat RNG stay exact. One miss debits7.8
+fatigue(140->132.2), applies no victim damage/wear/random draw, advances the
+counter once to3, and leaves no pending/held strike. Fatigue regenerates before
+saves; saved resource equality is not evidence that the debit did not happen.
+
+`S4/native-player-shortsword-restart-03` and
+`native-player-shortsword-runtime-sanitized-03` visibly expose the rusty blade,
+guard and right-hand grip before/after the attack and after distinct fresh
+reload. Both stock onehandidle sequences bind66 tracks, zero skips, and repeat
+start0/stop3. Each first recording contains one original Small swish match;
+each fresh reload contains none and does not add/equip/attack again. Four
+actual epochs, eight directly reviewed required captures and22 saved-state
+corruption controls pass. All121 PCM is freshly analyzed; the unchanged119
+three PCM verifier controls are explicitly reused, not rerun.
+Correlations: 0.9999865766 normal, 0.9999866022 sanitized.
+
+Fresh unfiltered suites pass2061 components and796 engine tests in each build,
+plus242 Python tests normally, with exact inventories/XML and no skips/failures:
+`S3/native-drawn-scabbard-world-02` and
+`native-drawn-scabbard-world-sanitized-02`.
+Tested before/after source fingerprint: `dab91ebb73807e15e9e675a18f1fa6013bfa3f86e4a7a0333d33e43b38e9327d`.
+Actual normal engine SHA `6de54139347b7b12d3848b3ab1cbd1924720c95eafa31288df88d31e3f9920ee`;
+sanitized engine SHA `62d7450b7867d89b22966b42e7f7341e27057c86f451cb83df7051d44ba16ab8`.
+
+The earlier world-01 suites predate the optimizer fix and do not verify final
+rendering. Sanitizers halt on errors, leak detection disabled. Final source,
+report, save, fixture, asset, capture and binary identities are consolidated in
+`S4/native-player-shortsword-final-acceptance-01/verification.json`.
+
+This closes the bounded stock first-person Player shortsword case. The NPC
+attachment also uses the visibility helper, but its exposed blade still needs
+its own ordinary-input course. Other weapons, aiming/views/controls, hit/block
+sound, real reactions, mastery consequences and the full S0–S14 gates remain
+open. S2/S3/S4 remain in progress; S5–S14 remain open.

@@ -20,6 +20,10 @@ namespace Resource
 
 namespace MWRender
 {
+    // TES4 weapon meshes contain their sheath alongside the blade. Hide only
+    // that geometry on the drawn instance, leaving the cached model intact.
+    void hideOblivionWeaponScabbard(osg::Node& node);
+
     // Overrides the texture of nodes in the mesh that had the same NiTexturingProperty as the first NiTexturingProperty
     // of the .NIF file's root node, if it had a NiTexturingProperty. Used for applying "particle textures" to magic
     // effects.

@@ -888,12 +888,23 @@ namespace NifOsg
             return true;
         }
 
+        bool isOblivionScabbard(const Nif::NiAVObject& node) const
+        {
+            if (mVersion <= Nif::NIFFile::VER_MW || mVersion > Nif::NIFFile::VER_OB)
+                return false;
+            const std::string_view name = node.mName;
+            return Misc::StringUtils::ciEqual(name, "Scb")
+                || (name.size() > 4 && name[3] == ':'
+                    && Misc::StringUtils::ciEqual(name.substr(0, 3), "Scb"));
+        }
+
         // Get a default dataVariance for this node to be used as a hint by optimization (post)routines
         osg::ref_ptr<osg::Group> createNode(const Nif::NiAVObject* nifNode) const
         {
             osg::ref_ptr<osg::Group> node;
 
-            osg::Object::DataVariance dataVariance = nifNode->mIsBone ? osg::Object::DYNAMIC : osg::Object::STATIC;
+            osg::Object::DataVariance dataVariance = nifNode->mIsBone || isOblivionScabbard(*nifNode)
+                ? osg::Object::DYNAMIC : osg::Object::STATIC;
 
             if (nifNode->mRecordType == Nif::RC_NiBillboardNode)
             {
@@ -2406,6 +2417,10 @@ namespace NifOsg
             }
 
             drawable->setName(nifNode->mName);
+            // Drawn TES4 weapons hide their embedded sheath independently.
+            // Merging it with the blade would lose that visibility boundary.
+            if (isOblivionScabbard(*nifNode))
+                drawable->setDataVariance(osg::Object::DYNAMIC);
             parentNode->addChild(drawable);
         }
 

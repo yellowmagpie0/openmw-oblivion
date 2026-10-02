@@ -11,12 +11,16 @@
 #include <components/resource/bgsmfilemanager.hpp>
 #include <components/resource/imagemanager.hpp>
 #include <components/sceneutil/serialize.hpp>
+#include <components/sceneutil/optimizer.hpp>
+#include <osg/Geometry>
+#include <algorithm>
 #include <components/vfs/manager.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <osgDB/Registry>
+#include <osgDB/SharedStateManager>
 
 #include <osgParticle/ModularProgram>
 
@@ -118,6 +122,72 @@ osg::Group {
   }
 }
 )");
+    }
+
+    TEST_F(NifOsgLoaderTest, oblivionScabbardRemainsSeparateFromBladeAfterOptimization)
+    {
+        Nif::NiNode root;
+        init(root);
+        root.mRecordType = Nif::RC_NiNode;
+        root.mName = "ShortSword";
+        Nif::NiTriShape scabbard, blade;
+        init(scabbard);
+        init(blade);
+        scabbard.mShaderProperty = nullptr;
+        scabbard.mAlphaProperty = nullptr;
+        blade.mShaderProperty = nullptr;
+        blade.mAlphaProperty = nullptr;
+        scabbard.mName = "Scb:0";
+        blade.mName = "ShortSword:0";
+        Nif::NiTriShapeData geometry{};
+        geometry.mRecordType = Nif::RC_NiTriShapeData;
+        geometry.mNumVertices = 3;
+        geometry.mNumTriangles = 1;
+        geometry.mVertices = { { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 } };
+        geometry.mTriangles = { 0, 1, 2 };
+        scabbard.mData = &geometry;
+        blade.mData = &geometry;
+        root.mChildren = { Nif::NiAVObjectPtr(&scabbard), Nif::NiAVObjectPtr(&blade) };
+        Nif::NIFFile file(testNif);
+        file.mVersion = 0x14000004; // Original stock shortsword version.
+        file.mRoots.push_back(&root);
+        auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+        // The scene manager permits flattening ordinary NIF property nodes;
+        // the optimizer's default callback otherwise keeps their StateSets.
+        struct ModelPermissions : SceneUtil::Optimizer::IsOperationPermissibleForObjectCallback
+        {
+            bool isOperationPermissibleForObjectImplementation(const SceneUtil::Optimizer* optimizer,
+                const osg::Node* node, unsigned int option) const override
+            {
+                return node->getDataVariance() != osg::Object::DYNAMIC
+                    && (option & optimizer->getPermissibleOptimizationsForObject(node)) != 0;
+            }
+        };
+        SceneUtil::Optimizer optimizer;
+        optimizer.setIsOperationPermissibleForObjectCallback(new ModelPermissions);
+        osg::ref_ptr<osgDB::SharedStateManager> shared = new osgDB::SharedStateManager;
+        optimizer.setSharedStateManager(shared, nullptr);
+        optimizer.optimize(loaded, SceneUtil::Optimizer::FLATTEN_STATIC_TRANSFORMS
+                | SceneUtil::Optimizer::REMOVE_REDUNDANT_NODES | SceneUtil::Optimizer::MERGE_GEOMETRY
+                | SceneUtil::Optimizer::SHARE_DUPLICATE_STATE);
+        struct GeometryVisitor : osg::NodeVisitor
+        {
+            std::vector<osg::Geometry*> meshes;
+            GeometryVisitor() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+            void apply(osg::Geometry& mesh) override { meshes.push_back(&mesh); }
+        } before;
+        loaded->accept(before);
+        ASSERT_EQ(before.meshes.size(), 2);
+        auto sheath = std::ranges::find_if(before.meshes,
+            [](const auto* mesh) { return mesh->getName() == "Scb:0"; });
+        ASSERT_NE(sheath, before.meshes.end());
+        (*sheath)->setNodeMask(0);
+        GeometryVisitor after;
+        loaded->accept(after);
+        ASSERT_EQ(after.meshes.size(), 1);
+        EXPECT_EQ(after.meshes.front()->getName(), "ShortSword:0");
+        ASSERT_NE(after.meshes.front()->getVertexArray(), nullptr);
+        EXPECT_EQ(after.meshes.front()->getVertexArray()->getNumElements(), 3);
     }
 
     struct NativePathFixture

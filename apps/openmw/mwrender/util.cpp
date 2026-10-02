@@ -5,6 +5,7 @@
 #include <osg/ValueObject>
 
 #include <components/misc/resourcehelpers.hpp>
+#include <components/misc/strings/algorithm.hpp>
 #include <components/resource/imagemanager.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
@@ -14,6 +15,30 @@
 
 namespace MWRender
 {
+    void hideOblivionWeaponScabbard(osg::Node& node)
+    {
+        struct ScabbardVisitor : osg::NodeVisitor
+        {
+            ScabbardVisitor()
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+            {
+            }
+
+            void apply(osg::Node& part) override
+            {
+                const std::string_view name = part.getName();
+                // Exported geometry names carry a numeric suffix, e.g. Scb:0.
+                if (Misc::StringUtils::ciEqual(name, "Scb")
+                    || (name.size() > 4 && name[3] == ':'
+                        && Misc::StringUtils::ciEqual(name.substr(0, 3), "Scb")))
+                    part.setNodeMask(0);
+                else
+                    traverse(part);
+            }
+        } visitor;
+        node.accept(visitor);
+    }
+
     namespace
     {
         struct TextureOverrideVisitor : osg::NodeVisitor

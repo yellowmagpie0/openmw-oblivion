@@ -47,13 +47,13 @@ payload alongside typed fields.
 
 ## Rule/probe gate
 
-No damage, block, armor, mastery, projectile, stealth, pickpocket, crime, fine,
-jail, or identity formula has passed its independent oracle gate yet. The data
-inventory command reports these open gates and returns failure overall even
-when every structural content check passes. Future entries must state units,
-rounding/clamping order, thresholds, supported version, independent expected
-values and exact retained original-game probe evidence. Do not infer gameplay
-acceptance from this document or the inventory counts.
+Bounded independent rule checks are recorded in the checkpoint entries below;
+these passes do not close the complete S2 or runtime gates. The initial data
+inventory's open-gate result is structural evidence, not a current summary of
+later rule comparisons. Entries must state units, rounding/clamping order,
+thresholds, supported version, independent expected values and exact retained
+original-game probe evidence. Do not infer gameplay acceptance from record
+inventories or bounded instruction execution alone.
 
 ## Creature and equipment input layouts
 
@@ -5892,3 +5892,37 @@ Existing118 component2060/selector1936 and119 PCM controls are explicitly reused
 Evidence:`S4/native-firstperson-melee-idle-final-acceptance-01`.
 Onehand/twohand actual coverage, aiming/view/control/reaction/mastery/audio
 policy/original live and full M15 acceptance remain open; no stage closure.
+
+
+### Checkpoint121 — original stock shortsword and separate scabbard geometry
+
+Hash-pinned original master WEAP090615/WeapIronShortswordRusty DATA decodes
+one-hand type0, speed float1.2000000476837158, reach float.800000011920929,
+weight8, health56 and damage5. Winning fCombatHitConeAngle is35; winning
+fFatigueAttackWeaponBase7 and Mult float.10000000149011612 supply the already
+reviewed normal-attack rule. The original speed selector6AF9DC..6AFAC0 and real
+403C00 settings getter select Small for this exact weapon input under both
+x87 precision words, with no game-function stubs. This additional two-case
+execution does not rerun or replace checkpoint118's1936-row comparison.
+SOUN0872C2/WPNSwishSmall resolves fx\wpn\swish\small\; the three original
+mono16/44100 waves are hash-identified and compared to actual new stereo engine
+PCM, with pre-existing correlation threshold. Original hardware audio and
+arbitrary user Audio.INI policy remain separate open gates.
+
+Original ShortSword.NIF SHA
+`100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d`
+contains independently located length-prefixed ShortSword, Scb:0 and
+ShortSword:0 names. Original executable SHA
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+uses literal Scb atA3CE0C with operands47928B/4807A2; retained bounded
+instructions show native node lookup/removal references. Those references do
+not independently prove the complete caller draw-state or original live pose.
+The actual observed sheath failure and loader optimizer regression justify the
+fork's separately preserved, hidden drawn sheath. Original onehandidle inline
+sequence metadata decodes66 controlled blocks, cycle0, frequency1, start0 and
+stop3. The original assets/audits remain ignored in
+`S4/native-stock-small-swish-assets-01`; editable fixture/course sources are
+versioned. Original-game SCDA acceptance remains open: this fixture uses the
+fork's SCTX compiler and ordinary fork activation. Final four-epoch/eight-
+capture/22-state-control acceptance is bounded to Player ready/reload visibility
+and one missed Small swish, not full combat or stage completion.

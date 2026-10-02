@@ -125,10 +125,13 @@ namespace MWRender
             Log(Debug::Warning) << "Unable to attach ESM4 carried weapon " << path << ": mesh is missing";
             return;
         }
-        if (insertPart(model, "Weapon", {}, false, &mWeaponParts))
+        if (osg::ref_ptr<osg::Node> attached = insertPart(model, "Weapon", {}, false, &mWeaponParts))
+        {
+            hideOblivionWeaponScabbard(*attached);
             Log(Debug::Info) << "M15 carried weapon attached: ref=" << mPtr.getCellRef().getRefId()
                              << " item=" << weapon->getCellRef().getRefId() << " model=" << model
                              << " bone=Weapon";
+        }
     }
 
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(

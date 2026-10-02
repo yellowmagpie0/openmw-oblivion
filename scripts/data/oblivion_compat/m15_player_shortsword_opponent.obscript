@@ -1,0 +1,9 @@
+scn M15PlayerShortswordOpponent
+short fighting
+Begin OnActivate
+    if fighting == 0
+        Player.AddItem WeapIronShortswordRusty 1
+        Player.EquipItem WeapIronShortswordRusty
+        set fighting to Player.GetEquipped WeapIronShortswordRusty
+    endif
+End
