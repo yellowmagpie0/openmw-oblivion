@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 28;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 29;
 
     struct RuntimeContentIdentity
     {
@@ -64,6 +64,9 @@ namespace ESM4
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };
 
+    // Logical equipment presentation, not native animation-group numbers.
+    enum class ActorDrawState : std::uint8_t { Nothing, Weapon, Spell };
+
     struct RuntimeReferenceState
     {
         ESM::FormKey mKey;
@@ -76,6 +79,9 @@ namespace ESM4
         std::int32_t mLockLevel = 0;
         std::vector<RuntimeInventoryItem> mInventory;
         std::map<std::string, RuntimeValue, std::less<>> mCustomState;
+        // v29: absent in old saves, rather than inferred from combat or AI.
+        // The native non-Player actor owns this view independently of input.
+        std::optional<ActorDrawState> mActorDrawState = std::nullopt;
 
         friend bool operator==(const RuntimeReferenceState&, const RuntimeReferenceState&) = default;
     };

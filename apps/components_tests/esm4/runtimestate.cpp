@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cmath>
 #include <bit>
 #include <algorithm>
@@ -2155,5 +2156,105 @@ TEST(ESM4RuntimeState, MeleeAi28PersistsOwnedTargetAndRejectsDanglingOrLossyStat
         auto truncated = bytes;
         truncated.resize(bytes.size() - cut);
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, NativeActorDraw29HasExactNullableWireAndRejectsCorruptFlags)
+{
+    auto state = ownedActionState();
+    state.mVersion = 29;
+    state.mPhysicalActions.mPending.clear();
+    state.mPhysicalActionOwners.clear();
+    constexpr std::string_view marker = "native-draw-wire-boundary";
+    state.mReferences.front().mCustomState = {{"boundary", std::string(marker)}};
+    auto legacy = state;
+    legacy.mVersion = 28;
+    const auto legacyBytes = legacy.serializeBinary();
+    const auto found = std::search(legacyBytes.begin(), legacyBytes.end(), marker.begin(), marker.end());
+    ASSERT_NE(found, legacyBytes.end());
+    const auto boundary = std::distance(legacyBytes.begin(), found) + marker.size();
+    const std::array<std::optional<ESM4::ActorDrawState>, 4> states{
+        std::nullopt, ESM4::ActorDrawState::Nothing, ESM4::ActorDrawState::Weapon, ESM4::ActorDrawState::Spell};
+    for (const auto draw : states)
+    {
+        SCOPED_TRACE(draw ? static_cast<int>(*draw) : -1);
+        state.mReferences.front().mActorDrawState = draw;
+        auto expected = legacyBytes;
+        expected[std::string_view("OMW4STATE").size()] = 29;
+        std::vector<std::uint8_t> wire{static_cast<std::uint8_t>(draw.has_value())};
+        if (draw)
+            wire.push_back(static_cast<std::uint8_t>(*draw));
+        expected.insert(expected.begin() + boundary, wire.begin(), wire.end());
+        const auto bytes = state.serializeBinary();
+        EXPECT_EQ(bytes, expected);
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes), state);
+        const auto jsonValue = draw ? std::to_string(static_cast<unsigned>(*draw)) : "null";
+        EXPECT_NE(state.canonicalJson().find("\"actor_draw_state\":" + jsonValue), std::string::npos);
+        auto invalid = bytes;
+        invalid[boundary] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        if (draw)
+        {
+            invalid = bytes;
+            invalid[boundary + 1] = 255;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+            invalid.assign(bytes.begin(), bytes.begin() + boundary + 1);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        }
+    }
+}
+
+TEST(ESM4RuntimeState, NativeActorDraw29RequiresMatchingNonPlayerValueAndLifeOwnership)
+{
+    auto state = ownedActionState();
+    state.mVersion = 29;
+    state.mPhysicalActions.mPending.clear();
+    state.mPhysicalActionOwners.clear();
+    state.mReferences.front().mActorDrawState = ESM4::ActorDrawState::Weapon;
+    ASSERT_NO_THROW(state.validate());
+    const auto reject = [&](auto mutate) {
+        auto invalid = state;
+        mutate(invalid);
+        EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(invalid.canonicalJson(), std::runtime_error);
+    };
+    reject([](auto& x) { x.mVersion = 28; });
+    reject([](auto& x) { x.mReferences.front().mActorDrawState = static_cast<ESM4::ActorDrawState>(3); });
+    reject([](auto& x) { x.mNativeActorValues.clear(); });
+    reject([](auto& x) { x.mNativeActorLife.clear(); });
+    reject([](auto& x) { x.mNativeActorLife.front().mBase = ESM::FormKey::content("oblivion.esm", 0x201); });
+    reject([](auto& x) {
+        auto extra = x.mReferences.front();
+        extra.mKey = ESM::FormKey::content("oblivion.esm", 0x101);
+        x.mReferences.push_back(std::move(extra));
+    });
+    reject([](auto& x) { x.mReferences.front().mKey = x.mPlayer.mReference; });
+}
+
+TEST(ESM4RuntimeState, OlderNativeReferencesDoNotInventDrawState)
+{
+    for (unsigned version = 1; version < 29; ++version)
+    {
+        SCOPED_TRACE(version);
+        ESM4::RuntimeState state;
+        state.mVersion = version;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        state.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        if (version >= 3)
+        {
+            state.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            state.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        }
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = ESM::FormKey::content("actors.esm", 4);
+        reference.mBase = ESM::FormKey::content("actors.esm", 5);
+        reference.mCell = state.mPlayer.mCell;
+        state.mReferences.push_back(reference);
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        ASSERT_EQ(restored.mReferences.size(), 1u);
+        EXPECT_FALSE(restored.mReferences.front().mActorDrawState);
+        EXPECT_EQ(restored.canonicalJson().find("actor_draw_state"), std::string::npos);
+        state.mReferences.front().mActorDrawState = ESM4::ActorDrawState::Nothing;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
 }

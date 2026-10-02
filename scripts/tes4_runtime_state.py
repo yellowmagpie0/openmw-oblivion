@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 28
+CURRENT_VERSION = 29
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -919,6 +919,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             old = custom["obscript.dead"]
             if type(old) is not bool or old != (phase == 1):
                 raise RuntimeStateError("TES4 native actor life conflicts with legacy obscript.dead")
+    for reference in references:
+        draw = reference.get("actor_draw_state")
+        if draw is None:
+            continue
+        if version < 29:
+            raise RuntimeStateError("TES4 native actor draw state requires version 29")
+        if type(draw) is not int or draw not in (0, 1, 2):
+            raise RuntimeStateError("Invalid TES4 native actor draw state")
+        key, base = reference["key"], reference["base"]
+        life = next((item for item in lives if item["actor"] == key), None)
+        if (key == player["reference"] or value_bases.get(key) != base or
+                life is None or life["base"] != base):
+            raise RuntimeStateError("Dangling or mismatched TES4 native actor draw state owner")
+
     engagements = check_collection(state.get("native_combat_engagements", []), "native combat engagement list")
     if version < 15 and engagements:
         raise RuntimeStateError("TES4 native combat engagements require version 15")
@@ -1273,6 +1287,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 raise RuntimeStateError(f"Duplicate TES4 custom value {name}")
             custom[name] = _value(reader)
         reference["custom_state"] = custom
+        if version >= 29:
+            has_draw = reader.unpack("<B")
+            if has_draw > 1:
+                raise RuntimeStateError("Invalid TES4 native actor draw state flag")
+            reference["actor_draw_state"] = reader.unpack("<B") if has_draw else None
         references.append(reference)
     result["references"] = references
     _validate_inventory(result["player"]["inventory"], version, True)
@@ -1571,6 +1590,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for name in sorted(custom):
             writer.string(name)
             _write_value(writer, custom[name])
+        if version >= 29:
+            draw = reference.get("actor_draw_state")
+            writer.pack("<B", int(draw is not None))
+            if draw is not None:
+                writer.pack("<B", draw)
     if version >= 2:
         writer.pack("<Q", int(state.get("script_event_sequence", 0)))
         scripts = sorted(state.get("script_instances", []), key=lambda item: (item["unit"], item["context"]))
@@ -1857,6 +1881,13 @@ def load_save(path: Path) -> dict[str, Any]:
     return decode_payload(_find_runtime_record(path.read_bytes())[3])
 
 
+def _upgrade_actor_draw(state: dict[str, Any]) -> None:
+    for reference in state.get("references", []):
+        if state.get("schema_version", 1) < 29 and reference.get("actor_draw_state") is not None:
+            raise RuntimeStateError("Legacy TES4 save cannot carry native actor draw state")
+        reference.setdefault("actor_draw_state", None)
+
+
 def _upgrade_melee_ai(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 28:
         for entry in state.get("native_melee_states", []):
@@ -1887,6 +1918,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_phases(state)
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
+    _upgrade_actor_draw(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -1942,6 +1974,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_phases(result)
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
+    _upgrade_actor_draw(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])

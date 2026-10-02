@@ -10666,3 +10666,37 @@ scene capture. NPC script equipment changes also still update saved vectors
 without publishing the live inventory. Shield/left, Player held rendering,
 grip/reactions/audio, breaking/block/mastery, other melee branches, input/view
 modes and in-action restart remain open. **S4 and S5-S14 are not complete.**
+
+### Checkpoint 108 — typed native actor draw save contract
+
+T4ST schema29 adds an optional `actor_draw_state` to each native reference:
+null means absent; logical enums0/1/2 mean nothing/weapon/spell. These are profile
+presentation enums, not original animation-group numbers or attack/block input.
+The reference wire adds a strict presence byte and optional enum byte after
+custom state. C++ binary/JSON and Python decoding, encoding and promotion agree.
+A non-null value requires matching non-Player native AV/life/reference base
+ownership. Unknown enums/presence flags, missing ownership and an older schema
+label carrying active draw state are rejected. Typed store/base-kind validation
+and live publication belong to the following world adapter chunk.
+
+Old schemas1-28 deliberately omit draw state; promotion materializes null without
+inferring a weapon from combat, equipment, held input or AI. Explicit nothing
+round-trips as present enum0, independently of absence. Three new C++ and three
+Python cases compare the complete independently constructed wire for all four
+states, binary/JSON round trips, truncated/corrupt bytes, wrong owners/base,
+old-label loss and all older schema versions. The preliminary Python run exposed
+only a new legacy test fixture using v4 equipment fields under versions1-3;
+that fixture now uses an empty inventory. Its failed log is retained; no codec
+expectation or production rule was loosened. The focused three new Python cases
+then pass.
+
+`S3/native-actor-draw-contract-01` passes all2055 component,765 engine and242
+Python tests. `native-actor-draw-contract-sanitized-01` passes all2055 component
+and765 engine tests under halting ASan/UBSan with leak detection off. Exact
+inventories match XML, zero failures/skips, stable tested source fingerprint
+4f49c600d1733586bc509f494b853ccc7297c8362c3b960c13191cc397c5d41f.
+This closes the codec/ownership contract only: current world capture and class
+hydration do not yet populate/apply the field, so checkpoint107's drawn-pose
+restart gap and failed sanitized initial-scene captures remain open. Next wire
+actual native NPC/CREA capture/restoration and repeat real rendered restarts.
+S3/S4 and later M15 stages are not declared complete.

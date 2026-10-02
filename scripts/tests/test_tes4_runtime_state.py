@@ -1610,6 +1610,74 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             state_io._upgrade_melee_ai(restored)
             self.assertIsNone(restored["native_melee_states"][0]["ai_intent"])
 
+    def draw_state(self):
+        state = self.engagement_state()
+        state["schema_version"] = 28
+        state["native_combat_engagements"] = []
+        state["references"][0]["custom_state"] = {"boundary": "native-draw-wire-boundary"}
+        return state_io.decode_payload(state_io.encode_payload(state))
+
+    def test_actor_draw29_exact_nullable_wire_and_corrupt_presence_enum(self):
+        legacy = self.draw_state()
+        old = state_io.encode_payload(legacy)
+        marker = b"native-draw-wire-boundary"
+        boundary = old.index(marker) + len(marker)
+        for draw in (None, 0, 1, 2):
+            with self.subTest(draw=draw):
+                state = copy.deepcopy(legacy)
+                state["schema_version"] = 29
+                state["references"][0]["actor_draw_state"] = draw
+                expected = bytearray(old)
+                struct.pack_into("<I", expected, len(state_io.MAGIC), 29)
+                expected[boundary:boundary] = bytes([0]) if draw is None else bytes([1, draw])
+                payload = state_io.encode_payload(state)
+                self.assertEqual(payload, bytes(expected))
+                restored = state_io.decode_payload(payload)
+                self.assertEqual(restored, state)
+                invalid = bytearray(payload); invalid[boundary] = 2
+                with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(bytes(invalid))
+                if draw is not None:
+                    invalid = bytearray(payload); invalid[boundary + 1] = 255
+                    with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(bytes(invalid))
+                    with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(payload[:boundary + 1])
+
+    def test_actor_draw29_strict_types_native_ownership_and_legacy_label_rejection(self):
+        state = self.draw_state(); state["schema_version"] = 29
+        state["references"][0]["actor_draw_state"] = 1
+        state_io.encode_payload(state)
+        for draw in (-1, 3, 255, 0.0, 1.0, False, True, "1", [], {}):
+            bad = copy.deepcopy(state); bad["references"][0]["actor_draw_state"] = draw
+            with self.subTest(draw=draw), self.assertRaises(state_io.RuntimeStateError):state_io.encode_payload(bad)
+        for mutate in (lambda x:x.update(schema_version=28), lambda x:x.update(native_actor_values=[]),
+                       lambda x:x.update(native_actor_life=[]),
+                       lambda x:x["native_actor_life"][0].update(base="content:actors.esm:000003"),
+                       lambda x:x["references"].append(dict(x["references"][0],key="content:actors.esm:000003")),
+                       lambda x:x["references"][0].update(key=x["player"]["reference"])):
+            bad = copy.deepcopy(state); mutate(bad)
+            with self.assertRaises(state_io.RuntimeStateError):state_io.encode_payload(bad)
+        mislabeled = copy.deepcopy(state); mislabeled["schema_version"] = 28
+        with self.assertRaises(state_io.RuntimeStateError):state_io._upgrade_actor_draw(mislabeled)
+
+    def test_actor_draw_legacy_versions_have_no_fabricated_draw_intent(self):
+        for version in range(1, 29):
+            state = make_state(); state["schema_version"] = version; state["ai_rng_state"] = 1
+            state["player"]["inventory"] = []
+            if version < 3:
+                for key in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(key)
+            if version < 2:
+                state.pop("script_event_sequence"); state.pop("script_instances"); state.pop("quests")
+            state["references"] = [{"key":"content:oblivion.esm:000100", "base":"content:oblivion.esm:000200",
+                "cell":state["player"]["cell"], "position":[0.0]*6, "enabled":True,"deleted":False,
+                "inventory":[],"custom_state":{},"owner":None,"lock_level":0}]
+            loaded = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("actor_draw_state", loaded["references"][0])
+            state_io._upgrade_actor_draw(loaded)
+            self.assertIsNone(loaded["references"][0]["actor_draw_state"])
+            state["references"][0]["actor_draw_state"] = 0
+            with self.assertRaises(state_io.RuntimeStateError):state_io.encode_payload(state)
+
+
 
 if __name__ == "__main__":
     unittest.main()

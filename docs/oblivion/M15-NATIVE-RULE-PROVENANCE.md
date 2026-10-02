@@ -5553,3 +5553,11 @@ criteria; these are retained as failed visual courses. Neither native draw-state
 restoration, complete grip/strike/reaction frames nor audio is accepted here.
 The authored restraint fixture and staged equipment/geometry remain declared
 setup, not independent proof of native AI probabilities or normal equipment use.
+
+Checkpoint108 introduces profile-owned logical draw-state persistence, without
+adding an original-mechanics numerical claim. Schema29 nullable enums and native
+non-Player reference/AV/life ownership have exact independent wire, corruption,
+round-trip and schema1-28 migration tests. Absence is not a derived combat pose.
+World capture, native class hydration, store-kind validation and actual rendered
+restoration remain subsequent acceptance work; the codec alone does not resolve
+the107 draw-state or initial-scene failures.

@@ -710,6 +710,21 @@ namespace ESM4
                 throw std::runtime_error("TES4 native actor life and value base conflict");
         }
         checkSize(mNativeCombatEngagements.size(), "native combat engagement set");
+        for (const auto& reference : mReferences)
+            if (reference.mActorDrawState)
+            {
+                if (mVersion < 29)
+                    throw std::runtime_error("TES4 native actor draw state requires runtime-state version 29");
+                if (static_cast<std::uint8_t>(*reference.mActorDrawState)
+                    > static_cast<std::uint8_t>(ActorDrawState::Spell))
+                    throw std::runtime_error("Invalid TES4 native actor draw state");
+                const auto values = nativeActors.find(reference.mKey);
+                const auto life = lives.find(reference.mKey);
+                if (reference.mKey == mPlayer.mReference || values == nativeActors.end()
+                    || values->second != reference.mBase || life == lives.end()
+                    || life->second->mBase != reference.mBase)
+                    throw std::runtime_error("Dangling or mismatched TES4 native actor draw state owner");
+            }
         if (mVersion < 15 && !mNativeCombatEngagements.empty())
             throw std::runtime_error("TES4 native combat engagements require runtime-state version 15");
         for (const auto& [first, second] : mNativeCombatEngagements)
@@ -1184,6 +1199,12 @@ namespace ESM4
             {
                 writer.string(name);
                 writeValue(writer, value);
+            }
+            if (mVersion >= 29)
+            {
+                writer.integer<std::uint8_t>(reference.mActorDrawState.has_value() ? 1 : 0);
+                if (reference.mActorDrawState)
+                    writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*reference.mActorDrawState));
             }
         }
 
@@ -1675,6 +1696,14 @@ namespace ESM4
                 const std::string name = reader.string();
                 if (!reference.mCustomState.emplace(name, readValue(reader)).second)
                     throw std::runtime_error("Duplicate TES4 runtime-state custom-state key");
+            }
+            if (result.mVersion >= 29)
+            {
+                const auto hasDrawState = reader.integer<std::uint8_t>();
+                if (hasDrawState > 1)
+                    throw std::runtime_error("Invalid TES4 native actor draw state flag");
+                if (hasDrawState)
+                    reference.mActorDrawState = static_cast<ActorDrawState>(reader.integer<std::uint8_t>());
             }
             result.mReferences.push_back(std::move(reference));
         }
@@ -2355,7 +2384,16 @@ namespace ESM4
                 stream << (index++ ? "," : "") << '"' << escapeJson(name) << "\":";
                 writeJsonValue(stream, value);
             }
-            stream << "}}";
+            stream << '}';
+            if (mVersion >= 29)
+            {
+                stream << ",\"actor_draw_state\":";
+                if (reference.mActorDrawState)
+                    stream << static_cast<unsigned>(*reference.mActorDrawState);
+                else
+                    stream << "null";
+            }
+            stream << '}';
         }
         stream << "],\"script_event_sequence\":" << mScriptEventSequence << ",\"script_instances\":[";
         for (std::size_t i = 0; i < mScriptInstances.size(); ++i)
