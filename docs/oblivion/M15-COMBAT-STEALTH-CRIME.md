@@ -12641,3 +12641,61 @@ Native gravity/force ordering, speed caps, collision/equipment eligibility,
 renderer bone writeback, native reaction/controller transitions and body save
 persistence remain open. All previously open M15 stages remain open. Next:
 connect verified physical poses to rendered bones and the native lifecycle.
+
+
+### Checkpoint134 — verified node world/local pose writeback (S4 open)
+
+The new immutable `NifBullet::ragdollBonePoseWriteback` projects a desired
+NetImmerse world pose into the original node writeback contract. Collision
+flag0x8 selects local writeback; an optional parent uses native transposed
+rotation and separately rounded reciprocal scale, rotation/vector products,
+scaled position and offset additions. Both previous scale slots survive.
+Local writeback happens even when world publication is below threshold. World
+position/rotation change bits are1/2; forced publication reports3. Unforced
+comparisons store binary32 deltas and use inclusive per-component0.001 rotation
+and0.01 position limits. Any reported change publishes the complete desired
+rotation/position, retaining the previous world scale. Inputs read by that
+path and all computed outputs must be finite, with positive separate scales;
+invalid/overflowing results throw without mutating inputs. This is a pose
+projection, not physics admission or actor mode selection.
+
+Before implementation, pinned original collision-object routine8978d0 executed
+its complete path with actual getter452a60, parent inverse718a80, transpose
+710400, composition53d7a0, matrix/vector products7100a0/7101f0 and comparison
+897490/8904e0. The native final change mask is captured before return, not
+inferred from the C++ implementation. No original function is stubbed. Initial
+`S4/native-ragdoll-bone-writeback-oracle-01` covers864 calls;02 adds adjacent
+binary32 thresholds;03 additionally records masks. The final1,440-case corpus
+covers flags1/9, parent absence/unit/rotated/uniform-scale2, forced/unforced
+publication, both x87 precision controls, all12 rotation/position threshold
+components and signed neighboring inputs. Original scale-copy exclusions are
+observed explicitly, using different previous local/world and desired scales.
+Actor mode selection and child propagation remain outside the oracle's scope.
+Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`; final helper
+`/tmp/m15_reaction134_bone_writeback_oracle_mask_v3.py`, SHA
+`2f296bd4f90281f52c2ae95c64c2c7af88a2390bfec2d0fb8951b3d482aecc29`; corpus `757aa6d64cf2a5b184780846458d0df53aa0a62e2831a68c56f88135a42d80dd`.
+
+Seven component cases cover world-only/local/root paths, transformed parent
+geometry, retained scale, independent inclusive thresholds, forced publication,
+unread invalid parents and overflowing output. Missing API compilation is
+retained in `S4/native-ragdoll-bone-writeback-red-01`; focused green01 passes.
+`S4/native-ragdoll-bone-writeback-comparison-{normal,sanitized}-01` each match
+all1,440 original local/world float-bit sequences and change masks exactly,
+including signed zero, under the predeclared zero-tolerance requirement. Five
+negative controls reject wrong masks, wrong scale bits, missing/duplicate cases
+and malformed input. Comparison helpers `/tmp/m15_reaction134_writeback_compare.cpp`
+and`.py` have source/comparator/binary/build hashes in their reports.
+
+Full normal and ASan/UBSan component runs
+`S4/native-ragdoll-bone-writeback-{normal,sanitized}-01` each pass2,111 cases,
+complete inventories with zero failures/skips, stable fingerprint
+`8bd4d2ffdf2a09566146b898621670ce8d5f0289fa53b529ae778e49be7ee2f2`. ASan detect_leaks=0:halt_on_error=1 and UBSan
+halt_on_error=1:print_stacktrace=1; no leak coverage claimed. Engine sources
+are unchanged since checkpoint133; its815 engine tests in both builds are
+explicitly reused, not newly relinked binaries. Python's unchanged243-case
+coverage remains reused from checkpoint124. This helper is not yet connected
+to renderer nodes or native actor transitions. The display-dependent runtime
+failure from checkpoint133 still requires a new run when a display can launch.
+All open M15 stages remain open. Next: bind stock graph record identities to
+live renderer bones, apply physical snapshots through the verified projection,
+then connect native lifecycle/controller/save state.

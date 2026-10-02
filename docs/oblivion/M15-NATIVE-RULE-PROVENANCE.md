@@ -6154,3 +6154,20 @@ admit all18 bodies/17 joints and run240 finite synthetic zero-gravity steps in
 both builds, then clean up. This is not rendered animated-bone writeback,
 actor/world scheduler ownership, original trajectory or normal-input gameplay.
 Failed initial API compilation and oracle02 tuple-unpacking are retained.
+
+
+### Checkpoint134: collision-object bone pose writeback
+
+Pinned original8978d0 supplies1,440 full-return cases without stubbed functions.
+Native parent transpose/reciprocal-scale projection and all binary32 intermediate
+stores are retained. Collision flag0x8 controls local writes; scale fields are
+not copied. World publication compares0.001 rotation and0.01 position component
+deltas inclusively; native mask bits are captured directly. Final corpus
+`757aa6d64cf2a5b184780846458d0df53aa0a62e2831a68c56f88135a42d80dd`; original helper SHA`2f296bd4f90281f52c2ae95c64c2c7af88a2390bfec2d0fb8951b3d482aecc29`.
+Normal and sanitizer C++ projections match every local/world float bit and
+publication mask exactly, with five rejected comparator negative controls each.
+Seven new tests bring full component inventories to2,111 in both builds.
+Renderer application, actor-mode selection, child propagation, controller and
+physical save integration remain open. Original mode flags are fixture inputs,
+not inferred normal-gameplay behavior. See the checkpoint134 milestone entry
+for paths, full executable/helper hashes and reused engine/Python evidence.
