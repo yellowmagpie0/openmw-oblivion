@@ -235,6 +235,7 @@ namespace NifBullet
         // Bodies are destroyed before shapes; neither owns the other's storage.
         std::vector<std::unique_ptr<btCollisionShape>> mShapes;
         std::vector<Body> mBodies;
+        std::vector<btCollisionObject*> mCollisionObjects;
         std::vector<std::unique_ptr<btTypedConstraint>> mConstraints;
         std::size_t mRegisteredBodies = 0, mRegisteredConstraints = 0;
 
@@ -328,7 +329,7 @@ namespace NifBullet
     }
 
     ActorRagdollPhysics::ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
-        float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask)
+        float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask, void* userPointer)
         : mImpl(std::make_unique<Impl>(world, lengthScale))
     {
         require(std::isfinite(lengthScale) && lengthScale > 0, "invalid length scale");
@@ -397,6 +398,8 @@ namespace NifBullet
             // exponential damping API. The serial caller applies native damping.
             info.m_linearDamping = info.m_angularDamping = 0;
             auto body = std::make_unique<btRigidBody>(info);
+            body->setUserPointer(userPointer);
+            mImpl->mCollisionObjects.push_back(body.get());
             mImpl->mShapes.push_back(std::move(shape));
             mImpl->mShapes.push_back(std::move(compound));
             mImpl->mBodies.push_back({input.mRecord, centerFrame, input.mLinearDamping,
@@ -444,6 +447,11 @@ namespace NifBullet
     }
 
     ActorRagdollPhysics::~ActorRagdollPhysics() = default;
+
+    std::span<btCollisionObject* const> ActorRagdollPhysics::collisionObjects() const
+    {
+        return mImpl->mCollisionObjects;
+    }
 
     std::vector<RagdollBodyState> ActorRagdollPhysics::capture() const
     {

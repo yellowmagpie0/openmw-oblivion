@@ -16,6 +16,9 @@
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
 
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+
 #include <LinearMath/btQuickprof.h>
 #include <LinearMath/btVector3.h>
 
@@ -138,8 +141,12 @@ namespace MWPhysics
         mDispatcher = std::make_unique<btCollisionDispatcher>(mCollisionConfiguration.get());
         mBroadphase = std::make_unique<btDbvtBroadphase>();
 
-        mCollisionWorld
-            = std::make_unique<btCollisionWorld>(mDispatcher.get(), mBroadphase.get(), mCollisionConfiguration.get());
+        mConstraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
+        auto dynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mDispatcher.get(), mBroadphase.get(),
+            mConstraintSolver.get(), mCollisionConfiguration.get());
+        // Native owner gravity is a separate policy; do not inherit Bullet's default.
+        dynamicsWorld->setGravity(btVector3(0, 0, 0));
+        mCollisionWorld = std::move(dynamicsWorld);
 
         // Don't update AABBs of all objects every frame. Most objects in MW are static, so we don't need this.
         // Should a "static" object ever be moved, we have to update its AABB manually using
@@ -505,6 +512,7 @@ namespace MWPhysics
 
     void PhysicsSystem::remove(const MWWorld::Ptr& ptr)
     {
+        mTaskScheduler->removeActorRagdoll(ptr);
         mTriggers.erase(ptr.mRef);
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
@@ -528,6 +536,7 @@ namespace MWPhysics
 
     void PhysicsSystem::updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
     {
+        mTaskScheduler->updateActorRagdollPtr(old, updated);
         if (auto trigger = mTriggers.find(old.mRef); trigger != mTriggers.end())
             trigger->second->updatePtr(updated);
         if (auto foundObject = mObjects.find(old.mRef); foundObject != mObjects.end())
@@ -866,7 +875,8 @@ namespace MWPhysics
             std::vector<Simulation>& simulations = mSimulations[mSimulationsCounter++ % mSimulations.size()];
             prepareSimulation(mTimeAccum >= mPhysicsDt, simulations);
             // modifies mTimeAccum
-            mTaskScheduler->applyQueuedMovements(mTimeAccum, simulations, frameStart, frameNumber, stats);
+            mTaskScheduler->applyQueuedMovements(
+                mTimeAccum, simulations, frameStart, frameNumber, stats, WorldFrameData{});
         }
     }
 
@@ -1061,6 +1071,12 @@ namespace MWPhysics
     WorldFrameData::WorldFrameData()
         : mIsInStorm(MWBase::Environment::get().getWorld()->isInStorm())
         , mStormDirection(MWBase::Environment::get().getWorld()->getStormDirection())
+    {
+    }
+
+    WorldFrameData::WorldFrameData(bool isInStorm, const osg::Vec3f& stormDirection)
+        : mIsInStorm(isInStorm)
+        , mStormDirection(stormDirection)
     {
     }
 

@@ -9,6 +9,7 @@
 #include <LinearMath/btTransform.h>
 
 class btDynamicsWorld;
+class btCollisionObject;
 
 namespace NifBullet
 {
@@ -52,11 +53,14 @@ namespace NifBullet
     {
     public:
         ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
-            float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask);
+            float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask,
+            void* userPointer = nullptr);
         ~ActorRagdollPhysics();
         ActorRagdollPhysics(const ActorRagdollPhysics&) = delete;
         ActorRagdollPhysics& operator=(const ActorRagdollPhysics&) = delete;
 
+        // Borrowed identities for engine collision routing; ownership stays here.
+        std::span<btCollisionObject* const> collisionObjects() const;
         std::vector<RagdollBodyState> capture() const;
         void restore(std::span<const RagdollBodyState> states);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);

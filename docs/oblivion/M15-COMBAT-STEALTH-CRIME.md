@@ -12577,3 +12577,67 @@ relinked engine binaries. Documentation follows implementation verification.
 S4 and all other open M15 stages remain open. Next: connect the borrowed dynamics
 world to the existing serial physics scheduler, bind captured body poses back
 to rendered bones, then wire native reaction/controller state and persistence.
+
+
+### Checkpoint133 — scheduler-owned ragdoll physics and worker shutdown (S4 open)
+
+The actual PhysicsTaskScheduler now owns physical ragdoll instances keyed by
+live-reference identity in its borrowed dynamics world. Body collision routing
+uses a PtrHolder owner, recorded in the same collision cache as other physics
+objects. Add, remove, capture, restore, impulse and reference rebind wait for
+the previous worker frame and use the existing exclusive world lock. Invalid
+and duplicate owners/graphs are rejected before publication; failed graph
+construction does not publish objects. Capture/restore uses the component's
+validated body-state interface. Removal, reference unload, shared-state release
+and scheduler destruction remove cached identities before destroying bodies
+and constraints. No second actor combat or save authority is added.
+
+PhysicsSystem owns a Bullet discrete dynamics world and solver with the required
+destruction order. Dynamics advances once in the existing post-step barrier,
+using that scheduler substep duration and no separate Bullet accumulator. It
+runs only while a ragdoll is owned; ordinary legacy collision/movement remains
+on its existing path. Native gravity has not been established/configured here:
+the engine world starts with zero dynamics gravity, without adopting Bullet's
+default. This transient framework is not an actor death/reaction transition.
+The explicit WorldFrameData snapshot keeps real queued-worker tests independent
+of ambient World services; the production caller supplies actual weather.
+
+Eighteen engine cases exercise zero, one and two actual worker threads:
+sphere/floor collision with explicit synthetic gravity, correct owner routing,
+120 exact scheduler steps, atomic restore rejection, duplicate/malformed graph
+rejection, reference rebinding, removal preserving unrelated static geometry,
+active-worker release, borrowed collision-only-world rejection and32 repeated
+immediate shutdowns per worker setting. Synthetic static references provide
+identity only; they do not prove NPC/controller/corpse or normal-input gameplay.
+The zero-friction floor case checks vertical settling and preserved horizontal
+sliding rather than claiming frictional rest.
+
+Initial missing-API compilation is retained in
+`S4/native-ragdoll-scheduler-red-01`. Intermediate builds01–03 retain interface
+and OSG Stats fixture errors. Execution04 exposed cleanup mistakenly placed in
+AABB updates, plus unsafe floor-fixture exception unwinding; both were fixed.
+Execution05 passed the movement cases but hung during two-worker idle shutdown.
+The previous worker loop could enter a job after stop while another thread
+already exited, leaving an unmatched final barrier. Ctrl-C terminated the run;
+its log and interruption report remain. The loop now checks stop before job
+execution; focused execution06 passes all18 cases. No failed attempt is reused
+as acceptance evidence.
+
+Final full normal and ASan/UBSan runs
+`S4/native-ragdoll-scheduler-{normal,sanitized}-01` each pass2,104 component and
+815 engine cases with full matching inventories, zero failures/skips and stable
+source fingerprint `c14cf4973049c3c5b617792fce55a6e7aec5f8310bc8338c2600cf025d4ed68f`. They build openmw, openmw-tests and
+esmtool. ASan detect_leaks=0:halt_on_error=1 and UBSan
+halt_on_error=1:print_stacktrace=1; leak coverage is not claimed. Unchanged
+Python coverage from checkpoint124 remains explicitly reused, not re-executed.
+
+The Morrowind runtime regression was attempted in
+`S4/native-ragdoll-scheduler-morrowind-01` but Xvfb could not bind a local display
+listener. The engine did not launch and no gameplay/save result is claimed.
+Failure metadata retains source/manifest/log/binary hashes, including normal
+openmw `079b46dd56b4b9806b4a5cc3f74f3140a940ddad5dbb1e2674141b9528752e29`. The display-dependent regression gate
+remains open; its old passing evidence does not cover this engine change.
+Native gravity/force ordering, speed caps, collision/equipment eligibility,
+renderer bone writeback, native reaction/controller transitions and body save
+persistence remain open. All previously open M15 stages remain open. Next:
+connect verified physical poses to rendered bones and the native lifecycle.

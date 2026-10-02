@@ -44,6 +44,7 @@ namespace Resource
 }
 
 class btCollisionWorld;
+class btSequentialImpulseConstraintSolver;
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
@@ -123,6 +124,7 @@ namespace MWPhysics
     struct WorldFrameData
     {
         WorldFrameData();
+        WorldFrameData(bool isInStorm, const osg::Vec3f& stormDirection);
         bool mIsInStorm;
         osg::Vec3f mStormDirection;
     };
@@ -318,6 +320,7 @@ namespace MWPhysics
         std::unique_ptr<btBroadphaseInterface> mBroadphase;
         std::unique_ptr<btDefaultCollisionConfiguration> mCollisionConfiguration;
         std::unique_ptr<btCollisionDispatcher> mDispatcher;
+        std::unique_ptr<btSequentialImpulseConstraintSolver> mConstraintSolver;
         std::unique_ptr<btCollisionWorld> mCollisionWorld;
         std::unique_ptr<PhysicsTaskScheduler> mTaskScheduler;
 

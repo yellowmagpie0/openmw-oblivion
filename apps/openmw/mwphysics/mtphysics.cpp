@@ -10,6 +10,7 @@
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <LinearMath/btThreads.h>
 
 #include <osg/Stats>
@@ -17,6 +18,7 @@
 #include "components/debug/debuglog.hpp"
 #include "components/misc/convert.hpp"
 #include <components/misc/barrier.hpp>
+#include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/settings/values.hpp>
 
 #include "../mwmechanics/actorutil.hpp"
@@ -389,6 +391,8 @@ namespace MWPhysics
             while (!mShouldStop)
             {
                 mHasJob.wait(lock, [&] { return mShouldStop || mFrameCounter != lastFrame; });
+                if (mShouldStop)
+                    break;
                 lastFrame = mFrameCounter;
                 lock.unlock();
                 f();
@@ -404,6 +408,19 @@ namespace MWPhysics
         bool mShouldStop = false;
         std::size_t mFrameCounter = 0;
         std::mutex mHasJobMutex;
+    };
+
+    class PhysicsTaskScheduler::ActorRagdoll : public PtrHolder
+    {
+    public:
+        ActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+            btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
+            : PtrHolder(ptr, {})
+            , mPhysics(definition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this))
+        {
+        }
+
+        NifBullet::ActorRagdollPhysics mPhysics;
     };
 
     PhysicsTaskScheduler::PhysicsTaskScheduler(
@@ -463,6 +480,7 @@ namespace MWPhysics
             mWorkersSync->stopWorkers();
         for (auto& thread : mThreads)
             thread.join();
+        clearActorRagdolls();
     }
 
     std::tuple<unsigned, float> PhysicsTaskScheduler::calculateStepConfig(float timeAccum) const
@@ -512,18 +530,18 @@ namespace MWPhysics
     }
 
     void PhysicsTaskScheduler::applyQueuedMovements(float& timeAccum, std::vector<Simulation>& simulations,
-        osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
+        osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData)
     {
         assert(mSimulations != &simulations);
 
         waitForWorkers();
-        prepareWork(timeAccum, simulations, frameStart, frameNumber, stats);
+        prepareWork(timeAccum, simulations, frameStart, frameNumber, stats, worldData);
         if (mWorkersSync != nullptr)
             mWorkersSync->wakeUpWorkers();
     }
 
     void PhysicsTaskScheduler::prepareWork(float& timeAccum, std::vector<Simulation>& simulations,
-        osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
+        osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData)
     {
         // This function run in the main thread.
         // While the mSimulationMutex is held, background physics threads can't run.
@@ -562,7 +580,7 @@ namespace MWPhysics
         mNextJob.store(0, std::memory_order_release);
 
         if (mAdvanceSimulation)
-            mWorldFrameData = std::make_unique<WorldFrameData>();
+            mWorldFrameData = std::make_unique<WorldFrameData>(worldData);
 
         if (mAdvanceSimulation)
             mBudgetCursor += 1;
@@ -597,6 +615,107 @@ namespace MWPhysics
             actor->updatePosition();
             actor->updateCollisionObjectPosition();
         }
+    }
+
+    PhysicsTaskScheduler::ActorRagdoll& PhysicsTaskScheduler::actorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        const auto found = mActorRagdolls.find(ptr.mRef);
+        if (found == mActorRagdolls.end())
+            throw std::invalid_argument("actor has no physical ragdoll");
+        return *found->second;
+    }
+
+    void PhysicsTaskScheduler::addActorRagdoll(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto* world = dynamic_cast<btDynamicsWorld*>(mCollisionWorld);
+        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef))
+            throw std::invalid_argument("invalid or duplicate ragdoll owner/world");
+        auto ragdoll = std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
+            poses, collisionGroup, collisionMask);
+        const auto identities = ragdoll->mPhysics.collisionObjects();
+        const std::vector<btCollisionObject*> objects(identities.begin(), identities.end());
+        try
+        {
+            for (auto* object : objects)
+                mCollisionObjects.insert(object);
+            mActorRagdolls.emplace(ptr.mRef, std::move(ragdoll));
+        }
+        catch (...)
+        {
+            for (auto* object : objects)
+                mCollisionObjects.erase(object);
+            throw;
+        }
+    }
+
+    void PhysicsTaskScheduler::removeActorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mActorRagdolls.find(ptr.mRef);
+        if (found == mActorRagdolls.end())
+            return;
+        for (auto* object : found->second->mPhysics.collisionObjects())
+            mCollisionObjects.erase(object);
+        mActorRagdolls.erase(found);
+    }
+
+    void PhysicsTaskScheduler::updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto found = mActorRagdolls.find(old.mRef);
+        if (found == mActorRagdolls.end())
+            return;
+        if (updated.isEmpty())
+            throw std::invalid_argument("empty updated ragdoll owner");
+        if (old.mRef != updated.mRef)
+        {
+            auto [destination, inserted] = mActorRagdolls.try_emplace(updated.mRef);
+            if (!inserted)
+                throw std::invalid_argument("duplicate updated ragdoll owner");
+            // Insertion may rehash; retrieve the old iterator afterward.
+            found = mActorRagdolls.find(old.mRef);
+            destination->second = std::move(found->second);
+            mActorRagdolls.erase(found);
+            found = destination;
+        }
+        found->second->updatePtr(updated);
+    }
+
+    void PhysicsTaskScheduler::clearActorRagdolls()
+    {
+        for (auto& [_, ragdoll] : mActorRagdolls)
+            for (auto* object : ragdoll->mPhysics.collisionObjects())
+                mCollisionObjects.erase(object);
+        mActorRagdolls.clear();
+    }
+
+    std::vector<NifBullet::RagdollBodyState> PhysicsTaskScheduler::captureActorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.capture();
+    }
+
+    void PhysicsTaskScheduler::restoreActorRagdoll(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollBodyState> states)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.restore(states);
+    }
+
+    void PhysicsTaskScheduler::applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
+        const btVector3& impulse, const btVector3& worldPoint)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.applyImpulse(body, impulse, worldPoint);
     }
 
     void PhysicsTaskScheduler::rayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld,
@@ -842,6 +961,8 @@ namespace MWPhysics
             mSimulations = nullptr;
         }
         mUpdateAabb.clear();
+        MaybeExclusiveLock worldLock(mCollisionWorldMutex, mLockingPolicy);
+        clearActorRagdolls();
     }
 
     void PhysicsTaskScheduler::afterPreStep()
@@ -862,6 +983,15 @@ namespace MWPhysics
         {
             --mRemainingSteps;
             updateActorsPositions();
+            if (!mActorRagdolls.empty())
+            {
+                // The barrier completion runs once, after every movement job.
+                // Reuse this step duration without a second Bullet accumulator.
+                MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+                for (auto& [_, ragdoll] : mActorRagdolls)
+                    ragdoll->mPhysics.applyNativeDamping(mPhysicsDt);
+                static_cast<btDynamicsWorld*>(mCollisionWorld)->stepSimulation(mPhysicsDt, 0);
+            }
         }
         mNextJob.store(0, std::memory_order_release);
     }

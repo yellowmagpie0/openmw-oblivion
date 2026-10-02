@@ -27,6 +27,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwphysics/testtrigger.cpp
     mwphysics/testactorbounds.cpp
+    mwphysics/testactorragdoll.cpp
 
     mwrender/testtes4facegen.cpp
 

@@ -8,6 +8,7 @@
 #include <set>
 #include <shared_mutex>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
@@ -17,6 +18,14 @@
 #include "components/misc/budgetmeasurement.hpp"
 #include "physicssystem.hpp"
 #include "ptrholder.hpp"
+
+class btTransform;
+
+namespace NifBullet
+{
+    struct ActorRagdollDefinition;
+    struct RagdollBodyState;
+}
 
 namespace Misc
 {
@@ -49,9 +58,19 @@ namespace MWPhysics
         /// @param actorsData per actor data needed to compute new positions
         /// @return new position of each actor
         void applyQueuedMovements(float& timeAccum, std::vector<Simulation>& simulations, osg::Timer_t frameStart,
-            unsigned int frameNumber, osg::Stats& stats);
+            unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
 
         void resetSimulation(const ActorMap& actors);
+
+        // Main-thread ownership operations wait for the previous worker frame.
+        void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+            float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+        void removeActorRagdoll(const MWWorld::Ptr& ptr);
+        void updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
+        std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
+        void restoreActorRagdoll(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBodyState> states);
+        void applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
+            const btVector3& impulse, const btVector3& worldPoint);
 
         // Thread safe wrappers
         void rayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld,
@@ -74,6 +93,9 @@ namespace MWPhysics
 
     private:
         class WorkersSync;
+        class ActorRagdoll;
+        void clearActorRagdolls();
+        ActorRagdoll& actorRagdoll(const MWWorld::Ptr& ptr);
 
         void doSimulation();
         void worker();
@@ -90,11 +112,12 @@ namespace MWPhysics
         void syncWithMainThread();
         void waitForWorkers();
         void prepareWork(float& timeAccum, std::vector<Simulation>& simulations, osg::Timer_t frameStart,
-            unsigned int frameNumber, osg::Stats& stats);
+            unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
 
         std::unique_ptr<WorldFrameData> mWorldFrameData;
         std::vector<Simulation>* mSimulations = nullptr;
         std::unordered_set<const btCollisionObject*> mCollisionObjects;
+        std::unordered_map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>> mActorRagdolls;
         float mDefaultPhysicsDt;
         float mPhysicsDt;
         float mTimeAccum;
