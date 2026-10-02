@@ -5540,3 +5540,16 @@ courses confirm2/1 draws and matching Health/conditions. Exact inventories,
 actor authority channels and no replay are independently checked with eight
 negative verifier controls. No general AI, in-action restart, held mesh,
 reaction/audio or campaign acceptance is inferred from these courses.
+
+Checkpoint107 adds carried-right NPC presentation using the same live equipped
+item as contact, without changing a native numerical rule. Winning Rust WEAP
+090615 identifies `Weapons\\Iron\\ShortSword.NIF`; the renderer resolves the
+record-relative path once and attaches to native `Weapon`. Normal and
+instrumented first-contact captures were directly inspected; frozen105 damage/
+wear/selection results remain exact. The normal full course passes independent
+save/restart checks. Instrumented continuation numerical checks pass with eight
+negative controls, but both initial loaded-scene captures fail unchanged image
+criteria; these are retained as failed visual courses. Neither native draw-state
+restoration, complete grip/strike/reaction frames nor audio is accepted here.
+The authored restraint fixture and staged equipment/geometry remain declared
+setup, not independent proof of native AI probabilities or normal equipment use.

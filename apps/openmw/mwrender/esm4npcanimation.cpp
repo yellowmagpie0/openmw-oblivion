@@ -36,6 +36,7 @@
 #include "../mwbase/soundmanager.hpp"
 #include "../mwclass/esm4npc.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/inventorystore.hpp"
 #include "../mwworld/worldimp.hpp"
 
 #include "util.hpp"
@@ -90,11 +91,49 @@ namespace MWRender
         mParts.clear();
         mFaceMorphs.clear();
         updateParts();
+        updateWeapon();
+    }
+
+    void ESM4NpcAnimation::showWeapons(bool showWeapon)
+    {
+        mShowWeapon = showWeapon;
+        updateWeapon();
+    }
+
+    void ESM4NpcAnimation::updateWeapon()
+    {
+        mWeaponParts.clear();
+        const ESM4::Npc* traits = MWClass::ESM4Npc::getTraitsRecord(mPtr);
+        if (!mShowWeapon || mObjectRoot == nullptr || traits == nullptr || !traits->mIsTES4)
+            return;
+
+        // Read the same live item instance used by the contact dispatcher.
+        // Selecting a second item from the saved native inventory would hide
+        // equipment publication bugs by drawing a different weapon.
+        const MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
+        const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        if (weapon == inventory.end())
+            return;
+        // insertPart accepts a record-relative model and resolves meshes/.
+        // Passing getCorrectedModel here would prepend that directory twice.
+        const std::string model(weapon->getClass().getModel(*weapon).value());
+        if (model.empty())
+            return;
+        const auto path = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model));
+        if (!mResourceSystem->getVFS()->exists(path))
+        {
+            Log(Debug::Warning) << "Unable to attach ESM4 carried weapon " << path << ": mesh is missing";
+            return;
+        }
+        if (insertPart(model, "Weapon", {}, false, &mWeaponParts))
+            Log(Debug::Info) << "M15 carried weapon attached: ref=" << mPtr.getCellRef().getRefId()
+                             << " item=" << weapon->getCellRef().getRefId() << " model=" << model
+                             << " bone=Weapon";
     }
 
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
         std::string_view model, std::string_view attachBone, std::string_view texture,
-        bool correctHeadPartOrientation)
+        bool correctHeadPartOrientation, std::vector<PartHolderPtr>* parts)
     {
         if (model.empty())
             return {};
@@ -141,8 +180,9 @@ namespace MWRender
                     Log(Debug::Warning) << "Unable to override ESM4 actor part texture " << texture
                                         << " on " << path;
             }
-            mParts.emplace_back(std::make_unique<PartHolder>(std::move(attached)));
-            return mParts.back()->getNode();
+            auto& destination = parts ? *parts : mParts;
+            destination.emplace_back(std::make_unique<PartHolder>(std::move(attached)));
+            return destination.back()->getNode();
         }
         catch (const std::exception& e)
         {

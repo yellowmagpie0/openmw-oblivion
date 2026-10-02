@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "purpose": "Synthetic S4 carried weapon capture: ordinary activation starts one controller-driven attack; actual attack Fatigue spending restrains the NPC while retaining combat and drawn weapon. A second ordinary activation stops combat and releases restraint. No damage, contacts, outcomes or mesh injection. Original winning NPC fields remain unchanged except CSTY/SCRI.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779392,
+    "editor_id": "M15CarriedWeaponStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779393,
+    "editor_id": "M15CarriedWeaponOpponent",
+    "sha256": "141462d3234297a3b3216e4057774bbc8ea6142fb8ed877fe7b71cc04ce1662e"
+  }
+}

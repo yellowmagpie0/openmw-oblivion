@@ -10596,3 +10596,73 @@ full S4 contract. Held-weapon models, block/reactions/mastery, other melee
 branches, views/input modes, in-action restart and audible outcomes remain.
 Next: carried-weapon visibility through the native actor renderer, preserving
 body/face parts and normal character-controller ownership.
+
+### Checkpoint 107 — native NPC carried-right weapon rendering
+
+`ESM4NpcAnimation::showWeapons` now attaches the actual live inventory's
+carried-right model to the native `Weapon` bone. Carried holders have separate
+lifetimes from body/face parts; equipment refresh rebuilds the requested carried
+model, and hiding it clears only those holders. Only native TES4 traits use this
+path. The record-relative model is normalized once, and missing meshes are
+reported instead of attaching the resource error marker. No damage, gear, RNG,
+AI or contact authority is changed by this renderer.
+
+Editable `m15_carried_weapon_fixture.json` and
+`m15_carried_weapon_opponent.obscript` reproduce the capture fixture with the
+existing hash-pinned builder. Winning NPC bytes remain unchanged except CSTY/
+SCRI. Ordinary Space activation starts combat; actual attack Fatigue spending
+causes script restraint/local2 while retaining combat and draw state. A fresh
+ordinary activation stops combat, releases restraint and saves local3. The
+fixture never injects damage, contacts, mesh or animation events. Script SHA256
+141462d3234297a3b3216e4057774bbc8ea6142fb8ed877fe7b71cc04ce1662e;
+plugin SHA256bcb0970042561f215725e5fae69af9ad6fba5cb56890b2d4b912876e22617c28.
+Generated licensed content remains ignored evidence, rather than editable source.
+
+`S4/native-npc-carried-weapon-engine-03` freshly passes all765 engine and239
+Python tests; `native-npc-carried-weapon-sanitized-02` passes all765 engine
+tests. Exact inventories match XML, zero failures/skips, stable source
+fingerprint3ab8c44b5dcc06a80336a1778802fbcefc5d73a3336ef8b7f88bf2a929c858a8.
+Instrumented checks use ASan/UBSan halting options with leak detection disabled.
+Unchanged component mechanics coverage is retained from checkpoint105.
+
+`native-npc-carried-weapon-offscreen-02` passes the normal contact/F5/distinct
+fresh-process course and independent save verifier, including eight rejection
+controls. One NPC-owned id1 contact retains the frozen original Health bits
+1064833122, Rust condition bits1113509069, Player Iron condition bits1132041335,
+Fatigue155->147.2 and seed1/three draws->415139642. All other native values/life/
+breath/base/death fields and all inventories are exact, with declared source
+Fatigue regeneration permitted. First combat/restraint/local2 and subsequent
+peaceful/unrestrained/local3 are checked separately. No held input, AI intent,
+pending action or strike replays. Normal executable SHA256
+0f9053208565b60e07bc5d25a6a4a612f95ddbc8d2e893778fda6246724a14b4.
+Both first-phase captures were directly inspected: actual sword at the NPC's
+right hand, named Dreth, unchanged face/body and prison scene. The close camera
+clips the lower blade; full grip/strike/reaction pose acceptance is not inferred.
+The first attempt `offscreen-01` is retained with `visual-rejection.json`: a
+wrong double `meshes/` prefix attached the error marker despite correct numeric
+results. This was fixed in production code, not by weakening capture criteria.
+
+`native-npc-carried-weapon-runtime-sanitized-01/first` passes the actual rendered
+instrumented contact/save course with the same frozen results and directly
+inspected held-model captures. Executable SHA256
+57d482d80869ee28a9bc4bc94ce6e7694c52d59a1aca1fe21be769c19ef849ef.
+Its `second` and `retry-second` fresh continuations are **not accepted visual
+courses**: their initial screenshot is HUD on blank scene (entropy0.0177256,
+unchanged minimum0.03), while the later after-stop captures show the actual
+prison/NPC and pass. Both failures and direct image reviews are retained; an
+extra20-second post-focus settling wait did not resolve the failure. No further
+blind waits or threshold reduction are used. Separate
+`numeric-verification-{second,retry}.json` explicitly reports
+`visual_acceptance_passed:false` while checking exact actual saved effects,
+first/local2 versus continuation/local3, unique changed input saves, distinct
+process epochs, no replay and eight numerical rejection controls. These are
+numerical evidence only, not an overall sanitized restart pass.
+
+A second independent gap is reproduced in the normal continuation: native
+NPC combat/restraint/local2 persist but drawn state resets, so no held model
+restores. Existing native class custom data does not serialize legacy DRAW.
+Next preserve validated typed native draw state and investigate initial loaded
+scene capture. NPC script equipment changes also still update saved vectors
+without publishing the live inventory. Shield/left, Player held rendering,
+grip/reactions/audio, breaking/block/mastery, other melee branches, input/view
+modes and in-action restart remain open. **S4 and S5-S14 are not complete.**

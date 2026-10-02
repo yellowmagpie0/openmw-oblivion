@@ -25,11 +25,13 @@ namespace MWRender
 
         osg::Vec3f runAnimation(float timepassed) override;
         void refreshEquipment();
+        void showWeapons(bool showWeapon) override;
 
     private:
         osg::ref_ptr<osg::Node> insertPart(
             std::string_view model, std::string_view attachBone = {}, std::string_view texture = {},
-            bool correctHeadPartOrientation = true);
+            bool correctHeadPartOrientation = true, std::vector<PartHolderPtr>* parts = nullptr);
+        void updateWeapon();
         std::size_t applyRagdollPose();
 
         // Works for FO3/FONV/TES5
@@ -40,6 +42,10 @@ namespace MWRender
         void updatePartsTES5(const ESM4::Npc& traits);
 
         std::vector<PartHolderPtr> mParts;
+        // Carried objects have their own lifetime: sheathing must not detach
+        // the actor's body or invalidate the face morph geometry.
+        std::vector<PartHolderPtr> mWeaponParts;
+        bool mShowWeapon = false;
         std::vector<Tes4FaceMorph> mFaceMorphs;
         float mFaceAnimationTime = 0.f;
         VFS::Path::Normalized mVoiceFile;

@@ -1,0 +1,20 @@
+scn M15CarriedWeaponOpponent
+short fighting
+Begin OnActivate
+    if fighting == 0
+        StartCombat Player
+        set fighting to 1
+    elseif fighting == 2
+        StopCombat
+        SetRestrained 0
+        set fighting to 3
+    endif
+End
+Begin GameMode
+    if fighting == 1
+        if GetAV Fatigue < GetBaseAV Fatigue
+            SetRestrained 1
+            set fighting to 2
+        endif
+    endif
+End
