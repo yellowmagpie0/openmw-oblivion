@@ -1440,6 +1440,25 @@ namespace MWWorld
                     return count;
                 }
             }
+            if (name == "removeitem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                const Ptr actor = ptrFor(owner);
+                if (nativeInventoryActor(actor))
+                {
+                    const auto count = boundedCount(argument(itemArg + 1));
+                    const int removed = mWorld.oblivionRemoveActorItem(actor, *item, count);
+                    if (removed > 0)
+                    {
+                        auto inventory = mWorld.captureOblivionActorInventory(actor);
+                        // Reacquire after observers, which may mutate saved references.
+                        if (auto* current = referenceState(owner))
+                            current->mInventory = std::move(inventory);
+                    }
+                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
+                        + " count=" + std::to_string(removed));
+                    return std::int64_t(0);
+                }
+            }
             ESM4::RuntimeReferenceState* state = referenceState(owner);
             if (!state)
                 return std::int64_t(0);

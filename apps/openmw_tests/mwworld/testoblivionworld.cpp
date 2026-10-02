@@ -255,6 +255,84 @@ namespace
         actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
     }
 
+    TEST(OblivionWorldTest, NativeScriptRemoveItemNonpositiveCountPreservesPhysicalAndSavedInventory)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = weapon;
+        item.mCount = 3;
+        item.mCondition = 43.125f;
+        item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        installEquipmentInventory(fixture, actor, {item});
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = actor.getCellRef().getFormKey();
+        for (const std::int64_t count : {std::int64_t(-2147483648LL), std::int64_t(-1), std::int64_t(0)})
+        {
+            const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, count};
+            EXPECT_EQ(ObScript::asInteger(host.call("RemoveItem", {}, args, context, {})), 0);
+            const auto captured = world.captureOblivionActorInventory(actor);
+            ASSERT_EQ(captured.size(), 1u);
+            EXPECT_EQ(captured.front().mCount, 3);
+            EXPECT_EQ(captured.front().mCondition, 43.125f);
+            EXPECT_EQ(captured.front().mOwner, item.mOwner);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+        }
+    }
+
+    TEST(OblivionWorldTest, NativeScriptRemoveItemWrappedMinimumCountPreservesInventory)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        const auto weapon = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem first;
+        first.mBase = weapon;
+        first.mCount = std::numeric_limits<std::int32_t>::max();
+        first.mCondition = 43.125f;
+        auto second = first;
+        second.mCount = 1;
+        second.mCondition = 99.125f;
+        installEquipmentInventory(fixture, actor, {first, second});
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = actor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
+        ASSERT_EQ(ObScript::asInteger(host.call("GetItemCount", {}, args, context, {})),
+            std::numeric_limits<std::int32_t>::min());
+        // Original command clamps against the signed query result before the
+        // positive-count gate: a wrapped INT_MIN must never touch inventory.
+        EXPECT_EQ(world.oblivionRemoveActorItem(actor, weapon, 1), 0);
+        const auto captured = world.captureOblivionActorInventory(actor);
+        ASSERT_EQ(captured.size(), 2u);
+        EXPECT_EQ(captured[0].mCount, first.mCount);
+        EXPECT_EQ(captured[0].mCondition, first.mCondition);
+        EXPECT_EQ(captured[1].mCount, second.mCount);
+        EXPECT_EQ(captured[1].mCondition, second.mCondition);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeActorRemoveAbsentItemDoesNotConstructAuthority)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        const auto weapon = addEquipmentWeapon(fixture);
+        EXPECT_EQ(world.oblivionRemoveActorItem(actor, weapon, 7), 0);
+        EXPECT_EQ(world.oblivionRemoveActorItem({}, weapon, 7), 0);
+        EXPECT_TRUE(world.captureOblivionActorInventory(actor).empty());
+        EXPECT_TRUE(world.captureOblivionActorInventory({}).empty());
+        EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
+        EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+    }
+
     TEST(OblivionWorldTest, NativeScriptItemCountReadsLiveStacksInsteadOfSavedInventory)
     {
         NativeWorldFixture fixture;

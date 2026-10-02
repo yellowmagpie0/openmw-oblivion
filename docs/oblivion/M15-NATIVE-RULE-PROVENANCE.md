@@ -5656,3 +5656,31 @@ SCTX fork compilation does not prove original-game bytecode acceptance.
 Rejected runtime ownership, red count/owner, trace-macro compilation, synthetic
 Player race validation and probe-loader syntax attempts remain retained. Wider
 M15 inventory mutation/cache/hydration and stage gates remain open.
+
+### Checkpoint 112 — native RemoveItem count clamp
+
+Original1.2.0416 SHA256a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+identifies RemoveItem entryB0D590/opcode1052/execute513810. Original
+513911..51394E and51399E execute with original9828C0 non-SSE conversion,
+both x87 control words, and only GetItemCount's double return supplied.
+`S4/native-removeitem-count-oracle-02` passes112 requested/available pairs,
+including signed extremes, absent quantity, count caps and aggregate INT_MIN;
+corpus58a76c4e505c5a3b643af0e87a263de392a78a81fad71ae21ff332dbb262b273.
+Clamp to min(requested, available), then mutate only for a positive count.
+Zero/negative requests and available INT_MIN bypass mutation. The earlier
+96-case report and initial exit-stop harness fault remain retained.
+
+Live Native NPC/CREA removal now uses physical inventory and captures its
+actual metadata after observers. The frozen prior executable's ordinary
+RemoveItem999/F5 retained count3 and is independently rejected in
+`S4/native-actor-removeitem-baseline-red-03`; final normal/SAN remove-all
+courses pass four epochs/six directly viewed captures/16 controls under
+`S4/native-actor-removeitem-final-acceptance-01`. Final780-case engine suites
+share fingerprintc5b6222ed61b43a647eb2457a6f3c40549ac96c6fdfb28ce895917fe1ef7b28b;
+242 unchanged Python checks are reused from the earlier112 fingerprint.
+The expanded C++ INT_MIN test was red before the guard (headless GUI-null
+path after an incorrect mutation, exit139), then green. Native instance
+selection/partial-removal order, full original command resolution/mutation/
+callbacks, active-windup removal, AddItem, Player/unavailable normalization,
+and the wider M15 gates remain open. See the milestone checkpoint112 for
+all identities, failures and boundary limits.

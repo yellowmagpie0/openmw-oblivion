@@ -315,6 +315,73 @@ namespace MWWorld
         return false;
     }
 
+    int World::oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor)
+            || key.isNull() || count <= 0)
+            return 0;
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
+        if (!id || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id)))
+            return 0;
+        const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        std::vector<Ptr> stacks;
+        std::uint32_t available = 0;
+        for (auto it = inventory.begin(); it != inventory.end(); ++it)
+            if (it->getCellRef().getRefId() == shared)
+            {
+                stacks.push_back(*it);
+                const std::int32_t raw = it->getCellRef().getCount(false);
+                available += raw < 0 ? 0u - static_cast<std::uint32_t>(raw)
+                                    : static_cast<std::uint32_t>(raw);
+            }
+        // Original RemoveItem clamps against GetItemCount's signed int32
+        // magnitude, then tests strictly positive. INT_MIN retains its sign.
+        constexpr std::uint32_t sign = std::uint32_t(1) << 31;
+        if (available == sign)
+            return 0;
+        if (available > sign)
+            available = 0u - available;
+        count = std::min(count, static_cast<int>(available));
+        if (count <= 0)
+            return 0;
+        int removed = 0;
+        for (const Ptr& stack : stacks)
+        {
+            if (removed == count)
+                break;
+            auto found = std::find(inventory.begin(), inventory.end(), stack);
+            if (found == inventory.end())
+                continue;
+            if (inventory.isEquipped(stack) && stack.getCellRef().getCount() <= count - removed
+                && mOblivionCombat)
+            {
+                const auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id));
+                if ((definition->mSlots & (ESM4::InventorySlotWeapon | ESM4::Armor::TES4_Shield
+                        | ESM4::InventorySlotLight)) != 0)
+                {
+                    auto* mechanics = MWBase::Environment::get().getMechanicsManagerOrNull();
+                    if (!mechanics || !mechanics->cancelOblivionCombatInput(actor))
+                    {
+                        const auto owner = actor.getCellRef().getFormKey();
+                        if (const auto* state = mOblivionCombat->findMeleeState(owner); state && state->mStrike)
+                            mOblivionCombat->cancelMeleeStrike(state->mStrike->mActionId, owner);
+                        mOblivionCombat->endBlocking(owner);
+                        mOblivionCombat->clearMeleeInput(owner);
+                    }
+                    found = std::find(inventory.begin(), inventory.end(), stack);
+                    if (found == inventory.end())
+                        continue;
+                }
+            }
+            // Snapshot iteration is bounded even if observers add new stacks.
+            // Re-find after cancellation and let the inventory unequip a depleted
+            // instance, preserving equipped stacks that survive partial removal.
+            removed += inventory.remove(*found, count - removed, false, true);
+        }
+        return removed;
+    }
+
     bool World::oblivionEquipActorItem(const Ptr& actor, const ESM::FormKey& key, bool equip)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor) || key.isNull())

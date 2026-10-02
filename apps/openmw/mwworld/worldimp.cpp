@@ -856,6 +856,66 @@ namespace MWWorld
         return true;
     }
 
+    std::vector<ESM4::RuntimeInventoryItem> World::captureOblivionActorInventory(const Ptr& owner) const
+    {
+        std::vector<ESM4::RuntimeInventoryItem> result;
+        const ESM::FormKey ownerKey = owner.isEmpty() ? ESM::FormKey{} : owner.getCellRef().getFormKey();
+        try
+        {
+            if (owner.isEmpty())
+                return result;
+            const unsigned ownerType = owner.getClass().getType();
+            if (ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
+                return result;
+            const ESM::FormKeyResolver inventoryResolver(mContentFiles);
+            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
+            for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
+            {
+                const Ptr itemPtr = *iterator;
+                if (itemPtr.isEmpty())
+                    continue;
+                const ESM::RefId nativeId
+                    = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
+                const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
+                if (formId == nullptr || itemPtr.getCellRef().getCount() <= 0)
+                    continue;
+                ESM4::RuntimeInventoryItem item;
+                item.mBase = inventoryResolver.toFormKey(*formId);
+                item.mCount = itemPtr.getCellRef().getCount();
+                if (const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId))
+                {
+                    item.mCondition = definition->mMaxCondition < 0 ? -1
+                        : itemPtr.getCellRef().getItemCondition(static_cast<float>(definition->mMaxCondition));
+                    item.mCharge = definition->mMaxCharge < 0.f ? -1.f
+                        : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
+                                                                           : itemPtr.getCellRef().getEnchantmentCharge();
+                    try
+                    {
+                        item.mRemainingUsageTime = definition->mMaxUsageTime < 0.f ? -1.f
+                            : itemPtr.getClass().getRemainingUsageTime(itemPtr);
+                    }
+                    catch (const std::exception& error)
+                    {
+                        throw std::runtime_error("remaining usage time for item " + item.mBase.serialize()
+                            + ": " + std::string(error.what()));
+                    }
+                    if (inventory.isEquipped(itemPtr))
+                        item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
+                }
+                const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
+                if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
+                    item.mOwner = inventoryResolver.toFormKey(*ownerId);
+                ESM4::addInventoryItem(result, std::move(item));
+            }
+            return result;
+        }
+        catch (const std::exception& error)
+        {
+            throw std::runtime_error("TES4 runtime-state actor inventory " + ownerKey.serialize()
+                + " capture failed: " + std::string(error.what()));
+        }
+    }
+
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
     {
         ESM4::RuntimeState state;
@@ -1033,64 +1093,7 @@ namespace MWWorld
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
                 previousReferences.emplace(reference.mKey, &reference);
 
-        const auto captureNativeActorInventory = [&](const Ptr& owner) {
-            std::vector<ESM4::RuntimeInventoryItem> result;
-            const ESM::FormKey ownerKey = owner.isEmpty() ? ESM::FormKey{} : owner.getCellRef().getFormKey();
-            try
-            {
-            if (owner.isEmpty())
-                return result;
-            const unsigned ownerType = owner.getClass().getType();
-            if (ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
-                return result;
-            const ESM::FormKeyResolver inventoryResolver(mContentFiles);
-            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
-            for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
-            {
-                const Ptr itemPtr = *iterator;
-                if (itemPtr.isEmpty())
-                    continue;
-                const ESM::RefId nativeId
-                    = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
-                const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
-                if (formId == nullptr || itemPtr.getCellRef().getCount() <= 0)
-                    continue;
-                ESM4::RuntimeInventoryItem item;
-                item.mBase = inventoryResolver.toFormKey(*formId);
-                item.mCount = itemPtr.getCellRef().getCount();
-                if (const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId))
-                {
-                    item.mCondition = definition->mMaxCondition < 0 ? -1
-                        : itemPtr.getCellRef().getItemCondition(static_cast<float>(definition->mMaxCondition));
-                    item.mCharge = definition->mMaxCharge < 0.f ? -1.f
-                        : itemPtr.getCellRef().getEnchantmentCharge() < 0.f ? definition->mMaxCharge
-                                                                           : itemPtr.getCellRef().getEnchantmentCharge();
-                    try
-                    {
-                        item.mRemainingUsageTime = definition->mMaxUsageTime < 0.f ? -1.f
-                            : itemPtr.getClass().getRemainingUsageTime(itemPtr);
-                    }
-                    catch (const std::exception& error)
-                    {
-                        throw std::runtime_error("remaining usage time for item " + item.mBase.serialize()
-                            + ": " + std::string(error.what()));
-                    }
-                    if (inventory.isEquipped(itemPtr))
-                        item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
-                }
-                const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
-                if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
-                    item.mOwner = inventoryResolver.toFormKey(*ownerId);
-                ESM4::addInventoryItem(result, std::move(item));
-            }
-            return result;
-            }
-            catch (const std::exception& error)
-            {
-                throw std::runtime_error("TES4 runtime-state actor inventory " + ownerKey.serialize()
-                    + " capture failed: " + std::string(error.what()));
-            }
-        };
+
 
         auto& worldModel = const_cast<WorldModel&>(mWorldModel);
         try
@@ -1262,7 +1265,7 @@ namespace MWWorld
                     }
                     if (actorReference)
                     {
-                        reference.mInventory = captureNativeActorInventory(mutablePtr);
+                        reference.mInventory = captureOblivionActorInventory(mutablePtr);
                         reference.mActorDrawState = captureOblivionActorDrawState(mutablePtr);
                     }
                     reference.mCustomState["count"]

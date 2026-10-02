@@ -1,0 +1,6 @@
+scn M15ActorRemoveItemOpponent
+short fighting
+Begin OnActivate
+    RemoveItem WeapIronShortswordRusty 999
+    set fighting to GetItemCount WeapIronShortswordRusty
+End

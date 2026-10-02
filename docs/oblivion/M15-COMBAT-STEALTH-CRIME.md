@@ -10941,3 +10941,122 @@ samples precede input and are excluded from scene acceptance; every required
 capture keeps minimum entropy0.03. General first-capture causality, full grip/
 reaction/audio, live AddItem/RemoveItem, complete cache synchronization/hydration
 and wider S3/S4/S5-S14 acceptance remain open. Full M15 is not complete.
+
+### Checkpoint 112 — live native actor removal and signed count gates
+
+Checkpoint111 committed as `43b4edc58f6f37dcf1a0585fc4686de792f73cad`,
+tree `117970eb3d24ea4175f52f1ee7131e398d00f913`, the108th isolated
+self-contained commit. Its verified bundle is
+`S3/isolated-git-progress-89/m15-progress.bundle`, SHA256
+`d04647baaebbfd0485c7df8afe91fabd1d555a10ec9808c0a310ca4312b231ae`.
+The original checkout's master and read-only Git metadata remain unchanged.
+
+Native NPC/CREA `RemoveItem` now changes live physical inventory instead of
+only its T4ST cache. The world adapter validates the native actor and item,
+clamps against the original signed query count, and removes existing physical
+instances without replacement equipment. Snapshot iteration is bounded, and
+instances are re-found after cancellation observers. An equipped weapon,
+shield or light that will be depleted cancels owned input/playback before
+removal observers; an equipped instance that survives partial removal is
+retained. Saved inventory is reacquired after observers and replaced by a
+complete reinspection of the resulting physical stacks. The existing full
+world inventory-capture code is now the reusable
+`captureOblivionActorInventory` method, including condition, charge, usage,
+equipment and the safe owner-key lifetime established in111.
+
+Original RemoveItem opcode1052, command entryB0D590, execute513810 was
+identified independently in the pinned1.2.0416 executable. The original
+513911..51394E count clamp and51399E positive gate execute with the actual
+9828C0 non-SSE conversion and both x87 control words. The only supplied
+boundary is GetItemCount's double return. `S4/native-removeitem-count-oracle-02`
+passes112 cases, corpus SHA256
+`58a76c4e505c5a3b643af0e87a263de392a78a81fad71ae21ff332dbb262b273`.
+Zero/negative requests remove nothing; positive requests are capped by the
+available signed query. An aggregate INT_MIN remains negative and bypasses
+removal. The earlier96-case oracle remains in`-01`. An initial harness run
+reached the exit cleanup beyond the selected slice and faulted; the preserved
+pre-fix script is`/tmp/m15_probe_remove_count112-before-stop-fix.py`.
+The corrected explicit exit stop changes no expected count. Actor/item
+resolution, selection among distinct instance metadata, inventory mutation
+and original callbacks remain outside this instruction slice.
+
+The final engine checks are`S3/native-actor-removeitem-world-02` and
+`native-actor-removeitem-world-sanitized-02`:780 cases each, exact unfiltered
+inventory/XML agreement, zero failures/skips and unchanged before/after
+fingerprint`c5b6222ed61b43a647eb2457a6f3c40549ac96c6fdfb28ce895917fe1ef7b28b`.
+Three new engine cases cover nonpositive live script removal, absent items/empty
+actors without authority birth, and aggregate INT_MIN preservation.
+The existing full-world owner capture case also passes. The new aggregate
+case was red before its production guard: the incorrect removal touched
+inventory and reached the headless fixture's absent WindowManager, exit139
+(`/tmp/m15_remove112_overflow_red01.log`). This is a unit reproducer of a
+branch that should perform no mutation, not an observed game-process crash.
+The corrected focused run passes4 cases.
+
+The earlier`world-01`/`world-sanitized-01` runs passed779 engine cases;
+normal`world-01` also passed242 Python cases with the same fixture bytes.
+Those Python results are explicitly reused after the final C++ count guard
+and capture-method formatting; Python code/fixtures did not change. Their
+source fingerprint is`b9766bdc0a88dd1304a92e0472a38bc8ee27369cdbef378fad39d74fce857243`,
+not the final C++ fingerprint. Component results from108 remain unchanged
+and are reused, not rerun for counts. Sanitizer engine and graphical runs
+use ASan/UBSan halting on errors with leak detection disabled; no leak
+coverage is claimed. The first broad build retains the existing
+CharacterController animation-entry warning.
+
+The independently retained111 executable reproduced the old defect through
+ordinary Space activation, query and F5:`S4/native-actor-removeitem-baseline-red-03`
+saved three Rust weapons after RemoveItem999, where the frozen expected
+remaining quantity is zero. `semantic-rejection.json` records rejection,
+old executable SHA256`c9236b793b23b2d4e3bbc657de19032edbd8e24e17afeafee3a357ad28597212`,
+and actual save SHA256`7f2cec6a3dd4551dc708c685da351b98b5cbdc9f070dc41c32cd9b255fa7ea48`.
+Its diagnostic transport expects the observed query3 solely to let the old
+process finish; the independent acceptance expectation remains0. Attempts
+`baseline-red-01`/`-02` failed startup because the isolated executable lacked
+its adjacent initial config/defaults setup. They are retained. Copying the
+verified build's local config/defaults corrected the isolated launch, without
+changing production code or removal expectations. The post-fix early normal
+`native-actor-removeitem-restart-01` passed two epochs/eight controls and all
+three required captures were directly viewed; it predates the final aggregate
+guard and is not final112 evidence. Its SAN sibling was prepared but unlaunched.
+
+The final courses are`S4/native-actor-removeitem-restart-02` and
+`native-actor-removeitem-runtime-sanitized-02`. Each executes ordinary Space
+RemoveItem999/GetItemCount0/F5/quit, then a distinct fresh load/F5/quit without
+command replay. Both pass all eight preregistered semantic negative controls;
+all six required captures were directly viewed and hash-recorded. Named
+Dreth, the real dungeon, surviving apparel and Player HUD are visible.
+The hand/weapon region is limited; full grip, counts from pixels, reactions
+and audio are not claimed. Extra startup samples remain excluded. The full
+native resource/life/breath/base/death/queue/RNG/action state, Player inventory
+and every prior reference inventory/draw view remain exact except the
+requested removal of all three Rust instances. The saved short local is
+exact integer0 and the fresh process performs no removal/query replay.
+
+Normal executable SHA256
+`6222a3b8e49278135c5f972d07118aa7405271962de7a96ff2f9244a4202d756`;
+sanitized`17d0ea28588b55e7c30aeb2db6d418314f0b2f974e14d35b041b409b0f6a0e4f`.
+Both lanes use identical staged input SHA256
+`23ac7cabc5d364b7c6e34dad4a1f75a86f778b58eb57dfe9a468de664057f648`
+and own generated plugin SHA256
+`eb2a224d810519cdefce745f266a04671930900090daa61b9dfc898c47b6413b`.
+The editable recipe/script are`m15_actor_remove_item_fixture.json` and
+`m15_actor_remove_item_opponent.obscript`; script SHA256
+`fdfd8d9db43e7f1436c4ad3fd5bf53ee38eee7a2161a1a33ecadd961a367e2c8`.
+Staging rebinds only the previous own synthetic script/style/plugin identities
+and fingerprints. It preserves the actual111 second-process inventory and
+all native authority; no removal outcome is injected. The unchanged generic
+builder independently reopens the plugin and preserves original NPC fields
+except the declared SCRI/ZNAM links. Consolidated proof is
+`S4/native-actor-removeitem-final-acceptance-01/verification.json`:four process
+epochs, six directly reviewed required captures and16 semantic controls.
+
+
+The chunk does not close S3/S4 or M15. Native partial-removal order among
+metadata-distinct stacks, callback reentry and removal during an active
+windup still need independent expectations and actual runtime courses.
+Player and unavailable-reference count normalization, live Native AddItem,
+lazy saved-inventory hydration, original compiled-bytecode acceptance and
+all remaining combat/ranged/death/stealth/crime/jail/campaign/regression gates
+remain open. Next bounded task: live Native AddItem with actual added-count
+reporting, ownership/condition preservation, and save/fresh-load acceptance.
