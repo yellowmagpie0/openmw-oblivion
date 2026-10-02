@@ -12350,3 +12350,80 @@ halt_on_error=1:print_stacktrace=1 are explicit; this is not leak coverage.
 Python is unchanged; checkpoint124's243 cases are explicitly reused. No M15
 stage gate closes. Next: establish malleability, admit the full stock graph,
 then connect physics scheduling, posed bones, reactions and fresh-process state.
+
+
+### Checkpoint130 — malleable solver parameters and full stock graph admission (S4 open)
+
+Checkpoint129 is committed as `6dcf95dec2f8a80ce0a9b2307b01101a66d52dcd`, tree
+`46f6c1187c96597a9bd07950417f2ebd77bd24a1`. Its126-commit verified bundle is
+`S3/isolated-git-progress-107/m15-progress.bundle`, SHA256
+`d890e9694663fd208112cf3750187cee358c806527752db78a2a846fdd636c55`.
+
+The bridge now admits native malleable wrappers for supported cone and hinge
+joints. Tau replaces the current constraint's positional error reduction and
+damping replaces its velocity damping; neither multiplies the world defaults.
+The parameters are finite and nonnegative and apply to that constraint's rows,
+including its bounded friction. The bridge does not mutate the world's solver
+settings. Invalid malleability rejects before world publication. This completes
+factory admission of the stock sphere/capsule/hull and cone/hinge/malleable graph,
+but does not close actor pose binding, native speed caps, world collision
+policy, physics scheduler integration, reaction/controller state or save gates.
+
+Original malleable builder9104b0 emits solver schema opcode15 with tau/damping,
+executes the real wrapped cone911480 or hinge8b2820 builder, then emits opcode16.
+Complete solver sweep9202a0 dispatches opcode15 at92197c, temporarily replacing
+solver-info fields+4/+8 with the wrapper's values; opcode16 at9219a5 restores
+them. Ball-socket solve9213f0 computes the impulse from positional rhs*tau minus
+relative velocity*damping, followed by its effective inverse-mass product.
+Both builders and the complete single sweep execute without boundary stubs and
+with verified builder ret8 / solver cdecl return. Original global tau/damping
+are verified restored after every case. Constructor/iteration/frame scheduling
+and full multi-iteration Havok behavior are not established by this experiment.
+The Bullet adapter's single iteration is compared deliberately; differences in
+full iterative algorithms and native effective-mass epsilon remain open.
+
+Each original wrapper has324 cases under control words027f/037f, varying
+zero/half/full tau and damping, coincident or offset anchors, signed incoming
+velocity and two positive frame durations. Original query inverse durations
+are explicit binary32 fixture values120/60. Tolerances absolute2e-6 and
+relative2e-6 were declared in the original reports before implementation,
+then retained unchanged. `S4/native-ragdoll-malleable-sweep-oracle-01` and
+`S4/native-hinge-malleable-sweep-oracle-01` supply648 total cases.
+`S4/native-ragdoll-malleable-comparison-{normal,sanitized}-02` checks actual
+Bullet bodies after one iteration and verifies world settings unchanged.
+All648 pass in both configurations, with maximum absolute error
+9.5367431640625e-07; four controls reject wrong values,
+missing rows, duplicate rows and malformed input. Earlier comparison01 passed
+the first324 cone cases; its original helpers are preserved as cone_v1 files.
+Original executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Corpus hashes `1118f515848d3fe9e41da932e4636890a743bce083b5851a2877b8249f3154cb` and
+`1118f515848d3fe9e41da932e4636890a743bce083b5851a2877b8249f3154cb`; generator hashes
+`95da7f1d4f8f908422fad4ac57bdbf363debcaa99438f669bfb629201b3e3d75` and `dc9d5c9274027ad232c5cb466adff3342e165c0cc091c45bcd1b8ba5a95c2150`;
+final comparator `a63e7465e4a01379629109e082840679f826ccafd63ec9a1416240726c9616d4`. No proprietary
+corpus or disassembly is committed.
+
+`S4/native-ragdoll-stock-physics-{normal,sanitized}-01` independently loads
+the fingerprinted human skeleton, SHA256
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`,
+constructs all18 bodies and17 joints, applies a pelvis impulse and runs240
+actual dynamics steps with native damping. All poses and linear/angular
+velocities remain finite, with maximum absolute position16.0652 inside the
+predeclared coarse100-unit bound. Destruction leaves zero bodies/constraints.
+This is a synthetic zero-gravity world using source Havok-info rest transforms
+and lengthScale1, not the actor's current posed skeleton, original collision
+filter/trajectory, original full frame integration or normal-input ragdoll.
+The coarse bound is a factory/simulation smoke check, not native pose parity.
+
+Final full runs `S4/native-ragdoll-malleable-normal-01` and `S4/native-ragdoll-malleable-sanitized-01` each execute2,097
+component cases and797 engine cases, matching inventories, no failures/skips,
+openmw/esmtool built. Tested source fingerprint
+`12171dbc4b30d9309b9de93b949a4ee63d7b926a6ade93d32385d83d65b54607` remains unchanged. The focused malleability test checks
+the independent single-sweep .75/.2499999701976776 velocity result and unchanged
+world settings; malformed parameters still reject. ASan options
+are detect_leaks=0:halt_on_error=1; UBSan halt_on_error=1:print_stacktrace=1;
+this does not provide leak coverage. Python is unchanged; checkpoint124's243
+cases are explicitly reused. Documentation follows implementation checks.
+S4 and all other open M15 stages remain open. Next: bind dynamic bodies to
+posed actor bones, establish the required world/native unit conversion and
+serial scheduler ownership, and connect native reactions and persisted state.

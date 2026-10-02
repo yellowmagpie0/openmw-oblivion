@@ -88,14 +88,19 @@ namespace NifBullet
         class NativeHingeConstraint final : public btHingeConstraint
         {
             float mFriction, mLengthScale;
+            bool mMalleable;
+            float mTau, mDamping;
             int mFrictionRow = 0;
 
         public:
             NativeHingeConstraint(btRigidBody& a, btRigidBody& b, const btTransform& frameA,
-                const btTransform& frameB, float friction, float scale)
+                const btTransform& frameB, float friction, float scale, const RagdollJointDefinition& definition)
                 : btHingeConstraint(a, b, frameA, frameB, true)
                 , mFriction(friction)
                 , mLengthScale(scale)
+                , mMalleable(definition.mMalleable)
+                , mTau(definition.mTau)
+                , mDamping(definition.mDamping)
             {
             }
 
@@ -109,6 +114,8 @@ namespace NifBullet
 
             void getInfo2(btConstraintInfo2* info) override
             {
+                if (mMalleable)
+                    info->erp = mTau;
                 btHingeConstraint::getInfo2(info);
                 if (mFriction > 0)
                 {
@@ -116,6 +123,8 @@ namespace NifBullet
                     frictionRow(info, mFrictionRow, axis,
                         ragdollFrictionImpulse(mFriction, float(1 / info->fps), mLengthScale));
                 }
+                if (mMalleable)
+                    info->m_damping = mDamping;
             }
         };
 
@@ -125,6 +134,8 @@ namespace NifBullet
             btVector3 mAxisA, mPlaneA, mAxisB, mPlaneB;
             btMatrix3x3 mShapeToCenterA;
             float mLengthScale;
+            bool mMalleable;
+            float mTau, mDamping;
             std::vector<RagdollAngularLimit> mRows;
 
             static osg::Vec3f native(const btVector3& value)
@@ -143,7 +154,8 @@ namespace NifBullet
 
         public:
             NativeConeConstraint(btRigidBody& a, btRigidBody& b, const RagdollConeJoint& joint,
-                const btTransform& centerA, const btTransform& centerB, btScalar scale)
+                const btTransform& centerA, const btTransform& centerB, btScalar scale,
+                const RagdollJointDefinition& definition)
                 : btPoint2PointConstraint(a, b, centerA.inverse() * (vector(joint.mA.mPivot) * scale),
                     centerB.inverse() * (vector(joint.mB.mPivot) * scale))
                 , mJoint(joint)
@@ -153,6 +165,9 @@ namespace NifBullet
                 , mPlaneB(centerB.getBasis().transpose() * vector(joint.mB.mPlane))
                 , mShapeToCenterA(centerA.getBasis().transpose())
                 , mLengthScale(float(scale))
+                , mMalleable(definition.mMalleable)
+                , mTau(definition.mTau)
+                , mDamping(definition.mDamping)
             {
                 mRows = coordinates();
             }
@@ -168,6 +183,8 @@ namespace NifBullet
 
             void getInfo2(btConstraintInfo2* info) override
             {
+                if (mMalleable)
+                    info->erp = mTau;
                 btPoint2PointConstraint::getInfo2(info);
                 int index = 3;
                 for (const auto& row : mRows)
@@ -197,6 +214,8 @@ namespace NifBullet
                     for (int axis = 0; axis < 3; ++axis)
                         frictionRow(info, index++, basis.getColumn(axis), maximum);
                 }
+                if (mMalleable)
+                    info->m_damping = mDamping;
             }
         };
     }
@@ -319,14 +338,18 @@ namespace NifBullet
         {
             require(input.mBodyA < mImpl->mBodies.size() && input.mBodyB < mImpl->mBodies.size()
                 && input.mBodyA != input.mBodyB, "invalid joint endpoints");
-            require(!input.mMalleable, "malleable joint solver is not implemented");
+            if (input.mMalleable)
+            {
+                coefficient(input.mTau);
+                coefficient(input.mDamping);
+            }
             auto& a = mImpl->mBodies[input.mBodyA];
             auto& b = mImpl->mBodies[input.mBodyB];
             if (const auto* cone = std::get_if<RagdollConeJoint>(&input.mJoint))
             {
                 coefficient(cone->mFriction);
                 mImpl->mConstraints.push_back(std::make_unique<NativeConeConstraint>(*a.mBody, *b.mBody,
-                    *cone, a.mCenterFrame, b.mCenterFrame, lengthScale));
+                    *cone, a.mCenterFrame, b.mCenterFrame, lengthScale, input));
                 continue;
             }
             const auto* hinge = std::get_if<RagdollHingeJoint>(&input.mJoint);
@@ -335,7 +358,7 @@ namespace NifBullet
                 && hinge->mMin <= hinge->mMax, "invalid hinge limits");
             auto constraint = std::make_unique<NativeHingeConstraint>(*a.mBody, *b.mBody,
                 a.mCenterFrame.inverse() * hingeFrame(hinge->mA, lengthScale),
-                b.mCenterFrame.inverse() * hingeFrame(hinge->mB, lengthScale), hinge->mFriction, lengthScale);
+                b.mCenterFrame.inverse() * hingeFrame(hinge->mB, lengthScale), hinge->mFriction, lengthScale, input);
             constraint->setLimit(hinge->mMin, hinge->mMax);
             mImpl->mConstraints.push_back(std::move(constraint));
         }

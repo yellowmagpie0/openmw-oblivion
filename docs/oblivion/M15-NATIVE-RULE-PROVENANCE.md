@@ -6096,3 +6096,20 @@ Bullet friction-row cases, with four corruption controls each. Zero-duration
 checks cover the cap only. Full hashes and bounded scope are in checkpoint129's
 milestone entry. Original effective-mass/iteration parity, malleability,
 stock graph admission, gameplay and saved continuation remain open.
+
+
+### Checkpoint130: original malleable parameter scope and one solver sweep
+
+Original9104b0 wraps real cone911480 or hinge8b2820 row builders with schema
+opcodes15/16. Complete solver sweep9202a0 executes92197c/9219a5 to replace and
+restore solver-info tau/damping fields+4/+8. The values replace defaults rather
+than multiplying them. Ball-socket solve9213f0 uses rhs*tau minus relative
+velocity*damping, then effective inverse mass. Both complete builder and single
+sweep execute without stubs in324 cases per joint type; saved global values are
+verified restored. Normal and sanitizer actual-body comparisons pass648 cases
+within absolute/relative2e-6 tolerances frozen before implementation and reject
+four controls. Full hashes/scope are in checkpoint130's milestone entry.
+This is single-sweep evidence in synthetic unit-mass/inertia anchor fixtures,
+not full native iterative/frame/collision or gameplay parity. Full stock graph
+factory admission and240 finite Bullet steps separately pass, using source
+info rest transforms, not current actor pose binding or normal-input reaction.

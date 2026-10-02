@@ -210,10 +210,11 @@ namespace
         EXPECT_THROW(body.applyImpulse(4, btVector3(0, 0, 0), btVector3(0, 0, 0)), std::invalid_argument);
     }
 
-    TEST_F(ActorRagdollPhysicsTest, RejectsUnsupportedMalleabilityAndMalformedConeBeforeWorldPublication)
+    TEST_F(ActorRagdollPhysicsTest, RejectsInvalidMalleabilityAndMalformedConeBeforeWorldPublication)
     {
         addHinge();
         mGraph.mJoints[0].mMalleable = true;
+        mGraph.mJoints[0].mTau = std::numeric_limits<float>::quiet_NaN();
         EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
         EXPECT_EQ(mWorld.getNumConstraints(), 0);
@@ -336,6 +337,33 @@ namespace
         EXPECT_NEAR(states[0].mAngularVelocity.x(), 0.1, 1e-12);
         EXPECT_NEAR(states[1].mAngularVelocity.x(), 0, 1e-12);
         EXPECT_GT(states[0].mPose.getRotation().x(), 0.004);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, MalleableCoefficientsReplaceSolverDefaultsForTheirOwnJoint)
+    {
+        addHinge();
+        mPoses[1] = mPoses[0];
+        auto cone = coneLimits();
+        cone.mA = cone.mB = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        mGraph.mJoints[0].mJoint = cone;
+        mGraph.mJoints[0].mMalleable = true;
+        mGraph.mJoints[0].mTau = 0.5f;
+        mGraph.mJoints[0].mDamping = 0.5f;
+        mWorld.getSolverInfo().m_numIterations = 1;
+        const auto originalErp = mWorld.getSolverInfo().m_erp;
+        const auto originalDamping = mWorld.getSolverInfo().m_damping;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto states = actor.capture();
+        states[0].mLinearVelocity = btVector3(1, 0, 0);
+        actor.restore(states);
+        mWorld.stepSimulation(btScalar(1) / 60, 0);
+        states = actor.capture();
+        // Full original wrapped builder and single sweep9202a0: .75 and
+        // .2499999701976776, with its inverse-mass epsilon retained.
+        EXPECT_NEAR(states[0].mLinearVelocity.x(), 0.75, 2e-6);
+        EXPECT_NEAR(states[1].mLinearVelocity.x(), 0.2499999701976776, 2e-6);
+        EXPECT_EQ(mWorld.getSolverInfo().m_erp, originalErp);
+        EXPECT_EQ(mWorld.getSolverInfo().m_damping, originalDamping);
     }
 
     TEST_F(ActorRagdollPhysicsTest, FallsAndSettlesAgainstActualWorldCollision)
