@@ -68,6 +68,57 @@ namespace ESM4
         return previous;
     }
 
+    PhysicalBlendControllerUpdate advancePhysicalBlendController(const PhysicalBlendControllerState& controller,
+        const PhysicalBlendTimeCache& timeCache, bool hasTarget, std::optional<PhysicalBlendGains> targetGains,
+        bool hasVelocityController, float inputTime)
+    {
+        PhysicalBlendControllerUpdate result{controller, timeCache, targetGains, false};
+        auto& next = result.mController;
+        if (!hasTarget || !(next.mTiming.mFlags & 8) || next.mKeys.empty())
+            return result;
+        validate(inputTime);
+        if (!targetGains)
+        {
+            next.mClock.mPreviousTime = inputTime;
+            return result;
+        }
+        validate(targetGains->mHierarchy);
+        validate(targetGains->mVelocity);
+        validate(next.mCachedGains.mHierarchy);
+        validate(next.mCachedGains.mVelocity);
+        const float keyTime = advancePhysicalBlendClock(next.mClock, result.mTimeCache, next.mTiming, inputTime);
+        const auto evaluated = evaluatePhysicalBlendKeys(next.mKeys, keyTime, next.mCursor);
+        next.mCursor = evaluated.mCursor;
+        if (evaluated.mGains)
+        {
+            if (next.mCachedGains.mHierarchy < 0.f)
+                next.mCachedGains = *targetGains;
+            result.mTargetGains = evaluated.mGains;
+        }
+        if (keyTime == next.mTiming.mStopKey && (next.mTiming.mFlags & 6) == 4)
+        {
+            // Reset precedes restoration in Original8AAD60. Retain the cached
+            // segment cursor even when its key array becomes empty.
+            if (next.mTiming.mFlags & 0x40)
+            {
+                next.mKeys.clear();
+                next.mCachedGains = {-1.f, -1.f};
+            }
+            result.mRemoveVelocityController = (next.mTiming.mFlags & 0x80) && hasVelocityController;
+            if ((next.mTiming.mFlags & 0x100) && next.mCachedGains.mHierarchy >= 0.f)
+            {
+                result.mTargetGains = next.mCachedGains;
+                next.mCachedGains = {-1.f, -1.f};
+            }
+            next.mTiming.mFlags &= 0xfff7u;
+            constexpr float sentinel = -std::numeric_limits<float>::max();
+            next.mClock.mPreviousTime = sentinel;
+            if (next.mTiming.mFlags & 1)
+                next.mClock.mStartTime = sentinel;
+        }
+        return result;
+    }
+
     float physicalBlendDurationForFilter(
         const PhysicalBlendDurationTables& tables, std::uint32_t filter, bool getUp)
     {

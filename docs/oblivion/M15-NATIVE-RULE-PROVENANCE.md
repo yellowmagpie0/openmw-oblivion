@@ -9490,3 +9490,67 @@ lifecycle remain open. Full physical save/restart, retained BodyT/floor failures
 and S5-S14 remain open. Next: execute the full original8AAD60 controller update
 including actual clock/evaluator and finish paths before owning those transitions
 in the existing physics/renderer bridge.
+
+
+### Checkpoint196: native controller update/finish publication candidate
+
+Checkpoint195 committed as `ca79810db9bfa3f3d4738c492907b5e0751cfa40`,
+192 isolated commits with exact-byte/fresh-clone verification. Bundle173 SHA256
+`caff73f382bbd3c29131030bf1f8238c90ac54d6f3043bc68d39c8533bb69ba9`.
+The owned value-state transition composes general timing and cached key evaluation
+with original eligibility and finish ordering. Missing target, inactive controller
+or empty keys leave state untouched and ignore unused input timing; a target
+without a blend updates only previous time. Successful evaluation snapshots old
+target gains only when cached hierarchy is negative. Clamp completion clears
+keys/cache first when requested, then optionally removes a separate velocity
+controller, then optionally restores cached gains, then stops. Reset preserves
+the segment cursor; Stop clears active bit and resets previous time, resetting
+start only for the absolute time base while preserving accumulated elapsed.
+The blend controller remains attached. The immutable result includes controller,
+shared time cache, optional target gains and a velocity-removal request for the
+runtime owner to publish atomically. This value model does not itself write
+nodes, remove live controllers or update physical bodies.
+
+Full original8AAD60 executes110,592 cases with actual497420 target lookup,
+7155A0 clock/CRT remainder,8AA990 evaluator,8AA7F0 reset,8AA3E0 velocity lookup,
+8AA420 optional gain restoration,6FFE90 attached-list removal and715570 Stop.
+Actual controller RTTI initializer ancestry executes. Only Windows critical-section
+and interlocked primitives are supplied; retained references avoid allocator/
+destructor boundaries. Both x87 words, four key fixtures, both time bases/all
+cycles/reverse, all active/reset/remove/restore bit combinations, target/blend/
+velocity presence, cached negative/zero/positive hierarchy and boundary times
+are covered. Shared time cache starts explicitly reset and all five fields are
+captured. Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`; oracle source/corpus
+`3ec989bec3eb2bd6bcb736a7dc6aa97ce9ee77d02c2b4dab09364145ea9e6713`, `2cb20ee115136cf16a269a1c7939d2fa0adb721d0b02992447f178ae5e6e6c71`. Both comparators match1,769,472
+exact gain/cache/key-count/clock/cursor/flag/velocity-attachment/time-cache fields
+per build. Comparator source/driver `fb1aefe834a9c687e241e672a7a68217278e4a56b764981ba674949c0dbbb08b`,
+`e34f29650c98d78f32663e1ef7158556c26449e96586350b08f14cebe877e917`. Paired original controls, excluding flag metadata
+itself, detect18,144 cases forced inactive,720 omitting key reset,360 omitting
+restoration and360 omitting velocity removal. The360 removed-controller cases
+all remove velocity controllers; no blend controller is detached. Control hash
+`966589c40e9eed4b0da354d712f161c5a0388ac6647e2b92afbfc4afd11ec29b`.
+
+Oracle01's2,304 cases retain a scope string naming detach even though no fixture
+contains an attached velocity controller and6FFE90 never executes. This is not
+self-detachment evidence: BA7F3C is the blend RTTI, while the removal lookup asks
+for BA8000 velocity RTTI. Oracle02 executes12,288 cases with actual initialized
+ancestries and optional attached velocity-controller nodes;03 adds all clock
+modes and explicit time-cache fields. These retained diagnostic distinctions are
+not waived. Original8AB000 separately confirms key insertion resets cursor+3C
+to0; finish reset's retained cursor must not be confused with new-key setup.
+
+All five new tests fail baseline01. Final normal/sanitized01 each pass all2,301
+component tests with complete inventories, no failures/skips; fingerprint
+`e97ae72ff10e74c2e5fc7839afbe88df8503b7bce6ac76b56f08e4cee9117975`. Unit regressions cover snapshot once, finish ordering, retained cursor,
+Stop sentinels/elapsed, zero-hierarchy restoration, missing-blend previous time,
+unused malformed timing and used rejection. ASan leak checks disabled; UBSan
+halts. Final build logs show no warnings. Engine/Python checks are not repeated
+for this isolated immutable component transition; live integration still needs
+engine rebuilding and owner lifetime/rollback tests.
+
+No stage closes. The full logical controller transition is now independently
+verified, but actual runtime ownership/publication, velocity-controller creation/
+removal effects, World begin-update-end and complete physical persistence remain
+open. Retained BodyT/floor failures and S5-S14 remain open. Next: give this state
+an ActorRagdollPhysics owner and compose its staged publication with the existing
+atomic native body-blend bridge before wiring World lifecycle calls.

@@ -3850,3 +3850,92 @@ TEST(ESM4PhysicalCombat, LoadedBlendBoundsValidateOnlyUsedTimesAndBounds)
     EXPECT_THROW(ESM4::resolvePhysicalBlendKeyBounds({0.f, 1.f}, std::span(keys).first(2)), std::invalid_argument);
     EXPECT_THROW(ESM4::resolvePhysicalBlendKeyBounds({0.f, 1.f}, std::span(keys).subspan(1)), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, BlendControllerUpdatesGainsAndCapturesInitialTargetOnce)
+{
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {0xcd, 1.f, 0.f, 0.f, .25f};
+    state.mKeys = {{0.f, {1.f, 1.f}}, {.25f, {0.f, 0.f}}};
+    state.mClock = {0.f, 0.f, 0.f};
+    auto update = ESM4::advancePhysicalBlendController(state, {}, true, ESM4::PhysicalBlendGains{.9f, .8f}, true, .125f);
+    ASSERT_TRUE(update.mTargetGains);
+    EXPECT_FLOAT_EQ(update.mTargetGains->mHierarchy, .5f);
+    EXPECT_FLOAT_EQ(update.mTargetGains->mVelocity, .5f);
+    EXPECT_FLOAT_EQ(update.mController.mCachedGains.mHierarchy, .9f);
+    EXPECT_FLOAT_EQ(update.mController.mCachedGains.mVelocity, .8f);
+    EXPECT_FALSE(update.mRemoveVelocityController);
+    update = ESM4::advancePhysicalBlendController(update.mController, update.mTimeCache, true,
+        ESM4::PhysicalBlendGains{.5f, .5f}, true, .2f);
+    EXPECT_FLOAT_EQ(update.mController.mCachedGains.mHierarchy, .9f);
+    EXPECT_FLOAT_EQ(update.mController.mClock.mElapsed, .2f);
+}
+
+TEST(ESM4PhysicalCombat, BlendControllerFinishClearsKeysBeforeRestoreAndRemovesVelocityController)
+{
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {0x1cd, 1.f, 0.f, 0.f, .25f};
+    state.mKeys = {{0.f, {1.f, 1.f}}, {.125f, {.7f, .8f}}, {.25f, {0.f, 0.f}}};
+    state.mClock = {0.f, 0.f, 0.f};
+    const auto update = ESM4::advancePhysicalBlendController(state, {}, true,
+        ESM4::PhysicalBlendGains{.9f, .8f}, true, .25f);
+    ASSERT_TRUE(update.mTargetGains);
+    EXPECT_FLOAT_EQ(update.mTargetGains->mHierarchy, 0.f);
+    EXPECT_FLOAT_EQ(update.mTargetGains->mVelocity, 0.f);
+    EXPECT_TRUE(update.mController.mKeys.empty());
+    EXPECT_EQ(update.mController.mCursor, 1u);
+    EXPECT_FLOAT_EQ(update.mController.mCachedGains.mHierarchy, -1.f);
+    EXPECT_FLOAT_EQ(update.mController.mCachedGains.mVelocity, -1.f);
+    EXPECT_EQ(update.mController.mTiming.mFlags, 0x1c5);
+    EXPECT_FLOAT_EQ(update.mController.mClock.mStartTime, -std::numeric_limits<float>::max());
+    EXPECT_FLOAT_EQ(update.mController.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+    EXPECT_FLOAT_EQ(update.mController.mClock.mElapsed, .25f);
+    EXPECT_TRUE(update.mRemoveVelocityController);
+}
+
+TEST(ESM4PhysicalCombat, BlendControllerFinishRestoresCachedGainsWhenKeysRemain)
+{
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {0x18d, 1.f, 0.f, 0.f, .25f};
+    state.mKeys = {{0.f, {1.f, 1.f}}, {.25f, {0.f, 0.f}}};
+    state.mClock = {0.f, 0.f, 0.f};
+    state.mCachedGains = {0.f, .5f};
+    const auto update = ESM4::advancePhysicalBlendController(state, {}, true,
+        ESM4::PhysicalBlendGains{.9f, .8f}, false, .5f);
+    ASSERT_TRUE(update.mTargetGains);
+    EXPECT_FLOAT_EQ(update.mTargetGains->mHierarchy, 0.f);
+    EXPECT_FLOAT_EQ(update.mTargetGains->mVelocity, .5f);
+    EXPECT_EQ(update.mController.mKeys.size(), 2u);
+    EXPECT_FLOAT_EQ(update.mController.mCachedGains.mHierarchy, -1.f);
+    EXPECT_EQ(update.mController.mTiming.mFlags, 0x185);
+    EXPECT_FALSE(update.mRemoveVelocityController);
+}
+
+TEST(ESM4PhysicalCombat, BlendControllerMissingBlendAdvancesOnlyPreviousTime)
+{
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {0xcd, 1.f, 0.f, 0.f, .25f};
+    state.mKeys = {{0.f, {1.f, 1.f}}};
+    const auto update = ESM4::advancePhysicalBlendController(state, {}, true, std::nullopt, true, .125f);
+    EXPECT_FLOAT_EQ(update.mController.mClock.mPreviousTime, .125f);
+    EXPECT_FLOAT_EQ(update.mController.mClock.mStartTime, state.mClock.mStartTime);
+    EXPECT_FLOAT_EQ(update.mController.mClock.mElapsed, state.mClock.mElapsed);
+    EXPECT_FALSE(update.mRemoveVelocityController);
+    EXPECT_FALSE(update.mTargetGains);
+}
+
+TEST(ESM4PhysicalCombat, BlendControllerIneligiblePathsIgnoreUnusedTimeAndTiming)
+{
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {0xcd, nan, nan, nan, nan};
+    state.mKeys = {{nan, {nan, nan}}};
+    EXPECT_NO_THROW(ESM4::advancePhysicalBlendController(state, {}, false, std::nullopt, true, nan));
+    state.mTiming.mFlags &= ~8u;
+    EXPECT_NO_THROW(ESM4::advancePhysicalBlendController(state, {}, true, std::nullopt, true, nan));
+    state.mTiming.mFlags |= 8u;
+    state.mKeys.clear();
+    EXPECT_NO_THROW(ESM4::advancePhysicalBlendController(state, {}, true, std::nullopt, true, nan));
+    state.mKeys = {{0.f, {1.f, 1.f}}};
+    EXPECT_THROW(ESM4::advancePhysicalBlendController(state, {}, true,
+        ESM4::PhysicalBlendGains{1.f, 1.f}, true, .1f), std::invalid_argument);
+}

@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 namespace ESM4
 {
@@ -67,6 +68,31 @@ namespace ESM4
     // Reversed finite bounds are raw native state, not clock admission.
     PhysicalBlendKeyBounds resolvePhysicalBlendKeyBounds(
         PhysicalBlendKeyBounds previous, std::span<const PhysicalBlendKey> keys);
+
+    struct PhysicalBlendControllerState
+    {
+        PhysicalBlendTiming mTiming{0, 1.f, 0.f, 0.f, 0.f};
+        std::vector<PhysicalBlendKey> mKeys;
+        PhysicalBlendClock mClock;
+        std::uint32_t mCursor = 0;
+        PhysicalBlendGains mCachedGains{-1.f, -1.f};
+    };
+
+    struct PhysicalBlendControllerUpdate
+    {
+        PhysicalBlendControllerState mController;
+        PhysicalBlendTimeCache mTimeCache;
+        std::optional<PhysicalBlendGains> mTargetGains;
+        bool mRemoveVelocityController;
+    };
+
+    // Full8AAD60 state transition, with target/velocity-controller identity
+    // resolved by the runtime owner. Returns an atomic publication candidate;
+    // actual node writes and velocity-controller removal remain with the owner.
+    // The blend controller remains attached after completion.
+    PhysicalBlendControllerUpdate advancePhysicalBlendController(const PhysicalBlendControllerState& controller,
+        const PhysicalBlendTimeCache& timeCache, bool hasTarget, std::optional<PhysicalBlendGains> targetGains,
+        bool hasVelocityController, float inputTime);
 
     // The body ID is bits8..12 of the packed native world-object filter.
     // Negative results mean native transition setup skips that body.
