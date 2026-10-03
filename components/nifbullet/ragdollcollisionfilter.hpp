@@ -64,6 +64,20 @@ namespace NifBullet
             0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
         },
     };
+
+    // Full original allocator 00531d80. Allocation/reuse ownership belongs to
+    // the caller; this operation does not reserve a unique live group.
+    inline std::uint16_t nextRagdollSystemGroup(std::uint16_t previous)
+    {
+        const auto next = static_cast<std::uint16_t>(std::uint32_t(previous) + 1);
+        return next == 0 ? 10 : next;
+    }
+
+    struct RagdollInternalCollisionFilter
+    {
+        RagdollCollisionFilter mMasks = InitialRagdollCollisionFilter;
+        std::uint16_t mSystemGroup = 0;
+    };
 }
 
 #endif

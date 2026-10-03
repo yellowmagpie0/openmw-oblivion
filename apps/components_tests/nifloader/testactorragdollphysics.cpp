@@ -700,4 +700,70 @@ namespace
         EXPECT_EQ(input.mLinear, osg::Vec3f(10, 20, 30));
         EXPECT_EQ(input.mAngular, osg::Vec3f(1, 2, 3));
     }
+    TEST_F(ActorRagdollPhysicsTest, NativeInternalFiltersControlActualOverlapWithoutBorrowingInput)
+    {
+        addHinge();
+        mGraph.mJoints.clear();
+        mPoses[1].setOrigin(mPoses[0].getOrigin() + btVector3(.5, 0, 0));
+        mGraph.mBodies[0].mInfoFilter = {8, 2, 0};
+        mGraph.mBodies[1].mInfoFilter = {8, 3, 0};
+        for (const bool wildcard : {false, true})
+        {
+            NifBullet::RagdollInternalCollisionFilter filter;
+            filter.mSystemGroup = wildcard ? 0 : 10;
+            {
+                NifBullet::ActorRagdollPhysics physics(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &filter);
+                filter.mMasks.mBoneMasks.fill(0xffffffffu); // Admission already consumed the input.
+                const auto objects = physics.collisionObjects();
+                EXPECT_EQ(objects[0]->checkCollideWith(objects[1]), wildcard);
+                EXPECT_EQ(objects[1]->checkCollideWith(objects[0]), wildcard);
+                mWorld.performDiscreteCollisionDetection();
+                EXPECT_EQ(mDispatcher.getNumManifolds(), wildcard ? 1 : 0);
+            }
+            EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+            EXPECT_EQ(mDispatcher.getNumManifolds(), 0);
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, ExplicitNativeMasksOwnJointPairFiltering)
+    {
+        addHinge();
+        mGraph.mBodies[0].mInfoFilter = {8, 2, 0};
+        mGraph.mBodies[1].mInfoFilter = {8, 6, 0};
+        NifBullet::RagdollInternalCollisionFilter filter;
+        filter.mSystemGroup = 10;
+        NifBullet::ActorRagdollPhysics physics(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &filter);
+        ASSERT_EQ(mWorld.getNumConstraints(), 1);
+        const auto objects = physics.collisionObjects();
+        EXPECT_TRUE(objects[0]->checkCollideWith(objects[1]));
+        EXPECT_TRUE(objects[1]->checkCollideWith(objects[0]));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RejectsInvalidOrAsymmetricFiltersBeforePublishingBodies)
+    {
+        addHinge();
+        NifBullet::RagdollInternalCollisionFilter filter;
+        filter.mSystemGroup = 10;
+        mGraph.mBodies[0].mInfoFilter = {8, 2, 0};
+        mGraph.mBodies[1].mInfoFilter = {32, 3, 0};
+        EXPECT_THROW(NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &filter),
+            std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+        mGraph.mBodies[1].mInfoFilter = {8, 6, 0};
+        filter.mMasks.mBoneMasks[2] = 0;
+        EXPECT_THROW(NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &filter),
+            std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+
+    TEST(RagdollSystemGroups, WrapsPastZeroToOriginalReservedStartingGroup)
+    {
+        EXPECT_EQ(NifBullet::nextRagdollSystemGroup(0), 1);
+        EXPECT_EQ(NifBullet::nextRagdollSystemGroup(9), 10);
+        EXPECT_EQ(NifBullet::nextRagdollSystemGroup(65534), 65535);
+        EXPECT_EQ(NifBullet::nextRagdollSystemGroup(65535), 10);
+    }
+
 }

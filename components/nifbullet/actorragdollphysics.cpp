@@ -331,7 +331,8 @@ namespace NifBullet
     }
 
     ActorRagdollPhysics::ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
-        float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask, void* userPointer)
+        float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask, void* userPointer,
+        const RagdollInternalCollisionFilter* internalFilter)
         : mImpl(std::make_unique<Impl>(world, lengthScale))
     {
         require(std::isfinite(lengthScale) && lengthScale > 0, "invalid length scale");
@@ -437,7 +438,33 @@ namespace NifBullet
             constraint->setLimit(hinge->mMin, hinge->mMax);
             mImpl->mConstraints.push_back(std::move(constraint));
         }
-        // Publish only after every body and admitted constraint was built.
+        if (internalFilter)
+        {
+            std::vector<std::uint32_t> filters;
+            filters.reserve(definition.mBodies.size());
+            for (const auto& body : definition.mBodies)
+            {
+                const auto& fields = body.mInfoFilter;
+                const auto value = std::uint32_t(fields.mLayer) | (std::uint32_t(fields.mFlags) << 8)
+                    | (std::uint32_t(internalFilter->mSystemGroup) << 16);
+                // Validate even a graph with one body or a wildcard group.
+                internalFilter->mMasks.enabled(value, value);
+                filters.push_back(value);
+            }
+            for (std::size_t a = 0; a < filters.size(); ++a)
+                for (std::size_t b = a + 1; b < filters.size(); ++b)
+                {
+                    const bool forward = internalFilter->mMasks.enabled(filters[a], filters[b]);
+                    const bool backward = internalFilter->mMasks.enabled(filters[b], filters[a]);
+                    require(forward == backward, "asymmetric internal collision filter");
+                    if (!forward)
+                    {
+                        mImpl->mBodies[a].mBody->setIgnoreCollisionCheck(mImpl->mBodies[b].mBody.get(), true);
+                        mImpl->mBodies[b].mBody->setIgnoreCollisionCheck(mImpl->mBodies[a].mBody.get(), true);
+                    }
+                }
+        }
+        // Publish only after every body, constraint and filter was admitted.
         for (auto& body : mImpl->mBodies)
         {
             world.addRigidBody(body.mBody.get(), collisionGroup, collisionMask);
@@ -445,7 +472,7 @@ namespace NifBullet
         }
         for (auto& constraint : mImpl->mConstraints)
         {
-            world.addConstraint(constraint.get(), true);
+            world.addConstraint(constraint.get(), internalFilter == nullptr);
             ++mImpl->mRegisteredConstraints;
         }
     }

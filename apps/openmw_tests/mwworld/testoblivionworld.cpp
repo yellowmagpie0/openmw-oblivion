@@ -277,9 +277,11 @@ namespace
             graph.mBodies.push_back(body);
             const std::array<btTransform, 1> poses{
                 btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 20))};
+            NifBullet::RagdollInternalCollisionFilter internalFilter;
+            internalFilter.mSystemGroup = 10;
             const auto admit = [&](const auto& definition) {
                 physics.addActorRagdoll(ptr, definition, 1, poses,
-                    MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World);
+                    MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
             };
             EXPECT_THROW(admit(graph), std::invalid_argument);
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));
@@ -289,6 +291,12 @@ namespace
             auto invalid = graph;
             invalid.mBodies[0].mMass = 0;
             EXPECT_THROW(admit(invalid), std::invalid_argument);
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            ASSERT_NE(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
+            invalid = graph;
+            invalid.mBodies[0].mInfoFilter.mLayer = 32;
+            EXPECT_THROW(admit(invalid), std::invalid_argument);
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
             EXPECT_FALSE(capsule->isCollisionSuspended());
             ASSERT_NE(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
             admit(graph);

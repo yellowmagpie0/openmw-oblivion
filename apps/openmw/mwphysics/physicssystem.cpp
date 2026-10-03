@@ -735,12 +735,13 @@ namespace MWPhysics
 
     void PhysicsSystem::addActorRagdoll(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
-        std::span<const btTransform> poses, int collisionGroup, int collisionMask)
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+        const NifBullet::RagdollInternalCollisionFilter* internalFilter)
     {
         const auto found = mActors.find(ptr.mRef);
         if (ptr.isEmpty() || found == mActors.end() || found->second->isCollisionSuspended())
             throw std::invalid_argument("physical pose requires an admitted movement actor");
-        mTaskScheduler->addActorRagdoll(ptr, definition, lengthScale, poses, collisionGroup, collisionMask);
+        mTaskScheduler->addActorRagdoll(ptr, definition, lengthScale, poses, collisionGroup, collisionMask, internalFilter);
         try
         {
             found->second->suspendCollision(true);

@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_NIFBULLET_ACTORRAGDOLLPHYSICS_HPP
 
 #include "actorragdoll.hpp"
+#include "ragdollcollisionfilter.hpp"
 
 #include <memory>
 #include <span>
@@ -49,12 +50,14 @@ namespace NifBullet
     // must outlive the instance; destruction removes every registered object.
     // Poses and velocities use the caller's world units. Native shape/inertia
     // lengths are converted once with the supplied positive length scale.
+    // Optional internal filtering consumes caller-resolved group/masks during
+    // construction only; it does not assign actor groups or filter other owners.
     class ActorRagdollPhysics
     {
     public:
         ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
             float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask,
-            void* userPointer = nullptr);
+            void* userPointer = nullptr, const RagdollInternalCollisionFilter* internalFilter = nullptr);
         ~ActorRagdollPhysics();
         ActorRagdollPhysics(const ActorRagdollPhysics&) = delete;
         ActorRagdollPhysics& operator=(const ActorRagdollPhysics&) = delete;

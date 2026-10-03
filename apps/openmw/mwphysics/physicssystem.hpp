@@ -58,6 +58,7 @@ class btTransform;
 namespace NifBullet
 {
     struct ActorRagdollDefinition;
+    struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
 }
 
@@ -186,7 +187,8 @@ namespace MWPhysics
         void addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh);
 
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
-            float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+            float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
         void removeActorRagdoll(const MWWorld::Ptr& ptr);
         bool hasActorRagdoll(const MWWorld::Ptr& ptr);
         NifBullet::ActorRagdollDefinition actorRagdollDefinition(const MWWorld::Ptr& ptr);

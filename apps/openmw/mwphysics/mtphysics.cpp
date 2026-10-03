@@ -417,10 +417,11 @@ namespace MWPhysics
     {
     public:
         ActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
-            btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
+            btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter)
             : PtrHolder(ptr, {})
             , mDefinition(definition)
-            , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this))
+            , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this), internalFilter)
             , mLinearDeltas(mDefinition.mBodies.size())
         {
             for (auto* object : mPhysics.collisionObjects())
@@ -670,7 +671,8 @@ namespace MWPhysics
 
     void PhysicsTaskScheduler::addActorRagdoll(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
-        std::span<const btTransform> poses, int collisionGroup, int collisionMask)
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+        const NifBullet::RagdollInternalCollisionFilter* internalFilter)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
@@ -678,7 +680,7 @@ namespace MWPhysics
         if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef))
             throw std::invalid_argument("invalid or duplicate ragdoll owner/world");
         auto ragdoll = std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
-            poses, collisionGroup, collisionMask);
+            poses, collisionGroup, collisionMask, internalFilter);
         const auto identities = ragdoll->mPhysics.collisionObjects();
         const std::vector<btCollisionObject*> objects(identities.begin(), identities.end());
         try

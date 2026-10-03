@@ -13326,3 +13326,49 @@ normal01 control disables Bullet warmstarting and also fails (first linear
 velocity difference0.32358162105083466 exceeding0.05). Neither changes production
 solver behavior, serialization or tolerances. Both failures remain retained;
 contact continuation, World lifecycle/render/save and gameplay gates stay open.
+
+
+### Checkpoint148 — apply resolved internal filters before physical admission (S4/S6 open)
+
+Physical construction accepts optional caller-resolved native system-group and
+mask inputs through PhysicsSystem and the worker-barrier scheduler. The graph's
+rigid-body-info layer/flags combine with that group. Validation and internal
+ignored-pair setup finish before any body/constraint enters the world. Unsupported
+layers, including single-body graphs, and asymmetric internal pairs fail without
+publication. Connected pairs follow supplied native masks rather than an
+unconditional Bullet constraint collision exclusion. The existing unfiltered
+callers retain their prior behavior. Inputs are consumed during construction;
+no borrowed mask lifetime or later caller mutation changes the admitted pairs.
+This boundary governs internal pairs only, not other owners or native World
+group assignment/reuse/dynamic-mask policy.
+
+Original allocator00531d80 executes complete returns for all65,536 uint16 prior
+counter values, no stubs. It increments modulo65536 and substitutes10 at zero.
+The executable's raw initialized counterB2EB3C is10; this is a PE data audit,
+not a runtime initialization trace. Corpus SHA256
+`6e0754a1658f62d1cae7d9cbc706d53e98aee0da64e0eba79006b89e4f01d663`;
+original executable identity is the checkpoint147 pinned hash. Actual C++
+normal/sanitized comparisons each match all65,536 outputs; zero-on-wrap and
+one-on-wrap controls each fail the wrap case. Actor group reuse branches and
+persistent runtime allocation are not claimed from this isolated operation.
+
+Four component tests cover real overlapping sphere contacts, zero-group
+wildcards, immutable consumed masks, connected-pair filtering, malformed and
+asymmetric admission cleanup, plus allocator boundaries. The PhysicsSystem
+integration test exercises the new boundary across workers0/1/2 and verifies
+that an invalid filter preserves the movement capsule. Full admission
+normal/sanitized01 pass2,142 component and842 engine tests each, complete
+inventories, zero failures/skips; openmw and esmtool rebuilt. Stable tested
+fingerprint `2544d4359f419fdb6ddb77b6d65bcb56f397fe19303c1f641fbd9da563020c29`.
+Python sources unchanged; ASan leaks disabled, UBSan halts on errors.
+
+World lifecycle, renderer/save coordination, native controller group assignment
+and the stock floor-contact continuation gate remain incomplete.
+
+Private `S4/native-ragdoll-stock-admitted-filter-scheduler-restart-normal-01`
+loads the actual18-body/17-joint stock graph through the production admission
+boundary, with allocator result10 from explicit prior9. Checkpoint, uninterrupted
+and resumed binary states exactly match the previous manual-filter diagnostic;
+`manual-filter-equivalence.json` records all three hashes. It still fails the
+unchanged velocity bound at0.05434548854827881>0.05. This comparison verifies
+filter integration equivalence, not a passing restart or normal-input gate.
