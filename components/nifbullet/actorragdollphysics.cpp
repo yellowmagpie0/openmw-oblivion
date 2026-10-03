@@ -2,6 +2,8 @@
 #include "ragdollconecoordinates.hpp"
 #include "ragdollvelocity.hpp"
 
+#include <components/esm4/physicalblenddispatch.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -246,6 +248,27 @@ namespace NifBullet
         std::vector<btCollisionObject*> mCollisionObjects;
         std::vector<std::unique_ptr<btTypedConstraint>> mConstraints;
         std::size_t mRegisteredBodies = 0, mRegisteredConstraints = 0;
+
+        void setMotion(Body& owned, RagdollNativeMotion motion)
+        {
+            auto& body = *owned.mBody;
+            const int flags = body.getCollisionFlags()
+                & ~(btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_KINEMATIC_OBJECT);
+            if (motion == RagdollNativeMotion::Keyframed)
+            {
+                body.setMassProps(0, btVector3(0, 0, 0));
+                body.setCollisionFlags(flags | btCollisionObject::CF_KINEMATIC_OBJECT);
+                body.forceActivationState(DISABLE_DEACTIVATION);
+            }
+            else
+            {
+                body.setMassProps(owned.mDynamicMass, owned.mDynamicInertia);
+                body.setCollisionFlags(flags);
+                body.forceActivationState(ACTIVE_TAG);
+            }
+            body.updateInertiaTensor();
+            owned.mMotion = motion;
+        }
 
         void activateGroup(std::size_t group)
         {
@@ -767,23 +790,7 @@ namespace NifBullet
         for (const auto& change : pending)
         {
             auto& owned = *change.mOwned;
-            auto& body = *owned.mBody;
-            const int flags = body.getCollisionFlags()
-                & ~(btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_KINEMATIC_OBJECT);
-            if (change.mMotion == RagdollNativeMotion::Keyframed)
-            {
-                body.setMassProps(0, btVector3(0, 0, 0));
-                body.setCollisionFlags(flags | btCollisionObject::CF_KINEMATIC_OBJECT);
-                body.forceActivationState(DISABLE_DEACTIVATION);
-            }
-            else
-            {
-                body.setMassProps(owned.mDynamicMass, owned.mDynamicInertia);
-                body.setCollisionFlags(flags);
-                body.forceActivationState(ACTIVE_TAG);
-            }
-            body.updateInertiaTensor();
-            owned.mMotion = change.mMotion;
+            mImpl->setMotion(owned, change.mMotion);
         }
         for (const auto& change : pending)
             if (change.mMotion == RagdollNativeMotion::Dynamic)
@@ -827,6 +834,137 @@ namespace NifBullet
             body.setInterpolationWorldTransform(change.mPose);
             mImpl->mWorld.updateSingleAabb(&body);
         }
+    }
+
+    std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlends(
+        std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ)
+    {
+        require(std::isfinite(nativeGravityZ), "invalid native blend gravity");
+        ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
+        struct Pending
+        {
+            Impl::Body* mOwned;
+            RagdollNativeMotion mMotion;
+            bool mChanged;
+            std::optional<btTransform> mPose;
+            std::optional<std::pair<btVector3, btVector3>> mVelocities;
+        };
+        std::vector<Pending> pending;
+        std::vector<RagdollNativeBlendPublication> result;
+        pending.reserve(updates.size());
+        result.reserve(updates.size());
+        std::unordered_set<std::uint32_t> selected;
+        for (const auto& update : updates)
+        {
+            require(selected.insert(update.mRecord).second, "duplicate native blend body identity");
+            const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == update.mRecord; });
+            require(found != mImpl->mBodies.end(), "unknown native blend body identity");
+            const auto dispatch = ESM4::resolvePhysicalBlendDispatch(update.mHierarchyGain,
+                update.mVelocityGain, update.mCollisionFlags, rawUpdateSelector);
+            if (!dispatch)
+                continue;
+            const auto motion = dispatch->mMotion == ESM4::PhysicalBlendMotion::Keyframed
+                ? RagdollNativeMotion::Keyframed : RagdollNativeMotion::Dynamic;
+            const bool changed = found->mMotion != motion;
+            Pending change{&*found, motion, changed, std::nullopt, std::nullopt};
+            auto& body = *found->mBody;
+            auto centerPose = body.getWorldTransform();
+            auto shapePose = centerPose * found->mCenterFrame.inverse();
+            RagdollNativeTargetPose physical;
+            const auto rotation = shapePose.getRotation();
+            for (unsigned axis = 0; axis < 4; ++axis)
+                physical.mRotation[axis] = float(rotation[axis]);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                physical.mPosition[axis] = float(shapePose.getOrigin()[axis] / mImpl->mLengthScale);
+
+            // Leaving keyframed motion synchronizes scene before restoring the
+            // dynamic archive. Entering keyframed motion zeroes velocities first.
+            const bool sync = (changed && found->mMotion == RagdollNativeMotion::Keyframed)
+                || dispatch->mRoute == ESM4::PhysicalBlendRoute::SceneToPhysics;
+            if (sync)
+            {
+                // Flag0x20 without0x40 selects the distinct native World-driven
+                // scene setter; this adapter has not admitted that path.
+                require(!(update.mCollisionFlags & 0x20) || (update.mCollisionFlags & 0x40),
+                    "unadmitted native World-driven scene synchronization");
+                physical = ragdollNativeSceneTargetPose(update.mAnimatedWorld);
+                shapePose = btTransform(btQuaternion(physical.mRotation[0], physical.mRotation[1],
+                    physical.mRotation[2], physical.mRotation[3]), vector(physical.mPosition) * mImpl->mLengthScale);
+                centerPose = shapePose * found->mCenterFrame;
+                validatePose(centerPose);
+                change.mPose = centerPose;
+            }
+            auto linear = body.getLinearVelocity();
+            auto angular = body.getAngularVelocity();
+            if (changed && found->mMotion == RagdollNativeMotion::Dynamic)
+            {
+                linear.setZero();
+                angular.setZero();
+                change.mVelocities = std::pair{linear, angular};
+            }
+            auto flags = update.mCollisionFlags;
+            if (changed)
+                flags = motion == RagdollNativeMotion::Keyframed ? flags & ~0x8 : flags | 0x8;
+            RagdollNativeBlendPublication publication{update.mRecord, flags, std::nullopt};
+            if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PhysicsToScene)
+                publication.mSceneTarget = ragdollBoneWorldFromNativePose(physical);
+            else if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PoseAndVelocity)
+            {
+                const auto targets = ragdollNativeBlendPoseTargets(physical, update.mAnimatedWorld,
+                    update.mHierarchyGain, flags);
+                if (rawUpdateSelector == 0)
+                    publication.mSceneTarget = targets.mSceneTarget;
+                const auto parameters = ESM4::resolvePhysicalBlendDriveParameters(
+                    preparedFrameSeconds, update.mVelocityGain, flags);
+                osg::Vec3f localCenter, currentCenter;
+                RagdollNativeVelocities current;
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    localCenter[axis] = float(found->mCenterFrame.getOrigin()[axis] / mImpl->mLengthScale);
+                    currentCenter[axis] = float(centerPose.getOrigin()[axis] / mImpl->mLengthScale);
+                    current.mLinear[axis] = float(linear[axis] / mImpl->mLengthScale);
+                    current.mAngular[axis] = float(angular[axis]);
+                }
+                const auto target = ragdollNativeTargetVelocities(localCenter, currentCenter,
+                    physical.mRotation, targets.mDriveTarget, parameters.mInverseFrameSeconds,
+                    found->mLimits.mMaxLinearVelocity, found->mLimits.mAngularLimit);
+                const auto velocities = ragdollNativeBlendVelocities(current, target,
+                    parameters.mVelocityGain, parameters.mInverseFrameSeconds, nativeGravityZ);
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    linear[axis] = btScalar(velocities.mLinear[axis]) * mImpl->mLengthScale;
+                    angular[axis] = velocities.mAngular[axis];
+                }
+                require(finite(linear) && finite(angular), "native blend exceeds world velocity domain");
+                change.mVelocities = std::pair{linear, angular};
+            }
+            pending.push_back(change);
+            result.push_back(publication);
+        }
+        // All admission, allocation and native computations precede publication.
+        for (const auto& change : pending)
+        {
+            auto& owned = *change.mOwned;
+            auto& body = *owned.mBody;
+            if (change.mChanged)
+                mImpl->setMotion(owned, change.mMotion);
+            if (change.mPose)
+            {
+                body.setCenterOfMassTransform(*change.mPose);
+                body.setInterpolationWorldTransform(*change.mPose);
+                mImpl->mWorld.updateSingleAabb(&body);
+            }
+            if (change.mVelocities)
+            {
+                body.setLinearVelocity(change.mVelocities->first);
+                body.setAngularVelocity(change.mVelocities->second);
+            }
+            if (change.mChanged || change.mPose || change.mVelocities)
+                mImpl->activateGroup(owned.mActivationGroup);
+        }
+        return result;
     }
 
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)

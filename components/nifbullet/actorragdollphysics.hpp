@@ -97,6 +97,23 @@ namespace NifBullet
         float mVelocityGain;
     };
 
+    struct RagdollNativeBlendUpdate
+    {
+        std::uint32_t mRecord;
+        osg::Matrixf mAnimatedWorld;
+        float mHierarchyGain;
+        float mVelocityGain;
+        std::uint16_t mCollisionFlags;
+    };
+
+    struct RagdollNativeBlendPublication
+    {
+        std::uint32_t mRecord;
+        std::uint16_t mCollisionFlags;
+        // Absent for scene-to-physics or suppressed mixed scene publication.
+        std::optional<osg::Matrixf> mSceneTarget;
+    };
+
     // Owns collision shapes, rigid bodies and constraints. The borrowed world
     // must outlive the instance; destruction removes every registered object.
     // Poses and velocities use the caller's world units. Native shape/inertia
@@ -127,6 +144,13 @@ namespace NifBullet
         // preparation. Stage the whole batch before changing any body. Preserve
         // velocities/forces and refresh current/previous poses and AABBs.
         void synchronizeNativeKeyframedPoses(std::span<const RagdollNativeScenePoseRequest> poses);
+        // Stage an entire sparse controller batch before publishing modes,
+        // scene synchronization or velocities. Return renderer targets and
+        // updated native collision flags; caller owns node writes and clock.
+        // No Bullet step, actor root resolution or lifecycle transition.
+        std::vector<RagdollNativeBlendPublication> updateNativeBlends(
+            std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.

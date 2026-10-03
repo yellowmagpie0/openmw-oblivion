@@ -8148,3 +8148,95 @@ No stage closes. Next: publish controller mode transitions and route sequencing
 through the physics owner and actual World lifecycle. Root selection, actor
 scaling, cross-owner contact islands, keyframed substeps, mode/clock persistence,
 World/gameplay and stock-floor fresh-restart acceptance remain open.
+
+
+### Checkpoint172: staged owned-body blend controller publication
+
+Checkpoint171 committed as `dccaf4edda6b39ef4a6f204090b49fb69f529b05`,
+168 isolated commits with exact-byte/fresh-clone proof. ActorRagdollPhysics now
+owns updateNativeBlends: a sparse record-keyed batch stages admission, dispatch,
+mode changes, scene synchronization, native pose/velocity preparation and
+renderer targets before publishing any body. Duplicate/foreign records,
+invalid gains/clock/gravity and nonrepresentable preparation reject the batch.
+Skipped routes do not inspect unneeded animated matrices or wake bodies.
+Returned collision flags/optional renderer target belong to the caller's
+controller/node projection; body motion and velocities remain with this owner.
+There is no world step or invented frame ownership in this API.
+
+Leaving requested Keyframed6 synchronizes the animated scene before restoring
+the current dynamic motion state. Entering6 from Dynamic1 clears both velocities
+before scene synchronization. Changed modes clear/set native flag8 according
+to the resulting motion; unchanged modes retain caller flags. SceneToPhysics
+synchronizes the animated target; PhysicsToScene returns the ordinary native
+projection; PoseAndVelocity prepares mixed targets and publishes target/mixed
+velocities, returning its renderer target only for selector0. This follows
+actual88F484/89ED20 sequencing. Shared mass/inertia/kinematic publication avoids
+a second mode implementation and retains body/shape/proxy/constraints/forces.
+Selected changes wake their owned constraint group. The flag20-without40
+World-driven scene setter remains explicitly unadmitted and rejects before
+publication; this API covers the ordinary scene sync path. PhysicsSystem and
+World do not call this new coordinated method yet.
+
+Five new cases cover both transition directions, mixed velocity drives and
+selector suppression, late invalid-batch rollback, skipped/empty sleeping-body
+retention and invalid clock/gravity. Baseline01 retains all five failures.
+Full controller-publication-{normal,sanitized}-01 each passes2,226 components
+and878 engine cases with complete inventories, zero failures/skips and stable
+fingerprint `35d38b157edfaca09694ca038c15cae209c462c96c2540057273aa119afd6941`. ASan leak checks disabled; UBSan halts.
+Python is unchanged and not rerun. This is owner implementation plus engine
+regression coverage; no public scheduler/World caller is claimed.
+
+Executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Original88F3D0 full controller
+oracle03 executes57,600 cases:400 source motion/animated inputs, old requested
+modes1/6, selectors0/1/2, hierarchy0/.25/1, velocity0/.5, flags0/8/100/108 and
+both precision words. Old6 is prepared by the actual8CBC60 archive constructor;
+mode setters, archive restore, scene sync, renderer writer and native velocity
+paths execute without replacement. Only Windows lock/thread imports and heap
+allocation/free primitives are supplied. Native scene-writer inputs are
+captured, including their absence for skipped/SceneToPhysics/suppressed mixed
+updates. Native requested mode, motion vtable, flags and final origin/quaternion/
+velocities are captured. Source/corpus SHA256 `38563fd0293db0a6e919435fc3bb3d916abe78f33ac6abed2f0964509039be74`,
+`bfdf230014c5a6de29f98b2e229935055b2cf3a33bf9b357466e1c60ce8980a0`. Oracle01's event lists accidentally share mutable storage
+with later fixture setup; its event-history rows are invalid diagnostic data.
+Oracle02 copies those lists and passes720 cases;03 expands the corpus and
+captures the actual desired renderer input. None proves a native borrowed
+World/contact island or actor lifecycle.
+
+Owned-controller-compare-{normal,sanitized}-01 each executes28,800 canonical
+53-bit27F cases against actual Bullet-owned bodies. Mode, collision flags,
+selection/renderer presence, force/torque retention, shape/proxy identity and
+cleanup match in230,400 exact checks. Before execution, the comparator declares
+absolute tolerances: renderer.001, native origin.001, quaternion components
+1e-6, native linear/angular velocity.001. These cover Bullet's double matrix/
+principal-COM representation versus separately stored original float fields;
+original no-World fixtures are compared with an owned World and explicit zero
+gravity, without stepping. No tolerances were changed after observing output.
+Maximum errors in both builds: renderer `3.814697265625e-06`,
+native origin `6.0656331697828136e-05`, quaternion
+`5.412993220321738e-08`, native linear velocity
+`0.00011444091069279239`, angular velocity
+`0.0001926422119140625`. Comparator/driver SHA256
+`402fc5534ed1baeb49a25263f27bc85f9d439c99389c120e0b45e9a688306325`, `605dbc7075bdc230b8fcdc321070c590cacf994b46b7cd56fe9dc4eea702c127`. Portable libm/RSQRT and live
+worker precision remain distinct from original-hardware gameplay acceptance.
+
+Stock controller-stock-animated-normal-01/sanitized-02 each runs240 frames on
+the actual18-body/17-joint skeleton and73-track idle animation. Synthetic
+hierarchy cycles1/.25 every60 frames, producing eight18-body mode changes;
+returned flags are carried to subsequent updates and every body's mode/flag
+is checked. Clock1/120 and gravity0 are explicit caller inputs. Detached
+animated targets match69,120 matrix fields exactly with an independent normal
+Animation instance; physical renderer/skin retain the prepared scene targets
+within unchanged.001 tolerance, maximum `5.34058e-05`.
+Controller rebuild, animation handoff and zero remaining bodies/constraints
+pass. Sanitized01 retained a harness output-layout failure: debug Bullet emits
+its exact static-static needsCollision warning for keyframed pairs. Runtime
+returned0 with the same small projection error. Sanitized02 admits only that
+specific debug line, records it, still validates all expected outputs and
+passes source/library hash guards. No arbitrary warning/error is suppressed.
+The stock run advances Bullet but does not establish native keyframed-integrator
+semantics or cross-owner contacts.
+
+No stage closes. Next: expose this batch through the movement-worker barrier
+and PhysicsSystem, then connect actual World controller/lifecycle ownership.
+Actor root/scale admission, keyframed integration, native clocks/mode/flag save
+projection and fresh-restart/gameplay acceptance remain open.

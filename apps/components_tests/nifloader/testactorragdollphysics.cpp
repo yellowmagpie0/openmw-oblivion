@@ -1692,3 +1692,88 @@ namespace
             std::invalid_argument);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendControllerEntersKeyframedClearsVelocitiesAndSyncsScene)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->setLinearVelocity({1, 2, 3}); body->setAngularVelocity({4, 5, 6});
+        body->applyCentralForce({7, 8, 9});
+        const auto* shape = body->getCollisionShape(); const auto* proxy = body->getBroadphaseHandle();
+        const auto anim = osg::Matrixf::translate(70, -35, 21);
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> requests{{{12, anim, 1, .5f, 0x108}}};
+        const auto result = actor.updateNativeBlends(requests, 1.f/120, 0, 0);
+        ASSERT_EQ(result.size(), 1); EXPECT_EQ(result[0].mRecord, 12); EXPECT_EQ(result[0].mCollisionFlags, 0x100);
+        EXPECT_FALSE(result[0].mSceneTarget); EXPECT_TRUE(body->isKinematicObject());
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(0, 0, 0)); EXPECT_EQ(body->getAngularVelocity(), btVector3(0, 0, 0));
+        const auto expected = NifBullet::ragdollNativePoseFromBoneWorld(anim);
+        EXPECT_EQ(body->getWorldTransform(), expected);
+        EXPECT_EQ(body->getInterpolationWorldTransform(), body->getWorldTransform());
+        EXPECT_EQ(body->getTotalForce(), btVector3(7, 8, 9)); EXPECT_EQ(body->getCollisionShape(), shape);
+        EXPECT_EQ(body->getBroadphaseHandle(), proxy);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendControllerLeavesKeyframedSyncsBeforeOrdinaryReturn)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->setLinearVelocity({1, 2, 3}); body->setAngularVelocity({4, 5, 6});
+        const auto anim = osg::Matrixf::translate(70, -35, 21);
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> requests{{{12, anim, 0, 0, 0}}};
+        const auto result = actor.updateNativeBlends(requests, 1.f/120, 0, 0);
+        ASSERT_EQ(result.size(), 1); EXPECT_EQ(result[0].mCollisionFlags, 8);
+        ASSERT_TRUE(result[0].mSceneTarget); EXPECT_FALSE(body->isKinematicObject());
+        const auto expected = NifBullet::ragdollNativeSceneTargetPose(anim);
+        EXPECT_EQ(actor.capture()[0].mPose, NifBullet::ragdollNativePoseFromBoneWorld(anim));
+        EXPECT_EQ(*result[0].mSceneTarget, NifBullet::ragdollBoneWorldFromNativePose(expected));
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(1, 2, 3)); EXPECT_EQ(body->getAngularVelocity(), btVector3(4, 5, 6));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendControllerDrivesMixedPoseAndSuppressesNonzeroSelectorScene)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto pose = actor.capture()[0].mPose;
+        std::array<NifBullet::RagdollNativeBlendUpdate, 1> requests{{{12, osg::Matrixf::translate(70, 0, 14), .25f, .5f, 8}}};
+        const auto result = actor.updateNativeBlends(requests, 1.f/120, 0, 0);
+        ASSERT_EQ(result.size(), 1); ASSERT_TRUE(result[0].mSceneTarget);
+        EXPECT_GT(actor.capture()[0].mLinearVelocity.x(), 0); EXPECT_EQ(actor.capture()[0].mPose, pose);
+        EXPECT_NEAR(result[0].mSceneTarget->getTrans().x(), 70, .0001);
+        const auto other = actor.updateNativeBlends(requests, 1.f/120, 1, 0);
+        ASSERT_EQ(other.size(), 1); EXPECT_FALSE(other[0].mSceneTarget);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendControllerRejectsLateInvalidRequestWithoutPartialMutation)
+    {
+        addHinge(); NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        first->setLinearVelocity({1, 2, 3}); first->applyCentralForce({4, 5, 6});
+        std::array<NifBullet::RagdollNativeBlendUpdate, 2> requests{{
+            {12, osg::Matrixf::translate(70, 0, 14), 1, .5f, 8},
+            {24, osg::Matrixf::scale(2, 2, 2), 1, .5f, 8}}};
+        const auto pose = first->getWorldTransform();
+        EXPECT_THROW(actor.updateNativeBlends(requests, 1.f/120, 0, 0), std::invalid_argument);
+        requests[1].mAnimatedWorld.makeIdentity(); requests[1].mRecord = 999;
+        EXPECT_THROW(actor.updateNativeBlends(requests, 1.f/120, 0, 0), std::invalid_argument);
+        requests[1].mRecord = 12;
+        EXPECT_THROW(actor.updateNativeBlends(requests, 1.f/120, 0, 0), std::invalid_argument);
+        requests[1].mRecord = 24; requests[1].mVelocityGain = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(actor.updateNativeBlends(requests, 1.f/120, 0, 0), std::invalid_argument);
+        EXPECT_EQ(first->getWorldTransform(), pose); EXPECT_EQ(first->getLinearVelocity(), btVector3(1, 2, 3));
+        EXPECT_EQ(first->getTotalForce(), btVector3(4, 5, 6)); EXPECT_FALSE(first->isKinematicObject());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendControllerSkippedAndEmptyBatchesLeaveSleepingBodiesAlone)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]); body->setActivationState(ISLAND_SLEEPING);
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> skip{{{12, osg::Matrixf::scale(2, 2, 2), 0, .5f, 8}}};
+        EXPECT_TRUE(actor.updateNativeBlends(skip, 1.f/120, 1, 0).empty());
+        EXPECT_TRUE(actor.updateNativeBlends({}, 1.f/120, 0, 0).empty()); EXPECT_FALSE(body->isActive());
+        EXPECT_THROW(actor.updateNativeBlends({}, -1, 0, 0), std::invalid_argument);
+        EXPECT_THROW(actor.updateNativeBlends({}, 1.f/120, 0, std::numeric_limits<float>::infinity()), std::invalid_argument);
+    }
+}
