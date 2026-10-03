@@ -39,6 +39,11 @@ namespace NifBullet
     // any graph property scaling. Does not admit reverse/controller binding.
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(
         const osg::Matrixf& worldPose, const RagdollBodyDefinition& body);
+    // Native8B8FB0/8B9150 reverse bodyT offset, in native length units.
+    // Ordinary bodies retain their native origin/quaternion unchanged.
+    // Matrix/world-length publication remains a separate operation.
+    RagdollNativeTargetPose ragdollNativeSceneTargetFromBodyPose(
+        const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body);
     // Original mixed blend target:539850 matrix layout then8B1B40 quaternion.
     // Keep its unrounded intermediates and raw quaternion for later Slerp;
     // unlike keyframed scene sync, this boundary does not normalize.

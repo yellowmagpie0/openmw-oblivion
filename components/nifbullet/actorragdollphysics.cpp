@@ -432,51 +432,77 @@ namespace NifBullet
         return result;
     }
 
+    namespace
+    {
+        void validateNativeOffsetRotation(const std::array<float, 4>& rotation)
+        {
+            double norm = 0;
+            for (const float value : rotation)
+            {
+                require(std::isfinite(value), "nonfinite native offset quaternion");
+                norm += double(value) * value;
+            }
+            require(std::abs(norm - 1.0) <= 1e-4, "nonunit native offset quaternion");
+        }
+
+        std::array<float, 4> bodyTLocalRotation(const RagdollBodyDefinition& body)
+        {
+            std::array<float, 4> local;
+            for (unsigned i = 0; i < 4; ++i)
+                local[i] = float(body.mRotation[i]);
+            validateNativeOffsetRotation(local);
+            for (unsigned i = 0; i < 3; ++i)
+                require(std::isfinite(body.mTranslation[i]), "nonfinite bodyT local position");
+            return local;
+        }
+
+        osg::Vec3f nativeBodyTOffset(const std::array<float, 4>& q, const osg::Vec3f& translation)
+        {
+            // Original8B9400/8B9150 rotate native-length local offset with
+            // SSE binary32 products/sums and three x87 coefficient stores.
+            const float dotX = q[0] * translation[0];
+            const float dotY = q[1] * translation[1];
+            const float dotZ = q[2] * translation[2];
+            const float dotXY = dotY + dotX;
+            const float dot = dotZ + dotXY;
+            const float axisCoefficient = float(2.0 * dot);
+            const float scalarCoefficient = float(2.0 * double(q[3]) * q[3] - 1.0);
+            const float crossCoefficient = float(2.0 * q[3]);
+            osg::Vec3f result;
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                const unsigned next = (axis + 1) % 3;
+                const unsigned last = (axis + 2) % 3;
+                const float first = q[next] * translation[last];
+                const float second = q[last] * translation[next];
+                const float cross = first - second;
+                const float crossTerm = cross * crossCoefficient;
+                const float scalarTerm = scalarCoefficient * translation[axis];
+                const float axisTerm = axisCoefficient * q[axis];
+                const float sum = scalarTerm + axisTerm;
+                result[axis] = crossTerm + sum;
+                require(std::isfinite(result[axis]), "nonfinite bodyT rotated offset");
+            }
+            return result;
+        }
+    }
+
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(
         const osg::Matrixf& worldPose, const RagdollBodyDefinition& body)
     {
         const auto parent = ragdollNativeSceneTargetPose(worldPose);
         if (!body.mUsesRigidBodyTransform)
             return parent;
-        std::array<float, 4> local;
-        double norm = 0;
-        for (unsigned i = 0; i < 4; ++i)
-        {
-            local[i] = float(body.mRotation[i]);
-            require(std::isfinite(local[i]), "nonfinite bodyT local quaternion");
-            norm += double(local[i]) * local[i];
-        }
-        require(std::abs(norm - 1.0) <= 1e-4, "nonunit bodyT local quaternion");
-        for (unsigned i = 0; i < 3; ++i)
-            require(std::isfinite(body.mTranslation[i]), "nonfinite bodyT local position");
-
-        // Original8B9400 rotates the already scaled native-length offset with
-        // SSE binary32 products/sums. Its three coefficients have x87 stores.
+        const auto local = bodyTLocalRotation(body);
         const auto& q = parent.mRotation;
-        const float dotX = q[0] * body.mTranslation[0];
-        const float dotY = q[1] * body.mTranslation[1];
-        const float dotZ = q[2] * body.mTranslation[2];
-        const float dotXY = dotY + dotX;
-        const float dot = dotZ + dotXY;
-        const float axisCoefficient = float(2.0 * dot);
-        const float scalarCoefficient = float(2.0 * double(q[3]) * q[3] - 1.0);
-        const float crossCoefficient = float(2.0 * q[3]);
+        const auto offset = nativeBodyTOffset(q, body.mTranslation);
         RagdollNativeTargetPose result;
         std::array<float, 3> products;
         for (unsigned axis = 0; axis < 3; ++axis)
         {
+            result.mPosition[axis] = offset[axis] + parent.mPosition[axis];
             const unsigned next = (axis + 1) % 3;
             const unsigned last = (axis + 2) % 3;
-            const float first = q[next] * body.mTranslation[last];
-            const float second = q[last] * body.mTranslation[next];
-            const float cross = first - second;
-            const float crossTerm = cross * crossCoefficient;
-            const float scalarTerm = scalarCoefficient * body.mTranslation[axis];
-            const float axisTerm = axisCoefficient * q[axis];
-            const float sum = scalarTerm + axisTerm;
-            const float rotated = crossTerm + sum;
-            result.mPosition[axis] = rotated + parent.mPosition[axis];
-
             // Full889470: parent * local, with no additional normalization.
             const float firstProduct = local[last] * q[next];
             const float secondProduct = local[next] * q[last];
@@ -493,6 +519,48 @@ namespace NifBullet
         const float productXYZ = products[2] + productXY;
         result.mRotation[3] = float(double(q[3]) * local[3] - productXYZ);
         require(std::isfinite(result.mRotation[3]), "nonfinite bodyT scene quaternion");
+        return result;
+    }
+
+    RagdollNativeTargetPose ragdollNativeSceneTargetFromBodyPose(
+        const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body)
+    {
+        validateNativeOffsetRotation(bodyPose.mRotation);
+        for (unsigned axis = 0; axis < 3; ++axis)
+            require(std::isfinite(bodyPose.mPosition[axis]), "nonfinite native body origin");
+        if (!body.mUsesRigidBodyTransform)
+            return bodyPose;
+        const auto local = bodyTLocalRotation(body);
+        const auto& q = bodyPose.mRotation;
+        RagdollNativeTargetPose result;
+        std::array<float, 4> products;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            // Full8A2B40 computes body * conjugate(local), with a distinct
+            // SSE scalar dot reduction rather than forward889470's x87 W.
+            const unsigned next = (axis + 1) % 3;
+            const unsigned last = (axis + 2) % 3;
+            const float firstProduct = local[next] * q[last];
+            const float secondProduct = local[last] * q[next];
+            const float cross = firstProduct - secondProduct;
+            const float parentTerm = q[3] * local[axis];
+            const float difference = cross - parentTerm;
+            const float localTerm = local[3] * q[axis];
+            result.mRotation[axis] = localTerm + difference;
+        }
+        for (unsigned axis = 0; axis < 4; ++axis)
+            products[axis] = local[axis] * q[axis];
+        const float productXZ = products[2] + products[0];
+        const float productYW = products[3] + products[1];
+        result.mRotation[3] = productYW + productXZ;
+        for (const float value : result.mRotation)
+            require(std::isfinite(value), "nonfinite bodyT reverse quaternion");
+        const auto offset = nativeBodyTOffset(result.mRotation, body.mTranslation);
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            result.mPosition[axis] = bodyPose.mPosition[axis] - offset[axis];
+            require(std::isfinite(result.mPosition[axis]), "nonfinite bodyT reverse position");
+        }
         return result;
     }
 

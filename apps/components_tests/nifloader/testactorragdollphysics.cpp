@@ -27,6 +27,64 @@ namespace
         return result;
     }
 
+    TEST(RagdollBodyTReverseScene, RemovesNativeLocalRotationAndTranslation)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {2, 3, 4};
+        body.mRotation = osg::Quat(0, 0, 1, 0);
+        NifBullet::RagdollNativeTargetPose physical{{12, 23, 34}, {0, 0, 1, 0}};
+        const auto result = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+        EXPECT_EQ(result.mPosition, osg::Vec3f(10, 20, 30));
+        EXPECT_EQ(result.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+        EXPECT_EQ(physical.mPosition, osg::Vec3f(12, 23, 34));
+        EXPECT_EQ(body.mTranslation, osg::Vec3f(2, 3, 4));
+    }
+
+    TEST(RagdollBodyTReverseScene, PreservesNoncommutingQuaternionOrderAndRotatedOffset)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {2, 3, 4};
+        const float half = std::sqrt(.5f);
+        body.mRotation = osg::Quat(0, 0, half, half);
+        NifBullet::RagdollNativeTargetPose physical{{10, 20, 30}, {.5f, -.5f, .5f, .5f}};
+        const auto result = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+        EXPECT_EQ(result.mRotation, (std::array<float, 4>{half, 0, 0, half}));
+        EXPECT_NEAR(result.mPosition.x(), 8.f, 1e-5);
+        EXPECT_NEAR(result.mPosition.y(), 24.f, 1e-5);
+        EXPECT_NEAR(result.mPosition.z(), 27.f, 1e-5);
+        body.mUsesRigidBodyTransform = false;
+        body.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        body.mRotation = osg::Quat(0, 0, 0, 0);
+        const auto ordinary = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+        EXPECT_EQ(ordinary.mPosition, physical.mPosition);
+        EXPECT_EQ(ordinary.mRotation, physical.mRotation);
+    }
+
+    TEST(RagdollBodyTReverseScene, RejectsMalformedOrOverflowingNativePosesAtomically)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mRotation = osg::Quat(0, 0, 0, 1);
+        NifBullet::RagdollNativeTargetPose physical{{1, 2, 3}, {0, 0, 0, 1}};
+        body.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body), std::invalid_argument);
+        body.mTranslation = {};
+        body.mRotation = osg::Quat(0, 0, 0, 0);
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body), std::invalid_argument);
+        body.mRotation = osg::Quat(0, 0, 0, 1);
+        physical.mRotation = {0, 0, 0, 0};
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body), std::invalid_argument);
+        physical.mRotation = {0, 0, 0, 1};
+        physical.mPosition.x() = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body), std::invalid_argument);
+        physical.mPosition.x() = std::numeric_limits<float>::max();
+        body.mTranslation.x() = -std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body), std::invalid_argument);
+        EXPECT_EQ(physical.mPosition.x(), std::numeric_limits<float>::max());
+    }
+
     TEST(RagdollBodyTSceneTarget, AppliesLocalOffsetInNativeLengthsAndOrderedQuaternionProduct)
     {
         NifBullet::RagdollBodyDefinition body{};
@@ -88,6 +146,9 @@ namespace
         body.mRotation = osg::Quat(0, 0, 0, 1);
         EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::scale(2, 2, 2), body),
             std::invalid_argument);
+        body.mTranslation.x() = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(
+            osg::Matrixf::translate(std::numeric_limits<float>::max(), 0, 0), body), std::invalid_argument);
     }
 
     TEST(RagdollConeCoordinates, ParallelAndOppositeTwistsUseNativeRowAdmissionAndFallback)

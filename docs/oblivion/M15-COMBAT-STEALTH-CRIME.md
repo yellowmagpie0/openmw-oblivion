@@ -15195,3 +15195,49 @@ No stage closes. Next: independently verified bodyT reverse projection and
 owned controller integration before renderer admission; actual World physical
 lifecycle, native stepping and unchanged stock-floor fresh-restart/gameplay
 gates remain open. S5-S14 remain pending.
+
+
+### Checkpoint180: reverse bodyT origin and quaternion projection
+
+Checkpoint179 committed as `a65363c86e57deaad50d6bafb0d0681d897b97bc`,
+176 isolated commits with exact-byte/fresh-clone proof; bundle157 SHA256
+`e9811a58cfaae5432691c4933544ed7954672605e617e3c45815cc4e89534f07`.
+NifBullet::ragdollNativeSceneTargetFromBodyPose removes the bodyT local rotation
+with original8A2B40 stores and subtracts the rotated native-length local offset.
+The reverse W dot uses SSE(X+Z)+(Y+W); forward889470 instead uses an x87 scalar
+product minus stored XYZ dot. No extra quaternion normalization is introduced.
+Ordinary bodies retain native origin/quaternion unchanged, with malformed
+physical input rejected. Both directions share validated local-offset rotation;
+all inputs remain immutable on rejection. Graph, renderer and controller
+bodyT admission remain closed until complete controller routes are verified.
+
+Three new tests cover identity/local transform removal, noncommuting rotation
+and rotated translation, ordinary unused metadata and atomic malformed or
+output-overflow rejection. Existing forward rejection also covers overflow.
+Reverse-baseline01 retains all three failing tests against identity projection.
+Full bodyt-reverse normal/sanitized01 each pass2,242 component and892 engine
+cases, complete inventories and zero failures/skips, rebuilding openmw/esmtool.
+Tested source fingerprint `8b8dddeca7c5f92df56214c71aa12cfce08756489567a3cf0fcae628a39f6c5d`. ASan leaks disabled; UBSan halts;
+unchanged Python sources were not rerun.
+
+Bodyt-reverse-oracle01 executes400 fixtures/800 complete original8B8FB0 and
+8B9150 getters with full8A2B40,8A2F10 and8A2ED0 callees, both x87 controls,
+using independently synchronized prior native body/local-offset state. No calls
+are replaced. Returns, output pointers, stack cleanup and every source byte
+are verified. Source/corpus SHA256 `b257f599fe05651d6af5c0dc7435502b3eabe2d7bf22be85957d0acc65d0717f`,
+`893c2ef84a87d9ea31514c19d4097824ecda50255304e04c68eb04d71aa12f05`; input corpus `2755719edee7d5d869f6a51dfc3189fcf082e86509797adf4bd79cd50ddcc6e0`;
+original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. World-length conversion,
+matrix/controller publication and actual actor lifecycle remain outside scope.
+
+Reverse-compare normal/sanitized01 each match400 cases/2,800 exact native scene
+origin/quaternion fields and reject discarded-offset math in all400 cases.
+Source/driver SHA256 `415c1c3f5eabe71930643b184a99d3a1d4caf8eb06160e388e229094511604ba`, `216925632a5e6fb31f4015288575248565744f92f5ffea0e9b842ce7077dcc29`.
+Forward-compare normal/sanitized02 repeat400 cases/2,800 exact original fields
+after sharing offset rotation, with the same discarded-offset negative control.
+Source/driver SHA256 `121d1fdbfa2a9eda9461c244d69eddd8f9f4f72972346ccd469b6957be161f96`, `183b848bd969e9b13dee342814a2c9c26127d0a1e6e4616c2a3e4a021e434f79`.
+No tolerance is used by either comparison.
+
+No stage closes. Next: bodyT center-of-mass velocity-drive conversion and owned
+controller integration before renderer/graph admission; actual World lifecycle,
+caller scale, native stepping and unchanged stock-floor fresh-restart/gameplay
+gates remain open. S5-S14 remain pending.
