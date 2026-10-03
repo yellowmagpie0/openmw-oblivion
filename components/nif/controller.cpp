@@ -547,10 +547,24 @@ namespace Nif
 
         uint32_t numKeys;
         nif->read(numKeys);
-        // Is this possible?
-        if (numKeys != 0)
-            throw Nif::Exception(
-                "Unsupported keys in bhkBlendController " + std::to_string(mRecordIndex), nif->getFile().getFilename());
+        if (numKeys != 0 && nif->getVersion() != NIFStream::generateVersion(20, 0, 0, 4)
+            && nif->getVersion() != NIFStream::generateVersion(20, 0, 0, 5))
+            throw Nif::Exception("Unsupported bhkBlendController key layout " + std::to_string(mRecordIndex),
+                nif->getFile().getFilename());
+        constexpr std::size_t bytesPerKey = 3 * sizeof(float);
+        if (numKeys > std::numeric_limits<std::size_t>::max() / bytesPerKey)
+            throw Nif::Exception("Oversized bhkBlendController keys " + std::to_string(mRecordIndex),
+                nif->getFile().getFilename());
+        // Bound the serialized payload before reserving memory. Keep authored
+        // order, duplicate times and raw gains; runtime clock/key admission is
+        // separate from lossless source decoding.
+        std::vector<float> coefficients;
+        nif->readVector(coefficients, static_cast<std::size_t>(numKeys) * 3);
+        std::vector<BlendControllerKey> keys;
+        keys.reserve(numKeys);
+        for (std::size_t i = 0; i < coefficients.size(); i += 3)
+            keys.push_back({coefficients[i], coefficients[i + 1], coefficients[i + 2]});
+        mKeys = std::move(keys);
     }
 
     void BSEffectShaderPropertyFloatController::read(NIFStream* nif)

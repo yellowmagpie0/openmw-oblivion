@@ -330,7 +330,11 @@ namespace NifBullet
                         }
                         value.mBlendController = RagdollBlendControllerDefinition{controller->mRecordIndex,
                             target, controller->mFlags, controller->mFrequency, controller->mPhase,
-                            controller->mTimeStart, controller->mTimeStop};
+                            controller->mTimeStart, controller->mTimeStop, {}};
+                        auto& keys = value.mBlendController->mKeys;
+                        keys.reserve(controller->mKeys.size());
+                        for (const auto& key : controller->mKeys)
+                            keys.push_back({key.mTime, key.mHierarchyGain, key.mVelocityGain});
                         break;
                     }
                 }

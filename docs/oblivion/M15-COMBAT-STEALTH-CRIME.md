@@ -15807,3 +15807,67 @@ Retained raw BodyT velocity and floor fresh-restart failures remain open, and
 S5-S14 remain pending. Next: admit and preserve nonempty authored blend-controller
 keys from the NIF stream, then connect owned keys/clocks to the physical
 lifecycle using the already identified original controller path.
+
+
+### Checkpoint192: nonempty authored bhkBlendController key payloads
+
+Checkpoint191 committed as `af6e77c003adab556bb530690a64c54fab4deeef`,
+188 isolated commits with exact-byte/fresh-clone verification. Bundle169 SHA256
+`179eba1e0fff1a87485a29a586638dd9784c2eb86a93db3f4f2542e915ef0395`.
+The NIF parser now decodes a uint32 key count followed by time/hierarchy/
+velocity float triples for both admitted Oblivion versions 20.0.0.4 and .5.
+It preserves authored order, duplicate times, signed zeros and raw gain values.
+Payload size is bounded through NIFStream's existing typed-vector read before
+allocation; overflow and truncation reject without replacing prior keys.
+Zero-count reads clear prior keys. Unverified later nonempty layouts retain
+unsupported behavior. Parsed source clock/header fields remain authored data;
+this parser does not emulate runtime key-range/cache changes. Actor graphs own
+an independent key copy from the selected first attached blend controller,
+retained after source records are destroyed.
+
+Original-load-oracle03 executes 36 full8AB7B0 cases, nine key fixtures across
+both admitted versions and both x87 precision words. Actual7008A0 inherited
+NiObject loading,715F40 NiTimeController loading,712A20 deferred-link reads,
+8AA480 allocation/constructor,8AA710 insertion and8AABE0 key bounds execute.
+Only resolved NiBinaryStream I/O and allocator/free boundaries are supplied;
+no game function is stubbed. Next/target links are null independent fixtures,
+not a native resource/link-resolution pass. Fixtures include 0/1/2/3/5 keys,
+shifted/descending/duplicate times, signed-zero gains, subnormal time and
+maximum-finite gain. The original preserves key order and bits. Executable hash
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, source/corpus hashes `66619df0f5d635f9e352298d5bcbfd55cd08c492374ade212b1e6fe71fd4d71e`,
+`44d4c64bd6dc364915539d496c7c3d28c7b9c3717f4a3f12ea3d30b7a145bac2`. Oracle01 retains a harness failure from treating the
+NiBinaryStream's direct read field as an indirect vtable slot, before any rule
+case completed. Oracle02's 18 cases explicitly stub inherited time loading;
+03 removes that stub and tests both supported file versions.
+
+Three of four initial tests fail baseline01 on unsupported keys; the malformed
+payload case passes. Baseline retains the temporary missing-vector-initializer
+warning, corrected by explicit ownership initialization. Filtered01 retains a
+build error from directly calling the private stream-size checker; the public
+typed-vector reader provides the existing checked boundary instead. Filtered02
+retains three failures from a version guard admitting only .4 while the common
+fixture uses VER_OB/.5. The original full-loader03 verifies both versions;
+filtered03 passes all six tests in each build, including added zero-count reuse
+and later-version rejection. Final normal/sanitized04 each pass 2,280 component
+and 898 engine tests, complete inventories with no skips/failures and rebuilt
+openmw/esmtool. Fingerprint `18af560914e7f6c4c4eb2f72c159d073805c66c0dc61f60b622fe2e6e6e30406`. ASan leaks disabled; UBSan halts. Unchanged
+Python checks are not repeated.
+
+Stock-key-compare02 loads the hash-identified .4 skeleton (18 bodies/17 joints),
+sets the in-memory controller decoder version to each fixture's .4/.5 version,
+parses independent key payloads at node8 and then destroys the parsed controller.
+Both builds exactly match all 240 owned count/key fields across the 36 original
+cases. Dropping keys differs in 32 cases, sorting in four, and deduplicating
+times in four. Comparator source/driver hashes `62ea1b456bbe7f85b1426a9f8d3b9e07dbb7e42059b9907039c617c045c9d907`,
+`fe4c65a35f2309e32b019bfef39d0fde01293825d6ed66def591a767d7721284`; stock asset `43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`. Compare01's 18
+inherited-load-boundary cases remain retained and passed. This is explicit
+fixture substitution, not a modified .5 stock asset or full stock controller
+runtime acceptance.
+
+No stage closes. Nonempty authored payload parsing/ownership is now implemented;
+keys and clock caches are not live simulation authority. The existing one-shot
+evaluator deliberately admits at most two keys, so general authored-key cursor
+progression remains open. World physical lifecycle and full physical save/
+restart, retained raw BodyT/floor failures and S5-S14 remain open. Next: verify
+and implement arbitrary authored-key evaluation with the original cached
+segment cursor, retaining the existing one-shot API's behavior.

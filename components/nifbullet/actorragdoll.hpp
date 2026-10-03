@@ -58,14 +58,20 @@ namespace NifBullet
     std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(
         Nif::FileView file, std::optional<std::uint32_t> rootRecord);
 
-    // Owned authored timing/identity from the first matching attached controller.
-    // No clock caches, runtime keys, attachment or simulation are inferred.
+    struct RagdollBlendControllerKey
+    {
+        float mTime, mHierarchyGain, mVelocityGain;
+    };
+
+    // Owned authored timing/identity/keys from the first matching controller.
+    // No runtime clock caches, attachment or simulation are inferred.
     struct RagdollBlendControllerDefinition
     {
         std::uint32_t mRecord;
         std::optional<std::uint32_t> mTargetRecord;
         std::uint16_t mFlags;
         float mFrequency, mPhase, mStartTime, mStopTime;
+        std::vector<RagdollBlendControllerKey> mKeys;
     };
 
     struct RagdollBodyDefinition

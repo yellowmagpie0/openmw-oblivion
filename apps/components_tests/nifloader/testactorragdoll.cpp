@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <bit>
+#include <span>
 #include <cstring>
 #include <limits>
 #include <sstream>
@@ -793,4 +795,109 @@ TEST_F(ActorRagdollTest, RejectsForeignAndCyclicControllerLookupBeforeProducingG
     prefix.mNext = Nif::NiTimeControllerPtr(&prefix);
     blend.mTarget->mController = Nif::NiTimeControllerPtr(&prefix);
     EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+}
+
+namespace
+{
+    std::string blendControllerBytes(std::uint32_t count, std::span<const std::array<float, 3>> keys)
+    {
+        std::string bytes;
+        const auto append = [&](const auto& value) {
+            bytes.append(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        append(std::int32_t{-1}); append(std::uint16_t{0xc5});
+        for (float value : {.75f, -.5f, 7.f, 8.f}) append(value);
+        append(std::int32_t{-1}); append(count);
+        for (const auto& key : keys) for (float value : key) append(value);
+        return bytes;
+    }
+}
+
+TEST_F(ActorRagdollTest, ReadsAuthoredBlendKeysAndPreservesTimeControllerFields)
+{
+    const std::array<std::array<float, 3>, 2> keys{{{0, 1, 1}, {.25f, 0, 0}}};
+    Nif::Reader reader(mFile, nullptr);
+    Nif::NIFStream stream(reader, std::make_unique<std::istringstream>(blendControllerBytes(2, keys)), nullptr);
+    Nif::bhkBlendController controller;
+    controller.read(&stream); controller.post(reader);
+    ASSERT_EQ(controller.mKeys.size(), 2);
+    EXPECT_FLOAT_EQ(controller.mKeys[0].mTime, 0);
+    EXPECT_FLOAT_EQ(controller.mKeys[0].mHierarchyGain, 1);
+    EXPECT_FLOAT_EQ(controller.mKeys[0].mVelocityGain, 1);
+    EXPECT_FLOAT_EQ(controller.mKeys[1].mTime, .25f);
+    EXPECT_FLOAT_EQ(controller.mKeys[1].mHierarchyGain, 0);
+    EXPECT_FLOAT_EQ(controller.mKeys[1].mVelocityGain, 0);
+    EXPECT_EQ(controller.mFlags, 0xc5);
+    EXPECT_FLOAT_EQ(controller.mFrequency, .75f); EXPECT_FLOAT_EQ(controller.mPhase, -.5f);
+    EXPECT_FLOAT_EQ(controller.mTimeStart, 7); EXPECT_FLOAT_EQ(controller.mTimeStop, 8);
+    EXPECT_TRUE(controller.mNext.empty()); EXPECT_TRUE(controller.mTarget.empty());
+}
+
+TEST_F(ActorRagdollTest, KeepsBlendKeySerializedOrderDuplicatesAndSignedZeros)
+{
+    const std::array<std::array<float, 3>, 4> keys{{{1, -.5f, 2}, {-1, 100, 0},
+        {0, -0.f, 0}, {0, 0, -0.f}}};
+    Nif::Reader reader(mFile, nullptr);
+    Nif::NIFStream stream(reader, std::make_unique<std::istringstream>(blendControllerBytes(4, keys)), nullptr);
+    Nif::bhkBlendController controller; controller.read(&stream);
+    ASSERT_EQ(controller.mKeys.size(), keys.size());
+    for (std::size_t i = 0; i < keys.size(); ++i)
+    {
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(controller.mKeys[i].mTime), std::bit_cast<std::uint32_t>(keys[i][0]));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(controller.mKeys[i].mHierarchyGain), std::bit_cast<std::uint32_t>(keys[i][1]));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(controller.mKeys[i].mVelocityGain), std::bit_cast<std::uint32_t>(keys[i][2]));
+    }
+}
+
+TEST_F(ActorRagdollTest, RejectsTruncatedAndOversizedBlendKeyPayloads)
+{
+    const std::array<std::array<float, 3>, 1> keys{{{0, 1, 1}}};
+    for (std::uint32_t count : {2u, std::numeric_limits<std::uint32_t>::max()})
+    {
+        Nif::Reader reader(mFile, nullptr);
+        Nif::NIFStream stream(reader, std::make_unique<std::istringstream>(blendControllerBytes(count, keys)), nullptr);
+        Nif::bhkBlendController controller;
+        controller.mKeys = {{2, 3, 4}};
+        EXPECT_THROW(controller.read(&stream), std::runtime_error);
+        ASSERT_EQ(controller.mKeys.size(), 1);
+        EXPECT_FLOAT_EQ(controller.mKeys[0].mTime, 2);
+    }
+}
+
+TEST_F(ActorRagdollTest, OwnsParsedBlendKeysAfterSourceRecordsDisappear)
+{
+    auto& blend = blendCollision(); auto& controller = add<Nif::bhkBlendController>();
+    controller.mRecordType = Nif::RC_bhkBlendController;
+    const std::array<std::array<float, 3>, 2> keys{{{0, -0.f, 1}, {.25f, .5f, 0}}};
+    Nif::Reader reader(mFile, nullptr);
+    Nif::NIFStream stream(reader, std::make_unique<std::istringstream>(blendControllerBytes(2, keys)), nullptr);
+    controller.read(&stream); controller.post(reader);
+    blend.mTarget->mController = Nif::NiTimeControllerPtr(&controller);
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    ASSERT_TRUE(graph.mBodies[0].mBlendController);
+    const auto& owned = graph.mBodies[0].mBlendController->mKeys;
+    ASSERT_EQ(owned.size(), 2);
+    mFile.mRecords.clear();
+    EXPECT_FLOAT_EQ(owned[1].mTime, .25f); EXPECT_FLOAT_EQ(owned[1].mHierarchyGain, .5f);
+    EXPECT_FLOAT_EQ(owned[1].mVelocityGain, 0); EXPECT_TRUE(std::signbit(owned[0].mHierarchyGain));
+}
+
+TEST_F(ActorRagdollTest, ZeroBlendKeyCountClearsPreviouslyReadKeys)
+{
+    Nif::Reader reader(mFile, nullptr);
+    Nif::NIFStream stream(reader, std::make_unique<std::istringstream>(blendControllerBytes(0, {})), nullptr);
+    Nif::bhkBlendController controller; controller.mKeys = {{1, 2, 3}};
+    controller.read(&stream);
+    EXPECT_TRUE(controller.mKeys.empty());
+    EXPECT_FLOAT_EQ(controller.mTimeStart, 7); EXPECT_FLOAT_EQ(controller.mTimeStop, 8);
+}
+
+TEST_F(ActorRagdollTest, KeepsUnverifiedLaterNonemptyBlendKeyLayoutsUnsupported)
+{
+    mFile.mVersion = Nif::NIFStream::generateVersion(20, 2, 0, 7);
+    const std::array<std::array<float, 3>, 1> keys{{{0, 1, 1}}};
+    Nif::Reader reader(mFile, nullptr);
+    Nif::NIFStream stream(reader, std::make_unique<std::istringstream>(blendControllerBytes(1, keys)), nullptr);
+    Nif::bhkBlendController controller;
+    EXPECT_THROW(controller.read(&stream), std::runtime_error);
 }

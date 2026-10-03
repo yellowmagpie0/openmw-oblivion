@@ -336,8 +336,14 @@ namespace Nif
         void post(Reader& nif) override;
     };
 
+    struct BlendControllerKey
+    {
+        float mTime, mHierarchyGain, mVelocityGain;
+    };
+
     struct bhkBlendController : public NiTimeController
     {
+        std::vector<BlendControllerKey> mKeys;
         void read(NIFStream* nif) override;
     };
 
