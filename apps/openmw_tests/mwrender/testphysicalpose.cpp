@@ -2,6 +2,7 @@
 #include <components/misc/osguservalues.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifosg/matrixtransform.hpp>
+#include <components/nif/niftypes.hpp>
 #include <components/sceneutil/skeleton.hpp>
 #include <components/sceneutil/keyframe.hpp>
 
@@ -138,6 +139,68 @@ namespace
         void traverse() { mRoot->accept(mVisitor); }
     };
 
+
+    TEST_F(PhysicalPoseAnimationTest, NativePlacementCarriesSeparateUniformScaleThroughOwnership)
+    {
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mScale = 2.f;
+        placement.mTranslation = {100, 20, 30};
+        mBone->setTranslation({1, 2, 3});
+        const auto initial = mAnimation->beginPhysicalPose(mGraph, placement);
+        ASSERT_EQ(initial.size(), 1u);
+        EXPECT_EQ(initial[0].mPose.getTrans(), osg::Vec3f(102, 24, 36));
+        EXPECT_NEAR(initial[0].mPose(0, 0), 1.f, 1e-6);
+        const std::vector<NifBullet::RagdollBoneWorldPose> physical{{8, osg::Matrixf::translate(120, 30, 40)}};
+        mAnimation->applyPhysicalPose(physical, placement);
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(10, 5, 5));
+        EXPECT_EQ(mAnimation->capturePhysicalPose(placement)[0].mPose.getTrans(), osg::Vec3f(120, 30, 40));
+        mAnimation->endPhysicalPose();
+        EXPECT_FALSE(mAnimation->hasPhysicalPose());
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativePlacementSamplingRestoresPhysicsAndReturnsScaledAnimationTarget)
+    {
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mScale = .5f;
+        placement.mTranslation = {100, 20, 30};
+        mAnimation->beginPhysicalPose(mGraph, placement, MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        const std::vector<NifBullet::RagdollBoneWorldPose> physical{{8, osg::Matrixf::translate(120, 30, 40)}};
+        mAnimation->applyPhysicalPose(physical, placement);
+        const auto before = mBone->getMatrix();
+        const auto writes = mAnimation->mWriter->mWrites;
+        const auto target = mAnimation->samplePhysicalAnimationTarget(placement, mVisitor);
+        ASSERT_EQ(target.size(), 1u);
+        EXPECT_EQ(target[0].mPose.getTrans(), osg::Vec3f(100.5f, 21, 31.5f));
+        EXPECT_EQ(mAnimation->mWriter->mWrites, writes + 1);
+        EXPECT_EQ(std::memcmp(before.ptr(), mBone->getMatrix().ptr(), 16 * sizeof(double)), 0);
+        EXPECT_EQ(mAnimation->capturePhysicalPose(placement)[0].mPose.getTrans(), osg::Vec3f(120, 30, 40));
+        mAnimation->endPhysicalPose();
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativePlacementRejectsInvalidScaleBeforeControllerDetachOrCallback)
+    {
+        auto placement = Nif::NiTransform::getIdentity();
+        for (float scale : {0.f, -1.f, std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::quiet_NaN()})
+        {
+            placement.mScale = scale;
+            EXPECT_THROW(mAnimation->beginPhysicalPose(mGraph, placement), std::invalid_argument);
+            EXPECT_FALSE(mAnimation->hasPhysicalPose());
+        }
+        placement.mScale = 2.f;
+        mAnimation->beginPhysicalPose(mGraph, placement, MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        const auto before = mBone->getMatrix();
+        const auto writes = mAnimation->mWriter->mWrites;
+        placement.mScale = -1.f;
+        EXPECT_THROW(mAnimation->samplePhysicalAnimationTarget(placement, mVisitor), std::invalid_argument);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, writes);
+        EXPECT_EQ(std::memcmp(before.ptr(), mBone->getMatrix().ptr(), 16 * sizeof(double)), 0);
+        EXPECT_THROW(mAnimation->capturePhysicalPose(placement), std::invalid_argument);
+        const std::vector<NifBullet::RagdollBoneWorldPose> physical{{8, osg::Matrixf::identity()}};
+        EXPECT_THROW(mAnimation->applyPhysicalPose(physical, placement), std::invalid_argument);
+        mAnimation->endPhysicalPose();
+    }
 
     TEST_F(PhysicalPoseAnimationTest, NativeReactionRootUsesLastExactNamedRecordIncludingHiddenNonBoneNodes)
     {

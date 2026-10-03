@@ -37,6 +37,11 @@ namespace Resource
     class ResourceSystem;
 }
 
+namespace Nif
+{
+    struct NiTransform;
+}
+
 namespace NifBullet
 {
     struct ActorRagdollDefinition;
@@ -215,6 +220,14 @@ namespace MWRender
 
         osg::ref_ptr<osg::Group> mObjectRoot;
         SceneUtil::Skeleton* mSkeleton;
+        template <class Placement>
+        std::vector<NifBullet::RagdollBoneWorldPose> beginPhysicalPoseImpl(
+            const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
+            PhysicalPoseAnimation animation);
+        template <class Placement>
+        std::vector<NifBullet::RagdollBoneWorldPose> samplePhysicalAnimationTargetImpl(
+            const Placement& objectWorld, osg::NodeVisitor& frameVisitor);
+
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mPhysicalPose;
         std::unique_ptr<SceneUtil::ActorRagdollLocalPose> mPhysicalAnimatedLocal;
         bool mPhysicalAnimatedTargets = false;
@@ -520,6 +533,16 @@ namespace MWRender
         std::vector<NifBullet::RagdollBoneWorldPose> capturePhysicalPose(const osg::Matrixf& objectWorld) const;
         void applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
             const osg::Matrixf& objectWorld);
+        // Native placement retains uniform scale separately from rotation.
+        // The caller scales physical graph properties independently.
+        std::vector<NifBullet::RagdollBoneWorldPose> beginPhysicalPose(
+            const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
+            PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
+        std::vector<NifBullet::RagdollBoneWorldPose> samplePhysicalAnimationTarget(
+            const Nif::NiTransform& objectWorld, osg::NodeVisitor& frameVisitor);
+        std::vector<NifBullet::RagdollBoneWorldPose> capturePhysicalPose(const Nif::NiTransform& objectWorld) const;
+        void applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+            const Nif::NiTransform& objectWorld);
         void endPhysicalPose();
         bool hasPhysicalPose() const { return mPhysicalPose != nullptr; }
         std::optional<std::uint32_t> getNativeReactionRootRecord() const { return mNativeReactionRootRecord; }

@@ -1772,8 +1772,9 @@ namespace MWRender
         return movement;
     }
 
-    std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPose(
-        const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
+    template <class Placement>
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPoseImpl(
+        const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
         PhysicalPoseAnimation animation)
     {
         if (mPhysicalPose)
@@ -1841,8 +1842,9 @@ namespace MWRender
         return initial;
     }
 
-    std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTarget(
-        const osg::Matrixf& objectWorld, osg::NodeVisitor& frameVisitor)
+    template <class Placement>
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTargetImpl(
+        const Placement& objectWorld, osg::NodeVisitor& frameVisitor)
     {
         if (!mPhysicalPose || !mPhysicalAnimatedTargets || !mPhysicalAnimatedLocal)
             throw std::logic_error("animated physical renderer pose is not bound");
@@ -1928,6 +1930,19 @@ namespace MWRender
         }
     }
 
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPose(
+        const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
+        PhysicalPoseAnimation animation)
+    {
+        return beginPhysicalPoseImpl(definition, objectWorld, animation);
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTarget(
+        const osg::Matrixf& objectWorld, osg::NodeVisitor& frameVisitor)
+    {
+        return samplePhysicalAnimationTargetImpl(objectWorld, frameVisitor);
+    }
+
     std::vector<NifBullet::RagdollBoneWorldPose> Animation::capturePhysicalPose(
         const osg::Matrixf& objectWorld) const
     {
@@ -1938,6 +1953,34 @@ namespace MWRender
 
     void Animation::applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
         const osg::Matrixf& objectWorld)
+    {
+        if (!mPhysicalPose)
+            throw std::logic_error("physical renderer pose is not bound");
+        mPhysicalPose->applyWorldBones(poses, objectWorld);
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPose(
+        const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
+        PhysicalPoseAnimation animation)
+    {
+        return beginPhysicalPoseImpl(definition, objectWorld, animation);
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTarget(
+        const Nif::NiTransform& objectWorld, osg::NodeVisitor& frameVisitor)
+    {
+        return samplePhysicalAnimationTargetImpl(objectWorld, frameVisitor);
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::capturePhysicalPose(const Nif::NiTransform& objectWorld) const
+    {
+        if (!mPhysicalPose)
+            throw std::logic_error("physical renderer pose is not bound");
+        return mPhysicalPose->captureWorldBones(objectWorld);
+    }
+
+    void Animation::applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+        const Nif::NiTransform& objectWorld)
     {
         if (!mPhysicalPose)
             throw std::logic_error("physical renderer pose is not bound");

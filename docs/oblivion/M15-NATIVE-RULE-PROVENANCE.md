@@ -9027,3 +9027,45 @@ World actor physical lifecycle remain open. Existing native stepping/restart
 failures are unchanged; no stage closes and S5-S14 remain pending. Next:
 connect separate native placement scale to Animation's physical ownership and
 sampling API, then continue live reaction lifecycle integration.
+
+
+### Checkpoint187: native placement in Animation physical ownership
+
+Checkpoint186 committed as `6841edae1a21e4afe1a3a97d196317ef31aeb803`,
+183 isolated commits with exact-byte/fresh-clone verification; bundle164 SHA256
+`5f4a19c6f0b15d974e35eaba7fba4ce8c847ccbf4b92d4b6b5f8936f00dbd20e`.
+Its initial staging attempt hit /tmp disk quota; four older review checkouts
+moved to ignored S3/relocated-temporary-reviews-01 storage with original paths
+preserved by symlinks. Exact staged bytes were checked before commit recovery;
+original workspace Git metadata remains unchanged.
+
+Animation now exposes native NiTransform placement for physical begin, capture,
+apply and animated-target sampling. Separate uniform scale reaches the verified
+SceneUtil binding instead of being packed into a rigid matrix. Shared private
+implementation preserves the original matrix API's controller detachment,
+resident/external callback ordering, topology validation and local-pose rollback.
+Graph property scaling remains the physics caller's separate responsibility.
+
+Three new tests fail against explicit unsupported-overload baseline01. Final
+cases cover scale2 frozen world/local round trips; scale0.5 animated targets,
+exact current physical matrix restoration, one callback execution and latest
+animated locals on ending ownership; zero/negative/nonfinite scale rejection
+before binding, and invalid live placement rejection before callback or write.
+All previous matrix-placement tests remain present. Native-ragdoll-animation-
+placement-normal-01 and sanitized-01 each rebuild openmw, openmw-tests and
+esmtool and pass all898 engine tests with complete inventories, no skips/
+failures. Tested fingerprint `5e17eb8b7b709caf9a8c1a69436f657eb542327e5218e6505ea39f693dd1373a`. ASan leaks disabled; UBSan halts. Unchanged
+component/Python sources were not rerun;2,258 components passed both builds at
+checkpoint186. The normal build retains the same CharacterController::
+unpersistAnimationState compiler maybe-uninitialized warning seen in this
+chunk's baseline before implementation; no new warning is attributed to the
+placement overloads.
+
+This verifies renderer API ownership and sampling, not normal World initialization
+or native gameplay. Original placement/scaling arithmetic evidence remains in
+checkpoints176-178; no new original-executable probe is claimed here. NPC
+initial morphology, World begin/apply/end lifecycle, native controller attachment,
+clock/contact/activation persistence and original stepping/restart failures
+remain open. No stage closes; S5-S14 remain pending. Next: retain authored node
+blend-controller identities and timing inputs so reaction setup can distinguish
+a real selected controller from absence, then connect the live lifecycle.
