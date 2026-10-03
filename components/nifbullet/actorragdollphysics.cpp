@@ -683,10 +683,11 @@ namespace NifBullet
         {
             require(records.insert(body.mRecord).second && nodes.insert(body.mNodeRecord).second,
                 "duplicate body/bone identity");
-            require(!body.mUsesRigidBodyTransform, "unadmitted bhkRigidBodyT pose binding");
             const auto found = poses.find(body.mNodeRecord);
             require(found != poses.end(), "missing current bone world pose");
-            auto pose = ragdollNativePoseFromBoneWorld(*found->second);
+            const auto target = ragdollNativeSceneBodyTargetPose(*found->second, body);
+            auto pose = btTransform(btQuaternion(target.mRotation[0], target.mRotation[1],
+                target.mRotation[2], target.mRotation[3]), vector(target.mPosition));
             pose.setOrigin(pose.getOrigin() * btScalar(RagdollNativeLengthScale));
             result.push_back(pose);
         }

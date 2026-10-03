@@ -27,7 +27,7 @@ namespace NifBullet
         osg::Matrixf mPose;
     };
 
-    // Current bone world pose at the ordinary bhkRigidBody sync boundary.
+    // Current scene bone world pose at the bhk scene-sync boundary.
     // Input already includes actor/world placement and must be rigid.
     // The single pose uses native lengths; the graph adapter returns world
     // lengths for ActorRagdollPhysics with RagdollNativeLengthScale.
@@ -36,7 +36,7 @@ namespace NifBullet
     RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose);
     // Ordinary scene sync plus the native bhkRigidBodyT local offset, when
     // present. Local translation is already in native lengths and includes
-    // any graph property scaling. Does not admit reverse/controller binding.
+    // any graph property scaling.
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(
         const osg::Matrixf& worldPose, const RagdollBodyDefinition& body);
     // Native8B8FB0/8B9150 reverse bodyT offset, in native length units.

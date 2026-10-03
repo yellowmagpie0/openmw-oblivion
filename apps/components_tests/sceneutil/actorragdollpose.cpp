@@ -64,6 +64,47 @@ namespace
         }
     };
 
+    TEST_F(ActorRagdollPoseTest, BodyTGraphAndControllerPublishScenePoseWithoutApplyingOffsetTwice)
+    {
+        mPelvis->setTranslation({0, 0, 0});
+        mConnector->setTranslation({0, 0, 0});
+        mHand->setTranslation({0, 0, 0});
+        for (auto& body : mGraph.mBodies)
+        {
+            body.mMass = 2;
+            body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mShape = NifBullet::RagdollSphere{.5f};
+        }
+        auto& hand = mGraph.mBodies[0];
+        hand.mUsesRigidBodyTransform = true;
+        hand.mTranslation = {2, 3, 4};
+        hand.mRotation = osg::Quat(0, 0, 1, 0);
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        auto scene = binding.captureWorldBones(osg::Matrixf::identity());
+        const auto physical = NifBullet::ragdollBodyWorldPoses(mGraph, scene);
+        const btScalar scale = NifBullet::RagdollNativeLengthScale;
+        EXPECT_EQ(physical[0].getOrigin(), btVector3(2 * scale, 3 * scale, 4 * scale));
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher(&configuration);
+        btDbvtBroadphase broadphase;
+        btSequentialImpulseConstraintSolver solver;
+        btDiscreteDynamicsWorld world(&dispatcher, &broadphase, &solver, &configuration);
+        NifBullet::ActorRagdollPhysics actor(mGraph, world, NifBullet::RagdollNativeLengthScale, physical, 1, -1);
+        std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{
+            {30, osg::Matrixf::identity(), 1, 0, 8}}};
+        actor.updateNativeBlends(updates, 1, 0, 0);
+        updates[0].mHierarchyGain = 0;
+        const auto publication = actor.updateNativeBlends(updates, 1, 0, 0);
+        ASSERT_EQ(publication.size(), 1);
+        ASSERT_TRUE(publication[0].mSceneTarget);
+        EXPECT_EQ(*publication[0].mSceneTarget, osg::Matrixf::identity());
+        scene[0].mPose = *publication[0].mSceneTarget;
+        binding.applyWorldBones(scene, osg::Matrixf::identity());
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(0, 0, 0));
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(0, 0, 0));
+        EXPECT_EQ(binding.captureWorldBones(osg::Matrixf::identity())[0].mPose, osg::Matrixf::identity());
+    }
+
     TEST_F(ActorRagdollPoseTest, NativePlacementScalesPositionsWithSeparateRigidPhysicalRotation)
     {
         SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
@@ -320,6 +361,7 @@ namespace
         EXPECT_THROW(binding.captureWorldBones(mObjectWorld), std::invalid_argument);
         mHand->setScale(1);
         mGraph.mBodies[0].mUsesRigidBodyTransform = true;
+        mGraph.mBodies[0].mBone.clear();
         EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot)), std::invalid_argument);
         mRoot = nullptr;
         EXPECT_THROW(binding.captureWorldBones(mObjectWorld), std::invalid_argument);

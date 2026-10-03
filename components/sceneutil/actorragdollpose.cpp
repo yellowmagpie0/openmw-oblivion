@@ -162,7 +162,6 @@ namespace SceneUtil
             std::unordered_set<std::uint32_t> bodyRecords, bodyNodes;
             for (const auto& body : definition.mBodies)
             {
-                require(!body.mUsesRigidBodyTransform, "unadmitted bhkRigidBodyT renderer binding");
                 require(bodyRecords.insert(body.mRecord).second && bodyNodes.insert(body.mNodeRecord).second,
                     "duplicate ragdoll renderer body identity");
                 const auto found = records.find(body.mNodeRecord);

@@ -575,7 +575,26 @@ namespace
         EXPECT_LT((actual[0].mPose.getOrigin() - poses[0].getOrigin()).length(), 1e-10);
     }
 
-    TEST_F(ActorRagdollPhysicsTest, RejectsIncompleteAmbiguousAndUnsupportedBoneBindings)
+    TEST_F(ActorRagdollPhysicsTest, BodyTGraphPreparesPhysicalPoseFromSceneBone)
+    {
+        auto& body = mGraph.mBodies[0];
+        body.mNodeRecord = 8;
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {2, 3, 4};
+        body.mRotation = osg::Quat(0, 0, 1, 0);
+        const NifBullet::RagdollBoneWorldPose bone{8, osg::Matrixf::identity()};
+        const auto poses = NifBullet::ragdollBodyWorldPoses(mGraph, std::span(&bone, 1));
+        ASSERT_EQ(poses.size(), 1);
+        const btScalar scale = NifBullet::RagdollNativeLengthScale;
+        EXPECT_EQ(poses[0].getOrigin(), btVector3(2 * scale, 3 * scale, 4 * scale));
+        EXPECT_EQ(poses[0].getRotation(), btQuaternion(0, 0, 1, 0));
+        EXPECT_EQ(bone.mPose, osg::Matrixf::identity());
+        EXPECT_EQ(body.mTranslation, osg::Vec3f(2, 3, 4));
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        EXPECT_EQ(actor.capture()[0].mPose, poses[0]);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RejectsIncompleteAmbiguousAndMalformedBoneBindings)
     {
         mGraph.mBodies[0].mNodeRecord = 8;
         const NifBullet::RagdollBoneWorldPose bone{8, osg::Matrixf::identity()};
@@ -586,6 +605,7 @@ namespace
         const std::array duplicates{bone, bone};
         EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(mGraph, duplicates), std::invalid_argument);
         mGraph.mBodies[0].mUsesRigidBodyTransform = true;
+        mGraph.mBodies[0].mRotation = osg::Quat(0, 0, 0, 0);
         EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(mGraph, std::span(&bone, 1)), std::invalid_argument);
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }

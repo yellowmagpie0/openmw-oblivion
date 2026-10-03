@@ -15357,3 +15357,55 @@ adapters, preserving the raw-state representation/integrator gate. Full native
 NIF loader mapping, caller scale, World begin/apply/end, native stepping,
 unchanged stock-floor fresh-restart and normal gameplay acceptance remain open.
 S5-S14 remain pending.
+
+
+### Checkpoint183: bodyT graph preparation and renderer scene binding
+
+Checkpoint182 committed as `ff620ad02f33efed8cb09af37e423eba4b9d7110`,
+179 isolated commits with exact-byte/fresh-clone proof; bundle160 SHA256
+`f60b69b5c65e948925152e111363daf64433ef20ed2810e599f852cf46087f8e`.
+Ragdoll graph pose preparation now uses the verified BodyT forward scene
+adapter before constructing physical world poses. Local native-length offsets
+include caller graph scaling exactly once. SceneUtil renderer binding admits
+BodyT targets as scene bones; offsets remain in physical graph/controller
+adapters, so writeback does not apply them twice. Existing rigid pose, finite
+input, record/hash/topology identity and positive uniform placement checks
+remain. Physical malformed local offsets reject during graph preparation and
+owned construction. Renderer binding validates the scene identities it uses.
+
+Two new tests cover exact identity-bone physical local offset/rotation and real
+renderer capture, graph construction, owned World keyframed/dynamic transitions,
+reverse scene projection and writeback/recapture without doubled offset.
+Baseline01 retains a test compile failure from using an unavailable translation
+getter;02 corrects that assertion and retains both failing admission-gate cases.
+Existing rejection fixtures now use malformed BodyT rotation or missing bone
+identity instead of expecting every BodyT record to reject. Green01 passes the
+selected old/new graph and scene tests. Full binding normal/sanitized01 each
+pass2,251 component and892 engine cases, complete inventories, zero failures/
+skips and rebuilt openmw/esmtool. Tested fingerprint `0326e847cd25561e66fa4953f3f5d786aa18f12adecac9cdb35db3465649db4d`. ASan leaks disabled;
+UBSan halts. Unchanged Python sources were not rerun.
+
+Binding-compare normal/sanitized01 each exercise400 synthetic scene node
+fixtures drawn from complete original SceneSync/controller executions across
+both x87 controls: real SceneUtil capture, graph BodyT physical preparation,
+owned Bullet World PhysicsToScene publication, renderer writeback/recapture
+and exact cleanup. Independent expected physical origin/basis are original
+89EAE0 BodyT outputs; expected renderer matrices are complete original88F3D0
+PhysicsToScene results. Each build matches1,200 exact world-origin fields and
+800 exact cleanup fields. Maximum native/Bullet basis error4.2878553419001264e-07
+and renderer scene error0.00048828125 stay within unchanged1e-6/0.001 limits;
+renderer writeback/recapture matches exactly. Predeclared tolerances, source/
+library/input drift guards and failures are recorded in the evidence.
+Source/driver SHA256 `28b3b6de301300ccc0307e70bb8c594d5c33f2e006446226e191c7c436527974`, `f8690d52be2bf257d5d1240f062fb3b6e20bd44681fdea58ecaace9a1b450217`;
+forward corpus `2755719edee7d5d869f6a51dfc3189fcf082e86509797adf4bd79cd50ddcc6e0`, controller corpus
+`3564df901875899ecaef42a8d08946f62f64bb76ca1890e9de82d772d30c2a5b`; original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+These are assembled scene/physical fixtures. No complete original native NIF
+loader, real actor placement authority, physics step or normal gameplay executes.
+
+No stage closes. BodyT graph and renderer boundary gates are now admitted for
+the tested supported local-offset domain; the12 raw-native pose/COM velocity
+mismatches from checkpoint182 remain open. Native integration/interpolation,
+World lifecycle, caller race/scale, unchanged stock-floor fresh-restart,
+save/controller clock projection and normal-input acceptance remain open.
+Next: resolve the remaining native reaction-entry/caller authority before World
+physical integration. S5-S14 remain pending.
