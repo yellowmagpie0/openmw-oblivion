@@ -493,6 +493,75 @@ namespace
 
 namespace
 {
+    TEST(RagdollNativeVelocityStep, LoadedLimitsApplyBothOriginalPreparationBranches)
+    {
+        for (float linear : {0.f, std::nextafter(250.f, 0.f), 250.f,
+                 std::nextafter(250.f, 300.f), 10000.f, std::numeric_limits<float>::max()})
+            for (float angular : {0.f, std::numeric_limits<float>::denorm_min(), 31.41590118408203f})
+            {
+                const auto limits = NifBullet::ragdollLoadedMotionLimits(2, 0.1f, linear, angular);
+                EXPECT_EQ(limits.mMaxLinearVelocity, 250.f);
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(limits.mAngularLimit), std::bit_cast<std::uint32_t>(angular));
+                EXPECT_EQ(limits.mLinearDamping, 2);
+                EXPECT_EQ(limits.mAngularDamping, 0.1f);
+            }
+        for (float invalid : {-1.f, std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::quiet_NaN()})
+        {
+            EXPECT_THROW(NifBullet::ragdollLoadedMotionLimits(invalid, 0, 1, 1), std::invalid_argument);
+            EXPECT_THROW(NifBullet::ragdollLoadedMotionLimits(0, invalid, 1, 1), std::invalid_argument);
+            EXPECT_THROW(NifBullet::ragdollLoadedMotionLimits(0, 0, invalid, 1), std::invalid_argument);
+            EXPECT_THROW(NifBullet::ragdollLoadedMotionLimits(0, 0, 1, invalid), std::invalid_argument);
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, AppliesLoadedCapsAfterNativeDeltaWithoutChangingPose)
+    {
+        mGraph.mBodies[0].mMaxLinearVelocity = 10000;
+        mGraph.mBodies[0].mMaxAngularVelocity = 0.1f;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7, mPoses, 1, -1);
+        auto states = actor.capture();
+        states[0].mLinearVelocity = btVector3(7000, 0, 0);
+        states[0].mAngularVelocity = btVector3(1, 0, 0);
+        actor.restore(states);
+        const std::array<osg::Vec3f, 1> delta{{{10, 0, 0}}};
+        actor.applyNativeVelocityStep(0.25f, delta);
+        const auto actual = actor.capture()[0];
+        EXPECT_EQ(actual.mLinearVelocity, btVector3(1750, 0, 0));
+        EXPECT_NEAR(actual.mAngularVelocity.x(), 0.31415927, 1e-7);
+        EXPECT_EQ(actual.mAngularVelocity.y(), 0);
+        EXPECT_EQ(actual.mPose, states[0].mPose);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 1);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, InvalidLaterBodyVelocityDeltaDoesNotPublishEarlierResults)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7, mPoses, 1, -1);
+        auto states = actor.capture();
+        for (auto& state : states)
+        {
+            state.mLinearVelocity = btVector3(70, 140, 210);
+            state.mAngularVelocity = btVector3(1, 2, 3);
+        }
+        actor.restore(states);
+        std::array<osg::Vec3f, 2> delta{{{1, 2, 3}, {0, 0, std::numeric_limits<float>::infinity()}}};
+        EXPECT_THROW(actor.applyNativeVelocityStep(0.25f, delta), std::invalid_argument);
+        EXPECT_THROW(actor.applyNativeVelocityStep(0.25f, std::span<const osg::Vec3f>(delta).first(1)),
+            std::invalid_argument);
+        delta[1].set(0, 0, 0);
+        EXPECT_THROW(actor.applyNativeVelocityStep(-1, delta), std::invalid_argument);
+        const auto actual = actor.capture();
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+            EXPECT_EQ(actual[i].mLinearVelocity, states[i].mLinearVelocity);
+            EXPECT_EQ(actual[i].mAngularVelocity, states[i].mAngularVelocity);
+            EXPECT_EQ(actual[i].mPose, states[i].mPose);
+        }
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 2);
+        EXPECT_EQ(mWorld.getNumConstraints(), 1);
+    }
+
     TEST(RagdollNativeVelocityStep, MatchesOriginalGravityDampingAndBothCapStores)
     {
         // Independent full original 8e96c0 corpus cases3918 and3070.

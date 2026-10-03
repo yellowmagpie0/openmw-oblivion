@@ -16,9 +16,15 @@ namespace NifBullet
         float mLinearDamping;
         float mAngularDamping;
         float mMaxLinearVelocity;
-        // Raw original motion field +B8, not serialized NIF maxAngularVelocity.
+        // Raw original motion field +B8; the loaded-body factory copies it unchanged.
         float mAngularLimit;
     };
+
+    // Original loaded bhk body limit preparation. Load caps linear speed at
+    // 250; construction raises it to at least 250. Angular speed is copied
+    // unchanged into motion+B8. This is not the general motion factory policy.
+    RagdollMotionLimits ragdollLoadedMotionLimits(float linearDamping, float angularDamping,
+        float maxLinearVelocity, float maxAngularVelocity);
 
     // Original sphere-motion velocity stores, in native units: the supplied
     // velocity delta precedes damping, linear speed and angular rotation caps.

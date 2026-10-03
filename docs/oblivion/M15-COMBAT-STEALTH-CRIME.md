@@ -13017,3 +13017,44 @@ mapping, actor motion-mode/recovery policy, World frame admission/capture/restor
 normal-input corpse/loot/media and display-dependent TES3 runtime gates remain
 open. This kernel is one prerequisite for those integrations; no M15 gate is
 promoted and no native Havok whole-trajectory agreement is claimed.
+
+
+### Checkpoint141 — loaded-body motion limits and atomic owned-body velocity step (S4/S6 open)
+
+The original load prefix8a4513..8a4532 caps finite nonnegative Cinfo linear
+limits at250. Construction prefix8a42dd..8a42fc raises them to at least250.
+Together these produce250 for loaded bodies, including serialized10000 and
+values adjacent to250. The angular limit remains the raw binary32 value:
+8a9f50 passes Cinfo+A8 to8a9630, whose full factory returns copy it to motion+B8.
+`ragdollLoadedMotionLimits` implements this loaded-body preparation and validates
+all four coefficients before returning. It deliberately does not describe the
+general motion factory as having a fixed250 limit. Owned bodies retain these
+limits; `applyNativeVelocityStep` accepts explicit per-body native velocity
+deltas, stages every damped/capped result, then publishes velocities without
+changing poses, registration or world clocks. Invalid later-body inputs leave
+all live velocities intact. Existing scheduler force policy remains unchanged.
+
+`S4/native-ragdoll-motion-limits-oracle-03` independently executes420 original
+cases across seven linear inputs, five angular inputs, six requested motion types
+and both x87 precision settings. Both normalization prefixes execute actual
+instructions and the motion factory executes through full return, including real
+motion constructors and property dispatch. Its only stub is an isolated aligned
+allocator with checked allocation size/tag and ret8. Cinfo arguments are synthetic;
+original stream deserialization and complete bhk wrapper admission are not
+executed. Normal/sanitized comparison01 match all four binary32 returned
+coefficient fields exactly and reject12 negative/NaN/infinite controls. Retained
+oracle01 records the initially incorrect upper-cap interpretation of the
+constructor branch; oracle02 verifies constructor minimum preparation alone;
+fresh03 verifies the actual load-then-construction sequence. No original expected
+value or production tolerance is tuned to the implementation.
+
+Three new component tests pin loaded thresholds/angular bits, actual owned-body
+cap/delta application with unchanged pose, and all-body atomic rejection. Green01
+passes the three selected cases. Full normal/sanitized01 pass2,132 components and
+827 engine tests, complete inventories and zero failures/skips; normal also passes
+245 Python tests. Stable tested source fingerprint `dffc7d561b698a7f8d0670dc2262dac9ed897c9c7e4b00bef171dcd1712ca01e`.
+ASan detect_leaks=0:halt_on_error=1; UBSan halt_on_error=1:print_stacktrace=1;
+no leak coverage. Original gravity preparation research is continuing separately.
+Live scheduler gravity/cap policy, actual World admission/render/save wiring,
+native recovery/mode semantics, normal-input corpse/loot/media and TES3 runtime
+acceptance remain open. No M15 gate is promoted by these prerequisite checks.

@@ -43,6 +43,18 @@ namespace NifBullet
         }
     }
 
+    RagdollMotionLimits ragdollLoadedMotionLimits(float linearDamping, float angularDamping,
+        float maxLinearVelocity, float maxAngularVelocity)
+    {
+        coefficient(linearDamping);
+        coefficient(angularDamping);
+        coefficient(maxLinearVelocity);
+        coefficient(maxAngularVelocity);
+        // 8a4513..8a4532 caps the loaded Cinfo at 250, then
+        // 8a42dd..8a42fc imposes a minimum of 250 before motion construction.
+        return {linearDamping, angularDamping, 250.f, maxAngularVelocity};
+    }
+
     RagdollNativeVelocities ragdollNativeVelocityStep(const RagdollNativeVelocities& input,
         const RagdollMotionLimits& limits, float frameSeconds, const osg::Vec3f& linearDelta)
     {

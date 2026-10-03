@@ -1,5 +1,6 @@
 #include "actorragdollphysics.hpp"
 #include "ragdollconecoordinates.hpp"
+#include "ragdollvelocity.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -228,6 +229,7 @@ namespace NifBullet
             std::uint32_t mRecord;
             btTransform mCenterFrame;
             float mLinearDamping, mAngularDamping;
+            RagdollMotionLimits mLimits;
             std::unique_ptr<btRigidBody> mBody;
         };
         btDynamicsWorld& mWorld;
@@ -343,6 +345,8 @@ namespace NifBullet
             require(std::isfinite(input.mMass) && input.mMass > 0, "invalid mass");
             coefficient(input.mLinearDamping);
             coefficient(input.mAngularDamping);
+            const auto limits = ragdollLoadedMotionLimits(input.mLinearDamping, input.mAngularDamping,
+                input.mMaxLinearVelocity, input.mMaxAngularVelocity);
             coefficient(input.mFriction);
             coefficient(input.mRestitution);
             const btScalar scale = lengthScale;
@@ -403,7 +407,7 @@ namespace NifBullet
             mImpl->mShapes.push_back(std::move(shape));
             mImpl->mShapes.push_back(std::move(compound));
             mImpl->mBodies.push_back({input.mRecord, centerFrame, input.mLinearDamping,
-                input.mAngularDamping, std::move(body)});
+                input.mAngularDamping, limits, std::move(body)});
         }
         for (const auto& input : definition.mJoints)
         {
@@ -491,6 +495,36 @@ namespace NifBullet
         auto& target = *mImpl->mBodies[body].mBody;
         target.activate(true);
         target.applyImpulse(impulse, worldPoint - target.getCenterOfMassPosition());
+    }
+
+    void ActorRagdollPhysics::applyNativeVelocityStep(float frameSeconds,
+        std::span<const osg::Vec3f> nativeLinearDeltas)
+    {
+        require(nativeLinearDeltas.size() == mImpl->mBodies.size(), "velocity delta count");
+        auto states = capture();
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+            RagdollNativeVelocities input;
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                input.mLinear[axis] = float(states[i].mLinearVelocity[axis] / mImpl->mLengthScale);
+                input.mAngular[axis] = float(states[i].mAngularVelocity[axis]);
+            }
+            const auto output = ragdollNativeVelocityStep(input, mImpl->mBodies[i].mLimits,
+                frameSeconds, nativeLinearDeltas[i]);
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                states[i].mLinearVelocity[axis] = btScalar(output.mLinear[axis]) * mImpl->mLengthScale;
+                states[i].mAngularVelocity[axis] = output.mAngular[axis];
+            }
+            require(finite(states[i].mLinearVelocity) && finite(states[i].mAngularVelocity),
+                "velocity exceeds world domain");
+        }
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+            mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
+            mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
+        }
     }
 
     void ActorRagdollPhysics::applyNativeDamping(float frameSeconds)
