@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_NIFBULLET_RAGDOLLVELOCITY_HPP
 
 #include <osg/Vec3f>
+#include <optional>
 
 namespace NifBullet
 {
@@ -15,6 +16,15 @@ namespace NifBullet
         osg::Vec3f mLinear;
         osg::Vec3f mAngular;
     };
+
+    // Native8A37E8 mixes current velocities with already prepared/capped
+    // pose-target velocities. A present world additionally compensates Z
+    // gravity by gain/inverseFrameSeconds before the ordinary world step.
+    // This does not prepare pose targets, select motion modes, wake bodies or
+    // publish velocities. The gain is finite but deliberately not clamped.
+    RagdollNativeVelocities ragdollNativeBlendVelocities(const RagdollNativeVelocities& current,
+        const RagdollNativeVelocities& target, float velocityGain, float inverseFrameSeconds,
+        std::optional<float> worldGravityZ);
 
     struct RagdollMotionLimits
     {

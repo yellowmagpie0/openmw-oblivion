@@ -54,6 +54,43 @@ namespace NifBullet
         return result;
     }
 
+    RagdollNativeVelocities ragdollNativeBlendVelocities(const RagdollNativeVelocities& current,
+        const RagdollNativeVelocities& target, float velocityGain, float inverseFrameSeconds,
+        std::optional<float> worldGravityZ)
+    {
+        finite(current.mLinear);
+        finite(current.mAngular);
+        finite(target.mLinear);
+        finite(target.mAngular);
+        if (!std::isfinite(velocityGain) || !std::isfinite(inverseFrameSeconds)
+            || inverseFrameSeconds <= 0.f || (worldGravityZ && !std::isfinite(*worldGravityZ)))
+            throw std::invalid_argument("Invalid native physical velocity blend input");
+        const float remaining = 1.f - velocityGain;
+        RagdollNativeVelocities result;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            // SSE stores each product and sum independently. Do not replace
+            // these with a double weighted sum or fused multiply-add.
+            const float currentLinear = remaining * current.mLinear[axis];
+            const float targetLinear = velocityGain * target.mLinear[axis];
+            const float currentAngular = remaining * current.mAngular[axis];
+            const float targetAngular = velocityGain * target.mAngular[axis];
+            result.mLinear[axis] = currentLinear + targetLinear;
+            result.mAngular[axis] = currentAngular + targetAngular;
+        }
+        finite(result.mLinear);
+        finite(result.mAngular);
+        if (worldGravityZ)
+        {
+            // Original x87 product/division/subtraction has only a final
+            // binary32 store; compensation is not applied to X/Y or rotation.
+            result.mLinear.z() = static_cast<float>(double(result.mLinear.z())
+                - double(*worldGravityZ) * velocityGain / inverseFrameSeconds);
+            finite(result.mLinear);
+        }
+        return result;
+    }
+
     RagdollMotionLimits ragdollLoadedMotionLimits(float linearDamping, float angularDamping,
         float maxLinearVelocity, float maxAngularVelocity)
     {

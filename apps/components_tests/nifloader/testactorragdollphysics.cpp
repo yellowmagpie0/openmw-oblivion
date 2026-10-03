@@ -766,4 +766,80 @@ namespace
         EXPECT_EQ(NifBullet::nextRagdollSystemGroup(65535), 10);
     }
 
+
+    TEST(RagdollNativeVelocityBlend, MatchesNativeIndependentLinearAngularAndGravityStores)
+    {
+        const NifBullet::RagdollNativeVelocities current{{1, -2, 3}, {-4, 5, -6}};
+        const NifBullet::RagdollNativeVelocities target{{7, -8, 9}, {10, -11, 12}};
+        const auto unchanged = NifBullet::ragdollNativeBlendVelocities(current, target, 0.f, 120.f, std::nullopt);
+        EXPECT_EQ(unchanged.mLinear, current.mLinear);
+        EXPECT_EQ(unchanged.mAngular, current.mAngular);
+        const auto driven = NifBullet::ragdollNativeBlendVelocities(current, target, 1.f, 120.f, std::nullopt);
+        EXPECT_EQ(driven.mLinear, target.mLinear);
+        EXPECT_EQ(driven.mAngular, target.mAngular);
+        const auto mixed = NifBullet::ragdollNativeBlendVelocities(current, target, 0.5f, 120.f,
+            NifBullet::RagdollNativeDefaultGravityZ);
+        // Original8A37E8..8A388C outputs in both x87 precision modes.
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mixed.mLinear[0]), 1082130432u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mixed.mAngular[0]), 1077936128u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mixed.mLinear[1]), 3231711232u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mixed.mAngular[1]), 3225419776u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mixed.mLinear[2]), 1086967644u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mixed.mAngular[2]), 1077936128u);
+    }
+
+    TEST(RagdollNativeVelocityBlend, DoesNotClampFiniteGainsOrCompensateMissingWorld)
+    {
+        const NifBullet::RagdollNativeVelocities current{{1, 2, 3}, {4, 5, 6}};
+        const NifBullet::RagdollNativeVelocities target{{7, 8, 9}, {10, 11, 12}};
+        const auto extended = NifBullet::ragdollNativeBlendVelocities(current, target, 1.5f, 1.f, std::nullopt);
+        EXPECT_EQ(extended.mLinear, osg::Vec3f(10, 11, 12));
+        EXPECT_EQ(extended.mAngular, osg::Vec3f(13, 14, 15));
+        const auto negative = NifBullet::ragdollNativeBlendVelocities(current, target, -0.5f, 1.f, std::nullopt);
+        EXPECT_EQ(negative.mLinear, osg::Vec3f(-2, -1, 0));
+        EXPECT_EQ(negative.mAngular, osg::Vec3f(1, 2, 3));
+        const NifBullet::RagdollNativeVelocities zero{};
+        const auto gravity = NifBullet::ragdollNativeBlendVelocities(zero, zero, 0.5f, 1.f, -10.f);
+        EXPECT_EQ(gravity.mLinear, osg::Vec3f(0, 0, 5));
+        EXPECT_EQ(gravity.mAngular, osg::Vec3f());
+    }
+
+    TEST(RagdollNativeVelocityBlend, PreservesSseSignedZeroProducts)
+    {
+        const NifBullet::RagdollNativeVelocities current{{-0.f, -0.f, -0.f}, {-0.f, -0.f, -0.f}};
+        const NifBullet::RagdollNativeVelocities positive{};
+        const auto cancelled = NifBullet::ragdollNativeBlendVelocities(current, positive, 0.f, 120.f, std::nullopt);
+        const auto retained = NifBullet::ragdollNativeBlendVelocities(current, current, 0.f, 120.f, std::nullopt);
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(cancelled.mLinear[axis]), 0u);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(cancelled.mAngular[axis]), 0u);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(retained.mLinear[axis]), 0x80000000u);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(retained.mAngular[axis]), 0x80000000u);
+        }
+    }
+
+    TEST(RagdollNativeVelocityBlend, RejectsInvalidInputsAndOverflowWithoutChangingVelocities)
+    {
+        const NifBullet::RagdollNativeVelocities current{{1, 2, 3}, {4, 5, 6}};
+        const NifBullet::RagdollNativeVelocities target{{7, 8, 9}, {10, 11, 12}};
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const float infinity = std::numeric_limits<float>::infinity();
+        for (float inverse : {0.f, -1.f, nan, infinity})
+            EXPECT_THROW(NifBullet::ragdollNativeBlendVelocities(current, target, 0.5f, inverse, std::nullopt),
+                std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendVelocities(current, target, nan, 120.f, std::nullopt),
+            std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendVelocities(current, target, 0.5f, 120.f, infinity),
+            std::invalid_argument);
+        auto invalid = current;
+        invalid.mAngular[2] = nan;
+        EXPECT_THROW(NifBullet::ragdollNativeBlendVelocities(invalid, target, 0.5f, 120.f, std::nullopt),
+            std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendVelocities(current, target,
+            std::numeric_limits<float>::max(), 120.f, std::nullopt), std::invalid_argument);
+        EXPECT_EQ(current.mLinear, osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(target.mAngular, osg::Vec3f(10, 11, 12));
+    }
+
 }

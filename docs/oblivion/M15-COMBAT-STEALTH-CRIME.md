@@ -13551,3 +13551,49 @@ Winning BlendSettings.ini import, actual scene key/controller creation,
 physical motion/pose/velocity blending, World admission/render/save and stock
 floor-contact continuation are still open. Rule/helper evidence does not close
 normal-input reaction or fresh-process gameplay gates.
+
+
+### Checkpoint153: prepared-target physical velocity blending
+
+Checkpoint152 committed as `dac976344efca6435e316f983166dacad9168913`
+with exact changed bytes and a verified fresh bundle clone. The new
+NifBullet::ragdollNativeBlendVelocities mixes current linear/angular velocities
+with supplied already prepared/capped target velocities. Finite gains remain
+unclamped. Each native SSE product/sum retains its binary32 store; a present
+world additionally subtracts gravityZ*gain/inverseFrameSeconds from linear Z
+with only the final x87-equivalent binary32 store. Missing worlds receive no
+gravity compensation. Nonfinite inputs, nonpositive inverse time and output
+overflow reject without mutating supplied velocities.
+
+Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+S4/native-ragdoll-blend-velocity-oracle-01 executes original prefix
+008a37e8..008a388c, stopping before wake/publication, and calls the actual
+0089d940 world getter through the original wrapper vtable. Synthetic wrapper,
+body, motion and optional world fields supply current and prepared targets;
+there are no game/OS call stubs. Both x87 precision words and nearest SSE
+without denormal flushing cover19,800 cases:100 vector fixtures,11 gain
+patterns including signed zero/subnormal and values outside0..1, three
+inverse frame times and three world/gravity choices. Oracle source SHA256
+`f14f39f777c44c8afcfb712506cb8932b7cbb2e97d78290dd1dd4aadb64c3459`;
+corpus SHA256
+`0075280329514bf655d85cc4b7eea2d2b067518bb40a2fb5eca62326cb753131`.
+
+S4/native-ragdoll-blend-velocity-compare-{normal,sanitized}-01 each compare
+all19,800 C++ outputs exactly with zero mismatches. Always-current,
+always-target, omitted gravity and clamped-gain controls reject
+10,836/18,402/3,654/5,406 cases. Comparator/driver SHA256:
+`2e936640cb10f5a038cd1e3596561419eb570e28a34d8d7494d1b3cbedf28180`,
+`8410192e30e634f0d72782b5db68e0a812312202c69d3785421611555ac36815`.
+Four component tests cover exact independent stores, unclamped gains,
+optional gravity, signed zeros and invalid/overflow rejection. Full
+S4/native-ragdoll-blend-velocity-{normal,sanitized}-01 each pass2,161
+component and842 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested source fingerprint
+`0e749004b5d94c82807b2d2c8d0f67d20d609da3bd572aae3ebba56c17b3c211`.
+ASan leaks disabled; UBSan halts. Python unchanged.
+
+This closes the prepared-target mix rule only. Pose-to-target velocity
+preparation/caps, motion selection, body wake/publication, controller
+attachment, World/render/save lifecycle and stock floor-contact continuation
+remain open. S4 and all later acceptance gates retain their existing status.
