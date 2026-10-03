@@ -16186,3 +16186,50 @@ save/restart remain open. Retained BodyT/floor failures and S5-S14 remain open.
 Next: connect renderer target sampling and physics publication with lifecycle
 ownership, starting with a rollback-tested binding rather than assuming a
 headless public API test establishes normal gameplay acceptance.
+
+
+### Checkpoint199: atomic complete animation frames
+
+Checkpoint198 committed as `eca9fc7362536a8ec31c938fce7c958b5f9a6a13`,
+195 isolated commits with exact-byte/fresh-clone verification. Bundle176 SHA256
+`ec24cf1bc8906cfd3642cc29dd449eac0fcc0b7171e30ebcf42f62ea0ef3924c`.
+ActorRagdollPhysics now accepts a complete bone frame and an explicit order
+containing every owned controller once. It matches node identities independently
+of attached-body identity, advances controllers using the shared cache in the
+supplied order, then publishes every owned blend body in supplied bone order.
+Uncontrolled blend bodies use current owned gains/flags; non-blend bodies remain
+untouched. The sparse controller API and complete-frame API share one staged
+implementation, so failures in later uncontrolled body computations also leave
+controllers, cached gains, shared clock cache, body modes and poses unchanged.
+Complete/unique node/controller admission is validated before publication. Graphs
+with ambiguous body nodes reject this complete-frame interface even if the legacy
+controller-free constructor admitted their synthetic metadata.
+
+Three initial tests all fail placeholder baseline01. Five final regressions cover
+redirected controller targets and unordered bone input, actual KEY publication
+for uncontrolled bodies, late uncontrolled failure rollback, malformed identity
+coverage, explicit forward/reverse controller order with native shared-cache
+identity, and zero-controller frames leaving non-blend bodies unchanged. The
+first expected-pose fixture uses the native length scale when comparing the
+world-length graph adapter; baseline exits at its placeholder size assertion.
+Final normal/sanitized01 each pass2,313 component and898 engine tests with full
+matching inventories and no failures/skips; fingerprint `d97e8bc08706d9bbda32dfada7ed78640f92af8bf6a179c1e78a78cc7014e679`. ASan leak checks
+disabled; UBSan halts. Python is unchanged and not repeated.
+
+Both complete-frame comparators reuse checkpoint197's independently generated
+original corpus, execute768 updates/192 owner lifetimes through the new full-frame
+API, and match15,816 exact owned gain/key/bound/clock/cache fields per build.
+Original corpus SHA256 `bcc0c03bc2cca3972c39b09cab202259756229be358fa85f8396663bb240d656`; comparator source/driver
+`2a138274aa513bb4fe7d62f4506b2e6ebffb9c832d5603ea1ac6654af82f4f81`, `262dfefe993ec2d7901594de6abc8f0a73be04c81f29432d84f1af6a6061c0eb`. This checks logical progression
+through the new physical publication boundary; original physical contacts,
+complete scene traversal ordering and normal World gameplay are not compared.
+The caller must obtain actual controller/bone traversal order; owned record
+insertion order is not asserted to be the original renderer traversal order.
+
+No stage closes. Complete frame publication is now available at the component
+owner, but public scheduler forwarding for that frame and renderer/World
+begin-update-end remain to connect. Generated reaction/velocity-controller
+ownership, full renderer clock scope and complete physical save/restart remain
+open, alongside retained BodyT/floor failures and S5-S14. Next: expose full frames
+at the worker barrier and test a joined renderer/physical binding with begin
+failure cleanup before adding automatic World lifecycle calls.

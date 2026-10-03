@@ -217,6 +217,14 @@ namespace NifBullet
             std::span<const RagdollNativeBlendControllerTarget> targets, float inputTime,
             ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ);
+        // Complete renderer frame, keyed by owned body nodes. The caller
+        // supplies each owned controller once in its traversal order. Advance
+        // controllers before publishing every blend body, including bodies
+        // without controllers. Preserve supplied bone order for publication.
+        std::vector<RagdollNativeBlendPublication> updateNativeBlendFrame(
+            std::span<const RagdollBoneWorldPose> bones, std::span<const std::uint32_t> controllerOrder,
+            float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.
@@ -239,6 +247,11 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
+        std::vector<RagdollNativeBlendPublication> updateNativeBlendControllersImpl(
+            std::span<const RagdollNativeBlendControllerTarget> targets,
+            std::span<const RagdollBoneWorldPose> completeBones, float inputTime,
+            ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

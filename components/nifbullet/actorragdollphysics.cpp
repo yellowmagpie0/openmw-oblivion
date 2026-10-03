@@ -231,6 +231,7 @@ namespace NifBullet
         struct Body
         {
             std::uint32_t mRecord;
+            std::uint32_t mNodeRecord;
             btTransform mCenterFrame;
             float mLinearDamping, mAngularDamping;
             RagdollMotionLimits mLimits;
@@ -939,7 +940,7 @@ namespace NifBullet
             mImpl->mCollisionObjects.push_back(body.get());
             mImpl->mShapes.push_back(std::move(shape));
             mImpl->mShapes.push_back(std::move(compound));
-            mImpl->mBodies.push_back({input.mRecord, centerFrame, input.mLinearDamping,
+            mImpl->mBodies.push_back({input.mRecord, input.mNodeRecord, centerFrame, input.mLinearDamping,
                 input.mAngularDamping, limits, std::move(body)});
             auto& owned = mImpl->mBodies.back();
             owned.mSceneOffset.mUsesRigidBodyTransform = input.mUsesRigidBodyTransform;
@@ -1321,6 +1322,16 @@ namespace NifBullet
         ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
         std::uint32_t rawUpdateSelector, float nativeGravityZ)
     {
+        return updateNativeBlendControllersImpl(targets, {}, inputTime, sharedTimeCache,
+            preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
+    }
+
+    std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendControllersImpl(
+        std::span<const RagdollNativeBlendControllerTarget> targets,
+        std::span<const RagdollBoneWorldPose> completeBones, float inputTime,
+        ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ)
+    {
         require(std::isfinite(nativeGravityZ), "invalid owned native controller gravity");
         ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
         auto nextControllers = mImpl->mBlendControllers;
@@ -1352,6 +1363,23 @@ namespace NifBullet
             bodyUpdates.push_back({target->mState.mBodyRecord, request.mAnimatedWorld,
                 target->mState.mGains.mHierarchy, target->mState.mGains.mVelocity, target->mState.mCollisionFlags});
         }
+        if (!completeBones.empty())
+        {
+            // Controller traversal and collision-object traversal are separate.
+            // Every physical target uses its final owned gain, including targets
+            // with no controller. The complete frame supplies collision order.
+            bodyUpdates.clear();
+            bodyUpdates.reserve(nextTargets.size());
+            for (const auto& bone : completeBones)
+            {
+                const auto target = std::find_if(nextTargets.begin(), nextTargets.end(),
+                    [&](const auto& value) { return value.mNode == bone.mNodeRecord; });
+                if (target != nextTargets.end())
+                    bodyUpdates.push_back({target->mState.mBodyRecord, bone.mPose,
+                        target->mState.mGains.mHierarchy, target->mState.mGains.mVelocity,
+                        target->mState.mCollisionFlags});
+            }
+        }
         // The existing body bridge stages every computation before any body
         // mutation. All controller/target/cache allocations are already done.
         auto publications = updateNativeBlends(bodyUpdates, preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
@@ -1363,6 +1391,37 @@ namespace NifBullet
         mImpl->mBlendTargets.swap(nextTargets);
         sharedTimeCache = nextCache;
         return publications;
+    }
+
+    std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendFrame(
+        std::span<const RagdollBoneWorldPose> bones, std::span<const std::uint32_t> controllerOrder,
+        float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ)
+    {
+        require(bones.size() == mImpl->mBodies.size(), "incomplete native blend frame bones");
+        require(controllerOrder.size() == mImpl->mBlendControllers.size(),
+            "incomplete native blend frame controllers");
+        std::unordered_map<std::uint32_t, const osg::Matrixf*> poses;
+        for (const auto& bone : bones)
+            require(poses.emplace(bone.mNodeRecord, &bone.mPose).second, "duplicate native blend frame bone");
+        std::unordered_set<std::uint32_t> ownedNodes;
+        for (const auto& body : mImpl->mBodies)
+        {
+            require(ownedNodes.insert(body.mNodeRecord).second, "ambiguous native blend frame body node");
+            require(poses.contains(body.mNodeRecord), "missing native blend frame body node");
+        }
+        std::vector<RagdollNativeBlendControllerTarget> requests;
+        requests.reserve(controllerOrder.size());
+        for (const auto record : controllerOrder)
+        {
+            const auto controller = std::find_if(mImpl->mBlendControllers.begin(), mImpl->mBlendControllers.end(),
+                [&](const auto& value) { return value.mRecord == record; });
+            require(controller != mImpl->mBlendControllers.end(), "unknown native blend frame controller");
+            requests.push_back({record, controller->mTargetNode ? *poses.at(*controller->mTargetNode)
+                : osg::Matrixf::identity()});
+        }
+        return updateNativeBlendControllersImpl(requests, bones, inputTime, sharedTimeCache,
+            preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
     }
 
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)
