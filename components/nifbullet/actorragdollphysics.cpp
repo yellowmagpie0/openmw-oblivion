@@ -564,6 +564,34 @@ namespace NifBullet
         return result;
     }
 
+    osg::Vec3f ragdollNativeSceneCenterOfMass(const osg::Vec3f& bodyCenter,
+        const std::array<float, 4>& bodyRotation, const RagdollBodyDefinition& body)
+    {
+        validateNativeOffsetRotation(bodyRotation);
+        for (unsigned axis = 0; axis < 3; ++axis)
+            require(std::isfinite(bodyCenter[axis]), "nonfinite native body center");
+        if (!body.mUsesRigidBodyTransform)
+            return bodyCenter;
+        for (unsigned axis = 0; axis < 3; ++axis)
+            require(std::isfinite(body.mTranslation[axis]), "nonfinite bodyT local position");
+        // Native8B9050 uses motion+10 (8B1DD0 basis), not the reverse
+        // scene quaternion or the quaternion-vector offset used by8B9150.
+        const auto basis = ragdollBoneWorldFromNativeBlendPose({{}, bodyRotation});
+        osg::Vec3f result;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            // Complete88FE00: three SSE products, then (X+Y)+Z stores.
+            const float x = basis(0, axis) * body.mTranslation[0];
+            const float y = basis(1, axis) * body.mTranslation[1];
+            const float z = basis(2, axis) * body.mTranslation[2];
+            const float xy = x + y;
+            const float offset = xy + z;
+            result[axis] = bodyCenter[axis] - offset;
+            require(std::isfinite(result[axis]), "nonfinite bodyT scene center");
+        }
+        return result;
+    }
+
     btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose)
     {
         const auto target = ragdollNativeSceneTargetPose(worldPose);

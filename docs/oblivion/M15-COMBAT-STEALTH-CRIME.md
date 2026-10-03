@@ -15241,3 +15241,56 @@ No stage closes. Next: bodyT center-of-mass velocity-drive conversion and owned
 controller integration before renderer/graph admission; actual World lifecycle,
 caller scale, native stepping and unchanged stock-floor fresh-restart/gameplay
 gates remain open. S5-S14 remain pending.
+
+
+### Checkpoint181: native bodyT center-of-mass projection
+
+Checkpoint180 committed as `337dafb189837b65613e950f327ac02cd8d0d95e`,
+177 isolated commits with exact-byte/fresh-clone proof; bundle158 SHA256
+`55746ae957af7e1c7db8d713d5d71fb9e4b9e229e67459221f0f6e495194a315`.
+NifBullet::ragdollNativeSceneCenterOfMass implements complete8B9050 math:
+subtract BodyT local translation rotated by the physical motion8B1DD0 basis,
+using88FE00 SSE products and(X+Y)+Z sums. This is distinct from reverse scene
+origin8B9150, which rotates translation using the reverse scene quaternion.
+The local BodyT rotation is unused by this COM getter; ordinary bodies ignore
+unused local metadata. Native input/output lengths stay unchanged. Malformed
+used inputs and output overflow reject without changing the inputs.
+
+Three new tests cover physical-basis rotation distinct from scene rotation,
+unused local rotation/ordinary metadata and atomic malformed/overflow rejection.
+Com-baseline01 retains two failures and one pass against identity projection.
+Full bodyt-com normal/sanitized01 each pass2,245 component and892 engine cases,
+complete inventories with zero failures/skips, rebuilding openmw/esmtool.
+Tested source fingerprint `5f2dea0cd814a639e17a53e9d5c5f96f32b9593cc5f81f61250fc25729da78da`. ASan leaks disabled; UBSan halts.
+Unchanged Python sources were not rerun.
+
+Com-oracle02 executes400 fixtures/800 complete original8B9050/8A2FF0 calls,
+with real8A3030 and88FE00, both x87 controls and source-byte preservation.
+No calls are replaced. Source/corpus SHA256 `12fb1f5c6ae2f57a021e3e583794d92d6d0752c9366a65533552ca65d243bf01`,
+`72c7ca4ea69879aa09039cb249ef68717b472116ec6715006785dba192f2adb8`; input corpus `2755719edee7d5d869f6a51dfc3189fcf082e86509797adf4bd79cd50ddcc6e0`;
+original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Com-oracle01/com-compare normal/sanitized01 retain a fixture-layout failure:
+8A3030 reads motion+60, which was initially left empty. Bounded original code
+inspection identified this; oracle02 maps the independently captured
+center at+60 (the prior corpus labels this previous_center_bits). No production change or tolerance relaxation corrected that probe.
+The supplied synchronized fixtures have centers at+50/+60 equal; this
+cannot close the later native integration/interpolation authority gate.
+Com-compare normal/sanitized02 each match400 cases/2,400 exact scene/raw-local
+COM fields; discarded-offset negative control differs in396 cases. Four cases
+have offsets too small to affect stored centers. Source/driver SHA256
+`70a47c519443fef583c56bfe1b658da2e24b4ed7648407680593b36e754d0757`, `9039bbb26135c5411ecdadc23e1e2cc250f8a6723291628319c4d6a80408201d`. No tolerance is used.
+
+Bodyt-controller-oracle01 additionally records57,600 complete original88F3D0
+updates over old modes1/6, selectors0/1/2, H0/.25/1, V0/.5, flags0/8/100/108
+and400 independently synchronized BodyT states. Actual native archive/restore,
+scene getters/setters, mixed pose, drive and renderer publication execute.
+Only Windows lock/thread imports and motion-heap allocation/free are boundaries.
+Source/corpus SHA256 `8614f2b2449dbe917a420d8718c09fb2b2ea9c57f66279e02ef6a262100129be`,
+`3564df901875899ecaef42a8d08946f62f64bb76ca1890e9de82d772d30c2a5b`.
+There is no owned C++ controller comparison yet. Velocity drive targets remain
+scene poses: original8A34C0 uses raw local COM, adjusted8B9050 center and reverse
+scene quaternion. Forward-composing its desired target would change that route.
+
+No stage closes. Next: owned BodyT controller integration/comparison before
+renderer/graph admission. Actual World lifecycle, caller scale, native stepping,
+unchanged stock-floor fresh-restart and gameplay gates remain open; S5-S14 pending.

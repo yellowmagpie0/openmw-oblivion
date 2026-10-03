@@ -27,6 +27,51 @@ namespace
         return result;
     }
 
+    TEST(RagdollBodyTSceneCenter, SubtractsOffsetUsingPhysicalBasis)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {2, 3, 4};
+        body.mRotation = osg::Quat(0, 0, 1, 0);
+        const osg::Vec3f center(10, 20, 30);
+        const auto result = NifBullet::ragdollNativeSceneCenterOfMass(center, {0, 0, 1, 0}, body);
+        EXPECT_EQ(result, osg::Vec3f(12, 23, 26));
+        EXPECT_EQ(center, osg::Vec3f(10, 20, 30));
+        EXPECT_EQ(body.mTranslation, osg::Vec3f(2, 3, 4));
+        // The local rotation is unused by the original COM getter.
+        body.mRotation = osg::Quat(0, 0, 0, 0);
+        EXPECT_EQ(NifBullet::ragdollNativeSceneCenterOfMass(center, {0, 0, 1, 0}, body), result);
+    }
+
+    TEST(RagdollBodyTSceneCenter, OrdinaryBodiesIgnoreUnusedOffsetMetadata)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        body.mRotation = osg::Quat(0, 0, 0, 0);
+        EXPECT_EQ(NifBullet::ragdollNativeSceneCenterOfMass({1, 2, 3}, {0, 0, 0, 1}, body),
+            osg::Vec3f(1, 2, 3));
+    }
+
+    TEST(RagdollBodyTSceneCenter, RejectsInvalidOrOverflowingInputsWithoutMutation)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        const osg::Vec3f center(1, 2, 3);
+        EXPECT_THROW(NifBullet::ragdollNativeSceneCenterOfMass(center, {0, 0, 0, 0}, body),
+            std::invalid_argument);
+        body.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneCenterOfMass(center, {0, 0, 0, 1}, body),
+            std::invalid_argument);
+        body.mTranslation = {};
+        EXPECT_THROW(NifBullet::ragdollNativeSceneCenterOfMass(
+            {std::numeric_limits<float>::infinity(), 0, 0}, {0, 0, 0, 1}, body), std::invalid_argument);
+        body.mTranslation.x() = -std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneCenterOfMass(
+            {std::numeric_limits<float>::max(), 0, 0}, {0, 0, 0, 1}, body), std::invalid_argument);
+        EXPECT_EQ(center, osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(body.mTranslation.x(), -std::numeric_limits<float>::max());
+    }
+
     TEST(RagdollBodyTReverseScene, RemovesNativeLocalRotationAndTranslation)
     {
         NifBullet::RagdollBodyDefinition body{};

@@ -44,6 +44,10 @@ namespace NifBullet
     // Matrix/world-length publication remains a separate operation.
     RagdollNativeTargetPose ragdollNativeSceneTargetFromBodyPose(
         const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body);
+    // Native8B9050 COM getter uses the physical motion basis, independently
+    // of reverse scene-origin projection. All positions use native lengths.
+    osg::Vec3f ragdollNativeSceneCenterOfMass(const osg::Vec3f& bodyCenter,
+        const std::array<float, 4>& bodyRotation, const RagdollBodyDefinition& body);
     // Original mixed blend target:539850 matrix layout then8B1B40 quaternion.
     // Keep its unrounded intermediates and raw quaternion for later Slerp;
     // unlike keyframed scene sync, this boundary does not normalize.
