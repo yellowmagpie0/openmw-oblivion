@@ -13,6 +13,20 @@ namespace
         return { Nif::Matrix3(), translation, scale };
     }
 
+    TEST(RagdollBoneWriteback, ComposesSeparateParentAndLocalScalesWithNativePositionStores)
+    {
+        auto parent = pose({10, 20, 30}, 2);
+        parent.mRotation.mValues[0][0] = parent.mRotation.mValues[1][1] = 0;
+        parent.mRotation.mValues[0][1] = -1;
+        parent.mRotation.mValues[1][0] = 1;
+        const auto result = NifBullet::composeRagdollBonePose(parent, pose({2, 3, 4}, .25f));
+        EXPECT_EQ(result.mTranslation, osg::Vec3f(4, 24, 38));
+        EXPECT_FLOAT_EQ(result.mScale, .5f);
+        EXPECT_EQ(result.mRotation.mValues[0][1], -1);
+        EXPECT_EQ(result.mRotation.mValues[1][0], 1);
+        EXPECT_THROW(NifBullet::composeRagdollBonePose(pose({}, 0), pose()), std::invalid_argument);
+    }
+
     TEST(RagdollBoneWriteback, WorldOnlyKeepsLocalPoseAndBothScaleFields)
     {
         const auto local = pose({1, 2, 3}, .25f);

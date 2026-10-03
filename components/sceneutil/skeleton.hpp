@@ -43,6 +43,9 @@ namespace SceneUtil
         /// Request an update of bone matrices. May be a no-op if already updated in this frame.
         void updateBoneMatrices(unsigned int traversalNumber);
 
+        // A pose changed without replacing nodes; retain cached bone identities.
+        void invalidateBoneMatrices() { mNeedToUpdateBoneMatrices = true; }
+
         enum ActiveType
         {
             Inactive = 0,

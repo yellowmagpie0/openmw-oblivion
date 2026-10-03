@@ -12699,3 +12699,70 @@ failure from checkpoint133 still requires a new run when a display can launch.
 All open M15 stages remain open. Next: bind stock graph record identities to
 live renderer bones, apply physical snapshots through the verified projection,
 then connect native lifecycle/controller/save state.
+
+
+### Checkpoint135 — physical snapshots drive renderer bone matrices (S4 open)
+
+`SceneUtil::ActorRagdollPoseBinding` resolves physical graph node-record and bone
+name identities in the matching live NIF asset namespace. It borrows renderer
+nodes, supports Animation's forced Skeleton wrapper and excludes separately
+loaded equipment namespaces. Only physical targets and their ancestors enter
+the pose calculation. Expired/detached/ambiguous paths, changed identities,
+unsupported transform types, mismatched source hashes and bhkRigidBodyT targets
+fail closed. Captures use current renderer transforms, not authored bind poses.
+Application validates a complete unique rigid snapshot and every projection
+before changing any node. Parents are projected before children regardless of
+body-record order; nonphysical connector transforms and authored scales survive.
+Physical targets use the previously verified local-write projection with explicit
+dynamic snapshot flag9 and forced world publication. Skeleton matrices are
+invalidated after publication so skinning updates in the same traversal.
+
+Stock SideWeapon has authored scale0.9999999403953552, whereas unrelated Weapon,
+BackWeapon and Quiver helpers have other neighboring-unit scales. Original
+NiTransform stores rotation and scale separately; ordinary body sync consumes
+unscaled NiWorld rotation and position. The new composition adapter retains
+that distinction and native binary32 intermediate stores. Physical world scales
+within1e-4 of unit are admitted; broader actor scaling remains unadmitted.
+The stock scale audit is retained in `S4/native-ragdoll-stock-scale-audit-01`.
+Before implementation, full original53d7a0 and actual7100a0/7101f0 executed
+1,494 calls with no stubs, including both x87 precision controls and stock
+neighboring-unit scales. Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+private oracle `/tmp/m15_reaction135_bone_compose_oracle.py`, helper SHA
+`32585073cf4e560905720290e29f228ad3563aa831dbccd73478ece4cb19724b`; corpus `c42428ea0132f8152e2d08362243ed5854d5a9f4bcda4fdc41e799e53443ef43`.
+Normal and sanitizer comparisons in
+`S4/native-ragdoll-bone-compose-comparison-{normal,sanitized}-01` match every
+output bit exactly. Both also repeat all1,440 original local/world writeback
+cases after the shared composition refactor, in
+`S4/native-ragdoll-bone-writeback-regression-{normal,sanitized}-01`.
+Each comparison rejects five wrong-output/missing/duplicate/malformed controls.
+
+Ten SceneUtil cases cover current poses, child-first graph records, same-traversal
+skinning, atomic invalid snapshot rejection, identity/path/lifetime failures,
+wrapper/equipment namespaces, untouched scaled helpers, preserved neighboring-unit
+physical scales, rotated connectors and actual live body motion feeding renderer
+bones. One composition test covers separately retained parent/local scales.
+Missing API builds remain in `S4/native-ragdoll-render-bones-red-01` and
+`S4/native-ragdoll-render-bone-scale-red-01`; focused green04 passes18 cases.
+Actual stock asset `43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`
+is parsed by NifReader and loaded by NifOsg::Loader. Its18 bodies and17 joints
+run240 zero-gravity steps; each resulting body snapshot is published into live
+renderer nodes and checked against both captured bone world matrices and
+same-traversal Skeleton skinning matrices. Predeclared absolute matrix tolerance
+is0.001; both builds pass in
+`S4/native-ragdoll-stock-render-bones-{normal,sanitized}-03`, with hashes,
+commands and maximum errors in their reports. Failed normal01/02 retain the
+scale admission failures; the source fix preserves the asset and tolerance.
+Private audit `/tmp/m15_reaction135_stock_render_bones.cpp` and runner v3 are
+hash-recorded. This checks actual stock hierarchy/physics/CPU bone matrices,
+not pixels, animation/controller transitions or native Havok trajectories.
+
+Full normal and ASan/UBSan runs
+`S4/native-ragdoll-render-bones-{normal,sanitized}-01` each pass2,122 component
+and815 engine tests, complete inventories, zero failures/skips and stable
+fingerprint `62b9e91f938369e310bf41e5226da78b34c57021e732e43852cda93b1f00ed12`. Both rebuild openmw/openmw-tests/esmtool;
+ASan leak detection is disabled and UBSan halts on errors. Unchanged243-case
+Python evidence remains reused from checkpoint124. The rendering adapter still
+needs a production actor lifecycle caller, animation ownership handoff, native
+force/mode policy and persistent dynamic body state. Display-dependent runtime
+acceptance remains open after checkpoint133's environment failure. No M15 stage
+is newly accepted from these component/stock-matrix checks.

@@ -41,32 +41,49 @@ namespace NifBullet
             return result;
         }
 
-        Nif::NiTransform localPose(const Nif::NiTransform& world, const Nif::NiTransform& parent)
+        Nif::NiTransform composePose(const Nif::NiTransform& parent, const Nif::NiTransform& local,
+            bool composeScale)
         {
-            Nif::Matrix3 inverseRotation;
-            for (unsigned row = 0; row < 3; ++row)
-                for (unsigned column = 0; column < 3; ++column)
-                    inverseRotation.mValues[row][column] = parent.mRotation.mValues[column][row];
-            const float inverseScale = store(1.0 / double(parent.mScale));
-            auto inversePosition = rotate(inverseRotation, -parent.mTranslation);
-            for (unsigned axis = 0; axis < 3; ++axis)
-                inversePosition[axis] = store(double(inversePosition[axis]) * inverseScale);
-
-            Nif::NiTransform result = world;
+            Nif::NiTransform result = local;
+            if (composeScale)
+                result.mScale = store(double(parent.mScale) * local.mScale);
             for (unsigned row = 0; row < 3; ++row)
                 for (unsigned column = 0; column < 3; ++column)
                     result.mRotation.mValues[row][column] = store(
-                        double(inverseRotation.mValues[row][0]) * world.mRotation.mValues[0][column]
-                        + double(inverseRotation.mValues[row][1]) * world.mRotation.mValues[1][column]
-                        + double(inverseRotation.mValues[row][2]) * world.mRotation.mValues[2][column]);
-            const auto rotated = rotate(inverseRotation, world.mTranslation);
+                        double(parent.mRotation.mValues[row][0]) * local.mRotation.mValues[0][column]
+                        + double(parent.mRotation.mValues[row][1]) * local.mRotation.mValues[1][column]
+                        + double(parent.mRotation.mValues[row][2]) * local.mRotation.mValues[2][column]);
+            const auto rotated = rotate(parent.mRotation, local.mTranslation);
             for (unsigned axis = 0; axis < 3; ++axis)
             {
-                const float scaled = store(double(rotated[axis]) * inverseScale);
-                result.mTranslation[axis] = store(double(scaled) + inversePosition[axis]);
+                const float scaled = store(double(rotated[axis]) * parent.mScale);
+                result.mTranslation[axis] = store(double(scaled) + parent.mTranslation[axis]);
             }
             return result;
         }
+
+        Nif::NiTransform localPose(const Nif::NiTransform& world, const Nif::NiTransform& parent)
+        {
+            Nif::NiTransform inverse;
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    inverse.mRotation.mValues[row][column] = parent.mRotation.mValues[column][row];
+            inverse.mScale = store(1.0 / double(parent.mScale));
+            inverse.mTranslation = rotate(inverse.mRotation, -parent.mTranslation);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                inverse.mTranslation[axis] = store(double(inverse.mTranslation[axis]) * inverse.mScale);
+            // The native local writer never reads the composed scale slot.
+            return composePose(inverse, world, false);
+        }
+    }
+
+    Nif::NiTransform composeRagdollBonePose(const Nif::NiTransform& parent, const Nif::NiTransform& local)
+    {
+        validate(parent);
+        validate(local);
+        const auto result = composePose(parent, local, true);
+        validate(result);
+        return result;
     }
 
     RagdollBonePoseWriteback ragdollBonePoseWriteback(const Nif::NiTransform& previousLocal,

@@ -7,6 +7,10 @@
 
 namespace NifBullet
 {
+    // Original NiTransform parent/local composition with separate scale
+    // and binary32 stores at the native matrix/vector/position boundaries.
+    Nif::NiTransform composeRagdollBonePose(const Nif::NiTransform& parent, const Nif::NiTransform& local);
+
     struct RagdollBonePoseWriteback
     {
         Nif::NiTransform mLocal;
