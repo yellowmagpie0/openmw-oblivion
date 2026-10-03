@@ -355,6 +355,60 @@ namespace NifBullet
         return result;
     }
 
+    RagdollNativeTargetPose ragdollNativeBlendSceneTargetPose(const osg::Matrixf& worldPose)
+    {
+        for (unsigned i = 0; i < 16; ++i)
+            require(std::isfinite(worldPose.ptr()[i]), "nonfinite bone world pose");
+        for (unsigned row = 0; row < 3; ++row)
+            require(worldPose(row, 3) == 0, "projective bone world pose");
+        require(worldPose(3, 3) == 1, "invalid affine bone world pose");
+        // OSG row-vector storage is the transpose of the native NiMatrix3.
+        const btMatrix3x3 basis(worldPose(0, 0), worldPose(1, 0), worldPose(2, 0),
+            worldPose(0, 1), worldPose(1, 1), worldPose(2, 1),
+            worldPose(0, 2), worldPose(1, 2), worldPose(2, 2));
+        validatePose(btTransform(basis, btVector3(0, 0, 0)));
+        std::array<float, 9> matrix;
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                matrix[row * 3 + col] = worldPose(col, row);
+        RagdollNativeTargetPose result;
+        result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans());
+        auto& q = result.mRotation;
+        // Original539850 only transposes/pads NiMatrix3 into the Havok matrix.
+        // Original8B1B40 retains trace, root and reciprocal on x87 through
+        // each output float store. Use the original CRT53-bit precision domain;
+        // no early binary32 trace/root stores and no quaternion normalization.
+        const double trace = double(matrix[4]) + matrix[0] + matrix[8];
+        if (trace > 0.)
+        {
+            const double root = std::sqrt(trace + 1.);
+            require(std::isfinite(root) && root > 0., "invalid native blend rotation root");
+            const double factor = .5 / root;
+            q[0] = float((double(matrix[7]) - matrix[5]) * factor);
+            q[1] = float((double(matrix[2]) - matrix[6]) * factor);
+            q[2] = float((double(matrix[3]) - matrix[1]) * factor);
+            q[3] = float(root * .5);
+        }
+        else
+        {
+            unsigned axis = matrix[4] > matrix[0] ? 1 : 0;
+            if (matrix[8] > matrix[axis * 3 + axis])
+                axis = 2;
+            const unsigned next = (axis + 1) % 3;
+            const unsigned last = (next + 1) % 3;
+            const double squared = double(matrix[axis * 3 + axis])
+                - (double(matrix[next * 3 + next]) + matrix[last * 3 + last]) + 1.;
+            const double root = std::sqrt(squared);
+            require(std::isfinite(root) && root > 0., "invalid native blend rotation root");
+            const double factor = .5 / root;
+            q[axis] = float(root * .5);
+            q[3] = float((double(matrix[last * 3 + next]) - matrix[next * 3 + last]) * factor);
+            q[next] = float((double(matrix[axis * 3 + next]) + matrix[next * 3 + axis]) * factor);
+            q[last] = float((double(matrix[axis * 3 + last]) + matrix[last * 3 + axis]) * factor);
+        }
+        return result;
+    }
+
     btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose)
     {
         const auto target = ragdollNativeSceneTargetPose(worldPose);

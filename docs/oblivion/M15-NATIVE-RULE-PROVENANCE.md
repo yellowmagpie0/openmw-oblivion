@@ -8018,3 +8018,64 @@ sequence and connect the actual controller. Live precision, actual actor root/
 shape scaling, cross-owner contact activation, native keyframed substep behavior,
 mode/clock persistence, stock-floor restart and all remaining gameplay campaigns
 stay open.
+
+
+### Checkpoint170: raw animated target preparation for the mixed blend route
+
+Checkpoint169 committed as `ce5eb2e548a87b9ded0c4252951f0ce33f418af8`,
+166 isolated commits with exact-byte/fresh-clone proof. New
+ragdollNativeBlendSceneTargetPose follows the separate animated-target boundary
+inside88F3D0:539850 transposes/pads NiMatrix3, then8B1B40 extracts XYZW quaternion.
+The trace, sqrt result and reciprocal remain unrounded53-bit intermediates
+until final output floats; the nonpositive-trace branch subtracts the sum of
+other diagonals before its root and uses strict largest-axis/cyclic selection.
+It keeps the raw quaternion for later Slerp, without the keyframed path's extra
+normalization. The existing rigid/finite/affine admission and native position
+conversion are retained. Ordinary keyframed scene sync still uses its distinct
+7150F0/4D6830 preparation unchanged.
+
+Three component cases retain14 original matrix/target examples, independently
+retain both original raw and original keyframed outputs for one shared matrix,
+and cover invalid matrices plus finite maximum-world-position admission.
+Baseline01 fails the first two cases against reuse of normalized keyframed
+preparation; admission already passes. Full blend-scene-{normal,sanitized}-01
+each pass2,217 component cases, complete inventories, zero failures/skips and
+stable fingerprint `0f251690e6d888cac89d8321abca98eecb1b4102964f1d50b9a531a71e830ca7`. ASan leak checks disabled; UBSan halts. No engine
+caller consumes this new pure query yet; engine/Python were not rerun for this
+query-only chunk. Checkpoint169's full engine878-case results are previous-
+revision evidence, not tests of this fingerprint.
+
+Executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Full original88F3D0 executes19,200
+synthetic no-world sphere-motion2 mixed-route updates. Requested dynamic mode1
+is unchanged, so this does not prove mode-transition initialization. Animated
+matrices/positions vary across400 source inputs; hierarchy gains-.25/.25/.5/1.25,
+velocity gains0/.5/1, flags8/108, forced/threshold publication and27F/37F words
+are covered. Actual539850/8B1B40,8B1C60/4D6830 blending,8B1DD0 matrix return,
+renderer writer,8A34C0 target/mixing and final velocity setters execute. Only
+Windows EnterCriticalSection/LeaveCriticalSection/GetCurrentThreadId are stubbed.
+Source/corpus SHA256 `8605fc2dc9f2790661a2be3596cd52effe740bbb62cc88ee0a861ff1cfb2365d`, `66544806b64a4a6b73cebd1bc1fac6c37f56ed8cbdc488774bd5912439c83650`. Raw animated
+pose, mixed target, desired scene transform, prepared target velocities, final
+body velocities and scene stores are independently captured at their actual
+boundaries. These latter fields are not compared by this chunk's query bridge.
+8B1DD0 is an x87 routine, not an SSE matrix converter; its store sequence is
+separate from ordinary47C600. Blend vector/quaternion operations do use SSE.
+
+Full-blend-oracle01 retains an invalid harness assumption that local and world
+poses always agree after flag8 publication: the local pose is written while
+world publication may be suppressed by its unchanged-position/rotation threshold.
+Oracle02 removes that assertion and passes1,600 fixed-gain/identity-animation
+cases;03 expands the independent inputs and captures the intermediate fields.
+Actual C++ blend-scene-compare-{normal,sanitized}-01 each matches all19,200
+raw animated targets under both precision words:134,400 exact position/quaternion
+float fields,400 distinct animated input matrices. The normalized-keyframed
+preparation negative control differs in12,000 cases in each build.
+Comparator/driver SHA256 `67b8fb24d93f5fdc4b262ad68575f363e1a1eb850035c8737eb5091e63cd3fc1`, `34cc8c3701689cd74c130b7be4d2c07bede0d2241871e90e3f4c479c02400626`.
+Portable libm and reciprocal-square-root behavior remains distinct from original-
+hardware gameplay evidence. Actual startup53-bit precision was checked in169;
+live main/worker precision remains open.
+
+No stage closes. Next: prepare the flag-dependent mixed scene target using the
+actual8B1DD0 store sequence, compare the coupled renderer/velocity pipeline,
+and integrate the actual controller/mode transitions. Root selection, actor
+scaling, cross-owner contact islands, keyframed substeps, mode/clock persistence,
+World/gameplay and stock-floor fresh-restart acceptance remain open.

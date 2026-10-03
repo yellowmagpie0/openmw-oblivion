@@ -1520,3 +1520,78 @@ namespace
         EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(input), std::invalid_argument);
     }
 }
+
+
+namespace
+{
+    TEST(RagdollNativeBlendScene, MatchesOriginalUnroundedRootsAndQuaternionBranches)
+    {
+        struct Example { std::array<uint32_t, 12> mWorld; std::array<uint32_t, 7> mTarget; };
+        const std::array<Example, 14> examples{{
+            {{1065353216u, 0u, 0u, 0u, 1065353216u, 0u, 0u, 0u, 1065353216u, 0u, 2147483648u, 1u}, {0u, 2147483648u, 0u, 0u, 0u, 0u, 1065353216u}},
+            {{1065353216u, 0u, 0u, 0u, 3212836864u, 2769105202u, 0u, 621621554u, 3212836864u, 3314338884u, 1138116808u, 3315924019u}, {3290492696u, 1114959375u, 3292304527u, 1065353216u, 0u, 0u, 613232946u}},
+            {{3212836864u, 0u, 621621554u, 0u, 1065353216u, 0u, 2769105202u, 0u, 3212836864u, 3267869863u, 3315588386u, 1152077344u}, {3244576084u, 3291920894u, 1128517087u, 0u, 1065353216u, 0u, 613232946u}},
+            {{3212836864u, 2769105202u, 0u, 621621554u, 3212836864u, 0u, 0u, 0u, 1065353216u, 1169936584u, 1157926914u, 3304766579u}, {1146531072u, 1134003540u, 3280948261u, 0u, 0u, 1065353216u, 613232946u}},
+            {{1065307251u, 3168475669u, 1032666985u, 1022046214u, 1065339889u, 3168954819u, 3180044065u, 1022493549u, 1065306842u, 3305571379u, 1168841500u, 3305231177u}, {3281671004u, 1145279375u, 3281282148u, 1013605850u, 1024232347u, 1013142243u, 1065340003u}},
+            {{3190770246u, 3194144129u, 1064682598u, 3206980294u, 1061274432u, 1030733362u, 3208467966u, 3206375676u, 3196855417u, 1167307176u, 1168142660u, 1154119745u}, {1143525622u, 1144480592u, 1130851580u, 3197534680u, 1061023358u, 3191863352u, 1058184483u}},
+            {{1064835956u, 3189764924u, 3192070642u, 1042358808u, 1065143492u, 3155552391u, 1044523046u, 3165454338u, 1065045070u, 1147350821u, 3317450125u, 3309891825u}, {1124193882u, 3294048888u, 3286609333u, 3141902126u, 3183749593u, 1034013528u, 1065223322u}},
+            {{1062901579u, 1036953602u, 3204626254u, 3198256997u, 1063350163u, 3199534172u, 1054077983u, 1055722268u, 1061725325u, 1171174668u, 3316537537u, 3278658283u}, {1147946219u, 3293005787u, 3255243807u, 1046405622u, 3195822309u, 3185791551u, 1064310490u}},
+            {{1037113736u, 3211969776u, 3197752432u, 1046152475u, 1050786922u, 3211568055u, 1064875203u, 1022801362u, 1047575054u, 1155657437u, 3319471683u, 3322303075u}, {1132535631u, 3296359556u, 3298396190u, 1052642417u, 3204268671u, 1055352869u, 1059361398u}},
+            {{3209445616u, 3206162134u, 3169483181u, 3190401618u, 1043435083u, 1064863572u, 3205784028u, 1061650863u, 3195262112u, 3321068162u, 1151696612u, 3315197105u}, {3297453649u, 1128081905u, 3291473655u, 3196337825u, 1061044802u, 1058453050u, 1044237150u}},
+            {{1065321637u, 1024245537u, 1028657033u, 3170497410u, 1065298479u, 3180923052u, 3176785441u, 1033212506u, 1065284592u, 3314986088u, 3321034672u, 3316995201u}, {3291232459u, 3297434509u, 3293528903u, 1024948814u, 1020606946u, 3162833862u, 1065333837u}},
+            {{1063545098u, 3189169736u, 1054510960u, 3181899070u, 1063284822u, 1056091243u, 3202571865u, 3203035365u, 1061496941u, 1167518039u, 3315738420u, 3322930968u}, {1143766641u, 3292092385u, 3299113880u, 3195903417u, 1047333370u, 1015955885u, 1064357043u}},
+            {{1060444133u, 1043952163u, 3207522233u, 1053368080u, 1060368174u, 1058525220u, 1058434486u, 3207600361u, 1054483847u, 1158634428u, 1171774346u, 1169523514u}, {1134812238u, 1148631659u, 1146058927u, 3200431213u, 3200330947u, 1031846521u, 1062703601u}},
+            {{1026121530u, 3182707978u, 1065273690u, 3206881031u, 1061299691u, 1036009411u, 3208861654u, 3206894860u, 3167761122u, 3319705356u, 3307487925u, 1168225423u}, {3296626648u, 3283861642u, 1144575191u, 3196987674u, 1059649139u, 3193312977u, 1059749949u}},
+        }};
+        for (const auto& example : examples)
+        {
+            osg::Matrixf world;
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned col = 0; col < 3; ++col)
+                    world(col, row) = std::bit_cast<float>(example.mWorld[row * 3 + col]);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                world(3, axis) = std::bit_cast<float>(example.mWorld[9 + axis]);
+            const auto actual = NifBullet::ragdollNativeBlendSceneTargetPose(world);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual.mPosition[axis]), example.mTarget[axis]);
+            for (unsigned axis = 0; axis < 4; ++axis)
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual.mRotation[axis]), example.mTarget[3 + axis]);
+        }
+    }
+
+    TEST(RagdollNativeBlendScene, KeepsDistinctNativeBlendAndKeyframedPreparation)
+    {
+        const std::array<uint32_t, 12> input{1065307251u, 3168475669u, 1032666985u, 1022046214u, 1065339889u, 3168954819u, 3180044065u, 1022493549u, 1065306842u, 3305571379u, 1168841500u, 3305231177u};
+        const std::array<uint32_t, 4> raw{1013605850u, 1024232347u, 1013142243u, 1065340003u};
+        const std::array<uint32_t, 4> key{1013605851u, 1024232347u, 1013142243u, 1065340003u};
+        osg::Matrixf world;
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                world(col, row) = std::bit_cast<float>(input[row * 3 + col]);
+        for (unsigned axis = 0; axis < 3; ++axis)
+            world(3, axis) = std::bit_cast<float>(input[9 + axis]);
+        const auto blend = NifBullet::ragdollNativeBlendSceneTargetPose(world);
+        const auto synchronized = NifBullet::ragdollNativeSceneTargetPose(world);
+        for (unsigned axis = 0; axis < 4; ++axis)
+        {
+            EXPECT_EQ(std::bit_cast<uint32_t>(blend.mRotation[axis]), raw[axis]);
+            EXPECT_EQ(std::bit_cast<uint32_t>(synchronized.mRotation[axis]), key[axis]);
+        }
+        EXPECT_NE(blend.mRotation, synchronized.mRotation);
+    }
+
+    TEST(RagdollNativeBlendScene, RejectsInvalidWorldMatricesBeforePreparingTargets)
+    {
+        EXPECT_THROW(NifBullet::ragdollNativeBlendSceneTargetPose(osg::Matrixf::scale(2, 1, 1)), std::invalid_argument);
+        auto matrix = osg::Matrixf::identity();
+        matrix(0, 3) = .1f;
+        EXPECT_THROW(NifBullet::ragdollNativeBlendSceneTargetPose(matrix), std::invalid_argument);
+        matrix = osg::Matrixf::identity();
+        matrix(3, 2) = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(NifBullet::ragdollNativeBlendSceneTargetPose(matrix), std::invalid_argument);
+        matrix = osg::Matrixf::identity();
+        matrix(3, 0) = std::numeric_limits<float>::max();
+        // This finite world position remains representable in native lengths.
+        EXPECT_NO_THROW(NifBullet::ragdollNativeBlendSceneTargetPose(matrix));
+    }
+}
