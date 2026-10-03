@@ -15,6 +15,7 @@
 #include <osg/MatrixTransform>
 #include <limits>
 #include <stdexcept>
+#include <cstring>
 
 namespace
 {
@@ -62,6 +63,119 @@ namespace
             return {{28, osg::Matrixf::translate(120, 5, 0)}, {8, osg::Matrixf::translate(120, 0, 0)}};
         }
     };
+
+    TEST_F(ActorRagdollPoseTest, LocalCheckpointRestoresExactMatricesAndSeparateNifCaches)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        // A procedural rotation can differ from the cached NIF rotation.
+        mPelvis->setMatrix(osg::Matrixd::rotate(.1234567890123, osg::Vec3d(0, 0, 1))
+            * osg::Matrixd::translate(10, 0, 0));
+        mConnector->setScale(1.000001f);
+        mHand->setTranslation({1, -0.f, 0});
+        const auto pelvisMatrix = mPelvis->getMatrix();
+        const auto connectorMatrix = mConnector->getMatrix();
+        const auto handMatrix = mHand->getMatrix();
+        const auto pelvisCache = mPelvis->mRotationScale;
+        const auto connectorCache = mConnector->mRotationScale;
+        const float scale = mConnector->mScale;
+        const auto local = binding.captureLocalPose();
+        mPelvis->setRotation(osg::Quat(.7, osg::Vec3f(1, 0, 0)));
+        mPelvis->setTranslation({20, 30, 40});
+        mConnector->setRotation(osg::Quat(.4, osg::Vec3f(0, 1, 0)));
+        mConnector->setScale(2);
+        mHand->setTranslation({50, 60, 70});
+        binding.restoreLocalPose(local);
+        EXPECT_EQ(mPelvis->getMatrix(), pelvisMatrix);
+        EXPECT_EQ(mConnector->getMatrix(), connectorMatrix);
+        EXPECT_EQ(mHand->getMatrix(), handMatrix);
+        EXPECT_EQ(std::memcmp(mPelvis->getMatrix().ptr(), pelvisMatrix.ptr(), 16 * sizeof(double)), 0);
+        EXPECT_EQ(std::memcmp(mConnector->getMatrix().ptr(), connectorMatrix.ptr(), 16 * sizeof(double)), 0);
+        EXPECT_EQ(std::memcmp(mHand->getMatrix().ptr(), handMatrix.ptr(), 16 * sizeof(double)), 0);
+        EXPECT_EQ(mConnector->mScale, scale);
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+            {
+                EXPECT_EQ(mPelvis->mRotationScale.mValues[row][column], pelvisCache.mValues[row][column]);
+                EXPECT_EQ(mConnector->mRotationScale.mValues[row][column], connectorCache.mValues[row][column]);
+            }
+    }
+
+    TEST_F(ActorRagdollPoseTest, LocalCheckpointRejectsEmptyForeignAndRecreatedBindingsBeforeWriting)
+    {
+        auto first = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(mGraph, *mRoot);
+        const auto local = first->captureLocalPose();
+        mPelvis->setTranslation({20, 0, 0});
+        const auto previous = mPelvis->getMatrix();
+        EXPECT_THROW(first->restoreLocalPose({}), std::invalid_argument);
+        SceneUtil::ActorRagdollPoseBinding other(mGraph, *mRoot);
+        EXPECT_THROW(other.restoreLocalPose(local), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), previous);
+        first.reset();
+        SceneUtil::ActorRagdollPoseBinding recreated(mGraph, *mRoot);
+        EXPECT_THROW(recreated.restoreLocalPose(local), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), previous);
+    }
+
+    TEST_F(ActorRagdollPoseTest, LocalCheckpointRejectsChangedAncestorBodyAndHierarchyAtomically)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto local = binding.captureLocalPose();
+        binding.applyWorldBones(desired(), mObjectWorld);
+        const auto previous = mPelvis->getMatrix();
+        mConnector->setUserValue("recordIndex", 19u);
+        EXPECT_THROW(binding.restoreLocalPose(local), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), previous);
+        mConnector->setUserValue("recordIndex", 18u);
+        mHand->setName("Changed");
+        EXPECT_THROW(binding.restoreLocalPose(local), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), previous);
+        mHand->setName("Hand");
+        mConnector->removeChild(mHand);
+        EXPECT_THROW(binding.restoreLocalPose(local), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), previous);
+        mConnector->addChild(mHand);
+        mRoot->setUserValue(Misc::OsgUserValues::sFileHash, std::string("changed-asset"));
+        EXPECT_THROW(binding.restoreLocalPose(local), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), previous);
+    }
+
+    TEST_F(ActorRagdollPoseTest, LocalCheckpointRecoversInvalidLiveFieldsAndInvalidatesSkinningMatrices)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        auto* hand = mRoot->getBone("Hand");
+        ASSERT_NE(hand, nullptr);
+        mRoot->updateBoneMatrices(0);
+        const auto original = hand->mMatrixInSkeletonSpace;
+        const auto local = binding.captureLocalPose();
+        binding.applyWorldBones(desired(), mObjectWorld);
+        mRoot->updateBoneMatrices(0);
+        EXPECT_NE(hand->mMatrixInSkeletonSpace, original);
+        mHand->mScale = 0;
+        mHand->setTranslation({std::numeric_limits<float>::quiet_NaN(), 0, 0});
+        EXPECT_THROW(binding.captureLocalPose(), std::invalid_argument);
+        binding.restoreLocalPose(local);
+        EXPECT_EQ(mHand->mScale, 1.f);
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(1, 0, 0));
+        mRoot->updateBoneMatrices(0);
+        EXPECT_EQ(hand->mMatrixInSkeletonSpace, original);
+        EXPECT_EQ(binding.captureWorldBones(mObjectWorld)[0].mPose.getTrans(), osg::Vec3f(111, 2, 0));
+    }
+
+    TEST_F(ActorRagdollPoseTest, LocalCheckpointRejectsInvalidCachedRotationWithValidRenderedMatrix)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto valid = binding.captureLocalPose();
+        const auto rendered = mHand->getMatrix();
+        mHand->mRotationScale.mValues[2][2] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_EQ(mHand->getMatrix(), rendered);
+        EXPECT_THROW(binding.captureLocalPose(), std::invalid_argument);
+        binding.restoreLocalPose(valid);
+        EXPECT_EQ(mHand->mRotationScale.mValues[2][2], 1.f);
+        mHand->mRotationScale.mValues[0][0] = 2;
+        EXPECT_THROW(binding.captureLocalPose(), std::invalid_argument);
+        binding.restoreLocalPose(valid);
+        EXPECT_EQ(mHand->mRotationScale.mValues[0][0], 1.f);
+    }
 
     TEST_F(ActorRagdollPoseTest, CapturesLiveBonePlacementInsteadOfAuthoredBindPose)
     {

@@ -13999,3 +13999,60 @@ switching, animated renderer blending, full World/render/save, cross-owner
 contacts and stock floor continuation remain open. No normal-input/restart
 acceptance gate is closed. Next: animate/capture targets while physical poses
 own the renderer, without a second scene traversal or overwritten skinning.
+
+
+### Checkpoint161: exact renderer local checkpoints for animation sampling
+
+Checkpoint160 committed as `d358e3abf69c015217731b4441bf1e10fff355f0`,
+157 isolated commits with exact-byte/fresh-clone proof. ActorRagdollPoseBinding
+now captures an immutable, ephemeral local checkpoint of the physical targets
+and their unsimulated ancestors. It retains each actual OSG double matrix,
+separate NIF rotation cache and scale without decomposing/recomposing them.
+A private shared authority token ties the checkpoint to this exact binding;
+foreign/default/recreated owners reject, including after the old binding dies.
+Every selected ancestor record, body name, asset and parent path is checked
+before the first restore write. Restoring a validated checkpoint can recover
+invalid live numeric fields; it does not require those fields to be valid
+before rollback. Same-traversal skinning caches are invalidated afterward.
+This is renderer sampling/rollback state, not a serialized physical save.
+
+Four baseline tests fail against missing local capture/restore. Initial full
+S4/native-ragdoll-local-checkpoint-{normal,sanitized}-01 each pass2,192
+component and851 engine tests. Added cache-baseline01 retains one failure:
+a valid rendered matrix previously hid an invalid NIF rotation cache. Capture
+now validates both representations; their legitimate differing procedural
+rotations remain distinct. Five tests cover exact double matrix/NIF-cache/
+scale restoration (including signed-zero matrix bytes), empty/foreign/recreated
+bindings, changed ancestor/body/asset/parent identities with atomic rejection,
+recovery of nonfinite/zero-scale live fields and skinning cache refresh, and
+invalid cached rotation with a valid visible matrix.
+
+S4/native-ragdoll-stock-local-checkpoint-{normal,sanitized}-01 each pass.
+Real stock18-body/17-joint NIF, actual73-track onehandidle KF, real Animation,
+OSG update traversal, Bullet factory/240 zero-gravity steps. Independent
+parent-chain enumeration identifies24 physical/ancestor local transforms.
+All24 actual double matrices, nine NIF rotation fields and scale are captured
+as expectations, overwritten, then restored240 times with exact byte
+comparisons:5,760 node restorations per build. Existing physical world/bone/
+skinning agreement tolerance remains.001, observed maximum3.8147e-05 in both
+builds. Freeze/resume and graph cleanup checks remain active. Source/driver
+SHA256:
+`d2160a6d3e0a4190859340d0bed5c77a89ed61470dfc7c9312f7e11e9b935253`,
+`7c4a78901ac525d811c3a5ae73d5d5b985db653596ebf6f46c68607c4222dc2a`.
+Stock NIF/KF SHA256:
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`,
+`d01bf09a3c703ae2f0f4c043abbe47dc1c0e6d3af0fedcf41ed9a50173bc17d5`.
+This is actual headless engine/resource/renderer/physics integration; it
+checks local checkpoint preservation, not pixels, native trajectories,
+animated physical blending or game-world acceptance.
+
+Final S4/native-ragdoll-local-checkpoint-{normal,sanitized}-02 each pass2,193
+component and851 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested fingerprint
+`35f127d4634782bca0f3932bb23bce91f5599b7d0ffc1ace4d2985f8fac5e5ad`.
+ASan leaks disabled; UBSan halts. Python unchanged. Animation currently still
+freezes during physical ownership; actual target sampling/advancement is the
+next bounded integration. Controller/frame caller, clock/save ownership,
+body motion switching, full World/render/save, cross-owner contact activation
+and stock floor continuation remain open. No stage or normal-input/restart
+gate is closed by the checkpoint API.

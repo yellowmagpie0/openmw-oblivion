@@ -69,6 +69,18 @@ namespace SceneUtil
         }
     }
 
+    struct ActorRagdollLocalPose::State
+    {
+        struct Node
+        {
+            osg::Matrixd mMatrix;
+            Nif::Matrix3 mRotationScale;
+            float mScale;
+        };
+        std::shared_ptr<const char> mAuthority;
+        std::vector<Node> mNodes;
+    };
+
     struct ActorRagdollPoseBinding::Impl
     {
         struct Node
@@ -76,6 +88,7 @@ namespace SceneUtil
             osg::observer_ptr<NifOsg::MatrixTransform> mTransform;
             std::vector<osg::observer_ptr<osg::Node>> mPath;
             std::optional<std::size_t> mParent;
+            std::uint32_t mNodeRecord;
         };
         struct Body
         {
@@ -86,6 +99,7 @@ namespace SceneUtil
         osg::observer_ptr<osg::Group> mRoot;
         osg::observer_ptr<osg::Group> mAssetRoot;
         std::string mSourceHash;
+        std::shared_ptr<const char> mLocalAuthority = std::make_shared<const char>(0);
         std::vector<Node> mNodes;
         std::vector<Body> mBodies;
 
@@ -126,7 +140,7 @@ namespace SceneUtil
                     require(node.getUserValue("recordIndex", record), "missing ragdoll renderer record identity");
                     const auto index = mNodes.size();
                     require(records.emplace(record, index).second, "duplicate ragdoll renderer record identity");
-                    mNodes.push_back({transform, path, parent});
+                    mNodes.push_back({transform, path, parent, record});
                     parent = index;
                 }
                 else
@@ -187,14 +201,15 @@ namespace SceneUtil
                 "expired or mismatched ragdoll renderer asset");
         }
 
-        std::vector<Nif::NiTransform> locals() const
+        void validateHierarchy() const
         {
             validateRoot();
-            std::vector<Nif::NiTransform> result;
-            result.reserve(mNodes.size());
             for (const auto& entry : mNodes)
             {
                 require(entry.mTransform.valid(), "expired ragdoll renderer bone");
+                unsigned record;
+                require(entry.mTransform->getUserValue("recordIndex", record) && record == entry.mNodeRecord,
+                    "changed ragdoll renderer transform identity");
                 for (std::size_t i = 0; i < entry.mPath.size(); ++i)
                 {
                     require(entry.mPath[i].valid(), "expired ragdoll renderer path");
@@ -203,16 +218,19 @@ namespace SceneUtil
                                 && entry.mPath[i]->getParent(0) == entry.mPath[i - 1].get(),
                             "detached or ambiguous ragdoll renderer path");
                 }
-                result.push_back(localPose(*entry.mTransform));
             }
             for (const auto& body : mBodies)
-            {
-                unsigned record;
-                const auto& node = *mNodes[body.mNode].mTransform;
-                require(node.getUserValue("recordIndex", record) && record == body.mNodeRecord
-                        && node.getName() == body.mBone,
+                require(mNodes[body.mNode].mTransform->getName() == body.mBone,
                     "changed ragdoll renderer bone identity");
-            }
+        }
+
+        std::vector<Nif::NiTransform> locals() const
+        {
+            validateHierarchy();
+            std::vector<Nif::NiTransform> result;
+            result.reserve(mNodes.size());
+            for (const auto& entry : mNodes)
+                result.push_back(localPose(*entry.mTransform));
             return result;
         }
 
@@ -236,6 +254,51 @@ namespace SceneUtil
     }
 
     ActorRagdollPoseBinding::~ActorRagdollPoseBinding() = default;
+
+    ActorRagdollLocalPose ActorRagdollPoseBinding::captureLocalPose() const
+    {
+        // Validate finite transform fields and the complete borrowed hierarchy
+        // before retaining any state. Store the actual double matrices, not a
+        // decomposed/recomposed float approximation of a procedural rotation.
+        mImpl->locals();
+        auto state = std::make_shared<ActorRagdollLocalPose::State>();
+        state->mAuthority = mImpl->mLocalAuthority;
+        state->mNodes.reserve(mImpl->mNodes.size());
+        for (const auto& entry : mImpl->mNodes)
+        {
+            // Missing KF rotation channels use this cache even when a
+            // procedural callback currently renders a different rotation.
+            // Both representations must be valid before retaining a checkpoint.
+            worldPose(entry.mTransform->mRotationScale.toOsgMatrix());
+            state->mNodes.push_back({entry.mTransform->getMatrix(),
+                entry.mTransform->mRotationScale, entry.mTransform->mScale});
+        }
+        ActorRagdollLocalPose result;
+        result.mState = std::move(state);
+        return result;
+    }
+
+    void ActorRagdollPoseBinding::restoreLocalPose(const ActorRagdollLocalPose& pose)
+    {
+        require(pose.mState && pose.mState->mAuthority == mImpl->mLocalAuthority
+                && pose.mState->mNodes.size() == mImpl->mNodes.size(),
+            "foreign or empty ragdoll renderer local checkpoint");
+        // Do not validate the live numeric fields here: a failing animation
+        // sampler must be able to roll back corrupted transform fields. The
+        // checkpoint is immutable and was validated when captured. Identity
+        // validation completes before any node or cached component is written.
+        mImpl->validateHierarchy();
+        for (std::size_t i = 0; i < mImpl->mNodes.size(); ++i)
+        {
+            auto& node = *mImpl->mNodes[i].mTransform;
+            const auto& saved = pose.mState->mNodes[i];
+            node.mScale = saved.mScale;
+            node.mRotationScale = saved.mRotationScale;
+            node.setMatrix(saved.mMatrix);
+        }
+        if (auto* skeleton = dynamic_cast<Skeleton*>(mImpl->mRoot.get()))
+            skeleton->invalidateBoneMatrices();
+    }
 
     std::vector<NifBullet::RagdollBoneWorldPose> ActorRagdollPoseBinding::captureWorldBones(
         const osg::Matrixf& objectWorld) const
