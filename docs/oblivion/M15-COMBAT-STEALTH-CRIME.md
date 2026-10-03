@@ -13282,3 +13282,47 @@ checks remain disabled and UBSan halts on errors.
 World admission, renderer/save synchronization, native recovery policy and
 stock floor-contact restart acceptance remain incomplete. This facade closes
 an ownership prerequisite and does not promote a gameplay acceptance gate.
+
+
+### Checkpoint147 — preserve native filters and verify their ordered predicate (S4/S6 open)
+
+The owned NIF graph retains both world-object and rigid-body-info layer, flags
+and group fields independently, without assuming they match or changing current
+physics admission. The collision-filter kernel accepts caller-owned layer/bone
+mask tables and rejects layers32..63 before lookup. Its initial tables and ordered
+branches follow the pinned original initializer008a83c0 and predicate008a7f70.
+Zero groups, flag14, the ordered layer29 exception, same/different groups, bone
+IDs and flag15 adjacency retain the original branch order. Runtime actor-group
+assignment, dynamic layer-mask policy and World admission are separate work.
+
+`S4/native-ragdoll-stock-filter-audit-01` reads actual18 stock bodies; both filter
+fields match, layer8/group0 with distinct bone IDs. Asset SHA256
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`.
+`S4/native-ragdoll-collision-filter-oracle-01` executes original initialization,
+actual CRT memset and full predicate returns, with no stubbed game calls:
+37,836 cases span all32x32 supported layers, group/flag combinations, all32x32
+bone IDs and stock18x18 ordered pairs. Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+corpus SHA256 `5789dbeb98a0d2696f0f356c737c7b0550c6d763370bb82e28e41e564202c546`.
+Actual C++ normal/sanitized comparison each matches37,836 results and both
+complete tables exactly. Always-enabled/disabled controls mismatch23,069/14,767
+cases; swapping arguments mismatches726. No gameplay gate follows from this.
+
+Three component tests cover independent field retention, unsupported layers
+even on wildcard/disabled paths, ordered flag handling and caller mask changes.
+Full filter normal/sanitized01 pass2,138 component and842 engine tests each,
+complete inventories, zero failures/skips, rebuilding openmw and esmtool.
+Stable tested fingerprint
+`b61302c59973a897969136a616048ca638ec53d11b9f29bddcf9ed3bdc929f05`.
+Python sources are unchanged; ASan leaks disabled and UBSan halts on errors.
+
+Private stock-filtered scheduler restart normal01 supplies a nonzero same-actor
+group and original bone masks; it does not execute actor-group allocation. It
+still fails the unchanged continuation bounds, first linear velocity difference
+0.05434548854827881 exceeding0.05. Full snapshot maxima are rotation
+0.008762143552303314, position0.2649369239807129, linear velocity
+2.0861258506774902 and angular velocity0.857350766658783. The private cold-solver
+normal01 control disables Bullet warmstarting and also fails (first linear
+velocity difference0.32358162105083466 exceeding0.05). Neither changes production
+solver behavior, serialization or tolerances. Both failures remain retained;
+contact continuation, World lifecycle/render/save and gameplay gates stay open.

@@ -2,6 +2,7 @@
 
 #include <components/nif/physics.hpp>
 #include <components/nifbullet/actorragdoll.hpp>
+#include <components/nifbullet/ragdollcollisionfilter.hpp>
 
 #include <gtest/gtest.h>
 
@@ -332,4 +333,52 @@ namespace
         EXPECT_EQ(info.mRotation, osg::Quat(1, 2, 3, 4));
     }
 
+}
+
+TEST_F(ActorRagdollTest, RetainsIndependentWorldAndBodyCollisionFilters)
+{
+    for (auto& record : mFile.mRecords)
+        if (auto* body = dynamic_cast<Nif::bhkRigidBody*>(record.get()))
+        {
+            body->mHavokFilter = { 8, 0x42, 65535 };
+            body->mInfo.mHavokFilter = { 29, 0x83, 123 };
+        }
+    const auto graph = NifBullet::loadActorRagdollDefinition(Nif::FileView(mFile));
+    ASSERT_EQ(graph.mBodies.size(), 2u);
+    for (const auto& body : graph.mBodies)
+    {
+        EXPECT_EQ(body.mWorldObjectFilter.mLayer, 8);
+        EXPECT_EQ(body.mWorldObjectFilter.mFlags, 0x42);
+        EXPECT_EQ(body.mWorldObjectFilter.mGroup, 65535);
+        EXPECT_EQ(body.mInfoFilter.mLayer, 29);
+        EXPECT_EQ(body.mInfoFilter.mFlags, 0x83);
+        EXPECT_EQ(body.mInfoFilter.mGroup, 123);
+    }
+}
+
+TEST(ActorRagdollCollisionFilter, RejectsUnverifiedLayersEvenOnWildcardOrDisabledPaths)
+{
+    for (unsigned layer = 32; layer < 64; ++layer)
+    {
+        EXPECT_THROW(NifBullet::InitialRagdollCollisionFilter.enabled(layer, 0), std::invalid_argument);
+        EXPECT_THROW(NifBullet::InitialRagdollCollisionFilter.enabled(0x4000, layer), std::invalid_argument);
+    }
+}
+
+TEST(ActorRagdollCollisionFilter, CallerMaskChangesAndOrderedBranchesAreRespected)
+{
+    auto filter = NifBullet::InitialRagdollCollisionFilter;
+    EXPECT_TRUE(filter.enabled(8, 8)); // Zero system group is a wildcard.
+    EXPECT_FALSE(filter.enabled(8 | 0x4000, 8));
+    EXPECT_TRUE(filter.enabled(29, 8 | 0x4000)); // Native exception is ordered.
+    EXPECT_FALSE(filter.enabled(8 | 0x4000, 29));
+    const std::uint32_t first = 8 | (2u << 8) | (1u << 16);
+    const std::uint32_t second = 8 | (6u << 8) | (1u << 16);
+    ASSERT_TRUE(filter.enabled(first, second));
+    filter.mBoneMasks[2] = 0;
+    EXPECT_FALSE(filter.enabled(first, second));
+    EXPECT_FALSE(filter.enabled(first | 0x8000, second | 0x8000));
+    filter.mLayerMasks[8] = 0;
+    EXPECT_FALSE(filter.enabled(first, second + (1u << 16)));
+    EXPECT_TRUE(filter.enabled(first & 0xffff, second));
 }

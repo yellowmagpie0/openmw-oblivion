@@ -31,6 +31,12 @@ namespace NifBullet
     };
     using RagdollShape = std::variant<RagdollSphere, RagdollCapsule, RagdollHull>;
 
+    struct RagdollBodyFilter
+    {
+        std::uint8_t mLayer = 0, mFlags = 0;
+        std::uint16_t mGroup = 0;
+    };
+
     struct RagdollBodyDefinition
     {
         std::uint32_t mRecord;
@@ -38,6 +44,7 @@ namespace NifBullet
         std::string mBone;
         osg::Matrixf mBoneBind;
         bool mUsesRigidBodyTransform = false;
+        RagdollBodyFilter mWorldObjectFilter, mInfoFilter;
         osg::Vec3f mTranslation;
         osg::Quat mRotation;
         osg::Vec3f mCenter;

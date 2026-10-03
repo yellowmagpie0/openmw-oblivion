@@ -142,6 +142,10 @@ namespace NifBullet
             value.mBoneBind = bind.at(node);
             value.mUsesRigidBodyTransform = body->mRecordType == Nif::RC_bhkRigidBodyT;
             const auto& info = body->mInfo;
+            value.mWorldObjectFilter = { body->mHavokFilter.mLayer, body->mHavokFilter.mFlags,
+                body->mHavokFilter.mGroup };
+            value.mInfoFilter = { info.mHavokFilter.mLayer, info.mHavokFilter.mFlags,
+                info.mHavokFilter.mGroup };
             value.mTranslation = xyz(info.mTranslation);
             value.mCenter = xyz(info.mCenter);
             value.mRotation = info.mRotation;
