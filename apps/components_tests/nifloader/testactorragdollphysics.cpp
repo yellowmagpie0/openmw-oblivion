@@ -1465,3 +1465,58 @@ namespace
                 EXPECT_NEAR(actual.getBasis()[row][col], expected.getBasis()[row][col], 1e-12);
     }
 }
+
+
+namespace
+{
+    TEST(RagdollNativePhysicsScene, PreservesOriginalFloatRotationStoresAndLengthReturn)
+    {
+        struct Example { std::array<uint32_t, 7> mInput; std::array<uint32_t, 12> mWorld; };
+        const std::array<Example, 10> examples{{
+            {{0u, 2147483648u, 0u, 0u, 0u, 0u, 1065353216u}, {1065353216u, 0u, 0u, 0u, 1065353216u, 0u, 0u, 0u, 1065353216u, 0u, 2147483648u, 0u}},
+            {{3290492696u, 1114959375u, 3292304527u, 1065353216u, 0u, 0u, 613232946u}, {1065353216u, 0u, 0u, 0u, 3212836864u, 2769105202u, 0u, 621621554u, 3212836864u, 3314338884u, 1138116807u, 3315924018u}},
+            {{3244576084u, 3291920894u, 1128517087u, 0u, 1065353216u, 0u, 613232946u}, {3212836864u, 0u, 621621554u, 0u, 1065353216u, 0u, 2769105202u, 0u, 3212836864u, 3267869862u, 3315588385u, 1152077343u}},
+            {{1146531072u, 1134003540u, 3280948261u, 0u, 0u, 1065353216u, 613232946u}, {3212836864u, 2769105202u, 0u, 621621554u, 3212836864u, 0u, 0u, 0u, 1065353216u, 1169936584u, 1157926914u, 3304766579u}},
+            {{3273270915u, 1145485206u, 1125083548u, 1057440399u, 1059944274u, 1049843532u, 1054378868u}, {3182157124u, 1056045612u, 1063294084u, 1064673026u, 1049449873u, 3177788096u, 3196699560u, 1062617218u, 3203663618u, 3297172726u, 1169021577u, 1148907522u}},
+            {{1140745618u, 1142487993u, 3236170880u, 3194691138u, 1030992394u, 3196589820u, 1064252517u}, {1062863826u, 1055937931u, 1047451579u, 3204851673u, 1061213623u, 1053523920u, 1009920560u, 3203130094u, 1063465463u, 1163825423u, 1166399375u, 3259466735u}},
+            {{1141989149u, 3298447784u, 1108142027u, 1048827863u, 3198782271u, 1040864278u, 1063636187u}, {1061061525u, 3201531164u, 3204866513u, 1033071318u, 1062515930u, 3205316804u, 1059717285u, 1052697800u, 1059448864u, 1165909381u, 3322348214u, 1131842811u}},
+            {{3292158297u, 1134042248u, 1139543056u, 1058686444u, 1059953782u, 1053604089u, 3188044185u}, {3195360604u, 1064040860u, 1050416039u, 1060537484u, 3174875376u, 1060314828u, 1059632270u, 1053104868u, 3206900244u, 3315796085u, 1157960779u, 1162773326u}},
+            {{3254622870u, 1149429204u, 1149769575u, 3151397088u, 3199958036u, 1038742035u, 1064069465u}, {1060416107u, 3193119406u, 3207431565u, 1046279216u, 1064913934u, 3180499540u, 1059897735u, 3183745050u, 1060852514u, 3277709177u, 1172638248u, 1173233816u}},
+            {{3276981675u, 3291635957u, 3287908264u, 1060669546u, 1055881397u, 3204639841u, 1008548040u}, {1025592712u, 1060053405u, 3208278794u, 1059724061u, 3205493404u, 3204187677u, 3208579996u, 3203259275u, 3203666975u, 3300419196u, 3315339100u, 3311028233u}},
+        }};
+        for (const auto& example : examples)
+        {
+            NifBullet::RagdollNativeTargetPose input;
+            for (unsigned axis = 0; axis < 3; ++axis)
+                input.mPosition[axis] = std::bit_cast<float>(example.mInput[axis]);
+            for (unsigned axis = 0; axis < 4; ++axis)
+                input.mRotation[axis] = std::bit_cast<float>(example.mInput[3 + axis]);
+            const auto actual = NifBullet::ragdollBoneWorldFromNativePose(input);
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    EXPECT_EQ(std::bit_cast<uint32_t>(actual(column, row)), example.mWorld[row * 3 + column]);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual(3, axis)), example.mWorld[9 + axis]);
+            EXPECT_EQ(actual(0, 3), 0.f);
+            EXPECT_EQ(actual(1, 3), 0.f);
+            EXPECT_EQ(actual(2, 3), 0.f);
+            EXPECT_EQ(actual(3, 3), 1.f);
+        }
+    }
+
+    TEST(RagdollNativePhysicsScene, RejectsNonfiniteNonunitAndUnrepresentableOutput)
+    {
+        NifBullet::RagdollNativeTargetPose input{{0, 0, 0}, {0, 0, 0, 1}};
+        input.mRotation[3] = 2;
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(input), std::invalid_argument);
+        input.mRotation = {0, 0, 0, 0};
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(input), std::invalid_argument);
+        input.mRotation = {0, 0, 0, std::numeric_limits<float>::quiet_NaN()};
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(input), std::invalid_argument);
+        input.mRotation = {0, 0, 0, 1};
+        input.mPosition[0] = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(input), std::invalid_argument);
+        input.mPosition[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(input), std::invalid_argument);
+    }
+}

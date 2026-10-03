@@ -362,6 +362,48 @@ namespace NifBullet
             target.mRotation[2], target.mRotation[3]), vector(target.mPosition));
     }
 
+    osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose)
+    {
+        double norm = 0;
+        for (const auto value : pose.mRotation)
+        {
+            require(std::isfinite(value), "nonfinite native scene quaternion");
+            norm += double(value) * double(value);
+        }
+        require(std::abs(norm - 1.) <= 1e-4, "nonunit native scene quaternion");
+        const auto position = ragdollNativeToWorldPosition(
+            osg::Vec3f(pose.mPosition[0], pose.mPosition[1], pose.mPosition[2]));
+        const auto& q = pose.mRotation;
+        // Original47C600 stores doubled XYZ first, then nine binary32
+        // products. Its final NiMatrix3 entries use unrounded differences/
+        // sums of those stored products; it does not renormalize the quaternion.
+        const float tx = float(double(q[0]) * 2.);
+        const float ty = float(double(q[1]) * 2.);
+        const float tz = float(double(q[2]) * 2.);
+        const float wx = float(double(q[3]) * double(tx));
+        const float wy = float(double(q[3]) * double(ty));
+        const float wz = float(double(q[3]) * double(tz));
+        const float xx = float(double(q[0]) * double(tx));
+        const float xy = float(double(q[0]) * double(ty));
+        const float xz = float(double(q[0]) * double(tz));
+        const float yy = float(double(q[1]) * double(ty));
+        const float yz = float(double(q[1]) * double(tz));
+        const float zz = float(double(q[2]) * double(tz));
+        // OSG row vectors transpose the native NiMatrix3 column convention.
+        osg::Matrixf result;
+        result(0, 0) = float(1. - double(yy) - double(zz));
+        result(0, 1) = float(double(xy) + double(wz));
+        result(0, 2) = float(double(xz) - double(wy));
+        result(1, 0) = float(double(xy) - double(wz));
+        result(1, 1) = float(1. - double(xx) - double(zz));
+        result(1, 2) = float(double(yz) + double(wx));
+        result(2, 0) = float(double(xz) + double(wy));
+        result(2, 1) = float(double(yz) - double(wx));
+        result(2, 2) = float(1. - double(xx) - double(yy));
+        result.setTrans(position);
+        return result;
+    }
+
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
         std::span<const RagdollBoneWorldPose> bones)
     {

@@ -7941,3 +7941,80 @@ No stage closes. Actual controller dispatch, root choice, frame ownership,
 motion/clock save state, actor scaling/contact islands and stock-floor restart
 failures remain open. Next: native reverse scene target preparation against the
 full original physics-to-scene route, then actual controller integration.
+
+
+### Checkpoint169: native ordinary physics-to-scene target preparation
+
+Checkpoint168 committed as `803a51f8ef70b60cb8861329297aa572e2f235d4`,
+165 isolated commits with exact-byte/fresh-clone proof. The new
+ragdollBoneWorldFromNativePose query converts native origin/XYZW quaternion to
+an OSG world matrix for the ordinary89EA70 physics-to-scene route. It follows
+actual47C600: separate float doubled XYZ stores, nine float product stores and
+unrounded sums/differences before final NiMatrix3 float stores. It transposes
+native/OSG conventions and uses the existing separately stored reverse length
+constant. Finite inputs, unit quaternion within1e-4 and representable world
+position are required; the quaternion is not renormalized. This is not the
+88F5xx mixed-pose renderer branch, which uses a different8B1DD0 matrix routine.
+
+Two new component tests retain ten original input/output examples and invalid
+nonunit/zero/nonfinite/overflow cases. Both fail against the old OSG rotation
+baseline01. Full physics-scene-{normal,sanitized}-01 each pass2,214 component
+and878 engine cases with complete inventories, zero failures/skips, rebuilt
+openmw/esmtool and stable tested fingerprint `071352ea3493ae55bb4fa94f89446bcc02b011c74c48bb56187fedabebb6ef1f`. ASan leak checks disabled;
+UBSan halts; Python unchanged.
+
+Executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Full original89EA70 route,
+actual body/motion getters,4D6950 quaternion reorder,47C600 conversion,4D6900/
+43F3E0 native length return and8978D0 scene writer complete1,600 cases each:
+oracle01 parentless and oracle02 with rotated/translated unit-scale parents.
+Flags0/8 and forced/threshold publication, both x87 precision words27F/37F;
+no game-call or Windows import stubs in either route probe. Velocity and
+separate local/world scale slots survive. Parent02 additionally executes
+718A80 inverse and53D7A0 transform product. Source/corpus SHA256:
+parentless `9915943faa9820bdaa3c8fd9386da2d14c7dfa736eda4223bd835a9c5bdc6f7e`, `1329b26ce8e85751e90f24ef32f95b72bb028293aa53f3dbdb35ad4f9e0a7274`;
+parent `dc235189f88fbef23f2aaa1160895379566ac9848df50af87646b3b14a894fa0`, `f20b4b610d6c763a3073c8e20cb26f7ee2127ca8b03bbe0139d43ac552a8b9ac`.
+Synthetic no-world data is not original NIF loading or gameplay acceptance.
+
+Actual C++ target preparation plus existing bone writer in compare03 each
+matches all1,600 parentless cases:41,600 exact local/world float fields under
+both precision words. Initial compare01/02 in both builds retain a comparator
+compile failure from attempting a range loop over osg::Vec3f; indexed access
+corrects the harness. Parent compare04 in each build retains four one-bit local
+rotation mismatches, all under37F; every world field and all80027F cases match.
+This exposes53-bit versus64-bit x87 cancellation in the preexisting parent
+composition helper; no tolerance has been relaxed and no arithmetic changed
+to satisfy a noncanonical precision experiment.
+
+Independent CRT precision oracle03 runs12 supplied-argument/control-word cases;
+oracle04 executes the actual startup987769 XOR/INC creating EBX1, actual9877E0
+PUSH/CALL and981C6B floating initializer prefix. Its original read-only PE-header
+pointer gate accepts AA3E84 callback982897; actual99076F/99E24F/9A0C8C sets53-bit
+precision while preserving rounding for three initial words. Only Windows
+GetModuleHandleA returns no external CRT module, selecting the actual floating-
+feature fallback. The IAT identity is independently parsed as KERNEL32.dll
+GetModuleHandleA; the unused next boundary is GetProcAddress. Intervening
+startup calls between the two caller slices are not emulated; EBX is callee-
+saved by the x86 ABI. CRT01/02 retain a raw-word assertion failure: reserved
+bit6 differs when the emulator loads a reconstructed word;03/04 compare the
+precision/rounding/exception fields, excluding that reserved bit. Startup04
+source/corpus SHA256 `7289a72d1c0ff16ce8be62f36fba08428d442e9aa5a35ba0f36841b8fee09da4`,
+`53bd87ad1f366dfbc7d01b969c6a613b210a9846e29b76a7785ce38b28b551ee`. Neither WinMain/graphics nor live main/worker
+control words are proved by these initialization slices.
+
+Parent compare05 in both builds declares the original CRT startup53-bit,
+round-to-nearest domain before execution and matches all800 selected cases:
+20,800 exact local/world float fields each. The four37F differences remain in
+compare04 as precision diagnostics; this is not an all-precision pass. Full
+live precision/runtime confirmation remains open before stage acceptance.
+Actual stock18-body/17-joint skeleton/idle KF regression in physics-scene-stock-
+animated-{normal,sanitized}-01 uses the new native return adapter on actual
+Bullet captured poses. Each passes240 frames,69,120 exact animated target fields,
+controller rebuild/handoff, unchanged.001 physical renderer tolerance (maximum
+4.57764e-05 normal/4.57764e-05 sanitized)
+and zero graph teardown objects/constraints. It is not World/save acceptance.
+
+No stage closes. Next: verify the full mixed-pose renderer/mode transition
+sequence and connect the actual controller. Live precision, actual actor root/
+shape scaling, cross-owner contact activation, native keyframed substep behavior,
+mode/clock persistence, stock-floor restart and all remaining gameplay campaigns
+stay open.

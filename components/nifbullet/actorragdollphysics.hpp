@@ -35,6 +35,9 @@ namespace NifBullet
     // Bullet transform representation. Matrix must already be rigid.
     RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose);
     btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose);
+    // Native motion origin/XYZW quaternion returned through bhk scene adapters.
+    // Output uses world lengths; input quaternion must already be unit length.
+    osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose);
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
         std::span<const RagdollBoneWorldPose> bones);
 
