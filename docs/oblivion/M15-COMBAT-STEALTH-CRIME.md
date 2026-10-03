@@ -13168,3 +13168,50 @@ The combined shape/center pose round trip remains under investigation; these
 controls do not establish whole-trajectory native Havok agreement. World actor
 admission/render/save, native recovery/mode policy, normal-input corpse/media,
 and display-dependent Morrowind runtime gates remain open.
+
+
+### Checkpoint144 — scheduler-owned graph and validated snapshot boundary (S4/S6 open)
+
+The scheduler now owns an immutable copy of each admitted physical graph and
+constructs bodies/delta storage from that copy. Main-thread ownership queries,
+inspection copies, snapshot capture and snapshot restore wait for workers and
+use the collision-world lock. Capture uses the actual owned graph/body state;
+restore validates the snapshot against the owned asset and body/node identities
+before changing physical state. Callers cannot replace the admitted graph by
+mutating the original admission argument or an inspection copy. Reference
+rebinding moves the graph/body/snapshot ownership together; stale references do
+not capture or remove the new owner. No World admission/lifecycle is claimed.
+
+Two parameterized tests cover workers0/1/2, successful restore, changed asset,
+body/node identities and nonfinite velocity rejection without partial state,
+external graph mutation, reference rebinding and cleanup. Normal/sanitized01
+retain three test-expectation failures: the established codec throws
+runtime_error for nonfinite velocity, while identity mismatch throws
+invalid_argument. The corrected tests preserve those existing contracts.
+Full owned-snapshot normal/sanitized02 pass839 engine tests each, complete
+inventories, zero failures/skips; both builds rebuild openmw and esmtool.
+Stable tested source fingerprint `f0844c84b3ac8f693c5c7418dcfa617881291b79933e43fe68a42c52f7ab4a8e`. No component/Python
+sources changed; their checkpoint143 passing evidence is not relabeled as a
+new run. ASan leaks are disabled and UBSan halts on error.
+
+Private `S4/native-ragdoll-stock-exact-com-diagnosis-normal-01` is diagnostic
+only: it stores exact Bullet center-of-mass transforms/velocities as doubles
+and restores them directly into a fresh18-body/17-joint stock scheduler world.
+Even this control fails the existing trajectory bounds: maximum rotation
+0.24695831537246704, position0.4578094482421875, linear velocity7.057619273662567
+and angular velocity2.702526092529297. It preserves the finite position/renderer
+handoff bounds and does not change production serialization or tolerances.
+Thus removing the shape/center conversion alone does not establish fresh
+contact continuation; the restart gate remains open.
+
+`S4/native-ragdoll-recovery-dispatch-oracle-01` independently executes512
+signed-byte dispatch cases and80 mode6 completion cases in the pinned original
+executable, with no stubbed game calls. Actual jump table at654c58 maps raw1 to
+654913, raw2/raw4 to654803, raw3 to654886, raw5 to654a87 and raw6 to654c3b;
+unknown bytes exit unchanged. Mode6 executes actual472ea0 and the update suffix
+through its return: completion requires animation+D0 null and either animation+CC
+null or its field+10 nonzero with kind3. The earlier actor eligibility and full
+method are outside scope; synthetic animation fields do not prove real get-up
+timing. These results ground further lifecycle work, not a passed gameplay gate.
+World render/save/collider handoff, native recovery/mode policy, normal-input
+corpse/media and all other open M15 gates remain incomplete.

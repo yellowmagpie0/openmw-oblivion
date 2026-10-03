@@ -37,6 +37,7 @@
 #include "contacttestwrapper.h"
 #include "movementsolver.hpp"
 #include "object.hpp"
+#include "oblivionragdoll.hpp"
 #include "physicssystem.hpp"
 #include "projectile.hpp"
 
@@ -418,8 +419,9 @@ namespace MWPhysics
         ActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
             : PtrHolder(ptr, {})
-            , mPhysics(definition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this))
-            , mLinearDeltas(definition.mBodies.size())
+            , mDefinition(definition)
+            , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this))
+            , mLinearDeltas(mDefinition.mBodies.size())
         {
             for (auto* object : mPhysics.collisionObjects())
             {
@@ -431,6 +433,7 @@ namespace MWPhysics
             }
         }
 
+        const NifBullet::ActorRagdollDefinition mDefinition;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
     };
@@ -662,6 +665,39 @@ namespace MWPhysics
                 mCollisionObjects.erase(object);
             throw;
         }
+    }
+
+    bool PhysicsTaskScheduler::hasActorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return mActorRagdolls.contains(ptr.mRef);
+    }
+
+    NifBullet::ActorRagdollDefinition PhysicsTaskScheduler::actorRagdollDefinition(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mDefinition;
+    }
+
+    ESM4::RuntimeActorRagdoll PhysicsTaskScheduler::captureActorRagdollSnapshot(
+        const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto& owned = actorRagdoll(ptr);
+        return captureNativeActorRagdoll(base, model, owned.mDefinition, owned.mPhysics.capture());
+    }
+
+    void PhysicsTaskScheduler::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto& owned = actorRagdoll(ptr);
+        const auto states = restoreNativeActorRagdoll(snapshot, base, model, owned.mDefinition);
+        owned.mPhysics.restore(states);
     }
 
     void PhysicsTaskScheduler::removeActorRagdoll(const MWWorld::Ptr& ptr)

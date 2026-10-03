@@ -7,6 +7,7 @@
 #include <optional>
 #include <set>
 #include <shared_mutex>
+#include <string_view>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
@@ -16,10 +17,16 @@
 #include <osg/Timer>
 
 #include "components/misc/budgetmeasurement.hpp"
+#include <components/esm/formkey.hpp>
 #include "physicssystem.hpp"
 #include "ptrholder.hpp"
 
 class btTransform;
+
+namespace ESM4
+{
+    struct RuntimeActorRagdoll;
+}
 
 namespace NifBullet
 {
@@ -66,6 +73,12 @@ namespace MWPhysics
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask);
         void removeActorRagdoll(const MWWorld::Ptr& ptr);
+        bool hasActorRagdoll(const MWWorld::Ptr& ptr);
+        NifBullet::ActorRagdollDefinition actorRagdollDefinition(const MWWorld::Ptr& ptr);
+        ESM4::RuntimeActorRagdoll captureActorRagdollSnapshot(
+            const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
+        void restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
+            const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
         void updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
         std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
         void restoreActorRagdoll(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBodyState> states);
