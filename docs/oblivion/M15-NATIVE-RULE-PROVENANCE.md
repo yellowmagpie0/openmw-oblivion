@@ -6967,3 +6967,59 @@ course. Python unchanged; ASan leak checks disabled, UBSan halts on errors.
 Native BlendSettings.ini duration resolution, scene/controller attachment,
 blended physical mode/pose/velocity handling and World admission/render/save
 coordination remain open, as does stock floor-contact restart acceptance.
+
+
+### Checkpoint152 — native duration tables and zero-duration controller rules (S4 open)
+
+Checkpoint151 is committed as `ef3b7c5c60d43fa07ea36ceff3fd60af6f2d67e7`;
+isolated-git-progress-129 verifies148 isolated commits, exact source bytes and a
+fresh bundle clone. New physicalblendsettings owns the independently identified
+32-entry duration defaults: body IDs0..24 use get-up1/knockdown0.25 seconds;
+IDs25..31 use-1. Configuration updates replace currently nonnegative entries
+and preserve negative entries, including on repeated updates. The native body
+ID selector uses packed world-object filter bits8..12. Settings are explicit
+BlendSettings.ini HIT inputs, not GMST lookups or a completed INI import.
+Nonfinite typed settings/table entries are rejected without mutating inputs.
+
+Original data B11A24/B11A2C identify fGetUpTime:HIT/fKnockDownTime:HIT defaults;
+B2EE68/B2EEE8 identify the32-entry tables. Original prefix0053a40c..0053a45c
+updates the tables and returns, no game calls/stubs. Two x87 words and100
+setting pairs yield200 cases, of which128 have finite configured values and
+belong to typed admission. Corpus SHA256
+`0d8103ec614414bfb1e4eca109d9057cd5af99c1795ab1099470e96d3e014b9f`;
+S4/native-ragdoll-blend-duration-oracle-02. Initial oracle01 is explicitly
+invalidated: its prefix setup failed to reset ECX (original0053a3ec does so),
+causing later cases to retain the loop index128. Both failed duration compare01
+outputs are retained; no production change was inferred from that invalid
+corpus. Corrected setup supplies ECX0 for every independent case.
+
+A zero-duration one-shot clock is valid and returns key time0. Original gain
+evaluation skips interpolation for a zero key interval and retains the first
+key's gains, including signed zero; it does not divide by zero or invent an
+instant jump to the second key. Additional full original evaluator/clock
+returns cover30/66 cases, respectively, with clock Windows critical-section
+boundaries stubbed as in checkpoint151. Zero-interval oracle01's incorrect
+helper-visitation assertion is retained; corrected oracle02 verifies that the
+linear interpolation helper is not called. Corpus hashes:
+`9fbfe4089700fd4a01f2c07769090749e7d018d41fa6749b77edb92ede7306b1`,
+`a8fb5a4239d24e27b2fa352fce09e482f60616c4751c4b30515040c595d84e31`;
+S4/native-ragdoll-blend-zero-duration-interpolation-oracle-02 and
+S4/native-ragdoll-blend-zero-duration-clock-oracle-01. Original executable
+identity remains `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+Final S4/native-ragdoll-blend-durations-compare-{normal,sanitized}-02 each match
+5,638 gain cases,492 clock cases and128 finite table cases exactly. Constant
+gain, zero clock, clamped stored elapsed and ignored settings controls reject
+4,488/280/208/126 cases respectively. Four added component tests cover zero
+intervals, every packed body selector/default, signed-zero/negative/repeated
+configuration and nonfinite rejection; earlier malformed-key/clock tests now
+use genuinely invalid descending/negative domains. Full duration
+normal/sanitized01 pass2,157 component and842 engine tests each, complete
+inventories and zero failures/skips; openmw and esmtool rebuilt. Stable tested
+fingerprint `8d70b24f092352f7ba33065f637875d218a60de2e43a3262a76d46a9b4aabe03`.
+Python unchanged; ASan leaks disabled, UBSan halts on errors.
+
+Winning BlendSettings.ini import, actual scene key/controller creation,
+physical motion/pose/velocity blending, World admission/render/save and stock
+floor-contact continuation are still open. Rule/helper evidence does not close
+normal-input reaction or fresh-process gameplay gates.

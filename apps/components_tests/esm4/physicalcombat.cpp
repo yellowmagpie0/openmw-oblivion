@@ -1,4 +1,5 @@
 #include <components/esm4/physicalcombat.hpp>
+#include <components/esm4/physicalblendsettings.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <array>
@@ -3106,7 +3107,7 @@ TEST(ESM4PhysicalCombat, PhysicalBlendRejectsUnsupportedOrMalformedKeys)
     EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, -0.01f), std::invalid_argument);
     EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, 0.26f), std::invalid_argument);
     EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
-    keys[1].mTime = keys[0].mTime;
+    keys[1].mTime = -1.f;
     EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, 0.f), std::invalid_argument);
     keys[1].mTime = 0.25f;
     keys[1].mGains.mVelocity = std::numeric_limits<float>::infinity();
@@ -3118,7 +3119,7 @@ TEST(ESM4PhysicalCombat, PhysicalBlendRejectsUnsupportedOrMalformedKeys)
 TEST(ESM4PhysicalCombat, PhysicalBlendClockRejectsWithoutMutatingState)
 {
     ESM4::PhysicalBlendClock clock{1.f, 1.f, 0.f};
-    for (float duration : {0.f, -1.f, std::numeric_limits<float>::infinity()})
+    for (float duration : {-1.f, std::numeric_limits<float>::infinity()})
     {
         EXPECT_THROW(ESM4::advancePhysicalBlendClock(clock, 2.f, duration), std::invalid_argument);
         EXPECT_EQ(clock.mStartTime, 1.f);
@@ -3165,4 +3166,66 @@ TEST(ESM4PhysicalCombat, PhysicalBlendClockKeepsNegativeZeroElapsedButReturnsPos
     EXPECT_EQ(std::bit_cast<std::uint32_t>(result), 0u);
     EXPECT_EQ(std::bit_cast<std::uint32_t>(clock.mElapsed), 0x80000000u);
     EXPECT_EQ(std::bit_cast<std::uint32_t>(clock.mPreviousTime), 0x80000000u);
+}
+
+
+TEST(ESM4PhysicalCombat, PhysicalBlendZeroDurationKeepsFirstKeyGains)
+{
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{0.f, {-0.f, 0.75f}}, {0.f, {1.f, 0.f}}}};
+    const auto result = ESM4::evaluatePhysicalBlend(keys, 0.f);
+    ASSERT_TRUE(result);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mHierarchy), 0x80000000u);
+    EXPECT_EQ(result->mVelocity, 0.75f);
+    ESM4::PhysicalBlendClock clock;
+    for (float time : {10.f, 10.125f, 11.f, 9.f, 10.f})
+        EXPECT_EQ(ESM4::advancePhysicalBlendClock(clock, time, 0.f), 0.f);
+    EXPECT_EQ(clock.mStartTime, 10.f);
+    EXPECT_EQ(clock.mPreviousTime, 10.f);
+    EXPECT_EQ(clock.mElapsed, 0.f);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendDurationsUseNativeIniDefaultsAndBodyIdBits)
+{
+    const auto tables = ESM4::resolvePhysicalBlendDurationTables(
+        ESM4::InitialPhysicalBlendDurationTables, {});
+    for (std::uint32_t body = 0; body < 32; ++body)
+    {
+        const std::uint32_t filter = 0xabcd0008u | (body << 8) | 0xe000u;
+        EXPECT_EQ(ESM4::physicalBlendDurationForFilter(tables, filter, true), body < 25 ? 1.f : -1.f);
+        EXPECT_EQ(ESM4::physicalBlendDurationForFilter(tables, filter, false), body < 25 ? 0.25f : -1.f);
+    }
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendDurationOverridesPreserveDisabledEntries)
+{
+    auto previous = ESM4::InitialPhysicalBlendDurationTables;
+    previous.mGetUp[2] = -2.f;
+    previous.mKnockdown[6] = -3.f;
+    const auto updated = ESM4::resolvePhysicalBlendDurationTables(previous, {0.f, -0.f});
+    EXPECT_EQ(updated.mGetUp[2], -2.f);
+    EXPECT_EQ(updated.mKnockdown[6], -3.f);
+    EXPECT_EQ(updated.mGetUp[25], -1.f);
+    EXPECT_EQ(updated.mKnockdown[31], -1.f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(updated.mKnockdown[2]), 0x80000000u);
+    EXPECT_EQ(previous.mGetUp[0], 1.f);
+    const auto disabled = ESM4::resolvePhysicalBlendDurationTables(previous, {-4.f, -5.f});
+    const auto reconfigured = ESM4::resolvePhysicalBlendDurationTables(disabled, {2.f, 3.f});
+    EXPECT_EQ(reconfigured.mGetUp[0], -4.f);
+    EXPECT_EQ(reconfigured.mKnockdown[0], -5.f);
+    EXPECT_EQ(reconfigured.mGetUp[2], -2.f);
+    EXPECT_EQ(reconfigured.mKnockdown[6], -3.f);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendDurationResolverRejectsNonfiniteConfiguration)
+{
+    const auto previous = ESM4::InitialPhysicalBlendDurationTables;
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    const float infinity = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::resolvePhysicalBlendDurationTables(previous, {nan, 0.25f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalBlendDurationTables(previous, {1.f, infinity}), std::invalid_argument);
+    auto malformed = previous;
+    malformed.mGetUp[31] = nan;
+    EXPECT_THROW(ESM4::resolvePhysicalBlendDurationTables(malformed, {}), std::invalid_argument);
+    EXPECT_THROW(ESM4::physicalBlendDurationForFilter(malformed, 31u << 8, true), std::invalid_argument);
+    EXPECT_EQ(previous.mGetUp[31], -1.f);
 }

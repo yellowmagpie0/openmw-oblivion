@@ -787,11 +787,13 @@ namespace ESM4
             return keys.front().mGains;
         const auto& first = keys.front();
         const auto& last = keys.back();
-        if (!(first.mTime < last.mTime) || time < first.mTime || time > last.mTime)
+        if (first.mTime > last.mTime || time < first.mTime || time > last.mTime)
             throw std::invalid_argument("invalid native physical blend key interval");
         // Original8AAB0F stores the key interval, not the numerator. Even the
         // first endpoint follows interpolation (including signed-zero sums).
         const float interval = rounded(double(last.mTime) - first.mTime);
+        if (interval == 0.f)
+            return first.mGains;
         const float fraction = rounded((double(time) - first.mTime) / interval);
         const auto interpolate = [fraction](float from, float to) {
             return rounded((1.0 - fraction) * from + double(fraction) * to);
@@ -807,7 +809,7 @@ namespace ESM4
         finite(clock.mStartTime);
         finite(clock.mPreviousTime);
         finite(clock.mElapsed);
-        if (duration <= 0.f)
+        if (duration < 0.f)
             throw std::invalid_argument("invalid native physical blend duration");
         auto next = clock;
         constexpr float sentinel = -std::numeric_limits<float>::max();
