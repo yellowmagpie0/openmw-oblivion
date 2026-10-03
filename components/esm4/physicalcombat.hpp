@@ -328,6 +328,27 @@ namespace ESM4
     // update establishes the origin. This is not native controller attachment.
     float advancePhysicalBlendClock(PhysicalBlendClock& clock, float absoluteTime, float duration);
 
+    struct PhysicalBlendTiming
+    {
+        std::uint16_t mFlags;
+        float mFrequency, mPhase, mStartKey, mStopKey;
+    };
+
+    // Original7155A0 uses a shared last-result cache. Its identity includes
+    // cycle mode, bounds and uncycled key time, but excludes the reverse flag.
+    // The runtime authority owns this cache; it is not static helper state.
+    struct PhysicalBlendTimeCache
+    {
+        std::uint32_t mCycle = 0xffffffffu;
+        float mStopKey = 0.f, mStartKey = 0.f, mKeyTime = 0.f, mResult = 0.f;
+    };
+
+    // General finite ordered-bound controller clock. Stage clock/cache writes
+    // together; malformed inputs or arithmetic overflow leave both unchanged.
+    // Controller active/attachment/update eligibility belongs to the caller.
+    float advancePhysicalBlendClock(PhysicalBlendClock& clock, PhysicalBlendTimeCache& cache,
+        const PhysicalBlendTiming& timing, float inputTime);
+
     struct KnockdownSettings
     {
         float mAgilityBase;

@@ -9388,3 +9388,61 @@ native key bounds, general frequency/phase/cycle/reverse clocks, controller
 attachment and live World lifecycle remain open. Full physical persistence,
 retained BodyT/floor failures and S5-S14 remain open. Next: establish the generic
 native controller clock/cache before connecting authored keys to live owners.
+
+
+### Checkpoint194: general controller clock and explicit shared cache
+
+Checkpoint193 committed as `a6277430d97a044f6509a67058e427b18bc44dd2`,
+190 isolated commits with exact-byte/fresh-clone verification. Bundle171 SHA256
+`7f8171170441a7ad523beab8c898c44d87a818312b6b6977ed7f1cd55af34d76`.
+General controller timing now supports both initial time bases, signed frequency,
+phase, all four cycle modes, reverse, shifted/zero finite ordered bounds and
+explicitly owned last-result cache. Native ping-pong cycles unshifted key time;
+wrap subtracts the start key. Float stores follow the original delta, accumulated
+elapsed, phase, remainder and reflected-result boundaries. The original cache
+identity omits reverse: two controllers sharing bounds, cycle and uncycled key
+time can reuse a result even with different reverse flags. This behavior is
+preserved with an explicit cache parameter, without introducing static helper
+state. Controller start/previous/elapsed and cache updates publish together only
+after validation and successful arithmetic. Existing one-shot API is unchanged.
+Active/attachment/update eligibility and scheduler cache ownership remain caller
+responsibilities, not inferred from flags by this clock helper.
+
+Full original7155A0 and actual982BFA CRT remainder execute70,226 cases across
+both x87 words. Only Windows critical-section enter/leave boundaries are supplied;
+no game clock, remainder or cycle function is stubbed. Cases cover both time
+bases, four cycles, reverse, five frequencies, three phases, shifted/zero bounds,
+sentinel/existing clocks, deliberate shared-cache reuse,512 seeded nonbinary
+fixtures and32 signed-zero/subnormal fixtures per precision word. Both words
+produce identical fields. Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`; oracle source/
+corpus `9f1e64dbe51784c79f8cb38569ef50ae328bc653e7aaf16b3ba42dab283764a1`, `4a109e458ad979699623a70037eb9493192021eb56920046e7cd8e4b6f538e9b`. Oracle01 retains the initial
+69,138-case corpus; the96-case probe retains an inherited one-shot scope string
+although its flags were changed to wrap, so only the full correctly scoped
+oracle02 is general-clock evidence. Final comparator04 matches632,034 exact
+returned-time, clock and cache fields per build. Source/driver hashes
+`07ce2b2de7887da74698bb9da1b55421ea753b1ea44018f03c548853ef34753c`, `b59606df8c7cebd83f9f11359c57a1a62bf7d086a7316b9e3160229e7e4bd5a9`. Original-corpus controls detect
+14,680 changed returned times when ignoring frequency,20,120 for phase,13,672 for
+forcing clamp (whole-state changed cases34,560/46,080/51,840). Control source hash
+`e44bb4ea0b2447cf05557f33ef4f7b1b31c7880d35f6de711c267aab8cf6216a`. Comparators01/02/03 retain passing earlier fingerprints.
+
+All five new clock tests fail the one-shot placeholder in baseline01. Initial
+normal/sanitized01 each pass2,290 component tests. Added sixth regression checks
+11 malformed clock/cache/input or used-overflow variants, comparing all retained
+state bits including NaNs after rejection. Normal/sanitized02 retain one failed
+fixture: using -FLT_MAX as a previous time correctly selects native sentinel
+initialization rather than subtraction overflow. The independent two-case
+sentinel probe confirms zero elapsed with maximal finite input; the used-overflow
+fixture now uses nextafter(-FLT_MAX,0), with production arithmetic unchanged. Final normal/sanitized03 each pass
+all2,291 component tests with complete inventories, no skips/failures; fingerprint
+`91fbe95406485bcd8194e611d2fc23f23fc39929b917a0fdfad0003f8047e579`. ASan leak checks disabled; UBSan halts. Existing aggregate-owner and
+dangling-else warnings from unchanged tests remain retained in baseline/first
+sanitizer compilation; no unrelated warning fixes are included. Engine/Python
+checks are not repeated for this isolated new pure API;898 engine tests per
+build were verified at192, and affected engine integration still requires rebuild.
+
+No stage closes. General clock arithmetic/cache and arbitrary-key evaluation are
+implemented independently, but native load-time key-bound initialization and
+live controller owner/attachment/World begin-update-end remain open. Full physical
+save/restart, retained BodyT/floor failures and S5-S14 remain open. Next: establish
+native loaded key-bound initialization and controller update/target dispatch,
+then connect the owned controller to the existing physics/renderer bridge.

@@ -3680,3 +3680,116 @@ TEST(ESM4PhysicalCombat, AuthoredBlendRejectsMalformedUsedKeysIntervalsAndCursor
     keys[1].mTime = 1; keys[1].mGains.mHierarchy = bad;
     EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 0), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, GeneralBlendClockDistinguishesInitialTimeBasesAndCycles)
+{
+    // Full original7155A0 rows1483/18763/5803/23083/10123/27403.
+    const std::array<std::pair<std::uint16_t, float>, 6> cases{{
+        {0xc0, .5f}, {0xc1, .75f}, {0xc2, .75f},
+        {0xc3, .25f}, {0xc4, 1.f}, {0xc5, .25f}}};
+    for (const auto& [flags, expected] : cases)
+    {
+        ESM4::PhysicalBlendClock clock;
+        ESM4::PhysicalBlendTimeCache cache;
+        EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, cache, {flags, 1.f, 0.f, .25f, 1.f}, 2.f), expected);
+        EXPECT_FLOAT_EQ(clock.mStartTime, 2.f);
+        EXPECT_FLOAT_EQ(clock.mPreviousTime, 2.f);
+        EXPECT_FLOAT_EQ(clock.mElapsed, (flags & 1) ? 0.f : 2.f);
+        EXPECT_EQ(cache.mCycle, (flags >> 1) & 3u);
+    }
+}
+
+TEST(ESM4PhysicalCombat, GeneralBlendClockAppliesFrequencyPhaseAndReverse)
+{
+    ESM4::PhysicalBlendClock clock{2.f, 1.f, .5f};
+    ESM4::PhysicalBlendTimeCache cache;
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, cache, {0xd5, .75f, -.5f, 0.f, 2.f}, 2.f), 1.25f);
+    EXPECT_FLOAT_EQ(clock.mElapsed, 1.25f);
+    EXPECT_FLOAT_EQ(cache.mKeyTime, .75f);
+    EXPECT_FLOAT_EQ(cache.mResult, 1.25f);
+}
+
+TEST(ESM4PhysicalCombat, GeneralBlendClockRetainsNativeSharedCacheIdentity)
+{
+    ESM4::PhysicalBlendClock clock{0.f, 0.f, 0.f};
+    ESM4::PhysicalBlendTimeCache cache;
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, cache, {0xc5, 1.f, 0.f, 0.f, .25f}, 0.f), 0.f);
+    auto otherClock = clock;
+    // Original rows69120/69121: reverse is absent from the cache identity.
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(otherClock, cache, {0xd5, 1.f, 0.f, 0.f, .25f}, 0.f), 0.f);
+    ESM4::PhysicalBlendTimeCache fresh;
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(otherClock, fresh, {0xd5, 1.f, 0.f, 0.f, .25f}, 0.f), .25f);
+}
+
+TEST(ESM4PhysicalCombat, GeneralBlendClockKeepsZeroIntervalsAndNegativeFrequency)
+{
+    ESM4::PhysicalBlendClock clock;
+    ESM4::PhysicalBlendTimeCache cache;
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, cache, {0xc2, -2.f, .75f, .25f, .25f}, -1.f), .25f);
+    EXPECT_FLOAT_EQ(clock.mElapsed, 2.f);
+    EXPECT_FLOAT_EQ(cache.mKeyTime, 2.75f);
+}
+
+TEST(ESM4PhysicalCombat, GeneralBlendClockRejectsMalformedInputAtomically)
+{
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    const auto max = std::numeric_limits<float>::max();
+    const std::array<ESM4::PhysicalBlendTiming, 6> cases{{
+        {0xc5, nan, 0.f, 0.f, 1.f}, {0xc5, 1.f, nan, 0.f, 1.f},
+        {0xc5, 1.f, 0.f, nan, 1.f}, {0xc5, 1.f, 0.f, 0.f, nan},
+        {0xc5, 1.f, 0.f, 2.f, 1.f}, {0xc5, max, 0.f, 0.f, 1.f}}};
+    for (const auto& timing : cases)
+    {
+        ESM4::PhysicalBlendClock clock{1.f, 1.f, 3.f};
+        ESM4::PhysicalBlendTimeCache cache{2, 1.f, 0.f, 3.f, 1.f};
+        EXPECT_THROW(ESM4::advancePhysicalBlendClock(clock, cache, timing, 3.f), std::invalid_argument);
+        EXPECT_FLOAT_EQ(clock.mPreviousTime, 1.f);
+        EXPECT_FLOAT_EQ(clock.mElapsed, 3.f);
+        EXPECT_FLOAT_EQ(cache.mKeyTime, 3.f);
+        EXPECT_FLOAT_EQ(cache.mResult, 1.f);
+    }
+}
+
+TEST(ESM4PhysicalCombat, GeneralBlendClockRejectsBadStateAndUsedArithmeticWithoutPublication)
+{
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    const auto max = std::numeric_limits<float>::max();
+    for (int variant = 0; variant < 11; ++variant)
+    {
+        SCOPED_TRACE(variant);
+        ESM4::PhysicalBlendClock clock{1.f, 1.f, 3.f};
+        ESM4::PhysicalBlendTimeCache cache{2, 1.f, 0.f, 3.f, 1.f};
+        ESM4::PhysicalBlendTiming timing{0xc5, 1.f, 0.f, 0.f, 1.f};
+        float time = 2.f;
+        if (variant == 0) clock.mStartTime = nan;
+        if (variant == 1) clock.mPreviousTime = nan;
+        if (variant == 2) clock.mElapsed = nan;
+        if (variant == 3) cache.mCycle = 4;
+        if (variant == 4) cache.mResult = nan;
+        if (variant == 5) cache.mKeyTime = nan;
+        if (variant == 6) time = nan;
+        if (variant == 7) timing = {0xc0, 1.f, 0.f, -max, max};
+        if (variant == 8) timing = {0xc2, 1.f, 0.f, 0.f, max};
+        if (variant == 9)
+        {
+            timing.mPhase = max;
+            clock.mElapsed = max;
+        }
+        if (variant == 10)
+        {
+            time = max;
+            // -FLT_MAX itself is the native previous-time sentinel.
+            clock.mPreviousTime = std::nextafter(-max, 0.f);
+        }
+        const auto beforeClock = clock;
+        const auto beforeCache = cache;
+        EXPECT_THROW(ESM4::advancePhysicalBlendClock(clock, cache, timing, time), std::invalid_argument);
+        for (auto [actual, expected] : std::array<std::pair<float, float>, 7>{{
+                 {clock.mStartTime, beforeClock.mStartTime}, {clock.mPreviousTime, beforeClock.mPreviousTime},
+                 {clock.mElapsed, beforeClock.mElapsed}, {cache.mStopKey, beforeCache.mStopKey},
+                 {cache.mStartKey, beforeCache.mStartKey}, {cache.mKeyTime, beforeCache.mKeyTime},
+                 {cache.mResult, beforeCache.mResult}}})
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(actual), std::bit_cast<std::uint32_t>(expected));
+        EXPECT_EQ(cache.mCycle, beforeCache.mCycle);
+    }
+}

@@ -887,6 +887,80 @@ namespace ESM4
         return result;
     }
 
+    float advancePhysicalBlendClock(PhysicalBlendClock& clock, PhysicalBlendTimeCache& cache,
+        const PhysicalBlendTiming& timing, float inputTime)
+    {
+        for (float value : {inputTime, timing.mFrequency, timing.mPhase, timing.mStartKey, timing.mStopKey,
+                 clock.mStartTime, clock.mPreviousTime, clock.mElapsed})
+            finite(value);
+        if (timing.mStartKey > timing.mStopKey)
+            throw std::invalid_argument("invalid native physical blend clock bounds");
+        if (cache.mCycle != 0xffffffffu)
+        {
+            if (cache.mCycle > 3)
+                throw std::invalid_argument("invalid native physical blend time cache");
+            for (float value : {cache.mStartKey, cache.mStopKey, cache.mKeyTime, cache.mResult})
+                finite(value);
+        }
+        auto next = clock;
+        auto nextCache = cache;
+        constexpr float sentinel = -std::numeric_limits<float>::max();
+        if (next.mStartTime == sentinel)
+            next.mStartTime = inputTime;
+        float delta;
+        if (next.mPreviousTime == sentinel)
+        {
+            next.mElapsed = 0.f;
+            delta = (timing.mFlags & 1) ? 0.f : inputTime;
+        }
+        else
+            delta = rounded(double(inputTime) - next.mPreviousTime);
+        next.mElapsed = rounded(double(timing.mFrequency) * delta + next.mElapsed);
+        next.mPreviousTime = inputTime;
+        const float keyTime = rounded(double(next.mElapsed) + timing.mPhase);
+        const std::uint32_t cycle = (timing.mFlags >> 1) & 3u;
+        float result;
+        if (cache.mCycle == cycle && cache.mStopKey == timing.mStopKey
+            && cache.mStartKey == timing.mStartKey && cache.mKeyTime == keyTime)
+            result = cache.mResult;
+        else
+        {
+            result = keyTime;
+            if (cycle <= 1)
+            {
+                const float interval = rounded(double(timing.mStopKey) - timing.mStartKey);
+                if (interval == 0.f)
+                    result = timing.mStartKey;
+                else if (cycle == 0)
+                {
+                    const float offset = rounded(double(keyTime) - timing.mStartKey);
+                    const float remainder = rounded(std::fmod(double(offset), double(interval)));
+                    result = rounded(double(remainder) + timing.mStartKey);
+                    if (result < timing.mStartKey)
+                        result = rounded(double(result) + interval);
+                }
+                else
+                {
+                    const float period = rounded(double(interval) + interval);
+                    float remainder = rounded(std::fmod(double(keyTime), double(period)));
+                    if (remainder < 0.f)
+                        remainder = rounded(double(remainder) + period);
+                    // Native ping-pong uses the unshifted key time. Reflection
+                    // and start-key addition share one final float store.
+                    result = rounded((remainder >= interval ? double(period) - remainder : double(remainder))
+                        + timing.mStartKey);
+                }
+            }
+            result = std::clamp(result, timing.mStartKey, timing.mStopKey);
+            if (timing.mFlags & 0x10)
+                result = rounded(double(timing.mStopKey) - (double(result) - timing.mStartKey));
+            nextCache = {cycle, timing.mStopKey, timing.mStartKey, keyTime, result};
+        }
+        clock = next;
+        cache = nextCache;
+        return result;
+    }
+
     void validateKnockdownSettings(const KnockdownSettings& settings)
     {
         for (float value : {settings.mAgilityBase, settings.mAgilityMultiplier,
