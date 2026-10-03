@@ -17,6 +17,7 @@
 #include <components/sceneutil/util.hpp>
 #include <components/vfs/pathutil.hpp>
 
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <span>
@@ -217,6 +218,12 @@ namespace MWRender
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mPhysicalPose;
         std::unique_ptr<SceneUtil::ActorRagdollLocalPose> mPhysicalAnimatedLocal;
         bool mPhysicalAnimatedTargets = false;
+        // Original palette is built from the model before equipment is attached.
+        std::unordered_map<std::string, std::uint32_t> mNativeReactionNodeRecords;
+        std::string mNativeReactionModelRootName;
+        std::optional<std::uint32_t> mNativeReactionRootRecord;
+        bool mNativeReactionPaletteInitialized = false;
+        bool mNativeReactionFirstSequenceLoaded = false;
         ActiveControllersVector mPhysicalResidentControllers;
 
         // The node expected to accumulate movement during movement animations.
@@ -278,6 +285,8 @@ namespace MWRender
         bool mRequiresBoneMap;
 
         const NodeMap& getNodeMap() const;
+        // Empty input prepares the native model palette without registering a sequence.
+        void bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences);
 
         /* Sets the appropriate animations on the bone groups based on priority by finding
          * the highest priority AnimationStates and linking the appropriate controllers stored
@@ -513,6 +522,7 @@ namespace MWRender
             const osg::Matrixf& objectWorld);
         void endPhysicalPose();
         bool hasPhysicalPose() const { return mPhysicalPose != nullptr; }
+        std::optional<std::uint32_t> getNativeReactionRootRecord() const { return mNativeReactionRootRecord; }
 
         void setLoopingEnabled(std::string_view groupname, bool enabled);
 

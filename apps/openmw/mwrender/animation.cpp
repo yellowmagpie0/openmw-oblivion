@@ -827,6 +827,7 @@ namespace MWRender
         }
 
         mAnimSources.push_back(animsrc);
+        bindNativeReactionRoot(animsrc->mKeyframes->mControllerSequences);
 
         mSupportedDirections.clear();
         for (const std::string& group : mAnimSources.back()->getTextKeys().getGroups())
@@ -894,6 +895,56 @@ namespace MWRender
         return animsrc;
     }
 
+    void Animation::bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
+    {
+        if (!mObjectRoot || mNativeReactionRootRecord)
+            return;
+        if (!mNativeReactionPaletteInitialized)
+        {
+            struct NativePalette : osg::NodeVisitor
+            {
+                std::unordered_map<std::string, std::uint32_t> mRecords;
+                std::string mModelRootName;
+                bool mFoundModelRoot = false;
+                NativePalette() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+                {
+                    setNodeMaskOverride(~0u);
+                }
+                void apply(osg::Node& node) override
+                {
+                    std::uint32_t record;
+                    if (node.getUserValue("recordIndex", record))
+                    {
+                        if (!mFoundModelRoot)
+                        {
+                            mModelRootName = node.getName();
+                            mFoundModelRoot = true;
+                        }
+                        // Serialized empty names become null pointers in the original
+                        // loader. Renderer wrappers have no native record identity.
+                        if (!node.getName().empty())
+                            mRecords.insert_or_assign(node.getName(), record);
+                    }
+                    traverse(node);
+                }
+            } palette;
+            mObjectRoot->accept(palette);
+            mNativeReactionNodeRecords.swap(palette.mRecords);
+            mNativeReactionModelRootName.swap(palette.mModelRootName);
+            mNativeReactionPaletteInitialized = true;
+        }
+        if (sequences.empty() || mNativeReactionFirstSequenceLoaded)
+            return;
+        // Native manager query471600 returns the first nonnull sequence's root,
+        // even when that root is null. It does not search subsequent sequences.
+        const auto& authoredName = sequences.front().mAccumRootName;
+        const auto& name = authoredName.empty() ? mNativeReactionModelRootName : authoredName;
+        const auto found = mNativeReactionNodeRecords.find(name);
+        if (found != mNativeReactionNodeRecords.end())
+            mNativeReactionRootRecord = found->second;
+        mNativeReactionFirstSequenceLoaded = true;
+    }
+
     void Animation::clearAnimSources()
     {
         mStates.clear();
@@ -909,6 +960,7 @@ namespace MWRender
         mReportedLazyAnimations.clear();
         mSupportedDirections.clear();
         mAnimSources.clear();
+        mNativeReactionFirstSequenceLoaded = false;
 
         mAnimVelocities.clear();
     }
@@ -2003,6 +2055,11 @@ namespace MWRender
 
     void Animation::setObjectRoot(const std::string& model, bool forceskeleton, bool baseonly, bool isCreature)
     {
+        mNativeReactionNodeRecords.clear();
+        mNativeReactionModelRootName.clear();
+        mNativeReactionRootRecord.reset();
+        mNativeReactionPaletteInitialized = false;
+        mNativeReactionFirstSequenceLoaded = false;
         mPhysicalPose.reset();
         mPhysicalAnimatedLocal.reset();
         mPhysicalAnimatedTargets = false;
@@ -2096,6 +2153,8 @@ namespace MWRender
             mObjectRoot = skel;
             mInsert->addChild(mObjectRoot);
         }
+
+        bindNativeReactionRoot({});
 
         // osgAnimation formats with skeletons should have their nodemap be bone instances
         // FIXME: better way to detect osgAnimation here instead of relying on extension?
@@ -2461,6 +2520,11 @@ namespace MWRender
 
     void Animation::removeFromSceneImpl()
     {
+        mNativeReactionNodeRecords.clear();
+        mNativeReactionModelRootName.clear();
+        mNativeReactionRootRecord.reset();
+        mNativeReactionPaletteInitialized = false;
+        mNativeReactionFirstSequenceLoaded = false;
         mPhysicalPose.reset();
         mPhysicalAnimatedLocal.reset();
         mPhysicalAnimatedTargets = false;

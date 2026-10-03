@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <osgUtil/UpdateVisitor>
+#include <array>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
@@ -90,6 +91,8 @@ namespace
             resetActiveGroups();
         }
         void rebuildControllers() { resetActiveGroups(); }
+        void bindRoots(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
+        { bindNativeReactionRoot(sequences); }
     private:
         void addControllers() override
         {
@@ -134,6 +137,90 @@ namespace
         }
         void traverse() { mRoot->accept(mVisitor); }
     };
+
+
+    TEST_F(PhysicalPoseAnimationTest, NativeReactionRootUsesLastExactNamedRecordIncludingHiddenNonBoneNodes)
+    {
+        osg::ref_ptr<osg::Group> duplicate = new osg::Group;
+        duplicate->setName("Pelvis");
+        duplicate->setUserValue("recordIndex", 21u);
+        duplicate->setNodeMask(0);
+        mRoot->addChild(duplicate);
+        osg::ref_ptr<osg::Group> otherCase = new osg::Group;
+        otherCase->setName("pelvis");
+        otherCase->setUserValue("recordIndex", 22u);
+        mRoot->addChild(otherCase);
+        osg::ref_ptr<osg::Group> otherSpace = new osg::Group;
+        otherSpace->setName("Pelvis ");
+        otherSpace->setUserValue("recordIndex", 23u);
+        mRoot->addChild(otherSpace);
+        osg::ref_ptr<osg::Group> wrapper = new osg::Group;
+        wrapper->setName("Pelvis"); // Renderer wrapper has no native record identity.
+        mRoot->addChild(wrapper);
+        SceneUtil::ControllerSequenceMetadata sequence;
+        sequence.mAccumRootName = "Pelvis";
+        mAnimation->bindRoots(std::span(&sequence, 1));
+        ASSERT_TRUE(mAnimation->getNativeReactionRootRecord());
+        EXPECT_EQ(*mAnimation->getNativeReactionRootRecord(), 21u);
+        EXPECT_EQ(mBone->getName(), "Pelvis");
+        EXPECT_EQ(duplicate->getNodeMask(), 0u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeReactionRootMissingFirstSequenceDoesNotUseLaterSequence)
+    {
+        std::array<SceneUtil::ControllerSequenceMetadata, 2> sequences;
+        sequences[0].mAccumRootName = "Missing";
+        sequences[1].mAccumRootName = "Pelvis";
+        mAnimation->bindRoots(sequences);
+        EXPECT_FALSE(mAnimation->getNativeReactionRootRecord());
+        mAnimation->bindRoots(std::span(&sequences[1], 1));
+        EXPECT_FALSE(mAnimation->getNativeReactionRootRecord());
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeReactionRootEmptySequenceSetDoesNotConsumeFirstSlot)
+    {
+        mAnimation->bindRoots({});
+        EXPECT_FALSE(mAnimation->getNativeReactionRootRecord());
+        osg::ref_ptr<osg::Group> attachedPart = new osg::Group;
+        attachedPart->setName("Pelvis");
+        attachedPart->setUserValue("recordIndex", 39u);
+        mRoot->addChild(attachedPart); // Added after native model palette construction.
+        SceneUtil::ControllerSequenceMetadata sequence;
+        sequence.mAccumRootName = "Pelvis";
+        mAnimation->bindRoots(std::span(&sequence, 1));
+        EXPECT_EQ(mAnimation->getNativeReactionRootRecord(), 8u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeReactionRootAbsentAuthoredNameUsesModelRecordName)
+    {
+        mRoot->setName("RendererWrapper");
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        model->setName("ModelRoot");
+        model->setUserValue("recordIndex", 0u);
+        mRoot->removeChild(mBone);
+        model->addChild(mBone);
+        mRoot->addChild(model);
+        SceneUtil::ControllerSequenceMetadata sequence;
+        mAnimation->bindRoots(std::span(&sequence, 1));
+        EXPECT_EQ(mAnimation->getNativeReactionRootRecord(), 0u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeReactionRootRetainsSelectionAndSceneRemovalReleasesIt)
+    {
+        SceneUtil::ControllerSequenceMetadata sequence;
+        sequence.mAccumRootName = "Pelvis";
+        mAnimation->bindRoots(std::span(&sequence, 1));
+        EXPECT_EQ(mAnimation->getNativeReactionRootRecord(), 8u);
+        mBone->setName("Changed");
+        osg::ref_ptr<osg::Group> replacement = new osg::Group;
+        replacement->setName("Pelvis");
+        replacement->setUserValue("recordIndex", 29u);
+        mRoot->addChild(replacement);
+        mAnimation->bindRoots(std::span(&sequence, 1));
+        EXPECT_EQ(mAnimation->getNativeReactionRootRecord(), 8u);
+        mAnimation->removeFromScene();
+        EXPECT_FALSE(mAnimation->getNativeReactionRootRecord());
+    }
 
     TEST_F(PhysicalPoseAnimationTest, PhysicalOwnershipDetachesResidentAncestorKeyframesAndRestoresThem)
     {

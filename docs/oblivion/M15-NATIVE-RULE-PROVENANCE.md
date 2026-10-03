@@ -8346,3 +8346,70 @@ No stage closes. Next: bind this authored root into renderer lifecycle using
 verified native palette/sequence ordering, then actual World controller/save
 ownership. Actor scale, keyframed stepping, native clock/mode/flag persistence,
 stock-floor fresh-restart and normal-gameplay acceptance remain open.
+
+
+### Checkpoint175: bind the native reaction root into Animation model lifecycle
+
+Checkpoint174 committed as `a880e81a4f0456225b6dd681c0353a687ec24be6`,
+171 isolated commits with exact-byte/fresh-clone proof. Animation caches an
+exact-name native record palette from the model before equipment attachment.
+Recordless renderer wrappers and serialized empty names do not enter that
+palette. Traversal ignores OSG masks, follows scene depth-first order, and the
+last equal name replaces earlier entries. Shared movement/bone name maps are
+unchanged. KF publication binds the first loaded sequence's authored root;
+an absent authored name uses the native model record's name, not the wrapper's.
+A missing first sequence root remains absent rather than searching later
+sequences. A selected nonnull record is retained across later sources and
+clear/reload; actual model rebuild and scene removal release palette/selection.
+The optional getNativeReactionRootRecord projection is ready for the native
+World owner; it does not create physical bodies or another lifecycle authority.
+
+Five new renderer cases cover duplicate/nonbone/hidden records and case/space
+matching; missing first roots with later sequences; empty sequence batches and
+parts attached after palette preparation; absent authored-name model fallback;
+and retained identity/scene release. Renderer-root-baseline01 retains four
+failures and one passing negative case against unimplemented adapters. The
+empty-batch final fixture additionally proves late attached record39 cannot
+replace original record8. Full renderer-root normal/sanitized01 each pass892
+engine cases, complete inventories, zero failures/skips, rebuilding openmw and
+esmtool. Tested fingerprint `870bf89db04554cb266108f527cbc661cfad67619f9e4fbfc49fb00d35c7ad7d`. ASan leaks disabled, UBSan halts.
+Component/Python sources unchanged and not rerun; checkpoint174's2,226-component
+normal/sanitized results are explicitly previous-revision evidence.
+
+Original palette-population-oracle01 executes1,024 cases/5,120 lookups in both
+precision words: full716690 clear/populate, recursive7165B0, real NiNode casts,
+6C5460/412D30 insertion, preseeded original pool allocation and copied-key
+storage, plus full6C5430 lookup. Only Windows critical sections/thread identity
+and heap allocation/free boundaries are supplied. Duplicate names are replaced
+in last depth-first order; exact case, whitespace and nonnull empty names are
+checked. Source/corpus SHA256 `6ff61418c64a15bd3b7a84f54b3fb73cbe83df405ed55d189576e07274ee5938`, `84498b8628a917decae7f817ba9f1f0361bd0df9d9619f8b47e39331580729d7`.
+Fallback-oracle01 executes22 actual6C5793 registration prefixes, including full
+49F4D0 name copy/CRT984B6A, and zero-length71364F reader-publication branches.
+Missing sequence name copies model target name; an existing name is retained;
+a serialized zero-length name publishes null. Heap allocation/free only is
+supplied; stream reads and full registration/binding are excluded. Source/corpus
+SHA256 `b9f9dc1cc38a7b19dbff7f381541fc0734cd10cb5a2124f82ce8d8a0588fda1b`, `622788846b7b1ecc19f21230fb6016a12b23232dd4e7633e16f7ee34ecbfdb62`. Executable identity remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+Renderer-palette-compare normal/sanitized02 each compare512 original canonical
+27F layouts and2,048 nonempty exact-name root queries with production Animation,
+without tolerances, including hidden OSG nodes and recordless wrappers. Original
+37F duplicate layouts remain in the corpus; nonnull runtime empty-name queries
+are predeclared outside the serialized NIF empty-name/null domain and excluded.
+Normal01 already passed the same checks but its inherited helper summary
+incorrectly printed unused selected_root_record3; its verification.json counts
+are correct. Corrected02 preserves that evidence and reports cases/check counts.
+No production input, expectation or tolerance changed.
+
+Stock-renderer-root normal/sanitized01 exercise actual setObjectRoot with
+ResourceSystem/VFS loading the pinned skeleton, then actual addSingleAnimSource
+for its idle KF. Both select native record3, retain it despite a duplicate-named
+part attached before KF loading, preserve it across clear/reload, release/rebind
+on actual model rebuild, and release on scene removal. Source/library/hash guards
+pass. Stock NIF/KF hashes remain those recorded in checkpoint174. This uses an
+empty actor pointer and normal animation settings; it is model/KF renderer
+lifecycle evidence, not native actor admission, World.init, physics or gameplay.
+
+No stage closes. Next: actual World physical lifecycle/controller ownership,
+actor/race scale admission, native keyframed stepping, clock/mode/flag save
+projection and unchanged stock-floor fresh-restart/normal-gameplay gates.
