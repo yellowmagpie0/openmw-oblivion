@@ -16503,3 +16503,72 @@ No stage closes. Next: realize native force application and own velocity-control
 creation/attachment/update/removal together with selected blend curves; then join
 actual World reaction callers and persistence. Clock/traversal production, initial
 NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
+
+
+### Checkpoint205: native immediate force stores and atomic physical owner batch
+
+Checkpoint204 committed as `517a66df114496f535ee28339bec6c543a26e9b2`,
+201 isolated commits with exact-byte/fresh-clone proof. Bundle182 SHA256
+`9aecfa308a4d42ed6227b35fd358839617f3253b6909da1781f8e30f12a00721`.
+Native inverse-mass preparation models89DA50/89DAC0: zero/signedzero store+0;
+finite positive mass stores the native reciprocal; unsupported negatives,
+nonfinite or overflowing inverse results reject. Native dynamic linear force
+stores frame*force, inverseMass*that product, then current+delta separately as
+binary32, matching8EAC80 SSE. It does not combine products, accumulate a Bullet
+force, integrate pose, damp/cap or change angular velocity.
+
+ActorRagdollPhysics::applyNativeForces stages a complete sparse identity batch.
+Dynamic bodies resolve the reciprocal from their owned original dynamic mass,
+convert live linear velocity to native units, prepare all force results, and
+convert world lengths once. Keyframed bodies preserve velocity and ignore unused
+force/time as the native virtual no-op does. Unknown/duplicate bodies or late
+malformed/overflowing dynamic requests reject before any velocity/wake change.
+Only after the whole batch validates are owned constraint-connected groups woken
+and dynamic linear velocities published. Pose, angular state, modes, body/shape/
+constraint identity, accumulated Bullet forces and unselected velocities remain
+unchanged. Unconnected sleeping bodies remain asleep; connected peers wake
+without gaining the selected body's force. Native contact-island activation
+beyond these owned constraint groups is not established or claimed.
+
+Independent complete original5377B0 executes8A6410 and actual dynamic/keyframed
+motion virtual+6C8EAC80/8EA060 in1,600 cases with no boundary stubs. body+91=1
+explicitly skips unresolved activation; both x87 controls and default MXCSR,
+zero/signedzero, five frames, five inverse masses, four force/velocity fixtures.
+All other motion bytes including angular velocity remain unchanged. Executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, force source `8e14db8cf3c5578f8080d9a145adea9bb9a446aef04427142da40e7f78f87bc5`,
+force corpus `ff7db56cc44697d77f7ea3f0cf4968642e42d41643117701a1cfeda933db447e`. Independent complete89DA50 plus actual
+virtual89DAC0 stores inverse mass in4,056 cases: audited18 stock masses and
+adjacent values, zero/signedzero, normal/extreme positives and2,000 deterministic
+bit patterns, both x87 controls. Mass source `f7cd507bcfbc030bda4ff7b8d18c1bd79908fb5612c0c8de24e252b0055bde3b`, corpus
+`41cc2a628f0a2a5b5fbb3d2607ec2a669cd7b7006eefac1bf5ec76ca8998fccb`. Explicit native motion fixtures; these are not full
+body-factory/inertia/contact/World acceptance.
+
+Final normal/sanitized comparators each match all5,656 mass/force cases and16,376
+fields exactly.1,440 force cases additionally execute actual ActorRagdollPhysics
+with native length conversion, verifying XYZ velocity and preserving pose,
+angular state/modes, plus zero collision objects between owners. Dynamic inverse0
+has no admitted positive-mass graph and remains pure-only; keyframed inverse0
+uses an unused positive graph mass because the actual native force branch is a
+no-op. Five independent original paired/observed negative controls distinguish
+keyframed dispatch, frame/inverse mass, absent force and use of mass as reciprocal.
+No production output generates original expectations.
+
+All five initial tests fail the placeholders. Six final regression tests cover
+native reciprocal/force stores, malformed input and arithmetic overflow, real
+scaled-body immediate velocity with preserved pose/angular/Bullet force/shape,
+unclamped force before the later world velocity cap, keyframed ignored inputs
+and restored dynamic response, late batch rollback before wake/publication,
+connected peer wake and separate unconnected sleeping-body preservation. Final
+normal/sanitized01 each pass all2,335 component and899 engine tests, exact full
+inventories without failure/skip; fingerprint `fc3992a5e9a86d80fb2d8fa723c56a5a3497ab4d8feecb03fd48e48f79eed623`. ASan leak checks disabled;
+UBSan halts. Rebuilt openmw/openmw-tests/esmtool. Python is unchanged and was not
+repeated. Sanitizer compiler notes reduced debug variable tracking for the large
+public fixture; no compiler warning/error or runtime sanitizer finding.
+
+No stage closes. The physical force boundary now exists for owned velocity
+controllers. Public force forwarding, velocity-controller creation/attachment/
+update/removal, atomic joined controller/frame publication, actual World reaction
+callers and complete persistence remain open. Actual clock/traversal producers,
+initial NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
+Next: independently execute velocity creation/attachment and source-vector
+preparation, own its lifetime and join it to admitted blend/force/frame state.

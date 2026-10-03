@@ -2819,3 +2819,116 @@ namespace
         EXPECT_EQ(actor.captureNativeBlendControllers()[1].mState.mSetupState, 2u);
     }
 }
+
+namespace
+{
+    TEST(RagdollNativeForce, StoresInverseMassAndSeparateForceProducts)
+    {
+        EXPECT_FLOAT_EQ(NifBullet::ragdollNativeInverseMass(2.f), .5f);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(NifBullet::ragdollNativeInverseMass(-0.f)), 0u);
+        const auto result = NifBullet::ragdollNativeLinearVelocityAfterForce({1.f, -2.f, 3.f, 0.f},
+            .5f, .25f, {2.f, -3.f, 4.f, 0.f});
+        EXPECT_EQ(result, (std::array<float, 4>{1.25f, -2.375f, 3.5f, 0.f}));
+    }
+
+    TEST(RagdollNativeForce, RejectsInvalidUsedInputsAndArithmeticOverflow)
+    {
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const float max = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeInverseMass(-1.f), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeInverseMass(bad), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeInverseMass(std::numeric_limits<float>::denorm_min()), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({bad, 0, 0, 0}, 1, 1, {}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({}, bad, 1, {}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({}, -1, 1, {}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({}, 1, -1, {}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({}, 1, 1, {bad, 0, 0, 0}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({}, 1, 2, {max, 0, 0, 0}), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterForce({max, 0, 0, 0}, 1, 1, {max, 0, 0, 0}), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeForcesPublishImmediateScaledVelocityWithoutChangingOtherState)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        auto state = actor.capture();
+        state[0].mLinearVelocity = {2, -4, 6};
+        state[0].mAngularVelocity = {1, 2, 3};
+        actor.restore(state);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->applyCentralForce({7, 8, 9});
+        const auto shape = body->getCollisionShape();
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> requests{{{12, {2, -3, 4}, .25f}}};
+        actor.applyNativeForces(requests);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(2.5, -4.75, 7));
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, state[0].mAngularVelocity);
+        EXPECT_EQ(actor.capture()[0].mPose, state[0].mPose);
+        EXPECT_EQ(body->getTotalForce(), btVector3(7, 8, 9));
+        EXPECT_EQ(body->getCollisionShape(), shape);
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> uncapped{{{12, {1000, 0, 0}, 1.f}}};
+        actor.applyNativeForces(uncapped);
+        EXPECT_GT(actor.capture()[0].mLinearVelocity.x(), 500);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeForcesIgnoreKeyframedInputsThenRestoreDynamicForceResponse)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        const auto initial = actor.capture()[0];
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> unused{{{12, {bad, bad, bad}, bad}}};
+        EXPECT_NO_THROW(actor.applyNativeForces(unused));
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, initial.mLinearVelocity);
+        EXPECT_EQ(actor.capture()[0].mPose, initial.mPose);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(dynamic);
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> requests{{{12, {2, 0, 0}, 1.f}}};
+        actor.applyNativeForces(requests);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(1, 0, 0));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeForceBatchRollsBackLateFailureAndWakesOnlyConnectedGroups)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING); second->setActivationState(ISLAND_SLEEPING);
+        const auto before = actor.capture();
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        for (const auto& requests : std::array<std::array<NifBullet::RagdollNativeForceRequest, 2>, 3>{{
+                 {{{12, {2, 0, 0}, 1.f}, {24, {bad, 0, 0}, 1.f}}},
+                 {{{12, {2, 0, 0}, 1.f}, {12, {}, 1.f}}},
+                 {{{12, {2, 0, 0}, 1.f}, {999, {}, 1.f}}}}})
+        {
+            EXPECT_THROW(actor.applyNativeForces(requests), std::invalid_argument);
+            EXPECT_EQ(actor.capture()[0].mLinearVelocity, before[0].mLinearVelocity);
+            EXPECT_FALSE(first->isActive()); EXPECT_FALSE(second->isActive());
+        }
+        actor.applyNativeForces({});
+        EXPECT_FALSE(first->isActive()); EXPECT_FALSE(second->isActive());
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> valid{{{12, {2, 0, 0}, 1.f}}};
+        actor.applyNativeForces(valid);
+        EXPECT_TRUE(first->isActive()); EXPECT_TRUE(second->isActive());
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(1, 0, 0));
+        EXPECT_EQ(actor.capture()[1].mLinearVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(mWorld.getNumConstraints(), 1);
+    }
+}
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, NativeForceDoesNotWakeUnconnectedBody)
+    {
+        addHinge(); mGraph.mJoints.clear();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING); second->setActivationState(ISLAND_SLEEPING);
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> requests{{{12, {2, 0, 0}, 1.f}}};
+        actor.applyNativeForces(requests);
+        EXPECT_TRUE(first->isActive()); EXPECT_FALSE(second->isActive());
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(1, 0, 0));
+        EXPECT_EQ(actor.capture()[1].mLinearVelocity, btVector3(0, 0, 0));
+    }
+}

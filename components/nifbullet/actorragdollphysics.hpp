@@ -132,6 +132,13 @@ namespace NifBullet
         float mVelocityGain;
     };
 
+    struct RagdollNativeForceRequest
+    {
+        std::uint32_t mRecord;
+        osg::Vec3f mForce;
+        float mFrameSeconds;
+    };
+
     struct RagdollNativeBlendUpdate
     {
         std::uint32_t mRecord;
@@ -251,6 +258,11 @@ namespace NifBullet
             float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
+        // Immediate native linear force updates, staged as a complete sparse
+        // batch. Resolve inverse mass from owned dynamic mass; keyframed motion
+        // ignores unused force/time. Wake owned constraint-connected groups
+        // only after validation. No Bullet force accumulation or World step.
+        void applyNativeForces(std::span<const RagdollNativeForceRequest> requests);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.

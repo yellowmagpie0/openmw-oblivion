@@ -9,6 +9,16 @@ namespace NifBullet
 {
     inline constexpr float RagdollNativeDefaultGravityZ = -73.57500457763672f;
 
+    // Original89DA50/89DAC0 dynamic mass setter, including zero's inverse0.
+    // This is the scalar store, not a body/inertia factory or mass projection.
+    float ragdollNativeInverseMass(float mass);
+
+    // Original dynamic motion virtual+6C8EAC80: three separate SSE stores
+    // (frame*force, inverseMass*product, current+delta). Native units; no
+    // damping/cap, activation, body publication or keyframed dispatch.
+    std::array<float, 4> ragdollNativeLinearVelocityAfterForce(const std::array<float, 4>& current,
+        float inverseMass, float frameSeconds, const std::array<float, 4>& force);
+
     // Original world+190 gravity delta, before the motion damping/cap stores.
     osg::Vec3f ragdollNativeGravityDelta(const osg::Vec3f& gravity, float frameSeconds);
 

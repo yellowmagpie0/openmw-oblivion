@@ -43,6 +43,35 @@ namespace NifBullet
         }
     }
 
+    float ragdollNativeInverseMass(float mass)
+    {
+        coefficient(mass);
+        if (mass == 0.f)
+            return 0.f;
+        const float result = float(1.0 / double(mass));
+        coefficient(result);
+        return result;
+    }
+
+    std::array<float, 4> ragdollNativeLinearVelocityAfterForce(const std::array<float, 4>& current,
+        float inverseMass, float frameSeconds, const std::array<float, 4>& force)
+    {
+        coefficient(inverseMass);
+        coefficient(frameSeconds);
+        std::array<float, 4> result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+        {
+            if (!std::isfinite(current[i]) || !std::isfinite(force[i]))
+                throw std::invalid_argument("nonfinite native linear force input");
+            const float frameForce = frameSeconds * force[i];
+            const float delta = inverseMass * frameForce;
+            result[i] = current[i] + delta;
+            if (!std::isfinite(frameForce) || !std::isfinite(delta) || !std::isfinite(result[i]))
+                throw std::invalid_argument("native linear force overflow");
+        }
+        return result;
+    }
+
     osg::Vec3f ragdollNativeGravityDelta(const osg::Vec3f& gravity, float frameSeconds)
     {
         finite(gravity);

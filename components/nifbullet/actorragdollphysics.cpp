@@ -1489,6 +1489,47 @@ namespace NifBullet
             preparedFrameSeconds, rawUpdateSelector, nativeGravityZ, publishScene);
     }
 
+    void ActorRagdollPhysics::applyNativeForces(std::span<const RagdollNativeForceRequest> requests)
+    {
+        struct Pending
+        {
+            Impl::Body* mOwned;
+            btVector3 mLinear;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(requests.size());
+        std::unordered_set<std::uint32_t> records;
+        for (const auto& request : requests)
+        {
+            require(records.insert(request.mRecord).second, "duplicate native force body");
+            const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == request.mRecord; });
+            require(owned != mImpl->mBodies.end(), "unknown native force body");
+            auto linear = owned->mBody->getLinearVelocity();
+            if (owned->mMotion == RagdollNativeMotion::Dynamic)
+            {
+                std::array<float, 4> current{}, force{};
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    current[axis] = float(linear[axis] / mImpl->mLengthScale);
+                    force[axis] = request.mForce[axis];
+                }
+                const auto output = ragdollNativeLinearVelocityAfterForce(current,
+                    ragdollNativeInverseMass(float(owned->mDynamicMass)), request.mFrameSeconds, force);
+                for (unsigned axis = 0; axis < 3; ++axis)
+                    linear[axis] = btScalar(output[axis]) * mImpl->mLengthScale;
+                require(finite(linear), "native force exceeds world velocity domain");
+            }
+            pending.push_back({&*owned, linear});
+        }
+        for (const auto& next : pending)
+        {
+            mImpl->activateGroup(next.mOwned->mActivationGroup);
+            if (next.mOwned->mMotion == RagdollNativeMotion::Dynamic)
+                next.mOwned->mBody->setLinearVelocity(next.mLinear);
+        }
+    }
+
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)
     {
         require(body < mImpl->mBodies.size() && finite(impulse) && finite(worldPoint), "invalid impulse");
