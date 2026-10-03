@@ -42,6 +42,20 @@ namespace NifBullet
     // Native motion origin/XYZW quaternion returned through bhk scene adapters.
     // Output uses world lengths; input quaternion must already be unit length.
     osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose);
+    // Original mixed renderer uses8B1DD0 instead of ordinary47C600 stores.
+    osg::Matrixf ragdollBoneWorldFromNativeBlendPose(const RagdollNativeTargetPose& pose);
+
+    struct RagdollNativeBlendPoseTargets
+    {
+        RagdollNativeTargetPose mDriveTarget;
+        osg::Matrixf mSceneTarget;
+    };
+
+    // For an already selected PoseAndVelocity route. Drive target is mixed;
+    // scene position uses the animated target unless flag0x100 selects mixed.
+    // Both targets are prepared before any caller-owned scene/body publication.
+    RagdollNativeBlendPoseTargets ragdollNativeBlendPoseTargets(const RagdollNativeTargetPose& physical,
+        const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags);
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
         std::span<const RagdollBoneWorldPose> bones);
 

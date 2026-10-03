@@ -8079,3 +8079,72 @@ actual8B1DD0 store sequence, compare the coupled renderer/velocity pipeline,
 and integrate the actual controller/mode transitions. Root selection, actor
 scaling, cross-owner contact islands, keyframed substeps, mode/clock persistence,
 World/gameplay and stock-floor fresh-restart acceptance remain open.
+
+
+### Checkpoint171: flag-specific mixed renderer and coupled native update
+
+Checkpoint170 committed as `5a2f04bf7f8349a281a78811174ff88cdc8687e2`,
+167 isolated commits with exact-byte/fresh-clone proof. The new
+ragdollBoneWorldFromNativeBlendPose follows original8B1DD0: six XYZ products
+and WX are stored as floats; WY/WZ stay at53-bit precision until final matrix
+stores. Both it and ordinary47C600 subtract summed diagonal products. A new
+near-cancellation fixture independently exposes the former ordinary adapter's
+left-associated subtraction: original27F returns bits3019898880 while the
+old expression returns3019898881. Shared admission still requires finite,
+near-unit quaternion and representable world position; no normalization is
+inserted. This correction applies to the existing ordinary renderer adapter.
+
+For an already selected PoseAndVelocity route, ragdollNativeBlendPoseTargets
+prepares both the blended velocity-drive target and scene target. Scene rotation
+uses the mixed quaternion; scene position uses raw animated native position
+unless flag0x100 selects the mixed position. The drive target stays mixed in
+both cases. Dispatch still owns route selection; neither helper writes bodies
+or renderer nodes. Whole preparation rejects before returning either result.
+
+Four new component cases cover original ordinary cancellation, distinct mixed
+matrix stores, four independent flag/gain/animated-pose examples, and invalid
+pose/gain/unrepresentable position rejection. Baseline01 retains three failed
+cases and one already passing validation case. Full mixed-renderer-
+{normal,sanitized}-01 each passes2,221 component and878 engine cases, complete
+inventories, zero failures/skips and stable fingerprint `af0b740844c436b3dbfad7b3514178d1bbd71f28d3de5d34fc8dd193b9fb577a`.
+ASan leak checks disabled; UBSan halts. Python is unchanged and not rerun.
+
+Executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Full original47C600/8B1DD0
+oracle executes6,556 cases:1,639 distinct near-unit quaternions, both matrix
+paths and both precision words. Quaternion inputs include captured mixed
+updates, signed-zero/axis fixtures and33 tiny-axis diagonal-cancellation cases.
+Original mixed matrix padding stores are also checked. There are no replaced
+game functions or Windows imports in this matrix oracle. Source/corpus SHA256
+`84a1bfa458fbbba8a634448fb0e08ce0fa1e1b0c9d6a5e5b02b6cc9c6c390428`, `b5d39945358c6a728adfd334dc2c0dace0cb083f12792be90058baf8ef4d6743`.
+
+Before C++ execution, each comparison declares exact-bit53-bit27F arithmetic,
+linked to the independent original CRT startup proof in checkpoint169. Both
+mixed-renderer-compare builds match all3,278 canonical matrix cases/29,502
+fields. Both also match9,600 complete original88F3D0 mixed updates/624,000 fields:
+raw animated preparation, blended drive, desired scene, actual local/world
+writer, prepared target velocities and final velocity mixing. Original fixtures
+use unchanged requested Dynamic mode1, native sphere-motion2, gains
+-.25/.25/.5/1.25, velocity gains0/.5/1, flags8/108, forced/threshold publication
+and no World. Only Windows lock/thread imports are stubbed by that full-update
+oracle. Native64-bit37F outputs remain diagnostic corpus data, outside the
+predeclared C++ domain; live main/worker precision remains open. No tolerances
+were introduced for these exact-bit comparisons. Comparator/driver SHA256
+`c14895bf174fd342af3c37d28e60e22b3d4f0a8cb704eb7c14e3a3439e1c4d54`, `4def3d357227c8146cc9c6f5892407ba447437bb208e46a1747eb5bbd538c752`.
+
+Mixed-renderer-stock-animated-{normal,sanitized}-01 each runs240 frames using
+actual18-body/17-joint stock skeleton and embedded73-track idle animation.
+It compares69,120 target matrix fields exactly with an independent ordinary
+Animation instance, including controller rebuild and post-physical handoff.
+Captured actual Bullet body poses and sampled animated targets feed the new
+mixed preparation with explicitly synthetic hierarchy gain.25 and flags8.
+Physical renderer and skin projections stay within unchanged.001 tolerance;
+maximum error `4.57764e-05` in each build. This is a
+coupled Animation/Bullet projection probe, not a native actor controller or
+World lifecycle/save/gameplay acceptance. Asset hashes remain those recorded
+in checkpoint169; the probe does not issue velocity drives or claim native
+frame integration.
+
+No stage closes. Next: publish controller mode transitions and route sequencing
+through the physics owner and actual World lifecycle. Root selection, actor
+scaling, cross-owner contact islands, keyframed substeps, mode/clock persistence,
+World/gameplay and stock-floor fresh-restart acceptance remain open.

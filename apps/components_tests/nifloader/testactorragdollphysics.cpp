@@ -1595,3 +1595,100 @@ namespace
         EXPECT_NO_THROW(NifBullet::ragdollNativeBlendSceneTargetPose(matrix));
     }
 }
+
+
+namespace
+{
+    TEST(RagdollNativeMixedRenderer, OrdinaryReturnSumsDiagonalsBeforeSubtraction)
+    {
+        const std::array<uint32_t, 4> quaternion{0u, 864090906u, 1060439284u, 1060439282u};
+        const std::array<uint32_t, 9> expected{3019898880u, 3212836863u, 867592206u, 1065353215u, 3019898880u, 867592208u, 3015075854u, 867592208u, 1065353216u};
+        NifBullet::RagdollNativeTargetPose input{{0, 0, 0}, {}};
+        for (unsigned axis = 0; axis < 4; ++axis)
+            input.mRotation[axis] = std::bit_cast<float>(quaternion[axis]);
+        const auto actual = NifBullet::ragdollBoneWorldFromNativePose(input);
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual(col, row)), expected[row * 3 + col]);
+    }
+
+    TEST(RagdollNativeMixedRenderer, KeepsUnstoredWYAndWZProducts)
+    {
+        const std::array<uint32_t, 4> quaternion{3144308502u, 3154936512u, 3143845009u, 1065352391u};
+        const std::array<uint32_t, 9> expected{1065350345u, 1004880946u, 3163311353u, 3152101175u, 1065352383u, 1005340441u, 1015854334u, 3152568621u, 1065350319u};
+        NifBullet::RagdollNativeTargetPose input{{7, -14, 21}, {}};
+        for (unsigned axis = 0; axis < 4; ++axis)
+            input.mRotation[axis] = std::bit_cast<float>(quaternion[axis]);
+        const auto actual = NifBullet::ragdollBoneWorldFromNativeBlendPose(input);
+        const auto ordinary = NifBullet::ragdollBoneWorldFromNativePose(input);
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual(col, row)), expected[row * 3 + col]);
+        EXPECT_NE(actual, ordinary);
+        EXPECT_FLOAT_EQ(actual(3, 0), 48.993282318115234f);
+        EXPECT_FLOAT_EQ(actual(3, 1), -97.98656463623047f);
+        EXPECT_FLOAT_EQ(actual(3, 2), 146.97984313964844f);
+    }
+
+    TEST(RagdollNativeMixedRenderer, SelectsNativeAnimatedOrMixedPositionAndKeepsDriveTarget)
+    {
+        struct Example
+        {
+            std::array<uint32_t, 7> mPhysical;
+            std::array<uint32_t, 12> mAnimated;
+            float mGain;
+            uint16_t mFlags;
+            std::array<uint32_t, 7> mDrive;
+            std::array<uint32_t, 12> mScene;
+        };
+        const std::array<Example, 4> examples{{
+            {{0u, 2147483648u, 0u, 0u, 0u, 0u, 1065353216u}, {1065307251u, 3168475669u, 1032666985u, 1022046214u, 1065339889u, 3168954819u, 3180044065u, 1022493549u, 1065306842u, 3305571379u, 1168841500u, 3305231177u}, 0.25f, 8u, {3264893788u, 1128502159u, 3264504932u, 996830902u, 1007456490u, 996367226u, 1065352390u}, {1065350342u, 3152106935u, 1015857969u, 1004886913u, 1065352383u, 3152574567u, 3163314967u, 1005346589u, 1065350317u, 3305571379u, 1168841499u, 3305231177u}},
+            {{0u, 2147483648u, 0u, 0u, 0u, 0u, 1065353216u}, {1065307251u, 3168475669u, 1032666985u, 1022046214u, 1065339889u, 3168954819u, 3180044065u, 1022493549u, 1065306842u, 3305571379u, 1168841500u, 3305231177u}, 0.25f, 264u, {3264893788u, 1128502159u, 3264504932u, 996830902u, 1007456490u, 996367226u, 1065352390u}, {1065350342u, 3152106935u, 1015857969u, 1004886913u, 1065352383u, 3152574567u, 3163314967u, 1005346589u, 1065350317u, 3288794163u, 1152064283u, 3288453961u}},
+            {{1140745618u, 1142487993u, 3236170880u, 3194691138u, 1030992394u, 3196589820u, 1064252517u}, {3209445616u, 3206162134u, 3169483181u, 3190401618u, 1043435083u, 1064863572u, 3205784028u, 1061650863u, 3195262112u, 3321068162u, 1151696612u, 3315197105u}, -0.25f, 8u, {1147441828u, 1144219656u, 1126628986u, 3188158504u, 3193196672u, 3203450622u, 1062795766u}, {1056015598u, 1062870382u, 3194520584u, 3208513680u, 1057345589u, 1054253856u, 1056154737u, 3169790456u, 1063323747u, 3321068161u, 1151696611u, 3315197105u}},
+            {{1140745618u, 1142487993u, 3236170880u, 3194691138u, 1030992394u, 3196589820u, 1064252517u}, {3209445616u, 3206162134u, 3169483181u, 3190401618u, 1043435083u, 1064863572u, 3205784028u, 1061650863u, 3195262112u, 3321068162u, 1151696612u, 3315197105u}, 1.25f, 264u, {3300775486u, 1118237032u, 3294326447u, 3190728606u, 1060413149u, 1059828387u, 3189521375u}, {3211079640u, 3172174291u, 3202572003u, 3202614081u, 1026337567u, 1063581038u, 3160217916u, 1065327406u, 3176942017u, 3324384674u, 1142033946u, 3317692956u}},
+        }};
+        for (const auto& example : examples)
+        {
+            NifBullet::RagdollNativeTargetPose physical;
+            for (unsigned axis = 0; axis < 3; ++axis)
+                physical.mPosition[axis] = std::bit_cast<float>(example.mPhysical[axis]);
+            for (unsigned axis = 0; axis < 4; ++axis)
+                physical.mRotation[axis] = std::bit_cast<float>(example.mPhysical[3 + axis]);
+            osg::Matrixf animated;
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned col = 0; col < 3; ++col)
+                    animated(col, row) = std::bit_cast<float>(example.mAnimated[row * 3 + col]);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                animated(3, axis) = std::bit_cast<float>(example.mAnimated[9 + axis]);
+            const auto actual = NifBullet::ragdollNativeBlendPoseTargets(physical, animated, example.mGain, example.mFlags);
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual.mDriveTarget.mPosition[axis]), example.mDrive[axis]);
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual.mSceneTarget(3, axis)), example.mScene[9 + axis]);
+            }
+            for (unsigned axis = 0; axis < 4; ++axis)
+                EXPECT_EQ(std::bit_cast<uint32_t>(actual.mDriveTarget.mRotation[axis]), example.mDrive[3 + axis]);
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned col = 0; col < 3; ++col)
+                    EXPECT_EQ(std::bit_cast<uint32_t>(actual.mSceneTarget(col, row)), example.mScene[row * 3 + col]);
+        }
+    }
+
+    TEST(RagdollNativeMixedRenderer, RejectsInvalidPoseGainAndUnrepresentableScene)
+    {
+        NifBullet::RagdollNativeTargetPose physical{{0, 0, 0}, {0, 0, 0, 1}};
+        EXPECT_THROW(NifBullet::ragdollNativeBlendPoseTargets(physical, osg::Matrixf::identity(),
+            std::numeric_limits<float>::infinity(), 8), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendPoseTargets(physical, osg::Matrixf::scale(2, 1, 1), .5f, 8),
+            std::invalid_argument);
+        physical.mRotation[3] = 2;
+        EXPECT_THROW(NifBullet::ragdollNativeBlendPoseTargets(physical, osg::Matrixf::identity(), .5f, 8),
+            std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativeBlendPose(physical), std::invalid_argument);
+        physical.mRotation = {0, 0, 0, 1};
+        physical.mPosition[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativeBlendPose(physical), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendPoseTargets(physical, osg::Matrixf::identity(), 0.f, 0x108),
+            std::invalid_argument);
+    }
+}
