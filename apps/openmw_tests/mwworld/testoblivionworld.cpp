@@ -12,8 +12,15 @@
 #include "apps/openmw/mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
 #include <components/sceneutil/keyframe.hpp>
+#include <components/settings/values.hpp>
 #include <components/vfs/filesystemarchive.hpp>
 #include <osg/MatrixTransform>
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osgDB/WriteFile>
+#include "apps/openmw/mwphysics/actor.hpp"
+#include "apps/openmw/mwphysics/physicssystem.hpp"
+#include "apps/openmw/mwphysics/oblivionragdoll.hpp"
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
 #include <components/esm4/loadbsgn.hpp>
 #include "apps/openmw/mwworld/player.hpp"
@@ -34,6 +41,10 @@
 #include <components/files/collections.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
+#include <components/shader/shadermanager.hpp>
+#include <components/sceneutil/lightmanager.hpp>
+#include <components/sceneutil/shadow.hpp>
 #include <components/testing/util.hpp>
 
 #include "apps/openmw/mwbase/environment.hpp"
@@ -212,6 +223,103 @@ namespace
         reader.getRecHeader();
         fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
     }
+    TEST(OblivionWorld, PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval)
+    {
+        struct RestoreThreads
+        {
+            int mPrevious = Settings::physics().mAsyncNumThreads;
+            ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+        } restoreThreads;
+        for (int threads : {0, 1, 2})
+        {
+            SCOPED_TRACE(threads);
+            Settings::physics().mAsyncNumThreads.set(threads);
+            NativeWorldFixture fixture;
+            const auto ptr = addNativeNpc(fixture, 0x900);
+            // An editable synthetic mesh exercises public VFS/resource loading
+            // and Actor admission without requiring installed game assets.
+            osg::ref_ptr<osg::Geode> model = new osg::Geode;
+            osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+            osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+            vertices->push_back(osg::Vec3(-1, -1, -1));
+            vertices->push_back(osg::Vec3(1, -1, -1));
+            vertices->push_back(osg::Vec3(0, 1, -1));
+            vertices->push_back(osg::Vec3(0, 0, 1));
+            geometry->setVertexArray(vertices);
+            osg::ref_ptr<osg::DrawElementsUInt> triangles = new osg::DrawElementsUInt(GL_TRIANGLES);
+            for (unsigned index : {0u, 2u, 1u, 0u, 1u, 3u, 1u, 2u, 3u, 2u, 0u, 3u})
+                triangles->push_back(index);
+            geometry->addPrimitiveSet(triangles);
+            model->addDrawable(geometry);
+            ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "physical-owner.osgt").string()));
+            fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+            fixture.mVfs.buildIndex();
+            const VFS::Path::Normalized path("physical-owner.osgt");
+            auto* scene = fixture.mResources.getSceneManager();
+            scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+            auto defines = Shader::getDefaultDefines();
+            for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
+                defines[name] = value;
+            osg::ref_ptr<SceneUtil::LightManager> lights
+                = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
+            for (const auto& [name, value] : lights->getLightDefines())
+                defines[name] = value;
+            scene->getShaderManager().setGlobalDefines(defines);
+            MWPhysics::PhysicsSystem physics(&fixture.mResources, new osg::Group);
+            NifBullet::ActorRagdollDefinition graph;
+            graph.mSourceHash = std::string(16, 'a');
+            NifBullet::RagdollBodyDefinition body{};
+            body.mRecord = 12;
+            body.mNodeRecord = 8;
+            body.mMass = 2;
+            body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mShape = NifBullet::RagdollSphere{.5f};
+            graph.mBodies.push_back(body);
+            const std::array<btTransform, 1> poses{
+                btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 20))};
+            const auto admit = [&](const auto& definition) {
+                physics.addActorRagdoll(ptr, definition, 1, poses,
+                    MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World);
+            };
+            EXPECT_THROW(admit(graph), std::invalid_argument);
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            physics.addActor(ptr, path);
+            auto* capsule = physics.getActor(ptr);
+            ASSERT_NE(capsule, nullptr);
+            auto invalid = graph;
+            invalid.mBodies[0].mMass = 0;
+            EXPECT_THROW(admit(invalid), std::invalid_argument);
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            ASSERT_NE(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
+            admit(graph);
+            EXPECT_TRUE(physics.hasActorRagdoll(ptr));
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_EQ(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
+            EXPECT_THROW(admit(graph), std::invalid_argument);
+            EXPECT_EQ(physics.actorRagdollDefinition(ptr).mSourceHash, graph.mSourceHash);
+            const auto base = ESM::FormKey::content("headless.esm", 0x800);
+            const auto original = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
+            physics.applyActorRagdollImpulse(ptr, 0, btVector3(2, 0, 0), poses[0].getOrigin());
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity, btVector3(1, 0, 0));
+            physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), original);
+            auto bad = original;
+            bad.mAssetHash[0] = '0';
+            EXPECT_THROW(physics.restoreActorRagdollSnapshot(ptr, bad, base, path.value()), std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), original);
+            physics.removeActorRagdoll(ptr);
+            physics.removeActorRagdoll(ptr);
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            ASSERT_NE(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
+            admit(graph);
+            physics.remove(ptr);
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_EQ(physics.getActor(ptr), nullptr);
+        }
+    }
+
     ESM::FormKey addEquipmentWeapon(NativeWorldFixture& fixture, std::uint32_t id = 0x940)
     {
         auto& store = fixture.mWorld.getStore();

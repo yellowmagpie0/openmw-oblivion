@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -19,6 +20,7 @@
 
 #include <components/vfs/pathutil.hpp>
 #include <components/esm4/physicalcombat.hpp>
+#include <components/esm/formkey.hpp>
 
 #include "../mwworld/ptr.hpp"
 
@@ -51,6 +53,18 @@ class btCollisionDispatcher;
 class btCollisionObject;
 class btCollisionShape;
 class btVector3;
+class btTransform;
+
+namespace NifBullet
+{
+    struct ActorRagdollDefinition;
+    struct RagdollBodyState;
+}
+
+namespace ESM4
+{
+    struct RuntimeActorRagdoll;
+}
 
 namespace MWPhysics
 {
@@ -170,6 +184,19 @@ namespace MWPhysics
         void addObject(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation,
             int collisionType = CollisionType_World, bool respectVisualCollisionType = true);
         void addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh);
+
+        void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+            float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+        void removeActorRagdoll(const MWWorld::Ptr& ptr);
+        bool hasActorRagdoll(const MWWorld::Ptr& ptr);
+        NifBullet::ActorRagdollDefinition actorRagdollDefinition(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
+        ESM4::RuntimeActorRagdoll captureActorRagdollSnapshot(
+            const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
+        void restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
+            const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
+        void applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
+            const btVector3& impulse, const btVector3& worldPoint);
 
         int addProjectile(
             const MWWorld::Ptr& caster, const osg::Vec3f& position, VFS::Path::NormalizedView mesh, bool computeRadius);

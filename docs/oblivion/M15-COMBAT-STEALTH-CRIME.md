@@ -13252,3 +13252,33 @@ World admission/release, render/save synchronization, verified native reaction/
 recovery policy and the failed stock floor-contact restart audit remain active
 work. This tested ownership prerequisite does not promote any M15 gameplay,
 media, Morrowind display-dependent runtime or final acceptance gate.
+
+
+### Checkpoint146 — PhysicsSystem physical ownership facade (S4/S6 open)
+
+PhysicsSystem now admits a scheduler-owned ragdoll only for an existing,
+unsuspended movement capsule, then suspends that capsule. Failed admission
+preserves capsule ownership; a failed suspension rolls back the new graph.
+Release resumes the capsule before removing the physical graph and is
+idempotent. The public boundary exposes owned graph inspection, body capture,
+validated snapshot capture/restore and impulses. Object removal still destroys
+both physical and capsule ownership without unnecessarily resuming the capsule.
+No World reaction/lifecycle caller or native collision-group policy is claimed.
+
+An integration test loads an actual editable synthetic collision model through
+VFS and ResourceSystem, admits a native actor through PhysicsSystem and covers
+workers0/1/2, missing/invalid/duplicate admission, capsule proxy membership,
+owned graph/snapshot inspection, impulse and restore, atomic wrong-asset
+rejection, repeated release and object removal. Initial normal/sanitized01
+failed in headless shader initialization before admission; the retained failures
+are corrected by supplying the actual shader path, default/shadow definitions
+and LightManager definitions. Full normal/sanitized02 pass842 engine tests each,
+complete inventories, zero failures/skips, rebuilding openmw and esmtool.
+Stable tested source fingerprint
+`95a16fada2e8a0470ca46b83e9cc0e7af692cfba0680b7b5b133e6a41ba27026`.
+Component/Python sources are unchanged; no new runs are claimed. ASan leak
+checks remain disabled and UBSan halts on errors.
+
+World admission, renderer/save synchronization, native recovery policy and
+stock floor-contact restart acceptance remain incomplete. This facade closes
+an ownership prerequisite and does not promote a gameplay acceptance gate.

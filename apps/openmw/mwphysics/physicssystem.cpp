@@ -58,6 +58,7 @@
 #include "movementsolver.hpp"
 #include "mtphysics.hpp"
 #include "object.hpp"
+#include "oblivionragdoll.hpp"
 #include "projectile.hpp"
 
 namespace
@@ -730,6 +731,69 @@ namespace MWPhysics
                 ? Settings::game().mDefaultActorPathfindHalfExtents : osg::Vec3f{});
 
         mActors.emplace(ptr.mRef, std::move(actor));
+    }
+
+    void PhysicsSystem::addActorRagdoll(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask)
+    {
+        const auto found = mActors.find(ptr.mRef);
+        if (ptr.isEmpty() || found == mActors.end() || found->second->isCollisionSuspended())
+            throw std::invalid_argument("physical pose requires an admitted movement actor");
+        mTaskScheduler->addActorRagdoll(ptr, definition, lengthScale, poses, collisionGroup, collisionMask);
+        try
+        {
+            found->second->suspendCollision(true);
+        }
+        catch (...)
+        {
+            mTaskScheduler->removeActorRagdoll(ptr);
+            throw;
+        }
+    }
+
+    void PhysicsSystem::removeActorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        if (!mTaskScheduler->hasActorRagdoll(ptr))
+            return;
+        // Both registration changes wait for workers. Restore the capsule
+        // before releasing the physical owner so a failed resume preserves it.
+        if (const auto found = mActors.find(ptr.mRef); found != mActors.end())
+            found->second->suspendCollision(false);
+        mTaskScheduler->removeActorRagdoll(ptr);
+    }
+
+    bool PhysicsSystem::hasActorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->hasActorRagdoll(ptr);
+    }
+
+    NifBullet::ActorRagdollDefinition PhysicsSystem::actorRagdollDefinition(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->actorRagdollDefinition(ptr);
+    }
+
+    std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureActorRagdoll(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdoll(ptr);
+    }
+
+    ESM4::RuntimeActorRagdoll PhysicsSystem::captureActorRagdollSnapshot(
+        const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
+    {
+        return mTaskScheduler->captureActorRagdollSnapshot(ptr, base, model);
+    }
+
+    void PhysicsSystem::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model)
+    {
+        mTaskScheduler->restoreActorRagdollSnapshot(ptr, snapshot, base, model);
+    }
+
+    void PhysicsSystem::applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
+        const btVector3& impulse, const btVector3& worldPoint)
+    {
+        mTaskScheduler->applyActorRagdollImpulse(ptr, body, impulse, worldPoint);
     }
 
     int PhysicsSystem::addProjectile(
