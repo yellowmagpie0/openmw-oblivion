@@ -198,6 +198,11 @@ namespace NifBullet
         // loaded-body caps. Stages every result before publishing active-body velocities;
         // does not apply Bullet forces or advance the world/transform clock.
         void applyNativeVelocityStep(float frameSeconds, std::span<const osg::Vec3f> nativeLinearDeltas);
+        // Advance active owned keyframed bodies in native units. Stage the
+        // entire batch before publishing transforms/velocities/AABBs. The
+        // NativeDynamicsWorld invokes this once per actual Bullet substep.
+        // An ordinary borrowed Bullet world requires an explicit caller.
+        void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
         struct Impl;

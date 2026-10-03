@@ -17,7 +17,7 @@
 #include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
 
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
-#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <components/nifbullet/nativedynamicsworld.hpp>
 
 #include <LinearMath/btQuickprof.h>
 #include <LinearMath/btVector3.h>
@@ -143,7 +143,7 @@ namespace MWPhysics
         mBroadphase = std::make_unique<btDbvtBroadphase>();
 
         mConstraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-        auto dynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(mDispatcher.get(), mBroadphase.get(),
+        auto dynamicsWorld = std::make_unique<NifBullet::NativeDynamicsWorld>(mDispatcher.get(), mBroadphase.get(),
             mConstraintSolver.get(), mCollisionConfiguration.get());
         // Native owner gravity is a separate policy; do not inherit Bullet's default.
         dynamicsWorld->setGravity(btVector3(0, 0, 0));

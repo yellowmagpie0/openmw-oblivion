@@ -1,4 +1,5 @@
 #include "actorragdollphysics.hpp"
+#include "nativedynamicsworld.hpp"
 #include "ragdollconecoordinates.hpp"
 #include "ragdollvelocity.hpp"
 
@@ -994,9 +995,16 @@ namespace NifBullet
             world.addConstraint(constraint.get(), internalFilter == nullptr);
             ++mImpl->mRegisteredConstraints;
         }
+        if (auto* nativeWorld = dynamic_cast<NativeDynamicsWorld*>(&world))
+            nativeWorld->registerNativeMotionOwner(this, mImpl->mCollisionObjects,
+                [this](float frame) { stepNativeKeyframedMotion(frame); });
     }
 
-    ActorRagdollPhysics::~ActorRagdollPhysics() = default;
+    ActorRagdollPhysics::~ActorRagdollPhysics()
+    {
+        if (auto* world = dynamic_cast<NativeDynamicsWorld*>(&mImpl->mWorld))
+            world->unregisterNativeMotionOwner(this);
+    }
 
     std::span<btCollisionObject* const> ActorRagdollPhysics::collisionObjects() const
     {
@@ -1294,6 +1302,64 @@ namespace NifBullet
                 mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
                 mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
             }
+        }
+    }
+
+    void ActorRagdollPhysics::stepNativeKeyframedMotion(float frameSeconds)
+    {
+        coefficient(frameSeconds);
+        struct Pending
+        {
+            btRigidBody* mBody;
+            btTransform mPose;
+            btVector3 mLinear, mAngular;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(mImpl->mBodies.size());
+        for (const auto& owned : mImpl->mBodies)
+        {
+            const auto& body = *owned.mBody;
+            if (owned.mMotion != RagdollNativeMotion::Keyframed || !body.isActive())
+                continue;
+            const auto physical = body.getWorldTransform() * owned.mCenterFrame.inverse();
+            const auto rotation = physical.getRotation();
+            std::array<float, 4> quaternion;
+            for (unsigned axis = 0; axis < 4; ++axis)
+                quaternion[axis] = static_cast<float>(rotation[axis]);
+            osg::Vec3f center, local;
+            RagdollNativeVelocities velocity;
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                center[axis] = static_cast<float>(body.getCenterOfMassPosition()[axis] / mImpl->mLengthScale);
+                local[axis] = static_cast<float>(owned.mCenterFrame.getOrigin()[axis] / mImpl->mLengthScale);
+                velocity.mLinear[axis] = static_cast<float>(body.getLinearVelocity()[axis] / mImpl->mLengthScale);
+                velocity.mAngular[axis] = static_cast<float>(body.getAngularVelocity()[axis]);
+            }
+            const auto step = ragdollNativeKeyframedMotionStep(center, quaternion, local,
+                velocity, frameSeconds, owned.mLimits.mMaxLinearVelocity, owned.mLimits.mAngularLimit);
+            const auto matrix = ragdollBoneWorldFromNativeBlendPose(step.mBodyPose);
+            btMatrix3x3 basis;
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned col = 0; col < 3; ++col)
+                    basis[row][col] = matrix(col, row);
+            // Bullet stores the principal inertia frame at physical COM.
+            // Rebuild that frame once; scene/bodyT offsets are already applied.
+            const btTransform pose(basis * owned.mCenterFrame.getBasis(),
+                vector(step.mCenterOfMass) * mImpl->mLengthScale);
+            validatePose(pose);
+            const auto linear = vector(step.mVelocities.mLinear) * mImpl->mLengthScale;
+            const auto angular = vector(step.mVelocities.mAngular);
+            require(finite(linear) && finite(angular), "keyframed velocity exceeds world domain");
+            pending.push_back({owned.mBody.get(), pose, linear, angular});
+        }
+        for (const auto& change : pending)
+        {
+            change.mBody->setLinearVelocity(change.mLinear);
+            change.mBody->setAngularVelocity(change.mAngular);
+            // For kinematic bodies Bullet retains the previous transform here
+            // and copies our capped velocities into interpolation state.
+            change.mBody->setCenterOfMassTransform(change.mPose);
+            mImpl->mWorld.updateSingleAabb(change.mBody);
         }
     }
 

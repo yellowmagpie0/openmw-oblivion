@@ -15698,3 +15698,63 @@ retained BodyT velocity representation and floor fresh-restart failures remain
 open. S5-S14 remain pending. Next: integrate owned native keyframed stepping
 at the shared physics boundary while preserving ordinary Bullet behavior and
 verifying owner registration/removal and mode transitions.
+
+
+### Checkpoint190: owned keyframed integration at actual Bullet substeps
+
+Checkpoint189 committed as `0bf4247c59009455071dc41c1a47689194505487`,
+186 isolated commits, exact-byte/fresh-clone verified. Bundle167 SHA256
+`89f15ab9884707470e469a5808a9db070666317a2c909c77c27e7700d66b4bb4`.
+PhysicsSystem now creates a NativeDynamicsWorld. ActorRagdollPhysics registers
+its borrowed bodies and a substep callback after admission, and unregisters
+before destruction. Each actual Bullet substep stages the active keyframed
+batch using the original motion helper, publishes capped velocity and physical
+COM/principal frame, and updates AABBs. Invalid batches do not partly publish.
+The native owner retains its velocities through Bullet's saveKinematicState;
+unrelated kinematic bodies continue deriving velocity from their old/new poses.
+Dynamic bodies keep their existing shared physics behavior. An ordinary
+borrowed Bullet world still needs the explicit owned-step caller. Neither
+renderer/bodyT offset nor actor scale is reapplied here.
+
+Baseline01 retains missing explicit Bullet header build errors. Baseline02
+executes five integration tests: four correctly fail without owned integration,
+while ordinary dynamic/unrelated kinematic control passes. Final normal/
+sanitized01 each pass 2,271 component and 898 engine tests, complete inventories,
+no skips/failures, rebuilt openmw/esmtool. Fingerprint `3e31af0dc9e6e2c9152984c865de8d54df83b9044f02b1fcdd1e5e9028618033`. New cases cover
+scaled local COM and preserved velocity under World gravity, zero actual
+substeps and multiple real substeps, owner destruction/replacement, rejection
+before batch mutation, and unchanged unrelated kinematic/dynamic behavior.
+ASan leaks disabled; UBSan halts. Python sources remain unchanged.
+
+Owned-compare01 retains 126 velocity-field mismatches in each build. They are
+42 high-speed zero-duration cases: directly invoking original8EA4B0 at zero
+duration caps velocity, whereas Bullet performs no actual substep and invokes
+no motion callback. This is a dispatched-domain distinction, not a tolerance
+change or a claimed native World zero-duration acceptance result. The explicit
+empty-step test checks no advancement. Compare02 separately selects the 1,008
+positive-duration original cases with effective loaded limits 250/31.4159.
+Other synthetic cap pairs from the arithmetic oracle are not admitted loaded
+body limits. Independent original physical basis/current COM/raw local COM and
+velocities are installed in a one-body owner fixture, then an actual Bullet
+step runs. Each build compares 21,168 fields (shape origin, COM, velocities,
+physical basis), with no mismatches: maximum origin error
+6.07310785199e-05, COM error
+2.27373675443e-13, linear velocity error
+2.84217094304e-14, angular velocity error
+0, basis error
+3.57627868652e-07. Fixed prior limits remain .001 for positions/
+velocities and 1e-6 for basis; 2,520 zero-velocity fields retain their signs.
+Original corpus `cda82cf69ad846ad9681fc7b8a375f7e3b5cec00973da9553e6e19dc6cf31fd4`; comparator source/driver
+`437b0fd47a33d775a7704a55c190782c61f90317f93d52eada73fec9e656e125`, `f1d35ca51598f72870fc3a7227c9aa9ffdd4879bb73f150a4bc88bd716f508a6`. The Bullet principal-frame/
+quaternion conversion is explicitly a representation bridge, not native
+quaternion bit ownership. Contact-free single-body comparison does not prove
+native contact solver ordering or full native clock/cache equivalence.
+
+No stage closes. The earlier keyframed velocity replacement/absence of owned
+physical advancement now has implemented substep ownership and tested behavior.
+Native swept clock caches, exact native motion representation/persistence,
+controller lifecycle and actual World physical begin/apply/end remain open.
+Retained BodyT raw velocity and floor fresh-restart failures remain open;
+S5-S14 remain pending. Next: exercise contact velocity use, motion-mode changes,
+registration rejection and actual PhysicsSystem/scheduler routing before
+connecting actor/controller World lifecycle.
