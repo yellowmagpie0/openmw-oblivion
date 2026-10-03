@@ -5,6 +5,11 @@
 
 namespace NifBullet
 {
+    inline constexpr float RagdollNativeDefaultGravityZ = -73.57500457763672f;
+
+    // Original world+190 gravity delta, before the motion damping/cap stores.
+    osg::Vec3f ragdollNativeGravityDelta(const osg::Vec3f& gravity, float frameSeconds);
+
     struct RagdollNativeVelocities
     {
         osg::Vec3f mLinear;
@@ -26,7 +31,7 @@ namespace NifBullet
     RagdollMotionLimits ragdollLoadedMotionLimits(float linearDamping, float angularDamping,
         float maxLinearVelocity, float maxAngularVelocity);
 
-    // Original sphere-motion velocity stores, in native units: the supplied
+    // Original sphere/box-motion velocity stores, in native units: the supplied
     // velocity delta precedes damping, linear speed and angular rotation caps.
     // This does not integrate a transform or prepare a world gravity delta.
     RagdollNativeVelocities ragdollNativeVelocityStep(const RagdollNativeVelocities& input,

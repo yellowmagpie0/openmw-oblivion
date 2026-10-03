@@ -493,6 +493,43 @@ namespace
 
 namespace
 {
+    TEST(RagdollNativeVelocityStep, GravityDeltaMatchesOriginalFloatStoresAndSignedZero)
+    {
+        for (const auto& [dt, expected] : std::array<std::pair<float, std::uint32_t>, 4>{{
+                 {0.f, 2147483648u}, {1.f / 120.f, 3206346180u},
+                 {0.1f, 3236655269u}, {1.f, 3264423527u}}})
+        {
+            const auto delta = NifBullet::ragdollNativeGravityDelta(
+                {0, 0, NifBullet::RagdollNativeDefaultGravityZ}, dt);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(delta.z()), expected);
+            EXPECT_EQ(delta.x(), 0);
+            EXPECT_EQ(delta.y(), 0);
+        }
+        EXPECT_THROW(NifBullet::ragdollNativeGravityDelta({0, 0, 1}, -1), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeGravityDelta({0, 0, std::numeric_limits<float>::infinity()}, 1),
+            std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeGravityDelta({0, 0, std::numeric_limits<float>::max()}, 2),
+            std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeVelocityStepPreservesSleepingBodiesUntilImpulse)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->setActivationState(ISLAND_SLEEPING);
+        const auto initial = actor.capture()[0];
+        const std::array<osg::Vec3f, 1> delta{{{0, 0, -1}}};
+        actor.applyNativeVelocityStep(0.1f, delta);
+        const auto sleeping = actor.capture()[0];
+        EXPECT_EQ(sleeping.mPose, initial.mPose);
+        EXPECT_EQ(sleeping.mLinearVelocity, initial.mLinearVelocity);
+        EXPECT_FALSE(body->isActive());
+        actor.applyImpulse(0, btVector3(1, 0, 0), mPoses[0].getOrigin());
+        EXPECT_TRUE(body->isActive());
+        actor.applyNativeVelocityStep(0.1f, delta);
+        EXPECT_LT(actor.capture()[0].mLinearVelocity.z(), 0);
+    }
+
     TEST(RagdollNativeVelocityStep, LoadedLimitsApplyBothOriginalPreparationBranches)
     {
         for (float linear : {0.f, std::nextafter(250.f, 0.f), 250.f,

@@ -43,6 +43,17 @@ namespace NifBullet
         }
     }
 
+    osg::Vec3f ragdollNativeGravityDelta(const osg::Vec3f& gravity, float frameSeconds)
+    {
+        finite(gravity);
+        coefficient(frameSeconds);
+        osg::Vec3f result;
+        for (unsigned axis = 0; axis < 3; ++axis)
+            result[axis] = gravity[axis] * frameSeconds;
+        finite(result);
+        return result;
+    }
+
     RagdollMotionLimits ragdollLoadedMotionLimits(float linearDamping, float angularDamping,
         float maxLinearVelocity, float maxAngularVelocity)
     {

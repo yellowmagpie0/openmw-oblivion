@@ -522,8 +522,13 @@ namespace NifBullet
         }
         for (std::size_t i = 0; i < states.size(); ++i)
         {
-            mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
-            mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
+            // Native sleeping islands do not enter motion integration. Do not
+            // accumulate gravity or wake a settled body without an impulse.
+            if (mImpl->mBodies[i].mBody->isActive())
+            {
+                mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
+                mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
+            }
         }
     }
 

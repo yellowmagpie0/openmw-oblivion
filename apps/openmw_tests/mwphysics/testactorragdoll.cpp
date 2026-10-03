@@ -3,6 +3,8 @@
 #include <apps/openmw/mwclass/static.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/nifbullet/ragdollvelocity.hpp>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <components/esm3/loadstat.hpp>
 #include <components/settings/values.hpp>
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
@@ -90,6 +92,64 @@ namespace
         EXPECT_EQ(mWorld.getNumConstraints(), 0);
         EXPECT_EQ(scheduler.getUserPointer(body), nullptr);
         floorGuard.reset();
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeGravityPrecedesDampingAndDoesNotAlterGlobalWorldGravity)
+    {
+        constexpr float dt = 1.f / 60.f;
+        constexpr float scale = 7;
+        mGraph.mBodies[0].mLinearDamping = 2;
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, scale, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(mWorld.getCollisionObjectArray()[0]);
+        ASSERT_NE(body, nullptr);
+        EXPECT_TRUE(body->getFlags() & BT_DISABLE_WORLD_GRAVITY);
+        EXPECT_EQ(body->getGravity(), btVector3(0, 0, 0));
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native gravity order");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = dt;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const auto state = scheduler.captureActorRagdoll(mPtr)[0];
+        const float nativeDelta = NifBullet::RagdollNativeDefaultGravityZ * dt;
+        const float factor = float(1. - double(dt) * 2.);
+        const btScalar expected = btScalar(nativeDelta * factor) * scale;
+        EXPECT_DOUBLE_EQ(state.mLinearVelocity.z(), expected);
+        EXPECT_NEAR(state.mPose.getOrigin().z(), 2 + expected * dt, 1e-12);
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        scheduler.removeActorRagdoll(mPtr);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, AppliesVelocityCapsAndKeepsSleepingBodiesSettled)
+    {
+        constexpr float dt = 1.f / 60.f;
+        mGraph.mBodies[0].mMaxLinearVelocity = 10000;
+        mGraph.mBodies[0].mMaxAngularVelocity = 0.1f;
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(mWorld.getCollisionObjectArray()[0]);
+        body->setActivationState(ISLAND_SLEEPING);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native sleeping and caps");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = dt;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        auto state = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_EQ(state.mPose, mPoses[0]);
+        EXPECT_EQ(state.mLinearVelocity, btVector3(0, 0, 0));
+        EXPECT_FALSE(body->isActive());
+        scheduler.applyActorRagdollImpulse(mPtr, 0, btVector3(1000, 0, 0), mPoses[0].getOrigin());
+        time += dt;
+        scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 1,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        state = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_TRUE(body->isActive());
+        EXPECT_NEAR(state.mLinearVelocity.length(), 250, 3e-5);
+        EXPECT_LT(state.mLinearVelocity.z(), 0);
+        scheduler.removeActorRagdoll(mPtr);
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 

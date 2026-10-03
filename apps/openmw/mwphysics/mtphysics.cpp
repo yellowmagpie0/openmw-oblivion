@@ -11,6 +11,7 @@
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btThreads.h>
 
 #include <osg/Stats>
@@ -19,6 +20,7 @@
 #include "components/misc/convert.hpp"
 #include <components/misc/barrier.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/nifbullet/ragdollvelocity.hpp>
 #include <components/settings/values.hpp>
 
 #include "../mwmechanics/actorutil.hpp"
@@ -417,10 +419,20 @@ namespace MWPhysics
             btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
             : PtrHolder(ptr, {})
             , mPhysics(definition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this))
+            , mLinearDeltas(definition.mBodies.size())
         {
+            for (auto* object : mPhysics.collisionObjects())
+            {
+                auto* body = btRigidBody::upcast(object);
+                // Native gravity is supplied before damping. Bullet's later
+                // force integration must not apply world gravity a second time.
+                body->setFlags(body->getFlags() | BT_DISABLE_WORLD_GRAVITY);
+                body->setGravity(btVector3(0, 0, 0));
+            }
         }
 
         NifBullet::ActorRagdollPhysics mPhysics;
+        std::vector<osg::Vec3f> mLinearDeltas;
     };
 
     PhysicsTaskScheduler::PhysicsTaskScheduler(
@@ -988,8 +1000,13 @@ namespace MWPhysics
                 // The barrier completion runs once, after every movement job.
                 // Reuse this step duration without a second Bullet accumulator.
                 MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+                const auto delta = NifBullet::ragdollNativeGravityDelta(
+                    {0, 0, NifBullet::RagdollNativeDefaultGravityZ}, mPhysicsDt);
                 for (auto& [_, ragdoll] : mActorRagdolls)
-                    ragdoll->mPhysics.applyNativeDamping(mPhysicsDt);
+                {
+                    std::fill(ragdoll->mLinearDeltas.begin(), ragdoll->mLinearDeltas.end(), delta);
+                    ragdoll->mPhysics.applyNativeVelocityStep(mPhysicsDt, ragdoll->mLinearDeltas);
+                }
                 static_cast<btDynamicsWorld*>(mCollisionWorld)->stepSimulation(mPhysicsDt, 0);
             }
         }

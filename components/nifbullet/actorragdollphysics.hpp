@@ -68,7 +68,7 @@ namespace NifBullet
         // composition and the serial step boundary. Bullet damping stays zero.
         void applyNativeDamping(float frameSeconds);
         // Explicit native-unit per-body velocity deltas, before damping and
-        // loaded-body caps. Stages every result before publishing velocities;
+        // loaded-body caps. Stages every result before publishing active-body velocities;
         // does not apply Bullet forces or advance the world/transform clock.
         void applyNativeVelocityStep(float frameSeconds, std::span<const osg::Vec3f> nativeLinearDeltas);
 

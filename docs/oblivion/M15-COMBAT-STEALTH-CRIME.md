@@ -13058,3 +13058,67 @@ no leak coverage. Original gravity preparation research is continuing separately
 Live scheduler gravity/cap policy, actual World admission/render/save wiring,
 native recovery/mode semantics, normal-input corpse/loot/media and TES3 runtime
 acceptance remain open. No M15 gate is promoted by these prerequisite checks.
+
+
+### Checkpoint142 — native gravity and velocity caps in the physics scheduler (S4/S6 open)
+
+The existing serial scheduler step now supplies binary32 native gravity*dt before
+loaded-body damping and velocity caps, then advances Bullet exactly once using the
+same physics duration. Default native gravity Z is the independently captured
+-73.57500457763672. Each owned ragdoll disables Bullet world gravity and sets its
+Bullet body gravity to zero, preventing a second application after damping; global
+world gravity and unrelated collision objects remain untouched. Per-body delta
+storage is allocated at admission and reused at each step. Sleeping bodies retain
+their velocities/activation state; explicit impulses wake them. No World actor
+admission, raw knocked transition or recovery timer is invented by this change.
+
+`S4/native-ragdoll-gravity-delta-oracle-01` executes48 original world preparation
+prefixes8d6e95..8d6f1f, which copy step info and store gravity*dt at world+190, then
+actual island dispatch8d70e2..8d7113 through the full sphere-motion return. Both
+precision settings cover zero/small/large durations, native/default, mixed-axis
+and signed-zero gravity fixtures. No calls are stubbed; world/island/body objects
+are isolated fixtures and prior actions/full world collision solving are outside
+scope. Normal/sanitized gravity comparison01 match all three delta bits in48
+cases and reject five controls. `S4/native-ragdoll-box-velocity-step-oracle-01`
+executes6,480 full original8eaff0 returns after actual box construction; damping,
+linear and angular cap stores match the sphere corpus exactly, including signed
+zeros/subnormals. Both box comparisons01 match every output bit and reject five
+controls. Transform integration executes but is not compared; no native Havok
+whole-trajectory agreement is claimed.
+
+Two component tests cover independently captured gravity bits/invalid inputs and
+sleeping-body preservation/wake-up. Two scheduler tests across workers0/1/2 cover
+actual one-step gravity-before-damping, length conversion, unchanged global
+world gravity, speed caps and sleeping/impulse behavior. Focused green01 retains
+nine failing engine cases from an incomplete call-site edit: Bullet gravity was
+disabled but the scheduler still invoked damping alone. The corrected call site
+passes green02 (74 component/29 engine cases). Full normal/sanitized01 pass2,134
+component and833 engine tests with complete inventories, zero failures/skips;
+normal also passes245 Python tests. Stable tested fingerprint
+`930a31975de32c5b7eb49538b92eb7154b246eeebc0666e6b1da2b9b2531665b`. ASan detect_leaks=0:halt_on_error=1 and
+UBSan halt_on_error=1:print_stacktrace=1; no leak coverage.
+
+The actual stock18-body/17-joint skeleton also runs through the real scheduler,
+native gravity, a static floor, finite absolute position bounds10000 and renderer
+pose handoff tolerance0.001 in private producer/reader processes. However,
+`S4/native-ragdoll-stock-scheduler-restart-{normal,sanitized}-02` FAIL their
+predeclared continuation bounds (R0.01, position0.1, linear/angular velocity0.05),
+first observed position difference0.24506044387817383. Normal01 retains an earlier
+private report parser failure on a real settings-loader startup line; fresh02
+whitelists that exact setup line, without changing production or tolerances.
+No floor-contact restart acceptance is claimed and bounds are not relaxed.
+
+`S4/native-ragdoll-stock-restart-diagnosis-normal-01` is a diagnostic, not a
+passing restart gate. Repeated producers and checkpoints are byte-identical.
+Restoring the float snapshot in place while retaining contacts still produces
+maximum position difference0.47612762451171875, rotation0.2613157853484154,
+linear velocity5.301872253417969 and angular velocity2.594521999359131.
+Fresh-process restoration rebuilding contacts gives position0.4741659164428711,
+rotation0.255676232278347, linear velocity11.168073177337646 and angular velocity
+2.5634031295776367. This isolates substantial sensitivity to the float snapshot
+boundary even with retained contacts; reconstructed contacts affect velocities
+too. The diagnostic retains finite body/renderer bounds but does not establish
+adequate continuation. Snapshot precision and contact continuation therefore
+remain active work, alongside World render/save admission, native recovery/mode
+policy, normal-input corpse/loot/media and display-dependent TES3 runtime gates.
+No M15 gate is promoted by this scheduler prerequisite.
