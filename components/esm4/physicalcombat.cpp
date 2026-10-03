@@ -764,6 +764,11 @@ namespace ESM4
         return static_cast<std::int32_t>(damage);
     }
 
+    bool knockdownBlendEntryReady(bool hasRoot, std::optional<float> hierarchyGain)
+    {
+        return !hasRoot || hierarchyGain.value_or(1.f) <= 0.f;
+    }
+
     void validateKnockdownSettings(const KnockdownSettings& settings)
     {
         for (float value : {settings.mAgilityBase, settings.mAgilityMultiplier,

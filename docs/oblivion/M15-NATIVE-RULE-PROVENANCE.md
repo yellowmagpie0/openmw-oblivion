@@ -6870,3 +6870,46 @@ as new runs. ASan leak checks disabled; UBSan halts on errors.
 
 World physical reaction admission/render/save, native controller recovery/group
 policy and floor-contact restart acceptance remain open.
+
+
+### Checkpoint150 — preserve authored blend fields and verify the native entry gate (S4 open)
+
+Owned ragdoll bodies now retain optional bhkBlendCollisionObject record identity,
+flags, hierarchy gain and velocity gain. Plain collision records remain absent;
+nonfinite authored gains are rejected while finite negative gains are preserved.
+The owned copy does not borrow source NIF records or represent live progression.
+
+The native raw2/4 entry gate uses hierarchy gain <=0 when a scene root exists.
+A missing blend lookup returns1 and holds entry; a missing root skips this gate.
+Original prefix00654803 reaches00654824 (ready) or00654c4d (hold), using actual
+0088fa30/0088f200 lookup and actual casts/RTTI initializer/getter with no game
+call stubs. All104 cases cover both x87 precision words, four scene placements,
+signed zero/subnormal/finite/infinity/NaN gains. Actual normal and sanitized C++
+comparators match104 each; always-ready/always-wait/reversed-comparison controls
+produce50/54/66 mismatches. Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+corpus SHA256 `b262f81cfde97f97778034a801046fdeeb671b9b3f1086a5d5bd96bae5b142b8`.
+Evidence: S4/native-ragdoll-blend-entry-oracle-01 and
+S4/native-ragdoll-blend-entry-compare-{normal,sanitized}-01.
+
+Independent bounded stock NIF byte decoding identifies all18 blend records,
+flags1 and both gains1, without the production NIF reader. It explicitly admits
+this stock flags1 fixture, not arbitrary NIFs. The production NIF reader and
+owned graph each match all18 records/gain bits. Stock asset SHA256
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`;
+independent corpus SHA256
+`1b0cfaf6813271b06a2796a3fbf49d4bfc9ec41967c709fff153a136d304072c`.
+Evidence: S4/native-ragdoll-stock-blend-byte-oracle-01,
+S4/native-ragdoll-stock-blend-audit-01 and
+S4/native-ragdoll-stock-owned-blend-normal-01.
+
+Three added component tests cover owned identity/flags/gains, lifetime isolation,
+finite admission and exact gate boundaries. Full blend-entry normal/sanitized01
+pass2,145 component and842 engine tests each, complete inventories and zero
+failures/skips; openmw and esmtool rebuilt. Stable tested fingerprint
+`13d5cfbeae4519b16600b16a2a25ccd2df5f4717fa7d254af168e423eefbc472`.
+Python sources unchanged; ASan leaks disabled, UBSan halts on errors.
+
+This adds the verified gate rule and authored data, not a World caller or live
+gain progression. Native controller recovery, coordinated runtime admission,
+renderer/save handoff and stock floor-contact continuation remain open.

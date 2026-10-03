@@ -62,6 +62,26 @@ namespace
             bodyA.mConstraints = {Nif::RecordPtrT<Nif::bhkSerializable>(&joint)};
             bodyB.mConstraints = {};
         }
+        Nif::bhkBlendCollisionObject& blendCollision()
+        {
+            for (auto& record : mFile.mRecords)
+                if (auto* collision = dynamic_cast<Nif::bhkCollisionObject*>(record.get()))
+                {
+                    auto blend = std::make_unique<Nif::bhkBlendCollisionObject>();
+                    blend->mRecordIndex = collision->mRecordIndex;
+                    blend->mRecordType = Nif::RC_bhkBlendCollisionObject;
+                    blend->mTarget = collision->mTarget;
+                    blend->mBody = collision->mBody;
+                    blend->mFlags = 0x123;
+                    blend->mHeirGain = .125f;
+                    blend->mVelGain = .75f;
+                    auto& result = *blend;
+                    blend->mTarget->mCollision = Nif::NiCollisionObjectPtr(blend.get());
+                    record = std::move(blend);
+                    return result;
+                }
+            throw std::runtime_error("missing fixture collision");
+        }
         Nif::NiNode& node(std::string name, osg::Vec3f position)
         {
             auto& result = add<Nif::NiNode>();
@@ -381,4 +401,32 @@ TEST(ActorRagdollCollisionFilter, CallerMaskChangesAndOrderedBranchesAreRespecte
     filter.mLayerMasks[8] = 0;
     EXPECT_FALSE(filter.enabled(first, second + (1u << 16)));
     EXPECT_TRUE(filter.enabled(first & 0xffff, second));
+}
+
+TEST_F(ActorRagdollTest, RetainsAuthoredBlendIdentityFlagsAndIndependentGains)
+{
+    auto& blend = blendCollision();
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    ASSERT_TRUE(graph.mBodies[0].mBlend);
+    EXPECT_EQ(graph.mBodies[0].mBlend->mRecord, blend.mRecordIndex);
+    EXPECT_EQ(graph.mBodies[0].mBlend->mFlags, 0x123);
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mHierarchyGain, .125f);
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mVelocityGain, .75f);
+    EXPECT_FALSE(graph.mBodies[1].mBlend);
+    blend.mHeirGain = 1;
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mHierarchyGain, .125f);
+}
+
+TEST_F(ActorRagdollTest, RejectsNonfiniteAuthoredBlendGainsWithoutInventingFiniteBounds)
+{
+    auto& blend = blendCollision();
+    blend.mHeirGain = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    blend.mHeirGain = -.5f;
+    blend.mVelGain = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    blend.mVelGain = -.25f;
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mHierarchyGain, -.5f);
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mVelocityGain, -.25f);
 }

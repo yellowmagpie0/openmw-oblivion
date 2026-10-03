@@ -141,6 +141,13 @@ namespace NifBullet
             value.mBone = node->mName;
             value.mBoneBind = bind.at(node);
             value.mUsesRigidBodyTransform = body->mRecordType == Nif::RC_bhkRigidBodyT;
+            if (const auto* blend = dynamic_cast<const Nif::bhkBlendCollisionObject*>(node->mCollision.getPtr()))
+            {
+                require(std::isfinite(blend->mHeirGain) && std::isfinite(blend->mVelGain),
+                    "nonfinite authored blend gain");
+                value.mBlend = RagdollBlendDefinition{blend->mRecordIndex, blend->mFlags,
+                    blend->mHeirGain, blend->mVelGain};
+            }
             const auto& info = body->mInfo;
             value.mWorldObjectFilter = { body->mHavokFilter.mLayer, body->mHavokFilter.mFlags,
                 body->mHavokFilter.mGroup };

@@ -3024,3 +3024,18 @@ TEST(ESM4PhysicalCombat, NativeNpcHitSoundLayersFollowOriginalLookupOrder)
         std::numeric_limits<std::int32_t>::max(), -1}),
         (Sounds{"PHYArmorHitHeavy", "PHYDamageFlesh", "WPNHitHand"}));
 }
+
+TEST(ESM4PhysicalCombat, KnockdownEntryWaitsForNonpositiveHierarchyGain)
+{
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(false, std::nullopt));
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(false, 1.f));
+    EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, std::nullopt));
+    EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, 1.f));
+    EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, std::numeric_limits<float>::denorm_min()));
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(true, -std::numeric_limits<float>::denorm_min()));
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(true, 0.f));
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(true, -0.f));
+    EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, std::numeric_limits<float>::quiet_NaN()));
+    EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, std::numeric_limits<float>::infinity()));
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(true, -std::numeric_limits<float>::infinity()));
+}

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -37,6 +38,13 @@ namespace NifBullet
         std::uint16_t mGroup = 0;
     };
 
+    struct RagdollBlendDefinition
+    {
+        std::uint32_t mRecord;
+        std::uint16_t mFlags;
+        float mHierarchyGain, mVelocityGain;
+    };
+
     struct RagdollBodyDefinition
     {
         std::uint32_t mRecord;
@@ -45,6 +53,8 @@ namespace NifBullet
         osg::Matrixf mBoneBind;
         bool mUsesRigidBodyTransform = false;
         RagdollBodyFilter mWorldObjectFilter, mInfoFilter;
+        // Authored bhkBlendCollisionObject data, not live blend progression.
+        std::optional<RagdollBlendDefinition> mBlend;
         osg::Vec3f mTranslation;
         osg::Quat mRotation;
         osg::Vec3f mCenter;
