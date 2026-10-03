@@ -7607,3 +7607,77 @@ body motion switches, renderer blend-route publication, actor scaling, full
 World/save lifecycle, cross-owner contact activation and stock floor continuation
 remain open. Next: implement and independently verify owned dynamic/keyframed
 motion handoff, then connect the complete physical controller update path.
+
+
+### Checkpoint163: owned dynamic/keyframed body handoff
+
+Checkpoint162 committed as `6e07e2b021da35bbf116f6eaf237b9c075f20827`,
+159 isolated commits with exact-byte/fresh-clone proof. ActorRagdollPhysics now
+accepts sparse body-record requests for Dynamic1 or Keyframed6 and reports those
+requested controller modes. It stages and validates the entire request batch
+before changing any body. Unknown records, duplicates and unknown modes reject
+without partial mass/activation changes. Keyframed bodies retain their current
+pose/velocities/interpolation/forces and become Bullet kinematic objects with
+zero inverse mass/inertia. Returning to Dynamic restores the original loaded
+mass/principal inertia, refreshes world inertia for the current pose and wakes
+constraint-connected owned bones. The same body/shape/constraint objects and
+collision/filter identities remain owned. Same-mode and empty requests do not
+wake untouched sleeping bodies. Keyframed bodies are excluded from dynamic
+native damping/velocity publication; a dynamic pose drive for them rejects.
+
+This boundary does not synchronize an animation pose or reset transition
+velocities. Original blend update88F484 separately synchronizes old mode6 or
+zeros linear/angular velocity for another old mode before requesting a change.
+That controller sequencing remains open. Mode requests are ephemeral at this
+step and are not included in RuntimeActorRagdoll snapshots. Full save authority,
+world/island/contact-mode publication, frontend worker ownership and the actual
+controller caller remain required before gameplay/restart acceptance.
+
+Original executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-ragdoll-motion-archive-oracle-02/-03/-04 each cover200 cases under both
+x87 precision words. Actual8CBC60 executes dynamic type2 -> keyframed6 -> requested
+Dynamic1, restoring the archived type2 rather than inventing a new type1. Actual
+keyframed constructor, type getters,89DF00/89DFB0 motion-state/velocity copies and
+destructor execute. Only allocation/free primitives supply a synthetic heap;
+no world is borrowed. All44 motion-state words and eight velocity words are
+copied, inverse mass/inertia properties stay archived, and the archive is
+consumed on return. The actual8CD4E0 dispatcher proves same-mode early return.
+Oracle01 retains a harness failure: invoking the internal8CBC60 helper directly
+for a no-op bypassed that caller gate. Oracle03 makes updated quaternions valid
+for the portable pose bridge;04 additionally includes signed-zero, subnormal,
+minimum-normal and maximum-finite velocity fields. Final source/corpus SHA256:
+`965f4ef1cc38f9f22da0aca38f097dbc41a6f9d6cf3322fe6606797dae0ba103`,
+`908c737ae1f433ff423ffba97b5ce6aaa0169b7da794a0b45ae3ca54d8492e72`.
+This does not prove contact/constraint-island publication, scene synchronization,
+zero-mass wrapper eligibility, physical stepping or a World/save lifecycle.
+
+Six new component tests cover current-pose/velocity/force/interpolation and mass/
+inertia conservation, actual kinematic non-response to impulse and dynamic
+response after return, atomic invalid batches and untouched sleeping bodies,
+128 repeated switches with stable graph identity and connected activation,
+restored anisotropic/center-frame off-center impulse response, and exclusion
+from dynamic integration/drives. S4/native-ragdoll-motion-mode-baseline-01
+retains five failures;baseline02 retains all six against the dynamic-only stub.
+
+Actual C++ S4/native-ragdoll-motion-mode-compare-{normal,sanitized}-01 each
+pass the200-case oracle03 corpus. Final compare-{normal,sanitized}-02 each pass
+oracle04:3,600 native position/linear/angular velocity fields match exactly,
+plus1,200 current-pose/interpolation, restored Bullet inverse-mass/principal-
+inertia, requested-mode and no-op checks. Each case removes its owned graph;
+zero bodies/constraints remain. Wrong old-velocity/zero-velocity/always-dynamic
+controls differ in200 cases each. Restored loaded physical properties represent
+native archived type2 behavior here; Bullet does not expose a Havok type tag.
+Comparator/driver SHA256:
+`53955d90ea72f5cff8bd6f0a58cdf3385d0f536be16b6bead06d8a8df08e4abd`,
+`d34f2482de174b3fc68ec7149bf50fa633ea422854f5c81e67f9fe0dda558882`.
+
+Full S4/native-ragdoll-motion-mode-{normal,sanitized}-01 each pass2,199 component
+and860 engine tests, complete inventories, zero failures/skips; openmw/esmtool
+rebuilt. Stable tested source fingerprint `7c9d500c6f5648a2d589820fa74b21e3f3cd3eac8a3fc507f77547dd57bb9447`.
+ASan leaks disabled; UBSan halts. Python unchanged. No stage closes. Next: connect
+mode publication/query through the worker barrier and owned-record scheduler,
+then complete the actual blend-route controller update and its persistence.
+Native frame/settings ownership, renderer blend-route publication, actor scaling,
+full World/save lifecycle, cross-owner contact activation and stock floor
+continuation remain open.

@@ -146,6 +146,176 @@ namespace
         }
     };
 
+    TEST_F(ActorRagdollPhysicsTest, NativeKeyframedMotionIsExcludedFromDynamicVelocityIntegration)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        body->setLinearVelocity(btVector3(1, 2, 3));
+        body->setAngularVelocity(btVector3(4, 5, 6));
+        actor.applyNativeDamping(.25f);
+        const std::array<osg::Vec3f, 1> deltas{{{7, 8, 9}}};
+        actor.applyNativeVelocityStep(.25f, deltas);
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(1, 2, 3));
+        EXPECT_EQ(body->getAngularVelocity(), btVector3(4, 5, 6));
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{12, {{4, 5, 6}, {0, 0, 0, 1}}, 1.f}}};
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 1.f, 0.f), std::invalid_argument);
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(1, 2, 3));
+        EXPECT_EQ(body->getAngularVelocity(), btVector3(4, 5, 6));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeMotionHandoffKeepsCurrentPoseVelocitiesAndDynamicMassInertia)
+    {
+        mGraph.mBodies[0].mCenter = {1, -2, 3};
+        mGraph.mBodies[0].mInertia = {2, .5f, 0, .5f, 3, 0, 0, 0, 4};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.5f, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        const auto inverseMass = body->getInvMass();
+        const auto inverseInertia = body->getInvInertiaDiagLocal();
+        body->setLinearVelocity(btVector3(1, 2, 3));
+        body->setAngularVelocity(btVector3(4, 5, 6));
+        body->applyCentralForce(btVector3(7, 8, 9));
+        const auto before = actor.capture()[0];
+        const auto interpolation = body->getInterpolationWorldTransform();
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        EXPECT_EQ(actor.captureNativeMotionModes(), std::vector<NifBullet::RagdollNativeMotionRequest>(key.begin(), key.end()));
+        EXPECT_TRUE(body->isKinematicObject());
+        EXPECT_FALSE(body->isStaticObject());
+        EXPECT_EQ(body->getInvMass(), 0);
+        EXPECT_EQ(body->getInvInertiaDiagLocal(), btVector3(0, 0, 0));
+        EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, before.mAngularVelocity);
+        EXPECT_EQ(body->getInterpolationWorldTransform(), interpolation);
+        EXPECT_EQ(body->getTotalForce(), btVector3(7, 8, 9));
+        auto changed = body->getWorldTransform();
+        changed.setOrigin(btVector3(11, 12, 13));
+        changed.setRotation(btQuaternion(btVector3(0, 0, 1), .7));
+        body->setCenterOfMassTransform(changed);
+        body->setLinearVelocity(btVector3(-1, -2, -3));
+        body->setAngularVelocity(btVector3(-4, -5, -6));
+        const auto current = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(dynamic);
+        EXPECT_FALSE(body->isKinematicObject());
+        EXPECT_FALSE(body->isStaticObject());
+        EXPECT_EQ(body->getInvMass(), inverseMass);
+        EXPECT_EQ(body->getInvInertiaDiagLocal(), inverseInertia);
+        EXPECT_EQ(actor.capture()[0].mPose, current.mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, current.mLinearVelocity);
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, current.mAngularVelocity);
+        EXPECT_EQ(body->getTotalForce(), btVector3(7, 8, 9));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeKeyframedMotionIgnoresImpulseAndRestoresDynamicResponse)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        const auto initial = actor.capture()[0];
+        actor.applyImpulse(0, btVector3(4, 0, 0), mPoses[0].getOrigin());
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(0, 0, 0));
+        mWorld.stepSimulation(.1, 0);
+        EXPECT_EQ(actor.capture()[0].mPose, initial.mPose);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(dynamic);
+        actor.applyImpulse(0, btVector3(4, 0, 0), mPoses[0].getOrigin());
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(2, 0, 0));
+        mWorld.stepSimulation(.1, 0);
+        EXPECT_GT(actor.capture()[0].mPose.getOrigin().x(), initial.mPose.getOrigin().x());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeMotionBatchValidationPreservesModesAndUnselectedSleepingBodies)
+    {
+        addHinge();
+        mGraph.mJoints.clear();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING);
+        second->setActivationState(ISLAND_SLEEPING);
+        std::array<NifBullet::RagdollNativeMotionRequest, 2> requests{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}, {999, NifBullet::RagdollNativeMotion::Keyframed}}};
+        EXPECT_THROW(actor.setNativeMotionModes(requests), std::invalid_argument);
+        requests[1].mRecord = 12;
+        EXPECT_THROW(actor.setNativeMotionModes(requests), std::invalid_argument);
+        requests[1].mRecord = 24;
+        requests[1].mMotion = static_cast<NifBullet::RagdollNativeMotion>(0);
+        EXPECT_THROW(actor.setNativeMotionModes(requests), std::invalid_argument);
+        EXPECT_EQ(first->getInvMass(), .5);
+        EXPECT_EQ(second->getInvMass(), .5);
+        EXPECT_FALSE(first->isActive());
+        EXPECT_FALSE(second->isActive());
+        EXPECT_FALSE(first->isKinematicObject());
+        EXPECT_FALSE(second->isKinematicObject());
+        requests[1].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+        actor.setNativeMotionModes(std::span(requests).subspan(1));
+        actor.setNativeMotionModes({});
+        EXPECT_FALSE(first->isActive());
+        EXPECT_TRUE(second->isKinematicObject());
+        EXPECT_EQ(actor.captureNativeMotionModes(), (std::vector<NifBullet::RagdollNativeMotionRequest>{
+            {12, NifBullet::RagdollNativeMotion::Dynamic}, {24, NifBullet::RagdollNativeMotion::Keyframed}}));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeMotionReturnWakesConnectedBonesAndKeepsGraphIdentity)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        auto* constraint = mWorld.getConstraint(0);
+        auto* shape = first->getCollisionShape();
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        for (unsigned cycle = 0; cycle < 128; ++cycle)
+        {
+            actor.setNativeMotionModes(key);
+            first->forceActivationState(ISLAND_SLEEPING);
+            second->forceActivationState(ISLAND_SLEEPING);
+            actor.setNativeMotionModes(dynamic);
+            EXPECT_TRUE(first->isActive());
+            EXPECT_TRUE(second->isActive());
+            EXPECT_EQ(actor.collisionObjects()[0], first);
+            EXPECT_EQ(actor.collisionObjects()[1], second);
+            EXPECT_EQ(first->getCollisionShape(), shape);
+            EXPECT_EQ(mWorld.getConstraint(0), constraint);
+            EXPECT_EQ(mWorld.getNumCollisionObjects(), 2);
+            EXPECT_EQ(mWorld.getNumConstraints(), 1);
+        }
+        first->forceActivationState(ISLAND_SLEEPING);
+        second->forceActivationState(ISLAND_SLEEPING);
+        actor.setNativeMotionModes(dynamic);
+        EXPECT_FALSE(first->isActive());
+        EXPECT_FALSE(second->isActive());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeMotionRestoresPrincipalInertiaForOffCenterImpulse)
+    {
+        mGraph.mBodies[0].mCenter = {1, -2, 3};
+        mGraph.mBodies[0].mInertia = {2, .5f, 0, .5f, 3, 0, 0, 0, 4};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.5f, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        const auto inverseMass = body->getInvMass();
+        const auto inverseInertia = body->getInvInertiaDiagLocal();
+        actor.applyImpulse(0, btVector3(1, 2, 3), btVector3(4, 5, 6));
+        const auto expected = actor.capture()[0];
+        body->setLinearVelocity(btVector3(0, 0, 0));
+        body->setAngularVelocity(btVector3(0, 0, 0));
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(key);
+        EXPECT_EQ(body->getInvMass(), 0);
+        actor.setNativeMotionModes(dynamic);
+        EXPECT_EQ(body->getInvMass(), inverseMass);
+        EXPECT_EQ(body->getInvInertiaDiagLocal(), inverseInertia);
+        actor.applyImpulse(0, btVector3(1, 2, 3), btVector3(4, 5, 6));
+        EXPECT_EQ(actor.capture()[0].mPose, expected.mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, expected.mLinearVelocity);
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, expected.mAngularVelocity);
+    }
+
     TEST_F(ActorRagdollPhysicsTest, OwnsLiveBodiesAndAppliesImpulseThroughDynamics)
     {
         {

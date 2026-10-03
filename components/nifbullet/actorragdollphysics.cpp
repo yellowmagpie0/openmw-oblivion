@@ -233,6 +233,9 @@ namespace NifBullet
             RagdollMotionLimits mLimits;
             std::unique_ptr<btRigidBody> mBody;
             std::size_t mActivationGroup = 0;
+            btScalar mDynamicMass = 0;
+            btVector3 mDynamicInertia{0, 0, 0};
+            RagdollNativeMotion mMotion = RagdollNativeMotion::Dynamic;
         };
         btDynamicsWorld& mWorld;
         float mLengthScale;
@@ -418,6 +421,8 @@ namespace NifBullet
             mImpl->mShapes.push_back(std::move(compound));
             mImpl->mBodies.push_back({input.mRecord, centerFrame, input.mLinearDamping,
                 input.mAngularDamping, limits, std::move(body)});
+            mImpl->mBodies.back().mDynamicMass = input.mMass;
+            mImpl->mBodies.back().mDynamicInertia = diagonal;
         }
         for (const auto& input : definition.mJoints)
         {
@@ -549,6 +554,65 @@ namespace NifBullet
         }
     }
 
+    std::vector<RagdollNativeMotionRequest> ActorRagdollPhysics::captureNativeMotionModes() const
+    {
+        std::vector<RagdollNativeMotionRequest> result;
+        for (const auto& body : mImpl->mBodies)
+            result.push_back({body.mRecord, body.mMotion});
+        return result;
+    }
+
+    void ActorRagdollPhysics::setNativeMotionModes(std::span<const RagdollNativeMotionRequest> requests)
+    {
+        struct Pending
+        {
+            Impl::Body* mOwned;
+            RagdollNativeMotion mMotion;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(requests.size());
+        std::unordered_set<std::uint32_t> selected;
+        for (const auto& request : requests)
+        {
+            require(request.mMotion == RagdollNativeMotion::Dynamic
+                || request.mMotion == RagdollNativeMotion::Keyframed, "invalid native body motion request");
+            require(selected.insert(request.mRecord).second, "duplicate native body motion identity");
+            const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == request.mRecord; });
+            require(found != mImpl->mBodies.end(), "unknown native body motion identity");
+            if (found->mMotion != request.mMotion)
+                pending.push_back({&*found, request.mMotion});
+        }
+        // Original8CBC60 archives the dynamic motion's physical properties,
+        // then copies current motion state and velocities on both handoffs.
+        // Keep the same Bullet object/shape/constraints and preserve those
+        // fields directly; do not reconstruct them from a stale pose snapshot.
+        for (const auto& change : pending)
+        {
+            auto& owned = *change.mOwned;
+            auto& body = *owned.mBody;
+            const int flags = body.getCollisionFlags()
+                & ~(btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_KINEMATIC_OBJECT);
+            if (change.mMotion == RagdollNativeMotion::Keyframed)
+            {
+                body.setMassProps(0, btVector3(0, 0, 0));
+                body.setCollisionFlags(flags | btCollisionObject::CF_KINEMATIC_OBJECT);
+                body.forceActivationState(DISABLE_DEACTIVATION);
+            }
+            else
+            {
+                body.setMassProps(owned.mDynamicMass, owned.mDynamicInertia);
+                body.setCollisionFlags(flags);
+                body.forceActivationState(ACTIVE_TAG);
+            }
+            body.updateInertiaTensor();
+            owned.mMotion = change.mMotion;
+        }
+        for (const auto& change : pending)
+            if (change.mMotion == RagdollNativeMotion::Dynamic)
+                mImpl->activateGroup(change.mOwned->mActivationGroup);
+    }
+
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)
     {
         require(body < mImpl->mBodies.size() && finite(impulse) && finite(worldPoint), "invalid impulse");
@@ -584,7 +648,8 @@ namespace NifBullet
         {
             // Native sleeping islands do not enter motion integration. Do not
             // accumulate gravity or wake a settled body without an impulse.
-            if (mImpl->mBodies[i].mBody->isActive())
+            if (mImpl->mBodies[i].mMotion == RagdollNativeMotion::Dynamic
+                && mImpl->mBodies[i].mBody->isActive())
             {
                 mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
                 mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
@@ -612,6 +677,7 @@ namespace NifBullet
             const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
                 [&](const auto& body) { return body.mRecord == drive.mRecord; });
             require(found != mImpl->mBodies.end(), "unknown native pose drive body");
+            require(found->mMotion == RagdollNativeMotion::Dynamic, "native pose drive requires dynamic motion");
             auto& body = *found->mBody;
             const auto shapePose = body.getWorldTransform() * found->mCenterFrame.inverse();
             const auto rotation = shapePose.getRotation();
@@ -658,6 +724,8 @@ namespace NifBullet
         auto states = capture();
         for (std::size_t i = 0; i < states.size(); ++i)
         {
+            if (mImpl->mBodies[i].mMotion != RagdollNativeMotion::Dynamic)
+                continue;
             const auto damp = [&](btVector3& velocity, float coefficient, btScalar scale) {
                 const float factor = static_cast<float>(std::max(0.0, 1.0 - double(frameSeconds) * coefficient));
                 for (int axis = 0; axis < 3; ++axis)
@@ -675,6 +743,8 @@ namespace NifBullet
         // Damping changes velocity only; retain the live contact/activation state.
         for (std::size_t i = 0; i < states.size(); ++i)
         {
+            if (mImpl->mBodies[i].mMotion != RagdollNativeMotion::Dynamic)
+                continue;
             mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
             mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
         }

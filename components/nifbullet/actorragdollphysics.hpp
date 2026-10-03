@@ -47,6 +47,19 @@ namespace NifBullet
         btVector3 mAngularVelocity;
     };
 
+    enum class RagdollNativeMotion : std::uint8_t
+    {
+        Dynamic = 1,
+        Keyframed = 6,
+    };
+
+    struct RagdollNativeMotionRequest
+    {
+        std::uint32_t mRecord;
+        RagdollNativeMotion mMotion;
+        friend bool operator==(const RagdollNativeMotionRequest&, const RagdollNativeMotionRequest&) = default;
+    };
+
     struct RagdollNativeVelocityDrive
     {
         std::uint32_t mRecord;
@@ -74,6 +87,12 @@ namespace NifBullet
         std::span<btCollisionObject* const> collisionObjects() const;
         std::vector<RagdollBodyState> capture() const;
         void restore(std::span<const RagdollBodyState> states);
+        // Requested blend-controller motion, not a serialized body snapshot.
+        // Dynamic restores the original mass/principal inertia while retaining
+        // the current pose and velocities, as the native motion archive does.
+        // Caller owns scene synchronization and any transition velocity reset.
+        std::vector<RagdollNativeMotionRequest> captureNativeMotionModes() const;
+        void setNativeMotionModes(std::span<const RagdollNativeMotionRequest> requests);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.
