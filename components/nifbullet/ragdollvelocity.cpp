@@ -91,6 +91,97 @@ namespace NifBullet
         return result;
     }
 
+    RagdollNativeTargetPose ragdollNativeBlendTargetPose(const RagdollNativeTargetPose& physical,
+        const RagdollNativeTargetPose& animated, float hierarchyGain)
+    {
+        finite(physical.mPosition);
+        finite(animated.mPosition);
+        if (!std::isfinite(hierarchyGain))
+            throw std::invalid_argument("Nonfinite native hierarchy gain");
+        const auto validate = [](const std::array<float, 4>& rotation) {
+            double squared = 0;
+            for (float value : rotation)
+            {
+                if (!std::isfinite(value))
+                    throw std::invalid_argument("Nonfinite native blend quaternion");
+                squared += double(value) * value;
+            }
+            if (std::abs(squared - 1.0) > 1e-4)
+                throw std::invalid_argument("Invalid native blend unit quaternion");
+        };
+        validate(physical.mRotation);
+        validate(animated.mRotation);
+        RagdollNativeTargetPose result;
+        const float remaining = 1.f - hierarchyGain;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            const float physicalTerm = remaining * physical.mPosition[axis];
+            const float animatedTerm = hierarchyGain * animated.mPosition[axis];
+            result.mPosition[axis] = physicalTerm + animatedTerm;
+        }
+        finite(result.mPosition);
+        const auto& from = physical.mRotation;
+        const auto& to = animated.mRotation;
+        const float x = from[0] * to[0];
+        const float y = from[1] * to[1];
+        const float z = from[2] * to[2];
+        const float w = from[3] * to[3];
+        const float xz = z + x;
+        const float yw = w + y;
+        const float dot = xz + yw;
+        const float sign = dot < 0.f ? -1.f : 1.f;
+        const float absoluteDot = std::abs(dot);
+        float physicalWeight = remaining;
+        float animatedWeight = sign * hierarchyGain;
+        if (absoluteDot < .9990000128746033f)
+        {
+            // Original8B1C60 keeps acos/FSIN and reciprocal-sine weights
+            // in x87 until their binary32 stores; angle is not stored as float.
+            const double angle = std::acos(double(absoluteDot));
+            const double animatedAngle = angle * hierarchyGain;
+            const double physicalAngle = angle - animatedAngle;
+            // FSIN outside +/-2^63 leaves its operand unchanged and raises C2.
+            // That unsupported original numeric domain must not silently use
+            // portable libm's argument reduction and publish a different pose.
+            if (std::abs(animatedAngle) >= 0x1p63 || std::abs(physicalAngle) >= 0x1p63)
+                throw std::invalid_argument("Native blend trigonometric argument outside supported domain");
+            const double reciprocalSine = 1.0 / std::sqrt(1.0 - double(absoluteDot) * absoluteDot);
+            physicalWeight = static_cast<float>(std::sin(physicalAngle) * reciprocalSine);
+            animatedWeight = static_cast<float>(std::sin(animatedAngle) * reciprocalSine * sign);
+        }
+        for (unsigned axis = 0; axis < 4; ++axis)
+        {
+            const float physicalTerm = from[axis] * physicalWeight;
+            const float animatedTerm = to[axis] * animatedWeight;
+            result.mRotation[axis] = physicalTerm + animatedTerm;
+        }
+        // Actual slerp normalizes once;88F5DF calls4D6830 a second time.
+        // Preserve both Newton refinement/store sequences using a portable
+        // reciprocal square root rather than CPU-specific RSQRT approximation.
+        for (unsigned pass = 0; pass < 2; ++pass)
+        {
+            const auto& q = result.mRotation;
+            const float xx = q[0] * q[0];
+            const float yy = q[1] * q[1];
+            const float zz = q[2] * q[2];
+            const float ww = q[3] * q[3];
+            const float xxzz = zz + xx;
+            const float yyww = ww + yy;
+            const float squared = yyww + xxzz;
+            if (!std::isfinite(squared) || squared <= 0.f)
+                throw std::invalid_argument("Nonrepresentable native blend quaternion");
+            const float reciprocal = 1.f / std::sqrt(squared);
+            const float first = squared * reciprocal;
+            const float second = first * reciprocal;
+            const float error = 3.f - second;
+            const float half = .5f * reciprocal;
+            const float factor = half * error;
+            for (float& value : result.mRotation)
+                value *= factor;
+        }
+        return result;
+    }
+
     RagdollNativeVelocities ragdollNativeTargetVelocities(const osg::Vec3f& localCenterOfMass,
         const osg::Vec3f& currentCenterOfMass, const std::array<float, 4>& currentRotation,
         const RagdollNativeTargetPose& target, float inverseFrameSeconds,

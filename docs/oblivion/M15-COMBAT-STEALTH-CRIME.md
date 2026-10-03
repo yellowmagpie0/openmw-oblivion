@@ -13826,3 +13826,58 @@ ASan leaks disabled; UBSan halts; Python unchanged. Selector/controller wiring,
 body motion switching, hierarchy pose blending, frame-time resolution,
 cross-owner contacts, full World/render/save and stock floor continuation
 remain open. No stage or normal-input/restart acceptance is closed here.
+
+
+### Checkpoint158: native velocity-drive target pose interpolation
+
+Checkpoint157 committed as `71f8c34e1e4232739ea82d6a82ca34c6213d2ade`,
+154 isolated commits with exact-byte and fresh-clone proof. New
+ragdollNativeBlendTargetPose prepares the target supplied to native8A34C0.
+Position products and sums each store binary32. Rotation uses the original
+shortest quaternion path, linear threshold0.9990000128746033, spherical
+weights, and two normalization/refinement sequences:8B1C60 normalizes once,
+then88F5DF calls4D6830 again. Finite hierarchy gain remains unclamped;
+negative/extrapolated gains and signed zero retain their native branches.
+Near-unit finite rotations and finite positions are required. Nonrepresentable
+results reject before publication. Spherical arguments outside +/-2^63 are
+explicitly unsupported/rejected: original FSIN would leave its operand and
+set C2, unlike portable libm argument reduction. Quaternion reciprocal-square
+root/CRT arithmetic is portable, not a claim about every original CPU.
+
+S4/native-ragdoll-blend-target-oracle-01 executes1,800 cases against original
+SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Actual88F5A4..88F5EA prefix executes full8B1C60, actual4D6830 twice and
+actual986130 CRT acos on spherical branches; no game/OS call stubs. Live
+caller SSE/stack inputs are explicit synthetic boundaries. Corpus covers100
+quaternion pairs (equivalent signs, quarter/pi turns, adjacent linear
+thresholds and seeded unit pairs),100 position pairs, nine gains including
+signed zero, adjacent1 and extrapolation, and two x87 precision words.
+Oracle source/corpus SHA256:
+`db52c73732abd7a895933f545311142446913406ad40efd50bac01e36ff7fa66`,
+`3053a5a1b89ff8c4800ffced8e36b2196ff49c9c964a2d8c7cb5dd6e23e6874b`.
+
+Actual C++ S4/native-ragdoll-blend-target-compare-{normal,sanitized}-01 each
+match all1,800 position and rotation outputs exactly, maximum quaternion
+absolute error0. Positions require exact bits; quaternion tolerance was
+predeclared2e-5 absolute plus2e-5 relative for portable CRT/RSQRT. Always
+physical/always animated/clamped-gain controls reject1,382/1,618/792 cases.
+Comparator/driver SHA256:
+`52ae505120f5a6723f16dfe27736bf914e2128b9af23ef23b6866ac65c560403`,
+`2891c517ddc261bec56e61553142e11edd326ca3daee061efc5d56a62325e34d`.
+Four new tests cover spherical interpolation, extrapolation and signs,
+linear threshold/signed-zero stores, invalid input and overflow. Baseline01
+retains four failures against the missing interpolation.
+
+Full S4/native-ragdoll-blend-target-{normal,sanitized}-01 each pass2,179
+component and851 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested fingerprint
+`14da7d025af047df41f2bc3c5c8197fb085414b91cfb7f1aef8da38405bce2f0`.
+ASan leaks disabled; UBSan halts. Python unchanged.
+
+This helper supplies the velocity-drive target only. Native flag0x100 scene
+position selection and subsequent scene writers are separate, uncompleted
+semantics; mixed target position must not be called the final rendered pose.
+Controller attachment, effective gains/frame clock, body mode switching,
+animated renderer blending, actual World/render/save integration, cross-owner
+contacts and stock floor continuation remain open. S4 remains in progress;
+no normal-input/restart gate is closed by these arithmetic tests.

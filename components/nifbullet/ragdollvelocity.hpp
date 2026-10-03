@@ -34,6 +34,13 @@ namespace NifBullet
         std::array<float, 4> mRotation;
     };
 
+    // Native88F5A4 velocity-drive target, not the flag-dependent scene pose.
+    // Gain is finite and unclamped. Both input rotations must be near-unit.
+    // Unrepresentable results and spherical FSIN arguments outside +/-2^63
+    // reject. Portable quaternion libm/reciprocal-square-root arithmetic.
+    RagdollNativeTargetPose ragdollNativeBlendTargetPose(const RagdollNativeTargetPose& physical,
+        const RagdollNativeTargetPose& animated, float hierarchyGain);
+
     // Prepare native target velocities from desired body origin/rotation,
     // body-local COM and current world COM/rotation. Caller resolves the
     // effective motion limits (including alternate keyframed motion).

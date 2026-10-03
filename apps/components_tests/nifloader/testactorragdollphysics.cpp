@@ -842,6 +842,78 @@ namespace
         EXPECT_EQ(target.mAngular, osg::Vec3f(10, 11, 12));
     }
 
+    TEST(RagdollNativeBlendTarget, SphericalTargetInterpolatesPositionAndShortestRotation)
+    {
+        const NifBullet::RagdollNativeTargetPose physical{{1, -2, 3}, {0, 0, 0, 1}};
+        const NifBullet::RagdollNativeTargetPose animated{{7, -8, 9}, {0, 0, .7071067690849304f, .7071067690849304f}};
+        // Original88F5A4..88F5EA, actual8B1C60 and two4D6830 calls.
+        const auto result = NifBullet::ragdollNativeBlendTargetPose(physical, animated, .5f);
+        EXPECT_EQ(result.mPosition, osg::Vec3f(4, -5, 6));
+        EXPECT_NEAR(result.mRotation[2], .3826834261417389f, 2e-5f);
+        EXPECT_NEAR(result.mRotation[3], .9238795042037964f, 2e-5f);
+        EXPECT_EQ(physical.mPosition, osg::Vec3f(1, -2, 3));
+        EXPECT_EQ(animated.mPosition, osg::Vec3f(7, -8, 9));
+    }
+
+    TEST(RagdollNativeBlendTarget, GainsExtrapolateAndEquivalentNegativeSignsChooseShortestPath)
+    {
+        const NifBullet::RagdollNativeTargetPose physical{{1, -2, 3}, {0, 0, 0, 1}};
+        const NifBullet::RagdollNativeTargetPose animated{{7, -8, 9}, {0, 0, .7071067690849304f, .7071067690849304f}};
+        const auto negative = NifBullet::ragdollNativeBlendTargetPose(physical, animated, -.5f);
+        EXPECT_EQ(negative.mPosition, osg::Vec3f(-2, 1, 0));
+        EXPECT_NEAR(negative.mRotation[2], -.3826834261417389f, 2e-5f);
+        const auto extended = NifBullet::ragdollNativeBlendTargetPose(physical, animated, 1.5f);
+        EXPECT_EQ(extended.mPosition, osg::Vec3f(10, -11, 12));
+        EXPECT_NEAR(extended.mRotation[2], .9238795638084412f, 2e-5f);
+        auto signedTarget = animated;
+        for (float& component : signedTarget.mRotation)
+            component = -component;
+        const auto same = NifBullet::ragdollNativeBlendTargetPose(physical, signedTarget, .5f);
+        EXPECT_NEAR(same.mRotation[2], .3826834261417389f, 2e-5f);
+        EXPECT_NEAR(same.mRotation[3], .9238795042037964f, 2e-5f);
+    }
+
+    TEST(RagdollNativeBlendTarget, LinearThresholdAndSignedZeroUseNativeStores)
+    {
+        const NifBullet::RagdollNativeTargetPose physical{{-0.f, -0.f, -0.f}, {0, 0, 0, 1}};
+        const NifBullet::RagdollNativeTargetPose animated{{-0.f, -0.f, -0.f}, {.04470989108085632f, 0, 0, .9990000128746033f}};
+        const auto result = NifBullet::ragdollNativeBlendTargetPose(physical, animated, .5f);
+        EXPECT_NEAR(result.mRotation[0], .022360535338521004f, 2e-7f);
+        EXPECT_NEAR(result.mRotation[3], .9997499585151672f, 2e-7f);
+        const auto zero = NifBullet::ragdollNativeBlendTargetPose(physical, physical, 0.f);
+        const auto negativeZero = NifBullet::ragdollNativeBlendTargetPose(physical, physical, -0.f);
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            EXPECT_TRUE(std::signbit(zero.mPosition[axis]));
+            EXPECT_FALSE(std::signbit(negativeZero.mPosition[axis]));
+        }
+    }
+
+    TEST(RagdollNativeBlendTarget, RejectsInvalidInputsAndNonrepresentableResults)
+    {
+        const NifBullet::RagdollNativeTargetPose valid{{1, 2, 3}, {0, 0, 0, 1}};
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const float infinity = std::numeric_limits<float>::infinity();
+        for (float gain : {nan, infinity, -infinity})
+        {
+            EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(valid, valid, gain), std::invalid_argument);
+        }
+        auto invalid = valid;
+        invalid.mPosition[0] = nan;
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(invalid, valid, .5f), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(valid, invalid, .5f), std::invalid_argument);
+        invalid = valid;
+        invalid.mRotation = {0, 0, 0, 0};
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(invalid, valid, .5f), std::invalid_argument);
+        invalid.mRotation = {0, 0, 0, 2};
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(valid, invalid, .5f), std::invalid_argument);
+        invalid.mRotation = {nan, 0, 0, 1};
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(valid, invalid, .5f), std::invalid_argument);
+        invalid = valid;
+        invalid.mPosition[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(valid, invalid, 2.f), std::invalid_argument);
+    }
+
     TEST(RagdollNativeTargetVelocity, RotatesLocalCenterOfMassAndCapsSpeedsIndependently)
     {
         const std::array<float, 4> identity{0, 0, 0, 1};
