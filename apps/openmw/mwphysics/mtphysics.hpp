@@ -68,6 +68,7 @@ namespace MWPhysics
             unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
 
         void resetSimulation(const ActorMap& actors);
+        void suspendActorCollision(Actor& actor, bool suspended);
 
         // Main-thread ownership operations wait for the previous worker frame.
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,

@@ -632,6 +632,34 @@ namespace MWPhysics
         }
     }
 
+    void PhysicsTaskScheduler::suspendActorCollision(Actor& actor, bool suspended)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        if (actor.mTaskScheduler != this)
+            throw std::invalid_argument("foreign actor collision owner");
+        if (actor.mCollisionSuspended == suspended)
+            return;
+        auto* object = actor.getCollisionObject();
+        if (suspended)
+        {
+            mCollisionObjects.erase(object);
+            mCollisionWorld->removeCollisionObject(object);
+            actor.setVelocity({});
+            actor.setInertialForce({});
+            actor.setOnGround(false);
+            actor.setStandingOnPtr({});
+        }
+        else
+        {
+            actor.updatePosition();
+            actor.updateCollisionObjectPosition();
+            mCollisionObjects.insert(object);
+            mCollisionWorld->addCollisionObject(object, CollisionType_Actor, actor.getCollisionMask());
+        }
+        actor.mCollisionSuspended = suspended;
+    }
+
     PhysicsTaskScheduler::ActorRagdoll& PhysicsTaskScheduler::actorRagdoll(const MWWorld::Ptr& ptr)
     {
         const auto found = mActorRagdolls.find(ptr.mRef);
@@ -904,7 +932,8 @@ namespace MWPhysics
         if (const auto actor = std::dynamic_pointer_cast<Actor>(ptr))
         {
             actor->updateCollisionObjectPosition();
-            mCollisionWorld->updateSingleAabb(actor->getCollisionObject());
+            if (!actor->isCollisionSuspended())
+                mCollisionWorld->updateSingleAabb(actor->getCollisionObject());
         }
         else if (const auto object = std::dynamic_pointer_cast<Object>(ptr))
         {

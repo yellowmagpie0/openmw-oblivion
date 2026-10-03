@@ -794,7 +794,7 @@ namespace MWPhysics
         const MWBase::World* world = MWBase::Environment::get().getWorld();
         for (const auto& [ref, physicActor] : mActors)
         {
-            if (!physicActor->isActive())
+            if (!physicActor->isActive() || physicActor->isCollisionSuspended())
                 continue;
 
             auto ptr = physicActor->getPtr();
@@ -892,7 +892,7 @@ namespace MWPhysics
             mActorsPositions.reserve(mActors.size() - 1);
         for (const auto& [ptr, physicActor] : mActors)
         {
-            if (physicActor.get() == player)
+            if (physicActor.get() == player || physicActor->isCollisionSuspended())
                 continue;
             mActorsPositions.emplace_back(physicActor->getPtr(), physicActor->getSimulationPosition());
         }
@@ -900,7 +900,7 @@ namespace MWPhysics
         for (const auto& [ptr, pos] : mActorsPositions)
             world->moveObject(ptr, pos, false, false);
 
-        if (player != nullptr)
+        if (player != nullptr && !player->isCollisionSuspended())
             world->moveObject(player->getPtr(), player->getSimulationPosition(), false, false);
     }
 

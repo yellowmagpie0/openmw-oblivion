@@ -51,6 +51,11 @@ namespace MWPhysics
          */
         void enableCollisionBody(bool collision);
 
+        // Physical-pose ownership removes the movement capsule entirely.
+        // Registration changes wait for the previous scheduler frame.
+        void suspendCollision(bool suspended);
+        bool isCollisionSuspended() const { return mCollisionSuspended; }
+
         void updateScale();
         void setRotation(osg::Quat quat);
 
@@ -154,6 +159,7 @@ namespace MWPhysics
         DetourNavigator::CollisionShapeType getCollisionShapeType() const { return mCollisionShapeType; }
 
     private:
+        friend class PhysicsTaskScheduler;
         MWWorld::Ptr mStandingOnPtr;
         /// Removes then re-adds the collision object to the dynamics world
         void updateCollisionMask();
@@ -192,6 +198,7 @@ namespace MWPhysics
         bool mOnSlope;
         bool mInternalCollisionMode;
         bool mExternalCollisionMode;
+        bool mCollisionSuspended = false;
         bool mActive;
 
         PhysicsTaskScheduler* mTaskScheduler;

@@ -13215,3 +13215,40 @@ method are outside scope; synthetic animation fields do not prove real get-up
 timing. These results ground further lifecycle work, not a passed gameplay gate.
 World render/save/collider handoff, native recovery/mode policy, normal-input
 corpse/media and all other open M15 gates remain incomplete.
+
+
+### Checkpoint145 — suspend movement capsules during physical ownership (S4/S6 open)
+
+`Actor::suspendCollision` changes registration through the scheduler after waiting
+for workers under the collision-world lock. Suspension removes the movement
+capsule entirely and clears queued velocity, inertia, grounding and standing-on
+state. Repeated suspend/resume is idempotent; a foreign scheduler is rejected.
+Mask changes while detached retain the desired flags without dereferencing a
+missing broadphase proxy. Immediate/queued capsule AABB refreshes do not publish
+a detached capsule. Resume refreshes its transform from the current reference
+and registers the current collision mask. The default is unsuspended.
+`PhysicsSystem` excludes suspended capsules from movement preparation and both
+NPC/player position publication, preventing a second movement owner once the
+World ragdoll handoff is connected. No native admission/mode policy is added.
+
+Two engine tests exercise real physics Actors, actual ragdoll gravity, capsule
+membership and idempotence, cleared movement/contact state, detached position
+updates, updated external-collision/water-walking flags, current-position resume,
+destruction and foreign-owner rejection. The physical coexistence/resume case
+runs workers0/1/2. Full capsule-suspension normal/sanitized02 pass841 engine tests
+each with complete inventories, zero failures/skips; both builds rebuild openmw
+and esmtool. Stable tested fingerprint `1755823050f622310f6a1b6f0e2fac1e724b15a6f451cb24d80159893fc59c82`. Components/Python
+were not changed or rerun. ASan leak checks disabled; UBSan halts on error.
+
+Normal/sanitized01 retain compiler failures from temporary-file quota exhaustion
+(`Disk quota exceeded` writing compiler assembly files under/tmp), before tests.
+The unchanged source passes fresh02 with compiler temporary storage redirected:
+`TMPDIR=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/compiler-tmp`.
+The ignored workspace directory has adequate storage; no unrelated temporary
+files or retained evidence were removed. This environment setting should be
+used for subsequent large parallel builds in this session.
+
+World admission/release, render/save synchronization, verified native reaction/
+recovery policy and the failed stock floor-contact restart audit remain active
+work. This tested ownership prerequisite does not promote any M15 gameplay,
+media, Morrowind display-dependent runtime or final acceptance gate.

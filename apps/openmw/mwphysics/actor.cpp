@@ -150,6 +150,11 @@ namespace MWPhysics
         }
     }
 
+    void Actor::suspendCollision(bool suspended)
+    {
+        mTaskScheduler->suspendActorCollision(*this, suspended);
+    }
+
     void Actor::addCollisionMask(int collisionMask)
     {
         mTaskScheduler->addCollisionObject(mCollisionObject.get(), CollisionType_Actor, collisionMask);
@@ -157,7 +162,8 @@ namespace MWPhysics
 
     void Actor::updateCollisionMask()
     {
-        mTaskScheduler->setCollisionFilterMask(mCollisionObject.get(), getCollisionMask());
+        if (!mCollisionSuspended)
+            mTaskScheduler->setCollisionFilterMask(mCollisionObject.get(), getCollisionMask());
     }
 
     int Actor::getCollisionMask() const
