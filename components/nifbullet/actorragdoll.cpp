@@ -70,6 +70,71 @@ namespace NifBullet
         }
     }
 
+    std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(
+        Nif::FileView file, std::optional<std::uint32_t> rootRecord)
+    {
+        require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
+            && file.getBethVersion() <= 16, "unsupported NIF version");
+        if (!rootRecord)
+            return std::nullopt;
+        require(*rootRecord < file.numRecords(), "root record outside source file");
+        const auto member = [&](const Nif::Record* record) {
+            require(record && record->mRecordIndex < file.numRecords()
+                && file.getRecord(record->mRecordIndex) == record, "reference outside source file");
+        };
+        const auto blendAt = [&](const Nif::NiAVObject* node) -> std::optional<RagdollRootBlendDefinition> {
+            member(node);
+            if (node->mCollision.empty())
+                return std::nullopt;
+            member(node->mCollision.getPtr());
+            const auto* blend = dynamic_cast<const Nif::bhkBlendCollisionObject*>(node->mCollision.getPtr());
+            if (!blend)
+                return std::nullopt;
+            require(!blend->mTarget.empty() && blend->mTarget.getPtr() == node && !blend->mBody.empty(),
+                "invalid root blend target");
+            member(blend->mBody.getPtr());
+            const auto* body = dynamic_cast<const Nif::bhkRigidBody*>(blend->mBody.getPtr());
+            require(body, "invalid root blend body");
+            require(std::isfinite(blend->mHeirGain) && std::isfinite(blend->mVelGain),
+                "nonfinite authored blend gain");
+            return RagdollRootBlendDefinition{file.getHash(), node->mRecordIndex, body->mRecordIndex,
+                {blend->mRecordIndex, blend->mFlags, blend->mHeirGain, blend->mVelGain}};
+        };
+        const auto childSlots = [](const Nif::NiNode* node) -> const Nif::NiAVObjectList& {
+            require(node && node->mChildren.size() <= 0xffff, "invalid native child array");
+            return node->mChildren;
+        };
+
+        const auto* root = dynamic_cast<const Nif::NiAVObject*>(file.getRecord(*rootRecord));
+        if (auto value = blendAt(root))
+            return value;
+        const auto& roots = childSlots(dynamic_cast<const Nif::NiNode*>(root));
+        // The original dereferences the first slot unconditionally after its
+        // extent check. Diagnose malformed absent/null first children safely.
+        require(!roots.empty() && !roots.front().empty(), "missing first root child");
+        const auto* first = roots.front().getPtr();
+        if (auto value = blendAt(first))
+            return value;
+        const auto& children = childSlots(dynamic_cast<const Nif::NiNode*>(first));
+        std::size_t nonnull = 0;
+        for (const auto& child : children)
+            nonnull += !child.empty();
+        const std::size_t selected = nonnull == 1 ? 0 : 1;
+        if (selected >= children.size() || children[selected].empty())
+            return std::nullopt;
+        const auto* node = children[selected].getPtr();
+        if (auto value = blendAt(node))
+            return value;
+        if (const auto* branch = dynamic_cast<const Nif::NiNode*>(node))
+            for (const auto& child : childSlots(branch))
+            {
+                require(!child.empty(), "null root blend search child");
+                if (auto value = blendAt(child.getPtr()))
+                    return value;
+            }
+        return std::nullopt;
+    }
+
     ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file)
     {
         require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)

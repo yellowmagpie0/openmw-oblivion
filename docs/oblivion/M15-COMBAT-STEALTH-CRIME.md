@@ -14250,3 +14250,72 @@ mode/clock persistence, actor scaling, actual World/gameplay acceptance,
 cross-owner contact activation and the retained stock-floor continuation failure
 remain open. No M15 stage closes. Next: independently verify native root blend
 selection, then connect the actual blend controller and its save authority.
+
+
+### Checkpoint165: explicit native root blend selection
+
+Checkpoint164 committed as `65800037d4b94a410a3336c142fcb3a1c499f39d`,
+161 isolated commits with exact-byte/fresh-clone proof. The loader now provides
+loadActorRagdollRootBlend(FileView, optional explicit scene-root record). Its
+owned result retains source hash, selected target-node/body/collision identities,
+flags and independent hierarchy/velocity gains. No root assumes file-root order
+or body-record order. Absence of the supplied root returns no blend. Root blend,
+first-child blend and the selected branch blend have successive priority.
+The selected branch is first child's slot0 if its nonnull count is1, otherwise
+slot1, bounded by slot extent. The query then scans only that branch's direct
+children in slot order. It never recursively searches deeper or visits an
+unselected branch. Zero/negative finite gains do not affect selection.
+
+Original full88F200/497420/47FAC0/88EA80 execute with actual NiNode vtable
+A7E38C+8 ->7616D0 (return this) and NiAVObject A7DF24+8 ->6F7070 (return null),
+identified via actual NiNode/NiAVObject constructors and RTTI getter. Oracle01
+covers4,097 synthetic raw-word cases. Final oracle02 covers7,169 cases, including
+seven child-slot layouts with holes, both selected object types and512 blend
+placement masks plus null root. B6/B8 are independently distinguished by the
+full original4B34E0 NiTArray SetAt in96 cases: slot extent versus nonnull count.
+Only imported Windows InterlockedIncrement/Decrement use equivalent synthetic
+reference-count operations (76 calls); allocation/attachment and original NIF
+loading are outside that array probe. Lookup itself has no stubbed calls.
+Original executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Final lookup source/corpus SHA256 `8e44080a46a2fd5f4cdb978a1612f24bf701a91ae6969827298b12d87b0a9e9b`,
+`32f10e3d7d1b2329074d16bd405aed69eb8ab2561385668e1d4525cf0e41c02d`; array source/corpus
+`b48bc247543e036dad5fa8bfac8ccb81f9db95112a9f4ef19dcf7273212abf31`, `a9c0ba0456decb3892b517d75c178c932d5d6dca18f347c80080f8aac2d446c0`.
+
+Six new component tests cover selection priority; holes without compaction;
+absence of recursive/unselected fallback; copied metadata and unclamped finite
+gains; explicit root selection and missing blend; malformed paths, foreign
+identity, wrong target/body, nonfinite gain and unsupported format. Portable
+admission safely diagnoses missing/null first children and null scanned entries
+where native code would dereference them. Existing full graph validation still
+owns cycle/shape/joint admission; the lookup alone does not validate a whole
+ragdoll. Baseline01 retains six failures against the empty query. Full normal01
+crashes and sanitized01 aborts on test fixtures that assigned unresolved default
+NIF references instead of resolved null pointers; the diagnostic log identifies
+RecordPtr::empty's pointer-state assertion. Those fixtures now use typed null
+pointers, and null scanned entries explicitly reject before getPtr.
+
+Actual C++ compare-{normal,sanitized}-01 each matched all7,168 nonnull-root
+oracle cases before the fixture/null-scan correction. Final compare-{normal,
+sanitized}-02 each repeat that complete comparison against the final source:
+exact original selected node plus controlled owned body/collision/flags/gain/hash
+fields. Generic DFS and always-slot0 negative controls differ in392 and222
+cases. Comparator/driver SHA256 `f037f2c711d6a014b8eb39696192b715000f98482e3856837abd9b467e864d43`,
+`9c5e49f29b08916c13c4410af77f69f61c08f549b0f5f60f4defc22f720c6d97`. Final source fingerprint `88cf51e59303e29bfded48653a9d9ba0f237cd3f4fb99725136d4204b3bc0a57`.
+
+Pinned stock skeleton SHA256 `43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435` parses/adopts its18-body/
+17-joint graph in stock-root-{normal,sanitized}-01. Explicit file root0 selects
+node8/body12/blend13 in both builds. Stock-root-oracle01 executes the original
+lookup with synthetic original-layout objects populated from that exported
+production-parser hierarchy and returns the same collision. Selected target/
+body/collision identities also match the independent raw blend-payload audit.
+Stock oracle source/layout SHA256 `97ac086de42fa9d173dba470eebf1e8afac4d3650551946b3dda696a1a29bceb`,
+`e5dbb19d4c72b09216d56d018e0b3af49adfd800169741c9d28f0f6cad524e07`. The hierarchy remains a declared production-parser
+boundary input; this is not an independent original NIF-loader audit. Original
+runtime scene wrapping and the gameplay actor's chosen object root remain open.
+
+Full root-lookup-{normal,sanitized}-02 each pass2,205 component and869 engine
+cases, exact complete inventories, zero failures/skips; openmw/esmtool rebuilt.
+ASan leak detection disabled; UBSan halts. Python unchanged. No M15 stage closes.
+Actual animation/root ownership, blend route/mode-transition sequencing,
+scene-to-physics publication, mode/clock persistence, actor scaling, World/
+contact/restart acceptance and retained stock-floor continuation remain open.

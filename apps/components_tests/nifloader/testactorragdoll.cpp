@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstring>
 #include <limits>
 #include <sstream>
@@ -429,4 +430,176 @@ TEST_F(ActorRagdollTest, RejectsNonfiniteAuthoredBlendGainsWithoutInventingFinit
     const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
     EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mHierarchyGain, -.5f);
     EXPECT_FLOAT_EQ(graph.mBodies[0].mBlend->mVelocityGain, -.25f);
+}
+
+
+namespace
+{
+    struct ActorRootBlendTest : ActorRagdollTest
+    {
+        std::array<Nif::NiNode*, 9> mNodes;
+        ActorRootBlendTest()
+        {
+            mFile.mRoots.clear();
+            mFile.mRecords.clear();
+            for (unsigned i = 0; i < mNodes.size(); ++i)
+                mNodes[i] = &node("root lookup " + std::to_string(i), {});
+            children(0, {1});
+            children(1, {2, 3});
+            children(2, {4, 5});
+            children(3, {6, 7});
+            children(6, {8});
+            mFile.mRoots = {mNodes[0]};
+            auto& shape = add<Nif::bhkSphereShape>();
+            shape.mRecordType = Nif::RC_bhkSphereShape;
+            shape.mRadius = .5f;
+            for (auto* n : mNodes)
+                body(*n, shape, 2);
+        }
+        void children(unsigned parent, std::initializer_list<unsigned> ids)
+        {
+            auto& values = mNodes[parent]->mChildren;
+            values.clear();
+            for (auto i : ids)
+                values.push_back(Nif::NiAVObjectPtr(mNodes[i]));
+        }
+        Nif::bhkBlendCollisionObject& blend(unsigned i)
+        {
+            auto* collision = static_cast<Nif::bhkCollisionObject*>(mNodes[i]->mCollision.getPtr());
+            auto value = std::make_unique<Nif::bhkBlendCollisionObject>();
+            value->mRecordIndex = collision->mRecordIndex;
+            value->mRecordType = Nif::RC_bhkBlendCollisionObject;
+            value->mTarget = collision->mTarget;
+            value->mBody = collision->mBody;
+            value->mFlags = 0x123;
+            value->mHeirGain = .125f;
+            value->mVelGain = .75f;
+            auto& result = *value;
+            mNodes[i]->mCollision = Nif::NiCollisionObjectPtr(value.get());
+            mFile.mRecords[value->mRecordIndex] = std::move(value);
+            return result;
+        }
+        auto lookup(std::optional<std::uint32_t> root = 0)
+        {
+            return NifBullet::loadActorRagdollRootBlend(mFile, root);
+        }
+        void expectNode(unsigned i)
+        {
+            const auto result = lookup();
+            ASSERT_TRUE(result);
+            EXPECT_EQ(result->mNodeRecord, mNodes[i]->mRecordIndex);
+            EXPECT_EQ(result->mBodyRecord,
+                static_cast<Nif::bhkCollisionObject*>(mNodes[i]->mCollision.getPtr())->mBody->mRecordIndex);
+            EXPECT_EQ(result->mBlend.mRecord, mNodes[i]->mCollision->mRecordIndex);
+        }
+    };
+
+    TEST_F(ActorRootBlendTest, PrioritizesRootFirstChildAndNativeSelectedBranch)
+    {
+        for (auto i : {0, 1, 2, 3, 6, 7})
+            blend(i);
+        expectNode(0);
+        mNodes[0]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        expectNode(1);
+        mNodes[1]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        expectNode(3); // Two nonnull slots select slot1, despite slot0's blend.
+        mNodes[3]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        expectNode(6);
+        mNodes[6]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        expectNode(7);
+        mNodes[7]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        EXPECT_FALSE(lookup()); // No search of the unselected branch2.
+    }
+
+    TEST_F(ActorRootBlendTest, CountsNonnullChildrenWithoutCompactingSlots)
+    {
+        blend(2);
+        blend(3);
+        mNodes[1]->mChildren[1] = Nif::NiAVObjectPtr(nullptr);
+        expectNode(2);
+        mNodes[1]->mChildren[0] = Nif::NiAVObjectPtr(nullptr);
+        mNodes[1]->mChildren[1] = Nif::NiAVObjectPtr(mNodes[3]);
+        EXPECT_FALSE(lookup()); // Effective count1 selects the empty slot0.
+        children(1, {2, 3});
+        expectNode(3);
+        children(1, {2});
+        expectNode(2);
+    }
+
+    TEST_F(ActorRootBlendTest, StopsAfterSelectedNodesDirectChildren)
+    {
+        blend(6);
+        blend(8);
+        expectNode(6);
+        mNodes[6]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        EXPECT_FALSE(lookup()); // Blend8 is a grandchild of the selected node.
+        blend(2);
+        EXPECT_FALSE(lookup()); // A DFS or first-body search would pick a blend.
+    }
+
+    TEST_F(ActorRootBlendTest, OwnsSelectedMetadataAndDoesNotFilterByGain)
+    {
+        auto& value = blend(3);
+        value.mHeirGain = -.5f;
+        value.mVelGain = -.25f;
+        const auto result = lookup();
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mSourceHash, mFile.mHash);
+        EXPECT_EQ(result->mNodeRecord, 3);
+        EXPECT_EQ(result->mBlend.mFlags, 0x123);
+        EXPECT_FLOAT_EQ(result->mBlend.mHierarchyGain, -.5f);
+        EXPECT_FLOAT_EQ(result->mBlend.mVelocityGain, -.25f);
+        value.mHeirGain = 0;
+        EXPECT_TRUE(lookup());
+        mFile.mRoots.clear();
+        mFile.mRecords.clear();
+        EXPECT_FLOAT_EQ(result->mBlend.mHierarchyGain, -.5f);
+        EXPECT_FLOAT_EQ(result->mBlend.mVelocityGain, -.25f);
+    }
+
+    TEST_F(ActorRootBlendTest, UsesExplicitRootAndAdmitsMissingBlend)
+    {
+        blend(3);
+        expectNode(3);
+        EXPECT_FALSE(lookup(std::nullopt));
+        mNodes[3]->mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        EXPECT_FALSE(lookup());
+        blend(8);
+        const auto nested = lookup(mNodes[6]->mRecordIndex);
+        ASSERT_TRUE(nested);
+        EXPECT_EQ(nested->mNodeRecord, 8);
+        mFile.mRoots = {mNodes[2]};
+        EXPECT_FALSE(lookup()); // The caller's selected root remains node0.
+    }
+
+    TEST_F(ActorRootBlendTest, RejectsMalformedLookupPathAndForeignIdentity)
+    {
+        EXPECT_THROW(lookup(999), std::runtime_error);
+        mNodes[0]->mChildren.clear();
+        EXPECT_THROW(lookup(), std::runtime_error);
+        children(0, {1});
+        mNodes[0]->mChildren[0] = Nif::NiAVObjectPtr(nullptr);
+        EXPECT_THROW(lookup(), std::runtime_error);
+        children(0, {1});
+        Nif::NiNode foreign;
+        Nif::Testing::init(foreign);
+        foreign.mRecordIndex = 3;
+        mNodes[1]->mChildren[1] = Nif::NiAVObjectPtr(&foreign);
+        EXPECT_THROW(lookup(), std::runtime_error);
+        children(1, {2, 3});
+        mNodes[3]->mChildren[0] = Nif::NiAVObjectPtr(nullptr);
+        EXPECT_THROW(lookup(), std::runtime_error);
+        children(3, {6, 7});
+        auto& selected = blend(3);
+        selected.mTarget = Nif::NiAVObjectPtr(mNodes[2]);
+        EXPECT_THROW(lookup(), std::runtime_error);
+        selected.mTarget = Nif::NiAVObjectPtr(mNodes[3]);
+        selected.mHeirGain = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(lookup(), std::runtime_error);
+        selected.mHeirGain = .125f;
+        selected.mBody = Nif::bhkWorldObjectPtr(nullptr);
+        EXPECT_THROW(lookup(), std::runtime_error);
+        mFile.mVersion = Nif::NIFFile::VER_MW;
+        EXPECT_THROW(lookup(), std::runtime_error);
+    }
 }

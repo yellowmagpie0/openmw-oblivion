@@ -45,6 +45,19 @@ namespace NifBullet
         float mHierarchyGain, mVelocityGain;
     };
 
+    struct RagdollRootBlendDefinition
+    {
+        std::string mSourceHash;
+        std::uint32_t mNodeRecord, mBodyRecord;
+        RagdollBlendDefinition mBlend;
+    };
+
+    // Select from the explicitly supplied scene root using native child-slot
+    // order. File root order and rigid-body record order are not substitutes.
+    // The result owns metadata; it does not advance live blend state.
+    std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(
+        Nif::FileView file, std::optional<std::uint32_t> rootRecord);
+
     struct RagdollBodyDefinition
     {
         std::uint32_t mRecord;
