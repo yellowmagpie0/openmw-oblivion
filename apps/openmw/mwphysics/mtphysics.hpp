@@ -35,6 +35,7 @@ namespace NifBullet
     struct RagdollBodyState;
     struct RagdollNativeVelocityDrive;
     struct RagdollNativeMotionRequest;
+    struct RagdollNativeScenePoseRequest;
 }
 
 namespace Misc
@@ -92,6 +93,9 @@ namespace MWPhysics
         std::vector<NifBullet::RagdollNativeMotionRequest> captureActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr);
         void setActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeMotionRequest> requests);
+        // Sparse scene targets publish only after the movement worker barrier.
+        void synchronizeActorRagdollKeyframedPoses(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativeScenePoseRequest> poses);
         // Serialized with movement workers; controller supplies resolved inverse time.
         void driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds);

@@ -344,7 +344,16 @@ namespace
                 std::vector<NifBullet::RagdollNativeMotionRequest>(keyframed.begin(), keyframed.end()));
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
             EXPECT_TRUE(capsule->isCollisionSuspended());
+            const osg::Matrixf sceneTarget = osg::Matrixf::translate(70, 0, 140);
+            const std::array<NifBullet::RagdollNativeScenePoseRequest, 1> scenePoses{{{12, sceneTarget}}};
+            EXPECT_THROW(physics.synchronizeActorRagdollKeyframedPoses(previous, scenePoses), std::invalid_argument);
+            physics.synchronizeActorRagdollKeyframedPoses(ptr, scenePoses);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose,
+                NifBullet::ragdollNativePoseFromBoneWorld(sceneTarget));
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
             physics.setActorRagdollNativeMotionModes(ptr, dynamic);
+            EXPECT_THROW(physics.synchronizeActorRagdollKeyframedPoses(ptr, scenePoses), std::invalid_argument);
             EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr),
                 std::vector<NifBullet::RagdollNativeMotionRequest>(dynamic.begin(), dynamic.end()));
             physics.applyActorRagdollImpulse(ptr, 0, btVector3(2, 0, 0), poses[0].getOrigin());

@@ -7906,3 +7906,38 @@ actor-root/shape scaling or normal-input gameplay acceptance is introduced.
 No M15 stage closes; stock-floor fresh-restart discrepancies and S5-S14 remain
 open. Next: route scene publication through the worker barrier and PhysicsSystem
 before implementing actual blend-controller sequencing.
+
+
+### Checkpoint168: worker-barrier/public physics scene publication
+
+Checkpoint167 committed as `6414a43697cf1d1ad3b79582afe7618a2b7de270`,
+164 isolated commits with exact-byte/fresh-clone proof. PhysicsTaskScheduler now
+routes sparse owned keyframed scene targets after waitForWorkers and under the
+collision-world exclusive lock. PhysicsSystem exposes the same owner-checked
+operation. No body construction, capsule replacement or controller state is
+added to this adapter.
+
+Three parameterized scheduler cases run with0/1/2 workers: publication after
+queued work and stable pose through the next keyframed step, updated ray queries,
+shape/proxy/owner identities and teardown; malformed whole batches, empty/stale/
+removed owners and successful owner rebind; empty publication, unselected sleep,
+current velocity/force and world/filter preservation. The existing real-resource
+PhysicsSystem capsule handoff test additionally verifies stale-owner rejection,
+scene publication, capsule suspension, restore and rejection on dynamic bodies.
+Baseline01 selects13 tests: all9 new cases fail and4 preexisting native-ragdoll
+cases pass. Baseline02 selects the public PhysicsSystem case and fails it.
+Both retained baselines use an inactive scheduler adapter.
+
+Full keyframed-scheduler-{normal,sanitized}-01 each pass878 engine tests,
+complete inventories, zero failures/skips and rebuilt openmw/esmtool. Stable
+tested fingerprint `16b702512226441ad98f9c1902dc8a8974273f734e41374c0fe1124215618a92`. ASan leaks disabled; UBSan halts. Component
+implementation is unchanged from checkpoint167's2,212-case passing runs; Python
+unchanged. Current velocity conservation is asserted at publication only; the
+next-step case proves pose stability, not native keyframed velocity evolution.
+These are actual queued scheduler and public PhysicsSystem operations, not
+World.init or normal-input gameplay/save/restart acceptance.
+
+No stage closes. Actual controller dispatch, root choice, frame ownership,
+motion/clock save state, actor scaling/contact islands and stock-floor restart
+failures remain open. Next: native reverse scene target preparation against the
+full original physics-to-scene route, then actual controller integration.

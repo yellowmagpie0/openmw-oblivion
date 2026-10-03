@@ -804,6 +804,14 @@ namespace MWPhysics
         actorRagdoll(ptr).mPhysics.setNativeMotionModes(requests);
     }
 
+    void PhysicsTaskScheduler::synchronizeActorRagdollKeyframedPoses(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeScenePoseRequest> poses)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.synchronizeNativeKeyframedPoses(poses);
+    }
+
     void PhysicsTaskScheduler::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {

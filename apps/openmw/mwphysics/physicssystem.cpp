@@ -831,6 +831,12 @@ namespace MWPhysics
         mTaskScheduler->setActorRagdollNativeMotionModes(ptr, requests);
     }
 
+    void PhysicsSystem::synchronizeActorRagdollKeyframedPoses(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeScenePoseRequest> poses)
+    {
+        mTaskScheduler->synchronizeActorRagdollKeyframedPoses(ptr, poses);
+    }
+
     void PhysicsSystem::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {
