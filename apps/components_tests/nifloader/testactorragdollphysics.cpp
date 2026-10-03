@@ -842,4 +842,62 @@ namespace
         EXPECT_EQ(target.mAngular, osg::Vec3f(10, 11, 12));
     }
 
+    TEST(RagdollNativeTargetVelocity, RotatesLocalCenterOfMassAndCapsSpeedsIndependently)
+    {
+        const std::array<float, 4> identity{0, 0, 0, 1};
+        const NifBullet::RagdollNativeTargetPose target{{7, -8, 9}, {0, 0, .7071067690849304f, .7071067690849304f}};
+        // Actual original8A34C0..8A37E8 fixture, both precision words.
+        const auto free = NifBullet::ragdollNativeTargetVelocities({1, -2, 3}, {4, 5, -6}, identity,
+            target, 1.f, 250.f, 31.4159f);
+        EXPECT_EQ(free.mLinear, osg::Vec3f(5, -12, 18));
+        EXPECT_NEAR(free.mAngular.x(), 0.f, 2e-5f);
+        EXPECT_NEAR(free.mAngular.y(), 0.f, 2e-5f);
+        EXPECT_NEAR(free.mAngular.z(), 1.570796251296997f, 2e-5f);
+        const auto capped = NifBullet::ragdollNativeTargetVelocities({1, -2, 3}, {4, 5, -6}, identity,
+            target, 1.f, 1.f, 1.f);
+        EXPECT_FLOAT_EQ(capped.mLinear.x(), .22518867254257202f);
+        EXPECT_FLOAT_EQ(capped.mLinear.y(), -.5404528379440308f);
+        EXPECT_FLOAT_EQ(capped.mLinear.z(), .8106792569160461f);
+        EXPECT_NEAR(capped.mAngular.z(), 1.f, 2e-5f);
+    }
+
+    TEST(RagdollNativeTargetVelocity, EquivalentQuaternionSignsAndZeroCapsProduceNoRotation)
+    {
+        const std::array<float, 4> negativeIdentity{0, 0, 0, -1};
+        const NifBullet::RagdollNativeTargetPose target{{1, 2, 3}, {0, 0, 0, 1}};
+        const auto moved = NifBullet::ragdollNativeTargetVelocities({}, {}, negativeIdentity,
+            target, 30.f, 250.f, 31.4159f);
+        EXPECT_EQ(moved.mLinear, osg::Vec3f(30, 60, 90));
+        EXPECT_EQ(moved.mAngular, osg::Vec3f());
+        const auto capped = NifBullet::ragdollNativeTargetVelocities({}, {}, negativeIdentity,
+            target, 30.f, 0.f, 0.f);
+        EXPECT_EQ(capped.mLinear, osg::Vec3f());
+        EXPECT_EQ(capped.mAngular, osg::Vec3f());
+    }
+
+    TEST(RagdollNativeTargetVelocity, RejectsInvalidPoseTimeLimitsAndOverflow)
+    {
+        const std::array<float, 4> identity{0, 0, 0, 1};
+        const NifBullet::RagdollNativeTargetPose target{{1, 2, 3}, identity};
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        for (float inverse : {0.f, -1.f, nan})
+            EXPECT_THROW(NifBullet::ragdollNativeTargetVelocities({}, {}, identity, target, inverse, 250.f, 31.f),
+                std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeTargetVelocities({}, {}, identity, target, 1.f, -1.f, 31.f),
+            std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeTargetVelocities({}, {}, identity, target, 1.f, 250.f, nan),
+            std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeTargetVelocities({}, {}, std::array<float, 4>{}, target, 1.f, 250.f, 31.f),
+            std::invalid_argument);
+        auto malformed = target;
+        malformed.mRotation[0] = nan;
+        EXPECT_THROW(NifBullet::ragdollNativeTargetVelocities({}, {}, identity, malformed, 1.f, 250.f, 31.f),
+            std::invalid_argument);
+        malformed = target;
+        malformed.mPosition[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeTargetVelocities({}, {}, identity, malformed, 120.f, 250.f, 31.f),
+            std::invalid_argument);
+        EXPECT_EQ(target.mPosition, osg::Vec3f(1, 2, 3));
+    }
+
 }

@@ -13597,3 +13597,61 @@ This closes the prepared-target mix rule only. Pose-to-target velocity
 preparation/caps, motion selection, body wake/publication, controller
 attachment, World/render/save lifecycle and stock floor-contact continuation
 remain open. S4 and all later acceptance gates retain their existing status.
+
+
+### Checkpoint154: pose-to-target velocity preparation
+
+Checkpoint153 committed as `29d89b5350cba2850ca9e89c3056e6b3e13123cb`,
+150 isolated commits, exact changed-byte and fresh-clone verification. New
+ragdollNativeTargetVelocities rotates body-local COM into the desired body
+pose, subtracts current world COM, multiplies by inverse frame time and caps
+linear speed. Desired rotation times conjugate(current) supplies normalized
+relative rotation; the original angle threshold selects angular preparation,
+quaternion signs select the short rotation and angular speed receives its
+separate cap. These caps are motion+B4/B8 vector speed limits, distinct from
+the ordinary integrated angular rotation-step cap. Caller supplies resolved
+limits; alternate keyframed-motion resolution is not implemented here.
+Typed admission requires finite near-unit quaternion inputs (squared norm
+within1e-4), positive finite inverse time and nonnegative finite caps; invalid
+inputs/overflow reject without input mutation. Portable reciprocal square root
+replaces CPU-specific approximate RSQRT. Angular comparison tolerance was
+predeclared2e-5 absolute plus2e-5 relative; measured outputs are stronger.
+
+Original pinned executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-ragdoll-target-velocity-oracle-01 executes actual prefix
+008a34c0..008a37e8 with actual wrapper local-COM/current-COM/quaternion getters
+008a2ff0/008a3030/008a2f10, sphere motion type lookup008a98d0,
+quaternion composition00889470, normalization004d6830, angle008a2c00,
+axis008a2c70 and actual CRT acos; no game/OS call stubs. Synthetic supplied
+native fields are not game-world acceptance. Initial1,440 cases span80 pose
+fixtures, three inverse times, three cap pairs and two x87 precision words.
+Oracle source/corpus SHA256:
+`edcb2213e93529c672c70bab8554bc494b2d71a7be7043eb9406965cacd2752d`,
+`b564e0d7f873bbad22287015af9824b1b0d3d6310e815e5615bb04f85ee675d1`.
+
+Extended oracle02 includes the initial fixtures plus small-angle/threshold
+cases, four rotation axes, equivalent quaternion signs and immediately
+adjacent scalar quaternion components near1:3,312 total cases. Source/corpus:
+`4b966f958d014134d58ef893cb97bd75cc28f8c8f0fd30be3a416399faf43ffb`,
+`9272c7e5df872d031687d7e760f289e10419a997cdcba172483efb997bcc70d0`.
+S4/native-ragdoll-target-velocity-compare-{normal,sanitized}-02 each match
+all3,312 linear AND angular outputs bit-for-bit; maximum angular error0.
+This does not prove every original CPU's approximate RSQRT bit pattern.
+Zero-linear/zero-angular controls fail2,100/1,344 cases; a real C++ run with
+local COM erased fails2,292 cases. Comparator/extended driver SHA256:
+`90a34b25358080272ff6aed483decb310db51d15149edd1992ceeca5dc748770`,
+`95586d742847e5071dde53e0afab429e7e0ae7537558fb10a9796deefb765e67`.
+Initial comparator01 also matches all1,440 outputs in both modes. The private
+driver's initial syntax error occurred before any build/run and was corrected;
+no production adjustment was required by these comparisons.
+
+Three component tests cover original rotated COM and independent caps,
+quaternion sign equivalence/zero limits, malformed inputs and overflow.
+S4/native-ragdoll-target-velocity-{normal,sanitized}-01 each pass2,164
+component and842 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested fingerprint
+`71ebcc54551ede22bbb0542430d147fba4cc83c08eb7d8f129bad4c59825da00`.
+ASan leaks disabled; UBSan halts; Python unchanged. Actual body publication,
+wake/motion mode, scene controller attachment, World/render/save integration
+and stock floor-contact continuation remain open. No stage is newly closed.

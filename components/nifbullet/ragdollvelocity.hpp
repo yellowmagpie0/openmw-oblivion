@@ -3,6 +3,7 @@
 
 #include <osg/Vec3f>
 #include <optional>
+#include <array>
 
 namespace NifBullet
 {
@@ -25,6 +26,23 @@ namespace NifBullet
     RagdollNativeVelocities ragdollNativeBlendVelocities(const RagdollNativeVelocities& current,
         const RagdollNativeVelocities& target, float velocityGain, float inverseFrameSeconds,
         std::optional<float> worldGravityZ);
+
+    struct RagdollNativeTargetPose
+    {
+        osg::Vec3f mPosition;
+        // Native quaternion layout X,Y,Z,W; world/native length units.
+        std::array<float, 4> mRotation;
+    };
+
+    // Prepare native target velocities from desired body origin/rotation,
+    // body-local COM and current world COM/rotation. Caller resolves the
+    // effective motion limits (including alternate keyframed motion).
+    // Quaternion normalization uses portable reciprocal square root rather
+    // than a CPU-specific approximate RSQRT instruction.
+    RagdollNativeVelocities ragdollNativeTargetVelocities(const osg::Vec3f& localCenterOfMass,
+        const osg::Vec3f& currentCenterOfMass, const std::array<float, 4>& currentRotation,
+        const RagdollNativeTargetPose& target, float inverseFrameSeconds,
+        float maximumLinearVelocity, float maximumAngularVelocity);
 
     struct RagdollMotionLimits
     {
