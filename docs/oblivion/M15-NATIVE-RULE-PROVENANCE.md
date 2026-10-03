@@ -8941,3 +8941,42 @@ open. BodyT graph/controller/renderer admission is separate from physical save
 projection, which still rejects BodyT records. Next: reconcile that save boundary
 with admitted physical BodyT poses, then continue complete reaction side effects
 and World integration. S5-S14 remain pending.
+
+
+### Checkpoint185: BodyT physical snapshot projection
+
+Checkpoint184 committed as `bf90254090f1a333c8c4917367d7457021d0b192`,
+181 isolated commits with exact-byte/fresh-clone verification; bundle162 SHA256
+`ed833b6b4d4fbf132d68d46c827829fa8e35a2ca6219cf2752d46df66dc01c73`.
+The physical snapshot boundary now accepts BodyT graph records. Snapshots store
+physical shape-world poses; local BodyT offsets belong to graph/controller
+conversion and must not be applied again on capture or restore. Winning asset
+hashes, model/base identity, body/node uniqueness, count and finite physical
+pose validations remain required. The serialization schema is unchanged.
+
+Three new engine tests fail against the former blanket BodyT rejection in
+native-ragdoll-bodyt-snapshot-baseline-01. They cover binary/canonical JSON
+round trips, signed-zero preservation,100 exact restore/capture cycles,
+duplicate body/node and changed-asset/nonfinite rejection without mutation,
+and a binary snapshot resumed in an independent Bullet world. The latter runs
+30 steps before saving and60 continuation steps with unchanged position1e-4,
+linear/angular velocity1e-6 and basis1e-5 tolerances. It uses the existing
+zero-gravity two-body fixture; this is not a floor/contact/native-game test.
+The ordinary-body continuation case remains present.
+
+Native-ragdoll-bodyt-snapshot-normal-01 and sanitized-01 each rebuild openmw,
+openmw-tests and esmtool and pass all895 engine tests with complete inventories,
+no skips/failures and no compiler warnings. Tested fingerprint `216999cdc986c2071d335cb65e800295bdca2cbfe01137f2c0d8dc2ad92b647a`.
+ASan leak checks are disabled; UBSan halts on errors. Component/Python sources
+are unchanged in this chunk;2,255 components passed both builds at checkpoint184
+and were not needlessly rerun.
+
+This closes the blanket BodyT physical-pose projection rejection only. It does
+not persist native motion modes, blend clocks, activation/contact state or
+establish native integrator equivalence. The original stock floor restart
+failure and raw BodyT velocity representation discrepancies remain retained.
+Loaded winning-file hashes remain identity authority; no new persisted kind
+marker is claimed. World actor physical lifecycle and normal gameplay remain
+open. Next: verify original8AB440 down-transition creation before implementing
+its caller/controller setup and World integration. No stage closes; S5-S14
+remain pending.

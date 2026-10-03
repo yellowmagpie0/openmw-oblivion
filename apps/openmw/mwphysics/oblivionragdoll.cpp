@@ -28,9 +28,8 @@ namespace MWPhysics
         {
             std::unordered_set<std::uint32_t> records, nodes;
             for (const auto& body : definition.mBodies)
-                if (body.mUsesRigidBodyTransform || !records.insert(body.mRecord).second
-                    || !nodes.insert(body.mNodeRecord).second)
-                    throw std::invalid_argument("native physical snapshot requires unique admitted body/bone identities");
+                if (!records.insert(body.mRecord).second || !nodes.insert(body.mNodeRecord).second)
+                    throw std::invalid_argument("native physical snapshot requires unique body/bone identities");
         }
     }
 

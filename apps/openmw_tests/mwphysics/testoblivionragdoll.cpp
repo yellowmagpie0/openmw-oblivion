@@ -62,7 +62,119 @@ namespace
             state.mNativeActorRagdolls.emplace(ref.mKey, pose);
             return state;
         }
+
+        void checkPhysicalSnapshotContinuation(bool bodyT)
+
+            {
+            if (bodyT)
+            {
+                mGraph.mBodies[0].mUsesRigidBodyTransform = true;
+                mGraph.mBodies[0].mTranslation = {2, 3, 4};
+                mGraph.mBodies[0].mRotation = osg::Quat(0, 0, 1, 0);
+            }
+            struct World
+            {
+                btDefaultCollisionConfiguration mConfiguration;
+                btCollisionDispatcher mDispatcher{&mConfiguration};
+                btDbvtBroadphase mBroadphase;
+                btSequentialImpulseConstraintSolver mSolver;
+                btDiscreteDynamicsWorld mWorld{&mDispatcher, &mBroadphase, &mSolver, &mConfiguration};
+                World() { mWorld.setGravity(btVector3(0, 0, 0)); }
+            } first, second;
+            std::vector<btTransform> poses;
+            for (const auto& body : mBodies)
+                poses.push_back(body.mPose);
+            NifBullet::ActorRagdollPhysics uninterrupted(mGraph, first.mWorld,
+                NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+            uninterrupted.restore(mBodies);
+            constexpr float dt = 1.f / 120.f;
+            const auto step = [&](auto& body, auto& world) {
+                body.applyNativeDamping(dt);
+                world.stepSimulation(dt, 0);
+            };
+            for (unsigned i = 0; i < 30; ++i)
+                step(uninterrupted, first.mWorld);
+            const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, uninterrupted.capture());
+            const auto bytes = save(snapshot).serializeBinary();
+            const auto decoded = ESM4::RuntimeState::deserializeBinary(bytes);
+            const auto loaded = MWPhysics::restoreNativeActorRagdoll(decoded.mNativeActorRagdolls.begin()->second,
+                mBase, mModel, mGraph);
+            poses.clear();
+            for (const auto& body : loaded)
+                poses.push_back(body.mPose);
+            NifBullet::ActorRagdollPhysics resumed(mGraph, second.mWorld,
+                NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+            resumed.restore(loaded);
+            for (unsigned i = 0; i < 60; ++i)
+            {
+                step(uninterrupted, first.mWorld);
+                step(resumed, second.mWorld);
+            }
+            const auto expected = uninterrupted.capture(), actual = resumed.capture();
+            ASSERT_EQ(actual.size(), expected.size());
+            // Snapshot floats round the double-precision Bullet bridge at the save
+            // boundary. Tolerances are fixed before running this continuation.
+            for (unsigned i = 0; i < actual.size(); ++i)
+                for (unsigned row = 0; row < 3; ++row)
+                {
+                    EXPECT_NEAR(actual[i].mPose.getOrigin()[row], expected[i].mPose.getOrigin()[row], 1e-4);
+                    EXPECT_NEAR(actual[i].mLinearVelocity[row], expected[i].mLinearVelocity[row], 1e-6);
+                    EXPECT_NEAR(actual[i].mAngularVelocity[row], expected[i].mAngularVelocity[row], 1e-6);
+                    for (unsigned col = 0; col < 3; ++col)
+                        EXPECT_NEAR(actual[i].mPose.getBasis()[row][col], expected[i].mPose.getBasis()[row][col], 1e-5);
+                }
+            EXPECT_EQ(first.mWorld.getNumCollisionObjects(), 2);
+            EXPECT_EQ(second.mWorld.getNumCollisionObjects(), 2);
+        }
     };
+
+    TEST_F(NativeRagdollSnapshotTest, BodyTPhysicalProjectionRoundtripsWithoutApplyingLocalOffset)
+    {
+        auto& body = mGraph.mBodies[0];
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {2, 3, 4};
+        body.mRotation = osg::Quat(0, 0, 1, 0);
+        const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies);
+        ASSERT_EQ(snapshot.mBodies.size(), 2);
+        EXPECT_EQ(snapshot.mBodies[1].mRecord, 24);
+        EXPECT_EQ(snapshot.mBodies[1].mPosition, (std::array<float, 3>{-0.f, 0.f, 20.f}));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(snapshot.mBodies[1].mPosition[0]), 0x80000000u);
+        const auto state = save(snapshot);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_EQ(decoded.canonicalJson(), state.canonicalJson());
+        EXPECT_EQ(decoded.mNativeActorRagdolls.begin()->second, snapshot);
+        auto roundtrip = snapshot;
+        for (unsigned i = 0; i < 100; ++i)
+        {
+            const auto restored = MWPhysics::restoreNativeActorRagdoll(roundtrip, mBase, mModel, mGraph);
+            EXPECT_EQ(restored[0].mPose.getOrigin(), mBodies[0].mPose.getOrigin());
+            roundtrip = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, restored);
+            EXPECT_EQ(roundtrip, snapshot);
+        }
+        EXPECT_EQ(body.mTranslation, osg::Vec3f(2, 3, 4));
+        EXPECT_EQ(body.mRotation, osg::Quat(0, 0, 1, 0));
+    }
+
+    TEST_F(NativeRagdollSnapshotTest, BodyTProjectionRetainsIdentityAndPhysicalInputRejection)
+    {
+        mGraph.mBodies[0].mUsesRigidBodyTransform = true;
+        mGraph.mBodies[0].mTranslation = {2, 3, 4};
+        mGraph.mBodies[0].mRotation = osg::Quat(0, 0, 1, 0);
+        const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies);
+        auto changed = mGraph;
+        changed.mBodies[0].mRecord = changed.mBodies[1].mRecord;
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, changed, mBodies), std::invalid_argument);
+        changed = mGraph;
+        changed.mBodies[0].mNodeRecord = changed.mBodies[1].mNodeRecord;
+        EXPECT_THROW(MWPhysics::restoreNativeActorRagdoll(snapshot, mBase, mModel, changed), std::invalid_argument);
+        changed = mGraph;
+        changed.mSourceHash[0] ^= 1;
+        EXPECT_THROW(MWPhysics::restoreNativeActorRagdoll(snapshot, mBase, mModel, changed), std::invalid_argument);
+        auto invalid = mBodies;
+        invalid[0].mPose.getOrigin().setX(std::numeric_limits<btScalar>::infinity());
+        EXPECT_ANY_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, invalid));
+        EXPECT_EQ(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies), snapshot);
+    }
 
     TEST_F(NativeRagdollSnapshotTest, PreservesWorldCoordinatesAssetBytesAndGraphOrder)
     {
@@ -96,7 +208,7 @@ namespace
         const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies);
         EXPECT_THROW(MWPhysics::restoreNativeActorRagdoll(snapshot, ESM::FormKey{}, mModel, mGraph), std::invalid_argument);
         EXPECT_THROW(MWPhysics::restoreNativeActorRagdoll(snapshot, mBase, "other.nif", mGraph), std::invalid_argument);
-        for (unsigned field = 0; field < 7; ++field)
+        for (unsigned field = 0; field < 6; ++field)
         {
             auto changed = mGraph;
             switch (field)
@@ -106,8 +218,7 @@ namespace
                 case 2: changed.mBodies[0].mRecord = 28; break;
                 case 3: changed.mBodies[0].mNodeRecord = 21; break;
                 case 4: changed.mBodies.pop_back(); break;
-                case 5: changed.mBodies[0].mUsesRigidBodyTransform = true; break;
-                case 6: changed.mBodies[0].mNodeRecord = changed.mBodies[1].mNodeRecord; break;
+                case 5: changed.mBodies[0].mNodeRecord = changed.mBodies[1].mNodeRecord; break;
             }
             EXPECT_THROW(MWPhysics::restoreNativeActorRagdoll(snapshot, mBase, mModel, changed), std::invalid_argument);
         }
@@ -141,58 +252,10 @@ namespace
 
     TEST_F(NativeRagdollSnapshotTest, BinarySnapshotResumesPhysicalMotionInAnIndependentWorld)
     {
-        struct World
-        {
-            btDefaultCollisionConfiguration mConfiguration;
-            btCollisionDispatcher mDispatcher{&mConfiguration};
-            btDbvtBroadphase mBroadphase;
-            btSequentialImpulseConstraintSolver mSolver;
-            btDiscreteDynamicsWorld mWorld{&mDispatcher, &mBroadphase, &mSolver, &mConfiguration};
-            World() { mWorld.setGravity(btVector3(0, 0, 0)); }
-        } first, second;
-        std::vector<btTransform> poses;
-        for (const auto& body : mBodies)
-            poses.push_back(body.mPose);
-        NifBullet::ActorRagdollPhysics uninterrupted(mGraph, first.mWorld,
-            NifBullet::RagdollNativeLengthScale, poses, 1, -1);
-        uninterrupted.restore(mBodies);
-        constexpr float dt = 1.f / 120.f;
-        const auto step = [&](auto& body, auto& world) {
-            body.applyNativeDamping(dt);
-            world.stepSimulation(dt, 0);
-        };
-        for (unsigned i = 0; i < 30; ++i)
-            step(uninterrupted, first.mWorld);
-        const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, uninterrupted.capture());
-        const auto bytes = save(snapshot).serializeBinary();
-        const auto decoded = ESM4::RuntimeState::deserializeBinary(bytes);
-        const auto loaded = MWPhysics::restoreNativeActorRagdoll(decoded.mNativeActorRagdolls.begin()->second,
-            mBase, mModel, mGraph);
-        poses.clear();
-        for (const auto& body : loaded)
-            poses.push_back(body.mPose);
-        NifBullet::ActorRagdollPhysics resumed(mGraph, second.mWorld,
-            NifBullet::RagdollNativeLengthScale, poses, 1, -1);
-        resumed.restore(loaded);
-        for (unsigned i = 0; i < 60; ++i)
-        {
-            step(uninterrupted, first.mWorld);
-            step(resumed, second.mWorld);
-        }
-        const auto expected = uninterrupted.capture(), actual = resumed.capture();
-        ASSERT_EQ(actual.size(), expected.size());
-        // Snapshot floats round the double-precision Bullet bridge at the save
-        // boundary. Tolerances are fixed before running this continuation.
-        for (unsigned i = 0; i < actual.size(); ++i)
-            for (unsigned row = 0; row < 3; ++row)
-            {
-                EXPECT_NEAR(actual[i].mPose.getOrigin()[row], expected[i].mPose.getOrigin()[row], 1e-4);
-                EXPECT_NEAR(actual[i].mLinearVelocity[row], expected[i].mLinearVelocity[row], 1e-6);
-                EXPECT_NEAR(actual[i].mAngularVelocity[row], expected[i].mAngularVelocity[row], 1e-6);
-                for (unsigned col = 0; col < 3; ++col)
-                    EXPECT_NEAR(actual[i].mPose.getBasis()[row][col], expected[i].mPose.getBasis()[row][col], 1e-5);
-            }
-        EXPECT_EQ(first.mWorld.getNumCollisionObjects(), 2);
-        EXPECT_EQ(second.mWorld.getNumCollisionObjects(), 2);
+        checkPhysicalSnapshotContinuation(false);
+    }
+    TEST_F(NativeRagdollSnapshotTest, BodyTBinarySnapshotResumesPhysicalMotionInAnIndependentWorld)
+    {
+        checkPhysicalSnapshotContinuation(true);
     }
 }
