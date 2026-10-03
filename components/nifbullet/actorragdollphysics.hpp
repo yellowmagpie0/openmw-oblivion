@@ -31,6 +31,9 @@ namespace NifBullet
     // Input already includes actor/world placement and must be rigid.
     // The single pose uses native lengths; the graph adapter returns world
     // lengths for ActorRagdollPhysics with RagdollNativeLengthScale.
+    // Native scene rotation extraction and position conversion before the
+    // Bullet transform representation. Matrix must already be rigid.
+    RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose);
     btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose);
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
         std::span<const RagdollBoneWorldPose> bones);

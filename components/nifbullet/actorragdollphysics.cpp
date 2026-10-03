@@ -287,23 +287,79 @@ namespace NifBullet
         return result;
     }
 
-    btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose)
+    RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose)
     {
         for (unsigned i = 0; i < 16; ++i)
             require(std::isfinite(worldPose.ptr()[i]), "nonfinite bone world pose");
         for (unsigned row = 0; row < 3; ++row)
             require(worldPose(row, 3) == 0, "projective bone world pose");
         require(worldPose(3, 3) == 1, "invalid affine bone world pose");
-        // OSG matrices multiply row vectors; Bullet matrices multiply columns.
+        // OSG row-vector storage is the transpose of the native NiMatrix3.
         const btMatrix3x3 basis(worldPose(0, 0), worldPose(1, 0), worldPose(2, 0),
             worldPose(0, 1), worldPose(1, 1), worldPose(2, 1),
             worldPose(0, 2), worldPose(1, 2), worldPose(2, 2));
         validatePose(btTransform(basis, btVector3(0, 0, 0)));
-        const auto rotation = worldPose.getRotate();
-        btQuaternion quaternion(float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w()));
-        require(std::isfinite(quaternion.length2()) && quaternion.length2() > 0, "invalid bone rotation");
-        quaternion.normalize();
-        return btTransform(quaternion, vector(ragdollWorldToNativePosition(worldPose.getTrans())));
+        std::array<float, 9> matrix;
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                matrix[row * 3 + col] = worldPose(col, row);
+        RagdollNativeTargetPose result;
+        result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans());
+        auto& q = result.mRotation;
+        // Actual7150F0 stores the trace, square-root input/result and reciprocal
+        // factor as binary32; differences/products retain double intermediates.
+        const float trace = float(double(matrix[0]) + matrix[4] + matrix[8]);
+        if (trace > 0.f)
+        {
+            const float root = float(std::sqrt(double(float(double(trace) + 1.0))));
+            q[3] = float(double(root) * .5);
+            const float factor = float(.5 / double(root));
+            q[0] = float((double(matrix[7]) - matrix[5]) * factor);
+            q[1] = float((double(matrix[2]) - matrix[6]) * factor);
+            q[2] = float((double(matrix[3]) - matrix[1]) * factor);
+        }
+        else
+        {
+            unsigned axis = matrix[4] > matrix[0] ? 1 : 0;
+            if (matrix[8] > matrix[axis * 3 + axis])
+                axis = 2;
+            const unsigned next = (axis + 1) % 3;
+            const unsigned last = (next + 1) % 3;
+            const float squared = float(double(matrix[axis * 3 + axis])
+                - matrix[next * 3 + next] - matrix[last * 3 + last] + 1.0);
+            const float root = float(std::sqrt(double(squared)));
+            q[axis] = float(double(root) * .5);
+            const float factor = float(.5 / double(root));
+            q[3] = float((double(matrix[last * 3 + next]) - matrix[next * 3 + last]) * factor);
+            q[next] = float((double(matrix[axis * 3 + next]) + matrix[next * 3 + axis]) * factor);
+            q[last] = float((double(matrix[axis * 3 + last]) + matrix[last * 3 + axis]) * factor);
+        }
+        // Scene sync reorders WXYZ to XYZW, then executes4D6830 once.
+        // Match its float reduction/Newton stores with portable reciprocal sqrt.
+        const float xx = q[0] * q[0];
+        const float yy = q[1] * q[1];
+        const float zz = q[2] * q[2];
+        const float ww = q[3] * q[3];
+        const float xxzz = zz + xx;
+        const float yyww = ww + yy;
+        const float squared = yyww + xxzz;
+        require(std::isfinite(squared) && squared > 0.f, "invalid native scene rotation");
+        const float reciprocal = 1.f / std::sqrt(squared);
+        const float first = squared * reciprocal;
+        const float second = first * reciprocal;
+        const float error = 3.f - second;
+        const float half = .5f * reciprocal;
+        const float factor = half * error;
+        for (float& value : q)
+            value *= factor;
+        return result;
+    }
+
+    btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose)
+    {
+        const auto target = ragdollNativeSceneTargetPose(worldPose);
+        return btTransform(btQuaternion(target.mRotation[0], target.mRotation[1],
+            target.mRotation[2], target.mRotation[3]), vector(target.mPosition));
     }
 
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,

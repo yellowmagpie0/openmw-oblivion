@@ -7791,3 +7791,68 @@ ASan leak detection disabled; UBSan halts. Python unchanged. No M15 stage closes
 Actual animation/root ownership, blend route/mode-transition sequencing,
 scene-to-physics publication, mode/clock persistence, actor scaling, World/
 contact/restart acceptance and retained stock-floor continuation remain open.
+
+
+### Checkpoint166: native scene quaternion preparation in the existing bone adapter
+
+Checkpoint165 committed as `ed49df1a124aabd2a0012bc47ff4385d8511f890`,
+162 isolated commits with exact-byte/fresh-clone proof. The existing
+ragdollNativePoseFromBoneWorld adapter now obtains its position/rotation from
+ragdollNativeSceneTargetPose before constructing the Bullet transform. The new
+query exposes the prepared native-unit origin and XYZW float quaternion without
+losing its representation through a Bullet matrix roundtrip. It retains the
+existing rigid/affine/finite matrix admission and signed-zero position conversion.
+OSG row-vector matrices are transposed to native NiMatrix3 convention. Rotation
+preparation follows the actual native positive-trace/largest-diagonal branches,
+strict diagonal comparisons/cyclic indices, float trace/root/reciprocal stores,
+unrounded double difference/product intermediates, and one float quaternion
+normalization reduction/Newton pass. The old OSG quaternion extractor and extra
+double normalization are no longer used by the bone/body pose adapter.
+
+Original executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Full original89EAE0 keyframed scene synchronization completes400 synthetic cases
+under flags1/40 and both x87 precision words. Actual motion type getter, NiWorld
+transform getter,7150F0 matrix conversion,4529E0 separate position scale,
+4D6830 quaternion normalization,8A2FB0 wrapper setter,8A9E20/89DB30/8DD970 motion
+transform stores,8B1DD0 quaternion-to-matrix and8A9D10 no-world return execute.
+Only Windows EnterCriticalSection/LeaveCriticalSection/GetCurrentThreadId are
+boundary stubs; no game-call arithmetic/pose setter is substituted. Source/
+corpus SHA256 `2b3ffeca6e1fd1de0b4b62d01bbd0194cfd19b61d055aac6ff0e138d75596afa`, `9a96456ff35e6326775942f27a53d5658ae8bd4b465eb35f3cf53472a84d79a9`.
+Native current/previous quaternion and COM stores agree and all eight velocity
+words and the local COM survive. World/contact/AABB publication is outside this
+no-world probe. The separate original scene scale field is not consumed by this
+rotation/position branch; this does not establish shape/inertia scaling or admit
+scaled OSG matrices. The cyclic index tableB27120 is the original initialized
+(1,2,0) PE data, and position adapterA39088 uses its actual separately stored
+0.1428767293691635 double, not an inferred reciprocal of the reverse constant.
+
+Three new component tests retain ten native input/output examples for exact
+quaternion branch signs/stores, ensure the existing bone adapter constructs the
+same transform from prepared target values, and preserve rigid admission/signed
+zero. Baseline01 retains two failures against the old adapter projection; the
+third admission case already passes. The range-loop copy warning is corrected.
+Actual C++ scene-target-compare-{normal,sanitized}-01 each match all400 original
+cases:2,800 exact native origin/normalized-quaternion fields and400 existing-
+adapter consistency checks. The old OSG quaternion/double-normalization negative
+control differs in305 cases in each build. Comparator/driver SHA256
+`361255b06cc3db47dccc8345361805fb4bd355aa80c9a8105c26e83a3c6a248a`, `cd49b1705013550d84d38416638650fad916a4fdd98e512ca2eed01304745fcd`.
+Normalization uses portable reciprocal square root; instruction emulation is not
+an original-hardware trajectory/RSQRT-approximation gameplay probe. Setter COM/
+previous-state/velocity observations are not compared by this arithmetic bridge.
+
+Full scene-target-{normal,sanitized}-01 each pass2,208 component and869 engine
+cases, exact complete inventories, zero failures/skips; openmw/esmtool rebuilt.
+Stable tested fingerprint `282017e1c4f342348a6ee58e6d0f784dd0dad43bd95f52b4c2058c86f37dd8f8`. ASan leaks disabled; UBSan halts. Python
+unchanged. Actual pinned stock18-body/17-joint NIF/KF animated-target regression
+scene-target-stock-animated-{normal,sanitized}-01 each pass240 frames,69,120 exact
+animated matrix fields, controller rebuild and handoff, zero graph teardown
+objects/constraints. Maximum physical renderer/bone error
+4.57764e-05 normal/4.57764e-05 sanitized,
+within unchanged.001 tolerance. This is a real asset Animation/Bullet projection
+check, not a World/gameplay/save continuation.
+
+No M15 stage closes. Next: publish validated scene targets to owned keyframed
+bodies at the worker boundary, then complete actual blend-controller sequencing
+and mode/clock persistence. Gameplay scene-root choice, actor scaling, contact
+activation, full World/restart acceptance and the stock-floor continuation
+failure remain open.

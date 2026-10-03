@@ -1272,3 +1272,66 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST(RagdollNativeSceneTarget, PreservesOriginalBranchQuaternionSignsAndFloatStores)
+    {
+        struct Case { std::array<std::uint32_t, 12> mScene; std::array<std::uint32_t, 7> mExpected; };
+        // Full original89EAE0 scene-sync corpus; inputs and returns precede
+        // production conversion. Scene scalar scale is a separate native field.
+        const std::array<Case, 10> cases{{
+        {{{3182157128u, 1056045612u, 1063294083u, 1064673025u, 1049449875u, 3177788088u, 3196699560u, 1062617218u, 3203663618u, 3297172727u, 1169021577u, 1148907522u}}, {{3273270915u, 1145485206u, 1125083548u, 1057440399u, 1059944274u, 1049843532u, 1054378868u}}},
+        {{{1062863826u, 1055937932u, 1047451580u, 3204851674u, 1061213623u, 1053523921u, 1009920570u, 3203130094u, 1063465463u, 1163825424u, 1166399375u, 3259466735u}}, {{1140745618u, 1142487993u, 3236170880u, 3194691138u, 1030992394u, 3196589820u, 1064252517u}}},
+        {{{1061061526u, 3201531164u, 3204866513u, 1033071318u, 1062515929u, 3205316804u, 1059717285u, 1052697801u, 1059448864u, 1165909382u, 3322348214u, 1131842812u}}, {{1141989149u, 3298447784u, 1108142027u, 1048827863u, 3198782271u, 1040864278u, 1063636187u}}},
+        {{{3195360606u, 1064040861u, 1050416041u, 1060537485u, 3174875426u, 1060314829u, 1059632271u, 1053104869u, 3206900245u, 3315796085u, 1157960779u, 1162773326u}}, {{3292158297u, 1134042248u, 1139543056u, 1058686444u, 1059953782u, 1053604089u, 3188044185u}}},
+        {{{1060416108u, 3193119406u, 3207431564u, 1046279215u, 1064913934u, 3180499540u, 1059897734u, 3183745049u, 1060852514u, 3277709178u, 1172638249u, 1173233816u}}, {{3254622870u, 1149429204u, 1149769575u, 3151397088u, 3199958036u, 1038742035u, 1064069465u}}},
+        {{{1025592694u, 1060053407u, 3208278796u, 1059724063u, 3205493408u, 3204187679u, 3208579997u, 3203259276u, 3203666984u, 3300419197u, 3315339100u, 3311028234u}}, {{3276981675u, 3291635957u, 3287908264u, 1060669546u, 1055881397u, 3204639841u, 1008548040u}}},
+        {{{1065333762u, 3167806168u, 1025983272u, 1020862862u, 1065342367u, 3167161487u, 3173293517u, 1020243799u, 1065334264u, 1157338782u, 3322845880u, 1172932094u}}, {{1133496532u, 3299016623u, 1149597138u, 1011577105u, 1017511955u, 1012209209u, 1065347058u}}},
+        {{{1063088572u, 1054175861u, 3197039264u, 3198352621u, 1063442527u, 1051490013u, 1053200643u, 3192871860u, 1063662311u, 3321979859u, 1164232920u, 1174983741u}}, {{3298026749u, 1141031040u, 1151100355u, 3188754562u, 3190996878u, 3192194716u, 1064603170u}}},
+        {{{1065282601u, 1026734527u, 1034228112u, 3176658219u, 1065219711u, 1038755607u, 3180956091u, 3186745032u, 1065188255u, 1164310681u, 3321120819u, 3323475113u}}, {{1141075481u, 3297483743u, 3299735845u, 3178146606u, 1025490497u, 3167085300u, 1065307017u}}},
+        {{{3190519825u, 1054835071u, 1063406506u, 1036318173u, 3210909462u, 1055465432u, 1065037445u, 1042620528u, 1037668220u, 1175024363u, 3314796064u, 3305692310u}}, {{1151146786u, 3291015259u, 3281809229u, 1059224699u, 1045879721u, 1060901257u, 3186439724u}}}
+        }};
+        for (const auto& row : cases)
+        {
+            osg::Matrixf matrix = osg::Matrixf::identity();
+            for (unsigned r = 0; r < 3; ++r)
+                for (unsigned c = 0; c < 3; ++c)
+                    matrix(c, r) = std::bit_cast<float>(row.mScene[r * 3 + c]);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                matrix(3, axis) = std::bit_cast<float>(row.mScene[9 + axis]);
+            const auto pose = NifBullet::ragdollNativeSceneTargetPose(matrix);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(pose.mPosition[axis]), row.mExpected[axis]);
+            for (unsigned axis = 0; axis < 4; ++axis)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(pose.mRotation[axis]), row.mExpected[3 + axis]);
+        }
+    }
+
+    TEST(RagdollNativeSceneTarget, ExistingBoneAdapterUsesThePreparedNativeTarget)
+    {
+        osg::Matrixf matrix = osg::Matrixf::rotate(.8f, osg::Vec3f(1, 2, 3))
+            * osg::Matrixf::translate(17, -23, 41);
+        const auto target = NifBullet::ragdollNativeSceneTargetPose(matrix);
+        const btTransform expected(btQuaternion(target.mRotation[0], target.mRotation[1],
+            target.mRotation[2], target.mRotation[3]),
+            btVector3(target.mPosition.x(), target.mPosition.y(), target.mPosition.z()));
+        EXPECT_EQ(NifBullet::ragdollNativePoseFromBoneWorld(matrix), expected);
+    }
+
+    TEST(RagdollNativeSceneTarget, RigidAdmissionAndSignedZeroRemainExplicit)
+    {
+        auto matrix = osg::Matrixf::identity();
+        matrix(3, 0) = -0.f;
+        const auto target = NifBullet::ragdollNativeSceneTargetPose(matrix);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(target.mPosition.x()), 0x80000000u);
+        EXPECT_EQ(target.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+        for (const auto& invalid : {osg::Matrixf::scale(2, 2, 2), osg::Matrixf::scale(-1, 1, 1)})
+            EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(invalid), std::invalid_argument);
+        matrix(0, 3) = .1f;
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(matrix), std::invalid_argument);
+        matrix = osg::Matrixf::identity();
+        matrix(1, 1) = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(matrix), std::invalid_argument);
+    }
+}
