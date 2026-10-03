@@ -512,6 +512,32 @@ namespace
             std::invalid_argument);
     }
 
+    TEST_F(ActorRagdollPhysicsTest, RestoredAnisotropicBodyUsesRotatedInertiaForOffCenterImpulse)
+    {
+        mGraph.mBodies[0].mInertia = {1, 0, 0, 0, 2, 0, 0, 0, 3};
+        mGraph.mBodies[0].mCenter.set(0.2f, 0.3f, 0.4f);
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto state = actor.capture();
+        state[0].mPose.setRotation(btQuaternion(btVector3(0, 0, 1), SIMD_HALF_PI));
+        state[0].mLinearVelocity = btVector3(2, 3, 4);
+        state[0].mAngularVelocity = btVector3(0, 0, 0);
+        actor.restore(state);
+        const auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        EXPECT_EQ(body->getInterpolationLinearVelocity(), state[0].mLinearVelocity);
+        EXPECT_EQ(body->getInterpolationAngularVelocity(), state[0].mAngularVelocity);
+        EXPECT_EQ(body->getInterpolationWorldTransform(), body->getWorldTransform());
+        // Rotation by 90 degrees about Z puts inertia2 on the world X axis.
+        // A unit Z impulse applied one unit along world Y gives unit X torque.
+        const auto center = body->getCenterOfMassPosition();
+        actor.applyImpulse(0, btVector3(0, 0, 1), center + btVector3(0, 1, 0));
+        const auto actual = actor.capture()[0];
+        EXPECT_NEAR(actual.mAngularVelocity.x(), 0.5, 1e-12);
+        EXPECT_NEAR(actual.mAngularVelocity.y(), 0, 1e-12);
+        EXPECT_NEAR(actual.mAngularVelocity.z(), 0, 1e-12);
+        EXPECT_EQ(actual.mLinearVelocity, btVector3(2, 3, 4.5));
+        EXPECT_NEAR((actual.mPose.getOrigin() - state[0].mPose.getOrigin()).length(), 0, 1e-12);
+    }
+
     TEST_F(ActorRagdollPhysicsTest, NativeVelocityStepPreservesSleepingBodiesUntilImpulse)
     {
         NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);

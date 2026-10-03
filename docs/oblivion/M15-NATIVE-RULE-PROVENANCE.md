@@ -6594,3 +6594,49 @@ adequate continuation. Snapshot precision and contact continuation therefore
 remain active work, alongside World render/save admission, native recovery/mode
 policy, normal-input corpse/loot/media and display-dependent TES3 runtime gates.
 No M15 gate is promoted by this scheduler prerequisite.
+
+
+### Checkpoint143 — restore rotated inertia and interpolation velocities (S4/S6 open)
+
+`ActorRagdollPhysics::restore` now assigns the restored velocities before calling
+Bullet's `setCenterOfMassTransform`, which refreshes rotated world inverse inertia
+and copies the velocities to interpolation state. The previous base
+`setWorldTransform` path left those values stale. A focused anisotropic-body test
+rotates inertia diag(1,2,3) by90 degrees about Z, uses a nonzero center offset and
+applies a unit X torque through an off-center impulse: angular X must be0.5,
+with interpolation velocity(2,3,4). The actual prior checkpoint142 sanitizer
+library yields angular X1 and interpolation velocity(0,0,0), independently
+confirmed in `S4/native-ragdoll-inertia-restore-red-01`. Its report identifies the
+old library hash and tested revision; it does not claim to test current sources.
+Focused green01 passes the new case. Full inertia-restore normal/sanitized01
+pass2,135 component and833 engine tests each, complete inventories and zero
+failures/skips; normal also passes245 Python tests. Both engine builds rebuild
+openmw and esmtool. Stable tested source fingerprint `91cdd4949e69f427c746ede186960d066625c1de5f0325bff3b96a3bf7d2df68`.
+ASan leak checks are disabled; UBSan halts on errors. No leak coverage claimed.
+
+Stock floor-contact restart normal/sanitized03 still FAIL the unchanged declared
+bounds(R0.01,position0.1,linear/angular velocity0.05), first position difference
+0.24506044387817383. No restart or gameplay gate is promoted. Private precision
+diagnosis normal01 retains a linker failure from exhausted temporary storage;
+normal02 executes a full-double checkpoint but still fails rotation0.01 with
+maximum rotation0.2556762620806694, position0.4741649627685547, linear velocity
+11.168063640594482 and angular velocity2.56339693069458. This rejects increased
+snapshot precision alone as the proposed correction; no production codec change
+is made. It also corrects checkpoint142's provisional attribution to the float
+boundary: that experiment changed multiple restore operations and did not isolate
+float quantization as the cause.
+
+Private inertia diagnosis normal01 and restore-operations diagnosis normal01
+are diagnostic successes only, not passing continuation gates. They exercise
+the actual18-body/17-joint stock graph, native-gravity scheduler, static floor,
+finite position bounds10000 and renderer handoff tolerance0.001. Repeated
+producers/checkpoints are byte-identical. Restoring a full-double shape pose in
+place while retaining contacts still yields maximum rotation
+0.26131683588027954, position0.4761161804199219, linear velocity5.3017425537109375
+and angular velocity2.594456672668457. Separate activation-only, AABB-only,
+velocity-assignment-only, exact-center-transform-only and clear-forces-only
+controls each produce byte-identical final state to the uninterrupted baseline.
+The combined shape/center pose round trip remains under investigation; these
+controls do not establish whole-trajectory native Havok agreement. World actor
+admission/render/save, native recovery/mode policy, normal-input corpse/media,
+and display-dependent Morrowind runtime gates remain open.

@@ -479,10 +479,11 @@ namespace NifBullet
         {
             auto& body = *mImpl->mBodies[i].mBody;
             const auto pose = states[i].mPose * mImpl->mBodies[i].mCenterFrame;
-            body.setWorldTransform(pose);
-            body.setInterpolationWorldTransform(pose);
             body.setLinearVelocity(states[i].mLinearVelocity);
             body.setAngularVelocity(states[i].mAngularVelocity);
+            // Refresh the rotated world inertia and copy the restored velocities
+            // into interpolation state as well as the current transform.
+            body.setCenterOfMassTransform(pose);
             body.clearForces();
             body.activate(true);
             mImpl->mWorld.updateSingleAabb(&body);
