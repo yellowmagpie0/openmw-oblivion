@@ -13655,3 +13655,77 @@ openmw/esmtool rebuilt. Stable tested fingerprint
 ASan leaks disabled; UBSan halts; Python unchanged. Actual body publication,
 wake/motion mode, scene controller attachment, World/render/save integration
 and stock floor-contact continuation remain open. No stage is newly closed.
+
+
+### Checkpoint155: owned body pose drives and connected activation
+
+Checkpoint154 committed as `51c82c1bcc041db519d985b9a9f014d2f84a1577`,
+151 isolated commits with exact bytes/fresh-clone proof. ActorRagdollPhysics
+now accepts sparse native target-pose drives keyed by owned body record.
+It prepares capped targets, mixes current velocities with the supplied gain,
+compensates supplied native world gravity and converts linear units once.
+Every result is validated before velocity or activation mutation. Duplicate/
+unknown records, bad target quaternion, nonfinite gain/gravity, invalid inverse
+time and overflow reject the entire batch. The driver preserves body poses,
+forces, contact and interpolation state; it does not restore/step transforms.
+Empty selections leave sleeping graphs alone. An explicit zero-gain call still
+activates eligible bodies as the original setter does; controller selection
+must decide when to call it. No controller selection is claimed here.
+
+Original pinned executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-ragdoll-full-velocity-publication-oracle-01 now executes the complete
+008a34c0 return, including actual preparation callees,0089d940 world getter,
+0089f570 dispatch,008a6410/008cbc00 activation, and0089db90/0089dbb0 velocity
+stores. There are no game/OS call stubs. Synthetic existing-index activation
+objects avoid allocation; scene motion-mode selection and collision stepping
+are excluded. Twelve pose fixtures, two x87 words, three inverse times/cap
+pairs/gains, present/absent world, initially active/inactive activation object
+and prevent-activation byte yield5,184 full returns. Actual activation occurs
+648 times, including216 zero-gain calls;3,240 cases finish active. Source/corpus
+SHA256:
+`3581fbd09256c0b5a77e4ec5973224c01c765fc9ea1939e8d76fb66350e4268e`,
+`1be490ab71572d2b4a3c5ed56346239bb5a833e2e5abd42372f60f67c312a8ab`.
+Two private script syntax errors were fixed before any emulation/evidence
+creation; setup-failures.txt retains the account.
+
+S4/native-ragdoll-body-drive-compare-{normal,sanitized}-04 each compare432
+applicable full-return cases through actual constructed owned Bullet graphs:
+world present, activation eligible, loaded max-linear250. Linear/angular bits
+match exactly; active state and unchanged transform agree in every case.
+Portable angular tolerance remains predeclared2e-5 absolute+relative; observed
+maximum error0. Missing publication, omitted activation and forced zero gain
+controls reject288/216/288 cases. Comparator/driver SHA256:
+`0d1d5708cc40a173d6164133938a616ba53e38205030786641f63ff32132ddc0`,
+`4efe1dab78643dd84ecf20e5399510b23ceef64a1299b65e0af67f8882ec19b1`.
+Comparator01 compile failures and sanitizer02 failure retain build logs and
+failure.json: assumed Bullet include paths were wrong; no cases ran. Corrected
+normal02/sanitizer03 passed before the final connected-activation revision.
+
+Native activation changes the shared activation object, not only one setter's
+body. Owned constraint-connected groups are reconstructed during construction
+and awakened before native gravity/damping. Both pose drives and impulses use
+that grouping. Disconnected owned bodies remain asleep. This addresses owned
+constraint connections only; contact-based islands across owners remain a
+world integration concern. No cross-owner activation acceptance is claimed.
+
+Retained S4/native-ragdoll-pose-drive-baseline-01 executes four failing new tests
+against a do-nothing driver. Initial normal/sanitized01 each fail three tests:
+Bullet's default vector constructor left staged fourth components uninitialized;
+explicit zero vector construction fixes this. Normal/sanitized02 pass2,168
+component/842 engine tests, but are superseded: connected-baseline01 then
+executes two failing tests showing the undriven connected bone stayed asleep
+and skipped gravity after both a pose drive and an impulse. Final owned-group
+activation corrects both failures. Six new component tests now cover publication,
+force/pose preservation, disconnected selection, whole-batch rejection,
+length/principal-COM conversion and connected activation before integration.
+Final S4/native-ragdoll-pose-drive-{normal,sanitized}-03 pass2,170 component
+and842 engine tests each, full inventories, zero failures/skips; openmw/esmtool
+rebuilt. Stable tested fingerprint
+`7bbbaf8169285027ba0f9c480f0049a3efeb34c2803c4abac522594be30aabe8`.
+ASan leaks disabled; UBSan halts; Python unchanged.
+
+Scheduler/PhysicsSystem drive dispatch, contact-connected world activation,
+controller creation/selection, native frame-time resolution, motion-mode and
+hierarchy pose blending, actual World/render/save lifecycle and stock floor
+continuation remain open. S4 and later gameplay/restart gates remain open.

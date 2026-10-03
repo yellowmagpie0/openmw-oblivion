@@ -900,4 +900,122 @@ namespace
         EXPECT_EQ(target.mPosition, osg::Vec3f(1, 2, 3));
     }
 
+    TEST_F(ActorRagdollPhysicsTest, NativePoseDrivePublishesVelocitiesAndWakesWithoutMovingOrClearingForces)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->applyCentralForce(btVector3(3, 4, 5));
+        body->setActivationState(ISLAND_SLEEPING);
+        const auto initial = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{12, {{1, 2, 5}, {0, 0, 0, 1}}, .5f}}};
+        actor.driveNativePoseVelocities(drives, 2.f, -10.f);
+        const auto result = actor.capture()[0];
+        // Native displacement(1,2,3)*inverse2*gain.5 plus Z compensation2.5.
+        EXPECT_EQ(result.mLinearVelocity, btVector3(1, 2, 5.5));
+        EXPECT_EQ(result.mAngularVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(result.mPose, initial.mPose);
+        EXPECT_EQ(body->getTotalForce(), btVector3(3, 4, 5));
+        EXPECT_TRUE(body->isActive());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativePoseDriveSelectsRecordsAndLeavesUnselectedSleepingBodiesAlone)
+    {
+        addHinge();
+        mGraph.mJoints.clear();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING);
+        second->setActivationState(ISLAND_SLEEPING);
+        actor.driveNativePoseVelocities({}, 1.f, 0.f);
+        EXPECT_FALSE(first->isActive());
+        EXPECT_FALSE(second->isActive());
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{24, {{4, 0, 1}, {0, 0, 0, 1}}, 1.f}}};
+        actor.driveNativePoseVelocities(drives, 1.f, 0.f);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(actor.capture()[1].mLinearVelocity, btVector3(4, 0, 0));
+        EXPECT_FALSE(first->isActive());
+        EXPECT_TRUE(second->isActive());
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativePoseDriveRejectsWholeBatchBeforeVelocityOrActivationChanges)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING);
+        second->setActivationState(ISLAND_SLEEPING);
+        std::array<NifBullet::RagdollNativeVelocityDrive, 2> drives{{
+            {12, {{4, 0, 2}, {0, 0, 0, 1}}, 1.f}, {999, {{4, 0, 1}, {0, 0, 0, 1}}, 1.f}}};
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 1.f, 0.f), std::invalid_argument);
+        drives[1].mRecord = 12;
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 1.f, 0.f), std::invalid_argument);
+        drives[1].mRecord = 24;
+        drives[1].mTarget.mRotation = {};
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 1.f, 0.f), std::invalid_argument);
+        drives[1].mTarget.mRotation = {0, 0, 0, 1};
+        drives[1].mVelocityGain = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 1.f, 0.f), std::invalid_argument);
+        drives[1].mVelocityGain = 1.f;
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 0.f, 0.f), std::invalid_argument);
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 1.f, std::numeric_limits<float>::quiet_NaN()),
+            std::invalid_argument);
+        drives[1].mTarget.mPosition.x() = std::numeric_limits<float>::max();
+        EXPECT_THROW(actor.driveNativePoseVelocities(drives, 2.f, 0.f), std::invalid_argument);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(actor.capture()[1].mLinearVelocity, btVector3(0, 0, 0));
+        EXPECT_FALSE(first->isActive());
+        EXPECT_FALSE(second->isActive());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativePoseDriveConvertsWorldUnitsAndPrincipalCenterFrameOnce)
+    {
+        mGraph.mBodies[0].mCenter = {1, -2, 3};
+        mGraph.mBodies[0].mInertia = {2, .5f, 0, .5f, 3, 0, 0, 0, 4};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.5f, mPoses, 1, -1);
+        const auto initial = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{12, {{2, 0, .8f}, {0, 0, 0, 1}}, 1.f}}};
+        actor.driveNativePoseVelocities(drives, 1.f, 0.f);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(5, 0, 0));
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(actor.capture()[0].mPose, initial.mPose);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativePoseDriveWakesConnectedBonesBeforeNativeGravityIntegration)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING);
+        second->setActivationState(ISLAND_SLEEPING);
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{24, {{0, 0, 1}, {0, 0, 0, 1}}, 0.f}}};
+        actor.driveNativePoseVelocities(drives, 120.f, 0.f);
+        EXPECT_TRUE(first->isActive());
+        EXPECT_TRUE(second->isActive());
+        const std::array<osg::Vec3f, 2> deltas{{{0, 0, -1}, {0, 0, -1}}};
+        actor.applyNativeVelocityStep(1.f / 120.f, deltas);
+        EXPECT_LT(actor.capture()[0].mLinearVelocity.z(), 0);
+        EXPECT_LT(actor.capture()[1].mLinearVelocity.z(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, ImpulseWakesConnectedBonesBeforeNativeGravityIntegration)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING);
+        second->setActivationState(ISLAND_SLEEPING);
+        actor.applyImpulse(1, btVector3(2, 0, 0), mPoses[1].getOrigin());
+        EXPECT_TRUE(first->isActive());
+        EXPECT_TRUE(second->isActive());
+        const std::array<osg::Vec3f, 2> deltas{{{0, 0, -1}, {0, 0, -1}}};
+        actor.applyNativeVelocityStep(1.f / 120.f, deltas);
+        EXPECT_LT(actor.capture()[0].mLinearVelocity.z(), 0);
+        EXPECT_LT(actor.capture()[1].mLinearVelocity.z(), 0);
+    }
+
 }

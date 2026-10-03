@@ -3,6 +3,7 @@
 
 #include "actorragdoll.hpp"
 #include "ragdollcollisionfilter.hpp"
+#include "ragdollvelocity.hpp"
 
 #include <memory>
 #include <span>
@@ -46,6 +47,13 @@ namespace NifBullet
         btVector3 mAngularVelocity;
     };
 
+    struct RagdollNativeVelocityDrive
+    {
+        std::uint32_t mRecord;
+        RagdollNativeTargetPose mTarget;
+        float mVelocityGain;
+    };
+
     // Owns collision shapes, rigid bodies and constraints. The borrowed world
     // must outlive the instance; destruction removes every registered object.
     // Poses and velocities use the caller's world units. Native shape/inertia
@@ -70,6 +78,13 @@ namespace NifBullet
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.
         void applyNativeDamping(float frameSeconds);
+        // Sparse explicit native pose drives, keyed by owned body record.
+        // Stage all results before publishing velocities and waking selected
+        // bodies and constraint-connected owned bones. Caller decides which
+        // controllers require a drive; an empty
+        // selection leaves sleeping bodies alone. No transform/world step.
+        void driveNativePoseVelocities(std::span<const RagdollNativeVelocityDrive> drives,
+            float inverseFrameSeconds, float nativeGravityZ);
         // Explicit native-unit per-body velocity deltas, before damping and
         // loaded-body caps. Stages every result before publishing active-body velocities;
         // does not apply Bullet forces or advance the world/transform clock.

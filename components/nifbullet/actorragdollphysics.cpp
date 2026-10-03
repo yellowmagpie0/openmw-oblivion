@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <type_traits>
 #include <unordered_set>
 #include <unordered_map>
@@ -231,15 +232,23 @@ namespace NifBullet
             float mLinearDamping, mAngularDamping;
             RagdollMotionLimits mLimits;
             std::unique_ptr<btRigidBody> mBody;
+            std::size_t mActivationGroup = 0;
         };
         btDynamicsWorld& mWorld;
         float mLengthScale;
         // Bodies are destroyed before shapes; neither owns the other's storage.
         std::vector<std::unique_ptr<btCollisionShape>> mShapes;
         std::vector<Body> mBodies;
+        std::vector<std::vector<std::size_t>> mActivationGroups;
         std::vector<btCollisionObject*> mCollisionObjects;
         std::vector<std::unique_ptr<btTypedConstraint>> mConstraints;
         std::size_t mRegisteredBodies = 0, mRegisteredConstraints = 0;
+
+        void activateGroup(std::size_t group)
+        {
+            for (const auto index : mActivationGroups[group])
+                mBodies[index].mBody->activate(true);
+        }
 
         Impl(btDynamicsWorld& world, float scale) : mWorld(world), mLengthScale(scale) {}
         ~Impl()
@@ -464,6 +473,29 @@ namespace NifBullet
                     }
                 }
         }
+        // Native activation belongs to an island, not just the setter's body.
+        // Reconstruct constraint-connected owned groups once so every connected
+        // bone enters our native gravity/damping pass before Bullet's island step.
+        // Contact connections outside this owned graph remain world authority.
+        std::vector<std::size_t> parent(mImpl->mBodies.size());
+        std::iota(parent.begin(), parent.end(), 0);
+        const auto root = [&](std::size_t index) {
+            while (parent[index] != index)
+            {
+                parent[index] = parent[parent[index]];
+                index = parent[index];
+            }
+            return index;
+        };
+        for (const auto& joint : definition.mJoints)
+            parent[root(joint.mBodyB)] = root(joint.mBodyA);
+        mImpl->mActivationGroups.resize(mImpl->mBodies.size());
+        for (std::size_t index = 0; index < mImpl->mBodies.size(); ++index)
+        {
+            const auto group = root(index);
+            mImpl->mBodies[index].mActivationGroup = group;
+            mImpl->mActivationGroups[group].push_back(index);
+        }
         // Publish only after every body, constraint and filter was admitted.
         for (auto& body : mImpl->mBodies)
         {
@@ -521,7 +553,7 @@ namespace NifBullet
     {
         require(body < mImpl->mBodies.size() && finite(impulse) && finite(worldPoint), "invalid impulse");
         auto& target = *mImpl->mBodies[body].mBody;
-        target.activate(true);
+        mImpl->activateGroup(mImpl->mBodies[body].mActivationGroup);
         target.applyImpulse(impulse, worldPoint - target.getCenterOfMassPosition());
     }
 
@@ -557,6 +589,66 @@ namespace NifBullet
                 mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
                 mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
             }
+        }
+    }
+
+    void ActorRagdollPhysics::driveNativePoseVelocities(std::span<const RagdollNativeVelocityDrive> drives,
+        float inverseFrameSeconds, float nativeGravityZ)
+    {
+        require(std::isfinite(inverseFrameSeconds) && inverseFrameSeconds > 0.f
+            && std::isfinite(nativeGravityZ), "invalid native pose drive clock/gravity");
+        struct Pending
+        {
+            btRigidBody* mBody;
+            btVector3 mLinear, mAngular;
+            std::size_t mActivationGroup;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(drives.size());
+        std::unordered_set<std::uint32_t> selected;
+        for (const auto& drive : drives)
+        {
+            require(selected.insert(drive.mRecord).second, "duplicate native pose drive identity");
+            const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == drive.mRecord; });
+            require(found != mImpl->mBodies.end(), "unknown native pose drive body");
+            auto& body = *found->mBody;
+            const auto shapePose = body.getWorldTransform() * found->mCenterFrame.inverse();
+            const auto rotation = shapePose.getRotation();
+            std::array<float, 4> quaternion;
+            for (unsigned axis = 0; axis < 4; ++axis)
+                quaternion[axis] = static_cast<float>(rotation[axis]);
+            osg::Vec3f localCenter, currentCenter;
+            RagdollNativeVelocities current;
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                // The owner's world/native length conversion is independent
+                // of renderer adapters. Angular speed has no length factor.
+                localCenter[axis] = static_cast<float>(found->mCenterFrame.getOrigin()[axis] / mImpl->mLengthScale);
+                currentCenter[axis] = static_cast<float>(body.getCenterOfMassPosition()[axis] / mImpl->mLengthScale);
+                current.mLinear[axis] = static_cast<float>(body.getLinearVelocity()[axis] / mImpl->mLengthScale);
+                current.mAngular[axis] = static_cast<float>(body.getAngularVelocity()[axis]);
+            }
+            const auto target = ragdollNativeTargetVelocities(localCenter, currentCenter, quaternion,
+                drive.mTarget, inverseFrameSeconds, found->mLimits.mMaxLinearVelocity, found->mLimits.mAngularLimit);
+            const auto output = ragdollNativeBlendVelocities(current, target,
+                drive.mVelocityGain, inverseFrameSeconds, nativeGravityZ);
+            Pending result{&body, btVector3(0, 0, 0), btVector3(0, 0, 0), found->mActivationGroup};
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                result.mLinear[axis] = btScalar(output.mLinear[axis]) * mImpl->mLengthScale;
+                result.mAngular[axis] = output.mAngular[axis];
+            }
+            require(finite(result.mLinear) && finite(result.mAngular), "pose drive exceeds world velocity domain");
+            pending.push_back(result);
+        }
+        // Original8A6410 prepares activation before the actual89DB90/89DBB0
+        // stores. Preserve live poses, forces, contacts and interpolation state.
+        for (const auto& result : pending)
+        {
+            mImpl->activateGroup(result.mActivationGroup);
+            result.mBody->setLinearVelocity(result.mLinear);
+            result.mBody->setAngularVelocity(result.mAngular);
         }
     }
 
