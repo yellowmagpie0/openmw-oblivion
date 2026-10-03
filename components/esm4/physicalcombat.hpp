@@ -259,6 +259,37 @@ namespace ESM4
     // evolution. IEEE nonfinite comparison behavior follows the original.
     bool knockdownBlendEntryReady(bool hasRoot, std::optional<float> hierarchyGain);
 
+    struct PhysicalBlendGains
+    {
+        float mHierarchy;
+        float mVelocity;
+    };
+
+    struct PhysicalBlendKey
+    {
+        float mTime;
+        PhysicalBlendGains mGains;
+    };
+
+    // The native one-shot transition creates at most two keys. Empty keys
+    // leave gains unchanged; one key is constant. Two-key evaluation requires
+    // a caller-clamped time and keeps the native float-store boundaries.
+    std::optional<PhysicalBlendGains> evaluatePhysicalBlend(
+        std::span<const PhysicalBlendKey> keys, float time);
+
+    struct PhysicalBlendClock
+    {
+        // Original NiTimeController sentinel (-FLT_MAX), not an actor timer.
+        float mStartTime = -3.40282346638528859812e+38F;
+        float mPreviousTime = -3.40282346638528859812e+38F;
+        float mElapsed = 0.f;
+    };
+
+    // Absolute, speed1, phase0, one-shot controller clock (flags0xc5).
+    // The returned key time is clamped; stored elapsed time is not. The first
+    // update establishes the origin. This is not native controller attachment.
+    float advancePhysicalBlendClock(PhysicalBlendClock& clock, float absoluteTime, float duration);
+
     struct KnockdownSettings
     {
         float mAgilityBase;

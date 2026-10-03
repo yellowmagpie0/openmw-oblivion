@@ -13441,3 +13441,57 @@ Python sources unchanged; ASan leaks disabled, UBSan halts on errors.
 This adds the verified gate rule and authored data, not a World caller or live
 gain progression. Native controller recovery, coordinated runtime admission,
 renderer/save handoff and stock floor-contact continuation remain open.
+
+
+### Checkpoint151 — native one-shot blend clock and gain interpolation (S4 open)
+
+Checkpoint150 is committed as `8d6c24f27746c5e4ca2959ef9b83cc147419752c`;
+isolated-git-progress-128 verifies147 commits, exact shared bytes and a fresh
+bundle clone. This chunk adds immutable finite zero/one/two-key gain evaluation
+and a mutable absolute speed1/phase0 one-shot clock, matching native flags0xc5.
+The clock establishes its origin on the first update, retains unclamped elapsed
+and previous time, allows backward time and returns a clamped key time. Invalid
+inputs/overflow leave clock state unchanged. These are rules, not scene
+controller creation or a persistent World reaction owner.
+
+Original0088aa990 and006d3690 execute full gain-evaluator/interpolation returns
+without stubs. Initial1,440 cases and extended4,168 cases cover empty/one/two
+keys, exact endpoints, independent signed gains, shifted intervals, signed zero
+and2,000 generated fixtures, each under both x87 precision words. Original
+007155a0 executes full one-shot clock returns for330 sequential and96 signed-
+zero/subnormal/snapshot-state cases. Only Windows EnterCriticalSection and
+LeaveCriticalSection are stubbed; no game-function boundary is substituted.
+All native corpora use executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Corpus SHA256, respectively:
+`b5ed23509e013af61bef64c423d44c1b3f3343dca01d7b663e9e27b9537e16c8`,
+`b585d6fcd5a3165f5a4c7b4280cd8ba7ee866da3b14fb414e357e795cf077a1d`,
+`bc85a9b652e51b40ade0b24f3844679dadf53bbda4947072ae113fe14a436b40`,
+`d8dc49b210ce4def72201c9a0d6f6f345a435477e504d9411a7a455885b24eb0`.
+Evidence: S4/native-ragdoll-blend-interpolation-oracle-{01,02},
+S4/native-ragdoll-blend-clock-oracle-{01,02}.
+
+Retained compare-normal02 found70 exact mismatches despite initial unit suites
+passing: the native evaluator stores the key interval before division, not the
+numerator, and interpolates at the first endpoint. Retained compare-normal04
+found two signed-zero key-time mismatches: positive-zero phase is added before
+clamping while the elapsed negative-zero bits remain stored. Regression tests
+preserve both discoveries; no tolerance was used or relaxed. Initial full
+normal/sanitized01/02 checks remain evidence of their earlier source revisions,
+not evidence for the final corrected code.
+
+Final S4/native-ragdoll-blend-progression-compare-{normal,sanitized}-05 each
+match all5,608 gain and426 clock cases exactly. Constant-gain, always-zero-clock
+and clamped-stored-elapsed controls disagree4,488/280/154 times respectively.
+Full blend-progression normal/sanitized03 pass2,153 component and842 engine
+tests each, complete inventories and zero failures/skips; openmw and esmtool
+rebuilt. Stable tested fingerprint
+`40167aa9f0a78542a554d91c6722a840c4d06136556e14d052f96957acd18772`.
+Eight added component tests cover independent gains/entry endpoint, first-update
+and backward clock, copied-state continuation, invalid-key/clock atomicity and
+three exact-bit regressions. Copied clock continuation is not a save/restart
+course. Python unchanged; ASan leak checks disabled, UBSan halts on errors.
+
+Native BlendSettings.ini duration resolution, scene/controller attachment,
+blended physical mode/pose/velocity handling and World admission/render/save
+coordination remain open, as does stock floor-contact restart acceptance.

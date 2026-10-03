@@ -3039,3 +3039,130 @@ TEST(ESM4PhysicalCombat, KnockdownEntryWaitsForNonpositiveHierarchyGain)
     EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, std::numeric_limits<float>::infinity()));
     EXPECT_TRUE(ESM4::knockdownBlendEntryReady(true, -std::numeric_limits<float>::infinity()));
 }
+
+
+TEST(ESM4PhysicalCombat, PhysicalBlendEvaluatesIndependentGainsAndEntryEndpoint)
+{
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{0.f, {0.125f, 0.75f}}, {0.25f, {0.f, 0.f}}}};
+    const auto initial = ESM4::evaluatePhysicalBlend(keys, 0.f);
+    ASSERT_TRUE(initial);
+    EXPECT_FLOAT_EQ(initial->mHierarchy, 0.125f);
+    EXPECT_FLOAT_EQ(initial->mVelocity, 0.75f);
+    const auto middle = ESM4::evaluatePhysicalBlend(keys, 0.125f);
+    ASSERT_TRUE(middle);
+    EXPECT_FLOAT_EQ(middle->mHierarchy, 0.0625f);
+    EXPECT_FLOAT_EQ(middle->mVelocity, 0.375f);
+    EXPECT_FALSE(ESM4::knockdownBlendEntryReady(true, middle->mHierarchy));
+    const auto end = ESM4::evaluatePhysicalBlend(keys, 0.25f);
+    ASSERT_TRUE(end);
+    EXPECT_FLOAT_EQ(end->mHierarchy, 0.f);
+    EXPECT_FLOAT_EQ(end->mVelocity, 0.f);
+    EXPECT_TRUE(ESM4::knockdownBlendEntryReady(true, end->mHierarchy));
+    EXPECT_FALSE(ESM4::evaluatePhysicalBlend({}, 1.f));
+    const std::array<ESM4::PhysicalBlendKey, 1> constant{{{7.f, {-0.5f, -0.25f}}}};
+    EXPECT_FLOAT_EQ(ESM4::evaluatePhysicalBlend(constant, -10.f)->mHierarchy, -0.5f);
+    EXPECT_FLOAT_EQ(ESM4::evaluatePhysicalBlend(constant, 100.f)->mVelocity, -0.25f);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendClockUsesFirstUpdateAndPreservesBackwardTime)
+{
+    ESM4::PhysicalBlendClock clock;
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, 10.f, 0.25f), 0.f);
+    EXPECT_FLOAT_EQ(clock.mStartTime, 10.f);
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, 10.125f, 0.25f), 0.125f);
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, 11.f, 0.25f), 0.25f);
+    EXPECT_FLOAT_EQ(clock.mElapsed, 1.f);
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, 9.f, 0.25f), 0.f);
+    EXPECT_FLOAT_EQ(clock.mElapsed, -1.f);
+    EXPECT_FLOAT_EQ(clock.mPreviousTime, 9.f);
+    EXPECT_FLOAT_EQ(ESM4::advancePhysicalBlendClock(clock, 10.125f, 0.25f), 0.125f);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendClockCopiedStateContinuesTheSameTransition)
+{
+    ESM4::PhysicalBlendClock uninterrupted;
+    ESM4::advancePhysicalBlendClock(uninterrupted, 100.f, 0.25f);
+    ESM4::advancePhysicalBlendClock(uninterrupted, 100.0625f, 0.25f);
+    auto resumed = uninterrupted;
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{0.f, {1.f, 0.5f}}, {0.25f, {0.f, 0.f}}}};
+    for (float time : {100.125f, 100.1875f, 100.25f, 100.5f, 99.f, 100.f})
+    {
+        const float first = ESM4::advancePhysicalBlendClock(uninterrupted, time, 0.25f);
+        const float second = ESM4::advancePhysicalBlendClock(resumed, time, 0.25f);
+        EXPECT_EQ(first, second);
+        EXPECT_EQ(uninterrupted.mStartTime, resumed.mStartTime);
+        EXPECT_EQ(uninterrupted.mPreviousTime, resumed.mPreviousTime);
+        EXPECT_EQ(uninterrupted.mElapsed, resumed.mElapsed);
+        const auto a = ESM4::evaluatePhysicalBlend(keys, first);
+        const auto b = ESM4::evaluatePhysicalBlend(keys, second);
+        EXPECT_EQ(a->mHierarchy, b->mHierarchy);
+        EXPECT_EQ(a->mVelocity, b->mVelocity);
+    }
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendRejectsUnsupportedOrMalformedKeys)
+{
+    std::array<ESM4::PhysicalBlendKey, 2> keys{{{0.f, {1.f, 1.f}}, {0.25f, {0.f, 0.f}}}};
+    EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, -0.01f), std::invalid_argument);
+    EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, 0.26f), std::invalid_argument);
+    EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+    keys[1].mTime = keys[0].mTime;
+    EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, 0.f), std::invalid_argument);
+    keys[1].mTime = 0.25f;
+    keys[1].mGains.mVelocity = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::evaluatePhysicalBlend(keys, 0.f), std::invalid_argument);
+    const std::array<ESM4::PhysicalBlendKey, 3> extra{};
+    EXPECT_THROW(ESM4::evaluatePhysicalBlend(extra, 0.f), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendClockRejectsWithoutMutatingState)
+{
+    ESM4::PhysicalBlendClock clock{1.f, 1.f, 0.f};
+    for (float duration : {0.f, -1.f, std::numeric_limits<float>::infinity()})
+    {
+        EXPECT_THROW(ESM4::advancePhysicalBlendClock(clock, 2.f, duration), std::invalid_argument);
+        EXPECT_EQ(clock.mStartTime, 1.f);
+        EXPECT_EQ(clock.mPreviousTime, 1.f);
+        EXPECT_EQ(clock.mElapsed, 0.f);
+    }
+    EXPECT_THROW(ESM4::advancePhysicalBlendClock(clock, std::numeric_limits<float>::quiet_NaN(), 1.f), std::invalid_argument);
+    clock.mPreviousTime = -std::numeric_limits<float>::max() / 2;
+    const auto before = clock;
+    EXPECT_THROW(ESM4::advancePhysicalBlendClock(clock, std::numeric_limits<float>::max(), 1.f), std::invalid_argument);
+    EXPECT_EQ(clock.mStartTime, before.mStartTime);
+    EXPECT_EQ(clock.mPreviousTime, before.mPreviousTime);
+    EXPECT_EQ(clock.mElapsed, before.mElapsed);
+}
+
+
+TEST(ESM4PhysicalCombat, PhysicalBlendInterpolatesSignedZeroAtFirstEndpoint)
+{
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{-100.f, {-0.f, 0.f}}, {-99.f, {0.f, -0.f}}}};
+    const auto first = ESM4::evaluatePhysicalBlend(keys, -100.f);
+    ASSERT_TRUE(first);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(first->mHierarchy), 0u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(first->mVelocity), 0u);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalBlendRoundsIntervalBeforeShiftedKeyInterpolation)
+{
+    // Original8AA990/6D3690 exact float outputs; both x87 words agree.
+    const auto f = [](std::uint32_t bits) { return std::bit_cast<float>(bits); };
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{f(3261556249u), {f(3252666617u), f(1067650390u)}},
+        {f(1107980408u), {f(3266406583u), f(3264137092u)}}}};
+    const auto result = ESM4::evaluatePhysicalBlend(keys, f(3254678952u));
+    ASSERT_TRUE(result);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mHierarchy), 3258207698u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mVelocity), 3248065162u);
+}
+
+
+TEST(ESM4PhysicalCombat, PhysicalBlendClockKeepsNegativeZeroElapsedButReturnsPositiveZero)
+{
+    // Full original7155A0 returns these bits in both x87 precision modes.
+    ESM4::PhysicalBlendClock clock{0.f, 0.f, -0.f};
+    const float result = ESM4::advancePhysicalBlendClock(clock, -0.f, 0.25f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result), 0u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(clock.mElapsed), 0x80000000u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(clock.mPreviousTime), 0x80000000u);
+}

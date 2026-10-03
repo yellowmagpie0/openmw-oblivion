@@ -769,6 +769,66 @@ namespace ESM4
         return !hasRoot || hierarchyGain.value_or(1.f) <= 0.f;
     }
 
+    std::optional<PhysicalBlendGains> evaluatePhysicalBlend(
+        std::span<const PhysicalBlendKey> keys, float time)
+    {
+        finite(time);
+        if (keys.size() > 2)
+            throw std::invalid_argument("unsupported native physical blend key count");
+        for (const auto& key : keys)
+        {
+            finite(key.mTime);
+            finite(key.mGains.mHierarchy);
+            finite(key.mGains.mVelocity);
+        }
+        if (keys.empty())
+            return std::nullopt;
+        if (keys.size() == 1)
+            return keys.front().mGains;
+        const auto& first = keys.front();
+        const auto& last = keys.back();
+        if (!(first.mTime < last.mTime) || time < first.mTime || time > last.mTime)
+            throw std::invalid_argument("invalid native physical blend key interval");
+        // Original8AAB0F stores the key interval, not the numerator. Even the
+        // first endpoint follows interpolation (including signed-zero sums).
+        const float interval = rounded(double(last.mTime) - first.mTime);
+        const float fraction = rounded((double(time) - first.mTime) / interval);
+        const auto interpolate = [fraction](float from, float to) {
+            return rounded((1.0 - fraction) * from + double(fraction) * to);
+        };
+        return PhysicalBlendGains{interpolate(first.mGains.mHierarchy, last.mGains.mHierarchy),
+            interpolate(first.mGains.mVelocity, last.mGains.mVelocity)};
+    }
+
+    float advancePhysicalBlendClock(PhysicalBlendClock& clock, float absoluteTime, float duration)
+    {
+        finite(absoluteTime);
+        finite(duration);
+        finite(clock.mStartTime);
+        finite(clock.mPreviousTime);
+        finite(clock.mElapsed);
+        if (duration <= 0.f)
+            throw std::invalid_argument("invalid native physical blend duration");
+        auto next = clock;
+        constexpr float sentinel = -std::numeric_limits<float>::max();
+        if (next.mStartTime == sentinel)
+            next.mStartTime = absoluteTime;
+        if (next.mPreviousTime == sentinel)
+            next.mElapsed = 0.f;
+        else
+        {
+            const float delta = rounded(double(absoluteTime) - next.mPreviousTime);
+            next.mElapsed = rounded(double(next.mElapsed) + delta);
+        }
+        next.mPreviousTime = absoluteTime;
+        // Original715619 adds the positive-zero phase before clamping. Keep
+        // this store separate from elapsed so a stored -0 yields key time +0.
+        const float keyTime = rounded(double(next.mElapsed) + 0.0);
+        const float result = std::clamp(keyTime, 0.f, duration);
+        clock = next;
+        return result;
+    }
+
     void validateKnockdownSettings(const KnockdownSettings& settings)
     {
         for (float value : {settings.mAgilityBase, settings.mAgilityMultiplier,
