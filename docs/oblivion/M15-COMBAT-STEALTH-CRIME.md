@@ -15508,3 +15508,50 @@ marker is claimed. World actor physical lifecycle and normal gameplay remain
 open. Next: verify original8AB440 down-transition creation before implementing
 its caller/controller setup and World integration. No stage closes; S5-S14
 remain pending.
+
+
+### Checkpoint186: native knockdown blend controller creation fields
+
+Checkpoint185 committed as `2cb5deb4b31e338cd7c7984db39411f31dda157a`,
+182 isolated commits with exact-byte/fresh-clone verification; bundle163 SHA256
+`83d93a4ab38171d8b8a07ab53305efc1e69d7fadd5d983316988c339690023ff`.
+preparePhysicalKnockdownBlend creates the selected-controller two-key transition
+from current separate H/V gains to0/0. Both signed-zero durations retain both
+keys; no instant-completion shortcut is introduced. Native setup preserves
+start-key/duration bits and flags outside its mask. Start adds active bit8:
+final flags=(old &0xFEF5)|0xCD. Start/previous clock times reset to-FLT_MAX;
+stored elapsed time is preserved. Only used finite gains/duration/start-key/
+elapsed values are validated; overwritten old clock fields are ignored.
+Negative durations must be handled as disabled by the selecting caller.
+
+Down-setup-oracle01 is a retained harness failure: runtime RTTI parent links
+were absent and all cases bypassed setup. Corrected02 executes original static
+initializer A120C0/70E220 before collision/controller RTTI lookup, then6,048
+original8AB440 prefix cases across both x87 words, seven duration boundaries,
+four signed/unclamped gain pairs, three old key-buffer capacities, three flag
+words, three start-key values, controller present/absent and immediate paths.
+Actual497420/47FAC0,700010,8AA7F0,8AA480 constructors/copy/reset,8AB000/8AA710
+insertion,8AABE0 key-range updates and715540 Start execute. Allocator401F00 and
+free401F20 are boundaries. Synthetic body-filter17 and requested motion0 avoid
+physical mutation. Stops precede immediate mutation, initial velocity and
+child traversal; no World/gameplay acceptance is claimed. Source/corpus hashes
+`886daebfe6c75d6a8f40ad1c7c8c1baf61673340c9940b13781499553f773a2f`, `9daa85502eb1d4b2b4de465e1e50276d1f96fc703bdc658babbe6593b55305a7`; pinned original executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. The1,296 selected transition rows compare exactly
+in normal/sanitized03:15,552 fields each, with clearing-elapsed and omitting
+Start-bit8 negative controls differing in every selected case.
+
+Three new tests retain failing baseline01, then verify fields, signed-zero/
+subnormal durations, initial gain evaluation and malformed used-data rejection.
+Full normal/sanitized01 and02 pass but retain an assertion-branch compiler
+warning;03 adds explicit braces and passes2,258 component and895 engine tests
+each without that warning. Tested fingerprint `a2bcba31e90c0f880d1715ad6ad04373d0a57cf5c8c5f444184e622cfec8c220`. ASan leaks disabled,
+UBSan halts; unchanged Python sources not rerun. Compare sources/driver hashes
+`fbb356ad8171a12fad855898846ad040e7dec8ac6dc81c480f3106c90799399c`, `1dccb63a32462d4b0dc0fb1a69765008b5bb5b7d1255b27caffc0347b7aa41b4`.
+
+This is an immutable controller-creation adapter, not a live controller owner.
+Full controller cache/state persistence, node attachment, nonzero start-key
+clock evaluation, immediate blend mutation, initial velocity, traversal and
+World actor physical lifecycle remain open. Existing native stepping/restart
+failures are unchanged; no stage closes and S5-S14 remain pending. Next:
+connect separate native placement scale to Animation's physical ownership and
+sampling API, then continue live reaction lifecycle integration.

@@ -3544,3 +3544,64 @@ TEST(ESM4PhysicalCombat, PhysicalReactionInitializationRejectsUsedNonfiniteFatig
         std::numeric_limits<std::uint32_t>::max(), 0, 1, 0, false);
     EXPECT_EQ(otherLife.mAction, ESM4::PhysicalReactionInitializationAction::DispatchExistingState);
 }
+
+
+TEST(ESM4PhysicalBlendSetup, PreservesCurrentGainsAndNativeStartFields)
+{
+    ESM4::PhysicalBlendClock clock{3.f, 4.f, 7.f};
+    for (std::uint16_t flags : {0u, 0xc5u, 0xffffu})
+    {
+        const auto result = ESM4::preparePhysicalKnockdownBlend({-.5f, 2.f}, .25f, 2.f, flags, clock);
+        EXPECT_EQ(result.mControllerFlags, (flags & 0xfef5u) | 0xcdu);
+        EXPECT_EQ(result.mKeys[0].mTime, 0.f);
+        EXPECT_EQ(result.mKeys[0].mGains.mHierarchy, -.5f);
+        EXPECT_EQ(result.mKeys[0].mGains.mVelocity, 2.f);
+        EXPECT_EQ(result.mKeys[1].mTime, .25f);
+        EXPECT_EQ(result.mKeys[1].mGains.mHierarchy, 0.f);
+        EXPECT_EQ(result.mKeys[1].mGains.mVelocity, 0.f);
+        EXPECT_EQ(result.mStartKey, 2.f);
+        EXPECT_EQ(result.mStopKey, .25f);
+        EXPECT_EQ(result.mClock.mStartTime, -std::numeric_limits<float>::max());
+        EXPECT_EQ(result.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+        EXPECT_EQ(result.mClock.mElapsed, 7.f);
+    }
+    EXPECT_EQ(clock.mStartTime, 3.f);
+    EXPECT_EQ(clock.mPreviousTime, 4.f);
+    EXPECT_EQ(clock.mElapsed, 7.f);
+}
+
+TEST(ESM4PhysicalBlendSetup, ZeroDurationRetainsTwoKeysAndInitialGains)
+{
+    for (float duration : {0.f, -0.f, std::numeric_limits<float>::denorm_min()})
+    {
+        auto result = ESM4::preparePhysicalKnockdownBlend({-0.f, .75f}, duration, -0.f, 0, {});
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mStopKey), std::bit_cast<std::uint32_t>(duration));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mKeys[1].mTime), std::bit_cast<std::uint32_t>(duration));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mStartKey), 0x80000000u);
+        const float time = ESM4::advancePhysicalBlendClock(result.mClock, 100.f, duration);
+        const auto gains = ESM4::evaluatePhysicalBlend(result.mKeys, time);
+        ASSERT_TRUE(gains);
+        EXPECT_EQ(gains->mVelocity, .75f);
+        if ((std::bit_cast<std::uint32_t>(duration) & 0x7fffffffu) == 0)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(gains->mHierarchy), 0x80000000u);
+        }
+    }
+}
+
+TEST(ESM4PhysicalBlendSetup, RejectsMalformedUsedInputsBeforeCreatingTransition)
+{
+    for (float value : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::preparePhysicalKnockdownBlend({value, 1.f}, .25f, 0.f, 0, {}), std::invalid_argument);
+        EXPECT_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, value}, .25f, 0.f, 0, {}), std::invalid_argument);
+        EXPECT_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, 1.f}, value, 0.f, 0, {}), std::invalid_argument);
+        EXPECT_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, 1.f}, .25f, value, 0, {}), std::invalid_argument);
+        EXPECT_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, 1.f}, .25f, 0.f, 0, {0.f, 0.f, value}), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, 1.f}, -1.f, 0.f, 0, {}), std::invalid_argument);
+    // Start overwrites these fields, so stale nonfinite sentinels are unused.
+    EXPECT_NO_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, 1.f}, .25f, 0.f, 0,
+        {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), 0.f}));
+}
