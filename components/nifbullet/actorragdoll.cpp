@@ -130,6 +130,44 @@ namespace NifBullet
         return result;
     }
 
+    ActorRagdollDefinition ragdollDefinitionWithNativeScaledProperties(
+        const ActorRagdollDefinition& source, float resolvedActorScale)
+    {
+        positive(resolvedActorScale);
+        const auto vector = [&](const osg::Vec3f& value) {
+            osg::Vec3f result;
+            for (unsigned i = 0; i < 3; ++i)
+            {
+                require(std::isfinite(value[i]), "nonfinite scaled graph coordinate");
+                result[i] = static_cast<float>(double(value[i]) * double(resolvedActorScale));
+                require(std::isfinite(result[i]), "nonfinite scaled graph result");
+            }
+            return result;
+        };
+        ActorRagdollDefinition result = source;
+        for (auto& body : result.mBodies)
+        {
+            body = ragdollBodyWithNativeScaledProperties(body, resolvedActorScale);
+            // Ordinary bhkRigidBody uses its target bone. Original 8B8E70
+            // scales the separate translation only for bhkRigidBodyT.
+            if (body.mUsesRigidBodyTransform)
+                body.mTranslation = vector(body.mTranslation);
+        }
+        for (auto& joint : result.mJoints)
+        {
+            require(joint.mBodyA < result.mBodies.size() && joint.mBodyB < result.mBodies.size()
+                && joint.mBodyA != joint.mBodyB, "invalid scaled joint endpoints");
+            std::visit([&](auto& value) {
+                value.mA.mPivot = vector(value.mA.mPivot);
+                value.mB.mPivot = vector(value.mB.mPivot);
+                // Native cone/hinge copy preserves directions, angular limits
+                // and friction. Malleable copy dispatches the same nested
+                // operation, retaining its separate tau/damping coefficients.
+            }, joint.mJoint);
+        }
+        return result;
+    }
+
     std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(
         Nif::FileView file, std::optional<std::uint32_t> rootRecord)
     {

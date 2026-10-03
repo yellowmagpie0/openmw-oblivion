@@ -121,6 +121,12 @@ namespace NifBullet
         std::vector<RagdollJointDefinition> mJoints;
     };
 
+    // Own a native property-scaled graph, including bodyT translation and
+    // joint pivots. Bone bind matrices remain authored; renderer placement
+    // supplies actor scale separately. Does not admit a scaled live binding.
+    ActorRagdollDefinition ragdollDefinitionWithNativeScaledProperties(
+        const ActorRagdollDefinition& source, float resolvedActorScale);
+
     // The currently admitted Oblivion skeleton graph uses sphere/capsule/hull
     // bodies and ragdoll/limited-hinge joints, including malleable wrappers.
     // Unsupported or malformed graphs are diagnosed as a whole.

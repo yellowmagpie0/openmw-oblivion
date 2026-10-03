@@ -203,6 +203,71 @@ namespace
         EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(original, 2), std::runtime_error);
     }
 
+    TEST_F(ActorRagdollTest, NativeGraphScaleChangesBodyTTranslationWithoutScalingOrdinaryTransforms)
+    {
+        auto source = NifBullet::loadActorRagdollDefinition(mFile);
+        source.mBodies[0].mUsesRigidBodyTransform = true;
+        source.mBodies[0].mTranslation = {1, -2, 3};
+        source.mBodies[1].mTranslation = {4, -5, 6};
+        const auto result = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 2);
+        EXPECT_EQ(result.mBodies[0].mTranslation, osg::Vec3f(2, -4, 6));
+        EXPECT_EQ(result.mBodies[1].mTranslation, source.mBodies[1].mTranslation);
+        EXPECT_EQ(result.mBodies[0].mBoneBind, source.mBodies[0].mBoneBind);
+        EXPECT_EQ(result.mBodies[0].mRotation, source.mBodies[0].mRotation);
+        EXPECT_EQ(result.mSourceHash, source.mSourceHash);
+        EXPECT_EQ(result.mBodies[1].mMass, 40);
+        EXPECT_EQ(source.mBodies[0].mTranslation, osg::Vec3f(1, -2, 3));
+    }
+
+    TEST_F(ActorRagdollTest, NativeGraphScaleChangesConeAndMalleableHingePivotsOnly)
+    {
+        auto source = NifBullet::loadActorRagdollDefinition(mFile);
+        source.mJoints[0].mMalleable = true;
+        source.mJoints[0].mTau = .25f;
+        source.mJoints[0].mDamping = .75f;
+        NifBullet::RagdollConeJoint cone{{{1, -2, 3}, {1, 0, 0}, {0, 1, 0}},
+            {{-4, 5, -6}, {0, 1, 0}, {1, 0, 0}}, .5f, -.3f, .7f, -.2f, .8f, .1f};
+        source.mJoints.push_back({77, 0, 1, false, 1, 1, cone});
+        const auto result = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 2);
+        const auto& hinge = std::get<NifBullet::RagdollHingeJoint>(result.mJoints[0].mJoint);
+        const auto& originalHinge = std::get<NifBullet::RagdollHingeJoint>(source.mJoints[0].mJoint);
+        EXPECT_EQ(hinge.mA.mPivot, osg::Vec3f(0, 0, 2));
+        EXPECT_EQ(hinge.mB.mPivot, osg::Vec3f(0, 0, -2));
+        EXPECT_EQ(hinge.mA.mAxis, originalHinge.mA.mAxis);
+        EXPECT_EQ(hinge.mB.mPlane, originalHinge.mB.mPlane);
+        EXPECT_EQ(hinge.mMin, originalHinge.mMin);
+        EXPECT_EQ(hinge.mFriction, originalHinge.mFriction);
+        EXPECT_EQ(result.mJoints[0].mTau, .25f);
+        EXPECT_EQ(result.mJoints[0].mDamping, .75f);
+        EXPECT_TRUE(result.mJoints[0].mMalleable);
+        const auto& scaledCone = std::get<NifBullet::RagdollConeJoint>(result.mJoints[1].mJoint);
+        EXPECT_EQ(scaledCone.mA.mPivot, osg::Vec3f(2, -4, 6));
+        EXPECT_EQ(scaledCone.mB.mPivot, osg::Vec3f(-8, 10, -12));
+        EXPECT_EQ(scaledCone.mB.mAxis, cone.mB.mAxis);
+        EXPECT_EQ(scaledCone.mA.mPlane, cone.mA.mPlane);
+        EXPECT_EQ(scaledCone.mTwistMax, cone.mTwistMax);
+        EXPECT_EQ(result.mJoints[1].mRecord, 77);
+        EXPECT_EQ(result.mJoints[1].mBodyA, 0);
+        EXPECT_EQ(result.mJoints[1].mBodyB, 1);
+    }
+
+    TEST_F(ActorRagdollTest, NativeGraphScaleCopiesAuthoredSourceAndRejectsLateInvalidPivotsAtomically)
+    {
+        auto source = NifBullet::loadActorRagdollDefinition(mFile);
+        const auto first = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 2);
+        const auto second = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 3);
+        EXPECT_EQ(first.mBodies[0].mMass, 80);
+        EXPECT_EQ(second.mBodies[0].mMass, 120);
+        EXPECT_EQ(source.mBodies[0].mMass, 40);
+        auto& hinge = std::get<NifBullet::RagdollHingeJoint>(source.mJoints[0].mJoint);
+        hinge.mB.mPivot[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 2), std::runtime_error);
+        EXPECT_EQ(source.mBodies[0].mMass, 40);
+        EXPECT_EQ(hinge.mA.mPivot, osg::Vec3f(0, 0, 1));
+        hinge.mB.mPivot[0] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 2), std::runtime_error);
+    }
+
     TEST_F(ActorRagdollTest, RejectsUnsupportedFormat)
     {
         mFile.mVersion = Nif::NIFFile::VER_MW;

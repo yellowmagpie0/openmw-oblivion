@@ -8481,3 +8481,78 @@ No stage closes. Next: verified joint/bodyT property and renderer placement
 scaling, complete graph/live admission and World physical lifecycle/controller
 ownership. Native stepping and unchanged floor fresh-restart/normal-gameplay
 gates remain open; all later M15 stages retain their existing pending status.
+
+
+### Checkpoint177: scale owned bodyT and cone/hinge graph properties
+
+Checkpoint176 committed as `742b24796f5b5b22d774539dd04b28dc4e80c74d`,
+173 isolated commits with exact-byte/fresh-clone proof; bundle154 SHA256
+`f830ddb575c25978a68f6cc9524d81bb14e121678bdb6ee853b485329a93a3d2`.
+NifBullet::ragdollDefinitionWithNativeScaledProperties owns a complete copy and
+applies checkpoint176's verified body/shape property operation, additionally
+scaling the separate bodyT translation and both cone/hinge pivots. Ordinary
+body translation, all rotations/directions, authored bone bind matrices,
+angular limits, friction and malleable tau/damping remain intact. Endpoint
+identities are validated. Every coordinate is checked before publication;
+a nonfinite/overflowing late joint rejects without modifying the authored
+source. Repeated calls from that source produce independent scales, without
+accumulating prior clone scale. This is a graph property adapter: renderer
+placement/binding, native full clone and live actor admission remain separate.
+
+Three new tests cover ordinary/bodyT distinctions, cone/malleable-hinge pivot
+and coefficient preservation, independent copies and late atomic rejection.
+Graph-scale-baseline01 retains all three failing tests against the unimplemented
+copy adapter. Full graph-scale normal/sanitized01 each pass2,233 components
+and892 engine cases with complete inventories, zero failures/skips, rebuilding
+openmw/esmtool. Source fingerprint `311fc23e62103dfdbd464d410a8308dcb45b0b95360d64dbffe5bc9e1d5534f4`. ASan leaks disabled; UBSan halts.
+Python sources unchanged and not rerun.
+
+Joint-scale-oracle02 executes272 complete original cone8C0B70/hinge8B2DD0
+copy/scale functions in both precision words using preallocated outputs,
+including full8A07B0/8A0200 publication. Only the two pivot vec4s scale;
+all copied direction/limit/friction fields remain exact. No calls are stubbed.
+Original cached cone/hinge CInfo vtables A98BBC/A56658 dispatch those functions;
+live native inner vtables A9CCB8/A97E68 identify cone type7 and hinge type2.
+Source/corpus SHA256 `01a84e148b3b08a83f998aff7f0ef55ef4c9054183137e41b46ee3b9c35e3eaf`, `fb5b99f944612ac9017711a126536e81e81331b2cb45d2aadf15d08ba0253c8e`.
+Joint-oracle01 retains its initial unmapped FS:0 exception-chain fault at
+8C0B7D before any case;02 maps the synthetic Windows exception-chain page.
+No native inputs or expectations changed.
+
+Bodyt-scale-oracle01 executes136 original8B8E70 prefixes, including full
+8A5980 cached-data getter. Original wrapper quaternion+20 copies to cached+40
+unchanged; wrapper translation+30 copies to cached+30 and scales as a vec4.
+Every unrelated cached byte remains intact. Each execution stops at8A4E30
+before generic body copy, verifying ECX and clone/process arguments. No calls
+are stubbed. Source/corpus SHA256 `1a66287c260a65fc1e49d5ff140f8c8b75c2ee8422c253a5ba49568d05e2b66c`, `309ba73fb9a0bf2032b00ff0b0810db2d033e51c11f879660f55add1f857d0a8`.
+Allocation, raw-NIF property mapping and the complete clone remain excluded.
+
+Malleable-scale-oracle01 executes272 complete original8BEE20 copies with
+preallocated outer output. Full8E7FD0 type dispatch,8E7E60 factory, real
+cone/hinge constructors and nested copy/scale/publication execute. The nested
+property object is independent; coefficients remain unchanged; all copied
+fields match the direct original joint corpus. Only heap allocation/free and
+the supplied Havok allocator virtual+10 are boundaries. Source/corpus SHA256
+`33c061f5c099c2b0d646a66b1d3386caebe42c901efc1f4234e18139a5483974`, `adec50dea1dce62ccb1569ecd240212b575fb61fb5cb38461a617fe7be34d260`. All three oracles identify original
+executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. General deletion/refcount behavior,
+raw-NIF-to-live mapping, whole model clone and normal gameplay are not proved.
+
+Graph-scale-compare normal/sanitized01 each pass680 cases and13,192 exact
+binary32 checks: bodyT XYZ/quaternion, direct/malleable cone/hinge XYZ pivots,
+represented directions, limits/friction, coefficients and endpoint identities.
+Native vec4 padding and unrepresented hinge secondary perpendicular fields are
+excluded explicitly; no tolerances are used. Source/library/input guards pass.
+
+Stock-graph-scale normal/sanitized02 use the pinned stock skeleton's actual
+NIF parse, renderer unit-placement binding and owned graph adapter for seven
+scales(.5/.9/1/1.1/1.3/2/3). Caller-supplied scaled bone translations initialize
+real Bullet ownership with18 bodies/17 constraints. All126 inverse masses match
+independent original8A2D60 stock outputs. Keyframed-to-dynamic archive restores
+mass and principal inertia exactly; every object/constraint is removed on
+release.01 retains compile failures from a missing osg::Group include in the
+private probe;02 adds that include only, preserving production source and
+expectations. No physics step, scale-aware renderer binding, World lifecycle,
+save/restart or gameplay acceptance is claimed.
+
+No stage closes. Next: native actor scale/renderer placement and bodyT pose
+admission, World physical lifecycle/controller ownership, native stepping and
+unchanged stock-floor fresh-restart/normal-gameplay gates. S5-S14 remain pending.
