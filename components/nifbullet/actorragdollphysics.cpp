@@ -243,6 +243,13 @@ namespace NifBullet
             // are used. Shape properties remain in their existing owners.
             RagdollBodyDefinition mSceneOffset{};
         };
+        struct BlendTarget
+        {
+            std::uint32_t mNode;
+            RagdollNativeBlendState mState;
+        };
+        std::vector<RagdollNativeBlendControllerState> mBlendControllers;
+        std::vector<BlendTarget> mBlendTargets;
         btDynamicsWorld& mWorld;
         float mLengthScale;
         // Bodies are destroyed before shapes; neither owns the other's storage.
@@ -826,6 +833,40 @@ namespace NifBullet
     {
         require(std::isfinite(lengthScale) && lengthScale > 0, "invalid length scale");
         require(!definition.mBodies.empty() && bodyPoses.size() == definition.mBodies.size(), "pose count");
+        const bool hasControllers = std::any_of(definition.mBodies.begin(), definition.mBodies.end(),
+            [](const auto& body) { return body.mBlendController.has_value(); });
+        std::unordered_set<std::uint32_t> nodes, controllers;
+        if (hasControllers)
+            for (const auto& body : definition.mBodies)
+                require(nodes.insert(body.mNodeRecord).second, "ambiguous native controller target node");
+        for (const auto& body : definition.mBodies)
+        {
+            if (body.mBlend)
+            {
+                require(std::isfinite(body.mBlend->mHierarchyGain) && std::isfinite(body.mBlend->mVelocityGain),
+                    "nonfinite owned native blend gains");
+                mImpl->mBlendTargets.push_back({body.mNodeRecord,
+                    {body.mRecord, body.mBlend->mFlags, {body.mBlend->mHierarchyGain, body.mBlend->mVelocityGain}}});
+            }
+            if (!body.mBlendController)
+                continue;
+            const auto& source = *body.mBlendController;
+            require(controllers.insert(source.mRecord).second, "duplicate owned native controller identity");
+            require(!source.mTargetRecord || nodes.contains(*source.mTargetRecord),
+                "unadmitted native controller target outside owned graph");
+            ESM4::PhysicalBlendControllerState state;
+            state.mTiming = {source.mFlags, source.mFrequency, source.mPhase, source.mStartTime, source.mStopTime};
+            state.mKeys.reserve(source.mKeys.size());
+            for (const auto& key : source.mKeys)
+            {
+                state.mKeys.push_back({key.mTime, {key.mHierarchyGain, key.mVelocityGain}});
+                const auto bounds = ESM4::resolvePhysicalBlendKeyBounds(
+                    {state.mTiming.mStartKey, state.mTiming.mStopKey}, state.mKeys);
+                state.mTiming.mStartKey = bounds.mStartKey;
+                state.mTiming.mStopKey = bounds.mStopKey;
+            }
+            mImpl->mBlendControllers.push_back({source.mRecord, source.mTargetRecord, std::move(state)});
+        }
         std::unordered_set<std::uint32_t> records;
         for (std::size_t i = 0; i < definition.mBodies.size(); ++i)
         {
@@ -1259,6 +1300,69 @@ namespace NifBullet
                 mImpl->activateGroup(owned.mActivationGroup);
         }
         return result;
+    }
+
+    std::vector<RagdollNativeBlendControllerState> ActorRagdollPhysics::captureNativeBlendControllers() const
+    {
+        return mImpl->mBlendControllers;
+    }
+
+    std::vector<RagdollNativeBlendState> ActorRagdollPhysics::captureNativeBlendStates() const
+    {
+        std::vector<RagdollNativeBlendState> result;
+        result.reserve(mImpl->mBlendTargets.size());
+        for (const auto& target : mImpl->mBlendTargets)
+            result.push_back(target.mState);
+        return result;
+    }
+
+    std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendControllers(
+        std::span<const RagdollNativeBlendControllerTarget> targets, float inputTime,
+        ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ)
+    {
+        require(std::isfinite(nativeGravityZ), "invalid owned native controller gravity");
+        ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
+        auto nextControllers = mImpl->mBlendControllers;
+        auto nextTargets = mImpl->mBlendTargets;
+        auto nextCache = sharedTimeCache;
+        std::vector<RagdollNativeBlendUpdate> bodyUpdates;
+        bodyUpdates.reserve(targets.size());
+        std::unordered_set<std::uint32_t> selectedControllers, selectedBodies;
+        for (const auto& request : targets)
+        {
+            require(selectedControllers.insert(request.mControllerRecord).second,
+                "duplicate owned native controller request");
+            const auto controller = std::find_if(nextControllers.begin(), nextControllers.end(),
+                [&](const auto& value) { return value.mRecord == request.mControllerRecord; });
+            require(controller != nextControllers.end(), "unknown owned native controller identity");
+            const auto target = std::find_if(nextTargets.begin(), nextTargets.end(),
+                [&](const auto& value) { return controller->mTargetNode && value.mNode == *controller->mTargetNode; });
+            const auto gains = target == nextTargets.end() ? std::nullopt
+                : std::optional<ESM4::PhysicalBlendGains>{target->mState.mGains};
+            auto update = ESM4::advancePhysicalBlendController(controller->mState, nextCache,
+                controller->mTargetNode.has_value(), gains, false, inputTime);
+            controller->mState = std::move(update.mController);
+            nextCache = update.mTimeCache;
+            if (target == nextTargets.end())
+                continue;
+            require(selectedBodies.insert(target->mState.mBodyRecord).second,
+                "unadmitted multiple controllers for one physical target");
+            target->mState.mGains = *update.mTargetGains;
+            bodyUpdates.push_back({target->mState.mBodyRecord, request.mAnimatedWorld,
+                target->mState.mGains.mHierarchy, target->mState.mGains.mVelocity, target->mState.mCollisionFlags});
+        }
+        // The existing body bridge stages every computation before any body
+        // mutation. All controller/target/cache allocations are already done.
+        auto publications = updateNativeBlends(bodyUpdates, preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
+        for (const auto& publication : publications)
+            for (auto& target : nextTargets)
+                if (target.mState.mBodyRecord == publication.mRecord)
+                    target.mState.mCollisionFlags = publication.mCollisionFlags;
+        mImpl->mBlendControllers.swap(nextControllers);
+        mImpl->mBlendTargets.swap(nextTargets);
+        sharedTimeCache = nextCache;
+        return publications;
     }
 
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)

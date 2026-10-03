@@ -2290,3 +2290,183 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersRetainLoadedBoundsAndDetachedSourceKeys)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        const auto max = std::numeric_limits<float>::max();
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xcd, 1.f, 0.f, max, -max, {{0.f, 1.f, 1.f}, {.25f, 0.f, 0.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        mGraph.mBodies.clear();
+        const auto controllers = actor.captureNativeBlendControllers();
+        ASSERT_EQ(controllers.size(), 1u);
+        EXPECT_EQ(controllers[0].mRecord, 78u);
+        EXPECT_EQ(controllers[0].mTargetNode, 8u);
+        EXPECT_EQ(controllers[0].mState.mKeys.size(), 2u);
+        EXPECT_FLOAT_EQ(controllers[0].mState.mTiming.mStartKey, 0.f);
+        EXPECT_FLOAT_EQ(controllers[0].mState.mTiming.mStopKey, 0.f);
+        EXPECT_FLOAT_EQ(controllers[0].mState.mClock.mPreviousTime, -max);
+        const auto gains = actor.captureNativeBlendStates();
+        ASSERT_EQ(gains.size(), 1u);
+        EXPECT_FLOAT_EQ(gains[0].mGains.mHierarchy, .9f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersPublishClockAndKeyframedBodyTogether)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xcd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalBlendTimeCache cache;
+        const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> targets{{{78, osg::Matrixf::identity()}}};
+        const auto publications = actor.updateNativeBlendControllers(targets, 1.f, cache, 1.f / 120, 0, 0.f);
+        ASSERT_EQ(publications.size(), 1u);
+        EXPECT_EQ(publications[0].mRecord, 12u);
+        EXPECT_FALSE(publications[0].mSceneTarget);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(0, 0, 0));
+        const auto controllers = actor.captureNativeBlendControllers();
+        ASSERT_EQ(controllers.size(), 1u);
+        EXPECT_FLOAT_EQ(controllers[0].mState.mClock.mPreviousTime, 1.f);
+        EXPECT_FLOAT_EQ(controllers[0].mState.mCachedGains.mHierarchy, .9f);
+        EXPECT_EQ(cache.mCycle, 2u);
+        const auto finished = actor.updateNativeBlendControllers(targets, 1.25f, cache, 1.f / 120, 0, 0.f);
+        EXPECT_EQ(finished.size(), 1u);
+        EXPECT_TRUE(actor.captureNativeBlendControllers()[0].mState.mKeys.empty());
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mTiming.mFlags, 0xc5);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersResolveTargetNodeRatherThanAttachedBody)
+    {
+        addHinge();
+        mGraph.mJoints.clear();
+        mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[1].mNodeRecord = 20;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        mGraph.mBodies[1].mBlend = NifBullet::RagdollBlendDefinition{31, 8, .7f, .6f};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 20, 0xcd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalBlendTimeCache cache;
+        const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> targets{{{78, osg::Matrixf::identity()}}};
+        const auto publications = actor.updateNativeBlendControllers(targets, 0.f, cache, 1.f / 120, 0, 0.f);
+        ASSERT_EQ(publications.size(), 1u);
+        EXPECT_EQ(publications[0].mRecord, 24u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(actor.captureNativeMotionModes()[1].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        EXPECT_EQ(actor.capture()[1].mPose.getOrigin(), btVector3(0, 0, 0));
+        const auto gains = actor.captureNativeBlendStates();
+        ASSERT_EQ(gains.size(), 2u);
+        EXPECT_FLOAT_EQ(gains[0].mGains.mHierarchy, .9f);
+        EXPECT_FLOAT_EQ(gains[1].mGains.mHierarchy, 1.f);
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mCachedGains.mHierarchy, .7f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersRejectLatePhysicsFailureWithoutPublishingClocks)
+    {
+        addHinge();
+        mGraph.mJoints.clear();
+        for (std::size_t i = 0; i < 2; ++i)
+        {
+            auto& body = mGraph.mBodies[i];
+            body.mNodeRecord = 8 + 12 * i;
+            body.mBlend = NifBullet::RagdollBlendDefinition{static_cast<std::uint32_t>(30 + i), 8, .9f, .8f};
+            body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+                static_cast<std::uint32_t>(78 + i), body.mNodeRecord, 0xcd, 1.f, 0.f, 0.f, .25f,
+                {{.25f, 1.f, 1.f}}};
+        }
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalBlendTimeCache cache;
+        const std::array<NifBullet::RagdollNativeBlendControllerTarget, 2> targets{{
+            {78, osg::Matrixf::identity()}, {79, osg::Matrixf::scale(2, 2, 2)}}};
+        EXPECT_THROW(actor.updateNativeBlendControllers(targets, 1.f, cache, 1.f / 120, 0, 0.f), std::invalid_argument);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(actor.captureNativeMotionModes()[1].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), mPoses[0].getOrigin());
+        EXPECT_EQ(cache.mCycle, 0xffffffffu);
+        const auto controllers = actor.captureNativeBlendControllers();
+        ASSERT_EQ(controllers.size(), 2u);
+        EXPECT_FLOAT_EQ(controllers[0].mState.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+        EXPECT_FLOAT_EQ(controllers[1].mState.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendStates()[0].mGains.mHierarchy, .9f);
+    }
+}
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersRejectBadIdentitiesBeforeRegistrationOrPublication)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 999, 0xcd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics{mGraph, mWorld, 1.f, mPoses, 1, -1}), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        body.mBlendController->mTargetRecord = 8;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalBlendTimeCache cache;
+        const auto matrix = osg::Matrixf::identity();
+        for (const auto& requests : std::array<std::array<NifBullet::RagdollNativeBlendControllerTarget, 2>, 2>{{
+                 {{{78, matrix}, {999, matrix}}}, {{{78, matrix}, {78, matrix}}}}})
+            EXPECT_THROW(actor.updateNativeBlendControllers(requests, 1.f, cache, 1.f / 120, 0, 0.f),
+                std::invalid_argument);
+        EXPECT_EQ(cache.mCycle, 0xffffffffu);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime,
+            -std::numeric_limits<float>::max());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersUseCallerSharedCacheAcrossActors)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics first(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        body.mBlendController->mRecord = 79;
+        body.mBlendController->mFlags = 0x1d;
+        NifBullet::ActorRagdollPhysics second(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> firstTarget{{{78, osg::Matrixf::identity()}}};
+        const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> secondTarget{{{79, osg::Matrixf::identity()}}};
+        ESM4::PhysicalBlendTimeCache shared;
+        first.updateNativeBlendControllers(firstTarget, 0.f, shared, 1.f / 120, 0, 0.f);
+        second.updateNativeBlendControllers(secondTarget, 0.f, shared, 1.f / 120, 0, 0.f);
+        EXPECT_EQ(second.captureNativeBlendControllers()[0].mState.mTiming.mFlags, 0x1d);
+        ESM4::PhysicalBlendTimeCache fresh;
+        second.updateNativeBlendControllers(secondTarget, 0.f, fresh, 1.f / 120, 0, 0.f);
+        EXPECT_EQ(second.captureNativeBlendControllers()[0].mState.mTiming.mFlags, 0x15);
+        EXPECT_EQ(first.captureNativeBlendControllers()[0].mState.mTiming.mFlags, 0xd);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedBlendControllersMissingBlendOrTargetIgnoreUnusedAnimationPose)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xcd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics noBlend(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> targets{{{78, osg::Matrixf::scale(2, 2, 2)}}};
+        ESM4::PhysicalBlendTimeCache cache;
+        EXPECT_TRUE(noBlend.updateNativeBlendControllers(targets, .125f, cache, 1.f / 120, 0, 0.f).empty());
+        EXPECT_FLOAT_EQ(noBlend.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime, .125f);
+        EXPECT_FLOAT_EQ(noBlend.captureNativeBlendControllers()[0].mState.mClock.mStartTime,
+            -std::numeric_limits<float>::max());
+        EXPECT_EQ(noBlend.capture()[0].mPose.getOrigin(), mPoses[0].getOrigin());
+        EXPECT_EQ(cache.mCycle, 0xffffffffu);
+        body.mBlendController->mTargetRecord.reset();
+        NifBullet::ActorRagdollPhysics noTarget(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        EXPECT_TRUE(noTarget.updateNativeBlendControllers(targets, .125f, cache, 1.f / 120, 0, 0.f).empty());
+        EXPECT_FLOAT_EQ(noTarget.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime,
+            -std::numeric_limits<float>::max());
+        EXPECT_TRUE(noTarget.captureNativeBlendStates().empty());
+    }
+}

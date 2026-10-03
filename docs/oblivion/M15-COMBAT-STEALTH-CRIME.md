@@ -16082,3 +16082,71 @@ removal effects, World begin-update-end and complete physical persistence remain
 open. Retained BodyT/floor failures and S5-S14 remain open. Next: give this state
 an ActorRagdollPhysics owner and compose its staged publication with the existing
 atomic native body-blend bridge before wiring World lifecycle calls.
+
+
+### Checkpoint197: physical owner for authored blend controllers
+
+Checkpoint196 committed as `d86ad329451ab89a075303cd6872df13f95e3360`,
+193 isolated commits with exact-byte/fresh-clone verification. Bundle174 SHA256
+`13049f7e191a339ba4300e9538fd195188cfb7a8ab6eaa02cb12ef150d09e2ad`.
+ActorRagdollPhysics now owns selected authored controller keys/timing, initialized
+per-insertion bounds, clocks/cursors/cached gains and current owned target gains/
+collision flags. Source records/definitions can be destroyed independently.
+Controller target-node identity resolves the physical body, including targets
+other than the body where the controller was attached. Target-less controllers
+and owned nodes without blend objects retain their distinct native behavior.
+The caller supplies the shared time cache across actors; no per-owner/static
+cache silently changes native reverse-cache identity. Each request batch stages
+all controller and target states, calls the existing atomic physical blend bridge,
+then commits owned metadata and shared cache only after all computations succeed.
+Actual body mode/synchronization/velocity and renderer publication targets are
+produced by that bridge. Direct updateNativeBlends remains an explicit supplied-
+gain bridge; this new interface owns its own controller/target metadata.
+
+Supported identity admission is explicit: controller targets must be absent or
+owned body nodes, body-node identities must be unambiguous when controllers
+exist, selected controller identities and physical targets must be unique.
+Cross-graph targets or multiple requested controllers for one physical target
+reject rather than pretending an unresolved node has no blend. Velocity
+controllers are not created/owned by this API; absence is passed explicitly to
+the logical transition. No velocity-removal effect or complete actor lifecycle
+is claimed. These admission limits remain open for the full World integration.
+
+Original owned-sequence oracle01 executes768 updates in192 groups over four
+successive frames. Actual8AABE0 initializes bounds after each key insertion,
+then full8AAD60/clock/evaluator/reset/restore/Stop executes from sentinel initial
+clocks/cache gains. Both x87 words, six key fixtures, reset/restore flags and
+target/blend presence are covered. Only Windows primitives are supplied;
+there are no velocity-controller fixtures. Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+oracle/harness/corpus `a14397cd04a16b431846fe5246682d8f4ac8a9628ee73812a8baabbab2af7228`, `e527a08cd0584d7b145d9dbe88e4f242f23e1c33da1385ac2b6d05d5586452fd`,
+`bcc0c03bc2cca3972c39b09cab202259756229be358fa85f8396663bb240d656`. Both owner comparators execute the physical blend bridge
+and exactly match15,816 owned gain/cache/count/clock/cursor/flag/bound/time-cache/
+key-bit fields. They recreate/remove192 physical owners and verify no leaked
+collision objects between groups. This compares logical owner state, not original
+physical contacts or World gameplay. Source/driver `1677b21ddd534a9d49ffc34830f56b50cd3d5b50cfe7c980d422bc5e845c4a7b`,
+`746e34ab37bdf068c453790a484f764b979faebf550dd736b53d333cfe093890`. Independent paired-input controls:
+`{'ignore_missing_target': 320, 'ignore_missing_blend': 160, 'omit_reset': 56}`; source `ab18830b1ad5abb6d167da42ee74373a98d96780b50f8cadb11c54e4c2733fa5`. The reset control also
+clears the unused removal bit to match available pairs, with flag metadata
+excluded and no velocity controllers. Controls01 retains a missing-pair lookup
+failure;02 makes that fixture constraint explicit.
+
+Baseline01 retains a test compile error from an incorrect RagdollBodyState field
+name; corrected baseline02 runs all four initial owner tests and all fail the
+placeholder. Filtered normal/sanitized01 each pass those four. Three added
+regressions cover invalid identity before registration/publication, cache sharing
+across actors with differing reverse flags, and missing target/blend with unused
+nonrigid animation poses. All seven owner tests pass. Final normal/sanitized01
+each pass2,308 component and898 engine tests, complete inventories with no skips/
+failures and rebuilt openmw/esmtool; fingerprint `3defc8c56a82dfcf64b0546d909c4c250d5e3f7f73cdfcf5ea0ae2b00f8eb862`. Comparator01 retains
+an explicit-btTransform constructor compile error;02 fixes only the private
+fixture construction. ASan leak checks disabled; UBSan halts. Existing GCC16
+Character.cpp3330 maybe-uninitialized and testoblivionactorstats6843 range-loop
+copy warnings are retained unchanged. Python checks are not repeated.
+
+No stage closes. Authored controller state now has a live physical owner with
+atomic physical publication, but public scheduler/PhysicsSystem forwarding,
+normal World/renderer begin-update-end, generated reaction-controller/velocity
+ownership and complete physical save/restart remain open. Retained BodyT/floor
+failures and S5-S14 remain open. Next: expose owned controller capture/update
+through the existing worker barrier and shared scheduler cache, test all0/1/2
+worker configurations, then wire the actual World lifecycle.

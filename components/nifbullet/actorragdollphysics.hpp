@@ -5,6 +5,8 @@
 #include "ragdollcollisionfilter.hpp"
 #include "ragdollvelocity.hpp"
 
+#include <components/esm4/physicalblendsettings.hpp>
+
 #include <memory>
 #include <span>
 
@@ -146,6 +148,26 @@ namespace NifBullet
         std::optional<osg::Matrixf> mSceneTarget;
     };
 
+    struct RagdollNativeBlendControllerState
+    {
+        std::uint32_t mRecord;
+        std::optional<std::uint32_t> mTargetNode;
+        ESM4::PhysicalBlendControllerState mState;
+    };
+
+    struct RagdollNativeBlendControllerTarget
+    {
+        std::uint32_t mControllerRecord;
+        osg::Matrixf mAnimatedWorld;
+    };
+
+    struct RagdollNativeBlendState
+    {
+        std::uint32_t mBodyRecord;
+        std::uint16_t mCollisionFlags;
+        ESM4::PhysicalBlendGains mGains;
+    };
+
     // Owns collision shapes, rigid bodies and constraints. The borrowed world
     // must outlive the instance; destruction removes every registered object.
     // Poses and velocities use the caller's world units. Native shape/inertia
@@ -182,6 +204,18 @@ namespace NifBullet
         // No Bullet step, actor root resolution or lifecycle transition.
         std::vector<RagdollNativeBlendPublication> updateNativeBlends(
             std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ);
+        std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
+        std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
+        // Own authored controllers and current target gains. Resolve each
+        // controller's target node, stage clocks/gains and the complete physical
+        // batch, then commit together. The caller owns the shared clock cache
+        // across actors and supplies target animation poses in request order.
+        // Velocity controllers, World lifecycle and persistence are not owned
+        // by this interface; direct updateNativeBlends remains an explicit bridge.
+        std::vector<RagdollNativeBlendPublication> updateNativeBlendControllers(
+            std::span<const RagdollNativeBlendControllerTarget> targets, float inputTime,
+            ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
