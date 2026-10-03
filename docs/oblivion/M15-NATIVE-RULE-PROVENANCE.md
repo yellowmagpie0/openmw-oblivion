@@ -9758,3 +9758,58 @@ failure cleanup at begin, then connect actual World reaction begin/update/end.
 Generated reaction/velocity-controller ownership, actual clock/traversal
 producers, initial NPC morphology and full physical persistence remain open;
 retained BodyT/floor failures and S5-S14 remain open.
+
+
+### Checkpoint201: joined renderer/physical lifetime entry and cleanup
+
+Checkpoint200 committed as `b68c124296f79f9198b289c48d45f02f8c59fe06`,
+197 isolated commits with exact-byte/fresh-clone verification. Bundle178 SHA256
+`d56c329028110db841957a9db3d6dd3a149ca7a0fa1066d859e01414cbd50a23`.
+The World-layer beginNativeActorPhysicalPose adapter joins Animation's detached
+animated-target ownership with public PhysicsSystem body/capsule ownership.
+It rejects missing/already-bound actors, owns a native property-scaled graph
+from caller-resolved uniform placement, captures actual live bone world poses,
+converts native/world lengths once, then admits physical bodies. Conversion/body
+admission failures end renderer ownership; capsule suspension is published only
+on successful physical admission. Authored graph properties remain unchanged.
+The caller supplies resolved collision policy and uniform morphology/placement;
+this helper does not infer NPC morphology or select/install reaction controllers.
+
+End joins renderer release and physical/capsule release, is repeatable, and still
+releases physical bodies/capsule when renderer rebuilding reports a failure.
+Animation::endPhysicalPose now releases borrowed physical state even when the
+hierarchy no longer admits local restoration. It restores controller ownership
+and reports the original restoration error, preserving it over a second rebuild
+error. Teardown of damaged renderer topology is cleanup with a diagnostic, not
+successful gameplay recovery or a claim that nonexistent nodes were restored.
+
+Entry baseline01 runs the public ownership case and fails the placeholder's
+missing admission rejection/renderer rebuild and bound-state assertions at its
+first0-worker iteration. Separate end-baseline01 runs the new renderer regression
+and proves prior endPhysicalPose retained physical ownership after detached-bone
+restoration failed. Final public integration covers all0/1/2 workers: deliberately
+invalid inertia rejects after renderer binding, leaving original locals and
+capsule collision; successful uniform-scale2 entry owns mass4/radius1 and correct
+world position from authored mass2/radius.5; duplicate entry preserves ownership;
+repeated teardown is safe; controller rebuild and detached-hierarchy errors still
+release renderer/physical ownership and restore capsule collision. The new
+renderer case also verifies teardown remains repeatable and callbacks traverse
+again after topology repair.
+
+Final normal/sanitized01 each rebuild openmw/openmw-tests/esmtool and pass all899
+engine tests, complete matching inventories with no failures/skips; fingerprint
+`bb9a17164c374cc016b58308b06ce58ca5f3255bc75bfff582951963dcd54c50`. ASan leak checks disabled; UBSan halts. Component rules/libraries and Python
+are unchanged; checkpoint200's2,316 component checks and independent controller/
+clock comparisons remain the applicable evidence, with no unchanged repeats.
+Uniform property/graph scaling uses the independently verified checkpoint176/177
+rules; this adapter adds lifecycle composition, not new native scaling formulas.
+The synthetic fixture owns real renderer and physical objects but does not call
+automatic World reaction orchestration or establish normal-input gameplay.
+
+No stage closes. Joined frame publication and lifetime entry/cleanup are now
+available to World orchestration. Generated reaction/velocity-controller setup,
+actual native clock/traversal producers, initial NPC morphology and full physical
+save/restart still need implementation/verification before that orchestration
+can be accepted. Retained BodyT/floor failures and S5-S14 remain open. Next:
+resolve/install owned generated reaction controllers and connect the actual
+World begin-update-end callers using independently admitted timing and placement.

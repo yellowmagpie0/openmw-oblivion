@@ -1,5 +1,7 @@
 #include "animation.hpp"
 
+#include <exception>
+
 #include <components/sceneutil/actorragdollpose.hpp>
 
 #include <algorithm>
@@ -1991,15 +1993,38 @@ namespace MWRender
     {
         if (!mPhysicalPose)
             return;
+        std::exception_ptr failure;
         if (mPhysicalAnimatedTargets)
-            mPhysicalPose->restoreLocalPose(*mPhysicalAnimatedLocal);
+        {
+            try
+            {
+                mPhysicalPose->restoreLocalPose(*mPhysicalAnimatedLocal);
+            }
+            catch (...)
+            {
+                // Changed/expired hierarchy cannot restore locals, but teardown
+                // must still release the borrowed physical binding and restore
+                // controller ownership. Preserve the original diagnostic.
+                failure = std::current_exception();
+            }
+        }
         mPhysicalPose.reset();
         mPhysicalAnimatedLocal.reset();
         mPhysicalAnimatedTargets = false;
         for (const auto& [node, callback] : mPhysicalResidentControllers)
             node->addUpdateCallback(callback);
         mPhysicalResidentControllers.clear();
-        resetActiveGroups();
+        try
+        {
+            resetActiveGroups();
+        }
+        catch (...)
+        {
+            if (!failure)
+                failure = std::current_exception();
+        }
+        if (failure)
+            std::rethrow_exception(failure);
     }
 
     void Animation::setLoopingEnabled(std::string_view groupname, bool enabled)

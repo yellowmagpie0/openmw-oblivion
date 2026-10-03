@@ -22,6 +22,10 @@
 #include "apps/openmw/mwphysics/actor.hpp"
 #include "apps/openmw/mwphysics/physicssystem.hpp"
 #include "apps/openmw/mwphysics/oblivionragdoll.hpp"
+#include "apps/openmw/mwworld/oblivionphysicalpose.hpp"
+#include <components/sceneutil/skeleton.hpp>
+#include <components/nifosg/matrixtransform.hpp>
+#include <components/misc/osguservalues.hpp>
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
 #include <components/esm4/loadbsgn.hpp>
 #include "apps/openmw/mwworld/player.hpp"
@@ -224,6 +228,29 @@ namespace
         reader.getRecHeader();
         fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
     }
+    class NativePhysicalPoseTestAnimation : public MWRender::Animation
+    {
+    public:
+        unsigned mPhysicalRebuilds = 0;
+        bool mThrowRebuild = false;
+        NativePhysicalPoseTestAnimation(osg::Group* parent, SceneUtil::Skeleton* root)
+            : Animation({}, parent, nullptr)
+        {
+            mObjectRoot = root;
+            mSkeleton = root;
+            parent->addChild(root);
+            resetActiveGroups();
+        }
+    private:
+        void addControllers() override
+        {
+            if (hasPhysicalPose())
+                ++mPhysicalRebuilds;
+            if (mThrowRebuild)
+                throw std::runtime_error("renderer controller rebuild rejected");
+        }
+    };
+
     TEST(OblivionWorld, PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval)
     {
         struct RestoreThreads
@@ -478,6 +505,69 @@ namespace
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));
             EXPECT_FALSE(capsule->isCollisionSuspended());
             ASSERT_NE(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
+            // Join real renderer ownership with the public physical owner.
+            auto renderedGraph = graph;
+            renderedGraph.mBodies[0].mBone = "Pelvis";
+            osg::ref_ptr<osg::Group> physicalParent = new osg::Group;
+            osg::ref_ptr<SceneUtil::Skeleton> physicalRoot = new SceneUtil::Skeleton;
+            physicalRoot->setUserValue(Misc::OsgUserValues::sFileHash, renderedGraph.mSourceHash);
+            osg::ref_ptr<NifOsg::MatrixTransform> physicalBone
+                = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+            physicalBone->setName("Pelvis");
+            physicalBone->setUserValue("recordIndex", 8u);
+            physicalBone->setTranslation({1, 0, 0});
+            physicalRoot->addChild(physicalBone);
+            NativePhysicalPoseTestAnimation animation(physicalParent, physicalRoot);
+            auto placement = Nif::NiTransform::getIdentity();
+            placement.mScale = 2.f;
+            placement.mTranslation = {100, 20, 30};
+            const auto originalBone = physicalBone->getMatrix();
+            const auto beginPhysical = [&](const auto& definition) {
+                MWWorld::beginNativeActorPhysicalPose(physics, animation, ptr, definition, placement,
+                    MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
+            };
+            auto rejectedGraph = renderedGraph;
+            rejectedGraph.mBodies[0].mInertia = {};
+            EXPECT_THROW(beginPhysical(rejectedGraph), std::invalid_argument);
+            EXPECT_EQ(animation.mPhysicalRebuilds, 1u);
+            EXPECT_FALSE(animation.hasPhysicalPose());
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            EXPECT_EQ(physicalBone->getMatrix(), originalBone);
+            beginPhysical(renderedGraph);
+            ASSERT_TRUE(animation.hasPhysicalPose());
+            ASSERT_TRUE(physics.hasActorRagdoll(ptr));
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_FLOAT_EQ(physics.actorRagdollDefinition(ptr).mBodies[0].mMass, 4.f);
+            EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(
+                physics.actorRagdollDefinition(ptr).mBodies[0].mShape).mRadius, 1.f);
+            EXPECT_NEAR(physics.captureActorRagdoll(ptr)[0].mPose.getOrigin().x(), 102, .001);
+            EXPECT_EQ(physicalBone->getMatrix(), originalBone);
+            EXPECT_THROW(beginPhysical(renderedGraph), std::invalid_argument);
+            EXPECT_TRUE(animation.hasPhysicalPose());
+            EXPECT_TRUE(physics.hasActorRagdoll(ptr));
+            MWWorld::endNativeActorPhysicalPose(physics, animation, ptr);
+            MWWorld::endNativeActorPhysicalPose(physics, animation, ptr);
+            EXPECT_FALSE(animation.hasPhysicalPose());
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            EXPECT_EQ(physicalBone->getMatrix(), originalBone);
+            EXPECT_FLOAT_EQ(renderedGraph.mBodies[0].mMass, 2.f);
+            // Teardown still releases bodies/capsule if renderer rebuilding fails.
+            beginPhysical(renderedGraph);
+            animation.mThrowRebuild = true;
+            EXPECT_THROW(MWWorld::endNativeActorPhysicalPose(physics, animation, ptr), std::runtime_error);
+            EXPECT_FALSE(animation.hasPhysicalPose());
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            animation.mThrowRebuild = false;
+            beginPhysical(renderedGraph);
+            physicalRoot->removeChild(physicalBone);
+            EXPECT_THROW(MWWorld::endNativeActorPhysicalPose(physics, animation, ptr), std::invalid_argument);
+            EXPECT_FALSE(animation.hasPhysicalPose());
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            physicalRoot->addChild(physicalBone);
             admit(graph);
             physics.remove(ptr);
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));

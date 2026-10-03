@@ -576,3 +576,18 @@ namespace
         EXPECT_EQ(mAnimation->mWriter->mWrites, 0);
     }
 }
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, EndPhysicalPoseReleasesOwnershipWhenHierarchyChanged)
+    {
+        mAnimation->beginPhysicalPose(mGraph, osg::Matrixf::identity(), MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        mRoot->removeChild(mBone);
+        EXPECT_THROW(mAnimation->endPhysicalPose(), std::invalid_argument);
+        EXPECT_FALSE(mAnimation->hasPhysicalPose());
+        mRoot->addChild(mBone);
+        EXPECT_NO_THROW(mAnimation->endPhysicalPose());
+        traverse();
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+    }
+}
