@@ -823,6 +823,14 @@ namespace MWPhysics
             updates, preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ);
     }
 
+    std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> PhysicsTaskScheduler::prepareActorRagdollKnockdownBlends(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.prepareNativeKnockdownBlends(requests);
+    }
+
     std::vector<NifBullet::RagdollNativeBlendControllerState> PhysicsTaskScheduler::captureActorRagdollBlendControllers(
         const MWWorld::Ptr& ptr)
     {

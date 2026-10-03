@@ -66,6 +66,8 @@ namespace NifBullet
     struct RagdollNativeBlendUpdate;
     struct RagdollNativeBlendPublication;
     struct RagdollNativeBlendControllerState;
+    struct RagdollNativeKnockdownBlendRequest;
+    enum class RagdollNativeKnockdownBlendDisposition;
     struct RagdollNativeBlendControllerTarget;
     struct RagdollNativeBlendState;
     struct RagdollBoneWorldPose;
@@ -221,6 +223,10 @@ namespace MWPhysics
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendUpdate> updates,
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector);
         // Owned controller state and publication share the movement-worker barrier.
+        // Selected-controller curve setup after the movement-worker barrier;
+        // duration/filter and whole reaction lifecycle remain caller-owned.
+        std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareActorRagdollKnockdownBlends(
+            const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests);
         std::vector<NifBullet::RagdollNativeBlendControllerState> captureActorRagdollBlendControllers(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollNativeBlendState> captureActorRagdollBlendStates(const MWWorld::Ptr& ptr);
         ESM4::PhysicalBlendTimeCache captureNativeBlendTimeCache();

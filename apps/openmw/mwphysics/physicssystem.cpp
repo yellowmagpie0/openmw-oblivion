@@ -844,6 +844,12 @@ namespace MWPhysics
         return mTaskScheduler->updateActorRagdollBlends(ptr, updates, preparedFrameSeconds, rawUpdateSelector);
     }
 
+    std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> PhysicsSystem::prepareActorRagdollKnockdownBlends(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests)
+    {
+        return mTaskScheduler->prepareActorRagdollKnockdownBlends(ptr, requests);
+    }
+
     std::vector<NifBullet::RagdollNativeBlendControllerState> PhysicsSystem::captureActorRagdollBlendControllers(
         const MWWorld::Ptr& ptr)
     {

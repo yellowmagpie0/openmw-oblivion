@@ -500,6 +500,37 @@ namespace
             EXPECT_EQ(physics.captureActorRagdollBlendControllers(duplicate)[0].mState.mTiming.mFlags, 0x1d);
             EXPECT_TRUE(physics.getActor(duplicate)->isCollisionSuspended());
             physics.remove(duplicate);
+            const std::array<NifBullet::RagdollNativeKnockdownBlendRequest, 1> downRequests{{{8, .25f}}};
+            EXPECT_THROW(physics.prepareActorRagdollKnockdownBlends(previous, downRequests), std::invalid_argument);
+            const std::array<NifBullet::RagdollNativeKnockdownBlendRequest, 2> badDown{{{8, .25f}, {999, .25f}}};
+            EXPECT_THROW(physics.prepareActorRagdollKnockdownBlends(ptr, badDown), std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mKeys.size(), 1u);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mSetupState, 0u);
+            const auto beforeSetupPose = physics.captureActorRagdoll(ptr)[0].mPose;
+            const auto beforeSetupCache = physics.captureNativeBlendTimeCache();
+            const auto prepared = physics.prepareActorRagdollKnockdownBlends(ptr, downRequests);
+            ASSERT_EQ(prepared.size(), 1u);
+            ASSERT_EQ(prepared[0], NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+            const auto configured = physics.captureActorRagdollBlendControllers(ptr)[0];
+            EXPECT_EQ(configured.mAttachedNode, 8u);
+            EXPECT_EQ(configured.mState.mKeys.size(), 2u);
+            EXPECT_EQ(configured.mState.mSetupState, 2u);
+            EXPECT_EQ(configured.mState.mTiming.mFlags, 0xcd);
+            EXPECT_FLOAT_EQ(configured.mState.mKeys[0].mGains.mHierarchy, 1.f);
+            EXPECT_FLOAT_EQ(configured.mState.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeSetupPose);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache().mCycle, beforeSetupCache.mCycle);
+            EXPECT_FLOAT_EQ(physics.captureNativeBlendTimeCache().mKeyTime, beforeSetupCache.mKeyTime);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            ASSERT_EQ(physics.updateActorRagdollBlendControllers(ptr, ownedTargets,
+                2.f, 1.f / 120, 0).size(), 1u);
+            ASSERT_EQ(physics.updateActorRagdollBlendControllers(ptr, ownedTargets,
+                2.25f, 1.f / 120, 0).size(), 1u);
+            EXPECT_TRUE(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mKeys.empty());
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mSetupState, 0u);
+            EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr)[0].mMotion,
+                NifBullet::RagdollNativeMotion::Dynamic);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
             physics.removeActorRagdoll(ptr);
             physics.removeActorRagdoll(ptr);
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));

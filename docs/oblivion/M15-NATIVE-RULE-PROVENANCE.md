@@ -9881,3 +9881,38 @@ physical save/restart, retained BodyT/floor failures and S5-S14 remain open.
 Next: expose selected-controller setup through the existing public scheduler
 barrier and verify it against live capsule/body ownership with0/1/2 workers,
 then connect admitted setup/update/cleanup boundaries to World reactions.
+
+
+### Checkpoint203: public selected knockdown setup behind the worker barrier
+
+Checkpoint202 committed as `63869ec0758097d31d935d6bb1c5d4623141c97f`,
+199 isolated commits with exact-byte/fresh-clone proof. Bundle180 SHA256
+`f736475546ab94545318b5cbc98aaeb5d1e052fe8d7426eb48c2e7166e501946`.
+PhysicsSystem::prepareActorRagdollKnockdownBlends delegates to its existing
+PhysicsTaskScheduler, which waits for movement workers, takes the collision-world
+lock, resolves current physical owner identity and calls the atomic component
+setup. It does not reset the shared frame cache, alter physical body pose/motion,
+or change capsule ownership during curve preparation. Duration/filter resolution
+and complete physical/velocity reaction effects remain caller-owned.
+
+The public aggregate placeholder baseline01 fails stale-owner rejection,
+late unknown-node rejection and Started disposition at its first0-worker
+iteration; its fatal assertion prevents later1/2-worker iterations, which are
+not claimed as baseline coverage. Final normal/sanitized01 each pass all899
+engine tests, exact full inventories with no failure/skip, fingerprint `021de1af6f141626b8844b719d4d291707ac01e224f60e45ab463be8ea0f4660`.
+ASan leak checks disabled; UBSan halts. The final aggregate exercises0/1/2 workers:
+stale identity rejects; a valid first request followed by unknown999 leaves the
+one authored key/setup state0; successful setup owns attachment8/two keys/state2,
+resets clock sentinel and preserves body pose/cache/capsule suspension; public
+updates advance and finish the curve, clear keys/state and return physical motion
+to Dynamic while capsule remains suspended until explicit owner removal.
+
+Component/Python implementation is unchanged, so checkpoint202's2,321 component
+checks,3,456 exact native setup/update captures and stock18-controller audit
+remain applicable without repeated unchanged suites. This uses real public
+physics, body and capsule objects with configurable workers; it is not automatic
+World reaction orchestration or normal-input game acceptance. No stage closes.
+Next: implement independently verified native velocity-controller update,
+creation/attachment and force/removal ownership, then complete admitted World
+reaction callers and full persistence. Actual timing/traversal producers, initial
+NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
