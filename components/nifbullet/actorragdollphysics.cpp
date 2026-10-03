@@ -658,6 +658,118 @@ namespace NifBullet
         return nativeSceneMatrix(pose, true);
     }
 
+    RagdollNativeKeyframedStepResult ragdollNativeKeyframedMotionStep(const osg::Vec3f& currentCenterOfMass,
+        const std::array<float, 4>& currentRotation, const osg::Vec3f& localCenterOfMass,
+        const RagdollNativeVelocities& velocities, float frameSeconds,
+        float maximumLinearVelocity, float angularLimit)
+    {
+        const auto scalar = [](double value) {
+            const float result = static_cast<float>(value);
+            require(std::isfinite(result), "nonfinite keyframed motion result");
+            return result;
+        };
+        const auto vectorFinite = [](const osg::Vec3f& value) {
+            for (unsigned axis = 0; axis < 3; ++axis)
+                require(std::isfinite(value[axis]), "nonfinite keyframed motion input");
+        };
+        const auto squaredLength = [&](const osg::Vec3f& value) {
+            const float x = scalar(double(value[0]) * value[0]);
+            const float y = scalar(double(value[1]) * value[1]);
+            const float z = scalar(double(value[2]) * value[2]);
+            const float xy = scalar(double(y) + x);
+            return scalar(double(z) + xy);
+        };
+        const auto multiply = [&](osg::Vec3f& value, float factor) {
+            for (unsigned axis = 0; axis < 3; ++axis)
+                value[axis] = scalar(double(value[axis]) * factor);
+        };
+        for (float value : {frameSeconds, maximumLinearVelocity, angularLimit})
+            require(std::isfinite(value) && value >= 0.f, "invalid keyframed motion coefficient");
+        vectorFinite(currentCenterOfMass);
+        vectorFinite(localCenterOfMass);
+        vectorFinite(velocities.mLinear);
+        vectorFinite(velocities.mAngular);
+        validateNativeOffsetRotation(currentRotation);
+        RagdollNativeKeyframedStepResult result;
+        result.mVelocities = velocities;
+        // Keyframed motion has no gravity addition or damping multiplication.
+        // Preserve untouched signed zeros, unlike the dynamic velocity step.
+        const float linearSquared = squaredLength(result.mVelocities.mLinear);
+        if (linearSquared > double(maximumLinearVelocity) * maximumLinearVelocity)
+            multiply(result.mVelocities.mLinear,
+                scalar(double(maximumLinearVelocity) / std::sqrt(double(linearSquared))));
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            const float increment = scalar(double(result.mVelocities.mLinear[axis]) * frameSeconds);
+            result.mCenterOfMass[axis] = scalar(double(currentCenterOfMass[axis]) + increment);
+        }
+        auto angularStep = result.mVelocities.mAngular;
+        multiply(angularStep, scalar(double(frameSeconds) * .5));
+        float angularSquared = scalar(double(squaredLength(angularStep)) * 0.40528470277786255f);
+        const double maximum = std::min(double(angularLimit) * frameSeconds, double(0.8999999761581421f));
+        const float maximumSquared = scalar(maximum * maximum);
+        if (angularSquared > maximumSquared)
+        {
+            const float factor = scalar(maximum / std::sqrt(double(angularSquared)));
+            multiply(result.mVelocities.mAngular, factor);
+            multiply(angularStep, factor);
+            // Original8EA65E uses the stored cap square, not a recomputed
+            // squared length of the rounded, capped half-angle vector.
+            angularSquared = maximumSquared;
+        }
+        const double square = double(angularSquared) * angularSquared;
+        const float w = scalar(((1.0 - double(angularSquared) * 0.8229479789733887f)
+            - square * 0.1305290013551712f) - square * angularSquared * 0.04440800100564957f);
+        // Full8EA6A4 passes incremental rotation first to889470: angular
+        // velocity is in world space, so incremental * current is required.
+        std::array<float, 4> q;
+        std::array<float, 3> products;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            const unsigned next = (axis + 1) % 3, last = (axis + 2) % 3;
+            const float first = scalar(double(currentRotation[last]) * angularStep[next]);
+            const float second = scalar(double(currentRotation[next]) * angularStep[last]);
+            const float cross = scalar(double(first) - second);
+            const float parent = scalar(double(w) * currentRotation[axis]);
+            const float local = scalar(double(currentRotation[3]) * angularStep[axis]);
+            const float sum = scalar(double(parent) + cross);
+            q[axis] = scalar(double(local) + sum);
+            products[axis] = scalar(double(angularStep[axis]) * currentRotation[axis]);
+        }
+        const float xy = scalar(double(products[1]) + products[0]);
+        const float xyz = scalar(double(products[2]) + xy);
+        q[3] = scalar(double(currentRotation[3]) * w - xyz);
+        // Full4D6830 reduction/Newton stores with portable reciprocal sqrt.
+        const float xx = scalar(double(q[0]) * q[0]), yy = scalar(double(q[1]) * q[1]);
+        const float zz = scalar(double(q[2]) * q[2]), ww = scalar(double(q[3]) * q[3]);
+        const float xz = scalar(double(zz) + xx), yw = scalar(double(ww) + yy);
+        const float norm = scalar(double(yw) + xz);
+        require(norm > 0.f, "zero keyframed motion rotation");
+        const float reciprocal = 1.f / std::sqrt(norm);
+        const float first = scalar(double(norm) * reciprocal);
+        const float second = scalar(double(first) * reciprocal);
+        const float error = scalar(3.0 - second);
+        const float half = scalar(.5 * reciprocal);
+        const float factor = scalar(double(half) * error);
+        for (float& value : q)
+            value = scalar(double(value) * factor);
+        result.mBodyPose.mRotation = q;
+        const auto basis = ragdollBoneWorldFromNativeBlendPose({{}, q});
+        for (unsigned row = 0; row < 3; ++row)
+        {
+            // Full8EA713: physical basis times raw local COM; (X+Y)+Z stores.
+            const float x = scalar(double(basis(0, row)) * localCenterOfMass[0]);
+            const float y = scalar(double(basis(1, row)) * localCenterOfMass[1]);
+            const float z = scalar(double(basis(2, row)) * localCenterOfMass[2]);
+            const float originXY = scalar(double(x) + y);
+            const float offset = scalar(double(originXY) + z);
+            result.mBodyPose.mPosition[row] = scalar(double(result.mCenterOfMass[row]) - offset);
+            result.mAngularDelta[row] = scalar(double(angularStep[row]) + angularStep[row]);
+        }
+        result.mAngularDelta[3] = scalar(std::sqrt(double(angularSquared)) * 3.1415927410125732f);
+        return result;
+    }
+
     RagdollNativeBlendPoseTargets ragdollNativeBlendPoseTargets(const RagdollNativeTargetPose& physical,
         const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags)
     {

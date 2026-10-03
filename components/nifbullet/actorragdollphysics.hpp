@@ -15,6 +15,24 @@ class btCollisionObject;
 
 namespace NifBullet
 {
+    struct RagdollNativeKeyframedStepResult
+    {
+        RagdollNativeTargetPose mBodyPose;
+        osg::Vec3f mCenterOfMass;
+        RagdollNativeVelocities mVelocities;
+        // Original motion+A0: twice the capped half-angle vector, followed
+        // by sqrt(stored angular fraction squared) * native pi.
+        std::array<float, 4> mAngularDelta;
+    };
+
+    // Original keyframed motion virtual+10 8EA4B0. Uses physical current COM,
+    // rotation and raw local COM; no damping/gravity or scene/bodyT conversion.
+    // Computes a new physical pose, not a World step or contact publication.
+    RagdollNativeKeyframedStepResult ragdollNativeKeyframedMotionStep(const osg::Vec3f& currentCenterOfMass,
+        const std::array<float, 4>& currentRotation, const osg::Vec3f& localCenterOfMass,
+        const RagdollNativeVelocities& velocities, float frameSeconds,
+        float maximumLinearVelocity, float angularLimit);
+
     // Original bhk position adapters store binary32 after multiplying by
     // these separately stored constants. The reverse is not computed as 1/k.
     inline constexpr float RagdollNativeLengthScale = 6.999040126800537f;

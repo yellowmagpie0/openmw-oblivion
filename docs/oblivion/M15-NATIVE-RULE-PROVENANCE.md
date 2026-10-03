@@ -9117,3 +9117,56 @@ controller/contact/activation persistence and existing native stepping/restart
 failures remain open. S5-S14 remain pending. Next: verify the original keyframed
 motion stepping path, whose velocity semantics currently disagree with Bullet's
 kinematic update, and use that evidence for the live physical lifecycle.
+
+
+### Checkpoint189: original keyframed physical motion step
+
+Checkpoint188 committed as `4579ac43ae3a3db9b1d1c6565056364ad2fbf20a`,
+185 isolated commits, exact-byte/fresh-clone verified. Bundle166 SHA256
+`e0b2a0697e5332ef1b50b0f7e6b67ed247ab87c65044b269e9683ef21dbdebe0`.
+An immutable keyframed motion helper now caps native linear/angular velocity,
+advances physical center of mass, applies a world-space angular increment,
+normalizes the quaternion and reconstructs physical origin using raw local
+center of mass. It returns the original angular increment cache as well.
+Keyframed motion does not apply gravity/damping. Untouched velocity signed
+zeros survive. Invalid physical inputs, coefficients and overflow reject.
+
+Original-key-step-oracle02 executes3,780 full8EA4B0 cases with actual889470,
+4D6830 and8B1DD0 and no stubbed game functions: both x87 controls,20 independent
+prior physical fixtures plus an identity fixture, five frames, three velocity
+cap pairs and six linear/angular velocity pairs. Executable hash
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, oracle source `d72b03f7c69d622400e20a6b422fa906736bb9a916ddc97cb9cbd6bf37b29103`,
+corpus `cda82cf69ad846ad9681fc7b8a375f7e3b5cec00973da9553e6e19dc6cf31fd4`. Oracle01's3,000 cases remain retained;02 adds
+identity/zero-angular fixtures. Actual motion+60 is current physical COM,
++80 current quaternion and+90 raw local COM; older corpus labels do not define
+these offsets. Swept time caches, native World scheduling and contacts remain
+outside the helper.
+
+Four initial tests fail baseline01. Green01 full suites pass, but original
+comparisons correctly reject13,140 numeric fields in each build. The initial
+helper multiplied current rotation before angular increment. Caller8EA6A4
+passes incremental rotation first: original889470 therefore applies a
+world-space increment before current rotation. The corrected helper includes
+an additional rotated-body regression from original row116. A local shadow
+warning is also corrected. Both comparison01 failures remain retained;
+no tolerance has changed.
+
+Final normal/sanitized02 each pass2,266 component and898 engine tests, full
+inventories and no skips/failures, with rebuilt openmw/esmtool. Fingerprint
+`92c62dcb17bee09dd7e99e6fe5a12fffe7631a5befa4c4143464fdeb59bcadf4`. ASan leaks disabled; UBSan halts. Comparisons02 each match all109,620
+numeric fields across3,780 cases with zero observed numeric error;13,482
+native velocity zero fields retain their signs. Fixed prior tolerances remain
+.001 for physical positions/velocities/angular cache and1e-6 for quaternion/
+basis. Zero-velocity and omitted-COM-advance negative controls differ in
+1806 and
+1344 rows respectively.
+Comparator source/driver hashes `8264bf1cab47db2d3fb68a4dad2ca4cc96f2e1beab991df1e088e7716f885835`,
+`e1654a4bc8ea5fdd2830e9a25eb95100e9b881bb37f10b7481412c5a82ed7f51`. Unchanged Python checks were not repeated.
+
+No stage closes. This helper does not yet advance owned Bullet keyframed
+bodies or suppress Bullet's saveKinematicState velocity replacement. Native
+swept time/activation/contact state, physical World lifecycle/save projection,
+retained BodyT velocity representation and floor fresh-restart failures remain
+open. S5-S14 remain pending. Next: integrate owned native keyframed stepping
+at the shared physics boundary while preserving ordinary Bullet behavior and
+verifying owner registration/removal and mode transitions.

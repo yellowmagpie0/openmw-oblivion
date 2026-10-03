@@ -2053,4 +2053,86 @@ namespace
         EXPECT_THROW(actor.updateNativeBlends({}, -1, 0, 0), std::invalid_argument);
         EXPECT_THROW(actor.updateNativeBlends({}, 1.f/120, 0, std::numeric_limits<float>::infinity()), std::invalid_argument);
     }
+    TEST(RagdollNativeKeyframedStep, AdvancesPhysicalCenterAndRebuildsOriginFromLocalCenter)
+    {
+        const auto step = NifBullet::ragdollNativeKeyframedMotionStep({4, 5, 6}, {0, 0, 0, 1},
+            {1, 0, 0}, {{1, 2, 3}, {0, 0, 0}}, .05f, 250.f, 31.4159f);
+        EXPECT_EQ(step.mCenterOfMass, osg::Vec3f(std::bit_cast<float>(1082235290u),
+            std::bit_cast<float>(1084437299u), std::bit_cast<float>(1086639309u)));
+        EXPECT_EQ(step.mBodyPose.mPosition, osg::Vec3f(std::bit_cast<float>(1078145844u),
+            std::bit_cast<float>(1084437299u), std::bit_cast<float>(1086639309u)));
+        EXPECT_EQ(step.mVelocities.mLinear, osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(step.mVelocities.mAngular, osg::Vec3f());
+        EXPECT_EQ(step.mBodyPose.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+    }
+
+    TEST(RagdollNativeKeyframedStep, UsesOriginalQuaternionIncrementAndAngularCache)
+    {
+        // Independently captured original8EA4B0 identity fixture, oracle02 row1868.
+        const auto step = NifBullet::ragdollNativeKeyframedMotionStep({4, 5, 6}, {0, 0, 0, 1},
+            {1, 0, 0}, {{1, 2, 3}, {.1f, .2f, .3f}}, .05f, 250.f, 31.4159f);
+        const std::array<std::uint32_t, 4> q{992204399u, 1000593007u, 1005961638u, 1065352482u};
+        const std::array<std::uint32_t, 4> delta{1000593163u, 1008981771u, 1014350480u, 1016676896u};
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            EXPECT_NEAR(step.mBodyPose.mRotation[i], std::bit_cast<float>(q[i]), 1e-6);
+            EXPECT_NEAR(step.mAngularDelta[i], std::bit_cast<float>(delta[i]), 1e-6);
+        }
+        const auto capped = NifBullet::ragdollNativeKeyframedMotionStep({4, 5, 6}, {0, 0, 0, 1},
+            {1, 0, 0}, {{1000, -2000, 3000}, {1000, 2000, -3000}}, .2f, 0.f, 0.f);
+        EXPECT_EQ(capped.mVelocities.mLinear, osg::Vec3f());
+        EXPECT_EQ(capped.mVelocities.mAngular, osg::Vec3f());
+        EXPECT_EQ(capped.mCenterOfMass, osg::Vec3f(4, 5, 6));
+        EXPECT_EQ(capped.mBodyPose.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+    }
+
+    TEST(RagdollNativeKeyframedStep, AppliesWorldAngularIncrementBeforeCurrentRotation)
+    {
+        // Full original8EA4B0 oracle02 row116: a rotated physical body.
+        const auto f = [](std::uint32_t bits) { return std::bit_cast<float>(bits); };
+        const auto step = NifBullet::ragdollNativeKeyframedMotionStep(
+            {f(1147962206u), f(3298255023u), f(1125857666u)},
+            {f(1060439283u), f(3207922931u), f(608677126u), f(608677126u)},
+            {f(1066608646u), f(1072082607u), f(3218266049u)},
+            {{1, 2, 3}, {.1f, .2f, .3f}}, f(1007192201u), 1.f, 1.f);
+        const std::array<std::uint32_t, 4> expectedQ{1060454098u, 3207908088u, 3127358567u, 966424644u};
+        const std::array<std::uint32_t, 3> expectedOrigin{1147991677u, 3298245521u, 1125750019u};
+        for (unsigned i = 0; i < 4; ++i)
+            EXPECT_NEAR(step.mBodyPose.mRotation[i], f(expectedQ[i]), 1e-6);
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_NEAR(step.mBodyPose.mPosition[i], f(expectedOrigin[i]), .001);
+    }
+
+    TEST(RagdollNativeKeyframedStep, ZeroFrameRetainsVelocitySignedZeros)
+    {
+        const auto step = NifBullet::ragdollNativeKeyframedMotionStep({4, 5, 6}, {0, 0, 0, 1},
+            {1, 0, 0}, {{-0.f, 0.f, -0.f}, {-0.f, 0.f, -0.f}}, 0.f, 250.f, 31.4159f);
+        for (unsigned i : {0u, 2u})
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(step.mVelocities.mLinear[i]), 0x80000000u);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(step.mVelocities.mAngular[i]), 0x80000000u);
+        }
+        EXPECT_EQ(step.mCenterOfMass, osg::Vec3f(4, 5, 6));
+        EXPECT_EQ(step.mBodyPose.mPosition, osg::Vec3f(3, 5, 6));
+    }
+
+    TEST(RagdollNativeKeyframedStep, RejectsMalformedPhysicalInputsAndUnrepresentableResults)
+    {
+        const auto call = [](osg::Vec3f center, std::array<float, 4> q, osg::Vec3f local,
+                              NifBullet::RagdollNativeVelocities velocity, float frame, float linear, float angular) {
+            return NifBullet::ragdollNativeKeyframedMotionStep(center, q, local, velocity, frame, linear, angular);
+        };
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(call({bad, 0, 0}, {0, 0, 0, 1}, {}, {}, 1, 250, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 0}, {}, {}, 1, 250, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, bad}, {}, {}, 1, 250, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 1}, {bad, 0, 0}, {}, 1, 250, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 1}, {}, {{bad, 0, 0}, {}}, 1, 250, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 1}, {}, {}, -1, 250, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 1}, {}, {}, 1, -1, 1), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 1}, {}, {}, 1, 250, bad), std::invalid_argument);
+        EXPECT_THROW(call({}, {0, 0, 0, 1}, {}, {{std::numeric_limits<float>::max(), 0, 0}, {}},
+            1, 250, 1), std::invalid_argument);
+    }
+
 }
