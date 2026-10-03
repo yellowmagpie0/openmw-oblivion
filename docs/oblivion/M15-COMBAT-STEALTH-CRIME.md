@@ -16572,3 +16572,54 @@ callers and complete persistence remain open. Actual clock/traversal producers,
 initial NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
 Next: independently execute velocity creation/attachment and source-vector
 preparation, own its lifetime and join it to admitted blend/force/frame state.
+
+
+### Checkpoint206: original velocity-controller creation/reuse and stored-vector rules
+
+Checkpoint205 committed as `70dba23ceead56d8605c2945fd33f4ee5cb8f704`,
+202 isolated commits with exact-byte/fresh-clone proof. Bundle183 SHA256
+`209e87216656b006f91493a235c52c5c0c634e8f106bc55aba9c7f46501daf22`.
+Complete original8B8590 executes actual NiTimeController constructor715990,
+SetTarget715CE0 and attached-list prepend6FFE60 for a fresh allocated controller;
+existing controllers retain null/self/other targets without retargeting. Generic
+collision47FAC0 admits nonblend collision objects too. Actual535AC0 reads stored
+mass through8A98D0 and89DA90, using archived motion inverse mass for keyframed
+current motion, while linear damping comes from current motion+C8. The stored
+vector rounds mass*source and (.75*linearDamping)*source separately before adding.
+No collision/wrapper copies the source unchanged. Frequency1, phase0, bounds
+0/duration, flags(old&FFF5)|D, sentinel Start resets with elapsed/delta retained
+on reuse; fresh elapsed/delta0. New controller prepends; existing list is retained.
+
+Original01 retains5,184 cases. Final02 expands to10,368 cases with fractional
+and extreme finite vector components, both x87 controls, fresh and three reused
+target identities, collision missing/object-without-wrapper/body, dynamic and
+keyframed archived mass, three inverse masses/damping values/durations, old1D/
+FFFF flags and four vectors. Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+source `f76efd4687ce5ccca20ee75fd962b750cfe8f5189bbcb51c8144d6d0b23b232e`, corpus `127f951a6205820dbfe54c4fa1056c1c1710dcf022d21ccbbeb23bb6e9287819`.
+Only fresh allocation401E20 and Windows critical/interlocked primitives are
+stubbed; constructor, attachment, lookup, mass/damping and Start run original
+instructions. These synthetic original scenes do not establish later force,
+activation, full Down recursion, World or normal gameplay acceptance.
+
+preparePhysicalVelocityController now models the independently verified finite
+nonnegative Down setup boundary. Its immutable result retains prior elapsed/
+delta and unmasked flags; missing prior state initializes native constructor
+flags/delta. Caller supplies resolved current/archived inverse mass and current
+linear damping. Missing bodies ignore unused coefficients. Used invalid duration,
+vector, mass/damping or arithmetic overflow rejects without modifying prior
+state. Target/list ownership remains with caller and is not fabricated as a NIF
+record identity. Four placeholder tests fail; final tests cover creation,
+reuse, weighted/zero mass and malformed/overflow rollback. All2,339 component
+tests pass in full normal/sanitized01 inventories without failure/skip. Normal
+and ASan/UBSan comparators each match134,784 exact captured fields in10,368 cases.
+Eight independent negative controls distinguish wrong attachment/target, reset
+clocks, missing-body weighting, unweighted body source, omitted damping and
+combined coefficient (288 original cases reject that rounding shortcut).
+Tested fingerprint `a3b34e6f605af23e140054a093f480c6a6ca9ad06f9d9a90c2e01f73dbebe8fc`. No compiler warning/error or sanitizer finding;
+ASan leak checks disabled. Engine/Python sources unchanged and not repeated.
+
+No stage closes. Owned velocity creation/reuse/list lifetime and removal, joined
+atomic blend/force/frame publication, automatic World reaction/traversal/clock
+producers and complete persistence remain open, as do initial NPC morphology,
+retained BodyT/floor failures and S5-S14. Next: use the proven setup rules in the
+physical owner, then integrate controller order, force and removal atomically.

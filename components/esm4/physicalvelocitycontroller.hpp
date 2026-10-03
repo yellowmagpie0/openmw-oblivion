@@ -16,6 +16,15 @@ namespace ESM4
         float mFrameDelta = 0.016f;
     };
 
+    // Original8B8590 setup after the caller admits a nonnegative Down duration.
+    // A missing prior controller uses native constructor clock/delta/flags.
+    // Body mass is the reciprocal read from current or archived native motion;
+    // linear damping belongs to the current motion. Target/list ownership is
+    // deliberately caller-owned and is not retargeted by reuse.
+    PhysicalVelocityControllerState preparePhysicalVelocityController(
+        const std::optional<PhysicalVelocityControllerState>& previous, const std::array<float, 4>& sourceVector,
+        float duration, bool hasPhysicalBody, float inverseMass, float linearDamping);
+
     struct PhysicalVelocityControllerUpdate
     {
         PhysicalVelocityControllerState mController;
