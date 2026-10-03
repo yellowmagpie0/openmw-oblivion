@@ -1335,3 +1335,133 @@ namespace
         EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(matrix), std::invalid_argument);
     }
 }
+
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, NativeKeyframedScenePosePreservesVelocitiesForcesAndGraphIdentity)
+    {
+        mGraph.mBodies[0].mCenter = {.25f, -.5f, .75f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        body->setLinearVelocity(btVector3(1, 2, 3));
+        body->setAngularVelocity(btVector3(-1, -2, -3));
+        body->applyCentralForce(btVector3(4, 5, 6));
+        body->applyTorque(btVector3(7, 8, 9));
+        const auto before = actor.capture()[0];
+        const auto* shape = body->getCollisionShape();
+        const auto* proxy = body->getBroadphaseHandle();
+        const auto matrix = osg::Matrixf::rotate(.7f, osg::Vec3f(1, 2, 3))
+            * osg::Matrixf::translate(21, -28, 35);
+        const std::array<NifBullet::RagdollNativeScenePoseRequest, 1> request{{{12, matrix}}};
+        actor.synchronizeNativeKeyframedPoses(request);
+        const auto target = NifBullet::ragdollNativePoseFromBoneWorld(matrix);
+        const auto after = actor.capture()[0];
+        for (unsigned axis = 0; axis < 3; ++axis)
+            EXPECT_NEAR(after.mPose.getOrigin()[axis], target.getOrigin()[axis], 1e-12);
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                EXPECT_NEAR(after.mPose.getBasis()[row][col], target.getBasis()[row][col], 1e-12);
+        EXPECT_EQ(after.mLinearVelocity, before.mLinearVelocity);
+        EXPECT_EQ(after.mAngularVelocity, before.mAngularVelocity);
+        EXPECT_EQ(body->getInterpolationWorldTransform(), body->getWorldTransform());
+        EXPECT_EQ(body->getInterpolationLinearVelocity(), before.mLinearVelocity);
+        EXPECT_EQ(body->getInterpolationAngularVelocity(), before.mAngularVelocity);
+        EXPECT_EQ(body->getTotalForce(), btVector3(4, 5, 6));
+        EXPECT_EQ(body->getTotalTorque(), btVector3(7, 8, 9));
+        EXPECT_EQ(body->getCollisionShape(), shape);
+        EXPECT_EQ(body->getBroadphaseHandle(), proxy);
+        EXPECT_TRUE(body->isKinematicObject());
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeKeyframedScenePoseRejectsEntireInvalidBatchBeforePublication)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 2> key{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}, {24, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->applyCentralForce(btVector3(1, 2, 3));
+        const auto firstPose = first->getWorldTransform();
+        const auto secondPose = second->getWorldTransform();
+        auto matrix = osg::Matrixf::translate(7, 14, 21);
+        std::array<NifBullet::RagdollNativeScenePoseRequest, 2> requests{{{12, matrix}, {999, matrix}}};
+        EXPECT_THROW(actor.synchronizeNativeKeyframedPoses(requests), std::invalid_argument);
+        requests[1].mRecord = 12;
+        EXPECT_THROW(actor.synchronizeNativeKeyframedPoses(requests), std::invalid_argument);
+        requests[1].mRecord = 24;
+        requests[1].mWorldPose = osg::Matrixf::scale(2, 2, 2);
+        EXPECT_THROW(actor.synchronizeNativeKeyframedPoses(requests), std::invalid_argument);
+        requests[1].mWorldPose = matrix;
+        requests[1].mWorldPose(3, 0) = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(actor.synchronizeNativeKeyframedPoses(requests), std::invalid_argument);
+        EXPECT_EQ(first->getWorldTransform(), firstPose);
+        EXPECT_EQ(second->getWorldTransform(), secondPose);
+        EXPECT_EQ(first->getTotalForce(), btVector3(1, 2, 3));
+        requests[1].mWorldPose = matrix;
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{24, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(dynamic);
+        EXPECT_THROW(actor.synchronizeNativeKeyframedPoses(requests), std::invalid_argument);
+        EXPECT_EQ(first->getWorldTransform(), firstPose);
+        EXPECT_EQ(second->getWorldTransform(), secondPose);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeKeyframedScenePoseUpdatesCollisionQueriesAndKeepsUnselectedSleep)
+    {
+        auto other = mGraph.mBodies[0];
+        other.mRecord = 24;
+        other.mBone = "unconnected";
+        mGraph.mBodies.push_back(other);
+        mPoses.push_back(btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 20)));
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        second->setActivationState(ISLAND_SLEEPING);
+        actor.synchronizeNativeKeyframedPoses({});
+        EXPECT_FALSE(second->isActive());
+        const std::array<NifBullet::RagdollNativeScenePoseRequest, 1> request{{{12, osg::Matrixf::translate(70, 0, 0)}}};
+        actor.synchronizeNativeKeyframedPoses(request);
+        EXPECT_GT(first->getWorldTransform().getOrigin().x(), 9.9);
+        EXPECT_EQ(second->getWorldTransform(), mPoses[1]);
+        EXPECT_FALSE(second->isActive());
+        btCollisionWorld::ClosestRayResultCallback oldRay(btVector3(-2, 0, 2), btVector3(2, 0, 2));
+        mWorld.rayTest(oldRay.m_rayFromWorld, oldRay.m_rayToWorld, oldRay);
+        EXPECT_FALSE(oldRay.hasHit());
+        btCollisionWorld::ClosestRayResultCallback newRay(btVector3(8, 0, 0), btVector3(12, 0, 0));
+        mWorld.rayTest(newRay.m_rayFromWorld, newRay.m_rayToWorld, newRay);
+        ASSERT_TRUE(newRay.hasHit());
+        EXPECT_EQ(newRay.m_collisionObject, first);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(dynamic);
+        EXPECT_FALSE(first->isKinematicObject());
+        EXPECT_GT(first->getWorldTransform().getOrigin().x(), 9.9);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeKeyframedScenePoseConvertsCallerLengthsAndPrincipalFrameOnce)
+    {
+        mGraph.mBodies[0].mCenter = {.25f, -.5f, .75f};
+        mGraph.mBodies[0].mInertia = {2, .3f, 0, .3f, 3, 0, 0, 0, 4};
+        constexpr float scale = 3.f;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, scale, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        const auto matrix = osg::Matrixf::rotate(.7f, osg::Vec3f(0, 0, 1)) * osg::Matrixf::translate(7, 14, 21);
+        const std::array<NifBullet::RagdollNativeScenePoseRequest, 1> request{{{12, matrix}}};
+        actor.synchronizeNativeKeyframedPoses(request);
+        auto expected = NifBullet::ragdollNativePoseFromBoneWorld(matrix);
+        expected.setOrigin(expected.getOrigin() * scale);
+        const auto actual = actor.capture()[0].mPose;
+        for (unsigned axis = 0; axis < 3; ++axis)
+            EXPECT_NEAR(actual.getOrigin()[axis], expected.getOrigin()[axis], 1e-12);
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned col = 0; col < 3; ++col)
+                EXPECT_NEAR(actual.getBasis()[row][col], expected.getBasis()[row][col], 1e-12);
+    }
+}

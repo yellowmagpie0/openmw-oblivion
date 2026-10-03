@@ -669,6 +669,45 @@ namespace NifBullet
                 mImpl->activateGroup(change.mOwned->mActivationGroup);
     }
 
+    void ActorRagdollPhysics::synchronizeNativeKeyframedPoses(
+        std::span<const RagdollNativeScenePoseRequest> poses)
+    {
+        struct Pending
+        {
+            Impl::Body* mOwned;
+            btTransform mPose;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(poses.size());
+        std::unordered_set<std::uint32_t> selected;
+        for (const auto& request : poses)
+        {
+            require(selected.insert(request.mRecord).second, "duplicate native scene pose identity");
+            const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == request.mRecord; });
+            require(found != mImpl->mBodies.end(), "unknown native scene pose identity");
+            require(found->mMotion == RagdollNativeMotion::Keyframed,
+                "native scene pose publication requires keyframed motion");
+            auto pose = ragdollNativePoseFromBoneWorld(request.mWorldPose);
+            pose.setOrigin(pose.getOrigin() * btScalar(mImpl->mLengthScale));
+            pose *= found->mCenterFrame;
+            validatePose(pose);
+            pending.push_back({&*found, pose});
+        }
+        for (const auto& change : pending)
+            mImpl->activateGroup(change.mOwned->mActivationGroup);
+        for (const auto& change : pending)
+        {
+            auto& body = *change.mOwned->mBody;
+            // Original8DD970 replaces current and previous COM/rotation while
+            // retaining motion velocities. Bullet's kinematic setter initially
+            // keeps the old interpolation pose, so replace that explicitly.
+            body.setCenterOfMassTransform(change.mPose);
+            body.setInterpolationWorldTransform(change.mPose);
+            mImpl->mWorld.updateSingleAabb(&body);
+        }
+    }
+
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)
     {
         require(body < mImpl->mBodies.size() && finite(impulse) && finite(worldPoint), "invalid impulse");

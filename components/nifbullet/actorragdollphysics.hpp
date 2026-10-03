@@ -63,6 +63,12 @@ namespace NifBullet
         friend bool operator==(const RagdollNativeMotionRequest&, const RagdollNativeMotionRequest&) = default;
     };
 
+    struct RagdollNativeScenePoseRequest
+    {
+        std::uint32_t mRecord;
+        osg::Matrixf mWorldPose;
+    };
+
     struct RagdollNativeVelocityDrive
     {
         std::uint32_t mRecord;
@@ -96,6 +102,10 @@ namespace NifBullet
         // Caller owns scene synchronization and any transition velocity reset.
         std::vector<RagdollNativeMotionRequest> captureNativeMotionModes() const;
         void setNativeMotionModes(std::span<const RagdollNativeMotionRequest> requests);
+        // Sparse keyframed scene publication using native scene target
+        // preparation. Stage the whole batch before changing any body. Preserve
+        // velocities/forces and refresh current/previous poses and AABBs.
+        void synchronizeNativeKeyframedPoses(std::span<const RagdollNativeScenePoseRequest> poses);
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.

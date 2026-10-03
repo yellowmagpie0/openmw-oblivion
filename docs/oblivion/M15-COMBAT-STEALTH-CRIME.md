@@ -14384,3 +14384,53 @@ bodies at the worker boundary, then complete actual blend-controller sequencing
 and mode/clock persistence. Gameplay scene-root choice, actor scaling, contact
 activation, full World/restart acceptance and the stock-floor continuation
 failure remain open.
+
+
+### Checkpoint167: owned keyframed scene pose publication
+
+Checkpoint166 committed as `7fc3af23ee6c3519c395ccce3680c92d46133410`,
+163 isolated commits with exact-byte/fresh-clone proof. Owned ragdoll physics
+now accepts sparse native scene-pose requests identified by body record. It
+stages and validates the complete batch, rejecting duplicate/unknown records,
+non-keyframed bodies and invalid matrices before writes. Native target preparation
+from checkpoint166 precedes one caller-length conversion and the existing
+principal-center frame conversion. Publication activates selected owned
+constraint groups, updates current and interpolation world poses, and refreshes
+AABBs. Body/shape/proxy/constraints, current velocity and accumulated forces
+survive publication. Empty batches do not activate or move bodies.
+
+Four new component cases cover exact prepared target pose, nonzero centers and
+principal inertia, velocity/force and graph identity preservation, complete
+invalid-batch rejection, empty/unselected sleeping bodies, collision queries at
+the new pose, and switching back to dynamic at the published position.
+All four fail against the retained inactive baseline01.
+Full keyframed-scene-{normal,sanitized}-01 each pass2,212 component and869
+engine cases with complete inventories, no failures/skips and rebuilt
+openmw/esmtool. Tested fingerprint `e38e360fedb82b13ba67362fad72a956265227e12b724921cbec5844ab07511f`. ASan leaks disabled; UBSan halts;
+Python unchanged.
+
+Actual owned Bullet publication compares against checkpoint166's full original
+89EAE0 corpus, executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, corpus SHA256
+`9a96456ff35e6326775942f27a53d5658ae8bd4b465eb35f3cf53472a84d79a9`. Keyframed-scene-compare-{normal,sanitized}-01 each
+pass400 bodies,2,400 exact native velocity fields and2,400 interpolation/force/
+identity/mode/teardown checks. Before either run, tolerances were declared as
+native origin1e-9, rotation basis1e-6 and world COM.001, accounting for the
+Bullet double/principal-center representation. Maximum errors in both builds:
+origin `1.1368683772161603e-13`, basis
+`2.2590223736074222e-07`, world COM
+`0.0004245360994976225`. Unchanged old pose and zero-velocity
+controls each differ in400 cases. Comparator/driver SHA256
+`5d6731b1a2b3c683818b90b8c36edb3fbb324f2e7adf6cd7d21a25b262ae8bb0`, `f8f9f1859abe8ccd1db1757a39d34b668973a60a589102a61047b34e53e9b67a`.
+The original probe executes no-world setter publication with Windows lock/thread
+imports stubbed; it does not prove full original-world contact/AABB behavior.
+
+Velocity preservation is proved at publication only: Bullet's later kinematic
+saveKinematicState derives velocities from its interpolation poses. Native
+keyframed substep semantics still need an independent instruction trace; no
+claim of native velocity conservation across a physics step is made. Owned
+constraint-group activation is reused, but cross-owner contact-island activation
+is open. No scheduler/World caller, controller/mode/clock save restoration,
+actor-root/shape scaling or normal-input gameplay acceptance is introduced.
+No M15 stage closes; stock-floor fresh-restart discrepancies and S5-S14 remain
+open. Next: route scene publication through the worker barrier and PhysicsSystem
+before implementing actual blend-controller sequencing.
