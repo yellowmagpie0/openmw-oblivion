@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_SCENEUTIL_ACTORRAGDOLLPOSE_HPP
 
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/nif/niftypes.hpp>
 
 #include <memory>
 #include <span>
@@ -31,8 +32,8 @@ namespace SceneUtil
     // It captures live world bones and applies complete physical world poses
     // atomically through the verified native local-pose projection. Actor
     // mode selection, physics stepping and persistence belong to their owners.
-    // Placement is rigid; physical targets admit authored neighboring-unit
-    // world scale while retaining their separate renderer scale fields.
+    // Matrix placement is rigid. Native placement additionally admits separate
+    // uniform scale; physical bones retain neighboring-unit authored scales.
     // Call on the renderer update thread, without concurrent topology changes.
     class ActorRagdollPoseBinding
     {
@@ -51,6 +52,14 @@ namespace SceneUtil
         std::vector<NifBullet::RagdollBoneWorldPose> captureWorldBones(const osg::Matrixf& objectWorld) const;
         void applyWorldBones(std::span<const NifBullet::RagdollBoneWorldPose> poses,
             const osg::Matrixf& objectWorld);
+
+        // Native placement retains uniform scale separately from rotation.
+        // The caller must scale the physical graph's properties independently.
+        // Authored physical bone scales must remain neighboring-unit relative
+        // to this placement; nonuniform scale/shear is never admitted.
+        std::vector<NifBullet::RagdollBoneWorldPose> captureWorldBones(const Nif::NiTransform& objectWorld) const;
+        void applyWorldBones(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+            const Nif::NiTransform& objectWorld);
 
     private:
         struct Impl;

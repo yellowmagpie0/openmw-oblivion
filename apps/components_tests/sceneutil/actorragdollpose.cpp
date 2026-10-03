@@ -64,6 +64,79 @@ namespace
         }
     };
 
+    TEST_F(ActorRagdollPoseTest, NativePlacementScalesPositionsWithSeparateRigidPhysicalRotation)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mTranslation = {100, 0, 0};
+        placement.mScale = 2.f;
+        auto poses = binding.captureWorldBones(placement);
+        ASSERT_EQ(poses.size(), 2u);
+        EXPECT_EQ(poses[0].mPose.getTrans(), osg::Vec3f(122, 4, 0));
+        EXPECT_EQ(poses[1].mPose.getTrans(), osg::Vec3f(120, 0, 0));
+        EXPECT_EQ(poses[0].mPose(0, 0), 1.f);
+        placement.mScale = .5f;
+        placement.mRotation.mValues[0][0] = 0;
+        placement.mRotation.mValues[0][1] = -1;
+        placement.mRotation.mValues[1][0] = 1;
+        placement.mRotation.mValues[1][1] = 0;
+        poses = binding.captureWorldBones(placement);
+        EXPECT_EQ(poses[0].mPose.getTrans(), osg::Vec3f(99, 5.5, 0));
+        EXPECT_EQ(poses[1].mPose.getTrans(), osg::Vec3f(100, 5, 0));
+        EXPECT_EQ(poses[0].mPose(0, 1), 1.f);
+    }
+
+    TEST_F(ActorRagdollPoseTest, NativePlacementWritebackDividesParentScaleWithoutAccumulation)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mTranslation = {100, 0, 0};
+        placement.mScale = 2.f;
+        const auto target = desired();
+        binding.applyWorldBones(target, placement);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10, 0, 0));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(0, .5, 0));
+        for (unsigned iteration = 0; iteration < 3; ++iteration)
+        {
+            binding.applyWorldBones(target, placement);
+            const auto actual = binding.captureWorldBones(placement);
+            EXPECT_EQ(actual[0].mPose.getTrans(), target[0].mPose.getTrans());
+            EXPECT_EQ(actual[1].mPose.getTrans(), target[1].mPose.getTrans());
+            EXPECT_EQ(mPelvis->mScale, 1.f);
+            EXPECT_EQ(mHand->mScale, 1.f);
+        }
+        EXPECT_EQ(mConnector->getMatrix().getTrans(), osg::Vec3d(0, 2, 0));
+    }
+
+    TEST_F(ActorRagdollPoseTest, NativePlacementRejectsInvalidTransformsBeforeWriting)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto pelvis = mPelvis->getMatrix();
+        const auto hand = mHand->getMatrix();
+        for (const float scale : {0.f, -1.f, std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::max()})
+        {
+            auto placement = Nif::NiTransform::getIdentity();
+            placement.mScale = scale;
+            EXPECT_THROW(binding.captureWorldBones(placement), std::invalid_argument);
+            EXPECT_THROW(binding.applyWorldBones(desired(), placement), std::invalid_argument);
+            EXPECT_EQ(mPelvis->getMatrix(), pelvis);
+            EXPECT_EQ(mHand->getMatrix(), hand);
+        }
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mScale = 2.f;
+        placement.mRotation.mValues[0][1] = .25f;
+        EXPECT_THROW(binding.captureWorldBones(placement), std::invalid_argument);
+        EXPECT_THROW(binding.applyWorldBones(desired(), placement), std::invalid_argument);
+        placement.mRotation = Nif::NiTransform::getIdentity().mRotation;
+        mHand->setScale(2.f);
+        EXPECT_THROW(binding.captureWorldBones(placement), std::invalid_argument);
+        EXPECT_THROW(binding.applyWorldBones(desired(), placement), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), pelvis);
+        auto nonuniform = osg::Matrixf::scale(2.f, 3.f, 2.f);
+        EXPECT_THROW(binding.captureWorldBones(nonuniform), std::invalid_argument);
+    }
+
     TEST_F(ActorRagdollPoseTest, LocalCheckpointRestoresExactMatricesAndSeparateNifCaches)
     {
         SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);

@@ -15084,3 +15084,66 @@ save/restart or gameplay acceptance is claimed.
 No stage closes. Next: native actor scale/renderer placement and bodyT pose
 admission, World physical lifecycle/controller ownership, native stepping and
 unchanged stock-floor fresh-restart/normal-gameplay gates. S5-S14 remain pending.
+
+
+### Checkpoint178: explicit native uniform placement in renderer bone binding
+
+Checkpoint177 committed as `cf1bbb9f2fb961d98d736e750ba66530f8f4c4ac`,
+174 isolated commits with exact-byte/fresh-clone proof; bundle155 SHA256
+`03b43dec5d757a7aa676d9873b3683ff55f9ee1305e332784681841fce65d454`.
+SceneUtil::ActorRagdollPoseBinding now accepts a native NiTransform placement,
+retaining uniform scale separately from rigid rotation. Capture composes current
+renderer nodes with that scale and returns unscaled physical rotations and
+scaled positions. Writeback uses the verified native inverse-parent projection,
+preserving authored local scales and unsimulated connectors. Physical bone
+scale must stay neighboring-unit relative to placement; nonuniform matrices,
+nonrigid rotations, invalid scales, overflow and unsupported independently
+scaled physical bones fail before renderer mutation. Existing matrix APIs
+retain rigid-placement admission. Callers must scale graph properties separately;
+no World caller or race morphology behavior is inferred from this adapter.
+
+Three tests cover scaled/rotated/translated capture, inverse-scale writeback
+without repeated accumulation, separate local scale preservation, and atomic
+invalid transform rejection. Baseline01/02 retain missing-type include compile
+failures; baseline03 compiles and all three tests fail against the adapter
+that discarded separate scale. Full render-placement normal/sanitized01 each
+pass2,236 component and892 engine cases with full inventories and zero skips
+or failures, rebuilding openmw/esmtool. Tested source fingerprint `24c689540b3b0dd1d9c6fe88addab660c63243ea694fafd497df10f7fcf3d62f`.
+ASan leaks disabled; UBSan halts; unchanged Python sources were not rerun.
+
+Render-placement-compare normal/sanitized01 each pass36 renderer fixtures and
+432 exact binary32 R/P checks against retained complete original53D7A0,
+7100A0 and7101F0 composition outputs, both x87 controls, parent scale2 and stock
+neighboring-unit parent/local scales. The separate NiWorld scale slot is
+excluded from rigid physical matrices. Original corpus SHA256
+`c42428ea0132f8152e2d08362243ed5854d5a9f4bcda4fdc41e799e53443ef43`.
+Comparator source/driver SHA256 `2493065ca6ba08e352bc2eb6a27c5a325a15d259fcc06b50d1c0d4d561774d30`, `7993e310f6d74724d177d632c32d3c505c8fce7b967c46570edfa9f9985437de`.
+
+Stock-render-placement normal/sanitized01 each pass actual stock NIF parsing,
+SceneUtil capture and writeback at seven scales(.5/.9/1/1.1/1.3/2/3), rotated
+and translated placement,35 repeated renderer roundtrips within the predeclared
+.001 matrix-element tolerance, and actual Bullet ownership18 bodies/17 joints.
+All126 inverse masses match independent original8A2D60 outputs. Keyframed to
+dynamic restoration retains exact mass/inertia; all objects and constraints
+are released. These poses come from live binding capture, replacing the prior
+probe's caller-supplied scaled translations. Source/driver SHA256
+`cd0c3f8a9682be5020316dd9e966d99db41f45f35bf9294388722c5e782333a2`, `2b906320e126ba517fa8389de8cedb15560d6fa69cdacdf582fa882d1ccd00c2`. Stock skeleton SHA256
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`.
+No Bullet stepping, World lifecycle, save/restart or gameplay gate is claimed.
+
+Root-scale-oracle01 executes864 fixtures/2,592 original paths with no replaced
+calls, both x87 controls: complete Character/Creature virtual+EC queries with
+actual4D7260,611D00,4D9B40,519D20; creation prefix4E43C6 stops before root
+virtual+50; SetScale prefix4DB5C6 includes actual+154 model getter and stops
+before707370. Correction to checkpoint176's inspection shorthand:4D7260 is
+not universally raw placed scale. For Creature formtype24 it multiplies placed
+scale by baseScale+114 with a binary32 store; NPC formtype23 does not take that
+branch. Character611D00 then multiplies by selected race height. Creation's
+root store uses4D7260; SetScale's root store uses virtual+EC. The whole initial
+model, race-weight/morphology, model replacement and physics clone paths are
+still open. Source/corpus SHA256 `61fcb9506fd71a0f6284e719f6c44b04facdef0aba23a66a75ddfd9203a07676`, `edf9e0ca5ac145a67f179b99304c710f51df34251c91421f08d3c1ef6290b7dd`;
+original executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+No stage closes. Next: bodyT pose admission and actual World physical lifecycle,
+caller scale resolution, controller ownership/native stepping and unchanged
+stock-floor fresh-restart/normal-gameplay gates. S5-S14 remain pending.

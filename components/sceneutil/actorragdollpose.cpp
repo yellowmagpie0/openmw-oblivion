@@ -38,12 +38,20 @@ namespace SceneUtil
             return result;
         }
 
-        osg::Matrixf physicalWorldMatrix(const Nif::NiTransform& pose)
+        Nif::NiTransform nativePlacement(const Nif::NiTransform& pose)
         {
-            // Authored neighboring-unit scale values are retained in renderer
-            // nodes. Ordinary body sync consumes NiWorld rotation and position,
-            // not its separate scale slot; broader actor scaling remains unadmitted.
-            require(std::isfinite(pose.mScale) && std::abs(pose.mScale - 1.f) <= 1e-4f,
+            // Validate rotation independently of its separate native scale.
+            worldPose(pose.mRotation.toOsgMatrix());
+            return NifBullet::composeRagdollBonePose(pose, Nif::NiTransform::getIdentity());
+        }
+
+        osg::Matrixf physicalWorldMatrix(const Nif::NiTransform& pose, float placementScale)
+        {
+            // Ordinary body sync consumes NiWorld rotation and position, not
+            // its separate scale slot. Require authored physical bone scale
+            // to remain neighboring-unit relative to the explicit placement.
+            require(std::isfinite(pose.mScale) && pose.mScale > 0
+                    && std::abs(double(pose.mScale) / placementScale - 1.0) <= 1e-4,
                 "unadmitted physical bone world scale");
             auto matrix = pose.mRotation.toOsgMatrix();
             matrix.setTrans(pose.mTranslation);
@@ -303,20 +311,26 @@ namespace SceneUtil
     std::vector<NifBullet::RagdollBoneWorldPose> ActorRagdollPoseBinding::captureWorldBones(
         const osg::Matrixf& objectWorld) const
     {
-        const auto placement = worldPose(objectWorld);
+        return captureWorldBones(worldPose(objectWorld));
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> ActorRagdollPoseBinding::captureWorldBones(
+        const Nif::NiTransform& objectWorld) const
+    {
+        const auto placement = nativePlacement(objectWorld);
         const auto world = mImpl->worlds(mImpl->locals(), placement);
         std::vector<NifBullet::RagdollBoneWorldPose> result;
         result.reserve(mImpl->mBodies.size());
         for (const auto& body : mImpl->mBodies)
-            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode])});
+            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode], placement.mScale)});
         return result;
     }
 
     void ActorRagdollPoseBinding::applyWorldBones(std::span<const NifBullet::RagdollBoneWorldPose> poses,
-        const osg::Matrixf& objectWorld)
+        const Nif::NiTransform& objectWorld)
     {
         require(poses.size() == mImpl->mBodies.size(), "ragdoll renderer snapshot count mismatch");
-        const auto placement = worldPose(objectWorld);
+        const auto placement = nativePlacement(objectWorld);
         auto local = mImpl->locals();
         const auto previousWorld = mImpl->worlds(local, placement);
         std::unordered_map<std::uint32_t, Nif::NiTransform> desired;
@@ -328,7 +342,7 @@ namespace SceneUtil
         {
             const auto found = desired.find(body.mNodeRecord);
             require(found != desired.end(), "missing ragdoll renderer snapshot target");
-            physicalWorldMatrix(previousWorld[body.mNode]);
+            physicalWorldMatrix(previousWorld[body.mNode], placement.mScale);
             targets.emplace(body.mNode, found->second);
         }
         std::vector<Nif::NiTransform> candidateWorld;
@@ -358,5 +372,11 @@ namespace SceneUtil
         }
         if (auto* skeleton = dynamic_cast<Skeleton*>(mImpl->mRoot.get()))
             skeleton->invalidateBoneMatrices();
+    }
+
+    void ActorRagdollPoseBinding::applyWorldBones(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+        const osg::Matrixf& objectWorld)
+    {
+        applyWorldBones(poses, worldPose(objectWorld));
     }
 }
