@@ -30,6 +30,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwphysics/testactorragdoll.cpp
 
     mwrender/testtes4facegen.cpp
+    mwrender/testphysicalpose.cpp
 
     mwgui/tooltips.cpp
     mwgui/weightedsearch.cpp

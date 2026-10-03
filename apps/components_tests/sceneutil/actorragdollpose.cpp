@@ -199,6 +199,38 @@ namespace
         EXPECT_EQ(mConnector->getMatrix().getTrans(), osg::Vec3f(0, 2, 0));
     }
 
+    TEST_F(ActorRagdollPoseTest, CapturesQuaternionCallbackPrecisionAndProceduralRenderedRotation)
+    {
+        mPelvis->setRotation(osg::Quat(.4, osg::Vec3f(0, 0, 1)));
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto checkRendered = [&] {
+            const auto poses = binding.captureWorldBones(mObjectWorld);
+            const osg::Matrixf expected = mHand->getMatrix() * mConnector->getMatrix()
+                * mPelvis->getMatrix() * mObjectWorld;
+            for (unsigned row = 0; row < 4; ++row)
+                for (unsigned column = 0; column < 4; ++column)
+                    EXPECT_NEAR(poses[0].mPose(row, column), expected(row, column), 1e-4);
+        };
+        checkRendered();
+        const auto cached = mPelvis->mRotationScale;
+        mPelvis->setMatrix(osg::Matrixd::rotate(-.7, osg::Vec3f(0, 0, 1))
+            * osg::Matrixd::translate(10, 0, 0));
+        EXPECT_FLOAT_EQ(mPelvis->mRotationScale.mValues[0][0], cached.mValues[0][0]);
+        checkRendered();
+    }
+
+    TEST_F(ActorRagdollPoseTest, RejectsNonRigidRenderedMatrixEvenWhenCachedNifRotationIsValid)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        auto shear = mPelvis->getMatrix();
+        shear(0, 1) = .5;
+        mPelvis->setMatrix(shear);
+        EXPECT_THROW(binding.captureWorldBones(mObjectWorld), std::invalid_argument);
+        EXPECT_THROW(binding.applyWorldBones(desired(), mObjectWorld), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix(), shear);
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3f(1, 0, 0));
+    }
+
     TEST_F(ActorRagdollPoseTest, PhysicalBodyMotionDrivesSkeletonMatrices)
     {
         for (auto& body : mGraph.mBodies)

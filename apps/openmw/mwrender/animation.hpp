@@ -36,6 +36,12 @@ namespace Resource
     class ResourceSystem;
 }
 
+namespace NifBullet
+{
+    struct ActorRagdollDefinition;
+    struct RagdollBoneWorldPose;
+}
+
 namespace SceneUtil
 {
     class KeyframeHolder;
@@ -44,6 +50,7 @@ namespace SceneUtil
     class LightSource;
     class LightListCallback;
     class Skeleton;
+    class ActorRagdollPoseBinding;
     struct LightCommon;
 }
 
@@ -200,6 +207,7 @@ namespace MWRender
 
         osg::ref_ptr<osg::Group> mObjectRoot;
         SceneUtil::Skeleton* mSkeleton;
+        std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mPhysicalPose;
 
         // The node expected to accumulate movement during movement animations.
         osg::ref_ptr<osg::Node> mAccumRoot;
@@ -478,6 +486,16 @@ namespace MWRender
         float getVelocity(std::string_view groupname) const;
 
         virtual osg::Vec3f runAnimation(float duration);
+
+        // Borrowed renderer projection; physical bodies and lifecycle state
+        // remain with the physics scheduler and native actor authority.
+        std::vector<NifBullet::RagdollBoneWorldPose> beginPhysicalPose(
+            const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld);
+        std::vector<NifBullet::RagdollBoneWorldPose> capturePhysicalPose(const osg::Matrixf& objectWorld) const;
+        void applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+            const osg::Matrixf& objectWorld);
+        void endPhysicalPose();
+        bool hasPhysicalPose() const { return mPhysicalPose != nullptr; }
 
         void setLoopingEnabled(std::string_view groupname, bool enabled);
 

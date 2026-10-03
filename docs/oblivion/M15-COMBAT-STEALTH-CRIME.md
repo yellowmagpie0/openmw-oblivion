@@ -12766,3 +12766,65 @@ needs a production actor lifecycle caller, animation ownership handoff, native
 force/mode policy and persistent dynamic body state. Display-dependent runtime
 acceptance remains open after checkpoint133's environment failure. No M15 stage
 is newly accepted from these component/stock-matrix checks.
+
+
+### Checkpoint136 — animation and physical pose ownership handoff (S4 open)
+
+Animation can bind, capture, apply and release an explicitly supplied physical
+bone projection. Admission resolves and captures the current complete renderer
+hierarchy before changing controller ownership. An invalid admission leaves
+animation callbacks attached; duplicate admission fails. During ownership,
+controller rebuilds remove transform callbacks and retain selected animation
+states without advancing their times or returning root motion. Spell effects
+still update. Release rebuilds the selected animation controllers; repeated
+release is harmless. Model replacement and scene removal drop the borrowed
+binding, without reattaching callbacks to a removed root. Native NPC/Creature
+XRGD application yields while physical projection is active. The scheduler still
+owns bodies and the native service still owns actor lifecycle; Animation owns
+only the borrowed renderer projection, not a competing actor simulation.
+
+An actual stock onehandidle KF exposed an overly strict cache-equality check in
+checkpoint135: quaternion callbacks retain double precision in the rendered
+matrix but cache binary32 NIF rotation components. Procedural rotate controllers
+also deliberately leave the cached base rotation unchanged. Capture now reads
+the current rendered matrix, removes the separately stored positive scale and
+validates the resulting rigid/finite/affine transform. It retains authored scale
+and native binary32 composition. This includes procedural pose rotation without
+silently substituting a cached bind or animation-base pose. Two new component
+regressions cover quaternion/procedural capture and rejecting a sheared rendered
+matrix despite valid cached NIF rotation. Four engine tests exercise actual
+update traversal, callback exclusion across controller rebuild, failed admission,
+invalid snapshots, duplicate/repeated release and scene removal. Green01 retains
+a synthetic node fixture whose default scale was incorrectly zero; the fixture
+now initializes a proper Ni transform. Missing APIs remain in red01; green03
+passes all16 selected component/engine cases.
+
+Private stock audit `/tmp/m15_reaction136_stock_animation.cpp` loads the actual
+18-body/17-joint skeleton and73 transform tracks from the winning original
+onehandidle KF `d01bf09a3c703ae2f0f4c043abbe47dc1c0e6d3af0fedcf41ed9a50173bc17d5`.
+It starts actual Animation playback, advances/traverses the animated skeleton,
+captures its current pose, binds physics and runs240 zero-gravity steps. Each
+step applies body snapshots, calls runAnimation and scene update traversal,
+requires unchanged KF playback time and zero root motion, and verifies captured
+and skinning bone matrices against physics under predeclared absolute0.001
+tolerance. Release must advance actual KF playback again. Normal and sanitizer
+`S4/native-ragdoll-stock-animation-handoff-{normal,sanitized}-04` pass, maximum
+matrix error0.000038147. Reports pin skeleton/KF/helper/comparator/binary/library
+hashes and build commands. Normal01 retains missing private MyGUI include;
+normal02 retains the valid animated-matrix admission failure; normal03 retains
+an overly narrow stdout parser which did not account for two setup log rows.
+Fresh04 parses those exact setup rows and the final strict summary. No asset or
+matrix tolerance was changed to make the check pass.
+
+Full `S4/native-ragdoll-animation-ownership-{normal,sanitized}-01` each pass
+2,124 component and819 engine tests with complete inventories, zero failures/
+skips and stable fingerprint `bd78d9af002a7085e8f9e6b19bb87bd4d338e3dad1e40e472c99fb3d0cb6ce0d`. Both rebuild openmw,
+openmw-tests and esmtool. ASan detect_leaks=0:halt_on_error=1; UBSan
+halt_on_error=1:print_stacktrace=1; no leak coverage. Unchanged Python243-case
+evidence remains reused from checkpoint124. Native composition/writeback
+arithmetic is unchanged since checkpoint135; its independent comparisons are
+reused explicitly. Actual stock KF/controller/CPU skinning acceptance is now
+covered headlessly; native actor activation/force/mode/recovery policy, dynamic
+save integration, pixel/media and normal-input gameplay acceptance remain open.
+The display-dependent checkpoint133 environment failure still needs a new
+runtime run when a display can launch. No M15 stage gate is promoted here.

@@ -1,5 +1,7 @@
 #include "animation.hpp"
 
+#include <components/sceneutil/actorragdollpose.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -1330,6 +1332,11 @@ namespace MWRender
 
         mAccumCtrl = nullptr;
 
+        // Keep selected animation states frozen, but detach their transform
+        // callbacks while the physical projection owns these bones.
+        if (mPhysicalPose)
+            return;
+
         for (size_t blendMask = 0; blendMask < sNumBlendMasks; blendMask++)
         {
             AnimStateMap::const_iterator active = mStates.end();
@@ -1555,6 +1562,11 @@ namespace MWRender
 
     osg::Vec3f Animation::runAnimation(float duration)
     {
+        if (mPhysicalPose)
+        {
+            updateEffects();
+            return {};
+        }
         osg::Vec3f movement(0.f, 0.f, 0.f);
         AnimStateMap::iterator stateiter = mStates.begin();
         while (stateiter != mStates.end())
@@ -1673,6 +1685,44 @@ namespace MWRender
         return movement;
     }
 
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPose(
+        const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld)
+    {
+        if (mPhysicalPose)
+            throw std::logic_error("physical renderer pose already bound");
+        if (!mObjectRoot)
+            throw std::invalid_argument("physical renderer pose requires an object root");
+        auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
+        auto initial = binding->captureWorldBones(objectWorld);
+        mPhysicalPose = std::move(binding);
+        resetActiveGroups();
+        return initial;
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::capturePhysicalPose(
+        const osg::Matrixf& objectWorld) const
+    {
+        if (!mPhysicalPose)
+            throw std::logic_error("physical renderer pose is not bound");
+        return mPhysicalPose->captureWorldBones(objectWorld);
+    }
+
+    void Animation::applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+        const osg::Matrixf& objectWorld)
+    {
+        if (!mPhysicalPose)
+            throw std::logic_error("physical renderer pose is not bound");
+        mPhysicalPose->applyWorldBones(poses, objectWorld);
+    }
+
+    void Animation::endPhysicalPose()
+    {
+        if (!mPhysicalPose)
+            return;
+        mPhysicalPose.reset();
+        resetActiveGroups();
+    }
+
     void Animation::setLoopingEnabled(std::string_view groupname, bool enabled)
     {
         AnimStateMap::iterator state(mStates.find(groupname));
@@ -1769,6 +1819,7 @@ namespace MWRender
 
     void Animation::setObjectRoot(const std::string& model, bool forceskeleton, bool baseonly, bool isCreature)
     {
+        mPhysicalPose.reset();
         osg::ref_ptr<osg::StateSet> previousStateset;
         if (mObjectRoot)
         {
@@ -2223,6 +2274,7 @@ namespace MWRender
 
     void Animation::removeFromSceneImpl()
     {
+        mPhysicalPose.reset();
         if (mGlowLight != nullptr)
             mInsert->removeChild(mGlowLight);
 

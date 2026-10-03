@@ -54,12 +54,17 @@ namespace SceneUtil
         Nif::NiTransform localPose(const NifOsg::MatrixTransform& node)
         {
             require(std::isfinite(node.mScale) && node.mScale > 0, "invalid ragdoll renderer node scale");
-            Nif::NiTransform result{node.mRotationScale, node.getMatrix().getTrans(), node.mScale};
-            auto rigid = result.mRotation.toOsgMatrix();
-            rigid.setTrans(result.mTranslation);
-            NifBullet::ragdollNativePoseFromBoneWorld(rigid);
-            require(result.toMatrix() == node.getMatrix(),
-                "inconsistent ragdoll renderer transform components");
+            // Quaternion callbacks retain double precision in OSG's matrix.
+            // Procedural rotate controllers also deliberately leave the cached
+            // NIF rotation unchanged. Capture the currently rendered rotation
+            // using its separately stored scale, rather than that cached base.
+            osg::Matrixf rigid(node.getMatrix());
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    rigid(row, column) = static_cast<float>(
+                        node.getMatrix()(row, column) / double(node.mScale));
+            auto result = worldPose(rigid);
+            result.mScale = node.mScale;
             return result;
         }
     }

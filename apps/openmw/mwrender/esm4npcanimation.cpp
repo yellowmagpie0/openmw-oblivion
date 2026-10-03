@@ -726,6 +726,8 @@ namespace MWRender
 
     std::size_t ESM4NpcAnimation::applyRagdollPose()
     {
+        if (hasPhysicalPose())
+            return 0;
         return applyTes4Ragdoll(mPtr.getCellRef().getRagdollPose(), getNodeMap(), mObjectRoot);
     }
 
@@ -990,6 +992,8 @@ namespace MWRender
 
     std::size_t ESM4CreatureAnimation::applyRagdollPose()
     {
+        if (hasPhysicalPose())
+            return 0;
         return applyTes4Ragdoll(mPtr.getCellRef().getRagdollPose(), getNodeMap(), mObjectRoot);
     }
 
