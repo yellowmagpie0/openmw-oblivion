@@ -12916,3 +12916,57 @@ admit full world initialization, gravity-modification commands, force stepping o
 native gameplay. No gravity policy is changed in production in this checkpoint.
 Activation/recovery, realized dynamic save continuation, media/runtime gates and
 the display-dependent TES3 regression remain open. No M15 gate is promoted.
+
+
+### Checkpoint139 — physics/save adapter and stock physical process continuation (S4/S6 open)
+
+MWPhysics converts complete physical shape-world snapshots to native runtime
+storage and back, without repeating length conversion or changing lifecycle.
+Admission matches NIF source's16 opaque asset-hash bytes, encoded as32 lowercase
+hex digits, and actor base/model. Captured bodies resolve their exact target node
+by original body record and canonicalize storage order. Restore resolves the
+snapshot back into the winning graph's order, checks every body/node identity
+and rejects missing/duplicate targets and unadmitted bhkRigidBodyT bindings.
+Double-precision Bullet pose and velocity components are rounded to binary32 at
+this explicit save boundary; the validated snapshot rejects nonfinite/overflow
+and nonrigid values before publication. This adapter owns no bodies or rendering
+controllers and does not create another simulation authority.
+
+Four engine regressions cover binary asset bytes, signed zero, units, graph/input
+permutations, changed winning assets/model/base/targets, invalid captures and
+binary continuation in an independent Bullet world. The continuation runs30
+steps, snapshots/serializes/decodes into a second world, then compares60 further
+steps against uninterrupted motion. Fixed tolerances: positions1e-4, rotation
+components1e-5 and linear/angular velocity1e-6. Green01 passes allfour selected
+cases. Full `S4/native-ragdoll-save-bridge-{normal,sanitized}-01` each pass2,126
+component and827 engine tests, complete inventories and zero failures/skips.
+Normal also passes245 Python tests. Stable tested fingerprint
+`dd92309c3d306c27cd91a7a70e512aa5712f687a84eb326b9ee21822e84ca7b0`. ASan detect_leaks=0:halt_on_error=1; UBSan
+halt_on_error=1:print_stacktrace=1; no leak coverage.
+
+Private actual-stock audit `/tmp/m15_reaction139_stock_restart_v2.cpp` loads the
+winning skeleton SHA-25643de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435,
+captures its actual NIF renderer hierarchy, instantiates18 bodies/17 constraints
+and applies one synthetic pelvis impulse. The producer simulates60 zero-gravity
+steps, writes a populated binary runtime snapshot, then runs60 more steps for
+an uninterrupted baseline. A distinct reader process loads the same asset,
+validates/restores saved physical state into a new world and runs60 steps. Both
+clean up all bodies and constraints. Native actor identity is an explicit
+synthetic fixture, not a normal input actor. Comparison tolerances declared
+before measuring: rotation components0.0001, positions0.001 and linear/angular
+velocity0.001. `S4/native-ragdoll-stock-physical-restart-{normal,sanitized}-03`
+passes both process continuations; maximum errors across builds are
+{'rotation': 3.277527866885066e-07, 'position': 1.52587890625e-05, 'linear_velocity': 4.85248165205121e-07, 'angular_velocity': 3.1337549444288015e-08}.
+Nonphysical runtime fields remain identical, saved input is unchanged and five
+controls reject truncated data, wrong asset hash, model, node and actor base
+without writing an output. Reports pin original asset, helpers, binaries,
+libraries, source fingerprint, inputs/outputs, build commands and process IDs.
+Normal01 retains a private C++ vexing-parse compile failure; normal02 retains a
+fault fixture with an invalid eight-digit FormKey ID instead of the canonical
+six digits. Fresh03 fixes that control while preserving the asset and all
+predeclared physics tolerances. This proves separate-process physical storage
+continuation for the private bridge, not native Havok trajectory equivalence.
+World frame capture/admission/restore callers, gravity/velocity policy, native
+activation/recovery and normal combat corpse/loot/media acceptance remain open.
+The display-dependent runtime/TES3 regression still needs an environment that
+can launch a display. No M15 gate is promoted here.

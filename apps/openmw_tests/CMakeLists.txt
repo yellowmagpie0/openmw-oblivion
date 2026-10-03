@@ -28,6 +28,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwphysics/testtrigger.cpp
     mwphysics/testactorbounds.cpp
     mwphysics/testactorragdoll.cpp
+    mwphysics/testoblivionragdoll.cpp
 
     mwrender/testtes4facegen.cpp
     mwrender/testphysicalpose.cpp
