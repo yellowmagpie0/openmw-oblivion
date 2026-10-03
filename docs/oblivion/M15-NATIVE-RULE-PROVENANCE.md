@@ -10095,3 +10095,57 @@ atomic blend/force/frame publication, automatic World reaction/traversal/clock
 producers and complete persistence remain open, as do initial NPC morphology,
 retained BodyT/floor failures and S5-S14. Next: use the proven setup rules in the
 physical owner, then integrate controller order, force and removal atomically.
+
+
+### Checkpoint207: owned generated velocity-controller setup, identity and attachment order
+
+Checkpoint206 committed as `74fd7b9aa0928c3fd9c268288786b1b07f346f00`,
+203 isolated commits with exact-byte/fresh-clone proof. Bundle184 SHA256
+`cc58581e57dcae51e4c61d2bb223a607045bdd4afaf14e7688ab4b75c2c331ed`.
+ActorRagdollPhysics owns generated velocity-controller state separately from
+selected authored blend controllers. Generated identity is the unique owned
+attachment node, with a typed Blend/Velocity reference; no authored NIF record
+is fabricated. Atomic setup reads inverse mass from owned dynamic mass (the
+native archive source even while keyframed), current loaded linear damping,
+and invokes verified206 setup. New controllers target their attachment node
+and prepend ahead of the selected blend; reuse retains target and list position.
+An entire late-invalid request batch rejects before replacing controllers.
+Setup does not mutate body pose, velocity, modes, activation or shared time cache.
+Nonblend collision bodies admit setup independently of blend metadata.
+
+Capture/restore of the generated state validates unique unambiguous owned
+attachment/target identities, finite clocks/delta/vector and ordered timing
+before atomic replacement; null and redirected owned targets are preserved.
+This is a component restoration boundary, not a complete serialized actor save.
+Selected-controller order consumes explicit caller node traversal and retains
+velocity-before/after-blend position. Missing/duplicate/ambiguous nodes reject.
+Unrelated renderer controllers and original recursive scene traversal are not
+included or inferred from graph body order.
+
+Five placeholder tests fail. Five final tests cover nonblend/keyframed archived
+mass with current damping, retained redirected target/clock/list order on reuse,
+late vector/duration/identity batch rollback without wake, restore malformed
+state/identity rollback and null target, fresh prepend and ambiguous nodes.
+Initial normal/sanitized01 each run2,344 component tests with one retained
+fixture failure: keyframed DISABLE_DEACTIVATION cannot be replaced by ordinary
+setActivationState(ISLAND_SLEEPING). Corrected the test to compare activation
+before/after setup; implementation remained unchanged. Comparators01 already
+match the original. Final02 normal/ASan+UBSan each pass all2,344 component and
+899 engine tests, exact inventories without failure/skip; rebuilt engine/tools.
+Final comparators02 each execute3,456 body-present original206 cases and match
+58,752 exact fields: timing/flags/clocks/delta/vector, target and selected-list
+position. Generated-owner count matches original allocation intent, not the
+native allocator implementation. Validate the derived native inverse mass
+before every owned case; preserve body poses/velocities/modes and leave zero
+registered objects after each owner. Original corpus remains206 oracle02,
+`127f951a6205820dbfe54c4fa1056c1c1710dcf022d21ccbbeb23bb6e9287819`.
+Tested fingerprint `db4a30f685f81412da512738922926b4cadc86620e318b695e8c3d46f99ae535`. No compiler warning/error or sanitizer finding;
+ASan leak checks disabled. Python unchanged, not repeated.
+
+No stage closes. Owned controller advancement, target-node removal, atomic
+force/clock/gain publication and public worker barriers remain open. Full scene/
+collision frame ordering and World lifecycle/traversal/clock producers require
+independent integration; component state restoration is not full save/restart.
+Initial NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
+Next: join selected physical-controller updates in verified original47C930 order
+with actual owned immediate force stores and blend-driven velocity removal.

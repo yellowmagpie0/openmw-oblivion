@@ -6,6 +6,7 @@
 #include "ragdollvelocity.hpp"
 
 #include <components/esm4/physicalblendsettings.hpp>
+#include <components/esm4/physicalvelocitycontroller.hpp>
 
 #include <functional>
 #include <memory>
@@ -164,6 +165,32 @@ namespace NifBullet
         std::uint32_t mAttachedNode = 0;
     };
 
+    struct RagdollNativeVelocityControllerState
+    {
+        // Generated controllers have no authored NIF record identity.
+        std::uint32_t mAttachedNode;
+        std::optional<std::uint32_t> mTargetNode;
+        ESM4::PhysicalVelocityControllerState mState;
+        bool mPrecedesBlend = true;
+    };
+
+    struct RagdollNativeVelocitySetupRequest
+    {
+        std::uint32_t mNodeRecord;
+        std::array<float, 4> mSourceVector;
+        float mDuration;
+    };
+
+    enum class RagdollNativeControllerKind { Blend, Velocity };
+    struct RagdollNativeControllerReference
+    {
+        RagdollNativeControllerKind mKind;
+        // Blend uses its authored record; velocity uses its attachment node.
+        std::uint32_t mIdentity;
+        friend bool operator==(const RagdollNativeControllerReference&,
+            const RagdollNativeControllerReference&) = default;
+    };
+
     struct RagdollNativeKnockdownBlendRequest
     {
         std::uint32_t mNodeRecord;
@@ -232,6 +259,19 @@ namespace NifBullet
         // setup, recursive traversal and shared frame clocks remain with caller.
         std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownBlends(
             std::span<const RagdollNativeKnockdownBlendRequest> requests);
+        // Atomic owned setup for already admitted body nodes and Down durations.
+        // Read current damping and archived dynamic mass, create at the head or
+        // retain existing target/list position. No body force, wake or pose write.
+        void prepareNativeVelocityControllers(std::span<const RagdollNativeVelocitySetupRequest> requests);
+        std::vector<RagdollNativeVelocityControllerState> captureNativeVelocityControllers() const;
+        // Replace generated controller state atomically, with owned identity,
+        // finite clock/vector and ordered timing admission. No body mutation.
+        void restoreNativeVelocityControllers(std::span<const RagdollNativeVelocityControllerState> controllers);
+        // Selected physical controllers in caller-supplied node traversal order.
+        // This excludes unrelated renderer controllers and does not infer scene
+        // traversal from the body graph. Fresh velocity controllers prepend.
+        std::vector<RagdollNativeControllerReference> captureNativeControllerOrder(
+            std::span<const std::uint32_t> nodeOrder) const;
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
         // Own authored controllers and current target gains. Resolve each

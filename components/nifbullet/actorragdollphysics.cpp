@@ -250,6 +250,7 @@ namespace NifBullet
             RagdollNativeBlendState mState;
         };
         std::vector<RagdollNativeBlendControllerState> mBlendControllers;
+        std::vector<RagdollNativeVelocityControllerState> mVelocityControllers;
         std::vector<BlendTarget> mBlendTargets;
         btDynamicsWorld& mWorld;
         float mLengthScale;
@@ -1362,6 +1363,95 @@ namespace NifBullet
             result.push_back(RagdollNativeKnockdownBlendDisposition::Started);
         }
         mImpl->mBlendControllers.swap(controllers);
+        return result;
+    }
+
+    void ActorRagdollPhysics::prepareNativeVelocityControllers(
+        std::span<const RagdollNativeVelocitySetupRequest> requests)
+    {
+        auto controllers = mImpl->mVelocityControllers;
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto& request : requests)
+        {
+            require(nodes.insert(request.mNodeRecord).second, "duplicate native velocity setup node");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == request.mNodeRecord; }) == 1,
+                "unknown or ambiguous native velocity setup node");
+            const auto body = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& value) { return value.mNodeRecord == request.mNodeRecord; });
+            const auto controller = std::find_if(controllers.begin(), controllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
+            const auto previous = controller == controllers.end() ? std::nullopt
+                : std::optional<ESM4::PhysicalVelocityControllerState>{controller->mState};
+            const auto state = ESM4::preparePhysicalVelocityController(previous, request.mSourceVector,
+                request.mDuration, true, ragdollNativeInverseMass(float(body->mDynamicMass)), body->mLinearDamping);
+            if (controller == controllers.end())
+                controllers.push_back({request.mNodeRecord, request.mNodeRecord, state, true});
+            else
+                controller->mState = state;
+        }
+        mImpl->mVelocityControllers.swap(controllers);
+    }
+
+    std::vector<RagdollNativeVelocityControllerState> ActorRagdollPhysics::captureNativeVelocityControllers() const
+    {
+        return mImpl->mVelocityControllers;
+    }
+
+    void ActorRagdollPhysics::restoreNativeVelocityControllers(
+        std::span<const RagdollNativeVelocityControllerState> controllers)
+    {
+        std::vector<RagdollNativeVelocityControllerState> next(controllers.begin(), controllers.end());
+        std::unordered_set<std::uint32_t> nodes;
+        const auto validNode = [&](std::uint32_t node) {
+            return std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mNodeRecord == node; }) == 1;
+        };
+        for (const auto& controller : next)
+        {
+            require(nodes.insert(controller.mAttachedNode).second, "duplicate native velocity restore node");
+            require(validNode(controller.mAttachedNode), "unknown or ambiguous native velocity attachment");
+            require(!controller.mTargetNode || validNode(*controller.mTargetNode),
+                "unknown or ambiguous native velocity target");
+            const auto& state = controller.mState;
+            require(std::isfinite(state.mTiming.mFrequency) && std::isfinite(state.mTiming.mPhase)
+                    && std::isfinite(state.mTiming.mStartKey) && std::isfinite(state.mTiming.mStopKey)
+                    && state.mTiming.mStartKey <= state.mTiming.mStopKey,
+                "invalid native velocity restore timing");
+            require(std::isfinite(state.mClock.mStartTime) && std::isfinite(state.mClock.mPreviousTime)
+                    && std::isfinite(state.mClock.mElapsed) && std::isfinite(state.mFrameDelta)
+                    && state.mFrameDelta >= 0.f,
+                "invalid native velocity restore clock/delta");
+            require(std::all_of(state.mForceVector.begin(), state.mForceVector.end(),
+                        [](float value) { return std::isfinite(value); }),
+                "invalid native velocity restore vector");
+        }
+        mImpl->mVelocityControllers.swap(next);
+    }
+
+    std::vector<RagdollNativeControllerReference> ActorRagdollPhysics::captureNativeControllerOrder(
+        std::span<const std::uint32_t> nodeOrder) const
+    {
+        std::vector<RagdollNativeControllerReference> result;
+        result.reserve(mImpl->mBlendControllers.size() + mImpl->mVelocityControllers.size());
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto node : nodeOrder)
+        {
+            require(nodes.insert(node).second, "duplicate native controller traversal node");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == node; }) == 1,
+                "unknown or ambiguous native controller traversal node");
+            const auto velocity = std::find_if(mImpl->mVelocityControllers.begin(), mImpl->mVelocityControllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == node; });
+            const auto blend = std::find_if(mImpl->mBlendControllers.begin(), mImpl->mBlendControllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == node; });
+            if (velocity != mImpl->mVelocityControllers.end() && velocity->mPrecedesBlend)
+                result.push_back({RagdollNativeControllerKind::Velocity, node});
+            if (blend != mImpl->mBlendControllers.end())
+                result.push_back({RagdollNativeControllerKind::Blend, blend->mRecord});
+            if (velocity != mImpl->mVelocityControllers.end() && !velocity->mPrecedesBlend)
+                result.push_back({RagdollNativeControllerKind::Velocity, node});
+        }
         return result;
     }
 
