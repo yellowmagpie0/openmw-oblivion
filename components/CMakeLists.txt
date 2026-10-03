@@ -254,6 +254,7 @@ add_component_dir (esm4
     combatsettings
     physicalcombat
     physicalblendsettings
+    physicalblenddispatch
     actorstats
     actorclock
     actorvalues

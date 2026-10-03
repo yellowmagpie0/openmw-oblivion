@@ -1,5 +1,6 @@
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm4/physicalblendsettings.hpp>
+#include <components/esm4/physicalblenddispatch.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <array>
@@ -999,7 +1000,9 @@ TEST(ESM4PhysicalCombat, DurabilityRejectsInvalidInputsAndOverflow)
         EXPECT_THROW(ESM4::armorWear(1, 1, {.06f, invalid}), std::invalid_argument);
         EXPECT_THROW(ESM4::armorWear(invalid, 1, settings), std::invalid_argument);
         if (invalid != -1.f)
+        {
             EXPECT_THROW(ESM4::armorWear(1, invalid, settings), std::invalid_argument);
+        }
     }
     EXPECT_THROW(ESM4::armorWear(1, std::nextafter(1.f, 2.f), settings), std::invalid_argument);
     EXPECT_THROW(ESM4::weaponWear(65535, {std::numeric_limits<float>::max(), 9}), std::invalid_argument);
@@ -1206,13 +1209,19 @@ TEST(ESM4PhysicalCombat, ArmorMutationArithmeticRejectsInvalidDomains)
     {
         EXPECT_THROW(ESM4::conditionAfterWear(bad, 1), std::invalid_argument);
         if (bad != -1.f)
+        {
             EXPECT_THROW(ESM4::conditionAfterWear(1, bad), std::invalid_argument);
+        }
         EXPECT_THROW(ESM4::mitigateArmor(bad, 50, 1, false), std::invalid_argument);
         if (bad != -1.f)
+        {
             EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, false), std::invalid_argument);
+        }
         EXPECT_THROW(ESM4::mitigateArmor(1, 50, bad, false), std::invalid_argument);
         if (bad != -1.f)
+        {
             EXPECT_THROW(ESM4::mitigateArmor(1, bad, 1, true), std::invalid_argument);
+        }
         for (float ESM4::ArmorWearMasterySettings::* member : {&ESM4::ArmorWearMasterySettings::mLightNoviceMultiplier,
                  &ESM4::ArmorWearMasterySettings::mHeavyNoviceMultiplier,
                  &ESM4::ArmorWearMasterySettings::mLightJourneymanMultiplier,
@@ -3228,4 +3237,62 @@ TEST(ESM4PhysicalCombat, PhysicalBlendDurationResolverRejectsNonfiniteConfigurat
     EXPECT_THROW(ESM4::resolvePhysicalBlendDurationTables(malformed, {}), std::invalid_argument);
     EXPECT_THROW(ESM4::physicalBlendDurationForFilter(malformed, 31u << 8, true), std::invalid_argument);
     EXPECT_EQ(previous.mGetUp[31], -1.f);
+}
+
+
+TEST(ESM4PhysicalBlendDispatch, ZeroHierarchySelectsPhysicsSyncUnlessVelocityNeedsBlending)
+{
+    using Motion = ESM4::PhysicalBlendMotion;
+    using Route = ESM4::PhysicalBlendRoute;
+    const ESM4::PhysicalBlendDispatch physical{Motion::Dynamic, Route::PhysicsToScene};
+    const ESM4::PhysicalBlendDispatch driven{Motion::Dynamic, Route::PoseAndVelocity};
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(0.f, 0.f, 0, 0), physical);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(-0.f, -0.f, 0, 0), physical);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(0.f, .5f, 0, 0), driven);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(0.f, .5f, 0x100, 0), physical);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(0.f, .5f, 0xff, 0), driven);
+}
+
+TEST(ESM4PhysicalBlendDispatch, IntermediateHierarchyRequiresPoseBlendEvenAtZeroVelocityGain)
+{
+    const ESM4::PhysicalBlendDispatch expected{
+        ESM4::PhysicalBlendMotion::Dynamic, ESM4::PhysicalBlendRoute::PoseAndVelocity};
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(.5f, 0.f, 0, 0), expected);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(.5f, 0.f, 0x100, 0), expected);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(-1.f, 0.f, 0, 0), expected);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(1.5f, -1.f, 0, 0), expected);
+}
+
+TEST(ESM4PhysicalBlendDispatch, PreservesExactHierarchyEndpointAndSpecialRawSelectors)
+{
+    const ESM4::PhysicalBlendDispatch animated{
+        ESM4::PhysicalBlendMotion::Keyframed, ESM4::PhysicalBlendRoute::SceneToPhysics};
+    const ESM4::PhysicalBlendDispatch physical{
+        ESM4::PhysicalBlendMotion::Dynamic, ESM4::PhysicalBlendRoute::PhysicsToScene};
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(1.f, 0.f, 0, 0), animated);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(1.f, 1.f, 0x100, 1), animated);
+    EXPECT_FALSE(ESM4::resolvePhysicalBlendDispatch(1.f, 0.f, 0, 2));
+    EXPECT_FALSE(ESM4::resolvePhysicalBlendDispatch(0.f, 1.f, 0, 1));
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(.5f, 1.f, 0, 2), physical);
+}
+
+TEST(ESM4PhysicalBlendDispatch, AdjacentFiniteGainsAndUninterpretedSelectorsRetainNativeBranches)
+{
+    const ESM4::PhysicalBlendDispatch driven{
+        ESM4::PhysicalBlendMotion::Dynamic, ESM4::PhysicalBlendRoute::PoseAndVelocity};
+    for (const float hierarchy : {std::nextafter(1.f, 0.f), std::nextafter(1.f, 2.f),
+             std::numeric_limits<float>::denorm_min(), -std::numeric_limits<float>::denorm_min(),
+             std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()})
+        for (const std::uint32_t selector : {0u, 3u, 4u, 0x7fffffffu, 0x80000000u, 0xffffffffu})
+            EXPECT_EQ(ESM4::resolvePhysicalBlendDispatch(hierarchy, 0.f, 0x8800, selector), driven);
+}
+
+TEST(ESM4PhysicalBlendDispatch, RejectsNonfiniteGainsBeforeReturningDispatch)
+{
+    for (const float value : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+    {
+        EXPECT_THROW(ESM4::resolvePhysicalBlendDispatch(value, 0.f, 0, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::resolvePhysicalBlendDispatch(0.f, value, 0, 1), std::invalid_argument);
+    }
 }

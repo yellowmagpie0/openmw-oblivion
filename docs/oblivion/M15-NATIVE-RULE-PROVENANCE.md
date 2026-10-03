@@ -7244,3 +7244,57 @@ Actual controller creation/selection and frame-time resolution, contact-based
 activation across owners, physical mode/hierarchy blending, World/render/save
 handoff and stock floor continuation remain open. These worker/physics tests
 do not close normal-input or fresh-process acceptance. S4 remains in progress.
+
+
+### Checkpoint157: native physical blend dispatch selection
+
+Checkpoint156 committed as `a12132b5f5aabb6f11c44b8c4ee5d0aed069e627`,
+153 isolated commits with exact-byte and fresh-clone proof. New immutable
+physicalblenddispatch selects the native requested motion and pose route.
+Zero hierarchy chooses dynamic motion with physical-to-scene sync when
+velocity is zero or flag0x100 is set; otherwise it chooses pose/velocity blend.
+Exact hierarchy1 chooses keyframed motion and scene-to-physics sync. Other
+finite hierarchy values remain unclamped and normally choose dynamic blend.
+Raw selector1 skips updates at hierarchy0; selector2 skips at hierarchy1 and
+selects physical sync at other hierarchy values. Other raw selector values
+retain default branches; no guessed configuration names or bounds are imposed.
+Nonfinite gains reject. This selector publishes no body mode, pose or velocity.
+
+Original pinned executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-ragdoll-blend-dispatch-oracle-01 executes1,024 prefix cases at
+0088f3fe, stopping before publication at0088f484 or early0088f6dd/0088f6df.
+Synthetic blend fields and the preceding scene lookup's supplied EAX are
+explicit boundaries; there are no call stubs. Source/corpus SHA256:
+`9fb905b8bd67716d59192eba85a4bb59bb53c95ca05150a04ca5c0442cbae7dc`,
+`98b8ae6ed7a7da567a6b4136aecef20cac98ccb50af00c18d7efcac5675726d7`.
+Expanded oracle02 covers15,680 cases:14 finite gain patterns including signed
+zero/subnormals, adjacent1 and finite extremes; five flag words; eight raw
+selectors including signed-boundary/max bit patterns; two x87 precision words.
+Source/corpus:
+`000d27998bd88c7ba7d6b27049beb5077c9f900c15b068093e2e2fc9c47a2134`,
+`c2624f247b92312991819fbfdf36e74fd4663d3e018e01d5171b03ef21e5e4b7`.
+Route interpretation is tied to actual branches: route0 enters the008a34c0
+prepared-pose/velocity path; route1 calls0089ea70 for body transform to scene;
+route2 uses the actual blend vtable+68 target0089eae0 for scene transform to
+body. Actual synchronization/motion publication remain separate work.
+
+S4/native-ragdoll-blend-dispatch-compare-{normal,sanitized}-01 each match all
+15,680 outputs exactly. Always-driven, always-physical, clamped hierarchy,
+ignored flag0x100 and ignored special-selector controls reject
+3,892/13,188/5,840/672/1,960 cases. Comparator/driver SHA256:
+`7e32e081a13bf71bef2e083ae127f25671e9ca0f9aed3f70a309b52a745968fa`,
+`f52912ccdf1ee3fcb503e7bfc1b98324050772bb0e81bfe1d3cf9c34b992ceff`.
+Five new tests cover zero/intermediate/endpoint routes, flags, exact adjacent
+branches, raw selectors and nonfinite rejection. Dispatch-baseline01 retains
+five failing tests against the absent rule. Four existing conditional test
+macros now have explicit braces, removing their ambiguous-else warnings.
+
+Full S4/native-ragdoll-blend-dispatch-{normal,sanitized}-01 each pass2,175
+component and851 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested fingerprint
+`814fd7e234d7c8630eb0593e557d44bfebb88b8346093239ea28f612f3d13e55`.
+ASan leaks disabled; UBSan halts; Python unchanged. Selector/controller wiring,
+body motion switching, hierarchy pose blending, frame-time resolution,
+cross-owner contacts, full World/render/save and stock floor continuation
+remain open. No stage or normal-input/restart acceptance is closed here.
