@@ -51,6 +51,23 @@ namespace ESM4
             static_cast<std::uint16_t>((controllerFlags & 0xfef5u) | 0xcdu), previousClock};
     }
 
+    PhysicalBlendKeyBounds resolvePhysicalBlendKeyBounds(
+        PhysicalBlendKeyBounds previous, std::span<const PhysicalBlendKey> keys)
+    {
+        if (keys.empty())
+            return {0.f, 0.f};
+        validate(previous.mStartKey);
+        validate(previous.mStopKey);
+        validate(keys.front().mTime);
+        validate(keys.back().mTime);
+        constexpr float sentinel = std::numeric_limits<float>::max();
+        if (keys.front().mTime < previous.mStartKey || previous.mStartKey == sentinel)
+            previous.mStartKey = keys.front().mTime;
+        if (keys.back().mTime < previous.mStopKey || previous.mStopKey == -sentinel)
+            previous.mStopKey = keys.back().mTime;
+        return previous;
+    }
+
     float physicalBlendDurationForFilter(
         const PhysicalBlendDurationTables& tables, std::uint32_t filter, bool getUp)
     {

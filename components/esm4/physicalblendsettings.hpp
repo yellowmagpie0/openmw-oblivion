@@ -55,6 +55,19 @@ namespace ESM4
     PhysicalKnockdownBlend preparePhysicalKnockdownBlend(PhysicalBlendGains current,
         float duration, float startKey, std::uint16_t controllerFlags, PhysicalBlendClock previousClock);
 
+    struct PhysicalBlendKeyBounds
+    {
+        float mStartKey, mStopKey;
+    };
+
+    // Original8AABE0 updates inherited bounds using the first/last stored keys.
+    // Load invokes it after each insertion; transition setup may invoke it once
+    // after creating every key. Preserve that distinction and raw signed zeros.
+    // Empty keys reset both bounds to +0; unused gains/middle times are ignored.
+    // Reversed finite bounds are raw native state, not clock admission.
+    PhysicalBlendKeyBounds resolvePhysicalBlendKeyBounds(
+        PhysicalBlendKeyBounds previous, std::span<const PhysicalBlendKey> keys);
+
     // The body ID is bits8..12 of the packed native world-object filter.
     // Negative results mean native transition setup skips that body.
     float physicalBlendDurationForFilter(

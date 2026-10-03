@@ -15974,3 +15974,47 @@ live controller owner/attachment/World begin-update-end remain open. Full physic
 save/restart, retained BodyT/floor failures and S5-S14 remain open. Next: establish
 native loaded key-bound initialization and controller update/target dispatch,
 then connect the owned controller to the existing physics/renderer bridge.
+
+
+### Checkpoint195: native loaded blend-key bound initialization
+
+Checkpoint194 committed as `16a9247885102aec5bda519c6d049035dbb11f1e`,
+191 isolated commits with exact-byte/fresh-clone verification. Bundle172 SHA256
+`df4cd92d30ee8d05f489bfaf5ff835130edec8fe04b931719958df2cd480b9a7`.
+The native bound helper preserves inherited minima, with +FLT_MAX start and
+-FLT_MAX stop initialization sentinels. Empty keys reset both bounds to+0 and
+ignore unused prior values. Equality retains inherited signed-zero bits.
+Only first/last key times and nonempty inherited bounds participate; gains and
+middle key times are unused by this primitive. Finite reversed raw bounds are
+preserved, rather than treated as admission to the ordered general clock.
+Calling the helper once after creating every transition key differs from calling
+it after each serialized key insertion: with0/.25 keys and sentinel bounds,
+once gives stop.25 while per-insertion loading retains stop0. The NIF parser's
+raw authored header/keys remain unchanged; this helper models runtime bound
+initialization separately and does not silently rewrite authoring metadata.
+
+Full original8AABE0 executes3,900 cases with no boundary stubs:59 authored time
+fixtures, six inherited bound pairs, both x87 words and both once/per-insertion
+strategies. Fixtures include empty, single, ascending/descending, duplicate,
+shifted, signed-zero, subnormal and50 seeded key arrays. Executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`; oracle source/corpus `a1abcfc09eb5161cae976b298057213785f8fc84f16167443dd4edf102414a2c`,
+`17df631f888cb177c060e7501e87f8705210259d48de3e2352396d54cc8a2651`. Oracle01's3,192 per-insertion cases remain retained. Both
+comparators exactly match7,800 bound fields each. The first/last shortcut differs
+in3,020 original cases. Comparator source/driver `e6405eaf8f80a6f8f9fb967023f540bda78e09aba1b45acd2d57ad0cf7bfba79`,
+`f5e33c31da9be394ff8b05360f9473cc949ee929eab51ddf853ee683e9a8c0ee`.
+
+All five new tests fail baseline01. Final normal/sanitized01 each pass all2,296
+component tests with complete inventories and no failures/skips; fingerprint
+`0f3a807301cd18f71c19c61bf7c72b58290301f745d4e1af9d66b71032f4486c`. Tests distinguish serialized versus one-time setup, inherited minima,
+sentinels, equality signed zeros, raw reversed bounds, empty unused NaNs and
+used/unused malformed fields. ASan leak checks disabled; UBSan halts. No warnings
+appear in final focused recompilations. Unchanged engine/Python checks are not
+repeated for this isolated pure helper; engine integration still needs rebuilding.
+
+No stage closes. Key-bound initialization now joins independently verified
+arbitrary-key evaluation and general timing, but live controller ownership,
+update eligibility/target dispatch, finish/reset/detach and World physical
+lifecycle remain open. Full physical save/restart, retained BodyT/floor failures
+and S5-S14 remain open. Next: execute the full original8AAD60 controller update
+including actual clock/evaluator and finish paths before owning those transitions
+in the existing physics/renderer bridge.

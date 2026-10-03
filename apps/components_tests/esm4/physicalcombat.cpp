@@ -3793,3 +3793,60 @@ TEST(ESM4PhysicalCombat, GeneralBlendClockRejectsBadStateAndUsedArithmeticWithou
         EXPECT_EQ(cache.mCycle, beforeCache.mCycle);
     }
 }
+
+TEST(ESM4PhysicalCombat, LoadedBlendBoundsPreserveInheritedMinimumAndInsertionOrder)
+{
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{0.f, {1.f, 1.f}}, {.25f, {0.f, 0.f}}}};
+    auto bounds = ESM4::resolvePhysicalBlendKeyBounds({7.f, 8.f}, std::span(keys).first(1));
+    EXPECT_FLOAT_EQ(bounds.mStartKey, 0.f);
+    EXPECT_FLOAT_EQ(bounds.mStopKey, 0.f);
+    bounds = ESM4::resolvePhysicalBlendKeyBounds(bounds, keys);
+    // Original rows12/13: per-insertion bound updates retain the first stop.
+    EXPECT_FLOAT_EQ(bounds.mStopKey, 0.f);
+    bounds = ESM4::resolvePhysicalBlendKeyBounds({-1.f, 2.f}, keys);
+    EXPECT_FLOAT_EQ(bounds.mStartKey, -1.f);
+    EXPECT_FLOAT_EQ(bounds.mStopKey, .25f);
+}
+
+TEST(ESM4PhysicalCombat, LoadedBlendBoundsDistinguishOneUpdateFromSerializedInsertion)
+{
+    const auto max = std::numeric_limits<float>::max();
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{0.f, {1.f, 1.f}}, {.25f, {0.f, 0.f}}}};
+    const auto once = ESM4::resolvePhysicalBlendKeyBounds({max, -max}, keys);
+    EXPECT_FLOAT_EQ(once.mStopKey, .25f);
+    auto loaded = ESM4::resolvePhysicalBlendKeyBounds({max, -max}, std::span(keys).first(1));
+    loaded = ESM4::resolvePhysicalBlendKeyBounds(loaded, keys);
+    EXPECT_FLOAT_EQ(loaded.mStopKey, 0.f);
+}
+
+TEST(ESM4PhysicalCombat, LoadedBlendBoundsKeepEqualitySignedZerosAndRawReversedBounds)
+{
+    const std::array<ESM4::PhysicalBlendKey, 2> zeros{{{0.f, {1.f, 1.f}}, {-0.f, {0.f, 0.f}}}};
+    const auto result = ESM4::resolvePhysicalBlendKeyBounds({-0.f, 0.f}, zeros);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mStartKey), 0x80000000u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mStopKey), 0u);
+    const auto max = std::numeric_limits<float>::max();
+    const std::array<ESM4::PhysicalBlendKey, 2> descending{{{1.f, {}}, {-1.f, {}}}};
+    const auto raw = ESM4::resolvePhysicalBlendKeyBounds({max, -max}, descending);
+    EXPECT_FLOAT_EQ(raw.mStartKey, 1.f);
+    EXPECT_FLOAT_EQ(raw.mStopKey, -1.f);
+}
+
+TEST(ESM4PhysicalCombat, LoadedBlendBoundsEmptyResetIgnoresUnusedPreviousValues)
+{
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    const auto result = ESM4::resolvePhysicalBlendKeyBounds({nan, nan}, {});
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mStartKey), 0u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mStopKey), 0u);
+}
+
+TEST(ESM4PhysicalCombat, LoadedBlendBoundsValidateOnlyUsedTimesAndBounds)
+{
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    const std::array<ESM4::PhysicalBlendKey, 3> keys{{{0.f, {nan, nan}}, {nan, {}}, {.25f, {nan, nan}}}};
+    EXPECT_NO_THROW(ESM4::resolvePhysicalBlendKeyBounds({0.f, 1.f}, keys));
+    EXPECT_THROW(ESM4::resolvePhysicalBlendKeyBounds({nan, 1.f}, keys), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalBlendKeyBounds({0.f, nan}, keys), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalBlendKeyBounds({0.f, 1.f}, std::span(keys).first(2)), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalBlendKeyBounds({0.f, 1.f}, std::span(keys).subspan(1)), std::invalid_argument);
+}
