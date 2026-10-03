@@ -999,8 +999,13 @@ namespace MWPhysics
             std::vector<Simulation>& simulations = mSimulations[mSimulationsCounter++ % mSimulations.size()];
             prepareSimulation(mTimeAccum >= mPhysicsDt, simulations);
             // modifies mTimeAccum
+            // Weather only affects movement jobs. A native physical owner can
+            // keep stepping after all actor capsules are suspended, leaving no
+            // movement jobs and no reason to query scene/weather authority.
+            const auto worldData = simulations.empty()
+                ? WorldFrameData(false, osg::Vec3f(0, 1, 0)) : WorldFrameData{};
             mTaskScheduler->applyQueuedMovements(
-                mTimeAccum, simulations, frameStart, frameNumber, stats, WorldFrameData{});
+                mTimeAccum, simulations, frameStart, frameNumber, stats, worldData);
         }
     }
 

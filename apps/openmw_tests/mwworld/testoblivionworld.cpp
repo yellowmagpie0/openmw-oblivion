@@ -17,6 +17,7 @@
 #include <osg/MatrixTransform>
 #include <osg/Geode>
 #include <osg/Geometry>
+#include <osg/Stats>
 #include <osgDB/WriteFile>
 #include "apps/openmw/mwphysics/actor.hpp"
 #include "apps/openmw/mwphysics/physicssystem.hpp"
@@ -380,6 +381,22 @@ namespace
             EXPECT_TRUE(capsule->isCollisionSuspended());
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x(), 60);
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
+            // The preceding dynamic pose drive compensates gravity. Set an
+            // explicit zero-Z velocity to isolate keyframed gravity exclusion.
+            auto keyInitial = original;
+            keyInitial.mBodies[0].mLinearVelocity = {60, 0, 0};
+            physics.restoreActorRagdollSnapshot(ptr, keyInitial, base, path.value());
+            physics.setActorRagdollNativeMotionModes(ptr, keyframed);
+            osg::ref_ptr<osg::Stats> schedulerStats = new osg::Stats("native-keyframed-scheduler");
+            physics.stepSimulation(.05f, false, osg::Timer::instance()->tick(), 1, *schedulerStats);
+            const auto steppedKey = physics.captureActorRagdoll(ptr)[0];
+            EXPECT_GT(steppedKey.mPose.getOrigin().x(), 0);
+            EXPECT_LE(steppedKey.mPose.getOrigin().x(), 3.001);
+            EXPECT_NEAR(steppedKey.mPose.getOrigin().z(), 20, 1e-6);
+            EXPECT_NEAR(steppedKey.mLinearVelocity.x(), 60, 1e-6);
+            EXPECT_NEAR(steppedKey.mLinearVelocity.z(), 0, 1e-6);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            physics.setActorRagdollNativeMotionModes(ptr, dynamic);
             physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), original);
             auto bad = original;

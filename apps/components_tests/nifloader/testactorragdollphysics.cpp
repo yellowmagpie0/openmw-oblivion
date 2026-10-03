@@ -2141,6 +2141,72 @@ namespace
         world.removeRigidBody(&body);
     }
 
+    TEST_F(ActorRagdollPhysicsTest, NativeWorldContactUsesPreservedKeyframedVelocity)
+    {
+        addHinge();
+        mGraph.mJoints.clear(); // Contact response must not come from the hinge.
+        mPoses[0].setOrigin({0, 0, 2});
+        mPoses[1].setOrigin({1, 0, 2});
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity({0, 0, 0});
+        NifBullet::ActorRagdollPhysics actor(mGraph, world, 1, mPoses, 1, -1);
+        actor.setNativeMotionModes(std::array<NifBullet::RagdollNativeMotionRequest, 1>{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}}});
+        auto states = actor.capture(); states[0].mLinearVelocity = {10, 0, 0}; actor.restore(states);
+        world.stepSimulation(.05, 0);
+        const auto result = actor.capture();
+        EXPECT_NEAR(result[0].mPose.getOrigin().x(), .5, 1e-6);
+        EXPECT_EQ(result[0].mLinearVelocity, btVector3(10, 0, 0));
+        EXPECT_GT(result[1].mLinearVelocity.x(), 0);
+        EXPECT_GT(mDispatcher.getNumManifolds(), 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeWorldRestoresDynamicMotionAfterKeyframedSubstep)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity({0, 0, 0});
+        NifBullet::ActorRagdollPhysics actor(mGraph, world, 1, mPoses, 1, -1);
+        actor.setNativeMotionModes(std::array<NifBullet::RagdollNativeMotionRequest, 1>{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}}});
+        auto states = actor.capture(); states[0].mLinearVelocity = {1000, 0, 0}; actor.restore(states);
+        world.stepSimulation(.05, 0);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(250, 0, 0));
+        EXPECT_NEAR(actor.capture()[0].mPose.getOrigin().x(), 12.5, 1e-6);
+        actor.setNativeMotionModes(std::array<NifBullet::RagdollNativeMotionRequest, 1>{{
+            {12, NifBullet::RagdollNativeMotion::Dynamic}}});
+        states = actor.capture(); states[0].mLinearVelocity = {3, 0, 0}; actor.restore(states);
+        actor.applyImpulse(0, {2, 0, 0}, states[0].mPose.getOrigin());
+        world.stepSimulation(.05, 0);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(4, 0, 0));
+        EXPECT_NEAR(actor.capture()[0].mPose.getOrigin().x(), 12.7, 1e-6);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeWorldRejectsDuplicateForeignAndMissingOwnerRegistrations)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics actor(mGraph, world, 1, mPoses, 1, -1);
+        const auto bodies = actor.collisionObjects();
+        const auto step = [](float) {};
+        int identity = 0;
+        EXPECT_THROW(world.registerNativeMotionOwner(nullptr, bodies, step), std::invalid_argument);
+        EXPECT_THROW(world.registerNativeMotionOwner(&actor, bodies, step), std::invalid_argument);
+        EXPECT_THROW(world.registerNativeMotionOwner(&identity, bodies, step), std::invalid_argument);
+        EXPECT_THROW(world.registerNativeMotionOwner(&identity, {}, step), std::invalid_argument);
+        EXPECT_THROW(world.registerNativeMotionOwner(&identity, bodies, {}), std::invalid_argument);
+        btSphereShape shape(.25); btRigidBody foreign(1, nullptr, &shape, {1, 1, 1});
+        const std::array<btCollisionObject*, 1> foreignBodies{&foreign};
+        const std::array<btCollisionObject*, 1> nullBodies{nullptr};
+        EXPECT_THROW(world.registerNativeMotionOwner(&identity, foreignBodies, step), std::invalid_argument);
+        EXPECT_THROW(world.registerNativeMotionOwner(&identity, nullBodies, step), std::invalid_argument);
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        world.unregisterNativeMotionOwner(&identity);
+        actor.setNativeMotionModes(std::array<NifBullet::RagdollNativeMotionRequest, 1>{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}}});
+        auto states = actor.capture(); states[0].mLinearVelocity = {1, 0, 0}; actor.restore(states);
+        world.stepSimulation(.05, 0);
+        EXPECT_NEAR(actor.capture()[0].mPose.getOrigin().x(), .05, 1e-6);
+    }
+
     TEST(RagdollNativeKeyframedStep, AdvancesPhysicalCenterAndRebuildsOriginFromLocalCenter)
     {
         const auto step = NifBullet::ragdollNativeKeyframedMotionStep({4, 5, 6}, {0, 0, 0, 1},

@@ -15758,3 +15758,52 @@ Retained BodyT raw velocity and floor fresh-restart failures remain open;
 S5-S14 remain pending. Next: exercise contact velocity use, motion-mode changes,
 registration rejection and actual PhysicsSystem/scheduler routing before
 connecting actor/controller World lifecycle.
+
+
+### Checkpoint191: physical-only public scheduler and contact regressions
+
+Checkpoint190 committed as `ef131a7c82ecc2f790f1830186ae0a2f680feb78`,
+187 isolated commits with exact-byte/fresh-clone verification. Bundle168 SHA256
+`a5f2404855ded7ffd1dd09a8f054f44fe7ef6fe12b9f044c4ec77c4c602966a8`.
+PhysicsSystem now constructs weather frame data only when movement jobs exist.
+A suspended capsule leaves its native physical owner alive; an empty movement
+job list still steps that owner through the serial or worker barrier. There
+is no weather consumer in that case. This avoids an unnecessary scene/weather
+authority query, rather than assigning weather state to actual movement jobs.
+
+The public PhysicsSystem fixture now performs a real scheduled keyframed step
+with 0, 1 and 2 physics worker threads, waits through the public capture barrier,
+checks motion and retained velocity/gravity exclusion, and keeps the capsule
+suspended. Baseline normal exits -11 before stepping; sanitizer identifies the
+null Scene call in World::isCellExterior -> isInStorm -> WorldFrameData ->
+PhysicsSystem::stepSimulation. Both failures remain retained. The fixture is a
+headless loaded-native-content/resource/synthetic-mesh integration; it does not
+initialize the normal gameplay World or replace normal-input acceptance.
+
+Three added component cases verify a moving keyframed body's retained velocity
+feeds an actual Bullet contact manifold and pushes a dynamic body, loaded
+linear capping to 250 followed by restored dynamic impulse response, and
+rejection of null/duplicate/foreign/missing owner registrations without changing
+the admitted owner. First full01 runs retain a fixture failure: the contact
+setup inherited a hinge whose registration disables linked-body collisions.
+Removing that joint makes the assertion require contact rather than constraint
+response. Engine-filtered01 additionally retains a wrong fixture expectation:
+the preceding dynamic pose drive intentionally supplies positive-Z gravity
+compensation. Explicit zero-Z initial velocity isolates the subsequent
+keyframed gravity check; no assertion tolerance changed.
+
+Filtered02 each pass three component cases and the one public scheduler case
+(with all three worker settings). Final normal/sanitized03 each pass 2,274
+component and 898 engine tests, full inventories with no skips/failures and
+rebuilt openmw/esmtool. Fingerprint `969a6e93ccd4ad0e228c12ef770cd43df365a64e96353c7d685619333619be66`. ASan leaks disabled; UBSan halts.
+The unchanged original keyframed arithmetic/owned single-body comparison remains
+checkpoint190 evidence; it was not rerun for this scheduling/test-fixture change.
+Python sources are unchanged. Bullet contact response is an integration
+regression, not independently paired original-game contact solver acceptance.
+
+No stage closes. Native swept time and exact motion representation/persistence,
+controller ownership and actual World physical begin/apply/end remain open.
+Retained raw BodyT velocity and floor fresh-restart failures remain open, and
+S5-S14 remain pending. Next: admit and preserve nonempty authored blend-controller
+keys from the NIF stream, then connect owned keys/clocks to the physical
+lifecycle using the already identified original controller path.
