@@ -337,6 +337,15 @@ namespace
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity, btVector3(1, 0, 0));
             physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), original);
+            const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{
+                {12, {{1, 0, 20}, {0, 0, 0, 1}}, .5f}}};
+            EXPECT_THROW(physics.driveActorRagdollPoseVelocities(previous, drives, 120.f), std::invalid_argument);
+            physics.driveActorRagdollPoseVelocities(ptr, drives, 120.f);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x(), 60);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
+            physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), original);
             auto bad = original;
             bad.mAssetHash[0] = '0';
             EXPECT_THROW(physics.restoreActorRagdollSnapshot(ptr, bad, base, path.value()), std::invalid_argument);

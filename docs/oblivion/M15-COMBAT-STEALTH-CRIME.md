@@ -13729,3 +13729,46 @@ Scheduler/PhysicsSystem drive dispatch, contact-connected world activation,
 controller creation/selection, native frame-time resolution, motion-mode and
 hierarchy pose blending, actual World/render/save lifecycle and stock floor
 continuation remain open. S4 and later gameplay/restart gates remain open.
+
+
+### Checkpoint156: scheduler and PhysicsSystem pose-drive dispatch
+
+Checkpoint155 committed as `dd66e47fa0e0574e6ad1bb045488aa18035a797d`,
+152 isolated commits, exact changed bytes and verified fresh-clone bundle.
+PhysicsTaskScheduler now serializes native pose drives with movement workers
+and the collision-world mutex, resolves the single owned graph by live
+reference and dispatches its staged body driver. PhysicsSystem forwards to
+that same authority. Gravity matches the scheduler's existing native world
+step (RagdollNativeDefaultGravityZ); shared Bullet world gravity is untouched.
+Controller callers must supply resolved inverse frame time. Original frame
+preparation/configuration and actual controller calls are not implemented here.
+
+Three added parameterized scheduler tests each execute with0/1/2 workers:
+exact native gravity compensation and unchanged pose/shared gravity/owner;
+drive after queued worker work and physical movement on the next substep;
+invalid target/time, empty/stale/rebound/removed ownership and real snapshot
+capture/restore. The existing native NPC PhysicsSystem admission test also
+exercises the public drive after actual LiveRef replacement, verifies stale
+owner rejection, keeps its ordinary capsule suspended, preserves the body
+pose and restores the same snapshot. Its VFS/ResourceSystem/PhysicsSystem are
+real; it does not initialize the full World renderer/gameplay pipeline.
+
+S4/native-ragdoll-pose-drive-scheduler-baseline-01 builds the missing adapter
+reproducer and executes exactly nine selected cases, all failing. This is a
+filtered failing baseline, not full engine acceptance. The actual adapter
+corrects it. The native NPC fixture's drive uses its actual initial body Z20,
+so its displacement stays on X and tests publication without unintended caps.
+Independent expected compensation bit pattern1050473923 is from the original
+checkpoint153 prepared-velocity oracle (gain.5, inverse120, gravity default).
+
+Final S4/native-ragdoll-pose-drive-scheduler-{normal,sanitized}-01 each pass
+all851 engine tests, complete inventories and zero failures/skips; openmw and
+esmtool rebuilt. Stable tested fingerprint
+`50354f376d93e87dff5c6653aee3dad8a69b4f848e87faf02e82883de40fcb97`.
+ASan leaks disabled; UBSan halts. Components/Python are unchanged; prior2170
+component checks retain their original checkpoint155 scope/fingerprint.
+
+Actual controller creation/selection and frame-time resolution, contact-based
+activation across owners, physical mode/hierarchy blending, World/render/save
+handoff and stock floor continuation remain open. These worker/physics tests
+do not close normal-input or fresh-process acceptance. S4 remains in progress.

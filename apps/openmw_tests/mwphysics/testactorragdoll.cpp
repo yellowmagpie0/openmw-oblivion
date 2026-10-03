@@ -16,6 +16,7 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 #include <gtest/gtest.h>
 #include <limits>
+#include <bit>
 #include <osg/Stats>
 
 namespace
@@ -314,6 +315,77 @@ namespace
             MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
         }
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativePoseDriveUsesNativeGravityAndPreservesOtherWorldState)
+    {
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(mWorld.getCollisionObjectArray()[0]);
+        body->setActivationState(ISLAND_SLEEPING);
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{12, {{1, 0, 2}, {0, 0, 0, 1}}, .5f}}};
+        scheduler.driveActorRagdollPoseVelocities(mPtr, drives, 120.f);
+        const auto result = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_EQ(result.mLinearVelocity, btVector3(60, 0, std::bit_cast<float>(1050473923u)));
+        EXPECT_EQ(result.mAngularVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(result.mPose, mPoses[0]);
+        EXPECT_TRUE(body->isActive());
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        EXPECT_EQ(static_cast<MWPhysics::PtrHolder*>(scheduler.getUserPointer(body))->getPtr(), mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativePoseDriveWaitsForQueuedWorkersAndEntersNextSubstep)
+    {
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native pose drive barrier");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{12, {{1, 0, 2}, {0, 0, 0, 1}}, .5f}}};
+        scheduler.driveActorRagdollPoseVelocities(mPtr, drives, 120.f);
+        auto result = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_EQ(result.mLinearVelocity.x(), 60);
+        EXPECT_EQ(result.mPose.getOrigin().x(), 0);
+        EXPECT_LT(result.mPose.getOrigin().z(), 2);
+        time += 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 1,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        result = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_NEAR(result.mPose.getOrigin().x(), 60 * double(1.f / 60.f), 1e-9);
+        EXPECT_EQ(result.mLinearVelocity.x(), 60);
+        scheduler.removeActorRagdoll(mPtr);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativePoseDriveRejectsInvalidOrStaleOwnersAndRestoresProjectedState)
+    {
+        const auto base = ESM::FormKey::content("actors.esm", 100);
+        const std::string model = "characters/_male/skeleton.nif";
+        mGraph.mSourceHash = std::string(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 7;
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        const auto original = scheduler.captureActorRagdollSnapshot(mPtr, base, model);
+        std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{999, {{1, 0, 2}, {0, 0, 0, 1}}, .5f}}};
+        EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities(mPtr, drives, 120.f), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), original);
+        drives[0].mRecord = 12;
+        EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities(mPtr, drives, 0.f), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), original);
+        MWWorld::LiveCellRef<ESM::Static> replacement(mReference, &mBase);
+        MWWorld::Ptr updated(&replacement);
+        scheduler.updateActorRagdollPtr(mPtr, updated);
+        EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities(mPtr, drives, 120.f), std::invalid_argument);
+        EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities({}, drives, 120.f), std::invalid_argument);
+        scheduler.driveActorRagdollPoseVelocities(updated, drives, 120.f);
+        const auto driven = scheduler.captureActorRagdollSnapshot(updated, base, model);
+        EXPECT_NE(driven, original);
+        scheduler.restoreActorRagdollSnapshot(updated, original, base, model);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(updated, base, model), original);
+        scheduler.removeActorRagdoll(updated);
+        EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities(updated, drives, 120.f), std::invalid_argument);
     }
 
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));

@@ -33,6 +33,7 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
+    struct RagdollNativeVelocityDrive;
 }
 
 namespace Misc
@@ -85,6 +86,9 @@ namespace MWPhysics
         void updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
         std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
         void restoreActorRagdoll(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBodyState> states);
+        // Serialized with movement workers; controller supplies resolved inverse time.
+        void driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds);
         void applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
             const btVector3& impulse, const btVector3& worldPoint);
 

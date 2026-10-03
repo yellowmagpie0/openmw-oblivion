@@ -788,6 +788,15 @@ namespace MWPhysics
         actorRagdoll(ptr).mPhysics.restore(states);
     }
 
+    void PhysicsTaskScheduler::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.driveNativePoseVelocities(
+            drives, inverseFrameSeconds, NifBullet::RagdollNativeDefaultGravityZ);
+    }
+
     void PhysicsTaskScheduler::applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
         const btVector3& impulse, const btVector3& worldPoint)
     {
