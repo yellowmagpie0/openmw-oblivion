@@ -764,6 +764,29 @@ namespace ESM4
         return static_cast<std::int32_t>(damage);
     }
 
+    PhysicalReactionInitialization resolvePhysicalReactionInitialization(
+        std::uint32_t rawLifeState, std::int8_t knockedState, float currentFatigue,
+        std::int32_t paralysisInteger, bool duplicatePlayerAnimation)
+    {
+        using Action = PhysicalReactionInitializationAction;
+        // Native Player view duplication returns before life/stat queries.
+        if (duplicatePlayerAnimation)
+            return {knockedState, false, Action::SkipDuplicatePlayerAnimation};
+        if (rawLifeState == 1 || rawLifeState == 2)
+            return {0, false, Action::ClearActorLifeReaction};
+        // Original654649 excludes both signed zeros. Only a fresh process
+        // byte starts a reaction; existing states continue their dispatcher.
+        if (!requiresIncapacitation(currentFatigue, paralysisInteger != 0, rawLifeState == 6))
+            return {knockedState, false, Action::DispatchExistingState};
+        if (knockedState == 0)
+            return paralysisInteger != 0
+                ? PhysicalReactionInitialization{3, false, Action::BeginParalysis}
+                : PhysicalReactionInitialization{4, false, Action::BeginFatigue};
+        // The original requests4FBF90(false, ActorExtraData, 0x40). This is
+        // a request for the caller's flag owner, not a mutation of its state.
+        return {knockedState, knockedState == 1 || knockedState == 2, Action::DispatchExistingState};
+    }
+
     bool knockdownBlendEntryReady(bool hasRoot, std::optional<float> hierarchyGain)
     {
         return !hasRoot || hierarchyGain.value_or(1.f) <= 0.f;

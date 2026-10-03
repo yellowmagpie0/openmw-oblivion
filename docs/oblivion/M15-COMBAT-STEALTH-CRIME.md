@@ -15409,3 +15409,63 @@ World lifecycle, caller race/scale, unchanged stock-floor fresh-restart,
 save/controller clock projection and normal-input acceptance remain open.
 Next: resolve the remaining native reaction-entry/caller authority before World
 physical integration. S5-S14 remain pending.
+
+
+### Checkpoint184: immutable native reaction initialization decisions
+
+Checkpoint183 committed as `9cf7d6df6c9d985baa017e8623cfd470012c03be`,
+180 isolated commits with exact-byte/fresh-clone proof; bundle161 SHA256
+`ea06f084ecda1ffca90049efe59a56c004236019e5166813f6a65fcedc3cdd8f`.
+ESM4::resolvePhysicalReactionInitialization models original6545E0 prefix
+branches before physical side effects or the existing raw-state dispatcher.
+Duplicate Player animation identity bypasses life/stat queries and preserves
+the reaction byte. Raw actor life1/2 clears it. Otherwise the existing native
+incapacitation rule uses strict Fatigue<0, IntegerAV48!=0 or raw life6. A fresh
+process byte0 starts raw3 for nonzero AV48 or raw4 otherwise. Existing signed
+bytes remain intact; only active states1/2 request4FBF90(false, ActorExtraData,
+0x40). The returned flag request is not proof of an external mutation.
+Only used Fatigue is validated finite; skipped/cleared paths ignore it. Actor
+and stat identity resolution, effects, actual body changes and clocks remain
+caller responsibilities. This is an immutable rule, not a second live owner.
+
+Four new tests cover Player bypass/life clearing, fresh negative-Fatigue and
+signed/extreme AV48 cases, both signed zeros and their adjacent values,
+existing signed-byte preservation/flag requests and nonfinite used-data rejection.
+Baseline01 retains four failures, including initially incorrect zero-Fatigue
+expectations. Original probe rows confirm signed zeros do not start raw4 by
+Fatigue alone. Baseline02 corrects those assertions and still retains all four
+failures against the placeholder. Production reuses requiresIncapacitation's
+already correct strict comparison. Full initialize normal/sanitized01 each
+pass2,255 component and892 engine tests, complete inventories with zero failures/
+skips and rebuilt openmw/esmtool. Tested fingerprint `96477ed8b99a17bdcd0fce476342d00fe59b9f2a265a5f28315d62a5c84e6b37`. ASan leaks disabled;
+UBSan halts. Unchanged Python sources were not rerun.
+
+Initialize-oracle01 executes25,600 original6545E0 prefix cases across both
+x87 controls, Character/Creature/Player and duplicate-view Player, eight raw
+life states (including UINT_MAX), ten signed process bytes, eight finite
+Fatigue boundary/extreme values and five signed IntegerAV48 values. Actual
+actor virtual164/animation getters, duplicate gate65D750, life predicates
+5E33B0/5E0DC0, stat wrappers5E0A60/5E17E0, High-process initial byte getter
+64B090, process-byte3/4 stores and optional4FBF90 with empty ExtraData lookup
+execute. Actor source bytes and every other process byte are preserved; early
+returns verify stack cleanup. Resolved FloatAV10 and IntegerAV48 cache returns
+are boundaries; MagicCaster cleanup699DA0 is omitted. Initial process+11D is0,
+so mounted/other disruption is not probed. No body-enable/initial velocity,
+blend setup, subsequent dispatcher, effects, World/save/gameplay executes.
+Source/corpus SHA256 `f3d5104860e0f1ca114a843e3c164577f44285c8085c6d4b3e504912417804a4`, `f27e3ce05af03b6e1f56d29f9fdc7e079761465791bbaa1399a4691d9e1d7cdc`;
+original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+Initialize-compare normal/sanitized01 each match25,600 cases/76,800 exact
+reaction byte, flag request and action fields. Ignoring the Player bypass differs
+in6,400 cases; ignoring raw life differs in4,890. No tolerance is used.
+Source/driver SHA256 `30658e8dbc17a88167015ccd1136dbd448c61d83d22fe241e4cf8c444cbd3d8d`, `0afec08b9dfe15873ca464be6857cf177614db57d1dd47435c973b590fec9e37`.
+The oracle's legacy clears_movement_flag field records the exact0x40 request;
+the production API deliberately does not assign its external ownership here.
+
+No stage closes. Native prefix initialization is verified; actual actor/stat
+resolution, physical side effects, root blend creation, recovery dispatch,
+World lifecycle and the existing native stepping/restart/gameplay gates remain
+open. BodyT graph/controller/renderer admission is separate from physical save
+projection, which still rejects BodyT records. Next: reconcile that save boundary
+with admitted physical BodyT poses, then continue complete reaction side effects
+and World integration. S5-S14 remain pending.

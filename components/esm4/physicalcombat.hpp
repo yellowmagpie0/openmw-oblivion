@@ -254,6 +254,31 @@ namespace ESM4
     // simply flagged essential. Recovery may begin when this becomes false.
     bool requiresIncapacitation(float currentFatigue, bool paralyzed, bool essentialUnconscious);
 
+    enum class PhysicalReactionInitializationAction : std::uint8_t
+    {
+        SkipDuplicatePlayerAnimation,
+        ClearActorLifeReaction,
+        DispatchExistingState,
+        BeginParalysis,
+        BeginFatigue,
+    };
+
+    struct PhysicalReactionInitialization
+    {
+        std::int8_t mKnockedState;
+        bool mClearFlag40;
+        PhysicalReactionInitializationAction mAction;
+    };
+
+    // Original6545E0 initialization prefix before physical side effects.
+    // Life states1/2 clear the process byte;6 requires incapacitation. The
+    // caller resolves Player animation identity and current AV10/IntegerAV48.
+    // Existing raw bytes stay intact; this does not execute body/magic/mount
+    // cleanup, animation, blend clocks or the later raw-state dispatcher.
+    PhysicalReactionInitialization resolvePhysicalReactionInitialization(
+        std::uint32_t rawLifeState, std::int8_t knockedState, float currentFatigue,
+        std::int32_t paralysisInteger, bool duplicatePlayerAnimation);
+
     // Original raw2/4 entry prefix: root absence skips the lookup; an absent
     // blend object yields gain1. This is a gate only, not entry cleanup or gain
     // evolution. IEEE nonfinite comparison behavior follows the original.

@@ -3471,3 +3471,76 @@ TEST(ESM4PhysicalBlendDriveParameters, RejectsInvalidFrameGainAndUnrepresentable
     EXPECT_TRUE(std::isfinite(minimum.mInverseFrameSeconds));
     EXPECT_EQ(minimum.mInverseFrameSeconds, 0x1p126f);
 }
+
+TEST(ESM4PhysicalCombat, PhysicalReactionInitializationPreservesPlayerBypassAndClearsActorLife)
+{
+    using Action = ESM4::PhysicalReactionInitializationAction;
+    const auto duplicate = ESM4::resolvePhysicalReactionInitialization(2, 4,
+        std::numeric_limits<float>::quiet_NaN(), 1, true);
+    EXPECT_EQ(duplicate.mAction, Action::SkipDuplicatePlayerAnimation);
+    EXPECT_EQ(duplicate.mKnockedState, 4);
+    EXPECT_FALSE(duplicate.mClearFlag40);
+    for (const auto life : {1u, 2u})
+    {
+        const auto cleared = ESM4::resolvePhysicalReactionInitialization(life, 3,
+            std::numeric_limits<float>::quiet_NaN(), 1, false);
+        EXPECT_EQ(cleared.mAction, Action::ClearActorLifeReaction);
+        EXPECT_EQ(cleared.mKnockedState, 0);
+        EXPECT_FALSE(cleared.mClearFlag40);
+    }
+}
+
+TEST(ESM4PhysicalCombat, PhysicalReactionInitializationStartsFreshFatigueAndParalysis)
+{
+    using Action = ESM4::PhysicalReactionInitializationAction;
+    for (const float fatigue : {-1.f, -std::numeric_limits<float>::denorm_min()})
+    {
+        const auto begun = ESM4::resolvePhysicalReactionInitialization(0, 0, fatigue, 0, false);
+        EXPECT_EQ(begun.mAction, Action::BeginFatigue);
+        EXPECT_EQ(begun.mKnockedState, 4);
+        EXPECT_FALSE(begun.mClearFlag40);
+    }
+    EXPECT_EQ(ESM4::resolvePhysicalReactionInitialization(6, 0, 1, 0, false).mAction, Action::BeginFatigue);
+    for (const auto paralysis : {std::numeric_limits<std::int32_t>::min(), -1, 1,
+             std::numeric_limits<std::int32_t>::max()})
+    {
+        const auto begun = ESM4::resolvePhysicalReactionInitialization(0, 0, 1, paralysis, false);
+        EXPECT_EQ(begun.mAction, Action::BeginParalysis);
+        EXPECT_EQ(begun.mKnockedState, 3);
+    }
+    for (const float fatigue : {-0.f, 0.f})
+    {
+        const auto zero = ESM4::resolvePhysicalReactionInitialization(0, 0, fatigue, 0, false);
+        EXPECT_EQ(zero.mAction, Action::DispatchExistingState);
+        EXPECT_EQ(zero.mKnockedState, 0);
+    }
+    const auto idle = ESM4::resolvePhysicalReactionInitialization(0, 0,
+        std::numeric_limits<float>::denorm_min(), 0, false);
+    EXPECT_EQ(idle.mAction, Action::DispatchExistingState);
+    EXPECT_EQ(idle.mKnockedState, 0);
+}
+
+TEST(ESM4PhysicalCombat, PhysicalReactionInitializationPreservesExistingBytesAndGatesFlag40)
+{
+    using Action = ESM4::PhysicalReactionInitializationAction;
+    for (const int raw : {-128, -1, 1, 2, 3, 4, 5, 6, 127})
+    {
+        const auto active = ESM4::resolvePhysicalReactionInitialization(0, std::int8_t(raw), -1, 0, false);
+        EXPECT_EQ(active.mAction, Action::DispatchExistingState);
+        EXPECT_EQ(active.mKnockedState, raw);
+        EXPECT_EQ(active.mClearFlag40, raw == 1 || raw == 2);
+        const auto inactive = ESM4::resolvePhysicalReactionInitialization(0, std::int8_t(raw), 1, 0, false);
+        EXPECT_EQ(inactive.mKnockedState, raw);
+        EXPECT_FALSE(inactive.mClearFlag40);
+    }
+}
+
+TEST(ESM4PhysicalCombat, PhysicalReactionInitializationRejectsUsedNonfiniteFatigue)
+{
+    for (const float fatigue : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+        EXPECT_THROW(ESM4::resolvePhysicalReactionInitialization(0, 0, fatigue, 1, false), std::invalid_argument);
+    const auto otherLife = ESM4::resolvePhysicalReactionInitialization(
+        std::numeric_limits<std::uint32_t>::max(), 0, 1, 0, false);
+    EXPECT_EQ(otherLife.mAction, ESM4::PhysicalReactionInitializationAction::DispatchExistingState);
+}
