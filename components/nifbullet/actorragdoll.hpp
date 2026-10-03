@@ -58,6 +58,16 @@ namespace NifBullet
     std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(
         Nif::FileView file, std::optional<std::uint32_t> rootRecord);
 
+    // Owned authored timing/identity from the first matching attached controller.
+    // No clock caches, runtime keys, attachment or simulation are inferred.
+    struct RagdollBlendControllerDefinition
+    {
+        std::uint32_t mRecord;
+        std::optional<std::uint32_t> mTargetRecord;
+        std::uint16_t mFlags;
+        float mFrequency, mPhase, mStartTime, mStopTime;
+    };
+
     struct RagdollBodyDefinition
     {
         std::uint32_t mRecord;
@@ -68,6 +78,7 @@ namespace NifBullet
         RagdollBodyFilter mWorldObjectFilter, mInfoFilter;
         // Authored bhkBlendCollisionObject data, not live blend progression.
         std::optional<RagdollBlendDefinition> mBlend;
+        std::optional<RagdollBlendControllerDefinition> mBlendController;
         osg::Vec3f mTranslation;
         osg::Quat mRotation;
         osg::Vec3f mCenter;

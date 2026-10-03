@@ -15597,3 +15597,51 @@ clock/contact/activation persistence and original stepping/restart failures
 remain open. No stage closes; S5-S14 remain pending. Next: retain authored node
 blend-controller identities and timing inputs so reaction setup can distinguish
 a real selected controller from absence, then connect the live lifecycle.
+
+
+### Checkpoint188: owned authored blend-controller identity and timing
+
+Checkpoint187 committed as `d88ff689321ae666e7e50c3d8ed09fee92c2852b`,
+184 isolated commits with exact-byte/fresh-clone verification; bundle165 SHA256
+`77c9e65be5cec0c7b8b6503a68da00de4f181dfcda19dae81dfca20223539365`.
+The actor graph now owns the first bhkBlendController attached to each blend
+collision target node: record identity, nullable authored target identity,
+flags, frequency, phase and start/stop timing fields. Lookup follows attached
+controller order and stops on the first match. Target equality is not a native
+selection predicate; missing controllers remain missing. Membership and cycles
+encountered before selection are validated. Later unused controllers are not
+invented as active authority. Raw authored timing preservation is not simulation;
+controller clock caches and keys are not synthesized here.
+
+Controller-lookup-oracle02 executes189 full original700010 cases with actual
+blend/velocity-controller RTTI getters: every matching mask at chain lengths0-5
+and null/same/other targets. Original RTTI ancestor initializers A09970,A09D90,
+A12400,A12640 execute first; no functions are stubbed. Oracle01 omitted these
+parent initializations;02 confirms identical output corpus while covering full
+ancestry. Original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`; source/corpus hashes
+`33317fa0c786590e6bcc35e517c64cb773fe987902700bdc69c4a8f50de61d9d`, `550432dff0bd03a967b42987fe533ab51ccc9c2e363da26f136dfc6a52a56a81`.
+
+Three new tests fail in baseline02. Baseline01 retains a private script syntax
+failure and rejected empty test selection; it is not test evidence. Green01
+retains a real null-link getPtr error (normal failure and sanitizer assertion),
+plus an unresolved synthetic null-target record pointer. Explicit empty-link
+checks and initialized null fixture pointers correct both. Full normal/
+sanitized02 each pass2,261 component and898 engine tests, complete inventories,
+no skips/failures and rebuilt openmw/esmtool. Tested fingerprint `67b8b51abdceeccdd1ae6e307cde90ec9e8d8ca217416921f9a56e03dc54bb4e`. ASan
+leaks disabled; UBSan halts. Unchanged Python sources were not rerun.
+
+Metadata-compare normal/sanitized02 load the hash-identified stock18-body/
+17-joint skeleton and attach189 independently enumerated synthetic chains to
+node8. Native selected indices match exactly; owned target/flags/timing fields
+match explicit fixture inputs:1,323 exact fields in each build. Head-only lookup
+would differ in78 rows; selecting the last match would differ in126. Asset hash
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`; source/driver hashes `9df35f44569ec017ee8ba5d747824784698b57b4236d094b3b04500588488739`,
+`a6d7f8ece4e2f8d35bbd3ee7a7267f0eacf58a8ee55037b94f671b86ab0e91a5`. This fixture substitution is not an unmodified-stock
+controller lifecycle or original-game acceptance.
+
+No stage closes. Authored controller identification is preserved; nonempty key
+parsing, runtime attachment, transition clocks, World physical lifecycle,
+controller/contact/activation persistence and existing native stepping/restart
+failures remain open. S5-S14 remain pending. Next: verify the original keyframed
+motion stepping path, whose velocity semantics currently disagree with Bullet's
+kinematic update, and use that evidence for the live physical lifecycle.

@@ -1,6 +1,7 @@
 #include "../nif/node.hpp"
 
 #include <components/nif/physics.hpp>
+#include <components/nif/controller.hpp>
 #include <components/nifbullet/actorragdoll.hpp>
 #include <components/nifbullet/ragdollcollisionfilter.hpp>
 
@@ -726,4 +727,70 @@ namespace
         mFile.mVersion = Nif::NIFFile::VER_MW;
         EXPECT_THROW(lookup(), std::runtime_error);
     }
+}
+
+TEST_F(ActorRagdollTest, OwnsFirstAuthoredNodeBlendControllerAndTimingInputs)
+{
+    auto& blend = blendCollision();
+    auto& prefix = add<Nif::NiTimeController>();
+    auto& first = add<Nif::bhkBlendController>();
+    auto& second = add<Nif::bhkBlendController>();
+    first.mRecordType = second.mRecordType = Nif::RC_bhkBlendController;
+    first.mFlags = 0xc5;
+    first.mFrequency = .75f;
+    first.mPhase = -.5f;
+    first.mTimeStart = -0.f;
+    first.mTimeStop = .25f;
+    first.mTarget = Nif::NiObjectNETPtr(blend.mTarget.getPtr());
+    prefix.mNext = Nif::NiTimeControllerPtr(&first);
+    first.mNext = Nif::NiTimeControllerPtr(&second);
+    second.mFlags = 0xffff;
+    blend.mTarget->mController = Nif::NiTimeControllerPtr(&prefix);
+    const auto id = first.mRecordIndex;
+    const auto target = blend.mTarget->mRecordIndex;
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    ASSERT_TRUE(graph.mBodies[0].mBlendController);
+    EXPECT_EQ(graph.mBodies[0].mBlendController->mRecord, id);
+    EXPECT_EQ(graph.mBodies[0].mBlendController->mTargetRecord, target);
+    EXPECT_EQ(graph.mBodies[0].mBlendController->mFlags, 0xc5);
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlendController->mFrequency, .75f);
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlendController->mPhase, -.5f);
+    EXPECT_TRUE(std::signbit(graph.mBodies[0].mBlendController->mStartTime));
+    EXPECT_FLOAT_EQ(graph.mBodies[0].mBlendController->mStopTime, .25f);
+    EXPECT_FALSE(graph.mBodies[1].mBlendController);
+    mFile.mRecords.clear();
+    EXPECT_EQ(graph.mBodies[0].mBlendController->mRecord, id);
+    EXPECT_EQ(graph.mBodies[0].mBlendController->mTargetRecord, target);
+}
+
+TEST_F(ActorRagdollTest, DistinguishesMissingControllerAndNullTargetWithoutInventingOne)
+{
+    auto& blend = blendCollision();
+    auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    EXPECT_FALSE(graph.mBodies[0].mBlendController);
+    auto& controller = add<Nif::bhkBlendController>();
+    controller.mRecordType = Nif::RC_bhkBlendController;
+    controller.mFlags = 0;
+    controller.mFrequency = 1;
+    controller.mPhase = 0;
+    controller.mTimeStart = -1;
+    controller.mTimeStop = 1;
+    controller.mTarget = Nif::NiObjectNETPtr(nullptr);
+    controller.mNext = Nif::NiTimeControllerPtr(nullptr);
+    blend.mTarget->mController = Nif::NiTimeControllerPtr(&controller);
+    graph = NifBullet::loadActorRagdollDefinition(mFile);
+    ASSERT_TRUE(graph.mBodies[0].mBlendController);
+    EXPECT_FALSE(graph.mBodies[0].mBlendController->mTargetRecord);
+}
+
+TEST_F(ActorRagdollTest, RejectsForeignAndCyclicControllerLookupBeforeProducingGraph)
+{
+    auto& blend = blendCollision();
+    Nif::NiTimeController foreign{};
+    blend.mTarget->mController = Nif::NiTimeControllerPtr(&foreign);
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    auto& prefix = add<Nif::NiTimeController>();
+    prefix.mNext = Nif::NiTimeControllerPtr(&prefix);
+    blend.mTarget->mController = Nif::NiTimeControllerPtr(&prefix);
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
 }

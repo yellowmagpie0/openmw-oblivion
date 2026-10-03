@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include <components/nif/node.hpp>
+#include <components/nif/controller.hpp>
 #include <components/nif/physics.hpp>
 
 namespace NifBullet
@@ -310,6 +311,29 @@ namespace NifBullet
                     "nonfinite authored blend gain");
                 value.mBlend = RagdollBlendDefinition{blend->mRecordIndex, blend->mFlags,
                     blend->mHeirGain, blend->mVelGain};
+                // Original700010 searches the attached chain in order and
+                // returns at the first matching RTTI. Its target is metadata,
+                // not a selection predicate; later controllers are unused.
+                std::unordered_set<const Nif::NiTimeController*> controllers;
+                for (const auto* current = node->mController.empty() ? nullptr : node->mController.getPtr(); current;
+                     current = current->mNext.empty() ? nullptr : current->mNext.getPtr())
+                {
+                    member(current);
+                    require(controllers.insert(current).second, "cyclic native blend controller lookup");
+                    if (const auto* controller = dynamic_cast<const Nif::bhkBlendController*>(current))
+                    {
+                        std::optional<std::uint32_t> target;
+                        if (!controller->mTarget.empty())
+                        {
+                            member(controller->mTarget.getPtr());
+                            target = controller->mTarget->mRecordIndex;
+                        }
+                        value.mBlendController = RagdollBlendControllerDefinition{controller->mRecordIndex,
+                            target, controller->mFlags, controller->mFrequency, controller->mPhase,
+                            controller->mTimeStart, controller->mTimeStop};
+                        break;
+                    }
+                }
             }
             const auto& info = body->mInfo;
             value.mWorldObjectFilter = { body->mHavokFilter.mLayer, body->mHavokFilter.mFlags,
