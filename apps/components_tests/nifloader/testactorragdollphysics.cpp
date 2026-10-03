@@ -972,6 +972,17 @@ namespace
         EXPECT_EQ(target.mPosition, osg::Vec3f(1, 2, 3));
     }
 
+    TEST(RagdollNativeBlendTarget, RejectsUnsupportedTrigonometricAndNormalizationOverflowDomains)
+    {
+        const NifBullet::RagdollNativeTargetPose physical{{}, {0, 0, 0, 1}};
+        const NifBullet::RagdollNativeTargetPose spherical{{}, {0, 0, .7071067690849304f, .7071067690849304f}};
+        const NifBullet::RagdollNativeTargetPose linear{{}, {.04470989108085632f, 0, 0, .9990000128746033f}};
+        const float gain = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(physical, spherical, gain), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendTargetPose(physical, linear, gain), std::invalid_argument);
+        EXPECT_EQ(physical.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+    }
+
     TEST_F(ActorRagdollPhysicsTest, NativePoseDrivePublishesVelocitiesAndWakesWithoutMovingOrClearingForces)
     {
         NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);

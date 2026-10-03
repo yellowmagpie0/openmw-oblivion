@@ -13881,3 +13881,70 @@ Controller attachment, effective gains/frame clock, body mode switching,
 animated renderer blending, actual World/render/save integration, cross-owner
 contacts and stock floor continuation remain open. S4 remains in progress;
 no normal-input/restart gate is closed by these arithmetic tests.
+
+
+### Checkpoint159: native physical frame preparation
+
+Checkpoint158 committed as `467db9b7a4beef761eaa0fa6dd54f809853fd655`,
+155 isolated commits with exact-byte/fresh-clone proof. New physicalframe
+prepares the native frame, substep duration/count and persistent remainder/
+smoothing state as distinct fields. Raw mode0 uses fixed substeps and the
+stored-remainder subtraction;10 smooths; all other raw modes divide the
+prepared frame. The supplied boolean limits count to2 rather than3. Short
+frames accumulate rather than pretending a body step occurred. Accumulated
+binary32 overflow is still capped. Clock changes stage atomically; malformed
+input, unrepresentable output and unsupported maximum/substep ratios>=2^32
+reject. Settings expose independently read image defaults, including frame
+cap166.6666717529297, threshold.008333333767950535, fixed step.01666666753590107
+and smoothing.05000000074505806. These are not a winning configuration audit,
+caller mapping or complete simulation authority.
+
+Original SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-ragdoll-frame-preparation-oracle-01 executes2,240 full889810 returns
+through889A20, no call stubs. Finite nonnegative delta/remainder, prior
+smoothing and raw mode/boolean are explicit fixtures. Four raw image settings
+are restored before every call. Source/corpus SHA256:
+`624293410d75554a21d8c1f052c0665ce95cfa7fc2e994c6488ccf387ce2bc14`,
+`f294360c85aae3c36149c01f78e5288a44b878c08b110b39571646c31f179ca9`.
+Oracle02 expands to18,240 with100 seeded durations; source/corpus:
+`cbcd1d24b25ced412e41c953a37938630ce1b982f79ea400252a11b3b9846a12`,
+`35b84e0c95b80de5953f867c3601aee8b739de29356b35d35fce95e57c10df30`.
+Oracle03 adds maximum finite delta/remainder and signed-zero remainder:
+25,760 cases, both x87 precision words. Source/corpus:
+`8271bc3453593ba809c2e61c5553c419c153f7befeec34de385b4ae0c494e1c8`,
+`19bbee332b361bdf771668dcf2ee80a0a710769cc65e09322926fad130e9ab35`.
+No executable bytes or disassembly are committed.
+
+C++ compare-{normal,sanitized}-01 each match18,240; expanded02 each match25,760
+at the additional-test fingerprint. Final S4/native-ragdoll-frame-preparation-
+compare-{normal,sanitized}-03 each match all25,760 cases, six output fields
+exact (original input delta, prepared frame, step duration/count, remainder,
+smoothing). Always-one-step/input-frame/discard-remainder/force-divided-mode
+controls reject18,632/18,776/6,528/12,596. Comparator/final-driver SHA256:
+`dcb9f23790770ae4ae31965a36c5a4ab66b420dcacdef9870f5db925bacbb247`,
+`9363092320389b32eb941f8e1c13bc8750e808ea7acc9c5bce5c26873b44f4bd`.
+
+Baseline01 retains four failed tests against missing preparation. First full
+normal/sanitized01 pass2,183 component and851 engine tests. Expanded02 retains
+one failed additional overflow test in each build: its supposed overflowing
+smoothing product was actually finite. Fix uses delta2 rather than1 to
+produce overflow; production arithmetic was unchanged. Five frame tests now
+cover modes/float stores, accumulated and zero frames, exact thresholds/count
+limits/cap/raw modes, malformed state/settings/duration with no mutation,
+accumulation overflow and atomic smoothing-result rejection. One additional
+target-pose test covers unsupported FSIN arguments and normalization overflow.
+
+Final S4/native-ragdoll-frame-preparation-{normal,sanitized}-03 each pass2,185
+component and851 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested fingerprint
+`c9d126f4db7cf736ab521c95dbd946e0900ebd945f3bde3cbf605f25c4a18214`.
+ASan leaks disabled; UBSan halts. Python unchanged.
+
+Actual frame-preparation caller/winning settings, scheduler clock ownership
+and persistence, controller attachment/effective drive parameters, physical
+motion switching, animated renderer blending, full World/render/save and
+stock floor continuation remain open. This arithmetic/clock helper advances
+no bodies and closes no normal-input/restart acceptance gate. S4 remains
+in progress. Next: independently verified inverse-frame/effective gain
+selection, then actual controller and physical/render ownership wiring.

@@ -1,6 +1,7 @@
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm4/physicalblendsettings.hpp>
 #include <components/esm4/physicalblenddispatch.hpp>
+#include <components/esm4/physicalframe.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <array>
@@ -3295,4 +3296,126 @@ TEST(ESM4PhysicalBlendDispatch, RejectsNonfiniteGainsBeforeReturningDispatch)
         EXPECT_THROW(ESM4::resolvePhysicalBlendDispatch(value, 0.f, 0, 0), std::invalid_argument);
         EXPECT_THROW(ESM4::resolvePhysicalBlendDispatch(0.f, value, 0, 1), std::invalid_argument);
     }
+}
+
+TEST(ESM4PhysicalFrame, OriginalModesKeepFrameSubstepAndRemainderDistinct)
+{
+    // Original full889810, both x87 precision words; no calls/stubs.
+    ESM4::PhysicalFrameClock fixed;
+    const auto first = ESM4::preparePhysicalFrame(fixed, {}, .1f, 0, false);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(first.mFrameSeconds), 1028443342u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(first.mSubstepSeconds), 1015580809u);
+    EXPECT_EQ(first.mSubstepCount, 3u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(fixed.mRemaining), 1015580809u);
+    EXPECT_EQ(first.mInputDelta, .1f);
+    ESM4::PhysicalFrameClock divided;
+    const auto second = ESM4::preparePhysicalFrame(divided, {}, .1f, 1, false);
+    EXPECT_EQ(second.mFrameSeconds, .1f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(second.mSubstepSeconds), 1023969417u);
+    EXPECT_EQ(second.mSubstepCount, 3u);
+    EXPECT_EQ(divided.mRemaining, 0.f);
+    ESM4::PhysicalFrameClock smoothed;
+    const auto third = ESM4::preparePhysicalFrame(smoothed, {}, .1f, 10, false);
+    EXPECT_EQ(third.mFrameSeconds, .1f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(third.mSubstepSeconds), 1024524184u);
+    EXPECT_EQ(third.mSubstepCount, 1u);
+    EXPECT_EQ(third.mSubstepSeconds, smoothed.mSmoothed);
+}
+
+TEST(ESM4PhysicalFrame, AccumulatesShortFramesAndZeroPreservesPriorSmoothing)
+{
+    ESM4::PhysicalFrameClock clock;
+    const auto shortFrame = ESM4::preparePhysicalFrame(clock, {}, .007f, 1, false);
+    EXPECT_EQ(shortFrame.mFrameSeconds, 0.f);
+    EXPECT_EQ(shortFrame.mSubstepSeconds, 0.f);
+    EXPECT_EQ(shortFrame.mSubstepCount, 0u);
+    EXPECT_EQ(clock.mRemaining, .007f);
+    const auto accumulated = ESM4::preparePhysicalFrame(clock, {}, .007f, 1, false);
+    EXPECT_EQ(accumulated.mFrameSeconds, .014f);
+    EXPECT_EQ(accumulated.mSubstepSeconds, .014f);
+    EXPECT_EQ(accumulated.mSubstepCount, 1u);
+    EXPECT_EQ(clock.mRemaining, 0.f);
+    const auto previous = clock;
+    const auto zero = ESM4::preparePhysicalFrame(clock, {}, -0.f, 10, false);
+    EXPECT_EQ(zero.mSubstepCount, 0u);
+    EXPECT_EQ(zero.mSubstepSeconds, 0.f);
+    EXPECT_EQ(clock, previous);
+}
+
+TEST(ESM4PhysicalFrame, ExactThresholdSubstepLimitAndMaximumUseNativeBranches)
+{
+    const ESM4::PhysicalFrameSettings settings;
+    ESM4::PhysicalFrameClock clock;
+    const auto below = ESM4::preparePhysicalFrame(clock, settings,
+        std::nextafter(settings.mMinimumFrame, 0.f), 1, false);
+    EXPECT_EQ(below.mSubstepCount, 0u);
+    clock = {};
+    const auto exact = ESM4::preparePhysicalFrame(clock, settings, settings.mMinimumFrame, 1, false);
+    EXPECT_EQ(exact.mSubstepCount, 1u);
+    EXPECT_EQ(exact.mSubstepSeconds, settings.mMinimumFrame);
+    clock = {};
+    const auto capped = ESM4::preparePhysicalFrame(clock, settings, 200.f, 1, true);
+    EXPECT_EQ(capped.mFrameSeconds, settings.mMaximumFrame);
+    EXPECT_EQ(capped.mSubstepCount, 2u);
+    EXPECT_EQ(capped.mSubstepSeconds, settings.mMaximumFrame / 2.f);
+    clock = {};
+    const auto rawSelector = ESM4::preparePhysicalFrame(clock, settings, .1f, 0xffffffffu, false);
+    EXPECT_EQ(rawSelector.mSubstepCount, 3u);
+    EXPECT_EQ(rawSelector.mFrameSeconds, .1f);
+}
+
+TEST(ESM4PhysicalFrame, InvalidSettingsStateAndDurationRejectWithoutMutation)
+{
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    ESM4::PhysicalFrameClock clock{.007f, .032f};
+    const auto previous = clock;
+    for (float delta : {nan, -1.f, std::numeric_limits<float>::infinity()})
+    {
+        EXPECT_THROW(ESM4::preparePhysicalFrame(clock, {}, delta, 0, false), std::invalid_argument);
+        EXPECT_EQ(clock, previous);
+    }
+    for (unsigned field = 0; field < 4; ++field)
+    {
+        ESM4::PhysicalFrameSettings invalid;
+        if (field == 0)
+            invalid.mMaximumFrame = 0;
+        if (field == 1)
+            invalid.mMinimumFrame = nan;
+        if (field == 2)
+            invalid.mFixedSubstep = -1;
+        if (field == 3)
+            invalid.mSmoothing = nan;
+        EXPECT_THROW(ESM4::preparePhysicalFrame(clock, invalid, .1f, 0, false), std::invalid_argument);
+        EXPECT_EQ(clock, previous);
+    }
+    ESM4::PhysicalFrameSettings unsupported;
+    unsupported.mFixedSubstep = std::numeric_limits<float>::min();
+    EXPECT_THROW(ESM4::preparePhysicalFrame(clock, unsupported, .1f, 0, false), std::invalid_argument);
+    EXPECT_EQ(clock, previous);
+    ESM4::PhysicalFrameClock invalid{-1.f, .032f};
+    EXPECT_THROW(ESM4::preparePhysicalFrame(invalid, {}, .1f, 1, false), std::invalid_argument);
+    EXPECT_EQ(invalid.mRemaining, -1.f);
+    invalid = {0, -1};
+    EXPECT_THROW(ESM4::preparePhysicalFrame(invalid, {}, .1f, 10, false), std::invalid_argument);
+    EXPECT_EQ(invalid.mSmoothed, -1.f);
+}
+
+TEST(ESM4PhysicalFrame, CapsOverflowingAccumulationAndRejectsOverflowingSmoothingAtomically)
+{
+    ESM4::PhysicalFrameClock clock{std::numeric_limits<float>::max(), .032f};
+    const ESM4::PhysicalFrameSettings settings;
+    const auto result = ESM4::preparePhysicalFrame(clock, settings,
+        std::numeric_limits<float>::max(), 1, false);
+    EXPECT_EQ(result.mFrameSeconds, settings.mMaximumFrame);
+    EXPECT_EQ(result.mSubstepCount, 3u);
+    EXPECT_EQ(clock.mRemaining, 0.f);
+    ESM4::PhysicalFrameSettings overflow;
+    overflow.mSmoothing = std::numeric_limits<float>::max();
+    clock = {.007f, .032f};
+    const auto previous = clock;
+    EXPECT_THROW(ESM4::preparePhysicalFrame(clock, overflow, 2.f, 10, false), std::invalid_argument);
+    EXPECT_EQ(clock, previous);
+    overflow.mSmoothing = -1.f;
+    EXPECT_THROW(ESM4::preparePhysicalFrame(clock, overflow, 2.f, 10, false), std::invalid_argument);
+    EXPECT_EQ(clock, previous);
 }
