@@ -601,6 +601,88 @@ namespace
         EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities(updated, drives, 120.f), std::invalid_argument);
     }
 
+
+    TEST_P(RagdollSchedulerTest, NativeBlendPublicationWaitsForWorkersAndUsesNativeGravity)
+    {
+        constexpr float dt = 1.f/60;
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native blend publication barrier");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = dt;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        std::array<NifBullet::RagdollNativeBlendUpdate, 1> requests{{{12, osg::Matrixf::identity(), 1, .5f, 8}}};
+        const auto key = scheduler.updateActorRagdollBlends(mPtr, requests, dt, 0);
+        ASSERT_EQ(key.size(), 1); EXPECT_EQ(key[0].mCollisionFlags, 0); EXPECT_FALSE(key[0].mSceneTarget);
+        auto state = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_EQ(state.mPose, btTransform::getIdentity()); EXPECT_EQ(state.mLinearVelocity, btVector3(0, 0, 0));
+        time += dt;
+        scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 1,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        requests[0].mHierarchyGain = .25f; requests[0].mCollisionFlags = key[0].mCollisionFlags;
+        const auto mixed = scheduler.updateActorRagdollBlends(mPtr, requests, 1.f/120, 0);
+        ASSERT_EQ(mixed.size(), 1); EXPECT_EQ(mixed[0].mCollisionFlags, 8); ASSERT_TRUE(mixed[0].mSceneTarget);
+        state = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_EQ(state.mPose, btTransform::getIdentity());
+        // Original composed frame inverse + velocity mix: inverse1/(1.f/120)
+        // stores bits1123024895, so gravity compensation is bits1050473924.
+        EXPECT_EQ(state.mLinearVelocity, btVector3(0, 0, std::bit_cast<float>(1050473924u)));
+        EXPECT_EQ(state.mAngularVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr)[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        scheduler.removeActorRagdoll(mPtr); EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeBlendPublicationRejectsBatchesAndStaleOwnersBeforeMutation)
+    {
+        auto other = mGraph.mBodies[0]; other.mRecord = 24; mGraph.mBodies.push_back(other);
+        mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(0, 0, 4));
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f/60, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        std::array<NifBullet::RagdollNativeBlendUpdate, 2> updates{{
+            {12, osg::Matrixf::identity(), 1, .5f, 8}, {24, osg::Matrixf::scale(2, 2, 2), 1, .5f, 8}}};
+        EXPECT_THROW(scheduler.updateActorRagdollBlends(mPtr, updates, 1.f/120, 0), std::invalid_argument);
+        updates[1].mAnimatedWorld.makeIdentity(); updates[1].mCollisionFlags = 0x20;
+        EXPECT_THROW(scheduler.updateActorRagdollBlends(mPtr, updates, 1.f/120, 0), std::invalid_argument);
+        updates[1].mCollisionFlags = 8; updates[1].mRecord = 12;
+        EXPECT_THROW(scheduler.updateActorRagdollBlends(mPtr, updates, 1.f/120, 0), std::invalid_argument);
+        updates[1].mRecord = 999;
+        EXPECT_THROW(scheduler.updateActorRagdollBlends(mPtr, updates, 1.f/120, 0), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose, mPoses[0]);
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr)[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        MWWorld::LiveCellRef<ESM::Static> replacement(mReference, &mBase); const MWWorld::Ptr updated(&replacement);
+        scheduler.updateActorRagdollPtr(mPtr, updated);
+        const auto one = std::span<const NifBullet::RagdollNativeBlendUpdate>(updates.data(), 1);
+        EXPECT_THROW(scheduler.updateActorRagdollBlends(mPtr, one, 1.f/120, 0), std::invalid_argument);
+        EXPECT_THROW(scheduler.updateActorRagdollBlends({}, one, 1.f/120, 0), std::invalid_argument);
+        ASSERT_EQ(scheduler.updateActorRagdollBlends(updated, one, 1.f/120, 0).size(), 1);
+        scheduler.removeActorRagdoll(updated);
+        EXPECT_THROW(scheduler.updateActorRagdollBlends(updated, {}, 1.f/120, 0), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeBlendPublicationKeepsUnselectedSleepAndCollisionIdentity)
+    {
+        auto other = mGraph.mBodies[0]; other.mRecord = 24; mGraph.mBodies.push_back(other);
+        mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(0, 0, 4));
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f/60, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(mWorld.getCollisionObjectArray()[0]);
+        auto* second = btRigidBody::upcast(mWorld.getCollisionObjectArray()[1]);
+        first->setActivationState(ISLAND_SLEEPING); second->applyCentralForce({1, 2, 3});
+        const auto* proxy = second->getBroadphaseHandle(); const auto* shape = second->getCollisionShape();
+        const auto* owner = scheduler.getUserPointer(second);
+        EXPECT_TRUE(scheduler.updateActorRagdollBlends(mPtr, {}, 1.f/120, 0).empty());
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{{24, osg::Matrixf::translate(70, 0, 0), 1, .5f, 8}}};
+        ASSERT_EQ(scheduler.updateActorRagdollBlends(mPtr, updates, 1.f/120, 0).size(), 1);
+        EXPECT_FALSE(first->isActive()); EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose, mPoses[0]);
+        EXPECT_EQ(second->getTotalForce(), btVector3(1, 2, 3)); EXPECT_EQ(second->getBroadphaseHandle(), proxy);
+        EXPECT_EQ(second->getCollisionShape(), shape); EXPECT_EQ(scheduler.getUserPointer(second), owner);
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        scheduler.removeActorRagdoll(mPtr); EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
 }

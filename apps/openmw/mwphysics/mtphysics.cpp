@@ -812,6 +812,16 @@ namespace MWPhysics
         actorRagdoll(ptr).mPhysics.synchronizeNativeKeyframedPoses(poses);
     }
 
+    std::vector<NifBullet::RagdollNativeBlendPublication> PhysicsTaskScheduler::updateActorRagdollBlends(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendUpdate> updates,
+        float preparedFrameSeconds, std::uint32_t rawUpdateSelector)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.updateNativeBlends(
+            updates, preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ);
+    }
+
     void PhysicsTaskScheduler::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {

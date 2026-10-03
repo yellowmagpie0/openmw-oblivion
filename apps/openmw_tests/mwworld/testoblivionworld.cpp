@@ -356,6 +356,19 @@ namespace
             EXPECT_THROW(physics.synchronizeActorRagdollKeyframedPoses(ptr, scenePoses), std::invalid_argument);
             EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr),
                 std::vector<NifBullet::RagdollNativeMotionRequest>(dynamic.begin(), dynamic.end()));
+            std::array<NifBullet::RagdollNativeBlendUpdate, 1> blendUpdates{{{12, sceneTarget, 1, .5f, 8}}};
+            EXPECT_THROW(physics.updateActorRagdollBlends(previous, blendUpdates, 1.f/120, 0), std::invalid_argument);
+            const auto keyPublication = physics.updateActorRagdollBlends(ptr, blendUpdates, 1.f/120, 0);
+            ASSERT_EQ(keyPublication.size(), 1); EXPECT_EQ(keyPublication[0].mCollisionFlags, 0);
+            EXPECT_FALSE(keyPublication[0].mSceneTarget); EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr)[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+            blendUpdates[0].mHierarchyGain = 0; blendUpdates[0].mVelocityGain = 0;
+            blendUpdates[0].mCollisionFlags = keyPublication[0].mCollisionFlags;
+            const auto dynamicPublication = physics.updateActorRagdollBlends(ptr, blendUpdates, 1.f/120, 0);
+            ASSERT_EQ(dynamicPublication.size(), 1); EXPECT_EQ(dynamicPublication[0].mCollisionFlags, 8);
+            EXPECT_TRUE(dynamicPublication[0].mSceneTarget); EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr)[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+            physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
             physics.applyActorRagdollImpulse(ptr, 0, btVector3(2, 0, 0), poses[0].getOrigin());
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity, btVector3(1, 0, 0));
             physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());

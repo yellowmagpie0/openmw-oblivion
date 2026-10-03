@@ -8240,3 +8240,51 @@ No stage closes. Next: expose this batch through the movement-worker barrier
 and PhysicsSystem, then connect actual World controller/lifecycle ownership.
 Actor root/scale admission, keyframed integration, native clocks/mode/flag save
 projection and fresh-restart/gameplay acceptance remain open.
+
+
+### Checkpoint173: coordinated controller updates through the worker barrier
+
+Checkpoint172 committed as `b743625abd81c0847286db74678dbeaeb6391bef`,
+169 isolated commits with exact-byte/fresh-clone proof. PhysicsTaskScheduler
+and public PhysicsSystem expose updateActorRagdollBlends. The scheduler waits
+for queued movement workers, takes its exclusive collision-world lock, validates
+the current actor owner and calls the staged owned-body controller with the
+native default gravity. Prepared frame time and raw selector remain explicit
+caller inputs. It returns renderer targets/updated flags without a separate
+renderer authority, speculative actor root selection or world step.
+
+Three parameterized tests run with workers0/1/2: publication while queued
+physics is active, Keyframed-to-Dynamic sequencing and native gravity; malformed,
+unsupported flag20 sync, duplicate/foreign/stale/null/removed-owner rejection
+without partial mutation; sparse updates retaining unselected sleep, force,
+shape/proxy/user-pointer identity and global World gravity. The existing public
+PhysicsSystem/resource/capsule fixture now exercises both controller transition
+directions, returned flags/projection and stale-owner rejection while retaining
+capsule suspension, snapshot restore, impulse and release/removal coverage.
+This is real PhysicsSystem coverage, not World.init/gameplay lifecycle evidence.
+
+Controller-barrier-baseline01 selects10 cases and retains all10 failures against
+unimplemented public adapters. Full normal/sanitized01 each retains three failed
+new assertions: the fixture incorrectly reused gravity bits1050473923 from an
+explicit inverse120 input. The coordinated API derives its inverse from the
+stored prepared-frame float1/120; original88F656 stores inverse bits1123024895
+(119.99999237060547), and original velocity mixing yields bits1050473924.
+The assertion is corrected to that independently observed value; implementation
+and tolerances are unchanged. Full controller-barrier-{normal,sanitized}-02
+each passes887 engine cases, complete inventories, zero failures/skips and
+stable fingerprint `5eef261e307488b0aa8be436905ef882db80a10560b60d67e0cc31c7f40d8834`, rebuilding openmw/esmtool. ASan leak checks disabled;
+UBSan halts. Component/Python sources are unchanged and not rerun; checkpoint172
+2,226-component results remain explicitly previous-revision evidence.
+
+Executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. Frame-gravity-oracle01 executes12
+original composed cases with no replaced game calls: actual flag/route prefix,
+prepared-frame inverse/effective gain stores, then actual world getter and
+zero-current/zero-target velocity mix. Frames0/1/120/1/60, flags8/108, gain.5
+and both precision words are checked. Explicit jumps bypass mode/scene/target
+preparation; this is not full controller/World execution. Source/corpus SHA256
+`61aa1bfa713b65ddf3dbc63a9b8876b02a1e9c70022050107777388584bfbbaf`, `b29a90dcd57a44651456e154afd684cd91176de75f72213e0731b5e3933c7e6a`. The exact1/120/flag8 gravity output
+is retained in all three queued-worker integration cases.
+
+No stage closes. Next: actual World physical controller/renderer lifecycle,
+verified animation-root construction/scale admission, native keyframed stepping,
+clock/mode/flag persistence and stock-floor fresh-restart/gameplay acceptance.
