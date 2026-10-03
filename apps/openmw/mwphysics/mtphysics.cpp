@@ -441,7 +441,8 @@ namespace MWPhysics
 
     PhysicsTaskScheduler::PhysicsTaskScheduler(
         float physicsDt, btCollisionWorld* collisionWorld, MWRender::DebugDrawer* debugDrawer)
-        : mDefaultPhysicsDt(physicsDt)
+        : mNativeBlendTimeCache(std::make_unique<ESM4::PhysicalBlendTimeCache>())
+        , mDefaultPhysicsDt(physicsDt)
         , mPhysicsDt(physicsDt)
         , mTimeAccum(0.f)
         , mCollisionWorld(collisionWorld)
@@ -820,6 +821,39 @@ namespace MWPhysics
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         return actorRagdoll(ptr).mPhysics.updateNativeBlends(
             updates, preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ);
+    }
+
+    std::vector<NifBullet::RagdollNativeBlendControllerState> PhysicsTaskScheduler::captureActorRagdollBlendControllers(
+        const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureNativeBlendControllers();
+    }
+
+    std::vector<NifBullet::RagdollNativeBlendState> PhysicsTaskScheduler::captureActorRagdollBlendStates(
+        const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureNativeBlendStates();
+    }
+
+    ESM4::PhysicalBlendTimeCache PhysicsTaskScheduler::captureNativeBlendTimeCache()
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return *mNativeBlendTimeCache;
+    }
+
+    std::vector<NifBullet::RagdollNativeBlendPublication> PhysicsTaskScheduler::updateActorRagdollBlendControllers(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendControllerTarget> targets,
+        float inputTime, float preparedFrameSeconds, std::uint32_t rawUpdateSelector)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.updateNativeBlendControllers(targets, inputTime,
+            *mNativeBlendTimeCache, preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ);
     }
 
     void PhysicsTaskScheduler::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,

@@ -65,11 +65,15 @@ namespace NifBullet
     struct RagdollNativeScenePoseRequest;
     struct RagdollNativeBlendUpdate;
     struct RagdollNativeBlendPublication;
+    struct RagdollNativeBlendControllerState;
+    struct RagdollNativeBlendControllerTarget;
+    struct RagdollNativeBlendState;
 }
 
 namespace ESM4
 {
     struct RuntimeActorRagdoll;
+    struct PhysicalBlendTimeCache;
 }
 
 namespace MWPhysics
@@ -215,6 +219,13 @@ namespace MWPhysics
         std::vector<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlends(
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendUpdate> updates,
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector);
+        // Owned controller state and publication share the movement-worker barrier.
+        std::vector<NifBullet::RagdollNativeBlendControllerState> captureActorRagdollBlendControllers(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollNativeBlendState> captureActorRagdollBlendStates(const MWWorld::Ptr& ptr);
+        ESM4::PhysicalBlendTimeCache captureNativeBlendTimeCache();
+        std::vector<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlendControllers(
+            const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendControllerTarget> targets,
+            float inputTime, float preparedFrameSeconds, std::uint32_t rawUpdateSelector);
         // Serialized with movement workers; controller supplies resolved inverse time.
         void driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds);

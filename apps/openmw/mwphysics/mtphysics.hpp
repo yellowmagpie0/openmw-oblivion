@@ -38,6 +38,9 @@ namespace NifBullet
     struct RagdollNativeScenePoseRequest;
     struct RagdollNativeBlendUpdate;
     struct RagdollNativeBlendPublication;
+    struct RagdollNativeBlendControllerState;
+    struct RagdollNativeBlendControllerTarget;
+    struct RagdollNativeBlendState;
 }
 
 namespace Misc
@@ -103,6 +106,12 @@ namespace MWPhysics
         std::vector<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlends(
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendUpdate> updates,
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector);
+        std::vector<NifBullet::RagdollNativeBlendControllerState> captureActorRagdollBlendControllers(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollNativeBlendState> captureActorRagdollBlendStates(const MWWorld::Ptr& ptr);
+        ESM4::PhysicalBlendTimeCache captureNativeBlendTimeCache();
+        std::vector<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlendControllers(
+            const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendControllerTarget> targets,
+            float inputTime, float preparedFrameSeconds, std::uint32_t rawUpdateSelector);
         // Serialized with movement workers; controller supplies resolved inverse time.
         void driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds);
@@ -155,6 +164,9 @@ namespace MWPhysics
         std::vector<Simulation>* mSimulations = nullptr;
         std::unordered_set<const btCollisionObject*> mCollisionObjects;
         std::unordered_map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>> mActorRagdolls;
+        // Shared by owned native physical controllers across actors. Access
+        // only after the worker barrier under the collision-world lock.
+        std::unique_ptr<ESM4::PhysicalBlendTimeCache> mNativeBlendTimeCache;
         float mDefaultPhysicsDt;
         float mPhysicsDt;
         float mTimeAccum;

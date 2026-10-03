@@ -275,6 +275,9 @@ namespace
             body.mMass = 2;
             body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
             body.mShape = NifBullet::RagdollSphere{.5f};
+            body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+            body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+                78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
             graph.mBodies.push_back(body);
             const std::array<btTransform, 1> poses{
                 btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 20))};
@@ -403,6 +406,48 @@ namespace
             bad.mAssetHash[0] = '0';
             EXPECT_THROW(physics.restoreActorRagdollSnapshot(ptr, bad, base, path.value()), std::invalid_argument);
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), original);
+            const auto ownedControllers = physics.captureActorRagdollBlendControllers(ptr);
+            ASSERT_EQ(ownedControllers.size(), 1u);
+            EXPECT_EQ(ownedControllers[0].mRecord, 78u);
+            EXPECT_FLOAT_EQ(ownedControllers[0].mState.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+            EXPECT_THROW(physics.captureActorRagdollBlendControllers(previous), std::invalid_argument);
+            EXPECT_THROW(physics.captureActorRagdollBlendStates(previous), std::invalid_argument);
+            ASSERT_EQ(physics.captureActorRagdollBlendStates(ptr).size(), 1u);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache().mCycle, 0xffffffffu);
+            const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> ownedTargets{{{78, sceneTarget}}};
+            EXPECT_THROW(physics.updateActorRagdollBlendControllers(previous, ownedTargets, 1.f, 1.f / 120, 0),
+                std::invalid_argument);
+            const auto ownedPublication = physics.updateActorRagdollBlendControllers(ptr, ownedTargets, 1.f, 1.f / 120, 0);
+            ASSERT_EQ(ownedPublication.size(), 1u);
+            EXPECT_EQ(ownedPublication[0].mRecord, 12u);
+            EXPECT_FALSE(ownedPublication[0].mSceneTarget);
+            EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr)[0].mMotion,
+                NifBullet::RagdollNativeMotion::Keyframed);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_FLOAT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mClock.mPreviousTime, 1.f);
+            EXPECT_FLOAT_EQ(physics.captureActorRagdollBlendStates(ptr)[0].mGains.mHierarchy, 1.f);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache().mCycle, 2u);
+            const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> badOwnedTargets{{
+                {78, osg::Matrixf::scale(2, 2, 2)}}};
+            const auto beforeOwnedPose = physics.captureActorRagdoll(ptr)[0].mPose;
+            EXPECT_THROW(physics.updateActorRagdollBlendControllers(ptr, badOwnedTargets, 1.125f, 1.f / 120, 0),
+                std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeOwnedPose);
+            EXPECT_FLOAT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mClock.mPreviousTime, 1.f);
+            EXPECT_FLOAT_EQ(physics.captureNativeBlendTimeCache().mKeyTime, 0.f);
+            // The scheduler cache is shared across physical owners. The native
+            // cache identity omits reverse, so this second actor stays active.
+            physics.addActor(duplicate, path);
+            auto reverseGraph = graph;
+            reverseGraph.mBodies[0].mBlendController->mRecord = 79;
+            reverseGraph.mBodies[0].mBlendController->mFlags = 0x1d;
+            physics.addActorRagdoll(duplicate, reverseGraph, 1.f, poses,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
+            const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> reverseTargets{{{79, sceneTarget}}};
+            ASSERT_EQ(physics.updateActorRagdollBlendControllers(duplicate, reverseTargets, 1.f, 1.f / 120, 0).size(), 1u);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(duplicate)[0].mState.mTiming.mFlags, 0x1d);
+            EXPECT_TRUE(physics.getActor(duplicate)->isCollisionSuspended());
+            physics.remove(duplicate);
             physics.removeActorRagdoll(ptr);
             physics.removeActorRagdoll(ptr);
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));

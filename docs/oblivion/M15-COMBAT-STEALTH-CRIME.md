@@ -16150,3 +16150,39 @@ ownership and complete physical save/restart remain open. Retained BodyT/floor
 failures and S5-S14 remain open. Next: expose owned controller capture/update
 through the existing worker barrier and shared scheduler cache, test all0/1/2
 worker configurations, then wire the actual World lifecycle.
+
+
+### Checkpoint198: public physical-controller scheduler forwarding
+
+Checkpoint197 committed as `84261feffa078d05707f2b636168579ef69ef44f`,
+194 isolated commits with exact-byte/fresh-clone verification. Bundle175 SHA256
+`c6d8bc2f95cb532938d4ead83a4e14f0e73596d609a475f84ace3bb7068727b3`.
+PhysicsSystem now exposes owned controller/current-blend captures and updates
+through PhysicsTaskScheduler. Every operation waits for movement workers and
+uses the existing collision-world lock policy. The scheduler owns one shared
+physical-controller time cache across actors, initialized before workers start;
+its lifetime is independent of individual ragdoll removal. This is the shared
+cache for these owned physical controllers, not yet all renderer NiTimeControllers.
+Update passes the reviewed native gravity constant and leaves controller/target/
+cache publication to the atomic component owner.
+
+The existing public physics ownership integration case now checks owned authored
+keys/timing, capture identity, stale-pointer rejection, actual KEY publication,
+continued capsule suspension, bad-pose rollback of physical/clock/cache state,
+and shared reverse-cache behavior across two physical actors. The case runs
+through all0/1/2 worker configurations. Baseline01 fails its first0-worker size
+assertion against the placeholder; the fatal assertion does not exercise later
+worker configurations in that baseline. Filtered normal/sanitized01 each pass
+the aggregate case including all three configurations. Final normal/sanitized02
+each rebuild openmw/openmw-tests/esmtool and pass all898 engine tests, complete
+inventories with no failures/skips; tested fingerprint `ca22708e6af94d814c4851c58bdd91d754d95fd0ef9e1a691b39f32756321c79`. ASan leak checks
+remain disabled; UBSan halts. Components are unchanged since checkpoint197's
+2,308-test normal/sanitized checks, so those and Python checks are not repeated.
+
+No stage closes. Public forwarding now reaches the live component owner, but
+normal World/renderer begin-update-end, generated reaction/velocity-controller
+ownership, the full renderer clock producer/cache scope, and complete physical
+save/restart remain open. Retained BodyT/floor failures and S5-S14 remain open.
+Next: connect renderer target sampling and physics publication with lifecycle
+ownership, starting with a rollback-tested binding rather than assuming a
+headless public API test establishes normal gameplay acceptance.

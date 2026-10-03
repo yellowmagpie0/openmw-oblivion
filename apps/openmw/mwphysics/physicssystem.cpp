@@ -844,6 +844,30 @@ namespace MWPhysics
         return mTaskScheduler->updateActorRagdollBlends(ptr, updates, preparedFrameSeconds, rawUpdateSelector);
     }
 
+    std::vector<NifBullet::RagdollNativeBlendControllerState> PhysicsSystem::captureActorRagdollBlendControllers(
+        const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdollBlendControllers(ptr);
+    }
+
+    std::vector<NifBullet::RagdollNativeBlendState> PhysicsSystem::captureActorRagdollBlendStates(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdollBlendStates(ptr);
+    }
+
+    ESM4::PhysicalBlendTimeCache PhysicsSystem::captureNativeBlendTimeCache()
+    {
+        return mTaskScheduler->captureNativeBlendTimeCache();
+    }
+
+    std::vector<NifBullet::RagdollNativeBlendPublication> PhysicsSystem::updateActorRagdollBlendControllers(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendControllerTarget> targets,
+        float inputTime, float preparedFrameSeconds, std::uint32_t rawUpdateSelector)
+    {
+        return mTaskScheduler->updateActorRagdollBlendControllers(ptr, targets, inputTime,
+            preparedFrameSeconds, rawUpdateSelector);
+    }
+
     void PhysicsSystem::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {
