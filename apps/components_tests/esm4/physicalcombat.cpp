@@ -3419,3 +3419,55 @@ TEST(ESM4PhysicalFrame, CapsOverflowingAccumulationAndRejectsOverflowingSmoothin
     EXPECT_THROW(ESM4::preparePhysicalFrame(clock, overflow, 2.f, 10, false), std::invalid_argument);
     EXPECT_EQ(clock, previous);
 }
+
+TEST(ESM4PhysicalBlendDriveParameters, UsesPreparedFrameAndNativeZeroFallback)
+{
+    // Actual original88F656..88F687 after original flag selection.
+    for (float frame : {0.f, -0.f})
+    {
+        const auto result = ESM4::resolvePhysicalBlendDriveParameters(frame, -.5f, 0);
+        EXPECT_EQ(result.mInverseFrameSeconds, 1.f);
+        EXPECT_EQ(result.mVelocityGain, -.5f);
+    }
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDriveParameters(.5f, 0.f, 0).mInverseFrameSeconds, 2.f);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendDriveParameters(2.f, 0.f, 0).mInverseFrameSeconds, .5f);
+    const auto step = ESM4::resolvePhysicalBlendDriveParameters(.01666666753590107f, .5f, 0);
+    EXPECT_EQ(step.mInverseFrameSeconds, 59.999996185302734f);
+    EXPECT_EQ(step.mVelocityGain, .5f);
+}
+
+TEST(ESM4PhysicalBlendDriveParameters, OverridesOnlyFlag100AndKeepsOtherGainsUnclamped)
+{
+    for (std::uint16_t flags : {0x100, 0xffff})
+    {
+        const auto result = ESM4::resolvePhysicalBlendDriveParameters(.5f,
+            -std::numeric_limits<float>::max(), flags);
+        EXPECT_EQ(result.mInverseFrameSeconds, 2.f);
+        EXPECT_EQ(result.mVelocityGain, 1.f);
+    }
+    for (std::uint16_t flags : {0, 1, 0xff, 0x8800})
+    {
+        EXPECT_EQ(ESM4::resolvePhysicalBlendDriveParameters(.5f, 1.5f, flags).mVelocityGain, 1.5f);
+        EXPECT_EQ(ESM4::resolvePhysicalBlendDriveParameters(.5f, -.5f, flags).mVelocityGain, -.5f);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(
+            ESM4::resolvePhysicalBlendDriveParameters(.5f, -0.f, flags).mVelocityGain), 0x80000000u);
+    }
+}
+
+TEST(ESM4PhysicalBlendDriveParameters, RejectsInvalidFrameGainAndUnrepresentableInverse)
+{
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    const float infinity = std::numeric_limits<float>::infinity();
+    for (float frame : {-1.f, nan, infinity, std::numeric_limits<float>::denorm_min()})
+    {
+        EXPECT_THROW(ESM4::resolvePhysicalBlendDriveParameters(frame, .5f, 0), std::invalid_argument);
+    }
+    for (float gain : {nan, infinity, -infinity})
+    {
+        EXPECT_THROW(ESM4::resolvePhysicalBlendDriveParameters(.5f, gain, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::resolvePhysicalBlendDriveParameters(.5f, gain, 0x100), std::invalid_argument);
+    }
+    const auto minimum = ESM4::resolvePhysicalBlendDriveParameters(std::numeric_limits<float>::min(), .5f, 0);
+    EXPECT_TRUE(std::isfinite(minimum.mInverseFrameSeconds));
+    EXPECT_EQ(minimum.mInverseFrameSeconds, 0x1p126f);
+}

@@ -13948,3 +13948,54 @@ stock floor continuation remain open. This arithmetic/clock helper advances
 no bodies and closes no normal-input/restart acceptance gate. S4 remains
 in progress. Next: independently verified inverse-frame/effective gain
 selection, then actual controller and physical/render ownership wiring.
+
+
+### Checkpoint160: native driven-route inverse time and effective velocity gain
+
+Checkpoint159 committed as `5d83c9293cb427f44bc0041ee0a76eeb32b8ff12`,
+156 isolated commits with exact-byte/fresh-clone proof. New
+resolvePhysicalBlendDriveParameters consumes an already prepared frame on an
+already selected PoseAndVelocity route. Either signed zero uses inverse1;
+nonzero frames divide then store binary32. Flag0x100 overrides velocity gain
+to1. Other finite gains remain unclamped, including signed zero/extrapolation.
+Nonfinite/negative frame, nonfinite gain and nonrepresentable positive inverse
+reject before publication. This selects no route or controller and does not
+prepare a frame, write a scene pose or publish body velocities.
+
+Original SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+S4/native-ragdoll-drive-parameters-oracle-01 executes1,200 cases: original
+88F3FE..88F484 selects the flag byte; original88F656..88F687 stores inverse
+and effective gain. Explicit jump over scene/motion publication separates
+the prefixes; no game/OS call stubs. Synthetic prepared frame and finite blend
+fields use hierarchy.5/raw selector0, which actually selects driven route.
+Source/corpus SHA256:
+`6c86603edf777a50df380a84411929b41b701bbc34e74b275cb4bd0157ab256d`,
+`5d5425ee263fbe3310ac064c5ed4f55f12bb8d763de467aea4d6d2b20b3d4a69`.
+Expanded oracle02 covers11,600 cases: adjacent inverse-overflow boundaries,
+100 seeded positive finite raw frame patterns, ten finite gains, five flag
+words and two x87 precision words. Native nonrepresentable inverses remain
+in the corpus as explicitly unsupported publication results. Source/corpus:
+`374e6e9e176fba9bf7d0013968c09c37d8faacf0aeb8d211eab69c431832244e`,
+`5d67dde69a8b335b0b5c238d2e9f44bf2ef27174b48e00e7a73493a9c3a36850`.
+
+Actual C++ S4/native-ragdoll-drive-parameters-compare-{normal,sanitized}-01
+each match11,300 representable outputs exactly and reject all300 unrepresentable
+inverse inputs. Always-inverse1/ignored-flag/clamped-gain/zero-inverse-zero
+controls reject11,000/4,068/4,068/200 cases. Comparator/driver SHA256:
+`d26296ea6e7ba56f02927c11319bf487c0b77a1fc84390517ef4b616f2d17e39`,
+`e44756c680550194653aababbe3df54dd72a859aa5beb79fd0410585f347415a`.
+Three new tests cover the frame/zero branches, only-flag100 override and
+unclamped/signed-zero gains, invalid inputs and finite-versus-overflow inverse.
+Baseline01 retains three failed tests against the missing rule.
+
+Full S4/native-ragdoll-drive-parameters-{normal,sanitized}-01 each pass2,188
+component and851 engine tests, complete inventories, zero failures/skips;
+openmw/esmtool rebuilt. Stable tested fingerprint
+`066664d4c10d53c7e01dcda754b570377b2e9ea6741744a7a9402a593f10e973`.
+ASan leaks disabled; UBSan halts. Python unchanged. Actual controller/frame
+caller and winning settings, scheduler clock/save ownership, body motion
+switching, animated renderer blending, full World/render/save, cross-owner
+contacts and stock floor continuation remain open. No normal-input/restart
+acceptance gate is closed. Next: animate/capture targets while physical poses
+own the renderer, without a second scene traversal or overwritten skinning.

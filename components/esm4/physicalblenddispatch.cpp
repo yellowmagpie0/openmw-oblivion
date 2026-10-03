@@ -5,6 +5,20 @@
 
 namespace ESM4
 {
+    PhysicalBlendDriveParameters resolvePhysicalBlendDriveParameters(
+        float preparedFrameSeconds, float velocityGain, std::uint16_t collisionFlags)
+    {
+        if (!std::isfinite(preparedFrameSeconds) || preparedFrameSeconds < 0.f || !std::isfinite(velocityGain))
+            throw std::invalid_argument("Invalid native physical drive frame/gain");
+        // Original88F656 treats either signed zero as inverse1. A nonzero
+        // prepared frame is divided on x87 and then stored as binary32.
+        const float inverse = preparedFrameSeconds == 0.f
+            ? 1.f : static_cast<float>(1.0 / double(preparedFrameSeconds));
+        if (!std::isfinite(inverse) || inverse <= 0.f)
+            throw std::invalid_argument("Nonrepresentable native physical drive inverse time");
+        return {inverse, (collisionFlags & 0x100) ? 1.f : velocityGain};
+    }
+
     std::optional<PhysicalBlendDispatch> resolvePhysicalBlendDispatch(
         float hierarchyGain, float velocityGain, std::uint16_t collisionFlags, std::uint32_t rawUpdateSelector)
     {

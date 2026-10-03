@@ -26,6 +26,19 @@ namespace ESM4
         friend bool operator==(const PhysicalBlendDispatch&, const PhysicalBlendDispatch&) = default;
     };
 
+    struct PhysicalBlendDriveParameters
+    {
+        float mInverseFrameSeconds;
+        float mVelocityGain;
+    };
+
+    // For an already selected PoseAndVelocity route. Native zero-frame
+    // inverse is1; flag0x100 overrides the finite, unclamped velocity gain.
+    // Reject nonrepresentable inverse time before a body can be published.
+    // Does not select a route, prepare a frame or write a scene/body pose.
+    PhysicalBlendDriveParameters resolvePhysicalBlendDriveParameters(
+        float preparedFrameSeconds, float velocityGain, std::uint16_t collisionFlags);
+
     // Original88F3FE selects motion/route before publishing either. An absent
     // result skips this update. Gains are finite but not clamped. The raw
     // selector remains uninterpreted; only original values1/2 are special.
