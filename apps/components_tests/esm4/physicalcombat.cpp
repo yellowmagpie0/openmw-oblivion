@@ -3939,3 +3939,19 @@ TEST(ESM4PhysicalCombat, BlendControllerIneligiblePathsIgnoreUnusedTimeAndTiming
     EXPECT_THROW(ESM4::advancePhysicalBlendController(state, {}, true,
         ESM4::PhysicalBlendGains{1.f, 1.f}, true, .1f), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, BlendControllerSetupStateResetsOnlyWithKeyReset)
+{
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {0xcd, 1.f, 0.f, 0.f, .25f};
+    state.mKeys = {{0.f, {1.f, 1.f}}, {.25f, {0.f, 0.f}}};
+    state.mClock = {0.f, 0.f, 0.f};
+    state.mSetupState = 2;
+    EXPECT_EQ(ESM4::advancePhysicalBlendController(state, {}, true,
+        ESM4::PhysicalBlendGains{.9f, .8f}, false, .25f).mController.mSetupState, 0u);
+    state.mTiming.mFlags = 0x8d;
+    EXPECT_EQ(ESM4::advancePhysicalBlendController(state, {}, true,
+        ESM4::PhysicalBlendGains{.9f, .8f}, false, .25f).mController.mSetupState, 2u);
+    EXPECT_EQ(ESM4::advancePhysicalBlendController(state, {}, false,
+        ESM4::PhysicalBlendGains{.9f, .8f}, false, .25f).mController.mSetupState, 2u);
+}

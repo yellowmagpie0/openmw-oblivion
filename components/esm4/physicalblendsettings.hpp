@@ -76,6 +76,8 @@ namespace ESM4
         PhysicalBlendClock mClock;
         std::uint32_t mCursor = 0;
         PhysicalBlendGains mCachedGains{-1.f, -1.f};
+        // Original controller+0x60: reset0, selected knockdown setup2.
+        std::uint32_t mSetupState = 0;
     };
 
     struct PhysicalBlendControllerUpdate

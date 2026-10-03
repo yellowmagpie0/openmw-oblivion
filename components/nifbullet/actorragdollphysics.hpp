@@ -154,6 +154,18 @@ namespace NifBullet
         std::uint32_t mRecord;
         std::optional<std::uint32_t> mTargetNode;
         ESM4::PhysicalBlendControllerState mState;
+        std::uint32_t mAttachedNode = 0;
+    };
+
+    struct RagdollNativeKnockdownBlendRequest
+    {
+        std::uint32_t mNodeRecord;
+        float mDuration;
+    };
+
+    enum class RagdollNativeKnockdownBlendDisposition
+    {
+        Started, MissingBlend, MissingController, Disabled,
     };
 
     struct RagdollNativeBlendControllerTarget
@@ -206,6 +218,13 @@ namespace NifBullet
         std::vector<RagdollNativeBlendPublication> updateNativeBlends(
             std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ);
+        // Normal selected-controller setup only. Duration is resolved by the
+        // caller from the native body filter. Stage the complete request batch;
+        // read attachment-node gains independently of controller target identity.
+        // Missing controllers are skipped. Motion/velocity effects, immediate
+        // setup, recursive traversal and shared frame clocks remain with caller.
+        std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownBlends(
+            std::span<const RagdollNativeKnockdownBlendRequest> requests);
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
         // Own authored controllers and current target gains. Resolve each

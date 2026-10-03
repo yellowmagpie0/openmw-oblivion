@@ -103,6 +103,7 @@ namespace ESM4
             {
                 next.mKeys.clear();
                 next.mCachedGains = {-1.f, -1.f};
+                next.mSetupState = 0;
             }
             result.mRemoveVelocityController = (next.mTiming.mFlags & 0x80) && hasVelocityController;
             if ((next.mTiming.mFlags & 0x100) && next.mCachedGains.mHierarchy >= 0.f)

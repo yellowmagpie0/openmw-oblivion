@@ -16341,3 +16341,71 @@ save/restart still need implementation/verification before that orchestration
 can be accepted. Retained BodyT/floor failures and S5-S14 remain open. Next:
 resolve/install owned generated reaction controllers and connect the actual
 World begin-update-end callers using independently admitted timing and placement.
+
+
+### Checkpoint202: owned selected knockdown curve setup and native setup state
+
+Checkpoint201 committed as `df4ab6653f932473bffdbef50b8f2eb9fcee228d`,
+198 isolated commits with exact-byte/fresh-clone proof. Bundle179 SHA256
+`239d1f8a0dae2e7715db17f54c4b1d083e937a3612c006e352a804616a76ecb0`.
+ActorRagdollPhysics now owns each selected controller's attachment-node identity
+separately from its target node. prepareNativeKnockdownBlends stages a complete
+caller-resolved node/duration batch and configures existing selected controllers
+from the attachment node's current gains. Missing blend/controller and negative
+duration skip setup; missing controllers are not invented. Unknown/ambiguous or
+duplicate nodes and nonfinite used durations reject without publishing an earlier
+curve. Unused durations on missing paths remain ignored. Zero duration retains
+both keys. Setup owns keys {0,current gains},{duration,0/0}, frequency1, phase0,
+explicit start0/stopduration, native flag mask plus Start, sentinel clock reset
+with elapsed retained, cursor0, cache gains-1 and raw controller+60 state2.
+Full controller finish resets the raw setup state to0 only when resetting keys.
+
+This implements the existing-controller normal setup boundary, not whole8AB440:
+physical motion, velocity-controller creation/removal, immediate setup, special
+nonblend parts and recursive traversal remain open. The caller must resolve the
+duration from the actual constructed native body filter; no unverified choice
+between raw NIF filter fields is introduced. Shared time-cache and body/gain/mode
+state are unchanged by setup. Actual updates still resolve controller target,
+which can differ from attachment or be absent.
+
+Independent original prefix8AB440 then full8AAD60 yields3,456 captures in576
+sequences over both x87 controls, null/self/other targets, attachment/blend
+presence, negative/zero/.25/1 durations, reverse/reset flags and warmed clocks.
+Actual RTTI lookup, allocation/key insertion, range updates, Start, clock,
+evaluator, reset/restore/Stop execute; Windows primitives and fresh key-buffer
+allocation/free are boundaries. Prefix stops before velocity/traversal/unsupported
+physical effects; requested motion0 fixture. Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, oracle source `15f52f6c1ed27c57d9ac5609e416225b9079cd641d8df3efd31c91f0198a5242`,
+corpus `b54d595a9969c351011e9d3b974291506199f26e219ef70e9027712deb92a0db`. Final normal/sanitized comparator02 each match
+all3,456 captures exactly, including both node gains, keys, bounds, frequency,
+phase, flags, clocks/cache/cursor and controller+60. Paired original observations
+and actual setup/finish markers reject six negative controls; no production
+outputs generate native expectations.
+
+The unmodified stock skeleton's independently decoded raw type table contains
+18 bhkBlendController instances. Parsed18-body/17-joint graph selects exactly
+those18; every controller targets its attachment node and initially owns an
+empty curve. Asset SHA256 `43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`. This resolves the previous
+uncertainty about controller generation for this stock asset: setup fills its
+existing curves; an absent blend controller is skipped by the original prefix.
+This content/metadata audit is not original-loader or game-lifecycle acceptance.
+
+Three initial regression tests fail against the placeholder. Final tests add
+owned warmed-clock setup, attachment/redirected-target distinction, zero-duration
+two-key retention, missing/disabled paths including unused malformed duration,
+absent target, late malformed/duplicate/unknown batch rollback, and setup-state
+finish reset/preservation. Normal/sanitized01 each execute2,321 component tests
+and fail one mistaken test expectation: native preserves reverse bit0x10, so
+setup from0x1d yields0xdd, not0xcd. Comparator01 already matched all original
+captures; assertion corrected without changing the implementation. Those failed
+runs stop before engine mode and remain retained. Final normal/sanitized02 each
+pass all2,321 component and899 engine tests, exact inventories without failures
+or skips; fingerprint `4f62f58cb719894eee4c65761eedfe554f6c2ea8ed84bec538939726a628b0e4`. ASan leak checks disabled; UBSan halts. Python is
+unchanged and was not repeated.
+
+No stage closes. Automatic World callers, public setup worker barrier, velocity
+controllers, actual timing/traversal producers, initial NPC morphology, full
+physical save/restart, retained BodyT/floor failures and S5-S14 remain open.
+Next: expose selected-controller setup through the existing public scheduler
+barrier and verify it against live capsule/body ownership with0/1/2 workers,
+then connect admitted setup/update/cleanup boundaries to World reactions.
