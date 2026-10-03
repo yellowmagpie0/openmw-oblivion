@@ -2608,3 +2608,62 @@ namespace
         EXPECT_EQ(cache.mCycle, 0xffffffffu);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendFrameSceneFailureRollsBackControllerCacheAndPhysicalState)
+    {
+        auto& body = mGraph.mBodies[0];
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalBlendTimeCache cache;
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{8, osg::Matrixf::identity()}}};
+        const std::array<std::uint32_t, 1> order{{78}};
+        unsigned calls = 0;
+        const auto reject = [&](std::span<const NifBullet::RagdollNativeBlendPublication> publications) {
+            ++calls;
+            EXPECT_EQ(publications.size(), 1u);
+            EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+            EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+            EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime,
+                -std::numeric_limits<float>::max());
+            throw std::runtime_error("invalid renderer publication");
+        };
+        EXPECT_THROW(actor.updateNativeBlendFrame(bones, order, 1.f, cache, 1.f / 120, 0, 0.f, reject),
+            std::runtime_error);
+        EXPECT_EQ(calls, 1u);
+        EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendStates()[0].mGains.mHierarchy, .9f);
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mCachedGains.mHierarchy, -1.f);
+        EXPECT_EQ(cache.mCycle, 0xffffffffu);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeBlendFrameSceneRunsOnceAfterPreparationAndBeforePhysicalCommit)
+    {
+        auto& body = mGraph.mBodies[0];
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, 1.f, 1.f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalBlendTimeCache cache;
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{8, osg::Matrixf::identity()}}};
+        unsigned calls = 0;
+        const auto publish = [&](std::span<const NifBullet::RagdollNativeBlendPublication> publications) {
+            ++calls;
+            EXPECT_EQ(publications.size(), 1u);
+            EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+            EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        };
+        ASSERT_EQ(actor.updateNativeBlendFrame(bones, {}, 1.f, cache, 1.f / 120, 0, 0.f, publish).size(), 1u);
+        EXPECT_EQ(calls, 1u);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(0, 0, 0));
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bad{{{8, osg::Matrixf::scale(2, 2, 2)}}};
+        EXPECT_THROW(actor.updateNativeBlendFrame(bad, {}, 1.f, cache, 1.f / 120, 0, 0.f, publish),
+            std::invalid_argument);
+        EXPECT_EQ(calls, 1u);
+    }
+}

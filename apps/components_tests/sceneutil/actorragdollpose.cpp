@@ -507,3 +507,63 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPoseTest, NativeBlendFrameScenePublishesRendererAndRejectsInvalidProjectionBeforePhysics)
+    {
+        for (auto& body : mGraph.mBodies)
+        {
+            body.mMass = 2;
+            body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mShape = NifBullet::RagdollSphere{.5f};
+            body.mBlend = NifBullet::RagdollBlendDefinition{body.mRecord + 100, 8, 0.f, 0.f};
+        }
+        mGraph.mBodies[1].mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, 0.f, 0.f}}};
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto bones = binding.captureWorldBones(mObjectWorld);
+        const auto physical = NifBullet::ragdollBodyWorldPoses(mGraph, desired());
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher(&configuration);
+        btDbvtBroadphase broadphase;
+        btSequentialImpulseConstraintSolver solver;
+        btDiscreteDynamicsWorld world(&dispatcher, &broadphase, &solver, &configuration);
+        NifBullet::ActorRagdollPhysics actor(mGraph, world, NifBullet::RagdollNativeLengthScale, physical, 1, -1);
+        const std::array<std::uint32_t, 1> order{{78}};
+        ESM4::PhysicalBlendTimeCache cache;
+        unsigned calls = 0;
+        bool reject = true;
+        const auto publish = [&](std::span<const NifBullet::RagdollNativeBlendPublication> publications) {
+            ++calls;
+            auto scene = bones;
+            for (const auto& publication : publications)
+                if (publication.mSceneTarget)
+                    for (std::size_t i = 0; i < mGraph.mBodies.size(); ++i)
+                        if (mGraph.mBodies[i].mRecord == publication.mRecord)
+                            scene[i].mPose = *publication.mSceneTarget;
+            if (reject)
+                scene.back().mPose = osg::Matrixf::scale(2, 2, 2);
+            binding.applyWorldBones(scene, mObjectWorld);
+        };
+        const auto oldPelvis = mPelvis->getMatrix(), oldHand = mHand->getMatrix();
+        EXPECT_THROW(actor.updateNativeBlendFrame(bones, order, 1.f, cache, 1.f / 120, 0, 0.f, publish),
+            std::invalid_argument);
+        EXPECT_EQ(calls, 1u);
+        EXPECT_EQ(mPelvis->getMatrix(), oldPelvis);
+        EXPECT_EQ(mHand->getMatrix(), oldHand);
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime,
+            -std::numeric_limits<float>::max());
+        EXPECT_EQ(cache.mCycle, 0xffffffffu);
+        EXPECT_EQ(actor.capture()[0].mPose, physical[0]);
+        reject = false;
+        ASSERT_EQ(actor.updateNativeBlendFrame(bones, order, 1.f, cache, 1.f / 120, 0, 0.f, publish).size(), 2u);
+        EXPECT_EQ(calls, 2u);
+        const auto rendered = binding.captureWorldBones(mObjectWorld);
+        const auto expected = desired();
+        for (std::size_t i = 0; i < rendered.size(); ++i)
+            EXPECT_LT((rendered[i].mPose.getTrans() - expected[i].mPose.getTrans()).length(), .001f);
+        EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime, 1.f);
+        EXPECT_EQ(cache.mCycle, 2u);
+    }
+}

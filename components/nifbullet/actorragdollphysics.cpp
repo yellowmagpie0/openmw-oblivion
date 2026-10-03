@@ -1174,6 +1174,14 @@ namespace NifBullet
         std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
         std::uint32_t rawUpdateSelector, float nativeGravityZ)
     {
+        return updateNativeBlendsImpl(updates, preparedFrameSeconds, rawUpdateSelector, nativeGravityZ, {});
+    }
+
+    std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendsImpl(
+        std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ,
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
+    {
         require(std::isfinite(nativeGravityZ), "invalid native blend gravity");
         ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
         struct Pending
@@ -1279,6 +1287,11 @@ namespace NifBullet
             pending.push_back(change);
             result.push_back(publication);
         }
+        // Atomic renderer validation/publication runs only after the complete
+        // physical batch has been prepared. No native computations remain after
+        // the callback succeeds; controller metadata is already staged too.
+        if (publishScene)
+            publishScene(result);
         // All admission, allocation and native computations precede publication.
         for (const auto& change : pending)
         {
@@ -1323,14 +1336,15 @@ namespace NifBullet
         std::uint32_t rawUpdateSelector, float nativeGravityZ)
     {
         return updateNativeBlendControllersImpl(targets, {}, inputTime, sharedTimeCache,
-            preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
+            preparedFrameSeconds, rawUpdateSelector, nativeGravityZ, {});
     }
 
     std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendControllersImpl(
         std::span<const RagdollNativeBlendControllerTarget> targets,
         std::span<const RagdollBoneWorldPose> completeBones, float inputTime,
         ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
-        std::uint32_t rawUpdateSelector, float nativeGravityZ)
+        std::uint32_t rawUpdateSelector, float nativeGravityZ,
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
     {
         require(std::isfinite(nativeGravityZ), "invalid owned native controller gravity");
         ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
@@ -1382,7 +1396,8 @@ namespace NifBullet
         }
         // The existing body bridge stages every computation before any body
         // mutation. All controller/target/cache allocations are already done.
-        auto publications = updateNativeBlends(bodyUpdates, preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
+        auto publications = updateNativeBlendsImpl(bodyUpdates, preparedFrameSeconds,
+            rawUpdateSelector, nativeGravityZ, publishScene);
         for (const auto& publication : publications)
             for (auto& target : nextTargets)
                 if (target.mState.mBodyRecord == publication.mRecord)
@@ -1396,7 +1411,8 @@ namespace NifBullet
     std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendFrame(
         std::span<const RagdollBoneWorldPose> bones, std::span<const std::uint32_t> controllerOrder,
         float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
-        std::uint32_t rawUpdateSelector, float nativeGravityZ)
+        std::uint32_t rawUpdateSelector, float nativeGravityZ,
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
     {
         require(bones.size() == mImpl->mBodies.size(), "incomplete native blend frame bones");
         require(controllerOrder.size() == mImpl->mBlendControllers.size(),
@@ -1421,7 +1437,7 @@ namespace NifBullet
                 : osg::Matrixf::identity()});
         }
         return updateNativeBlendControllersImpl(requests, bones, inputTime, sharedTimeCache,
-            preparedFrameSeconds, rawUpdateSelector, nativeGravityZ);
+            preparedFrameSeconds, rawUpdateSelector, nativeGravityZ, publishScene);
     }
 
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)

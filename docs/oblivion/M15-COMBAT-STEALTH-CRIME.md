@@ -16233,3 +16233,56 @@ ownership, full renderer clock scope and complete physical save/restart remain
 open, alongside retained BodyT/floor failures and S5-S14. Next: expose full frames
 at the worker barrier and test a joined renderer/physical binding with begin
 failure cleanup before adding automatic World lifecycle calls.
+
+
+### Checkpoint200: renderer publication before physical commit
+
+Checkpoint199 committed as `a7140028ee1007cad5c5cb025e08a7e654105cce`,
+196 isolated commits with exact-byte/fresh-clone verification. Bundle177 SHA256
+`8c7a1bf409f57fc556814950deee0b04122fff0f3cc9f5c8ffb7f2521215add2`.
+Complete native blend frames now support an optional atomic renderer publication
+hook. It receives the borrowed prepared body publications exactly once after all
+physical computations and owned controller/target/cache staging, before any
+physical body or owned metadata changes. A throwing callback leaves the physical
+owner and shared cache unchanged. The callback must publish its own scene batch
+atomically, must not mutate the physical owner or reenter scheduler operations,
+and must not retain the publication span. The existing renderer binding validates
+and projects its whole batch before writing. Scheduler/PhysicsSystem forwarding
+now exposes complete frames and their hooks under the existing worker barrier/
+collision-world lock, retaining the cross-actor clock cache and reviewed gravity.
+This provides a joined publication boundary; automatic World lifecycle is still
+absent, and caller-supplied traversal/time are not claimed as normal renderer
+clock/traversal producers.
+
+Three component cases all fail baseline01 when the hook is ignored: rejected
+scene publication incorrectly commits physical/controller state, no callback is
+observed before physical commit, and the joined SceneUtil renderer binding is not
+updated. The component failure stops that helper before its engine mode, so a
+separate scheduler baseline01 rebuilds/runs the public ownership case and fails
+its first0-worker full-frame size assertion. No later worker baseline coverage is
+claimed. Final tests cover once-only preparation/publication order, bad physical
+targets not invoking the scene callback, callback failure retaining pose/mode/
+gain/cache/clock state, complete real renderer projection rejection without
+partial node writes, and successful retry rendering desired physical poses.
+The public integration case exercises full-frame forwarding, scene callback,
+stale actor rejection, callback-failure rollback and capsule suspension through
+all0/1/2 worker configurations.
+
+Final normal/sanitized01 each rebuild openmw/openmw-tests/esmtool and pass2,316
+component and898 engine tests, complete matching inventories with no failures/
+skips; fingerprint `7eeac77fbb8fceacab3695d4fd01dc15fb30e79730a56b1c29834c7104869d8f`. ASan leak checks disabled; UBSan halts. Baseline's new
+GTest dangling-else warning is fixed with explicit braces before the final builds.
+Python is unchanged and not repeated. Both updated comparators execute768
+successful publication hooks and192 owner lifetimes over the independently
+captured checkpoint197 corpus;15,816 exact owned gain/key/bound/clock/cache fields
+match per build. Corpus SHA256 `bcc0c03bc2cca3972c39b09cab202259756229be358fa85f8396663bb240d656`; comparator source/driver
+`7de2c6b3c1ba3ab54acb4a67e238c88a7ec563f39b7b309b0d719d5c5a22203e`, `faa83b4e20f138b789c68e0a29ae914e012f1d4046f63cd3940d7c01e5ae6c73`. No original physical contacts,
+normal scene traversal timing, World gameplay or full save/restart comparison is
+claimed by these metadata comparisons or the synthetic joined renderer fixture.
+
+No stage closes. The renderer/physical frame publication boundary and public
+forwarding are now joined. Next: bind renderer and physical lifetimes with
+failure cleanup at begin, then connect actual World reaction begin/update/end.
+Generated reaction/velocity-controller ownership, actual clock/traversal
+producers, initial NPC morphology and full physical persistence remain open;
+retained BodyT/floor failures and S5-S14 remain open.

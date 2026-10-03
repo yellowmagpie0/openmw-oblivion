@@ -7,6 +7,7 @@
 
 #include <components/esm4/physicalblendsettings.hpp>
 
+#include <functional>
 #include <memory>
 #include <span>
 
@@ -221,10 +222,16 @@ namespace NifBullet
         // supplies each owned controller once in its traversal order. Advance
         // controllers before publishing every blend body, including bodies
         // without controllers. Preserve supplied bone order for publication.
+        // Once all native computations and owned metadata are staged, invoke
+        // optional atomic scene publication before changing bodies/clocks/cache.
+        // A throwing callback leaves this owner unchanged. The callback must
+        // not mutate this owner, reenter scheduler operations, or retain the
+        // borrowed publication span.
         std::vector<RagdollNativeBlendPublication> updateNativeBlendFrame(
             std::span<const RagdollBoneWorldPose> bones, std::span<const std::uint32_t> controllerOrder,
             float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
-            std::uint32_t rawUpdateSelector, float nativeGravityZ);
+            std::uint32_t rawUpdateSelector, float nativeGravityZ,
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
         void applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint);
         // Original sphere-motion velocity damping; caller owns gravity/force
         // composition and the serial step boundary. Bullet damping stays zero.
@@ -247,11 +254,16 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
+        std::vector<RagdollNativeBlendPublication> updateNativeBlendsImpl(
+            std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ,
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene);
         std::vector<RagdollNativeBlendPublication> updateNativeBlendControllersImpl(
             std::span<const RagdollNativeBlendControllerTarget> targets,
             std::span<const RagdollBoneWorldPose> completeBones, float inputTime,
             ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
-            std::uint32_t rawUpdateSelector, float nativeGravityZ);
+            std::uint32_t rawUpdateSelector, float nativeGravityZ,
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

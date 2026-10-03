@@ -427,6 +427,31 @@ namespace
             EXPECT_FLOAT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mClock.mPreviousTime, 1.f);
             EXPECT_FLOAT_EQ(physics.captureActorRagdollBlendStates(ptr)[0].mGains.mHierarchy, 1.f);
             EXPECT_EQ(physics.captureNativeBlendTimeCache().mCycle, 2u);
+            const std::array<NifBullet::RagdollBoneWorldPose, 1> frameBones{{{8, sceneTarget}}};
+            const std::array<std::uint32_t, 1> frameOrder{{78}};
+            unsigned scenePublications = 0;
+            const auto publishScene = [&](std::span<const NifBullet::RagdollNativeBlendPublication> publications) {
+                ++scenePublications;
+                EXPECT_EQ(publications.size(), 1u);
+                if (!publications.empty())
+                {
+                    EXPECT_EQ(publications[0].mRecord, 12u);
+                }
+            };
+            ASSERT_EQ(physics.updateActorRagdollBlendFrame(ptr, frameBones, frameOrder,
+                1.f, 1.f / 120, 0, publishScene).size(), 1u);
+            EXPECT_EQ(scenePublications, 1u);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_THROW(physics.updateActorRagdollBlendFrame(previous, frameBones, frameOrder,
+                1.f, 1.f / 120, 0, publishScene), std::invalid_argument);
+            EXPECT_EQ(scenePublications, 1u);
+            const auto beforeFramePose = physics.captureActorRagdoll(ptr)[0].mPose;
+            EXPECT_THROW(physics.updateActorRagdollBlendFrame(ptr, frameBones, frameOrder,
+                1.125f, 1.f / 120, 0,
+                [](auto) { throw std::runtime_error("scene publication rejected"); }), std::runtime_error);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeFramePose);
+            EXPECT_FLOAT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mClock.mPreviousTime, 1.f);
+            EXPECT_FLOAT_EQ(physics.captureNativeBlendTimeCache().mKeyTime, 0.f);
             const std::array<NifBullet::RagdollNativeBlendControllerTarget, 1> badOwnedTargets{{
                 {78, osg::Matrixf::scale(2, 2, 2)}}};
             const auto beforeOwnedPose = physics.captureActorRagdoll(ptr)[0].mPose;
