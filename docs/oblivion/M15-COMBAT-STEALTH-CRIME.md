@@ -14816,3 +14816,61 @@ is retained in all three queued-worker integration cases.
 No stage closes. Next: actual World physical controller/renderer lifecycle,
 verified animation-root construction/scale admission, native keyframed stepping,
 clock/mode/flag persistence and stock-floor fresh-restart/gameplay acceptance.
+
+
+### Checkpoint174: preserve authored controller-sequence reaction-root identity
+
+Checkpoint173 committed as `a8d36ece5f8fd3ff2b6127abc240946a32882f5c`,
+170 isolated commits with exact-byte/fresh-clone proof. ControllerSequenceMetadata
+now retains NiControllerSequence.mAccumRootName verbatim. Loader publication,
+shallow-copy preservation and independent copy mutation are covered by the
+strengthened OriginalSequenceCoordinatesAndCopies regression. Baseline01
+retains its failure against an empty metadata field. Full sequence-root normal
+and sanitized01 each pass2,226 component/887 engine cases, complete inventories,
+zero failures/skips, rebuilding openmw/esmtool. Tested fingerprint `4e75cb689fdf45487c3aed935bff6cfaf098cc1ad3a12c053f03ccfb166bfa88`;
+ASan leak checks disabled, UBSan halts. Python sources unchanged and not rerun.
+
+The native root is NOT inferred from fileRoot0 or Actor+3C. Actual6545E0 calls
+actor virtual164: Character/Creature4D8370 selects process+17C for form50/51
+and process type0/1, otherwise actual empty ExtraData15 lookup; Player65D720
+first checks+5DC, then+5CC only when selector+588 is zero, then that fallback.
+Player fields stay opaque. Actor-animation-root-oracle01 runs960 cases through
+actual virtual dispatch/getters and, when animation exists, actual654803 entry
+gate using animation-object+8 plus full88FA30/88F200. No game-call replacement.
+Source/corpus SHA256 `74fee6c8dd517233dcb30983ee808817571021ee833831d6bcd2a8af92b682bb`, `08b473a94f5a181186305b8acb5bed5bc3a4c0cecc1433145d0de3e949ecfc20`.
+Eligibility, scene construction and scale remain outside that probe.
+
+Actor model loading4E3A21 calls475D80, which stores the model node in animation+4.
+The separate reaction root+8 is assigned at4744AA through471600. Full471600
+checks manager+6C, scans array slots through extent+46, chooses its first nonnull
+sequence, and returns sequence+60 even if that root is null. Later sequences
+are not a missing-root fallback; existing nonnull animation+8 is retained.
+Actual sequence binding6C9590 resolves its+5C name through manager+7C's palette
+virtual4C and stores+60. Sequence-root-oracle01 covers608 cases using that
+prefix, full original palette6C5430/map55E000/hash7DAED0/equality584D10/CRT98262D,
+complete471600 and actual lazy assignment prefix, no stubs. Matching is exact,
+including case, whitespace and empty strings; absent name preserves prior+60
+at this prefix. Source/corpus SHA256 `5be8f8e72c2f6a644c9d689a18eb780aa14bb72f36c47691ddc12dbd5e602e53`, `4696073fa853149259452c9ba2ed1e544de9e829c795609208770f0a7e08a912`.
+Registration separately fills a null name from manager target name6C5793;
+full binding success, palette population/duplicate names and actor runtime
+construction are not claimed by these prefix/declared-layout checks.
+
+Stock-sequence-byte-oracle01 independently decodes the pinned80-record,
+73-track idle KF's first sequence header: accumulation string at byte2869 is
+Bip01. KF SHA256 `d01bf09a3c703ae2f0f4c043abbe47dc1c0e6d3af0fedcf41ed9a50173bc17d5`, audit source `7d00435d101e0e3269b7c14044eb89a9abcd1404f7be1f3377e735647a21da77`.
+Both production stock-sequence normal/sanitized02 preserve that exact string
+and resolve the unique skeleton name to record3, then loadActorRagdollRootBlend
+selects node8/body12/blend13. Stock-sequence01 in both modes retains a harness
+layout failure: the existing loader informational line precedes the two probe
+outputs; runtime exited0. Corrected02 admits only that exact line, records it,
+validates all outputs and passes source/library hash guards. Full original
+stock-sequence-root-oracle01 independently verifies lookup from record3 on the
+previous production-parsed scene-layout boundary, with selected blend/body
+also matching independently audited raw blend bytes. Source/corpus SHA256
+`f91d3f472e784ab4a16ac4dd44bf41d9975082af819c3a9f1ebcc7173a05cda1`, `1d3c5fa75a0f82f73353e55806f9cf2f79749e63a3d09065765446ebbeb30bc8`. FileRoot0 is not substituted;
+the synthetic layout is not an independent NIF loader or live actor acceptance.
+
+No stage closes. Next: bind this authored root into renderer lifecycle using
+verified native palette/sequence ordering, then actual World controller/save
+ownership. Actor scale, keyframed stepping, native clock/mode/flag persistence,
+stock-floor fresh-restart and normal-gameplay acceptance remain open.

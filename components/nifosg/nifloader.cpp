@@ -500,6 +500,7 @@ namespace NifOsg
                         group = std::string(nif.getFilename().stem());
                     SceneUtil::ControllerSequenceMetadata metadata;
                     metadata.mGroup = group;
+                    metadata.mAccumRootName = embedded.mAccumRootName;
                     metadata.mStartTime = embedded.mStartTime;
                     metadata.mStopTime = embedded.mStopTime;
                     metadata.mFrequency = embedded.mFrequency;

@@ -66,6 +66,8 @@ namespace SceneUtil
     struct ControllerSequenceMetadata
     {
         std::string mGroup;
+        // Authored sequence root name, retained verbatim for native scene binding.
+        std::string mAccumRootName;
         float mStartTime = 0;
         float mStopTime = 0;
         float mFrequency = 1;
