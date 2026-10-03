@@ -6844,3 +6844,29 @@ and resumed binary states exactly match the previous manual-filter diagnostic;
 `manual-filter-equivalence.json` records all three hashes. It still fails the
 unchanged velocity bound at0.05434548854827881>0.05. This comparison verifies
 filter integration equivalence, not a passing restart or normal-input gate.
+
+
+### Checkpoint149 — keep capsule and physical ownership together on reference replacement (S4/S6 open)
+
+PhysicsSystem reference updates now rekey an admitted movement actor together
+with its scheduler-owned ragdoll when the live object identity changes. Empty
+and occupied actor destinations are rejected before physical rebinding. A new
+map slot is allocated first; a failed scheduler rebind removes that empty slot.
+Only then does the capsule move to its new key and update its Ptr. Existing
+standing-on/projectile owner updates continue afterward. Same-identity updates
+retain their previous path. Ordinary CellStore moves retain the live object
+identity; this repair concerns replacement references, not a changed cell-move
+implementation or a demonstrated normal-input corpse course.
+
+The actual PhysicsSystem/resource integration test now covers a distinct live
+replacement retaining the stable FormKey, rejected duplicate/empty owners,
+continued suspended capsule membership, new-owner graph/snapshot access, stale
+lookup/capture/removal isolation, idempotent rebinding, release/resume and final
+removal across workers0/1/2. Full capsule-rebind normal/sanitized01 pass842
+engine tests each, complete inventories, zero failures/skips, rebuilding openmw
+and esmtool. Stable tested fingerprint `b0122eaddba9eb37da8679f3f7671d3deb502f1d088c7cfd42facf08e7fbc6a6`.
+Component/Python sources are unchanged; checkpoint148 evidence is not relabeled
+as new runs. ASan leak checks disabled; UBSan halts on errors.
+
+World physical reaction admission/render/save, native controller recovery/group
+policy and floor-contact restart acceptance remain open.

@@ -537,7 +537,35 @@ namespace MWPhysics
 
     void PhysicsSystem::updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
     {
-        mTaskScheduler->updateActorRagdollPtr(old, updated);
+        const bool hasActor = mActors.contains(old.mRef);
+        if (hasActor && updated.isEmpty())
+            throw std::invalid_argument("empty updated movement actor owner");
+        const bool moveActor = hasActor && old.mRef != updated.mRef;
+        if (moveActor)
+        {
+            if (mObjects.contains(updated.mRef) || mTriggers.contains(updated.mRef)
+                || !mActors.try_emplace(updated.mRef).second)
+                throw std::invalid_argument("duplicate updated movement actor owner");
+        }
+        try
+        {
+            // Allocate the capsule destination before moving physical ownership.
+            // A failed scheduler rebind rolls back the empty destination slot.
+            mTaskScheduler->updateActorRagdollPtr(old, updated);
+        }
+        catch (...)
+        {
+            if (moveActor)
+                mActors.erase(updated.mRef);
+            throw;
+        }
+        if (moveActor)
+        {
+            auto actor = std::move(mActors.at(old.mRef));
+            mActors.erase(old.mRef);
+            mActors.at(updated.mRef) = std::move(actor);
+            mActors.at(updated.mRef)->updatePtr(updated);
+        }
         if (auto trigger = mTriggers.find(old.mRef); trigger != mTriggers.end())
             trigger->second->updatePtr(updated);
         if (auto foundObject = mObjects.find(old.mRef); foundObject != mObjects.end())

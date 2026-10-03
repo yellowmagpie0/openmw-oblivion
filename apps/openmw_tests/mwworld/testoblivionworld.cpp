@@ -235,7 +235,7 @@ namespace
             SCOPED_TRACE(threads);
             Settings::physics().mAsyncNumThreads.set(threads);
             NativeWorldFixture fixture;
-            const auto ptr = addNativeNpc(fixture, 0x900);
+            auto ptr = addNativeNpc(fixture, 0x900);
             // An editable synthetic mesh exercises public VFS/resource loading
             // and Actor admission without requiring installed game assets.
             osg::ref_ptr<osg::Geode> model = new osg::Geode;
@@ -304,6 +304,31 @@ namespace
             EXPECT_TRUE(capsule->isCollisionSuspended());
             EXPECT_EQ(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
             EXPECT_THROW(admit(graph), std::invalid_argument);
+            const auto duplicate = addNativeNpc(fixture, 0x901);
+            physics.addActor(duplicate, path);
+            EXPECT_THROW(physics.updatePtr(ptr, duplicate), std::invalid_argument);
+            EXPECT_THROW(physics.updatePtr(ptr, {}), std::invalid_argument);
+            EXPECT_EQ(physics.getActor(ptr), capsule);
+            EXPECT_TRUE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(physics.hasActorRagdoll(duplicate));
+            EXPECT_FALSE(physics.getActor(duplicate)->isCollisionSuspended());
+            physics.remove(duplicate);
+            MWWorld::LiveCellRef<ESM4::Npc> rebound(*ptr.get<ESM4::Npc>());
+            const MWWorld::Ptr updated(&rebound, ptr.getCell());
+            const auto previous = ptr;
+            physics.updatePtr(previous, updated);
+            EXPECT_EQ(physics.getActor(previous), nullptr);
+            EXPECT_EQ(physics.getActor(updated), capsule);
+            EXPECT_EQ(capsule->getPtr(), updated);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_FALSE(physics.hasActorRagdoll(previous));
+            EXPECT_TRUE(physics.hasActorRagdoll(updated));
+            EXPECT_THROW(physics.captureActorRagdoll(previous), std::invalid_argument);
+            physics.remove(previous); // A stale reference cannot remove the new owner.
+            EXPECT_EQ(physics.getActor(updated), capsule);
+            EXPECT_TRUE(physics.hasActorRagdoll(updated));
+            physics.updatePtr(updated, updated);
+            ptr = updated;
             EXPECT_EQ(physics.actorRagdollDefinition(ptr).mSourceHash, graph.mSourceHash);
             const auto base = ESM::FormKey::content("headless.esm", 0x800);
             const auto original = physics.captureActorRagdollSnapshot(ptr, base, path.value());
