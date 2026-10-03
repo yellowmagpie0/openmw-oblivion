@@ -34,6 +34,11 @@ namespace NifBullet
     // Native scene rotation extraction and position conversion before the
     // Bullet transform representation. Matrix must already be rigid.
     RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose);
+    // Ordinary scene sync plus the native bhkRigidBodyT local offset, when
+    // present. Local translation is already in native lengths and includes
+    // any graph property scaling. Does not admit reverse/controller binding.
+    RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(
+        const osg::Matrixf& worldPose, const RagdollBodyDefinition& body);
     // Original mixed blend target:539850 matrix layout then8B1B40 quaternion.
     // Keep its unrounded intermediates and raw quaternion for later Slerp;
     // unlike keyframed scene sync, this boundary does not normalize.

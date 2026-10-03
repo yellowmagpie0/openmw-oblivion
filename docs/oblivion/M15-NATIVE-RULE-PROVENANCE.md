@@ -8619,3 +8619,51 @@ original executable SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d7563
 No stage closes. Next: bodyT pose admission and actual World physical lifecycle,
 caller scale resolution, controller ownership/native stepping and unchanged
 stock-floor fresh-restart/normal-gameplay gates. S5-S14 remain pending.
+
+
+### Checkpoint179: original bodyT forward scene target
+
+Checkpoint178 committed as `4c0d2e4fd951eb196563fc54e000cf15173cbe28`,
+175 isolated commits with exact-byte/fresh-clone proof; bundle156 SHA256
+`59cfcd74d57a943595730619f0da9b803461ec112c951440c8e81ac3ab9f39d3`.
+NifBullet::ragdollNativeSceneBodyTargetPose retains the ordinary current-bone
+extraction and adds the verified bodyT-specific forward operation. It rotates
+the already scaled local native-length translation by the scene quaternion,
+adds native scene position with SSE binary32 stores, and applies ordered
+parent/local quaternion composition without an extra normalization. Local
+quaternion and translation are validated; ordinary bodies ignore those fields.
+The general graph/renderer admission gates remain closed for bodyT until
+reverse projection and controller paths are implemented and verified.
+
+Three tests cover local offset units, quaternion order, already scaled offsets,
+ordinary-body unused metadata, malformed offsets/quaternions and nonrigid
+scene input rejection. Bodyt-scene-baseline01 retains all three failing tests
+against ordinary-only extraction. Full bodyt-scene normal/sanitized01 each
+pass2,239 component and892 engine tests with complete inventories, no failures
+or skips, rebuilding openmw/esmtool. Tested fingerprint `0cae0f08e724be1f752ad97850c1dcf3874e2403ed3095bbe95042ec81182f2a`.
+ASan leaks disabled; UBSan halts; unchanged Python sources were not rerun.
+
+Bodyt-scene-sync-oracle01 executes400 complete original89EAE0 synchronizations,
+both x87 controls and flags1/40, with real BodyT vtable A980A4 dispatch+ A0 to
+8B9400. Full7150F0/4529E0/4D6830 preparation,8B9400 offset rotation/addition,
+889470 parent/local quaternion multiplication and ordinary motion setters run.
+Only Windows lock/thread primitives are replaced. Local offsets, scene and
+local rotations, COM/interpolation state and retained velocities are recorded.
+The body-specific target is independently captured at8A2FB0 after the actual
+forward transformation. Source/corpus SHA256 `77b371f752150d0f31d4b668b852156db05a154a6f49234a9c428da32cd01931`,
+`2755719edee7d5d869f6a51dfc3189fcf082e86509797adf4bd79cd50ddcc6e0`; original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+NiWorld's separate scale slot is varied but excluded from the already rigid
+C++ matrix input; property-clone scaling remains independently owned.
+
+Bodyt-scene-compare normal/sanitized01 each match400 cases/2,800 exact origin
+and quaternion fields. Discarding the bodyT offset changes all400 cases,
+providing an independently evaluated negative control. Source/driver SHA256
+`121d1fdbfa2a9eda9461c244d69eddd8f9f4f72972346ccd469b6957be161f96`, `6672d1b804125b2ed17d35a6df3792833cb47e1f7195e6fb28cdfc10be28f027`. Original motion COM,
+interpolation and velocity preservation are recorded but not compared by this
+pure forward adapter. No bodyT reverse, full live binding, World lifecycle,
+save/restart, stepping or gameplay acceptance is claimed.
+
+No stage closes. Next: independently verified bodyT reverse projection and
+owned controller integration before renderer admission; actual World physical
+lifecycle, native stepping and unchanged stock-floor fresh-restart/gameplay
+gates remain open. S5-S14 remain pending.

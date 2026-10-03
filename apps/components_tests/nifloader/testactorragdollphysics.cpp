@@ -27,6 +27,69 @@ namespace
         return result;
     }
 
+    TEST(RagdollBodyTSceneTarget, AppliesLocalOffsetInNativeLengthsAndOrderedQuaternionProduct)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {2, 3, 4};
+        body.mRotation = osg::Quat(0, 0, 1, 0);
+        const auto world = osg::Matrixf::translate(7, 14, 21);
+        const auto ordinary = NifBullet::ragdollNativeSceneTargetPose(world);
+        const auto target = NifBullet::ragdollNativeSceneBodyTargetPose(world, body);
+        EXPECT_EQ(target.mRotation, (std::array<float, 4>{0, 0, 1, 0}));
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(target.mPosition[i], float(ordinary.mPosition[i] + body.mTranslation[i]));
+        auto rotated = osg::Matrixf::identity();
+        rotated(0, 0) = rotated(1, 1) = 0;
+        rotated(0, 1) = 1;
+        rotated(1, 0) = -1;
+        body.mRotation = osg::Quat(1, 0, 0, 0);
+        const auto parent = NifBullet::ragdollNativeSceneTargetPose(rotated);
+        const auto product = NifBullet::ragdollNativeSceneBodyTargetPose(rotated, body);
+        EXPECT_EQ(product.mRotation[0], parent.mRotation[3]);
+        EXPECT_EQ(product.mRotation[1], parent.mRotation[2]);
+        EXPECT_EQ(product.mRotation[2], 0.f);
+        EXPECT_EQ(product.mRotation[3], 0.f);
+        EXPECT_NEAR(product.mPosition.x(), -3.f, 1e-6);
+        EXPECT_NEAR(product.mPosition.y(), 2.f, 1e-6);
+        EXPECT_NEAR(product.mPosition.z(), 4.f, 1e-6);
+    }
+
+    TEST(RagdollBodyTSceneTarget, UsesAlreadyScaledLocalOffsetWithoutScalingItAgain)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mRotation = osg::Quat(0, 0, 0, 1);
+        body.mTranslation = {6, -4, 2}; // Graph's scale2 offset, already in native units.
+        const auto target = NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::identity(), body);
+        EXPECT_EQ(target.mPosition, body.mTranslation);
+        body.mUsesRigidBodyTransform = false;
+        body.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        body.mRotation = osg::Quat(0, 0, 0, 0);
+        const auto ordinary = NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::identity(), body);
+        EXPECT_EQ(ordinary.mPosition, osg::Vec3f());
+        EXPECT_EQ(ordinary.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+    }
+
+    TEST(RagdollBodyTSceneTarget, RejectsInvalidSupportedOffsetsWithoutChangingInputs)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        body.mUsesRigidBodyTransform = true;
+        body.mRotation = osg::Quat(0, 0, 0, 1);
+        body.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::identity(), body), std::invalid_argument);
+        EXPECT_TRUE(std::isnan(body.mTranslation.x()));
+        body.mTranslation = {1, 2, 3};
+        body.mRotation = osg::Quat(0, 0, 0, 0);
+        EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::identity(), body), std::invalid_argument);
+        body.mRotation = osg::Quat(0, 0, 0, std::numeric_limits<float>::infinity());
+        EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::identity(), body), std::invalid_argument);
+        EXPECT_EQ(body.mTranslation, osg::Vec3f(1, 2, 3));
+        body.mRotation = osg::Quat(0, 0, 0, 1);
+        EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(osg::Matrixf::scale(2, 2, 2), body),
+            std::invalid_argument);
+    }
+
     TEST(RagdollConeCoordinates, ParallelAndOppositeTwistsUseNativeRowAdmissionAndFallback)
     {
         const NifBullet::RagdollJointFrame a{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
