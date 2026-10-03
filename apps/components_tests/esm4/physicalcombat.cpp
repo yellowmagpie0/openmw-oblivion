@@ -3605,3 +3605,78 @@ TEST(ESM4PhysicalBlendSetup, RejectsMalformedUsedInputsBeforeCreatingTransition)
     EXPECT_NO_THROW(ESM4::preparePhysicalKnockdownBlend({1.f, 1.f}, .25f, 0.f, 0,
         {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), 0.f}));
 }
+
+TEST(ESM4PhysicalCombat, AuthoredBlendKeysSelectAndResetOriginalCachedSegment)
+{
+    const std::array<ESM4::PhysicalBlendKey, 3> keys{{{0, {1, .5f}},
+        {.25f, {.7f, .9f}}, {.5f, {0, 1}}}};
+    // Independently captured full original8AA990 rows59/63, both x87 words.
+    const auto forward = ESM4::evaluatePhysicalBlendKeys(keys, .375f, 0);
+    ASSERT_TRUE(forward.mGains); EXPECT_EQ(forward.mCursor, 1);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(forward.mGains->mHierarchy), 1051931443u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(forward.mGains->mVelocity), 1064514355u);
+    const auto backward = ESM4::evaluatePhysicalBlendKeys(keys, 0, forward.mCursor);
+    ASSERT_TRUE(backward.mGains); EXPECT_EQ(backward.mCursor, 0);
+    EXPECT_FLOAT_EQ(backward.mGains->mHierarchy, 1); EXPECT_FLOAT_EQ(backward.mGains->mVelocity, .5f);
+}
+
+TEST(ESM4PhysicalCombat, AuthoredBlendDuplicatesRetainCursorDependentBoundary)
+{
+    const std::array<ESM4::PhysicalBlendKey, 4> keys{{{0, {1, 1}},
+        {.25f, {.7f, .8f}}, {.25f, {0, 0}}, {1, {-1, 2}}}};
+    // Original rows79/105: equal timestamps preserve the caller's cache.
+    const auto first = ESM4::evaluatePhysicalBlendKeys(keys, .25f, 0);
+    const auto later = ESM4::evaluatePhysicalBlendKeys(keys, .25f, 2);
+    ASSERT_TRUE(first.mGains); ASSERT_TRUE(later.mGains);
+    EXPECT_EQ(first.mCursor, 0); EXPECT_EQ(later.mCursor, 2);
+    EXPECT_FLOAT_EQ(first.mGains->mHierarchy, .7f); EXPECT_FLOAT_EQ(first.mGains->mVelocity, .8f);
+    EXPECT_FLOAT_EQ(later.mGains->mHierarchy, 0); EXPECT_FLOAT_EQ(later.mGains->mVelocity, 0);
+    const std::array<ESM4::PhysicalBlendKey, 3> zeros{{{0, {-0.f, 0}},
+        {0, {0, -0.f}}, {0, {1, -1}}}};
+    const auto zero = ESM4::evaluatePhysicalBlendKeys(zeros, 0, 1);
+    ASSERT_TRUE(zero.mGains); EXPECT_EQ(zero.mCursor, 1);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(zero.mGains->mVelocity), 0x80000000u);
+}
+
+TEST(ESM4PhysicalCombat, EmptyAndConstantAuthoredBlendIgnoreUnusedTimeAndCursor)
+{
+    const auto bad = std::numeric_limits<float>::quiet_NaN();
+    const auto empty = ESM4::evaluatePhysicalBlendKeys({}, bad, 0xffffffffu);
+    EXPECT_FALSE(empty.mGains); EXPECT_EQ(empty.mCursor, 0xffffffffu);
+    const std::array<ESM4::PhysicalBlendKey, 1> constant{{{bad, {-0.f, 2}}}};
+    const auto result = ESM4::evaluatePhysicalBlendKeys(constant, bad, 99);
+    ASSERT_TRUE(result.mGains); EXPECT_EQ(result.mCursor, 99);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mGains->mHierarchy), 0x80000000u);
+    EXPECT_FLOAT_EQ(result.mGains->mVelocity, 2);
+}
+
+TEST(ESM4PhysicalCombat, AuthoredBlendCacheContinuesForwardAndBackwardSequence)
+{
+    const std::array<ESM4::PhysicalBlendKey, 3> keys{{{0, {1, .5f}},
+        {.25f, {.7f, .9f}}, {.5f, {0, 1}}}};
+    const std::array<float, 6> times{0, .375f, .5f, .25f, 0, .4f};
+    const std::array<std::uint32_t, 6> cursors{0, 1, 1, 1, 0, 1};
+    std::uint32_t cursor = 0;
+    for (unsigned i = 0; i < times.size(); ++i)
+    {
+        const auto result = ESM4::evaluatePhysicalBlendKeys(keys, times[i], cursor);
+        ASSERT_TRUE(result.mGains); EXPECT_EQ(result.mCursor, cursors[i]); cursor = result.mCursor;
+    }
+}
+
+TEST(ESM4PhysicalCombat, AuthoredBlendRejectsMalformedUsedKeysIntervalsAndCursors)
+{
+    std::array<ESM4::PhysicalBlendKey, 2> keys{{{0, {1, 1}}, {1, {0, 0}}}};
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 0xffffffffu), std::invalid_argument);
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, -1, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, 2, 0), std::invalid_argument);
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, bad, 0), std::invalid_argument);
+    keys[1].mTime = -1;
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, 0, 0), std::invalid_argument);
+    keys[1].mTime = bad;
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, 0, 0), std::invalid_argument);
+    keys[1].mTime = 1; keys[1].mGains.mHierarchy = bad;
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 0), std::invalid_argument);
+}

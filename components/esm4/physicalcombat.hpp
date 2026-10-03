@@ -302,6 +302,19 @@ namespace ESM4
     std::optional<PhysicalBlendGains> evaluatePhysicalBlend(
         std::span<const PhysicalBlendKey> keys, float time);
 
+    struct PhysicalBlendEvaluation
+    {
+        std::optional<PhysicalBlendGains> mGains;
+        std::uint32_t mCursor;
+    };
+
+    // Original8AA990 general authored-key evaluation with an explicit cached
+    // lower segment cursor. Return the next cursor without mutating input.
+    // Empty/single-key paths ignore unused time/cursor fields; multi-key input
+    // requires finite ordered times, finite gains and caller-clamped time.
+    PhysicalBlendEvaluation evaluatePhysicalBlendKeys(
+        std::span<const PhysicalBlendKey> keys, float time, std::uint32_t cursor);
+
     struct PhysicalBlendClock
     {
         // Original NiTimeController sentinel (-FLT_MAX), not an actor timer.

@@ -15871,3 +15871,48 @@ progression remains open. World physical lifecycle and full physical save/
 restart, retained raw BodyT/floor failures and S5-S14 remain open. Next: verify
 and implement arbitrary authored-key evaluation with the original cached
 segment cursor, retaining the existing one-shot API's behavior.
+
+
+### Checkpoint193: cached arbitrary authored blend-key evaluation
+
+Checkpoint192 committed as `e2fceedf9e6dac2bbe0de5558a8c38c7754c06b0`,
+189 isolated commits with exact-byte/fresh-clone verification. Bundle170 SHA256
+`ead28d17239313d3adde6cbd0423170599c461acbab88ddbda5f96dcd1c3769a`.
+The general authored-key evaluator now accepts an explicit cached lower-segment
+cursor and returns both gains and the next cursor. Backward time before the
+cached lower key resets the search; forward search advances only when the next
+key time is strictly less than requested time. Equality, duplicate times and
+zero-length intervals preserve cursor-dependent behavior. Empty controllers
+leave gains absent and preserve arbitrary cursors; constant controllers ignore
+unused key time, requested time and cursor while retaining signed-zero gains.
+Multi-key inputs validate finite gains/times, ordered keys, admitted cursor and
+caller-clamped time before returning a result. The existing two-key one-shot
+API retains its supported domain and interpolation store boundaries.
+
+Full original8AA990 and6D3690 execute 11,248 cases with no game-function stubs:
+69 key sets, including60 seeded3-9-key arrays, duplicate/zero-time/signed-zero
+fixtures, all admitted cursors, endpoints and interior times, both x87 words.
+Empty/single paths include unused NaN time and arbitrary cursors. Both precision
+words produce identical results. Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`; oracle
+source/corpus `e28264e6db7f79e2020ccc23b48e1a1507d7c2956e80e92876ba5f38bb21f666`, `2b390341e15713c0fe0726fd117938a4abd69891a50dab1dffd75696b67855c5`. Normal and sanitizer
+comparators exactly match44,992 result/cursor/gain-bit fields each. Original
+corpus negative controls detect500 cases changed by unconditional cursor reset
+and8,904 wrong cursors from always selecting the first segment. Comparator
+source/driver hashes `deae41ad4d983203f2c719587a5b7ca1df2ff3529011777f4964ffd998237879`, `e4bb639052edcf26a4409a9683691e8d20dcd5d8f619569d1aacf094960ed115`.
+
+Baseline01 runs six selected tests: the existing authored-byte regression passes
+and all five new cases fail the placeholder. Final normal/sanitize01 each pass
+all2,285 component tests with complete inventories and no failures/skips;
+fingerprint `0f6a998c41baafde80284eefdecd74e15edbf98a4321279c89dfc3833a260f15`. ASan leak checks remain disabled; UBSan halts. Sanitizer
+recompilation exposes existing missing-owner aggregate-initializer warnings in
+inventorymechanics/runtimestate and dangling-else warning in runtimestate2109;
+these unchanged tests are not modified in this chunk. Engine and Python checks
+are not repeated for this isolated pure new API: the existing API/data layout is
+unchanged, with898 engine tests per build verified at192. Runtime integration
+will rebuild affected engine targets.
+
+No stage closes. General authored gain/cursor evaluation is implemented, but
+native key bounds, general frequency/phase/cycle/reverse clocks, controller
+attachment and live World lifecycle remain open. Full physical persistence,
+retained BodyT/floor failures and S5-S14 remain open. Next: establish the generic
+native controller clock/cache before connecting authored keys to live owners.

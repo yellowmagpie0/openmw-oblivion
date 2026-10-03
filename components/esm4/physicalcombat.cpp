@@ -825,6 +825,39 @@ namespace ESM4
             interpolate(first.mGains.mVelocity, last.mGains.mVelocity)};
     }
 
+    PhysicalBlendEvaluation evaluatePhysicalBlendKeys(
+        std::span<const PhysicalBlendKey> keys, float time, std::uint32_t cursor)
+    {
+        if (keys.empty())
+            return {std::nullopt, cursor};
+        for (const auto& key : keys)
+        {
+            finite(key.mGains.mHierarchy);
+            finite(key.mGains.mVelocity);
+        }
+        // Original8AA990 does not inspect the clock or cached segment for a
+        // constant controller. Its authored key time is unused as well.
+        if (keys.size() == 1)
+            return {keys.front().mGains, cursor};
+        finite(time);
+        if (keys.size() > std::numeric_limits<std::uint32_t>::max() || cursor >= keys.size() - 1)
+            throw std::invalid_argument("invalid native physical blend cursor");
+        for (std::size_t i = 0; i < keys.size(); ++i)
+        {
+            finite(keys[i].mTime);
+            if (i != 0 && keys[i - 1].mTime > keys[i].mTime)
+                throw std::invalid_argument("invalid native physical blend key order");
+        }
+        if (time < keys.front().mTime || time > keys.back().mTime)
+            throw std::invalid_argument("invalid native physical blend key interval");
+        if (keys[cursor].mTime > time)
+            cursor = 0;
+        // Equality retains the cached segment, including duplicate key times.
+        while (cursor + 1 < keys.size() - 1 && keys[cursor + 1].mTime < time)
+            ++cursor;
+        return {evaluatePhysicalBlend(keys.subspan(cursor, 2), time), cursor};
+    }
+
     float advancePhysicalBlendClock(PhysicalBlendClock& clock, float absoluteTime, float duration)
     {
         finite(absoluteTime);
