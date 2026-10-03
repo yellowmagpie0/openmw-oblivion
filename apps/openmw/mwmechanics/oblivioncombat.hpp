@@ -230,6 +230,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
         std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
+        std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
@@ -302,6 +303,13 @@ namespace MWMechanics
         // older asynchronous simulation from overwriting its pulse on sync.
         bool syncActorKnockback(const ESM::FormKey& actor, const ESM4::TimedKnockbackState& expected,
             const ESM4::TimedKnockbackState& updated);
+        std::optional<ESM4::RuntimeActorRagdoll> actorRagdoll(const ESM::FormKey& actor) const;
+        // Main-thread physical projection publication. Null represents absence;
+        // a stale capture cannot replace a newer pose or recreate released bodies.
+        // Asset/body identity changes require release followed by new admission.
+        bool syncActorRagdoll(const ESM::FormKey& actor,
+            const std::optional<ESM4::RuntimeActorRagdoll>& expected,
+            const std::optional<ESM4::RuntimeActorRagdoll>& updated);
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
         // Preparation does not advance live state. The owned contact publishes
         // the checked transition with all resources/conditions and consumption.

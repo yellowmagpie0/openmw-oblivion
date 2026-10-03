@@ -12868,3 +12868,51 @@ and commands. Normal01 retains the same Python packing failure. This is snapshot
 format and interoperability evidence; service/world/physics save capture and
 fresh-process gameplay restoration are not yet connected. Lifecycle force/mode/
 recovery and normal-input/media acceptance remain open. No M15 gate is promoted.
+
+
+### Checkpoint138 — native service physical snapshot authority (S4/S6 open)
+
+OblivionCombatService now owns the version31 physical snapshot map. Main-thread
+publication compares the caller's expected snapshot against current authority;
+stale admission/update/release cannot overwrite a newer pose or recreate released
+bodies. Absence is explicit. Before publication, the whole updated snapshot must
+validate and match the existing native actor/base/lifecycle. An active binding
+cannot change model, asset hash, body count, body or target node records; those
+changes require release and fresh admission. Map insertion/candidate preparation
+can throw before publication; replacement uses a no-throw swap. Queries return
+owned copies. This does not select motion mode, change actor life, emit events or
+advance combat randomness.
+
+Capture copies the map before destination publication and rejects v30-or-earlier
+downgrades before any destination changes. Validated restore stages it with all
+other native authority before swapping. Clear and legacy replacement discard
+physical history. The existing World service capture and replacement paths now
+carry this map, although per-frame physics capture, realized body creation and
+normal gameplay restoration remain to be connected. Four engine regressions
+exercise service-to-binary-to-fresh-service storage including signed zero,
+independent query copies, stale update/release/recreation rejection, invalid
+geometry/owner/assets, atomic invalid restore/downgrade, clear and legacy reset.
+This is a new authority object in one test process, not an actual process restart.
+
+Full `S4/native-ragdoll-service-{normal,sanitized}-01` each pass2,126 component
+and823 engine tests, complete inventories and zero failures/skips. Normal also
+passes245 Python tests. Both stable tested fingerprint `50fe05df8c626835bae2cd4bc0b38a03ac4c8f15714aa19d67aaadfe0eba5199`.
+ASan detect_leaks=0:halt_on_error=1; UBSan halt_on_error=1:print_stacktrace=1;
+no leak coverage. Snapshot codec/native composition arithmetic is unchanged;
+checkpoint137/135 comparisons are explicitly reused.
+
+Independent groundwork for later force policy:
+`S4/native-ragdoll-world-gravity-oracle-01` executes96 original-instruction cases
+with no stubbed calls. Full generic Havok constructor8a9510 has Y-down -9.8;
+full Bethesda cinfo constructor88a4f0 has Y-down binary32 -73.57500457763672.
+Actual exterior creation prefix4d5000..4d508a and interior creation prefix
+4d4a8b..4d4ad0 overwrite this with Z-down -73.57500457763672 and execute the
+actual cinfo and bounds setup callees. Poison-filled inputs, both x87 precision
+settings and three quality-byte fixtures preserve gravity bits. Report pins
+original executable/helper/corpus hashes. Prefixes stop before allocation and
+world construction; the interior begins after eligibility with prior EBX=0
+supplied, and exterior SEH uses a synthetic zero environment cell. This does not
+admit full world initialization, gravity-modification commands, force stepping or
+native gameplay. No gravity policy is changed in production in this checkpoint.
+Activation/recovery, realized dynamic save continuation, media/runtime gates and
+the display-dependent TES3 regression remain open. No M15 gate is promoted.

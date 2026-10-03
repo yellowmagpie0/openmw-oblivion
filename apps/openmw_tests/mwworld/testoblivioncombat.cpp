@@ -608,3 +608,151 @@ TEST(OblivionCombatService, NativeActorClockCaptureRestoreIsAtomicAndClearResets
     EXPECT_EQ(captured.mNativeActorManagerTime, 0);
     EXPECT_TRUE(captured.mNativeActorUpdateTimes.empty());
 }
+
+
+namespace
+{
+    ESM4::RuntimeActorRagdoll physicalSnapshot(const ESM4::RuntimeState& state)
+    {
+        ESM4::RuntimeActorRagdoll result;
+        result.mBase = state.mReferences.front().mBase;
+        result.mModel = "characters/_male/skeleton.nif";
+        result.mAssetHash = "0123456789abcdef0123456789abcdef";
+        ESM4::RuntimeRagdollBody body;
+        body.mRecord = 12;
+        body.mNodeRecord = 8;
+        body.mPosition = {-0.0f, 2, 3};
+        body.mLinearVelocity = {1, 2, 3};
+        body.mAngularVelocity = {4, 5, 6};
+        result.mBodies.push_back(body);
+        return result;
+    }
+}
+
+TEST(OblivionCombatService, PhysicalPosePersistsThroughServiceAndBinaryRestart)
+{
+    auto state = combatMembershipState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto pose = physicalSnapshot(state);
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    ASSERT_FALSE(service.actorRagdoll(actor));
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, pose));
+    service.capture(state);
+    ASSERT_EQ(state.mNativeActorRagdolls.size(), 1);
+    EXPECT_EQ(state.mNativeActorRagdolls.at(actor), pose);
+    // Fresh authority receives only decoded bytes, without borrowing service data.
+    const auto bytes = state.serializeBinary();
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(bytes));
+    EXPECT_EQ(restored.actorRagdoll(actor), pose);
+    auto copy = restored.actorRagdoll(actor);
+    copy->mBodies[0].mPosition[0] = 100;
+    EXPECT_EQ(restored.actorRagdoll(actor), pose);
+    auto recaptured = savedState();
+    recaptured.mReferences = state.mReferences;
+    restored.capture(recaptured);
+    EXPECT_EQ(recaptured.serializeBinary(), bytes); // Includes negative zero.
+    EXPECT_EQ(recaptured.mNativeActorLife, state.mNativeActorLife);
+    EXPECT_EQ(recaptured.mCombatRngState, state.mCombatRngState);
+    EXPECT_TRUE(recaptured.mPendingDeathEvents.empty());
+}
+
+TEST(OblivionCombatService, StalePhysicalPublicationCannotOverwriteOrRecreateReleasedBodies)
+{
+    auto state = combatMembershipState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto original = physicalSnapshot(state);
+    auto newer = original;
+    newer.mBodies[0].mPosition[1] = 40;
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, original));
+    EXPECT_FALSE(service.syncActorRagdoll(actor, std::nullopt, newer));
+    ASSERT_TRUE(service.syncActorRagdoll(actor, original, newer));
+    EXPECT_FALSE(service.syncActorRagdoll(actor, original, original));
+    EXPECT_FALSE(service.syncActorRagdoll(actor, original, std::nullopt));
+    EXPECT_EQ(service.actorRagdoll(actor), newer);
+    ASSERT_TRUE(service.syncActorRagdoll(actor, newer, std::nullopt));
+    EXPECT_FALSE(service.syncActorRagdoll(actor, newer, original));
+    EXPECT_FALSE(service.actorRagdoll(actor));
+    EXPECT_TRUE(service.syncActorRagdoll(actor, std::nullopt, std::nullopt));
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, original));
+    state.mNativeActorRagdolls.emplace(actor, original);
+    service.capture(state);
+    EXPECT_EQ(state.mNativeActorRagdolls.at(actor), original);
+}
+
+TEST(OblivionCombatService, InvalidPhysicalPublicationAndRestoreAreAtomic)
+{
+    auto state = combatMembershipState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto pose = physicalSnapshot(state);
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    EXPECT_THROW(service.syncActorRagdoll(ESM::FormKey{}, std::nullopt, pose), std::invalid_argument);
+    auto wrongBase = pose;
+    wrongBase.mBase = state.mReferences.back().mBase;
+    EXPECT_THROW(service.syncActorRagdoll(actor, std::nullopt, wrongBase), std::invalid_argument);
+    auto invalid = pose;
+    invalid.mBodies[0].mRotation[0] = 2;
+    EXPECT_THROW(service.syncActorRagdoll(actor, std::nullopt, invalid), std::runtime_error);
+    EXPECT_FALSE(service.actorRagdoll(actor));
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, pose));
+    EXPECT_THROW(service.syncActorRagdoll(actor, pose, invalid), std::runtime_error);
+    for (unsigned field = 0; field < 5; ++field)
+    {
+        auto changed = pose;
+        switch (field)
+        {
+            case 0: changed.mModel = "characters/_male/another.nif"; break;
+            case 1: changed.mAssetHash[0] = 'a'; break;
+            case 2: changed.mBodies[0].mRecord = 16; break;
+            case 3: changed.mBodies[0].mNodeRecord = 9; break;
+            case 4:
+                auto extra = changed.mBodies[0];
+                extra.mRecord = 20;
+                extra.mNodeRecord = 16;
+                changed.mBodies.push_back(extra);
+                break;
+        }
+        EXPECT_THROW(service.syncActorRagdoll(actor, pose, changed), std::invalid_argument);
+    }
+    service.capture(state);
+    const auto before = state.serializeBinary();
+    state.mNativeActorRagdolls.at(actor) = invalid;
+    EXPECT_THROW(service.restore(state), std::runtime_error);
+    service.capture(state);
+    EXPECT_EQ(state.serializeBinary(), before);
+    EXPECT_EQ(service.actorRagdoll(actor), pose);
+}
+
+TEST(OblivionCombatService, PhysicalDowngradeClearAndLegacyReplacementDoNotInventHistory)
+{
+    auto state = combatMembershipState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto pose = physicalSnapshot(state);
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, pose));
+    auto old = savedState(30);
+    const auto before = old;
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    EXPECT_EQ(old, before);
+    EXPECT_EQ(service.actorRagdoll(actor), pose);
+    service.clear();
+    EXPECT_FALSE(service.actorRagdoll(actor));
+    service.capture(state);
+    EXPECT_TRUE(state.mNativeActorRagdolls.empty());
+    state = combatMembershipState();
+    service.restore(state);
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, pose));
+    state.mVersion = 30;
+    service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    EXPECT_FALSE(service.actorRagdoll(actor));
+    auto current = state;
+    current.mVersion = 31;
+    service.capture(current);
+    EXPECT_TRUE(current.mNativeActorRagdolls.empty());
+    EXPECT_EQ(current.mNativeActorLife, state.mNativeActorLife);
+}

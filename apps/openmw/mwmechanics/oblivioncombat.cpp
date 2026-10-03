@@ -637,6 +637,7 @@ namespace MWMechanics
         mMeleeStates.clear();
         mAnimationClocks.clear();
         mActorKnockback.clear();
+        mActorRagdolls.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -3175,6 +3176,53 @@ namespace MWMechanics
         return true;
     }
 
+    std::optional<ESM4::RuntimeActorRagdoll> OblivionCombatService::actorRagdoll(const ESM::FormKey& actor) const
+    {
+        const auto found = mActorRagdolls.find(actor);
+        return found == mActorRagdolls.end() ? std::nullopt : std::optional(found->second);
+    }
+
+    bool OblivionCombatService::syncActorRagdoll(const ESM::FormKey& actor,
+        const std::optional<ESM4::RuntimeActorRagdoll>& expected,
+        const std::optional<ESM4::RuntimeActorRagdoll>& updated)
+    {
+        const auto found = mActorRagdolls.find(actor);
+        if (expected ? found == mActorRagdolls.end() || found->second != *expected
+                     : found != mActorRagdolls.end())
+            return false;
+        if (!updated)
+        {
+            if (found != mActorRagdolls.end())
+                mActorRagdolls.erase(found);
+            return true;
+        }
+        updated->validate();
+        const auto values = mActorValues.find(actor);
+        const auto life = mActorLife.find(actor);
+        if (values == mActorValues.end() || life == mActorLife.end()
+            || values->second.mBase != updated->mBase || life->second.mBase != updated->mBase)
+            throw std::invalid_argument("native physical pose requires a matching actor/base/lifecycle owner");
+        if (expected)
+        {
+            if (expected->mBase != updated->mBase || expected->mModel != updated->mModel
+                || expected->mAssetHash != updated->mAssetHash || expected->mBodies.size() != updated->mBodies.size())
+                throw std::invalid_argument("native physical pose cannot replace a bound asset");
+            for (std::size_t i = 0; i < expected->mBodies.size(); ++i)
+                if (expected->mBodies[i].mRecord != updated->mBodies[i].mRecord
+                    || expected->mBodies[i].mNodeRecord != updated->mBodies[i].mNodeRecord)
+                    throw std::invalid_argument("native physical pose cannot replace a bound body identity");
+        }
+        auto candidate = *updated;
+        if (found == mActorRagdolls.end())
+            mActorRagdolls.emplace(actor, std::move(candidate));
+        else
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorRagdoll>);
+            std::swap(found->second, candidate);
+        }
+        return true;
+    }
+
     void OblivionCombatService::capture(ESM4::RuntimeState& state) const
     {
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
@@ -3187,6 +3235,8 @@ namespace MWMechanics
             throw std::invalid_argument("native combat random state requires an Oblivion v27+ save");
         if (state.mVersion < 30 && !mActorKnockback.empty())
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
+        if (state.mVersion < 31 && !mActorRagdolls.empty())
+            throw std::invalid_argument("native physical poses require an Oblivion v31+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
                 || std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
                     return entry.second.mStrike && entry.second.mStrike->mSequenceTiming.has_value();
@@ -3257,6 +3307,7 @@ namespace MWMechanics
         auto meleeStates = mMeleeStates;
         auto animationClocks = mAnimationClocks;
         auto knockback = mActorKnockback;
+        auto ragdolls = mActorRagdolls;
         state.mCombatRngState = mCombatRngState;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
@@ -3265,6 +3316,7 @@ namespace MWMechanics
         state.mNativeMeleeStates.swap(meleeStates);
         state.mNativeAnimationClocks.swap(animationClocks);
         state.mNativeActorKnockback.swap(knockback);
+        state.mNativeActorRagdolls.swap(ragdolls);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -3393,6 +3445,7 @@ namespace MWMechanics
         auto meleeStates = state.mNativeMeleeStates;
         auto animationClocks = state.mNativeAnimationClocks;
         auto knockback = state.mNativeActorKnockback;
+        auto ragdolls = state.mNativeActorRagdolls;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -3434,6 +3487,7 @@ namespace MWMechanics
         mMeleeStates.swap(meleeStates);
         mAnimationClocks.swap(animationClocks);
         mActorKnockback.swap(knockback);
+        mActorRagdolls.swap(ragdolls);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);
