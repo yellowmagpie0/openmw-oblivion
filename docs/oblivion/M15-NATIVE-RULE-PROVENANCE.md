@@ -9916,3 +9916,62 @@ Next: implement independently verified native velocity-controller update,
 creation/attachment and force/removal ownership, then complete admitted World
 reaction callers and full persistence. Actual timing/traversal producers, initial
 NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
+
+
+### Checkpoint204: native velocity-controller clock and force intent
+
+Checkpoint203 committed as `4b9ebc9329dc1d0f01cf3774ff9dcb8dd26c7b54`,
+200 isolated commits with exact-byte/fresh-clone proof. Bundle181 SHA256
+`ba840caaf5fccd927111f814f75282ff234d86bb896428234a8ae66d9acf5cd5`.
+New ESM4 physicalvelocitycontroller module models full8B8770 controller update
+and8B8380 force eligibility/preparation as immutable state and publication intent.
+Every update resets raw frame delta to the native A96CFC value0.016, even when
+inactive or missing its target. Active targeted updates store nonnegative
+input-minus-previous time as delta; sentinel/negative differences retain default,
+and repeated time uses zero. The general native shared clock advances independently
+of target blend/body availability. A present blend with hierarchy gain strictly
+below1 and a physical body yields native force intent100 times each stored vector
+component. Completion at stop key clears active directly for any cycle mode;
+it does not call Stop, reset clock sentinels, clear stored vector or detach.
+
+The caller resolves identities and stored vector, owns the shared cache and must
+apply force using returned delta. No controller creation/attachment/removal,
+body activation/force mutation, source vector generation, World reaction,
+persistence or physical contacts are implemented by this pure boundary. Validate
+finite used inputs/force results and representable deltas; unused vector/time/gain
+values on early paths are ignored. Invalid computations cannot mutate input state
+or caller cache because results are staged in an owned candidate.
+
+Independent original full8B8770 plus8B8380 runs49,152 captures in12,288 sequences,
+both x87 controls, active/inactive and absolute/relative clocks, all four cycles,
+reverse, target/blend/body availability, hierarchy0/.5/1/2, frequencies.25/1,
+phases-.125/0, zero/.25 stop keys, forward/backward/repeated frames. Actual RTTI
+lookup/shared7155A0/CRT clock execute. Windows primitives are boundaries;5377B0
+captures native force/delta arguments without applying them. Exactly1,332 force
+calls observed. Original executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, oracle source
+`99bc11e3d134d05440ea2061ffd462b0e7da52e476837f07a23c304f57d4806e`, corpus `0df403d25a05d259242295d664bffbf69e5cb81d952b208bf1e8637846799f55`. Final comparator02
+matches all49,152 captures and547,332 fields exactly in normal and sanitizer
+builds. Six independent paired/observed negative controls distinguish target,
+blend/body/hierarchy gates, missing100x force scaling and incorrect Stop reset.
+Earlier original01/02 corpora and comparator01 outputs remain retained.
+
+Six baseline tests all fail the placeholder. Eight final regression tests cover
+force preparation and non-Stop completion, inactive/missing target default delta,
+clock advancement without force target, backwards/equal frames, cyclic finish,
+used/unused malformed inputs and overflow, strict1 threshold with adjacent floats,
+and first relative-clock initialization. Final normal/sanitized02 each pass all
+2,329 component tests, complete matching inventories without failures/skips,
+fingerprint `d718d733b7bbd5ac87fd613b225d33f05f07022c6dac42a4b334853ce24be1b0`. ASan leak checks disabled; UBSan halts. Normal/sanitized01
+each execute2,329 tests and fail one incorrect extra test expectation that relative
+first update retains elapsed/start sentinel. The original captures already match
+the implementation: previous-time sentinel resets elapsed, first relative delta
+uses input, and missing start origin becomes input. Only that assertion/name was
+corrected; both failed directories remain retained. Engine adapters/Python are
+unchanged and were not repeated for this pure module; checkpoint203's899 engine
+checks remain the latest public integration evidence, not a claim of velocity
+controller runtime wiring.
+
+No stage closes. Next: realize native force application and own velocity-controller
+creation/attachment/update/removal together with selected blend curves; then join
+actual World reaction callers and persistence. Clock/traversal production, initial
+NPC morphology, retained BodyT/floor failures and S5-S14 remain open.

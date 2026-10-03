@@ -1,3 +1,4 @@
+#include <components/esm4/physicalvelocitycontroller.hpp>
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm4/physicalblendsettings.hpp>
 #include <components/esm4/physicalblenddispatch.hpp>
@@ -3954,4 +3955,122 @@ TEST(ESM4PhysicalCombat, BlendControllerSetupStateResetsOnlyWithKeyReset)
         ESM4::PhysicalBlendGains{.9f, .8f}, false, .25f).mController.mSetupState, 2u);
     EXPECT_EQ(ESM4::advancePhysicalBlendController(state, {}, false,
         ESM4::PhysicalBlendGains{.9f, .8f}, false, .25f).mController.mSetupState, 2u);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerPublishesForceAndStopsWithoutResettingClock)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xd, 1.f, 0.f, 0.f, .25f};
+    state.mClock = {0.f, 0.f, 0.f};
+    state.mForceVector = {2.f, -3.f, 4.f, 0.f};
+    const auto result = ESM4::advancePhysicalVelocityController(state, {}, true, .5f, true, .25f);
+    ASSERT_TRUE(result.mForce);
+    EXPECT_EQ(*result.mForce, (std::array<float, 4>{200.f, -300.f, 400.f, 0.f}));
+    EXPECT_FLOAT_EQ(result.mController.mFrameDelta, .25f);
+    EXPECT_EQ(result.mController.mTiming.mFlags, 5);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mPreviousTime, .25f);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mElapsed, .25f);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mStartTime, 0.f);
+    EXPECT_EQ(state.mTiming.mFlags, 0xd);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerInactiveOrMissingTargetResetsOnlyDelta)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mFrameDelta = 99.f;
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    state.mForceVector = {bad, bad, bad, bad};
+    const auto inactive = ESM4::advancePhysicalVelocityController(state, {}, true, bad, true, bad);
+    EXPECT_FLOAT_EQ(inactive.mController.mFrameDelta, .016f);
+    EXPECT_FALSE(inactive.mForce);
+    state.mTiming.mFlags = 0xd;
+    const auto missing = ESM4::advancePhysicalVelocityController(state, {}, false, bad, true, bad);
+    EXPECT_FLOAT_EQ(missing.mController.mFrameDelta, .016f);
+    EXPECT_EQ(missing.mTimeCache.mCycle, 0xffffffffu);
+    EXPECT_FLOAT_EQ(missing.mController.mClock.mPreviousTime, state.mClock.mPreviousTime);
+    EXPECT_FALSE(missing.mForce);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerClocksAdvanceWithoutAdmittedForceTarget)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xd, 1.f, 0.f, 0.f, .25f};
+    state.mClock = {0.f, 0.f, 0.f};
+    state.mForceVector.fill(std::numeric_limits<float>::quiet_NaN());
+    for (const auto gain : {std::optional<float>{}, std::optional<float>{1.f}, std::optional<float>{2.f}})
+    {
+        const auto result = ESM4::advancePhysicalVelocityController(state, {}, true, gain, true, .25f);
+        EXPECT_FALSE(result.mForce);
+        EXPECT_EQ(result.mController.mTiming.mFlags, 5);
+        EXPECT_FLOAT_EQ(result.mController.mClock.mPreviousTime, .25f);
+    }
+    EXPECT_FALSE(ESM4::advancePhysicalVelocityController(state, {}, true, .5f, false, .125f).mForce);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerNegativeDeltaUsesDefaultAndRepeatedTimeUsesZero)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xd, 1.f, 0.f, 0.f, 2.f};
+    state.mClock = {0.f, 1.f, 1.f};
+    state.mForceVector = {1.f, 0.f, 0.f, 0.f};
+    const auto backward = ESM4::advancePhysicalVelocityController(state, {}, true, .5f, true, .875f);
+    EXPECT_FLOAT_EQ(backward.mController.mFrameDelta, .016f);
+    EXPECT_FLOAT_EQ(backward.mController.mClock.mElapsed, .875f);
+    const auto repeated = ESM4::advancePhysicalVelocityController(
+        backward.mController, backward.mTimeCache, true, .5f, true, .875f);
+    EXPECT_FLOAT_EQ(repeated.mController.mFrameDelta, 0.f);
+    EXPECT_TRUE(repeated.mForce);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerCompletionAlsoStopsCyclicControllersAtStopKey)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xb, 1.f, 0.f, 0.f, .25f};
+    state.mClock = {0.f, 0.f, 0.f};
+    const auto result = ESM4::advancePhysicalVelocityController(state, {}, true, 1.f, true, .25f);
+    EXPECT_EQ(result.mController.mTiming.mFlags, 3);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mPreviousTime, .25f);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerRejectsOnlyUsedMalformedInputsAndForceOverflow)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xd, 1.f, 0.f, 0.f, 1.f};
+    state.mClock = {0.f, 0.f, 0.f};
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::advancePhysicalVelocityController(state, {}, true, .5f, true, bad), std::invalid_argument);
+    EXPECT_THROW(ESM4::advancePhysicalVelocityController(state, {}, true, bad, true, .125f), std::invalid_argument);
+    state.mForceVector = {bad, 0.f, 0.f, 0.f};
+    EXPECT_THROW(ESM4::advancePhysicalVelocityController(state, {}, true, .5f, true, .125f), std::invalid_argument);
+    EXPECT_NO_THROW(ESM4::advancePhysicalVelocityController(state, {}, true, 1.f, true, .125f));
+    EXPECT_NO_THROW(ESM4::advancePhysicalVelocityController(state, {}, true, .5f, false, .125f));
+    state.mForceVector = {std::numeric_limits<float>::max(), 0.f, 0.f, 0.f};
+    EXPECT_THROW(ESM4::advancePhysicalVelocityController(state, {}, true, .5f, true, .125f), std::invalid_argument);
+    EXPECT_EQ(state.mTiming.mFlags, 0xd);
+    EXPECT_FLOAT_EQ(state.mClock.mPreviousTime, 0.f);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerHierarchyGateUsesStrictOneThreshold)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xd, 1.f, 0.f, 0.f, 1.f};
+    state.mClock = {0.f, 0.f, 0.f};
+    state.mForceVector = {2.f, -3.f, 4.f, 0.f};
+    for (const auto& [gain, expected] : std::array<std::pair<float, bool>, 6>{{
+             {-1.f, true}, {-0.f, true}, {0.f, true}, {std::nextafter(1.f, 0.f), true},
+             {1.f, false}, {std::nextafter(1.f, 2.f), false}}})
+        EXPECT_EQ(ESM4::advancePhysicalVelocityController(state, {}, true, gain, true, .125f).mForce.has_value(), expected);
+}
+
+TEST(ESM4PhysicalCombat, VelocityControllerRelativeFirstUpdateResetsElapsedAndUsesDefaultFrameDelta)
+{
+    ESM4::PhysicalVelocityControllerState state;
+    state.mTiming = {0xc, 1.f, 0.f, 0.f, 2.f};
+    state.mClock.mElapsed = 7.f;
+    const auto result = ESM4::advancePhysicalVelocityController(state, {}, true, 1.f, true, .125f);
+    EXPECT_FLOAT_EQ(result.mController.mFrameDelta, .016f);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mElapsed, .125f);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mPreviousTime, .125f);
+    EXPECT_FLOAT_EQ(result.mController.mClock.mStartTime, .125f);
+    EXPECT_EQ(result.mController.mTiming.mFlags, 0xc);
 }
