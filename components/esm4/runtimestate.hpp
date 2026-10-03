@@ -29,7 +29,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 30;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 31;
 
     struct RuntimeContentIdentity
     {
@@ -316,6 +316,32 @@ namespace ESM4
     // Logical lifecycle phases, not the original executable's animation-state
     // numbers. A terminal actor is dead while its death animation may continue.
     enum class ActorLifePhase : std::uint8_t { Alive, Dead, EssentialUnconscious };
+
+    // Shape-world transforms and velocities in game world units. Record IDs
+    // belong to the identified NIF asset, not the content load order.
+    struct RuntimeRagdollBody
+    {
+        std::uint32_t mRecord = 0;
+        std::uint32_t mNodeRecord = 0;
+        std::array<float, 9> mRotation{1, 0, 0, 0, 1, 0, 0, 0, 1};
+        std::array<float, 3> mPosition{};
+        std::array<float, 3> mLinearVelocity{};
+        std::array<float, 3> mAngularVelocity{};
+        friend bool operator==(const RuntimeRagdollBody&, const RuntimeRagdollBody&) = default;
+    };
+
+    struct RuntimeActorRagdoll
+    {
+        ESM::FormKey mBase;
+        std::string mModel;
+        // Lowercase hexadecimal encoding of Nif::FileView's 16 opaque hash
+        // bytes. This is the renderer's asset identity, not a SHA-256 digest.
+        std::string mAssetHash;
+        // Canonical increasing body-record order, independent of hierarchy.
+        std::vector<RuntimeRagdollBody> mBodies;
+        void validate() const;
+        friend bool operator==(const RuntimeActorRagdoll&, const RuntimeActorRagdoll&) = default;
+    };
     struct RuntimeActorLife
     {
         ESM::FormKey mActor;
@@ -428,6 +454,8 @@ namespace ESM4
         // v30: timed native Havok pulse, independent of attack continuation.
         // Older saves start without inferred physical forces.
         std::map<ESM::FormKey, TimedKnockbackState> mNativeActorKnockback;
+        // v31: persistent physical snapshots; old saves have no invented pose.
+        std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

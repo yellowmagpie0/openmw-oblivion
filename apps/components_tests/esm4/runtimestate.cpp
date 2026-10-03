@@ -1901,6 +1901,106 @@ TEST(ESM4RuntimeState, NativeKnockbackVersionThirtyWireAndIndependentLifetime)
     EXPECT_EQ(old.serializeBinary(), legacyBytes);
 }
 
+TEST(ESM4RuntimeState, NativeRagdollVersionThirtyOneWireAndMigration)
+{
+    auto old = meleeState();
+    old.mVersion = 30;
+    const auto actor = old.mReferences.front().mKey;
+    const auto oldBytes = old.serializeBinary();
+    auto state = old;
+    state.mVersion = 31;
+    auto expected = oldBytes;
+    expected[std::string_view("OMW4STATE").size()] = 31;
+    expected.insert(expected.end(), 4, 0);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(oldBytes).mNativeActorRagdolls.empty());
+    ESM4::RuntimeActorRagdoll pose;
+    pose.mBase = old.mReferences.front().mBase;
+    pose.mModel = "meshes/characters/_male/skeleton.nif";
+    pose.mAssetHash = "00112233445566778899aabbccddeeff";
+    ESM4::RuntimeRagdollBody body;
+    body.mRecord = 12;
+    body.mNodeRecord = 8;
+    body.mPosition = {-0.f, -2, 3};
+    body.mLinearVelocity = {1, 2, 3};
+    body.mAngularVelocity = {4, 5, 6};
+    pose.mBodies.push_back(body);
+    state.mNativeActorRagdolls.emplace(actor, pose);
+    const auto bytes = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored.mNativeActorRagdolls, state.mNativeActorRagdolls);
+    EXPECT_TRUE(std::signbit(restored.mNativeActorRagdolls.at(actor).mBodies[0].mPosition[0]));
+    EXPECT_NE(restored.canonicalJson().find("\"position\":[-0.0,-2,3]"), std::string::npos);
+    const auto appendInteger = [&](std::uint32_t value) {
+        for (unsigned i = 0; i < 4; ++i)
+            expected.push_back(static_cast<std::uint8_t>(value >> (8 * i)));
+    };
+    const auto appendString = [&](const std::string& text) {
+        appendInteger(text.size());
+        expected.insert(expected.end(), text.begin(), text.end());
+    };
+    expected.resize(expected.size() - 4);
+    appendInteger(1);
+    appendString(actor.serialize());
+    appendString(pose.mBase.serialize());
+    appendString(pose.mModel);
+    appendString(pose.mAssetHash);
+    appendInteger(1);
+    appendInteger(12);
+    appendInteger(8);
+    for (const auto& values : {body.mRotation, std::array<float, 9>{-0.f, -2, 3, 1, 2, 3, 4, 5, 6}})
+        for (float value : values)
+            appendInteger(std::bit_cast<std::uint32_t>(value));
+    EXPECT_EQ(bytes, expected);
+    for (std::size_t size = oldBytes.size(); size < bytes.size(); ++size)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({bytes.begin(), bytes.begin() + size}), std::runtime_error);
+    EXPECT_EQ(old.serializeBinary(), oldBytes);
+}
+
+TEST(ESM4RuntimeState, NativeRagdollRejectsInvalidAssetOwnerAndBodySnapshots)
+{
+    auto state = meleeState();
+    state.mVersion = 31;
+    const auto actor = state.mReferences.front().mKey;
+    ESM4::RuntimeActorRagdoll pose;
+    pose.mBase = state.mReferences.front().mBase;
+    pose.mModel = "meshes/characters/_male/skeleton.nif";
+    pose.mAssetHash = "00112233445566778899aabbccddeeff";
+    pose.mBodies.push_back({12, 8});
+    state.mNativeActorRagdolls.emplace(actor, pose);
+    ASSERT_NO_THROW(state.serializeBinary());
+    const auto rejects = [&](auto mutate) {
+        auto invalid = state;
+        mutate(invalid);
+        EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    };
+    rejects([](auto& s) { s.mVersion = 30; });
+    rejects([](auto& s) { s.mNativeActorLife.clear(); });
+    rejects([](auto& s) { s.mNativeActorValues.clear(); });
+    rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mBase = ESM::FormKey{}; });
+    for (const std::string model : {"", "../skeleton.nif", "/skeleton.nif", "Meshes/skeleton.nif", "meshes\\skeleton.nif"})
+        rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mModel = model; });
+    for (const std::string hash : {"", "invalid", "00112233445566778899AABBCCDDEEFF"})
+        rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mAssetHash = hash; });
+    rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mBodies.clear(); });
+    rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mBodies.push_back(pose.mBodies[0]); });
+    rejects([&](auto& s) { auto body = pose.mBodies[0]; body.mRecord = 13; s.mNativeActorRagdolls.at(actor).mBodies.push_back(body); });
+    rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mBodies[0].mRotation[0] = -1; });
+    rejects([&](auto& s) { s.mNativeActorRagdolls.at(actor).mBodies[0].mRotation[1] = .5f; });
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        for (unsigned field = 0; field < 4; ++field)
+            rejects([&](auto& s) {
+                auto& body = s.mNativeActorRagdolls.at(actor).mBodies[0];
+                switch (field)
+                {
+                    case 0: body.mRotation[0] = bad; break;
+                    case 1: body.mPosition[0] = bad; break;
+                    case 2: body.mLinearVelocity[0] = bad; break;
+                    default: body.mAngularVelocity[0] = bad; break;
+                }
+            });
+}
+
 TEST(ESM4RuntimeState, NativeAnimationClockAndSequenceTimingPersistIndependentlyOfMeleeInput)
 {
     auto state = meleeState();

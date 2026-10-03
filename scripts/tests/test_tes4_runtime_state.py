@@ -1400,6 +1400,77 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 state_io.encode_payload(bad)
         with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-1])
 
+    def ragdoll_state(self):
+        state = self.melee_state()
+        state_io._upgrade_melee_phases(state)
+        state_io._upgrade_melee_timing(state)
+        state_io._upgrade_melee_ai(state)
+        state_io._upgrade_actor_draw(state)
+        state["schema_version"] = 31
+        owner = state["native_actor_values"][0]
+        body = {"record": 12, "node_record": 8, "rotation": [1., 0., 0., 0., 1., 0., 0., 0., 1.],
+                "position": [-0., -2., 3.], "linear_velocity": [1., 2., 3.], "angular_velocity": [4., 5., 6.]}
+        state["native_actor_ragdolls"] = [{"actor": owner["actor"], "base": owner["base"],
+            "model": "meshes/characters/_male/skeleton.nif", "asset_hash": "00112233445566778899aabbccddeeff",
+            "bodies": [body]}]
+        return state
+
+    def test_ragdoll_v31_independent_wire_and_migration(self):
+        state = self.ragdoll_state()
+        old = copy.deepcopy(state)
+        old["schema_version"] = 30
+        del old["native_actor_ragdolls"]
+        legacy = state_io.encode_payload(old)
+        self.assertNotIn("native_actor_ragdolls", state_io.decode_payload(legacy))
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 31)
+        expected += struct.pack("<I", 1)
+        entry = state["native_actor_ragdolls"][0]
+        for field in ("actor", "base", "model", "asset_hash"):
+            text = entry[field].encode()
+            expected += struct.pack("<I", len(text)) + text
+        expected += struct.pack("<III18f", 1, 12, 8, 1, 0, 0, 0, 1, 0, 0, 0, 1, -0., -2, 3, 1, 2, 3, 4, 5, 6)
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, expected)
+        restored = state_io.decode_payload(payload)
+        self.assertEqual(restored["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        self.assertEqual(math.copysign(1., restored["native_actor_ragdolls"][0]["bodies"][0]["position"][0]), -1.)
+        for size in range(len(legacy), len(payload)):
+            with self.subTest(size=size), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:size])
+        state_io._upgrade_actor_knockback(old)
+        self.assertEqual(old["native_actor_ragdolls"], [])
+
+    def test_ragdoll_v31_rejects_invalid_owner_asset_and_geometry(self):
+        state = self.ragdoll_state()
+        def pose(s): return s["native_actor_ragdolls"][0]
+        def body(s): return pose(s)["bodies"][0]
+        mutations = [lambda s: s.update(schema_version=30),
+            lambda s: s["native_actor_ragdolls"].append(copy.deepcopy(pose(s))),
+            lambda s: pose(s).update(actor="null"), lambda s: pose(s).update(base="null"),
+            lambda s: pose(s).update(bodies=[]),
+            lambda s: pose(s)["bodies"].append(copy.deepcopy(body(s))),
+            lambda s: body(s).update(record=-1), lambda s: body(s).update(node_record=True),
+            lambda s: body(s).update(rotation=[-1., 0., 0., 0., 1., 0., 0., 0., 1.]),
+            lambda s: body(s).update(rotation=[1., .5, 0., 0., 1., 0., 0., 0., 1.]),
+            lambda s: body(s).update(position=[0., 1.])]
+        for model in ("", "../skeleton.nif", "/skeleton.nif", "Meshes/skeleton.nif", "meshes\\skeleton.nif", "meshes//skeleton.nif"):
+            mutations.append(lambda s, m=model: pose(s).update(model=m))
+        for digest in ("", "invalid", "00112233445566778899AABBCCDDEEFF"):
+            mutations.append(lambda s, h=digest: pose(s).update(asset_hash=h))
+        for field, size in [("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)]:
+            for value in (float("inf"), float("nan"), True, None):
+                mutations.append(lambda s, f=field, n=size, v=value: body(s).update({f: [v] + [0.] * (n-1)}))
+        for index, mutate in enumerate(mutations):
+            bad = copy.deepcopy(state)
+            mutate(bad)
+            with self.subTest(index=index), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        bad["schema_version"] = 30
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io._upgrade_actor_knockback(bad)
+
     def test_animation_v23_exact_wire_and_independent_clock_lifetime(self):
         state = self.melee_state()
         state_io._upgrade_melee_phases(state)

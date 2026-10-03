@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 30
+CURRENT_VERSION = 31
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -993,6 +993,57 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if native_float(entry["remaining"]) < 0:
             raise RuntimeStateError("Negative TES4 native actor knockback timer")
         pulse_actors.add(actor)
+    ragdolls = check_collection(state.get("native_actor_ragdolls", []), "native actor ragdoll list")
+    if version < 31 and ragdolls:
+        raise RuntimeStateError("TES4 actor ragdolls require version31")
+    ragdoll_actors: set[str] = set()
+    for entry in ragdolls:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "base", "model", "asset_hash", "bodies"}:
+            raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
+        actor, base = entry["actor"], entry["base"]
+        native_key(actor)
+        native_key(base)
+        if actor in ragdoll_actors or actor not in native_keys or actor not in phases or value_bases.get(actor) != base:
+            raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
+        ragdoll_actors.add(actor)
+        model = entry["model"]
+        if (not isinstance(model, str) or not model or len(model) > 4096
+                or any(ord(c) < 32 or ord(c) >= 127 or c in "\\:" or "A" <= c <= "Z" for c in model)
+                or any(component in ("", ".", "..") for component in model.split("/"))):
+            raise RuntimeStateError("Noncanonical TES4 ragdoll model path")
+        digest = entry["asset_hash"]
+        if not isinstance(digest, str) or len(digest) != 32 or any(c not in "0123456789abcdef" for c in digest):
+            raise RuntimeStateError("Invalid TES4 ragdoll asset hash")
+        bodies = check_collection(entry["bodies"], "native ragdoll bodies")
+        if not bodies:
+            raise RuntimeStateError("Empty TES4 ragdoll snapshot")
+        previous = -1
+        nodes: set[int] = set()
+        for body in bodies:
+            if not isinstance(body, dict) or set(body) != {"record", "node_record", "rotation", "position", "linear_velocity", "angular_velocity"}:
+                raise RuntimeStateError("Invalid TES4 ragdoll body")
+            record, node = body["record"], body["node_record"]
+            if (type(record) is not int or type(node) is not int or not previous < record <= 0x7fffffff
+                    or not 0 <= node <= 0x7fffffff or node in nodes):
+                raise RuntimeStateError("Invalid TES4 ragdoll body identity or order")
+            previous = record
+            nodes.add(node)
+            for field, size in [("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)]:
+                vector = body[field]
+                if not isinstance(vector, list) or len(vector) != size:
+                    raise RuntimeStateError("Invalid TES4 ragdoll pose or velocity")
+                for value in vector:
+                    native_float(value)
+            rotation = [native_float(value) for value in body["rotation"]]
+            for row in range(3):
+                for other in range(row, 3):
+                    dot = sum(rotation[row*3+c] * rotation[other*3+c] for c in range(3))
+                    if abs(dot - (1. if row == other else 0.)) > 1e-4:
+                        raise RuntimeStateError("Nonrigid TES4 ragdoll rotation")
+            r = rotation
+            determinant = r[0]*(r[4]*r[8]-r[5]*r[7])-r[1]*(r[3]*r[8]-r[5]*r[6])+r[2]*(r[3]*r[7]-r[4]*r[6])
+            if abs(determinant - 1.) > 1e-4:
+                raise RuntimeStateError("Improper TES4 ragdoll rotation")
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -1541,6 +1592,17 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_actor_knockback"] = [{"actor": reader.string(),
             "acceleration": [reader.unpack("<f") for _ in range(3)], "remaining": reader.unpack("<f")}
             for _ in range(reader.count())]
+    if version >= 31:
+        result["native_actor_ragdolls"] = []
+        for _ in range(reader.count()):
+            entry = {"actor": reader.string(), "base": reader.string(), "model": reader.string(),
+                     "asset_hash": reader.string(), "bodies": []}
+            for _ in range(reader.count()):
+                body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
+                for field, size in [("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)]:
+                    body[field] = [reader.unpack("<f") for _ in range(size)]
+                entry["bodies"].append(body)
+            result["native_actor_ragdolls"].append(entry)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -1866,6 +1928,19 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for component in entry["acceleration"]:
                 writer.pack("<f", component)
             writer.pack("<f", entry["remaining"])
+    if version >= 31:
+        ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(ragdolls))
+        for entry in ragdolls:
+            for field in ["actor", "base", "model", "asset_hash"]:
+                writer.string(entry[field])
+            writer.pack("<I", len(entry["bodies"]))
+            for body in entry["bodies"]:
+                writer.pack("<I", body["record"])
+                writer.pack("<I", body["node_record"])
+                for field in ["rotation", "position", "linear_velocity", "angular_velocity"]:
+                    for value in body[field]:
+                        writer.pack("<f", value)
     return writer.finish()
 
 
@@ -1923,6 +1998,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 30 and state.get("native_actor_knockback"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor knockback")
     state.setdefault("native_actor_knockback", [])
+    if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
+    state.setdefault("native_actor_ragdolls", [])
 
 
 def _upgrade_melee_ai(state: dict[str, Any]) -> None:

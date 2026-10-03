@@ -532,6 +532,65 @@ namespace ESM4
         }
     }
 
+    void RuntimeActorRagdoll::validate() const
+    {
+        if (mBase.isNull() || mModel.empty() || mModel.size() > 4096
+            || mModel.front() == '/' || mModel.back() == '/'
+            || mModel.find("//") != std::string::npos
+            || std::any_of(mModel.begin(), mModel.end(), [](unsigned char c) {
+                return c < 32 || c >= 127 || c == '\\' || c == ':' || (c >= 'A' && c <= 'Z');
+            }))
+            throw std::runtime_error("Invalid TES4 ragdoll model identity");
+        for (std::size_t start = 0; start < mModel.size();)
+        {
+            const auto end = mModel.find('/', start);
+            const auto component = std::string_view(mModel).substr(start,
+                end == std::string::npos ? mModel.size() - start : end - start);
+            if (component == "." || component == "..")
+                throw std::runtime_error("Noncanonical TES4 ragdoll model path");
+            if (end == std::string::npos)
+                break;
+            start = end + 1;
+        }
+        if (mAssetHash.size() != 32 || std::any_of(mAssetHash.begin(), mAssetHash.end(), [](char c) {
+                return !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f');
+            }) || mBodies.empty() || mBodies.size() > sMaximumCollectionSize)
+            throw std::runtime_error("Invalid TES4 ragdoll asset hash or body count");
+        std::optional<std::uint32_t> previous;
+        std::set<std::uint32_t> nodes;
+        for (const auto& body : mBodies)
+        {
+            if ((previous && body.mRecord <= *previous)
+                || body.mRecord > std::numeric_limits<std::int32_t>::max()
+                || body.mNodeRecord > std::numeric_limits<std::int32_t>::max()
+                || !nodes.insert(body.mNodeRecord).second)
+                throw std::runtime_error("Invalid TES4 ragdoll body identity or order");
+            previous = body.mRecord;
+            for (float component : body.mRotation)
+                if (!std::isfinite(component))
+                    throw std::runtime_error("Nonfinite TES4 ragdoll rotation");
+            for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
+                for (float component : vector)
+                    if (!std::isfinite(component))
+                        throw std::runtime_error("Nonfinite TES4 ragdoll position or velocity");
+            const auto& r = body.mRotation;
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned other = row; other < 3; ++other)
+                {
+                    double dot = 0;
+                    for (unsigned column = 0; column < 3; ++column)
+                        dot += double(r[row * 3 + column]) * r[other * 3 + column];
+                    if (std::abs(dot - (row == other ? 1.0 : 0.0)) > 1e-4)
+                        throw std::runtime_error("Nonrigid TES4 ragdoll rotation");
+                }
+            const double determinant = double(r[0]) * (double(r[4]) * r[8] - double(r[5]) * r[7])
+                - double(r[1]) * (double(r[3]) * r[8] - double(r[5]) * r[6])
+                + double(r[2]) * (double(r[3]) * r[7] - double(r[4]) * r[6]);
+            if (std::abs(determinant - 1.0) > 1e-4)
+                throw std::runtime_error("Improper TES4 ragdoll rotation");
+        }
+    }
+
     void RuntimeActorLife::validate() const
     {
         if (mActor.isNull() || mBase.isNull()
@@ -778,6 +837,16 @@ namespace ESM4
         if (mVersion < 23 && !mNativeAnimationClocks.empty())
             throw std::runtime_error("TES4 animation clocks require runtime-state version23");
         checkSize(mNativeActorKnockback.size(), "native actor knockback list");
+        checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
+        if (mVersion < 31 && !mNativeActorRagdolls.empty())
+            throw std::runtime_error("TES4 actor ragdolls require runtime-state version31");
+        for (const auto& [actor, pose] : mNativeActorRagdolls)
+        {
+            pose.validate();
+            const auto values = nativeActors.find(actor);
+            if (values == nativeActors.end() || !lives.contains(actor) || values->second != pose.mBase)
+                throw std::runtime_error("Dangling or mismatched TES4 ragdoll owner");
+        }
         if (mVersion < 30 && !mNativeActorKnockback.empty())
             throw std::runtime_error("TES4 actor knockback requires runtime-state version30");
         for (const auto& [actor, pulse] : mNativeActorKnockback)
@@ -1624,6 +1693,28 @@ namespace ESM4
                 writer.floating(pulse.mRemaining);
             }
         }
+        if (mVersion >= 31)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorRagdolls.size()));
+            for (const auto& [actor, pose] : mNativeActorRagdolls)
+            {
+                writeKey(writer, actor);
+                writeKey(writer, pose.mBase);
+                writer.string(pose.mModel);
+                writer.string(pose.mAssetHash);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mBodies.size()));
+                for (const auto& body : pose.mBodies)
+                {
+                    writer.integer(body.mRecord);
+                    writer.integer(body.mNodeRecord);
+                    for (float value : body.mRotation)
+                        writer.floating(value);
+                    for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
+                        for (float value : vector)
+                            writer.floating(value);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2281,6 +2372,42 @@ namespace ESM4
                 pulse.mRemaining = reader.float32();
                 if (!result.mNativeActorKnockback.emplace(std::move(actor), pulse).second)
                     throw std::runtime_error("Duplicate TES4 native actor knockback");
+            }
+        }
+        if (result.mVersion >= 31)
+        {
+            const auto readRagdollKey = [&] {
+                const auto text = reader.string();
+                ESM::FormKey key;
+                try { key = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument&) { throw std::runtime_error("Invalid TES4 ragdoll identity"); }
+                if (key.serialize() != text)
+                    throw std::runtime_error("Noncanonical TES4 ragdoll identity");
+                return key;
+            };
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto actor = readRagdollKey();
+                RuntimeActorRagdoll pose;
+                pose.mBase = readRagdollKey();
+                pose.mModel = reader.string();
+                pose.mAssetHash = reader.string();
+                const auto bodies = reader.count();
+                for (std::uint32_t j = 0; j < bodies; ++j)
+                {
+                    RuntimeRagdollBody body;
+                    body.mRecord = reader.integer<std::uint32_t>();
+                    body.mNodeRecord = reader.integer<std::uint32_t>();
+                    for (float& value : body.mRotation)
+                        value = reader.float32();
+                    for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
+                        for (float& value : *vector)
+                            value = reader.float32();
+                    pose.mBodies.push_back(body);
+                }
+                if (!result.mNativeActorRagdolls.emplace(std::move(actor), std::move(pose)).second)
+                    throw std::runtime_error("Duplicate TES4 ragdoll owner");
             }
         }
         if (!reader.eof())
@@ -2965,6 +3092,47 @@ namespace ESM4
                 stream << "],\"remaining\":";
                 floating(pulse.mRemaining);
                 stream << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 31)
+        {
+            stream << ",\"native_actor_ragdolls\":[";
+            bool first = true;
+            const auto vector = [&](const auto& values) {
+                stream << '[';
+                for (std::size_t i = 0; i < values.size(); ++i)
+                {
+                    if (i) stream << ',';
+                    const float value = values[i];
+                    if (value == 0 && std::signbit(value)) stream << "-0.0";
+                    else stream << std::setprecision(17) << value;
+                }
+                stream << ']';
+            };
+            for (const auto& [actor, pose] : mNativeActorRagdolls)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << "\",\"base\":\""
+                       << escapeJson(pose.mBase.serialize()) << "\",\"model\":\"" << escapeJson(pose.mModel)
+                       << "\",\"asset_hash\":\"" << pose.mAssetHash << "\",\"bodies\":[";
+                for (std::size_t i = 0; i < pose.mBodies.size(); ++i)
+                {
+                    if (i) stream << ',';
+                    const auto& body = pose.mBodies[i];
+                    stream << "{\"record\":" << body.mRecord << ",\"node_record\":" << body.mNodeRecord
+                           << ",\"rotation\":";
+                    vector(body.mRotation);
+                    stream << ",\"position\":";
+                    vector(body.mPosition);
+                    stream << ",\"linear_velocity\":";
+                    vector(body.mLinearVelocity);
+                    stream << ",\"angular_velocity\":";
+                    vector(body.mAngularVelocity);
+                    stream << '}';
+                }
+                stream << "]}";
             }
             stream << ']';
         }

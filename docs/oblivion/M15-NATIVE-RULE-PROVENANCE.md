@@ -6300,3 +6300,43 @@ covered headlessly; native actor activation/force/mode/recovery policy, dynamic
 save integration, pixel/media and normal-input gameplay acceptance remain open.
 The display-dependent checkpoint133 environment failure still needs a new
 runtime run when a display can launch. No M15 stage gate is promoted here.
+
+
+### Checkpoint137 — version31 persistent physical body snapshot codec (S4/S6 open)
+
+Runtime schema31 appends an actor-keyed physical snapshot, with matching native
+actor/base/lifecycle identity, normalized model path and 32 lowercase hexadecimal
+characters encoding the NIF renderer's 16 opaque asset-hash bytes. This identity
+is not the independently audited asset SHA-256. Bodies are ordered by original
+NIF body record, have unique target node records, row-major rigid world rotation,
+world position and linear/angular velocity. All18 floats must be finite; rotation
+must be proper orthonormal under fixed1e-4 tolerance. Empty/duplicate/misordered
+bodies, invalid paths/hashes, mismatched owners and incompatible legacy versions
+are rejected. This stores physical realization without introducing another
+lifecycle enum. Older saves decode without physical history and migrate to an
+empty physical map; old wire layouts remain unchanged.
+
+Two C++ and two Python regressions check independently assembled wire bytes,
+roundtrip, signed zero, every truncated prefix of the new section, empty legacy
+migration, identity/path/hash/geometry violations and nonfinite components.
+Green01 covered the two C++ cases and243 preexisting Python tests. Full normal01
+passed C++ suites but the new Python wire test exposed a scalar writer API being
+called with paired IDs; the failed log is retained. The encoder now writes the
+two IDs separately. Fresh normal02 passes all245 Python tests plus2,126 component
+and819 engine tests. Sanitized02 passes the same full C++ inventories, zero
+failures/skips. Both stable tested fingerprint: 3b885d0997d60e0e78088214ea299f21f286c25436955c0be00d2706f12a7492. ASan uses
+ detect_leaks=0:halt_on_error=1; UBSan halt_on_error=1:print_stacktrace=1; no leak
+coverage. Sanitized01 also passed before the Python-only packing correction.
+
+Private C++/Python interoperability audit
+`S4/native-ragdoll-codec-comparison-{normal,sanitized}-02` checks24 snapshots
+and432 bodies: complete wire bytes must roundtrip exactly, including signed zero,
+and physical JSON fields must agree. Rotations/positions are input fixtures from
+the independently captured original bone-world corpus; velocities and asset
+identities are explicitly synthetic. Five negative controls reject truncation,
+trailing data, nonrigid rotation, duplicate body records and a noncanonical wire
+actor. Reports pin corpus, source, comparator, binary and component library hashes
+and commands. Normal01 retains the same Python packing failure. This is snapshot
+format and interoperability evidence; service/world/physics save capture and
+fresh-process gameplay restoration are not yet connected. Lifecycle force/mode/
+recovery and normal-input/media acceptance remain open. No M15 gate is promoted.
