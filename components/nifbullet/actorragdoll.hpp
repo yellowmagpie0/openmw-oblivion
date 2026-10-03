@@ -79,6 +79,11 @@ namespace NifBullet
         RagdollShape mShape;
     };
 
+    // Scale cached mass, inertia, center and supported shape properties only.
+    // Does not scale bone/body/joint transforms or admit a scaled live actor.
+    RagdollBodyDefinition ragdollBodyWithNativeScaledProperties(
+        const RagdollBodyDefinition& source, float resolvedActorScale);
+
     struct RagdollJointFrame
     {
         osg::Vec3f mPivot;

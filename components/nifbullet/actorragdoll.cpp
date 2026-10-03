@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -68,6 +69,65 @@ namespace NifBullet
                     osg::Vec4f(xyz(value.mDataB.mPerpAxis2) ^ xyz(value.mDataB.mAxis), 0)),
                 value.mMinAngle, value.mMaxAngle, value.mMaxFriction };
         }
+    }
+
+    RagdollBodyDefinition ragdollBodyWithNativeScaledProperties(
+        const RagdollBodyDefinition& source, float resolvedActorScale)
+    {
+        positive(resolvedActorScale);
+        const double scale = resolvedActorScale;
+        // Original 8A2D60 stores the cube only after both x87 multiplies.
+        const float inertiaScale = static_cast<float>(scale * scale * scale);
+        positive(inertiaScale);
+        const auto multiply = [](float value, double factor) {
+            require(std::isfinite(value), "nonfinite scaled property input");
+            const float result = static_cast<float>(double(value) * factor);
+            require(std::isfinite(result), "nonfinite scaled property result");
+            return result;
+        };
+        const auto vector = [&](const osg::Vec3f& value) {
+            return osg::Vec3f(multiply(value[0], scale), multiply(value[1], scale),
+                multiply(value[2], scale));
+        };
+        // Own the complete copy before changing any property. Caller state and
+        // shared authored definitions survive rejected and successful scaling.
+        RagdollBodyDefinition result = source;
+        positive(source.mMass);
+        result.mMass = multiply(source.mMass, scale);
+        positive(result.mMass);
+        result.mCenter = vector(source.mCenter);
+        for (std::size_t i = 0; i < result.mInertia.size(); ++i)
+            result.mInertia[i] = multiply(source.mInertia[i], inertiaScale);
+        std::visit([&](auto& shape) {
+            using Shape = std::decay_t<decltype(shape)>;
+            if constexpr (std::is_same_v<Shape, RagdollSphere>)
+            {
+                positive(shape.mRadius);
+                shape.mRadius = multiply(shape.mRadius, scale);
+                positive(shape.mRadius);
+            }
+            else if constexpr (std::is_same_v<Shape, RagdollCapsule>)
+            {
+                positive(shape.mRadius1);
+                positive(shape.mRadius2);
+                shape.mPoint1 = vector(shape.mPoint1);
+                shape.mPoint2 = vector(shape.mPoint2);
+                shape.mRadius1 = multiply(shape.mRadius1, scale);
+                shape.mRadius2 = multiply(shape.mRadius2, scale);
+                positive(shape.mRadius1);
+                positive(shape.mRadius2);
+            }
+            else
+            {
+                nonnegative(shape.mRadius);
+                require(shape.mVertices.size() >= 4, "insufficient hull vertices");
+                for (auto& vertex : shape.mVertices)
+                    vertex = vector(vertex);
+                // Original 8C8AA0 leaves convex-hull collision radius intact.
+                // Its plane-normal/offset array is not retained by this graph.
+            }
+        }, result.mShape);
+        return result;
     }
 
     std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(

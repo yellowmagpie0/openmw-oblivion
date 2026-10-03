@@ -8413,3 +8413,71 @@ lifecycle evidence, not native actor admission, World.init, physics or gameplay.
 No stage closes. Next: actual World physical lifecycle/controller ownership,
 actor/race scale admission, native keyframed stepping, clock/mode/flag save
 projection and unchanged stock-floor fresh-restart/normal-gameplay gates.
+
+
+### Checkpoint176: reproduce native body and shape property scaling
+
+Checkpoint175 committed as `36193abb0e0cd261928fb583ce8009184bc10f86`,
+172 isolated commits, verified exact-byte tree/fresh clone and bundle153.
+NifBullet::ragdollBodyWithNativeScaledProperties produces an owned copy of
+cached mass, inertia, center and admitted shape properties for a positive finite
+resolved actor scale. Original mass scales linearly; inertia uses a stored
+binary32 scale cube after two double intermediates, then a separate binary32
+product for each element. Center, sphere radius, capsule endpoint coordinates
+and distinct endpoint radii scale with individual binary32 products. Convex
+hull vertices scale but its collision radius remains unchanged. Inputs and
+outputs must remain finite; invalid scale, mass/radius underflow and overflowing
+cube/results reject without mutating the caller. Source record identities,
+transform, rotation, authored bone bind, coefficients and speed limits are
+retained. This property-only function does not scale joint frames, bodyT
+translation or renderer transforms, nor does it remove live actor admission
+restrictions. It is a prerequisite for the subsequent complete graph adapter.
+
+Four new tests prove mass/inertia distinction, capsule radii, owned hull
+vertices with unchanged radius, and atomic rejection. Property-scale-baseline01
+retains all four failing tests against the unimplemented copy adapter. Full
+property-scale normal/sanitized01 each pass2,230 components and892 engine
+cases with exact inventories, zero failures/skips, rebuilding openmw/esmtool.
+Tested source fingerprint `d57a3e19f7b23a5a325d749c3fe874b433462ff953560543a716a5fe357b51cb`. ASan leaks disabled, UBSan halts.
+Python sources unchanged and not rerun.
+
+Mass-scale-oracle01 executes the complete original8A2D60 without stubs in612
+cases: independently byte-audited18 stock body inertia/COM/mass inputs,
+17 positive/adjacent-float scale patterns, both x87 precision words and default
+SSE rounding. All8,568 stored fields are retained; all unrelated cached-data
+bytes and inertia padding are unchanged. Original layout uses three padded
+inertia vectors at70/80/90, COM vec4 atA0 and massB0. Source/corpus SHA256
+`9347467b6e9ed16320b769450cf6ae2cf9878d89ab427e30a608b6786692a0ad`, `32b475d0c3aca1b583a15fda5bc03a334951048def8571cb22cb1c7ea99b3be6`; stock boundary SHA256
+`d39590a10329df8f2fe3133ea93ee3824f56e77100d56ceac37aa9ab08a12161`. This probe excludes the caller/full clone,
+cache lifetime, scale resolution, shapes/joints, renderer and live world.
+
+Shape-scale-oracle01 executes408 original sphere8AF4B0, capsule8B68B0 and
+hull8C8AA0 copy-member scaling prefixes with real cached-data virtual getters,
+17 scales, four coordinate patterns and both x87 words. No calls are stubbed;
+each execution stops before generic8A2670 clone publication. Hull plane
+normals and collision radius are unchanged; vertices vec4 and plane W scale.
+Source/corpus SHA256 `a5ebe5ca41d423974f3e78ebbdf28fc5af90b3473e6c3fb437d89850d551754d`, `6b30dddd7ac3a08efe5d1046fb349f35bce56dc77051be561b38c73a12a8e73b`. Cache
+allocation/creation/deletion, native constructors/full clone and gameplay are
+outside this probe. Both probes identify original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+Property-scale-compare normal/sanitized01 each pass all1,020 cases and10,948
+exact binary32 checks against these original corpora. Scope is explicitly the
+represented fields:13 mass properties; sphere radius; capsule XYZ/end radii;
+hull XYZ/radius. COM padding, separate cached capsule global radius and hull
+plane arrays are not retained by the owned definition and are not claimed as
+implemented. Source/library/input hashes remain stable throughout comparisons.
+
+Bounded caller inspection additionally finds original8A4E30 applying the
+resolved cloning-process+10 scale to cached body data before shape cloning.
+WorldObject copy89D610 calls source virtual+64 withtrue; actual8BD670 deletes
+and clears source+C cached data. This is instruction inspection, not a full
+repeated-clone execution proof. NiAV copy707E90 preserves its13 local-transform
+words unchanged; native SetScale continuation4DB5FF instead writes root local
+scale and updates3D. Do not multiply every node's local translation during
+cloning or conflate actor scale with the fixed Havok length conversion.
+
+No stage closes. Next: verified joint/bodyT property and renderer placement
+scaling, complete graph/live admission and World physical lifecycle/controller
+ownership. Native stepping and unchanged floor fresh-restart/normal-gameplay
+gates remain open; all later M15 stages retain their existing pending status.

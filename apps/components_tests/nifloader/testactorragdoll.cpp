@@ -144,6 +144,65 @@ namespace
         EXPECT_TRUE(NifBullet::loadActorRagdollDefinition(mFile).mBodies[0].mUsesRigidBodyTransform);
     }
 
+    TEST_F(ActorRagdollTest, NativePropertyScaleUsesLinearMassAndStoredCubicInertia)
+    {
+        auto original = NifBullet::loadActorRagdollDefinition(mFile).mBodies.front();
+        original.mCenter = {1, -2, 3};
+        original.mInertia = {1, .25f, 0, .25f, 2, 0, 0, 0, 3};
+        const auto scaled = NifBullet::ragdollBodyWithNativeScaledProperties(original, 2);
+        EXPECT_EQ(scaled.mMass, 80);
+        EXPECT_EQ(scaled.mCenter, osg::Vec3f(2, -4, 6));
+        EXPECT_EQ(scaled.mInertia, (std::array<float, 9>{8, 2, 0, 2, 16, 0, 0, 0, 24}));
+        EXPECT_EQ(std::get<NifBullet::RagdollSphere>(scaled.mShape).mRadius, 1);
+        EXPECT_EQ(original.mMass, 40);
+        EXPECT_EQ(original.mCenter, osg::Vec3f(1, -2, 3));
+        EXPECT_EQ(scaled.mBoneBind, original.mBoneBind);
+        EXPECT_EQ(scaled.mTranslation, original.mTranslation);
+        EXPECT_EQ(scaled.mRotation, original.mRotation);
+        EXPECT_EQ(scaled.mRecord, original.mRecord);
+        EXPECT_EQ(scaled.mNodeRecord, original.mNodeRecord);
+        EXPECT_EQ(scaled.mLinearDamping, original.mLinearDamping);
+        EXPECT_EQ(scaled.mMaxLinearVelocity, original.mMaxLinearVelocity);
+    }
+
+    TEST_F(ActorRagdollTest, NativeCapsuleScaleRetainsDistinctEndpointRadii)
+    {
+        const auto original = NifBullet::loadActorRagdollDefinition(mFile).mBodies[1];
+        const auto scaled = NifBullet::ragdollBodyWithNativeScaledProperties(original, .5f);
+        const auto& capsule = std::get<NifBullet::RagdollCapsule>(scaled.mShape);
+        EXPECT_EQ(capsule.mPoint1, osg::Vec3f(0, 0, -.5f));
+        EXPECT_EQ(capsule.mPoint2, osg::Vec3f(0, 0, .5f));
+        EXPECT_EQ(capsule.mRadius1, .125f);
+        EXPECT_EQ(capsule.mRadius2, .15f);
+        EXPECT_EQ(std::get<NifBullet::RagdollCapsule>(original.mShape).mRadius2, .3f);
+    }
+
+    TEST_F(ActorRagdollTest, NativeHullScalePreservesCollisionRadiusAndOwnsVertices)
+    {
+        auto original = NifBullet::loadActorRagdollDefinition(mFile).mBodies.front();
+        original.mShape = NifBullet::RagdollHull{{{1, 0, 0}, {0, 2, 0}, {0, 0, 3}, {-1, -1, -1}}, .3f};
+        auto scaled = NifBullet::ragdollBodyWithNativeScaledProperties(original, 2);
+        auto& hull = std::get<NifBullet::RagdollHull>(scaled.mShape);
+        EXPECT_EQ(hull.mRadius, .3f);
+        EXPECT_EQ(hull.mVertices[1], osg::Vec3f(0, 4, 0));
+        hull.mVertices[0] = {};
+        EXPECT_EQ(std::get<NifBullet::RagdollHull>(original.mShape).mVertices[0], osg::Vec3f(1, 0, 0));
+    }
+
+    TEST_F(ActorRagdollTest, NativePropertyScaleRejectsInvalidAndUnrepresentableResultsAtomically)
+    {
+        auto original = NifBullet::loadActorRagdollDefinition(mFile).mBodies.front();
+        for (float scale : {0.f, -1.f, std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::max()})
+            EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(original, scale), std::runtime_error);
+        original.mCenter[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(original, 2), std::runtime_error);
+        EXPECT_EQ(original.mMass, 40);
+        original.mCenter[0] = 0;
+        original.mInertia[4] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(original, 2), std::runtime_error);
+    }
+
     TEST_F(ActorRagdollTest, RejectsUnsupportedFormat)
     {
         mFile.mVersion = Nif::NIFFile::VER_MW;
