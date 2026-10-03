@@ -317,6 +317,105 @@ namespace
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
+    TEST_P(RagdollSchedulerTest, NativeMotionModesSwitchAtWorkerBarrierAndEnterNextSubstep)
+    {
+        constexpr float dt = 1.f / 60.f;
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native motion mode barrier");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = dt;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        scheduler.setActorRagdollNativeMotionModes(mPtr, key);
+        const auto keyed = scheduler.captureActorRagdoll(mPtr)[0];
+        EXPECT_LT(keyed.mPose.getOrigin().z(), 2);
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr),
+            std::vector<NifBullet::RagdollNativeMotionRequest>(key.begin(), key.end()));
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{{12, {{1, 0, 2}, {0, 0, 0, 1}}, 1.f}}};
+        EXPECT_THROW(scheduler.driveActorRagdollPoseVelocities(mPtr, drives, 120.f), std::invalid_argument);
+        time += dt;
+        scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 1,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose, keyed.mPose);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{{12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        scheduler.setActorRagdollNativeMotionModes(mPtr, dynamic);
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr),
+            std::vector<NifBullet::RagdollNativeMotionRequest>(dynamic.begin(), dynamic.end()));
+        time += dt;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 2,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        EXPECT_LT(scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin().z(), keyed.mPose.getOrigin().z());
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        scheduler.removeActorRagdoll(mPtr);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeMotionModesRejectStaleOwnersAndInvalidBatchesWithoutPublication)
+    {
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        const auto before = scheduler.captureActorRagdoll(mPtr)[0];
+        const auto modes = scheduler.captureActorRagdollNativeMotionModes(mPtr);
+        std::array<NifBullet::RagdollNativeMotionRequest, 1> request{{{999, NifBullet::RagdollNativeMotion::Keyframed}}};
+        EXPECT_THROW(scheduler.setActorRagdollNativeMotionModes(mPtr, request), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose, before.mPose);
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr), modes);
+        request[0].mRecord = 12;
+        request[0].mMotion = static_cast<NifBullet::RagdollNativeMotion>(99);
+        EXPECT_THROW(scheduler.setActorRagdollNativeMotionModes(mPtr, request), std::invalid_argument);
+        request[0].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+        MWWorld::LiveCellRef<ESM::Static> replacement(mReference, &mBase);
+        MWWorld::Ptr updated(&replacement);
+        scheduler.updateActorRagdollPtr(mPtr, updated);
+        EXPECT_THROW(scheduler.setActorRagdollNativeMotionModes(mPtr, request), std::invalid_argument);
+        EXPECT_THROW(scheduler.captureActorRagdollNativeMotionModes(mPtr), std::invalid_argument);
+        EXPECT_THROW(scheduler.setActorRagdollNativeMotionModes({}, request), std::invalid_argument);
+        scheduler.setActorRagdollNativeMotionModes(updated, request);
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(updated),
+            std::vector<NifBullet::RagdollNativeMotionRequest>(request.begin(), request.end()));
+        scheduler.removeActorRagdoll(updated);
+        EXPECT_THROW(scheduler.setActorRagdollNativeMotionModes(updated, {}), std::invalid_argument);
+        EXPECT_THROW(scheduler.captureActorRagdollNativeMotionModes(updated), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeMotionModesPreserveUnselectedBodiesAndWorldConfiguration)
+    {
+        auto other = mGraph.mBodies[0];
+        other.mRecord = 24;
+        mGraph.mBodies.push_back(other);
+        mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(0, 0, 4));
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(mWorld.getCollisionObjectArray()[0]);
+        auto* second = btRigidBody::upcast(mWorld.getCollisionObjectArray()[1]);
+        first->setActivationState(ISLAND_SLEEPING);
+        const auto* firstOwner = scheduler.getUserPointer(first);
+        const auto* secondOwner = scheduler.getUserPointer(second);
+        const auto group = second->getBroadphaseHandle()->m_collisionFilterGroup;
+        const auto mask = second->getBroadphaseHandle()->m_collisionFilterMask;
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{24, NifBullet::RagdollNativeMotion::Keyframed}}};
+        scheduler.setActorRagdollNativeMotionModes(mPtr, key);
+        EXPECT_FALSE(first->isActive());
+        EXPECT_FALSE(first->isKinematicObject());
+        EXPECT_TRUE(second->isKinematicObject());
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr), (std::vector<NifBullet::RagdollNativeMotionRequest>{
+            {12, NifBullet::RagdollNativeMotion::Dynamic}, {24, NifBullet::RagdollNativeMotion::Keyframed}}));
+        EXPECT_EQ(scheduler.getUserPointer(first), firstOwner);
+        EXPECT_EQ(scheduler.getUserPointer(second), secondOwner);
+        EXPECT_EQ(second->getBroadphaseHandle()->m_collisionFilterGroup, group);
+        EXPECT_EQ(second->getBroadphaseHandle()->m_collisionFilterMask, mask);
+        EXPECT_TRUE(second->getFlags() & BT_DISABLE_WORLD_GRAVITY);
+        EXPECT_EQ(second->getGravity(), btVector3(0, 0, 0));
+        EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
+        scheduler.removeActorRagdoll(mPtr);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+    }
+
     TEST_P(RagdollSchedulerTest, NativePoseDriveUsesNativeGravityAndPreservesOtherWorldState)
     {
         MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);

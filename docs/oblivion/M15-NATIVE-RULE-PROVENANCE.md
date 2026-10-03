@@ -7681,3 +7681,44 @@ then complete the actual blend-route controller update and its persistence.
 Native frame/settings ownership, renderer blend-route publication, actor scaling,
 full World/save lifecycle, cross-owner contact activation and stock floor
 continuation remain open.
+
+
+### Checkpoint164: worker-owned dynamic/keyframed publication
+
+Checkpoint163 committed as `c4db091f31179501fbe5b18e2109a57a6ea4e336`,
+160 isolated commits with exact-byte/fresh-clone proof. PhysicsSystem now exposes
+owned sparse native motion-mode publication/query through PhysicsTaskScheduler.
+Both scheduler operations wait for outstanding workers and take the collision
+world lock before resolving the actor owner and accessing its owned graph.
+Stale, null and removed owners reject even an empty setter request. Body-record
+and mode validation remains at ActorRagdollPhysics; no new simulation authority
+or serialization representation is introduced.
+
+Three new parameterized test bodies provide nine cases across0/1/2 workers:
+queued dynamic stepping completes before the keyframed handoff; the next
+substep holds that pose; returning to Dynamic resumes falling. Dynamic-only
+pose drives reject keyed bodies. Invalid records/modes and stale owners reject
+without publishing pose/mode changes. Unselected sleeping bodies, owner pointers,
+collision filters, per-body gravity flags and global world gravity survive.
+Every graph teardown leaves zero collision objects and constraints. The existing
+public PhysicsSystem capsule/snapshot/removal integration test now checks stale
+owner rejection, requested modes and exact pose conservation while the capsule
+remains suspended. It then exercises the existing impulse/drive/restore/removal
+path after returning to Dynamic, in all three worker configurations.
+
+S4/native-ragdoll-motion-scheduler-baseline-01 retains a build failure caused by
+a missing request-type forward declaration; baseline02 builds and retains all10
+filtered behavioral failures with an inactive scheduler setter. The corrected
+setter passes full S4/native-ragdoll-motion-scheduler-{normal,sanitized}-01:
+869 engine cases each, exact complete inventories, zero failures/skips;
+openmw/openmw-tests/esmtool built in both configurations. Source fingerprint
+`cb10ee3512c463e3bf1678379354507a36f78d8b44ac571e5d94b26ba1beea2c`. ASan leak detection disabled; UBSan halts on errors. The component
+implementation is unchanged from checkpoint163's2,199 passing component cases
+in each build at that checkpoint's separate source fingerprint. Python unchanged.
+
+This closes only the worker/frontend motion-mode boundary. Native blend route
+sequencing, animated scene-to-physics synchronization, root blend selection,
+mode/clock persistence, actor scaling, actual World/gameplay acceptance,
+cross-owner contact activation and the retained stock-floor continuation failure
+remain open. No M15 stage closes. Next: independently verify native root blend
+selection, then connect the actual blend controller and its save authority.

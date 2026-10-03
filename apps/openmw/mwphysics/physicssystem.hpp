@@ -61,6 +61,7 @@ namespace NifBullet
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
     struct RagdollNativeVelocityDrive;
+    struct RagdollNativeMotionRequest;
 }
 
 namespace ESM4
@@ -198,6 +199,11 @@ namespace MWPhysics
             const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
         void restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
             const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
+        // Queries/publication share the worker barrier and owned record identity.
+        // These requested modes are not yet part of the physical save projection.
+        std::vector<NifBullet::RagdollNativeMotionRequest> captureActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr);
+        void setActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativeMotionRequest> requests);
         // Serialized with movement workers; controller supplies resolved inverse time.
         void driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds);

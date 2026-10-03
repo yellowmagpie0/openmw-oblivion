@@ -788,6 +788,22 @@ namespace MWPhysics
         actorRagdoll(ptr).mPhysics.restore(states);
     }
 
+    std::vector<NifBullet::RagdollNativeMotionRequest> PhysicsTaskScheduler::captureActorRagdollNativeMotionModes(
+        const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureNativeMotionModes();
+    }
+
+    void PhysicsTaskScheduler::setActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeMotionRequest> requests)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.setNativeMotionModes(requests);
+    }
+
     void PhysicsTaskScheduler::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {

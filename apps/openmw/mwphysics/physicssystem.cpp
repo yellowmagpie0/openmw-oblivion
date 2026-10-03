@@ -819,6 +819,18 @@ namespace MWPhysics
         mTaskScheduler->restoreActorRagdollSnapshot(ptr, snapshot, base, model);
     }
 
+    std::vector<NifBullet::RagdollNativeMotionRequest> PhysicsSystem::captureActorRagdollNativeMotionModes(
+        const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdollNativeMotionModes(ptr);
+    }
+
+    void PhysicsSystem::setActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeMotionRequest> requests)
+    {
+        mTaskScheduler->setActorRagdollNativeMotionModes(ptr, requests);
+    }
+
     void PhysicsSystem::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {

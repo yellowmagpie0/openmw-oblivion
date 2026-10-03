@@ -333,6 +333,20 @@ namespace
             const auto base = ESM::FormKey::content("headless.esm", 0x800);
             const auto original = physics.captureActorRagdollSnapshot(ptr, base, path.value());
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
+            const std::array<NifBullet::RagdollNativeMotionRequest, 1> keyframed{{
+                {12, NifBullet::RagdollNativeMotion::Keyframed}}};
+            const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{
+                {12, NifBullet::RagdollNativeMotion::Dynamic}}};
+            EXPECT_THROW(physics.setActorRagdollNativeMotionModes(previous, keyframed), std::invalid_argument);
+            EXPECT_THROW(physics.captureActorRagdollNativeMotionModes(previous), std::invalid_argument);
+            physics.setActorRagdollNativeMotionModes(ptr, keyframed);
+            EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr),
+                std::vector<NifBullet::RagdollNativeMotionRequest>(keyframed.begin(), keyframed.end()));
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            physics.setActorRagdollNativeMotionModes(ptr, dynamic);
+            EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr),
+                std::vector<NifBullet::RagdollNativeMotionRequest>(dynamic.begin(), dynamic.end()));
             physics.applyActorRagdollImpulse(ptr, 0, btVector3(2, 0, 0), poses[0].getOrigin());
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity, btVector3(1, 0, 0));
             physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
