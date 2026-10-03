@@ -1,5 +1,6 @@
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollconecoordinates.hpp>
+#include <components/nifbullet/ragdollvelocity.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
@@ -487,4 +488,84 @@ namespace
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
+}
+
+
+namespace
+{
+    TEST(RagdollNativeVelocityStep, MatchesOriginalGravityDampingAndBothCapStores)
+    {
+        // Independent full original 8e96c0 corpus cases3918 and3070.
+        const NifBullet::RagdollNativeVelocities input{{10, 20, 30}, {10, 20, 30}};
+        auto output = NifBullet::ragdollNativeVelocityStep(input, {0, 0, 1, 31.4159f}, 1, {});
+        const std::array<std::uint32_t, 3> linear{1049155191, 1057543799, 1062027699};
+        const std::array<std::uint32_t, 3> angular{1061253928, 1069642536, 1074861662};
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mLinear[i]), linear[i]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mAngular[i]), angular[i]);
+        }
+        output = NifBullet::ragdollNativeVelocityStep(input, {.1f, 0, 10000, .1f}, .5f,
+            {0, 0, std::bit_cast<float>(3256034919u)});
+        const std::array<std::uint32_t, 3> gravityLinear{1092091904, 1100480512, 3234748175};
+        const std::array<std::uint32_t, 3> limitedAngular{1034679446, 1043068054, 1048639344};
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mLinear[i]), gravityLinear[i]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mAngular[i]), limitedAngular[i]);
+        }
+    }
+
+    TEST(RagdollNativeVelocityStep, ZeroDurationDoesNotApplyAnAngularCapAndDampingClampsAtZero)
+    {
+        const NifBullet::RagdollNativeVelocities input{{10, 20, 30}, {10, 20, 30}};
+        auto output = NifBullet::ragdollNativeVelocityStep(input, {0, 0, 0, 0}, 0, {});
+        EXPECT_EQ(output.mLinear, osg::Vec3f());
+        EXPECT_EQ(output.mAngular, input.mAngular);
+        output = NifBullet::ragdollNativeVelocityStep(input, {2, 2, 10000, 31.4159f}, 1, {});
+        EXPECT_EQ(output.mLinear, osg::Vec3f());
+        EXPECT_EQ(output.mAngular, osg::Vec3f());
+        const float tiny = std::numeric_limits<float>::denorm_min();
+        const NifBullet::RagdollNativeVelocities zeros{{-0.0f, -tiny, tiny}, {-0.0f, -tiny, tiny}};
+        output = NifBullet::ragdollNativeVelocityStep(zeros, {0, 0, 10000, 31.4159f}, 1, {});
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mAngular[i]),
+                std::bit_cast<std::uint32_t>(zeros.mAngular[i]));
+    }
+
+    TEST(RagdollNativeVelocityStep, RejectsInvalidCoefficientsVectorsAndOverflowWithoutChangingInputs)
+    {
+        const NifBullet::RagdollNativeVelocities input{{10, 20, 30}, {1, 2, 3}};
+        for (float bad : {-1.f, std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()})
+        {
+            EXPECT_THROW(NifBullet::ragdollNativeVelocityStep(input, {0, 0, 1, 1}, bad, {}), std::invalid_argument);
+            for (unsigned field = 0; field < 4; ++field)
+            {
+                NifBullet::RagdollMotionLimits limits{0, 0, 1, 1};
+                switch (field)
+                {
+                    case 0: limits.mLinearDamping = bad; break;
+                    case 1: limits.mAngularDamping = bad; break;
+                    case 2: limits.mMaxLinearVelocity = bad; break;
+                    case 3: limits.mAngularLimit = bad; break;
+                }
+                EXPECT_THROW(NifBullet::ragdollNativeVelocityStep(input, limits, 1, {}), std::invalid_argument);
+            }
+        }
+        for (unsigned field = 0; field < 3; ++field)
+        {
+            auto invalid = input;
+            osg::Vec3f delta;
+            const float nan = std::numeric_limits<float>::quiet_NaN();
+            if (field == 0) invalid.mLinear[1] = nan;
+            if (field == 1) invalid.mAngular[2] = nan;
+            if (field == 2) delta[0] = nan;
+            EXPECT_THROW(NifBullet::ragdollNativeVelocityStep(invalid, {0, 0, 1, 1}, 1, delta), std::invalid_argument);
+        }
+        auto overflowing = input;
+        overflowing.mLinear[0] = std::numeric_limits<float>::max();
+        EXPECT_THROW(NifBullet::ragdollNativeVelocityStep(overflowing, {0, 0, 1, 1}, 1, {}), std::invalid_argument);
+        EXPECT_EQ(input.mLinear, osg::Vec3f(10, 20, 30));
+        EXPECT_EQ(input.mAngular, osg::Vec3f(1, 2, 3));
+    }
 }

@@ -159,6 +159,7 @@ add_component_dir (nifbullet
     actorragdollphysics
     ragdollconecoordinates
     ragdollbonepose
+    ragdollvelocity
     )
 
 add_component_dir (toutf8

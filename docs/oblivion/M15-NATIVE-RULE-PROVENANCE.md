@@ -6442,3 +6442,50 @@ World frame capture/admission/restore callers, gravity/velocity policy, native
 activation/recovery and normal combat corpse/loot/media acceptance remain open.
 The display-dependent runtime/TES3 regression still needs an environment that
 can launch a display. No M15 gate is promoted here.
+
+
+### Checkpoint140 — original motion delta/damping/velocity-cap kernel (S4/S6 open)
+
+A pure native-unit velocity kernel implements the original sphere-motion stores:
+supplied binary32 linear velocity delta first, separately clamped damping factors,
+linear speed cap, then angular rotation-step cap. Original SSE squared-length
+reduction uses Y+X then Z with binary32 multiplication/addition stores; x87
+normalization factors are stored to binary32 before vector multiplication. Angular
+step uses half dt, original0.40528470277786255 squared-angle constant and maximum
+step0.8999999761581421. Zero duration preserves angular velocity even with zero
+angular limit; linear cap remains independent of duration. Inputs require finite
+vectors and nonnegative finite coefficients; overflow is diagnosed instead of
+publishing nonfinite physical state. The angular-limit argument is explicitly the
+raw original motion+B8 field. Conversion from serialized NIF maxAngularVelocity
+has not yet been admitted and is not silently assumed. The kernel does not
+prepare gravity, integrate transforms or change live actor/scheduler policy.
+
+`S4/native-ragdoll-velocity-step-oracle-01` independently executes6,480 full
+original8e96c0 returns with actual889470/4d6830/8b1dd0 and no stubbed calls, both
+x87 precision settings. The corpus varies frame duration, two damping channels,
+linear and angular limits, ordinary/zero/subnormal velocities and supplied zero,
+signed-tiny or gravity-like fixture deltas. It captures damping and both cap
+stores, and verifies final returned velocities retain those cap results. The
+supplied delta and raw motion limits are explicit fixtures, not proof of original
+world-step force preparation or NIF-to-motion property mapping. Three component
+regressions pin independent original cases3918/3070, zero-duration/damping/tiny
+branches and invalid vectors/coefficients/overflow without input mutation.
+Green01 passes the three selected cases.
+
+`S4/native-ragdoll-velocity-step-comparison-{normal,sanitized}-02` match allsix
+binary32 output components exactly in all6,480 independently captured cases, with
+five rejecting controls for negative duration/angular limit, NaN velocity,
+infinite delta and squared-speed overflow. Reports pin original corpus, helper,
+comparator, binary and component library hashes, build commands and tested source
+identity. Normal comparison01 retains a private standalone helper missing its
+cstdint include; fresh02 fixes the helper include without changing production
+math or expected tolerances. Full `S4/native-ragdoll-velocity-step-{normal,sanitized}-01`
+pass2,129 component and827 engine tests, complete inventories and zero failures/
+skips. Normal also passes245 Python tests. Stable tested fingerprint
+`9eb2b4ef494a8c5c42ca042b812e6073b7949a01ea2610ab40a1dc2d57c6c13f`. ASan detect_leaks=0:halt_on_error=1; UBSan
+halt_on_error=1:print_stacktrace=1; no leak coverage. Existing physical ownership,
+snapshot and native pose conversion behavior is unchanged. Live force/property
+mapping, actor motion-mode/recovery policy, World frame admission/capture/restore,
+normal-input corpse/loot/media and display-dependent TES3 runtime gates remain
+open. This kernel is one prerequisite for those integrations; no M15 gate is
+promoted and no native Havok whole-trajectory agreement is claimed.
