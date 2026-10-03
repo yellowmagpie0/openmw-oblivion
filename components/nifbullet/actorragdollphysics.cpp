@@ -238,6 +238,9 @@ namespace NifBullet
             btScalar mDynamicMass = 0;
             btVector3 mDynamicInertia{0, 0, 0};
             RagdollNativeMotion mMotion = RagdollNativeMotion::Dynamic;
+            // Owned snapshot: only transform flag, local translation/rotation
+            // are used. Shape properties remain in their existing owners.
+            RagdollBodyDefinition mSceneOffset{};
         };
         btDynamicsWorld& mWorld;
         float mLengthScale;
@@ -715,6 +718,8 @@ namespace NifBullet
             const auto& input = definition.mBodies[i];
             require(records.insert(input.mRecord).second, "duplicate body identity");
             validatePose(bodyPoses[i]);
+            if (input.mUsesRigidBodyTransform)
+                bodyTLocalRotation(input);
             require(std::isfinite(input.mMass) && input.mMass > 0, "invalid mass");
             coefficient(input.mLinearDamping);
             coefficient(input.mAngularDamping);
@@ -781,6 +786,10 @@ namespace NifBullet
             mImpl->mShapes.push_back(std::move(compound));
             mImpl->mBodies.push_back({input.mRecord, centerFrame, input.mLinearDamping,
                 input.mAngularDamping, limits, std::move(body)});
+            auto& owned = mImpl->mBodies.back();
+            owned.mSceneOffset.mUsesRigidBodyTransform = input.mUsesRigidBodyTransform;
+            owned.mSceneOffset.mTranslation = input.mTranslation;
+            owned.mSceneOffset.mRotation = input.mRotation;
             mImpl->mBodies.back().mDynamicMass = input.mMass;
             mImpl->mBodies.back().mDynamicInertia = diagonal;
         }
@@ -976,7 +985,9 @@ namespace NifBullet
             require(found != mImpl->mBodies.end(), "unknown native scene pose identity");
             require(found->mMotion == RagdollNativeMotion::Keyframed,
                 "native scene pose publication requires keyframed motion");
-            auto pose = ragdollNativePoseFromBoneWorld(request.mWorldPose);
+            const auto native = ragdollNativeSceneBodyTargetPose(request.mWorldPose, found->mSceneOffset);
+            auto pose = btTransform(btQuaternion(native.mRotation[0], native.mRotation[1],
+                native.mRotation[2], native.mRotation[3]), vector(native.mPosition));
             pose.setOrigin(pose.getOrigin() * btScalar(mImpl->mLengthScale));
             pose *= found->mCenterFrame;
             validatePose(pose);
@@ -1049,13 +1060,14 @@ namespace NifBullet
                 // scene setter; this adapter has not admitted that path.
                 require(!(update.mCollisionFlags & 0x20) || (update.mCollisionFlags & 0x40),
                     "unadmitted native World-driven scene synchronization");
-                physical = ragdollNativeSceneTargetPose(update.mAnimatedWorld);
+                physical = ragdollNativeSceneBodyTargetPose(update.mAnimatedWorld, found->mSceneOffset);
                 shapePose = btTransform(btQuaternion(physical.mRotation[0], physical.mRotation[1],
                     physical.mRotation[2], physical.mRotation[3]), vector(physical.mPosition) * mImpl->mLengthScale);
                 centerPose = shapePose * found->mCenterFrame;
                 validatePose(centerPose);
                 change.mPose = centerPose;
             }
+            const auto scenePhysical = ragdollNativeSceneTargetFromBodyPose(physical, found->mSceneOffset);
             auto linear = body.getLinearVelocity();
             auto angular = body.getAngularVelocity();
             if (changed && found->mMotion == RagdollNativeMotion::Dynamic)
@@ -1069,10 +1081,10 @@ namespace NifBullet
                 flags = motion == RagdollNativeMotion::Keyframed ? flags & ~0x8 : flags | 0x8;
             RagdollNativeBlendPublication publication{update.mRecord, flags, std::nullopt};
             if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PhysicsToScene)
-                publication.mSceneTarget = ragdollBoneWorldFromNativePose(physical);
+                publication.mSceneTarget = ragdollBoneWorldFromNativePose(scenePhysical);
             else if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PoseAndVelocity)
             {
-                const auto targets = ragdollNativeBlendPoseTargets(physical, update.mAnimatedWorld,
+                const auto targets = ragdollNativeBlendPoseTargets(scenePhysical, update.mAnimatedWorld,
                     update.mHierarchyGain, flags);
                 if (rawUpdateSelector == 0)
                     publication.mSceneTarget = targets.mSceneTarget;
@@ -1087,8 +1099,9 @@ namespace NifBullet
                     current.mLinear[axis] = float(linear[axis] / mImpl->mLengthScale);
                     current.mAngular[axis] = float(angular[axis]);
                 }
+                currentCenter = ragdollNativeSceneCenterOfMass(currentCenter, physical.mRotation, found->mSceneOffset);
                 const auto target = ragdollNativeTargetVelocities(localCenter, currentCenter,
-                    physical.mRotation, targets.mDriveTarget, parameters.mInverseFrameSeconds,
+                    scenePhysical.mRotation, targets.mDriveTarget, parameters.mInverseFrameSeconds,
                     found->mLimits.mMaxLinearVelocity, found->mLimits.mAngularLimit);
                 const auto velocities = ragdollNativeBlendVelocities(current, target,
                     parameters.mVelocityGain, parameters.mInverseFrameSeconds, nativeGravityZ);
@@ -1209,7 +1222,9 @@ namespace NifBullet
                 current.mLinear[axis] = static_cast<float>(body.getLinearVelocity()[axis] / mImpl->mLengthScale);
                 current.mAngular[axis] = static_cast<float>(body.getAngularVelocity()[axis]);
             }
-            const auto target = ragdollNativeTargetVelocities(localCenter, currentCenter, quaternion,
+            const auto sceneRotation = ragdollNativeSceneTargetFromBodyPose({{}, quaternion}, found->mSceneOffset);
+            currentCenter = ragdollNativeSceneCenterOfMass(currentCenter, quaternion, found->mSceneOffset);
+            const auto target = ragdollNativeTargetVelocities(localCenter, currentCenter, sceneRotation.mRotation,
                 drive.mTarget, inverseFrameSeconds, found->mLimits.mMaxLinearVelocity, found->mLimits.mAngularLimit);
             const auto output = ragdollNativeBlendVelocities(current, target,
                 drive.mVelocityGain, inverseFrameSeconds, nativeGravityZ);

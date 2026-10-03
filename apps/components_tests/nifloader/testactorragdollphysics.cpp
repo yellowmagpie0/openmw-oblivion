@@ -1864,6 +1864,94 @@ namespace
 
 namespace
 {
+    TEST_F(ActorRagdollPhysicsTest, BodyTControllerSynchronizesAndProjectsSceneOffsets)
+    {
+        auto& definition = mGraph.mBodies[0];
+        definition.mUsesRigidBodyTransform = true;
+        definition.mTranslation = {2, 3, 4};
+        definition.mRotation = osg::Quat(0, 0, 1, 0);
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{
+            {12, osg::Matrixf::identity(), 1, .5f, 8}}};
+        const auto key = actor.updateNativeBlends(updates, 1, 0, 0);
+        ASSERT_EQ(key.size(), 1);
+        EXPECT_FALSE(key[0].mSceneTarget);
+        const auto state = actor.capture()[0];
+        EXPECT_EQ(state.mPose.getOrigin(), btVector3(2, 3, 4));
+        EXPECT_NEAR(std::abs(state.mPose.getRotation().z()), 1, 1e-6);
+        updates[0].mHierarchyGain = 0;
+        updates[0].mVelocityGain = 0;
+        updates[0].mCollisionFlags = 0;
+        const auto dynamic = actor.updateNativeBlends(updates, 1, 0, 0);
+        ASSERT_EQ(dynamic.size(), 1);
+        ASSERT_TRUE(dynamic[0].mSceneTarget);
+        EXPECT_EQ(*dynamic[0].mSceneTarget, osg::Matrixf::identity());
+        EXPECT_EQ(actor.capture()[0].mPose, state.mPose);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, BodyTControllerDriveUsesSceneTargetAndPhysicalBasisCenter)
+    {
+        auto& definition = mGraph.mBodies[0];
+        definition.mUsesRigidBodyTransform = true;
+        definition.mTranslation = {2, 3, 4};
+        definition.mRotation = osg::Quat(0, 0, 1, 0);
+        mPoses[0] = btTransform(btQuaternion(0, 0, 1, 0), btVector3(2, 3, 4));
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{
+            {12, osg::Matrixf::identity(), 0, .5f, 8}}};
+        const auto result = actor.updateNativeBlends(updates, 1, 0, 0);
+        ASSERT_EQ(result.size(), 1);
+        ASSERT_TRUE(result[0].mSceneTarget);
+        EXPECT_EQ(*result[0].mSceneTarget, osg::Matrixf::identity());
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(-2, -3, 0));
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, btVector3(0, 0, 0));
+        EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, BodyTOwnedOffsetsSurviveSourceChangesAndServeExplicitAdapters)
+    {
+        auto& definition = mGraph.mBodies[0];
+        definition.mUsesRigidBodyTransform = true;
+        definition.mTranslation = {2, 3, 4};
+        definition.mRotation = osg::Quat(0, 0, 1, 0);
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        definition.mTranslation = {100, 200, 300};
+        definition.mRotation = osg::Quat(0, 0, 0, 0);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        const std::array<NifBullet::RagdollNativeScenePoseRequest, 1> poses{{
+            {12, osg::Matrixf::identity()}}};
+        actor.synchronizeNativeKeyframedPoses(poses);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(2, 3, 4));
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> dynamic{{
+            {12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        actor.setNativeMotionModes(dynamic);
+        const std::array<NifBullet::RagdollNativeVelocityDrive, 1> drives{{
+            {12, {{0, 0, 0}, {0, 0, 0, 1}}, .5f}}};
+        actor.driveNativePoseVelocities(drives, 1, 0);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(-2, -3, 0));
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, btVector3(0, 0, 0));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, BodyTConstructionRejectsLateInvalidOffsetBeforeRegistration)
+    {
+        addHinge();
+        for (auto& body : mGraph.mBodies)
+        {
+            body.mUsesRigidBodyTransform = true;
+            body.mRotation = osg::Quat(0, 0, 0, 1);
+        }
+        mGraph.mBodies.back().mRotation = osg::Quat(0, 0, 0, 0);
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        EXPECT_EQ(mWorld.getNumConstraints(), 0);
+        mGraph.mBodies.back().mRotation = osg::Quat(0, 0, 0, 1);
+        mGraph.mBodies.back().mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
     TEST_F(ActorRagdollPhysicsTest, NativeBlendControllerEntersKeyframedClearsVelocitiesAndSyncsScene)
     {
         NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);

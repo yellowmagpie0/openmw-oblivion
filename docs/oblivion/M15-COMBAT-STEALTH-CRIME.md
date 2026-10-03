@@ -15294,3 +15294,66 @@ scene quaternion. Forward-composing its desired target would change that route.
 No stage closes. Next: owned BodyT controller integration/comparison before
 renderer/graph admission. Actual World lifecycle, caller scale, native stepping,
 unchanged stock-floor fresh-restart and gameplay gates remain open; S5-S14 pending.
+
+
+### Checkpoint182: owned bodyT controller and scene adapters
+
+Checkpoint181 committed as `1a0dbfd2bbe3fb3af4fbd73690c9ec78e5fef61a`,
+178 isolated commits with exact-byte/fresh-clone proof; bundle159 SHA256
+`8f64bd43973b05815e2252c594adbb99b466df15de1635e0590c3be4cc43fb07`.
+ActorRagdollPhysics now owns a snapshot of each body's local BodyT offset,
+validating supported local data before registration. Keyframed scene sync and
+controller sync compose scene targets into physical body poses. Physics-to-scene
+and mixed routes remove local offsets before preparing renderer/drive targets.
+Velocity drive retains a scene target, raw local COM and the physical-basis
+adjusted COM, matching original8A34C0 dispatch. Explicit keyframed-pose and
+velocity-drive adapters use the same conversions. Physical capture/restore,
+shape ownership, mass archives and sparse atomic publication remain in their
+existing authority. Graph and renderer binding admission remain closed.
+
+Four new tests cover keyframed/dynamic transitions and scene projection,
+scene-target velocity drive with independently derived physical-basis COM,
+owned offsets surviving source mutation and both explicit adapters, plus late
+invalid offset rejection before any world registration. Baseline01 retains two
+failures; baseline02 retains all four failures against checkpoint181 production.
+Green01 passes its selected existing/new controller tests. Full owned normal/
+sanitized01 each pass2,249 component and892 engine tests, complete inventories,
+zero failures/skips and rebuilt openmw/esmtool. Tested fingerprint `5fba4ec05c7691ca23afffb525656272c60e2b590cdb9735eca15b892938e2ca`.
+ASan leaks disabled; UBSan halts; unchanged Python sources were not rerun.
+
+Raw owned compare-normal01 retains21,780 failures/28,800 canonical CRT cases
+before implementation. Compare-normal02 reduces this to12 failures: maximum
+linear velocity error0.0012073516845703125 and angular0.001180887222290039 exceed
+the unchanged0.001 limit. These remain failures, not waived acceptance. Native
+motion stores origin and COM independently in float; Bullet's principal-COM
+matrix cannot preserve both raw fixture fields exactly. Input-projection01
+captures the actual owned starting states before controller execution; audit01
+verifies200 unique inputs/28,800 repeated preparations preserve raw COM exactly,
+with maximum origin error6.103515625e-05 and quaternion error1.1920928955078125e-07,
+within unchanged0.001/1e-6 portable representation limits. Projection/source/
+audit SHA256 `4b8395db4f9f5158e3e99278dc0162e53be29a37f094ac0445a338f82aaefca7`, `9c93365b855dd394f95f7af9a835c60f8bc1edeaa8b62eb33553c8709a281714`,
+`86889f0b9eb17201e5aa53266d7959cfbad14fd06ae7b314b12532ba4ad1ec6d`. No expected controller outputs come from production.
+
+Paired-oracle01 executes28,800 complete original88F3D0 updates from those
+physically paired starting inputs, with actual8B1DD0 initial bases and full
+motion creation/archive/restore. Old modes1/6, selectors0/1/2, H0/.25/1,
+V0/.5 and flags0/8/100/108 remain covered. Only Windows lock/thread imports and
+motion-heap allocation/free are boundaries. Source/corpus SHA256
+`460b52f45a85f2e9c31579d6918c2418abc696672bc31824c59b680ba4947507`, `9531c17b25ef67bdcbec5819a978538541cdc6d609c254d8bcd9b46a5958dfb3`; original executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`. The raw57,600-case corpus remains retained.
+Paired compare-normal04/sanitized05 each pass28,800 cases and230,400 exact
+selection/mode/flag/presence/retention/identity/cleanup checks. Renderer output
+and angular velocities match exactly; maximum body position error6.0931131656616344e-05,
+quaternion8.628668690668917e-08 and linear velocity0.0001068115234375 remain within
+the original tolerances. Normal03 records the earlier two-test source pass;
+normal04 uses the final four-test source. Sanitized04 retains a compiler
+ENOSPC failure;05 uses workspace TMPDIR and succeeds. Comparator source/driver
+SHA256 `29e3a0350192b847142c9150b48bb8330b7c1f77bad9ce87a1f96c4f60efaf06`, `3bda5da33ea8edc8f8fed1a1f2e2088eed0889fd212bb11071f8bfc459f730d4` (normal04),
+`bceee93878320a2de693c9429ea610bc7f1e213055d117f77fc9fabf654c2a42` (sanitized05). This proves controller rules from
+matched owned starting states, not raw-native pose/COM fidelity through steps.
+
+No stage closes. Next: graph/renderer BodyT boundaries with current verified
+adapters, preserving the raw-state representation/integrator gate. Full native
+NIF loader mapping, caller scale, World begin/apply/end, native stepping,
+unchanged stock-floor fresh-restart and normal gameplay acceptance remain open.
+S5-S14 remain pending.
