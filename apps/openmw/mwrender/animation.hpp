@@ -51,11 +51,18 @@ namespace SceneUtil
     class LightListCallback;
     class Skeleton;
     class ActorRagdollPoseBinding;
+    class ActorRagdollLocalPose;
     struct LightCommon;
 }
 
 namespace MWRender
 {
+
+    enum class PhysicalPoseAnimation
+    {
+        Frozen,
+        AnimatedTargets,
+    };
 
     class ResetAccumRootCallback;
     class RotateController;
@@ -208,6 +215,9 @@ namespace MWRender
         osg::ref_ptr<osg::Group> mObjectRoot;
         SceneUtil::Skeleton* mSkeleton;
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mPhysicalPose;
+        std::unique_ptr<SceneUtil::ActorRagdollLocalPose> mPhysicalAnimatedLocal;
+        bool mPhysicalAnimatedTargets = false;
+        ActiveControllersVector mPhysicalResidentControllers;
 
         // The node expected to accumulate movement during movement animations.
         osg::ref_ptr<osg::Node> mAccumRoot;
@@ -490,7 +500,14 @@ namespace MWRender
         // Borrowed renderer projection; physical bodies and lifecycle state
         // remain with the physics scheduler and native actor authority.
         std::vector<NifBullet::RagdollBoneWorldPose> beginPhysicalPose(
-            const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld);
+            const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
+            PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
+        // After runAnimation, sample detached pose callbacks with this frame's
+        // visitor information. No scene/effect/geometry traversal; restore the
+        // current physical locals before returning. Body driving remains owned
+        // by the caller. Requires AnimatedTargets mode and stable topology.
+        std::vector<NifBullet::RagdollBoneWorldPose> samplePhysicalAnimationTarget(
+            const osg::Matrixf& objectWorld, osg::NodeVisitor& frameVisitor);
         std::vector<NifBullet::RagdollBoneWorldPose> capturePhysicalPose(const osg::Matrixf& objectWorld) const;
         void applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
             const osg::Matrixf& objectWorld);

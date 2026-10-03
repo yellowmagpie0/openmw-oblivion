@@ -14,6 +14,7 @@
 #include <osg/Matrix>
 #include <osg/MatrixTransform>
 #include <osg/Switch>
+#include <osgUtil/UpdateVisitor>
 
 #include <osg/Vec4f>
 #include <osgParticle/ParticleProcessor>
@@ -1318,94 +1319,128 @@ namespace MWRender
 
     void Animation::resetActiveGroups()
     {
-        // remove all previous external controllers from the scene graph
-        for (auto it = mActiveControllers.begin(); it != mActiveControllers.end(); ++it)
+        std::optional<SceneUtil::ActorRagdollLocalPose> physical;
+        if (mPhysicalPose && mPhysicalAnimatedTargets)
         {
-            osg::Node* node = it->first;
-            node->removeUpdateCallback(it->second);
-
-            // Should be no longer needed with OSG 3.4
-            it->second->setNestedCallback(nullptr);
+            physical = mPhysicalPose->captureLocalPose();
+            mPhysicalPose->restoreLocalPose(*mPhysicalAnimatedLocal);
         }
-
-        mActiveControllers.clear();
-
-        mAccumCtrl = nullptr;
-
-        // Keep selected animation states frozen, but detach their transform
-        // callbacks while the physical projection owns these bones.
-        if (mPhysicalPose)
-            return;
-
-        for (size_t blendMask = 0; blendMask < sNumBlendMasks; blendMask++)
+        try
         {
-            AnimStateMap::const_iterator active = mStates.end();
-
-            AnimStateMap::const_iterator state = mStates.begin();
-            for (; state != mStates.end(); ++state)
+            // remove all previous external controllers from the scene graph
+            for (auto it = mActiveControllers.begin(); it != mActiveControllers.end(); ++it)
             {
-                if (!state->second.blendMaskContains(blendMask))
-                    continue;
+                osg::Node* node = it->first;
+                node->removeUpdateCallback(it->second);
 
-                if (active == mStates.end()
-                    || active->second.mPriority[(BoneGroup)blendMask] < state->second.mPriority[(BoneGroup)blendMask])
-                    active = state;
+                // Should be no longer needed with OSG 3.4
+                it->second->setNestedCallback(nullptr);
             }
 
-            mAnimationTimePtr[blendMask]->setTimePtr(
-                active == mStates.end() ? std::shared_ptr<float>() : active->second.mTime);
+            mActiveControllers.clear();
 
-            // add external controllers for the AnimSource active in this blend mask
-            if (active != mStates.end())
+            mAccumCtrl = nullptr;
+
+            // Keep selected animation states frozen, but detach their transform
+            // callbacks while the physical projection owns these bones.
+            if (mPhysicalPose && !mPhysicalAnimatedTargets)
+                return;
+
+            for (size_t blendMask = 0; blendMask < sNumBlendMasks; blendMask++)
             {
-                std::shared_ptr<AnimSource> animsrc = active->second.mSource;
-                const AnimBlendStateData stateData
-                    = { .mGroupname = active->second.mGroupname, .mStartKey = active->second.mStartKey };
+                AnimStateMap::const_iterator active = mStates.end();
 
-                for (AnimSource::ControllerMap::iterator it = animsrc->mControllerMap[blendMask].begin();
-                     it != animsrc->mControllerMap[blendMask].end(); ++it)
+                AnimStateMap::const_iterator state = mStates.begin();
+                for (; state != mStates.end(); ++state)
                 {
-                    osg::ref_ptr<osg::Node> node = getNodeMap().at(
-                        it->first); // this should not throw, we already checked for the node existing in addAnimSource
+                    if (!state->second.blendMaskContains(blendMask))
+                        continue;
 
-                    const bool useSmoothAnims = Settings::game().mSmoothAnimTransitions;
+                    if (active == mStates.end()
+                        || active->second.mPriority[(BoneGroup)blendMask] < state->second.mPriority[(BoneGroup)blendMask])
+                        active = state;
+                }
 
-                    osg::Callback* callback = it->second->getAsCallback();
-                    if (useSmoothAnims)
+                mAnimationTimePtr[blendMask]->setTimePtr(
+                    active == mStates.end() ? std::shared_ptr<float>() : active->second.mTime);
+
+                // add external controllers for the AnimSource active in this blend mask
+                if (active != mStates.end())
+                {
+                    std::shared_ptr<AnimSource> animsrc = active->second.mSource;
+                    const AnimBlendStateData stateData
+                        = { .mGroupname = active->second.mGroupname, .mStartKey = active->second.mStartKey };
+
+                    for (AnimSource::ControllerMap::iterator it = animsrc->mControllerMap[blendMask].begin();
+                         it != animsrc->mControllerMap[blendMask].end(); ++it)
                     {
-                        if (dynamic_cast<NifOsg::MatrixTransform*>(node.get()))
-                        {
-                            callback = handleBlendTransform<NifAnimBlendController>(node, it->second,
-                                mAnimBlendControllers, stateData, animsrc->mAnimBlendRules, active->second);
-                        }
-                        else if (dynamic_cast<osgAnimation::Bone*>(node.get()))
-                        {
-                            callback = handleBlendTransform<BoneAnimBlendController>(node, it->second,
-                                mBoneAnimBlendControllers, stateData, animsrc->mAnimBlendRules, active->second);
-                        }
-                    }
+                        osg::ref_ptr<osg::Node> node = getNodeMap().at(
+                            it->first); // this should not throw, we already checked for the node existing in addAnimSource
 
-                    node->addUpdateCallback(callback);
-                    mActiveControllers.emplace_back(node, callback);
+                        const bool useSmoothAnims = Settings::game().mSmoothAnimTransitions;
 
-                    if (blendMask == 0 && node == mAccumRoot)
-                    {
-                        mAccumCtrl = it->second;
-
-                        // make sure reset is last in the chain of callbacks
-                        if (!mResetAccumRootCallback)
+                        osg::Callback* callback = it->second->getAsCallback();
+                        if (useSmoothAnims)
                         {
-                            mResetAccumRootCallback = new ResetAccumRootCallback;
-                            mResetAccumRootCallback->setAccumulate(mAccumulate);
+                            if (dynamic_cast<NifOsg::MatrixTransform*>(node.get()))
+                            {
+                                callback = handleBlendTransform<NifAnimBlendController>(node, it->second,
+                                    mAnimBlendControllers, stateData, animsrc->mAnimBlendRules, active->second);
+                            }
+                            else if (dynamic_cast<osgAnimation::Bone*>(node.get()))
+                            {
+                                callback = handleBlendTransform<BoneAnimBlendController>(node, it->second,
+                                    mBoneAnimBlendControllers, stateData, animsrc->mAnimBlendRules, active->second);
+                            }
                         }
-                        mAccumRoot->addUpdateCallback(mResetAccumRootCallback);
-                        mActiveControllers.emplace_back(mAccumRoot, mResetAccumRootCallback);
+
+                        node->addUpdateCallback(callback);
+                        mActiveControllers.emplace_back(node, callback);
+
+                        if (blendMask == 0 && node == mAccumRoot)
+                        {
+                            mAccumCtrl = it->second;
+
+                            // make sure reset is last in the chain of callbacks
+                            if (!mResetAccumRootCallback)
+                            {
+                                mResetAccumRootCallback = new ResetAccumRootCallback;
+                                mResetAccumRootCallback->setAccumulate(mAccumulate);
+                            }
+                            mAccumRoot->addUpdateCallback(mResetAccumRootCallback);
+                            mActiveControllers.emplace_back(mAccumRoot, mResetAccumRootCallback);
+                        }
                     }
                 }
             }
-        }
 
-        addControllers();
+            addControllers();
+
+            if (mPhysicalAnimatedTargets)
+            {
+                // Retain these callbacks for explicit sampling, outside scene traversal.
+                for (const auto& [node, callback] : mActiveControllers)
+                {
+                    node->removeUpdateCallback(callback);
+                    callback->setNestedCallback(nullptr);
+                }
+            }
+        }
+        catch (...)
+        {
+            if (physical)
+            {
+                for (const auto& [node, callback] : mActiveControllers)
+                {
+                    node->removeUpdateCallback(callback);
+                    callback->setNestedCallback(nullptr);
+                }
+                mPhysicalPose->restoreLocalPose(*physical);
+            }
+            throw;
+        }
+        if (physical)
+            mPhysicalPose->restoreLocalPose(*physical);
     }
 
     void Animation::adjustSpeedMult(const std::string& groupname, float speedmult)
@@ -1562,7 +1597,7 @@ namespace MWRender
 
     osg::Vec3f Animation::runAnimation(float duration)
     {
-        if (mPhysicalPose)
+        if (mPhysicalPose && !mPhysicalAnimatedTargets)
         {
             updateEffects();
             return {};
@@ -1686,17 +1721,159 @@ namespace MWRender
     }
 
     std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPose(
-        const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld)
+        const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
+        PhysicalPoseAnimation animation)
     {
         if (mPhysicalPose)
             throw std::logic_error("physical renderer pose already bound");
+        if (animation != PhysicalPoseAnimation::Frozen && animation != PhysicalPoseAnimation::AnimatedTargets)
+            throw std::invalid_argument("invalid physical animation mode");
         if (!mObjectRoot)
             throw std::invalid_argument("physical renderer pose requires an object root");
         auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
         auto initial = binding->captureWorldBones(objectWorld);
+        std::unique_ptr<SceneUtil::ActorRagdollLocalPose> animated;
+        if (animation == PhysicalPoseAnimation::AnimatedTargets)
+            animated = std::make_unique<SceneUtil::ActorRagdollLocalPose>(binding->captureLocalPose());
+        // Embedded keyframe callbacks can reset the NIF rotation cache even
+        // without an input source. Retain them ahead of selected external
+        // tracks, and detach them while physics owns the renderer.
+        struct ResidentControllers : osg::NodeVisitor
+        {
+            const ActiveControllersVector& mExternal;
+            ActiveControllersVector mResident;
+            explicit ResidentControllers(const ActiveControllersVector& external)
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mExternal(external)
+            {
+                // Ownership must cover hidden nodes that can become visible later.
+                setNodeMaskOverride(~0u);
+            }
+            void apply(osg::Node& node) override
+            {
+                if (dynamic_cast<osg::MatrixTransform*>(&node))
+                    for (osg::Callback* callback = node.getUpdateCallback(); callback;
+                         callback = callback->getNestedCallback())
+                        if (dynamic_cast<SceneUtil::KeyframeController*>(callback)
+                            && std::none_of(mExternal.begin(), mExternal.end(), [&](const auto& entry) {
+                                return entry.first == &node && entry.second == callback;
+                            }))
+                            mResident.emplace_back(&node, callback);
+                traverse(node);
+            }
+        } resident(mActiveControllers);
+        mObjectRoot->accept(resident);
+        mPhysicalResidentControllers = std::move(resident.mResident);
+        for (const auto& [node, callback] : mPhysicalResidentControllers)
+        {
+            node->removeUpdateCallback(callback);
+            callback->setNestedCallback(nullptr);
+        }
         mPhysicalPose = std::move(binding);
-        resetActiveGroups();
+        mPhysicalAnimatedLocal = std::move(animated);
+        mPhysicalAnimatedTargets = animation == PhysicalPoseAnimation::AnimatedTargets;
+        try
+        {
+            resetActiveGroups();
+        }
+        catch (...)
+        {
+            mPhysicalPose.reset();
+            mPhysicalAnimatedLocal.reset();
+            mPhysicalAnimatedTargets = false;
+            for (const auto& [node, callback] : mPhysicalResidentControllers)
+                node->addUpdateCallback(callback);
+            mPhysicalResidentControllers.clear();
+            resetActiveGroups();
+            throw;
+        }
         return initial;
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTarget(
+        const osg::Matrixf& objectWorld, osg::NodeVisitor& frameVisitor)
+    {
+        if (!mPhysicalPose || !mPhysicalAnimatedTargets || !mPhysicalAnimatedLocal)
+            throw std::logic_error("animated physical renderer pose is not bound");
+        const osg::FrameStamp* stamp = frameVisitor.getFrameStamp();
+        if (frameVisitor.getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR || !stamp
+            || !std::isfinite(stamp->getSimulationTime()) || !std::isfinite(stamp->getReferenceTime()))
+            throw std::invalid_argument("physical animation sampling requires a finite update frame");
+        // Validate placement and binding identities before invoking any callback.
+        mPhysicalPose->captureWorldBones(objectWorld);
+        auto physical = mPhysicalPose->captureLocalPose();
+        struct Call
+        {
+            osg::ref_ptr<osg::Node> mNode;
+            osg::ref_ptr<osg::Callback> mCallback;
+            osg::NodePath mPath;
+            std::vector<unsigned> mOrder;
+        };
+        std::vector<Call> calls;
+        ActiveControllersVector controllers = mPhysicalResidentControllers;
+        controllers.insert(controllers.end(), mActiveControllers.begin(), mActiveControllers.end());
+        calls.reserve(controllers.size());
+        for (const auto& [node, callback] : controllers)
+        {
+            if (!node || !callback)
+                throw std::invalid_argument("physical animation has an invalid controller");
+            Call call{ node, callback, {}, {} };
+            osg::Node* current = node;
+            call.mPath.push_back(current);
+            while (current != mObjectRoot)
+            {
+                if (current->getNumParents() != 1)
+                    throw std::invalid_argument("physical animation controller requires a unique root path");
+                osg::Group* parent = current->getParent(0);
+                unsigned index = parent->getChildIndex(current);
+                if (index >= parent->getNumChildren())
+                    throw std::invalid_argument("physical animation controller has an invalid parent");
+                call.mOrder.push_back(index);
+                current = parent;
+                if (std::find(call.mPath.begin(), call.mPath.end(), current) != call.mPath.end())
+                    throw std::invalid_argument("physical animation controller has a cyclic parent path");
+                call.mPath.push_back(current);
+            }
+            std::reverse(call.mPath.begin(), call.mPath.end());
+            std::reverse(call.mOrder.begin(), call.mOrder.end());
+            calls.push_back(std::move(call));
+        }
+        // Match ordinary depth-first scene traversal, preserving callback order on each node.
+        std::stable_sort(calls.begin(), calls.end(), [](const Call& a, const Call& b) {
+            return a.mOrder < b.mOrder;
+        });
+        osgUtil::UpdateVisitor sampler;
+        sampler.setFrameStamp(new osg::FrameStamp(*stamp));
+        sampler.setTraversalNumber(frameVisitor.getTraversalNumber());
+        sampler.setTraversalMask(frameVisitor.getTraversalMask());
+        sampler.setNodeMaskOverride(frameVisitor.getNodeMaskOverride());
+        sampler.setTraversalMode(osg::NodeVisitor::TRAVERSE_NONE);
+        try
+        {
+            mPhysicalPose->restoreLocalPose(*mPhysicalAnimatedLocal);
+            for (const Call& call : calls)
+            {
+                if (!std::all_of(call.mPath.begin(), call.mPath.end(), [&](const osg::Node* node) {
+                        return sampler.validNodeMask(*node);
+                    }))
+                    continue;
+                for (osg::Node* node : call.mPath)
+                    sampler.pushOntoNodePath(node);
+                if (!call.mCallback->run(call.mNode, &sampler))
+                    throw std::invalid_argument("physical animation controller rejected update visitor");
+                for (std::size_t i = 0; i < call.mPath.size(); ++i)
+                    sampler.popFromNodePath();
+            }
+            auto target = mPhysicalPose->captureWorldBones(objectWorld);
+            auto animated = std::make_unique<SceneUtil::ActorRagdollLocalPose>(mPhysicalPose->captureLocalPose());
+            mPhysicalPose->restoreLocalPose(physical);
+            mPhysicalAnimatedLocal = std::move(animated);
+            return target;
+        }
+        catch (...)
+        {
+            mPhysicalPose->restoreLocalPose(physical);
+            throw;
+        }
     }
 
     std::vector<NifBullet::RagdollBoneWorldPose> Animation::capturePhysicalPose(
@@ -1719,7 +1896,14 @@ namespace MWRender
     {
         if (!mPhysicalPose)
             return;
+        if (mPhysicalAnimatedTargets)
+            mPhysicalPose->restoreLocalPose(*mPhysicalAnimatedLocal);
         mPhysicalPose.reset();
+        mPhysicalAnimatedLocal.reset();
+        mPhysicalAnimatedTargets = false;
+        for (const auto& [node, callback] : mPhysicalResidentControllers)
+            node->addUpdateCallback(callback);
+        mPhysicalResidentControllers.clear();
         resetActiveGroups();
     }
 
@@ -1820,6 +2004,9 @@ namespace MWRender
     void Animation::setObjectRoot(const std::string& model, bool forceskeleton, bool baseonly, bool isCreature)
     {
         mPhysicalPose.reset();
+        mPhysicalAnimatedLocal.reset();
+        mPhysicalAnimatedTargets = false;
+        mPhysicalResidentControllers.clear();
         osg::ref_ptr<osg::StateSet> previousStateset;
         if (mObjectRoot)
         {
@@ -2275,6 +2462,9 @@ namespace MWRender
     void Animation::removeFromSceneImpl()
     {
         mPhysicalPose.reset();
+        mPhysicalAnimatedLocal.reset();
+        mPhysicalAnimatedTargets = false;
+        mPhysicalResidentControllers.clear();
         if (mGlowLight != nullptr)
             mInsert->removeChild(mGlowLight);
 

@@ -14056,3 +14056,82 @@ next bounded integration. Controller/frame caller, clock/save ownership,
 body motion switching, full World/render/save, cross-owner contact activation
 and stock floor continuation remain open. No stage or normal-input/restart
 gate is closed by the checkpoint API.
+
+
+### Checkpoint162: animated targets while physical bones own the renderer
+
+Checkpoint161 committed as `54f6ef6c2bbe84e7d11dc0de01ae30e2606c0560`,
+158 isolated commits with exact-byte/fresh-clone proof. Animation now has an
+explicit AnimatedTargets physical mode in addition to the default Frozen mode.
+The animated mode advances its existing animation/text-key/effect clock once
+through runAnimation. Its explicit target sampler executes detached transform
+callbacks in ordinary depth-first node order, preserving registration order on
+each node. It copies the update frame stamp, traversal number/masks and node
+paths into a traversal-disabled update visitor; it does not traverse scene
+children, geometry, effects or bounds a second time. It restores the previous
+animated local checkpoint before sampling so missing KF channels cannot inherit
+physical transforms, captures new world targets and the latest animated locals,
+then restores the exact physical locals and invalidates skeleton matrices.
+Invalid frame/placement or callback results reject; callback exceptions restore
+the physical targets and their selected ancestors. This does not promise rollback
+of unrelated scene nodes or arbitrary callback-owned state. Topology remains
+stable during sampling. Ending animated physical ownership restores the latest
+animated checkpoint before ordinary callbacks are reattached.
+
+Controller group rebuilds temporarily expose the saved animated locals to
+transition-controller construction, keep callbacks detached, and restore physical
+locals on success or exception. Embedded resident keyframes are retained ahead
+of external tracks: even a keyframe without a source resets the NIF rotation
+cache, so leaving it attached can overwrite a procedural ancestor rotation during
+ordinary traversal. Discovery includes hidden/masked nodes; actual sampling
+still honors update traversal masks. Both frozen and animated physical modes
+detach resident keyframes and restore them on exit. Object replacement/removal
+clears these ephemeral physical sampling fields. None is a new save authority.
+
+Six new baseline tests fail against frozen target sampling in
+S4/native-ragdoll-animated-target-baseline-03. Baseline01 retains five earlier
+failures; baseline02 retains a test-fixture compile error from attempting to
+modify OSG's const frame stamp, corrected by owning a mutable fixture stamp.
+Nine new regression cases cover target capture without renderer/skinning
+replacement, missing channels, invalid/throwing callbacks and no child traversal,
+parent-before-child ordering despite registration order, finite update frames and
+mode/placement rejection, animated handoff, mask/override behavior, controller
+rebuild failure, and resident ancestor keyframes in both physical modes.
+S4/native-ragdoll-resident-mask-baseline-01 retains the additional failing
+hidden-at-entry ownership case before discovery's mask override was implemented.
+
+Stock S4/native-ragdoll-stock-animated-target-normal-01 through -04 retain
+actual renderer failures after sampling: immediate physical writeback agreed,
+but later ordinary traversal reset an ancestor's cached rotation. Diagnostic
+runs02-04 reached maximum error7.37653 with nonzero procedural rotations.
+The original .001 renderer tolerance was not changed. After resident-keyframe
+ownership was fixed, normal/sanitized runs05 and06 pass; run06 includes the
+whitespace-clean source. Final normal/sanitized runs07 each pass against the
+final hidden-node fix. Two independently loaded stock18-body/17-joint skeletons
+and Animation instances use the real73-track onehandidle KF. One is sampled
+under physical ownership; the other uses ordinary scene traversal. Nonzero
+head/upper-body/legs/body rotations and a midpoint controller rebuild exercise
+ordering and transition construction. All69,120 world-matrix fields match
+exactly over240 animation frames in each build; clocks advance identically.
+A further ordinary frame after physical handoff also matches. Real Bullet
+zero-gravity steps continue feeding physical renderer/skinning transforms,
+maximum error3.8147e-05 in both builds against .001.
+Cleanup leaves zero owned bodies/constraints. Source/driver SHA256:
+`6439195ce1b3e7601a03817b1f5ec85359a169bf5aacdd0c19642434e6036266`,
+`ddb613a30c168dab0fb74f50ab64c56bda0e2b1de3352c7d7e606f5d3630b60c`.
+Stock NIF/KF SHA256 remain:
+`43de349062d2f57b1e581353f1907f8f70bcd3c92b4fe3bd049989b93572d435`,
+`d01bf09a3c703ae2f0f4c043abbe47dc1c0e6d3af0fedcf41ed9a50173bc17d5`.
+This is headless engine/resource/animation/renderer/physics integration, not
+an original-game trajectory comparison, pixels, gameplay or restart acceptance.
+
+Final S4/native-ragdoll-animated-target-{normal,sanitized}-05 each pass860
+engine tests, complete inventories, zero failures/skips; openmw/esmtool rebuilt.
+Stable tested source fingerprint `4f8a43329351d5b0c899d88f5ed9a9bf9f7c9ab760e67bd7de34ac5a4233130b`.
+ASan leaks disabled; UBSan halts. Components/Python implementation is unchanged;
+checkpoint161's2,193 component passes retain their separate tested fingerprint.
+No stage closes. Native frame/settings ownership and physical controller caller,
+body motion switches, renderer blend-route publication, actor scaling, full
+World/save lifecycle, cross-owner contact activation and stock floor continuation
+remain open. Next: implement and independently verify owned dynamic/keyframed
+motion handoff, then connect the complete physical controller update path.
