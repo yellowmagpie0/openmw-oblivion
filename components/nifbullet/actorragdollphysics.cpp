@@ -1455,6 +1455,90 @@ namespace NifBullet
         return result;
     }
 
+    void ActorRagdollPhysics::advanceNativePhysicalControllers(
+        std::span<const RagdollNativeControllerReference> controllerOrder, float inputTime,
+        ESM4::PhysicalBlendTimeCache& sharedTimeCache)
+    {
+        require(controllerOrder.size() == mImpl->mBlendControllers.size() + mImpl->mVelocityControllers.size(),
+            "native physical controller order must be complete");
+        std::unordered_set<std::uint64_t> selected;
+        for (const auto& reference : controllerOrder)
+        {
+            require(reference.mKind == RagdollNativeControllerKind::Blend
+                    || reference.mKind == RagdollNativeControllerKind::Velocity,
+                "unknown native physical controller kind");
+            const auto identity = (std::uint64_t(reference.mKind) << 32) | reference.mIdentity;
+            require(selected.insert(identity).second, "duplicate native physical controller reference");
+            if (reference.mKind == RagdollNativeControllerKind::Blend)
+                require(std::any_of(mImpl->mBlendControllers.begin(), mImpl->mBlendControllers.end(),
+                            [&](const auto& value) { return value.mRecord == reference.mIdentity; }),
+                    "unknown native physical blend controller");
+            else
+                require(std::any_of(mImpl->mVelocityControllers.begin(), mImpl->mVelocityControllers.end(),
+                            [&](const auto& value) { return value.mAttachedNode == reference.mIdentity; }),
+                    "unknown native physical velocity controller");
+        }
+        auto blends = mImpl->mBlendControllers;
+        auto velocities = mImpl->mVelocityControllers;
+        auto targets = mImpl->mBlendTargets;
+        auto cache = sharedTimeCache;
+        std::vector<RagdollNativeForceRequest> forces;
+        forces.reserve(velocities.size());
+        for (const auto& reference : controllerOrder)
+        {
+            if (reference.mKind == RagdollNativeControllerKind::Blend)
+            {
+                const auto controller = std::find_if(blends.begin(), blends.end(),
+                    [&](const auto& value) { return value.mRecord == reference.mIdentity; });
+                const auto target = std::find_if(targets.begin(), targets.end(),
+                    [&](const auto& value) { return controller->mTargetNode && value.mNode == *controller->mTargetNode; });
+                const auto gains = target == targets.end() ? std::nullopt
+                    : std::optional<ESM4::PhysicalBlendGains>{target->mState.mGains};
+                const auto velocity = std::find_if(velocities.begin(), velocities.end(),
+                    [&](const auto& value) {
+                        return controller->mTargetNode && value.mAttachedNode == *controller->mTargetNode;
+                    });
+                auto update = ESM4::advancePhysicalBlendController(controller->mState, cache,
+                    controller->mTargetNode.has_value(), gains, velocity != velocities.end(), inputTime);
+                controller->mState = std::move(update.mController);
+                cache = update.mTimeCache;
+                if (target != targets.end())
+                    target->mState.mGains = *update.mTargetGains;
+                if (update.mRemoveVelocityController)
+                    velocities.erase(velocity);
+            }
+            else
+            {
+                const auto controller = std::find_if(velocities.begin(), velocities.end(),
+                    [&](const auto& value) { return value.mAttachedNode == reference.mIdentity; });
+                // Original47C930 reads next after Update. A controller detached
+                // by an earlier blend finish is not subsequently updated.
+                if (controller == velocities.end())
+                    continue;
+                const auto target = std::find_if(targets.begin(), targets.end(),
+                    [&](const auto& value) { return controller->mTargetNode && value.mNode == *controller->mTargetNode; });
+                const auto body = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                    [&](const auto& value) { return controller->mTargetNode && value.mNodeRecord == *controller->mTargetNode; });
+                const auto gain = target == targets.end() ? std::nullopt
+                    : std::optional<float>{target->mState.mGains.mHierarchy};
+                auto update = ESM4::advancePhysicalVelocityController(controller->mState, cache,
+                    controller->mTargetNode.has_value(), gain, body != mImpl->mBodies.end(), inputTime);
+                controller->mState = update.mController;
+                cache = update.mTimeCache;
+                if (update.mForce)
+                    forces.push_back({body->mRecord,
+                        {(*update.mForce)[0], (*update.mForce)[1], (*update.mForce)[2]}, update.mController.mFrameDelta});
+            }
+        }
+        // Force preparation validates every used body/result before publishing
+        // velocities or waking groups. Logical candidates are already allocated.
+        applyNativeForcesImpl(forces, true);
+        mImpl->mBlendControllers.swap(blends);
+        mImpl->mVelocityControllers.swap(velocities);
+        mImpl->mBlendTargets.swap(targets);
+        sharedTimeCache = cache;
+    }
+
     std::vector<RagdollNativeBlendControllerState> ActorRagdollPhysics::captureNativeBlendControllers() const
     {
         return mImpl->mBlendControllers;
@@ -1581,6 +1665,12 @@ namespace NifBullet
 
     void ActorRagdollPhysics::applyNativeForces(std::span<const RagdollNativeForceRequest> requests)
     {
+        applyNativeForcesImpl(requests, false);
+    }
+
+    void ActorRagdollPhysics::applyNativeForcesImpl(
+        std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies)
+    {
         struct Pending
         {
             Impl::Body* mOwned;
@@ -1591,11 +1681,14 @@ namespace NifBullet
         std::unordered_set<std::uint32_t> records;
         for (const auto& request : requests)
         {
-            require(records.insert(request.mRecord).second, "duplicate native force body");
+            const bool unique = records.insert(request.mRecord).second;
+            require(unique || allowRepeatedBodies, "duplicate native force body");
             const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
                 [&](const auto& body) { return body.mRecord == request.mRecord; });
             require(owned != mImpl->mBodies.end(), "unknown native force body");
-            auto linear = owned->mBody->getLinearVelocity();
+            const auto prior = std::find_if(pending.rbegin(), pending.rend(),
+                [&](const auto& value) { return value.mOwned == &*owned; });
+            auto linear = prior == pending.rend() ? owned->mBody->getLinearVelocity() : prior->mLinear;
             if (owned->mMotion == RagdollNativeMotion::Dynamic)
             {
                 std::array<float, 4> current{}, force{};

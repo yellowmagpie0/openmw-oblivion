@@ -16677,3 +16677,68 @@ independent integration; component state restoration is not full save/restart.
 Initial NPC morphology, retained BodyT/floor failures and S5-S14 remain open.
 Next: join selected physical-controller updates in verified original47C930 order
 with actual owned immediate force stores and blend-driven velocity removal.
+
+
+### Checkpoint208: joined selected-controller clocks, gains, force and removal
+
+Checkpoint207 committed as `a768301b61d07d797a04c23881d6aa98f3be911a`,
+204 isolated commits with exact-byte/fresh-clone proof. Bundle185 SHA256
+`1ecc40d1249d9b69aa986cc7fbdff9ddb59aecdbed6eedd7632fba300b2292dc`.
+advanceNativePhysicalControllers admits a complete unique typed controller order
+before staging owned blend/velocity controllers, target gains and shared cache.
+Advance in caller order; velocity sees gains from earlier updates. Blend finish
+removes the velocity attached to its TARGET node, independently of the blend's
+attachment. Original47C930 reads the next link after each Update, so a removed
+later velocity is skipped; an earlier velocity's already-prepared force remains.
+All immediate force results validate before physical velocity/wake publication;
+then controller/gain/cache candidates swap together. Late input, order or force
+failure rolls back all of them. Distinct redirected controllers may apply forces
+to one body sequentially, preserving each native binary32 store; the explicit
+public sparse applyNativeForces still rejects duplicate body requests. Preserve
+pose/angular/modes/flags/shape, and do not run collision/renderer pose publication.
+Owned constraint-connected activation scope remains unchanged from205.
+
+Independent full original47C930 executes actual blend8AAD60 and velocity8B8770,
+shared7155A0 clock, direct5377B0/8A6410/8EAC80 dynamic or8EA060 keyframed force
+and6FFE90 velocity detach. No force boundary stub. Original body+91=1 explicitly
+skips unresolved activation; Windows critical/interlocked primitives only.
+Both x87 controls/default MXCSR, two attachment orders, both motion modes,
+three initial H gains, D/CD/1CD blend flags, D/1D velocity flags and forward/
+backward/equal sequences. Final oracle03 includes actual per-insertion8AABE0
+key bounds before controller traversal:1,152 captures/288 four-frame groups.
+Executable `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`, source `1882e5d9e47fbaa9a59e6959507cf745894e01f3d410a009a13aa8e021a71aa9`,
+corpus `a8d7623311cfcb5b3ef6912ac4c0b504f1ea4c32c69bcbb400a10042df87b76e`. Original01/02 manually prepared stop.25;
+these remain valid separately prepared-bound observations. Comparators01 against
+those fixtures retain1,152 mismatches each because owned graph admission applies
+verified per-insertion bounds, producing stop0. No production bounds/clock rule
+was changed to fit them. Final03 original uses the same admission boundary.
+
+Five placeholder tests fail. Seven final tests cover actual scaled force and
+clock/gains without pose publication, removal before force vs retained earlier
+force, late overflow/order rollback before any wake/cache/clocks, keyframed force
+no-op with clock advance, redirected target-node removal and sequential forces
+from two controllers targeting one body. Initial full normal/sanitized01 each
+run2,351 component tests with one retained assertion failure: the two-key fixture's
+native per-insertion stop0 immediately calls Stop, leaving the previous sentinel.
+Use a single-key.25 fixture for the intended advancing-clock assertion; production
+implementation unchanged. Final02 both builds pass all2,351 component and899
+engine tests, exact full inventories without failure/skip; engine/tools rebuilt.
+Final comparators02 each match27,648 fields exactly in1,152 original03 captures:
+blend clock/flags/keys/cursor/cache/setup/gains, velocity presence/clock/flags/
+delta/vector, dynamic/keyframed actual owned XYZ velocity and shared time cache.
+Raw motion W is compared only in the zero-W fixture; full raw-W persistence is
+not established. Preserve pose/angular/modes and zero objects after owners end.
+Five final original controls reject omitted force256, wrong keyframed dispatch256,
+ignored order248, retained detached velocity768 and reset completion clock264.
+Controls01 retain an unobservable-control failure (identical stop bounds);02
+replace that control with an observable retained-clock prediction;03 passes the
+final initialization corpus. No production expectations generate originals.
+
+Tested fingerprint `a117f886108cda4b07d1287823ec6959dfb8725d6f4c937b5a13367205749c4e`. No compiler warning/error or sanitizer finding;
+ASan leak checks disabled. The sanitizer compiler notes a debug variable-tracking
+budget retry for the large public fixture, not a runtime sanitizer issue. Python
+unchanged, not repeated. No stage closes: public controller/force worker barriers,
+atomic complete scene/collision frame integration and automatic World reaction/
+traversal/clock producers remain open. Initial NPC morphology, full native state
+persistence, retained BodyT/floor failures and S5-S14 remain open. Next: public
+worker-serialized ownership/phase/force APIs and real0/1/2-worker owner checks.

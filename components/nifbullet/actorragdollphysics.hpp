@@ -272,6 +272,12 @@ namespace NifBullet
         // traversal from the body graph. Fresh velocity controllers prepend.
         std::vector<RagdollNativeControllerReference> captureNativeControllerOrder(
             std::span<const std::uint32_t> nodeOrder) const;
+        // Selected physical-controller phase in caller-supplied traversal order.
+        // Stage all clocks, gains, velocity removals and immediate linear forces
+        // together. This phase does not publish collision/scene poses or infer
+        // recursive scene traversal; those remain separate caller boundaries.
+        void advanceNativePhysicalControllers(std::span<const RagdollNativeControllerReference> controllerOrder,
+            float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache);
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
         // Own authored controllers and current target gains. Resolve each
@@ -335,6 +341,7 @@ namespace NifBullet
             ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene);
+        void applyNativeForcesImpl(std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };
