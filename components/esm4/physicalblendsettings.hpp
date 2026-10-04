@@ -164,6 +164,83 @@ namespace ESM4
         const PhysicalBlendDurationTables& previousDurations, std::uint32_t version,
         const PhysicalHitBlendProfileValues& processedValues);
 
+    struct PhysicalDefaultBlendProfile
+    {
+        // Head through BackWeapon map to IDs1-21; PonyTail maps to23.
+        std::array<std::string, 22> mGains = [] {
+            std::array<std::string, 22> result;
+            result.fill("1.0, 1.0");
+            result[12] = "1.0f, 1.0"; // Original compiled RHand literal.
+            return result;
+        }();
+        float mHighTranslation = .07f;
+        float mHighRotation = .005f;
+        float mLowTranslation = .7f;
+        float mLowRotation = .2f;
+        float mPassOutTime = 1.2f;
+        float mPassOutForce = -10.f;
+    };
+
+    struct PhysicalQuadHitBlendProfile
+    {
+        // RCalf, RThigh, RForeArm, RUpperArm, LCalf, LThigh, LForeArm,
+        // LUpperArm, Spine2, Spine1, Body, Head: original setting-object order.
+        std::array<std::string, 12> mGains = [] {
+            std::array<std::string, 12> result;
+            result.fill("1.0, 1.0");
+            result[11] = "0.3, 0.9";
+            return result;
+        }();
+    };
+
+    inline constexpr PhysicalBlendGainTable InitialPhysicalQuadHitBlendGainTable = [] {
+        PhysicalBlendGainTable result{};
+        for (auto& gain : result)
+            gain = {.2f, .9f};
+        result[1] = {.3f, .9f};
+        for (std::size_t i = 2; i <= 16; ++i)
+            result[i] = {1.f, 1.f};
+        result[22] = {1.f, 1.f};
+        return result;
+    }();
+
+    struct PhysicalBlendProfiles
+    {
+        PhysicalHitBlendProfile mHit;
+        PhysicalDefaultBlendProfile mDefault;
+        PhysicalQuadHitBlendProfile mQuadHit;
+    };
+
+    struct PhysicalBlendProfilesValues
+    {
+        PhysicalHitBlendProfileValues mHit;
+        std::array<std::optional<std::string_view>, 22> mDefaultGains;
+        std::array<std::optional<std::string_view>, 12> mQuadHitGains;
+        std::optional<std::string_view> mHighTranslation;
+        std::optional<std::string_view> mHighRotation;
+        std::optional<std::string_view> mLowTranslation;
+        std::optional<std::string_view> mLowRotation;
+        std::optional<std::string_view> mPassOutTime;
+        std::optional<std::string_view> mPassOutForce;
+    };
+
+    struct PhysicalBlendProfilesConfiguration
+    {
+        PhysicalBlendProfiles mProfiles;
+        PhysicalBlendGainTable mPostLink = InitialPhysicalBlendGainTable;
+        PhysicalHitBlendConfiguration mHit{InitialPhysicalHitBlendGainTable, .3f, .95f};
+        PhysicalBlendGainTable mQuadHit = InitialPhysicalQuadHitBlendGainTable;
+        PhysicalBlendDurationTables mDurations = InitialPhysicalBlendDurationTables;
+    };
+
+    // Complete producer-input transaction for53A1B0/53A460/53A720. The caller
+    // resolves VERSION and processed profile text. Preserve all unconfigured
+    // body IDs and publish only the returned owned candidate. Other settings
+    // used by reaction selection and actual file discovery are separate.
+    PhysicalBlendProfilesConfiguration loadPhysicalBlendProfiles(
+        const PhysicalBlendProfilesConfiguration& previous, std::uint32_t version,
+        const PhysicalBlendProfilesValues& processedValues);
+
     struct PhysicalKnockdownBlend
     {
         std::array<PhysicalBlendKey, 2> mKeys;

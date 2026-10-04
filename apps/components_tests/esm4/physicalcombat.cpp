@@ -4485,3 +4485,90 @@ TEST(ESM4PhysicalCombat, HitProfileRejectsLateNonfiniteSettingsWithoutChangingAn
     EXPECT_EQ(oldGains[1].mHierarchy, .3f);
     EXPECT_EQ(oldDurations.mGetUp[0], 1.f);
 }
+
+TEST(ESM4PhysicalCombat, AllBlendProfilesKeepDistinctTablesAndNativeBodyMappings)
+{
+    ESM4::PhysicalBlendProfilesConfiguration previous;
+    previous.mPostLink[22] = {-0.f, -7.f};
+    previous.mQuadHit[7] = {-0.f, -8.f};
+    ESM4::PhysicalBlendProfilesValues values;
+    for (auto& gain : values.mDefaultGains)
+        gain = "-0, -2";
+    for (auto& gain : values.mQuadHitGains)
+        gain = ".25, .75";
+    values.mHit.mGains[9] = ".5, .625";
+    const auto result = ESM4::loadPhysicalBlendProfiles(previous, 14, values);
+    for (std::size_t i = 1; i <= 23; ++i)
+    {
+        if (i == 22)
+            continue;
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mPostLink[i].mHierarchy), 0x80000000u);
+        EXPECT_EQ(result.mPostLink[i].mVelocity, -2.f);
+    }
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mPostLink[22].mHierarchy), 0x80000000u);
+    EXPECT_EQ(result.mPostLink[22].mVelocity, -7.f);
+    EXPECT_EQ(result.mPostLink[0].mHierarchy, 1.f);
+    EXPECT_EQ(result.mPostLink[31].mVelocity, 1.f);
+    for (const auto i : {1u, 2u, 3u, 4u, 5u, 6u, 8u, 9u, 11u, 12u, 14u, 15u})
+    {
+        EXPECT_EQ(result.mQuadHit[i].mHierarchy, .25f);
+        EXPECT_EQ(result.mQuadHit[i].mVelocity, .75f);
+    }
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mQuadHit[7].mHierarchy), 0x80000000u);
+    EXPECT_EQ(result.mQuadHit[7].mVelocity, -8.f);
+    EXPECT_EQ(result.mQuadHit[23].mHierarchy, .2f);
+    EXPECT_EQ(result.mHit.mGains[1].mHierarchy, .5f);
+    EXPECT_EQ(result.mHit.mGains[1].mVelocity, .625f);
+    EXPECT_EQ(previous.mPostLink[1].mHierarchy, 1.f);
+    EXPECT_EQ(previous.mQuadHit[1].mHierarchy, .3f);
+}
+
+TEST(ESM4PhysicalCombat, AllBlendProfilesResolvePassOutAndMotorInputsWithoutClamping)
+{
+    const ESM4::PhysicalBlendProfilesConfiguration previous;
+    ESM4::PhysicalBlendProfilesValues values;
+    values.mHighTranslation = "-0";
+    values.mHighRotation = "-2";
+    values.mLowTranslation = "3";
+    values.mLowRotation = "4";
+    values.mPassOutTime = "0";
+    values.mPassOutForce = "-30";
+    const auto result = ESM4::loadPhysicalBlendProfiles(previous, 0xffffffffu, values);
+    const auto& profile = result.mProfiles.mDefault;
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(profile.mHighTranslation), 0x80000000u);
+    EXPECT_EQ(profile.mHighRotation, -2.f);
+    EXPECT_EQ(profile.mLowTranslation, 3.f);
+    EXPECT_EQ(profile.mLowRotation, 4.f);
+    EXPECT_EQ(profile.mPassOutTime, 0.f);
+    EXPECT_EQ(profile.mPassOutForce, -30.f);
+    EXPECT_EQ(result.mProfiles.mDefault.mGains[12], "1.0f, 1.0");
+    EXPECT_EQ(result.mPostLink[13].mHierarchy, 1.f);
+    EXPECT_EQ(result.mPostLink[13].mVelocity, 1.f);
+    // Each producer still runs below14; processed overrides are ignored.
+    values.mPassOutForce = "1e1000";
+    const auto skipped = ESM4::loadPhysicalBlendProfiles(previous, 13, values);
+    EXPECT_EQ(skipped.mProfiles.mDefault.mPassOutForce, -10.f);
+    EXPECT_EQ(skipped.mProfiles.mDefault.mPassOutTime, 1.2f);
+    EXPECT_EQ(skipped.mHit.mGains[1].mHierarchy, .4f);
+}
+
+TEST(ESM4PhysicalCombat, AllBlendProfilesRejectLateSectionFailureWithoutPublishingEarlierSections)
+{
+    const ESM4::PhysicalBlendProfilesConfiguration previous;
+    ESM4::PhysicalBlendProfilesValues values;
+    values.mHit.mGains[9] = ".125, .375";
+    values.mDefaultGains[0] = ".25, .75";
+    values.mQuadHitGains[11] = ".5, 1e1000";
+    EXPECT_THROW(ESM4::loadPhysicalBlendProfiles(previous, 14, values), std::invalid_argument);
+    values.mQuadHitGains[11] = ".5, .75";
+    values.mPassOutForce = "1e1000";
+    EXPECT_THROW(ESM4::loadPhysicalBlendProfiles(previous, 14, values), std::invalid_argument);
+    auto corrupt = previous;
+    corrupt.mQuadHit[31].mVelocity = std::numeric_limits<float>::quiet_NaN();
+    values.mPassOutForce = "-10";
+    EXPECT_THROW(ESM4::loadPhysicalBlendProfiles(corrupt, 14, values), std::invalid_argument);
+    EXPECT_EQ(previous.mHit.mGains[1].mHierarchy, .3f);
+    EXPECT_EQ(previous.mPostLink[1].mHierarchy, 1.f);
+    EXPECT_EQ(previous.mQuadHit[1].mHierarchy, .3f);
+    EXPECT_EQ(previous.mProfiles.mDefault.mPassOutForce, -10.f);
+}

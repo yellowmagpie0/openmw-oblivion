@@ -198,6 +198,17 @@ namespace ESM4
                     | (normal.convert_to<std::uint32_t>() - (1u << 23));
             return std::bit_cast<float>(sign | result);
         }
+        template <std::size_t Size>
+        void readPhysicalBlendProfileStrings(std::array<std::string, Size>& current,
+            const std::array<std::optional<std::string_view>, Size>& processedValues)
+        {
+            for (std::size_t i = 0; i < Size; ++i)
+            {
+                const std::string_view text = processedValues[i].value_or(current[i]);
+                current[i] = std::string(text.substr(0, std::min<std::size_t>(255, text.find('\0'))));
+            }
+        }
+
         PhysicalBlendGains parsePhysicalHitBlendGains(std::string_view text)
         {
             text = text.substr(0, text.find('\0'));
@@ -321,6 +332,66 @@ namespace ESM4
         auto hit = resolvePhysicalHitBlendConfiguration(previousGains, settings);
         auto durations = resolvePhysicalBlendDurationTables(previousDurations, next.mDurations);
         return {std::move(next), std::move(hit), std::move(durations)};
+    }
+
+    PhysicalBlendProfilesConfiguration loadPhysicalBlendProfiles(
+        const PhysicalBlendProfilesConfiguration& previous, std::uint32_t version,
+        const PhysicalBlendProfilesValues& processedValues)
+    {
+        for (const auto* table : {&previous.mPostLink, &previous.mHit.mGains, &previous.mQuadHit})
+            for (const auto gain : *table)
+            {
+                validate(gain.mHierarchy);
+                validate(gain.mVelocity);
+            }
+        validate(previous.mHit.mMinimumHierarchy);
+        validate(previous.mHit.mMinimumVelocity);
+        auto hit = loadPhysicalHitBlendProfile(
+            previous.mProfiles.mHit, previous.mHit.mGains, previous.mDurations, version, processedValues.mHit);
+        auto next = previous;
+        auto& defaults = next.mProfiles.mDefault;
+        auto& quadruped = next.mProfiles.mQuadHit;
+        if (version >= 14)
+        {
+            readPhysicalBlendProfileStrings(defaults.mGains, processedValues.mDefaultGains);
+            readPhysicalBlendProfileStrings(quadruped.mGains, processedValues.mQuadHitGains);
+            defaults.mHighTranslation = readPhysicalBlendFloatSetting(
+                previous.mProfiles.mDefault.mHighTranslation, processedValues.mHighTranslation).mValue;
+            defaults.mHighRotation = readPhysicalBlendFloatSetting(
+                previous.mProfiles.mDefault.mHighRotation, processedValues.mHighRotation).mValue;
+            defaults.mLowTranslation = readPhysicalBlendFloatSetting(
+                previous.mProfiles.mDefault.mLowTranslation, processedValues.mLowTranslation).mValue;
+            defaults.mLowRotation = readPhysicalBlendFloatSetting(
+                previous.mProfiles.mDefault.mLowRotation, processedValues.mLowRotation).mValue;
+            defaults.mPassOutTime = readPhysicalBlendFloatSetting(
+                previous.mProfiles.mDefault.mPassOutTime, processedValues.mPassOutTime).mValue;
+            defaults.mPassOutForce = readPhysicalBlendFloatSetting(
+                previous.mProfiles.mDefault.mPassOutForce, processedValues.mPassOutForce).mValue;
+        }
+        for (float value : {defaults.mHighTranslation, defaults.mHighRotation,
+                 defaults.mLowTranslation, defaults.mLowRotation, defaults.mPassOutTime, defaults.mPassOutForce})
+            validate(value);
+
+        for (std::size_t i = 0; i < defaults.mGains.size(); ++i)
+        {
+            const auto gain = parsePhysicalHitBlendGains(defaults.mGains[i]);
+            validate(gain.mHierarchy);
+            validate(gain.mVelocity);
+            // IDs1-21 are contiguous; PonyTail is23, leaving22 unchanged.
+            next.mPostLink[i == 21 ? 23 : i + 1] = gain;
+        }
+        constexpr std::array<std::size_t, 12> quadIds{15, 14, 12, 11, 9, 8, 6, 5, 4, 3, 2, 1};
+        for (std::size_t i = 0; i < quadIds.size(); ++i)
+        {
+            const auto gain = parsePhysicalHitBlendGains(quadruped.mGains[i]);
+            validate(gain.mHierarchy);
+            validate(gain.mVelocity);
+            next.mQuadHit[quadIds[i]] = gain;
+        }
+        next.mProfiles.mHit = std::move(hit.mProfile);
+        next.mHit = std::move(hit.mHit);
+        next.mDurations = std::move(hit.mDurations);
+        return next;
     }
 
     PhysicalKnockdownBlend preparePhysicalKnockdownBlend(PhysicalBlendGains current,

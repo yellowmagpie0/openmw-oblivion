@@ -19215,3 +19215,60 @@ remaining DEFAULT/QUADHIT and other HIT settings/reaction selectors, initial
 uniform morphology, automatic physical admission/update/getup/readmission,
 native scene traversal/time/contact continuation, retained numerical failures
 and normal-input restart/gameplay remain required. S5-S14 remain pending.
+
+### Checkpoint 248: resolve all three physical blend producer input sets
+
+PhysicalBlendProfilesConfiguration now owns the HIT, DEFAULT and QUADHIT raw
+profiles and their separate derived tables. loadPhysicalBlendProfiles stages
+all 44 gain strings and ten float settings before returning a complete owned
+candidate. Below VERSION14 it skips profile reads but still runs the producers;
+admitted reads retain the native partial-scan, missing-value, empty-string and
+255-byte/NUL behavior verified in246/247. Nonfinite previous tables and late
+nonfinite results reject without changing any input.
+
+DEFAULT maps 22 strings to body IDs1-21 and23, preserving22 and all other
+unconfigured entries. Its original compiled RHand string is literally
+"1.0f, 1.0"; the partial scan still yields1/1. QUADHIT maps twelve strings to
+IDs15/14/12/11/9/8/6/5/4/3/2/1 and preserves the remaining entries. Its initial
+PE table is distinct from both DEFAULT and HIT. Six DEFAULT floats retain
+finite raw values, including signed zero and negatives: high/low translation/
+rotation, pass-out time and pass-out force. These values have not yet been
+integrated into an automatic physical reaction or solver motor.
+
+Independent native-all-blend-profiles-oracle-01 verifies the original executable
+SHA256 a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+and executes all54 actual4A8800 reader calls followed by complete53A1B0,
+53A460 and53A720 producers, including actual8A3180 motor-setting stores.
+756 cases cover54 selected inputs, seven texts and two x87 control words.
+Every reader and producer must return explicitly. Source SHA256
+6702c454cb3c7051553786c1517e0697bfbc7ff1e10f8104c6bc1b8537839500;
+corpus SHA256
+b55913b505ec989343a617bebeb4faee6b5e0acae4d9a3750be4084264e170a7.
+Boundaries remain processed Windows profile text, game allocation/free arena,
+initial thread C-locale, OS error state and initial CRT decoded pointer identity.
+Actual numeric parsing, setting copies/name mutation and producers execute.
+File discovery and registered-list enumeration/order are excluded.
+
+Three new tests execute and fail against an unimplemented resolver, then verify
+distinct native body mappings, preserved unconfigured entries, raw unclamped
+motor/pass-out inputs, version gating and late-section atomic rejection.
+native-all-blend-profiles-normal-01 and sanitized-01 each pass2425 exact
+inventoried component tests with zero failures/skips. Normal has no warnings;
+sanitizer recompilation repeats only unchanged inventorymechanics.cpp
+missing-initializer warnings, byte-verified against247 in
+unchanged-warning-source.json. ASan leak checks are disabled; UBSan halts.
+Tested fingerprint:
+c54fb5eeb82fed395fffea34c9143c674a3f2d6f264f08d897c248f0c1f3f8cb.
+
+native-all-blend-profiles-compare-normal-01 and sanitized-01 each match756
+original cases across206820 exact fields with zero mismatches. The108 native
+nonfinite-output cases require explicit production rejection. Finite cases
+compare44 owned strings, ten raw float settings,192 gain lanes, two HIT minima,
+64 duration lanes, pass-out force/time and four motor values. Source, archive,
+executable and corpus hashes remain stable. No engine/Python code changed;
+previous evidence is retained rather than repeated.
+
+No stage closes. Actual configuration discovery/import, remaining HIT force/
+bone selectors, automatic world physical reactions/admission/update/getup,
+initial uniform morphology, native scene/time/contact continuation and required
+normal-input gameplay/restarts remain open. S5-S14 remain pending.
