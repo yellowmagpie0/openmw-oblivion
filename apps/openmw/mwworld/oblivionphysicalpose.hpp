@@ -3,12 +3,14 @@
 
 #include <components/esm4/physicalblendsettings.hpp>
 #include <span>
+#include <osg/Vec3f>
 
 namespace MWPhysics { class PhysicsSystem; }
 namespace MWRender { class Animation; }
 namespace Nif { struct NiTransform; }
 namespace NifBullet
 {
+    enum class RagdollNativeKnockdownBlendDisposition;
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
 }
@@ -16,6 +18,12 @@ namespace NifBullet
 namespace MWWorld
 {
     class Ptr;
+    struct OblivionPhysicalDownRequest
+    {
+        std::uint32_t mNodeRecord;
+        std::uint32_t mResolvedPackedFilter;
+        osg::Vec3f mWorldVector;
+    };
     // Borrowed renderer/physics lifetimes. The caller supplies resolved native
     // uniform placement, resolved packed body filters/gain table and collision policy; this does not select reactions,
     // infer NPC morphology, or install generated controllers.

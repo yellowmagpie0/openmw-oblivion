@@ -251,6 +251,42 @@ namespace
         }
     };
 
+    TEST(OblivionWorld, PhysicalConfigurationOwnsResolvedTablesAndRejectsLateReload)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto& initial = world.getOblivionPhysicalBlendConfiguration();
+        EXPECT_THROW(world.prepareOblivionActorKnockdownControllers({}, {}), std::logic_error);
+        EXPECT_EQ(initial.mHit.mGains[1].mHierarchy, .4f);
+        EXPECT_EQ(initial.mQuadHit[1].mHierarchy, .3f);
+        ESM4::PhysicalBlendProfilesValues values;
+        std::string tail = ".53125, .875";
+        values.mDefaultGains[16] = tail;
+        values.mHit.mKnockdownTime = ".625";
+        values.mPassOutForce = "-10";
+        values.mPassOutTime = "2";
+        world.loadOblivionPhysicalBlendConfiguration(14, values);
+        tail.assign("changed by input owner");
+        const auto accepted = world.getOblivionPhysicalBlendConfiguration();
+        EXPECT_EQ(accepted.mProfiles.mDefault.mGains[16], ".53125, .875");
+        EXPECT_EQ(accepted.mPostLink[17].mHierarchy, .53125f);
+        EXPECT_EQ(accepted.mPostLink[17].mVelocity, .875f);
+        EXPECT_EQ(accepted.mDurations.mKnockdown[17], .625f);
+        EXPECT_EQ(accepted.mProfiles.mDefault.mPassOutTime, 2.f);
+        values.mDefaultGains[16] = "0, 0";
+        values.mQuadHitGains.back() = "1, 1e1000";
+        EXPECT_THROW(world.loadOblivionPhysicalBlendConfiguration(14, values), std::invalid_argument);
+        EXPECT_EQ(world.getOblivionPhysicalBlendConfiguration().mPostLink[17].mHierarchy, .53125f);
+        EXPECT_EQ(world.getOblivionPhysicalBlendConfiguration().mProfiles.mDefault.mGains[16],
+            accepted.mProfiles.mDefault.mGains[16]);
+        EXPECT_EQ(world.getOblivionPhysicalBlendConfiguration().mDurations.mKnockdown, accepted.mDurations.mKnockdown);
+        world.loadOblivionPhysicalBlendConfiguration(13, values);
+        EXPECT_EQ(world.getOblivionPhysicalBlendConfiguration().mPostLink[17].mHierarchy, .53125f);
+        MWWorld::World legacy(&fixture.mResources, -1, "", fixture.mDirectory, ESM::GameProfile::Morrowind);
+        EXPECT_THROW(legacy.getOblivionPhysicalBlendConfiguration(), std::logic_error);
+        EXPECT_THROW(legacy.loadOblivionPhysicalBlendConfiguration(14, {}), std::logic_error);
+    }
+
     TEST(OblivionWorld, PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval)
     {
         struct RestoreThreads
@@ -293,7 +329,7 @@ namespace
             for (const auto& [name, value] : lights->getLightDefines())
                 defines[name] = value;
             scene->getShaderManager().setGlobalDefines(defines);
-            MWPhysics::PhysicsSystem physics(&fixture.mResources, new osg::Group);
+            auto& physics = fixture.mWorld.initializePhysics(new osg::Group);
             NifBullet::ActorRagdollDefinition graph;
             graph.mSourceHash = std::string(16, 'a');
             NifBullet::RagdollBodyDefinition body{};
@@ -872,6 +908,56 @@ namespace
             EXPECT_FALSE(capsule->isCollisionSuspended());
             EXPECT_EQ(physicalBone->getMatrix(), originalBone);
             EXPECT_FLOAT_EQ(renderedGraph.mBodies[0].mMass, 2.f);
+            // World admission consumes its owned DEFAULT table. Down consumes
+            // the same resolved configuration through the actual scheduler.
+            ESM4::PhysicalBlendProfilesValues worldConfigured;
+            worldConfigured.mDefaultGains[16] = ".53125, .875";
+            worldConfigured.mHit.mKnockdownTime = ".25";
+            worldConfigured.mPassOutForce = "-10";
+            worldConfigured.mPassOutTime = "2";
+            fixture.mWorld.loadOblivionPhysicalBlendConfiguration(14, worldConfigured);
+            fixture.mWorld.beginOblivionActorPhysicalPose(animation, ptr, renderedGraph, placement, linkedFilters,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
+            EXPECT_EQ(physics.captureActorRagdollBlendStates(ptr)[0].mGains.mHierarchy, .53125f);
+            EXPECT_EQ(physics.captureActorRagdollBlendStates(ptr)[0].mGains.mVelocity, .875f);
+            const std::array worldDownRequests{MWWorld::OblivionPhysicalDownRequest{8, 0x1108, {1, -2, .5}}};
+            const auto beforeDown = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            // The same owner selects disabled per-body durations and validates
+            // admitted pass-out settings before publishing either controller.
+            const std::array disabledWorldDown{
+                MWWorld::OblivionPhysicalDownRequest{8, 0xfffff908u, {1, -2, .5}}};
+            const auto disabledResult
+                = fixture.mWorld.prepareOblivionActorKnockdownControllers(ptr, disabledWorldDown);
+            ASSERT_EQ(disabledResult.size(), 1u);
+            EXPECT_EQ(disabledResult[0], NifBullet::RagdollNativeKnockdownBlendDisposition::Disabled);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforeDown);
+            worldConfigured.mPassOutTime = "-2";
+            fixture.mWorld.loadOblivionPhysicalBlendConfiguration(14, worldConfigured);
+            EXPECT_THROW(fixture.mWorld.prepareOblivionActorKnockdownControllers(ptr, worldDownRequests),
+                std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforeDown);
+            worldConfigured.mPassOutTime = "2";
+            fixture.mWorld.loadOblivionPhysicalBlendConfiguration(14, worldConfigured);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforeDown);
+            const std::array lateBadDown{worldDownRequests[0],
+                MWWorld::OblivionPhysicalDownRequest{999, 0x1108, {1, 0, 0}}};
+            EXPECT_THROW(fixture.mWorld.prepareOblivionActorKnockdownControllers(ptr, lateBadDown),
+                std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforeDown);
+            auto downResult = fixture.mWorld.prepareOblivionActorKnockdownControllers(ptr, worldDownRequests);
+            ASSERT_EQ(downResult.size(), 1u);
+            EXPECT_EQ(downResult[0], NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mTiming.mStopKey, .25f);
+            const auto worldConfiguredVelocity = physics.captureActorRagdollVelocityControllers(ptr);
+            ASSERT_EQ(worldConfiguredVelocity.size(), 1u);
+            EXPECT_EQ(worldConfiguredVelocity[0].mState.mTiming.mStopKey, 2.f);
+            // Native oracle210 mass2 values scale by2 for the admitted mass4.
+            const std::array<std::uint32_t, 4> worldConfiguredBits{
+                3233210841u, 1094115801u, 3224822233u, 1065353216u};
+            for (unsigned axis = 0; axis < 4; ++axis)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(worldConfiguredVelocity[0].mState.mForceVector[axis]),
+                    worldConfiguredBits[axis]);
+            MWWorld::endNativeActorPhysicalPose(physics, animation, ptr);
             // Teardown still releases bodies/capsule if renderer rebuilding fails.
             beginPhysical(renderedGraph);
             animation.mThrowRebuild = true;

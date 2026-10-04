@@ -352,6 +352,12 @@ namespace MWWorld
 
         if (mGameProfile == ESM::GameProfile::Oblivion)
         {
+            // The native configuration producers run even when VERSION blocks
+            // file reads. Start from owned compiled settings; the OS/path
+            // adapter supplies any separately resolved overrides later.
+            mOblivionPhysicalBlendConfiguration
+                = std::make_unique<ESM4::PhysicalBlendProfilesConfiguration>(
+                    ESM4::loadPhysicalBlendProfiles({}, 0, {}));
             mOblivionAi = std::make_unique<MWMechanics::OblivionAiService>(*this);
             mOblivionCombat = std::make_unique<MWMechanics::OblivionCombatService>();
             mOblivionObservation = ESM4::ObservationStream::fromEnvironment();
@@ -359,6 +365,49 @@ namespace MWWorld
         }
 
         mSwimHeightScale = mStore.get<ESM::GameSetting>().find("fSwimHeightScale")->mValue.getFloat();
+    }
+
+    const ESM4::PhysicalBlendProfilesConfiguration& World::getOblivionPhysicalBlendConfiguration() const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionPhysicalBlendConfiguration)
+            throw std::logic_error("native physical configuration requires a loaded Oblivion world");
+        return *mOblivionPhysicalBlendConfiguration;
+    }
+
+    void World::loadOblivionPhysicalBlendConfiguration(
+        std::uint32_t version, const ESM4::PhysicalBlendProfilesValues& processedValues)
+    {
+        auto candidate = std::make_unique<ESM4::PhysicalBlendProfilesConfiguration>(
+            ESM4::loadPhysicalBlendProfiles(getOblivionPhysicalBlendConfiguration(), version, processedValues));
+        mOblivionPhysicalBlendConfiguration.swap(candidate);
+    }
+
+    void World::beginOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor,
+        const NifBullet::ActorRagdollDefinition& authored, const Nif::NiTransform& placement,
+        std::span<const std::uint32_t> resolvedPackedFilters, int collisionGroup, int collisionMask,
+        const NifBullet::RagdollInternalCollisionFilter* internalFilter)
+    {
+        const auto& configuration = getOblivionPhysicalBlendConfiguration();
+        if (!mPhysics)
+            throw std::logic_error("native physical admission requires initialized World physics");
+        beginNativeActorPhysicalPose(*mPhysics, animation, actor, authored, placement, resolvedPackedFilters,
+            configuration.mPostLink, collisionGroup, collisionMask, internalFilter);
+    }
+
+    std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> World::prepareOblivionActorKnockdownControllers(
+        const Ptr& actor, std::span<const OblivionPhysicalDownRequest> requests)
+    {
+        const auto& configuration = getOblivionPhysicalBlendConfiguration();
+        if (!mPhysics)
+            throw std::logic_error("native Down setup requires initialized World physics");
+        std::vector<NifBullet::RagdollNativeKnockdownControllerSetupRequest> prepared;
+        prepared.reserve(requests.size());
+        for (const auto& request : requests)
+            prepared.push_back({request.mNodeRecord, request.mWorldVector,
+                ESM4::physicalBlendDurationForFilter(configuration.mDurations, request.mResolvedPackedFilter, false)});
+        const auto& settings = configuration.mProfiles.mDefault;
+        return mPhysics->prepareActorRagdollKnockdownControllerSetup(
+            actor, prepared, {settings.mPassOutForce, settings.mPassOutTime});
     }
 
     MWPhysics::PhysicsSystem& World::initializePhysics(osg::ref_ptr<osg::Group> rootNode)

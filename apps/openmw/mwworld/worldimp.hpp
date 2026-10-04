@@ -19,6 +19,7 @@
 #include "../mwbase/world.hpp"
 
 #include "contentloader.hpp"
+#include "oblivionphysicalpose.hpp"
 #include "esmstore.hpp"
 #include "globals.hpp"
 #include "groundcoverstore.hpp"
@@ -131,6 +132,7 @@ namespace MWWorld
         std::unique_ptr<MWMechanics::OblivionAiService> mOblivionAi;
         std::unique_ptr<MWMechanics::OblivionCombatService> mOblivionCombat;
         std::unique_ptr<ESM4::ObservationStream> mOblivionObservation;
+        std::unique_ptr<ESM4::PhysicalBlendProfilesConfiguration> mOblivionPhysicalBlendConfiguration;
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
         bool mDispatchingOblivionDeathEvents = false;
@@ -270,6 +272,19 @@ namespace MWWorld
         MWMechanics::OblivionAiService* getOblivionAiService() { return mOblivionAi.get(); }
         MWMechanics::OblivionCombatService* getOblivionCombatService() { return mOblivionCombat.get(); }
         const MWMechanics::OblivionCombatService* getOblivionCombatService() const { return mOblivionCombat.get(); }
+        // Process-owned configuration, independent of saved actor state. VERSION
+        // and OS-processed text are resolved separately by the input adapter.
+        const ESM4::PhysicalBlendProfilesConfiguration& getOblivionPhysicalBlendConfiguration() const;
+        void loadOblivionPhysicalBlendConfiguration(
+            std::uint32_t version, const ESM4::PhysicalBlendProfilesValues& processedValues);
+        // Explicit resolved admission/reaction inputs; selection and native
+        // morphology remain the lifecycle caller's responsibility.
+        void beginOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor,
+            const NifBullet::ActorRagdollDefinition& authored, const Nif::NiTransform& placement,
+            std::span<const std::uint32_t> resolvedPackedFilters, int collisionGroup, int collisionMask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter);
+        std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareOblivionActorKnockdownControllers(
+            const Ptr& actor, std::span<const OblivionPhysicalDownRequest> requests);
         void advanceOblivionActorClock(float duration);
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.

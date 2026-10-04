@@ -19272,3 +19272,51 @@ No stage closes. Actual configuration discovery/import, remaining HIT force/
 bone selectors, automatic world physical reactions/admission/update/getup,
 initial uniform morphology, native scene/time/contact continuation and required
 normal-input gameplay/restarts remain open. S5-S14 remain pending.
+
+### Checkpoint 249: world-owned blend configuration drives physical setup
+
+World now constructs an owned physical blend configuration when native content
+loads, running248's three producers from compiled settings with VERSION0.
+A profile-gated reload resolves a complete candidate and swaps it only after
+validation. Returned strings own their storage; changing the input text afterward
+cannot change accepted configuration. Configuration is process state, separate
+from serialized actor/controller state. Actual OS/path discovery remains open.
+
+Explicit World physical admission consumes that owner's DEFAULT/post-link gain
+table through the renderer/body/capsule handoff. Explicit World Down setup
+resolves each caller-supplied packed filter through the owner's duration table
+and passes its pass-out force/time to the actual scheduler/controller operation.
+No caller supplies a replacement gain table, Down duration or pass-out constants
+at these World boundaries. Uniform placement, packed filters, collision policy,
+selected nodes and world vectors remain explicit resolved lifecycle inputs;
+automatic reaction selection is not claimed.
+
+A new integration test checks compiled producer execution, owned text lifetime,
+late QUADHIT reload rejection, below14 read suppression and legacy-profile/
+uninitialized-physics rejection. The existing physical ownership integration now
+uses World-owned Physics and additionally exercises configured renderer admission,
+generated velocity setup, disabled body25 selection with high filter bits,
+negative pass-out time rejection, late unknown-node rollback, accepted reload
+without modifying existing controllers and configured force/time/duration output
+in all0/1/2-worker configurations. Complete physical snapshots prove rejected
+reaction batches publish no earlier owner changes. Force expectations retain
+the independently verified210 input vector, with exact mass2-to-mass4 scaling.
+
+Baseline01 is a retained test-variable collision compile failure. Baseline02
+executes both selected tests and fails against placeholder World methods.
+First full normal/sanitized01 each execute946 tests; the ownership aggregate
+fails because the added fixture supplied Y=-3 while its original210 expected
+vector used Y=-2. Restore the independent probe's input Y=-2; expected bits are
+unchanged. Corrected world-physical-configuration-normal-02 and sanitized-02
+each pass946 exact inventoried engine tests, zero failures/skips, rebuilding
+openmw/openmw-tests/esmtool with no compiler warnings. Sanitizer01 repeated only
+an unchanged actorstats test range-loop copy warning, byte-compared to248 in
+unchanged-warning-source.json. ASan leaks disabled; UBSan halts.
+Tested source fingerprint
+f652b692133343244a640eebab737a09ed2646364e791a314d3473f2600de5ca.
+Components/Python sources did not change; their preceding evidence is retained.
+
+No stage closes. Automatic normal-input physical reactions, configuration file
+discovery, original initial morphology, native scene/time/contact continuation,
+retained numerical failures and full gameplay/restart gates remain open.
+S5-S14 remain pending.
