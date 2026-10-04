@@ -156,6 +156,9 @@ namespace MWPhysics
         // share the worker/world barrier and scheduler physical clock cache.
         void prepareActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocitySetupRequest> requests);
         std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareActorRagdollHitBlends(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeHitBlendSetupRequest> requests);
+        std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareActorRagdollHitControllerSetup(
+            const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeHitBlendSetupRequest> blends,
+            std::span<const NifBullet::RagdollNativeHitVelocitySetupRequest> velocities);
         void prepareActorRagdollHitVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeHitVelocitySetupRequest> requests);
         std::vector<NifBullet::RagdollNativeVelocityControllerState> captureActorRagdollVelocityControllers(const MWWorld::Ptr& ptr);
         void restoreActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocityControllerState> controllers);

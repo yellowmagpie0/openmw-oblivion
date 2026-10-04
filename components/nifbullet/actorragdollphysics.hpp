@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <span>
+#include <utility>
 
 #include <LinearMath/btTransform.h>
 
@@ -430,6 +431,11 @@ namespace NifBullet
         // No requested-motion synchronization, body writes or wake.
         std::vector<RagdollNativeHitBlendDisposition> prepareNativeHitBlends(
             std::span<const RagdollNativeHitBlendSetupRequest> requests);
+        // Stage both selected HIT controller kinds as a single reaction.
+        // A late failure in either batch must leave both owned lists unchanged.
+        std::vector<RagdollNativeHitBlendDisposition> prepareNativeHitControllerSetup(
+            std::span<const RagdollNativeHitBlendSetupRequest> blends,
+            std::span<const RagdollNativeHitVelocitySetupRequest> velocities);
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
         // Complete collision metadata snapshot; no body/controller conversion.
@@ -516,6 +522,10 @@ namespace NifBullet
             std::span<const RagdollNativeKnockdownControllerSetupRequest> requests, bool includeVelocity,
             RagdollNativePassOutSettings settings);
         void applyNativeForcesImpl(std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies);
+        std::pair<std::vector<RagdollNativeBlendControllerState>, std::vector<RagdollNativeHitBlendDisposition>>
+            prepareNativeHitBlendsImpl(std::span<const RagdollNativeHitBlendSetupRequest> requests) const;
+        std::vector<RagdollNativeVelocityControllerState> prepareNativeHitVelocityControllersImpl(
+            std::span<const RagdollNativeHitVelocitySetupRequest> requests) const;
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

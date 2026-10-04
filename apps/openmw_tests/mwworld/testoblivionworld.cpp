@@ -258,6 +258,7 @@ namespace
         const auto& initial = world.getOblivionPhysicalBlendConfiguration();
         EXPECT_THROW(world.prepareOblivionActorKnockdownControllers({}, {}), std::logic_error);
         EXPECT_THROW(world.prepareOblivionActorHitBlendControllers({}, {}, false), std::logic_error);
+        EXPECT_THROW(world.prepareOblivionActorHitControllers({}, {}, false, {}), std::logic_error);
         EXPECT_EQ(initial.mHit.mGains[1].mHierarchy, .4f);
         EXPECT_EQ(initial.mQuadHit[1].mHierarchy, .3f);
         ESM4::PhysicalBlendProfilesValues values;
@@ -286,6 +287,7 @@ namespace
         MWWorld::World legacy(&fixture.mResources, -1, "", fixture.mDirectory, ESM::GameProfile::Morrowind);
         EXPECT_THROW(legacy.getOblivionPhysicalBlendConfiguration(), std::logic_error);
         EXPECT_THROW(legacy.prepareOblivionActorHitBlendControllers({}, {}, true), std::logic_error);
+        EXPECT_THROW(legacy.prepareOblivionActorHitControllers({}, {}, true, {}), std::logic_error);
         EXPECT_THROW(legacy.loadOblivionPhysicalBlendConfiguration(14, {}), std::logic_error);
     }
 
@@ -966,6 +968,25 @@ namespace
             worldHitState = physics.captureActorRagdollBlendControllers(ptr)[0].mState;
             EXPECT_EQ(worldHitState.mKeys[0].mGains, (ESM4::PhysicalBlendGains{.3f, .875f}));
             EXPECT_EQ(worldHitState.mKeys[1].mGains, (ESM4::PhysicalBlendGains{.3f, .9f}));
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeWorldHitPose);
+            const auto beforeCompoundHit = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            const std::array worldHitVelocities{MWWorld::OblivionPhysicalHitVelocityRequest{8, {1, -2, .5f, 0}, .5f}};
+            EXPECT_THROW(fixture.mWorld.prepareOblivionActorHitControllers(previous, worldHitRequests, false, worldHitVelocities),
+                std::invalid_argument);
+            const std::array badWorldHitVelocities{worldHitVelocities[0],
+                MWWorld::OblivionPhysicalHitVelocityRequest{999, {}, 1}};
+            EXPECT_THROW(fixture.mWorld.prepareOblivionActorHitControllers(ptr, worldHitRequests, false, badWorldHitVelocities),
+                std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforeCompoundHit);
+            hitResult = fixture.mWorld.prepareOblivionActorHitControllers(ptr, worldHitRequests, false, worldHitVelocities);
+            ASSERT_EQ(hitResult.size(), 1u);
+            EXPECT_EQ(hitResult[0], NifBullet::RagdollNativeHitBlendDisposition::Started);
+            const auto compoundHitVelocity = physics.captureActorRagdollVelocityControllers(ptr);
+            ASSERT_EQ(compoundHitVelocity.size(), 1u);
+            EXPECT_EQ(compoundHitVelocity[0].mState.mTiming.mStopKey, .2f);
+            EXPECT_EQ(compoundHitVelocity[0].mState.mForceVector, (std::array<float, 4>{2, -4, 1, 0}));
+            EXPECT_EQ(compoundHitVelocity[0].mTargetNode, 8u);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mTiming.mStopKey, 1.f);
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeWorldHitPose);
             physics.restoreActorRagdollSnapshot(ptr, beforeWorldHit, base, path.value());
             const std::array worldDownRequests{MWWorld::OblivionPhysicalDownRequest{8, 0x1108, {1, -2, .5}}};

@@ -424,6 +424,25 @@ namespace MWWorld
         return mPhysics->prepareActorRagdollHitBlends(actor, prepared);
     }
 
+    std::vector<NifBullet::RagdollNativeHitBlendDisposition> World::prepareOblivionActorHitControllers(
+        const Ptr& actor, std::span<const OblivionPhysicalHitBlendRequest> blends, bool useQuadHit,
+        std::span<const OblivionPhysicalHitVelocityRequest> velocities)
+    {
+        const auto& configuration = getOblivionPhysicalBlendConfiguration();
+        if (!mPhysics)
+            throw std::logic_error("native HIT setup requires initialized World physics");
+        const auto& gains = useQuadHit ? configuration.mQuadHit : configuration.mHit.mGains;
+        std::vector<NifBullet::RagdollNativeHitBlendSetupRequest> preparedBlends;
+        preparedBlends.reserve(blends.size());
+        for (const auto& request : blends)
+            preparedBlends.push_back({request.mNodeRecord, gains[(request.mResolvedPackedFilter >> 8) & 31u]});
+        std::vector<NifBullet::RagdollNativeHitVelocitySetupRequest> preparedVelocities;
+        preparedVelocities.reserve(velocities.size());
+        for (const auto& request : velocities)
+            preparedVelocities.push_back({request.mNodeRecord, request.mNativeSourceVector, request.mResolvedMassMultiplier});
+        return mPhysics->prepareActorRagdollHitControllerSetup(actor, preparedBlends, preparedVelocities);
+    }
+
     MWPhysics::PhysicsSystem& World::initializePhysics(osg::ref_ptr<osg::Group> rootNode)
     {
         if (mPhysics)

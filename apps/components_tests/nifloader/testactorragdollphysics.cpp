@@ -4845,3 +4845,95 @@ namespace
         EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
     }
 }
+
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, CompoundHitSetupCreatesBothControllersAndPreservesIndependentTargets)
+    {
+        addHinge(); defineOwnedHitBlends(mGraph);
+        // Explicit original250 mass2/multiplier.5/damping0 fixture.
+        for (auto& body : mGraph.mBodies) body.mLinearDamping = 0.f;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto before = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeHitBlendSetupRequest, 1> blends{{{8, {1, 1}}}};
+        const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 1> velocities{{{8, {1, -2, .5f, 0}, .5f}}};
+        const auto result = actor.prepareNativeHitControllerSetup(blends, velocities);
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0], NifBullet::RagdollNativeHitBlendDisposition::Started);
+        const auto blend = actor.captureNativeBlendControllers()[0];
+        EXPECT_EQ(blend.mTargetNode, 20u);
+        EXPECT_EQ(blend.mState.mTiming.mStopKey, 1);
+        EXPECT_EQ(blend.mState.mSetupState, 1u);
+        const auto velocity = actor.captureNativeVelocityControllers();
+        ASSERT_EQ(velocity.size(), 1u);
+        EXPECT_EQ(velocity[0].mTargetNode, 8u);
+        EXPECT_TRUE(velocity[0].mPrecedesBlend);
+        EXPECT_EQ(velocity[0].mState.mTiming.mStopKey, .2f);
+        EXPECT_EQ(velocity[0].mState.mForceVector, (std::array<float, 4>{1, -2, .5f, 0}));
+        const std::array<std::uint32_t, 2> nodes{8, 20};
+        EXPECT_EQ(actor.captureNativeControllerOrder(nodes), (std::vector<NifBullet::RagdollNativeControllerReference>{
+            {NifBullet::RagdollNativeControllerKind::Velocity, 8}, {NifBullet::RagdollNativeControllerKind::Blend, 78},
+            {NifBullet::RagdollNativeControllerKind::Blend, 79}}));
+        EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, CompoundHitSetupRollsBackBlendWhenLateVelocityValidationFails)
+    {
+        addHinge(); defineOwnedHitBlends(mGraph);
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto before = actor.captureNativeBlendControllers();
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING); second->setActivationState(ISLAND_SLEEPING);
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const float max = std::numeric_limits<float>::max();
+        const std::array<NifBullet::RagdollNativeHitBlendSetupRequest, 1> blends{{{8, {.4f, .6f}}}};
+        for (const auto& velocities : std::array<std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 2>, 5>{{
+            {{{8, {1, 0, 0, 0}, 1}, {20, {bad, 0, 0, 0}, 1}}},
+            {{{8, {1, 0, 0, 0}, 1}, {20, {0, 0, 0, max}, 2}}},
+            {{{8, {1, 0, 0, 0}, 1}, {20, {}, bad}}},
+            {{{8, {1, 0, 0, 0}, 1}, {8, {}, 1}}},
+            {{{8, {1, 0, 0, 0}, 1}, {999, {}, 1}}}}})
+        {
+            EXPECT_THROW(actor.prepareNativeHitControllerSetup(blends, velocities), std::invalid_argument);
+            const auto current = actor.captureNativeBlendControllers();
+            for (unsigned i = 0; i < 2; ++i) EXPECT_EQ(current[i].mState, before[i].mState);
+            EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+            EXPECT_FALSE(first->isActive()); EXPECT_FALSE(second->isActive());
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, CompoundHitSetupRejectsLateBlendAndStillReplacesVelocityForStrongerBlend)
+    {
+        addHinge(); defineOwnedHitBlends(mGraph);
+        // Explicit original250 mass2/multiplier.5/damping0 fixture.
+        for (auto& body : mGraph.mBodies) body.mLinearDamping = 0.f;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        ESM4::PhysicalVelocityControllerState state;
+        state.mTiming = {0xffff, 8, 9, 0, 11}; state.mClock = {3, 4, 7};
+        state.mForceVector = {8, 9, 10, 11}; state.mFrameDelta = 99;
+        const std::array<NifBullet::RagdollNativeVelocityControllerState, 1> saved{{{8, 20, state, false}}};
+        actor.restoreNativeVelocityControllers(saved);
+        const auto oldBlends = actor.captureNativeBlendControllers();
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const std::array<NifBullet::RagdollNativeHitBlendSetupRequest, 2> badBlends{{{8, {1, 1}}, {20, {bad, 1}}}};
+        const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 1> velocities{{{8, {1, -2, .5f, 0}, .5f}}};
+        EXPECT_THROW(actor.prepareNativeHitControllerSetup(badBlends, velocities), std::invalid_argument);
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState, state);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, oldBlends[0].mState);
+        auto stronger = oldBlends; stronger[0].mState.mSetupState = 2;
+        restoreOwnedHitBlendControllers(actor, stronger);
+        const std::array<NifBullet::RagdollNativeHitBlendSetupRequest, 1> strongerRequest{{{8, {bad, bad}}}};
+        const auto result = actor.prepareNativeHitControllerSetup(strongerRequest, velocities);
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0], NifBullet::RagdollNativeHitBlendDisposition::StrongerSetup);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, stronger[0].mState);
+        const auto reused = actor.captureNativeVelocityControllers()[0];
+        EXPECT_EQ(reused.mTargetNode, 20u); EXPECT_FALSE(reused.mPrecedesBlend);
+        EXPECT_EQ(reused.mState.mClock.mElapsed, 7); EXPECT_EQ(reused.mState.mFrameDelta, 99);
+        EXPECT_EQ(reused.mState.mTiming.mStopKey, .2f);
+        EXPECT_EQ(reused.mState.mForceVector, (std::array<float, 4>{1, -2, .5f, 0}));
+    }
+}

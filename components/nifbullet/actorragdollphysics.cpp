@@ -1694,6 +1694,16 @@ namespace NifBullet
     std::vector<RagdollNativeHitBlendDisposition> ActorRagdollPhysics::prepareNativeHitBlends(
         std::span<const RagdollNativeHitBlendSetupRequest> requests)
     {
+        auto prepared = prepareNativeHitBlendsImpl(requests);
+        auto result = std::move(prepared.second);
+        mImpl->mBlendControllers.swap(prepared.first);
+        return result;
+    }
+
+    std::pair<std::vector<RagdollNativeBlendControllerState>, std::vector<RagdollNativeHitBlendDisposition>>
+        ActorRagdollPhysics::prepareNativeHitBlendsImpl(
+            std::span<const RagdollNativeHitBlendSetupRequest> requests) const
+    {
         auto controllers = mImpl->mBlendControllers;
         std::vector<RagdollNativeHitBlendDisposition> result;
         result.reserve(requests.size());
@@ -1727,7 +1737,20 @@ namespace NifBullet
                 controller->mState, blend->mState.mGains, request.mConfiguredGains);
             result.push_back(RagdollNativeHitBlendDisposition::Started);
         }
-        mImpl->mBlendControllers.swap(controllers);
+        return {std::move(controllers), std::move(result)};
+    }
+
+    std::vector<RagdollNativeHitBlendDisposition> ActorRagdollPhysics::prepareNativeHitControllerSetup(
+        std::span<const RagdollNativeHitBlendSetupRequest> blends,
+        std::span<const RagdollNativeHitVelocitySetupRequest> velocities)
+    {
+        auto preparedBlends = prepareNativeHitBlendsImpl(blends);
+        auto preparedVelocities = prepareNativeHitVelocityControllersImpl(velocities);
+        // Move the result before publication. Returning this ordinary local
+        // uses NRVO or vector's nonthrowing move, never a post-swap allocation.
+        auto result = std::move(preparedBlends.second);
+        mImpl->mBlendControllers.swap(preparedBlends.first);
+        mImpl->mVelocityControllers.swap(preparedVelocities);
         return result;
     }
 
@@ -1761,6 +1784,13 @@ namespace NifBullet
     void ActorRagdollPhysics::prepareNativeHitVelocityControllers(
         std::span<const RagdollNativeHitVelocitySetupRequest> requests)
     {
+        auto prepared = prepareNativeHitVelocityControllersImpl(requests);
+        mImpl->mVelocityControllers.swap(prepared);
+    }
+
+    std::vector<RagdollNativeVelocityControllerState> ActorRagdollPhysics::prepareNativeHitVelocityControllersImpl(
+        std::span<const RagdollNativeHitVelocitySetupRequest> requests) const
+    {
         auto controllers = mImpl->mVelocityControllers;
         std::unordered_set<std::uint32_t> nodes;
         for (const auto& request : requests)
@@ -1783,7 +1813,7 @@ namespace NifBullet
             else
                 controller->mState = state;
         }
-        mImpl->mVelocityControllers.swap(controllers);
+        return controllers;
     }
 
     std::vector<RagdollNativeVelocityControllerState> ActorRagdollPhysics::captureNativeVelocityControllers() const

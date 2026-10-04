@@ -30,6 +30,12 @@ namespace MWWorld
         std::uint32_t mNodeRecord;
         std::uint32_t mResolvedPackedFilter;
     };
+    struct OblivionPhysicalHitVelocityRequest
+    {
+        std::uint32_t mNodeRecord;
+        std::array<float, 4> mNativeSourceVector;
+        float mResolvedMassMultiplier;
+    };
     // Borrowed renderer/physics lifetimes. The caller supplies resolved native
     // uniform placement, resolved packed body filters/gain table and collision policy; this does not select reactions,
     // infer NPC morphology, or install generated controllers.

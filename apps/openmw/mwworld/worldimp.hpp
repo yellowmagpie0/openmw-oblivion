@@ -287,6 +287,9 @@ namespace MWWorld
             const Ptr& actor, std::span<const OblivionPhysicalDownRequest> requests);
         std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareOblivionActorHitBlendControllers(
             const Ptr& actor, std::span<const OblivionPhysicalHitBlendRequest> requests, bool useQuadHit);
+        std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareOblivionActorHitControllers(
+            const Ptr& actor, std::span<const OblivionPhysicalHitBlendRequest> blends, bool useQuadHit,
+            std::span<const OblivionPhysicalHitVelocityRequest> velocities);
         void advanceOblivionActorClock(float duration);
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.

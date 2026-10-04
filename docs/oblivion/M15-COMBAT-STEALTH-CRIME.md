@@ -19528,3 +19528,47 @@ No stage closes. Combined hit blend/velocity transaction, automatic actor
 physical admission/reactions/update/getup, actual configuration discovery,
 initial morphology, native scene/time/contact continuation and required
 normal-input gameplay/restarts remain open. S5-S14 pending.
+
+### Checkpoint 254: atomic combined World HIT controller setup
+
+The ragdoll owner now prepares both complete HIT blend and velocity controller
+lists before publishing either. The existing single-list operations reuse those
+same private candidate preparers, retaining the independently verified arithmetic
+and branch behavior. Result ownership is moved before the two nonthrowing swaps,
+so returning blend dispositions cannot allocate after publication.
+
+PhysicsSystem and the scheduler expose one combined operation under one worker
+barrier. World resolves HIT/QUADHIT gains from its owned configuration and sends
+explicit resolved nodes, packed filters, native four-lane vectors and mass
+multipliers to that operation. A stronger blend skips its own setup while the
+velocity controller still restarts, as required by the original HIT paths.
+This does not apply force, wake bodies, change motion or advance the shared clock.
+
+Three new component tests exercise successful independent target/list preservation,
+five late velocity errors with complete rollback, late blend failure, and velocity
+replacement despite a stronger blend. Existing World tests cover owner/configuration
+guards and the same late failure and successful setup through all 0/1/2-worker
+configurations, preserving the existing Down fixtures afterward.
+
+Component baseline01 executes/fails three tests: two fixtures omitted the intended
+zero damping, and the rollback test demonstrates five premature blend publications.
+Set those two fixtures' damping explicitly to zero; retain the original expected
+vectors. Original250 corpus02 case3297 independently confirms their force.
+Baseline02 executes three tests: two pass and only the rollback test fails, with
+five snapshot assertions. World baseline01 executes two tests: the guard passes
+and the ownership test fails exactly three unchanged-snapshot assertions, one for
+each worker configuration. Retain all baseline failures.
+
+Final world-compound-hit-setup-normal-01 and sanitized-01 each pass2441 exact
+inventoried full component tests and946 exact inventoried full engine tests,
+zero failures/skips or compiler warnings. Both build openmw/openmw-tests/esmtool.
+ASan leaks disabled; UBSan halts.
+Tested fingerprint
+4fd566d523a1ed137b65ac9fa1b4e5040c1a7e688ac3e7b82669b39b35b2bf77.
+No numeric rule or Python source changes;250/252's independent original
+comparisons and preceding Python evidence remain applicable.
+
+No stage closes. Automatic admission/reactions/update/getup, winning physical
+configuration discovery, initial morphology, whole native scene/time/contact
+continuation and required normal-input gameplay/restarts remain open. S5-S14
+remain pending.
