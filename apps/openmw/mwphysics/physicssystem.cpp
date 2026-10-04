@@ -850,6 +850,13 @@ namespace MWPhysics
         return mTaskScheduler->prepareActorRagdollKnockdownBlends(ptr, requests);
     }
 
+    std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> PhysicsSystem::prepareActorRagdollKnockdownControllerSetup(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownControllerSetupRequest> requests,
+        NifBullet::RagdollNativePassOutSettings settings)
+    {
+        return mTaskScheduler->prepareActorRagdollKnockdownControllerSetup(ptr, requests, settings);
+    }
+
     void PhysicsSystem::prepareActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocitySetupRequest> requests)
     {
         mTaskScheduler->prepareActorRagdollVelocityControllers(ptr, requests);

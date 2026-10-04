@@ -44,6 +44,8 @@ namespace NifBullet
     struct RagdollNativeControllerReference;
     struct RagdollNativeForceRequest;
     struct RagdollNativeKnockdownBlendRequest;
+    struct RagdollNativeKnockdownControllerSetupRequest;
+    struct RagdollNativePassOutSettings;
     enum class RagdollNativeKnockdownBlendDisposition;
     struct RagdollNativeBlendControllerTarget;
     struct RagdollNativeBlendState;
@@ -117,6 +119,10 @@ namespace MWPhysics
         // duration/filter and whole reaction lifecycle remain caller-owned.
         std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareActorRagdollKnockdownBlends(
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests);
+        // Atomic normal Down setup; caller resolves configuration and motion synchronization.
+        std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareActorRagdollKnockdownControllerSetup(
+            const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownControllerSetupRequest> requests,
+            NifBullet::RagdollNativePassOutSettings settings);
         // Generated controller ownership and immediate force/controller phase
         // share the worker/world barrier and scheduler physical clock cache.
         void prepareActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocitySetupRequest> requests);

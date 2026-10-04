@@ -10341,3 +10341,45 @@ publication, complete physical/controller/contact persistence and initial NPC
 morphology remain open. Retained BodyT/floor failures and all S5-S14 gates remain
 open. Next expose this compound setup through public worker barriers, then
 continue scene/World lifecycle and persistence integration.
+
+
+### Checkpoint211: public atomic normal Down controller setup
+
+Checkpoint210 committed as `4dcec1839bef6d798b830516b9f13d0b10e4e099`,
+207 isolated commits with exact-byte/fresh-clone proof. Bundle188 SHA256
+`1522a60798baaebacedc06fdd72bb192cbbf756cf8e3416b0b0ae488716f468e`.
+PhysicsSystem and PhysicsTaskScheduler now expose compound normal Down setup
+with explicit resolved pass-out settings. The scheduler waits for queued movement
+workers, holds the existing collision world lock and resolves the current actor
+owner before forwarding the atomic210 component operation. The caller still
+resolves per-body Down duration, configured force/time and stored requested-motion
+synchronization; automatic World reaction dispatch is not claimed.
+
+The real public ownership aggregate runs all0/1/2-thread configurations. Stale
+owner rejects; invalid force and late unknown node preserve empty velocity and
+reset blend state. Successful signed force-10/time2/body duration.25 creates
+velocity before blend with self target and original-oracle04 exact four-lane
+mass2/damping0 vector bits. Pose/shared time cache remain unchanged during setup.
+Restore a null target and retained elapsed7/frame delta99, then repeat compound
+setup with invalid unused settings: existing velocity vector/target/duration/
+clocks remain untouched while the blend curve restarts. Restore the self target
+and advance through the actual public joined controller phase: first frame stays
+active; completing the body Down curve removes the velocity before its own2-second
+stop and clears raw blend setup state. Capsule stays suspended until removal.
+Existing queued-worker/remap/shared-cache/renderer/lifetime/snapshot checks run
+in the same aggregate in all three configurations.
+
+Placeholder baseline01 runs the first0-thread iteration and fails invalid-force,
+late-node and missing-velocity assertions; the fatal size assertion prevents
+later1/2 iterations, which are not claimed as baseline coverage. Final full
+normal/ASan+UBSan01 each pass899 engine tests, exact inventories with no skips or
+failures, rebuilding openmw/openmw-tests/esmtool. Fingerprint `2db9dfffe62f6dae13ad4877141a0d0774e0281680ae3c5c633dcb384b83bd70`.
+ASan leak detection disabled. Component/Python/native arithmetic unchanged;
+210's2,357 component inventories and configured full-leaf/legacy exact comparisons
+remain the applicable verification rather than repeating unchanged checks.
+
+No stage closes. Automatic World lifecycle, configured settings production,
+requested-motion ownership/synchronization, recursive scene/controller/collision
+ordering and complete atomic publication/persistence remain open. Retained
+BodyT/floor failures and S5-S14 remain open. Continue those integration boundaries
+before claiming normal-input knockdown or physical restart acceptance.

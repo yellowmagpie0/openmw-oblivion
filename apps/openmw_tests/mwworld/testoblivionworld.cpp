@@ -594,6 +594,53 @@ namespace
                 NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
             physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 3.25f);
             EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr).empty());
+            const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> compoundDown{{{8, {1, -2, .5f}, .25f}}};
+            EXPECT_THROW(physics.prepareActorRagdollKnockdownControllerSetup(previous, compoundDown, {-10.f, 2.f}),
+                std::invalid_argument);
+            const float invalidPassOut = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(physics.prepareActorRagdollKnockdownControllerSetup(ptr, compoundDown, {invalidPassOut, 2.f}),
+                std::invalid_argument);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr).empty());
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mSetupState, 0u);
+            const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 2> badCompound{{
+                {8, {1, 0, 0}, .25f}, {999, {}, .25f}}};
+            EXPECT_THROW(physics.prepareActorRagdollKnockdownControllerSetup(ptr, badCompound, {-10.f, 2.f}),
+                std::invalid_argument);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr).empty());
+            const auto compoundPose = physics.captureActorRagdoll(ptr)[0].mPose;
+            const auto compoundCache = physics.captureNativeBlendTimeCache();
+            ASSERT_EQ(physics.prepareActorRagdollKnockdownControllerSetup(ptr, compoundDown, {-10.f, 2.f})[0],
+                NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+            const auto compoundVelocity = physics.captureActorRagdollVelocityControllers(ptr);
+            ASSERT_EQ(compoundVelocity.size(), 1u);
+            EXPECT_EQ(compoundVelocity[0].mTargetNode, 8u);
+            EXPECT_TRUE(compoundVelocity[0].mPrecedesBlend);
+            EXPECT_EQ(compoundVelocity[0].mState.mTiming.mStopKey, 2.f);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mTiming.mStopKey, .25f);
+            // Original oracle04 initialized force-10, mass2, damping0, body time.25.
+            const std::array<std::uint32_t, 4> compoundBits{3224822233u, 1085727193u, 3216433625u, 1056964608u};
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(compoundVelocity[0].mState.mForceVector[i]), compoundBits[i]);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, compoundPose);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache().mKeyTime, compoundCache.mKeyTime);
+            auto retainedCompound = compoundVelocity; retainedCompound[0].mTargetNode.reset();
+            retainedCompound[0].mState.mClock.mElapsed = 7.f;
+            retainedCompound[0].mState.mFrameDelta = 99.f;
+            physics.restoreActorRagdollVelocityControllers(ptr, retainedCompound);
+            ASSERT_EQ(physics.prepareActorRagdollKnockdownControllerSetup(ptr, compoundDown,
+                {invalidPassOut, invalidPassOut})[0], NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+            const auto preservedCompound = physics.captureActorRagdollVelocityControllers(ptr)[0];
+            EXPECT_FALSE(preservedCompound.mTargetNode);
+            EXPECT_EQ(preservedCompound.mState.mForceVector, compoundVelocity[0].mState.mForceVector);
+            EXPECT_EQ(preservedCompound.mState.mTiming.mStopKey, 2.f);
+            EXPECT_EQ(preservedCompound.mState.mClock.mElapsed, 7.f);
+            EXPECT_EQ(preservedCompound.mState.mFrameDelta, 99.f);
+            physics.restoreActorRagdollVelocityControllers(ptr, compoundVelocity);
+            physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 4.f);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr)[0].mState.mTiming.mFlags & 8);
+            physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 4.25f);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr).empty());
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState.mSetupState, 0u);
             EXPECT_TRUE(capsule->isCollisionSuspended());
             physics.removeActorRagdoll(ptr);
             physics.removeActorRagdoll(ptr);
