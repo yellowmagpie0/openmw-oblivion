@@ -4145,3 +4145,76 @@ TEST(ESM4PhysicalCombat, VelocityControllerSetupRejectsUsedMalformedInputsWithou
     EXPECT_EQ(previous.mClock.mElapsed, 7.f);
     EXPECT_EQ(previous.mFrameDelta, 99.f);
 }
+
+
+TEST(ESM4PhysicalCombat, BlendCollisionConstructorMatchesOriginalBeforeLoadAndLink)
+{
+    const ESM4::PhysicalBlendCollisionState state;
+    // Actual original88EB60, all independent initial-blend oracle cases.
+    EXPECT_EQ(state.mFlags, 0x41u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(state.mGains.mHierarchy), 0u);
+    EXPECT_EQ(state.mGains.mVelocity, 1.f);
+    EXPECT_EQ(state.mRequestedMotion, 8u);
+    for (const auto gains : ESM4::InitialPhysicalBlendGainTable)
+    {
+        EXPECT_EQ(gains.mHierarchy, 1.f);
+        EXPECT_EQ(gains.mVelocity, 1.f);
+    }
+}
+
+TEST(ESM4PhysicalCombat, BlendCollisionLinkReplacesAuthoredGainsForEveryMaskedBodyPart)
+{
+    auto table = ESM4::InitialPhysicalBlendGainTable;
+    for (unsigned i = 0; i < table.size(); ++i)
+        table[i] = {float(i) / 32.f, float(31 - i) / 16.f};
+    const ESM4::PhysicalBlendCollisionState loaded{0x100, {-.5f, 2.f}, 8};
+    // Original full constructor/load/link oracle01 custom table1.
+    for (unsigned i = 0; i < 32; ++i)
+    {
+        const auto result = ESM4::resolvePhysicalBlendCollisionAfterLink(loaded, true,
+            0xf000e008u | (i << 8), table);
+        EXPECT_EQ(result.mFlags, 0x108u);
+        EXPECT_EQ(result.mGains.mHierarchy, float(i) / 32.f);
+        EXPECT_EQ(result.mGains.mVelocity, float(31 - i) / 16.f);
+        EXPECT_EQ(result.mRequestedMotion, 8u);
+    }
+    EXPECT_EQ(loaded.mFlags, 0x100u);
+    EXPECT_EQ(loaded.mGains.mHierarchy, -.5f);
+}
+
+TEST(ESM4PhysicalCombat, BlendCollisionLinkMissingBodyUsesZeroAndPreservesRequestedMotion)
+{
+    auto table = ESM4::InitialPhysicalBlendGainTable;
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    for (auto& gains : table)
+        gains = {bad, bad};
+    table[0] = {-0.f, 2.f};
+    // Original full link oracle03 preserves0/1/6/8/FFFFFFFF.
+    for (const auto requested : {0u, 1u, 6u, 8u, 0xffffffffu})
+    {
+        const auto result = ESM4::resolvePhysicalBlendCollisionAfterLink(
+            {0xfff7, {bad, bad}, requested}, false, 0xffffffff, table);
+        EXPECT_EQ(result.mFlags, 0xffffu);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mGains.mHierarchy), 0x80000000u);
+        EXPECT_EQ(result.mGains.mVelocity, 2.f);
+        EXPECT_EQ(result.mRequestedMotion, requested);
+    }
+}
+
+TEST(ESM4PhysicalCombat, BlendCollisionLinkRejectsOnlySelectedNonfiniteGainsWithoutMutation)
+{
+    auto table = ESM4::InitialPhysicalBlendGainTable;
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    const ESM4::PhysicalBlendCollisionState loaded{1, {.9f, .8f}, 6};
+    table[17] = {bad, 1.f};
+    EXPECT_THROW(ESM4::resolvePhysicalBlendCollisionAfterLink(loaded, true, 17u << 8, table),
+        std::invalid_argument);
+    table[17] = {1.f, std::numeric_limits<float>::infinity()};
+    EXPECT_THROW(ESM4::resolvePhysicalBlendCollisionAfterLink(loaded, true, 17u << 8, table),
+        std::invalid_argument);
+    EXPECT_NO_THROW(ESM4::resolvePhysicalBlendCollisionAfterLink(loaded, false, 17u << 8, table));
+    EXPECT_EQ(loaded.mFlags, 1u);
+    EXPECT_EQ(loaded.mGains.mHierarchy, .9f);
+    EXPECT_EQ(loaded.mGains.mVelocity, .8f);
+    EXPECT_EQ(loaded.mRequestedMotion, 6u);
+}

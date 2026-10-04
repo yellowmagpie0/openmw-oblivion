@@ -15,6 +15,19 @@ namespace ESM4
         }
     }
 
+    PhysicalBlendCollisionState resolvePhysicalBlendCollisionAfterLink(
+        PhysicalBlendCollisionState loaded, bool hasResolvedBody, std::uint32_t packedFilter,
+        const PhysicalBlendGainTable& resolvedGains)
+    {
+        const auto index = hasResolvedBody ? (packedFilter >> 8) & 31u : 0u;
+        const auto gains = resolvedGains[index];
+        validate(gains.mHierarchy);
+        validate(gains.mVelocity);
+        loaded.mFlags |= 0x8;
+        loaded.mGains = gains;
+        return loaded;
+    }
+
     PhysicalBlendDurationTables resolvePhysicalBlendDurationTables(
         const PhysicalBlendDurationTables& previous, const PhysicalBlendDurationSettings& settings)
     {

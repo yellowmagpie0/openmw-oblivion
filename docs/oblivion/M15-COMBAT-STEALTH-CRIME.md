@@ -16911,3 +16911,71 @@ requested-motion ownership/synchronization, recursive scene/controller/collision
 ordering and complete atomic publication/persistence remain open. Retained
 BodyT/floor failures and S5-S14 remain open. Continue those integration boundaries
 before claiming normal-input knockdown or physical restart acceptance.
+
+
+### Checkpoint212: native initial collision constructor and post-link state
+
+Checkpoint211 committed as `f60f9253e7ae1aeaa3dd9b59209d036d45fe6ea2`,
+208 isolated commits, exact-byte/fresh-clone proof. Bundle189 SHA256
+`e720c555e312f556981d6b42f1fcf4845425fdd6000b0011c62816b675be3761`.
+Immutable PhysicalBlendCollisionState models actual88EB60 constructor flags41,
+gains0/1 and requested-motion8. resolvePhysicalBlendCollisionAfterLink models
+88ECD0's gain/flag result after caller-resolved ownership: OR flag8, replace both
+authored gains from resolved table[(packedFilter>>8)&31], or table0 when wrapper/
+body is absent. Preserve requested motion. Finite gains remain unclamped and
+signed zeros remain exact. Validate only selected table gains; unused authored
+and other table entries do not affect the result. Input state/table are immutable.
+InitialPhysicalBlendGainTable records the pinned PE's32 pairs1/1; this is initial
+data, not proof of winning runtime settings. Caller supplies the resolved table.
+
+Original88F040 reads requested motion separately from actual body motion; its
+constructor value8 does not request conversion. Full88ECD0 is the original
+post-load virtual slot20, not a guessed body setter. It executes actual inherited
+link resolution, scene flag update, body assignment/refcounts and collision-owner
+property insertion before overwriting authored gains. C++ helper deliberately
+returns only gain/flag/requested-motion state; those ownership/scene operations
+remain explicit caller boundaries, not simulated C++ runtime acceptance.
+
+Independent oracle01 captures13,824 full constructor88EB60/load88F2D0/link88ECD0
+and initial88F040 skip cases: both x87 words, scene present/absent, wrapper/body
+presence, all32 body IDs, four flag words, three authored gain pairs and three
+resolved tables including signed zero and unclamped values. Actual property
+insertion uses preallocated capacity; no allocator/free/destructor or game-function
+stub. Only resolved stream fixture reads and Windows critical-section/interlocked
+primitives are stubbed. Native stream+4=8 is a declared fixture, not yet a proved
+header-field producer or winning configuration. Oracle03 adds1,920 full load/link
+captures with requested-motion0/1/6/8/FFFFFFFF supplied after construction and
+retained by link; it does not call88F040 on those changed states.
+Executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Oracle01 source/corpus:
+`b2540243f987d3e1f7b1acac486d0243ef2b13d92c93209c87d182fac1a7d166`,
+`3c1ad661bc8a27e4ad193d1c0619b459492276c61b663450007b71ece10f9b2e`.
+Oracle03 source/corpus:
+`c71f6691f0015c42a6d2d937d6cacf01723f8aff54d3174098576717bf0f240b`,
+`2ca320127007c892941fb65f7790fdf3a011574c513d63da8f096baca0a24cdf`.
+
+Both normal/sanitizer comparator01 match15,744 cases/125,952 exact constructor/
+post-link fields, also asserting loaded input remains unchanged. Eight independent
+controls reject retained authored gains, omitted flag8, requested reset, table0
+for every body, wrong absent-body selection, clamping, discarded negative zero
+and a Dynamic constructor request. Four component regressions cover constructor,
+all masked filters, missing-body/unused-input paths and selected malformed gains.
+Placeholder baseline passes constructor and fails the other three. Final full
+normal/ASan+UBSan01 each pass2,361 component tests, exact full inventory, no
+failure/skip. Fingerprint `7d80cdfea6a4f6e66e6b6b21f372a478956e32f4d73fefa83cc631fc387cd66f`. ASan leak checks disabled. Engine/Python
+unchanged;211's full899 engine inventories remain applicable, not repeated.
+
+Additional oracle02 has384 full-load/link captures with declared stream+4 values
+0/7/8/11 and file-version fields20.0.0.4/5. Original raw-load branch reads its two
+extra floats strictly below8. Local raw decoder currently uses BethVersion<=8;
+no parser change is inferred until the original stream+4 producer/semantic identity
+is established. This retained discovery is not described as a passed parser
+comparison. Raw authored decoding remains distinct from linked runtime gains.
+
+No stage closes. Runtime owner/World initialization from resolved gains, requested-
+motion persistence/synchronization, configuration producer, initial morphology,
+full recursive frame ordering/atomicity and physical restart remain open. Retained
+BodyT/floor failures and S5-S14 remain open. Next integrate this initial state into
+the renderer/physics lifetime boundary and retain requested motion during owned
+collision updates before completing automatic World reactions.

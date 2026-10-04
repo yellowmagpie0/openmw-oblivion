@@ -10,6 +10,31 @@
 
 namespace ESM4
 {
+    // Original88EB60 constructor values, before authored load and link.
+    struct PhysicalBlendCollisionState
+    {
+        std::uint16_t mFlags = 0x41;
+        PhysicalBlendGains mGains{0.f, 1.f};
+        std::uint32_t mRequestedMotion = 8;
+    };
+
+    using PhysicalBlendGainTable = std::array<PhysicalBlendGains, 32>;
+    // Initial PE data only. The caller supplies the resolved runtime table.
+    inline constexpr PhysicalBlendGainTable InitialPhysicalBlendGainTable = [] {
+        PhysicalBlendGainTable result{};
+        for (auto& gains : result)
+            gains = {1.f, 1.f};
+        return result;
+    }();
+
+    // Full88ECD0 link gain/flag result, after caller resolves body ownership.
+    // Ignore authored gains; missing wrapper/body selects entry0. Preserve the
+    // existing requested-motion field and validate only the selected gains.
+    // Scene flags, deferred links/refcounts and physical bodies are caller-owned.
+    PhysicalBlendCollisionState resolvePhysicalBlendCollisionAfterLink(
+        PhysicalBlendCollisionState loaded, bool hasResolvedBody, std::uint32_t packedFilter,
+        const PhysicalBlendGainTable& resolvedGains);
+
     // Original BlendSettings.ini HIT values, not TES4 GMSTs. Configuration
     // import supplies explicit finite overrides to the table resolver.
     struct PhysicalBlendDurationSettings
