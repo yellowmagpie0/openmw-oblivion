@@ -566,8 +566,11 @@ collision/hit dispatch, arrow recovery.
 1. Use existing projectile/physics/render plumbing with native identity and
    rule dispatch. Do not represent TES4 ammunition through an unreviewed
    TES3 crossbow/bolt rule.
-2. Debit one correctly identified ammo instance at successful release, not at
-   draw start. Define cancel/no-ammo/broken-bow behavior and equipment changes.
+2. Debit one correctly identified Player ammo instance at successful release,
+   not at draw start. Preserve NPC/Creature ammunition and god-mode Player
+   quantities according to the verified original actor dispatch (checkpoint270
+   in the provenance report). Define cancel/no-ammo/broken-bow behavior and
+   equipment changes.
 3. Handle launch transforms, moving shooters/targets, gravity, collision with
    walls/doors/terrain/water as applicable, expiration, stuck/recoverable
    arrows, and shooter self-collision avoidance.

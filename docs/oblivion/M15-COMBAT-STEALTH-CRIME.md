@@ -18,7 +18,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
-| S5 projectiles | in-progress | Winning native bow/AMMO launch snapshot query; checkpoint255 below | Bow controller, ammo transaction, native swept impact/recovery, normal-input release/impact and in-flight restart |
+| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication; checkpoints255–274 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
 | S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
@@ -20514,3 +20514,47 @@ The bow service does not invoke staged unequipping yet; it still rejects a
 wear-to-zero transition. Native drop publication, release/projectile coupling,
 Character input, flight/impact/persistence and normal-input acceptance remain
 open. S5 and M15 remain in progress.
+
+
+### S5 checkpoint274: atomic Player/quest bow-break consequences
+
+Prepared bow release now snapshots the actual saved shared draw view. A
+wear-to-zero transition with a drawn weapon stages exact slot removal for
+the Player or a winning quest-item bow. Condition, ammunition, fatigue,
+shared actor projection and action consumption publish before equipment
+observers. Deferred notifications remain one-shot when an observer throws
+or clears inventory. A later ammunition notification rejects the retired
+inventory identity before dereferencing destroyed items.
+
+With the supported null-enchantment wear context, a non-weapon draw view
+retains the already admitted shot's now-zero-condition equipped bow, matching
+the original no-equipment-request branch. Further release preparation still
+requires positive condition. Player god mode preserves condition and ammunition.
+Drawn ordinary NPC bows still reject wear-to-zero before any publication
+until an atomic native dropped-reference transaction is available. NPC quest
+bows unequip and retain their ammunition. The existing saved shared draw view
+supplies readiness here; full normal-input linkage remains open.
+
+Six new actual-world tests cover Player last-arrow break conservation and
+complete native/shared resource state before both equipment observers, NPC
+quest versus unsupported ordinary-drop policy, unready Nothing/Spell views,
+god mode, stale draw view, cancellation, throwing/clearing observers and a
+clearing observer that returns normally before the next notification.
+The existing late-failure fixture now checks ordinary drawn NPC drop rejection
+alongside invalid winning settings; immutable tokens still survive World
+destruction safely. Independent break dispatch/readiness evidence is recorded
+at checkpoint273; no dropped-reference or full original inventory execution
+is claimed.
+
+Final normal and ASan/UBSan each pass997 full engine tests, exact inventories,
+no failures/skips and no incremental compiler warnings. Leak checks are
+disabled. Components/Python/schema are unchanged. Both initial01 runs passed
+996 tests but emitted a new fixture enum-conversion warning; corrected02 uses
+an explicit unsigned conversion and adds the returning-clear lifetime case.
+Production is unchanged from those initial passing runs.
+Evidence: S5/prepared-bow-break-{normal,sanitized}-02.
+Tested fingerprint: aa7fbd134262780cc7068cb6b36c9e2d414f3905574f7570aac403323f89fab9
+
+Native NPC ordinary-bow drop, compound projectile/resource publication,
+Character bow input, flight/impact/recovery, saved projectiles and normal-input
+acceptance remain open. S5 and M15 remain in progress.

@@ -5,6 +5,7 @@
 #include "../mwworld/worldimp.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/common.hpp>
 #include <components/esm4/loadgmst.hpp>
 
 #include <components/esm4/runtimestate.hpp>
@@ -923,7 +924,9 @@ namespace MWMechanics
         MWWorld::InventoryStore* mInventory = nullptr;
         MWBase::World* mWorld = nullptr;
         bool mGodMode = false;
-        MWWorld::Ptr mBow;
+        MWWorld::Ptr mBow, mActor;
+        DrawState mExpectedDrawState = DrawState::Nothing;
+        std::unique_ptr<MWWorld::InventoryStore::PreparedUnequip> mBreakUnequip;
         std::unique_ptr<MWWorld::InventoryStore::PreparedAmmunitionDebit> mAmmunition;
         MWWorld::OblivionArrowLaunch mLaunch;
         ESM4::RuntimeActorValues mExpectedValues, mValues;
@@ -996,6 +999,12 @@ namespace MWMechanics
         prepared->mWorld = &world;
         prepared->mGodMode = world.getGodModeState();
         prepared->mBow = bow;
+        prepared->mActor = actor;
+        prepared->mExpectedDrawState = actor.getClass().getCreatureStats(actor).getDrawState();
+        if (prepared->mExpectedDrawState != DrawState::Nothing
+            && prepared->mExpectedDrawState != DrawState::Weapon
+            && prepared->mExpectedDrawState != DrawState::Spell)
+            throw std::invalid_argument("invalid native bow release draw state");
         prepared->mLaunch = std::move(launch);
         prepared->mExpectedValues = values;
         prepared->mValues = values;
@@ -1018,10 +1027,15 @@ namespace MWMechanics
             const auto wear = ESM4::weaponWear(definition->mData.damage, ESM4::buildDurabilitySettings(settings));
             if (const auto after = ESM4::nativeConditionAfterWear(condition, wear))
             {
-                // Break consequences need their own prepared equipment policy.
-                // Reject before any publication until that policy is connected.
-                if (*after == 0)
-                    throw std::invalid_argument("native bow release break transition is not prepared");
+                if (*after == 0 && prepared->mExpectedDrawState == DrawState::Weapon)
+                {
+                    // Original admitted break dispatch keeps Player/quest
+                    // weapons in inventory and unequips them. Other NPC bows
+                    // require an independently prepared dropped reference.
+                    if (!player && !(definition->mFlags & ESM4::Rec_Persistent))
+                        throw std::invalid_argument("native NPC bow break drop is not prepared");
+                    prepared->mBreakUnequip = inventory.prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight);
+                }
                 prepared->mCondition = std::make_unique<MWWorld::CellRef>(reference);
                 prepared->mCondition->setNativeItemCondition(*after);
             }
@@ -1072,6 +1086,10 @@ namespace MWMechanics
             || bool(base) != prepared->mBase.has_value()
             || (base && *base != *prepared->mBase))
             return false;
+        if ((prepared->mBreakUnequip && !inventory.validatePreparedUnequip(*prepared->mBreakUnequip))
+            || prepared->mActor.getClass().getCreatureStats(prepared->mActor).getDrawState()
+                != prepared->mExpectedDrawState)
+            return false;
         const auto slot = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         if (slot == inventory.end() || *slot != prepared->mBow) return false;
         const auto& ref = prepared->mBow.getCellRef();
@@ -1090,6 +1108,11 @@ namespace MWMechanics
         static_assert(std::is_nothrow_swappable_v<MWWorld::CellRef>);
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
         if (prepared.mCondition) std::swap(prepared.mBow.getCellRef(), *prepared.mCondition);
+        // All exact slot/count/lifetime checks precede the first resource
+        // write. Ammunition debit and condition swap preserve the bow count
+        // and its slot, so this already-validated commit cannot become stale.
+        if (prepared.mBreakUnequip)
+            (void)inventory.commitPreparedUnequip(*prepared.mBreakUnequip);
         const auto& key = prepared.mExpectedValues.mActor;
         std::swap(mActorValues.find(key)->second, prepared.mValues);
         mActions.consume(prepared.mState.mActionId);
@@ -1112,6 +1135,8 @@ namespace MWMechanics
             || prepared->mInventory != &inventory || !prepared->mCommitted || prepared->mNotified)
             return false;
         prepared->mNotified = true;
+        if (prepared->mBreakUnequip)
+            inventory.notifyPreparedUnequip(*prepared->mBreakUnequip);
         if (prepared->mDebitAmmunition)
             inventory.notifyPreparedAmmunitionDebit(*prepared->mAmmunition);
         return true;

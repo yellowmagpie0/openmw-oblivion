@@ -1,3 +1,4 @@
+#include <components/esm4/common.hpp>
 #include "apps/openmw/mwworld/projectilemanager.hpp"
 #include "apps/openmw/mwworld/manualref.hpp"
 #include "apps/openmw/mwphysics/collisiontype.hpp"
@@ -8793,12 +8794,13 @@ TEST(OblivionWorldTest, PreparedBowReleaseLateFailuresAndDiscardAfterWorldDestru
     for (bool invalidSetting : {false,true})
     {
         NativeWorldFixture fixture;
-        const auto actors = installPreparedBowRelease(fixture,true);
+        const auto actors = installPreparedBowRelease(fixture,invalidSetting);
         auto& world = fixture.mWorld;
         auto& service = *world.getOblivionCombatService();
         auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
         const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+        actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(MWMechanics::DrawState::Weapon);
         const auto id = admitPreparedBowRelease(fixture,actors.actor);
         retained = service.prepareBowRelease(world,actors.actor,id);
         if (invalidSetting)
@@ -8817,7 +8819,8 @@ TEST(OblivionWorldTest, PreparedBowReleaseLateFailuresAndDiscardAfterWorldDestru
         EXPECT_EQ(captureNativeActorState(fixture,actors.npc).serializeBinary(),before);
         EXPECT_EQ(bow.getCellRef().getNativeItemCondition(),condition);
         EXPECT_EQ(ammo.getCellRef().getCount(),2);
-        EXPECT_TRUE(service.isActionPending(id,ESM::FormKey::dynamic("player",1)));
+        const auto key = invalidSetting ? ESM::FormKey::dynamic("player",1) : actors.actor.getCellRef().getFormKey();
+        EXPECT_TRUE(service.isActionPending(id,key));
     }
     // Immutable launch data and token destruction never dereference the dead
     // service, world, projection target or inventory.
@@ -8957,4 +8960,248 @@ TEST(OblivionWorldTest, PreparedUnequipOwnerReuseAndDiscardAfterDestructionAreSa
     ASSERT_TRUE(owner->commitPreparedUnequip(*current));
     owner->~InventoryStore();
     old.reset(); current.reset();
+}
+
+TEST(OblivionWorldTest, PreparedPlayerBowBreakPublishesAllResourcesBeforeEquipmentObservers)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actors = installPreparedBowRelease(fixture, true, 1);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    auto& service = *world.getOblivionCombatService();
+    const auto key = ESM::FormKey::dynamic("player", 1);
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    bow.getCellRef().setNativeItemCondition(.1f);
+    actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(MWMechanics::DrawState::Weapon);
+    const auto id = admitPreparedBowRelease(fixture, actors.actor);
+    const float fatigue = service.getPlayerValue(10);
+    auto cancelled = service.prepareBowRelease(world, actors.actor, id); cancelled.reset();
+    EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), .1f);
+    EXPECT_EQ(ammo.getCellRef().getCount(), 1);
+    EXPECT_TRUE(service.isActionPending(id, key));
+    struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+    {
+        MWWorld::InventoryStore& inventory;
+        MWMechanics::OblivionCombatService& service;
+        MWWorld::Ptr bow, ammo, actor;
+        ESM::FormKey key;
+        std::uint64_t id;
+        float fatigue;
+        int equipment = 0, removed = 0;
+        Observer(MWWorld::InventoryStore& inv, MWMechanics::OblivionCombatService& authority,
+            MWWorld::Ptr weapon, MWWorld::Ptr arrow, MWWorld::Ptr owner, ESM::FormKey identity,
+            std::uint64_t action, float before)
+            : inventory(inv), service(authority), bow(weapon), ammo(arrow), actor(owner),
+              key(identity), id(action), fatigue(before) {}
+        void coherent()
+        {
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+            EXPECT_EQ(inventory.getSelectedEnchantItem(), inventory.end());
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(bow.getCellRef().getCount(), 1);
+            EXPECT_EQ(ammo.getCellRef().getCount(), 0);
+            EXPECT_FALSE(service.isActionPending(id, key));
+            EXPECT_TRUE(service.findBowState(key)->mReleaseCommitted);
+            EXPECT_EQ(service.findBowState(key)->mAction, 3);
+            EXPECT_EQ(service.getPlayerValue(10), fatigue - 5);
+            EXPECT_EQ(actor.getClass().getCreatureStats(actor).getFatigue().getCurrent(), fatigue - 5);
+        }
+        void equipmentChanged() override { ++equipment; coherent(); }
+        void itemRemoved(const MWWorld::ConstPtr& item, int quantity) override
+        {
+            ++removed; EXPECT_EQ(item, ammo); EXPECT_EQ(quantity, 1); coherent();
+        }
+    } observer(inventory, service, bow, ammo, actors.actor, key, id, fatigue);
+    inventory.setInvListener(&observer); inventory.setContListener(&observer);
+    inventory.setSelectedEnchantItem(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight));
+    auto prepared = service.prepareBowRelease(world, actors.actor, id);
+    ASSERT_TRUE(service.commitBowRelease(*prepared, inventory));
+    EXPECT_EQ(observer.equipment, 0); EXPECT_EQ(observer.removed, 0);
+    observer.coherent();
+    EXPECT_FALSE(service.commitBowRelease(*prepared, inventory));
+    ASSERT_TRUE(service.notifyBowRelease(*prepared, inventory));
+    EXPECT_EQ(observer.equipment, 2); EXPECT_EQ(observer.removed, 1);
+    EXPECT_FALSE(service.notifyBowRelease(*prepared, inventory));
+    inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, PreparedNpcQuestBowBreakKeepsAmmoAndOrdinaryBowDropRemainsAtomic)
+{
+    for (bool quest : {false, true})
+    {
+        NativeWorldFixture fixture; auto& world = fixture.mWorld;
+        const auto actors = installPreparedBowRelease(fixture, false);
+        auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+        auto& service = *world.getOblivionCombatService();
+        const auto key = actors.actor.getCellRef().getFormKey();
+        const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+        auto definition = *world.getStore().get<ESM4::Weapon>().search(ESM::FormId{0x940, 0});
+        definition.mFlags = quest ? static_cast<std::uint32_t>(ESM4::Rec_Persistent) : 0u;
+        world.getStore().getWritable<ESM4::Weapon>().insertStatic(
+            definition, ESM::FormKey::content("headless.esm", 0x940));
+        bow.getCellRef().setNativeItemCondition(.1f);
+        actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(MWMechanics::DrawState::Weapon);
+        const auto id = admitPreparedBowRelease(fixture, actors.actor);
+        const auto before = captureNativeActorState(fixture, actors.npc).serializeBinary();
+        const float fatigue = service.getNonPlayerValue(actors.actor, 10);
+        if (!quest)
+        {
+            EXPECT_THROW(service.prepareBowRelease(world, actors.actor, id), std::invalid_argument);
+            EXPECT_EQ(captureNativeActorState(fixture, actors.npc).serializeBinary(), before);
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), bow);
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), .1f);
+            EXPECT_TRUE(service.isActionPending(id, key));
+        }
+        else
+        {
+            auto prepared = service.prepareBowRelease(world, actors.actor, id);
+            ASSERT_TRUE(service.commitBowRelease(*prepared, inventory));
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(bow.getCellRef().getCount(), 1);
+            EXPECT_EQ(service.getNonPlayerValue(actors.actor, 10), fatigue - 5);
+            EXPECT_FALSE(service.isActionPending(id, key));
+            EXPECT_TRUE(service.notifyBowRelease(*prepared, inventory));
+        }
+        EXPECT_EQ(ammo.getCellRef().getCount(), 2);
+        EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), ammo);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedUnreadyBowBreakPreservesEquippedSlotAndGodModePreservesCondition)
+{
+    for (bool player : {false, true})
+        for (auto draw : {MWMechanics::DrawState::Nothing, MWMechanics::DrawState::Spell})
+        {
+            NativeWorldFixture fixture; auto& world = fixture.mWorld;
+            const auto actors = installPreparedBowRelease(fixture, player);
+            auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+            auto& service = *world.getOblivionCombatService();
+            const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+            bow.getCellRef().setNativeItemCondition(.1f);
+            actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(draw);
+            const auto id = admitPreparedBowRelease(fixture, actors.actor);
+            auto prepared = service.prepareBowRelease(world, actors.actor, id);
+            ASSERT_TRUE(service.commitBowRelease(*prepared, inventory));
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), bow);
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(ammo.getCellRef().getCount(), player ? 1 : 2);
+            EXPECT_TRUE(service.notifyBowRelease(*prepared, inventory));
+        }
+    NativeWorldFixture fixture; auto& world = fixture.mWorld;
+    const auto actors = installPreparedBowRelease(fixture, true);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    bow.getCellRef().setNativeItemCondition(.1f);
+    actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(MWMechanics::DrawState::Weapon);
+    const auto id = admitPreparedBowRelease(fixture, actors.actor);
+    world.toggleGodMode();
+    auto& service = *world.getOblivionCombatService();
+    auto prepared = service.prepareBowRelease(world, actors.actor, id);
+    ASSERT_TRUE(service.commitBowRelease(*prepared, inventory));
+    EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), .1f);
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), bow);
+}
+
+TEST(OblivionWorldTest, PreparedBowBreakRejectsChangedDrawStateBeforeAnyResourcePublication)
+{
+    NativeWorldFixture fixture; auto& world = fixture.mWorld;
+    const auto actors = installPreparedBowRelease(fixture, true);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    auto& service = *world.getOblivionCombatService();
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    bow.getCellRef().setNativeItemCondition(.1f);
+    auto& stats = actors.actor.getClass().getCreatureStats(actors.actor);
+    stats.setDrawState(MWMechanics::DrawState::Weapon);
+    const auto id = admitPreparedBowRelease(fixture, actors.actor);
+    auto prepared = service.prepareBowRelease(world, actors.actor, id);
+    stats.setDrawState(MWMechanics::DrawState::Nothing);
+    const auto before = captureNativeActorState(fixture, actors.npc).serializeBinary();
+    EXPECT_FALSE(service.validateBowRelease(*prepared, inventory));
+    EXPECT_FALSE(service.commitBowRelease(*prepared, inventory));
+    EXPECT_EQ(captureNativeActorState(fixture, actors.npc).serializeBinary(), before);
+    EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), .1f);
+    EXPECT_EQ(ammo.getCellRef().getCount(), 2);
+    EXPECT_TRUE(service.isActionPending(id, ESM::FormKey::dynamic("player", 1)));
+}
+
+TEST(OblivionWorldTest, PreparedBowBreakObserversCannotReplayAfterThrowingOrClearingInventory)
+{
+    for (bool clear : {false, true})
+    {
+        NativeWorldFixture fixture; auto& world = fixture.mWorld;
+        const auto actors = installPreparedBowRelease(fixture, true, 1);
+        auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+        auto& service = *world.getOblivionCombatService();
+        const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        bow.getCellRef().setNativeItemCondition(.1f);
+        actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(MWMechanics::DrawState::Weapon);
+        const auto id = admitPreparedBowRelease(fixture, actors.actor);
+        struct Observer : MWWorld::InventoryStoreListener
+        {
+            MWWorld::InventoryStore& inventory;
+            bool clear;
+            int calls = 0;
+            Observer(MWWorld::InventoryStore& value, bool flag) : inventory(value), clear(flag) {}
+            void equipmentChanged() override
+            {
+                ++calls;
+                EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+                EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+                if (clear) inventory.clear();
+                throw std::runtime_error("injected bow break observer failure");
+            }
+        } observer(inventory, clear);
+        inventory.setInvListener(&observer);
+        auto prepared = service.prepareBowRelease(world, actors.actor, id);
+        ASSERT_TRUE(service.commitBowRelease(*prepared, inventory));
+        EXPECT_THROW(service.notifyBowRelease(*prepared, inventory), std::runtime_error);
+        EXPECT_EQ(observer.calls, 1);
+        EXPECT_FALSE(service.notifyBowRelease(*prepared, inventory));
+        EXPECT_FALSE(service.commitBowRelease(*prepared, inventory));
+        EXPECT_FALSE(service.isActionPending(id, ESM::FormKey::dynamic("player", 1)));
+        inventory.setInvListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedBowBreakClearingObserverCanReturnWithoutTouchingDeletedAmmunition)
+{
+    NativeWorldFixture fixture; auto& world = fixture.mWorld;
+    const auto actors = installPreparedBowRelease(fixture, true, 1);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    auto& service = *world.getOblivionCombatService();
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    bow.getCellRef().setNativeItemCondition(.1f);
+    actors.actor.getClass().getCreatureStats(actors.actor).setDrawState(MWMechanics::DrawState::Weapon);
+    const auto id = admitPreparedBowRelease(fixture, actors.actor);
+    struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+    {
+        MWWorld::InventoryStore& inventory;
+        int calls = 0, removed = 0;
+        explicit Observer(MWWorld::InventoryStore& value) : inventory(value) {}
+        void equipmentChanged() override
+        {
+            ++calls;
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+            inventory.clear();
+        }
+        void itemRemoved(const MWWorld::ConstPtr&, int) override { ++removed; }
+    } observer(inventory);
+    inventory.setInvListener(&observer); inventory.setContListener(&observer);
+    auto prepared = service.prepareBowRelease(world, actors.actor, id);
+    ASSERT_TRUE(service.commitBowRelease(*prepared, inventory));
+    ASSERT_TRUE(service.notifyBowRelease(*prepared, inventory));
+    EXPECT_EQ(observer.calls, 1);
+    EXPECT_EQ(observer.removed, 0); // The cleared owner's old ammunition token is rejected.
+    EXPECT_FALSE(service.notifyBowRelease(*prepared, inventory));
+    EXPECT_FALSE(service.commitBowRelease(*prepared, inventory));
+    EXPECT_FALSE(service.isActionPending(id, ESM::FormKey::dynamic("player", 1)));
+    prepared.reset(); // Discard both borrowed-item tokens after clear destroyed their instances.
+    inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
 }
