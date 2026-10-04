@@ -19,6 +19,12 @@ class btCollisionObject;
 
 namespace NifBullet
 {
+    // Prepare linked collision gains/flags from explicit resolved native body
+    // filters before physical admission; preserve the authored source graph.
+    ActorRagdollDefinition ragdollDefinitionWithNativeLinkedBlendState(
+        const ActorRagdollDefinition& authored, std::span<const std::uint32_t> resolvedPackedFilters,
+        const ESM4::PhysicalBlendGainTable& resolvedGains);
+
     struct RagdollNativeKeyframedStepResult
     {
         RagdollNativeTargetPose mBodyPose;
@@ -227,6 +233,8 @@ namespace NifBullet
         std::uint32_t mBodyRecord;
         std::uint16_t mCollisionFlags;
         ESM4::PhysicalBlendGains mGains;
+        // Original collision+1C, independent of actual body motion.
+        std::uint32_t mRequestedMotion = 8;
     };
 
     // Owns collision shapes, rigid bodies and constraints. The borrowed world

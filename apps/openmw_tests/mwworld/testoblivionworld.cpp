@@ -650,6 +650,7 @@ namespace
             // Join real renderer ownership with the public physical owner.
             auto renderedGraph = graph;
             renderedGraph.mBodies[0].mBone = "Pelvis";
+            renderedGraph.mBodies[0].mBlend->mFlags = 1;
             osg::ref_ptr<osg::Group> physicalParent = new osg::Group;
             osg::ref_ptr<SceneUtil::Skeleton> physicalRoot = new SceneUtil::Skeleton;
             physicalRoot->setUserValue(Misc::OsgUserValues::sFileHash, renderedGraph.mSourceHash);
@@ -664,10 +665,22 @@ namespace
             placement.mScale = 2.f;
             placement.mTranslation = {100, 20, 30};
             const auto originalBone = physicalBone->getMatrix();
+            const std::array<std::uint32_t, 1> linkedFilters{0x1108};
+            auto linkedGains = ESM4::InitialPhysicalBlendGainTable;
+            linkedGains[17] = {.53125f, .875f};
             const auto beginPhysical = [&](const auto& definition) {
-                MWWorld::beginNativeActorPhysicalPose(physics, animation, ptr, definition, placement,
+                MWWorld::beginNativeActorPhysicalPose(physics, animation, ptr, definition, placement, linkedFilters, linkedGains,
                     MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
             };
+            linkedGains[17].mHierarchy = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(beginPhysical(renderedGraph), std::invalid_argument);
+            EXPECT_FALSE(animation.hasPhysicalPose());
+            EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            EXPECT_EQ(animation.mPhysicalRebuilds, 0u);
+            EXPECT_EQ(physicalBone->getMatrix(), originalBone);
+            linkedGains[17].mHierarchy = .53125f;
+            linkedGains[6].mHierarchy = std::numeric_limits<float>::quiet_NaN();
             auto rejectedGraph = renderedGraph;
             rejectedGraph.mBodies[0].mInertia = {};
             EXPECT_THROW(beginPhysical(rejectedGraph), std::invalid_argument);
@@ -683,6 +696,14 @@ namespace
             EXPECT_FLOAT_EQ(physics.actorRagdollDefinition(ptr).mBodies[0].mMass, 4.f);
             EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(
                 physics.actorRagdollDefinition(ptr).mBodies[0].mShape).mRadius, 1.f);
+            const auto linkedState = physics.captureActorRagdollBlendStates(ptr)[0];
+            EXPECT_EQ(linkedState.mCollisionFlags, 9u);
+            EXPECT_EQ(linkedState.mGains.mHierarchy, .53125f);
+            EXPECT_EQ(linkedState.mGains.mVelocity, .875f);
+            EXPECT_EQ(linkedState.mRequestedMotion, 8u);
+            EXPECT_EQ(renderedGraph.mBodies[0].mBlend->mFlags, 1u);
+            EXPECT_EQ(renderedGraph.mBodies[0].mBlend->mHierarchyGain, .9f);
+            EXPECT_EQ(renderedGraph.mBodies[0].mBlend->mVelocityGain, .8f);
             EXPECT_NEAR(physics.captureActorRagdoll(ptr)[0].mPose.getOrigin().x(), 102, .001);
             EXPECT_EQ(physicalBone->getMatrix(), originalBone);
             EXPECT_THROW(beginPhysical(renderedGraph), std::invalid_argument);

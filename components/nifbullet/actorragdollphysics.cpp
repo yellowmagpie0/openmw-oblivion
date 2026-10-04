@@ -791,6 +791,27 @@ namespace NifBullet
         return {drive, ragdollBoneWorldFromNativeBlendPose(scene)};
     }
 
+    ActorRagdollDefinition ragdollDefinitionWithNativeLinkedBlendState(
+        const ActorRagdollDefinition& authored, std::span<const std::uint32_t> resolvedPackedFilters,
+        const ESM4::PhysicalBlendGainTable& resolvedGains)
+    {
+        require(resolvedPackedFilters.size() == authored.mBodies.size(), "linked blend filter count");
+        auto linked = authored;
+        for (std::size_t i = 0; i < linked.mBodies.size(); ++i)
+        {
+            auto& blend = linked.mBodies[i].mBlend;
+            if (!blend)
+                continue;
+            const auto state = ESM4::resolvePhysicalBlendCollisionAfterLink(
+                {blend->mFlags, {blend->mHierarchyGain, blend->mVelocityGain}, 8},
+                true, resolvedPackedFilters[i], resolvedGains);
+            blend->mFlags = state.mFlags;
+            blend->mHierarchyGain = state.mGains.mHierarchy;
+            blend->mVelocityGain = state.mGains.mVelocity;
+        }
+        return linked;
+    }
+
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
         std::span<const RagdollBoneWorldPose> bones)
     {
@@ -1662,6 +1683,19 @@ namespace NifBullet
                         target->mState.mGains.mHierarchy, target->mState.mGains.mVelocity,
                         target->mState.mCollisionFlags});
             }
+        }
+        // Original88F4C5 retains requested motion independently of the body's
+        // actual motion. Stage that collision metadata before the scene hook;
+        // skipped selector branches retain the previous request.
+        for (const auto& update : bodyUpdates)
+        {
+            const auto dispatch = ESM4::resolvePhysicalBlendDispatch(update.mHierarchyGain,
+                update.mVelocityGain, update.mCollisionFlags, rawUpdateSelector);
+            if (!dispatch)
+                continue;
+            const auto target = std::find_if(nextTargets.begin(), nextTargets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == update.mRecord; });
+            target->mState.mRequestedMotion = static_cast<std::uint32_t>(dispatch->mMotion);
         }
         // The existing body bridge stages every computation before any body
         // mutation. All controller/target/cache allocations are already done.

@@ -11,7 +11,8 @@ namespace MWWorld
 {
     void beginNativeActorPhysicalPose(MWPhysics::PhysicsSystem& physics, MWRender::Animation& animation,
         const Ptr& actor, const NifBullet::ActorRagdollDefinition& authored,
-        const Nif::NiTransform& placement, int collisionGroup, int collisionMask,
+        const Nif::NiTransform& placement, std::span<const std::uint32_t> resolvedPackedFilters,
+        const ESM4::PhysicalBlendGainTable& resolvedGains, int collisionGroup, int collisionMask,
         const NifBullet::RagdollInternalCollisionFilter* internalFilter)
     {
         if (actor.isEmpty() || !physics.getActor(actor)
@@ -20,7 +21,9 @@ namespace MWWorld
         // Scale an owned definition before detaching renderer callbacks. The
         // caller resolves uniform placement/morphology; authored data stays
         // immutable and world/native lengths are converted only once.
-        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(authored, placement.mScale);
+        const auto linked = NifBullet::ragdollDefinitionWithNativeLinkedBlendState(
+            authored, resolvedPackedFilters, resolvedGains);
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(linked, placement.mScale);
         const auto bones = animation.beginPhysicalPose(
             scaled, placement, MWRender::PhysicalPoseAnimation::AnimatedTargets);
         try

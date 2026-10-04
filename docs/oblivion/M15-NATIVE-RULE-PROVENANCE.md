@@ -10451,3 +10451,80 @@ full recursive frame ordering/atomicity and physical restart remain open. Retain
 BodyT/floor failures and S5-S14 remain open. Next integrate this initial state into
 the renderer/physics lifetime boundary and retain requested motion during owned
 collision updates before completing automatic World reactions.
+
+
+### Checkpoint213: resolved collision state at physical-pose admission
+
+Checkpoint212 committed as `ec0f605adaee86957a4f8c0c7446a42f24ad179c`,
+209 isolated commits with exact-byte/fresh-clone proof. Bundle190 SHA256
+`36ba46ba5d85ab169354f4cec136cf74b6168f37db248affa40ca8e366b4f7da`.
+ragdollDefinitionWithNativeLinkedBlendState copies the authored graph and applies
+212's linked flags/gains using an explicitly supplied resolved packed-filter
+array and gain table. Require a complete filter array; validate only selected
+blend gains. Preserve raw source identity, shapes/body properties/controllers
+and unrelated nonblend bodies. The prepared graph remains separate from raw
+NIF data and caller-resolved native filtering; no inferred Info/World filter
+substitution or winning configuration is claimed.
+
+beginNativeActorPhysicalPose now requires those resolved filters/gains and
+prepares linked state before native property scaling or animation detachment.
+Invalid used gain input rejects before callbacks, owner creation or capsule
+suspension. Valid prepared graph feeds the existing joined renderer/physics
+admission and cleanup boundary. These free helpers are compiled/tested but are
+still not automatically invoked by World reactions. Uniform placement/morphology,
+configuration and filter production remain explicit caller responsibilities.
+
+Owned blend-state capture adds requested-motion, initialized8 independently of
+actual Dynamic body mode, as in88EB60. Owned controller/collision frame updates
+stage the selected native requested motion1/6 before the scene hook and publish
+it with clocks/gains/flags after physical preparation succeeds. Selector skips
+preserve the old request, and a failing scene hook preserves request and actual
+body motion. The original88F484 compares collision+1C with the selected mode;
+88F4C5 stores it after conversion. This chunk tracks that metadata using157's
+independently verified selector; full mode-conversion coupling when requested
+and actual body modes disagree, legacy manual body-update reconciliation,88F040
+pre-knockdown synchronization and requested-motion persistence remain open.
+
+Three component regressions verify selected resolved-filter preparation, source
+property/controller preservation, invalid/unused table entries and pre-admission
+world cleanup. Down captures the resolved gains. A separate owned frame test
+checks skipped request8, throwing-scene rollback, Key request6 and completed Down
+request1 with corresponding body modes. Real public renderer/physics aggregate
+runs0/1/2 threads: bad selected gain causes no rebuild/owner/capsule change;
+an unused NaN table entry is ignored; valid part17 gains.53125/.875 and flags9
+are captured after scaled admission, with raw graph flags1/gains.9/.8 preserved.
+Existing mass4/radius1, placementX102, duplicate/bad-inertia, repeat/end-failure,
+worker/owner-remap/controller/force and cleanup checks remain and all configurations
+complete. Caller-supplied filter17/settings values are an independent fixture,
+not a live winning-data producer.
+
+Placeholder baseline01 failed compilation because four new test calls omitted
+required native gravity. Test-only correction retains that failed evidence.
+Baseline02 then runs/fails all three new component tests against no-op graph
+preparation and absent requested-motion tracking. No engine baseline is claimed.
+Final full normal/ASan+UBSan01 each pass2,364 component and899 engine tests,
+exact full inventories with no failure/skip. Fingerprint `908bed9b50bf57229170006bac9c1f99350958367741b8c7a0aaad45a8099140`. ASan leak
+checks disabled. Python unchanged. Each actual linked-graph/ActorRagdollPhysics
+admission comparator matches4,608 body-present oracle212 cases/18,432 exact
+flags/gains/requested fields. It also preserves raw source identity/properties,
+body pose/mode/velocities, empty controllers and zero world objects at destruction.
+The original ownership/refcount/scene operations remain original-only observations,
+not inferred C++ runtime acceptance.
+
+A follow-up original converter audit executes200 full Dynamic-type2 -> Key6 ->
+archived-type2 transitions with only allocator/free primitives supplied. Current
+Key motion+C8/CC are+0, while archived dynamic coefficients are retained for
+restoration. Oracle S4/native-keyframed-current-coefficients-oracle-01 source
+`e457f95ed8aee0214dd9eae165ef9970b47c28aebe5c13c410b554ed211e0b6e`,
+corpus `2e6dc79722b77cb0ddfdbc2ed80f1c8d06e0f4a5d23256b97e946c7fb604a8df`.
+207's generated-controller owner still supplies loaded Dynamic linear damping
+after Key conversion;206's pure helper explicitly accepts resolved current damping.
+Correct this producer boundary next using original conversion plus full controller
+creation captures. The passing explicit-input arithmetic captures do not close
+that owner-mode gap.
+
+No stage closes. Automatic World reactions, current coefficient production,
+stored-mode conversion/synchronization, recursive scene/controller/physical
+ordering and atomic publication, full physical/contact/controller save/restart,
+configuration and initial NPC morphology remain open. Retained BodyT/floor failures
+and S5-S14 remain open; normal-input physical acceptance is not claimed.

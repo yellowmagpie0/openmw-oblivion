@@ -3420,3 +3420,84 @@ namespace
     }
 
 }
+
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, NativeLinkedDefinitionUsesExplicitFiltersAndPreservesAuthoredProperties)
+    {
+        auto& body = mGraph.mBodies[0]; body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 1, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, .25f, {}};
+        auto gains = ESM4::InitialPhysicalBlendGainTable;
+        gains[17] = {.53125f, .875f};
+        const std::array<std::uint32_t, 1> filters{0x1108};
+        const auto linked = NifBullet::ragdollDefinitionWithNativeLinkedBlendState(mGraph, filters, gains);
+        EXPECT_EQ(linked.mBodies[0].mBlend->mFlags, 9u);
+        EXPECT_EQ(linked.mBodies[0].mBlend->mHierarchyGain, .53125f);
+        EXPECT_EQ(linked.mBodies[0].mBlend->mVelocityGain, .875f);
+        EXPECT_EQ(linked.mSourceHash, mGraph.mSourceHash);
+        EXPECT_EQ(linked.mBodies[0].mMass, body.mMass);
+        EXPECT_EQ(linked.mBodies[0].mInertia, body.mInertia);
+        EXPECT_EQ(linked.mBodies[0].mBlendController->mRecord, 78u);
+        EXPECT_TRUE(linked.mBodies[0].mBlendController->mKeys.empty());
+        EXPECT_EQ(body.mBlend->mFlags, 1u);
+        EXPECT_EQ(body.mBlend->mHierarchyGain, .9f);
+        NifBullet::ActorRagdollPhysics actor(linked, mWorld, 1.f, mPoses, 1, -1);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mGains.mHierarchy, .53125f);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 8u);
+        const std::array<NifBullet::RagdollNativeKnockdownBlendRequest, 1> down{{{8, .25f}}};
+        actor.prepareNativeKnockdownBlends(down);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mKeys[0].mGains.mHierarchy, .53125f);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mKeys[0].mGains.mVelocity, .875f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeLinkedDefinitionRejectsUsedSettingsBeforeAdmissionAndIgnoresUnused)
+    {
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 1, .9f, .8f};
+        const std::array<std::uint32_t, 1> filters{0x1108};
+        auto gains = ESM4::InitialPhysicalBlendGainTable;
+        gains[17].mVelocity = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollDefinitionWithNativeLinkedBlendState(mGraph, filters, gains), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollDefinitionWithNativeLinkedBlendState(mGraph, {}, gains), std::invalid_argument);
+        EXPECT_EQ(mGraph.mBodies[0].mBlend->mFlags, 1u);
+        EXPECT_EQ(mGraph.mBodies[0].mBlend->mVelocityGain, .8f);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        gains[17] = {-0.f, 2.f};
+        gains[0].mHierarchy = std::numeric_limits<float>::quiet_NaN();
+        const auto linked = NifBullet::ragdollDefinitionWithNativeLinkedBlendState(mGraph, filters, gains);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(linked.mBodies[0].mBlend->mHierarchyGain), 0x80000000u);
+        EXPECT_EQ(linked.mBodies[0].mBlend->mVelocityGain, 2.f);
+        mGraph.mBodies[0].mBlend.reset();
+        EXPECT_NO_THROW(NifBullet::ragdollDefinitionWithNativeLinkedBlendState(mGraph, filters, gains));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeLinkedRequestedMotionTracksOwnedUpdatesAndSceneRollback)
+    {
+        auto& body = mGraph.mBodies[0]; body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 1, 1.f, 1.f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0, 1, 0, 0, .25f, {}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{8, osg::Matrixf::translate(0, 0, 2)}}};
+        const std::array<std::uint32_t, 1> order{78};
+        ESM4::PhysicalBlendTimeCache cache;
+        actor.updateNativeBlendFrame(bones, order, 0.f, cache, .016f, 2, NifBullet::RagdollNativeDefaultGravityZ);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 8u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_THROW(actor.updateNativeBlendFrame(bones, order, 0.f, cache, .016f, 0,
+            NifBullet::RagdollNativeDefaultGravityZ, [](auto) { throw std::runtime_error("scene rejects request"); }),
+            std::runtime_error);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 8u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        actor.updateNativeBlendFrame(bones, order, 0.f, cache, .016f, 0, NifBullet::RagdollNativeDefaultGravityZ);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 6u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        const std::array<NifBullet::RagdollNativeKnockdownBlendRequest, 1> down{{{8, .25f}}};
+        actor.prepareNativeKnockdownBlends(down);
+        actor.updateNativeBlendFrame(bones, order, 1.f, cache, .016f, 0, NifBullet::RagdollNativeDefaultGravityZ);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 6u);
+        actor.updateNativeBlendFrame(bones, order, 1.25f, cache, .016f, 0, NifBullet::RagdollNativeDefaultGravityZ);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 1u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+    }
+}
