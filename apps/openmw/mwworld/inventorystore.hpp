@@ -66,6 +66,7 @@ namespace MWWorld
         typedef std::vector<ContainerStoreIterator> TSlots;
 
         TSlots mSlots;
+        std::shared_ptr<const char> mPreparedAmmunitionIdentity;
 
         void autoEquipWeapon(TSlots& slots);
         void autoEquipArmor(TSlots& slots);
@@ -87,6 +88,30 @@ namespace MWWorld
         ContainerStoreIterator findSlot(int slot) const;
 
     public:
+        class PreparedAmmunitionDebit
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedAmmunitionDebit(std::unique_ptr<Impl> impl);
+            friend class InventoryStore;
+        public:
+            ~PreparedAmmunitionDebit();
+            PreparedAmmunitionDebit(PreparedAmmunitionDebit&&);
+            PreparedAmmunitionDebit& operator=(PreparedAmmunitionDebit&&);
+            PreparedAmmunitionDebit(const PreparedAmmunitionDebit&) = delete;
+            PreparedAmmunitionDebit& operator=(const PreparedAmmunitionDebit&) = delete;
+        };
+        // One actual equipped ammunition instance. Preparation/cancellation
+        // do not debit. Publication is allocation/callback-free and once-only;
+        // owner replacement, slot replacement or changed count reject it.
+        std::unique_ptr<PreparedAmmunitionDebit> prepareAmmunitionDebit();
+        bool validatePreparedAmmunitionDebit(const PreparedAmmunitionDebit& debit) const noexcept;
+        bool commitPreparedAmmunitionDebit(PreparedAmmunitionDebit& debit) noexcept;
+        // After the complete resource/projectile release: script, equipment
+        // and item observers run once. Caller owns the inventory UI refresh.
+        // Observer exceptions leave publication committed and cannot replay.
+        bool notifyPreparedAmmunitionDebit(PreparedAmmunitionDebit& debit);
+
         InventoryStore();
         InventoryStore(const InventoryStore& store);
         InventoryStore(InventoryStore&& store);

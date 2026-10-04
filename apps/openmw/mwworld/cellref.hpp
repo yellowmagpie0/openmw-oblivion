@@ -307,6 +307,9 @@ namespace MWWorld
         bool hasChanged() const { return mChanged; }
 
     private:
+        // Prepared inventory publication may defer zero-count script removal
+        // until the complete native release has committed.
+        friend class InventoryStore;
         bool mChanged = false;
         ESM::ReferenceVariant mCellRef;
     };

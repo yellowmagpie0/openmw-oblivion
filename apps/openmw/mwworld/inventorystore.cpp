@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
 
 #include <components/esm3/inventorystate.hpp>
 
@@ -117,6 +118,7 @@ MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(const InventoryStore
 {
     if (this == &store)
         return *this;
+    mPreparedAmmunitionIdentity.reset();
     ContainerStore::operator=(store);
     mInventoryListener = store.mInventoryListener;
     mUpdatesEnabled = store.mUpdatesEnabled;
@@ -128,6 +130,9 @@ MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(const InventoryStore
 
 MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(InventoryStore&& store)
 {
+    if (this == &store) return *this;
+    mPreparedAmmunitionIdentity.reset();
+    store.mPreparedAmmunitionIdentity.reset();
     mInventoryListener = store.mInventoryListener;
     mUpdatesEnabled = store.mUpdatesEnabled;
     mFirstAutoEquip = store.mFirstAutoEquip;
@@ -152,6 +157,8 @@ void MWWorld::InventoryStore::swapPreparedContents(InventoryStore& other) noexce
 {
     if (this == &other)
         return;
+    mPreparedAmmunitionIdentity.reset();
+    other.mPreparedAmmunitionIdentity.reset();
     ContainerStore::swapPreparedContents(other);
     mSlots.swap(other.mSlots);
     for (auto& slot : mSlots)
@@ -761,6 +768,7 @@ void MWWorld::InventoryStore::fireEquipmentChangedEvent()
 
 void MWWorld::InventoryStore::clear()
 {
+    mPreparedAmmunitionIdentity.reset();
     mSlots.clear();
     initSlots(mSlots);
     ContainerStore::clear();
@@ -791,4 +799,92 @@ bool MWWorld::InventoryStore::isFirstEquip()
     bool first = mFirstAutoEquip;
     mFirstAutoEquip = false;
     return first;
+}
+
+struct MWWorld::InventoryStore::PreparedAmmunitionDebit::Impl
+{
+    InventoryStore* mOwner;
+    std::shared_ptr<const char> mIdentity;
+    Ptr mItem;
+    int mCount;
+    bool mCommitted = false;
+    bool mNotified = false;
+};
+
+MWWorld::InventoryStore::PreparedAmmunitionDebit::PreparedAmmunitionDebit(std::unique_ptr<Impl> impl)
+    : mImpl(std::move(impl))
+{
+}
+MWWorld::InventoryStore::PreparedAmmunitionDebit::~PreparedAmmunitionDebit() = default;
+MWWorld::InventoryStore::PreparedAmmunitionDebit::PreparedAmmunitionDebit(PreparedAmmunitionDebit&&) = default;
+MWWorld::InventoryStore::PreparedAmmunitionDebit&
+MWWorld::InventoryStore::PreparedAmmunitionDebit::operator=(PreparedAmmunitionDebit&&) = default;
+
+std::unique_ptr<MWWorld::InventoryStore::PreparedAmmunitionDebit>
+MWWorld::InventoryStore::prepareAmmunitionDebit()
+{
+    const auto slot = getSlot(Slot_Ammunition);
+    if (slot == end() || slot.getType() != ContainerStore::Type_Weapon)
+        throw std::invalid_argument("prepared ammunition debit requires an equipped ammunition instance");
+    const auto item = *slot;
+    const auto* ref = std::get_if<ESM::CellRef>(&item.getCellRef().mCellRef.mVariant);
+    if (item.getContainerStore() != this || !ref || ref->mCount <= 0)
+        throw std::invalid_argument("prepared ammunition debit requires a positive projected inventory count");
+    auto impl = std::make_unique<PreparedAmmunitionDebit::Impl>();
+    if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
+    impl->mOwner = this; impl->mIdentity = mPreparedAmmunitionIdentity;
+    impl->mItem = item; impl->mCount = ref->mCount;
+    return std::unique_ptr<PreparedAmmunitionDebit>(new PreparedAmmunitionDebit(std::move(impl)));
+}
+
+bool MWWorld::InventoryStore::validatePreparedAmmunitionDebit(const PreparedAmmunitionDebit& debit) const noexcept
+{
+    const auto* value = debit.mImpl.get();
+    // Check lifetime identity before dereferencing a retained item pointer.
+    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
+        return false;
+    const auto& slot = mSlots[Slot_Ammunition];
+    if (slot == end() || slot.getType() != ContainerStore::Type_Weapon || *slot != value->mItem)
+        return false;
+    const auto* ref = std::get_if<ESM::CellRef>(&value->mItem.getCellRef().mCellRef.mVariant);
+    return ref && ref->mCount == value->mCount && value->mCount > 0;
+}
+
+bool MWWorld::InventoryStore::commitPreparedAmmunitionDebit(PreparedAmmunitionDebit& debit) noexcept
+{
+    if (!validatePreparedAmmunitionDebit(debit)) return false;
+    auto& value = *debit.mImpl;
+    auto& cell = value.mItem.getCellRef();
+    // Validation proves the variant and exact instance. No script/observer
+    // can run between the count/slot/cache writes and the caller's resources.
+    std::get<ESM::CellRef>(cell.mCellRef.mVariant).mCount = value.mCount - 1;
+    cell.mChanged = true;
+    if (value.mCount == 1)
+    {
+        if (mSelectedEnchantItem == mSlots[Slot_Ammunition]) mSelectedEnchantItem = end();
+        mSlots[Slot_Ammunition] = end();
+    }
+    ContainerStore::flagAsModified();
+    value.mCommitted = true;
+    return true;
+}
+
+bool MWWorld::InventoryStore::notifyPreparedAmmunitionDebit(PreparedAmmunitionDebit& debit)
+{
+    auto* value = debit.mImpl.get();
+    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity
+        || !value->mCommitted || value->mNotified)
+        return false;
+    value->mNotified = true;
+    if (value->mCount == 1)
+    {
+        MWBase::Environment::get().getWorld()->removeRefScript(&value->mItem.getCellRef());
+        if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+        fireEquipmentChangedEvent();
+    }
+    // An observer can replace or clear the inventory. Do not touch its former
+    // item pointer after that replacement.
+    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    if (mListener) mListener->itemRemoved(value->mItem, 1);
+    return true;
 }

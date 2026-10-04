@@ -3,6 +3,8 @@
 #include "apps/openmw/mwphysics/collisiontype.hpp"
 #include <components/esm3/inventorystate.hpp>
 #include <bit>
+#include <cstddef>
+#include <new>
 #include <components/esm4/loadweap.hpp>
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwclass/clothing.hpp"
@@ -8432,4 +8434,144 @@ namespace
         manager.clear();
     }
 
+}
+
+namespace
+{
+    MWWorld::Ptr installPreparedDebitAmmunition(NativeWorldFixture& fixture, int count)
+    {
+        MWClass::Weapon::registerSelf();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& store = fixture.mWorld.getStore();
+        const auto key = ESM::FormKey::content("headless.esm", 0x941);
+        ESM4::Ammunition ammo{}; ammo.mId = {0x941, 0}; ammo.mData.mWeight = 2;
+        store.getWritable<ESM4::Ammunition>().insertStatic(ammo, key);
+        ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(ammo.mId);
+        shared.mData.mType = ESM::Weapon::Arrow; shared.mData.mWeight = 2;
+        store.insertStatic(shared);
+        ESM4::RuntimeInventoryItem item; item.mBase = key; item.mCount = count;
+        item.mEquippedSlots = ESM4::InventorySlotAmmunition;
+        installEquipmentInventory(fixture, actor, {item});
+        return actor;
+    }
+}
+
+TEST(OblivionWorldTest, PreparedAmmoCountAndLastSlotPublishOnceBeforeObservers)
+{
+    NativeWorldFixture fixture;
+    const auto actor = installPreparedDebitAmmunition(fixture, 2);
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+    {
+        MWWorld::InventoryStore& inventory;
+        int equipment = 0, removed = 0;
+        explicit Observer(MWWorld::InventoryStore& value) : inventory(value) {}
+        void equipmentChanged() override
+        {
+            ++equipment;
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+        }
+        void itemRemoved(const MWWorld::ConstPtr& item, int count) override
+        {
+            ++removed; EXPECT_EQ(count, 1);
+            EXPECT_EQ(item.getCellRef().getCount(), removed == 1 ? 1u : 0u);
+        }
+    } observer(inventory);
+    inventory.setInvListener(&observer); inventory.setContListener(&observer);
+    EXPECT_EQ(inventory.getWeight(), 4);
+    auto cancelled = inventory.prepareAmmunitionDebit(); cancelled.reset();
+    EXPECT_EQ(item.getCellRef().getCount(), 2u); EXPECT_EQ(observer.removed, 0);
+    auto first = inventory.prepareAmmunitionDebit();
+    EXPECT_FALSE(inventory.notifyPreparedAmmunitionDebit(*first));
+    ASSERT_TRUE(inventory.commitPreparedAmmunitionDebit(*first));
+    EXPECT_FALSE(inventory.commitPreparedAmmunitionDebit(*first));
+    EXPECT_EQ(item.getCellRef().getCount(), 1u); EXPECT_EQ(inventory.getWeight(), 2);
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), item);
+    EXPECT_EQ(observer.removed, 0); EXPECT_EQ(observer.equipment, 0);
+    ASSERT_TRUE(inventory.notifyPreparedAmmunitionDebit(*first));
+    EXPECT_FALSE(inventory.notifyPreparedAmmunitionDebit(*first));
+    auto last = inventory.prepareAmmunitionDebit();
+    inventory.setSelectedEnchantItem(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition));
+    ASSERT_TRUE(inventory.commitPreparedAmmunitionDebit(*last));
+    EXPECT_EQ(item.getCellRef().getCount(), 0u); EXPECT_EQ(inventory.getWeight(), 0);
+    EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+    EXPECT_EQ(inventory.getSelectedEnchantItem(), inventory.end());
+    EXPECT_EQ(observer.equipment, 0); EXPECT_EQ(observer.removed, 1);
+    ASSERT_TRUE(inventory.notifyPreparedAmmunitionDebit(*last));
+    EXPECT_EQ(observer.equipment, 1); EXPECT_EQ(observer.removed, 2);
+    EXPECT_FALSE(inventory.notifyPreparedAmmunitionDebit(*last));
+    EXPECT_THROW(inventory.prepareAmmunitionDebit(), std::invalid_argument);
+    inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, PreparedAmmoRejectsForeignStaleAndReplacedInventoryContents)
+{
+    NativeWorldFixture fixture; const auto actor = installPreparedDebitAmmunition(fixture, 2);
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    auto stale = inventory.prepareAmmunitionDebit();
+    MWWorld::InventoryStore copy(inventory);
+    EXPECT_FALSE(copy.commitPreparedAmmunitionDebit(*stale));
+    item.getCellRef().setCount(3);
+    EXPECT_FALSE(inventory.commitPreparedAmmunitionDebit(*stale)); EXPECT_EQ(item.getCellRef().getCount(), 3u);
+    auto copied = copy.prepareAmmunitionDebit(); ASSERT_TRUE(copy.commitPreparedAmmunitionDebit(*copied));
+    EXPECT_EQ(item.getCellRef().getCount(), 3u);
+    auto replaced = inventory.prepareAmmunitionDebit();
+    inventory = copy;
+    EXPECT_FALSE(inventory.commitPreparedAmmunitionDebit(*replaced));
+    auto cleared = inventory.prepareAmmunitionDebit(); inventory.clear();
+    EXPECT_FALSE(inventory.commitPreparedAmmunitionDebit(*cleared));
+    inventory = copy;
+    auto swapped = inventory.prepareAmmunitionDebit(); inventory.swapPreparedContents(copy);
+    EXPECT_FALSE(inventory.commitPreparedAmmunitionDebit(*swapped));
+    EXPECT_FALSE(copy.commitPreparedAmmunitionDebit(*swapped));
+}
+
+TEST(OblivionWorldTest, PreparedAmmoOwnerLifetimeCannotAliasFreshInventoryAtSameAddress)
+{
+    NativeWorldFixture fixture; const auto actor = installPreparedDebitAmmunition(fixture, 2);
+    auto& source = actor.getClass().getInventoryStore(actor);
+    alignas(MWWorld::InventoryStore) std::array<std::byte, sizeof(MWWorld::InventoryStore)> memory;
+    auto* owner = new (memory.data()) MWWorld::InventoryStore(source);
+    auto old = owner->prepareAmmunitionDebit();
+    owner->~InventoryStore();
+    owner = new (memory.data()) MWWorld::InventoryStore(source);
+    auto current = owner->prepareAmmunitionDebit();
+    EXPECT_FALSE(owner->commitPreparedAmmunitionDebit(*old));
+    ASSERT_TRUE(owner->commitPreparedAmmunitionDebit(*current));
+    owner->~InventoryStore();
+    // Tokens can be discarded after the borrowed owner's lifetime.
+    old.reset(); current.reset();
+}
+
+TEST(OblivionWorldTest, PreparedAmmoObserversCannotReplayOrDereferenceReplacedItems)
+{
+    for (bool throws : {false, true})
+    {
+        NativeWorldFixture fixture; const auto actor = installPreparedDebitAmmunition(fixture, 1);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+        {
+            MWWorld::InventoryStore& inventory; bool throws; int calls = 0, items = 0;
+            Observer(MWWorld::InventoryStore& value, bool shouldThrow) : inventory(value), throws(shouldThrow) {}
+            void equipmentChanged() override
+            {
+                ++calls;
+                if (throws) throw std::runtime_error("prepared ammo observer failure");
+                inventory.clear();
+            }
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++items; }
+        } observer(inventory, throws);
+        inventory.setInvListener(&observer); inventory.setContListener(&observer);
+        auto debit = inventory.prepareAmmunitionDebit();
+        ASSERT_TRUE(inventory.commitPreparedAmmunitionDebit(*debit));
+        if (throws) EXPECT_THROW(inventory.notifyPreparedAmmunitionDebit(*debit), std::runtime_error);
+        else EXPECT_TRUE(inventory.notifyPreparedAmmunitionDebit(*debit));
+        EXPECT_FALSE(inventory.commitPreparedAmmunitionDebit(*debit));
+        EXPECT_FALSE(inventory.notifyPreparedAmmunitionDebit(*debit));
+        EXPECT_EQ(observer.calls, 1); EXPECT_EQ(observer.items, 0);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+        inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
+    }
 }

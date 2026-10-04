@@ -20339,3 +20339,47 @@ producers and trajectory acceptance remain unverified here.
 
 Character input/renderer wiring, release resources/projectiles, flight and
 normal-input ranged acceptance remain open. This does not close S5 or M15.
+
+
+### S5 checkpoint270: prepared ammunition publication and native actor dispatch
+
+InventoryStore now prepares a one-item debit of the actual equipped ammunition
+instance without changing count, slots, caches or observers. Commit validates
+the owner lifetime, exact instance and positive raw projected count, then
+publishes count, last-item slot/selected-enchantment clearing and cache
+invalidation without allocations or callbacks. Deferred notification is
+one-shot even when an observer throws. Identity checks after callbacks avoid
+dereferencing items destroyed by inventory replacement. Copy/move assignment,
+clear and prepared-content swaps invalidate old tokens before list destruction;
+strong lifetime tags reject same-address owner reuse. Existing public item
+removal and CellRef setters retain their normal notification behavior.
+
+Four actual-world tests cover two-to-one-to-zero counts and weight, cancellation,
+last-item slots and notifications, foreign/stale/replaced inventories, owner
+destruction and placement-new reuse, and observers that throw or clear the
+inventory. Normal and ASan/UBSan each pass982 full engine tests with exact
+inventories and no failures/skips. Leak checks are disabled. Components/Python
+are unchanged. Normal emits ten existing Lua/Character/test warnings; sanitizer
+emits eleven existing console-regex/test warnings. Warning-bearing sources
+match checkpoint269, recorded in unchanged-warning-source.json in each run.
+Evidence: S5/prepared-ammunition-{normal,sanitized}-01.
+Tested fingerprint: d9dd857256bb67d327bb39f4776bca5aa323c964b4ff777ab4523e65cf5e5321
+
+Independent original release dispatch5FD4A4 through5FD4B0 reveals an actor
+distinction: NPC/Creature vtablesA6FC9C/A710F4 dispatch ammunition removal to
+60D0A0, a RET; PlayerA73A0C dispatches to662590. Player requests exactly one
+item unless god mode is active. All192 actor/god/count/ExtraCount/x87 cases
+pass, including original41E860 signed-word/default-one reads and60D020 process
+entry stores. Stable declared boundaries are process entry getter/clear,
+ExtraCount lookup/setter request, inventory removal4D8760, UI request5C1900
+and absent ContainerChanges4D6D40. This observes requests and entry writes,
+not full inventory/ContainerChanges storage or a compound shot. The quantity-one
+release policy applies to the native Player caller; do not debit NPC ammunition.
+Evidence: S5/native-arrow-ammo-dispatch-oracle-01.
+Oracle source SHA-256:
+715b7fb05e1efb3951d7b4bca8d67953f11d1f6aa39077da081e8a35ab3ef5e0
+
+Compound resources/projectile release, Character input, native flight, bow
+break consequences and normal-input acceptance remain open. Existing display
+connections are unavailable; authenticated TCP Xvfb also fails to open its
+listening sockets. Headless checks do not close normal-input gates or S5/M15.
