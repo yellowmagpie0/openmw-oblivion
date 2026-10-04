@@ -259,3 +259,57 @@ namespace
         checkPhysicalSnapshotContinuation(true);
     }
 }
+
+
+namespace
+{
+    TEST_F(NativeRagdollSnapshotTest, PackedNativeVelocitySnapshotRestartsAndContinuesExactPhases)
+    {
+        struct World
+        {
+            btDefaultCollisionConfiguration mConfiguration;
+            btCollisionDispatcher mDispatcher{&mConfiguration};
+            btDbvtBroadphase mBroadphase;
+            btSequentialImpulseConstraintSolver mSolver;
+            btDiscreteDynamicsWorld mWorld{&mDispatcher, &mBroadphase, &mSolver, &mConfiguration};
+        } first, second;
+        for (auto& body : mGraph.mBodies) body.mMaxAngularVelocity = 31.4159f;
+        std::vector<btTransform> poses; for (const auto& body : mBodies) poses.push_back(body.mPose);
+        NifBullet::ActorRagdollPhysics uninterrupted(mGraph, first.mWorld, NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        auto initial = uninterrupted.captureNativePackedVelocities();
+        initial[0].mVelocities = {{1000, -2000, 3000, 8}, {1000, -2000, 3000, 8}};
+        initial[1].mVelocities = {{1, 2, 3, -0.f}, {4, 5, 6, -8}};
+        uninterrupted.restoreNativePackedVelocities(initial);
+        const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph,
+            uninterrupted.capture(), uninterrupted.captureNativePackedVelocities());
+        const auto wire = save(snapshot).serializeBinary();
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(wire);
+        const auto& loaded = decoded.mNativeActorRagdolls.begin()->second;
+        const auto spatial = MWPhysics::restoreNativeActorRagdoll(loaded, mBase, mModel, mGraph);
+        const auto packed = MWPhysics::restoreNativeActorRagdollPackedVelocities(loaded, mBase, mModel, mGraph);
+        ASSERT_TRUE(packed); ASSERT_EQ(packed->size(), initial.size());
+        // The asset order is24/12; the wire is12/24. Restore must resolve IDs.
+        EXPECT_EQ((*packed)[0].mRecord, 24u); EXPECT_EQ((*packed)[1].mRecord, 12u);
+        NifBullet::ActorRagdollPhysics resumed(mGraph, second.mWorld, NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        resumed.restore(spatial, *packed);
+        const std::array<std::array<float, 4>, 2> deltas{{{0, 0, -1.1772000789642334f, 8}, {0, 0, 0, 0}}};
+        for (unsigned step = 0; step < 60; ++step)
+        {
+            const auto expected = uninterrupted.captureNativePackedVelocities();
+            const auto actual = resumed.captureNativePackedVelocities();
+            for (std::size_t body = 0; body < expected.size(); ++body)
+                for (unsigned axis = 0; axis < 4; ++axis)
+                {
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mLinear[axis]), std::bit_cast<std::uint32_t>(expected[body].mVelocities.mLinear[axis]));
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mAngular[axis]), std::bit_cast<std::uint32_t>(expected[body].mVelocities.mAngular[axis]));
+                }
+            uninterrupted.applyNativePackedVelocityStep(.016f, deltas);
+            resumed.applyNativePackedVelocityStep(.016f, deltas);
+        }
+        auto legacy = loaded; for (auto& body : legacy.mBodies) body.mNativePackedVelocity.reset();
+        EXPECT_FALSE(MWPhysics::restoreNativeActorRagdollPackedVelocities(legacy, mBase, mModel, mGraph));
+        auto wrong = initial; wrong[1].mRecord = 999;
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, uninterrupted.capture(), wrong), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, uninterrupted.capture(), std::span<const NifBullet::RagdollNativePackedVelocityState>(initial.data(), 1)), std::invalid_argument);
+    }
+}

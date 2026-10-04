@@ -363,6 +363,19 @@ namespace
             EXPECT_EQ(physics.actorRagdollDefinition(ptr).mSourceHash, graph.mSourceHash);
             const auto base = ESM::FormKey::content("headless.esm", 0x800);
             const auto original = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            ASSERT_TRUE(original.mBodies[0].mNativePackedVelocity);
+            auto packedSave = physics.captureActorRagdollNativePackedVelocities(ptr);
+            packedSave[0].mVelocities = {{1, 2, 3, -0.f}, {4, 5, 6, 8}};
+            physics.restoreActorRagdollNativePackedVelocities(ptr, packedSave);
+            const auto packedSnapshot = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            ASSERT_TRUE(packedSnapshot.mBodies[0].mNativePackedVelocity);
+            EXPECT_EQ(*packedSnapshot.mBodies[0].mNativePackedVelocity, packedSave[0].mVelocities);
+            auto invalidPackedSnapshot = packedSnapshot;
+            invalidPackedSnapshot.mBodies[0].mPosition = {10, 20, 30};
+            invalidPackedSnapshot.mBodies[0].mNativePackedVelocity->mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(physics.restoreActorRagdollSnapshot(ptr, invalidPackedSnapshot, base, path.value()), std::runtime_error);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), packedSnapshot);
+            physics.restoreActorRagdollSnapshot(ptr, original, base, path.value());
             EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, poses[0]);
             const std::array<NifBullet::RagdollNativeMotionRequest, 1> keyframed{{
                 {12, NifBullet::RagdollNativeMotion::Keyframed}}};
@@ -415,6 +428,10 @@ namespace
             // explicit zero-Z velocity to isolate keyframed gravity exclusion.
             auto keyInitial = original;
             keyInitial.mBodies[0].mLinearVelocity = {60, 0, 0};
+            // This fixture admits length scale1: native60 is exactly60 world
+            // units. Keep the authoritative snapshot lanes consistent.
+            ASSERT_TRUE(keyInitial.mBodies[0].mNativePackedVelocity);
+            keyInitial.mBodies[0].mNativePackedVelocity->mLinear = {60, 0, 0, 0};
             physics.restoreActorRagdollSnapshot(ptr, keyInitial, base, path.value());
             physics.setActorRagdollNativeMotionModes(ptr, keyframed);
             osg::ref_ptr<osg::Stats> schedulerStats = new osg::Stats("native-keyframed-scheduler");

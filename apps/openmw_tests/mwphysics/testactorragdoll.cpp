@@ -179,9 +179,11 @@ namespace
         auto changed = original;
         changed.mBodies[0].mPosition = {4, 5, 6};
         changed.mBodies[0].mLinearVelocity = {7, 8, 9};
+        ASSERT_TRUE(changed.mBodies[0].mNativePackedVelocity);
+        changed.mBodies[0].mNativePackedVelocity->mLinear = {7, 8, 9, -8};
         scheduler.restoreActorRagdollSnapshot(mPtr, changed, base, model);
         EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), changed);
-        for (unsigned field = 0; field < 4; ++field)
+        for (unsigned field = 0; field < 5; ++field)
         {
             auto invalid = changed;
             switch (field)
@@ -190,8 +192,9 @@ namespace
                 case 1: invalid.mBodies[0].mNodeRecord = 99; break;
                 case 2: invalid.mBodies[0].mRecord = 99; break;
                 case 3: invalid.mBodies[0].mLinearVelocity[0] = std::numeric_limits<float>::infinity(); break;
+                case 4: invalid.mBodies[0].mNativePackedVelocity->mAngular[3] = std::numeric_limits<float>::quiet_NaN(); break;
             }
-            if (field == 3)
+            if (field >= 3)
                 EXPECT_THROW(scheduler.restoreActorRagdollSnapshot(mPtr, invalid, base, model), std::runtime_error);
             else
                 EXPECT_THROW(scheduler.restoreActorRagdollSnapshot(mPtr, invalid, base, model), std::invalid_argument);

@@ -560,6 +560,13 @@ namespace ESM4
         std::set<std::uint32_t> nodes;
         for (const auto& body : mBodies)
         {
+            if (body.mNativePackedVelocity.has_value() != mBodies.front().mNativePackedVelocity.has_value())
+                throw std::runtime_error("Incomplete TES4 packed ragdoll snapshot");
+            if (body.mNativePackedVelocity)
+                for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
+                    for (float value : vector)
+                        if (!std::isfinite(value))
+                            throw std::runtime_error("Nonfinite TES4 packed ragdoll velocity");
             if ((previous && body.mRecord <= *previous)
                 || body.mRecord > std::numeric_limits<std::int32_t>::max()
                 || body.mNodeRecord > std::numeric_limits<std::int32_t>::max()
@@ -843,6 +850,8 @@ namespace ESM4
         for (const auto& [actor, pose] : mNativeActorRagdolls)
         {
             pose.validate();
+            if (mVersion < 32 && pose.mBodies.front().mNativePackedVelocity)
+                throw std::runtime_error("TES4 packed ragdoll velocities require runtime-state version32");
             const auto values = nativeActors.find(actor);
             if (values == nativeActors.end() || !lives.contains(actor) || values->second != pose.mBase)
                 throw std::runtime_error("Dangling or mismatched TES4 ragdoll owner");
@@ -1712,6 +1721,14 @@ namespace ESM4
                     for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
                         for (float value : vector)
                             writer.floating(value);
+                    if (mVersion >= 32)
+                    {
+                        writer.integer<std::uint8_t>(body.mNativePackedVelocity.has_value());
+                        if (body.mNativePackedVelocity)
+                            for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
+                                for (float value : vector)
+                                    writer.floating(value);
+                    }
                 }
             }
         }
@@ -2404,6 +2421,19 @@ namespace ESM4
                     for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
                         for (float& value : *vector)
                             value = reader.float32();
+                    if (result.mVersion >= 32)
+                    {
+                        const auto present = reader.integer<std::uint8_t>();
+                        if (present > 1)
+                            throw std::runtime_error("Invalid TES4 packed ragdoll presence flag");
+                        if (present)
+                        {
+                            body.mNativePackedVelocity.emplace();
+                            for (auto* vector : {&body.mNativePackedVelocity->mLinear, &body.mNativePackedVelocity->mAngular})
+                                for (float& value : *vector)
+                                    value = reader.float32();
+                        }
+                    }
                     pose.mBodies.push_back(body);
                 }
                 if (!result.mNativeActorRagdolls.emplace(std::move(actor), std::move(pose)).second)
@@ -3130,6 +3160,14 @@ namespace ESM4
                     vector(body.mLinearVelocity);
                     stream << ",\"angular_velocity\":";
                     vector(body.mAngularVelocity);
+                    if (body.mNativePackedVelocity)
+                    {
+                        stream << ",\"native_packed_velocity\":{\"linear\":";
+                        vector(body.mNativePackedVelocity->mLinear);
+                        stream << ",\"angular\":";
+                        vector(body.mNativePackedVelocity->mAngular);
+                        stream << '}';
+                    }
                     stream << '}';
                 }
                 stream << "]}";

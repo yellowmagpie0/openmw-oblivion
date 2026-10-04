@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 31
+CURRENT_VERSION = 32
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1020,8 +1020,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         previous = -1
         nodes: set[int] = set()
         for body in bodies:
-            if not isinstance(body, dict) or set(body) != {"record", "node_record", "rotation", "position", "linear_velocity", "angular_velocity"}:
+            fields = {"record", "node_record", "rotation", "position", "linear_velocity", "angular_velocity"}
+            if not isinstance(body, dict) or set(body) not in (fields, fields | {"native_packed_velocity"}):
                 raise RuntimeStateError("Invalid TES4 ragdoll body")
+            packed = body.get("native_packed_velocity")
+            if "native_packed_velocity" in body:
+                if version < 32 or not isinstance(packed, dict) or set(packed) != {"linear", "angular"}:
+                    raise RuntimeStateError("Invalid TES4 packed ragdoll velocity or version")
+                for vector in packed.values():
+                    if not isinstance(vector, list) or len(vector) != 4:
+                        raise RuntimeStateError("Invalid TES4 packed ragdoll lane count")
+                    for value in vector:
+                        native_float(value)
+            if ("native_packed_velocity" in body) != ("native_packed_velocity" in bodies[0]):
+                raise RuntimeStateError("Incomplete TES4 packed ragdoll snapshot")
             record, node = body["record"], body["node_record"]
             if (type(record) is not int or type(node) is not int or not previous < record <= 0x7fffffff
                     or not 0 <= node <= 0x7fffffff or node in nodes):
@@ -1601,6 +1613,13 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
                 for field, size in [("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)]:
                     body[field] = [reader.unpack("<f") for _ in range(size)]
+                if version >= 32:
+                    present = reader.unpack("<B")
+                    if present > 1:
+                        raise RuntimeStateError("Invalid TES4 packed ragdoll presence flag")
+                    if present:
+                        body["native_packed_velocity"] = {field: [reader.unpack("<f") for _ in range(4)]
+                                                          for field in ("linear", "angular")}
                 entry["bodies"].append(body)
             result["native_actor_ragdolls"].append(entry)
     _validate_basic_state(result)
@@ -1941,6 +1960,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for field in ["rotation", "position", "linear_velocity", "angular_velocity"]:
                     for value in body[field]:
                         writer.pack("<f", value)
+                if version >= 32:
+                    writer.pack("<B", int("native_packed_velocity" in body))
+                    if "native_packed_velocity" in body:
+                        for field in ("linear", "angular"):
+                            for value in body["native_packed_velocity"][field]:
+                                writer.pack("<f", value)
     return writer.finish()
 
 

@@ -26,6 +26,7 @@ namespace ESM4
     {
         std::array<float, 4> mLinear;
         std::array<float, 4> mAngular;
+        friend bool operator==(const PhysicalWorldSceneVelocities&, const PhysicalWorldSceneVelocities&) = default;
     };
 
     // Full8A3900 velocity intent after caller resolves World/authority and

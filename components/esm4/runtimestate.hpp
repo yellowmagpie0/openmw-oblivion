@@ -20,6 +20,7 @@
 #include "actionledger.hpp"
 #include "actorvalues.hpp"
 #include "physicalcombat.hpp"
+#include "physicalsceneworld.hpp"
 
 namespace ESM
 {
@@ -29,7 +30,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 31;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 32;
 
     struct RuntimeContentIdentity
     {
@@ -327,6 +328,9 @@ namespace ESM4
         std::array<float, 3> mPosition{};
         std::array<float, 3> mLinearVelocity{};
         std::array<float, 3> mAngularVelocity{};
+        // v32: exact native binary32 velocity lanes, separate from the world
+        // spatial projection. Legacy snapshots leave this absent.
+        std::optional<PhysicalWorldSceneVelocities> mNativePackedVelocity;
         friend bool operator==(const RuntimeRagdollBody&, const RuntimeRagdollBody&) = default;
     };
 

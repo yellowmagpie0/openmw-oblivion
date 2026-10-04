@@ -1123,8 +1123,8 @@ namespace
         state.mPlayer.mClass = {};
         state.mPlayer.mBirthSign = {};
         state.mPlayer.mCharacterGenerationFlags = 0;
-        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
-        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2, -1, -1.f, 0, -1, {}, -1.f } };
+        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1, -1, -1.f, 0, -1, {}, -1.f } };
         const auto bytes = state.serializeBinary();
         const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(bytes);
         EXPECT_EQ(loaded.mVersion, 1u);
@@ -1141,8 +1141,8 @@ namespace
         state.mPlayer.mClass = {};
         state.mPlayer.mBirthSign = {};
         state.mPlayer.mCharacterGenerationFlags = 0;
-        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
-        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2, -1, -1.f, 0, -1, {}, -1.f } };
+        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1, -1, -1.f, 0, -1, {}, -1.f } };
         const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
         EXPECT_EQ(loaded.mVersion, 2u);
         EXPECT_TRUE(loaded.mPlayer.mRace.isNull());
@@ -1153,8 +1153,8 @@ namespace
     {
         auto state = makeState();
         state.mVersion = 3;
-        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2 } };
-        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1 } };
+        state.mPlayer.mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x18baa), 2, -1, -1.f, 0, -1, {}, -1.f } };
+        state.mReferences[0].mInventory = { { ESM::FormKey::content("Oblivion.esm", 0x400), -1, -1, -1.f, 0, -1, {}, -1.f } };
         const ESM4::RuntimeState loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
         EXPECT_EQ(loaded.mVersion, 3u);
         ASSERT_EQ(loaded.mPlayer.mInventory.size(), 1u);
@@ -1966,7 +1966,10 @@ TEST(ESM4RuntimeState, NativeRagdollRejectsInvalidAssetOwnerAndBodySnapshots)
     pose.mBase = state.mReferences.front().mBase;
     pose.mModel = "meshes/characters/_male/skeleton.nif";
     pose.mAssetHash = "00112233445566778899aabbccddeeff";
-    pose.mBodies.push_back({12, 8});
+    ESM4::RuntimeRagdollBody snapshotBody;
+    snapshotBody.mRecord = 12;
+    snapshotBody.mNodeRecord = 8;
+    pose.mBodies.push_back(snapshotBody);
     state.mNativeActorRagdolls.emplace(actor, pose);
     ASSERT_NO_THROW(state.serializeBinary());
     const auto rejects = [&](auto mutate) {
@@ -2107,7 +2110,9 @@ TEST(ESM4RuntimeState, Condition24PreservesNativeFloatBitsAndRejectsLossyDowngra
         EXPECT_EQ(std::bit_cast<std::uint32_t>(static_cast<float>(restored.mPlayer.mInventory.front().mCondition)), bits);
         EXPECT_EQ(restored.serializeBinary(), bytes);
         if (bits == 0x80000000u)
+        {
             EXPECT_NE(restored.canonicalJson().find("\"condition\":-0.0"), std::string::npos);
+        }
         if (bits != 0u && bits != 0x43000000u)
         {
             state.mVersion = 23;
@@ -2400,4 +2405,72 @@ TEST(ESM4RuntimeState, OlderNativeReferencesDoNotInventDrawState)
         state.mReferences.front().mActorDrawState = ESM4::ActorDrawState::Nothing;
         EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
+}
+
+
+namespace
+{
+    ESM4::RuntimeState packedRagdollState()
+    {
+        auto state = meleeState(); state.mVersion = 32;
+        ESM4::RuntimeActorRagdoll pose;
+        pose.mBase = state.mReferences.front().mBase;
+        pose.mModel = "meshes/characters/_male/skeleton.nif";
+        pose.mAssetHash = "00112233445566778899aabbccddeeff";
+        ESM4::RuntimeRagdollBody body; body.mRecord = 12; body.mNodeRecord = 8;
+        body.mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{
+            {66.83216857910156f, -133.66433715820312f, 200.41783142089844f, -0.f},
+            {26.377605438232422f, -52.755210876464844f, 79.13282012939453f, .2110208421945572f}};
+        pose.mBodies.push_back(body);
+        state.mNativeActorRagdolls.emplace(state.mReferences.front().mKey, pose);
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, NativePackedRagdollVersionThirtyTwoWireAndLegacyAbsence)
+{
+    auto state = packedRagdollState(); const auto actor = state.mReferences.front().mKey;
+    const auto native = *state.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity;
+    auto old = state; old.mVersion = 31;
+    old.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity.reset();
+    const auto legacy = old.serializeBinary();
+    auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 32;
+    expected.push_back(1);
+    for (const auto& vector : {native.mLinear, native.mAngular})
+        for (float value : vector)
+        {
+            const auto bits = std::bit_cast<std::uint32_t>(value);
+            for (unsigned byte = 0; byte < 4; ++byte)
+                expected.push_back(static_cast<std::uint8_t>(bits >> (byte * 8)));
+        }
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto decoded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(decoded.mNativeActorRagdolls, state.mNativeActorRagdolls);
+    ASSERT_TRUE(decoded.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(decoded.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity->mLinear[3]), 0x80000000u);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity);
+    EXPECT_EQ(old.serializeBinary(), legacy);
+    old.mVersion = 32; auto absent = legacy; absent[std::string_view("OMW4STATE").size()] = 32; absent.push_back(0);
+    EXPECT_EQ(old.serializeBinary(), absent);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(absent).mNativeActorRagdolls, old.mNativeActorRagdolls);
+    EXPECT_NE(decoded.canonicalJson().find("\"native_packed_velocity\":{\"linear\":[66.832168579101562,-133.66433715820312,200.41783142089844,-0.0]"), std::string::npos);
+}
+
+TEST(ESM4RuntimeState, NativePackedRagdollRejectsMalformedVersionPresenceAndPayload)
+{
+    auto state = packedRagdollState(); const auto actor = state.mReferences.front().mKey;
+    auto invalid = state; invalid.mVersion = 31;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity->mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state; auto extra = invalid.mNativeActorRagdolls.at(actor).mBodies[0];
+    extra.mRecord = 13; extra.mNodeRecord = 9; extra.mNativePackedVelocity.reset();
+    invalid.mNativeActorRagdolls.at(actor).mBodies.push_back(extra);
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    auto payload = state.serializeBinary();
+    ASSERT_GE(payload.size(), 33u);
+    for (std::size_t cut = payload.size() - 33; cut < payload.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({payload.begin(), payload.begin() + cut}), std::runtime_error);
+    payload[payload.size() - 33] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(payload), std::runtime_error);
 }

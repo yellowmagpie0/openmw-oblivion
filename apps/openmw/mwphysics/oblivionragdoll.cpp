@@ -35,11 +35,14 @@ namespace MWPhysics
 
     ESM4::RuntimeActorRagdoll captureNativeActorRagdoll(const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
-        std::span<const NifBullet::RagdollBodyState> bodies)
+        std::span<const NifBullet::RagdollBodyState> bodies,
+        std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities)
     {
         validateGraph(definition);
         if (bodies.size() != definition.mBodies.size())
             throw std::invalid_argument("native physical snapshot body count does not match asset");
+        if (!packedVelocities.empty() && packedVelocities.size() != bodies.size())
+            throw std::invalid_argument("native packed snapshot body count does not match asset");
         ESM4::RuntimeActorRagdoll result;
         result.mBase = base;
         result.mModel = model;
@@ -48,6 +51,7 @@ namespace MWPhysics
         for (const auto& body : definition.mBodies)
             nodes.emplace(body.mRecord, body.mNodeRecord);
         result.mBodies.reserve(bodies.size());
+        std::size_t index = 0;
         for (const auto& input : bodies)
         {
             const auto node = nodes.find(input.mRecord);
@@ -64,6 +68,13 @@ namespace MWPhysics
                 body.mLinearVelocity[row] = static_cast<float>(input.mLinearVelocity[row]);
                 body.mAngularVelocity[row] = static_cast<float>(input.mAngularVelocity[row]);
             }
+            if (!packedVelocities.empty())
+            {
+                if (packedVelocities[index].mRecord != input.mRecord)
+                    throw std::invalid_argument("native packed snapshot body identity mismatch");
+                body.mNativePackedVelocity = packedVelocities[index].mVelocities;
+            }
+            ++index;
             result.mBodies.push_back(body);
         }
         std::sort(result.mBodies.begin(), result.mBodies.end(), [](const auto& a, const auto& b) {
@@ -100,6 +111,25 @@ namespace MWPhysics
                 btVector3(body.mLinearVelocity[0], body.mLinearVelocity[1], body.mLinearVelocity[2]),
                 btVector3(body.mAngularVelocity[0], body.mAngularVelocity[1], body.mAngularVelocity[2])});
         }
+        return result;
+    }
+
+    std::optional<std::vector<NifBullet::RagdollNativePackedVelocityState>> restoreNativeActorRagdollPackedVelocities(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        // Reuse complete winning-asset and geometry validation before producing
+        // either projection. No live owner is touched by this adapter.
+        (void)restoreNativeActorRagdoll(snapshot, base, model, definition);
+        if (!snapshot.mBodies.front().mNativePackedVelocity)
+            return std::nullopt;
+        std::unordered_map<std::uint32_t, const ESM4::RuntimeRagdollBody*> bodies;
+        for (const auto& body : snapshot.mBodies)
+            bodies.emplace(body.mRecord, &body);
+        std::vector<NifBullet::RagdollNativePackedVelocityState> result;
+        result.reserve(definition.mBodies.size());
+        for (const auto& target : definition.mBodies)
+            result.push_back({target.mRecord, *bodies.at(target.mRecord)->mNativePackedVelocity});
         return result;
     }
 }

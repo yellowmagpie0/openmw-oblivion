@@ -17674,3 +17674,68 @@ No M15 stage closes. The versioned save schema and public scheduler snapshot
 must carry this data before packed save/restart can be claimed. Full raw modes,
 COM/time/cache/controller persistence, automatic World getter/frame/reaction
 integration, retained contact/restart failures and S5-S14 acceptance remain open.
+
+
+### Checkpoint224: versioned packed-velocity snapshots and scheduler save boundary
+
+Runtime-state version32 extends each physical body with a strict one-byte
+presence marker and, when present, eight binary32 native velocity lanes.
+All bodies in an actor snapshot must consistently carry or omit packed state;
+finite lanes, count/identity and winning asset checks remain mandatory. Current
+snapshots carry packed velocities separately from the legacy world-unit spatial
+projection. Native velocities are authoritative during combined restoration.
+Versions1-31 retain their existing wire layout and absence semantics; a version31
+payload cannot silently discard a populated packed field. Canonical JSON emits
+the optional field only when present and preserves negative zero. C++ and Python
+codecs share this explicit format and reject malformed markers, partial native
+snapshots, truncation and nonfinite lanes.
+
+The capture adapter optionally accepts a complete ordered native velocity span,
+resolves body/node identities, and stores it in canonical record order. Restoration
+returns complete native state in asset order, or absence for legacy snapshots.
+The actual Scheduler/PhysicsSystem snapshot path now captures both projections
+under its worker wait and lock. It prepares both restored projections before
+calling223's combined atomic restore. Legacy snapshots retain the old spatial
+restore path. Packed restoration does not imply restoration of modes, activation,
+contact caches or controller clocks; those remain separate/open.
+
+Two C++ wire/malformed tests fail packed-save-baseline-01. Python baseline01's
+runner failed import before executing tests; corrected baseline02 executes both
+new tests and both error because the baseline codec rejects the new field.
+Final tests manually assemble version32 bytes from the unchanged independently
+checked version31 layout, exercise absent/present markers and signed zero, and
+reject downgrade, mixed presence, nonfinite lanes, unknown marker and every
+truncated byte of the new33-byte extension. Engine continuation serializes a
+snapshot, deserializes it, resolves wire order12/24 back to asset order24/12,
+restores a separate owner and compares60 packed velocity phases bit-for-bit.
+This is contact-free phase continuation, not fresh-process gameplay acceptance.
+Public World fixture0/1/2 workers checks captured packed data and invalid packed
+rollback. The original spatial-only adapter signature remains supported.
+
+Full normal/sanitized packed-save-01 each passes2,394 components but fails the
+same3 scheduler snapshot tests (0/1/2 workers). Those tests altered world-unit
+velocities without updating the now-authoritative native snapshot. Corrected
+fixtures set both projections consistently, retain original expected spatial
+velocities and add invalid packed-lane rollback. The keyframed public fixture
+uses its actual admitted scale1 and sets native60 alongside world60, retaining
+its existing expectations/tolerances. New optional-member initializer warning
+and six old test aggregate initializer warnings in runtimestate.cpp are removed
+without behavior changes; old inventory-test, loop-copy and GCC animation-state
+warnings from the wider rebuild remain recorded in01 rather than hidden.
+
+Actual native-packed-save-wire-compare-normal/sanitized-01 each passes34,560
+C++ serializer/deserializer payloads using original222 captured velocity values,
+276,480 exact lane checks. The independent Python codec parses and re-encodes
+every complete payload byte-for-byte, zero wire failures. Executable/corpus
+identity remains222's pinned original dataset. These values are snapshot inputs;
+this does not establish the original game's save protocol. Comparisons ran at
+source fingerprint `8e418bdb34aae6adfa58c57de4197ff0f353af41ec5f6af44aebe6a7b39b5b26`. Subsequent changes touch tests only;
+both final component archives are verified byte-identical to those comparers.
+Full packed-save-normal/sanitized-02 each passes2,394 components and900 engine,
+exact inventories, zero failed/skipped cases. The normal run additionally passes
+247 Python tests. ASan leak checks remain disabled. Final tested source
+fingerprint `1c8b12d10595a4ba91a4cc0e78d8b4cf25d6ddf756c30613e611aa38e42b72e6`.
+
+No M15 stage closes. Full native modes/request/flags/gains/controller/clock/raw
+COM-time and activation/contact persistence, automatic World getter/frame/reaction
+integration, retained physical/restart failures and S5-S14 acceptance remain open.

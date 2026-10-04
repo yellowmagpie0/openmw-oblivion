@@ -13,8 +13,14 @@ namespace MWPhysics
     // converted by the physics owner; this adapter does not convert units again.
     ESM4::RuntimeActorRagdoll captureNativeActorRagdoll(const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
-        std::span<const NifBullet::RagdollBodyState> bodies);
+        std::span<const NifBullet::RagdollBodyState> bodies,
+        std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities = {});
     std::vector<NifBullet::RagdollBodyState> restoreNativeActorRagdoll(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
+    // Absent for legacy snapshots; complete in current asset body order when
+    // present. Resolve both projections before calling the combined owner restore.
+    std::optional<std::vector<NifBullet::RagdollNativePackedVelocityState>> restoreNativeActorRagdollPackedVelocities(
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
 }

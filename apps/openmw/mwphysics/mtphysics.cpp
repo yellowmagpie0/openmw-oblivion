@@ -738,7 +738,8 @@ namespace MWPhysics
         waitForWorkers();
         MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
         const auto& owned = actorRagdoll(ptr);
-        return captureNativeActorRagdoll(base, model, owned.mDefinition, owned.mPhysics.capture());
+        return captureNativeActorRagdoll(base, model, owned.mDefinition, owned.mPhysics.capture(),
+            owned.mPhysics.captureNativePackedVelocities());
     }
 
     void PhysicsTaskScheduler::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
@@ -748,7 +749,11 @@ namespace MWPhysics
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto& owned = actorRagdoll(ptr);
         const auto states = restoreNativeActorRagdoll(snapshot, base, model, owned.mDefinition);
-        owned.mPhysics.restore(states);
+        const auto packed = restoreNativeActorRagdollPackedVelocities(snapshot, base, model, owned.mDefinition);
+        if (packed)
+            owned.mPhysics.restore(states, *packed);
+        else
+            owned.mPhysics.restore(states);
     }
 
     void PhysicsTaskScheduler::removeActorRagdoll(const MWWorld::Ptr& ptr)
