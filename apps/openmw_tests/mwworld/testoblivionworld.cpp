@@ -8824,3 +8824,137 @@ TEST(OblivionWorldTest, PreparedBowReleaseLateFailuresAndDiscardAfterWorldDestru
     EXPECT_EQ(retained->launch().mAmmunition,ESM::FormKey::content("headless.esm",0x941));
     retained.reset();
 }
+
+TEST(OblivionWorldTest, PreparedUnequipPublishesSlotsWithoutQuantityChangesBeforeObservers)
+{
+    for (const int slot : {MWWorld::InventoryStore::Slot_CarriedRight, MWWorld::InventoryStore::Slot_Ammunition})
+    {
+        NativeWorldFixture fixture;
+        const auto actors = installPreparedBowRelease(fixture, true);
+        auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+        const auto item = *inventory.getSlot(slot);
+        const auto count = item.getCellRef().getCount();
+        const auto weight = inventory.getWeight();
+        struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+        {
+            MWWorld::InventoryStore& inventory;
+            MWWorld::Ptr item;
+            int slot, changed = 0, removed = 0;
+            unsigned count;
+            Observer(MWWorld::InventoryStore& inv, MWWorld::Ptr ptr, int s)
+                : inventory(inv), item(ptr), slot(s), count(ptr.getCellRef().getCount()) {}
+            void equipmentChanged() override
+            {
+                ++changed;
+                EXPECT_EQ(inventory.getSlot(slot), inventory.end());
+                EXPECT_EQ(item.getCellRef().getCount(), count);
+                EXPECT_EQ(inventory.getSelectedEnchantItem(), inventory.end());
+            }
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++removed; }
+        } observer(inventory, item, slot);
+        inventory.setInvListener(&observer); inventory.setContListener(&observer);
+        inventory.setSelectedEnchantItem(inventory.getSlot(slot));
+        auto cancelled = inventory.prepareUnequip(slot); cancelled.reset();
+        EXPECT_EQ(*inventory.getSlot(slot), item);
+        auto prepared = inventory.prepareUnequip(slot);
+        EXPECT_FALSE(inventory.notifyPreparedUnequip(*prepared));
+        ASSERT_TRUE(inventory.validatePreparedUnequip(*prepared));
+        ASSERT_TRUE(inventory.commitPreparedUnequip(*prepared));
+        EXPECT_FALSE(inventory.commitPreparedUnequip(*prepared));
+        EXPECT_EQ(inventory.getSlot(slot), inventory.end());
+        EXPECT_EQ(inventory.getSelectedEnchantItem(), inventory.end());
+        EXPECT_EQ(item.getCellRef().getCount(), count);
+        EXPECT_EQ(inventory.getWeight(), weight);
+        EXPECT_EQ(observer.changed, 0); EXPECT_EQ(observer.removed, 0);
+        ASSERT_TRUE(inventory.notifyPreparedUnequip(*prepared));
+        EXPECT_EQ(observer.changed, 1); EXPECT_EQ(observer.removed, 0);
+        EXPECT_FALSE(inventory.notifyPreparedUnequip(*prepared));
+        EXPECT_THROW(inventory.prepareUnequip(slot), std::invalid_argument);
+        inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedUnequipRejectsStaleForeignAndReplacedSlotsBeforeDereferencingItems)
+{
+    NativeWorldFixture fixture;
+    const auto actor = installPreparedDebitAmmunition(fixture, 2);
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const int slot = MWWorld::InventoryStore::Slot_Ammunition;
+    EXPECT_THROW(inventory.prepareUnequip(-1), std::invalid_argument);
+    EXPECT_THROW(inventory.prepareUnequip(MWWorld::InventoryStore::Slots), std::invalid_argument);
+    EXPECT_THROW(inventory.prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight), std::invalid_argument);
+    auto prepared = inventory.prepareUnequip(slot);
+    MWWorld::InventoryStore copy(inventory);
+    EXPECT_FALSE(copy.validatePreparedUnequip(*prepared));
+    EXPECT_FALSE(copy.commitPreparedUnequip(*prepared));
+    auto item = *inventory.getSlot(slot);
+    item.getCellRef().setCount(3);
+    EXPECT_FALSE(inventory.commitPreparedUnequip(*prepared));
+    EXPECT_EQ(*inventory.getSlot(slot), item);
+    auto cleared = inventory.prepareUnequip(slot);
+    inventory.clear();
+    EXPECT_FALSE(inventory.validatePreparedUnequip(*cleared));
+    EXPECT_FALSE(inventory.commitPreparedUnequip(*cleared));
+    inventory = copy;
+    auto replaced = inventory.prepareUnequip(slot);
+    inventory = copy;
+    EXPECT_FALSE(inventory.commitPreparedUnequip(*replaced));
+    auto swapped = inventory.prepareUnequip(slot);
+    inventory.swapPreparedContents(copy);
+    EXPECT_FALSE(inventory.commitPreparedUnequip(*swapped));
+    EXPECT_FALSE(copy.commitPreparedUnequip(*swapped));
+    auto moved = inventory.prepareUnequip(slot);
+    MWWorld::InventoryStore::PreparedUnequip retained(std::move(*moved));
+    EXPECT_FALSE(inventory.commitPreparedUnequip(*moved));
+    EXPECT_TRUE(inventory.commitPreparedUnequip(retained));
+}
+
+TEST(OblivionWorldTest, PreparedUnequipObserverFailureOrInventoryClearCannotReplay)
+{
+    for (bool clear : {false, true})
+    {
+        NativeWorldFixture fixture;
+        const auto actor = installPreparedDebitAmmunition(fixture, 2);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        struct Observer : MWWorld::InventoryStoreListener
+        {
+            MWWorld::InventoryStore& inventory;
+            bool clear;
+            int calls = 0;
+            Observer(MWWorld::InventoryStore& value, bool flag) : inventory(value), clear(flag) {}
+            void equipmentChanged() override
+            {
+                ++calls;
+                EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+                if (clear) inventory.clear();
+                throw std::runtime_error("injected prepared unequip observer failure");
+            }
+        } observer(inventory, clear);
+        inventory.setInvListener(&observer);
+        auto prepared = inventory.prepareUnequip(MWWorld::InventoryStore::Slot_Ammunition);
+        ASSERT_TRUE(inventory.commitPreparedUnequip(*prepared));
+        EXPECT_THROW(inventory.notifyPreparedUnequip(*prepared), std::runtime_error);
+        EXPECT_EQ(observer.calls, 1);
+        EXPECT_FALSE(inventory.notifyPreparedUnequip(*prepared));
+        EXPECT_FALSE(inventory.commitPreparedUnequip(*prepared));
+        inventory.setInvListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedUnequipOwnerReuseAndDiscardAfterDestructionAreSafe)
+{
+    NativeWorldFixture fixture;
+    const auto actor = installPreparedDebitAmmunition(fixture, 2);
+    auto& source = actor.getClass().getInventoryStore(actor);
+    alignas(MWWorld::InventoryStore) std::array<std::byte, sizeof(MWWorld::InventoryStore)> memory;
+    auto* owner = new (memory.data()) MWWorld::InventoryStore(source);
+    auto old = owner->prepareUnequip(MWWorld::InventoryStore::Slot_Ammunition);
+    owner->~InventoryStore();
+    owner = new (memory.data()) MWWorld::InventoryStore(source);
+    auto current = owner->prepareUnequip(MWWorld::InventoryStore::Slot_Ammunition);
+    EXPECT_FALSE(owner->validatePreparedUnequip(*old));
+    EXPECT_FALSE(owner->commitPreparedUnequip(*old));
+    ASSERT_TRUE(owner->commitPreparedUnequip(*current));
+    owner->~InventoryStore();
+    old.reset(); current.reset();
+}

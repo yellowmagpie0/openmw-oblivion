@@ -888,3 +888,89 @@ bool MWWorld::InventoryStore::notifyPreparedAmmunitionDebit(PreparedAmmunitionDe
     if (mListener) mListener->itemRemoved(value->mItem, 1);
     return true;
 }
+
+struct MWWorld::InventoryStore::PreparedUnequip::Impl
+{
+    InventoryStore* mOwner;
+    std::shared_ptr<const char> mIdentity;
+    Ptr mItem;
+    int mSlot;
+    int mCount;
+    bool mCommitted = false;
+    bool mNotified = false;
+};
+
+MWWorld::InventoryStore::PreparedUnequip::PreparedUnequip(std::unique_ptr<Impl> impl)
+    : mImpl(std::move(impl))
+{
+}
+MWWorld::InventoryStore::PreparedUnequip::~PreparedUnequip() = default;
+MWWorld::InventoryStore::PreparedUnequip::PreparedUnequip(PreparedUnequip&&) noexcept = default;
+MWWorld::InventoryStore::PreparedUnequip&
+MWWorld::InventoryStore::PreparedUnequip::operator=(PreparedUnequip&&) noexcept = default;
+
+std::unique_ptr<MWWorld::InventoryStore::PreparedUnequip>
+MWWorld::InventoryStore::prepareUnequip(int slot)
+{
+    if (slot < 0 || slot >= static_cast<int>(mSlots.size()) || mSlots[slot] == end())
+        throw std::invalid_argument("prepared unequip requires an occupied valid slot");
+    const auto item = *mSlots[slot];
+    const auto* reference = std::get_if<ESM::CellRef>(&item.getCellRef().mCellRef.mVariant);
+    if (item.getContainerStore() != this || !reference || reference->mCount <= 0)
+        throw std::invalid_argument("prepared unequip requires a positive projected instance");
+    auto impl = std::make_unique<PreparedUnequip::Impl>();
+    if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
+    impl->mOwner = this;
+    impl->mIdentity = mPreparedAmmunitionIdentity;
+    impl->mItem = item;
+    impl->mSlot = slot;
+    impl->mCount = reference->mCount;
+    return std::unique_ptr<PreparedUnequip>(new PreparedUnequip(std::move(impl)));
+}
+
+bool MWWorld::InventoryStore::validatePreparedUnequip(const PreparedUnequip& change) const noexcept
+{
+    const auto* value = change.mImpl.get();
+    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
+        return false;
+    const auto& slot = mSlots[value->mSlot];
+    if (slot == end() || *slot != value->mItem)
+        return false;
+    const auto* reference = std::get_if<ESM::CellRef>(&value->mItem.getCellRef().mCellRef.mVariant);
+    return reference && reference->mCount == value->mCount && value->mCount > 0;
+}
+
+bool MWWorld::InventoryStore::commitPreparedUnequip(PreparedUnequip& change) noexcept
+{
+    if (!validatePreparedUnequip(change)) return false;
+    auto& value = *change.mImpl;
+    if (mSelectedEnchantItem == mSlots[value.mSlot]) mSelectedEnchantItem = end();
+    mSlots[value.mSlot] = end();
+    ContainerStore::flagAsModified();
+    value.mCommitted = true;
+    return true;
+}
+
+bool MWWorld::InventoryStore::notifyPreparedUnequip(PreparedUnequip& change)
+{
+    auto* value = change.mImpl.get();
+    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity
+        || !value->mCommitted || value->mNotified)
+        return false;
+    // Mark before any operation that can throw or invoke an observer.
+    value->mNotified = true;
+    if (value->mItem.getCellRef().getCount())
+    {
+        restack(value->mItem);
+        if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+        if (getPtr() == MWMechanics::getPlayer())
+        {
+            const ESM::RefId& script = value->mItem.getClass().getScript(value->mItem);
+            if (!script.empty())
+                value->mItem.getRefData().getLocals().setVarByInt(script, "onpcequip", 0);
+        }
+    }
+    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    fireEquipmentChangedEvent();
+    return true;
+}

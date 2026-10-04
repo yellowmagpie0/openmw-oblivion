@@ -12915,3 +12915,50 @@ These fixtures do not establish actual Arrow controller field producers,
 per-frame support/collision inputs or trajectories. Full native flight,
 resource/projectile coupling, Character input, persistence/impact and
 normal-input acceptance remain open. This does not close S5 or M15.
+
+
+### S5 checkpoint273: staged equipment removal for compound resources
+
+InventoryStore now prepares exact-instance unequipping without changing
+quantity or slots. Commit validates the inventory lifetime, slot identity and
+count, then clears the slot/selected enchantment and invalidates caches
+without allocation or observers. Restacking, OnPCEquip handling and equipment
+notification are deferred and one-shot, including failures. Lifetime checks
+protect stale item pointers after replacement and callback-driven clearing.
+Existing public unequip behavior is unchanged.
+
+Four actual-world tests exercise Player bow/ammunition cancellation, quantity
+and weight conservation, coherent slot/selection state before observers,
+invalid slots, foreign/count-stale/cleared/assigned/swapped owners, moved
+tokens, throwing or clearing observers and same-address owner reuse. Tokens
+can be discarded after inventory destruction. Normal and ASan/UBSan each
+pass991 full engine tests with exact inventories and no failures/skips.
+Leak checks are disabled. Components/Python are unchanged. Normal emits two
+existing Character/actor-test warnings; sanitizer emits one actor-test
+warning. Sources match checkpoint272 in unchanged-warning-source.json.
+Evidence: S5/prepared-unequip-{normal,sanitized}-01.
+Tested fingerprint: 8988ab9bf28fb98e874b310a77f517bc61d1e35622ae879b7f4fd7f170fa1c83
+
+Independent original break-dispatch research passes48 admitted-consequence
+cases and720 expanded zero-condition/process/readiness cases. Original
+5F39D3 through5F3B25/5F3B31 executes all four process vtable+304 dispatches:
+Low/MiddleLow69D990 return false; MiddleHigh/High64AD30 read byte115.
+With null enchantment argument, positive remaining condition, missing
+process or false weapon-out emits no equipment request. A broken drawn weapon
+requests unequipping for the actual Player or quest items; other NPC/Creature
+weapons request dropping exactly one item. Actual WEAP vtableA45354+78
+getter4D7030 tests form+8 bit0x400, matching the TES4 header quest-item flag.
+The Player bypasses that getter. Original711440 rotation conversion executes.
+
+Declared boundaries are actor+168 query, process+118/+120 node getters,
+unequip5F2E70, drop5FC440 and notification4DC000 requests. This establishes
+dispatch/request arguments, not full wear admission, inventory storage,
+dropped-reference creation or gameplay acceptance.
+Evidence: S5/native-broken-weapon-dispatch-oracle-{01,02}.
+Expanded oracle source SHA-256:
+1499d2716bf16927606d2519e29642467ca1a981af5e231fe87ab58536335e5b
+
+The bow service does not invoke staged unequipping yet; it still rejects a
+wear-to-zero transition. Native drop publication, release/projectile coupling,
+Character input, flight/impact/persistence and normal-input acceptance remain
+open. S5 and M15 remain in progress.

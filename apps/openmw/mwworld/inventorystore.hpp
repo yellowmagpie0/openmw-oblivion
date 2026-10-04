@@ -104,6 +104,29 @@ namespace MWWorld
         // One actual equipped ammunition instance. Preparation/cancellation
         // do not debit. Publication is allocation/callback-free and once-only;
         // owner replacement, slot replacement or changed count reject it.
+        class PreparedUnequip
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedUnequip(std::unique_ptr<Impl> impl);
+            friend class InventoryStore;
+        public:
+            ~PreparedUnequip();
+            PreparedUnequip(PreparedUnequip&&) noexcept;
+            PreparedUnequip& operator=(PreparedUnequip&&) noexcept;
+            PreparedUnequip(const PreparedUnequip&) = delete;
+            PreparedUnequip& operator=(const PreparedUnequip&) = delete;
+        };
+
+        // Stage exact-instance slot removal for compound resource changes.
+        // Commit leaves item quantity unchanged and invokes no observers.
+        // The caller prepares condition/resource changes before committing.
+        std::unique_ptr<PreparedUnequip> prepareUnequip(int slot);
+        bool validatePreparedUnequip(const PreparedUnequip& change) const noexcept;
+        bool commitPreparedUnequip(PreparedUnequip& change) noexcept;
+        // One-shot deferred restacking/script/equipment notification.
+        bool notifyPreparedUnequip(PreparedUnequip& change);
+
         std::unique_ptr<PreparedAmmunitionDebit> prepareAmmunitionDebit();
         bool validatePreparedAmmunitionDebit(const PreparedAmmunitionDebit& debit) const noexcept;
         bool commitPreparedAmmunitionDebit(PreparedAmmunitionDebit& debit) noexcept;
