@@ -11843,3 +11843,63 @@ automatic World lifecycle/save/reaction/update/getter/frame wiring. Renderer-
 global traversal/cache, raw COM/time/quaternion/cache, activation/contact
 continuation, retained physical/restart failures, normal-input display acceptance
 and S5-S14 remain required.
+
+
+### Checkpoint236: prepared legacy restore variants preserve absent metadata
+
+PreparedRestore now supports all existing one/two/three/four-span legacy
+projections as well as the complete six-span controller snapshot. Its optional
+owned packed/mode/blend/controller buffers distinguish absent fields from a
+present complete-empty set. Spatial-only preparation validates and owns the
+world pose/velocity projection. Packed preparation replaces spatial XYZ with
+native authoritative velocities before validation, retaining the prior rule
+that unused conflicting spatial velocity fields do not override packed state.
+Mode preparation validates complete ordered logical1/6 requests; blend
+preparation validates and owns the complete winning blend-target set. Complete
+controller preparation adds both validated authored/generated vectors. None
+publishes during preparation.
+
+Commit applies only present metadata. Without packed state it publishes the
+legacy spatial projection and retains the owner's separately stored native
+fourth velocity lanes. Absent modes, blend metadata or controllers leave existing
+owner fields untouched; no defaults are invented. Present complete-empty metadata
+is still published. Wrong/consumed token admission and original-owner lifetime/
+synchronization contract remain unchanged. All five existing restore overloads
+now use the same appropriate prepare-and-commit path, preserving prior spatial,
+packed-authority, mode, force/activation/interpolation and metadata semantics.
+This removes the legacy preparation gap before aggregate scheduler restoration;
+no runtime schema, JSON field or World save format changes.
+
+All three prepared-legacy-restore-baseline-01 cases execute and fail because the
+new legacy preparations return no token. Added tests cover spatial-only
+restoration at length scale2 with world XYZ7/8/9 becoming native3.5/4/4.5,
+preserved native W8/angular negative zero, existing Keyframed mode, raw requested
+motion FFFFFFFF and authored/generated state; packed-only/packed+mode/
+packed+mode+blend variants preserve absent controllers and publish only selected
+metadata; late invalid pose, packed fourth lane, logical raw2 mode and blend gain
+reject without physical publication. Existing lower restore tests continue
+checking authoritative packed XYZ, late rollback, force clearing/activation,
+interpolation, BodyT, identities and complete controller continuation.
+
+Full prepared-legacy-restore-normal/sanitized-01 each passes2,415 component tests,
+exact inventory and zero failures/skips. Tested fingerprint `ef4b9328fe31ec3871ec7d1af3e8ec97c83f04f564f2b860443afa03549b3c24`. ASan leak
+checks disabled. Unchanged Python codecs and scheduler forwarding are not rerun.
+
+Actual native-prepared-legacy-controller-restore-compare-normal/sanitized-01 each
+passes110,592 original196 composed controller outputs through complete explicit
+preparation/commit after the optional-buffer refactor,1,216,512 exact captured
+fields. Captured gains/cache/clock/cursor/flags/key-count/generated-presence and
+original executable/source/corpus/declared Windows-interlocked boundary are
+unchanged. Input key contents, owner IDs, setup0/2/FFFFFFFF, generated order/state,
+logical Dynamic mode and zero packed velocities remain explicit software
+fixtures, not newly captured original save/getter outputs. Shared cache and
+original next-phase/native-save/World/contact/gameplay remain excluded.
+Internal Bullet broadphase allocation failure remains unexercised; preparing
+owned buffers is not a noexcept/OOM rollback claim.
+
+No M15 gate closes. Next is coherent scheduler/PhysicsSystem capture and
+restoration of every bound owner plus the global cache at one worker barrier and
+lock, choosing matching legacy/current preparations. Automatic World lifecycle/
+save/reaction/update/getter/frame wiring, renderer-global traversal/cache, raw
+COM/time/quaternion/cache, activation/contact continuation, retained physical/
+restart failures, normal-input display acceptance and S5-S14 remain required.

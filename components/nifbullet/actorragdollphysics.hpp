@@ -316,6 +316,17 @@ namespace NifBullet
         };
         // Caller retains the original owner and synchronization barrier until
         // commit. Stage complete owned buffers without publishing body state.
+        // Legacy projections retain absent metadata instead of inventing it.
+        std::unique_ptr<PreparedRestore> prepareRestore(std::span<const RagdollBodyState> states) const;
+        std::unique_ptr<PreparedRestore> prepareRestore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities) const;
+        std::unique_ptr<PreparedRestore> prepareRestore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities,
+            std::span<const RagdollNativeMotionRequest> motions) const;
+        std::unique_ptr<PreparedRestore> prepareRestore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities,
+            std::span<const RagdollNativeMotionRequest> motions,
+            std::span<const RagdollNativeBlendState> blends) const;
         std::unique_ptr<PreparedRestore> prepareRestore(std::span<const RagdollBodyState> states,
             std::span<const RagdollNativePackedVelocityState> packedVelocities,
             std::span<const RagdollNativeMotionRequest> motions,

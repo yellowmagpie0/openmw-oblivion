@@ -4554,3 +4554,81 @@ namespace
         EXPECT_EQ(first.capture()[0].mPose, committed[0].mPose);
     }
 }
+
+
+namespace
+{
+    TEST_F(CompleteControllerRestoreTest, PreparedLegacySpatialKeepsNativeWModeAndControllers)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2, mPoses, 1, -1);
+        auto packed = actor.captureNativePackedVelocities(); packed[0].mVelocities = {{1, 2, 3, 8}, {4, 5, 6, -0.f}};
+        auto modes = actor.captureNativeMotionModes(); modes[0].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+        auto blends = actor.captureNativeBlendStates(); blends[0].mRequestedMotion = 0xffffffffu;
+        const auto controls = savedBlendControllers(actor); const auto velocities = savedVelocityControllers();
+        actor.restore(actor.capture(), packed, modes, blends, controls, velocities);
+        auto spatial = actor.capture(); const auto original = spatial;
+        spatial[0].mPose.setOrigin({10, 20, 30}); spatial[0].mLinearVelocity = {7, 8, 9};
+        auto prepared = actor.prepareRestore(spatial); ASSERT_TRUE(prepared);
+        EXPECT_EQ(actor.capture()[0].mPose, original[0].mPose);
+        actor.commitRestore(*prepared);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, btVector3(7, 8, 9));
+        const auto native = actor.captureNativePackedVelocities()[0].mVelocities;
+        EXPECT_EQ(native.mLinear, (std::array<float, 4>{3.5f, 4, 4.5f, 8}));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(native.mAngular[3]), 0x80000000u);
+        EXPECT_EQ(actor.captureNativeMotionModes(), modes);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 0xffffffffu);
+        EXPECT_EQ(savedBlendControllerWords(actor.captureNativeBlendControllers()[0]), savedBlendControllerWords(controls[0]));
+        ASSERT_EQ(actor.captureNativeVelocityControllers().size(), velocities.size());
+        EXPECT_EQ(savedVelocityControllerWords(actor.captureNativeVelocityControllers()[0]), savedVelocityControllerWords(velocities[0]));
+    }
+
+    TEST_F(CompleteControllerRestoreTest, PreparedLegacyPackedModesAndBlendKeepAbsentControllers)
+    {
+        for (unsigned kind = 0; kind < 3; ++kind)
+        {
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+            const auto controls = savedBlendControllers(actor); const auto velocities = savedVelocityControllers();
+            actor.restore(actor.capture(), actor.captureNativePackedVelocities(), actor.captureNativeMotionModes(),
+                actor.captureNativeBlendStates(), controls, velocities);
+            auto spatial = actor.capture(); spatial[0].mPose.setOrigin({10, 20, 30});
+            auto packed = actor.captureNativePackedVelocities(); packed[0].mVelocities = {{1, 2, 3, 8}, {4, 5, 6, -0.f}};
+            auto modes = actor.captureNativeMotionModes(); modes[0].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+            auto blends = actor.captureNativeBlendStates(); blends[0].mRequestedMotion = 0xffffffffu;
+            std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepared;
+            if (kind == 0) prepared = actor.prepareRestore(spatial, packed);
+            if (kind == 1) prepared = actor.prepareRestore(spatial, packed, modes);
+            if (kind == 2) prepared = actor.prepareRestore(spatial, packed, modes, blends);
+            ASSERT_TRUE(prepared); EXPECT_NE(actor.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+            actor.commitRestore(*prepared);
+            EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+            EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, packed[0].mVelocities.mLinear);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(actor.captureNativePackedVelocities()[0].mVelocities.mAngular[3]), 0x80000000u);
+            EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, kind ? NifBullet::RagdollNativeMotion::Keyframed : NifBullet::RagdollNativeMotion::Dynamic);
+            EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, kind == 2 ? 0xffffffffu : 8u);
+            EXPECT_EQ(savedBlendControllerWords(actor.captureNativeBlendControllers()[0]), savedBlendControllerWords(controls[0]));
+            ASSERT_EQ(actor.captureNativeVelocityControllers().size(), velocities.size());
+            EXPECT_EQ(savedVelocityControllerWords(actor.captureNativeVelocityControllers()[0]), savedVelocityControllerWords(velocities[0]));
+        }
+    }
+
+    TEST_F(CompleteControllerRestoreTest, PreparedLegacyLateInvalidProjectionNeverPublishes)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto before = actor.capture(); auto spatial = before; spatial[0].mPose.setOrigin({10, 20, 30});
+        auto packed = actor.captureNativePackedVelocities(); auto modes = actor.captureNativeMotionModes();
+        auto blends = actor.captureNativeBlendStates();
+        // Valid preparation itself must work before testing malformed variants.
+        auto valid = actor.prepareRestore(spatial); ASSERT_TRUE(valid);
+        auto badSpatial = spatial; badSpatial.back().mPose.getOrigin().setX(std::numeric_limits<btScalar>::infinity());
+        EXPECT_THROW(actor.prepareRestore(badSpatial), std::invalid_argument);
+        auto badPacked = packed; badPacked.back().mVelocities.mLinear[3] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(actor.prepareRestore(spatial, badPacked), std::invalid_argument);
+        auto badModes = modes; badModes.back().mMotion = static_cast<NifBullet::RagdollNativeMotion>(2);
+        EXPECT_THROW(actor.prepareRestore(spatial, packed, badModes), std::invalid_argument);
+        auto badBlends = blends; badBlends.back().mGains.mHierarchy = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(actor.prepareRestore(spatial, packed, modes, badBlends), std::invalid_argument);
+        EXPECT_EQ(actor.capture()[0].mPose, before[0].mPose);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, packed[0].mVelocities.mLinear);
+    }
+}
