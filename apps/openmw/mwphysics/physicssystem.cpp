@@ -807,6 +807,25 @@ namespace MWPhysics
         return mTaskScheduler->captureActorRagdoll(ptr);
     }
 
+    std::vector<NifBullet::RagdollNativePackedVelocityState>
+    PhysicsSystem::captureActorRagdollNativePackedVelocities(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdollNativePackedVelocities(ptr);
+    }
+
+    void PhysicsSystem::restoreActorRagdollNativePackedVelocities(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativePackedVelocityState> states)
+    {
+        mTaskScheduler->restoreActorRagdollNativePackedVelocities(ptr, states);
+    }
+
+    std::vector<std::uint32_t> PhysicsSystem::synchronizeActorRagdollWorldScenes(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeWorldSceneRequest> requests,
+        const std::function<void(std::span<const std::uint32_t>)>& beforePublish)
+    {
+        return mTaskScheduler->synchronizeActorRagdollWorldScenes(ptr, requests, beforePublish);
+    }
+
     ESM4::RuntimeActorRagdoll PhysicsSystem::captureActorRagdollSnapshot(
         const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
     {

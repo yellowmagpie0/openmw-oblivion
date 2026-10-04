@@ -60,6 +60,8 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
+    struct RagdollNativePackedVelocityState;
+    struct RagdollNativeWorldSceneRequest;
     struct RagdollNativeVelocityDrive;
     struct RagdollNativeMotionRequest;
     struct RagdollNativeScenePoseRequest;
@@ -211,6 +213,17 @@ namespace MWPhysics
         bool hasActorRagdoll(const MWWorld::Ptr& ptr);
         NifBullet::ActorRagdollDefinition actorRagdollDefinition(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollNativePackedVelocityState> captureActorRagdollNativePackedVelocities(
+            const MWWorld::Ptr& ptr);
+        void restoreActorRagdollNativePackedVelocities(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativePackedVelocityState> states);
+        // World guard bits come from this scheduler's owned wrapper binding.
+        // Caller supplies prepared native getter/target/frame fields. Stage all
+        // writes before the optional atomic hook; no physics reentry in the hook.
+        // This does not infer getter clock lanes or automatic collision ordering.
+        std::vector<std::uint32_t> synchronizeActorRagdollWorldScenes(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativeWorldSceneRequest> requests,
+            const std::function<void(std::span<const std::uint32_t>)>& beforePublish = {});
         ESM4::RuntimeActorRagdoll captureActorRagdollSnapshot(
             const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
         void restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,

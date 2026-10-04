@@ -23,6 +23,7 @@ namespace NifBullet
             std::vector<btCollisionObject*> mBodies;
         };
         std::vector<Owner> mNativeOwners;
+        const void* mNativeSceneOwner = nullptr;
 
         bool isNativeBody(const btCollisionObject* body) const
         {
@@ -52,6 +53,26 @@ namespace NifBullet
 
     public:
         using btDiscreteDynamicsWorld::btDiscreteDynamicsWorld;
+
+        // Engine wrapper binding, analogous to original889BB0's World+2B0
+        // backreference. This is ownership presence, not simulation enablement.
+        void bindNativeSceneOwner(const void* identity)
+        {
+            if (!identity || mNativeSceneOwner)
+                throw std::invalid_argument("Invalid native scene World owner binding");
+            mNativeSceneOwner = identity;
+        }
+
+        void unbindNativeSceneOwner(const void* identity) noexcept
+        {
+            if (identity && mNativeSceneOwner == identity)
+                mNativeSceneOwner = nullptr;
+        }
+
+        bool hasNativeSceneOwner(const void* identity) const noexcept
+        {
+            return identity && mNativeSceneOwner == identity;
+        }
 
         void registerNativeMotionOwner(const void* identity, std::span<btCollisionObject* const> bodies,
             std::function<void(float)> step)

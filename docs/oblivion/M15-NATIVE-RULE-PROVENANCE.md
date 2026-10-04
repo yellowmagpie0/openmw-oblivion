@@ -10945,3 +10945,58 @@ integration, not proof that this scheduler already supplies that authority.
 No M15 stage closes. Continue public World-scene ownership/coupling, packed
 force/damping/persistence, automatic reaction lifetime, full ordering, retained
 physical/runtime failures and all remaining S5-S14 acceptance.
+
+
+### Checkpoint220: public packed World-scene service and owner binding
+
+Exposed packed native velocity capture/restore and sparse World-scene publication
+through PhysicsSystem and PhysicsTaskScheduler. Each operation waits for workers,
+holds the collision-world lock and resolves the current actor owner. The World
+publication copies prepared requests, resolves their guard bits from the owned
+World/scheduler binding, then invokes218's staged all-lane publication. Caller
+World booleans cannot substitute for the scheduler's live binding. Native getter,
+converted-target/scratch and prepared-frame values remain explicit caller inputs;
+this service does not yet produce them during automatic collision traversal.
+The hook retains218's atomic/no-reentry contract while the scheduler lock is held.
+
+NativeDynamicsWorld now supports one scene-owner binding. Scheduler acquires it
+through a RAII object before starting workers; destruction clears it after worker
+shutdown and ragdoll removal. A failed later construction also releases the RAII
+binding. Null/duplicate/ambiguous acquisition rejects; mismatched release cannot
+clear another owner. Ordinary borrowed Bullet worlds have no native binding and
+therefore no World-scene authority through this public operation. This is the
+engine ownership translation of the original backreference guard, not an
+implementation of arbitrary Havok reference counts or simulation-enable flags.
+
+Independent original full889BB0 probe recorded in219 passes1,728 cases through
+actual452A60 and89D430, followed by full8A3900. Added captured controls: absent
+World skips reference operations; releasing clears+2B0 and changes reference2
+to1; acquiring installs the actual wrapper pointer and changes2 to3. Original
+vtableA95CF4 is independently confirmed as `.?AVbhkWorld@@` by complete-object
+locatorAD1988 and type descriptorB2E4BC, not a borrowed header label. Constructor
+88AEB0 writes that table; its4C pointer setter89D400 invokes50's custom889BB0 when
+switching held objects. Actual full constructor/final-reference destruction and
+game-level lifecycle are still outside these fixtures. Wrapper RTTI and binding
+controls are retained beside native-world-wrapper-bound-scene-oracle-01; original
+source/corpus hashes are in219. No activation island or contact acceptance claim.
+
+New component test exercises binding ambiguity, mismatched release and rebinding.
+Extended the existing public physical-owner fixture for worker counts0/1/2 with
+packed restore/signed-zero validation, stale actor rejection, late invalid sparse
+requests, hook rollback, real binding despite false caller guard bits, uncapped
+original velocity outputs, fourth angular lane, unchanged pose/modes/cache,
+far-frame0 retention and near-frame0 all-lane clearing. This uses explicit native
+getter fixtures alongside real scheduler ownership, not live automatic getters.
+Full normal/sanitized public-world-scene-01 each pass2,383 components and899 engine,
+exact inventories, no failed/skipped cases or build warning. ASan leaks disabled;
+Python unchanged. Tested source fingerprint `87b19a8bdee832f40732c4de84b3582392f284b0ec2c5172cc19224c828744f2`.
+
+Follow-up native-packed-body-force-oracle-01 passes48,000 complete5377B0/8EAC80/
+KEY8EA060 cases, no stubs: independent force/current fourth lanes, both x87 words,
+zero/signed-zero/frame/inverse-mass boundaries. Source SHA256
+`690b3374d3395dd55239625777ea3500cdbc69668d89118da0a087c4538ac360`;
+corpus `f4d2abd110aafe46b8784e966ce378fd8d7251fa45f2a30b81c2f5a1af58f459`.
+Activation is explicitly suppressed; this is input to221, not current force-owner
+integration evidence. No M15 stage closes. Continue packed force/damping/save,
+collision-frame getter/ordering integration and automatic World reactions,
+then complete the retained physical/runtime and all S5-S14 acceptance gates.

@@ -21,6 +21,7 @@
 #include <components/misc/barrier.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollvelocity.hpp>
+#include <components/nifbullet/nativedynamicsworld.hpp>
 #include <components/settings/values.hpp>
 
 #include "../mwmechanics/actorutil.hpp"
@@ -439,6 +440,24 @@ namespace MWPhysics
         std::vector<osg::Vec3f> mLinearDeltas;
     };
 
+    class PhysicsTaskScheduler::NativeSceneBinding
+    {
+        NifBullet::NativeDynamicsWorld* mWorld;
+        const void* mIdentity;
+    public:
+        NativeSceneBinding(btCollisionWorld* world, const void* identity)
+            : mWorld(dynamic_cast<NifBullet::NativeDynamicsWorld*>(world)), mIdentity(identity)
+        {
+            if (mWorld)
+                mWorld->bindNativeSceneOwner(mIdentity);
+        }
+        ~NativeSceneBinding()
+        {
+            if (mWorld)
+                mWorld->unbindNativeSceneOwner(mIdentity);
+        }
+    };
+
     PhysicsTaskScheduler::PhysicsTaskScheduler(
         float physicsDt, btCollisionWorld* collisionWorld, MWRender::DebugDrawer* debugDrawer)
         : mNativeBlendTimeCache(std::make_unique<ESM4::PhysicalBlendTimeCache>())
@@ -467,6 +486,7 @@ namespace MWPhysics
         , mFrameStart(0)
         , mWorkersSync(mNumThreads >= 1 ? std::make_unique<WorkersSync>() : nullptr)
     {
+        mNativeSceneBinding = std::make_unique<NativeSceneBinding>(mCollisionWorld, this);
         if (mNumThreads >= 1)
         {
             Log(Debug::Info) << "Using " << mNumThreads << " async physics threads";
@@ -779,6 +799,41 @@ namespace MWPhysics
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         return actorRagdoll(ptr).mPhysics.capture();
+    }
+
+    std::vector<NifBullet::RagdollNativePackedVelocityState>
+    PhysicsTaskScheduler::captureActorRagdollNativePackedVelocities(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureNativePackedVelocities();
+    }
+
+    void PhysicsTaskScheduler::restoreActorRagdollNativePackedVelocities(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativePackedVelocityState> states)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.restoreNativePackedVelocities(states);
+    }
+
+    std::vector<std::uint32_t> PhysicsTaskScheduler::synchronizeActorRagdollWorldScenes(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollNativeWorldSceneRequest> requests,
+        const std::function<void(std::span<const std::uint32_t>)>& beforePublish)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto& owner = actorRagdoll(ptr).mPhysics;
+        const auto* world = dynamic_cast<const NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+        std::vector<NifBullet::RagdollNativeWorldSceneRequest> prepared(requests.begin(), requests.end());
+        for (auto& request : prepared)
+        {
+            // The current owned body is registered in this borrowed World.
+            // Presence of the scheduler's RAII wrapper binding resolves+2B0.
+            request.mInput.mHasWorld = true;
+            request.mInput.mHasAuthority = world && world->hasNativeSceneOwner(this);
+        }
+        return owner.synchronizeNativeWorldScenes(prepared, beforePublish);
     }
 
     void PhysicsTaskScheduler::restoreActorRagdoll(const MWWorld::Ptr& ptr,

@@ -3871,3 +3871,22 @@ namespace
         EXPECT_NE(actor.capture()[0].mPose, mPoses[0]);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, NativeWorldSceneWrapperBindingRejectsAmbiguousOwnersAndClearsOnRelease)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        int first = 0, second = 0;
+        EXPECT_FALSE(world.hasNativeSceneOwner(&first)); EXPECT_FALSE(world.hasNativeSceneOwner(nullptr));
+        EXPECT_THROW(world.bindNativeSceneOwner(nullptr), std::invalid_argument);
+        world.bindNativeSceneOwner(&first);
+        EXPECT_TRUE(world.hasNativeSceneOwner(&first)); EXPECT_FALSE(world.hasNativeSceneOwner(&second));
+        EXPECT_THROW(world.bindNativeSceneOwner(&first), std::invalid_argument);
+        EXPECT_THROW(world.bindNativeSceneOwner(&second), std::invalid_argument);
+        world.unbindNativeSceneOwner(&second); EXPECT_TRUE(world.hasNativeSceneOwner(&first));
+        world.unbindNativeSceneOwner(&first); EXPECT_FALSE(world.hasNativeSceneOwner(&first));
+        world.bindNativeSceneOwner(&second); EXPECT_TRUE(world.hasNativeSceneOwner(&second));
+        world.unbindNativeSceneOwner(&second);
+    }
+}

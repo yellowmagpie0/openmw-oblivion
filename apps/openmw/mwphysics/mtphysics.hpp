@@ -33,6 +33,8 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
+    struct RagdollNativePackedVelocityState;
+    struct RagdollNativeWorldSceneRequest;
     struct RagdollNativeVelocityDrive;
     struct RagdollNativeMotionRequest;
     struct RagdollNativeScenePoseRequest;
@@ -101,6 +103,17 @@ namespace MWPhysics
             const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
         void updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
         std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollNativePackedVelocityState> captureActorRagdollNativePackedVelocities(
+            const MWWorld::Ptr& ptr);
+        void restoreActorRagdollNativePackedVelocities(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativePackedVelocityState> states);
+        // World guard bits come from this scheduler's owned wrapper binding.
+        // Caller supplies prepared native getter/target/frame fields. Stage all
+        // writes before the optional atomic hook; no physics reentry in the hook.
+        // This does not infer getter clock lanes or automatic collision ordering.
+        std::vector<std::uint32_t> synchronizeActorRagdollWorldScenes(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollNativeWorldSceneRequest> requests,
+            const std::function<void(std::span<const std::uint32_t>)>& beforePublish = {});
         void restoreActorRagdoll(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBodyState> states);
         // Queries/publication share the worker barrier and owned record identity.
         // These requested modes are not yet part of the physical save projection.
@@ -195,6 +208,8 @@ namespace MWPhysics
         std::unique_ptr<WorldFrameData> mWorldFrameData;
         std::vector<Simulation>* mSimulations = nullptr;
         std::unordered_set<const btCollisionObject*> mCollisionObjects;
+        class NativeSceneBinding;
+        std::unique_ptr<NativeSceneBinding> mNativeSceneBinding;
         std::unordered_map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>> mActorRagdolls;
         // Shared by owned native physical controllers across actors. Access
         // only after the worker barrier under the collision-world lock.
