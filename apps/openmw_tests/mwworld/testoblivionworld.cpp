@@ -1538,6 +1538,233 @@ namespace
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
     }
 
+    TEST(OblivionWorldTest, WorldApplyStagesLoadedPhysicalOwnersBeforeWorldPublication)
+    {
+        struct RestoreThreads
+        {
+            int mPrevious = Settings::physics().mAsyncNumThreads;
+            ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+        } restoreThreads;
+        for (int threads : {0, 1, 2})
+        {
+            SCOPED_TRACE(threads);
+            Settings::physics().mAsyncNumThreads.set(threads);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            MWClass::Npc::registerSelf();
+            world.setupPlayer();
+            auto& store = world.getStore();
+            ESM::Race race{}; race.blank(); race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+            store.getWritable<ESM::Race>().insertStatic(race);
+            ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+            cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+            cell.mCellFlags = ESM4::CELL_Interior; cell.mEditorId = "NativeOwnerCaptureCell";
+            store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+            // setupPlayer's fallback uses a string race. Give this capture fixture
+            // a managed projected base with a native race key, as a real loaded
+            // Oblivion player has; save validation must remain enabled.
+            auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            playerBase.mId = ESM::RefId::stringRefId("NativeOwnerCapturePlayer");
+            playerBase.mRace = race.mId;
+            store.insertStatic(playerBase);
+            world.getPlayerPtr().get<ESM::NPC>()->mBase = store.get<ESM::NPC>().find(playerBase.mId);
+            auto& residentCell = world.getWorldModel().getCell(cell.mId);
+            world.getPlayer().setCell(&residentCell);
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{10, 0, 0, 0}};
+            for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+            const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
+            auto& combat = *world.getOblivionCombatService();
+            combat.publishPlayerValues(world.getPlayer(), values, settings);
+            ESM4::RuntimeActorLife life;
+            life.mActor = values.mActor; life.mBase = values.mBase;
+            combat.publishPlayerLife(world.getPlayer(), life);
+            const auto draft = addNativeNpc(fixture, 0x900);
+            const auto actor = draft.getCell()->moveTo(draft, &residentCell);
+            const auto retainedDraft = addNativeNpc(fixture, 0x901);
+            const auto retained = retainedDraft.getCell()->moveTo(retainedDraft, &residentCell);
+            world.getWorldModel().registerPtr(actor);
+            world.getWorldModel().registerPtr(retained);
+            const auto baseKey = actor.get<ESM4::Npc>()->mBase->mFormKey;
+            auto npc = *actor.get<ESM4::Npc>()->mBase;
+            npc.mModel = "physical-owner.osgt";
+            store.getWritable<ESM4::Npc>().insertStatic(npc, baseKey);
+            ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+            ASSERT_TRUE(world.initializeOblivionNonPlayerActor(retained, ESM4::ActorValueProcess::Active));
+            osg::ref_ptr<osg::Geode> model = new osg::Geode;
+            osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+            osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+            vertices->push_back(osg::Vec3(-1, -1, -1));
+            vertices->push_back(osg::Vec3(1, -1, -1));
+            vertices->push_back(osg::Vec3(0, 1, -1));
+            vertices->push_back(osg::Vec3(0, 0, 1));
+            geometry->setVertexArray(vertices);
+            osg::ref_ptr<osg::DrawElementsUInt> triangles = new osg::DrawElementsUInt(GL_TRIANGLES);
+            for (unsigned index : {0u, 2u, 1u, 0u, 1u, 3u, 1u, 2u, 3u, 2u, 0u, 3u})
+                triangles->push_back(index);
+            geometry->addPrimitiveSet(triangles);
+            model->addDrawable(geometry);
+            std::filesystem::create_directories(fixture.mDirectory / "meshes");
+            ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "meshes/physical-owner.osgt").string()));
+            fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+            fixture.mVfs.buildIndex();
+            const VFS::Path::Normalized path("meshes/physical-owner.osgt");
+            auto* scene = fixture.mResources.getSceneManager();
+            scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+            auto defines = Shader::getDefaultDefines();
+            for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
+                defines[name] = value;
+            osg::ref_ptr<SceneUtil::LightManager> lights
+                = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
+            for (const auto& [name, value] : lights->getLightDefines())
+                defines[name] = value;
+            scene->getShaderManager().setGlobalDefines(defines);
+            auto& physics = world.initializePhysics(new osg::Group);
+            physics.addActor(actor, path);
+            NifBullet::ActorRagdollDefinition graph;
+            graph.mSourceHash = std::string(16, 'a');
+            NifBullet::RagdollBodyDefinition body{};
+            body.mRecord = 12; body.mNodeRecord = 8;
+            body.mMass = 2; body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mShape = NifBullet::RagdollSphere{.5f};
+            body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+            body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+                78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+            graph.mBodies.push_back(body);
+            const std::array<btTransform, 1> poses{
+                btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 20))};
+            NifBullet::RagdollInternalCollisionFilter internalFilter;
+            internalFilter.mSystemGroup = 10;
+            physics.addActorRagdoll(actor, graph, 1, poses,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
+            const auto actorKey = actor.getCellRef().getFormKey();
+            const auto retainedKey = retained.getCellRef().getFormKey();
+            const std::string modelName(path.value());
+            const auto cached = physics.captureActorRagdollSnapshot(actor, baseKey, modelName);
+            ASSERT_TRUE(combat.syncActorRagdoll(actorKey, std::nullopt, cached));
+            auto retainedPose = cached;
+            retainedPose.mBodies[0].mPosition = {777, 888, 999};
+            ASSERT_TRUE(combat.syncActorRagdoll(retainedKey, std::nullopt, retainedPose));
+            auto projectedPlayer = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            projectedPlayer.mId = ESM::RefId::stringRefId("Player");
+            projectedPlayer.mModel = "physical-owner.osgt";
+            world.getPlayerPtr().get<ESM::NPC>()->mBase = store.insert(projectedPlayer);
+            // Headless capsule construction has no camera/view-dependent race
+            // scaling. Bind its ready cell after admission, before saving.
+            world.getPlayer().setCell(nullptr);
+            const auto playerAdmission = world.getPlayerPtr();
+            physics.addActor(playerAdmission, path);
+            world.getPlayer().setCell(&residentCell);
+            const auto playerPtr = world.getPlayerPtr();
+            physics.updatePtr(playerAdmission, playerPtr);
+            internalFilter.mSystemGroup = 11;
+            physics.addActorRagdoll(playerPtr, graph, 1, poses,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
+            const auto playerKey = ESM::FormKey::dynamic("player", 1);
+            const auto playerCached = physics.captureActorRagdollSnapshot(playerPtr, values.mBase, modelName);
+            ASSERT_TRUE(combat.syncActorRagdoll(playerKey, std::nullopt, playerCached));
+            const std::array<MWPhysics::NativeRagdollSnapshotBinding, 2> bindings{{
+                {actor, actorKey, baseKey, modelName},
+                {playerPtr, playerKey, values.mBase, modelName}}};
+            auto current = physics.captureActorRagdollSnapshots(bindings);
+            current.mActors.at(actorKey).mBodies[0].mPosition = {99, 88, 77};
+            current.mActors.at(actorKey).mBodies[0].mNativePackedVelocity->mLinear[3] = 8;
+            current.mActors.at(playerKey).mBodies[0].mPosition = {66, 55, 44};
+            current.mActors.at(playerKey).mBodies[0].mNativePackedVelocity->mAngular[3] = -0.f;
+            current.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+            for (auto& [key, pose] : current.mActors)
+            {
+                auto& authored = pose.mNativeControllers->mBlends[0].mState;
+                authored.mClock = {10, 11, 1};
+                authored.mCachedGains = {-0.f, -2};
+                authored.mCursor = 0xffffffffu; // A single key retains the opaque cursor.
+                authored.mSetupState = 0xffffffffu;
+                ESM4::PhysicalVelocityControllerState velocity;
+                velocity.mTiming = {0xd, 1, 0, 0, 4};
+                velocity.mClock = {10, 11, 1};
+                velocity.mForceVector = {1, 2, 3, 8};
+                velocity.mFrameDelta = .1f;
+                pose.mNativeControllers->mVelocities.push_back({8, 8, false, velocity});
+                pose.mNativeBlends->at(0).mRequestedMotion = 1;
+                pose.mNativeBlends->at(0).mHierarchyGain = .25f;
+                pose.mNativeBlends->at(0).mVelocityGain = .75f;
+            }
+            physics.restoreActorRagdollSnapshots(current, bindings);
+            const auto saved = world.captureOblivionRuntimeState();
+            auto moved = current;
+            for (auto& [key, pose] : moved.mActors)
+            {
+                pose.mBodies[0].mPosition = {123, 234, 345};
+                pose.mBodies[0].mNativePackedVelocity->mLinear[3] = 99;
+                pose.mNativeControllers->mBlends[0].mState.mClock = {20, 21, 2};
+                pose.mNativeControllers->mVelocities.clear();
+                pose.mNativeBlends->at(0).mRequestedMotion = 8;
+            }
+            moved.mTimeCache = ESM4::PhysicalBlendTimeCache{1, 8, 0, 2, 4};
+            physics.restoreActorRagdollSnapshots(moved, bindings);
+            readNativeSnapshot(fixture, saved);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            EXPECT_EQ(physics.captureActorRagdollSnapshots(bindings), current);
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNativeActorRagdolls, saved.mNativeActorRagdolls);
+            EXPECT_EQ(combat.actorRagdoll(retainedKey), retainedPose);
+            // Use actual scheduler owner order so the last body's bad binding
+            // is reached only after any earlier owner is staged.
+            const auto owners = physics.actorRagdollOwners();
+            ASSERT_EQ(owners.size(), 2u);
+            const auto lateKey = owners.back() == world.getPlayerPtr() ? playerKey
+                : owners.back().getCellRef().getFormKey();
+            auto otherCell = cell;
+            otherCell.mId = ESM::RefId(ESM::FormId{2, 0});
+            otherCell.mFormKey = ESM::FormKey::content("headless.esm", 2);
+            otherCell.mEditorId = "OtherPhysicalRestoreCell";
+            store.getWritable<ESM4::Cell>().insertStatic(otherCell, otherCell.mFormKey);
+            for (unsigned field = 0; field < 9; ++field)
+            {
+                const auto previous = physics.captureActorRagdollSnapshots(bindings);
+                const auto previousClock = world.getTimeStamp();
+                const auto previousValues = *combat.findActorValues(playerKey);
+                const auto previousPosition = actor.getRefData().getPosition();
+                const auto previousScale = actor.getCellRef().getScale();
+                const auto previousEnabled = actor.getRefData().isEnabled();
+                auto bad = saved;
+                for (auto& actorValues : bad.mNativeActorValues)
+                    if (actorValues.mActor == playerKey)
+                        actorValues.mValues[8].mModifiers[1] = -7;
+                bad.mClock.mHour = 9;
+                bad.mNativePhysicalBlendTimeCache = ESM4::PhysicalBlendTimeCache{3, 8, 0, 2, 123};
+                for (auto& [key, pose] : bad.mNativeActorRagdolls)
+                    pose.mBodies[0].mPosition = {999, 999, 999};
+                auto& late = bad.mNativeActorRagdolls.at(lateKey);
+                if (field == 0) late.mAssetHash.back() = 'b';
+                if (field == 1) late.mNativeControllers->mBlends[0].mRecord = 79;
+                if (field == 2) late.mModel = "meshes/other.osgt";
+                auto npcReference = std::find_if(bad.mReferences.begin(), bad.mReferences.end(),
+                    [&](const auto& ref) { return ref.mKey == actorKey; });
+                ASSERT_NE(npcReference, bad.mReferences.end());
+                if (field == 3) npcReference->mCustomState["scale"] = 2.;
+                if (field == 4) npcReference->mEnabled = false;
+                if (field == 5) npcReference->mCell = otherCell.mFormKey;
+                if (field == 6) bad.mPlayer.mCell = otherCell.mFormKey;
+                if (field == 7) bad.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x812);
+                if (field == 8) bad.mPlayer.mFemale = !bad.mPlayer.mFemale;
+                ASSERT_NO_THROW(bad.validate());
+                readNativeSnapshot(fixture, bad);
+                EXPECT_ANY_THROW(world.applyOblivionRuntimeState());
+                EXPECT_EQ(physics.captureActorRagdollSnapshots(bindings), previous);
+                EXPECT_EQ(world.getTimeStamp(), previousClock);
+                EXPECT_EQ(*combat.findActorValues(playerKey), previousValues);
+                EXPECT_EQ(actor.getRefData().getPosition(), previousPosition);
+                EXPECT_EQ(actor.getCellRef().getScale(), previousScale);
+                EXPECT_EQ(actor.getRefData().isEnabled(), previousEnabled);
+                readNativeSnapshot(fixture, saved);
+                ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            }
+        }
+    }
+
     TEST(OblivionWorldTest, WorldSaveRefreshesLivePhysicalOwnersAndPreservesRetainedPoses)
     {
         struct RestoreThreads

@@ -18726,3 +18726,71 @@ unloaded-cell continuation, winning morphology/INI producers, renderer-global
 Ni cache/traversal, raw pose/time/activation/contact continuation, retained
 numerical failures, normal-input runtime acceptance and pending S5-S14 remain
 required.
+
+
+### Checkpoint242: stage loaded physical projections before World restore publication
+
+World capture and restore share resolveNativePhysicalBindings with a noncopyable
+owning context: reserved strings back borrowed model views, and vector moves
+retain that backing storage through the call. It resolves current native bases/
+models, Player identity and saved pose/value/life ownership without adopting a
+stale label. Capture retains its prior complete asset/body validation and local
+map overlay. World apply uses detached preparedCombat with the incoming saved
+state and collects only the currently owned physical actors into a group; other
+saved poses remain in the complete restored native authority.
+
+After existing World preflight and before global/player/reference publication,
+World prepares the complete loaded group through checkpoint241. Winning-asset
+hash, body identities, authored controller identities and every controller/body/
+cache buffer are resolved without physical publication. At the end of accepted
+World/script/AI/combat installation it commits that group, including a present
+shared clock. Zero-owner and legacy absent-clock paths preserve the preceding
+clock contract. Native authority and the physical projection no longer resume
+with different loaded pose/controller snapshots merely because save used a
+fresher physics capture than the service cache.
+
+Existing live graphs cannot be migrated by bare CellStore/reference metadata
+mutation. Preflight requires the loaded Player's current cell/race/gender and
+stored Player model to match the pending context; loaded NPCs require the same
+resident binding/cell, an enabled nondeleted saved reference and unchanged
+explicit reference scale. Changes requiring scene unload/readmission reject
+before World publication. This prevents retaining an old physical pointer or
+geometry across a metadata move; it does not implement automatic readmission.
+Normal scene/lifecycle reconstruction and unowned saved actor admission remain
+required for full gameplay/save-load acceptance.
+
+world-physical-owner-restore-baseline-01 executes the new actual World test
+through all worker0/1/2 loops without setup exceptions. It fails on missing body/
+authored/generated controller restoration and accepted late hash/controller/
+model mismatches that change World time and physical cache. The fixture owns
+native NPC and projected Player ragdolls plus a retained resident/nonphysical
+NPC pose. The projected Player's managed model is installed under the actual
+Player record so normal World metadata restore retains that model; it is still
+an editable synthetic fixture, not a stock asset/runtime oracle.
+
+The test saves changed positions, native packed lanes (including negative-zero
+angular W), requested blend/gains, authored clocks/cached gains/opaque setup and
+single-key cursor, generated velocity attachment/order/clock/force/delta and the
+shared clock, then changes the live projections and applies T4ST. It compares the
+complete physical group and World resave and verifies the other pose survives.
+Late mismatch uses the actual scheduler owner's last binding, not canonical map
+ordering. Added six readmission cases: NPC scale/disabled/cell, Player cell/race/
+gender, along with the three hash/controller/model cases. Each incoming state
+also requests changed time/cache/pose and native Player damage; all nine failures
+retain physical group, World time, native values, reference position/scale/
+enabled state. Saved restoration is repeated between cases.
+
+Full normal/sanitized-01 each passes942 cases. Added the readmission coverage;
+normal/sanitized-02 each also passes942 but retains a new test variable-shadow
+warning. Renamed only that loop variable after both runs terminated. Final full
+world-physical-owner-restore-normal-03 and sanitized-03 each passes942 with exact
+inventory, zero failures/skips and no compiler warnings. ASan leak checks
+disabled. Tested fingerprint `80779b9297cc4e8a3f390d577c20b087c10fb2350fc17507f9314f8ae3b92157`. No lower native arithmetic or codec changed;
+unchanged component/Python/original-instruction comparisons are not repeated.
+
+No M15 stage closes. This restores already admitted physical graphs in a
+compatible existing context, not automatic body creation, scene readmission,
+reaction/update/end/getup or renderer pose publication. True unloaded-cell and
+fresh-process admission, original initial morphology/INI producers, full Ni
+traversal/cache, raw pose/time/activation/contact continuation, retained numerical
+failures, normal-input gameplay acceptance and pending S5-S14 remain required.

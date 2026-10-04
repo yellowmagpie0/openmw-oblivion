@@ -986,6 +986,57 @@ namespace MWWorld
         }
     }
 
+    namespace
+    {
+        struct NativePhysicalBindings
+        {
+            std::vector<std::string> mModels;
+            std::vector<MWPhysics::NativeRagdollSnapshotBinding> mBindings;
+            NativePhysicalBindings() = default;
+            NativePhysicalBindings(const NativePhysicalBindings&) = delete;
+            NativePhysicalBindings& operator=(const NativePhysicalBindings&) = delete;
+            NativePhysicalBindings(NativePhysicalBindings&&) noexcept = default;
+            NativePhysicalBindings& operator=(NativePhysicalBindings&&) noexcept = default;
+        };
+
+        NativePhysicalBindings resolveNativePhysicalBindings(MWPhysics::PhysicsSystem& physics,
+            const MWMechanics::OblivionCombatService& service, const ESM4::RuntimeState& state,
+            const Ptr& player, const VFS::Manager* vfs)
+        {
+            const auto owners = physics.actorRagdollOwners();
+            NativePhysicalBindings result;
+            auto& models = result.mModels;
+            auto& bindings = result.mBindings;
+            models.reserve(owners.size());
+            bindings.reserve(owners.size());
+            for (const auto& actor : owners)
+            {
+                const auto key = actor == player ? ESM::FormKey::dynamic("player", 1)
+                                                 : actor.getCellRef().getFormKey();
+                const auto cached = state.mNativeActorRagdolls.find(key);
+                const auto* values = service.findActorValues(key);
+                const auto* life = service.findActorLife(key);
+                const auto base = actor == player && values ? values->mBase : nativeActorBase(actor);
+                if (cached == state.mNativeActorRagdolls.end() || !values || !life || base.isNull()
+                    || values->mBase != base || life->mBase != base || cached->second.mBase != base)
+                    throw std::runtime_error("native physical state has an unbound actor/base/lifecycle owner");
+                // Resolve the current class model, rather than laundering a stale
+                // cached model label through a physical adapter.
+                auto model = actor.getClass().getCorrectedModel(actor);
+                if (actor == player && actor.getType() == ESM::REC_NPC_
+                    && !actor.get<ESM::NPC>()->mBase->mModel.empty())
+                    model = Misc::ResourceHelpers::correctActorModelPath(
+                        Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
+                        vfs);
+                if (model.empty() || model.value() != cached->second.mModel)
+                    throw std::runtime_error("native physical state model does not match the current actor");
+                models.emplace_back(model.value());
+                bindings.push_back({actor, key, base, models.back()});
+            }
+            return result;
+        }
+    }
+
     void World::captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const
     {
         if (!mPhysics)
@@ -998,36 +1049,9 @@ namespace MWWorld
         }
         if (!mOblivionCombat)
             throw std::logic_error("native physical save requires combat authority");
-        const auto owners = mPhysics->actorRagdollOwners();
-        std::vector<std::string> models;
-        std::vector<MWPhysics::NativeRagdollSnapshotBinding> bindings;
-        models.reserve(owners.size());
-        bindings.reserve(owners.size());
-        for (const auto& actor : owners)
-        {
-            const auto key = actor == player ? ESM::FormKey::dynamic("player", 1)
-                                             : actor.getCellRef().getFormKey();
-            const auto cached = state.mNativeActorRagdolls.find(key);
-            const auto* values = mOblivionCombat->findActorValues(key);
-            const auto* life = mOblivionCombat->findActorLife(key);
-            const auto base = actor == player && values ? values->mBase : nativeActorBase(actor);
-            if (cached == state.mNativeActorRagdolls.end() || !values || !life || base.isNull()
-                || values->mBase != base || life->mBase != base || cached->second.mBase != base)
-                throw std::runtime_error("native physical save has an unbound actor/base/lifecycle owner");
-            // Resolve the current class model, rather than laundering a stale
-            // cached model label through a physical adapter.
-            auto model = actor.getClass().getCorrectedModel(actor);
-            if (actor == player && actor.getType() == ESM::REC_NPC_
-                && !actor.get<ESM::NPC>()->mBase->mModel.empty())
-                model = Misc::ResourceHelpers::correctActorModelPath(
-                    Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
-                    mResourceSystem->getVFS());
-            if (model.empty() || model.value() != cached->second.mModel)
-                throw std::runtime_error("native physical save model does not match the current actor");
-            models.emplace_back(model.value());
-            bindings.push_back({actor, key, base, models.back()});
-        }
-        const auto physical = mPhysics->captureActorRagdollSnapshots(bindings);
+        const auto bound = resolveNativePhysicalBindings(
+            *mPhysics, *mOblivionCombat, state, player, mResourceSystem->getVFS());
+        const auto physical = mPhysics->captureActorRagdollSnapshots(bound.mBindings);
         // Validate every captured asset/body binding before replacing any local
         // cached projection. Unloaded/nonphysical actors remain in the map.
         for (const auto& [key, pose] : physical.mActors)
@@ -2389,6 +2413,47 @@ namespace MWWorld
             setVariant(prepared, value);
             preparedGlobals.emplace_back(&target, std::move(prepared));
         }
+        std::unique_ptr<MWPhysics::PreparedNativeRagdollSnapshotRestore> preparedPhysics;
+        if (mPhysics)
+        {
+            NativePhysicalBindings bound;
+            if (preparedCombat)
+                bound = resolveNativePhysicalBindings(
+                    *mPhysics, *preparedCombat, state, getPlayerPtr(), mResourceSystem->getVFS());
+            else if (!mPhysics->actorRagdollOwners().empty())
+                throw std::runtime_error("native physical restore requires combat authority");
+            // Bare reference relocation/scale changes cannot migrate an already
+            // admitted physical graph. Scene unload/readmission owns that path.
+            for (const auto& binding : bound.mBindings)
+            {
+                if (binding.mPtr == getPlayerPtr())
+                {
+                    const auto* current = binding.mPtr.get<ESM::NPC>()->mBase;
+                    const auto* target = mStore.get<ESM::NPC>().find(ESM::RefId::stringRefId("Player"));
+                    const auto race = resolver.toFormId(state.mPlayer.mRace);
+                    if (binding.mPtr.getCell() != &playerCell
+                        || (state.mVersion >= 3 && (!race || ESM::RefId(*race) != current->mRace
+                            || current->isMale() == state.mPlayer.mFemale
+                            || current->mModel.getNormalized() != target->mModel.getNormalized())))
+                        throw std::runtime_error("native physical Player restore requires scene readmission");
+                }
+                else
+                {
+                    const auto reference = std::find_if(preparedReferences.begin(), preparedReferences.end(),
+                        [&](const auto& item) { return item.mState->mKey == binding.mActor; });
+                    if (reference == preparedReferences.end() || reference->mReference != binding.mPtr
+                        || reference->mCell != binding.mPtr.getCell() || !reference->mState->mEnabled
+                        || reference->mState->mDeleted
+                        || (reference->mScale && *reference->mScale != binding.mPtr.getCellRef().getScale()))
+                        throw std::runtime_error("native physical actor restore requires scene readmission");
+                }
+            }
+            MWPhysics::NativeRagdollSnapshotGroup physical;
+            physical.mTimeCache = state.mNativePhysicalBlendTimeCache;
+            for (const auto& binding : bound.mBindings)
+                physical.mActors.emplace(binding.mActor, state.mNativeActorRagdolls.at(binding.mActor));
+            preparedPhysics = mPhysics->prepareActorRagdollSnapshots(physical, bound.mBindings);
+        }
         // Every binding/conversion/allocation above succeeds before changing
         // any global. Preserve FormKey ordering even for editor-ID aliases.
         static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
@@ -2546,11 +2611,11 @@ namespace MWWorld
             const auto residents = mWorldModel.getResidentPtrs();
             mOblivionCombat->installRestoredActorState(std::move(*preparedCombat), residents, mPlayer.get());
         }
-        // Detached native/World validation and service restoration must accept
-        // the save before replacing this scheduler-owned clock. Legacy absence
-        // preserves the current clock, just like the physical group adapter.
-        if (mPhysics && state.mNativePhysicalBlendTimeCache)
-            mPhysics->restoreNativeBlendTimeCache(*state.mNativePhysicalBlendTimeCache);
+        // All physical data was prepared before World publication. Commit the
+        // complete loaded projection and optional shared clock as one group.
+        // Retained unowned poses remain in the restored native authority.
+        if (preparedPhysics)
+            mPhysics->commitActorRagdollSnapshots(*preparedPhysics);
     }
 
     void World::runOblivionScripts(double secondsPassed)
