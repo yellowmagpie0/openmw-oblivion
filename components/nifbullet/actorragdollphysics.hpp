@@ -302,6 +302,28 @@ namespace NifBullet
             std::span<const RagdollNativeBlendState> blends,
             std::span<const RagdollNativeBlendControllerState> blendControllers,
             std::span<const RagdollNativeVelocityControllerState> velocityControllers);
+        class PreparedRestore
+        {
+        public:
+            ~PreparedRestore();
+            PreparedRestore(const PreparedRestore&) = delete;
+            PreparedRestore& operator=(const PreparedRestore&) = delete;
+        private:
+            friend class ActorRagdollPhysics;
+            struct Data;
+            explicit PreparedRestore(std::unique_ptr<Data> data);
+            std::unique_ptr<Data> mData;
+        };
+        // Caller retains the original owner and synchronization barrier until
+        // commit. Stage complete owned buffers without publishing body state.
+        std::unique_ptr<PreparedRestore> prepareRestore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities,
+            std::span<const RagdollNativeMotionRequest> motions,
+            std::span<const RagdollNativeBlendState> blends,
+            std::span<const RagdollNativeBlendControllerState> blendControllers,
+            std::span<const RagdollNativeVelocityControllerState> velocityControllers) const;
+        // Original owner only; successful publication consumes the token.
+        void commitRestore(PreparedRestore& prepared);
         // Native units, including both packed fourth lanes. XYZ comes from the
         // current body; fourth lanes have separate owned binary32 storage.
         std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;

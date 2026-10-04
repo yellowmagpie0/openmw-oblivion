@@ -4465,3 +4465,92 @@ namespace
         }
     }
 }
+
+
+namespace
+{
+    TEST_F(CompleteControllerRestoreTest, PreparedRestoreStagesOwnedBuffersUntilExplicitCommit)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto spatial = actor.capture(); const auto before = spatial;
+        spatial[0].mPose.setOrigin({10, 20, 30});
+        auto packed = actor.captureNativePackedVelocities();
+        packed[0].mVelocities = {{1, 2, 3, 8}, {4, 5, 6, -0.f}};
+        auto motions = actor.captureNativeMotionModes();
+        motions[0].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+        auto blends = actor.captureNativeBlendStates(); blends[0].mRequestedMotion = 0xffffffffu;
+        const auto controls = savedBlendControllers(actor); const auto velocities = savedVelocityControllers();
+        const auto initialControls = actor.captureNativeBlendControllers();
+        auto pending = actor.prepareRestore(spatial, packed, motions, blends, controls, velocities);
+        ASSERT_TRUE(pending);
+        EXPECT_EQ(actor.capture()[0].mPose, before[0].mPose);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(savedBlendControllerWords(actor.captureNativeBlendControllers()[0]), savedBlendControllerWords(initialControls[0]));
+        // The token must own its data; caller buffers can change before commit.
+        spatial[0].mPose.setOrigin({99, 99, 99}); packed[0].mVelocities = {};
+        motions.clear(); blends.clear();
+        actor.commitRestore(*pending);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 0xffffffffu);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, (std::array<float, 4>{1, 2, 3, 8}));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actor.captureNativePackedVelocities()[0].mVelocities.mAngular[3]), 0x80000000u);
+        EXPECT_EQ(savedBlendControllerWords(actor.captureNativeBlendControllers()[0]), savedBlendControllerWords(controls[0]));
+        ASSERT_EQ(actor.captureNativeVelocityControllers().size(), velocities.size());
+        EXPECT_EQ(savedVelocityControllerWords(actor.captureNativeVelocityControllers()[0]), savedVelocityControllerWords(velocities[0]));
+    }
+
+    TEST_F(CompleteControllerRestoreTest, PreparedRestoreRejectsLateSecondOwnerBeforeEitherPublishes)
+    {
+        NifBullet::ActorRagdollPhysics first(mGraph, mWorld, 1, mPoses, 1, -1);
+        NifBullet::ActorRagdollPhysics second(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto spatial = first.capture(); spatial[0].mPose.setOrigin({10, 20, 30});
+        const auto packed = first.captureNativePackedVelocities(); const auto motions = first.captureNativeMotionModes();
+        const auto blends = first.captureNativeBlendStates(); const auto controls = savedBlendControllers(first);
+        const auto velocities = savedVelocityControllers();
+        auto firstReady = first.prepareRestore(spatial, packed, motions, blends, controls, velocities);
+        ASSERT_TRUE(firstReady);
+        const auto beforeFirst = first.capture(); const auto beforeSecond = second.capture();
+        for (unsigned field = 0; field < 6; ++field)
+        {
+            auto badSpatial = spatial; auto badPacked = packed; auto badModes = motions;
+            auto badBlends = blends; auto badControls = controls; auto badVelocities = velocities;
+            switch (field)
+            {
+                case 0: badSpatial.back().mPose.getOrigin().setX(std::numeric_limits<btScalar>::infinity()); break;
+                case 1: badPacked.back().mVelocities.mAngular[3] = std::numeric_limits<float>::quiet_NaN(); break;
+                case 2: badModes.back().mMotion = static_cast<NifBullet::RagdollNativeMotion>(2); break;
+                case 3: badBlends.back().mGains.mVelocity = std::numeric_limits<float>::infinity(); break;
+                case 4: badControls.back().mAttachedNode = 8; break;
+                case 5: badVelocities.back().mState.mFrameDelta = -1; break;
+            }
+            EXPECT_THROW(second.prepareRestore(badSpatial, badPacked, badModes, badBlends, badControls, badVelocities), std::invalid_argument);
+            EXPECT_EQ(first.capture()[0].mPose, beforeFirst[0].mPose);
+            EXPECT_EQ(second.capture()[0].mPose, beforeSecond[0].mPose);
+        }
+        auto secondReady = second.prepareRestore(spatial, packed, motions, blends, controls, velocities);
+        ASSERT_TRUE(secondReady); first.commitRestore(*firstReady); second.commitRestore(*secondReady);
+        EXPECT_EQ(first.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+        EXPECT_EQ(second.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+    }
+
+    TEST_F(CompleteControllerRestoreTest, PreparedRestoreRejectsWrongOwnerAndConsumedToken)
+    {
+        NifBullet::ActorRagdollPhysics first(mGraph, mWorld, 1, mPoses, 1, -1);
+        NifBullet::ActorRagdollPhysics second(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto spatial = first.capture(); spatial[0].mPose.setOrigin({10, 20, 30});
+        const auto packed = first.captureNativePackedVelocities(); const auto motions = first.captureNativeMotionModes();
+        const auto blends = first.captureNativeBlendStates(); const auto controls = savedBlendControllers(first);
+        const auto velocities = savedVelocityControllers();
+        auto pending = first.prepareRestore(spatial, packed, motions, blends, controls, velocities);
+        ASSERT_TRUE(pending);
+        const auto beforeSecond = second.capture();
+        EXPECT_THROW(second.commitRestore(*pending), std::invalid_argument);
+        EXPECT_EQ(second.capture()[0].mPose, beforeSecond[0].mPose);
+        first.commitRestore(*pending);
+        EXPECT_EQ(first.capture()[0].mPose.getOrigin(), btVector3(10, 20, 30));
+        const auto committed = first.capture();
+        EXPECT_THROW(first.commitRestore(*pending), std::invalid_argument);
+        EXPECT_EQ(first.capture()[0].mPose, committed[0].mPose);
+    }
+}

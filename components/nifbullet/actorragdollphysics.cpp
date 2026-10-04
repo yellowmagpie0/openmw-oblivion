@@ -1099,6 +1099,70 @@ namespace NifBullet
         return result;
     }
 
+    struct ActorRagdollPhysics::PreparedRestore::Data
+    {
+        const ActorRagdollPhysics* mOwner = nullptr;
+        const Impl* mOwnerImpl = nullptr;
+        std::vector<RagdollBodyState> mStates;
+        std::vector<RagdollNativePackedVelocityState> mPacked;
+        std::vector<RagdollNativeMotionRequest> mMotions;
+        std::vector<Impl::BlendTarget> mTargets;
+        std::vector<RagdollNativeBlendControllerState> mAuthored;
+        std::vector<RagdollNativeVelocityControllerState> mGenerated;
+    };
+    ActorRagdollPhysics::PreparedRestore::PreparedRestore(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    ActorRagdollPhysics::PreparedRestore::~PreparedRestore() = default;
+
+    std::unique_ptr<ActorRagdollPhysics::PreparedRestore> ActorRagdollPhysics::prepareRestore(
+        std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities,
+        std::span<const RagdollNativeMotionRequest> motions,
+        std::span<const RagdollNativeBlendState> blends,
+        std::span<const RagdollNativeBlendControllerState> blendControllers,
+        std::span<const RagdollNativeVelocityControllerState> velocityControllers) const
+    {
+        auto data = std::make_unique<PreparedRestore::Data>();
+        data->mOwner = this;
+        data->mOwnerImpl = mImpl.get();
+        data->mAuthored = prepareNativeBlendControllerRestore(blendControllers);
+        data->mGenerated = prepareNativeVelocityControllerRestore(velocityControllers);
+        validateNativeBlendStates(blends);
+        data->mTargets = mImpl->mBlendTargets;
+        for (const auto& state : blends)
+        {
+            const auto target = std::find_if(data->mTargets.begin(), data->mTargets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == state.mBodyRecord; });
+            target->mState = state;
+        }
+        require(motions.size() == mImpl->mBodies.size(), "prepared pose motion count");
+        for (std::size_t i = 0; i < motions.size(); ++i)
+        {
+            require(motions[i].mRecord == mImpl->mBodies[i].mRecord, "prepared pose motion identity");
+            require(motions[i].mMotion == RagdollNativeMotion::Dynamic
+                || motions[i].mMotion == RagdollNativeMotion::Keyframed, "invalid prepared pose motion");
+        }
+        data->mStates = preparePackedRestore(states, packedVelocities);
+        data->mPacked.assign(packedVelocities.begin(), packedVelocities.end());
+        data->mMotions.assign(motions.begin(), motions.end());
+        return std::unique_ptr<PreparedRestore>(new PreparedRestore(std::move(data)));
+    }
+
+    void ActorRagdollPhysics::commitRestore(PreparedRestore& prepared)
+    {
+        require(prepared.mData && prepared.mData->mOwner == this
+            && prepared.mData->mOwnerImpl == mImpl.get(), "foreign or consumed prepared pose restore");
+        auto& data = *prepared.mData;
+        for (std::size_t i = 0; i < data.mMotions.size(); ++i)
+            if (mImpl->mBodies[i].mMotion != data.mMotions[i].mMotion)
+                mImpl->setMotion(mImpl->mBodies[i], data.mMotions[i].mMotion);
+        publishPackedRestore(data.mStates, data.mPacked);
+        mImpl->mBlendTargets.swap(data.mTargets);
+        mImpl->mBlendControllers.swap(data.mAuthored);
+        mImpl->mVelocityControllers.swap(data.mGenerated);
+        prepared.mData.reset();
+    }
+
     void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states)
     {
         validateRestore(states);
@@ -1273,13 +1337,8 @@ namespace NifBullet
         std::span<const RagdollNativeBlendControllerState> blendControllers,
         std::span<const RagdollNativeVelocityControllerState> velocityControllers)
     {
-        auto authored = prepareNativeBlendControllerRestore(blendControllers);
-        auto generated = prepareNativeVelocityControllerRestore(velocityControllers);
-        // All controller storage and validation precede the physical handoffs.
-        // Successful publication only swaps these already prepared buffers.
-        restore(states, packedVelocities, motions, blends);
-        mImpl->mBlendControllers.swap(authored);
-        mImpl->mVelocityControllers.swap(generated);
+        auto prepared = prepareRestore(states, packedVelocities, motions, blends, blendControllers, velocityControllers);
+        commitRestore(*prepared);
     }
 
     std::vector<std::uint32_t> ActorRagdollPhysics::synchronizeNativeWorldScenes(

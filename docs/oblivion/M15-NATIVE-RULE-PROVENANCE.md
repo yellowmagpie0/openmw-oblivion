@@ -11780,3 +11780,66 @@ save/lifecycle/reaction/update/getter/frame wiring remain to implement. Renderer
 global Ni traversal/cache, raw COM/time/quaternion/cache, activation/contact
 continuation, retained restart/physical failures, normal-input display acceptance
 and S5-S14 remain required.
+
+
+### Checkpoint235: separate complete owner restore preparation and publication
+
+ActorRagdollPhysics now exposes an opaque noncopyable PreparedRestore token.
+prepareRestore validates and owns the complete body projection, authoritative
+packed velocities, logical modes, blend target metadata and authored/generated
+controller buffers without publishing any physical state. Caller buffer lifetime
+ends at preparation: later edits cannot change the prepared snapshot. It retains
+the original owner/implementation identity. commitRestore rejects a foreign or
+consumed token before mutation, applies changed modes, publishes the prepared
+physical/packed state, swaps the already prepared metadata/controller vectors
+and consumes the token after successful publication. The original owner must
+stay alive and synchronized between preparation and commit; the token does not
+permit use after destruction or a concurrent lifetime change. The existing
+complete six-span restore now prepares and commits through this same path.
+Legacy one/two/three/four-span routes retain their prior behavior.
+
+All owned buffer allocation and validation precedes publication. This allows a
+caller to prepare every actor before changing the first, instead of invoking
+each complete restore sequentially and discovering a bad later snapshot after
+earlier owners changed. The scheduler-wide cache remains a separate authority.
+This lower API alone is not a complete multiowner or World save transaction.
+Actual Impl::setMotion changes mass/flags/activation/inertia in place; it does not
+remove/re-add bodies or allocate owned buffers. Physical publication calls
+updateSingleAabb and therefore the Bullet broadphase. Internal Bullet allocation
+failure was not injected or audited as a no-throw guarantee; no OOM rollback or
+noexcept publication claim is made.
+
+prepared-controller-restore-baseline-01 retains an executed first-test crash:
+after expected no-op restore failures, the new test indexed the empty generated
+controller list. Added a size assertion after the terminal run; no implementation
+change. All three corrected prepared-controller-restore-baseline-02 cases execute
+and fail on missing staging validation/publication and token ownership/consumption.
+Tests then cover untouched pose/mode/controllers after preparation, caller-buffer
+edits before commit, actual prepared pose/packed signed-zero/mode/raw requested
+metadata/controller fields, six late-invalid categories in a second owner while
+neither publishes, successful later publication of both and rejection of a wrong
+owner or already consumed token before changes.
+
+Full prepared-controller-restore-normal/sanitized-01 each passes2,412 component
+tests, exact inventory, zero failures/skips. Tested fingerprint `41002b0fc3c633f6f9a0b9ae7ce3a87cd56f49bfc949cb2e8cd4415f4a91ca6c`.
+ASan leak checks disabled. Unchanged Python codecs and engine forwarding are not
+rerun in this lower owner transaction chunk.
+
+Actual native-prepared-controller-restore-compare-normal/sanitized-01 each passes
+110,592 original196 composed controller outputs through the explicit preparation
+and commit API,1,216,512 exact captured fields. Captured gain/cache/clock/cursor/
+flags/key-count/generated-presence fields and original executable/source/corpus/
+Windows-interlocked boundary are unchanged. Original fixture keys, owned node/
+record mappings, setup0/2/FFFFFFFF, generated head/tail/state, logical Dynamic
+mode and zero packed velocity remain declared software inputs, not new original
+save/getter captures. Shared cache, original next-phase/native-save/World/contact/
+gameplay are excluded. Component archive hashes and comparator commands/sources
+are recorded. Existing complete restore tests also exercise the refactored
+six-span wrapper and its prior60 explicit fresh-owner controller phases.
+
+No M15 stage closes. Next is scheduler/PhysicsSystem coherent multiowner capture
+and restoration with global cache at one worker barrier and lock, followed by
+automatic World lifecycle/save/reaction/update/getter/frame wiring. Renderer-
+global traversal/cache, raw COM/time/quaternion/cache, activation/contact
+continuation, retained physical/restart failures, normal-input display acceptance
+and S5-S14 remain required.
