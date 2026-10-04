@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 33
+CURRENT_VERSION = 34
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -998,7 +998,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         raise RuntimeStateError("TES4 actor ragdolls require version31")
     ragdoll_actors: set[str] = set()
     for entry in ragdolls:
-        if not isinstance(entry, dict) or set(entry) != {"actor", "base", "model", "asset_hash", "bodies"}:
+        fields = {"actor", "base", "model", "asset_hash", "bodies"}
+        if (not isinstance(entry, dict) or not fields <= set(entry)
+                or not set(entry) <= fields | {"native_blends"}):
             raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
         actor, base = entry["actor"], entry["base"]
         native_key(actor)
@@ -1063,6 +1065,25 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             determinant = r[0]*(r[4]*r[8]-r[5]*r[7])-r[1]*(r[3]*r[8]-r[5]*r[6])+r[2]*(r[3]*r[7]-r[4]*r[6])
             if abs(determinant - 1.) > 1e-4:
                 raise RuntimeStateError("Improper TES4 ragdoll rotation")
+        if "native_blends" in entry:
+            blends = check_collection(entry["native_blends"], "native ragdoll blends")
+            if (version < 34 or len(blends) > len(bodies)
+                    or "native_packed_velocity" not in bodies[0] or "native_motion" not in bodies[0]):
+                raise RuntimeStateError("Invalid TES4 native blend version or incomplete body snapshot")
+            body_records = {body["record"] for body in bodies}
+            previous_blend = -1
+            for blend in blends:
+                if not isinstance(blend, dict) or set(blend) != {
+                        "body_record", "collision_flags", "requested_motion", "hierarchy_gain", "velocity_gain"}:
+                    raise RuntimeStateError("Invalid TES4 native blend snapshot")
+                record, flags, request = blend["body_record"], blend["collision_flags"], blend["requested_motion"]
+                if (type(record) is not int or record not in body_records or record <= previous_blend
+                        or type(flags) is not int or not 0 <= flags <= 0xffff
+                        or type(request) is not int or not 0 <= request <= 0xffffffff):
+                    raise RuntimeStateError("Invalid TES4 native blend identity, order or flags/request")
+                previous_blend = record
+                native_float(blend["hierarchy_gain"])
+                native_float(blend["velocity_gain"])
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -1634,6 +1655,18 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     if present:
                         body["native_motion"] = reader.unpack("<B")
                 entry["bodies"].append(body)
+            if version >= 34:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 native blend presence flag")
+                if present:
+                    count = reader.count()
+                    if count > len(entry["bodies"]):
+                        raise RuntimeStateError("Excessive TES4 native blend count")
+                    entry["native_blends"] = [{"body_record": reader.unpack("<I"),
+                        "collision_flags": reader.unpack("<H"), "requested_motion": reader.unpack("<I"),
+                        "hierarchy_gain": reader.unpack("<f"), "velocity_gain": reader.unpack("<f")}
+                        for _ in range(count)]
             result["native_actor_ragdolls"].append(entry)
     _validate_basic_state(result)
     if reader.offset != len(payload):
@@ -1983,6 +2016,16 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<B", int("native_motion" in body))
                     if "native_motion" in body:
                         writer.pack("<B", body["native_motion"])
+            if version >= 34:
+                writer.pack("<B", int("native_blends" in entry))
+                if "native_blends" in entry:
+                    writer.pack("<I", len(entry["native_blends"]))
+                    for blend in entry["native_blends"]:
+                        writer.pack("<I", blend["body_record"])
+                        writer.pack("<H", blend["collision_flags"])
+                        writer.pack("<I", blend["requested_motion"])
+                        writer.pack("<f", blend["hierarchy_gain"])
+                        writer.pack("<f", blend["velocity_gain"])
     return writer.finish()
 
 

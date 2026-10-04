@@ -30,7 +30,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 33;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 34;
 
     struct RuntimeContentIdentity
     {
@@ -339,6 +339,17 @@ namespace ESM4
         friend bool operator==(const RuntimeRagdollBody&, const RuntimeRagdollBody&) = default;
     };
 
+    // v34: stored requests are independent of the current logical body mode.
+    struct RuntimeRagdollBlendState
+    {
+        std::uint32_t mBodyRecord = 0;
+        std::uint16_t mCollisionFlags = 0;
+        std::uint32_t mRequestedMotion = 0;
+        float mHierarchyGain = 0;
+        float mVelocityGain = 0;
+        friend bool operator==(const RuntimeRagdollBlendState&, const RuntimeRagdollBlendState&) = default;
+    };
+
     struct RuntimeActorRagdoll
     {
         ESM::FormKey mBase;
@@ -348,6 +359,9 @@ namespace ESM4
         std::string mAssetHash;
         // Canonical increasing body-record order, independent of hierarchy.
         std::vector<RuntimeRagdollBody> mBodies;
+        // Absent means a legacy snapshot; present empty means no blend targets.
+        // Present entries are the complete target set in increasing body order.
+        std::optional<std::vector<RuntimeRagdollBlendState>> mNativeBlends = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeActorRagdoll&, const RuntimeActorRagdoll&) = default;
     };

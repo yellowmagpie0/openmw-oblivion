@@ -11363,3 +11363,58 @@ controller/order/global clock and raw COM/time/quaternion/cache, native activati
 contacts, automatic World getter/frame/reaction integration, retained physical/
 restart failures and S5-S14 acceptance remain open. Existing-display information
 is pending while implementation continues.
+
+
+### Checkpoint228: version34 complete blend metadata wire boundary
+
+Version34 adds an actor-level optional complete blend-target list after its body
+records. A strict byte presence marker distinguishes absent legacy data from a
+current complete empty list; present lists have a uint32 count and18-byte entries
+(body uint32, flags uint16, opaque request uint32, hierarchy/velocity binary32).
+Versions1-33 preserve their previous layouts and absence. Populated lists reject
+older-version serialization. Entries must be increasing unique known body IDs,
+finite unclamped gains, at most the body count, with complete packed velocities
+and logical body modes. The schema permits a proper subset of bodies because
+not all asset bodies have blend collision targets. Exact winning target-set
+validation belongs to the next adapter/scheduler checkpoint. Arbitrary uint32
+requests remain independent of logical actual modes1/6; all uint16 flag bits and
+signed-zero gains survive binary and canonical JSON output. No archive mode tag,
+controller keys/clocks, native raw motion or World service persistence is invented.
+
+Both blend-save-baseline-01 component tests execute and fail; both
+blend-save-python-baseline-01 Python tests execute and error before implementation.
+Separate C++/Python golden checks construct the version34 suffix byte-for-byte
+from an unchanged version33 payload, includingFFFFFFFF/F123 and negative-zero/
+unclamped gains. Tests cover legacy absence/current empty, proper body subset,
+downgrade, incomplete body state, duplicate/unknown/reversed IDs, finite gains,
+strict markers, excessive counts and every truncation in the metadata extension.
+Python additionally rejects booleans/strings/out-of-range flags and requests,
+invalid list/entry shapes and nonfinite values.
+
+Full blend-save-normal/sanitized-01 each passes2,402 component tests; normal
+passes251 Python tests. The first builds exposed a new local-count shadow
+warning; renamed it to blendCount after terminal runs. Final
+blend-save-normal/sanitized-02 each passes2,402 component tests with exact
+inventories and zero failures/skips, no new compiler warnings. First builds also
+retain preexisting inventory-test missing mOwner initializer warnings. Python
+code/tests were unchanged by the C++ local rename, so unchanged passing Python
+checks were not repeated. ASan leak checks disabled. Tested final source
+fingerprint `b999a39e7dd8c6561e7d19f8058d6a7ac165e5046b0b4a742af87266dbc184a3`.
+
+Actual native-blend-save-wire-compare-normal/sanitized-01 each passes5,760
+complete C++ encode/decode inputs and independent Python decode/reencode byte
+identity:46,080 exact native velocity lanes,5,760 logical modes and23,040 raw
+flag/request/gain fields (74,880 total). The composed input set pairs all216
+original full-caller final flags/requests/vtable mappings and its explicit input
+gains with222 original velocity outputs cyclically. Gains are fixture inputs,
+not post-return getter captures. Original216 source/corpus identity and declared
+Windows/heap/no-World boundary are unchanged;222 original identity is unchanged.
+This is codec interoperability, not a single original save/restart/controller/
+World/contact experiment or gameplay acceptance. Comparer source and binary,
+archive, input corpus and source fingerprint hashes are recorded in each report.
+
+No M15 gate closes. The actual scheduler must still capture/resolve/publish these
+fields; controller/order/shared clocks and raw COM/time/quaternion/cache,
+activation/contact continuation, automatic World/reaction wiring, retained
+physical/restart failures and S5-S14 acceptance remain open. Existing X11 display
+information is pending while implementation continues.

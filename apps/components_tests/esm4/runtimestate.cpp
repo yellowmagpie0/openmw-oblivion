@@ -2524,3 +2524,72 @@ TEST(ESM4RuntimeState, NativeMotionRagdollRejectsMalformedVersionPresenceAndPayl
     bad = payload; bad.back() = 2; // Native getter2 is not logical Dynamic1.
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
 }
+
+
+TEST(ESM4RuntimeState, NativeBlendRagdollVersionThirtyFourWireAndLegacyAbsence)
+{
+    auto state = packedRagdollState(); const auto actor = state.mReferences.front().mKey;
+    auto& pose = state.mNativeActorRagdolls.at(actor);
+    state.mVersion = 33; pose.mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed;
+    const auto legacy = state.serializeBinary();
+    state.mVersion = 34;
+    pose.mNativeBlends = std::vector<ESM4::RuntimeRagdollBlendState>{{12, 0xf123, 0xffffffffu, -0.f, -2.f}};
+    auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 34;
+    const std::vector<std::uint8_t> suffix{1, 1,0,0,0, 12,0,0,0, 0x23,0xf1,
+        0xff,0xff,0xff,0xff, 0,0,0,0x80, 0,0,0,0xc0};
+    expected.insert(expected.end(), suffix.begin(), suffix.end());
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto restored = ESM4::RuntimeState::deserializeBinary(expected);
+    const auto& blend = restored.mNativeActorRagdolls.at(actor).mNativeBlends->front();
+    EXPECT_EQ(blend.mRequestedMotion, 0xffffffffu); EXPECT_EQ(blend.mCollisionFlags, 0xf123);
+    EXPECT_TRUE(std::signbit(blend.mHierarchyGain)); EXPECT_EQ(blend.mVelocityGain, -2.f);
+    EXPECT_EQ(restored.mNativeActorRagdolls, state.mNativeActorRagdolls);
+    EXPECT_EQ(restored.serializeBinary(), expected);
+    EXPECT_NE(restored.canonicalJson().find("\"native_blends\":["), std::string::npos);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorRagdolls.at(actor).mNativeBlends);
+    expected.resize(expected.size() - suffix.size()); expected.push_back(0); pose.mNativeBlends.reset();
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.at(actor).mNativeBlends);
+    pose.mNativeBlends.emplace(); expected.back() = 1; expected.insert(expected.end(), 4, 0);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.at(actor).mNativeBlends->empty());
+    EXPECT_NE(state.canonicalJson().find("\"native_blends\":[]"), std::string::npos);
+    // A complete blend set can be a proper subset of the body set.
+    auto extra = pose.mBodies[0]; extra.mRecord = 24; extra.mNodeRecord = 16; pose.mBodies.push_back(extra);
+    pose.mNativeBlends = std::vector<ESM4::RuntimeRagdollBlendState>{{12, 8, 1, -2, 3}};
+    EXPECT_NO_THROW(state.validate());
+}
+
+TEST(ESM4RuntimeState, NativeBlendRagdollRejectsMalformedVersionPresenceAndPayload)
+{
+    auto state = packedRagdollState(); state.mVersion = 34; const auto actor = state.mReferences.front().mKey;
+    auto& pose = state.mNativeActorRagdolls.at(actor); pose.mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed;
+    pose.mNativeBlends = std::vector<ESM4::RuntimeRagdollBlendState>{{12, 8, 1, -2, 3}};
+    auto invalid = state; invalid.mVersion = 33; EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion.reset();
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state; invalid.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity.reset();
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state; invalid.mNativeActorRagdolls.at(actor).mNativeBlends->front().mBodyRecord = 13;
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state; invalid.mNativeActorRagdolls.at(actor).mNativeBlends->push_back(pose.mNativeBlends->front());
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    for (bool hierarchy : {false, true})
+    {
+        invalid = state; auto& blend = invalid.mNativeActorRagdolls.at(actor).mNativeBlends->front();
+        (hierarchy ? blend.mHierarchyGain : blend.mVelocityGain) = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(invalid.validate(), std::runtime_error);
+    }
+    const auto payload = state.serializeBinary(); ASSERT_GE(payload.size(), 23u);
+    for (std::size_t cut = payload.size() - 23; cut < payload.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({payload.begin(), payload.begin() + cut}), std::runtime_error);
+    auto malformed = payload; malformed[malformed.size() - 23] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(malformed), std::runtime_error);
+    malformed = payload; malformed[malformed.size() - 22] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(malformed), std::runtime_error);
+    // Reverse a valid two-target list without changing its count or payload size.
+    auto extra = pose.mBodies[0]; extra.mRecord = 24; extra.mNodeRecord = 16; pose.mBodies.push_back(extra);
+    pose.mNativeBlends->push_back({24, 0xffff, 6, 1, 0}); EXPECT_NO_THROW(state.validate());
+    std::reverse(pose.mNativeBlends->begin(), pose.mNativeBlends->end());
+    EXPECT_THROW(state.validate(), std::runtime_error);
+}

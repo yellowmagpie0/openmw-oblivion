@@ -602,6 +602,23 @@ namespace ESM4
             if (std::abs(determinant - 1.0) > 1e-4)
                 throw std::runtime_error("Improper TES4 ragdoll rotation");
         }
+        if (mNativeBlends)
+        {
+            if (!mBodies.front().mNativePackedVelocity || !mBodies.front().mNativeMotion
+                || mNativeBlends->size() > mBodies.size())
+                throw std::runtime_error("Incomplete TES4 native blend snapshot");
+            std::optional<std::uint32_t> previousBlend;
+            for (const auto& blend : *mNativeBlends)
+            {
+                const auto body = std::lower_bound(mBodies.begin(), mBodies.end(), blend.mBodyRecord,
+                    [](const RuntimeRagdollBody& value, std::uint32_t record) { return value.mRecord < record; });
+                if ((previousBlend && blend.mBodyRecord <= *previousBlend)
+                    || body == mBodies.end() || body->mRecord != blend.mBodyRecord
+                    || !std::isfinite(blend.mHierarchyGain) || !std::isfinite(blend.mVelocityGain))
+                    throw std::runtime_error("Invalid TES4 native blend identity, order or gain");
+                previousBlend = blend.mBodyRecord;
+            }
+        }
     }
 
     void RuntimeActorLife::validate() const
@@ -860,6 +877,8 @@ namespace ESM4
                 throw std::runtime_error("TES4 packed ragdoll velocities require runtime-state version32");
             if (mVersion < 33 && pose.mBodies.front().mNativeMotion)
                 throw std::runtime_error("TES4 logical ragdoll motion requires runtime-state version33");
+            if (mVersion < 34 && pose.mNativeBlends)
+                throw std::runtime_error("TES4 native blend snapshots require runtime-state version34");
             const auto values = nativeActors.find(actor);
             if (values == nativeActors.end() || !lives.contains(actor) || values->second != pose.mBase)
                 throw std::runtime_error("Dangling or mismatched TES4 ragdoll owner");
@@ -1744,6 +1763,22 @@ namespace ESM4
                             writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
                     }
                 }
+                if (mVersion >= 34)
+                {
+                    writer.integer<std::uint8_t>(pose.mNativeBlends.has_value());
+                    if (pose.mNativeBlends)
+                    {
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mNativeBlends->size()));
+                        for (const auto& blend : *pose.mNativeBlends)
+                        {
+                            writer.integer(blend.mBodyRecord);
+                            writer.integer(blend.mCollisionFlags);
+                            writer.integer(blend.mRequestedMotion);
+                            writer.floating(blend.mHierarchyGain);
+                            writer.floating(blend.mVelocityGain);
+                        }
+                    }
+                }
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -2457,6 +2492,29 @@ namespace ESM4
                             body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
                     }
                     pose.mBodies.push_back(body);
+                }
+                if (result.mVersion >= 34)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 native blend presence flag");
+                    if (present)
+                    {
+                        const auto blendCount = reader.count();
+                        if (blendCount > pose.mBodies.size())
+                            throw std::runtime_error("Excessive TES4 native blend count");
+                        pose.mNativeBlends.emplace();
+                        for (std::uint32_t j = 0; j < blendCount; ++j)
+                        {
+                            RuntimeRagdollBlendState blend;
+                            blend.mBodyRecord = reader.integer<std::uint32_t>();
+                            blend.mCollisionFlags = reader.integer<std::uint16_t>();
+                            blend.mRequestedMotion = reader.integer<std::uint32_t>();
+                            blend.mHierarchyGain = reader.float32();
+                            blend.mVelocityGain = reader.float32();
+                            pose.mNativeBlends->push_back(blend);
+                        }
+                    }
                 }
                 if (!result.mNativeActorRagdolls.emplace(std::move(actor), std::move(pose)).second)
                     throw std::runtime_error("Duplicate TES4 ragdoll owner");
@@ -3194,7 +3252,29 @@ namespace ESM4
                         stream << ",\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion);
                     stream << '}';
                 }
-                stream << "]}";
+                stream << ']';
+                if (pose.mNativeBlends)
+                {
+                    stream << ",\"native_blends\":[";
+                    for (std::size_t i = 0; i < pose.mNativeBlends->size(); ++i)
+                    {
+                        if (i) stream << ',';
+                        const auto& blend = (*pose.mNativeBlends)[i];
+                        const auto scalar = [&](float value) {
+                            if (value == 0 && std::signbit(value)) stream << "-0.0";
+                            else stream << std::setprecision(17) << value;
+                        };
+                        stream << "{\"body_record\":" << blend.mBodyRecord
+                            << ",\"collision_flags\":" << blend.mCollisionFlags
+                            << ",\"requested_motion\":" << blend.mRequestedMotion
+                            << ",\"hierarchy_gain\":";
+                        scalar(blend.mHierarchyGain);
+                        stream << ",\"velocity_gain\":"; scalar(blend.mVelocityGain);
+                        stream << '}';
+                    }
+                    stream << ']';
+                }
+                stream << '}';
             }
             stream << ']';
         }
