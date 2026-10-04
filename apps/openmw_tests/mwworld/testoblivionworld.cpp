@@ -651,6 +651,14 @@ namespace
             auto observed = physics.captureActorRagdollNativePackedVelocities(ptr);
             EXPECT_TRUE(std::signbit(observed[0].mVelocities.mLinear[3]));
             EXPECT_EQ(observed[0].mVelocities.mAngular, packed[0].mVelocities.mAngular);
+            const std::array packedDynamic{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Dynamic}};
+            physics.setActorRagdollNativeMotionModes(ptr, packedDynamic);
+            const std::array<NifBullet::RagdollNativeForceRequest, 1> packedForce{{{12, {}, .25f, 8.f}}};
+            physics.applyActorRagdollNativeForces(ptr, packedForce);
+            observed = physics.captureActorRagdollNativePackedVelocities(ptr);
+            EXPECT_EQ(observed[0].mVelocities.mLinear[3], 1.f);
+            EXPECT_EQ(observed[0].mVelocities.mAngular[3], 8.f);
+            physics.restoreActorRagdollNativePackedVelocities(ptr, packed);
             EXPECT_THROW(physics.captureActorRagdollNativePackedVelocities(previous), std::invalid_argument);
             EXPECT_THROW(physics.restoreActorRagdollNativePackedVelocities(previous, packed), std::invalid_argument);
             auto badPacked = packed; badPacked[0].mVelocities.mAngular[3] = std::numeric_limits<float>::quiet_NaN();

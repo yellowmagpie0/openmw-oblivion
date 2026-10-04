@@ -3890,3 +3890,89 @@ namespace
         world.unbindNativeSceneOwner(&second);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, PackedNativeForcePublishesFourthLaneAndRejectsLateInvalidBeforeMutation)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        auto state = actor.captureNativePackedVelocities();
+        state[0].mVelocities = {{1, 2, 3, 4}, {5, 6, 7, 8}};
+        actor.restoreNativePackedVelocities(state);
+        const auto pose = actor.capture()[0].mPose;
+        const std::array<NifBullet::RagdollNativeForceRequest, 1> force{{{12, {2, 0, 0}, .25f, 8.f}}};
+        actor.applyNativeForces(force);
+        state = actor.captureNativePackedVelocities();
+        EXPECT_EQ(state[0].mVelocities.mLinear[3], 5.f);
+        EXPECT_EQ(state[0].mVelocities.mLinear[0], 1.25f);
+        EXPECT_EQ(state[0].mVelocities.mAngular[3], 8.f);
+        EXPECT_EQ(actor.capture()[0].mPose, pose);
+        const auto saved = state;
+        const std::array<NifBullet::RagdollNativeForceRequest, 2> invalid{{
+            force[0], {24, {}, .25f, std::numeric_limits<float>::quiet_NaN()}}};
+        EXPECT_THROW(actor.applyNativeForces(invalid), std::invalid_argument);
+        state = actor.captureNativePackedVelocities();
+        EXPECT_EQ(state[0].mVelocities.mLinear, saved[0].mVelocities.mLinear);
+        const std::array modes{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(modes);
+        auto unused = force; unused[0].mFrameSeconds = unused[0].mForceW = std::numeric_limits<float>::quiet_NaN();
+        unused[0].mForce.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_NO_THROW(actor.applyNativeForces(unused));
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, saved[0].mVelocities.mLinear);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PackedVelocityControllerForceRetainsFourthSourceAndBodyLanes)
+    {
+        mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, 0.f, 1.f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        auto bodies = actor.captureNativePackedVelocities(); bodies[0].mVelocities.mLinear[3] = 4.f;
+        actor.restoreNativePackedVelocities(bodies);
+        const std::array<NifBullet::RagdollNativeVelocitySetupRequest, 1> setup{{{8, {0, 0, 0, 8}, 1.f}}};
+        actor.prepareNativeVelocityControllers(setup);
+        auto controllers = actor.captureNativeVelocityControllers(); controllers[0].mState.mForceVector = {0, 0, 0, 8};
+        actor.restoreNativeVelocityControllers(controllers);
+        const std::array order{NifBullet::RagdollNativeControllerReference{NifBullet::RagdollNativeControllerKind::Velocity, 8}};
+        ESM4::PhysicalBlendTimeCache cache;
+        actor.advanceNativePhysicalControllers(order, 10.f, cache);
+        // Original force case4483: frame .016, inverse mass .5, forceW800,
+        // currentW4. Controller's original force producer multiplies W by100.
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear[3], 10.399999618530273f);
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState.mFrameDelta, .016f);
+    }
+}
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, PackedVelocityControllerForcesAccumulateSequentiallyOnSharedTarget)
+    {
+        mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, 0.f, 1.f};
+        addHinge(); mGraph.mBodies[1].mNodeRecord = 16; mGraph.mBodies[1].mBlend->mRecord = 31;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        auto bodies = actor.captureNativePackedVelocities(); bodies[0].mVelocities.mLinear[3] = 4.f;
+        actor.restoreNativePackedVelocities(bodies);
+        const std::array<NifBullet::RagdollNativeVelocitySetupRequest, 2> setup{{
+            {8, {0, 0, 0, 8}, 1.f}, {16, {0, 0, 0, 8}, 1.f}}};
+        actor.prepareNativeVelocityControllers(setup);
+        auto controllers = actor.captureNativeVelocityControllers();
+        for (auto& controller : controllers)
+        {
+            controller.mTargetNode = 8;
+            controller.mState.mForceVector = {0, 0, 0, 8};
+        }
+        actor.restoreNativeVelocityControllers(controllers);
+        const std::array<NifBullet::RagdollNativeControllerReference, 2> order{{
+            {NifBullet::RagdollNativeControllerKind::Velocity, 8},
+            {NifBullet::RagdollNativeControllerKind::Velocity, 16}}};
+        ESM4::PhysicalBlendTimeCache cache;
+        actor.advanceNativePhysicalControllers(order, 10.f, cache);
+        bodies = actor.captureNativePackedVelocities();
+        // Original sequential force case48, second call: preserve the first
+        // rounded update as the next current value, not the original snapshot.
+        EXPECT_EQ(bodies[0].mVelocities.mLinear[3], 16.799999237060547f);
+        EXPECT_EQ(bodies[1].mVelocities.mLinear[3], 0.f);
+        EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+    }
+}

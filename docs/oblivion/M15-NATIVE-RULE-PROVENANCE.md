@@ -10961,8 +10961,8 @@ The hook retains218's atomic/no-reentry contract while the scheduler lock is hel
 
 NativeDynamicsWorld now supports one scene-owner binding. Scheduler acquires it
 through a RAII object before starting workers; destruction clears it after worker
-shutdown and ragdoll removal. A failed later construction also releases the RAII
-binding. Null/duplicate/ambiguous acquisition rejects; mismatched release cannot
+shutdown and ragdoll removal. Normal shutdown is verified; thread-start/allocation failure paths have not
+been exercised by these tests. Null/duplicate/ambiguous acquisition rejects; mismatched release cannot
 clear another owner. Ordinary borrowed Bullet worlds have no native binding and
 therefore no World-scene authority through this public operation. This is the
 engine ownership translation of the original backreference guard, not an
@@ -11000,3 +11000,57 @@ Activation is explicitly suppressed; this is input to221, not current force-owne
 integration evidence. No M15 stage closes. Continue packed force/damping/save,
 collision-frame getter/ordering integration and automatic World reactions,
 then complete the retained physical/runtime and all S5-S14 acceptance gates.
+
+
+### Checkpoint221: packed native force and controller-force publication
+
+Extended sparse force requests with an explicitly supplied fourth force lane
+(default0 preserves existing spatial callers). Dynamic force staging now reads
+owned fourth linear velocity, passes all four lanes through205's native force
+primitive and publishes the staged fourth result with XYZ. KEY ignores unused
+force/time inputs and retains all lanes. Shared-target controller forces read the
+preceding staged fourth update, preserving sequential binary32 stores. The owned
+velocity-controller phase now carries its existing four-lane force intent through
+the body request; it previously dropped W. Angular lanes, pose/modes and force
+accumulation remain unchanged. Late used-invalid requests reject before any
+body/activation/controller/cache publication.
+
+Two initial tests fail baseline02 after baseline01's compile failure from an
+incorrect test field name (`mVector`, corrected to existing `mForceVector`). Added
+a shared-target sequential test; baseline03 fails all3. Actual original comparison
+baseline fails10,208/48,000 cases, each exclusively the owned fourth linear lane.
+No pure or spatial field mismatch. Final tests cover direct fourth-lane force,
+late invalid W rollback, KEY unused-invalid inputs, controller source W×100 and
+sequential shared-target updates. Public fixture for0/1/2 workers also applies a
+nonzero fourth force through PhysicsSystem and captures its result.
+
+Original48,000-case source/corpus is recorded in220. Final actual production
+normal/sanitized packed-body-force-compare-01 each passes48,000 pure and43,200
+owned positive-mass/KEY cases,412,800 exact bit-pattern checks, no mismatch.
+Dynamic inverse0 remains4,800 pure-only cases because positive-mass owner
+admission cannot represent that factory domain. Neither tolerances nor inputs
+were changed to obtain these passes. Full normal/sanitized packed-force-01 each
+passes2,386 components and899 engine, exact inventories, zero failed/skipped
+cases and no build warning. ASan leaks disabled; Python unchanged. Tested source
+fingerprint `91dc81ab14b613d32a5c95283269957ac91ac865d29d30e2978bfdef24ba7362`.
+
+Additional original sequential-packed-force-oracle-01 executes300 fixtures/900
+full5377B0 calls (three consecutive Dynamic/KEY force calls), no stubs, explicit
+inverse mass.5 and both x87 words. Source SHA256
+`720c87ff8c217a117b44eefc789ca3ea7259bfa38d523431f0c304eed6de01f2`;
+corpus `f1bc867944361bdc8657dead844d209b6622682db53d077ce7be0fef149b6353`.
+Fixture48 independently supplies10.399999618530273 then16.799999237060547 for
+frame.016/forceW800/currentW4; the single-controller and shared-target tests use
+those captures. This raw sequential corpus is not a complete native linked-list
+controller/World-step probe. Earlier204/208 controller traversal/source evidence
+and new owned tests cover the joined controller path at their declared scopes.
+S4 evidence: packed-force-baseline-01/02/03,normal/sanitized-01;
+native-packed-body-force-oracle-01,compare-normal-baseline,normal/sanitized-01;
+native-sequential-packed-force-oracle-01. Activation remains suppressed in
+original arithmetic captures; native islands/contact acceptance is still open.
+
+Clarified220's binding lifetime report: normal shutdown/worker variants are
+verified; thread-start/allocation failure paths have not been exercised. No M15
+stage closes. Packed dynamic damping/caps, full raw motion/controller persistence,
+automatic collision-frame getter/ordering and World reaction integration, prior
+physical/runtime failures and S5-S14 acceptance remain open.

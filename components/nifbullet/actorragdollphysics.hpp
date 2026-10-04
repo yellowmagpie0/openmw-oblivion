@@ -162,6 +162,7 @@ namespace NifBullet
         std::uint32_t mRecord;
         osg::Vec3f mForce;
         float mFrameSeconds;
+        float mForceW = 0.f;
     };
 
     struct RagdollNativeBlendUpdate

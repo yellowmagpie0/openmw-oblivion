@@ -1672,7 +1672,8 @@ namespace NifBullet
                 cache = update.mTimeCache;
                 if (update.mForce)
                     forces.push_back({body->mRecord,
-                        {(*update.mForce)[0], (*update.mForce)[1], (*update.mForce)[2]}, update.mController.mFrameDelta});
+                        {(*update.mForce)[0], (*update.mForce)[1], (*update.mForce)[2]}, update.mController.mFrameDelta,
+                        (*update.mForce)[3]});
             }
         }
         // Force preparation validates every used body/result before publishing
@@ -1962,6 +1963,7 @@ namespace NifBullet
         {
             Impl::Body* mOwned;
             btVector3 mLinear;
+            float mLinearW;
         };
         std::vector<Pending> pending;
         pending.reserve(requests.size());
@@ -1976,6 +1978,7 @@ namespace NifBullet
             const auto prior = std::find_if(pending.rbegin(), pending.rend(),
                 [&](const auto& value) { return value.mOwned == &*owned; });
             auto linear = prior == pending.rend() ? owned->mBody->getLinearVelocity() : prior->mLinear;
+            float linearW = prior == pending.rend() ? owned->mNativeLinearW : prior->mLinearW;
             if (owned->mMotion == RagdollNativeMotion::Dynamic)
             {
                 std::array<float, 4> current{}, force{};
@@ -1984,19 +1987,25 @@ namespace NifBullet
                     current[axis] = float(linear[axis] / mImpl->mLengthScale);
                     force[axis] = request.mForce[axis];
                 }
+                current[3] = linearW;
+                force[3] = request.mForceW;
                 const auto output = ragdollNativeLinearVelocityAfterForce(current,
                     ragdollNativeInverseMass(float(owned->mDynamicMass)), request.mFrameSeconds, force);
                 for (unsigned axis = 0; axis < 3; ++axis)
                     linear[axis] = btScalar(output[axis]) * mImpl->mLengthScale;
+                linearW = output[3];
                 require(finite(linear), "native force exceeds world velocity domain");
             }
-            pending.push_back({&*owned, linear});
+            pending.push_back({&*owned, linear, linearW});
         }
         for (const auto& next : pending)
         {
             mImpl->activateGroup(next.mOwned->mActivationGroup);
             if (next.mOwned->mMotion == RagdollNativeMotion::Dynamic)
+            {
                 next.mOwned->mBody->setLinearVelocity(next.mLinear);
+                next.mOwned->mNativeLinearW = next.mLinearW;
+            }
         }
     }
 
