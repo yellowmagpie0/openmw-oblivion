@@ -531,6 +531,70 @@ namespace
             EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr)[0].mMotion,
                 NifBullet::RagdollNativeMotion::Dynamic);
             EXPECT_TRUE(capsule->isCollisionSuspended());
+            const std::array<NifBullet::RagdollNativeVelocitySetupRequest, 1> velocitySetup{{{8, {1, 0, 0, 0}, .25f}}};
+            const std::array<std::uint32_t, 1> physicalNodes{8};
+            const std::array<NifBullet::RagdollNativeControllerReference, 2> expectedOrder{{
+                {NifBullet::RagdollNativeControllerKind::Velocity, 8}, {NifBullet::RagdollNativeControllerKind::Blend, 78}}};
+            const std::array<NifBullet::RagdollNativeForceRequest, 1> directForce{{{12, {2, 0, 0}, .25f}}};
+            EXPECT_THROW(physics.prepareActorRagdollVelocityControllers(previous, velocitySetup), std::invalid_argument);
+            EXPECT_THROW(physics.captureActorRagdollVelocityControllers(previous), std::invalid_argument);
+            EXPECT_THROW(physics.restoreActorRagdollVelocityControllers(previous, {}), std::invalid_argument);
+            EXPECT_THROW(physics.captureActorRagdollControllerOrder(previous, physicalNodes), std::invalid_argument);
+            EXPECT_THROW(physics.advanceActorRagdollPhysicalControllers(previous, expectedOrder, 3.f), std::invalid_argument);
+            EXPECT_THROW(physics.applyActorRagdollNativeForces(previous, directForce), std::invalid_argument);
+            const std::array<NifBullet::RagdollNativeVelocitySetupRequest, 2> badVelocitySetup{{
+                {8, {1, 0, 0, 0}, .25f}, {999, {}, .25f}}};
+            EXPECT_THROW(physics.prepareActorRagdollVelocityControllers(ptr, badVelocitySetup), std::invalid_argument);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr).empty());
+            const auto beforeVelocityCache = physics.captureNativeBlendTimeCache();
+            physics.prepareActorRagdollVelocityControllers(ptr, velocitySetup);
+            const auto velocities = physics.captureActorRagdollVelocityControllers(ptr);
+            ASSERT_EQ(velocities.size(), 1u);
+            EXPECT_EQ(velocities[0].mTargetNode, 8u);
+            EXPECT_EQ(velocities[0].mState.mForceVector, (std::array<float, 4>{2, 0, 0, 0}));
+            EXPECT_EQ(physics.captureActorRagdollControllerOrder(ptr, physicalNodes),
+                (std::vector<NifBullet::RagdollNativeControllerReference>(expectedOrder.begin(), expectedOrder.end())));
+            EXPECT_EQ(physics.captureNativeBlendTimeCache().mCycle, beforeVelocityCache.mCycle);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache().mKeyTime, beforeVelocityCache.mKeyTime);
+            auto redirected = velocities; redirected[0].mTargetNode.reset();
+            redirected[0].mState.mClock.mElapsed = 7.f; redirected[0].mState.mFrameDelta = 99.f;
+            physics.restoreActorRagdollVelocityControllers(ptr, redirected);
+            physics.prepareActorRagdollVelocityControllers(ptr, velocitySetup);
+            const auto reused = physics.captureActorRagdollVelocityControllers(ptr)[0];
+            EXPECT_FALSE(reused.mTargetNode);
+            EXPECT_EQ(reused.mState.mClock.mElapsed, 7.f);
+            EXPECT_EQ(reused.mState.mFrameDelta, 99.f);
+            auto invalidVelocity = velocities; invalidVelocity[0].mTargetNode = 999;
+            EXPECT_THROW(physics.restoreActorRagdollVelocityControllers(ptr, invalidVelocity), std::invalid_argument);
+            EXPECT_FALSE(physics.captureActorRagdollVelocityControllers(ptr)[0].mTargetNode);
+            physics.restoreActorRagdollVelocityControllers(ptr, velocities);
+            const auto beforeDirectForce = physics.captureActorRagdoll(ptr)[0];
+            const std::array<NifBullet::RagdollNativeForceRequest, 2> badDirectForce{{
+                {12, {2, 0, 0}, .25f}, {999, {}, .25f}}};
+            EXPECT_THROW(physics.applyActorRagdollNativeForces(ptr, badDirectForce), std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity, beforeDirectForce.mLinearVelocity);
+            physics.applyActorRagdollNativeForces(ptr, directForce);
+            EXPECT_FLOAT_EQ(float(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x()),
+                float(beforeDirectForce.mLinearVelocity.x()) + .25f);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeDirectForce.mPose);
+            const auto beforeControllerForce = physics.captureActorRagdoll(ptr)[0];
+            auto badPhysicalOrder = expectedOrder; badPhysicalOrder[1].mIdentity = 999;
+            EXPECT_THROW(physics.advanceActorRagdollPhysicalControllers(ptr, badPhysicalOrder, 3.f), std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mState.mClock.mPreviousTime,
+                -std::numeric_limits<float>::max());
+            physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 3.f);
+            EXPECT_FLOAT_EQ(float(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x()),
+                float(beforeControllerForce.mLinearVelocity.x()) + 1.6f);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeControllerForce.mPose);
+            EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mState.mClock.mPreviousTime, 3.f);
+            physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 3.25f);
+            EXPECT_FALSE(physics.captureActorRagdollVelocityControllers(ptr)[0].mState.mTiming.mFlags & 8);
+            const std::array<NifBullet::RagdollNativeKnockdownBlendRequest, 1> immediateFinish{{{8, 0.f}}};
+            ASSERT_EQ(physics.prepareActorRagdollKnockdownBlends(ptr, immediateFinish)[0],
+                NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+            physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 3.25f);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr).empty());
+            EXPECT_TRUE(capsule->isCollisionSuspended());
             physics.removeActorRagdoll(ptr);
             physics.removeActorRagdoll(ptr);
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));

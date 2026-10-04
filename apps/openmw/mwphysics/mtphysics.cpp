@@ -831,6 +831,48 @@ namespace MWPhysics
         return actorRagdoll(ptr).mPhysics.prepareNativeKnockdownBlends(requests);
     }
 
+    void PhysicsTaskScheduler::prepareActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocitySetupRequest> requests)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.prepareNativeVelocityControllers(requests);
+    }
+
+    std::vector<NifBullet::RagdollNativeVelocityControllerState> PhysicsTaskScheduler::captureActorRagdollVelocityControllers(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureNativeVelocityControllers();
+    }
+
+    void PhysicsTaskScheduler::restoreActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocityControllerState> controllers)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.restoreNativeVelocityControllers(controllers);
+    }
+
+    std::vector<NifBullet::RagdollNativeControllerReference> PhysicsTaskScheduler::captureActorRagdollControllerOrder(const MWWorld::Ptr& ptr, std::span<const std::uint32_t> nodeOrder)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureNativeControllerOrder(nodeOrder);
+    }
+
+    void PhysicsTaskScheduler::advanceActorRagdollPhysicalControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.advanceNativePhysicalControllers(controllerOrder, inputTime, *mNativeBlendTimeCache);
+    }
+
+    void PhysicsTaskScheduler::applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.applyNativeForces(requests);
+    }
+
     std::vector<NifBullet::RagdollNativeBlendControllerState> PhysicsTaskScheduler::captureActorRagdollBlendControllers(
         const MWWorld::Ptr& ptr)
     {

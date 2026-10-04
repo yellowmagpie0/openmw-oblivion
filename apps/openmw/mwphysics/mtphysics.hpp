@@ -39,6 +39,10 @@ namespace NifBullet
     struct RagdollNativeBlendUpdate;
     struct RagdollNativeBlendPublication;
     struct RagdollNativeBlendControllerState;
+    struct RagdollNativeVelocitySetupRequest;
+    struct RagdollNativeVelocityControllerState;
+    struct RagdollNativeControllerReference;
+    struct RagdollNativeForceRequest;
     struct RagdollNativeKnockdownBlendRequest;
     enum class RagdollNativeKnockdownBlendDisposition;
     struct RagdollNativeBlendControllerTarget;
@@ -113,6 +117,14 @@ namespace MWPhysics
         // duration/filter and whole reaction lifecycle remain caller-owned.
         std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareActorRagdollKnockdownBlends(
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests);
+        // Generated controller ownership and immediate force/controller phase
+        // share the worker/world barrier and scheduler physical clock cache.
+        void prepareActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocitySetupRequest> requests);
+        std::vector<NifBullet::RagdollNativeVelocityControllerState> captureActorRagdollVelocityControllers(const MWWorld::Ptr& ptr);
+        void restoreActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocityControllerState> controllers);
+        std::vector<NifBullet::RagdollNativeControllerReference> captureActorRagdollControllerOrder(const MWWorld::Ptr& ptr, std::span<const std::uint32_t> nodeOrder);
+        void advanceActorRagdollPhysicalControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime);
+        void applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests);
         std::vector<NifBullet::RagdollNativeBlendControllerState> captureActorRagdollBlendControllers(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollNativeBlendState> captureActorRagdollBlendStates(const MWWorld::Ptr& ptr);
         ESM4::PhysicalBlendTimeCache captureNativeBlendTimeCache();

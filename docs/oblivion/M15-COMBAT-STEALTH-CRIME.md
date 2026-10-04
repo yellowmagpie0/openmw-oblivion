@@ -16742,3 +16742,63 @@ atomic complete scene/collision frame integration and automatic World reaction/
 traversal/clock producers remain open. Initial NPC morphology, full native state
 persistence, retained BodyT/floor failures and S5-S14 remain open. Next: public
 worker-serialized ownership/phase/force APIs and real0/1/2-worker owner checks.
+
+
+### Checkpoint209: public worker barriers for generated controllers and native forces
+
+Checkpoint208 committed as `83e0d9091e35fd6ef62835761e89a9fb9ac7998c`,
+205 isolated commits with exact-byte/fresh-clone proof. Bundle186 SHA256
+`653a741a2aaa7f84ec51ab6d6539a44e72b9b64075cd02bec9f6b914a9580791`.
+PhysicsSystem/PhysicsTaskScheduler expose generated velocity setup/capture/
+restore, selected typed controller order, joined physical-controller advancement
+and explicit native force batches. Every scheduler entry waits for movement
+workers, holds the existing world lock, resolves the current owned actor and
+uses the scheduler-owned shared physical time cache for joined advancement.
+Stale/removed pointers reject consistently before component state mutation.
+These are the verified component boundaries from205/207/208, not yet automatic
+World reactions or a complete renderer/collision frame transaction.
+
+The real public ownership aggregate runs with0/1/2 threads. All six stale-owner
+paths reject. Late-invalid setup leaves no generated controller; valid setup
+resolves owned mass and creates the head velocity before selected blend without
+changing cache. Round-trip null target and retained elapsed/delta, then reuse
+without retargeting; invalid restore preserves prior target. Late explicit-force
+identity rejection preserves velocity, successful force stores native immediate
+velocity while preserving pose. Bad typed order preserves clock; joined update
+publishes first native default-delta force, then completes velocity at stop.
+A subsequent zero-duration blend setup removes that stopped velocity. Actor
+capsule remains suspended until explicit owner removal. Existing queued-worker,
+owner remap, shared-cache, renderer/lifetime and snapshot checks remain in the
+same aggregate and all three thread configurations complete.
+
+Placeholder baseline01 executes the aggregate's first0-thread iteration and
+fails stale-owner, setup and ownership assertions; its fatal empty-controller
+assertion prevents reaching1/2, which are not claimed as baseline runs. Final
+full normal/ASan+UBSan01 each pass899 engine tests, exact full inventories with
+no failure/skip, rebuilding openmw/openmw-tests/esmtool. Fingerprint `d5ddc7da9801675896c6daf46ce4786e84e858d9f074a24b1a230ebe0f3febde`.
+Components/Python and native formulas unchanged, not repeated;208 full2,351
+component inventories and exact native corpus comparisons remain the relevant
+component verification. ASan leak checks disabled. The sanitizer rebuild exposes
+an existing range-loop-copy warning in testoblivionactorstats.cpp:6843 (unchanged
+by this chunk); no new compiler error or runtime sanitizer finding. Compiler
+warnings are not claimed absent.
+
+The public fixture repeatedly exceeded GCC debug variable-assignment tracking
+and retried the whole large function. Apply existing teststore.cpp source option
+-fno-var-tracking-assignments also to testoblivionworld.cpp, scoped to GCC engine
+tests. Actual generated normal/sanitizer flags retain -g and the sanitizer build
+retains address/undefined instrumentation and frame pointers. No variable-tracking
+retry appears for that fixture in these final builds; no matched compile-time
+benchmark or game performance improvement is claimed. Preserve all other cached
+build options and fetched double-precision Bullet configuration.
+
+No stage closes. Automatic World begin/update/end, full renderer/collision frame
+ordering/atomicity, normal knockdown composition and requested-motion handling,
+complete physical/controller/contact persistence and initial NPC morphology
+remain open. Retained BodyT/floor failures and S5-S14 remain open. Independent
+work on full8AB440 normal leaf now establishes that an existing attached velocity
+is skipped entirely, while a new one uses its own compiled1.2-second duration
+and vector preparation, independently of body Down curve duration. The public
+setup is generic8B8590; it does not silently impose that higher-level entry rule.
+Next: compound the normal controller setup from the full original leaf captures,
+then finish scene/World lifecycle and persistence integration.

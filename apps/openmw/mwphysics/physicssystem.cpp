@@ -850,6 +850,36 @@ namespace MWPhysics
         return mTaskScheduler->prepareActorRagdollKnockdownBlends(ptr, requests);
     }
 
+    void PhysicsSystem::prepareActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocitySetupRequest> requests)
+    {
+        mTaskScheduler->prepareActorRagdollVelocityControllers(ptr, requests);
+    }
+
+    std::vector<NifBullet::RagdollNativeVelocityControllerState> PhysicsSystem::captureActorRagdollVelocityControllers(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdollVelocityControllers(ptr);
+    }
+
+    void PhysicsSystem::restoreActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocityControllerState> controllers)
+    {
+        mTaskScheduler->restoreActorRagdollVelocityControllers(ptr, controllers);
+    }
+
+    std::vector<NifBullet::RagdollNativeControllerReference> PhysicsSystem::captureActorRagdollControllerOrder(const MWWorld::Ptr& ptr, std::span<const std::uint32_t> nodeOrder)
+    {
+        return mTaskScheduler->captureActorRagdollControllerOrder(ptr, nodeOrder);
+    }
+
+    void PhysicsSystem::advanceActorRagdollPhysicalControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime)
+    {
+        mTaskScheduler->advanceActorRagdollPhysicalControllers(ptr, controllerOrder, inputTime);
+    }
+
+    void PhysicsSystem::applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests)
+    {
+        mTaskScheduler->applyActorRagdollNativeForces(ptr, requests);
+    }
+
     std::vector<NifBullet::RagdollNativeBlendControllerState> PhysicsSystem::captureActorRagdollBlendControllers(
         const MWWorld::Ptr& ptr)
     {

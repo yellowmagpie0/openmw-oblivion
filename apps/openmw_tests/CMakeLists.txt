@@ -54,10 +54,11 @@ if (MSVC)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # GCC retries this large tuple-based TU after exceeding its debug variable
+    # GCC retries these large TUs after exceeding its debug variable
     # tracking budget. Keep line/debug information and sanitizer instrumentation
     # while avoiding that repeated assignment-tracking pass.
-    set_property(SOURCE mwworld/teststore.cpp APPEND PROPERTY COMPILE_OPTIONS -fno-var-tracking-assignments)
+    set_property(SOURCE mwworld/teststore.cpp mwworld/testoblivionworld.cpp
+        APPEND PROPERTY COMPILE_OPTIONS -fno-var-tracking-assignments)
 endif()
 
 source_group(apps\\openmw-tests FILES ${UNITTEST_SRC_FILES})
