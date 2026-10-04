@@ -1,3 +1,4 @@
+#include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
 
 #include <components/esm4/runtimestate.hpp>
@@ -636,6 +637,7 @@ namespace MWMechanics
         mActionOwners.clear();
         mMeleeStates.clear();
         mAnimationClocks.clear();
+        mPlayerBowTimer.reset();
         mActorKnockback.clear();
         mActorRagdolls.clear();
         mActorValues.clear();
@@ -729,6 +731,15 @@ namespace MWMechanics
     {
         const auto found = mMeleeStates.find(actor);
         return found == mMeleeStates.end() ? nullptr : &found->second;
+    }
+
+    float OblivionCombatService::updatePlayerBowTimer(float duration,
+        std::int32_t processAction, ESM4::BowAnimationPhase phase)
+    {
+        (void)playerValues();
+        const float next = ESM4::advancePlayerBowTimer(playerBowTimer(), duration, processAction, phase);
+        mPlayerBowTimer = next;
+        return next;
     }
 
     float OblivionCombatService::animationClock(const ESM::FormKey& actor) const
@@ -3277,6 +3288,8 @@ namespace MWMechanics
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
             throw std::invalid_argument("native physical poses require an Oblivion v31+ save");
+        if (state.mVersion < 37 && mPlayerBowTimer)
+            throw std::invalid_argument("native Player bow timer requires an Oblivion v37+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
                 || std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
                     return entry.second.mStrike && entry.second.mStrike->mSequenceTiming.has_value();
@@ -3355,6 +3368,7 @@ namespace MWMechanics
         state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeMeleeStates.swap(meleeStates);
         state.mNativeAnimationClocks.swap(animationClocks);
+        state.mNativePlayerBowTimer = mPlayerBowTimer;
         state.mNativeActorKnockback.swap(knockback);
         state.mNativeActorRagdolls.swap(ragdolls);
         state.mNativeActorLife.swap(lives);
@@ -3526,6 +3540,7 @@ namespace MWMechanics
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
         mAnimationClocks.swap(animationClocks);
+        mPlayerBowTimer = state.mNativePlayerBowTimer;
         mActorKnockback.swap(knockback);
         mActorRagdolls.swap(ragdolls);
         mActorValues.swap(actors);

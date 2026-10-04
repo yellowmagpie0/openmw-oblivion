@@ -22,6 +22,7 @@ namespace ESM4
 {
     struct ActorCharacterBaseStats;
     struct PassiveAbilityInput;
+    enum class BowAnimationPhase : std::uint8_t;
 }
 
 namespace MWWorld
@@ -229,6 +230,7 @@ namespace MWMechanics
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
+        std::optional<float> mPlayerBowTimer;
         std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
         std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
@@ -339,6 +341,10 @@ namespace MWMechanics
         void setMeleeAiIntent(const ESM::FormKey& actor, const ESM4::RuntimeMeleeAiIntent& intent,
             const MWWorld::ESMStore& store);
         bool clearMeleeAiIntent(const ESM::FormKey& actor) noexcept;
+        // Caller supplies verified bow input/action/phase eligibility. Timer
+        // authority survives save/load; this neither debits resources nor releases.
+        float playerBowTimer() const noexcept { return mPlayerBowTimer.value_or(0); }
+        float updatePlayerBowTimer(float duration, std::int32_t processAction, ESM4::BowAnimationPhase phase);
         float animationClock(const ESM::FormKey& actor) const;
         float advanceAnimationClock(const ESM::FormKey& actor, float duration);
         bool setMeleeSequenceTiming(std::uint64_t id, const ESM::FormKey& actor,

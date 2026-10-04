@@ -138,6 +138,19 @@ namespace ESM4
         return upperBodyPaused ? result : advanceBowAnimation(result, animationClock, keyTimes);
     }
 
+    float advancePlayerBowTimer(float current, float duration,
+        std::int32_t processAction, BowAnimationPhase phase)
+    {
+        if (phase > BowAnimationPhase::End)
+            throw std::invalid_argument("invalid native player bow phase");
+        if ((processAction != 4 && processAction != 5) || phase == BowAnimationPhase::End)
+            return 0;
+        nonnegative(duration);
+        if (!std::isfinite(current))
+            throw std::invalid_argument("nonfinite native player bow timer");
+        return rounded(double(current) + duration);
+    }
+
     void validateArrowCleanupSettings(const ArrowCleanupSettings& settings)
     {
         if (settings.mMaximumReferences < 0)

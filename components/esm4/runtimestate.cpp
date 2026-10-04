@@ -733,6 +733,11 @@ namespace ESM4
             throw std::runtime_error("Unsupported TES4 runtime-state version " + std::to_string(mVersion));
         if (mProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state requires the Oblivion game profile");
+        if (mNativePlayerBowTimer)
+        {
+            if (mVersion < 37 || !std::isfinite(*mNativePlayerBowTimer))
+                throw std::runtime_error("Invalid native Player bow timer version or value");
+        }
         if (mNativePhysicalBlendTimeCache)
         {
             if (mVersion < 36)
@@ -1895,6 +1900,12 @@ namespace ESM4
                     writer.floating(value);
             }
         }
+        if (mVersion >= 37)
+        {
+            writer.integer<std::uint8_t>(mNativePlayerBowTimer.has_value());
+            if (mNativePlayerBowTimer)
+                writer.floating(*mNativePlayerBowTimer);
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2691,6 +2702,14 @@ namespace ESM4
             if (present)
                 result.mNativePhysicalBlendTimeCache = PhysicalBlendTimeCache{reader.integer<std::uint32_t>(),
                     reader.float32(), reader.float32(), reader.float32(), reader.float32()};
+        }
+        if (result.mVersion >= 37)
+        {
+            const auto present = reader.integer<std::uint8_t>();
+            if (present > 1)
+                throw std::runtime_error("Invalid native Player bow timer presence marker");
+            if (present)
+                result.mNativePlayerBowTimer = reader.float32();
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -3510,6 +3529,14 @@ namespace ESM4
             stream << ",\"start_key\":"; scalar(cache.mStartKey);
             stream << ",\"key_time\":"; scalar(cache.mKeyTime);
             stream << ",\"result\":"; scalar(cache.mResult); stream << '}';
+        }
+        if (mNativePlayerBowTimer)
+        {
+            stream << ",\"native_player_bow_timer\":";
+            if (*mNativePlayerBowTimer == 0 && std::signbit(*mNativePlayerBowTimer))
+                stream << "-0.0";
+            else
+                stream << *mNativePlayerBowTimer;
         }
         stream << "}";
         return stream.str();

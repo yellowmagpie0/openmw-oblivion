@@ -43,6 +43,11 @@ namespace ESM4
         float animationClock, float duration, float sequenceStart,
         const std::array<float, 5>& keyTimes, bool upperBodyPaused, float playbackRate = 1);
 
+    // Player held-bow input prefix, after bow/input eligibility. Actions4/5
+    // accumulate through phase Release; other actions or End reset the timer.
+    float advancePlayerBowTimer(float current, float duration,
+        std::int32_t processAction, BowAnimationPhase phase);
+
     struct ArrowCleanupSettings
     {
         std::int32_t mMaximumReferences;

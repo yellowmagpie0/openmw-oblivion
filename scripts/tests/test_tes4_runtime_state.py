@@ -151,6 +151,40 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def test_player_bow_timer_v37_golden_and_legacy_absence(self):
+        old = make_state(); old["schema_version"] = 36; old["ai_rng_state"] = 1
+        legacy = state_io.encode_payload(old)
+        prefix = bytearray(legacy); struct.pack_into("<I", prefix, len(b"OMW4STATE"), 37)
+        state = copy.deepcopy(old); state["schema_version"] = 37
+        state["native_player_bow_timer"] = -0.
+        expected = bytes(prefix) + bytes.fromhex("0100000080")
+        self.assertEqual(state_io.encode_payload(state), expected)
+        decoded = state_io.decode_payload(expected)
+        self.assertEqual(struct.pack("<f", decoded["native_player_bow_timer"]), bytes.fromhex("00000080"))
+        self.assertEqual(state_io.encode_payload(decoded), expected)
+        self.assertNotIn("native_player_bow_timer", state_io.decode_payload(legacy))
+        del state["native_player_bow_timer"]
+        self.assertEqual(state_io.encode_payload(state), bytes(prefix) + bytes([0]))
+        for timer in (-.25, .625, 3.4028234663852886e38):
+            state["native_player_bow_timer"] = timer
+            self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_player_bow_timer"], timer)
+
+    def test_player_bow_timer_rejects_corruption_and_lossy_downgrade(self):
+        state = make_state(); state["schema_version"] = 37; state["ai_rng_state"] = 1; state["native_player_bow_timer"] = .625
+        payload = state_io.encode_payload(state)
+        for timer in (math.inf, math.nan, None, True, []):
+            bad = copy.deepcopy(state); bad["native_player_bow_timer"] = timer
+            with self.subTest(timer=timer), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        for corrupt in (payload[:-1], payload + bytes([0]), payload[:-5] + bytes([2]) + payload[-4:],
+                        payload[:-4] + struct.pack("<f", math.nan)):
+            with self.subTest(corrupt=corrupt[-5:]), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(corrupt)
+        state["schema_version"] = 36
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_player_bow_timer"]
+        state_io.encode_payload(state)
+
     def test_passive_initial_magnitude_v19_wire_and_v18_unknown(self):
         state = make_state()
         state["schema_version"] = 18

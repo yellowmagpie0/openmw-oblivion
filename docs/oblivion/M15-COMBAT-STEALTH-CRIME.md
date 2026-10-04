@@ -19837,3 +19837,79 @@ No engine writer or Python codec changed; unchanged958 engine evidence remains
 applicable. This is a playback prefix, not owned controller state, input routing,
 render attachment, release/ammo/fatigue transaction or projectile acceptance.
 S5 remains in progress and no stage closes.
+
+
+### Checkpoint 261: native Player draw timer authority and schema37 persistence
+
+advancePlayerBowTimer models the bow-present/held-input prefix: actions4/5
+accumulate binary32 timer-plus-frame-duration through phases Start/Attach/Hold/
+Release; other actions or End reset zero without reading unused timer/duration.
+The supported enum is phase0..4. Invalid phase, selected nonfinite timer,
+negative/nonfinite duration and stored overflow reject. Signed zero and finite
+negative native state remain explicit; no invented timer clamp is applied.
+
+OblivionCombatService owns optional Player timer state. Updating first requires
+initialized native Player binding, then prepares the value before publication.
+It changes no actor values/resources or inventory. Capture preserves the timer
+and rejects an initialized timer's downgrade before writing; restore validates
+all input before replacing authority. Clear and older absent snapshots start
+at zero. Character input eligibility, phase ownership, hold fatigue, release
+and projectiles remain separate integration work.
+
+Runtime C++ and independent Python codecs advance to37. Optional timer presence
+is one byte0/1, followed by binary32 when present, after36's physical cache.
+All finite timer values survive, including negative values and signed zero.
+Populated downgrade, malformed presence, truncation, trailing bytes and NaN/Inf
+reject. Original Player+640 is also included by native save code at66188C;
+this new schema is this engine's wire contract, not the original save layout.
+
+Native-player-bow-timer-oracle-02 executes65ED3A through65ED9F with complete
+original5E0EE0/470750 queries and403C00 setting access. Process virtual2D0 is a
+declared action-input return hook;65ED41 independently observes/asserts the
+actual returned action in every fixture. All864 finite raw cases return.
+The720 supported phase0..4 cases compare exactly in both normal and sanitizer
+builds. Negative raw phase-1 observations remain outside the enum API.
+The secondary native input clock is captured but excluded from this timer API.
+Bow-present/held-input predicates, process construction, later action dispatch,
+fatigue/release and gameplay are not supplied by the probe.
+
+Retain oracle01 and normal compare01's160 mismatches. That fixture rewrote a
+synthetic action function without invalidating Unicorn translated code, so later
+cases reused its first action while their labels changed. Its varying-action
+corpus is invalid as expected-value evidence. Replace the input boundary with a
+stable return hook and observed action assertions; production arithmetic and
+unit expected timer values do not change.
+
+Four new component tests cover timer branches/float storage and schema37 golden
+wire/migration/corruption. Two service tests prove native binding, capture/
+restore continuation, unchanged actor authority, clear/old-save defaults and
+atomic invalid update/restore/downgrade. Two Python tests mirror independently
+specified wire bytes and malformed input. Initial manual Python fixtures failed
+before reaching timer encoding because promoted schema4 inputs omitted required
+nonzero AI RNG; correct the fixture input and retain the observation.
+
+Final player-bow-timer-persistence-normal-01 passes2458 component,960 engine
+and257 Python tests; sanitized-01 passes2458 component and960 engine tests.
+C++ inventories match exactly, zero failures/skips. Both build openmw,
+openmw-tests and esmtool. ASan leaks disabled; UBSan halts.
+Components emit no warnings. Normal engine broad recompilation emits an
+existing GCC16 maybe-uninitialized diagnostic in CharacterController's
+animation-queue restoration; sanitizer emits the existing actorstats test
+range-loop copy warning. Relevant source/header bytes match260 and are recorded
+in each check's unchanged-warning-source.json; they are not new timer code.
+These records do not establish that every compiler diagnostic is false.
+
+Native timer compare-02 builds each pass720 exact binary32 checks, zero
+mismatches. Cross-language wire-normal-01 and sanitized-01 each pass41 exact
+binary/canonical-JSON roundtrips: all legacy1..36,37 absence and four literal
+timer bit patterns. Source/component archive hashes remain stable.
+Tested fingerprint:
+23c7ff48f211bb0b56900567492e1fa3a88019da3019ae0dd39d5a199e56c008
+Original PE SHA256:
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+Corrected oracle source SHA256:
+81c996c71727eb4ca7f3a9dab14589eb497491156a08cb57ce100b2ef51198e1
+Corrected corpus SHA256:
+4913419c0cb93541e318142b270cd2570d4a90e79dbbc97e261061c7ec504d30
+No normal-input draw, controller restart, ammunition debit, native projectile
+or impact is claimed. S5 stays in progress; all other open gates remain.

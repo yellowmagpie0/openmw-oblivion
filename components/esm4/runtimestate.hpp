@@ -32,7 +32,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 36;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 37;
 
     struct RuntimeContentIdentity
     {
@@ -513,6 +513,9 @@ namespace ESM4
         // v36: scheduler-wide physical clock cache, independent of actor ownership.
         // Renderer-global Ni controller caching belongs to a different authority.
         std::optional<PhysicalBlendTimeCache> mNativePhysicalBlendTimeCache = std::nullopt;
+        // v37: original Player bow timer, independent of the animation clock.
+        // Absence in an older snapshot starts at zero, without inferring a draw.
+        std::optional<float> mNativePlayerBowTimer = std::nullopt;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

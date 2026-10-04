@@ -2751,3 +2751,52 @@ TEST(ESM4RuntimeState, NativePhysicalCacheRejectsDowngradeNonfiniteAndMalformedW
     state.mVersion = 35; EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     state.mNativePhysicalBlendTimeCache.reset(); EXPECT_NO_THROW(state.serializeBinary());
 }
+
+TEST(ESM4RuntimeState, PlayerBowTimerVersionThirtySevenGoldenAndLegacyAbsence)
+{
+    auto old = makeState(); old.mVersion = 36;
+    const auto legacy = old.serializeBinary();
+    auto prefix = legacy; prefix[std::string_view("OMW4STATE").size()] = 37;
+    auto state = old; state.mVersion = 37; state.mNativePlayerBowTimer = -0.f;
+    auto expected = prefix;
+    expected.insert(expected.end(), {1, 0, 0, 0, 128});
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(expected);
+    ASSERT_TRUE(loaded.mNativePlayerBowTimer);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*loaded.mNativePlayerBowTimer), 0x80000000u);
+    EXPECT_EQ(loaded.serializeBinary(), expected);
+    EXPECT_NE(loaded.canonicalJson().find("\"native_player_bow_timer\":-0.0"), std::string::npos);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativePlayerBowTimer);
+    state.mNativePlayerBowTimer.reset(); expected = prefix; expected.push_back(0);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativePlayerBowTimer);
+    for (float timer : {-.25f, .625f, std::numeric_limits<float>::max()})
+    {
+        state.mNativePlayerBowTimer = timer;
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativePlayerBowTimer, timer);
+    }
+}
+
+TEST(ESM4RuntimeState, PlayerBowTimerRejectsNonfiniteBadWireAndLossyDowngrade)
+{
+    auto state = makeState(); state.mNativePlayerBowTimer = .625f;
+    const auto bytes = state.serializeBinary();
+    for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto invalid = state; invalid.mNativePlayerBowTimer = bad;
+        EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+        auto corrupt = bytes; const auto bits = std::bit_cast<std::uint32_t>(bad);
+        for (unsigned i = 0; i < 4; ++i) corrupt[corrupt.size() - 4 + i] = (bits >> (8*i)) & 255;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    }
+    auto corrupt = bytes; corrupt[corrupt.size() - 5] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    corrupt = bytes; corrupt.pop_back();
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    corrupt = bytes; corrupt.push_back(0);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    state.mVersion = 36;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativePlayerBowTimer.reset();
+    EXPECT_NO_THROW(state.serializeBinary());
+}

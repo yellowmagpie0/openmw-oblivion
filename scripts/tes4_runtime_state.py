@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 36
+CURRENT_VERSION = 37
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -993,6 +993,10 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if native_float(entry["remaining"]) < 0:
             raise RuntimeStateError("Negative TES4 native actor knockback timer")
         pulse_actors.add(actor)
+    if "native_player_bow_timer" in state:
+        if version < 37:
+            raise RuntimeStateError("TES4 Player bow timer requires version37")
+        native_float(state["native_player_bow_timer"])
     if "native_physical_blend_time_cache" in state:
         cache = state["native_physical_blend_time_cache"]
         if version < 36 or not isinstance(cache, dict) or set(cache) != {"cycle", "stop_key", "start_key", "key_time", "result"}:
@@ -1786,6 +1790,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         if present:
             result["native_physical_blend_time_cache"] = {"cycle": reader.unpack("<I"),
                 **{field: reader.unpack("<f") for field in ("stop_key", "start_key", "key_time", "result")}}
+    if version >= 37:
+        present = reader.unpack("<B")
+        if present not in (0, 1):
+            raise RuntimeStateError("Invalid TES4 Player bow timer presence marker")
+        if present:
+            result["native_player_bow_timer"] = reader.unpack("<f")
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -2177,6 +2187,10 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<I", cache["cycle"])
             for field in ("stop_key", "start_key", "key_time", "result"):
                 writer.pack("<f", cache[field])
+    if version >= 37:
+        writer.pack("<B", int("native_player_bow_timer" in state))
+        if "native_player_bow_timer" in state:
+            writer.pack("<f", state["native_player_bow_timer"])
     return writer.finish()
 
 

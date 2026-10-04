@@ -554,3 +554,29 @@ TEST(ESM4ProjectileRules, BowPlaybackAppliesNativeRateBeforeAdvancing)
     EXPECT_NO_THROW(ESM4::advanceBowPlayback({}, 0, 0, 0, keys, true,
         std::numeric_limits<float>::quiet_NaN()));
 }
+
+TEST(ESM4ProjectileRules, PlayerBowTimerAccumulatesOnlyNativeDrawHoldActionsBeforeEnd)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    for (auto phase : {Phase::Start, Phase::Attach, Phase::Hold, Phase::Release})
+        for (int action : {4, 5})
+            EXPECT_EQ(ESM4::advancePlayerBowTimer(.625f, .25f, action, phase), .875f);
+    for (int action : {-1, 0, 3, 6})
+        EXPECT_EQ(ESM4::advancePlayerBowTimer(.625f, .25f, action, Phase::Hold), 0);
+    EXPECT_EQ(ESM4::advancePlayerBowTimer(.625f, .25f, 5, Phase::End), 0);
+    EXPECT_EQ(ESM4::advancePlayerBowTimer(1, 0x1p-24f, 5, Phase::Hold), 1);
+    EXPECT_TRUE(std::signbit(ESM4::advancePlayerBowTimer(-0.f, -0.f, 4, Phase::Start)));
+}
+
+TEST(ESM4ProjectileRules, PlayerBowTimerRejectsSelectedInvalidInputsAndSkipsResetOperands)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::advancePlayerBowTimer(nan, 0, 4, Phase::Hold), std::invalid_argument);
+    EXPECT_THROW(ESM4::advancePlayerBowTimer(0, -1, 5, Phase::Hold), std::invalid_argument);
+    EXPECT_THROW(ESM4::advancePlayerBowTimer(0, 0, 4, static_cast<Phase>(5)), std::invalid_argument);
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::advancePlayerBowTimer(maximum, maximum, 4, Phase::Hold), std::invalid_argument);
+    EXPECT_EQ(ESM4::advancePlayerBowTimer(nan, nan, -1, Phase::Hold), 0);
+    EXPECT_EQ(ESM4::advancePlayerBowTimer(nan, nan, 5, Phase::End), 0);
+}

@@ -1,3 +1,5 @@
+#include <components/esm4/projectilerules.hpp>
+#include <limits>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadachr.hpp>
@@ -828,4 +830,61 @@ TEST(OblivionCombatService, PhysicalGroupPublicationRejectsLateStaleAndInvalidUp
     EXPECT_FALSE(restored.actorRagdoll(last));
     EXPECT_EQ(restored.actorRagdoll(middle), untouched);
     EXPECT_TRUE(restored.isActionPending(action));
+}
+
+TEST(OblivionCombatService, PlayerBowTimerAuthoritySaveRestoreContinuationAndClear)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    auto state = savedState();
+    ESM4::RuntimeActorValues values;
+    values.mActor = state.mPlayer.mReference;
+    values.mBase = ESM::FormKey::dynamic("player-base", 1);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    values.mPlayerFormValues = {{100, 30, 40, 0}};
+    state.mNativeActorValues.push_back(values);
+    MWMechanics::OblivionCombatService service;
+    EXPECT_THROW(service.updatePlayerBowTimer(.25f, 4, Phase::Start), std::logic_error);
+    service.restore(state);
+    EXPECT_EQ(service.playerBowTimer(), 0);
+    EXPECT_EQ(service.updatePlayerBowTimer(.25f, 4, Phase::Start), .25f);
+    EXPECT_EQ(service.updatePlayerBowTimer(.375f, 5, Phase::Hold), .625f);
+    service.capture(state);
+    ASSERT_EQ(state.mNativePlayerBowTimer, .625f);
+    const auto actorBefore = state.mNativeActorValues;
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    EXPECT_EQ(restored.playerBowTimer(), .625f);
+    EXPECT_EQ(restored.updatePlayerBowTimer(.25f, 5, Phase::Release),
+        service.updatePlayerBowTimer(.25f, 5, Phase::Release));
+    restored.capture(state);
+    EXPECT_EQ(state.mNativeActorValues, actorBefore);
+    EXPECT_EQ(restored.updatePlayerBowTimer(.25f, 5, Phase::End), 0);
+    restored.clear(); EXPECT_EQ(restored.playerBowTimer(), 0);
+    auto empty = savedState(); restored.capture(empty);
+    EXPECT_FALSE(empty.mNativePlayerBowTimer);
+}
+
+TEST(OblivionCombatService, PlayerBowTimerInvalidUpdateRestoreAndDowngradeAreAtomic)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    auto state = savedState();
+    ESM4::RuntimeActorValues values;
+    values.mActor = state.mPlayer.mReference;
+    values.mBase = ESM::FormKey::dynamic("player-base", 1);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    values.mPlayerFormValues = {{100, 30, 40, 0}};
+    state.mNativeActorValues.push_back(values);
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    service.updatePlayerBowTimer(.625f, 4, Phase::Attach);
+    service.capture(state); const auto before = state.serializeBinary();
+    EXPECT_THROW(service.updatePlayerBowTimer(-1, 5, Phase::Hold), std::invalid_argument);
+    auto bad = state; bad.mNativePlayerBowTimer = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(service.restore(bad), std::runtime_error);
+    service.capture(state); EXPECT_EQ(state.serializeBinary(), before);
+    auto old = savedState(36); const auto untouched = old.serializeBinary();
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    EXPECT_EQ(old.serializeBinary(), untouched);
+    auto legacy = state; legacy.mVersion = 36; legacy.mNativePlayerBowTimer.reset();
+    service.restore(ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary()));
+    EXPECT_EQ(service.playerBowTimer(), 0);
 }
