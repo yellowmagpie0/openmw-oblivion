@@ -20383,3 +20383,47 @@ Compound resources/projectile release, Character input, native flight, bow
 break consequences and normal-input acceptance remain open. Existing display
 connections are unavailable; authenticated TCP Xvfb also fails to open its
 listening sockets. Headless checks do not close normal-input gates or S5/M15.
+
+
+### S5 checkpoint271: prepared bow resources and coordinate/shape provenance
+
+OblivionCombatService prepares immutable shot inputs before resource changes,
+then stages actual fatigue channels, shared actor projections, bow condition,
+ammunition and owned action consumption. Commit validates service/inventory
+lifetimes, exact equipment and unchanged authority before callback-free
+publication. Player god mode preserves resources; NPC ammunition is preserved
+as verified at checkpoint270. Deferred ammunition observers run only after
+the resource/action state is coherent and cannot replay after failure.
+Cancellation, stale or foreign owners, assignment/restore, invalid settings
+and equipment changes publish nothing. The owned launch data remains safe to
+read and discard after World destruction.
+
+Five new actual-world tests cover coherent last-arrow observers, NPC/god-mode
+policy, nine stale-state branches, cancellation/foreign owners, late failures
+and token destruction after World destruction. Normal and ASan/UBSan each
+pass987 full engine tests with exact inventories, no failures/skips and no
+incremental compiler warnings. Leak checks are disabled. Components/Python
+are unchanged. Retain both initial01 failures: the fixture advanced only0.1
+after native Hold rewound to1.0, never crossing Release1.25. Corrected02
+advances0.3. Evidence: S5/prepared-bow-release-{normal,sanitized}-02.
+Tested fingerprint: e6b85e52e5cc0bffb642417b5a088f69727ee2b5004d3c95d2d4d09beee7ac07
+
+An independent130-case original-instruction oracle verifies64 coordinate
+vectors in both x87 modes plus two actual arrow sphere callers. Original
+43F3E0 converts xyz to world units with double6.999040126800537 and float
+stores; arrow initialization60A363 uses double0.1428767293691635. These
+constants are not exact reciprocals. Actual60A3A4 sphere construction passes
+world radius0.10000000149011612 and conversion flag1; original532090 requests
+Havok radius0.014287672936916351 (bits1013585624) at8AF550. Original base
+constructors execute; a declared Windows InterlockedIncrement import and the
+shape publication boundary are isolated. Retain initial01's unbound-import
+failure. Evidence: S5/native-arrow-coordinate-shape-oracle-02.
+Oracle source SHA-256:
+cbb8a6b8cad73b4a595267ce61f17c7d7f45cf8e8e0d289da3d416fda491ab69
+
+Projectile publication is not coupled to this transaction yet. Character bow
+input, complete native flight/controller state, impact/recovery, saved
+projectiles and normal-input acceptance remain open. Wear that would break
+the bow is rejected before publication until native break consequences are
+implemented. Coordinate/shape evidence does not establish trajectory or full
+Havok allocation. S5 and M15 remain in progress.

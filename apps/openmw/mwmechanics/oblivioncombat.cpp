@@ -1,5 +1,11 @@
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
+#include "oblivionranged.hpp"
+#include "../mwbase/world.hpp"
+#include "../mwworld/worldimp.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
+#include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadgmst.hpp>
 
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/actorclock.hpp>
@@ -652,6 +658,7 @@ namespace MWMechanics
 
     void OblivionCombatService::clear()
     {
+        mPreparedReleaseIdentity.mValue.reset();
         mActions = {};
         mCombatRngState = 1;
         mActionOwners.clear();
@@ -906,6 +913,207 @@ namespace MWMechanics
         found->second.mReleaseCommitted = true;
         found->second.mAction = 3;
         mActorValues.find(actor)->second.mProcessAction = 3;
+        return true;
+    }
+
+    struct OblivionCombatService::PreparedBowRelease::Impl
+    {
+        OblivionCombatService* mOwner = nullptr;
+        std::shared_ptr<const char> mIdentity;
+        MWWorld::InventoryStore* mInventory = nullptr;
+        MWBase::World* mWorld = nullptr;
+        bool mGodMode = false;
+        MWWorld::Ptr mBow;
+        std::unique_ptr<MWWorld::InventoryStore::PreparedAmmunitionDebit> mAmmunition;
+        MWWorld::OblivionArrowLaunch mLaunch;
+        ESM4::RuntimeActorValues mExpectedValues, mValues;
+        ESM4::RuntimeActorLife mLife;
+        ESM4::RuntimeBowState mState;
+        std::optional<ESM4::RuntimeActorBaseOverride> mBase;
+        std::optional<float> mTimer;
+        float mClock = 0;
+        std::optional<float> mExpectedCondition;
+        int mExpectedCharge = -1;
+        float mExpectedRemainder = 0;
+        std::unique_ptr<MWWorld::CellRef> mCondition;
+        std::unique_ptr<OblivionActorProjection> mPlayerView;
+        std::unique_ptr<PreparedNonPlayerView> mNpcView;
+        bool mDebitAmmunition = false;
+        bool mCommitted = false;
+        bool mNotified = false;
+    };
+
+    OblivionCombatService::PreparedBowRelease::PreparedBowRelease(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionCombatService::PreparedBowRelease::~PreparedBowRelease() = default;
+    OblivionCombatService::PreparedBowRelease::PreparedBowRelease(PreparedBowRelease&&) noexcept = default;
+    OblivionCombatService::PreparedBowRelease&
+    OblivionCombatService::PreparedBowRelease::operator=(PreparedBowRelease&&) noexcept = default;
+
+    const MWWorld::OblivionArrowLaunch& OblivionCombatService::PreparedBowRelease::launch() const
+    {
+        if (!mImpl) throw std::invalid_argument("moved-from native bow release");
+        return mImpl->mLaunch;
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedBowRelease>
+    OblivionCombatService::prepareBowRelease(
+        MWBase::World& world, const MWWorld::Ptr& actor, std::uint64_t id)
+    {
+        auto* native = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        if (!native || native->getOblivionCombatService() != this || actor.isEmpty())
+            throw std::invalid_argument("native bow release requires its actual world authority");
+        const bool player = actor == world.getPlayerPtr();
+        const auto& values = player ? playerValues() : nonPlayerValues(actor);
+        const auto key = values.mActor;
+        const auto* state = findBowState(key);
+        const auto* life = findActorLife(key);
+        if (!state || state->mActionId != id || !life
+            || pendingBowEvent(key, true, true) != ESM4::BowActionEvent::Release)
+            throw std::invalid_argument("native bow release requires an admitted pending Release");
+        // Sample launch before shot fatigue or condition changes.
+        auto launch = sampleOblivionEquippedArrowLaunch(world, actor, playerBowTimer());
+        if (launch.mBow != state->mBowBase || launch.mAmmunition != state->mAmmoBase)
+            throw std::invalid_argument("native bow release equipped forms differ from the owned draw");
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto& store = world.getStore();
+        const auto idValue = MWWorld::OblivionProfileServices::nativeItemId(store, bow.getCellRef().getRefId());
+        const auto* definition = store.get<ESM4::Weapon>().search(idValue);
+        const auto& reference = bow.getCellRef();
+        const double condition = reference.getNativeItemCondition() ? double(*reference.getNativeItemCondition())
+            : reference.getCharge() < 0 ? double(definition->mData.health)
+            : double(reference.getCharge()) + reference.getChargeIntRemainder();
+        if (reference.getCount() != 1 || !(condition > 0))
+            throw std::invalid_argument("native bow release requires one unbroken equipped bow");
+        const bool godMode = player && world.getGodModeState();
+        auto prepared = std::make_unique<PreparedBowRelease::Impl>();
+        // This also guards borrowed bow pointers for NPC/god-mode releases;
+        // those callers never commit its count mutation.
+        prepared->mAmmunition = inventory.prepareAmmunitionDebit();
+        prepared->mInventory = &inventory;
+        prepared->mWorld = &world;
+        prepared->mGodMode = world.getGodModeState();
+        prepared->mBow = bow;
+        prepared->mLaunch = std::move(launch);
+        prepared->mExpectedValues = values;
+        prepared->mValues = values;
+        prepared->mLife = *life;
+        prepared->mState = *state;
+        if (const auto* base = findActorBase(values.mBase)) prepared->mBase = *base;
+        prepared->mTimer = mPlayerBowTimer;
+        prepared->mClock = animationClock(key);
+        prepared->mExpectedCondition = reference.getNativeItemCondition();
+        prepared->mExpectedCharge = reference.getCharge();
+        prepared->mExpectedRemainder = reference.getChargeIntRemainder();
+        prepared->mDebitAmmunition = player && !godMode;
+        if (!godMode)
+        {
+            std::vector<const ESM4::GameSetting*> settings;
+            std::set<ESM::FormId> seen;
+            for (const auto& setting : store.get<ESM4::GameSetting>())
+                if (seen.insert(setting.mId).second)
+                    settings.push_back(store.get<ESM4::GameSetting>().search(setting.mId));
+            const auto wear = ESM4::weaponWear(definition->mData.damage, ESM4::buildDurabilitySettings(settings));
+            if (const auto after = ESM4::nativeConditionAfterWear(condition, wear))
+            {
+                // Break consequences need their own prepared equipment policy.
+                // Reject before any publication until that policy is connected.
+                if (*after == 0)
+                    throw std::invalid_argument("native bow release break transition is not prepared");
+                prepared->mCondition = std::make_unique<MWWorld::CellRef>(reference);
+                prepared->mCondition->setNativeItemCondition(*after);
+            }
+            const float current = player ? getPlayerValue(10) : getNonPlayerValue(actor, 10);
+            const float debit = current > 0 ? std::min(current, prepared->mLaunch.mShotFatigueDebit) : 0;
+            if (debit > 0)
+                prepared->mValues.mValues[10] = ESM4::changeActorValueModifier(
+                    prepared->mValues.mValues[10], values.mOwner, 10, ESM4::ActorValueModifier::Damage, -debit);
+        }
+        prepared->mValues.mProcessAction = 3;
+        if (player)
+        {
+            preparePlayerValues(prepared->mValues, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+            prepared->mPlayerView = std::make_unique<OblivionActorProjection>(
+                actor.getClass().getNpcStats(actor), actorProjection(prepared->mValues, nullptr, life));
+        }
+        else
+            prepared->mNpcView = std::make_unique<PreparedNonPlayerView>(
+                actor, prepared->mValues, findActorBase(values.mBase), life);
+        prepared->mValues.validate();
+        if (!mPreparedReleaseIdentity.mValue)
+            mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
+        prepared->mOwner = this;
+        prepared->mIdentity = mPreparedReleaseIdentity.mValue;
+        return std::unique_ptr<PreparedBowRelease>(new PreparedBowRelease(std::move(prepared)));
+    }
+
+    bool OblivionCombatService::validateBowRelease(
+        const PreparedBowRelease& release, const MWWorld::InventoryStore& inventory) const noexcept
+    {
+        const auto* prepared = release.mImpl.get();
+        if (!prepared || prepared->mOwner != this
+            || prepared->mIdentity != mPreparedReleaseIdentity.mValue || prepared->mCommitted
+            || prepared->mInventory != &inventory
+            || !inventory.validatePreparedAmmunitionDebit(*prepared->mAmmunition)
+            || prepared->mWorld->getGodModeState() != prepared->mGodMode)
+            return false;
+        const auto& key = prepared->mExpectedValues.mActor;
+        const auto* values = findActorValues(key);
+        const auto* life = findActorLife(key);
+        const auto* state = findBowState(key);
+        const auto* base = findActorBase(prepared->mExpectedValues.mBase);
+        const auto clock = mAnimationClocks.find(key);
+        if (!values || *values != prepared->mExpectedValues || !life || *life != prepared->mLife
+            || !state || *state != prepared->mState || !isActionPending(state->mActionId, key)
+            || clock == mAnimationClocks.end() || clock->second != prepared->mClock
+            || mPlayerBowTimer != prepared->mTimer
+            || bool(base) != prepared->mBase.has_value()
+            || (base && *base != *prepared->mBase))
+            return false;
+        const auto slot = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        if (slot == inventory.end() || *slot != prepared->mBow) return false;
+        const auto& ref = prepared->mBow.getCellRef();
+        return ref.getCount() == 1 && ref.getNativeItemCondition() == prepared->mExpectedCondition
+            && ref.getCharge() == prepared->mExpectedCharge
+            && ref.getChargeIntRemainder() == prepared->mExpectedRemainder;
+    }
+
+    bool OblivionCombatService::commitBowRelease(
+        PreparedBowRelease& release, MWWorld::InventoryStore& inventory) noexcept
+    {
+        if (!validateBowRelease(release, inventory)) return false;
+        auto& prepared = *release.mImpl;
+        if (prepared.mDebitAmmunition && !inventory.commitPreparedAmmunitionDebit(*prepared.mAmmunition))
+            return false;
+        static_assert(std::is_nothrow_swappable_v<MWWorld::CellRef>);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+        if (prepared.mCondition) std::swap(prepared.mBow.getCellRef(), *prepared.mCondition);
+        const auto& key = prepared.mExpectedValues.mActor;
+        std::swap(mActorValues.find(key)->second, prepared.mValues);
+        mActions.consume(prepared.mState.mActionId);
+        mActionOwners.erase(prepared.mState.mActionId);
+        auto& state = mBowStates.find(key)->second;
+        state.mReleaseCommitted = true;
+        state.mAction = 3;
+        prepared.mCommitted = true;
+        if (prepared.mPlayerView) prepared.mPlayerView->commit();
+        if (prepared.mNpcView) prepared.mNpcView->commit();
+        return true;
+    }
+
+    bool OblivionCombatService::notifyBowRelease(
+        PreparedBowRelease& release, MWWorld::InventoryStore& inventory)
+    {
+        auto* prepared = release.mImpl.get();
+        if (!prepared || prepared->mOwner != this
+            || prepared->mIdentity != mPreparedReleaseIdentity.mValue
+            || prepared->mInventory != &inventory || !prepared->mCommitted || prepared->mNotified)
+            return false;
+        prepared->mNotified = true;
+        if (prepared->mDebitAmmunition)
+            inventory.notifyPreparedAmmunitionDebit(*prepared->mAmmunition);
         return true;
     }
 
@@ -3759,6 +3967,7 @@ namespace MWMechanics
         for (const auto& life : state.mNativeActorLife)
             lives.emplace(life.mActor, life);
         std::deque<ESM4::RuntimeActorDeathEvent> events(state.mPendingDeathEvents.begin(), state.mPendingDeathEvents.end());
+        mPreparedReleaseIdentity.mValue.reset();
         mActions = std::move(actions);
         mCombatRngState = state.mCombatRngState;
         mActionOwners.swap(actionOwners);

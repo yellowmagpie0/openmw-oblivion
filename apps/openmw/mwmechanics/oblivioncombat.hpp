@@ -25,11 +25,15 @@ namespace ESM4
     enum class BowAnimationPhase : std::uint8_t;
 }
 
+namespace MWBase { class World; }
+
 namespace MWWorld
 {
     class Ptr;
     class Player;
     class ESMStore;
+    class InventoryStore;
+    struct OblivionArrowLaunch;
 }
 
 namespace MWMechanics
@@ -226,6 +230,19 @@ namespace MWMechanics
     {
         friend class OblivionActorLifeAdoption;
         class PreparedNonPlayerView;
+        // Prepared release handles never survive service replacement. Copies
+        // and moves receive their own identity, including placement-new reuse.
+        struct PreparedReleaseIdentity
+        {
+            std::shared_ptr<const char> mValue;
+            PreparedReleaseIdentity() = default;
+            PreparedReleaseIdentity(const PreparedReleaseIdentity&) noexcept {}
+            PreparedReleaseIdentity(PreparedReleaseIdentity&& other) noexcept { other.mValue.reset(); }
+            PreparedReleaseIdentity& operator=(const PreparedReleaseIdentity& other) noexcept
+            { if (this != &other) mValue.reset(); return *this; }
+            PreparedReleaseIdentity& operator=(PreparedReleaseIdentity&& other) noexcept
+            { if (this != &other) { mValue.reset(); other.mValue.reset(); } return *this; }
+        } mPreparedReleaseIdentity;
         ESM4::ActionLedger mActions;
         std::uint32_t mCombatRngState = 1;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
@@ -362,6 +379,32 @@ namespace MWMechanics
         // These own logical transitions; they do not create geometry/projectiles.
         bool confirmBowAttachment(std::uint64_t id, const ESM::FormKey& actor);
         bool commitBowRelease(std::uint64_t id, const ESM::FormKey& actor);
+        class PreparedBowRelease
+        {
+            friend class OblivionCombatService;
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedBowRelease(std::unique_ptr<Impl> impl);
+        public:
+            ~PreparedBowRelease();
+            PreparedBowRelease(PreparedBowRelease&&) noexcept;
+            PreparedBowRelease& operator=(PreparedBowRelease&&) noexcept;
+            PreparedBowRelease(const PreparedBowRelease&) = delete;
+            PreparedBowRelease& operator=(const PreparedBowRelease&) = delete;
+            const MWWorld::OblivionArrowLaunch& launch() const;
+        };
+        // All fallible resource preparation happens before projectile
+        // publication. The caller supplies the current inventory at validation,
+        // commit and notification so retained handles cannot dereference a
+        // destroyed/replaced container. No callbacks between validation and
+        // projectile/resource publication.
+        std::unique_ptr<PreparedBowRelease> prepareBowRelease(
+            MWBase::World& world, const MWWorld::Ptr& actor, std::uint64_t id);
+        bool validateBowRelease(const PreparedBowRelease& release,
+            const MWWorld::InventoryStore& inventory) const noexcept;
+        bool commitBowRelease(PreparedBowRelease& release, MWWorld::InventoryStore& inventory) noexcept;
+        bool notifyBowRelease(PreparedBowRelease& release, MWWorld::InventoryStore& inventory);
+
         bool finishBowPlayback(std::uint64_t id, const ESM::FormKey& actor);
         bool cancelBowDraw(std::uint64_t id, const ESM::FormKey& actor);
         float playerBowTimer() const noexcept { return mPlayerBowTimer.value_or(0); }
