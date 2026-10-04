@@ -1691,6 +1691,46 @@ namespace NifBullet
         return prepareNativeKnockdownControllerSetupImpl(converted, false, {});
     }
 
+    std::vector<RagdollNativeHitBlendDisposition> ActorRagdollPhysics::prepareNativeHitBlends(
+        std::span<const RagdollNativeHitBlendSetupRequest> requests)
+    {
+        auto controllers = mImpl->mBlendControllers;
+        std::vector<RagdollNativeHitBlendDisposition> result;
+        result.reserve(requests.size());
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto& request : requests)
+        {
+            require(nodes.insert(request.mNodeRecord).second, "duplicate native HIT blend setup node");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == request.mNodeRecord; }) == 1,
+                "unknown or ambiguous native HIT blend setup node");
+            const auto blend = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+                [&](const auto& value) { return value.mNode == request.mNodeRecord; });
+            if (blend == mImpl->mBlendTargets.end())
+            {
+                result.push_back(RagdollNativeHitBlendDisposition::MissingBlend);
+                continue;
+            }
+            const auto controller = std::find_if(controllers.begin(), controllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
+            if (controller == controllers.end())
+            {
+                result.push_back(RagdollNativeHitBlendDisposition::MissingController);
+                continue;
+            }
+            if (controller->mState.mSetupState > 1)
+            {
+                result.push_back(RagdollNativeHitBlendDisposition::StrongerSetup);
+                continue;
+            }
+            controller->mState = ESM4::preparePhysicalHitBlendController(
+                controller->mState, blend->mState.mGains, request.mConfiguredGains);
+            result.push_back(RagdollNativeHitBlendDisposition::Started);
+        }
+        mImpl->mBlendControllers.swap(controllers);
+        return result;
+    }
+
     void ActorRagdollPhysics::prepareNativeVelocityControllers(
         std::span<const RagdollNativeVelocitySetupRequest> requests)
     {

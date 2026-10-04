@@ -285,6 +285,8 @@ namespace MWWorld
             const NifBullet::RagdollInternalCollisionFilter* internalFilter);
         std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareOblivionActorKnockdownControllers(
             const Ptr& actor, std::span<const OblivionPhysicalDownRequest> requests);
+        std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareOblivionActorHitBlendControllers(
+            const Ptr& actor, std::span<const OblivionPhysicalHitBlendRequest> requests, bool useQuadHit);
         void advanceOblivionActorClock(float duration);
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.

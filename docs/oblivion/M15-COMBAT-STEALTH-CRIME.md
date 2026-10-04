@@ -19467,3 +19467,64 @@ No stage closes. Owned HIT blend setup, automatic physical admission/reactions,
 configuration discovery, initial morphology, native scene/time/contact
 continuation and required normal-input gameplay/restarts remain open.
 S5-S14 pending.
+
+### Checkpoint 253: owned HIT blend setup consumes World profile tables
+
+ActorRagdollPhysics stages the entire selected HIT blend batch. It resolves live
+gains from the controller's attachment node, retains the independent target,
+record and list identity, and consumes252's original-verified controller candidate.
+Missing blend/controller or unsigned setup above1 skips unused configured gains.
+Duplicate/unknown/ambiguous nodes and late nonfinite used gains reject every
+candidate before publication. The operation does not synchronize requested
+motion, mutate body/target gains, apply force, wake or touch the shared clock.
+This distinction from Down is required by the actual8AB040 path.
+
+PhysicsSystem reaches the owner through the scheduler's worker/exclusive barrier.
+World resolves each explicit packed filter's bits8-12 from its owned HIT or
+QUADHIT table, then sends a complete batch to that scheduler operation.
+The profile selector and resolved nodes/filters remain explicit lifecycle inputs;
+the wrapper does not infer them from species or mutate process configuration.
+
+Three component tests cover redirected target versus attachment-node gains,
+clock/cache/key setup, unchanged keyframed actual mode despite a stored dynamic
+request, stronger-state and missing-object skips, late invalid/duplicate/unknown
+rollback and preserved activation. Two existing World tests now cover profile/
+uninitialized-physics guards and the actual configured scheduler path in all
+0/1/2-worker configurations. They verify both distinct profile tables, masking
+unrelated filter bits, wrong owner/late bad node rejection, whole snapshot
+rollback, repeated HIT setup1 and stronger Down setup2 preservation. Snapshot
+restore retains the existing independent Down fixtures.
+
+Component baseline01 executes/fails all three new tests at the unimplemented
+owner. World baseline01 executes two selected engine tests: the guard test
+passes and physical ownership fails at that unimplemented operation.
+Initial full normal/sanitized01 execute2438 component tests;2437 pass and one
+new fixture incorrectly requires a keyframed Bullet body to sleep after
+setActivationState. DISABLE_DEACTIVATION retains its pre-call state. Record
+actual activation before HIT and require it unchanged afterward; independently
+verified native key/gain expectations remain unchanged. The separate focused
+World normal preflight passes both tests, including all worker configurations.
+Retain the initial failures.
+
+Corrected world-owned-hit-blend-setup-normal-02 and sanitized-02 each pass2438
+exact inventoried full component tests and946 exact inventoried full engine
+tests, zero failures/skips. Both rebuild openmw/openmw-tests/esmtool.
+Normal has no warnings; sanitizer repeats only the unchanged actorstats test
+range-loop copy warning, source byte-verified against252. ASan leaks disabled;
+UBSan halts. Tested fingerprint
+492013dddb63032f89af01f41db0d9b66884013dfabec73874aeddc9d3aaa70e.
+No production numeric rule or Python source changes;252's independent original
+comparisons and prior Python evidence remain applicable.
+
+Bounded read-only original inspection additionally identifies5EE760 in native
+RTTI vtables for Actor, Character, Creature and PlayerCharacter at slot398.
+Its table-selector helper65A2C0 reads the actor process virtual18C output payload,
+then releases the temporary reference. Do not infer species/record flags from
+the runtime object's1F4 bit1. Complete caller argument meaning, actor selection,
+force/bone resolution and automatic dispatch remain unresolved; this inspection
+is not a new executable/gameplay oracle.
+
+No stage closes. Combined hit blend/velocity transaction, automatic actor
+physical admission/reactions/update/getup, actual configuration discovery,
+initial morphology, native scene/time/contact continuation and required
+normal-input gameplay/restarts remain open. S5-S14 pending.

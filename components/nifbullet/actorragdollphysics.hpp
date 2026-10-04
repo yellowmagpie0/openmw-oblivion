@@ -248,6 +248,17 @@ namespace NifBullet
         Started, MissingBlend, MissingController, Disabled,
     };
 
+    struct RagdollNativeHitBlendSetupRequest
+    {
+        std::uint32_t mNodeRecord;
+        ESM4::PhysicalBlendGains mConfiguredGains;
+    };
+
+    enum class RagdollNativeHitBlendDisposition
+    {
+        Started, MissingBlend, MissingController, StrongerSetup,
+    };
+
     struct RagdollNativeBlendControllerTarget
     {
         std::uint32_t mControllerRecord;
@@ -414,6 +425,11 @@ namespace NifBullet
         std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownControllerSetup(
             std::span<const RagdollNativeKnockdownControllerSetupRequest> requests,
             RagdollNativePassOutSettings settings);
+        // Original selected HIT blend leaf: read attachment-node gains,
+        // retain independent controller target and stage the entire batch.
+        // No requested-motion synchronization, body writes or wake.
+        std::vector<RagdollNativeHitBlendDisposition> prepareNativeHitBlends(
+            std::span<const RagdollNativeHitBlendSetupRequest> requests);
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
         // Complete collision metadata snapshot; no body/controller conversion.

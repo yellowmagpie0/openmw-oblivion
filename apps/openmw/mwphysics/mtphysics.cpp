@@ -1107,6 +1107,13 @@ namespace MWPhysics
         actorRagdoll(ptr).mPhysics.prepareNativeVelocityControllers(requests);
     }
 
+    std::vector<NifBullet::RagdollNativeHitBlendDisposition> PhysicsTaskScheduler::prepareActorRagdollHitBlends(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeHitBlendSetupRequest> requests)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.prepareNativeHitBlends(requests);
+    }
+
     void PhysicsTaskScheduler::prepareActorRagdollHitVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeHitVelocitySetupRequest> requests)
     {
         waitForWorkers();

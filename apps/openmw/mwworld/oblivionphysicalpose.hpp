@@ -11,6 +11,7 @@ namespace Nif { struct NiTransform; }
 namespace NifBullet
 {
     enum class RagdollNativeKnockdownBlendDisposition;
+    enum class RagdollNativeHitBlendDisposition;
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
 }
@@ -23,6 +24,11 @@ namespace MWWorld
         std::uint32_t mNodeRecord;
         std::uint32_t mResolvedPackedFilter;
         osg::Vec3f mWorldVector;
+    };
+    struct OblivionPhysicalHitBlendRequest
+    {
+        std::uint32_t mNodeRecord;
+        std::uint32_t mResolvedPackedFilter;
     };
     // Borrowed renderer/physics lifetimes. The caller supplies resolved native
     // uniform placement, resolved packed body filters/gain table and collision policy; this does not select reactions,

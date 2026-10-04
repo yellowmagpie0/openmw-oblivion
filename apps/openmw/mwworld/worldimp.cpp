@@ -410,6 +410,20 @@ namespace MWWorld
             actor, prepared, {settings.mPassOutForce, settings.mPassOutTime});
     }
 
+    std::vector<NifBullet::RagdollNativeHitBlendDisposition> World::prepareOblivionActorHitBlendControllers(
+        const Ptr& actor, std::span<const OblivionPhysicalHitBlendRequest> requests, bool useQuadHit)
+    {
+        const auto& configuration = getOblivionPhysicalBlendConfiguration();
+        if (!mPhysics)
+            throw std::logic_error("native HIT blend setup requires initialized World physics");
+        const auto& gains = useQuadHit ? configuration.mQuadHit : configuration.mHit.mGains;
+        std::vector<NifBullet::RagdollNativeHitBlendSetupRequest> prepared;
+        prepared.reserve(requests.size());
+        for (const auto& request : requests)
+            prepared.push_back({request.mNodeRecord, gains[(request.mResolvedPackedFilter >> 8) & 31u]});
+        return mPhysics->prepareActorRagdollHitBlends(actor, prepared);
+    }
+
     MWPhysics::PhysicsSystem& World::initializePhysics(osg::ref_ptr<osg::Group> rootNode)
     {
         if (mPhysics)
