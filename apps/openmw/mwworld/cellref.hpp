@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
 
 #include <components/esm/esmbridge.hpp>
 #include <components/esm3/cellref.hpp>
@@ -132,6 +133,9 @@ namespace MWWorld
         // If this returns int(-1) it means full health.
         int getCharge() const
         {
+            if (std::holds_alternative<ESM4::Reference>(mCellRef.mVariant) && mNativePlacedItemCondition)
+                return static_cast<int>(std::min(double(std::numeric_limits<int>::max()),
+                    std::ceil(double(*mNativePlacedItemCondition))));
             struct Visitor
             {
                 int operator()(const ESM::CellRef& ref)
@@ -140,7 +144,7 @@ namespace MWWorld
                         ? static_cast<int>(std::min(double(std::numeric_limits<int>::max()),
                             std::ceil(double(*ref.mNativeItemCondition)))) : ref.mChargeInt;
                 }
-                int operator()(const ESM4::Reference& /*ref*/) { return 0; }
+                int operator()(const ESM4::Reference&) { return -1; }
                 int operator()(const ESM4::ActorCharacter&) { return 0; }
             };
             return std::visit(Visitor(), mCellRef.mVariant);
@@ -165,11 +169,13 @@ namespace MWWorld
             };
             return std::visit(Visitor(), mCellRef.mVariant);
         }
-        // Exact native health for projected TES4 inventory instances. Missing
+        // Exact native health for projected inventory and native placed items. Missing
         // native storage reads the legacy integer/remainder or supplied maximum.
         std::optional<float> getNativeItemCondition() const;
         float getItemCondition(float maximum) const;
         void setNativeItemCondition(float condition);
+        // Restore an absent native extra without inventing a zero condition.
+        void resetNativeItemCondition() noexcept;
         void setCharge(int charge);
         void setChargeFloat(float charge);
         void applyChargeRemainderToBeSubtracted(float chargeRemainder); // Stores remainders and applies if <= -1
@@ -312,6 +318,10 @@ namespace MWWorld
         friend class InventoryStore;
         bool mChanged = false;
         ESM::ReferenceVariant mCellRef;
+        // Runtime extras belong to this live REFR instance, never its winning
+        // authored record. Native save capture/restore must carry them.
+        std::optional<float> mNativePlacedItemCondition;
+        float mNativePlacedEnchantmentCharge = -1.f;
     };
 
 }

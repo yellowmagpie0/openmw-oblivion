@@ -148,7 +148,7 @@ namespace MWWorld
     float CellRef::getEnchantmentCharge() const
     {
         return std::visit(ESM::VisitOverload{
-                              [&](const ESM4::Reference& /*ref*/) { return 0.f; },
+                              [&](const ESM4::Reference&) { return mNativePlacedEnchantmentCharge; },
                               [&](const ESM::CellRef& ref) { return ref.mEnchantmentCharge; },
                               [&](const ESM4::ActorCharacter&) -> float { return 0.f; },
                           },
@@ -174,12 +174,17 @@ namespace MWWorld
 
     void CellRef::setEnchantmentCharge(float charge)
     {
-        if (charge != getEnchantmentCharge())
+        const bool nativePlaced = std::holds_alternative<ESM4::Reference>(mCellRef.mVariant);
+        if (nativePlaced && (!std::isfinite(charge) || (charge < 0 && charge != -1.f)))
+            throw std::invalid_argument("Invalid native placed enchantment charge");
+        if (charge != getEnchantmentCharge()
+            || (nativePlaced && charge == 0
+                && std::signbit(charge) != std::signbit(getEnchantmentCharge())))
         {
             mChanged = true;
 
             std::visit(ESM::VisitOverload{
-                           [&](ESM4::Reference& /*ref*/) {},
+                           [&](ESM4::Reference&) { mNativePlacedEnchantmentCharge = charge; },
                            [&](ESM4::ActorCharacter&) {},
                            [&](ESM::CellRef& ref) { ref.mEnchantmentCharge = charge; },
                        },
@@ -190,7 +195,9 @@ namespace MWWorld
     std::optional<float> CellRef::getNativeItemCondition() const
     {
         const auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant);
-        return ref ? ref->mNativeItemCondition : std::nullopt;
+        if (ref) return ref->mNativeItemCondition;
+        return std::holds_alternative<ESM4::Reference>(mCellRef.mVariant)
+            ? mNativePlacedItemCondition : std::nullopt;
     }
 
     float CellRef::getItemCondition(float maximum) const
@@ -206,14 +213,42 @@ namespace MWWorld
         if (!std::isfinite(condition) || condition < 0)
             throw std::invalid_argument("Invalid native item condition");
         auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant);
-        if (!ref)
-            throw std::invalid_argument("Native condition requires a projected inventory instance");
-        ref->mNativeItemCondition = condition;
+        if (ref)
+            ref->mNativeItemCondition = condition;
+        else if (std::holds_alternative<ESM4::Reference>(mCellRef.mVariant))
+            mNativePlacedItemCondition = condition;
+        else
+            throw std::invalid_argument("Native condition requires an inventory or placed item instance");
+        mChanged = true;
+    }
+
+    void CellRef::resetNativeItemCondition() noexcept
+    {
+        if (auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant))
+        {
+            if (!ref->mNativeItemCondition) return;
+            ref->mNativeItemCondition.reset();
+        }
+        else
+        {
+            if (!mNativePlacedItemCondition) return;
+            mNativePlacedItemCondition.reset();
+        }
         mChanged = true;
     }
 
     void CellRef::setCharge(int charge)
     {
+        if (std::holds_alternative<ESM4::Reference>(mCellRef.mVariant))
+        {
+            if (charge < -1)
+                throw std::invalid_argument("Invalid native placed item charge");
+            if (charge == -1)
+                resetNativeItemCondition();
+            else
+                setNativeItemCondition(static_cast<float>(charge));
+            return;
+        }
         std::visit(ESM::VisitOverload{
                        [&](ESM4::Reference& /*ref*/) {},
                        [&](ESM4::ActorCharacter&) {},

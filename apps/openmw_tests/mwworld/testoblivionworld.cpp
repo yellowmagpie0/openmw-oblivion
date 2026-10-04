@@ -9205,3 +9205,115 @@ TEST(OblivionWorldTest, PreparedBowBreakClearingObserverCanReturnWithoutTouching
     prepared.reset(); // Discard both borrowed-item tokens after clear destroyed their instances.
     inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
 }
+
+TEST(OblivionWorldTest, NativePlacedItemExtrasPreserveIdentityExactConditionAndChargeAcrossCopies)
+{
+    ESM4::Reference authored{};
+    authored.mFormKey = ESM::FormKey::dynamic("dropped-item", 1);
+    authored.mBaseKey = ESM::FormKey::content("oblivion.esm", 0x200);
+    authored.mBaseObj = ESM::FormId{0x200, 0};
+    MWWorld::CellRef live(authored);
+    EXPECT_FALSE(live.hasChanged());
+    EXPECT_FALSE(live.getNativeItemCondition());
+    EXPECT_EQ(live.getCharge(), -1);
+    EXPECT_EQ(live.getItemCondition(50.f), 50.f);
+    EXPECT_EQ(live.getEnchantmentCharge(), -1.f);
+    for (const float condition : {0.f, -0.f, .1f, 49.8f, std::numeric_limits<float>::denorm_min(),
+            std::numeric_limits<float>::max()})
+    {
+        SCOPED_TRACE(condition);
+        live.setNativeItemCondition(condition);
+        live.setEnchantmentCharge(7.25f);
+        MWWorld::CellRef copied(live);
+        EXPECT_EQ(copied.getFormKey(), authored.mFormKey);
+        EXPECT_EQ(copied.getRefId(), ESM::RefId(authored.mBaseObj));
+        ASSERT_TRUE(copied.getNativeItemCondition());
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*copied.getNativeItemCondition()),
+            std::bit_cast<std::uint32_t>(condition));
+        EXPECT_EQ(copied.getItemCondition(50.f), condition);
+        EXPECT_EQ(copied.getCharge(), static_cast<int>(std::min(double(std::numeric_limits<int>::max()),
+            std::ceil(double(condition)))));
+        EXPECT_EQ(copied.getEnchantmentCharge(), 7.25f);
+        MWWorld::CellRef fresh(authored);
+        std::swap(copied, fresh);
+        EXPECT_FALSE(copied.getNativeItemCondition());
+        EXPECT_EQ(copied.getEnchantmentCharge(), -1.f);
+        EXPECT_EQ(fresh.getNativeItemCondition(), condition);
+        EXPECT_EQ(fresh.getEnchantmentCharge(), 7.25f);
+        fresh.setCharge(-1);
+        EXPECT_FALSE(fresh.getNativeItemCondition());
+        EXPECT_EQ(fresh.getItemCondition(50.f), 50.f);
+        EXPECT_EQ(fresh.getEnchantmentCharge(), 7.25f);
+        live.resetNativeItemCondition();
+        EXPECT_FALSE(live.getNativeItemCondition());
+    }
+    MWWorld::CellRef independent(authored);
+    EXPECT_FALSE(independent.getNativeItemCondition());
+    EXPECT_EQ(independent.getEnchantmentCharge(), -1.f);
+    for (const float charge : {0.f, -0.f, .1f, std::numeric_limits<float>::denorm_min(),
+            std::numeric_limits<float>::max(), 0.f})
+    {
+        live.setEnchantmentCharge(charge);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(live.getEnchantmentCharge()), std::bit_cast<std::uint32_t>(charge));
+        MWWorld::CellRef copied(live);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(copied.getEnchantmentCharge()), std::bit_cast<std::uint32_t>(charge));
+    }
+    live.setCharge(17);
+    EXPECT_EQ(live.getNativeItemCondition(), 17.f);
+    live.setEnchantmentCharge(-1.f);
+    EXPECT_EQ(live.getEnchantmentCharge(), -1.f);
+}
+
+TEST(OblivionWorldTest, NativePlacedItemExtrasRejectInvalidValuesBeforeChangingAnInstance)
+{
+    const ESM4::Reference authored{};
+    for (const float invalid : {-1.f, -2.f, std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        MWWorld::CellRef fresh(authored);
+        EXPECT_THROW(fresh.setNativeItemCondition(invalid), std::invalid_argument);
+        EXPECT_FALSE(fresh.hasChanged());
+        EXPECT_FALSE(fresh.getNativeItemCondition());
+    }
+    for (const float invalid : {-.5f, -2.f, std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        MWWorld::CellRef fresh(authored);
+        EXPECT_THROW(fresh.setEnchantmentCharge(invalid), std::invalid_argument);
+        EXPECT_FALSE(fresh.hasChanged());
+        EXPECT_EQ(fresh.getEnchantmentCharge(), -1.f);
+    }
+    MWWorld::CellRef fresh(authored);
+    EXPECT_THROW(fresh.setCharge(-2), std::invalid_argument);
+    EXPECT_FALSE(fresh.hasChanged());
+    fresh.setNativeItemCondition(0.f);
+    fresh.setEnchantmentCharge(0.f);
+    EXPECT_THROW(fresh.setNativeItemCondition(-1.f), std::invalid_argument);
+    EXPECT_THROW(fresh.setEnchantmentCharge(-2.f), std::invalid_argument);
+    EXPECT_EQ(fresh.getNativeItemCondition(), 0.f);
+    EXPECT_EQ(fresh.getEnchantmentCharge(), 0.f);
+    ESM4::ActorCharacter actor{};
+    MWWorld::CellRef actorRef(actor);
+    EXPECT_THROW(actorRef.setNativeItemCondition(1.f), std::invalid_argument);
+    EXPECT_FALSE(actorRef.hasChanged());
+    EXPECT_FALSE(actorRef.getNativeItemCondition());
+}
+
+TEST(OblivionWorldTest, ProjectedInventoryConditionStorageRetainsLegacyChargeResetSemantics)
+{
+    ESM::CellRef item;
+    item.blank();
+    item.mChargeInt = 13;
+    item.mChargeIntRemainder = .25f;
+    MWWorld::CellRef live(item);
+    EXPECT_EQ(live.getItemCondition(50.f), 13.25f);
+    live.setNativeItemCondition(.1f);
+    EXPECT_EQ(live.getItemCondition(50.f), .1f);
+    live.setCharge(9);
+    EXPECT_FALSE(live.getNativeItemCondition());
+    EXPECT_EQ(live.getChargeIntRemainder(), 0.f);
+    EXPECT_EQ(live.getItemCondition(50.f), 9.f);
+    live.setNativeItemCondition(0.f);
+    live.resetNativeItemCondition();
+    EXPECT_EQ(live.getItemCondition(50.f), 9.f);
+}

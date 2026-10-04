@@ -18,7 +18,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
-| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication; checkpoints255–274 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
+| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication and placed-item extras; checkpoints255–275 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
 | S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
@@ -20558,3 +20558,49 @@ Tested fingerprint: aa7fbd134262780cc7068cb6b36c9e2d414f3905574f7570aac403323f89
 Native NPC ordinary-bow drop, compound projectile/resource publication,
 Character bow input, flight/impact/recovery, saved projectiles and normal-input
 acceptance remain open. S5 and M15 remain in progress.
+
+
+### S5 checkpoint275: native placed-item condition and charge storage
+
+Live native REFR instances now retain exact binary32 condition and enchantment
+charge independently of their winning authored record. Missing condition reads
+the supplied base maximum, rather than an invented broken value; missing charge
+keeps the existing full/default sentinel. Copy, move and swap retain these extras
+with the reference's stable identity. Legacy integer health views use the same
+ceil/clamp projection as native inventory health. Explicit reset restores absence.
+
+Native condition and charge reject invalid values before changing the instance.
+The native charge setter also preserves the sign bit when replacing positive
+zero with negative zero. Existing projected TES3/inventory charge-reset and
+remainder behavior remains unchanged. Actor references cannot acquire item
+condition through this API.
+
+Three engine unit tests directly exercise CellRef storage, exact float bits,
+zero/subnormal/maximum values, positive-to-negative-zero charge replacement,
+copy/swap/base-record independence, default/reset behavior, malformed inputs
+and legacy projected health. They do not exercise World drop or pickup.
+
+Normal05 and sanitized04 each pass1000 full engine tests with exact inventories
+and no failures/skips. Passing incremental builds emit 1/1
+existing range-copy warnings in the unchanged actor-stats test; byte equality
+against checkpoint274 is recorded in normal05/unchanged-warning-source.json.
+ASan leak checks are disabled. Components, Python and runtime schema39 are
+unchanged.
+
+Initial normal01 exposed two new fixture compile mistakes; sanitized01 was
+interrupted before tests. Both02 were interrupted for another fixture
+initialization correction, and both03 for the signed-zero charge regression.
+Normal04 then failed linking because an interrupted build had left a zero-byte
+generated weather binding object. Recovery removes only that empty object;
+normal05 has identical source to normal04. Failed/interrupted evidence and the
+object-recovery metadata remain in their original directories.
+
+Evidence: S5/native-placed-item-extras-normal-05 and
+S5/native-placed-item-extras-sanitized-04.
+Tested fingerprint: d5acc292e55cafc315d0b10e05457bc2b300ab2ee426a804bdf55bb379a88303
+
+Native loose-item save capture/restore, dropped-reference recreation and atomic
+pickup remain open. Drawn ordinary NPC bow breaks still reject before resource
+publication; full native drop consequences, compound shot publication,
+Character input, flight/impact/recovery and normal-input/restart acceptance are
+not closed by this storage prerequisite. S5 and M15 remain in progress.
