@@ -20282,3 +20282,60 @@ Tested fingerprint: 0cbb084455afbddb42e8b6c14a698d681c70bf642d5e1e5f48291cb9e5ce
 
 This closes the typed input rule only. Owned saved latch/controller wiring,
 resource release, native flight and normal-input ranged acceptance remain open.
+
+### S5 checkpoint269: saved Player bow input and native timer selection
+
+Runtime-state39 adds a canonical boolean Player hold latch to each owned bow
+record. Only the actual Player can carry a true latch. Version38 draws decode
+with a false latch; current binary/JSON/Python agree, and populated latch
+downgrades are rejected. Migration preserves older draws without inventing a
+held input. Accepted Player draw admission creates the owned latch; NPC draws
+do not. advancePlayerBowPlayback selects pause from the verified native tail
+and prepares timer/latch before publishing a successful playback frame.
+Invalid/stale/nonrunning frames leave the whole state unchanged. Cancellation
+removes ownership; fresh admission receives a fresh action identity/latch.
+
+The independently executed original input selection65EB57 observes actual
+Player+640 timer writes through65EF38/65EC2A/65ED9F. Input403520, process
+readiness/bow/action, setting403C00 and draw-weapon request5E6D70 are stable,
+declared boundaries; actual raw-action and phase queries execute. All5760
+factorial cases agree in exact binary32 bits with normal and instrumented C++.
+Eligible new presses preserve an active draw timer, eligible ordinary held
+frames accumulate it, inactive/End draws reset, and ineligible input leaves it
+unchanged. The old caller-selected timer API remains available for its distinct
+supported prefix; the owned Player input adapter uses this verified selection.
+
+Actual service tests compare full saved state for held playback, button
+release and a resumed press that cannot recreate the old latch. They verify
+the timer remains1.5 across released/pressed frames, and invalid frames,
+lossy capture, cancellation and renewed admission. C++/Python independent
+golden wire tests reject truncation/noncanonical markers. Both cross-language
+drivers pass52 exact binary/JSON cases: all39 empty schemas, ten phase/latch
+combinations, two pending-Release latch cases, and a populated legacy38 draw.
+
+Final normal and ASan/UBSan each pass2465 full component and978 full engine
+tests, exact inventories, no failures/skips and no emitted incremental-build
+warnings. Normal also passes261 Python tests without skips. Leak detection is
+disabled. Retain both initial engine01 failures: the new service-comparison
+fixture used an empty Player identity; initialize it from the real fixture
+state. Retain Python precheck01's NPC latch fixture error and both wire01
+drivers' legacy character-generation fixture error. Corrected02 evidence is
+S5/player-bow-input-{normal,sanitized}-02 and
+S5/player-bow-input-wire-cross-language-{normal,sanitized}-02.
+Timer evidence is S5/native-player-bow-timer-input-oracle-01 and
+S5/native-player-bow-timer-input-compare-{normal,sanitized}-02.
+The standalone comparisons preceded the final engine-test-only correction;
+production archives are unchanged and hashed by each comparator.
+Final tested fingerprint: 1a875ccccd9539ab2340b4139af42d368269ace172d4cb95c9f21f1fa31dc0d5
+
+Additional independent flight research executes original interior-world setup
+4D4A8B through4D4AD0, including actual88A4F0/8A9510 constructors and8A9460
+bounds setup, with no game-function stubs. Both x87 modes store the exact
+gravity quad[0,0,-73.57500457763672,0] in world-info+10; original89A230
+copies that quad to Havokworld+20. Evidence:
+S5/native-world-gravity-setup-oracle-01. These are Havok coordinates; the
+coordinate-conversion caller, arrow motion-state selection, other world
+producers and trajectory acceptance remain unverified here.
+
+Character input/renderer wiring, release resources/projectiles, flight and
+normal-input ranged acceptance remain open. This does not close S5 or M15.

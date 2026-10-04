@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 38
+CURRENT_VERSION = 39
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1249,9 +1249,14 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for bow in bows:
         fields = {"actor", "id", "bow_base", "ammo_base", "animation_group",
                   "playback_rate", "phase", "sequence_offset", "key_times", "action", "release_committed"}
+        if version >= 39:
+            fields.add("player_hold_latched")
         if not isinstance(bow, dict) or set(bow) != fields:
             raise RuntimeStateError("Invalid TES4 bow state")
         actor, identity = bow["actor"], bow["id"]
+        if version >= 39 and (type(bow["player_hold_latched"]) is not bool
+                or (bow["player_hold_latched"] and actor != state["player"]["reference"])):
+            raise RuntimeStateError("Invalid native Player bow hold latch ownership")
         for field in ("actor", "bow_base", "ammo_base"):
             native_key(bow[field])
         phase, action, committed = bow["phase"], bow["action"], bow["release_committed"]
@@ -1844,6 +1849,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if marker not in (0, 1):
                 raise RuntimeStateError("Invalid TES4 bow release marker")
             bow["release_committed"] = bool(marker)
+            if version >= 39:
+                latch = reader.unpack("<B")
+                if latch not in (0, 1):
+                    raise RuntimeStateError("Invalid native Player bow hold latch")
+                bow["player_hold_latched"] = bool(latch)
             result["native_bow_states"].append(bow)
     _validate_basic_state(result)
     if reader.offset != len(payload):
@@ -2250,6 +2260,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<f", bow["sequence_offset"])
             for time in bow["key_times"]: writer.pack("<f", time)
             writer.pack("<h", bow["action"]); writer.pack("<B", int(bow["release_committed"]))
+            if version >= 39: writer.pack("<B", int(bow["player_hold_latched"]))
     return writer.finish()
 
 
@@ -2316,6 +2327,11 @@ def _upgrade_bow_states(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 38 and state.get("native_bow_states"):
         raise RuntimeStateError("Legacy TES4 save cannot carry owned bow playback")
     state.setdefault("native_bow_states", [])
+    if state.get("schema_version", 1) < 39:
+        for bow in state["native_bow_states"]:
+            if bow.get("player_hold_latched", False):
+                raise RuntimeStateError("Legacy TES4 save cannot carry a Player bow hold latch")
+            bow["player_hold_latched"] = False
 
 
 def _upgrade_melee_ai(state: dict[str, Any]) -> None:

@@ -1025,6 +1025,8 @@ namespace ESM4
         for (const auto& [actor, bow] : mNativeBowStates)
         {
             bow.validate();
+            if (bow.mPlayerHoldLatched && (mVersion < 39 || actor != mPlayer.mReference))
+                throw std::runtime_error("Native Player bow hold latch requires Player ownership and version39");
             const auto life = lives.find(actor);
             const auto melee = mNativeMeleeStates.find(actor);
             const auto owner = mPhysicalActionOwners.find(bow.mActionId);
@@ -1960,6 +1962,7 @@ namespace ESM4
                 for (float time : bow.mKeyTimes) writer.floating(time);
                 writer.integer(bow.mAction);
                 writer.integer<std::uint8_t>(bow.mReleaseCommitted);
+                if (mVersion >= 39) writer.integer<std::uint8_t>(bow.mPlayerHoldLatched);
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -2793,6 +2796,12 @@ namespace ESM4
                 if (committed > 1)
                     throw std::runtime_error("Invalid TES4 bow release marker");
                 bow.mReleaseCommitted = committed;
+                if (result.mVersion >= 39)
+                {
+                    const auto latched = reader.integer<std::uint8_t>();
+                    if (latched > 1) throw std::runtime_error("Invalid native Player bow hold latch");
+                    bow.mPlayerHoldLatched = latched;
+                }
                 if (!result.mNativeBowStates.emplace(std::move(actor), std::move(bow)).second)
                     throw std::runtime_error("Duplicate TES4 bow actor");
             }
@@ -3649,7 +3658,9 @@ namespace ESM4
                 for (std::size_t i = 0; i < bow.mKeyTimes.size(); ++i)
                 { if (i) stream << ','; scalar(bow.mKeyTimes[i]); }
                 stream << "],\"action\":" << bow.mAction
-                    << ",\"release_committed\":" << (bow.mReleaseCommitted ? "true" : "false") << '}';
+                    << ",\"release_committed\":" << (bow.mReleaseCommitted ? "true" : "false");
+                if (mVersion >= 39) stream << ",\"player_hold_latched\":" << (bow.mPlayerHoldLatched ? "true" : "false");
+                stream << '}';
             }
             stream << ']';
         }

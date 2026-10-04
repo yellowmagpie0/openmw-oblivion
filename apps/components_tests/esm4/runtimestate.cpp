@@ -2834,7 +2834,7 @@ namespace
 
 TEST(ESM4RuntimeState, BowThirtyEightIndependentGoldenWireAndLegacyAbsence)
 {
-    auto state = bowState();
+    auto state = bowState(); state.mVersion = 38;
     auto old = state; old.mVersion = 37; old.mNativeBowStates.clear();
     const auto legacy = old.serializeBinary();
     auto expected = legacy;
@@ -2891,4 +2891,25 @@ TEST(ESM4RuntimeState, BowRejectsMalformedOwnershipReplayAndTruncatedWire)
     committed.mPhysicalActions.mPending.clear(); committed.mPhysicalActionOwners.clear();
     EXPECT_NO_THROW(committed.serializeBinary());
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(committed.serializeBinary()).mNativeBowStates, committed.mNativeBowStates);
+}
+
+TEST(ESM4RuntimeState, PlayerBowHoldLatchThirtyNineIndependentWireAndLegacyDefault)
+{
+    auto legacy = bowState(); legacy.mVersion = 38;
+    const auto oldBytes = legacy.serializeBinary();
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(oldBytes).mNativeBowStates.begin()->second.mPlayerHoldLatched);
+    for (bool latched : {false, true})
+    {
+        auto state = legacy; state.mVersion = 39;
+        state.mNativeBowStates.begin()->second.mPlayerHoldLatched = latched;
+        auto expected = oldBytes; expected[9] = 39; expected.push_back(latched);
+        EXPECT_EQ(state.serializeBinary(), expected);
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(expected).mNativeBowStates, state.mNativeBowStates);
+        expected.back() = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(expected), std::runtime_error);
+        expected.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(expected), std::runtime_error);
+    }
+    legacy.mNativeBowStates.begin()->second.mPlayerHoldLatched = true;
+    EXPECT_THROW(legacy.serializeBinary(), std::runtime_error);
 }

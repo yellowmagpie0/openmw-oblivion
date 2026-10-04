@@ -164,6 +164,18 @@ namespace ESM4
         return rounded(double(current) + duration);
     }
 
+    float playerBowTimerAfterInput(float current, float duration, std::int32_t action,
+        BowAnimationPhase phase, bool held, bool pressed, bool ready, bool blocked)
+    {
+        if (phase > BowAnimationPhase::End)
+            throw std::invalid_argument("invalid native player bow input phase");
+        if (!(held || pressed) || !ready || blocked)
+            return current;
+        if ((action != 4 && action != 5) || phase == BowAnimationPhase::End)
+            return 0;
+        return pressed ? current : advancePlayerBowTimer(current, duration, action, phase);
+    }
+
     BowActionEvent bowActionEvent(std::int32_t action, BowAnimationPhase phase,
         bool present, bool running)
     {

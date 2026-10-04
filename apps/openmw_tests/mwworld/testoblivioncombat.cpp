@@ -1018,3 +1018,60 @@ TEST(OblivionCombatService, BowDrawIdentityCannotCommitAMeleeResourceTransaction
     service.capture(state); EXPECT_EQ(state.serializeBinary(), before);
     EXPECT_TRUE(service.isActionPending(id, actor));
 }
+
+TEST(OblivionCombatService, PlayerBowInputHoldAndReleaseContinueExactlyAcrossSave)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    auto state = bowServiceState(); const auto actor = state.mPlayer.mReference;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    const auto id = service.beginBowDraw(actor, preparedBow());
+    ASSERT_TRUE(service.findBowState(actor)->mPlayerHoldLatched);
+    ASSERT_TRUE(service.advancePlayerBowPlayback(id, actor, .3f, true, true, true, false, true));
+    ASSERT_TRUE(service.confirmBowAttachment(id, actor));
+    ASSERT_TRUE(service.advancePlayerBowPlayback(id, actor, 1, true, false, true, false, true));
+    ASSERT_EQ(service.findBowState(actor)->mProgress.mPhase, Phase::Hold);
+    ASSERT_TRUE(service.advancePlayerBowPlayback(id, actor, .5f, true, false, true, false, true));
+    ASSERT_EQ(service.findBowState(actor)->mProgress.mPhase, Phase::Hold);
+    service.capture(state);
+    MWMechanics::OblivionCombatService resumed;
+    resumed.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_TRUE(resumed.bindBowPlayback(id, actor));
+    for (auto* current : {&service, &resumed})
+    {
+        ASSERT_TRUE(current->advancePlayerBowPlayback(id, actor, .01f, false, false, true, false, true));
+        EXPECT_FALSE(current->findBowState(actor)->mPlayerHoldLatched);
+        EXPECT_EQ(current->playerBowTimer(), 1.5f);
+        ASSERT_EQ(current->findBowState(actor)->mProgress.mPhase, Phase::Hold);
+    }
+    auto a = state, b = state; service.capture(a); resumed.capture(b);
+    EXPECT_EQ(a.serializeBinary(), b.serializeBinary());
+    MWMechanics::OblivionCombatService afterRelease;
+    afterRelease.restore(ESM4::RuntimeState::deserializeBinary(b.serializeBinary()));
+    ASSERT_TRUE(afterRelease.bindBowPlayback(id, actor));
+    ASSERT_TRUE(afterRelease.advancePlayerBowPlayback(id, actor, .2f, true, true, true, false, true));
+    ASSERT_TRUE(service.advancePlayerBowPlayback(id, actor, .2f, true, true, true, false, true));
+    EXPECT_FALSE(afterRelease.findBowState(actor)->mPlayerHoldLatched);
+    EXPECT_EQ(afterRelease.playerBowTimer(), 1.5f);
+    EXPECT_EQ(afterRelease.findBowState(actor)->mProgress.mPhase, Phase::Release);
+    service.capture(a); afterRelease.capture(b); EXPECT_EQ(a.serializeBinary(), b.serializeBinary());
+}
+
+TEST(OblivionCombatService, PlayerBowInputFrameRejectsAtomicallyAndCancellationRemovesLatch)
+{
+    auto state = bowServiceState(); const auto actor = state.mPlayer.mReference;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    const auto id = service.beginBowDraw(actor, preparedBow());
+    service.capture(state); const auto before = state.serializeBinary();
+    EXPECT_THROW(service.advancePlayerBowPlayback(id, actor, -1, false, false, true, false, true),
+        std::invalid_argument);
+    EXPECT_FALSE(service.advancePlayerBowPlayback(id + 1, actor, 1, false, false, true, false, true));
+    EXPECT_FALSE(service.advancePlayerBowPlayback(id, actor, 1, false, false, true, false, false));
+    service.capture(state); EXPECT_EQ(state.serializeBinary(), before);
+    auto old = state; old.mVersion = 38;
+    EXPECT_THROW(service.capture(old), std::invalid_argument);
+    ASSERT_TRUE(service.cancelBowDraw(id, actor));
+    EXPECT_FALSE(service.findBowState(actor));
+    service.capture(state); EXPECT_TRUE(state.mNativeBowStates.empty());
+    const auto next = service.beginBowDraw(actor, preparedBow());
+    EXPECT_GT(next, id); EXPECT_TRUE(service.findBowState(actor)->mPlayerHoldLatched);
+}

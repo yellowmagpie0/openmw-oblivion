@@ -645,3 +645,21 @@ TEST(ESM4ProjectileRules, BowActionEventsRequireTheOriginalActionPhaseAndRunning
                 }
     EXPECT_THROW(ESM4::bowActionEvent(4, static_cast<Phase>(5), true, true), std::invalid_argument);
 }
+
+TEST(ESM4ProjectileRules, PlayerBowTimerInputSelectsHeldAccumulationAndPressReset)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(.625f, .25f, 5, Phase::Hold, true, false, true, false), .875f);
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(.625f, .25f, 5, Phase::Hold, true, true, true, false), .625f);
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(.625f, .25f, 5, Phase::Hold, false, false, true, false), .625f);
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(.625f, .25f, 5, Phase::Hold, true, false, false, false), .625f);
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(.625f, .25f, 5, Phase::Hold, true, false, true, true), .625f);
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(nan, nan, 3, Phase::Release, false, true, true, false), 0);
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(nan, nan, 5, Phase::End, true, false, true, false), 0);
+    EXPECT_EQ(ESM4::playerBowTimerAfterInput(.625f, nan, 5, Phase::Hold, true, true, true, false), .625f);
+    EXPECT_THROW(ESM4::playerBowTimerAfterInput(0, -1, 5, Phase::Hold, true, false, true, false),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::playerBowTimerAfterInput(0, 0, 5, static_cast<Phase>(5), false, false, false, false),
+        std::invalid_argument);
+}

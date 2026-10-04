@@ -33,7 +33,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 38;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 39;
 
     struct RuntimeContentIdentity
     {
@@ -426,6 +426,8 @@ namespace ESM4
         std::array<float, 5> mKeyTimes{};
         std::int16_t mAction = 4;
         bool mReleaseCommitted = false;
+        // v39: accepted Player input latch, retained through held playback.
+        bool mPlayerHoldLatched = false;
         void validate() const;
         friend bool operator==(const RuntimeBowState&, const RuntimeBowState&) = default;
     };

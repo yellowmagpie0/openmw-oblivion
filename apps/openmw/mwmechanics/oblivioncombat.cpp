@@ -777,6 +777,7 @@ namespace MWMechanics
             || values->mProcessKnockedState != 0 || values->mProcessAction != -1
             || mBowStates.contains(actor) || (melee && melee->mStrike) || getProcessParalysis(actor) != 0)
             throw std::invalid_argument("native bow draw requires an idle, awake Active actor");
+        prepared.mPlayerHoldLatched = values->mOwner == ESM4::ActorValueOwner::Player;
         // Prepare map nodes and owned strings before allocating an action ID.
         decltype(mBowStates) states;
         states.emplace(actor, std::move(prepared));
@@ -824,8 +825,33 @@ namespace MWMechanics
         return ESM4::bowActionEvent(bow->mAction, bow->mProgress.mPhase, present, running);
     }
 
+    bool OblivionCombatService::advancePlayerBowPlayback(std::uint64_t id, const ESM::FormKey& actor,
+        float duration, bool held, bool pressed, bool ready, bool blocked, bool running)
+    {
+        const auto* values = findActorValues(actor);
+        const auto found = mBowStates.find(actor);
+        if (!values || values->mOwner != ESM4::ActorValueOwner::Player
+            || found == mBowStates.end() || found->second.mActionId != id)
+            return false;
+        const auto result = ESM4::playerBowHold({held, pressed, ready, false, blocked, 7, 0,
+            found->second.mProgress.mPhase, found->second.mPlayerHoldLatched});
+        const auto timer = ESM4::playerBowTimerAfterInput(playerBowTimer(), duration,
+            found->second.mAction, found->second.mProgress.mPhase, held, pressed, ready, blocked);
+        if (!advanceBowPlaybackImpl(id, actor, duration, result.mPaused, running, false))
+            return false;
+        mPlayerBowTimer = timer;
+        found->second.mPlayerHoldLatched = result.mLatched;
+        return true;
+    }
+
     bool OblivionCombatService::advanceBowPlayback(std::uint64_t id, const ESM::FormKey& actor,
         float duration, bool paused, bool running)
+    {
+        return advanceBowPlaybackImpl(id, actor, duration, paused, running, true);
+    }
+
+    bool OblivionCombatService::advanceBowPlaybackImpl(std::uint64_t id, const ESM::FormKey& actor,
+        float duration, bool paused, bool running, bool updatePlayerTimer)
     {
         const auto found = mBowStates.find(actor);
         if (found == mBowStates.end() || found->second.mActionId != id || !running)
@@ -849,7 +875,7 @@ namespace MWMechanics
             bow.mKeyTimes.front(), bow.mKeyTimes, paused, bow.mPlaybackRate);
         candidate.validate();
         std::optional<float> timer;
-        if (values->mOwner == ESM4::ActorValueOwner::Player)
+        if (updatePlayerTimer && values->mOwner == ESM4::ActorValueOwner::Player)
             timer = ESM4::advancePlayerBowTimer(playerBowTimer(), duration, bow.mAction, bow.mProgress.mPhase);
         // No allocations or callbacks after preparing every selected result.
         clock->second = nextClock;
@@ -3478,6 +3504,9 @@ namespace MWMechanics
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
             throw std::invalid_argument("native physical poses require an Oblivion v31+ save");
+        if (state.mVersion < 39 && std::any_of(mBowStates.begin(), mBowStates.end(),
+                [](const auto& entry) { return entry.second.mPlayerHoldLatched; }))
+            throw std::invalid_argument("native Player bow hold latch requires an Oblivion v39+ save");
         if (state.mVersion < 38 && !mBowStates.empty())
             throw std::invalid_argument("native owned bow playback requires an Oblivion v38+ save");
         if (state.mVersion < 37 && mPlayerBowTimer)

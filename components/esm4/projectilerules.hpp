@@ -73,6 +73,12 @@ namespace ESM4
     float advancePlayerBowTimer(float current, float duration,
         std::int32_t processAction, BowAnimationPhase phase);
 
+    // Player input selection preceding the hold tail. A new press can reset
+    // a completed/inactive draw; only an eligible held frame accumulates.
+    // Ineligible input leaves the timer untouched, including unused operands.
+    float playerBowTimerAfterInput(float current, float duration, std::int32_t processAction,
+        BowAnimationPhase phase, bool held, bool pressed, bool ready, bool blocked);
+
     enum class BowActionEvent : std::uint8_t { None, Attach, Release };
     // Actor action dispatch after a present, running sequence has been resolved.
     BowActionEvent bowActionEvent(std::int32_t processAction, BowAnimationPhase phase,

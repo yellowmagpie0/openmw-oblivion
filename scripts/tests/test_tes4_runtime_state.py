@@ -165,6 +165,34 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             "key_times": [0., .25, 1., 1.5, 2.], "action": 4, "release_committed": False}]
         return state
 
+    def test_bow39_hold_latch_independent_wire_corruption_and_legacy_upgrade(self):
+        old = self.bow_state()
+        player = old["player"]["reference"]
+        old["native_bow_states"][0]["actor"] = player
+        old["native_animation_clocks"][0]["actor"] = player
+        for owner in old["physical_action_owners"]:
+            if owner["id"] == 2: owner["actor"] = player
+        payload = state_io.encode_payload(old)
+        for latch in (False, True):
+            state = copy.deepcopy(old); state["schema_version"] = 39
+            state["native_bow_states"][0]["player_hold_latched"] = latch
+            expected = bytearray(payload)
+            struct.pack_into("<I", expected, len(state_io.MAGIC), 39)
+            expected += bytes([latch])
+            self.assertEqual(state_io.encode_payload(state), expected)
+            self.assertEqual(state_io.decode_payload(expected)["native_bow_states"], state["native_bow_states"])
+            bad = expected[:-1] + bytes([2])
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(expected[:-1])
+            state["schema_version"] = 38
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        upgraded = copy.deepcopy(old)
+        state_io._upgrade_bow_states(upgraded); upgraded["schema_version"] = 39
+        self.assertFalse(upgraded["native_bow_states"][0]["player_hold_latched"])
+        self.assertFalse(state_io.decode_payload(state_io.encode_payload(upgraded))["native_bow_states"][0]["player_hold_latched"])
+        upgraded["native_bow_states"][0]["player_hold_latched"] = 1
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(upgraded)
+
     def test_bow38_independent_wire_legacy_and_committed_continuation(self):
         state = self.bow_state()
         old = copy.deepcopy(state); old["schema_version"] = 37; del old["native_bow_states"]
@@ -200,7 +228,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             source.write_bytes(record + tail)
             state_io.write_save(source, target, state)
             decoded = state_io.load_save(target)
-            self.assertEqual(decoded["schema_version"], 38)
+            self.assertEqual(decoded["schema_version"], state_io.CURRENT_VERSION)
             self.assertEqual(decoded["native_bow_states"], [])
             self.assertEqual(decoded["physical_actions"], state_io.decode_payload(payload)["physical_actions"])
             self.assertEqual(decoded["physical_action_owners"], sorted(state["physical_action_owners"], key=lambda x:x["id"]))

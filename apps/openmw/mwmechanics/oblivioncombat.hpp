@@ -238,6 +238,8 @@ namespace MWMechanics
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
         void clearBowPlaybackAction(const ESM::FormKey& actor) noexcept;
+        bool advanceBowPlaybackImpl(std::uint64_t id, const ESM::FormKey& actor,
+            float duration, bool paused, bool sequenceRunning, bool updatePlayerTimer);
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
@@ -349,6 +351,9 @@ namespace MWMechanics
         const ESM4::RuntimeBowState* findBowState(const ESM::FormKey& actor) const;
         std::uint64_t beginBowDraw(const ESM::FormKey& actor, ESM4::RuntimeBowState prepared);
         bool bindBowPlayback(std::uint64_t id, const ESM::FormKey& actor);
+        // Owned Player input policy; phase/category/latch come from this draw.
+        bool advancePlayerBowPlayback(std::uint64_t id, const ESM::FormKey& actor,
+            float duration, bool held, bool pressed, bool ready, bool blocked, bool sequenceRunning);
         bool advanceBowPlayback(std::uint64_t id, const ESM::FormKey& actor,
             float duration, bool paused, bool sequenceRunning);
         ESM4::BowActionEvent pendingBowEvent(const ESM::FormKey& actor,
