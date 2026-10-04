@@ -240,6 +240,7 @@ namespace NifBullet
             btScalar mDynamicMass = 0;
             btVector3 mDynamicInertia{0, 0, 0};
             RagdollNativeMotion mMotion = RagdollNativeMotion::Dynamic;
+            float mNativeLinearW = 0.f, mNativeAngularW = 0.f;
             float currentNativeLinearDamping() const
             {
                 // Original8CBC60 creates KEY motion with zero current damping;
@@ -1115,6 +1116,106 @@ namespace NifBullet
         }
     }
 
+    std::vector<RagdollNativePackedVelocityState> ActorRagdollPhysics::captureNativePackedVelocities() const
+    {
+        std::vector<RagdollNativePackedVelocityState> result;
+        result.reserve(mImpl->mBodies.size());
+        for (const auto& owned : mImpl->mBodies)
+        {
+            RagdollNativePackedVelocityState state{owned.mRecord, {}};
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                state.mVelocities.mLinear[axis] = float(owned.mBody->getLinearVelocity()[axis] / mImpl->mLengthScale);
+                state.mVelocities.mAngular[axis] = float(owned.mBody->getAngularVelocity()[axis]);
+            }
+            state.mVelocities.mLinear[3] = owned.mNativeLinearW;
+            state.mVelocities.mAngular[3] = owned.mNativeAngularW;
+            result.push_back(state);
+        }
+        return result;
+    }
+
+    namespace
+    {
+        std::pair<btVector3, btVector3> packedWorldVelocity(
+            const ESM4::PhysicalWorldSceneVelocities& velocity, float lengthScale)
+        {
+            for (unsigned axis = 0; axis < 4; ++axis)
+                require(std::isfinite(velocity.mLinear[axis]) && std::isfinite(velocity.mAngular[axis]),
+                    "nonfinite native packed velocity");
+            btVector3 linear(0, 0, 0), angular(0, 0, 0);
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                linear[axis] = btScalar(velocity.mLinear[axis]) * lengthScale;
+                angular[axis] = velocity.mAngular[axis];
+            }
+            require(finite(linear) && finite(angular), "native packed velocity exceeds world domain");
+            return {linear, angular};
+        }
+    }
+
+    void ActorRagdollPhysics::restoreNativePackedVelocities(
+        std::span<const RagdollNativePackedVelocityState> states)
+    {
+        require(states.size() == mImpl->mBodies.size(), "native packed velocity count");
+        std::vector<std::pair<btVector3, btVector3>> pending;
+        pending.reserve(states.size());
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+            require(states[i].mRecord == mImpl->mBodies[i].mRecord, "native packed velocity identity");
+            pending.push_back(packedWorldVelocity(states[i].mVelocities, mImpl->mLengthScale));
+        }
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+            auto& owned = mImpl->mBodies[i];
+            owned.mBody->setLinearVelocity(pending[i].first);
+            owned.mBody->setAngularVelocity(pending[i].second);
+            owned.mNativeLinearW = states[i].mVelocities.mLinear[3];
+            owned.mNativeAngularW = states[i].mVelocities.mAngular[3];
+        }
+    }
+
+    std::vector<std::uint32_t> ActorRagdollPhysics::synchronizeNativeWorldScenes(
+        std::span<const RagdollNativeWorldSceneRequest> requests,
+        const std::function<void(std::span<const std::uint32_t>)>& beforePublish)
+    {
+        struct Pending
+        {
+            Impl::Body* mOwned;
+            ESM4::PhysicalWorldSceneVelocities mNative;
+            std::pair<btVector3, btVector3> mWorld;
+        };
+        std::vector<Pending> pending;
+        std::vector<std::uint32_t> written;
+        std::unordered_set<std::uint32_t> selected;
+        pending.reserve(requests.size());
+        written.reserve(requests.size());
+        for (const auto& request : requests)
+        {
+            require(selected.insert(request.mRecord).second, "duplicate native World scene body");
+            const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == request.mRecord; });
+            require(owned != mImpl->mBodies.end(), "unknown native World scene body");
+            const auto velocity = ESM4::preparePhysicalWorldSceneVelocities(request.mInput);
+            if (!velocity)
+                continue;
+            pending.push_back({&*owned, *velocity, packedWorldVelocity(*velocity, mImpl->mLengthScale)});
+            written.push_back(request.mRecord);
+        }
+        if (beforePublish)
+            beforePublish(written);
+        for (const auto& change : pending)
+        {
+            auto& owned = *change.mOwned;
+            owned.mBody->setLinearVelocity(change.mWorld.first);
+            owned.mBody->setAngularVelocity(change.mWorld.second);
+            owned.mNativeLinearW = change.mNative.mLinear[3];
+            owned.mNativeAngularW = change.mNative.mAngular[3];
+            mImpl->activateGroup(owned.mActivationGroup);
+        }
+        return written;
+    }
+
     std::vector<RagdollNativeMotionRequest> ActorRagdollPhysics::captureNativeMotionModes() const
     {
         std::vector<RagdollNativeMotionRequest> result;
@@ -1219,6 +1320,7 @@ namespace NifBullet
             RagdollNativeMotion mMotion;
             bool mChanged;
             bool mActivate;
+            bool mResetPackedW;
             std::optional<btTransform> mPose;
             std::optional<std::pair<btVector3, btVector3>> mVelocities;
         };
@@ -1258,7 +1360,7 @@ namespace NifBullet
             const auto motion = changed ? selectedMotion : found->mMotion;
             Pending change{&*found, motion, changed,
                 hasCollision && requestChanged && selectedMotion == RagdollNativeMotion::Dynamic,
-                std::nullopt, std::nullopt};
+                requestChanged && previousRequest != 6, std::nullopt, std::nullopt};
             auto& body = *found->mBody;
             auto centerPose = body.getWorldTransform();
             auto shapePose = centerPose * found->mCenterFrame.inverse();
@@ -1379,6 +1481,11 @@ namespace NifBullet
             {
                 body.setLinearVelocity(change.mVelocities->first);
                 body.setAngularVelocity(change.mVelocities->second);
+            }
+            if (change.mResetPackedW)
+            {
+                owned.mNativeLinearW = 0.f;
+                owned.mNativeAngularW = 0.f;
             }
             if (change.mActivate || change.mChanged || change.mPose || change.mVelocities)
                 mImpl->activateGroup(owned.mActivationGroup);

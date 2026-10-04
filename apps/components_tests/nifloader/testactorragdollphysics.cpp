@@ -3700,3 +3700,125 @@ namespace
         EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
     }
 }
+
+namespace
+{
+    NifBullet::RagdollNativeWorldSceneRequest preparedWorldScene(std::uint32_t record)
+    {
+        NifBullet::RagdollNativeWorldSceneRequest result{record, {}};
+        result.mInput.mHasWorld = result.mInput.mHasAuthority = true;
+        result.mInput.mCurrentRotation = {0, 0, 0, 1};
+        result.mInput.mTargetRotation = {0, 0, .70710677f, .70710677f};
+        result.mInput.mTargetPosition = {142.87672424316406f, -285.7534484863281f, 71.43836212158203f, 0};
+        result.mInput.mFrameSeconds = .016f;
+        return result;
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, WorldScenePackedPublicationPreservesPoseModeForcesAndIdentity)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        const std::array modes{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(modes);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->applyCentralForce({1, 2, 3}); body->applyTorque({4, 5, 6});
+        const auto pose = body->getWorldTransform();
+        const auto* shape = body->getCollisionShape(); const auto* proxy = body->getBroadphaseHandle();
+        const std::array requests{preparedWorldScene(12)};
+        bool called = false;
+        const auto written = actor.synchronizeNativeWorldScenes(requests, [&](auto ids) {
+            called = true; ASSERT_EQ(ids.size(), 1u); EXPECT_EQ(ids[0], 12u);
+            EXPECT_EQ(body->getLinearVelocity(), btVector3(0, 0, 0));
+            EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mAngular[3], 0.f);
+        });
+        EXPECT_TRUE(called); ASSERT_EQ(written.size(), 1u); EXPECT_EQ(written[0], 12u);
+        const auto state = actor.captureNativePackedVelocities()[0];
+        // Original03 uncapped input/output capture; fourth angular lane is real.
+        EXPECT_EQ(state.mVelocities.mLinear[0], 8929.794921875f);
+        EXPECT_EQ(state.mVelocities.mLinear[1], -17859.58984375f);
+        EXPECT_EQ(state.mVelocities.mLinear[2], 4464.8974609375f);
+        EXPECT_EQ(state.mVelocities.mLinear[3], 0.f);
+        EXPECT_NEAR(state.mVelocities.mAngular[2], 98.17475891113281f, .001f);
+        EXPECT_NEAR(state.mVelocities.mAngular[3], 98.17475891113281f, .001f);
+        EXPECT_EQ(body->getLinearVelocity()[0], btScalar(8929.794921875f) * 7);
+        EXPECT_EQ(body->getWorldTransform(), pose);
+        EXPECT_EQ(body->getTotalForce(), btVector3(1, 2, 3)); EXPECT_EQ(body->getTotalTorque(), btVector3(4, 5, 6));
+        EXPECT_EQ(body->getCollisionShape(), shape); EXPECT_EQ(body->getBroadphaseHandle(), proxy);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, WorldScenePackedBatchRejectsLateInvalidAndThrowingHookBeforeMutation)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.5f, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->forceActivationState(ISLAND_SLEEPING);
+        auto invalid = preparedWorldScene(24); invalid.mInput.mTargetRotation = {0, 0, 0, 0};
+        std::array requests{preparedWorldScene(12), invalid};
+        bool called = false;
+        EXPECT_THROW(actor.synchronizeNativeWorldScenes(requests, [&](auto) { called = true; }), std::invalid_argument);
+        EXPECT_FALSE(called); EXPECT_EQ(body->getActivationState(), ISLAND_SLEEPING);
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(0, 0, 0));
+        requests[1] = preparedWorldScene(24);
+        EXPECT_THROW(actor.synchronizeNativeWorldScenes(requests, [](auto) { throw std::runtime_error("scene failure"); }), std::runtime_error);
+        EXPECT_EQ(body->getActivationState(), ISLAND_SLEEPING);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mAngular[3], 0.f);
+        requests[1].mRecord = 12;
+        EXPECT_THROW(actor.synchronizeNativeWorldScenes(requests), std::invalid_argument);
+        requests[1].mRecord = 99;
+        EXPECT_THROW(actor.synchronizeNativeWorldScenes(requests), std::invalid_argument);
+        requests[1] = preparedWorldScene(24);
+        requests[0].mInput.mHasWorld = false; requests[0].mInput.mTargetRotation[0] = std::numeric_limits<float>::quiet_NaN();
+        requests[1].mInput.mFrameSeconds = 0;
+        EXPECT_TRUE(actor.synchronizeNativeWorldScenes(requests).empty());
+        EXPECT_EQ(body->getActivationState(), ISLAND_SLEEPING);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, WorldScenePackedSnapshotRestoresAllLanesAtomically)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        auto states = actor.captureNativePackedVelocities(); ASSERT_EQ(states.size(), 2u);
+        states[0].mVelocities = {{1, 2, 3, -0.f}, {5, 6, 7, 8}};
+        states[1].mVelocities = {{-1, -2, -3, 4}, {-5, -6, -7, -8}};
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]); body->forceActivationState(ISLAND_SLEEPING);
+        const auto pose = body->getWorldTransform();
+        actor.restoreNativePackedVelocities(states);
+        auto actual = actor.captureNativePackedVelocities();
+        EXPECT_EQ(actual[0].mVelocities.mLinear, states[0].mVelocities.mLinear);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[0].mVelocities.mLinear[3]), 0x80000000u);
+        EXPECT_EQ(actual[1].mVelocities.mAngular, states[1].mVelocities.mAngular);
+        EXPECT_EQ(body->getActivationState(), ISLAND_SLEEPING); EXPECT_EQ(body->getWorldTransform(), pose);
+        auto invalid = states; invalid[0].mVelocities.mLinear[0] = 99;
+        invalid[1].mVelocities.mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(actor.restoreNativePackedVelocities(invalid), std::invalid_argument);
+        invalid = states; invalid[1].mRecord = 12;
+        EXPECT_THROW(actor.restoreNativePackedVelocities(invalid), std::invalid_argument);
+        EXPECT_THROW(actor.restoreNativePackedVelocities(std::span<const NifBullet::RagdollNativePackedVelocityState>(states).first(1)), std::invalid_argument);
+        actual = actor.captureNativePackedVelocities(); EXPECT_EQ(actual[0].mVelocities.mLinear[0], 1.f);
+        auto near = preparedWorldScene(12); near.mInput.mTargetPosition = {}; near.mInput.mTargetRotation = {0, 0, 0, 1}; near.mInput.mFrameSeconds = 0;
+        const std::array requests{near};
+        EXPECT_EQ(actor.synchronizeNativeWorldScenes(requests).size(), 1u);
+        actual = actor.captureNativePackedVelocities();
+        EXPECT_EQ(actual[0].mVelocities.mLinear, (std::array<float, 4>{}));
+        EXPECT_EQ(actual[0].mVelocities.mAngular, (std::array<float, 4>{}));
+        EXPECT_EQ(actual[1].mVelocities.mAngular, states[1].mVelocities.mAngular);
+    }
+}
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, WorldScenePackedRequestedMotionResetClearsBothFourthLanes)
+    {
+        auto& definition = mGraph.mBodies[0]; definition.mNodeRecord = 8;
+        definition.mBlend = NifBullet::RagdollBlendDefinition{30, 0, 0.f, 0.f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto state = actor.captureNativePackedVelocities();
+        state[0].mVelocities = {{1, 2, 3, 4}, {5, 6, 7, 8}};
+        actor.restoreNativePackedVelocities(state);
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{{12, osg::Matrixf::identity(), 0.f, 0.f, 0}}};
+        actor.updateNativeBlends(updates, .016f, 0, 0.f);
+        state = actor.captureNativePackedVelocities();
+        EXPECT_EQ(state[0].mVelocities.mLinear, (std::array<float, 4>{}));
+        EXPECT_EQ(state[0].mVelocities.mAngular, (std::array<float, 4>{}));
+    }
+}

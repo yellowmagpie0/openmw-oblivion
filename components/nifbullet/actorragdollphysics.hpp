@@ -7,6 +7,7 @@
 
 #include <components/esm4/physicalblendsettings.hpp>
 #include <components/esm4/physicalvelocitycontroller.hpp>
+#include <components/esm4/physicalsceneworld.hpp>
 
 #include <functional>
 #include <memory>
@@ -130,6 +131,20 @@ namespace NifBullet
     {
         std::uint32_t mRecord;
         osg::Matrixf mWorldPose;
+    };
+
+    struct RagdollNativePackedVelocityState
+    {
+        std::uint32_t mRecord;
+        ESM4::PhysicalWorldSceneVelocities mVelocities;
+    };
+
+    struct RagdollNativeWorldSceneRequest
+    {
+        std::uint32_t mRecord;
+        // Caller-resolved original getter snapshot, converted target and frame.
+        // A borrowed Bullet World alone does not resolve native authority.
+        ESM4::PhysicalWorldSceneInput mInput;
     };
 
     struct RagdollNativeVelocityDrive
@@ -257,6 +272,21 @@ namespace NifBullet
         std::span<btCollisionObject* const> collisionObjects() const;
         std::vector<RagdollBodyState> capture() const;
         void restore(std::span<const RagdollBodyState> states);
+        // Native units, including both packed fourth lanes. XYZ comes from the
+        // current body; fourth lanes have separate owned binary32 storage.
+        std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;
+        // Complete ordered snapshot, staged before all writes. Preserve pose,
+        // forces, mode and activation; this is velocity state restoration only.
+        void restoreNativePackedVelocities(std::span<const RagdollNativePackedVelocityState> states);
+        // Sparse8A3900 publication from explicitly resolved prepared snapshots.
+        // Prepare the entire batch, invoke the optional atomic caller hook, then
+        // publish all eight lanes and wake groups for actual writes only. A
+        // throwing hook leaves this owner unchanged; no owner mutation/reentry
+        // or retained spans are permitted inside the hook. Return written IDs.
+        // No inferred World authority, direct pose setter or motion step.
+        std::vector<std::uint32_t> synchronizeNativeWorldScenes(
+            std::span<const RagdollNativeWorldSceneRequest> requests,
+            const std::function<void(std::span<const std::uint32_t>)>& beforePublish = {});
         // Requested blend-controller motion, not a serialized body snapshot.
         // Dynamic restores the original mass/principal inertia while retaining
         // the current pose and velocities, as the native motion archive does.

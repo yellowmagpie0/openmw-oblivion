@@ -10834,3 +10834,52 @@ No M15 stage closes. Next wire owned packed state and staged World-scene velocit
 publication, then resolve actual World authority/lifetime and complete the
 remaining automatic reaction, ordering, persistence/contact, gameplay and
 S5-S14 acceptance gates. Earlier retained BodyT/floor/runtime failures remain.
+
+
+### Checkpoint218: atomic owned World-scene velocity publication
+
+Added ActorRagdollPhysics sparse `synchronizeNativeWorldScenes`, with explicit
+caller-prepared217 input snapshots and owned body identity resolution. It stages
+all native computations, output validation and world-unit projection before an
+optional caller publication hook. A late invalid identity/input or throwing hook
+leaves bodies and activation unchanged. Actual writes publish XYZ plus separately
+owned binary32 fourth linear/angular lanes, then wake the owned connected group.
+Absent World/authority and far frame0 preserve all eight lanes without waking.
+Pose, body mode, accumulated forces, collision shape and broadphase identity stay
+unchanged. This invokes the actual production217 rule; it does not infer native
+World authority or original getter/time/scratch fields from a Bullet World.
+
+Added complete ordered capture/restore of native packed velocities. Restore
+validates the entire snapshot before writing and preserves pose, forces, mode
+and activation. Signed zeros and both fourth lanes survive. Initial owned fourth
+lanes are zero, matching this owner's initially zero XYZ velocities; this is not
+a new proof of every native factory/loaded-stream velocity initialization.
+The existing world-unit RagdollBodyState remains an XYZ/pose projection, separate
+from this packed snapshot. Requested-motion reset in updateNativeBlends now
+clears both owned fourth lanes alongside XYZ, consistent with216's original
+reset capture. Other motion/force/damping routes need their own packed-lane
+integration; this checkpoint does not claim they already consume these fields.
+
+Three WorldScenePacked baseline tests each fail against publication/restore
+stubs. Four final owner tests pass, including uncapped output, all-lane snapshot,
+signed zero, late invalid batches, hook rollback, near-frame0 clearing, sleeping
+no-write paths and requested-motion reset. Full normal/sanitized01 each pass
+2,379 components and899 engine, exact inventories and zero failure/skip. Both
+builds have no new warning. ASan leaks disabled; Python unchanged. Tested source
+fingerprint `fdd13bf09fe4c6aa09be543dee82bb7c06a23b265a362466681ed0721ef8ede8`.
+
+Actual owner comparison normal/sanitized01 each passes1,264 original cases and
+9520 exact checks from217's unchanged corpus/domain/tolerances, maximum angular
+error0. Driver alternates Dynamic/KEY and scales1/7/6.999040126800537; asserts
+prepublication hook order, retained pose/mode/forces/shape/proxy, and complete
+object/constraint deregistration at destruction. These are owned Bullet tests
+using resolved native input fixtures, not an automatic World-frame/game probe.
+S4 evidence: owned-world-scene-baseline-01,normal/sanitized-01;
+native-owned-world-scene-compare-normal/sanitized-01. Shared original source and
+corpus hashes are recorded in217 and copied into comparator verification.
+
+No M15 stage closes. Public scheduler/World-frame coupling, actual authority and
+getter producers, full packed motion/force/serialization and earlier acceptance
+gates remain open. Follow-up original packed-key-step-oracle-01 captures17,010
+complete8EA4B0 cases with both fourth velocity lanes -8/-0/+8; this is input to
+the next keyframed-integration chunk, not current218 implementation evidence.
