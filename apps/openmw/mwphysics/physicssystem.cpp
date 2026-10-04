@@ -832,6 +832,11 @@ namespace MWPhysics
         return mTaskScheduler->captureActorRagdollSnapshot(ptr, base, model);
     }
 
+    std::vector<MWWorld::Ptr> PhysicsSystem::actorRagdollOwners()
+    {
+        return mTaskScheduler->actorRagdollOwners();
+    }
+
     NativeRagdollSnapshotGroup PhysicsSystem::captureActorRagdollSnapshots(
         std::span<const NativeRagdollSnapshotBinding> bindings)
     {

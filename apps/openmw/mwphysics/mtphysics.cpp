@@ -726,6 +726,17 @@ namespace MWPhysics
         return mActorRagdolls.contains(ptr.mRef);
     }
 
+    std::vector<MWWorld::Ptr> PhysicsTaskScheduler::actorRagdollOwners()
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        std::vector<MWWorld::Ptr> result;
+        result.reserve(mActorRagdolls.size());
+        for (const auto& [reference, ragdoll] : mActorRagdolls)
+            result.push_back(ragdoll->getPtr());
+        return result;
+    }
+
     NifBullet::ActorRagdollDefinition PhysicsTaskScheduler::actorRagdollDefinition(const MWWorld::Ptr& ptr)
     {
         waitForWorkers();

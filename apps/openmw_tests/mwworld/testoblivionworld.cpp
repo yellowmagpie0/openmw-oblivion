@@ -316,7 +316,9 @@ namespace
             };
             EXPECT_THROW(admit(graph), std::invalid_argument);
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));
+            EXPECT_TRUE(physics.actorRagdollOwners().empty());
             physics.addActor(ptr, path);
+            EXPECT_TRUE(physics.actorRagdollOwners().empty()); // Capsules are not physical pose owners.
             auto* capsule = physics.getActor(ptr);
             ASSERT_NE(capsule, nullptr);
             auto invalid = graph;
@@ -334,6 +336,7 @@ namespace
             EXPECT_TRUE(physics.hasActorRagdoll(ptr));
             EXPECT_TRUE(capsule->isCollisionSuspended());
             EXPECT_EQ(capsule->getCollisionObject()->getBroadphaseHandle(), nullptr);
+            EXPECT_EQ(physics.actorRagdollOwners(), std::vector<MWWorld::Ptr>{ptr});
             EXPECT_THROW(admit(graph), std::invalid_argument);
             const auto duplicate = addNativeNpc(fixture, 0x901);
             physics.addActor(duplicate, path);
@@ -354,6 +357,7 @@ namespace
             EXPECT_TRUE(capsule->isCollisionSuspended());
             EXPECT_FALSE(physics.hasActorRagdoll(previous));
             EXPECT_TRUE(physics.hasActorRagdoll(updated));
+            EXPECT_EQ(physics.actorRagdollOwners(), std::vector<MWWorld::Ptr>{updated});
             EXPECT_THROW(physics.captureActorRagdoll(previous), std::invalid_argument);
             physics.remove(previous); // A stale reference cannot remove the new owner.
             EXPECT_EQ(physics.getActor(updated), capsule);

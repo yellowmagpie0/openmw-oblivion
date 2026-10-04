@@ -96,6 +96,9 @@ namespace MWPhysics
             const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
         void removeActorRagdoll(const MWWorld::Ptr& ptr);
         bool hasActorRagdoll(const MWWorld::Ptr& ptr);
+        // Main-thread borrowed references; the returned vector owns no actors.
+        // Waits for queued physics before reading the complete current owner set.
+        std::vector<MWWorld::Ptr> actorRagdollOwners();
         NifBullet::ActorRagdollDefinition actorRagdollDefinition(const MWWorld::Ptr& ptr);
         ESM4::RuntimeActorRagdoll captureActorRagdollSnapshot(
             const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);

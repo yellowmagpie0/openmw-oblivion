@@ -1072,6 +1072,40 @@ namespace
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0); EXPECT_EQ(fresh.mWorld.getNumCollisionObjects(), 0);
     }
 
+    TEST_P(RagdollSchedulerTest, OwnerEnumerationFollowsQueuedWorkRebindingAndRemoval)
+    {
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase);
+        MWWorld::LiveCellRef<ESM::Static> rebound(mReference, &mBase);
+        const MWWorld::Ptr second(&other), updated(&rebound);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.addActorRagdoll(second, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("owner enumeration worker barrier");
+        std::vector<MWPhysics::Simulation> frame;
+        float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frame, osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        auto owners = scheduler.actorRagdollOwners();
+        ASSERT_EQ(owners.size(), 2u);
+        EXPECT_NE(owners[0], owners[1]);
+        EXPECT_NE(std::find(owners.begin(), owners.end(), mPtr), owners.end());
+        EXPECT_NE(std::find(owners.begin(), owners.end(), second), owners.end());
+        scheduler.updateActorRagdollPtr(mPtr, updated);
+        owners = scheduler.actorRagdollOwners();
+        ASSERT_EQ(owners.size(), 2u);
+        EXPECT_EQ(std::find(owners.begin(), owners.end(), mPtr), owners.end());
+        EXPECT_NE(std::find(owners.begin(), owners.end(), updated), owners.end());
+        EXPECT_NE(std::find(owners.begin(), owners.end(), second), owners.end());
+        scheduler.removeActorRagdoll(mPtr); // The stale reference has no owner.
+        EXPECT_EQ(scheduler.actorRagdollOwners().size(), 2u);
+        scheduler.removeActorRagdoll(updated);
+        EXPECT_EQ(scheduler.actorRagdollOwners(), std::vector<MWWorld::Ptr>{second});
+        scheduler.removeActorRagdoll(second);
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
 }

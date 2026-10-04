@@ -18503,3 +18503,40 @@ with retained unloaded actor/reference/value/life authorities. Renderer-global N
 traversal/cache, raw COM/time/quaternion/cache, activation/contact continuation,
 retained physical/restart failures, normal-input display acceptance and S5-S14
 remain required.
+
+
+### Checkpoint238: enumerate current physical owners through the worker boundary
+
+Added the read-only actorRagdollOwners query to PhysicsTaskScheduler and actual
+PhysicsSystem forwarding. It waits for queued movement workers and reads the
+complete owned ragdoll map under one shared physics lock. The returned vector
+contains each owner holder's current Ptr, including its current cell binding;
+it owns no actors and promises no hash-map ordering. It does not include normal
+capsule actors or synthesize stable native identities/model labels. Callers must
+use these borrowed references on the main thread and resolve native bindings;
+the existing group snapshot API separately checks complete ownership coverage.
+
+All three worker0/1/2 ragdoll-owner-enumeration-baseline-01 cases execute and fail
+because the baseline stub returns an empty list after two owners are admitted.
+The implemented tests enumerate after queued movement, check two distinct owners,
+rebind one reference, verify the stale reference disappears, prove stale removal
+cannot remove the replacement, remove each current owner and confirm an empty
+list and zero owned collision objects. The actual PhysicsSystem fixture also
+checks zero owners before admission, exclusion of a normal capsule, current owner
+after physical handoff and the rebound reference. An intermediate private edit
+helper failed on an overly narrow test insertion marker after implementing the
+scheduler method; no build ran on that partial attempt. Corrected the marker
+before the final test runs.
+
+Full ragdoll-owner-enumeration-normal-01 and sanitized-01 each pass929 engine
+cases with exact inventory agreement, zero failures/skips and no compiler
+warnings. ASan leak checks disabled. Tested fingerprint: `07f4495e249f925ab6eb6eee93c66713508d4e10616ed47680aaa91c891b3eea`.
+No native arithmetic, lower component code or binary/JSON codec changed, so
+unchanged component/Python/original-instruction comparisons are not repeated.
+
+No M15 stage closes. This supplies the complete physical owner discovery needed
+by World save/lifecycle joins; automatic World capture/restore and reactions
+still require implementation and acceptance. Retained unloaded authority,
+winning base/model/asset identity, renderer-global traversal/cache, native raw
+pose/time/activation/contact continuation, retained numerical failures,
+normal-input runtime gates and all pending S5-S14 requirements remain open.
