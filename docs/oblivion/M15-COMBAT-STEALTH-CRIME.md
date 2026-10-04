@@ -18983,3 +18983,125 @@ runtime import, initial morphology, actual automatic physical admission/
 reaction/update/getup, full Ni traversal/time/contact continuation, retained
 physical numerical failures, normal-input restart/gameplay and pending S5-S14
 remain required.
+
+
+### Checkpoint246: native float configuration reader and configuration-path audit
+
+Checkpoint245 committed as `373c1a0cb942fecbbe0209329dca8fc3a664407f`,
+242 isolated commits, tree `20efac5f85726006344ed8037564289dc2e4312d`;
+bundle223 SHA256
+`9b1a66a0df70d63ace4b9449971bf30fd6864adf7642e6ff3350f385c0fccd55`.
+
+readPhysicalBlendFloatSetting accepts an immutable finite previous value and
+optional OS-processed profile text. Missing text formats the previous value to
+six decimal places before parsing; supplied empty/malformed text preserves the
+previous value and returns accepted=false. The native256-byte profile buffer
+limits input to255 bytes, with NUL termination. Decimal prefixes, partial
+exponents and signed zero follow the captured original reader. Nonfinite parsed
+outputs throw before publication under the supported finite-state contract,
+although the original scanner accepts overflow as infinity.
+
+The implementation uses bounded integer/rational arithmetic rather than host
+strtof. Original994ECE collects at most25 significant digits; when there are
+more than24 it increments digit24 if that digit itself is at least5, then drops
+digit25. A resulting coefficient10 retains its position. Original995258 clears
+the integer collector's low16 bits before decimal-exponent multiplication.
+Original99F66D rounds halfway significands toward zero. Its subnormal path
+restores the pre-rounded significand, rounds half a subnormal unit, then
+truncates to a whole unit. Thus1e-45 becomes zero but1e-38 remains subnormal.
+The production rational model reproduces the tested float outputs; it does not
+claim instruction-identical decimal-power table intermediates.
+
+Missing defaults need their own rounding rule. Legacy sprintf rounds fixed-six
+decimal halfway values away from zero. For example.0078125 becomes.007813,
+and the resulting binary32 value is3c000219. Initial std::to_chars formatting
+instead selected.007812 and failed32 newly added cases. Replaced it with exact
+integer arithmetic over the previous binary32 significand/exponent, preserving
+negative zero. Large native defaults use17 significant decimal digits with
+trailing zeroes, while the integer formatter retains the exact float digits;
+the output API exposes the parsed float, not this intermediate text. Missing
+defaults for128 additional fixed-seed finite values and max-float round back
+to the original captured results.
+
+All original reader corpora verify executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+run actual CRT initialization982837, complete4A8800 name/section splitting,
+actual sprintf, sscanf/numeric callback and actual collection open/close
+preservation, and require explicit return. Boundaries supply Windows
+GetPrivateProfileStringA processed text/default/capacity, initial C-locale
+thread acquisition and initial plain CRT OS decoded pointers. They do not
+replace numeric conversion. Both x87 control words execute. Filesystem/profile
+preprocessing and whole-game startup are excluded.
+
+Reader evidence under S4:
+
+| Corpus | Cases | Coverage | Source SHA256 | Cases SHA256 |
+| --- | ---: | --- | --- | --- |
+| native-blend-ini-float-oracle-03 | 696 | 696 boundary/default/open-state cases | `5e199897ae3b5e7e6e20d74d0cb10afe747c395a0bd788ab85562e9df561cc3e` | `ae0f3dac7125814c0e02cd6578c0aca41fcea3e187497a4431c815c19c2abcec` |
+| native-blend-ini-float-oracle-04 | 2022 | Fixed-seed decimal lengths/exponents and grammar | `06f5aadf062323434d3acd2ebae004dc3a34a09bf0e2cbe8a12957c31bed97ab` | `9945b422a500e64f0086418292c384337a4a285e131d306b3d0ec6c0d3af3fe3` |
+| native-blend-ini-float-oracle-06 | 1024 | Exact adjacent-float halfways and signs | `13ba7bcf2f62d78556d05cb07447f7338d454a1dcd959db9d92b6039263bc196` | `bf622082b7af5362408d589134f53a144be06fdc66a306a72f7261ab5c0bdca0` |
+| native-blend-ini-float-oracle-07 | 992 | Halfways at exponents0-30 and signs | `8af4681e383d42a120c65838905e5ffc40f80b77d8e5d5120592acec50e191df` | `5e2faf2fee64b29614878e33f07d05d5426d4f162cb3e295efd189ef25ddc05c` |
+| native-blend-ini-float-oracle-08 | 68 | Fixed-six default halfway rounding and max float | `3fa923cabb3254090ca41eecdc53e0d7c876764b888741955ae1f8c75d85bca6` | `5cce5930e135c38da81edcfb2dfbeabee27e6077747e8bb8812a461c616d438a` |
+| native-blend-ini-float-oracle-09 | 256 | Fixed-seed finite previous values, missing defaults | `9f9940c4c9d925902bd10e9bd2ad90e3dbcb992465d171e0a246e9e7885bfe27` | `bc1f725f6ad3414dc3fa13d3e66845f7d69c84d6992d714c28d238d66fd9d79c` |
+
+Attempts01/02 are successful earlier subsets, not extra independent final
+cases. Oracle05's22 cases additionally capture the actual extended significand
+at the narrowing callback. Private rational prototypes retained failures from
+a decimal coefficient10 incorrectly expanded to two text digits, then from
+omitting the native initial low16-bit truncation; these were corrected before
+production integration.
+
+Two new tests execute and fail against a placeholder returning the old value.
+They cover independent original binary32 boundaries, missing defaults,
+malformed input, overflow/nonfinite-old rejection,255-byte truncation, embedded
+NUL and whitespace. Initial full normal/sanitized-01 each pass2419 tests, but
+the extended original default comparison still fails32 cases. Retain that
+failure as native-float-ini-reader-compare-normal-02. After the formatter fix,
+full native-float-ini-reader-normal-02 and sanitized-02 each pass2419 tests with
+exact inventories, zero failures/skips and no compiler warnings. Earlier
+sanitizer-01 missing-initializer warnings come from unchanged
+inventorymechanics.cpp, byte-compared with245 in unchanged-warning-source.json.
+ASan leak checks disabled; UBSan halts.
+Tested fingerprint
+`bf5a1eaf3db4ada06dd188ba81a111aa27351c5e0a7e26708196f8c1e17da575`.
+
+Production standalone comparison-normal-03 and sanitized-03 each compare5058
+original-reader cases and10,116 exact accepted-status/binary32 fields with zero
+mismatches. The716 original accepted nonfinite outputs instead require explicit
+production rejection and preservation of the previous input bits. Archives,
+corpora, original executable and source fingerprints are hash-checked.
+Component-only configuration code changed; preceding945 engine tests and
+unchanged Python/codecs are not repeated.
+
+Configuration-path research is separate. Original53AC60 queries VERSION in
+sectionDEFAULT using the bare BlendSettings.ini filename. Raw unsigned
+version>=14 admits a collection read from prefix+filename; below14 skips that
+read but still runs configured producers. Actual collection open/load/close
+with an empty registered list executes in native-blend-configuration-path-
+oracle-01:20 explicit prefixes/version cases. Original40DF80 reads
+General/bUseMyGamesDirectory/default1 from .\Oblivion.ini. Nonzero selects
+Documents\My Games\Oblivion\ for the configuration prefix, with a separate
+LocalAppData\Oblivion\ path; zero selects .\. Original copies/appends,
+sprintf and directory-call ordering execute in prefix-oracle-02's12 cases.
+Its first attempt failed only an incorrect expected main-INI query filename;
+the failure is retained. OS-returned directories/flags/create success remain
+explicit fixtures, not filesystem discovery. The bare version query and
+prefixed collection read must not be conflated: Windows also permits registry
+INI mapping and documents different bare-filename lookup behavior
+([GetPrivateProfileInt](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getprivateprofileint)).
+Registered setting enumeration, actual winning file/profile processing and
+runtime import remain open.
+
+The user delegated display selection. Read-only display inspection finds no
+X11 socket in /tmp/.X11-unix, while the available wayland-0 compositor query
+fails with Operation not permitted (display-wayland-inspection-01).
+No display/compositor creation, input or game acceptance was attempted in this
+inspection; existing Xvfb/X11 failures remain classified. Do not bypass the
+restriction or count offscreen rendering as normal-input acceptance.
+
+No stage closes. Next bounded configuration work connects the verified
+processed-text reader to the complete HIT settings producer, preserving the
+separate file-query/collection locations. Automatic World physical admission/
+reaction/update/getup and restored-owner readmission, morphology, full Ni
+traversal/time/contact continuation, retained numeric failures, normal-input
+restart/gameplay and pending S5-S14 remain required.

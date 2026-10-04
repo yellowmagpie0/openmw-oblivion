@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 #include <vector>
 
 namespace ESM4
@@ -70,6 +71,21 @@ namespace ESM4
     // minima are stored without clamping; this does not parse/discover INI files.
     PhysicalHitBlendConfiguration resolvePhysicalHitBlendConfiguration(
         const PhysicalBlendGainTable& previous, const PhysicalHitBlendSettings& settings);
+
+    struct PhysicalBlendFloatSettingResult
+    {
+        float mValue;
+        bool mAccepted;
+    };
+
+    // Original4A8800 float reader, after the OS supplies processed profile text.
+    // Missing text formats the previous value to six decimal places. Empty or
+    // malformed text preserves it; accepted finite values retain native decimal
+    // rounding and signed zero. Nonfinite results throw before publication.
+    // The 256-byte native profile buffer limits text to255 bytes. File discovery,
+    // Windows INI preprocessing and collection open/close remain adapter-owned.
+    PhysicalBlendFloatSettingResult readPhysicalBlendFloatSetting(
+        float previous, std::optional<std::string_view> processedProfileValue);
 
     // Full88ECD0 link gain/flag result, after caller resolves body ownership.
     // Ignore authored gains; missing wrapper/body selects entry0. Preserve the

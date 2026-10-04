@@ -1,9 +1,14 @@
 #include "physicalblendsettings.hpp"
 
+#include <algorithm>
+#include <bit>
 #include <cmath>
-#include <stdexcept>
 #include <limits>
+#include <stdexcept>
+#include <string>
 #include <utility>
+
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace ESM4
 {
@@ -14,6 +19,194 @@ namespace ESM4
             if (!std::isfinite(value))
                 throw std::invalid_argument("nonfinite native physical blend duration");
         }
+
+        using boost::multiprecision::cpp_int;
+
+        cpp_int decimalPower10(unsigned exponent)
+        {
+            cpp_int result = 1;
+            while (exponent--)
+                result *= 10;
+            return result;
+        }
+
+        cpp_int roundDecimalWithTiesTowardZero(cpp_int numerator, cpp_int denominator, int shift)
+        {
+            if (shift >= 0)
+                numerator <<= shift;
+            else
+                denominator <<= -shift;
+            cpp_int quotient = numerator / denominator;
+            const cpp_int remainder = numerator % denominator;
+            if ((remainder << 1) > denominator)
+                ++quotient;
+            return quotient;
+        }
+
+        std::string formatPhysicalBlendDefault(float previous)
+        {
+            const auto bits = std::bit_cast<std::uint32_t>(previous);
+            const int rawExponent = (bits >> 23) & 255u;
+            const std::uint32_t significand = (bits & 0x7fffffu) | (rawExponent ? (1u << 23) : 0u);
+            const int exponent = rawExponent ? rawExponent - 150 : -149;
+            cpp_int numerator = cpp_int(significand) * 1000000;
+            cpp_int denominator = 1;
+            if (exponent >= 0)
+                numerator <<= exponent;
+            else
+                denominator <<= -exponent;
+            cpp_int units = numerator / denominator;
+            if (((numerator % denominator) << 1) >= denominator)
+                ++units;
+            // Original98208B's fixed-six default rounds decimal halfway values
+            // away from zero. Preserve the sign even when all six digits are0.
+            std::string result = units.convert_to<std::string>();
+            if (result.size() < 7)
+                result.insert(0, 7 - result.size(), '0');
+            result.insert(result.size() - 6, 1, '.');
+            if (bits & 0x80000000u)
+                result.insert(result.begin(), '-');
+            return result;
+        }
+
+        std::optional<float> parsePhysicalBlendDecimal(std::string_view text)
+        {
+            std::size_t position = 0;
+            while (position < text.size()
+                && (text[position] == ' ' || (text[position] >= '\t' && text[position] <= '\r')))
+                ++position;
+            std::uint32_t sign = 0;
+            if (position < text.size() && (text[position] == '+' || text[position] == '-'))
+            {
+                if (text[position] == '-')
+                    sign = 0x80000000u;
+                ++position;
+            }
+            std::string digits;
+            bool hasPoint = false;
+            bool hasDigit = false;
+            bool significant = false;
+            int exponent = 0;
+            while (position < text.size())
+            {
+                const char character = text[position];
+                if (character == '.' && !hasPoint)
+                {
+                    hasPoint = true;
+                    ++position;
+                    continue;
+                }
+                if (character < '0' || character > '9')
+                    break;
+                hasDigit = true;
+                significant |= character != '0';
+                if (significant)
+                    digits += character;
+                if (hasPoint)
+                    --exponent;
+                ++position;
+            }
+            if (!hasDigit)
+                return std::nullopt;
+            if (position < text.size() && (text[position] == 'e' || text[position] == 'E'))
+            {
+                ++position;
+                int direction = 1;
+                if (position < text.size() && (text[position] == '+' || text[position] == '-'))
+                {
+                    if (text[position] == '-')
+                        direction = -1;
+                    ++position;
+                }
+                int inputExponent = 0;
+                while (position < text.size() && text[position] >= '0' && text[position] <= '9')
+                {
+                    inputExponent = std::min(5201, inputExponent * 10 + text[position] - '0');
+                    ++position;
+                }
+                exponent += direction * inputExponent;
+            }
+            if (digits.empty())
+                return std::bit_cast<float>(sign);
+            if (digits.size() > 24)
+            {
+                // Original994ECE's 25-digit collector increments digit24 when
+                // digit24>=5, then drops digit25. Preserve a resulting digit10
+                // as an integer coefficient rather than changing its position.
+                if (digits[23] >= '5')
+                    ++digits[23];
+                exponent += static_cast<int>(digits.size()) - 24;
+                digits.resize(24);
+            }
+            // Bound integer work; these exponents cannot yield a finite nonzero
+            // float for a nonzero coefficient of at most24 decimal digits.
+            if (exponent > 100)
+                throw std::invalid_argument("nonfinite native physical blend INI value");
+            if (exponent < -400)
+                return std::bit_cast<float>(sign);
+            cpp_int numerator = 0;
+            for (char digit : digits)
+                numerator = numerator * 10 + (digit - '0');
+
+            // Original995258 discards the low16 bits of the integer collector
+            // before decimal exponent multiplication.
+            const int integerExponent = static_cast<int>(boost::multiprecision::msb(numerator));
+            numerator = roundDecimalWithTiesTowardZero(numerator, cpp_int(1), 79 - integerExponent);
+            numerator = (numerator >> 16) << 16;
+            cpp_int denominator = 1;
+            if (integerExponent >= 79)
+                numerator <<= integerExponent - 79;
+            else
+                denominator <<= 79 - integerExponent;
+            if (exponent >= 0)
+                numerator *= decimalPower10(exponent);
+            else
+                denominator *= decimalPower10(-exponent);
+            int binaryExponent = static_cast<int>(boost::multiprecision::msb(numerator))
+                - static_cast<int>(boost::multiprecision::msb(denominator));
+            if (binaryExponent >= 0 ? numerator < (denominator << binaryExponent)
+                                    : (numerator << -binaryExponent) < denominator)
+                --binaryExponent;
+
+            // Use integer arithmetic to make native significand stores and
+            // halfway rounding independent of the host's floating-point mode.
+            const cpp_int mantissa
+                = roundDecimalWithTiesTowardZero(numerator, denominator, 79 - binaryExponent);
+            cpp_int normal = roundDecimalWithTiesTowardZero(mantissa, cpp_int(1), -56);
+            if (normal == (cpp_int(1) << 24))
+            {
+                ++binaryExponent;
+                normal >>= 1;
+            }
+            std::uint32_t result = 0;
+            if (binaryExponent >= 128)
+                throw std::invalid_argument("nonfinite native physical blend INI value");
+            if (binaryExponent < -151)
+                result = 0;
+            else if (binaryExponent <= -127)
+            {
+                // Original99F66D restores the pre-rounded significand for
+                // subnormals, rounds half a subnormal unit, then truncates it.
+                result = (roundDecimalWithTiesTowardZero(mantissa, cpp_int(1), binaryExponent + 71) >> 1)
+                             .convert_to<std::uint32_t>();
+            }
+            else
+                result = (static_cast<std::uint32_t>(binaryExponent + 127) << 23)
+                    | (normal.convert_to<std::uint32_t>() - (1u << 23));
+            return std::bit_cast<float>(sign | result);
+        }
+    }
+
+    PhysicalBlendFloatSettingResult readPhysicalBlendFloatSetting(
+        float previous, std::optional<std::string_view> processedProfileValue)
+    {
+        validate(previous);
+        const std::string formattedDefault
+            = processedProfileValue ? std::string{} : formatPhysicalBlendDefault(previous);
+        std::string_view text = processedProfileValue.value_or(formattedDefault);
+        text = text.substr(0, std::min<std::size_t>(255, text.find('\0')));
+        const auto value = parsePhysicalBlendDecimal(text);
+        return {value.value_or(previous), value.has_value()};
     }
 
     PhysicalHitBlendConfiguration resolvePhysicalHitBlendConfiguration(

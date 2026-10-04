@@ -4338,3 +4338,61 @@ TEST(ESM4PhysicalCombat, HitConfigurationPreservesRawFiniteSettingsAndRejectsInv
     EXPECT_EQ(settings.mHead.mVelocity, -2);
     EXPECT_EQ(previous[31].mVelocity, -7);
 }
+
+TEST(ESM4PhysicalCombat, FloatIniReaderPreservesNativeDecimalBoundaries)
+{
+    // Full original4A8800, oracle03/04/06; independent expected binary32 lanes.
+    const std::array<std::pair<std::string_view, std::uint32_t>, 17> cases{{
+        {"-0", 0x80000000u}, {" +1.25 extra", 0x3fa00000u}, {"0x1p+2", 0u},
+        {"1e-3", 0x3a83126fu}, {"1e", 0x3f800000u}, {"1e+", 0x3f800000u},
+        {"1e-1000", 0u}, {"-1e-1000", 0x80000000u}, {"1e-45", 0u},
+        {"1e-38", 0x006ce3eeu}, {"1.1754942807573643e-38", 0x007fffffu},
+        {"1.17549432e-38", 0x00800000u}, {"-1.17549432e-38", 0x80800000u},
+        {"1.00000005960464477539062500001", 0x3f800000u},
+        {"1.000000178813934326171875", 0x3f800001u},
+        {"1.000000298023223876953125", 0x3f800002u},
+        {"3.4028235677973366e38", 0x7f7fffffu}
+    }};
+    for (const auto& [text, expected] : cases)
+    {
+        SCOPED_TRACE(text);
+        const auto result = ESM4::readPhysicalBlendFloatSetting(.25f, text);
+        EXPECT_TRUE(result.mAccepted);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mValue), expected);
+    }
+    // Legacy fixed-six sprintf rounds decimal halfway defaults away from zero.
+    for (const auto& [previous, expected] : std::array<std::pair<float, std::uint32_t>, 4>{{
+        {.0078125f, 0x3c000219u}, {-.0078125f, 0xbc000219u},
+        {1.0078125f, 0x3f810004u}, {-1.0078125f, 0xbf810004u}}})
+    {
+        const auto result = ESM4::readPhysicalBlendFloatSetting(previous, std::nullopt);
+        EXPECT_TRUE(result.mAccepted);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mValue), expected);
+    }
+    const auto roundedDefault = ESM4::readPhysicalBlendFloatSetting(.123456789f, std::nullopt);
+    EXPECT_TRUE(roundedDefault.mAccepted);
+    EXPECT_EQ(roundedDefault.mValue, .123457f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(
+        ESM4::readPhysicalBlendFloatSetting(1e-8f, std::nullopt).mValue), 0u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(
+        ESM4::readPhysicalBlendFloatSetting(-0.f, std::nullopt).mValue), 0x80000000u);
+}
+
+TEST(ESM4PhysicalCombat, FloatIniReaderRejectsInvalidTextAndOverflowWithoutPublishing)
+{
+    for (std::string_view text : {"", "invalid", "nan", "inf", ".", "+", "-."})
+    {
+        const auto result = ESM4::readPhysicalBlendFloatSetting(-0.f, text);
+        EXPECT_FALSE(result.mAccepted);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mValue), 0x80000000u);
+    }
+    for (std::string_view text : {"1e1000", "-1e1000", "3.4028235677973367e38"})
+        EXPECT_THROW(ESM4::readPhysicalBlendFloatSetting(.25f, text), std::invalid_argument);
+    EXPECT_THROW(ESM4::readPhysicalBlendFloatSetting(
+        std::numeric_limits<float>::infinity(), "1"), std::invalid_argument);
+    const std::string truncated = std::string(255, '0') + "1";
+    EXPECT_EQ(ESM4::readPhysicalBlendFloatSetting(.25f, truncated).mValue, 0.f);
+    const std::string embeddedNull("1\0invalid", 9);
+    EXPECT_EQ(ESM4::readPhysicalBlendFloatSetting(.25f, embeddedNull).mValue, 1.f);
+    EXPECT_EQ(ESM4::readPhysicalBlendFloatSetting(.25f, "\t\v\f\r\n.5").mValue, .5f);
+}
