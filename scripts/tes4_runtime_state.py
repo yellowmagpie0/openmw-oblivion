@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 35
+CURRENT_VERSION = 36
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -993,6 +993,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if native_float(entry["remaining"]) < 0:
             raise RuntimeStateError("Negative TES4 native actor knockback timer")
         pulse_actors.add(actor)
+    if "native_physical_blend_time_cache" in state:
+        cache = state["native_physical_blend_time_cache"]
+        if version < 36 or not isinstance(cache, dict) or set(cache) != {"cycle", "stop_key", "start_key", "key_time", "result"}:
+            raise RuntimeStateError("Invalid TES4 native physical cache version or shape")
+        if type(cache["cycle"]) is not int or not 0 <= cache["cycle"] <= 0xffffffff:
+            raise RuntimeStateError("Invalid TES4 native physical cache cycle")
+        for field in ("stop_key", "start_key", "key_time", "result"):
+            native_float(cache[field])
+
     ragdolls = check_collection(state.get("native_actor_ragdolls", []), "native actor ragdoll list")
     if version < 31 and ragdolls:
         raise RuntimeStateError("TES4 actor ragdolls require version31")
@@ -1770,6 +1779,13 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         value["force_vector"] = [reader.unpack("<f") for _ in range(4)]; value["frame_delta"] = reader.unpack("<f")
                         controls["velocities"].append(controller)
             result["native_actor_ragdolls"].append(entry)
+    if version >= 36:
+        present = reader.unpack("<B")
+        if present not in (0, 1):
+            raise RuntimeStateError("Invalid TES4 native physical cache presence marker")
+        if present:
+            result["native_physical_blend_time_cache"] = {"cycle": reader.unpack("<I"),
+                **{field: reader.unpack("<f") for field in ("stop_key", "start_key", "key_time", "result")}}
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -2154,6 +2170,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         writer.pack("<B", int(controller["precedes_blend"])); value = controller["state"]; common_state(value)
                         for component in value["force_vector"]: writer.pack("<f", component)
                         writer.pack("<f", value["frame_delta"])
+    if version >= 36:
+        writer.pack("<B", int("native_physical_blend_time_cache" in state))
+        if "native_physical_blend_time_cache" in state:
+            cache = state["native_physical_blend_time_cache"]
+            writer.pack("<I", cache["cycle"])
+            for field in ("stop_key", "start_key", "key_time", "result"):
+                writer.pack("<f", cache[field])
     return writer.finish()
 
 

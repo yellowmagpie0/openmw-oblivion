@@ -18208,3 +18208,56 @@ traversal/cache, raw COM/time/quaternion/cache, activation/contact continuation,
 retained physical/restart failures, normal-input display acceptance and S5-S14
 remain required. Original checkout metadata is protected; this chunk is committed
 as exact matching source bytes in the existing writable progress repository.
+
+
+### Checkpoint233: version36 global physical clock-cache metadata
+
+RuntimeState now optionally retains the scheduler-wide PhysicalBlendTimeCache,
+separately from every actor snapshot. This is the physical controller cache;
+renderer-global Ni caching is a different unresolved authority. No owner is
+required for present data: the scheduler can retain its cache after the last
+ragdoll is removed. Legacy versions1-35 preserve their exact layouts and do not
+invent cache state. Populated state, including the default raw sentinel, rejects
+downgrading to35. Version36 appends a strict presence byte to the complete
+version35 payload, then raw uint32 cycle and binary32 stop/start/key/result fields
+when present:21 bytes present or1 byte absent. All four floats must be finite;
+cycle remains an arbitrary raw uint32, and finite reversed cached bounds are
+preserved rather than treated as active controller timing. JSON emits the exact
+five-field native_physical_blend_time_cache object only when present; scalar
+negative zeros are retained. Python validates exact shape/int-not-bool cycle,
+range, finite binary32 values and downgrade. Added cache value equality only;
+signed-zero proof uses actual bits and independent whole-payload byte fixtures.
+
+Both physical-cache-save-baseline-01 C++ cases execute and fail on unsupported
+version36; both physical-cache-save-python-baseline-01 cases execute and error on
+the same missing codec support. Manual21-byte suffix fixtures use FFFFFFFF raw
+cycle, reversed1/-1 bounds, negative-zero key time and-.25 result, appended to an
+unchanged version35 prefix with its version header updated. Tests cover all raw
+cycle boundaries, legacy/current absence, every extension truncation, marker2,
+all four float nonfinite fields through encoding and C++ decoding, populated
+legacy downgrade, Python bool/noninteger/range violations and extra/missing or
+incorrect nested shape. Existing older-schema goldens remain unchanged.
+
+Full physical-cache-save-normal/sanitized-01 each passes2,409 component tests;
+normal passes255 Python tests, exact inventory with zero failures/skips. Broader
+recompilation retains only the preexisting inventory missing-mOwner initializer
+warnings. ASan leak checks disabled. Tested fingerprint `6ece135ec4a38373b6f0b90bf6a0ff8cdd29ade8e1a9255df1c69ae4fd5aa61b`.
+
+Actual native-physical-cache-save-wire-compare-normal/sanitized-01 each passes
+110,592 original196 captured cache outputs,552,960 exact fields:raw cycle and all
+four cached binary32 values. C++ version36 encode/decode/reencode, independent
+Python decode/reencode and C++ canonical JSON to Python encoding preserve the
+whole payload byte-for-byte for every input. Optional global location/presence
+and player envelope are software snapshot policy, not original save output.
+Original196 executable/source/corpus identity and full-instruction/declared
+Windows/interlocked boundary remain unchanged. No original native-save/next-phase,
+World/contact/gameplay or renderer-global Ni cache claim. Sources/commands/archive
+hashes are recorded; unchanged engine integration was not rebuilt in this codec
+chunk.
+
+No M15 gate closes. Global cache publication and consistent multiowner snapshots
+at the scheduler/World authority barrier still need implementation and engine
+verification. Automatic World lifecycle/reaction/update/getter/frame wiring,
+renderer-global traversal/cache, raw COM/time/quaternion/cache, activation/contact
+continuation, retained physical/restart failures and S5-S14/normal-input acceptance
+remain required.

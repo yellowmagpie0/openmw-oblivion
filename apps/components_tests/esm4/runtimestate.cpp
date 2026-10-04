@@ -2696,3 +2696,58 @@ TEST(ESM4RuntimeState, NativeControllersRejectMalformedVersionIdentityTimingAndW
     auto bad = payload; bad[offset + 1] = 2;
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
 }
+
+TEST(ESM4RuntimeState, NativePhysicalCacheVersionThirtySixGoldenAndLegacyAbsence)
+{
+    auto old = makeState(); old.mVersion = 35;
+    const auto legacy = old.serializeBinary(); auto prefix = legacy;
+    prefix[std::string_view("OMW4STATE").size()] = 36;
+    auto state = old; state.mVersion = 36;
+    state.mNativePhysicalBlendTimeCache = ESM4::PhysicalBlendTimeCache{0xffffffffu, 1, -1, -0.f, -.25f};
+    const std::vector<std::uint8_t> suffix{1, 255,255,255,255, 0,0,128,63, 0,0,128,191, 0,0,0,128, 0,0,128,190};
+    auto expected = prefix; expected.insert(expected.end(), suffix.begin(), suffix.end());
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(expected);
+    ASSERT_TRUE(loaded.mNativePhysicalBlendTimeCache);
+    EXPECT_EQ(*loaded.mNativePhysicalBlendTimeCache, *state.mNativePhysicalBlendTimeCache);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(loaded.mNativePhysicalBlendTimeCache->mKeyTime), 0x80000000u);
+    EXPECT_EQ(loaded.serializeBinary(), expected);
+    EXPECT_NE(loaded.canonicalJson().find("\"native_physical_blend_time_cache\":{\"cycle\":4294967295,\"stop_key\":1,\"start_key\":-1,\"key_time\":-0.0,\"result\":-0.25}"), std::string::npos);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativePhysicalBlendTimeCache);
+    state.mNativePhysicalBlendTimeCache.reset(); expected = prefix; expected.push_back(0);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativePhysicalBlendTimeCache);
+    for (const auto cycle : {0u, 1u, 2u, 3u, 0x80000000u, 0xffffffffu})
+    {
+        state.mNativePhysicalBlendTimeCache = ESM4::PhysicalBlendTimeCache{cycle, -0.f, 0, 1, -2};
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativePhysicalBlendTimeCache, state.mNativePhysicalBlendTimeCache);
+    }
+}
+
+TEST(ESM4RuntimeState, NativePhysicalCacheRejectsDowngradeNonfiniteAndMalformedWire)
+{
+    auto state = makeState(); state.mVersion = 36; state.mNativePhysicalBlendTimeCache.emplace();
+    const auto payload = state.serializeBinary(); const auto offset = payload.size() - 21;
+    for (std::size_t cut = offset; cut < payload.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(std::vector(payload.begin(), payload.begin() + cut)), std::runtime_error);
+    auto badWire = payload; badWire[offset] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(badWire), std::runtime_error);
+    for (unsigned field = 0; field < 4; ++field)
+        for (const auto value : {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+        {
+            auto bad = state; auto& cache = *bad.mNativePhysicalBlendTimeCache;
+            switch (field)
+            {
+                case 0: cache.mStopKey = value; break;
+                case 1: cache.mStartKey = value; break;
+                case 2: cache.mKeyTime = value; break;
+                case 3: cache.mResult = value; break;
+            }
+            EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+            auto wire = payload; const auto bits = std::bit_cast<std::uint32_t>(value);
+            for (unsigned lane = 0; lane < 4; ++lane) wire[offset + 5 + field * 4 + lane] = bits >> (lane * 8);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
+        }
+    state.mVersion = 35; EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativePhysicalBlendTimeCache.reset(); EXPECT_NO_THROW(state.serializeBinary());
+}

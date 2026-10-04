@@ -32,7 +32,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 35;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 36;
 
     struct RuntimeContentIdentity
     {
@@ -510,6 +510,9 @@ namespace ESM4
         std::map<ESM::FormKey, TimedKnockbackState> mNativeActorKnockback;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
+        // v36: scheduler-wide physical clock cache, independent of actor ownership.
+        // Renderer-global Ni controller caching belongs to a different authority.
+        std::optional<PhysicalBlendTimeCache> mNativePhysicalBlendTimeCache = std::nullopt;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

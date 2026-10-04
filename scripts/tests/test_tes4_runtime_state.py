@@ -1994,6 +1994,48 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"] = value
             with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
 
+    def test_native_physical_cache_v36_golden_and_legacy_absence(self):
+        old = self.controller_ragdoll_state(); legacy = state_io.encode_payload(old)
+        prefix = bytearray(legacy); struct.pack_into("<I", prefix, len(b"OMW4STATE"), 36)
+        state = copy.deepcopy(old); state["schema_version"] = 36
+        state["native_physical_blend_time_cache"] = {"cycle":0xffffffff,"stop_key":1.,"start_key":-1.,"key_time":-0.,"result":-.25}
+        expected = bytes(prefix) + bytes.fromhex("01ffffffff0000803f000080bf00000080000080be")
+        self.assertEqual(state_io.encode_payload(state), expected)
+        decoded = state_io.decode_payload(expected)
+        self.assertEqual(state_io.encode_payload(decoded), expected)
+        self.assertEqual(struct.pack("<f", decoded["native_physical_blend_time_cache"]["key_time"]), bytes.fromhex("00000080"))
+        self.assertNotIn("native_physical_blend_time_cache", state_io.decode_payload(legacy))
+        del state["native_physical_blend_time_cache"]
+        self.assertEqual(state_io.encode_payload(state), bytes(prefix) + bytes([0]))
+        self.assertNotIn("native_physical_blend_time_cache", state_io.decode_payload(bytes(prefix) + bytes([0])))
+        for cycle in (0,1,2,3,0x80000000,0xffffffff):
+            state["native_physical_blend_time_cache"] = {"cycle":cycle,"stop_key":-0.,"start_key":0.,"key_time":1.,"result":-2.}
+            self.assertEqual(state_io.encode_payload(state_io.decode_payload(state_io.encode_payload(state))), state_io.encode_payload(state))
+
+    def test_native_physical_cache_v36_rejects_version_fields_and_wire(self):
+        state = self.controller_ragdoll_state(); state["schema_version"] = 36
+        cache = {"cycle":0xffffffff,"stop_key":0.,"start_key":0.,"key_time":0.,"result":0.}
+        state["native_physical_blend_time_cache"] = cache
+        payload = state_io.encode_payload(state); offset = len(payload)-21
+        for cut in range(offset,len(payload)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:cut])
+        bad = bytearray(payload); bad[offset] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+        for field in ("stop_key","start_key","key_time","result"):
+            for value in (math.nan, math.inf, -math.inf, True, "0"):
+                bad = copy.deepcopy(state); bad["native_physical_blend_time_cache"][field] = value
+                with self.subTest(field=field,value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        for value in (-1, 0x100000000, True, 1., "0"):
+            bad = copy.deepcopy(state); bad["native_physical_blend_time_cache"]["cycle"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        for value in (None, [], {}, {**cache,"unknown":0}, {k:v for k,v in cache.items() if k!="result"}):
+            bad = copy.deepcopy(state); bad["native_physical_blend_time_cache"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 35
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_physical_blend_time_cache"]
+        state_io.encode_payload(state)
+
 
 if __name__ == "__main__":
     unittest.main()

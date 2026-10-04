@@ -345,6 +345,7 @@ namespace ESM4
     {
         std::uint32_t mCycle = 0xffffffffu;
         float mStopKey = 0.f, mStartKey = 0.f, mKeyTime = 0.f, mResult = 0.f;
+        friend bool operator==(const PhysicalBlendTimeCache&, const PhysicalBlendTimeCache&) = default;
     };
 
     // General finite ordered-bound controller clock. Stage clock/cache writes

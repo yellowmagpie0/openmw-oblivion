@@ -733,6 +733,15 @@ namespace ESM4
             throw std::runtime_error("Unsupported TES4 runtime-state version " + std::to_string(mVersion));
         if (mProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state requires the Oblivion game profile");
+        if (mNativePhysicalBlendTimeCache)
+        {
+            if (mVersion < 36)
+                throw std::runtime_error("Native physical cache requires runtime schema36");
+            const auto& cache = *mNativePhysicalBlendTimeCache;
+            for (float value : {cache.mStopKey, cache.mStartKey, cache.mKeyTime, cache.mResult})
+                if (!std::isfinite(value))
+                    throw std::runtime_error("Nonfinite native physical cache state");
+        }
         if (mVersion < 27 && mCombatRngState != 1)
             throw std::runtime_error("Native combat random state requires runtime schema27");
         if (mNextDynamicSerial == 0)
@@ -1875,6 +1884,17 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 36)
+        {
+            writer.integer<std::uint8_t>(mNativePhysicalBlendTimeCache.has_value());
+            if (mNativePhysicalBlendTimeCache)
+            {
+                const auto& cache = *mNativePhysicalBlendTimeCache;
+                writer.integer(cache.mCycle);
+                for (float value : {cache.mStopKey, cache.mStartKey, cache.mKeyTime, cache.mResult})
+                    writer.floating(value);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2662,6 +2682,15 @@ namespace ESM4
                 if (!result.mNativeActorRagdolls.emplace(std::move(actor), std::move(pose)).second)
                     throw std::runtime_error("Duplicate TES4 ragdoll owner");
             }
+        }
+        if (result.mVersion >= 36)
+        {
+            const auto present = reader.integer<std::uint8_t>();
+            if (present > 1)
+                throw std::runtime_error("Invalid native physical cache presence marker");
+            if (present)
+                result.mNativePhysicalBlendTimeCache = PhysicalBlendTimeCache{reader.integer<std::uint32_t>(),
+                    reader.float32(), reader.float32(), reader.float32(), reader.float32()};
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -3468,6 +3497,19 @@ namespace ESM4
                 stream << '}';
             }
             stream << ']';
+        }
+        if (mNativePhysicalBlendTimeCache)
+        {
+            const auto& cache = *mNativePhysicalBlendTimeCache;
+            const auto scalar = [&](float value) {
+                if (value == 0.f && std::signbit(value)) stream << "-0.0";
+                else stream << value;
+            };
+            stream << ",\"native_physical_blend_time_cache\":{\"cycle\":" << cache.mCycle;
+            stream << ",\"stop_key\":"; scalar(cache.mStopKey);
+            stream << ",\"start_key\":"; scalar(cache.mStartKey);
+            stream << ",\"key_time\":"; scalar(cache.mKeyTime);
+            stream << ",\"result\":"; scalar(cache.mResult); stream << '}';
         }
         stream << "}";
         return stream.str();
