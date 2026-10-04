@@ -1,4 +1,5 @@
 #include "worldimp.hpp"
+#include "../mwphysics/oblivionragdoll.hpp"
 
 #include <array>
 #include <charconv>
@@ -360,10 +361,18 @@ namespace MWWorld
         mSwimHeightScale = mStore.get<ESM::GameSetting>().find("fSwimHeightScale")->mValue.getFloat();
     }
 
+    MWPhysics::PhysicsSystem& World::initializePhysics(osg::ref_ptr<osg::Group> rootNode)
+    {
+        if (mPhysics)
+            throw std::logic_error("World physics is already initialized");
+        mPhysics = std::make_unique<MWPhysics::PhysicsSystem>(mResourceSystem, rootNode);
+        return *mPhysics;
+    }
+
     void World::init(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer, osg::ref_ptr<osg::Group> rootNode,
         SceneUtil::WorkQueue* workQueue, SceneUtil::UnrefQueue& unrefQueue)
     {
-        mPhysics = std::make_unique<MWPhysics::PhysicsSystem>(mResourceSystem, rootNode);
+        initializePhysics(rootNode);
 
         if (Settings::navigator().mEnable)
         {
@@ -973,6 +982,65 @@ namespace MWWorld
         }
     }
 
+    void World::captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const
+    {
+        if (!mPhysics)
+        {
+            // A retained save may be inspected without starting a scene/physics
+            // subsystem. Its global clock still belongs to the saved authority.
+            if (mOblivionRuntimeState)
+                state.mNativePhysicalBlendTimeCache = mOblivionRuntimeState->mNativePhysicalBlendTimeCache;
+            return;
+        }
+        if (!mOblivionCombat)
+            throw std::logic_error("native physical save requires combat authority");
+        const auto owners = mPhysics->actorRagdollOwners();
+        std::vector<std::string> models;
+        std::vector<MWPhysics::NativeRagdollSnapshotBinding> bindings;
+        models.reserve(owners.size());
+        bindings.reserve(owners.size());
+        for (const auto& actor : owners)
+        {
+            const auto key = actor == player ? ESM::FormKey::dynamic("player", 1)
+                                             : actor.getCellRef().getFormKey();
+            const auto cached = state.mNativeActorRagdolls.find(key);
+            const auto* values = mOblivionCombat->findActorValues(key);
+            const auto* life = mOblivionCombat->findActorLife(key);
+            const auto base = actor == player && values ? values->mBase : nativeActorBase(actor);
+            if (cached == state.mNativeActorRagdolls.end() || !values || !life || base.isNull()
+                || values->mBase != base || life->mBase != base || cached->second.mBase != base)
+                throw std::runtime_error("native physical save has an unbound actor/base/lifecycle owner");
+            // Resolve the current class model, rather than laundering a stale
+            // cached model label through a physical adapter.
+            auto model = actor.getClass().getCorrectedModel(actor);
+            if (actor == player && actor.getType() == ESM::REC_NPC_
+                && !actor.get<ESM::NPC>()->mBase->mModel.empty())
+                model = Misc::ResourceHelpers::correctActorModelPath(
+                    Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
+                    mResourceSystem->getVFS());
+            if (model.empty() || model.value() != cached->second.mModel)
+                throw std::runtime_error("native physical save model does not match the current actor");
+            models.emplace_back(model.value());
+            bindings.push_back({actor, key, base, models.back()});
+        }
+        const auto physical = mPhysics->captureActorRagdollSnapshots(bindings);
+        // Validate every captured asset/body binding before replacing any local
+        // cached projection. Unloaded/nonphysical actors remain in the map.
+        for (const auto& [key, pose] : physical.mActors)
+        {
+            const auto& cached = state.mNativeActorRagdolls.at(key);
+            if (pose.mAssetHash != cached.mAssetHash || pose.mBodies.size() != cached.mBodies.size())
+                throw std::runtime_error("native physical save asset does not match the bound authority");
+            for (std::size_t i = 0; i < pose.mBodies.size(); ++i)
+                if (pose.mBodies[i].mRecord != cached.mBodies[i].mRecord
+                    || pose.mBodies[i].mNodeRecord != cached.mBodies[i].mNodeRecord)
+                    throw std::runtime_error("native physical save body does not match the bound authority");
+        }
+        for (const auto& [key, pose] : physical.mActors)
+            state.mNativeActorRagdolls.at(key) = pose;
+        state.mNativePhysicalBlendTimeCache = physical.mTimeCache;
+    }
+
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
     {
         ESM4::RuntimeState state;
@@ -1329,6 +1397,7 @@ namespace MWWorld
             mOblivionAi->capture(state);
         if (mOblivionCombat)
             mOblivionCombat->capture(state);
+        captureOblivionPhysicalState(state, player);
         const auto normalizeNativeInventory = [](std::vector<ESM4::RuntimeInventoryItem>& inventory) {
             for (ESM4::RuntimeInventoryItem& item : inventory)
                 if (item.mCount < 0)

@@ -12012,3 +12012,84 @@ still require implementation and acceptance. Retained unloaded authority,
 winning base/model/asset identity, renderer-global traversal/cache, native raw
 pose/time/activation/contact continuation, retained numerical failures,
 normal-input runtime gates and all pending S5-S14 requirements remain open.
+
+
+### Checkpoint239: actual World save refreshes loaded physical projections
+
+World::captureOblivionRuntimeState now invokes a physical join after capturing
+the combat service and before final RuntimeState validation. With initialized
+physics it enumerates every current owner, resolves the projected Player to
+dynamic(player,1) and other native actors to their reference keys, and requires
+matching cached pose, native actor values/life and current base. It resolves the
+current corrected class model; a projected Player's explicit custom model uses
+the actor-model resource correction path. A stale model label cannot be passed
+back to physics as if it were current. Models live in a reserved owning string
+vector throughout borrowed group bindings. The coherent scheduler group captures
+all loaded physical projections and the shared clock. World checks every loaded
+asset hash, body count and record/node identity against the admitted authority
+before overlaying the local save map. Other retained poses remain in that map;
+no cached combat service pose is mutated by saving. Final state validation checks
+the reference/value/life joins. Empty initialized physics still saves its global
+clock. Without initialized physics, a retained T4ST clock is preserved; a fresh
+headless World has no invented clock.
+
+Factored the existing World-owned physics construction into initializePhysics,
+returning its borrowed PhysicsSystem reference and rejecting duplicate explicit
+initialization before replacing any owner. Normal World::init calls that method.
+This permits headless actual World-owned physics tests without introducing a
+test-only friend or injecting an unrelated subsystem. It is not full renderer/
+navigator/scene initialization or automatic native reaction admission.
+
+Two new engine tests loop worker counts0/1/2. The live-owner test uses editable
+synthetic mesh/VFS/resource inputs, an actual World/PhysicsSystem, native NPC and
+projected Player physical owners, native reference/value/life companions and a
+retained resident NPC pose with no physical owner. It changes NPC/Player body
+positions, native packed W lanes and global cache after service capture, proves
+World save refreshes both loaded poses and preserves the other pose, checks a
+negative-zero angular W bit, verifies binary version36 roundtrip and confirms
+service caches remain unchanged. Missing authority, valid-but-wrong hash/model,
+body record, node and count all reject capture. The retained actor in this test
+is resident/nonphysical, not a demonstrated unloaded-cell gameplay continuation.
+The empty-owner test checks fresh absent cache without physics, readT4ST retained
+cache preservation without physics, initialized physics superseding that clock,
+duplicate initialization ownership, empty ragdolls and binary clock roundtrip.
+
+world-physical-save-baseline-01 retains a compile failure caused by an incorrect
+assumption that World exposes getPhysicsSystem; its actual getter is the
+RayCastingInterface. Returning the initialized subsystem corrected the fixture.
+Baseline-02 executes both tests: empty-owner capture fails on absent cache;
+live-owner setup first fails on a duplicate projected Player record ID. After
+using a distinct managed record, baseline-03 retains a headless fixture crash:
+Player capsule scale construction accesses the camera when the Player already
+has a cell. The fixture now constructs its capsule before assigning the cell,
+then binds the current Ptr before physical handoff/saving. It does not exercise
+camera-dependent initial scaling. Baseline-04 reaches stale NPC/Player snapshots,
+missing cache and missing-owner rejection but stops its live loop at a malformed
+wrong-hash fixture. Changing only the final hash digit retains the required hash
+format. Baseline-05 executes both tests without setup exceptions: the live case
+runs all three worker loops and fails on stale poses, packed negative-zero W,
+cache omission and accepted invalid bindings; the empty case demonstrates
+retained clock loss and initialized cache omission at worker0 before its fatal
+presence assertion. These are actual missing-behavior failures, not skipped cases.
+
+First full normal/sanitized implementation attempts retain a compile failure
+from spelling REC_NPC instead of this repository's REC_NPC_. Corrected that
+constant, with no expectation/tolerance changes. Final full
+world-physical-save-normal-02 and sanitized-02 each pass931 engine cases with
+exact inventory, zero failures/skips. Normal broader recompilation retains a
+GCC16 maybe-uninitialized diagnostic in unchanged CharacterController queue
+restore; unchanged-character-warning.json compares both character source/header
+bytes against checkpoint238 and records their hashes. All queue entry fields
+are assigned before insertion on inspection; no new World-source diagnostic is
+reported. Sanitized build has no compiler warnings. ASan leak checks disabled.
+Tested fingerprint `05c6771acc0b0c7055727739256c68786249dd1824333f41a0b4e7ad959ad725`. No lower component/native arithmetic/codec changed,
+so unchanged component/Python/original-instruction comparisons are not repeated.
+
+No M15 stage closes. This is automatic World saving of already admitted physical
+owners, not automatic World begin/update/end, reaction/getup implementation,
+winning initial morphology or INI producers, fresh-process physical restoration,
+renderer-global Ni cache/traversal or raw COM/time/quaternion/activation/contact
+continuation. True unloaded-cell lifecycle joins, retained numerical failures,
+normal-input display acceptance and pending S5-S14 remain required. Next connect
+the saved physical cache/owner projections to World restore and lifecycle before
+claiming resumed simulation or gameplay acceptance.

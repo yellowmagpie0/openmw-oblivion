@@ -222,6 +222,8 @@ namespace MWWorld
 
         float feetToGameUnits(float feet);
 
+        void captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const;
+
         MWWorld::ConstPtr getClosestMarker(const MWWorld::ConstPtr& ptr, const ESM::RefId& id);
         MWWorld::ConstPtr getClosestMarkerFromExteriorPosition(const osg::Vec3f& worldPos, const ESM::RefId& id);
 
@@ -313,6 +315,9 @@ namespace MWWorld
         void loadData(const Files::Collections& fileCollections, const std::vector<std::string>& contentFiles,
             const std::vector<std::string>& groundcoverFiles, ToUTF8::Utf8Encoder* encoder,
             Loading::Listener* listener);
+
+        // Must be called after loadData. Physics can be initialized without rendering.
+        MWPhysics::PhysicsSystem& initializePhysics(osg::ref_ptr<osg::Group> rootNode);
 
         // Must be called after `loadData`.
         void init(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer, osg::ref_ptr<osg::Group> rootNode,
