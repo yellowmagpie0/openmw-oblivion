@@ -292,6 +292,26 @@ namespace MWMechanics
                     changed = true;
                 }
             }
+            // Native5FACC8: Player action5 (not a phase or rendered hold flag),
+            // integer Marksman mastery, then expenditure before regeneration.
+            if (values.mOwner == ESM4::ActorValueOwner::Player
+                && values.mProcessAction == 5 && input.mCanSpend)
+            {
+                const auto& skill = values.mValues[28];
+                const auto marksman = ESM4::composeIntegerActorValue(
+                    ESM4::combatBaseValue(skill.mBase), skill.mModifiers, values.mOwner, values.mProcess);
+                const float cost = ESM4::bowHoldFatigue(
+                    marksman, true, true, input.mDuration, settings.mBow, settings.mMastery);
+                const float current = ESM4::composeActorValue(values.mValues[10], values.mOwner, values.mProcess);
+                // Common expenditure5E07D0 suppresses current<=0 and limits
+                // this debit; direct fatigue damage has different semantics.
+                const float debit = current > 0 && cost > 0 ? std::min(current, cost) : 0;
+                if (debit > 0)
+                {
+                    changeFatigueDamage(values, -debit);
+                    changed = true;
+                }
+            }
             const float restoration = fatigueRestoration(values, input.mDuration, settings.mRegeneration);
             if (restoration > 0)
             {

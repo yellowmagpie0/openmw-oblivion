@@ -8066,3 +8066,57 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST(OblivionWorldTest, NativeBowHoldFrameClockWinningRateGodModeAndRestartDoNotReplayDebit)
+    {
+        NativeWorldFixture fixture; auto& world = fixture.mWorld; auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        ESM4::Npc native{}; native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        native.mIsTES4 = true; native.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto ptr = world.getPlayerPtr(); auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x960;
+        for (auto [name, value] : {std::pair{"fMarksmanFatigueBurnPerSecond", 20.f},
+                 {"fFatigueReturnBase", 0.f}, {"fFatigueReturnMult", 0.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+        }
+        ESM4::RuntimeState state;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        state.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        state.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        state.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        auto values = *service.findActorValues(key);
+        values.mPlayerFormValues = {{100, 0, 40, 0}};
+        for (auto av : {0, 3, 5, 6, 28}) values.mValues[av] = {};
+        values.mValues[10].mModifiers = {}; values.mProcessAction = 5;
+        service.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+        service.advanceFrameClock(.125f);
+        ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false)); // Actor clock owns duration.
+        EXPECT_EQ(service.getPlayerValue(10), 37.5f);
+        ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false));
+        EXPECT_EQ(service.getPlayerValue(10), 37.5f);
+        service.capture(state);
+        const auto wire = state.serializeBinary();
+        MWMechanics::OblivionCombatService replacement;
+        replacement.restore(ESM4::RuntimeState::deserializeBinary(wire), store);
+        const std::array<MWWorld::Ptr, 1> residents{ptr};
+        service.installRestoredActorState(std::move(replacement), residents, &world.getPlayer());
+        ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false));
+        EXPECT_EQ(service.getPlayerValue(10), 37.5f);
+        service.advanceFrameClock(.125f);
+        ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false));
+        EXPECT_EQ(service.getPlayerValue(10), 35);
+        EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), 35);
+        EXPECT_TRUE(world.toggleGodMode()); service.advanceFrameClock(.125f);
+        ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false)); EXPECT_EQ(service.getPlayerValue(10), 35);
+        EXPECT_FALSE(world.toggleGodMode());
+        service.setProcessAction(key, 3); service.advanceFrameClock(.125f);
+        ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false)); EXPECT_EQ(service.getPlayerValue(10), 35);
+    }
+}

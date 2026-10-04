@@ -7226,3 +7226,113 @@ namespace
         EXPECT_TRUE(restored.isActionConsumed(id));
     }
 }
+
+namespace
+{
+    TEST_F(OblivionActorStatsTest, BowHoldSettingsResolveWinningTypedRecordsForEveryFrameWriter)
+    {
+        const auto initial = MWWorld::resolveOblivionFrameSettings(mStore);
+        EXPECT_EQ(initial.mFatigue.mBow.mHoldPerSecond, 15);
+        EXPECT_EQ(initial.mFatigue.mBow.mPerShot, 5);
+        ESM::GameSetting shared{}; shared.mId = ESM::RefId::stringRefId("fMarksmanFatigueBurnPerSecond");
+        shared.mValue.setType(ESM::VT_Float); shared.mValue.setFloat(999);
+        mStore.getWritable<ESM::GameSetting>().insertStatic(shared);
+        EXPECT_EQ(MWWorld::resolveOblivionFatigueSettings(mStore).mBow.mHoldPerSecond, 15);
+        ESM4::GameSetting setting{}; setting.mId = {0x982, 3};
+        setting.mEditorId = "FMARKSMANFATIGUEBURNPERSECOND"; setting.mData = 3.f;
+        const auto key = ESM::FormKey::content("actors.esm", 0x982);
+        mStore.getWritable<ESM4::GameSetting>().insertStatic(setting, key);
+        EXPECT_EQ(MWWorld::resolveOblivionFatigueSettings(mStore).mBow.mHoldPerSecond, 3);
+        EXPECT_EQ(MWWorld::resolveOblivionFrameSettings(mStore).mFatigue.mBow.mHoldPerSecond, 3);
+        setting.mData = 20.f; mStore.getWritable<ESM4::GameSetting>().insertStatic(setting, key);
+        EXPECT_EQ(MWWorld::resolveOblivionFrameSettings(mStore).mFatigue.mBow.mHoldPerSecond, 20);
+        setting.mData = std::int32_t{3}; mStore.getWritable<ESM4::GameSetting>().insertStatic(setting, key);
+        EXPECT_THROW(MWWorld::resolveOblivionFrameSettings(mStore), std::invalid_argument);
+        setting.mData = -1.f; mStore.getWritable<ESM4::GameSetting>().insertStatic(setting, key);
+        EXPECT_THROW(MWWorld::resolveOblivionFatigueSettings(mStore), std::invalid_argument);
+    }
+}
+
+namespace
+{
+    TEST_F(OblivionActorStatsTest, BowHoldDebitUsesPlayerActionIntegerMasteryAndCommonExpenditureBeforeRegeneration)
+    {
+        autoNpc(); sharedStats();
+        mNpc.mFormKey = mActorKey;
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{}; playerBase.blank(); playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(playerBase);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Npc::registerSelf();
+        MWWorld::Player player(record); const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{}; initial.blank(); playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCharacter ref{}; ref.mId = {0x901, 3};
+        ref.mFormKey = ESM::FormKey::content("actors.esm", 0x901); ref.mBaseKey = mActorKey;
+        MWWorld::LiveCellRef<ESM4::Npc> live(ref, mStore.search<ESM4::Npc>(mActorKey));
+        const MWWorld::Ptr npcPtr(&live);
+        auto settings = MWWorld::resolveOblivionFatigueSettings(mStore);
+        settings.mRegeneration = {0, 0};
+        using Owner = ESM4::ActorValueOwner;
+        for (bool isPlayer : {false, true})
+        {
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues values;
+            values.mActor = isPlayer ? ESM::FormKey::dynamic("player", 1) : ref.mFormKey;
+            values.mBase = isPlayer ? ESM::FormKey::dynamic("player-base", 1) : mActorKey;
+            values.mOwner = isPlayer ? Owner::Player : Owner::NonPlayer;
+            values.mProcess = ESM4::ActorValueProcess::Active; values.mProcessKnockedState = 0;
+            values.mValues[8].mBase = 100; values.mValues[10].mBase = 40;
+            if (isPlayer) values.mPlayerFormValues = {{100, 0, 40, 0}};
+            const auto ptr = isPlayer ? playerPtr : npcPtr;
+            const auto publish = [&] {
+                if (isPlayer) service.publishPlayerValues(player, values, settings.mPlayerBase);
+                else service.publishNonPlayerValues(ptr, values);
+            };
+            const auto update = [&](float dt, bool canSpend, const auto& chosen) {
+                if (isPlayer) service.updatePlayerFatigue(player, {dt, 0, false, canSpend}, chosen);
+                else service.updateNonPlayerFatigue(ptr, {dt, 0, false, canSpend}, chosen);
+            };
+            for (int action : {-1, 3, 4, 5, 6})
+                for (int marksman : {0, 24, 25, 49, 50, 74, 75, 99, 100})
+                {
+                    SCOPED_TRACE(testing::Message() << isPlayer << " action=" << action << " marksman=" << marksman);
+                    values.mProcessAction = action; values.mValues[28] = {float(marksman), {}};
+                    values.mValues[10].mModifiers = {}; publish(); update(.25f, true, settings);
+                    const float expected = isPlayer && action == 5 && marksman < 25 ? 36.25f : 40;
+                    EXPECT_EQ(service.findActorValues(values.mActor)->mValues[10].mBase, 40);
+                    EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), expected);
+                }
+            values.mProcessAction = 5; values.mValues[28] = {24.5f, {.75f, {}, {}}};
+            values.mValues[10].mModifiers = {}; publish();
+            update(.25f, true, settings);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), isPlayer ? 36.25f : 40);
+            values.mValues[28] = {25.5f, {std::nullopt, std::nullopt, -.75f}};
+            values.mValues[10].mModifiers = {}; publish(); update(.25f, true, settings);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), isPlayer ? 36.25f : 40);
+            values.mValues[28] = {};
+            for (float current : {-1.f, 0.f, .125f, 40.f})
+            {
+                values.mValues[10].mModifiers = {2.f, -1.f, current - 41.f}; publish();
+                update(1, true, settings);
+                const float expected = isPlayer && current > 0 ? std::max(0.f, current - 15.f) : current;
+                EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), expected);
+                EXPECT_EQ(service.findActorValues(values.mActor)->mValues[10].mModifiers[0], 2);
+                EXPECT_EQ(service.findActorValues(values.mActor)->mValues[10].mModifiers[1], -1);
+            }
+            values.mValues[10].mModifiers = {}; publish(); update(.25f, false, settings);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), 40);
+            auto regenerated = settings; regenerated.mRegeneration = {10, 0};
+            publish(); update(.25f, true, regenerated);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue().getCurrent(), isPlayer ? 38.75f : 40);
+            publish(); const auto before = *service.findActorValues(values.mActor);
+            const auto sharedBefore = ptr.getClass().getCreatureStats(ptr).getFatigue();
+            auto invalid = settings; invalid.mRegeneration.mBase = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(update(.25f, true, invalid), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(values.mActor), before);
+            EXPECT_EQ(ptr.getClass().getCreatureStats(ptr).getFatigue(), sharedBefore);
+        }
+    }
+}

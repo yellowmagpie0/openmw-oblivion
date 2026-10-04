@@ -143,7 +143,7 @@ namespace MWWorld
     {
         const auto settings = winningRecords<ESM4::GameSetting>(store);
         return {{ESM4::buildMovementFatigueSettings(settings), ESM4::buildFatigueRegenerationSettings(settings),
-                    ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings)},
+                    ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings), ESM4::buildBowFatigueSettings(settings)},
             ESM4::buildMagickaRegenerationSettings(settings)};
     }
 
@@ -151,7 +151,7 @@ namespace MWWorld
     {
         const auto settings = winningRecords<ESM4::GameSetting>(store);
         return {ESM4::buildMovementFatigueSettings(settings), ESM4::buildFatigueRegenerationSettings(settings),
-            ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings)};
+            ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings), ESM4::buildBowFatigueSettings(settings)};
     }
 
     ESM4::FatigueRegenerationSettings resolveOblivionFatigueRegenerationSettings(const ESMStore& store)

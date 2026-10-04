@@ -106,6 +106,7 @@ namespace MWMechanics
         ESM4::FatigueRegenerationSettings mRegeneration;
         ESM4::CombatMasterySettings mMastery;
         ESM4::PlayerDynamicBaseSettings mPlayerBase;
+        ESM4::BowFatigueSettings mBow{15, 5};
     };
 
     struct OblivionFatigueUpdate

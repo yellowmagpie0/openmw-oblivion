@@ -12455,3 +12455,63 @@ runtime import, initial morphology, actual automatic physical admission/
 reaction/update/getup, full Ni traversal/time/contact continuation, retained
 physical numerical failures, normal-input restart/gameplay and pending S5-S14
 remain required.
+
+
+### S5 actual Player bow hold-fatigue frame writer (checkpoint263)
+
+Actual native frame resource updates now debit Player bow hold fatigue between
+running expenditure and regeneration. Process action5 selects the debit in
+every phase; integer Marksman chooses mastery, novice rate uses winning typed
+TES4 fFatigueAttackBase/multiplier settings, and positive current Fatigue caps
+the debit. NPCs and god-mode expenditure are excluded. Both fatigue/frame
+settings resolvers refresh winning typed GMSTs; TES3 names cannot supply them.
+The service prepares all native channels and shared projections before
+publication, so a later invalid regeneration setting leaves resources and
+the actor frame clock unchanged.
+
+Three new engine tests cover compiled and replacement settings, record typing,
+Player/NPC action/mastery boundaries, fractional integer-AV composition,
+nonpositive/depleted Fatigue, unchanged unrelated modifier channels, canSpend
+exclusion, regeneration order, and late-failure atomicity. The actual World
+frame writer uses the saved service clock rather than the supplied arbitrary
+duration; restore plus actor rebinding prevents same-clock replay and continues
+the next debit. God mode and leaving action5 stop expenditure. This is backend
+World/service continuation, not a fresh-process or normal-input game course.
+
+Original oracle01 executes 5FACC8 through the bow hold branch and complete
+5E07D0 common expenditure, then 65E530 Player god-mode guard. It stops at
+65E565 before original magnitude adjustment/storage, or5FAD1B on skipped
+expenditure. All19,200 cases complete across Player/NPC, process absence,
+actions, mastery ranks, current Fatigue, duration, rate, god mode and both x87
+control words. Declared boundaries supply process action, integer Marksman,
+mastery rank and current Fatigue getters; an observer asserts the actual action
+return, and native eligibility virtual977C50 executes. The corpus records
+requested deltas, not a claim that native actor-value storage was emulated.
+Final normal05 and sanitized05 comparers exercise the real Player service
+writer plus shared Fatigue projection against4,800 Player/present-process
+fixtures each, with zero mismatches. Plain Fatigue fixtures predict their
+result from current plus the captured original delta. NPC exclusion is tested
+separately in the engine suite.
+
+Final bow-hold-frame-normal-03 and sanitized-03 each pass967 full engine tests,
+matching exact inventories with zero failures/skips, and build openmw,
+openmw-tests and esmtool. ASan leak checks remain disabled; UBSan halts.
+Components and Python sources are unchanged from262's passing2461/260 checks.
+
+Retain failed01 compilation (ambiguous test initializer), failed02 normal
+segfault/sanitizer assertion (level-scaled NPC fixture without a World), and
+comparer01 missing Settings initialization,02 missing MyGUI include path,
+03 unlabeled parsing of Settings stdout. Correct fixture initialization and
+use actual engine include flags plus indexed result labels. Expectations and
+production mechanics are unchanged by those fixture corrections. Final03
+retains the existing actorstats range-loop-copy warning: recorded prefix bytes
+match262 before the newly appended tests.
+
+Tested fingerprint: f9118962d7480e4f10f3dd34eab857bdac6a52b09ac81a4c6f59ab27911f8f06
+Original PE SHA256: a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+Oracle source SHA256: dfa4d32bad5906b1b61735db9a549d5613ed8a579f96c54b53487ba9d306f7ab
+Oracle corpus SHA256: df5bc294d770b6fc306bb7244fbe71a07a2b0dd173d7254b7b2162fe63dda570
+
+Actual bow controller/renderer integration, release ammunition/shot fatigue/
+weapon wear, projectiles/impact/recovery/in-flight save and normal-input courses
+remain open. S5 remains in progress; no other M15 stage closes.
