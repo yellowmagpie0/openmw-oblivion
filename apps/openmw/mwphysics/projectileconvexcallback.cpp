@@ -10,40 +10,41 @@ namespace MWPhysics
         btCollisionWorld::LocalConvexResult& result, bool normalInWorldSpace)
     {
         const auto* hitObject = result.m_hitCollisionObject;
-        // don't hit the caster
-        if (hitObject == mCaster)
+        if (hitObject == mCaster || hitObject == mMe)
             return 1.f;
 
-        // don't hit the projectile
-        if (hitObject == mMe)
-            return 1.f;
-
-        btCollisionWorld::ClosestConvexResultCallback::addSingleResult(result, normalInWorldSpace);
+        // Reject before updating the closest fraction. An ignored actor must
+        // not hide an eligible wall or actor farther along the sweep.
         switch (hitObject->getBroadphaseHandle()->m_collisionFilterGroup)
         {
             case CollisionType_Actor:
-            {
                 if (!mProjectile.isValidTarget(hitObject))
                     return 1.f;
                 break;
-            }
             case CollisionType_Projectile:
             {
-                auto* target = static_cast<Projectile*>(hitObject->getUserPointer());
-                if (!mProjectile.isValidTarget(target->getCasterCollisionObject()))
+                const auto* target = static_cast<Projectile*>(hitObject->getUserPointer());
+                const auto* caster = target->getCasterCollisionObject();
+                if (caster && !mProjectile.isValidTarget(caster))
                     return 1.f;
-                target->hit(mMe, m_hitPointWorld, m_hitNormalWorld);
-                break;
-            }
-            case CollisionType_Water:
-            {
-                mProjectile.setHitWater();
                 break;
             }
         }
-        mProjectile.hit(hitObject, m_hitPointWorld, m_hitNormalWorld);
-
-        return result.m_hitFraction;
+        return btCollisionWorld::ClosestConvexResultCallback::addSingleResult(result, normalInWorldSpace);
     }
 
+    void ProjectileConvexCallback::commitHit()
+    {
+        if (!hasHit())
+            return;
+        const auto group = m_hitCollisionObject->getBroadphaseHandle()->m_collisionFilterGroup;
+        if (!mProjectile.hit(m_hitCollisionObject, m_hitPointWorld, m_hitNormalWorld,
+                group == CollisionType_Water))
+            return;
+        if (group == CollisionType_Projectile)
+        {
+            auto* target = static_cast<Projectile*>(m_hitCollisionObject->getUserPointer());
+            target->hit(mMe, m_hitPointWorld, m_hitNormalWorld);
+        }
+    }
 }

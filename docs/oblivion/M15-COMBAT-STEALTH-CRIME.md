@@ -19613,3 +19613,42 @@ S5 is now in progress. Release/cancel/equipment/ammo publication, launch transfo
 trajectory/collision/impact/recovery, in-flight/spent persistence, Marksman effects,
 cell/shooter removal and required normal-input shots/restarts remain open.
 No M15 stage closes; all other outstanding stage gates remain required.
+
+### Checkpoint 256: closest swept projectile hit and complete publication
+
+The shared production projectile sweep callback now filters ignored candidates
+before updating Bullet's closest fraction, then publishes only after the sweep
+finishes. Farther candidates cannot prematurely stop an arrow, mark water, or
+hit a second projectile. Only the winning collision can trigger reciprocal
+projectile hits; an unresolved shooter does not enter a null validity assertion.
+MovementSolver commits the selected result before publishing its final position.
+
+Projectile hit publication now has a separate atomic producer claim. The winner
+writes target, position, normal and water together before the inactive release
+store; existing acquire readers can observe a complete result. Losing producers
+leave it untouched, including repeated callback commits and moving-actor hits.
+This preserves the existing shared projectile collision policy while repairing
+candidate ordering and metadata publication. It does not establish original
+TES4 projectile-to-projectile rules, gravity, impact damage or native lifecycle.
+
+Seven engine tests use real PhysicsSystem resources, Projectile objects, Bullet
+worlds and the production MovementSolver. They cover deliberately far-first
+candidate order, ignored caster/self, farther water versus nearer wall,
+a1000-unit swept step into a.02-unit wall (declared position tolerance.005),
+empty/zero movement, sixteen concurrent hit producers with an immediate acquire
+read before joining, farther projectile preservation and closest reciprocal hit
+without a resolved shooter. Baseline01 executes four tests: the two closest/
+water-order regressions fail, while thin-wall and empty/zero movement pass.
+Keep that baseline; the latter already-passing behavior is not a new fix claim.
+
+Final projectile-sweep-order-normal-01 and sanitized-01 each pass957 exact
+inventoried full engine tests, zero failures/skips/compiler warnings. Both build
+openmw/openmw-tests/esmtool. ASan leaks disabled; UBSan halts. The concurrency
+regression checks publication behavior but is not a ThreadSanitizer run.
+Tested fingerprint
+3a07ce516f94f59ee6f5140b24b6835ba5039d55a9b3431982e5e01aaee3c525.
+No component numerical rule or Python codec changes;254's2441 component tests
+and prior native arithmetic comparisons remain applicable. S5 remains in progress;
+native bow release/ammo transaction, transforms/trajectory/impact/recovery,
+saved projectile ownership/continuation, mastery consequences and normal-input
+gameplay/restarts remain open. No stage closes.

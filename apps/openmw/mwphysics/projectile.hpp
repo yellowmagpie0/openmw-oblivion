@@ -42,11 +42,11 @@ namespace MWPhysics
         void setCaster(const MWWorld::Ptr& caster);
         const btCollisionObject* getCasterCollisionObject() const { return mCasterColObj; }
 
-        void setHitWater() { mHitWater = true; }
-
         bool getHitWater() const { return mHitWater; }
 
-        void hit(const btCollisionObject* target, btVector3 pos, btVector3 normal);
+        // One producer claims the hit; publish complete metadata with the
+        // inactive release store. False leaves the previous hit untouched.
+        bool hit(const btCollisionObject* target, btVector3 pos, btVector3 normal, bool water = false);
 
         void setValidTargets(const std::vector<MWWorld::Ptr>& targets);
         bool isValidTarget(const btCollisionObject* target) const;
@@ -59,6 +59,7 @@ namespace MWPhysics
 
         bool mHitWater;
         std::atomic<bool> mActive;
+        std::atomic<bool> mHitClaimed;
         MWWorld::Ptr mCaster;
         const btCollisionObject* mCasterColObj;
         const btCollisionObject* mHitTarget;

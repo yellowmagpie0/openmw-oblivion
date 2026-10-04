@@ -480,6 +480,7 @@ namespace MWPhysics
         assert(shape->isConvex());
         collisionWorld->convexSweepTest(static_cast<const btConvexShape*>(shape), btTransform(btrot, btFrom),
             btTransform(btrot, btTo), resultCallback);
+        resultCallback.commitHit();
 
         projectile.mPosition
             = Misc::Convert::toOsg(projectile.mProjectile->isActive() ? btTo : resultCallback.m_hitPointWorld);

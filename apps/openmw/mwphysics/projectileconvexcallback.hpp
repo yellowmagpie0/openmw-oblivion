@@ -21,6 +21,9 @@ namespace MWPhysics
         {
         }
 
+        // Publish only after the sweep has selected its closest eligible hit.
+        void commitHit();
+
         btScalar addSingleResult(btCollisionWorld::LocalConvexResult& result, bool normalInWorldSpace) override;
 
     private:

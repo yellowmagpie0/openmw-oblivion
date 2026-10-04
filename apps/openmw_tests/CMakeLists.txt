@@ -25,6 +25,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwsound/testnativeaudio.cpp
 
+    mwphysics/testprojectilesweep.cpp
     mwphysics/testtrigger.cpp
     mwphysics/testactorbounds.cpp
     mwphysics/testactorragdoll.cpp

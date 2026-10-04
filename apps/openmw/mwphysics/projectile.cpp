@@ -17,6 +17,7 @@ namespace MWPhysics
         : PtrHolder(MWWorld::Ptr(), position)
         , mHitWater(false)
         , mActive(true)
+        , mHitClaimed(false)
         , mHitTarget(nullptr)
         , mPhysics(physicssystem)
         , mTaskScheduler(scheduler)
@@ -57,14 +58,17 @@ namespace MWPhysics
         mCollisionObject->setWorldTransform(trans);
     }
 
-    void Projectile::hit(const btCollisionObject* target, btVector3 pos, btVector3 normal)
+    bool Projectile::hit(const btCollisionObject* target, btVector3 pos, btVector3 normal, bool water)
     {
-        bool active = true;
-        if (!mActive.compare_exchange_strong(active, false, std::memory_order_relaxed) || !active)
-            return;
+        bool claimed = false;
+        if (!mHitClaimed.compare_exchange_strong(claimed, true, std::memory_order_relaxed))
+            return false;
         mHitTarget = target;
         mHitPosition = pos;
         mHitNormal = normal;
+        mHitWater = water;
+        mActive.store(false, std::memory_order_release);
+        return true;
     }
 
     MWWorld::Ptr Projectile::getTarget() const
