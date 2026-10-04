@@ -581,6 +581,54 @@ TEST(ESM4ProjectileRules, PlayerBowTimerRejectsSelectedInvalidInputsAndSkipsRese
     EXPECT_EQ(ESM4::advancePlayerBowTimer(nan, nan, 5, Phase::End), 0);
 }
 
+TEST(ESM4ProjectileRules, PlayerBowHoldPausesAttackBowAndPreservesEligibleLatch)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    ESM4::PlayerBowHoldInput input{true, false, true, false, false, 7, 0, Phase::Hold, true};
+    EXPECT_EQ(ESM4::playerBowHold(input), (ESM4::PlayerBowHoldResult{true, true}));
+    input.mHeld = false;
+    input.mPressed = true;
+    EXPECT_EQ(ESM4::playerBowHold(input), (ESM4::PlayerBowHoldResult{true, true}));
+    for (unsigned category = 0; category <= 8; ++category)
+    {
+        input.mAnimationCategory = category;
+        EXPECT_EQ(ESM4::playerBowHold(input).mPaused, category == 4 || category == 6 || category == 7);
+        EXPECT_TRUE(ESM4::playerBowHold(input).mLatched);
+    }
+    input.mAnimationCategory = 7;
+    for (auto phase : {Phase::Start, Phase::Attach, Phase::Release, Phase::End})
+    {
+        input.mPhase = phase;
+        EXPECT_EQ(ESM4::playerBowHold(input), (ESM4::PlayerBowHoldResult{false, true}));
+    }
+    input.mPhase = Phase::Hold;
+    input.mInputGate = 1;
+    EXPECT_EQ(ESM4::playerBowHold(input), (ESM4::PlayerBowHoldResult{false, true}));
+    input.mInputGate = 0;
+    input.mLatched = false;
+    EXPECT_EQ(ESM4::playerBowHold(input), (ESM4::PlayerBowHoldResult{false, false}));
+}
+
+TEST(ESM4ProjectileRules, PlayerBowHoldClearsLatchWhenInputOrProcessEligibilityEnds)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const ESM4::PlayerBowHoldInput eligible{true, false, true, false, false, 7, 0, Phase::Hold, true};
+    for (unsigned condition = 0; condition < 4; ++condition)
+    {
+        auto input = eligible;
+        if (condition == 0) input.mHeld = false;
+        if (condition == 1) input.mReady = false;
+        if (condition == 2) input.mCrossbow = true;
+        if (condition == 3) input.mBlocked = true;
+        EXPECT_EQ(ESM4::playerBowHold(input), (ESM4::PlayerBowHoldResult{false, false}));
+    }
+    auto invalid = eligible;
+    invalid.mPhase = static_cast<Phase>(5);
+    EXPECT_THROW(ESM4::playerBowHold(invalid), std::invalid_argument);
+    invalid.mHeld = false;
+    EXPECT_THROW(ESM4::playerBowHold(invalid), std::invalid_argument);
+}
+
 TEST(ESM4ProjectileRules, BowActionEventsRequireTheOriginalActionPhaseAndRunningSequence)
 {
     using Phase = ESM4::BowAnimationPhase;

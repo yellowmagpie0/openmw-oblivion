@@ -21,6 +21,30 @@ namespace ESM4
     BowAnimationKeys bowAnimationKeyTimes(std::span<const MeleeTextKey> textKeys);
 
     enum class BowAnimationPhase : std::uint8_t { Start, Attach, Hold, Release, End };
+    struct PlayerBowHoldInput
+    {
+        bool mHeld;
+        bool mPressed;
+        bool mReady;
+        bool mCrossbow;
+        bool mBlocked;
+        std::uint32_t mAnimationCategory;
+        std::uint32_t mInputGate;
+        BowAnimationPhase mPhase;
+        bool mLatched;
+    };
+    struct PlayerBowHoldResult
+    {
+        bool mPaused;
+        bool mLatched;
+        friend bool operator==(const PlayerBowHoldResult&, const PlayerBowHoldResult&) = default;
+    };
+    // Original Player input tail for a present bow. The caller supplies the
+    // process readiness query and animation category (AttackBow is 7; casts
+    // are 5), and applies pause to both views. Earlier attack admission owns
+    // latch creation; this tail only preserves or clears it.
+    PlayerBowHoldResult playerBowHold(const PlayerBowHoldInput& input);
+
     struct BowAnimationProgress
     {
         BowAnimationPhase mPhase = BowAnimationPhase::Start;

@@ -12698,3 +12698,35 @@ Tested fingerprint: 5eb6157239b5a2303a184a88dbe16f463e4a09c852a1743263ff9edd664f
 This fixes the existing shared producer's publication failure path. It does
 not establish native TES4 flight, native resource release or normal-input
 ranged acceptance; those S5 gates remain open.
+
+### S5 checkpoint268: original Player bow-hold input tail
+
+playerBowHold implements the bow-present Player input tail65EF38 through
+65F04A/65F070. Held or newly pressed action4, process readiness, crossbow
+exclusion and blocked-input state decide latch preservation versus clearing.
+Pause requires animation category4..7 excluding category5, zero input gate,
+Hold phase and a live latch. Original AttackBow group19 is category7, and
+actual native setters pause both views. Category5 is casts, not Bow; the
+earlier reverse-engineering interpretation is corrected here.
+
+The independent hash-identified executable oracle executes actual group,
+category, sequence, phase and pause instructions. Input403520 and process
+virtual readiness304/crossbow13C/bow138/action2D0 are declared stable fixture
+boundaries. Both x87 control words and all3840 factorial cases agree with
+production C++, exactly7680 pause/latch fields in both normal and sanitizer
+comparisons. Earlier admission/latch creation, nonbow input, process creation
+and gameplay are excluded. Invalid typed phases are rejected explicitly.
+
+Normal and ASan/UBSan each pass2463 full component tests, exact inventory,
+zero failures/skips. Both incremental builds emit20 existing missing-owner
+initializer warnings in inventorymechanics tests; no changed-source warnings.
+Leak detection is disabled. Engine/Python are unchanged.
+Retain comparison-normal01 failure: the harness accidentally linked the
+older playback driver. Corrected normal/sanitized02 use the intended driver.
+Evidence: S5/native-player-bow-hold-oracle-01,
+S5/native-player-bow-hold-compare-{normal,sanitized}-02,
+S5/player-bow-hold-{normal,sanitized}-01.
+Tested fingerprint: 0cbb084455afbddb42e8b6c14a698d681c70bf642d5e1e5f48291cb9e5cea168
+
+This closes the typed input rule only. Owned saved latch/controller wiring,
+resource release, native flight and normal-input ranged acceptance remain open.

@@ -89,6 +89,19 @@ namespace ESM4
         return result;
     }
 
+    PlayerBowHoldResult playerBowHold(const PlayerBowHoldInput& input)
+    {
+        if (input.mPhase > BowAnimationPhase::End)
+            throw std::invalid_argument("invalid native player bow hold phase");
+        if (!(input.mHeld || input.mPressed) || !input.mReady || input.mCrossbow || input.mBlocked)
+            return {false, false};
+        const bool attack = input.mAnimationCategory >= 4 && input.mAnimationCategory <= 7
+            && input.mAnimationCategory != 5;
+        return {attack && input.mInputGate == 0 && input.mPhase == BowAnimationPhase::Hold
+                    && input.mLatched,
+            input.mLatched};
+    }
+
     BowAnimationProgress advanceBowAnimation(const BowAnimationProgress& progress,
         float animationClock, const std::array<float, 5>& keyTimes, bool upperBody)
     {
