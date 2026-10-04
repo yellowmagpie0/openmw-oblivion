@@ -282,6 +282,12 @@ namespace NifBullet
         // and interpolation behavior. Motion modes are not changed.
         void restore(std::span<const RagdollBodyState> states,
             std::span<const RagdollNativePackedVelocityState> packedVelocities);
+        // Complete ordered logical motion modes, pose and native velocities.
+        // Stage all validation before handoffs/publication; retain object,
+        // shape and constraint identities. Does not restore activation/contacts.
+        void restore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities,
+            std::span<const RagdollNativeMotionRequest> motions);
         // Native units, including both packed fourth lanes. XYZ comes from the
         // current body; fourth lanes have separate owned binary32 storage.
         std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;
@@ -411,6 +417,12 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
+        void validateRestore(std::span<const RagdollBodyState> states) const;
+        void publishRestore(std::span<const RagdollBodyState> states);
+        std::vector<RagdollBodyState> preparePackedRestore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities) const;
+        void publishPackedRestore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities);
         std::vector<RagdollNativeBlendPublication> updateNativeBlendsImpl(
             std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,

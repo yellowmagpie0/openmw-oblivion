@@ -1101,6 +1101,12 @@ namespace NifBullet
 
     void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states)
     {
+        validateRestore(states);
+        publishRestore(states);
+    }
+
+    void ActorRagdollPhysics::validateRestore(std::span<const RagdollBodyState> states) const
+    {
         require(states.size() == mImpl->mBodies.size(), "state count");
         for (std::size_t i = 0; i < states.size(); ++i)
         {
@@ -1108,6 +1114,10 @@ namespace NifBullet
             validatePose(states[i].mPose);
             require(finite(states[i].mLinearVelocity) && finite(states[i].mAngularVelocity), "nonfinite velocity");
         }
+    }
+
+    void ActorRagdollPhysics::publishRestore(std::span<const RagdollBodyState> states)
+    {
         for (std::size_t i = 0; i < states.size(); ++i)
         {
             auto& body = *mImpl->mBodies[i].mBody;
@@ -1182,8 +1192,9 @@ namespace NifBullet
         }
     }
 
-    void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states,
-        std::span<const RagdollNativePackedVelocityState> packedVelocities)
+    std::vector<RagdollBodyState> ActorRagdollPhysics::preparePackedRestore(
+        std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities) const
     {
         require(states.size() == mImpl->mBodies.size() && packedVelocities.size() == states.size(),
             "packed pose state count");
@@ -1195,14 +1206,45 @@ namespace NifBullet
             pending[i].mLinearVelocity = world.first;
             pending[i].mAngularVelocity = world.second;
         }
-        // The existing pose restore validates the complete ordered batch before
-        // writes and refreshes interpolation from the authoritative velocities.
-        restore(pending);
-        for (std::size_t i = 0; i < pending.size(); ++i)
+        validateRestore(pending);
+        return pending;
+    }
+
+    void ActorRagdollPhysics::publishPackedRestore(std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities)
+    {
+        publishRestore(states);
+        for (std::size_t i = 0; i < states.size(); ++i)
         {
             mImpl->mBodies[i].mNativeLinearW = packedVelocities[i].mVelocities.mLinear[3];
             mImpl->mBodies[i].mNativeAngularW = packedVelocities[i].mVelocities.mAngular[3];
         }
+    }
+
+    void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities)
+    {
+        const auto pending = preparePackedRestore(states, packedVelocities);
+        publishPackedRestore(pending, packedVelocities);
+    }
+
+    void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities,
+        std::span<const RagdollNativeMotionRequest> motions)
+    {
+        require(motions.size() == mImpl->mBodies.size(), "packed pose motion count");
+        for (std::size_t i = 0; i < motions.size(); ++i)
+        {
+            require(motions[i].mRecord == mImpl->mBodies[i].mRecord, "packed pose motion identity");
+            require(motions[i].mMotion == RagdollNativeMotion::Dynamic
+                || motions[i].mMotion == RagdollNativeMotion::Keyframed, "invalid packed pose motion");
+        }
+        // All allocation, pose and velocity validation precede the first handoff.
+        const auto pending = preparePackedRestore(states, packedVelocities);
+        for (std::size_t i = 0; i < motions.size(); ++i)
+            if (mImpl->mBodies[i].mMotion != motions[i].mMotion)
+                mImpl->setMotion(mImpl->mBodies[i], motions[i].mMotion);
+        publishPackedRestore(pending, packedVelocities);
     }
 
     std::vector<std::uint32_t> ActorRagdollPhysics::synchronizeNativeWorldScenes(

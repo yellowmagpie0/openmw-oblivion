@@ -4132,3 +4132,79 @@ namespace
         EXPECT_THROW(actor.restore(next, packed), std::invalid_argument); check();
     }
 }
+
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, PackedPoseMotionRestoreChangesBothDirectionsAndKeepsIdentity)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        const std::array key{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(key);
+        const auto first = actor.collisionObjects()[0], second = actor.collisionObjects()[1];
+        const auto firstShape = first->getCollisionShape(), secondShape = second->getCollisionShape();
+        auto spatial = actor.capture(); spatial[0].mPose.setOrigin({1, 2, 3}); spatial[1].mPose.setOrigin({4, 5, 6});
+        auto packed = actor.captureNativePackedVelocities();
+        packed[0].mVelocities = {{1, 2, 3, -8}, {4, 5, 6, -0.f}};
+        packed[1].mVelocities = {{7, 8, 9, 8}, {10, 11, 12, 4}};
+        const std::array<NifBullet::RagdollNativeMotionRequest, 2> motions{{
+            {12, NifBullet::RagdollNativeMotion::Dynamic}, {24, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.restore(spatial, packed, motions);
+        EXPECT_EQ(actor.captureNativeMotionModes(), std::vector<NifBullet::RagdollNativeMotionRequest>(motions.begin(), motions.end()));
+        EXPECT_EQ(btRigidBody::upcast(first)->getInvMass(), .5);
+        EXPECT_EQ(btRigidBody::upcast(second)->getInvMass(), 0);
+        EXPECT_FALSE(first->isKinematicObject()); EXPECT_TRUE(second->isKinematicObject());
+        EXPECT_EQ(actor.collisionObjects()[0], first); EXPECT_EQ(actor.collisionObjects()[1], second);
+        EXPECT_EQ(first->getCollisionShape(), firstShape); EXPECT_EQ(second->getCollisionShape(), secondShape);
+        EXPECT_EQ(mWorld.getNumConstraints(), 1);
+        const auto actual = actor.captureNativePackedVelocities();
+        for (std::size_t body = 0; body < packed.size(); ++body)
+        {
+            EXPECT_EQ(actor.capture()[body].mPose, spatial[body].mPose);
+            for (unsigned axis = 0; axis < 4; ++axis)
+            {
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mLinear[axis]), std::bit_cast<std::uint32_t>(packed[body].mVelocities.mLinear[axis]));
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mAngular[axis]), std::bit_cast<std::uint32_t>(packed[body].mVelocities.mAngular[axis]));
+            }
+            const auto* bodyObject = btRigidBody::upcast(actor.collisionObjects()[body]);
+            EXPECT_EQ(bodyObject->getInterpolationLinearVelocity(), bodyObject->getLinearVelocity());
+            EXPECT_EQ(bodyObject->getInterpolationAngularVelocity(), bodyObject->getAngularVelocity());
+        }
+        actor.applyNativeDamping(.25f);
+        const auto damped = actor.captureNativePackedVelocities();
+        EXPECT_EQ(damped[0].mVelocities.mLinear[3], -4.f);
+        EXPECT_EQ(damped[1].mVelocities.mLinear[3], 8.f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PackedPoseMotionRestoreRejectsLateInvalidWithoutAnyHandoff)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        auto packed = actor.captureNativePackedVelocities(); packed[0].mVelocities.mLinear[3] = 8;
+        actor.restoreNativePackedVelocities(packed);
+        const auto original = actor.capture(); const auto originalModes = actor.captureNativeMotionModes();
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        first->applyCentralForce({1, 2, 3}); first->forceActivationState(ISLAND_SLEEPING);
+        auto spatial = original; spatial[0].mPose.setOrigin({1, 2, 3});
+        const std::array<NifBullet::RagdollNativeMotionRequest, 2> motions{{
+            {12, NifBullet::RagdollNativeMotion::Keyframed}, {24, NifBullet::RagdollNativeMotion::Dynamic}}};
+        const auto check = [&] {
+            EXPECT_EQ(actor.capture()[0].mPose, original[0].mPose);
+            EXPECT_EQ(actor.captureNativeMotionModes(), originalModes);
+            EXPECT_EQ(first->getInvMass(), .5); EXPECT_FALSE(first->isKinematicObject());
+            EXPECT_EQ(first->getTotalForce(), btVector3(1, 2, 3));
+            EXPECT_EQ(first->getActivationState(), ISLAND_SLEEPING);
+            EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear[3], 8);
+        };
+        auto invalid = motions; invalid[1].mMotion = static_cast<NifBullet::RagdollNativeMotion>(255);
+        EXPECT_THROW(actor.restore(spatial, packed, invalid), std::invalid_argument); check();
+        invalid = motions; invalid[1].mRecord = 999;
+        EXPECT_THROW(actor.restore(spatial, packed, invalid), std::invalid_argument); check();
+        EXPECT_THROW(actor.restore(spatial, packed, std::span<const NifBullet::RagdollNativeMotionRequest>(motions.data(), 1)), std::invalid_argument); check();
+        auto badPacked = packed; badPacked[1].mVelocities.mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(actor.restore(spatial, badPacked, motions), std::invalid_argument); check();
+        spatial[1].mPose.getBasis()[0][0] = 2;
+        EXPECT_THROW(actor.restore(spatial, packed, motions), std::invalid_argument); check();
+    }
+}

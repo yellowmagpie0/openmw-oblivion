@@ -11211,3 +11211,49 @@ fingerprint `1c8b12d10595a4ba91a4cc0e78d8b4cf25d6ddf756c30613e611aa38e42b72e6`.
 No M15 stage closes. Full native modes/request/flags/gains/controller/clock/raw
 COM-time and activation/contact persistence, automatic World getter/frame/reaction
 integration, retained physical/restart failures and S5-S14 acceptance remain open.
+
+
+### Checkpoint225: complete logical motion/pose/packed restoration
+
+Added a complete ordered logical Dynamic/KEY mode, pose and native packed-velocity
+restore overload. Mode count, identity and enum validation, velocity conversion,
+pose validation and buffer allocation all precede the first physical handoff.
+Restoration reuses the existing archived dynamic mass/inertia and KEY transition
+primitive, then publishes authoritative native velocities and pose/interpolation.
+Body, shape, proxy and constraint identities are retained. The logical owner mode
+is not the original Havok motion class-kind: Dynamic's owner value1 must not be
+mistaken for a raw native getter/archive type. Activation/contact persistence is
+not added by this API.
+
+Extracted shared pose validation/publication and packed preparation/publication
+helpers so legacy, packed and mode-inclusive restores use the same reviewed
+paths. No allocation occurs between mode handoff and packed/pose publication.
+Bullet-internal allocation failure during publication remains unexercised; the
+batch guarantees concern supported-domain validation and owned staging.
+
+Baseline01 fails compilation because a new test named a nonexistent public
+damping getter. Replaced it with actual damping behavior: after restoring both
+handoff directions, Dynamic W damps and KEY W retains its value. Baseline02
+executes both new tests and both fail. Final tests verify inverse mass, kinematic
+flags, signed-zero/native lanes, interpolation, pose and constraint/shape identity;
+late invalid mode/record/count, packed W and pose all leave prior modes, pose,
+velocity, force and sleeping state intact before any handoff.
+
+Actual normal/sanitized native-packed-motion-restore-compare-01 each changes
+34,560 cases to the opposite initial logical mode, alternates Dynamic/KEY and
+scales1/7/native, and retains all eight immutable original222 captured velocity
+lanes exactly (276,480 bit-pattern checks). Additional checks require desired
+mode/inverse mass/kinematic flag, pose, shape/proxy, interpolation, force clearing,
+wakeup and destruction cleanup. This is owner state restoration using original
+velocity outputs as inputs; it is not a full original save/handoff experiment
+or raw native motion-class persistence. No tolerance/input adjustments.
+Full packed-motion-restore-normal/sanitized-01 each passes2,396 components,
+exact inventory and zero failures/skips; no new compiler warnings. ASan leaks
+disabled. Python unchanged; no new engine caller for this overload yet. Engine
+integration checks will accompany the next versioned scheduler mode boundary.
+Tested source fingerprint `76af79a836750db715a2bc0eb317a6cdb28206fb415875f742660a09ca19b302`.
+
+No M15 stage closes. Versioned logical-mode persistence is still required before
+fresh owners restore KEY correctly. Raw COM/time/cache, controller clocks/flags,
+activation/contact persistence, automatic World getter/frame/reaction wiring,
+retained physical/restart failures and all S5-S14 acceptance remain open.
