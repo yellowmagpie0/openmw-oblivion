@@ -19364,3 +19364,46 @@ No engine/Python code changed; prior evidence remains applicable.
 No stage closes. Automatic reactions, owned HIT setup, whole actor selection,
 configuration discovery, initial morphology, scene/time/contact continuation
 and required normal-input gameplay/restart gates remain open. S5-S14 pending.
+
+### Checkpoint 251: owned HIT velocity setup reaches the physics scheduler
+
+ActorRagdollPhysics now stages native HIT velocity setup for already admitted
+body nodes, using its archived dynamic mass and current motion's native damping.
+Each request supplies the selected node, four-lane source and resolved multiplier;
+duration and replacement arithmetic come from250's original-verified helper.
+New controllers target their attachment and prepend to physical blend processing.
+Existing controllers retain null/redirected targets, attachment, list position,
+elapsed time and delta while replacing their vector and restart timing.
+Duplicate, unknown, nonfinite and late-overflow requests reject the entire
+batch. Preparation writes no body pose, velocity, activation or shared clock.
+PhysicsSystem delegates through the scheduler's worker/exclusive barrier.
+
+Three component tests cover exact original250-case1841 output, dynamic/keyframed
+damping, retained archived mass, fresh target/order, redirected/null reuse,
+unclamped multiplier, stronger raw flags, clock/delta retention and five late
+failure categories before publication/wake. The engine ownership integration
+exercises the real PhysicsSystem/scheduler wrapper for0/1/2 workers, including
+wrong owner, late bad identity, fresh/reused/null targets and unchanged body
+state. Existing force/advance/serialization tests remain in both full suites.
+
+owned-hit-velocity-setup-baseline-01 independently compiles an isolated
+unimplemented owner-method replacement and links it ahead of the production
+archive. All three new tests execute and fail; production sources, archive and
+binaries are unchanged. This baseline was recorded after implementation and does
+not claim chronological test-first development. Production arithmetic is unchanged
+from250; its independent original comparisons remain applicable.
+
+owned-hit-velocity-setup-normal-01 and sanitized-01 each pass2431 exact
+inventoried component tests and946 exact inventoried engine tests with zero
+failures/skips. Both rebuild openmw/openmw-tests/esmtool. Components have no
+warnings. Normal engine repeats unchanged Character GCC maybe-uninitialized and
+actorstats test range-copy warnings; sanitizer repeats only the latter.
+Warning source bytes are verified against250. ASan leaks disabled; UBSan halts.
+Tested fingerprint
+35ff97cd29a1ee3100abcb1fe8bc42d7234b6b2ff51d6df1b74841f0b6113ec5.
+Python code did not change; prior evidence remains applicable.
+
+No stage closes. No automatic World hit/admission call is claimed. Absent-body
+scene nodes, actor/bone selection, owned HIT blend setup, configuration discovery,
+native scene/time/contact continuation and normal-input gameplay/restart gates
+remain open. S5-S14 pending.

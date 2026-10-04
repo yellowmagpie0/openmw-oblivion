@@ -206,6 +206,13 @@ namespace NifBullet
         float mDuration;
     };
 
+    struct RagdollNativeHitVelocitySetupRequest
+    {
+        std::uint32_t mNodeRecord;
+        std::array<float, 4> mSourceVector;
+        float mResolvedMassMultiplier;
+    };
+
     enum class RagdollNativeControllerKind { Blend, Velocity };
     struct RagdollNativeControllerReference
     {
@@ -379,6 +386,10 @@ namespace NifBullet
         // Read current damping and archived dynamic mass, create at the head or
         // retain existing target/list position. No body force, wake or pose write.
         void prepareNativeVelocityControllers(std::span<const RagdollNativeVelocitySetupRequest> requests);
+        // Original HIT setter: compiled duration, caller-resolved multiplier,
+        // archived mass/current damping. Replace existing vector/timing while
+        // retaining target, elapsed/delta and list position; stage whole batch.
+        void prepareNativeHitVelocityControllers(std::span<const RagdollNativeHitVelocitySetupRequest> requests);
         std::vector<RagdollNativeVelocityControllerState> captureNativeVelocityControllers() const;
         // Replace generated controller state atomically, with owned identity,
         // finite clock/vector and ordered timing admission. No body mutation.

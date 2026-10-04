@@ -907,6 +907,11 @@ namespace MWPhysics
         mTaskScheduler->prepareActorRagdollVelocityControllers(ptr, requests);
     }
 
+    void PhysicsSystem::prepareActorRagdollHitVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeHitVelocitySetupRequest> requests)
+    {
+        mTaskScheduler->prepareActorRagdollHitVelocityControllers(ptr, requests);
+    }
+
     std::vector<NifBullet::RagdollNativeVelocityControllerState> PhysicsSystem::captureActorRagdollVelocityControllers(const MWWorld::Ptr& ptr)
     {
         return mTaskScheduler->captureActorRagdollVelocityControllers(ptr);

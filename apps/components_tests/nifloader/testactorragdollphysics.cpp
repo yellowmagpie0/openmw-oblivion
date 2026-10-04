@@ -4632,3 +4632,106 @@ namespace
         EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, packed[0].mVelocities.mLinear);
     }
 }
+
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, OwnedHitVelocitySetupUsesArchivedMassAndCurrentDamping)
+    {
+        auto& definition = mGraph.mBodies.front();
+        definition.mNodeRecord = 8;
+        definition.mLinearDamping = 2;
+        definition.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, 0.f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->setActivationState(ISLAND_SLEEPING);
+        const auto before = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 1> request{{{8, {1, -2, .5f, 0}, .5f}}};
+        actor.prepareNativeHitVelocityControllers(request);
+        auto stored = actor.captureNativeVelocityControllers();
+        ASSERT_EQ(stored.size(), 1u);
+        EXPECT_EQ(stored[0].mAttachedNode, 8u);
+        EXPECT_EQ(stored[0].mTargetNode, 8u);
+        EXPECT_TRUE(stored[0].mPrecedesBlend);
+        // Complete original250 oracle01 case1841, no production-derived expectation.
+        const std::array<std::uint32_t, 4> expected{1075838976u, 3231711232u, 1067450368u, 0u};
+        for (unsigned axis = 0; axis < 4; ++axis)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(stored[0].mState.mForceVector[axis]), expected[axis]);
+        EXPECT_EQ(stored[0].mState.mTiming.mStopKey, .2f);
+        EXPECT_EQ(stored[0].mState.mTiming.mFlags, 0xdu);
+        EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+        EXPECT_FALSE(body->isActive());
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> key{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(key);
+        actor.prepareNativeHitVelocityControllers(request);
+        stored = actor.captureNativeVelocityControllers();
+        EXPECT_EQ(stored[0].mState.mForceVector, (std::array<float, 4>{1, -2, .5f, 0}));
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedHitVelocitySetupReplacesExistingStateAndRetainsRedirectedTargetAndOrder)
+    {
+        addHinge();
+        mGraph.mBodies[0].mNodeRecord = 8; mGraph.mBodies[1].mNodeRecord = 20;
+        mGraph.mBodies[0].mLinearDamping = 2;
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalVelocityControllerState old;
+        old.mTiming = {0xffff, 8, 9, 10, 11};
+        old.mClock = {3, 4, 7}; old.mFrameDelta = 99; old.mForceVector = {8, 9, 10, 11};
+        const std::array<NifBullet::RagdollNativeVelocityControllerState, 1> saved{{{8, 20, old, false}}};
+        actor.restoreNativeVelocityControllers(saved);
+        const std::array<std::uint32_t, 2> nodes{8, 20};
+        const auto beforeOrder = actor.captureNativeControllerOrder(nodes);
+        const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 1> request{{{8, {1, -2, .5f, -0.f}, -.5f}}};
+        actor.prepareNativeHitVelocityControllers(request);
+        const auto stored = actor.captureNativeVelocityControllers();
+        ASSERT_EQ(stored.size(), 1u);
+        EXPECT_EQ(stored[0].mTargetNode, 20u);
+        EXPECT_FALSE(stored[0].mPrecedesBlend);
+        EXPECT_EQ(stored[0].mState.mForceVector, (std::array<float, 4>{-2.5f, 5, -1.25f, 0}));
+        EXPECT_EQ(stored[0].mState.mTiming.mFlags, 0xfffdu);
+        EXPECT_EQ(stored[0].mState.mTiming.mStopKey, .2f);
+        EXPECT_EQ(stored[0].mState.mClock.mStartTime, -std::numeric_limits<float>::max());
+        EXPECT_EQ(stored[0].mState.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+        EXPECT_EQ(stored[0].mState.mClock.mElapsed, 7);
+        EXPECT_EQ(stored[0].mState.mFrameDelta, 99);
+        EXPECT_EQ(actor.captureNativeControllerOrder(nodes), beforeOrder);
+        auto noTarget = stored; noTarget[0].mTargetNode.reset();
+        actor.restoreNativeVelocityControllers(noTarget);
+        actor.prepareNativeHitVelocityControllers(request);
+        EXPECT_FALSE(actor.captureNativeVelocityControllers()[0].mTargetNode);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, OwnedHitVelocitySetupRejectsLateFailuresBeforePublishingOrWaking)
+    {
+        addHinge(); mGraph.mBodies[0].mNodeRecord = 8; mGraph.mBodies[1].mNodeRecord = 20;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 1> good{{{8, {1, 0, 0, 0}, .5f}}};
+        actor.prepareNativeHitVelocityControllers(good);
+        const auto before = actor.captureNativeVelocityControllers()[0];
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING); second->setActivationState(ISLAND_SLEEPING);
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const float max = std::numeric_limits<float>::max();
+        for (const auto& requests : std::array<std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 2>, 5>{{
+            {{{8, {2, 0, 0, 0}, 1}, {20, {bad, 0, 0, 0}, 1}}},
+            {{{8, {2, 0, 0, 0}, 1}, {20, {0, 0, 0, max}, 2}}},
+            {{{8, {2, 0, 0, 0}, 1}, {20, {}, bad}}},
+            {{{8, {2, 0, 0, 0}, 1}, {8, {}, 1}}},
+            {{{8, {2, 0, 0, 0}, 1}, {999, {}, 1}}}}})
+        {
+            EXPECT_THROW(actor.prepareNativeHitVelocityControllers(requests), std::invalid_argument);
+            const auto after = actor.captureNativeVelocityControllers();
+            ASSERT_EQ(after.size(), 1u);
+            EXPECT_EQ(after[0].mState, before.mState);
+            EXPECT_EQ(after[0].mTargetNode, before.mTargetNode);
+            EXPECT_FALSE(first->isActive()); EXPECT_FALSE(second->isActive());
+        }
+        actor.prepareNativeHitVelocityControllers({});
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState, before.mState);
+    }
+}

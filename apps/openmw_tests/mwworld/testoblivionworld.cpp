@@ -700,6 +700,27 @@ namespace
             auto invalidVelocity = velocities; invalidVelocity[0].mTargetNode = 999;
             EXPECT_THROW(physics.restoreActorRagdollVelocityControllers(ptr, invalidVelocity), std::invalid_argument);
             EXPECT_FALSE(physics.captureActorRagdollVelocityControllers(ptr)[0].mTargetNode);
+            const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 1> hitVelocitySetup{{{8, {1, -2, .5f, 0}, .5f}}};
+            EXPECT_THROW(physics.prepareActorRagdollHitVelocityControllers(previous, hitVelocitySetup), std::invalid_argument);
+            const std::array<NifBullet::RagdollNativeHitVelocitySetupRequest, 2> badHitVelocitySetup{{
+                {8, {2, 0, 0, 0}, 1}, {999, {}, 1}}};
+            const auto beforeHit = physics.captureActorRagdollVelocityControllers(ptr)[0];
+            EXPECT_THROW(physics.prepareActorRagdollHitVelocityControllers(ptr, badHitVelocitySetup), std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mState, beforeHit.mState);
+            const auto beforeHitPose = physics.captureActorRagdoll(ptr)[0];
+            physics.prepareActorRagdollHitVelocityControllers(ptr, hitVelocitySetup);
+            const auto reusedHit = physics.captureActorRagdollVelocityControllers(ptr)[0];
+            EXPECT_FALSE(reusedHit.mTargetNode);
+            EXPECT_EQ(reusedHit.mState.mClock.mElapsed, 7.f);
+            EXPECT_EQ(reusedHit.mState.mFrameDelta, 99.f);
+            EXPECT_EQ(reusedHit.mState.mTiming.mStopKey, .2f);
+            EXPECT_EQ(reusedHit.mState.mForceVector, (std::array<float, 4>{1, -2, .5f, 0}));
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mPose, beforeHitPose.mPose);
+            EXPECT_EQ(physics.captureActorRagdoll(ptr)[0].mLinearVelocity, beforeHitPose.mLinearVelocity);
+            physics.restoreActorRagdollVelocityControllers(ptr, {});
+            physics.prepareActorRagdollHitVelocityControllers(ptr, hitVelocitySetup);
+            EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mTargetNode, 8u);
+            EXPECT_TRUE(physics.captureActorRagdollVelocityControllers(ptr)[0].mPrecedesBlend);
             physics.restoreActorRagdollVelocityControllers(ptr, velocities);
             const auto beforeDirectForce = physics.captureActorRagdoll(ptr)[0];
             const std::array<NifBullet::RagdollNativeForceRequest, 2> badDirectForce{{

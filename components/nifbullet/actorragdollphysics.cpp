@@ -1718,6 +1718,34 @@ namespace NifBullet
         mImpl->mVelocityControllers.swap(controllers);
     }
 
+    void ActorRagdollPhysics::prepareNativeHitVelocityControllers(
+        std::span<const RagdollNativeHitVelocitySetupRequest> requests)
+    {
+        auto controllers = mImpl->mVelocityControllers;
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto& request : requests)
+        {
+            require(nodes.insert(request.mNodeRecord).second, "duplicate native HIT velocity setup node");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == request.mNodeRecord; }) == 1,
+                "unknown or ambiguous native HIT velocity setup node");
+            const auto body = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& value) { return value.mNodeRecord == request.mNodeRecord; });
+            const auto controller = std::find_if(controllers.begin(), controllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
+            const auto previous = controller == controllers.end() ? std::nullopt
+                : std::optional<ESM4::PhysicalVelocityControllerState>{controller->mState};
+            const auto state = ESM4::preparePhysicalHitVelocityController(previous, request.mSourceVector,
+                true, ragdollNativeInverseMass(float(body->mDynamicMass)),
+                body->currentNativeLinearDamping(), request.mResolvedMassMultiplier);
+            if (controller == controllers.end())
+                controllers.push_back({request.mNodeRecord, request.mNodeRecord, state, true});
+            else
+                controller->mState = state;
+        }
+        mImpl->mVelocityControllers.swap(controllers);
+    }
+
     std::vector<RagdollNativeVelocityControllerState> ActorRagdollPhysics::captureNativeVelocityControllers() const
     {
         return mImpl->mVelocityControllers;
