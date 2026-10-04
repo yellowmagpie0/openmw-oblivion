@@ -4280,3 +4280,61 @@ namespace
         EXPECT_THROW(ESM4::preparePhysicalWorldSceneVelocities(input), std::invalid_argument);
     }
 }
+
+TEST(ESM4PhysicalCombat, HitConfigurationUsesItsOwnNativeBodyTableAndCompiledSettings)
+{
+    const auto previous = ESM4::InitialPhysicalHitBlendGainTable;
+    const auto result = ESM4::resolvePhysicalHitBlendConfiguration(previous, {});
+    const std::array<unsigned, 10> ids{1, 2, 3, 4, 5, 6, 7, 11, 12, 13};
+    const std::array<ESM4::PhysicalBlendGains, 10> gains{{
+        {.4f,.6f}, {1,1}, {.6f,.8f}, {.5f,.7f}, {.2f,.5f},
+        {1,1}, {1,1}, {.2f,.5f}, {1,1}, {1,1}}};
+    for (unsigned i = 0; i < gains.size(); ++i)
+    {
+        EXPECT_EQ(result.mGains[ids[i]].mHierarchy, gains[i].mHierarchy);
+        EXPECT_EQ(result.mGains[ids[i]].mVelocity, gains[i].mVelocity);
+    }
+    for (unsigned id = 0; id < 32; ++id)
+        if (std::find(ids.begin(), ids.end(), id) == ids.end())
+        {
+            EXPECT_EQ(result.mGains[id].mHierarchy, previous[id].mHierarchy);
+            EXPECT_EQ(result.mGains[id].mVelocity, previous[id].mVelocity);
+        }
+    EXPECT_EQ(result.mMinimumHierarchy, .3f);
+    EXPECT_EQ(result.mMinimumVelocity, .95f);
+    EXPECT_EQ(previous[1].mHierarchy, .3f);
+    EXPECT_EQ(previous[5].mHierarchy, .4f);
+    for (const auto gain : ESM4::InitialPhysicalBlendGainTable)
+    {
+        EXPECT_EQ(gain.mHierarchy, 1);
+        EXPECT_EQ(gain.mVelocity, 1);
+    }
+}
+
+TEST(ESM4PhysicalCombat, HitConfigurationPreservesRawFiniteSettingsAndRejectsInvalidInputAtomically)
+{
+    auto previous = ESM4::InitialPhysicalHitBlendGainTable;
+    previous[31] = {-0.f, -7};
+    ESM4::PhysicalHitBlendSettings settings;
+    settings.mHead = {-0.f, -2};
+    settings.mMinimumHierarchy = -0.f;
+    settings.mMinimumVelocity = 4;
+    const auto result = ESM4::resolvePhysicalHitBlendConfiguration(previous, settings);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mGains[1].mHierarchy), 0x80000000u);
+    EXPECT_EQ(result.mGains[1].mVelocity, -2);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mGains[31].mHierarchy), 0x80000000u);
+    EXPECT_EQ(result.mGains[31].mVelocity, -7);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mMinimumHierarchy), 0x80000000u);
+    EXPECT_EQ(result.mMinimumVelocity, 4);
+    auto bad = settings;
+    bad.mRHand.mVelocity = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::resolvePhysicalHitBlendConfiguration(previous, bad), std::invalid_argument);
+    bad = settings;
+    bad.mMinimumHierarchy = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::resolvePhysicalHitBlendConfiguration(previous, bad), std::invalid_argument);
+    auto badPrevious = previous;
+    badPrevious[31].mVelocity = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::resolvePhysicalHitBlendConfiguration(badPrevious, settings), std::invalid_argument);
+    EXPECT_EQ(settings.mHead.mVelocity, -2);
+    EXPECT_EQ(previous[31].mVelocity, -7);
+}

@@ -12374,3 +12374,84 @@ compile and await those runtime gates. Automatic reaction/admission/update/end/
 getup, morphology/configuration producers, full native scene traversal, contact/
 activation continuation, retained numeric failures and pending S5-S14 remain
 open. No M15 stage closes.
+
+
+### Checkpoint245: independent HIT gain configuration producer
+
+Checkpoint244 committed as `dcc322cd37ff03b500de4e7f64b12996a7181554`,
+241 isolated commits, tree `1167c3b4d588f74d8b296a51950f31fab647fdbb`;
+bundle222 SHA256
+`f584fc50a7b3f754f16281b46f18cc5b12aa49673fe5031a455a7c1005e32d33`.
+
+Original53A1B0 configures the HIT gain table at B2EC68, which is distinct from
+the post-link table B2E660. The latter's initial32 pairs are all1/1 and the
+existing InitialPhysicalBlendGainTable remains correct for that purpose.
+The HIT initial PE table uses mostly.2/.9, with native variants at IDs1-7,
+11-13 and22. Configuration changes ten body IDs: Head1, Body2, Spine1=3,
+Spine2=4, left upper/fore/hand5/6/7 and right upper/fore/hand11/12/13.
+Unconfigured IDs retain their previous entries, including ID22=1/1.
+
+PhysicalHitBlendSettings owns already-parsed typed HIT inputs. Compiled settings
+produce Head.4/.6, Body1/1, Spine1.6/.8, Spine2.5/.7, upper arms.2/.5 and
+forearms/hands1/1, with minimum hierarchy.3 and velocity.95. The distinct
+InitialPhysicalHitBlendGainTable records the independently read PE data.
+resolvePhysicalHitBlendConfiguration validates all typed previous/settings/
+minimum floats, updates an owned table and returns minima without clamping.
+Finite negative/outside-unit gains and negative zero survive. Source settings
+and previous table are immutable. This API does not parse strings, discover or
+merge BlendSettings.ini, choose an actor reaction, or replace post-link gains.
+
+native-blend-gain-configuration-oracle-08 verifies original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+executes complete CRT callback initialization982837, then full53A1B0 with actual
+sscanf98629E/995D33 and numeric callback98FDAD. All300 fixtures return explicitly:
+both x87 control words, ten settings and15 strings, including valid comma pairs,
+negative zero/negative values, exponent notation, empty/invalid strings, partial
+second conversions and missing comma. Before each scan native code initializes
+both outputs1/1. Partial first conversion retains the second1. No numeric parser
+or table producer is replaced. Declared boundaries are CRT current-thread locale
+acquisition with pinned initial C-locale pointers, Windows GetLastError/
+SetLastError and the CRT OS decoded-pointer boundary using initial plain
+pointers. File discovery, initial whole-game startup and gameplay are excluded.
+Corpus SHA256
+`32962e85ba6949607b441a0befb547e11893773fd1b2276bc6a742c5a8e7a033`;
+source SHA256
+`6abf4820d3f87858f4b4c17bdf89c2cd5def9a78b0cd6987fb8fa3941f4562af`.
+
+Attempts01-07 remain failed setup evidence, with zero completed cases.
+Unresolved Windows IAT entries contained RVAs and jumped into unrelated mapped
+game code. Supplying declared OS/locale boundaries reached the CRT's initial
+floating trap callback: the fixture had not executed982837 to install actual
+98FDAD. The correction executes the original initializer; it does not stub the
+trap/abort or numeric conversion. Bounded instruction/literal-reference reads
+identified the callback producer before changing the fixture.
+
+Two new component tests execute and fail against a placeholder that returns the
+previous table: missing ten configured gain updates, lost negative-zero/raw
+settings and accepted nonfinite input. Implementation coverage checks compiled
+body mappings, all unconfigured IDs, immutable input, distinct unchanged
+post-link defaults, raw finite settings and nonfinite last-setting/minimum/
+previous-table rejection. Full native-hit-configuration-normal-01 and
+sanitized-01 each pass2417 component tests with exact inventories, zero failures/
+skips. Normal final has no warnings; sanitizer broad recompilation retains
+preexisting missing-initializer diagnostics in unchanged inventorymechanics.cpp,
+whose bytes match244 in unchanged-warning-source.json. ASan leak checks disabled.
+Tested fingerprint `d7e059474162354837ac378a6dd97579f16faa5cfeaa31fcc801822271b190a9`. No engine writer or Python codec changed; the
+preceding945 engine tests are not repeated for an unused new typed API.
+
+Standalone comparison-normal-01 cannot load bundled Bullet and executes zero
+cases; its failed launch is retained. Add the existing bundled-library search
+path, with no production change. native-hit-configuration-compare-normal-02
+and sanitized-02 each compare64 initial PE HIT lanes plus all64 configured
+gain lanes and two minima for300 original cases:19,864 exact binary32 checks
+with zero mismatches. Already-parsed selected inputs use actual native scanf
+outputs; the other nine use compiled setting strings. Expected complete tables/
+minima come from original instruction outputs, never production C++. The
+comparison therefore proves typed mapping/preservation, not a C++ string parser.
+Archive hashes and source fingerprints remain stable during both comparisons.
+
+No M15 stage closes. Winning configuration file discovery/merge and typed
+runtime import, initial morphology, actual automatic physical admission/
+reaction/update/getup, full Ni traversal/time/contact continuation, retained
+physical numerical failures, normal-input restart/gameplay and pending S5-S14
+remain required.

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <limits>
+#include <utility>
 
 namespace ESM4
 {
@@ -13,6 +14,30 @@ namespace ESM4
             if (!std::isfinite(value))
                 throw std::invalid_argument("nonfinite native physical blend duration");
         }
+    }
+
+    PhysicalHitBlendConfiguration resolvePhysicalHitBlendConfiguration(
+        const PhysicalBlendGainTable& previous, const PhysicalHitBlendSettings& settings)
+    {
+        validate(settings.mMinimumHierarchy);
+        validate(settings.mMinimumVelocity);
+        for (const auto gain : previous)
+        {
+            validate(gain.mHierarchy);
+            validate(gain.mVelocity);
+        }
+        const std::array<std::pair<std::size_t, PhysicalBlendGains>, 10> configured{{
+            {1, settings.mHead}, {2, settings.mBody}, {3, settings.mSpine1}, {4, settings.mSpine2},
+            {5, settings.mLUpperArm}, {6, settings.mLForeArm}, {7, settings.mLHand},
+            {11, settings.mRUpperArm}, {12, settings.mRForeArm}, {13, settings.mRHand}}};
+        auto result = PhysicalHitBlendConfiguration{previous, settings.mMinimumHierarchy, settings.mMinimumVelocity};
+        for (const auto& [id, gain] : configured)
+        {
+            validate(gain.mHierarchy);
+            validate(gain.mVelocity);
+            result.mGains[id] = gain;
+        }
+        return result;
     }
 
     PhysicalBlendCollisionState resolvePhysicalBlendCollisionAfterLink(

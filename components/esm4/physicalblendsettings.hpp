@@ -27,6 +27,50 @@ namespace ESM4
         return result;
     }();
 
+    // HIT configuration is a different table from the all-one post-link
+    // table above. Settings are already parsed by the configuration adapter.
+    struct PhysicalHitBlendSettings
+    {
+        PhysicalBlendGains mHead{.4f, .6f};
+        PhysicalBlendGains mBody{1.f, 1.f};
+        PhysicalBlendGains mSpine1{.6f, .8f};
+        PhysicalBlendGains mSpine2{.5f, .7f};
+        PhysicalBlendGains mLUpperArm{.2f, .5f};
+        PhysicalBlendGains mLForeArm{1.f, 1.f};
+        PhysicalBlendGains mLHand{1.f, 1.f};
+        PhysicalBlendGains mRUpperArm{.2f, .5f};
+        PhysicalBlendGains mRForeArm{1.f, 1.f};
+        PhysicalBlendGains mRHand{1.f, 1.f};
+        float mMinimumHierarchy = .3f;
+        float mMinimumVelocity = .95f;
+    };
+
+    // Original PE data before the resolved settings producer53A1B0 runs.
+    inline constexpr PhysicalBlendGainTable InitialPhysicalHitBlendGainTable = [] {
+        PhysicalBlendGainTable result{};
+        for (auto& gain : result)
+            gain = {.2f, .9f};
+        result[1] = {.3f, .9f};
+        for (std::size_t i : {2u, 3u, 4u})
+            result[i] = {.2f, .8f};
+        for (std::size_t i : {5u, 6u, 7u, 11u, 12u, 13u})
+            result[i] = {.4f, .9f};
+        result[22] = {1.f, 1.f};
+        return result;
+    }();
+
+    struct PhysicalHitBlendConfiguration
+    {
+        PhysicalBlendGainTable mGains;
+        float mMinimumHierarchy;
+        float mMinimumVelocity;
+    };
+
+    // Preserve unconfigured body IDs, including ID22. Finite raw gains and
+    // minima are stored without clamping; this does not parse/discover INI files.
+    PhysicalHitBlendConfiguration resolvePhysicalHitBlendConfiguration(
+        const PhysicalBlendGainTable& previous, const PhysicalHitBlendSettings& settings);
+
     // Full88ECD0 link gain/flag result, after caller resolves body ownership.
     // Ignore authored gains; missing wrapper/body selects entry0. Preserve the
     // existing requested-motion field and validate only the selected gains.
