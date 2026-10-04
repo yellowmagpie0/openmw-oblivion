@@ -1052,14 +1052,20 @@ namespace MWPhysics
         return id;
     }
 
-    int PhysicsSystem::addProjectile(
+    std::unique_ptr<PreparedProjectile> PhysicsSystem::prepareProjectile(
         const MWWorld::Ptr& caster, const osg::Vec3f& position, VFS::Path::NormalizedView mesh, bool computeRadius)
     {
         osg::ref_ptr<Resource::BulletShapeInstance> shapeInstance = mShapeManager->getInstance(mesh);
         if (!shapeInstance)
             throw std::invalid_argument("projectile mesh has no collision shape");
         const float radius = computeRadius ? shapeInstance->mCollisionBox.mExtents.length() / 2.f : 1.f;
-        auto prepared = prepareProjectile(caster, position, radius);
+        return prepareProjectile(caster, position, radius);
+    }
+
+    int PhysicsSystem::addProjectile(
+        const MWWorld::Ptr& caster, const osg::Vec3f& position, VFS::Path::NormalizedView mesh, bool computeRadius)
+    {
+        auto prepared = prepareProjectile(caster, position, mesh, computeRadius);
         return commitProjectile(*prepared);
     }
 

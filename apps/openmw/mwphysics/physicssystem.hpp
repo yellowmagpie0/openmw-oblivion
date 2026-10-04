@@ -328,6 +328,8 @@ namespace MWPhysics
 
         std::unique_ptr<PreparedProjectile> prepareProjectile(
             const MWWorld::Ptr& caster, const osg::Vec3f& position, float radius);
+        std::unique_ptr<PreparedProjectile> prepareProjectile(const MWWorld::Ptr& caster,
+            const osg::Vec3f& position, VFS::Path::NormalizedView mesh, bool computeRadius);
         // Main-thread publication. Foreign/consumed tokens fail before writes;
         // collision registration completes before publishing the prepared map
         // node and consuming the next ID. Resource writers can prepare first.

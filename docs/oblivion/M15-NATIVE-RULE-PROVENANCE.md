@@ -12665,3 +12665,36 @@ This is collision preparation and ownership integration. Compound native bow
 release, resource debits, flight/impact/recovery/persistence and normal-input
 acceptance remain open. The explicit caller radius is not yet a verified native
 arrow collision rule. S5 and the full M15 goal remain in progress.
+
+
+### S5 projectile-manager publication rollback (checkpoint267)
+
+The existing ProjectileManager launch path now prepares its scene model,
+effect-time/controller/texture/glow setup, mesh-derived collision token and
+ownership vector insertion before publishing the scene node or collision.
+False or throwing scene publication removes any attached node and the staged
+ownership entry. Collision commit is the final fallible publication operation.
+PhysicsSystem's mesh preparation overload retains the actual BulletShapeManager
+lookup and existing radius rules; addProjectile delegates through it.
+createModel's ordinary callers publish after its fallible controller/texture
+setup, while the projectile launch caller requests detached preparation.
+
+The real World fixture uses a synthetic triangle mesh, actual ManualRef items,
+SceneManager and PhysicsSystem. A model without collision geometry, explicit
+scene rejection and an injected exception after attachment each leave zero
+scene children, ray hits, saved projectile records and consumed projectile IDs.
+Successful publication creates one visible and collidable projectile with ID1;
+clear removes scene and collision, and the next launch receives ID2.
+The producer does not debit ammunition.
+
+Retain initial normal/sanitized01 compiler failures: ProjectileState is not
+nothrow-movable. Corrected02 moves the state before world publication and
+rolls ownership back on failure. Final normal and ASan/UBSan each pass976 full
+engine tests, exact inventories, no failures/skips and no emitted compiler
+warnings. ASan leak checks are disabled. Components/Python are unchanged.
+Evidence: S5/projectile-manager-publication-{normal,sanitized}-02.
+Tested fingerprint: 5eb6157239b5a2303a184a88dbe16f463e4a09c852a1743263ff9edd664fe6c0
+
+This fixes the existing shared producer's publication failure path. It does
+not establish native TES4 flight, native resource release or normal-input
+ranged acceptance; those S5 gates remain open.

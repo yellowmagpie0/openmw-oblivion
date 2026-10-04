@@ -1,3 +1,6 @@
+#include "apps/openmw/mwworld/projectilemanager.hpp"
+#include "apps/openmw/mwworld/manualref.hpp"
+#include "apps/openmw/mwphysics/collisiontype.hpp"
 #include <components/esm3/inventorystate.hpp>
 #include <bit>
 #include <components/esm4/loadweap.hpp>
@@ -8347,4 +8350,86 @@ namespace
             EXPECT_EQ(equipped->getCellRef().getCount(), 3);
         }
     }
+
+    TEST(OblivionWorldTest, ProjectileLaunchPreparesBeforePublicationAndRollsBackSceneFailures)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); MWClass::Weapon::registerSelf(); world.setupPlayer();
+        std::filesystem::create_directories(fixture.mDirectory / "meshes");
+        osg::ref_ptr<osg::Geode> model = new osg::Geode;
+        osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+        osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+        vertices->push_back({0,0,0}); vertices->push_back({1,0,0}); vertices->push_back({0,1,0});
+        geometry->setVertexArray(vertices);
+        geometry->addPrimitiveSet(new osg::DrawArrays(GL_TRIANGLES, 0, 3));
+        model->addDrawable(geometry);
+        ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "meshes/arrow.osgt").string()));
+        osg::ref_ptr<osg::Group> empty = new osg::Group;
+        ASSERT_TRUE(osgDB::writeNodeFile(*empty, (fixture.mDirectory / "meshes/empty.osgt").string()));
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        auto* scene = fixture.mResources.getSceneManager();
+        scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+        auto defines = Shader::getDefaultDefines();
+        for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
+            defines[name] = value;
+        osg::ref_ptr<SceneUtil::LightManager> lights
+            = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
+        for (const auto& [name, value] : lights->getLightDefines())
+            defines[name] = value;
+        scene->getShaderManager().setGlobalDefines(defines);
+        auto& physics = world.initializePhysics(new osg::Group);
+        ESM::Weapon arrow; arrow.blank(); arrow.mId = ESM::RefId::stringRefId("prepared-arrow");
+        arrow.mData.mType = ESM::Weapon::Arrow; arrow.mModel = "arrow.osgt";
+        world.getStore().insertStatic(arrow);
+        ESM::Weapon noShape = arrow; noShape.mId = ESM::RefId::stringRefId("empty-arrow");
+        noShape.mModel = "empty.osgt"; world.getStore().insertStatic(noShape);
+        MWWorld::ManualRef item(world.getStore(), arrow.mId);
+        MWWorld::ManualRef emptyItem(world.getStore(), noShape.mId);
+        class Parent : public osg::Group
+        {
+        public:
+            enum Mode { Accept, Reject, ThrowAfterAttach } mMode = Accept;
+            bool addChild(osg::Node* child) override
+            {
+                if (mMode == Reject) return false;
+                const bool result = osg::Group::addChild(child);
+                if (mMode == ThrowAfterAttach) throw std::runtime_error("injected scene failure");
+                return result;
+            }
+        };
+        osg::ref_ptr<Parent> parent = new Parent;
+        MWWorld::ProjectileManager manager(parent, &fixture.mResources, nullptr, &physics);
+        const auto actor = world.getPlayerPtr();
+        const auto launch = [&](const MWWorld::Ptr& ammunition) {
+            manager.launchProjectile(actor, ammunition, osg::Vec3f(5,0,0),
+                osg::Quat{}, item.getPtr(), 100, .5f, .25f);
+        };
+        const auto ray = [&] { return physics.castRay(osg::Vec3f(0,0,0), osg::Vec3f(10,0,0),
+            {}, {}, MWPhysics::CollisionType_Projectile, MWPhysics::CollisionType_Projectile).mHit; };
+        EXPECT_THROW(launch(emptyItem.getPtr()), std::invalid_argument);
+        EXPECT_EQ(parent->getNumChildren(), 0u); EXPECT_FALSE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u); EXPECT_EQ(physics.getProjectile(1), nullptr);
+        parent->mMode = Parent::Reject;
+        EXPECT_THROW(launch(item.getPtr()), std::runtime_error);
+        EXPECT_EQ(parent->getNumChildren(), 0u); EXPECT_FALSE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u); EXPECT_EQ(physics.getProjectile(1), nullptr);
+        parent->mMode = Parent::ThrowAfterAttach;
+        EXPECT_THROW(launch(item.getPtr()), std::runtime_error);
+        EXPECT_EQ(parent->getNumChildren(), 0u); EXPECT_FALSE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u); EXPECT_EQ(physics.getProjectile(1), nullptr);
+        parent->mMode = Parent::Accept;
+        launch(item.getPtr());
+        EXPECT_EQ(parent->getNumChildren(), 1u); EXPECT_TRUE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 1u); EXPECT_NE(physics.getProjectile(1), nullptr);
+        EXPECT_EQ(item.getPtr().getCellRef().getCount(), 1);
+        manager.clear();
+        EXPECT_EQ(parent->getNumChildren(), 0u); EXPECT_FALSE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u); EXPECT_EQ(physics.getProjectile(1), nullptr);
+        launch(item.getPtr());
+        EXPECT_NE(physics.getProjectile(2), nullptr);
+        manager.clear();
+    }
+
 }

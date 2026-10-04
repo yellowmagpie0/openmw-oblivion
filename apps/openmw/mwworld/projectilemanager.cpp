@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 
 #include <osg/PositionAttitudeTransform>
 
@@ -216,7 +217,7 @@ namespace MWWorld
 
     void ProjectileManager::createModel(State& state, VFS::Path::NormalizedView model, const osg::Vec3f& pos,
         const osg::Quat& orient, bool rotate, bool createLight, osg::Vec4 lightDiffuseColor,
-        VFS::Path::NormalizedView texture)
+        VFS::Path::NormalizedView texture, bool publishScene)
     {
         state.mNode = new osg::PositionAttitudeTransform;
         state.mNode->setNodeMask(MWRender::Mask_Effect);
@@ -273,14 +274,15 @@ namespace MWWorld
 
         state.mNode->addCullCallback(new SceneUtil::LightListCallback);
 
-        mParent->addChild(state.mNode);
-
         state.mEffectAnimationTime = std::make_shared<MWRender::EffectAnimationTime>();
 
         SceneUtil::AssignControllerSourcesVisitor assignVisitor(state.mEffectAnimationTime);
         state.mNode->accept(assignVisitor);
 
         MWRender::overrideFirstRootTexture(texture, mResourceSystem, *projectile);
+        if (publishScene && !mParent->addChild(state.mNode))
+            throw std::runtime_error("projectile scene publication rejected");
+
     }
 
     void ProjectileManager::update(State& state, float duration)
@@ -365,6 +367,8 @@ namespace MWWorld
     void ProjectileManager::launchProjectile(const Ptr& actor, const ConstPtr& projectile, const osg::Vec3f& pos,
         const osg::Quat& orient, const Ptr& bow, float speed, float attackStrength, float attackWindUp)
     {
+        // Reserve ownership before publishing either scene or collision.
+        mProjectiles.reserve(mProjectiles.size() + 1);
         ProjectileState state;
         state.mCaster = actor.getCellRef().getRefNum();
         state.mBowId = bow.getCellRef().getRefId();
@@ -378,13 +382,27 @@ namespace MWWorld
         MWWorld::Ptr ptr = ref.getPtr();
 
         const VFS::Path::Normalized model = ptr.getClass().getCorrectedModel(ptr);
-        createModel(state, model, pos, orient, false, false, osg::Vec4(0, 0, 0, 0));
+        createModel(state, model, pos, orient, false, false, osg::Vec4(0, 0, 0, 0), {}, false);
         if (!ptr.getClass().getEnchantment(ptr).empty())
             SceneUtil::addEnchantedGlow(state.mNode, mResourceSystem, ptr.getClass().getEnchantmentColor(ptr));
 
-        state.mProjectileId = mPhysics->addProjectile(actor, pos, model, false);
+        auto collision = mPhysics->prepareProjectile(actor, pos, model, false);
         state.mToDelete = false;
+        // Complete the potentially throwing state move before world writes.
         mProjectiles.push_back(std::move(state));
+        auto& staged = mProjectiles.back();
+        try
+        {
+            if (!mParent->addChild(staged.mNode))
+                throw std::runtime_error("projectile scene publication rejected");
+            staged.mProjectileId = mPhysics->commitProjectile(*collision);
+        }
+        catch (...)
+        {
+            mParent->removeChild(staged.mNode);
+            mProjectiles.pop_back();
+            throw;
+        }
     }
 
     void ProjectileManager::updateCasters()
