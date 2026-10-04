@@ -444,3 +444,54 @@ TEST(ESM4ProjectileRules, BowKeysRejectNonfiniteAndUnsupportedPostEndText)
         {0, "Start\nAttach\nHold\nRelease\nEnd\nSound: bowShoot"}}};
     EXPECT_EQ(ESM4::bowAnimationKeyTimes(sound).mMatchedCount, 5);
 }
+
+TEST(ESM4ProjectileRules, BowPhaseAdvancesStrictlyPastOneKeyPerCall)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    EXPECT_EQ(ESM4::advanceBowAnimation({}, .25f, keys).mPhase, Phase::Start);
+    EXPECT_EQ(ESM4::advanceBowAnimation({}, std::nextafter(.25f, 1.f), keys).mPhase, Phase::Attach);
+    EXPECT_EQ(ESM4::advanceBowAnimation({}, 100, keys).mPhase, Phase::Attach);
+    EXPECT_EQ(ESM4::advanceBowAnimation({Phase::End, 0}, 100, keys).mPhase, Phase::End);
+}
+
+TEST(ESM4ProjectileRules, BowPhaseHoldChangesUpperBodyOffsetOnlyOnEntry)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    const ESM4::BowAnimationProgress previous{Phase::Attach, .1f};
+    const auto upper = ESM4::advanceBowAnimation(previous, 1.5f, keys);
+    EXPECT_EQ(upper.mPhase, Phase::Hold);
+    EXPECT_EQ(upper.mSequenceOffset, -.25f);
+    const auto lower = ESM4::advanceBowAnimation(previous, 1.5f, keys, false);
+    EXPECT_EQ(lower.mPhase, Phase::Hold);
+    EXPECT_EQ(lower.mSequenceOffset, .1f);
+    const auto held = ESM4::advanceBowAnimation(upper, 1.25f, keys);
+    EXPECT_EQ(held.mPhase, Phase::Hold);
+    EXPECT_EQ(held.mSequenceOffset, -.25f);
+    EXPECT_EQ(previous.mSequenceOffset, .1f);
+}
+
+TEST(ESM4ProjectileRules, BowPhaseRoundsCombinedTimeBeforeComparing)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const std::array<float, 5> keys{0, 1, 2, 3, 4};
+    const auto plateau = ESM4::advanceBowAnimation({Phase::Start, 1}, 0x1p-24f, keys);
+    EXPECT_EQ(plateau.mPhase, Phase::Start);
+    const auto crossed = ESM4::advanceBowAnimation({Phase::Start, 1}, 0x1.8p-24f, keys);
+    EXPECT_EQ(crossed.mPhase, Phase::Attach);
+}
+
+TEST(ESM4ProjectileRules, BowPhaseRejectsInvalidStateAndStoredOverflow)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    EXPECT_THROW(ESM4::advanceBowAnimation({static_cast<Phase>(5), 0}, 0, keys), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceBowAnimation({}, std::numeric_limits<float>::infinity(), keys),
+        std::invalid_argument);
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::advanceBowAnimation({Phase::Start, maximum}, maximum, keys),
+        std::invalid_argument);
+    keys[4] = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::advanceBowAnimation({}, 0, keys), std::invalid_argument);
+}

@@ -20,6 +20,19 @@ namespace ESM4
     // completed five-slot sequence is explicitly outside the supported domain.
     BowAnimationKeys bowAnimationKeyTimes(std::span<const MeleeTextKey> textKeys);
 
+    enum class BowAnimationPhase : std::uint8_t { Start, Attach, Hold, Release, End };
+    struct BowAnimationProgress
+    {
+        BowAnimationPhase mPhase = BowAnimationPhase::Start;
+        float mSequenceOffset = 0;
+    };
+    // Original five-phase advancement prefix. The supplied animation clock
+    // has already advanced. At most one phase advances, strictly past its key.
+    // Entering Hold in the upper-body slot also adjusts the sequence offset.
+    // End/queued-animation dispatch and input routing remain caller operations.
+    BowAnimationProgress advanceBowAnimation(const BowAnimationProgress& progress,
+        float animationClock, const std::array<float, 5>& keyTimes, bool upperBody = true);
+
     struct ArrowCleanupSettings
     {
         std::int32_t mMaximumReferences;

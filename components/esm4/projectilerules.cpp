@@ -89,6 +89,27 @@ namespace ESM4
         return result;
     }
 
+    BowAnimationProgress advanceBowAnimation(const BowAnimationProgress& progress,
+        float animationClock, const std::array<float, 5>& keyTimes, bool upperBody)
+    {
+        if (progress.mPhase > BowAnimationPhase::End
+            || !std::isfinite(progress.mSequenceOffset) || !std::isfinite(animationClock))
+            throw std::invalid_argument("invalid native bow animation progress");
+        for (float time : keyTimes)
+            if (!std::isfinite(time))
+                throw std::invalid_argument("nonfinite native bow phase coordinate");
+        auto result = progress;
+        const auto phase = static_cast<std::size_t>(progress.mPhase);
+        if (phase < keyTimes.size() - 1
+            && rounded(double(progress.mSequenceOffset) + animationClock) > keyTimes[phase + 1])
+        {
+            result.mPhase = static_cast<BowAnimationPhase>(phase + 1);
+            if (upperBody && result.mPhase == BowAnimationPhase::Hold)
+                result.mSequenceOffset = rounded(double(keyTimes[2]) - animationClock);
+        }
+        return result;
+    }
+
     void validateArrowCleanupSettings(const ArrowCleanupSettings& settings)
     {
         if (settings.mMaximumReferences < 0)

@@ -19743,3 +19743,48 @@ applicable to unchanged wiring. Allocation, terminal animation validation,
 phase playback, draw/hold/release controller, attachment, release transaction,
 projectile state/impact/restart and normal-input gameplay remain required.
 S5 stays in progress; no stage closes.
+
+
+### Checkpoint 259: native bow phase advancement and Hold offset
+
+advanceBowAnimation represents the five AttackBow phases and supplied native
+sequence offset/clock. Each call advances at most one phase, strictly when the
+binary32 combined offset/clock exceeds the next phase coordinate. Equality
+does not advance. Entering Hold in the upper-body slot changes the sequence
+offset to binary32(Hold coordinate minus clock); the lower slot preserves its
+offset. Other transitions and End preserve offset. Invalid phase, nonfinite
+coordinates/state and stored arithmetic overflow reject before publication.
+
+Hash-verified table column7 dispatches to47717B. Native-bow-stage-oracle-02
+executes the complete five-phase prefix47717B through4771DB and original
+51AE20 frame lookup. Nine hundred cases use both x87 precision modes, native
+stock coordinates, five initial phases, positive/negative offsets and slots0/3.
+No boundary stub replaces phase arithmetic or key lookup. Original loader01
+fails before any case due to a nested string split;02 corrects the loader.
+Corpus/source/PE hashes and cases remain in ignored oracle evidence.
+
+The first implementation and initial unit fixture reversed the Hold subtraction.
+Original51AE20 returns the key in ST0 before subtracting the stored clock.
+Both compare-01 builds retain42 actual offset-sign mismatches, including
+phase1/clock3/offset0 advancing to phase2/offset-1.6333332061767578.
+Correct production subtraction and the fixture expectation; original expected
+corpus outputs remain unchanged. Initial full component tests passed with the
+incorrect expectation and are not proof of native equivalence.
+
+Final bow-animation-progress-normal-02 and sanitized-02 each pass2450 full
+inventoried component tests, zero failures/skips/compiler warnings.
+Native-bow-stage-compare-normal-02 and sanitized-02 each pass900 cases/1800
+exact phase and binary32 offset checks, zero mismatches; stable source/archive
+hashes recorded. ASan leaks disabled; UBSan halts. Tested fingerprint:
+a7b96fad5d976404df8bd47552d77d8e4e90ff45b144a8e9abde31fb09f49279
+Oracle source SHA256:
+f32b73c606c4b33c8b838daf81a3f88f4954ca96bce3cadf772d19bf164e49d8
+Corpus SHA256:
+2d400e123857bb1858fc2a8065cb927cfb956f4d36a1b1e0fc9163e0d2eb5750
+Original PE SHA256:
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+No engine writer/Python codec changes; unchanged preceding958 engine tests
+remain applicable. This bounded helper excludes preceding slot-control/clock
+updates, End/queued animation dispatch, actor input/release routing and actual
+gameplay. Subsequent controller tracing is separate. S5 stays in progress;
+no M15 stage closes.
