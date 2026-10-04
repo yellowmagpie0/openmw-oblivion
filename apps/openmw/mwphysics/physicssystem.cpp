@@ -842,6 +842,16 @@ namespace MWPhysics
     {
         return mTaskScheduler->captureActorRagdollSnapshots(bindings);
     }
+    std::unique_ptr<PreparedNativeRagdollSnapshotRestore> PhysicsSystem::prepareActorRagdollSnapshots(
+        const NativeRagdollSnapshotGroup& snapshot, std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        return mTaskScheduler->prepareActorRagdollSnapshots(snapshot, bindings);
+    }
+    void PhysicsSystem::commitActorRagdollSnapshots(PreparedNativeRagdollSnapshotRestore& prepared)
+    {
+        mTaskScheduler->commitActorRagdollSnapshots(prepared);
+    }
+
     void PhysicsSystem::restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
         std::span<const NativeRagdollSnapshotBinding> bindings)
     {

@@ -18663,3 +18663,66 @@ raw pose/time/activation/contact continuation, retained numerical failures,
 normal-input runtime acceptance and all pending S5-S14 remain required. Next
 stage complete body/controller restore before World publication and validate
 physical owner lifetime across that staged boundary.
+
+
+### Checkpoint241: staged physical group restore with lifetime validation
+
+Added an opaque noncopyable PreparedNativeRagdollSnapshotRestore token and actual
+PhysicsSystem prepare/commit forwarding. Scheduler preparation waits for workers,
+takes a shared physics lock, validates complete unique bindings and optional
+cache, resolves every winning-asset projection and owns every lower one/two/
+three/four/six-span prepared restore plus a copy of the optional cache. It does
+not publish bodies/controllers/clock or retain borrowed caller spans/models.
+
+Scheduler and each ActorRagdoll have an independent shared lifetime marker;
+prepared data holds weak markers and borrowed Ptr identities, not strong body
+owners. Commit waits and takes an exclusive lock, rejects consumed or foreign/
+destroyed scheduler identity, requires the exact current owner count and checks
+every pending Ptr membership/lifetime marker before invoking any lower commit.
+Removed/readmitted actors cannot be accepted by recycled owner addresses or
+unchanged raw reference keys; rebinding cannot silently redirect an old token.
+Weak markers do not retain removed Bullet bodies. Only after all markers accept
+does commit publish every owned projection and a present global clock, then
+consume the token. Legacy absent clock remains unchanged. Prepared storage
+cleanup does not dereference a destroyed physical owner. Internal Bullet
+broadphase allocation failure remains unexercised; this is not a noexcept/OOM
+rollback guarantee.
+
+Extracted locked preparation/publication helpers so the existing immediate group
+restore retains its single worker wait/exclusive lock across all staging and
+publication. It does not call separately locked public prepare/commit methods.
+The separate deferred API supplies the World prevalidation boundary; World does
+not yet invoke this body/controller token in this checkpoint.
+
+All nine ragdoll-prepared-group-baseline-01 worker0/1/2 cases execute and fail
+because preparation returns no token. Implemented tests verify read-only
+preparation, owned caller-buffer copies, complete body/cache commit and a raw
+negative-zero angular W bit, consumed-token rejection, late owner removal/
+readmission/rebinding rejection before changing an earlier owner, immediate
+collision-object release despite a pending token, malformed later packed data,
+foreign scheduler, destroyed scheduler and fresh replacement, empty owners,
+legacy cache absence and all four invalid cache fields. A supplementary test
+admits a third owner after preparation while both original owner markers remain
+alive; the old two-owner token rejects the expanded set without publishing any
+body or clock. The actual PhysicsSystem fixture loops worker0/1/2, prepares its
+changed authored-controller group, confirms no publication, commits and rejects
+a second commit.
+
+Full normal/sanitized-01 each executes941 cases with938 passing and three
+failures: the new invalid packed-body assertion expected invalid_argument, but
+the existing RuntimeActorRagdoll validator correctly throws runtime_error.
+Changed only that assertion to the established exception type and added the
+expanded-owner-set regression. No production algorithm, numeric tolerance or
+rejection policy changed. Final full ragdoll-prepared-group-normal-02 and
+sanitized-02 each passes941 cases with exact inventory, zero failures/skips and
+no compiler warnings. ASan leak checks disabled. Tested fingerprint `3b9fec742e42b4aae6c57d024e99a68c28d1c6716531f0e61c202284fe8125be`.
+Unchanged lower component/native arithmetic/codec/Python comparisons remain at
+their prior checkpoints; this change only stages and validates engine ownership.
+
+No M15 stage closes. Next connect this group token to World restore before
+globals/player publication and join restored native actor lifecycles with live
+physical projections. Automatic reaction/admission/update/end/getup, true
+unloaded-cell continuation, winning morphology/INI producers, renderer-global
+Ni cache/traversal, raw pose/time/activation/contact continuation, retained
+numerical failures, normal-input runtime acceptance and pending S5-S14 remain
+required.

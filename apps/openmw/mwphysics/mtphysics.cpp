@@ -415,6 +415,25 @@ namespace MWPhysics
         std::mutex mHasJobMutex;
     };
 
+    struct NativeRagdollRestoreLifetime {};
+    struct PreparedNativeRagdollSnapshotRestore::Data
+    {
+        struct Pending
+        {
+            MWWorld::Ptr mPtr;
+            std::weak_ptr<const NativeRagdollRestoreLifetime> mLifetime;
+            std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> mRestore;
+        };
+        std::weak_ptr<const NativeRagdollRestoreLifetime> mSchedulerLifetime;
+        std::optional<ESM4::PhysicalBlendTimeCache> mTimeCache;
+        std::vector<Pending> mPending;
+    };
+    PreparedNativeRagdollSnapshotRestore::PreparedNativeRagdollSnapshotRestore(std::unique_ptr<Data> data)
+        : mData(std::move(data))
+    {
+    }
+    PreparedNativeRagdollSnapshotRestore::~PreparedNativeRagdollSnapshotRestore() = default;
+
     class PhysicsTaskScheduler::ActorRagdoll : public PtrHolder
     {
     public:
@@ -422,6 +441,7 @@ namespace MWPhysics
             btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask,
             const NifBullet::RagdollInternalCollisionFilter* internalFilter)
             : PtrHolder(ptr, {})
+            , mLifetime(std::make_shared<const NativeRagdollRestoreLifetime>())
             , mDefinition(definition)
             , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this), internalFilter)
             , mLinearDeltas(mDefinition.mBodies.size())
@@ -436,6 +456,7 @@ namespace MWPhysics
             }
         }
 
+        const std::shared_ptr<const NativeRagdollRestoreLifetime> mLifetime;
         const NifBullet::ActorRagdollDefinition mDefinition;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
@@ -461,7 +482,8 @@ namespace MWPhysics
 
     PhysicsTaskScheduler::PhysicsTaskScheduler(
         float physicsDt, btCollisionWorld* collisionWorld, MWRender::DebugDrawer* debugDrawer)
-        : mNativeBlendTimeCache(std::make_unique<ESM4::PhysicalBlendTimeCache>())
+        : mNativeRagdollRestoreLifetime(std::make_shared<const NativeRagdollRestoreLifetime>())
+        , mNativeBlendTimeCache(std::make_unique<ESM4::PhysicalBlendTimeCache>())
         , mDefaultPhysicsDt(physicsDt)
         , mPhysicsDt(physicsDt)
         , mTimeAccum(0.f)
@@ -796,11 +818,24 @@ namespace MWPhysics
         return result;
     }
 
-    void PhysicsTaskScheduler::restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
-        std::span<const NativeRagdollSnapshotBinding> bindings)
+    std::unique_ptr<PreparedNativeRagdollSnapshotRestore> PhysicsTaskScheduler::prepareActorRagdollSnapshots(
+        const NativeRagdollSnapshotGroup& snapshot, std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return prepareActorRagdollSnapshotsLocked(snapshot, bindings);
+    }
+
+    void PhysicsTaskScheduler::commitActorRagdollSnapshots(PreparedNativeRagdollSnapshotRestore& prepared)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        commitActorRagdollSnapshotsLocked(prepared);
+    }
+
+    std::unique_ptr<PreparedNativeRagdollSnapshotRestore> PhysicsTaskScheduler::prepareActorRagdollSnapshotsLocked(const NativeRagdollSnapshotGroup& snapshot,
+        std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
         validateActorRagdollBindings(bindings);
         if (snapshot.mActors.size() != bindings.size())
             throw std::invalid_argument("native physical snapshot actor count does not match bound owners");
@@ -809,13 +844,10 @@ namespace MWPhysics
                      snapshot.mTimeCache->mKeyTime, snapshot.mTimeCache->mResult})
                 if (!std::isfinite(value))
                     throw std::invalid_argument("nonfinite saved native physical clock cache");
-        struct Pending
-        {
-            NifBullet::ActorRagdollPhysics* mOwner;
-            std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> mRestore;
-        };
-        std::vector<Pending> pending;
-        pending.reserve(bindings.size());
+        auto data = std::make_unique<PreparedNativeRagdollSnapshotRestore::Data>();
+        data->mSchedulerLifetime = mNativeRagdollRestoreLifetime;
+        data->mTimeCache = snapshot.mTimeCache;
+        data->mPending.reserve(bindings.size());
         for (const auto& binding : bindings)
         {
             const auto saved = snapshot.mActors.find(binding.mActor);
@@ -851,14 +883,42 @@ namespace MWPhysics
                 prepared = owned.mPhysics.prepareRestore(states, *packed);
             else
                 prepared = owned.mPhysics.prepareRestore(states);
-            pending.push_back({&owned.mPhysics, std::move(prepared)});
+            data->mPending.push_back({binding.mPtr, owned.mLifetime, std::move(prepared)});
         }
-        // Every identity, projection and owned buffer is ready before the first
-        // body publishes. Hold the same barrier/lock through all owners/cache.
-        for (auto& entry : pending)
-            entry.mOwner->commitRestore(*entry.mRestore);
-        if (snapshot.mTimeCache)
-            *mNativeBlendTimeCache = *snapshot.mTimeCache;
+        return std::unique_ptr<PreparedNativeRagdollSnapshotRestore>(
+            new PreparedNativeRagdollSnapshotRestore(std::move(data)));
+    }
+
+    void PhysicsTaskScheduler::commitActorRagdollSnapshotsLocked(PreparedNativeRagdollSnapshotRestore& prepared)
+    {
+        if (!prepared.mData || prepared.mData->mSchedulerLifetime.lock() != mNativeRagdollRestoreLifetime
+            || prepared.mData->mPending.size() != mActorRagdolls.size())
+            throw std::invalid_argument("consumed, foreign or changed native physical group restore");
+        // Validate the entire owner set before dereferencing any staged lower
+        // owner token. Weak lifetime tags cannot keep removed Bullet bodies
+        // alive or accept a new owner allocated at a recycled address.
+        for (const auto& entry : prepared.mData->mPending)
+        {
+            const auto found = mActorRagdolls.find(entry.mPtr.mRef);
+            if (found == mActorRagdolls.end() || entry.mLifetime.lock() != found->second->mLifetime)
+                throw std::invalid_argument("removed, replaced or rebound native physical restore owner");
+        }
+        for (auto& entry : prepared.mData->mPending)
+            actorRagdoll(entry.mPtr).mPhysics.commitRestore(*entry.mRestore);
+        if (prepared.mData->mTimeCache)
+            *mNativeBlendTimeCache = *prepared.mData->mTimeCache;
+        prepared.mData.reset();
+    }
+
+    void PhysicsTaskScheduler::restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
+        std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        // Keep the immediate API's single barrier/lock across preparation and
+        // publication. Deferred users deliberately have separate boundaries.
+        auto prepared = prepareActorRagdollSnapshotsLocked(snapshot, bindings);
+        commitActorRagdollSnapshotsLocked(*prepared);
     }
 
     void PhysicsTaskScheduler::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,

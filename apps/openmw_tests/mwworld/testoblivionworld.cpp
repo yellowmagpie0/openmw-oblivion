@@ -381,8 +381,12 @@ namespace
             ASSERT_EQ(groupBefore.mActors.size(), 1u); ASSERT_TRUE(groupBefore.mTimeCache);
             auto groupChanged = groupBefore; groupChanged.mActors.begin()->second.mBodies[0].mPosition = {10, 20, 30};
             groupChanged.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
-            physics.restoreActorRagdollSnapshots(groupChanged, groupBindings);
+            auto preparedGroup = physics.prepareActorRagdollSnapshots(groupChanged, groupBindings);
+            ASSERT_NE(preparedGroup, nullptr);
+            EXPECT_EQ(physics.captureActorRagdollSnapshots(groupBindings), groupBefore);
+            physics.commitActorRagdollSnapshots(*preparedGroup);
             EXPECT_EQ(physics.captureActorRagdollSnapshots(groupBindings), groupChanged);
+            EXPECT_THROW(physics.commitActorRagdollSnapshots(*preparedGroup), std::invalid_argument);
             auto groupInvalid = groupChanged; groupInvalid.mActors.begin()->second.mBodies[0].mPosition = {99, 99, 99};
             groupInvalid.mTimeCache->mResult = std::numeric_limits<float>::quiet_NaN();
             EXPECT_THROW(physics.restoreActorRagdollSnapshots(groupInvalid, groupBindings), std::invalid_argument);

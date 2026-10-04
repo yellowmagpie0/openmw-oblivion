@@ -66,6 +66,7 @@ namespace MWRender
 
 namespace MWPhysics
 {
+    struct NativeRagdollRestoreLifetime;
     enum class LockingPolicy
     {
         NoLocks,
@@ -106,6 +107,11 @@ namespace MWPhysics
             const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
         // Complete owner bindings; capture/prepare all under one worker barrier.
         NativeRagdollSnapshotGroup captureActorRagdollSnapshots(std::span<const NativeRagdollSnapshotBinding> bindings);
+        // Own staged buffers without publishing. Commit rejects consumed,
+        // foreign or removed/replaced owners before the first publication.
+        std::unique_ptr<PreparedNativeRagdollSnapshotRestore> prepareActorRagdollSnapshots(
+            const NativeRagdollSnapshotGroup& snapshot, std::span<const NativeRagdollSnapshotBinding> bindings);
+        void commitActorRagdollSnapshots(PreparedNativeRagdollSnapshotRestore& prepared);
         void restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
             std::span<const NativeRagdollSnapshotBinding> bindings);
         void updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
@@ -211,6 +217,9 @@ namespace MWPhysics
         void syncWithMainThread();
         void waitForWorkers();
         void validateActorRagdollBindings(std::span<const NativeRagdollSnapshotBinding> bindings) const;
+        std::unique_ptr<PreparedNativeRagdollSnapshotRestore> prepareActorRagdollSnapshotsLocked(
+            const NativeRagdollSnapshotGroup& snapshot, std::span<const NativeRagdollSnapshotBinding> bindings);
+        void commitActorRagdollSnapshotsLocked(PreparedNativeRagdollSnapshotRestore& prepared);
         void prepareWork(float& timeAccum, std::vector<Simulation>& simulations, osg::Timer_t frameStart,
             unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
 
@@ -222,6 +231,7 @@ namespace MWPhysics
         std::unordered_map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>> mActorRagdolls;
         // Shared by owned native physical controllers across actors. Access
         // only after the worker barrier under the collision-world lock.
+        std::shared_ptr<const NativeRagdollRestoreLifetime> mNativeRagdollRestoreLifetime;
         std::unique_ptr<ESM4::PhysicalBlendTimeCache> mNativeBlendTimeCache;
         float mDefaultPhysicsDt;
         float mPhysicsDt;

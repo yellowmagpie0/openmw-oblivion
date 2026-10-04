@@ -90,6 +90,19 @@ namespace ESM4
 namespace MWPhysics
 {
     struct NativeRagdollSnapshotGroup;
+    class PreparedNativeRagdollSnapshotRestore
+    {
+        struct Data;
+        std::unique_ptr<Data> mData;
+        explicit PreparedNativeRagdollSnapshotRestore(std::unique_ptr<Data> data);
+        friend class PhysicsTaskScheduler;
+
+    public:
+        ~PreparedNativeRagdollSnapshotRestore();
+        PreparedNativeRagdollSnapshotRestore(const PreparedNativeRagdollSnapshotRestore&) = delete;
+        PreparedNativeRagdollSnapshotRestore& operator=(const PreparedNativeRagdollSnapshotRestore&) = delete;
+    };
+
     struct NativeRagdollSnapshotBinding
     {
         MWWorld::Ptr mPtr;
@@ -296,6 +309,11 @@ namespace MWPhysics
         void removeProjectile(const int projectileId);
 
         NativeRagdollSnapshotGroup captureActorRagdollSnapshots(std::span<const NativeRagdollSnapshotBinding> bindings);
+        // Own staged buffers without publishing. Commit rejects consumed,
+        // foreign or removed/replaced owners before the first publication.
+        std::unique_ptr<PreparedNativeRagdollSnapshotRestore> prepareActorRagdollSnapshots(
+            const NativeRagdollSnapshotGroup& snapshot, std::span<const NativeRagdollSnapshotBinding> bindings);
+        void commitActorRagdollSnapshots(PreparedNativeRagdollSnapshotRestore& prepared);
         void restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
             std::span<const NativeRagdollSnapshotBinding> bindings);
         void updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);

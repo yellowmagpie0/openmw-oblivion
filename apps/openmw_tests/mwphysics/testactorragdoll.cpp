@@ -1106,6 +1106,129 @@ namespace
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
+    TEST_P(RagdollSchedulerTest, PreparedGroupOwnsStagedProjectionAndOnlyPublishesOnCommit)
+    {
+        mGraph.mSourceHash = std::string(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 8;
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        const std::string model = "meshes/skeleton.nif";
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 1> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 20),
+                ESM::FormKey::content("actors.esm", 100), model}}};
+        const auto before = scheduler.captureActorRagdollSnapshots(bindings);
+        auto desired = before;
+        desired.mActors.begin()->second.mBodies[0].mPosition = {9, 8, 7};
+        desired.mActors.begin()->second.mBodies[0].mNativePackedVelocity->mLinear[3] = 8;
+        desired.mActors.begin()->second.mBodies[0].mNativePackedVelocity->mAngular[3] = -0.f;
+        desired.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+        auto caller = desired;
+        auto prepared = scheduler.prepareActorRagdollSnapshots(caller, bindings);
+        ASSERT_NE(prepared, nullptr);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), before);
+        caller.mActors.begin()->second.mBodies[0].mPosition[0] = std::numeric_limits<float>::quiet_NaN();
+        caller.mTimeCache->mResult = std::numeric_limits<float>::infinity();
+        scheduler.commitActorRagdollSnapshots(*prepared);
+        const auto after = scheduler.captureActorRagdollSnapshots(bindings);
+        EXPECT_EQ(after, desired);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(
+            after.mActors.begin()->second.mBodies[0].mNativePackedVelocity->mAngular[3]), 0x80000000u);
+        EXPECT_THROW(scheduler.commitActorRagdollSnapshots(*prepared), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), after);
+    }
+
+    TEST_P(RagdollSchedulerTest, PreparedGroupRejectsLaterRemovedReadmittedOrReboundOwnersBeforePublication)
+    {
+        mGraph.mSourceHash = std::string(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 8;
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase), rebound(mReference, &mBase);
+        const MWWorld::Ptr second(&other), updated(&rebound);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.addActorRagdoll(second, mGraph, 1, mPoses, 1, -1);
+        const std::string model = "meshes/skeleton.nif";
+        const auto base = ESM::FormKey::content("actors.esm", 100);
+        std::array<MWPhysics::NativeRagdollSnapshotBinding, 2> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 20), base, model},
+            {second, ESM::FormKey::content("actors.esm", 10), base, model}}};
+        auto desired = scheduler.captureActorRagdollSnapshots(bindings);
+        desired.mActors.at(bindings[0].mActor).mBodies[0].mPosition = {99, 99, 99};
+        desired.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+        auto prepared = scheduler.prepareActorRagdollSnapshots(desired, bindings);
+        ASSERT_NE(prepared, nullptr);
+        scheduler.removeActorRagdoll(second);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 1); // The token cannot retain bodies.
+        scheduler.addActorRagdoll(second, mGraph, 1, mPoses, 1, -1);
+        const auto readmitted = scheduler.captureActorRagdollSnapshots(bindings);
+        EXPECT_THROW(scheduler.commitActorRagdollSnapshots(*prepared), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), readmitted);
+        prepared = scheduler.prepareActorRagdollSnapshots(desired, bindings);
+        ASSERT_NE(prepared, nullptr);
+        scheduler.updateActorRagdollPtr(second, updated);
+        bindings[1].mPtr = updated;
+        const auto reboundState = scheduler.captureActorRagdollSnapshots(bindings);
+        EXPECT_THROW(scheduler.commitActorRagdollSnapshots(*prepared), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), reboundState);
+        auto invalid = reboundState;
+        invalid.mActors.at(bindings[0].mActor).mBodies[0].mPosition = {99, 99, 99};
+        invalid.mActors.at(bindings[1].mActor).mBodies[0].mNativePackedVelocity->mAngular[3]
+            = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(scheduler.prepareActorRagdollSnapshots(invalid, bindings), std::runtime_error);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), reboundState);
+        prepared = scheduler.prepareActorRagdollSnapshots(desired, bindings);
+        ASSERT_NE(prepared, nullptr);
+        MWWorld::LiveCellRef<ESM::Static> added(mReference, &mBase);
+        const MWWorld::Ptr third(&added);
+        scheduler.addActorRagdoll(third, mGraph, 1, mPoses, 1, -1);
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 3> expanded{{
+            bindings[0], bindings[1], {third, ESM::FormKey::content("actors.esm", 30), base, model}}};
+        const auto expandedState = scheduler.captureActorRagdollSnapshots(expanded);
+        EXPECT_THROW(scheduler.commitActorRagdollSnapshots(*prepared), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(expanded), expandedState);
+        scheduler.removeActorRagdoll(third);
+    }
+
+    TEST_P(RagdollSchedulerTest, PreparedEmptyGroupRejectsForeignOrDestroyedSchedulerAndPreservesLegacyCache)
+    {
+        auto scheduler = std::make_unique<MWPhysics::PhysicsTaskScheduler>(1.f / 60.f, &mWorld, nullptr);
+        auto desired = scheduler->captureActorRagdollSnapshots({});
+        desired.mTimeCache = ESM4::PhysicalBlendTimeCache{0xffffffffu, 1, -1, -0.f, -.25f};
+        auto prepared = scheduler->prepareActorRagdollSnapshots(desired, {});
+        ASSERT_NE(prepared, nullptr);
+        {
+            MWPhysics::PhysicsTaskScheduler other(1.f / 60.f, &mWorld, nullptr);
+            const auto before = other.captureActorRagdollSnapshots({});
+            EXPECT_THROW(other.commitActorRagdollSnapshots(*prepared), std::invalid_argument);
+            EXPECT_EQ(other.captureActorRagdollSnapshots({}), before);
+        }
+        scheduler->commitActorRagdollSnapshots(*prepared);
+        EXPECT_EQ(scheduler->captureActorRagdollSnapshots({}), desired);
+        auto legacy = desired;
+        legacy.mTimeCache.reset();
+        auto legacyPrepared = scheduler->prepareActorRagdollSnapshots(legacy, {});
+        ASSERT_NE(legacyPrepared, nullptr);
+        scheduler->commitActorRagdollSnapshots(*legacyPrepared);
+        EXPECT_EQ(scheduler->captureActorRagdollSnapshots({}), desired);
+        prepared = scheduler->prepareActorRagdollSnapshots(desired, {});
+        ASSERT_NE(prepared, nullptr);
+        scheduler.reset();
+        scheduler = std::make_unique<MWPhysics::PhysicsTaskScheduler>(1.f / 60.f, &mWorld, nullptr);
+        const auto replacement = scheduler->captureActorRagdollSnapshots({});
+        EXPECT_THROW(scheduler->commitActorRagdollSnapshots(*prepared), std::invalid_argument);
+        EXPECT_EQ(scheduler->captureActorRagdollSnapshots({}), replacement);
+        for (unsigned field = 0; field < 4; ++field)
+        {
+            auto bad = replacement;
+            const auto nan = std::numeric_limits<float>::quiet_NaN();
+            if (field == 0) bad.mTimeCache->mStopKey = nan;
+            if (field == 1) bad.mTimeCache->mStartKey = nan;
+            if (field == 2) bad.mTimeCache->mKeyTime = nan;
+            if (field == 3) bad.mTimeCache->mResult = nan;
+            EXPECT_THROW(scheduler->prepareActorRagdollSnapshots(bad, {}), std::invalid_argument);
+            EXPECT_EQ(scheduler->captureActorRagdollSnapshots({}), replacement);
+        }
+    }
+
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
 }
