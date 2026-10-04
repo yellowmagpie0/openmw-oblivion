@@ -101,6 +101,10 @@ namespace MWPhysics
             const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
         void restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
             const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
+        // Complete owner bindings; capture/prepare all under one worker barrier.
+        NativeRagdollSnapshotGroup captureActorRagdollSnapshots(std::span<const NativeRagdollSnapshotBinding> bindings);
+        void restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
+            std::span<const NativeRagdollSnapshotBinding> bindings);
         void updateActorRagdollPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
         std::vector<NifBullet::RagdollBodyState> captureActorRagdoll(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollNativePackedVelocityState> captureActorRagdollNativePackedVelocities(
@@ -203,6 +207,7 @@ namespace MWPhysics
         void afterPostSim();
         void syncWithMainThread();
         void waitForWorkers();
+        void validateActorRagdollBindings(std::span<const NativeRagdollSnapshotBinding> bindings) const;
         void prepareWork(float& timeAccum, std::vector<Simulation>& simulations, osg::Timer_t frameStart,
             unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
 

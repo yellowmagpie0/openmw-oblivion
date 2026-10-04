@@ -89,6 +89,15 @@ namespace ESM4
 
 namespace MWPhysics
 {
+    struct NativeRagdollSnapshotGroup;
+    struct NativeRagdollSnapshotBinding
+    {
+        MWWorld::Ptr mPtr;
+        ESM::FormKey mActor;
+        ESM::FormKey mBase;
+        std::string_view mModel;
+    };
+
     class HeightField;
     class Object;
     class Actor;
@@ -283,6 +292,9 @@ namespace MWPhysics
         void setCaster(int projectileId, const MWWorld::Ptr& caster);
         void removeProjectile(const int projectileId);
 
+        NativeRagdollSnapshotGroup captureActorRagdollSnapshots(std::span<const NativeRagdollSnapshotBinding> bindings);
+        void restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
+            std::span<const NativeRagdollSnapshotBinding> bindings);
         void updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
 
         Actor* getActor(const MWWorld::Ptr& ptr);

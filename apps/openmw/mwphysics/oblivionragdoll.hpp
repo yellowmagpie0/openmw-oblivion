@@ -10,6 +10,13 @@
 
 namespace MWPhysics
 {
+    struct NativeRagdollSnapshotGroup
+    {
+        std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActors;
+        std::optional<ESM4::PhysicalBlendTimeCache> mTimeCache = std::nullopt;
+        friend bool operator==(const NativeRagdollSnapshotGroup&, const NativeRagdollSnapshotGroup&) = default;
+    };
+
     struct NativeRagdollControllerSnapshot
     {
         std::span<const NifBullet::RagdollNativeBlendControllerState> mBlends;

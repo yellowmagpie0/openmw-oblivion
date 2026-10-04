@@ -832,6 +832,17 @@ namespace MWPhysics
         return mTaskScheduler->captureActorRagdollSnapshot(ptr, base, model);
     }
 
+    NativeRagdollSnapshotGroup PhysicsSystem::captureActorRagdollSnapshots(
+        std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        return mTaskScheduler->captureActorRagdollSnapshots(bindings);
+    }
+    void PhysicsSystem::restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
+        std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        mTaskScheduler->restoreActorRagdollSnapshots(snapshot, bindings);
+    }
+
     void PhysicsSystem::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model)
     {

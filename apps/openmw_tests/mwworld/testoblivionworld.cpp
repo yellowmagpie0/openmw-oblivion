@@ -371,6 +371,19 @@ namespace
             EXPECT_EQ(physics.captureNativeBlendTimeCache(), savedCache);
             physics.restoreNativeBlendTimeCache(initialCache);
             const auto base = ESM::FormKey::content("headless.esm", 0x800);
+            const std::array<MWPhysics::NativeRagdollSnapshotBinding, 1> groupBindings{{
+                {ptr, ESM::FormKey::content("headless.esm", 0x900), base, path.value()}}};
+            const auto groupBefore = physics.captureActorRagdollSnapshots(groupBindings);
+            ASSERT_EQ(groupBefore.mActors.size(), 1u); ASSERT_TRUE(groupBefore.mTimeCache);
+            auto groupChanged = groupBefore; groupChanged.mActors.begin()->second.mBodies[0].mPosition = {10, 20, 30};
+            groupChanged.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+            physics.restoreActorRagdollSnapshots(groupChanged, groupBindings);
+            EXPECT_EQ(physics.captureActorRagdollSnapshots(groupBindings), groupChanged);
+            auto groupInvalid = groupChanged; groupInvalid.mActors.begin()->second.mBodies[0].mPosition = {99, 99, 99};
+            groupInvalid.mTimeCache->mResult = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(physics.restoreActorRagdollSnapshots(groupInvalid, groupBindings), std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollSnapshots(groupBindings), groupChanged);
+            physics.restoreActorRagdollSnapshots(groupBefore, groupBindings);
             const auto original = physics.captureActorRagdollSnapshot(ptr, base, path.value());
             ASSERT_TRUE(original.mBodies[0].mNativePackedVelocity);
             auto packedSave = physics.captureActorRagdollNativePackedVelocities(ptr);

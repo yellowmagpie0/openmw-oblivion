@@ -873,6 +873,205 @@ namespace
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
+    TEST_P(RagdollSchedulerTest, GroupSnapshotsPrepareEveryOwnerAndSharedCacheBeforePublication)
+    {
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, 4, {}};
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase); const MWWorld::Ptr second(&other);
+        const auto base = ESM::FormKey::content("actors.esm", 100); const std::string model = "characters/_male/skeleton.nif";
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 2> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 20), base, model},
+            {second, ESM::FormKey::content("actors.esm", 10), base, model}}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.addActorRagdoll(second, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("group snapshot worker barrier");
+        std::vector<MWPhysics::Simulation> frame; float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frame, osg::Timer::instance()->tick(), 0, *stats, MWPhysics::WorldFrameData(false, {}));
+        auto group = scheduler.captureActorRagdollSnapshots(bindings);
+        ASSERT_EQ(group.mActors.size(), 2u); ASSERT_TRUE(group.mTimeCache);
+        EXPECT_EQ(group.mActors.begin()->first, bindings[1].mActor);
+        group.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+        unsigned index = 0;
+        for (auto& [actor, pose] : group.mActors)
+        {
+            pose.mBodies[0].mPosition = {10.f + index++, 20, 30};
+            pose.mBodies[0].mNativePackedVelocity->mLinear[3] = 8;
+            auto& curve = pose.mNativeControllers->mBlends[0].mState;
+            curve.mClock = {10, 11, 1}; curve.mCachedGains = {-0.f, -2}; curve.mSetupState = 0xffffffffu;
+        }
+        scheduler.restoreActorRagdollSnapshots(group, bindings);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), group);
+        for (unsigned field = 0; field < 5; ++field)
+        {
+            auto invalid = group; invalid.mActors.at(bindings[0].mActor).mBodies[0].mPosition = {99, 99, 99};
+            auto& last = invalid.mActors.at(bindings[1].mActor);
+            if (field == 0) last.mNativeControllers->mBlends[0].mRecord = 99;
+            if (field == 1) last.mBodies[0].mNativePackedVelocity->mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+            if (field == 2) invalid.mTimeCache->mResult = std::numeric_limits<float>::infinity();
+            if (field == 3) invalid.mActors.erase(invalid.mActors.rbegin()->first);
+            if (field == 4)
+            {
+                const auto extra = last; invalid.mActors.erase(bindings[1].mActor);
+                invalid.mActors.emplace(ESM::FormKey::content("actors.esm", 99), extra);
+            }
+            EXPECT_ANY_THROW(scheduler.restoreActorRagdollSnapshots(invalid, bindings));
+            EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), group);
+        }
+        scheduler.removeActorRagdoll(mPtr); scheduler.removeActorRagdoll(second);
+    }
+
+    TEST_P(RagdollSchedulerTest, GroupSnapshotsRejectIncompleteDuplicateAndUnknownBindings)
+    {
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase); const MWWorld::Ptr second(&other);
+        const auto base = ESM::FormKey::content("actors.esm", 100); const std::string model = "characters/_male/skeleton.nif";
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 2> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 10), base, model},
+            {second, ESM::FormKey::content("actors.esm", 20), base, model}}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.addActorRagdoll(second, mGraph, 1, mPoses, 1, -1);
+        const auto original = scheduler.captureActorRagdollSnapshots(bindings);
+        ASSERT_EQ(original.mActors.size(), 2u);
+        EXPECT_THROW(scheduler.captureActorRagdollSnapshots(std::span(bindings).first(1)), std::invalid_argument);
+        for (unsigned field = 0; field < 5; ++field)
+        {
+            auto bad = bindings;
+            if (field == 0) bad[1].mActor = bad[0].mActor;
+            if (field == 1) bad[1].mPtr = bad[0].mPtr;
+            if (field == 2) bad[1].mPtr = {};
+            if (field == 3) bad[1].mActor = {};
+            if (field == 4) bad[1].mBase = {};
+            EXPECT_ANY_THROW(scheduler.captureActorRagdollSnapshots(bad));
+            EXPECT_ANY_THROW(scheduler.restoreActorRagdollSnapshots(original, bad));
+            EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), original);
+        }
+        scheduler.removeActorRagdoll(mPtr); scheduler.removeActorRagdoll(second);
+    }
+
+    TEST_P(RagdollSchedulerTest, GroupSnapshotsRetainLegacyAbsenceAndNoOwnerCache)
+    {
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        const auto base = ESM::FormKey::content("actors.esm", 100); const std::string model = "characters/_male/skeleton.nif";
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 1> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 10), base, model}}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        const auto current = scheduler.captureActorRagdollSnapshots(bindings);
+        ASSERT_EQ(current.mActors.size(), 1u); ASSERT_TRUE(current.mTimeCache);
+        auto legacy = current; legacy.mTimeCache.reset();
+        auto& pose = legacy.mActors.begin()->second; pose.mNativeControllers.reset(); pose.mNativeBlends.reset();
+        pose.mBodies[0].mNativeMotion.reset(); pose.mBodies[0].mNativePackedVelocity.reset();
+        pose.mBodies[0].mPosition = {10, 20, 30};
+        const ESM4::PhysicalBlendTimeCache retained{0xffffffffu, 1, -1, -0.f, -.25f};
+        scheduler.restoreNativeBlendTimeCache(retained);
+        scheduler.restoreActorRagdollSnapshots(legacy, bindings);
+        EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin(), btVector3(10, 20, 30));
+        EXPECT_EQ(scheduler.captureNativeBlendTimeCache(), retained);
+        scheduler.removeActorRagdoll(mPtr);
+        const auto empty = scheduler.captureActorRagdollSnapshots({});
+        EXPECT_TRUE(empty.mActors.empty()); ASSERT_TRUE(empty.mTimeCache);
+        EXPECT_EQ(*empty.mTimeCache, retained);
+        auto loadedEmpty = empty; loadedEmpty.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+        scheduler.restoreActorRagdollSnapshots(loadedEmpty, {});
+        EXPECT_EQ(scheduler.captureNativeBlendTimeCache(), *loadedEmpty.mTimeCache);
+    }
+
+    TEST_P(RagdollSchedulerTest, GroupSnapshotWireResumesAllOwnersAndSharedCacheForSixtyExplicitPhases)
+    {
+        struct World
+        {
+            btDefaultCollisionConfiguration mConfiguration;
+            btCollisionDispatcher mDispatcher{&mConfiguration};
+            btDbvtBroadphase mBroadphase;
+            btSequentialImpulseConstraintSolver mSolver;
+            btDiscreteDynamicsWorld mWorld{&mDispatcher, &mBroadphase, &mSolver, &mConfiguration};
+        } fresh;
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, 4, {}};
+        MWWorld::LiveCellRef<ESM::Static> sourceSecond(mReference, &mBase);
+        MWWorld::LiveCellRef<ESM::Static> freshFirst(mReference, &mBase), freshSecond(mReference, &mBase);
+        const auto base = ESM::FormKey::content("actors.esm", 100); const std::string model = "characters/_male/skeleton.nif";
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 2> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 10), base, model},
+            {MWWorld::Ptr(&sourceSecond), ESM::FormKey::content("actors.esm", 20), base, model}}};
+        auto freshBindings = bindings; freshBindings[0].mPtr = MWWorld::Ptr(&freshFirst); freshBindings[1].mPtr = MWWorld::Ptr(&freshSecond);
+        MWPhysics::PhysicsTaskScheduler source(1.f / 60.f, &mWorld, nullptr);
+        MWPhysics::PhysicsTaskScheduler resumed(1.f / 60.f, &fresh.mWorld, nullptr);
+        for (const auto& binding : bindings) source.addActorRagdoll(binding.mPtr, mGraph, 1, mPoses, 1, -1);
+        for (const auto& binding : freshBindings) resumed.addActorRagdoll(binding.mPtr, mGraph, 1, mPoses, 1, -1);
+        auto snapshot = source.captureActorRagdollSnapshots(bindings);
+        ASSERT_EQ(snapshot.mActors.size(), 2u);
+        snapshot.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+        for (auto& [actor, pose] : snapshot.mActors)
+        {
+            auto& curve = pose.mNativeControllers->mBlends[0].mState;
+            curve.mTiming = {0xd, 1, -0.f, 0, 4}; curve.mClock = {10, 10, 0};
+            curve.mKeys = {{0, {1, 0}}, {4, {0, 1}}}; curve.mCachedGains = {-0.f, -2};
+            curve.mSetupState = 0xffffffffu;
+            ESM4::RuntimeRagdollVelocityController velocity;
+            velocity.mAttachedNode = 8; velocity.mTargetNode = 8; velocity.mPrecedesBlend = false;
+            velocity.mState.mTiming = {0xd, 1, -0.f, 0, 4}; velocity.mState.mClock = {10, 10, 0};
+            velocity.mState.mForceVector = {1, 2, 3, 8};
+            pose.mNativeControllers->mVelocities = {velocity};
+        }
+        source.restoreActorRagdollSnapshots(snapshot, bindings);
+        ESM4::RuntimeState runtime;
+        runtime.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        runtime.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        runtime.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        runtime.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        runtime.mNativeActorRagdolls = snapshot.mActors; runtime.mNativePhysicalBlendTimeCache = snapshot.mTimeCache;
+        for (const auto& [actor, pose] : snapshot.mActors)
+        {
+            ESM4::RuntimeReferenceState ref; ref.mKey = actor; ref.mBase = base; ref.mCell = runtime.mPlayer.mCell;
+            runtime.mReferences.push_back(ref);
+            ESM4::RuntimeActorValues values; values.mActor = actor; values.mBase = base; runtime.mNativeActorValues.push_back(values);
+            runtime.mNativeActorLife.push_back({actor, base, ESM4::ActorLifePhase::Dead, 0, {}});
+        }
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(runtime.serializeBinary());
+        const MWPhysics::NativeRagdollSnapshotGroup loaded{decoded.mNativeActorRagdolls, decoded.mNativePhysicalBlendTimeCache};
+        resumed.restoreActorRagdollSnapshots(loaded, freshBindings);
+        EXPECT_EQ(resumed.captureActorRagdollSnapshots(freshBindings), snapshot);
+        const std::array<std::uint32_t, 1> nodes{8};
+        // Explicit physical-controller phases; neither Bullet world is stepped.
+        // This is a software v36 envelope, not automatic World/gameplay saving.
+        for (unsigned frame = 0; frame < 60; ++frame)
+        {
+            const float input = 11.f + frame * .016f;
+            for (unsigned owner = 0; owner < bindings.size(); ++owner)
+            {
+                const auto order = source.captureActorRagdollControllerOrder(bindings[owner].mPtr, nodes);
+                EXPECT_EQ(resumed.captureActorRagdollControllerOrder(freshBindings[owner].mPtr, nodes), order);
+                source.advanceActorRagdollPhysicalControllers(bindings[owner].mPtr, order, input);
+                resumed.advanceActorRagdollPhysicalControllers(freshBindings[owner].mPtr, order, input);
+            }
+            const auto expected = source.captureActorRagdollSnapshots(bindings);
+            const auto actual = resumed.captureActorRagdollSnapshots(freshBindings);
+            EXPECT_EQ(actual, expected);
+            for (const auto& binding : bindings)
+            {
+                const auto& a = actual.mActors.at(binding.mActor).mBodies[0].mNativePackedVelocity;
+                const auto& e = expected.mActors.at(binding.mActor).mBodies[0].mNativePackedVelocity;
+                for (unsigned lane = 0; lane < 4; ++lane)
+                {
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(a->mLinear[lane]), std::bit_cast<std::uint32_t>(e->mLinear[lane]));
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(a->mAngular[lane]), std::bit_cast<std::uint32_t>(e->mAngular[lane]));
+                }
+            }
+            if (frame == 0)
+            {
+                EXPECT_EQ(actual.mActors.begin()->second.mNativeBlends->front().mHierarchyGain, .25f);
+            }
+        }
+        for (const auto& binding : bindings) source.removeActorRagdoll(binding.mPtr);
+        for (const auto& binding : freshBindings) resumed.removeActorRagdoll(binding.mPtr);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0); EXPECT_EQ(fresh.mWorld.getNumCollisionObjects(), 0);
+    }
+
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
 }

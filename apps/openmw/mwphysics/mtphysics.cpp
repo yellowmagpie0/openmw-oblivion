@@ -746,6 +746,110 @@ namespace MWPhysics
             owned.mPhysics.captureNativeBlendStates(), NativeRagdollControllerSnapshot{authored, generated});
     }
 
+    void PhysicsTaskScheduler::validateActorRagdollBindings(
+        std::span<const NativeRagdollSnapshotBinding> bindings) const
+    {
+        if (bindings.size() != mActorRagdolls.size())
+            throw std::invalid_argument("native physical snapshot requires every owned actor binding");
+        std::set<ESM::FormKey> actors;
+        std::unordered_set<const MWWorld::LiveCellRefBase*> references;
+        for (const auto& binding : bindings)
+        {
+            if (binding.mPtr.isEmpty() || !mActorRagdolls.contains(binding.mPtr.mRef)
+                || binding.mActor.isNull() || binding.mBase.isNull() || binding.mModel.empty()
+                || ESM::FormKey::deserialize(binding.mActor.serialize()) != binding.mActor
+                || ESM::FormKey::deserialize(binding.mBase.serialize()) != binding.mBase
+                || !actors.insert(binding.mActor).second || !references.insert(binding.mPtr.mRef).second)
+                throw std::invalid_argument("invalid, duplicate or unowned native physical snapshot binding");
+        }
+    }
+
+    NativeRagdollSnapshotGroup PhysicsTaskScheduler::captureActorRagdollSnapshots(
+        std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        validateActorRagdollBindings(bindings);
+        NativeRagdollSnapshotGroup result;
+        for (const auto& binding : bindings)
+        {
+            const auto& owned = actorRagdoll(binding.mPtr);
+            const auto authored = owned.mPhysics.captureNativeBlendControllers();
+            const auto generated = owned.mPhysics.captureNativeVelocityControllers();
+            result.mActors.emplace(binding.mActor, captureNativeActorRagdoll(binding.mBase, binding.mModel,
+                owned.mDefinition, owned.mPhysics.capture(), owned.mPhysics.captureNativePackedVelocities(),
+                owned.mPhysics.captureNativeMotionModes(), owned.mPhysics.captureNativeBlendStates(),
+                NativeRagdollControllerSnapshot{authored, generated}));
+        }
+        result.mTimeCache = *mNativeBlendTimeCache;
+        return result;
+    }
+
+    void PhysicsTaskScheduler::restoreActorRagdollSnapshots(const NativeRagdollSnapshotGroup& snapshot,
+        std::span<const NativeRagdollSnapshotBinding> bindings)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        validateActorRagdollBindings(bindings);
+        if (snapshot.mActors.size() != bindings.size())
+            throw std::invalid_argument("native physical snapshot actor count does not match bound owners");
+        if (snapshot.mTimeCache)
+            for (float value : {snapshot.mTimeCache->mStopKey, snapshot.mTimeCache->mStartKey,
+                     snapshot.mTimeCache->mKeyTime, snapshot.mTimeCache->mResult})
+                if (!std::isfinite(value))
+                    throw std::invalid_argument("nonfinite saved native physical clock cache");
+        struct Pending
+        {
+            NifBullet::ActorRagdollPhysics* mOwner;
+            std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> mRestore;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(bindings.size());
+        for (const auto& binding : bindings)
+        {
+            const auto saved = snapshot.mActors.find(binding.mActor);
+            if (saved == snapshot.mActors.end())
+                throw std::invalid_argument("native physical snapshot omits a bound actor");
+            auto& owned = actorRagdoll(binding.mPtr);
+            const auto& pose = saved->second;
+            const auto states = restoreNativeActorRagdoll(pose, binding.mBase, binding.mModel, owned.mDefinition);
+            const auto packed = restoreNativeActorRagdollPackedVelocities(pose, binding.mBase, binding.mModel, owned.mDefinition);
+            const auto modes = restoreNativeActorRagdollMotionModes(pose, binding.mBase, binding.mModel, owned.mDefinition);
+            const auto blends = restoreNativeActorRagdollBlendStates(pose, binding.mBase, binding.mModel, owned.mDefinition);
+            const auto controllers = restoreNativeActorRagdollControllers(pose, binding.mBase, binding.mModel, owned.mDefinition);
+            std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepared;
+            if (controllers)
+            {
+                if (!packed || !modes || !blends)
+                    throw std::invalid_argument("native controller group restore requires complete physical and blend state");
+                prepared = owned.mPhysics.prepareRestore(states, *packed, *modes, *blends, controllers->mBlends, controllers->mVelocities);
+            }
+            else if (blends)
+            {
+                if (!packed || !modes)
+                    throw std::invalid_argument("native blend group restore requires packed and motion state");
+                prepared = owned.mPhysics.prepareRestore(states, *packed, *modes, *blends);
+            }
+            else if (modes)
+            {
+                if (!packed)
+                    throw std::invalid_argument("native motion group restore requires packed state");
+                prepared = owned.mPhysics.prepareRestore(states, *packed, *modes);
+            }
+            else if (packed)
+                prepared = owned.mPhysics.prepareRestore(states, *packed);
+            else
+                prepared = owned.mPhysics.prepareRestore(states);
+            pending.push_back({&owned.mPhysics, std::move(prepared)});
+        }
+        // Every identity, projection and owned buffer is ready before the first
+        // body publishes. Hold the same barrier/lock through all owners/cache.
+        for (auto& entry : pending)
+            entry.mOwner->commitRestore(*entry.mRestore);
+        if (snapshot.mTimeCache)
+            *mNativeBlendTimeCache = *snapshot.mTimeCache;
+    }
+
     void PhysicsTaskScheduler::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model)
     {

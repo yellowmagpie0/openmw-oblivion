@@ -11903,3 +11903,75 @@ lock, choosing matching legacy/current preparations. Automatic World lifecycle/
 save/reaction/update/getter/frame wiring, renderer-global traversal/cache, raw
 COM/time/quaternion/cache, activation/contact continuation, retained physical/
 restart failures, normal-input display acceptance and S5-S14 remain required.
+
+
+### Checkpoint237: coherent scheduler group snapshots and shared cache
+
+Added NativeRagdollSnapshotGroup with canonical actor-key map and optional shared
+physical time cache, and borrowed call-lifetime bindings carrying Ptr/stable actor
+key/base/model. PhysicsTaskScheduler capture waits once, holds one shared physics
+lock and captures every bound owner's complete body/packed/mode/blend/authored/
+generated projections plus the shared cache. Bindings must cover exactly every
+owned ragdoll, including the zero-owner case, with unique known nonempty Ptr
+references, unique canonical nonnull actor keys, canonical nonnull base keys and nonempty model labels.
+Actor/base/model labels come from the winning caller context; this physics API
+cannot infer the World profile store's base/model from a Ptr. The existing
+winning-asset adapter retains hash/record/node binding validation. Controller
+span inputs remain backed by live local vectors through each capture call;
+per-actor public methods are not recursively called under the group lock.
+
+Restore waits once and holds one exclusive lock throughout. It validates the
+complete bindings, exact saved actor set and finite present global cache fields,
+resolves every winning-asset projection and prepares all owner tokens before the
+first physical publication. Matching legacy/current branches choose one/two/
+three/four/six-span preparation. Only after all owned validation/storage succeeds
+does it commit each owner and publish a present shared cache. Absent legacy cache
+preserves the existing one. Current empty-owner capture retains a present cache.
+Unknown, missing, duplicate or incomplete bindings, bad later actor data or late
+cache admission cannot publish earlier actor poses. Internal Bullet broadphase
+allocation failure remains unexercised; this is not a noexcept/OOM rollback claim.
+Actual PhysicsSystem forwards both operations through this scheduler boundary.
+
+ragdoll-group-save-baseline-01 retains an insertion-script failure: the
+PhysicsSystem header names updatePtr rather than updateActorRagdollPtr. Only the
+group DTO was inserted before that exception; its subsequent helper builds but
+selects no tests. It is not an executed group baseline. After correcting the
+marker and guarding the already inserted DTO, all nine ragdoll-group-save-
+baseline-02 worker0/1/2 cases execute and fail on missing group capture. Correct
+late-owner rollback tests use the last binding, not the last canonical map key:
+bindings are deliberately unsorted20/10, so key ordering must not turn a purported
+late failure into the first prepared actor.
+
+Tests cover queued-worker group capture, canonical actor ordering, complete
+two-owner/cache restore, first-owner changed pose with bad second-owner authored
+identity/packed lane, nonfinite cache, missing or unexpected actor, incomplete/
+duplicate/empty bindings, legacy absence and zero-owner retained/restored cache.
+Actual PhysicsSystem's fixture loops0/1/2 workers and checks group forwarding,
+changed pose/cache capture, invalid cache rollback and original-group restoration.
+Three additional worker-param cases serialize the two-owner group and global
+cache in a valid software version36 envelope with linked reference/value/life
+companions, restore into a fresh scheduler in a different Bullet world, and compare
+60 explicit controller phases against the source. Each phase compares complete
+group state and all eight packed velocity lane bits per owner. Initial cache
+cycle2/key1/result3 makes a normal consumer reuse reversed-producer result3 and
+gain.25; a cold recomputation would give.75. Neither Bullet world is stepped.
+The envelope is a software fixture, not automatic World saving or original-game
+fresh-process/contact/gameplay acceptance.
+
+Full ragdoll-group-save-normal/sanitized-01 each passes926 engine cases but
+retains a new dangling-else warning from an unbraced if around a GoogleTest macro.
+After both terminal runs, added braces only in that test. Final full ragdoll-group-
+save-normal/sanitized-02 each passes926 engine cases, exact inventory, zero
+failures/skips and no new compiler warnings. Broader sanitized-01 recompilation
+retains the preexisting actor-stats range-loop copy warning. ASan leak checks
+disabled. Final tested fingerprint `cf605484016d8205d6f1b0398b54b7c378b486cb776082fc5b3b9b465c243670`. Unchanged lower2,415 component,
+255 Python and original110,592 controller/cache comparisons remain recorded at
+preceding checkpoints; no new native arithmetic or runtime codec rule changed
+in this scheduler grouping chunk.
+
+No M15 stage closes. Automatic World capture/restore and actor lifecycle/reaction/
+update/getter/frame wiring remain required, including joining physical projections
+with retained unloaded actor/reference/value/life authorities. Renderer-global Ni
+traversal/cache, raw COM/time/quaternion/cache, activation/contact continuation,
+retained physical/restart failures, normal-input display acceptance and S5-S14
+remain required.
