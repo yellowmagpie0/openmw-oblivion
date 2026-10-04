@@ -18,7 +18,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
-| S5 projectiles | pending | No implementation/evidence | Normal-input release/impact and in-flight restart |
+| S5 projectiles | in-progress | Winning native bow/AMMO launch snapshot query; checkpoint255 below | Bow controller, ammo transaction, native swept impact/recovery, normal-input release/impact and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
 | S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
@@ -19572,3 +19572,44 @@ No stage closes. Automatic admission/reactions/update/getup, winning physical
 configuration discovery, initial morphology, whole native scene/time/contact
 continuation and required normal-input gameplay/restarts remain open. S5-S14
 remain pending.
+
+### Checkpoint 255: resolve native bow and ammunition launch snapshots
+
+A read-only World data query now resolves the explicit stable bow and ammunition
+keys against winning TES4 stores, requires the Oblivion profile and native bow
+type5, validates the AMMO damage representation before uint16 conversion, and
+loads the winning native GMST inventory. Existing original-verified helpers
+capture draw fraction, damage, speed, gravity factor and the later shot-fatigue
+debit. Player draw reads its explicit timer; NPC full draw does not read it.
+Damage/gravity Marksman and mastery Marksman are separate caller-resolved inputs
+because native float-query conversion and integer AV composition differ.
+The query neither consumes ammo, modifies AVs, admits release, spawns arrows nor
+executes an impact. The profile guard is API context admission, not new parser
+proof distinguishing an integral later-game AMMO record.
+
+Four engine tests cover distinct plugin/item identity, player half/full draw,
+condition and AttackBonus, NPC unused NaN timer, retained damage before the shot
+debit, independent mastery threshold, winning static/dynamic AMMO and GMST
+overrides, excluded TES3 GMST values, and wrong profile/type/missing/deleted/
+malformed ammo/setting rejection. Literal damage expectations retain S2's
+independently reviewed oracle operands.
+
+Initial normal/sanitized01 each execute950 engine tests:947 pass and three new
+tests fail damage comparisons because their fixture omitted the S2 oracle's
+custom physical settings and loaded compiled defaults. Retain both failures.
+Correct seven fixture GMST inputs to the declared S2 operands; do not alter the
+expected results or production arithmetic. Also test separate integer mastery
+input at24/25 while damage/gravity retain the same float-query input.
+
+Corrected native-arrow-launch-query-normal-02 and sanitized-02 each pass950
+exact inventoried full engine tests, zero failures/skips/compiler warnings.
+Both build openmw/openmw-tests/esmtool. ASan leaks disabled; UBSan halts.
+Tested fingerprint
+412d89c2c3f8b37face764efbb8377fe7d6c88c7ddaea8768fa3112c8477132a.
+No component numeric rule or Python codec changes;254's2441 normal/sanitized
+component tests and earlier independent projectile rule evidence remain applicable.
+
+S5 is now in progress. Release/cancel/equipment/ammo publication, launch transforms,
+trajectory/collision/impact/recovery, in-flight/spent persistence, Marksman effects,
+cell/shooter removal and required normal-input shots/restarts remain open.
+No M15 stage closes; all other outstanding stage gates remain required.

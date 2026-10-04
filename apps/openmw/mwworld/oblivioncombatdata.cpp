@@ -4,12 +4,55 @@
 #include <components/esm/records.hpp>
 #include <components/esm4/combatstylepolicy.hpp>
 
+#include <cmath>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <vector>
 
 namespace MWWorld
 {
+    OblivionArrowLaunch resolveOblivionArrowLaunch(const ESMStore& store,
+        ESM::GameProfile profile, const OblivionArrowLaunchInput& input)
+    {
+        if (profile != ESM::GameProfile::Oblivion)
+            throw std::invalid_argument("native arrow launch requires the Oblivion profile");
+        if (input.mBow.isNull() || input.mAmmunition.isNull())
+            throw std::invalid_argument("native arrow launch requires stable item identities");
+        const auto* bow = store.search<ESM4::Weapon>(input.mBow);
+        const auto* ammunition = store.search<ESM4::Ammunition>(input.mAmmunition);
+        if (!bow || bow->mData.type != 5 || !ammunition)
+            throw std::invalid_argument("native arrow launch requires a winning TES4 bow and ammunition");
+        const float ammoDamage = ammunition->mData.mDamage;
+        // TES4 AMMO DATA stores damage as uint16; later-game layouts use
+        // float. Reject values incompatible with TES4 damage before narrowing.
+        if (!std::isfinite(ammoDamage) || ammoDamage < 0
+            || ammoDamage > std::numeric_limits<std::uint16_t>::max()
+            || std::trunc(ammoDamage) != ammoDamage)
+            throw std::invalid_argument("native ammunition damage is not uint16");
+
+        std::vector<const ESM4::GameSetting*> settings;
+        const auto& native = store.get<ESM4::GameSetting>();
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : native)
+            if (seen.insert(setting.mId).second)
+                settings.push_back(native.search(setting.mId));
+
+        const auto projectile = ESM4::buildProjectileSettings(settings);
+        const auto physical = ESM4::buildPhysicalCombatSettings(settings);
+        const auto fatigue = ESM4::buildBowFatigueSettings(settings);
+        const auto mastery = ESM4::buildCombatMasterySettings(settings);
+        const float draw = input.mPlayer ? ESM4::bowDrawFraction(input.mBowTimer, projectile) : 1.f;
+        const ESM4::ArrowDamageInput damage{input.mMarksman, input.mLuck, input.mAgility,
+            bow->mData.damage, static_cast<std::uint16_t>(ammoDamage),
+            input.mBowConditionRatio, input.mFatigueRatio, draw, input.mAttackBonus};
+        return {input.mBow, input.mAmmunition, draw,
+            ESM4::arrowLaunchDamage(damage, physical),
+            ESM4::arrowLaunchSpeed(ammunition->mData.mSpeed, draw, projectile),
+            ESM4::arrowGravityFactor(input.mMarksman, input.mLuck, draw, projectile, physical),
+            ESM4::bowShotFatigue(input.mMasteryMarksman, fatigue, mastery)};
+    }
+
     ESM4::CombatStyleDefaults buildOblivionCombatDefaults(const ESMStore& store)
     {
         std::vector<const ESM4::GameSetting*> settings;
