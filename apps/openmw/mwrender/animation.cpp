@@ -37,6 +37,10 @@
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadrace.hpp>
 #include <components/esm4/loadligh.hpp>
+#include <components/esm4/loadammo.hpp>
+#include <components/esm4/loadweap.hpp>
+#include "../mwworld/inventorystore.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 
 #include <components/misc/constants.hpp>
 #include <components/misc/pathhelpers.hpp>
@@ -1329,6 +1333,46 @@ namespace MWRender
         return mNodeMap;
     }
 
+    bool Animation::attachOblivionArrow()
+    {
+        const auto* world = MWBase::Environment::get().getWorld().operator MWBase::World*();
+        if (!world || world->getGameProfile() != ESM::GameProfile::Oblivion
+            || mPtr.isEmpty() || !mPtr.getClass().hasInventoryStore(mPtr) || !mResourceSystem)
+            return false;
+        const auto target = getNodeMap().find("ArrowBone");
+        if (target == getNodeMap().end())
+            return false;
+        const auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
+        const auto bow = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto ammo = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+        if (bow == inventory.end() || ammo == inventory.end()
+            || bow->getCellRef().getCount() <= 0 || ammo->getCellRef().getCount() <= 0)
+            return false;
+        const auto& store = world->getStore();
+        const auto bowId = MWWorld::OblivionProfileServices::nativeItemId(store, bow->getCellRef().getRefId());
+        const auto ammoId = MWWorld::OblivionProfileServices::nativeItemId(store, ammo->getCellRef().getRefId());
+        const auto* weapon = store.get<ESM4::Weapon>().search(bowId);
+        const auto* arrow = store.get<ESM4::Ammunition>().search(ammoId);
+        if (!weapon || weapon->mData.type != 5 || !arrow || arrow->mModel.empty())
+            return false;
+        const auto path = Misc::ResourceHelpers::correctMeshPath(arrow->mModel.getNormalized());
+        auto* scene = mResourceSystem->getSceneManager();
+        const auto model = scene->getTemplate(path);
+        auto geometry = cloneOblivionArrowGeometry(*model, *scene);
+        if (!geometry)
+            return false;
+        auto prepared = std::make_unique<PartHolder>(geometry);
+        if (!target->second->addChild(geometry))
+            return false;
+        mOblivionHeldArrow.swap(prepared);
+        return true;
+    }
+
+    void Animation::detachOblivionArrow() noexcept
+    {
+        mOblivionHeldArrow.reset();
+    }
+
     void Animation::refreshAnimationBindings()
     {
         if (!mObjectRoot)
@@ -2183,6 +2227,7 @@ namespace MWRender
 
     void Animation::setObjectRoot(const std::string& model, bool forceskeleton, bool baseonly, bool isCreature)
     {
+        detachOblivionArrow();
         mNativeReactionNodeRecords.clear();
         mNativeReactionModelRootName.clear();
         mNativeReactionRootRecord.reset();
@@ -2648,6 +2693,7 @@ namespace MWRender
 
     void Animation::removeFromSceneImpl()
     {
+        detachOblivionArrow();
         mNativeReactionNodeRecords.clear();
         mNativeReactionModelRootName.clear();
         mNativeReactionRootRecord.reset();

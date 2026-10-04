@@ -20120,3 +20120,65 @@ Normal-input first/third-person bow rendering, held-arrow geometry, draw/release
 input, prepared ammunition/fatigue/wear publication, flight/impact/recovery/save
 and remaining mastery courses still require their own integration/acceptance.
 S5 stays in progress, and no other M15 stage or runtime gate closes.
+
+
+### S5 native held-arrow geometry (checkpoint265)
+
+The original hash-identified nock path5FCF8C..5FD0FD looks up exact Arrow:0
+and calls700900 to clone that selected object before attaching it. The clone
+wrapper constructs its cloning process, invokes source virtual18/38, and returns
+the clone; original destination storage and action publication are not emulated
+here. The renderer now clones only exact Arrow:0 through the actual SceneManager
+instance API, preserving authored transforms and the immutable ammunition
+template. Missing Arrow:0 never falls back to the complete quiver model.
+
+Both TES4 NPC and native Player animation producers select actual equipped,
+positive-count bow/ammunition instances and winning typed TES4 WEAP5/AMMO
+records. They load the winning native ammunition model, prepare a PartHolder
+before graph publication, and replace the previous held clone only on success.
+Missing targets/items/geometry leave existing ownership unchanged; detachment,
+equipment replacement, object-root replacement and scene removal release it.
+These producers do not debit ammunition, fatigue or condition and do not
+publish a logical bow event or projectile. Player native release still requires
+its own implementation; ordinary TES3 release cannot supply native semantics.
+
+Two renderer tests cover exact-name selection, hidden source nodes, independent
+clones, preserved authored transforms/template, absence of quiver and actual
+PartHolder attachment/cleanup. One World fixture checks actual equipped
+instances with intentionally misleading shared TES3 model/type projections,
+winning native model replacement, missing ArrowBone, zero ammunition, nonbow
+native type, missing Arrow:0 retaining the previous clone, repeated detach and
+scene removal without ammunition debit.
+
+Final normal and ASan/UBSan each pass971 full engine tests with exact inventories,
+no failures/skips and no emitted compiler warnings. Initial01 also passes971;
+the final02 fixture adds negative admission cases without changing production.
+Initial01 retains the existing GCC16 Character queue warning: implementation
+and header bytes match264. ASan leak checking is disabled, not leak coverage.
+Components/Python remain unchanged from262.
+
+The stock asset audit loads the original Iron Arrow through actual NIF and
+SceneManager code: seven source geometries, one selected Arrow:0 geometry,
+221 vertices, no quiver in the held clone and clean parent removal. Normal and
+sanitized final03 both pass, loading isolated original diffuse/normal textures
+without missing-image diagnostics. Mesh SHA256:
+35286b4cb6638d8de87d1a25fe1e5a677379172115fe43cd900d3f6330f53a63.
+Texture archive SHA256:
+d6e6a2155bea688052862df471c631e93572d525fb81b4358da328bd34760bd2.
+Inputs and their individual hashes are retained in held-arrow-stock-input-02/
+inputs.json. Proprietary extracted assets remain ignored evidence.
+
+Retain initial stock audit01 shader initialization failure, corrected by
+matching the actual headless engine shader setup. Intermediate02 passes
+geometry checks but reports a missing texture; final03 supplies hash-identified
+textures and checks that diagnostic is absent. Retain stock-input-01's metadata
+path-normalization failure; corrected02 verifies normalized extracted paths.
+Evidence lives under S5/held-arrow-geometry-{normal,sanitized}-02 and
+S5/native-held-arrow-assets-{normal,sanitized}-03.
+
+Tested fingerprint: 6734488639f413294e37fa7e1dbe753e3969b2074e0d167e97d62238d18f6d37
+
+This proves scene geometry selection/ownership and stock material loading,
+not graphics capture or normal-input first/third-person acceptance. Bow input,
+successful release resources, flight/impact/recovery/save, mastery and remaining
+M15 gameplay gates stay open. S5 remains in progress.

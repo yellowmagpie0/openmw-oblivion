@@ -1186,6 +1186,7 @@ namespace MWRender
 
     void NpcAnimation::showWeapons(bool showWeapon)
     {
+        detachOblivionArrow();
         mShowWeapons = showWeapon;
         mAmmunition.reset();
         if (showWeapon)
@@ -1283,6 +1284,11 @@ namespace MWRender
 
     void NpcAnimation::attachArrow()
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            attachOblivionArrow();
+            return;
+        }
         WeaponAnimation::attachArrow(mPtr);
 
         const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
@@ -1300,6 +1306,11 @@ namespace MWRender
 
     void NpcAnimation::detachArrow()
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            detachOblivionArrow();
+            return;
+        }
         WeaponAnimation::detachArrow(mPtr);
         updateQuiver();
     }

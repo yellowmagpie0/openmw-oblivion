@@ -103,8 +103,19 @@ namespace MWRender
         updateWeapon();
     }
 
+    void ESM4NpcAnimation::attachArrow()
+    {
+        attachOblivionArrow();
+    }
+
+    void ESM4NpcAnimation::detachArrow()
+    {
+        detachOblivionArrow();
+    }
+
     void ESM4NpcAnimation::updateWeapon()
     {
+        detachOblivionArrow();
         mWeaponParts.clear();
         mNodeMap.clear();
         mNodeMapCreated = false;

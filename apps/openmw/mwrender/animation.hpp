@@ -301,6 +301,10 @@ namespace MWRender
         // Rebind loaded KF tracks after equipment changes the model hierarchy.
         // Preserve playback and controllers for unchanged node/mask bindings.
         void refreshAnimationBindings();
+        bool attachOblivionArrow();
+        void detachOblivionArrow() noexcept;
+        PartHolderPtr mOblivionHeldArrow;
+
         // Empty input prepares the native model palette without registering a sequence.
         void bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences);
 
@@ -575,6 +579,7 @@ namespace MWRender
         /// A value < 1 makes the animation translucent, 1.f = fully opaque
         void setAlpha(float alpha);
         virtual void setPitchFactor(float factor) {}
+        bool hasOblivionHeldArrow() const noexcept { return bool(mOblivionHeldArrow); }
         virtual void attachArrow() {}
         virtual void detachArrow() {}
         virtual void releaseArrow(float attackStrength, float attackWindUp) {}

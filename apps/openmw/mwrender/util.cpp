@@ -15,6 +15,32 @@
 
 namespace MWRender
 {
+    osg::ref_ptr<osg::Node> cloneOblivionArrowGeometry(
+        const osg::Node& ammunition, Resource::SceneManager& sceneManager)
+    {
+        struct ArrowFinder : osg::NodeVisitor
+        {
+            const osg::Node* mArrow = nullptr;
+            ArrowFinder() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+            {
+                setTraversalMask(~0u);
+                setNodeMaskOverride(~0u);
+            }
+            void apply(osg::Node& node) override
+            {
+                if (mArrow)
+                    return;
+                if (node.getName() == "Arrow:0")
+                    mArrow = &node;
+                else
+                    traverse(node);
+            }
+        } finder;
+        // NodeVisitor traversal is read-only here; OSG accept lacks a const overload.
+        const_cast<osg::Node&>(ammunition).accept(finder);
+        return finder.mArrow ? sceneManager.getInstance(finder.mArrow) : nullptr;
+    }
+
     void hideOblivionWeaponScabbard(osg::Node& node)
     {
         struct ScabbardVisitor : osg::NodeVisitor

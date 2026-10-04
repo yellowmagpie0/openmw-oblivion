@@ -16,6 +16,7 @@ namespace osg
 namespace Resource
 {
     class ResourceSystem;
+    class SceneManager;
 }
 
 namespace MWRender
@@ -23,6 +24,11 @@ namespace MWRender
     // TES4 weapon meshes contain their sheath alongside the blade. Hide only
     // that geometry on the drawn instance, leaving the cached model intact.
     void hideOblivionWeaponScabbard(osg::Node& node);
+    // Clone only the native arrow shape, retaining its authored local transform.
+    // The ammunition model also contains its quiver and spare arrows.
+    osg::ref_ptr<osg::Node> cloneOblivionArrowGeometry(
+        const osg::Node& ammunition, Resource::SceneManager& sceneManager);
+
 
     // Overrides the texture of nodes in the mesh that had the same NiTexturingProperty as the first NiTexturingProperty
     // of the .NIF file's root node, if it had a NiTexturingProperty. Used for applying "particle textures" to magic

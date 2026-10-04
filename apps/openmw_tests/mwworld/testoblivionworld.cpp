@@ -8238,4 +8238,113 @@ namespace
         EXPECT_EQ(first->getUpdateCallback(), nullptr);
         EXPECT_EQ(animation->callbacks(), 0u);
     }
+
+    TEST(OblivionWorldTest, NativeHeldArrowReadsWinningAmmoModelAndNeverDebitsEquippedInstances)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); MWClass::Weapon::registerSelf(); world.setupPlayer();
+        const auto npc = addNativeNpc(fixture, 0x801);
+        const auto bowKey = ESM::FormKey::content("headless.esm", 0x940);
+        const auto ammoKey = ESM::FormKey::content("headless.esm", 0x941);
+        ESM4::Weapon bow{}; bow.mId = {0x940, 0}; bow.mData.type = 5; bow.mData.health = 100;
+        store.getWritable<ESM4::Weapon>().insertStatic(bow, bowKey);
+        ESM4::Ammunition ammo{}; ammo.mId = {0x941, 0}; ammo.mModel = "first.osgt";
+        store.getWritable<ESM4::Ammunition>().insertStatic(ammo, ammoKey);
+        for (unsigned id : {0x940u, 0x941u})
+        {
+            ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(ESM::FormId{id, 0});
+            shared.mData.mType = id == 0x940 ? ESM::Weapon::MarksmanCrossbow : ESM::Weapon::Arrow;
+            shared.mData.mHealth = 1; shared.mModel = "wrong-shared-model.nif";
+            store.insertStatic(shared);
+        }
+        std::filesystem::create_directories(fixture.mDirectory / "meshes");
+        for (const auto& [file, name] : {std::pair{"first.osgt", "first-arrow"},
+                 {"second.osgt", "second-arrow"}, {"missing.osgt", "not-the-arrow"}})
+        {
+            osg::ref_ptr<osg::Group> model = new osg::Group;
+            model->setName("ArrowQuiver");
+            osg::ref_ptr<osg::MatrixTransform> shape = new osg::MatrixTransform;
+            shape->setName(std::string_view(file) == "missing.osgt" ? "Arrow1:0" : "Arrow:0");
+            shape->setUserValue("fixture", std::string(name));
+            model->addChild(shape);
+            ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "meshes" / file).string()));
+        }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        class ArrowAnimation : public MWRender::Animation
+        {
+        public:
+            using Animation::Animation;
+            using Animation::attachOblivionArrow;
+            using Animation::detachOblivionArrow;
+            osg::ref_ptr<NifOsg::MatrixTransform> mBone;
+            void root()
+            {
+                mObjectRoot = new osg::Group; mInsert->addChild(mObjectRoot);
+                mBone = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+                mBone->setName("ArrowBone"); mObjectRoot->addChild(mBone);
+            }
+        };
+        for (const auto actor : {world.getPlayerPtr(), npc})
+        {
+            ammo.mModel = "first.osgt";
+            store.getWritable<ESM4::Ammunition>().insertStatic(ammo, ammoKey);
+            ESM4::RuntimeInventoryItem weapon; weapon.mBase = bowKey; weapon.mCount = 1;
+            weapon.mCondition = 50; weapon.mEquippedSlots = ESM4::InventorySlotWeapon;
+            ESM4::RuntimeInventoryItem arrows; arrows.mBase = ammoKey; arrows.mCount = 3;
+            arrows.mEquippedSlots = ESM4::InventorySlotAmmunition;
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {weapon, arrows});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            inventory.swapPreparedContents(*staged);
+            const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+            osg::ref_ptr<ArrowAnimation> animation = new ArrowAnimation(actor, new osg::Group, &fixture.mResources);
+            EXPECT_FALSE(animation->attachOblivionArrow()); // No ArrowBone.
+            animation->root();
+            equipped->getCellRef().setCount(0);
+            EXPECT_FALSE(animation->attachOblivionArrow()); // No ammunition to nock.
+            EXPECT_FALSE(animation->hasOblivionHeldArrow());
+            EXPECT_EQ(animation->mBone->getNumChildren(), 0u);
+            equipped->getCellRef().setCount(3);
+            bow.mData.type = 3;
+            store.getWritable<ESM4::Weapon>().insertStatic(bow, bowKey);
+            EXPECT_FALSE(animation->attachOblivionArrow()); // Shared crossbow type cannot override native WEAP.
+            EXPECT_FALSE(animation->hasOblivionHeldArrow());
+            bow.mData.type = 5;
+            store.getWritable<ESM4::Weapon>().insertStatic(bow, bowKey);
+            ASSERT_TRUE(animation->attachOblivionArrow());
+            ASSERT_TRUE(animation->hasOblivionHeldArrow());
+            ASSERT_EQ(animation->mBone->getNumChildren(), 1u);
+            osg::ref_ptr<osg::Node> old = animation->mBone->getChild(0);
+            EXPECT_EQ(old->getName(), "Arrow:0");
+            std::string marker; ASSERT_TRUE(old->getUserValue("fixture", marker)); EXPECT_EQ(marker, "first-arrow");
+            ammo.mModel = "second.osgt";
+            store.getWritable<ESM4::Ammunition>().insertStatic(ammo, ammoKey);
+            ASSERT_TRUE(animation->attachOblivionArrow());
+            EXPECT_EQ(old->getNumParents(), 0u);
+            ASSERT_EQ(animation->mBone->getNumChildren(), 1u);
+            ASSERT_TRUE(animation->mBone->getChild(0)->getUserValue("fixture", marker));
+            EXPECT_EQ(marker, "second-arrow");
+            EXPECT_EQ(equipped->getCellRef().getCount(), 3);
+            ammo.mModel = "missing.osgt";
+            store.getWritable<ESM4::Ammunition>().insertStatic(ammo, ammoKey);
+            EXPECT_FALSE(animation->attachOblivionArrow());
+            EXPECT_TRUE(animation->hasOblivionHeldArrow());
+            EXPECT_EQ(animation->mBone->getNumChildren(), 1u);
+            EXPECT_EQ(equipped->getCellRef().getCount(), 3);
+            animation->detachOblivionArrow();
+            animation->detachOblivionArrow(); // Repeated cancellation is harmless.
+            EXPECT_FALSE(animation->hasOblivionHeldArrow());
+            EXPECT_EQ(animation->mBone->getNumChildren(), 0u);
+            ammo.mModel = "second.osgt";
+            store.getWritable<ESM4::Ammunition>().insertStatic(ammo, ammoKey);
+            ASSERT_TRUE(animation->attachOblivionArrow());
+            animation->removeFromScene();
+            EXPECT_FALSE(animation->hasOblivionHeldArrow());
+            EXPECT_EQ(animation->mBone->getNumChildren(), 0u);
+            EXPECT_EQ(equipped->getCellRef().getCount(), 3);
+        }
+    }
 }

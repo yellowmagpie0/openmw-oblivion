@@ -26,6 +26,8 @@ namespace MWRender
         osg::Vec3f runAnimation(float timepassed) override;
         void refreshEquipment();
         void showWeapons(bool showWeapon) override;
+        void attachArrow() override;
+        void detachArrow() override;
 
     private:
         osg::ref_ptr<osg::Node> insertPart(
