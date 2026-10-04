@@ -3225,3 +3225,198 @@ namespace
         EXPECT_EQ(actor.captureNativeVelocityControllers()[1].mState.mClock.mPreviousTime, 0.f);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, FullDownSetupCreatesIndependentVelocityDurationAndNativeVector)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8; body.mLinearDamping = .1f;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0x1d, .25f, -.125f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        const auto before = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> requests{{{8, {1, -2, .5f}, .25f}}};
+        const auto result = actor.prepareNativeKnockdownControllerSetup(requests, {20000.f, 1.2f});
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0], NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+        const auto blend = actor.captureNativeBlendControllers()[0];
+        EXPECT_EQ(blend.mState.mTiming.mFlags, 0xddu);
+        EXPECT_EQ(blend.mState.mTiming.mStopKey, .25f);
+        EXPECT_EQ(blend.mState.mSetupState, 2u);
+        ASSERT_EQ(blend.mState.mKeys.size(), 2u);
+        const auto velocity = actor.captureNativeVelocityControllers();
+        ASSERT_EQ(velocity.size(), 1u);
+        EXPECT_EQ(velocity[0].mState.mTiming.mFlags, 0xdu);
+        EXPECT_EQ(velocity[0].mState.mTiming.mStopKey, 1.2f);
+        // Independent complete initial-PE-cache original8AB440 oracle03, case57, executable
+        // a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+        const std::array<std::uint32_t, 4> expected{1169771283, 3325643539, 1161382675, 1057279181};
+        for (unsigned i = 0; i < 4; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity[0].mState.mForceVector[i]), expected[i]);
+        EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+        EXPECT_EQ(actor.capture()[0].mAngularVelocity, before.mAngularVelocity);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mGains.mHierarchy, .9f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, FullDownSetupSkipsExistingVelocityCompletelyIncludingUnusedWorldVector)
+    {
+        addHinge(); auto& body = mGraph.mBodies[0]; body.mNodeRecord = 8; mGraph.mBodies[1].mNodeRecord = 20;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, .25f, -.125f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        ESM4::PhysicalVelocityControllerState velocity;
+        velocity.mTiming = {0xffff, 9.f, 8.f, 0.f, 6.f}; velocity.mClock = {5, 4, 3};
+        velocity.mForceVector = {2, -3, 4, 99}; velocity.mFrameDelta = 99;
+        const std::array<NifBullet::RagdollNativeVelocityControllerState, 1> existing{{{8, 20, velocity, false}}};
+        actor.restoreNativeVelocityControllers(existing);
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> requests{{{8, {bad, bad, bad}, .25f}}};
+        const auto result = actor.prepareNativeKnockdownControllerSetup(requests, {bad, bad});
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0], NifBullet::RagdollNativeKnockdownBlendDisposition::Started);
+        const auto after = actor.captureNativeVelocityControllers()[0];
+        EXPECT_EQ(after.mTargetNode, 20u); EXPECT_FALSE(after.mPrecedesBlend);
+        EXPECT_EQ(after.mState.mTiming.mFlags, 0xffffu);
+        EXPECT_EQ(after.mState.mTiming.mFrequency, 9.f); EXPECT_EQ(after.mState.mTiming.mPhase, 8.f);
+        EXPECT_EQ(after.mState.mTiming.mStartKey, 0.f); EXPECT_EQ(after.mState.mTiming.mStopKey, 6.f);
+        EXPECT_EQ(after.mState.mClock.mStartTime, 5.f); EXPECT_EQ(after.mState.mClock.mPreviousTime, 4.f);
+        EXPECT_EQ(after.mState.mClock.mElapsed, 3.f); EXPECT_EQ(after.mState.mFrameDelta, 99.f);
+        EXPECT_EQ(after.mState.mForceVector, velocity.mForceVector);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mSetupState, 2u);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, FullDownSetupRollsBackBothControllerKindsOnLateFailureBeforeWake)
+    {
+        addHinge(); auto& body = mGraph.mBodies[0]; body.mNodeRecord = 8;
+        mGraph.mBodies[1].mNodeRecord = 20;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, .25f, -.125f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        mGraph.mBodies[1].mBlend = NifBullet::RagdollBlendDefinition{31, 8, .7f, .6f};
+        mGraph.mBodies[1].mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            79, 20, 0xd, .25f, -.125f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(actor.collisionObjects()[1]);
+        first->setActivationState(ISLAND_SLEEPING); second->setActivationState(ISLAND_SLEEPING);
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const float max = std::numeric_limits<float>::max();
+        for (const auto& requests : std::array<std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 2>, 5>{{
+            {{{8, {1, 0, 0}, .25f}, {20, {bad, 0, 0}, .25f}}},
+            {{{8, {1, 0, 0}, .25f}, {20, {max, 0, 0}, .25f}}},
+            {{{8, {1, 0, 0}, .25f}, {20, {}, bad}}},
+            {{{8, {1, 0, 0}, .25f}, {8, {}, .25f}}},
+            {{{8, {1, 0, 0}, .25f}, {999, {}, .25f}}}}})
+        {
+            EXPECT_THROW(actor.prepareNativeKnockdownControllerSetup(requests, {20000.f, 1.2f}), std::invalid_argument);
+            EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mSetupState, 0u);
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mKeys.size(), 1u);
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mTiming.mFrequency, .25f);
+            EXPECT_FALSE(first->isActive()); EXPECT_FALSE(second->isActive());
+        }
+        EXPECT_TRUE(actor.prepareNativeKnockdownControllerSetup({}, {20000.f, 1.2f}).empty());
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 2> valid{{
+            {8, {1, 0, 0}, .25f}, {20, {}, 1.f}}};
+        ASSERT_EQ(actor.prepareNativeKnockdownControllerSetup(valid, {20000.f, 1.2f}).size(), 2u);
+        ASSERT_EQ(actor.captureNativeVelocityControllers().size(), 2u);
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[1].mState.mTiming.mStopKey, 1.2f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, FullDownSetupSkipsMissingAndDisabledBeforeUnusedInputs)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> unused{{{8, {bad, bad, bad}, bad}}};
+        {
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+            const auto result = actor.prepareNativeKnockdownControllerSetup(unused, {bad, bad});
+            ASSERT_EQ(result.size(), 1u);
+            EXPECT_EQ(result[0], NifBullet::RagdollNativeKnockdownBlendDisposition::MissingBlend);
+            EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+        }
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        {
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+            const auto result = actor.prepareNativeKnockdownControllerSetup(unused, {bad, bad});
+            ASSERT_EQ(result.size(), 1u);
+            EXPECT_EQ(result[0], NifBullet::RagdollNativeKnockdownBlendDisposition::MissingController);
+            EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+        }
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, .25f, -.125f, 0.f, .25f, {{.25f, 1.f, 1.f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> disabled{{{8, {bad, bad, bad}, -1.f}}};
+        ASSERT_EQ(actor.prepareNativeKnockdownControllerSetup(disabled, {bad, bad})[0],
+            NifBullet::RagdollNativeKnockdownBlendDisposition::Disabled);
+        EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mSetupState, 0u);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, FullDownSetupZeroDurationStillCreatesOnePointTwoVelocityController)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, 1.f, 1.f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> requests{{{8, {}, 0.f}}};
+        ASSERT_EQ(actor.prepareNativeKnockdownControllerSetup(requests, {20000.f, 1.2f}).size(), 1u);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mTiming.mStopKey, 0.f);
+        const auto velocity = actor.captureNativeVelocityControllers();
+        ASSERT_EQ(velocity.size(), 1u);
+        EXPECT_EQ(velocity[0].mState.mTiming.mStopKey, 1.2f);
+        EXPECT_EQ(velocity[0].mState.mForceVector, (std::array<float, 4>{}));
+    }
+    TEST_F(ActorRagdollPhysicsTest, FullDownSetupUsesResolvedSignedForceAndIndependentTime)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8; body.mLinearDamping = 0.f;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, 1.f, 1.f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {}};
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> requests{{{8, {1, -2, .5f}, .25f}}};
+        // Original settings-copy prefix and full normal leaf, oracle04.
+        {
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+            actor.prepareNativeKnockdownControllerSetup(requests, {-10.0f, 1.2f});
+            const auto velocity = actor.captureNativeVelocityControllers()[0];
+            EXPECT_EQ(velocity.mState.mTiming.mStopKey, 1.2f);
+            const std::array<std::uint32_t, 4> expected{3224822233u, 1085727193u, 3216433625u, 1056964608u};
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity.mState.mForceVector[i]), expected[i]);
+        }
+        {
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+            actor.prepareNativeKnockdownControllerSetup(requests, {0.125f, 2.0f});
+            const auto velocity = actor.captureNativeVelocityControllers()[0];
+            EXPECT_EQ(velocity.mState.mTiming.mStopKey, 2.0f);
+            const std::array<std::uint32_t, 4> expected{1024609863u, 3180482119u, 1016221255u, 1056964608u};
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity.mState.mForceVector[i]), expected[i]);
+        }
+        {
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+            actor.prepareNativeKnockdownControllerSetup(requests, {0.0f, 0.0f});
+            const auto velocity = actor.captureNativeVelocityControllers()[0];
+            EXPECT_EQ(velocity.mState.mTiming.mStopKey, 0.0f);
+            const std::array<std::uint32_t, 4> expected{0u, 2147483648u, 0u, 1056964608u};
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity.mState.mForceVector[i]), expected[i]);
+        }
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        const float bad = std::numeric_limits<float>::quiet_NaN();
+        const float huge = std::numeric_limits<float>::max();
+        for (const auto settings : std::array<NifBullet::RagdollNativePassOutSettings, 5>{{
+            {bad, 1.f}, {1.f, bad}, {1.f, -1.f}, {huge, 1.f}, {-huge, 1.f}}})
+        {
+            EXPECT_THROW(actor.prepareNativeKnockdownControllerSetup(requests, settings), std::invalid_argument);
+            EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mSetupState, 0u);
+            EXPECT_TRUE(actor.captureNativeBlendControllers()[0].mState.mKeys.empty());
+        }
+    }
+
+}

@@ -197,6 +197,20 @@ namespace NifBullet
         float mDuration;
     };
 
+    // Caller-resolved DEFAULT settings from BlendSettings.ini; no cached PE defaults.
+    struct RagdollNativePassOutSettings
+    {
+        float mForce;
+        float mTime;
+    };
+
+    struct RagdollNativeKnockdownControllerSetupRequest
+    {
+        std::uint32_t mNodeRecord;
+        osg::Vec3f mWorldVector;
+        float mDuration;
+    };
+
     enum class RagdollNativeKnockdownBlendDisposition
     {
         Started, MissingBlend, MissingController, Disabled,
@@ -278,6 +292,15 @@ namespace NifBullet
         // recursive scene traversal; those remain separate caller boundaries.
         void advanceNativePhysicalControllers(std::span<const RagdollNativeControllerReference> controllerOrder,
             float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache);
+        // Original normal8AB440 selected blend-controller/velocity setup.
+        // Caller resolves per-body Down duration and stored requested-motion
+        // synchronization first. A new velocity uses the resolved pass-out duration
+        // and native source-vector preparation; an existing one is untouched.
+        // Missing/disabled bodies skip unused inputs. Stage the complete batch.
+        // Immediate/nonblend/recursive entry, forces and World remain separate.
+        std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownControllerSetup(
+            std::span<const RagdollNativeKnockdownControllerSetupRequest> requests,
+            RagdollNativePassOutSettings settings);
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
         // Own authored controllers and current target gains. Resolve each
@@ -341,6 +364,9 @@ namespace NifBullet
             ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene);
+        std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownControllerSetupImpl(
+            std::span<const RagdollNativeKnockdownControllerSetupRequest> requests, bool includeVelocity,
+            RagdollNativePassOutSettings settings);
         void applyNativeForcesImpl(std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies);
         struct Impl;
         std::unique_ptr<Impl> mImpl;

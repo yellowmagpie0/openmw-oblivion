@@ -16802,3 +16802,70 @@ and vector preparation, independently of body Down curve duration. The public
 setup is generic8B8590; it does not silently impose that higher-level entry rule.
 Next: compound the normal controller setup from the full original leaf captures,
 then finish scene/World lifecycle and persistence integration.
+
+
+### Checkpoint210: compound normal Down setup with resolved pass-out settings
+
+Checkpoint209 committed as `f8161fe7bc14bd014193ccc71fa0887e0739db27`,
+206 isolated commits, exact-byte and fresh-clone proof. Bundle187 SHA256
+`4d095056de2d4292140f63e4ee88972af2319cd7e9fe3e92ad52adb2b9a990b7`.
+ActorRagdollPhysics now stages normal selected blend setup and optional new
+velocity attachment together. It preserves the existing blend-only boundary.
+Missing blend/controller and negative body Down duration skip unused inputs;
+unknown/ambiguous/duplicate nodes and late-invalid used inputs roll back both
+controller collections before wake or body mutation. Existing attached velocity
+is completely untouched, including target, list position, flags, clocks, vector
+and frame delta. New velocity targets its attachment node and precedes blend.
+
+Important correction to209's preliminary 'compiled1.2' claim: the full original
+initializer53AC14..53AC2C copies configured DEFAULT fPassOutForce/fPassOutTime
+from B11C0C/B11C04 to cached B2EC5C/B2EC60. The initial PE cache contains20000,
+but the identified setting default is -10; initial cached data is not initialized
+runtime configuration. The API therefore requires caller-resolved force/time,
+with finite signed force and supported nonnegative time, validated only for new
+velocity creation. Actual configuration import/winning override remains open.
+Body curve duration and pass-out velocity duration are independent, including
+zero. Original4707B0 stores each world XYZ product as binary32, then4529E0
+stores conversion with the separate .1428767293691635 constant. Generic8B8590
+mass/damping preparation follows. Source W retains the second blend key time
+from the native stack scratch, rather than source W or zero.
+
+The independent oracle04 executes the actual settings-copy prefix then full
+8AB440 normal blend leaf, including actual controller construction, lookup,
+attachment, owned-mass/damping preparation, Start and security-cookie return.
+15,360 cases cover both x87 control words, four existing-target states, body
+Down -1/0/.25/1, controller flags, two source vectors, two inverse masses/two
+damping values, configured force -10/0/.125/1/20000 and time0/.25/1.2/2.
+Only Windows critical-section/interlocked primitives and three allocation/free
+boundaries are stubbed. Executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+oracle source `943099a2fc2df423367ecb3cc544171cfaa31c40f2bc65a89f186797bb428c48`,
+corpus `8a2f44c9943caa07651b7084674d5b93cf3e1fb77ab5cf26cc1c9b75e39d4463`.
+The native stored requested-motion field is0 here, explicitly skipping conversion.
+88F040 uses that collision field and actual motion type; Down does not establish
+an unconditional Dynamic conversion. Immediate/nonblend/child recursion and
+force/activation/contact/World remain separate unverified boundaries.
+
+Initial-cache oracle01/02/03 captures remain evidence, not initialized-default
+proof.01's key-field read offsets were corrected in02.03 uses finite ordered
+existing-controller bounds admitted by owned restore (0/6 instead of unused
+native malformed7/6). Initial normal/sanitizer01 each passed2,356 components and
+899 engine tests but did not cover settings initialization; they do not close
+that gap. Placeholder baseline01 failed all five initial regression tests.
+Final02 adds explicit configured settings and signed/zero/fractional force/time
+cases, unused invalid settings, used invalid/overflow rollback; each normal and
+ASan+UBSan run passes2,357 components and899 engine tests, exact full inventories
+with no failures/skips. ASan leak detection disabled. Fingerprint `84da792c7d64d3d0c2622faf14338e0b69e82e6491c395d5f71f7cd42376d73d`.
+Each native comparator02 passes15,360 cases/528,960 exact fields, resolving native
+inverse mass from actual owned mass before every case. Each legacy blend-only
+comparator04 passes3,456 cases/62,496 exact fields after the common refactor.
+Eleven independent negative controls reject incorrect constants, reused-velocity
+restart, skipped blend setup, duration coupling, missing source conversion,
+zeroed fourth lane, wrong insertion/target and disabled/zero body behavior.
+
+No stage closes. Automatic World reactions, configured settings production,
+stored requested-motion synchronization, full scene/physical ordering and atomic
+publication, complete physical/controller/contact persistence and initial NPC
+morphology remain open. Retained BodyT/floor failures and all S5-S14 gates remain
+open. Next expose this compound setup through public worker barriers, then
+continue scene/World lifecycle and persistence integration.

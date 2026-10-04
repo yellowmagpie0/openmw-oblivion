@@ -1320,50 +1320,11 @@ namespace NifBullet
     std::vector<RagdollNativeKnockdownBlendDisposition> ActorRagdollPhysics::prepareNativeKnockdownBlends(
         std::span<const RagdollNativeKnockdownBlendRequest> requests)
     {
-        auto controllers = mImpl->mBlendControllers;
-        std::vector<RagdollNativeKnockdownBlendDisposition> result;
-        result.reserve(requests.size());
-        std::unordered_set<std::uint32_t> nodes;
+        std::vector<RagdollNativeKnockdownControllerSetupRequest> converted;
+        converted.reserve(requests.size());
         for (const auto& request : requests)
-        {
-            require(nodes.insert(request.mNodeRecord).second, "duplicate native knockdown setup node");
-            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
-                        [&](const auto& body) { return body.mNodeRecord == request.mNodeRecord; }) == 1,
-                "unknown or ambiguous native knockdown setup node");
-            const auto blend = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
-                [&](const auto& value) { return value.mNode == request.mNodeRecord; });
-            if (blend == mImpl->mBlendTargets.end())
-            {
-                result.push_back(RagdollNativeKnockdownBlendDisposition::MissingBlend);
-                continue;
-            }
-            const auto controller = std::find_if(controllers.begin(), controllers.end(),
-                [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
-            if (controller == controllers.end())
-            {
-                result.push_back(RagdollNativeKnockdownBlendDisposition::MissingController);
-                continue;
-            }
-            require(std::isfinite(request.mDuration), "nonfinite native knockdown setup duration");
-            if (request.mDuration < 0.f)
-            {
-                result.push_back(RagdollNativeKnockdownBlendDisposition::Disabled);
-                continue;
-            }
-            auto& state = controller->mState;
-            const auto setup = ESM4::preparePhysicalKnockdownBlend(
-                blend->mState.mGains, request.mDuration, 0.f, state.mTiming.mFlags, state.mClock);
-            state.mKeys.assign(setup.mKeys.begin(), setup.mKeys.end());
-            // Native insertion updates bounds, then8AB440 overwrites them.
-            state.mTiming = {setup.mControllerFlags, 1.f, 0.f, setup.mStartKey, setup.mStopKey};
-            state.mClock = setup.mClock;
-            state.mCursor = 0;
-            state.mCachedGains = {-1.f, -1.f};
-            state.mSetupState = 2;
-            result.push_back(RagdollNativeKnockdownBlendDisposition::Started);
-        }
-        mImpl->mBlendControllers.swap(controllers);
-        return result;
+            converted.push_back({request.mNodeRecord, {}, request.mDuration});
+        return prepareNativeKnockdownControllerSetupImpl(converted, false, {});
     }
 
     void ActorRagdollPhysics::prepareNativeVelocityControllers(
@@ -1537,6 +1498,91 @@ namespace NifBullet
         mImpl->mVelocityControllers.swap(velocities);
         mImpl->mBlendTargets.swap(targets);
         sharedTimeCache = cache;
+    }
+
+    std::vector<RagdollNativeKnockdownBlendDisposition> ActorRagdollPhysics::prepareNativeKnockdownControllerSetup(
+        std::span<const RagdollNativeKnockdownControllerSetupRequest> requests,
+        RagdollNativePassOutSettings settings)
+    {
+        return prepareNativeKnockdownControllerSetupImpl(requests, true, settings);
+    }
+
+    std::vector<RagdollNativeKnockdownBlendDisposition> ActorRagdollPhysics::prepareNativeKnockdownControllerSetupImpl(
+        std::span<const RagdollNativeKnockdownControllerSetupRequest> requests, bool includeVelocity,
+        RagdollNativePassOutSettings settings)
+    {
+        auto controllers = mImpl->mBlendControllers;
+        auto velocities = mImpl->mVelocityControllers;
+        std::vector<RagdollNativeKnockdownBlendDisposition> result;
+        result.reserve(requests.size());
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto& request : requests)
+        {
+            require(nodes.insert(request.mNodeRecord).second, "duplicate native knockdown setup node");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == request.mNodeRecord; }) == 1,
+                "unknown or ambiguous native knockdown setup node");
+            const auto blend = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+                [&](const auto& value) { return value.mNode == request.mNodeRecord; });
+            if (blend == mImpl->mBlendTargets.end())
+            {
+                result.push_back(RagdollNativeKnockdownBlendDisposition::MissingBlend);
+                continue;
+            }
+            const auto controller = std::find_if(controllers.begin(), controllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
+            if (controller == controllers.end())
+            {
+                result.push_back(RagdollNativeKnockdownBlendDisposition::MissingController);
+                continue;
+            }
+            require(std::isfinite(request.mDuration), "nonfinite native knockdown setup duration");
+            if (request.mDuration < 0.f)
+            {
+                result.push_back(RagdollNativeKnockdownBlendDisposition::Disabled);
+                continue;
+            }
+            auto& state = controller->mState;
+            const auto setup = ESM4::preparePhysicalKnockdownBlend(
+                blend->mState.mGains, request.mDuration, 0.f, state.mTiming.mFlags, state.mClock);
+            state.mKeys.assign(setup.mKeys.begin(), setup.mKeys.end());
+            // Native insertion updates bounds, then8AB440 overwrites them.
+            state.mTiming = {setup.mControllerFlags, 1.f, 0.f, setup.mStartKey, setup.mStopKey};
+            state.mClock = setup.mClock;
+            state.mCursor = 0;
+            state.mCachedGains = {-1.f, -1.f};
+            state.mSetupState = 2;
+            if (includeVelocity && std::none_of(velocities.begin(), velocities.end(),
+                    [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; }))
+            {
+                const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                    [&](const auto& value) { return value.mNodeRecord == request.mNodeRecord; });
+                require(std::isfinite(settings.mForce), "nonfinite native pass-out force");
+                require(std::isfinite(settings.mTime) && settings.mTime >= 0.f, "invalid native pass-out duration");
+                std::array<float, 4> source;
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    require(std::isfinite(request.mWorldVector[axis]), "nonfinite native Down world vector");
+                    // Original4707B0 binary32 products, then4529E0 stores with
+                    // the separately stored native world-to-length constant.
+                    const float scaled = float(double(request.mWorldVector[axis]) * double(settings.mForce));
+                    require(std::isfinite(scaled), "native Down world vector product overflow");
+                    source[axis] = float(double(scaled) * double(0.1428767293691635f));
+                    require(std::isfinite(source[axis]), "native Down vector conversion overflow");
+                }
+                // Original stack scratch retains the second blend key time in
+                // this fourth lane. Preserve it in the owned controller vector.
+                source[3] = request.mDuration;
+                const auto velocity = ESM4::preparePhysicalVelocityController(std::nullopt, source,
+                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)), owned->mLinearDamping);
+                velocities.push_back({request.mNodeRecord, request.mNodeRecord, velocity, true});
+            }
+            result.push_back(RagdollNativeKnockdownBlendDisposition::Started);
+        }
+        mImpl->mBlendControllers.swap(controllers);
+        if (includeVelocity)
+            mImpl->mVelocityControllers.swap(velocities);
+        return result;
     }
 
     std::vector<RagdollNativeBlendControllerState> ActorRagdollPhysics::captureNativeBlendControllers() const
