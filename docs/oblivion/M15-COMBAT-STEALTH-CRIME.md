@@ -17582,3 +17582,56 @@ verified; thread-start/allocation failure paths have not been exercised. No M15
 stage closes. Packed dynamic damping/caps, full raw motion/controller persistence,
 automatic collision-frame getter/ordering and World reaction integration, prior
 physical/runtime failures and S5-S14 acceptance remain open.
+
+
+### Checkpoint222: packed dynamic damping and motion caps
+
+Implemented a single four-lane dynamic velocity rule. It adds the supplied
+four-lane linear delta, applies native linear/angular damping, and scales all
+four lanes when the spatial linear or angular-step reduction admits a cap.
+Only XYZ participates in those reductions. The three-lane rule delegates with
+zero fourth inputs; the existing owned scheduler phase delegates with zero
+fourth deltas while retaining current owned fourth velocities. The unused
+angular half-step W is not computed or validated. Used packed values and stored
+results must remain finite within the declared supported domain.
+
+The owned packed phase stages every active Dynamic body and world projection
+before writing any velocity. KEY and sleeping bodies ignore unused deltas;
+pose, modes, force accumulation, collision objects and activation remain
+unchanged. Explicit standalone damping updates all four lanes of Dynamic bodies,
+including sleepers, without waking them; KEY retains its original values.
+It multiplies directly, preserving negative zero when its damping factor is zero.
+Four new tests fail the retained packed-dynamic-velocity-baseline-01 before
+implementation. They cover independent original cap outputs, used-invalid W,
+late invalid batch rollback, inactive unused-invalid deltas, legacy phase joining,
+standalone signed zero, pose/modes and sleeping retention.
+
+Original native-packed-dynamic-velocity-oracle-01 passes34,560 complete sphere
+8E96C0/box8EAFF0 motion calls with actual889470/4D6830/8B1DD0 and no stubbed
+calls. Executable SHA256 remains the pinned original. Probe source SHA256
+`62ca1d3dbbc10a7e9dd10d6565388e923cc36397f7a2affcbe01b199943d33ad`;
+corpus `05534719046a03d539d40e1cc5a4f2526c3cbbdb8ad199015f26201b4091752b`.
+Fixtures independently vary linearW/angularW/deltaW, both x87 control words,
+frames0/1/120/.016/.05/.5, damping0/2, linear limits1/250, angular limits1/31.4159,
+spatial zero/subnormal/large velocities and zero/gravity deltas. StepInfo values
+and raw angular-limit fields are explicit fixtures, not proved World producers.
+Final pose/cache captures are recorded by the full return. Captured controls
+find1,920 groups of18 W variants with bit-identical final origin/center/rotation/
+angular-delta fields. This proves independence only within those fixtures.
+
+Actual production normal/sanitized native-packed-dynamic-velocity-compare-01
+both pass34,560 pure cases and17,280 owned factory-linear-limit250 cases,
+449,280 exact field checks including admission indicators, no mismatches.
+Owned scales1/7/native alternate, with shape/proxy, pose/mode/forces/activation
+retention and collision-object removal checked. Original box cases use the same
+owned sphere velocity phase, which does not inspect shape. Raw linear limit1
+is pure-only because admitted loaded bodies have limit250. Frame0 is a direct
+phase fixture, not an engine World-step acceptance case. All eight velocity
+outputs match bit-for-bit; no tolerances or inputs were changed after comparison.
+Full packed-dynamic-velocity-normal/sanitized-01 each passes2,390 component and
+899 engine tests, exact inventories, zero failures/skips. ASan leak checks remain
+disabled. Python unchanged. Tested source fingerprint `a13eaae5180816a3e12325b3693891726fd6d76759f02ed305247cff14f27f03`.
+
+No M15 stage closes. Full packed/raw motion and controller persistence, actual
+World getter/clock/collision-frame ordering, automatic reactions, retained native
+activation/contact/save failures and all S5-S14 gameplay acceptance remain open.

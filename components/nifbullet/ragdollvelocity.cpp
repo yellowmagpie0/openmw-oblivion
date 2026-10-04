@@ -345,31 +345,43 @@ namespace NifBullet
         return {linearDamping, angularDamping, 250.f, maxAngularVelocity};
     }
 
-    RagdollNativeVelocities ragdollNativeVelocityStep(const RagdollNativeVelocities& input,
-        const RagdollMotionLimits& limits, float frameSeconds, const osg::Vec3f& linearDelta)
+    ESM4::PhysicalWorldSceneVelocities ragdollNativePackedVelocityStep(
+        const ESM4::PhysicalWorldSceneVelocities& input, const RagdollMotionLimits& limits,
+        float frameSeconds, const std::array<float, 4>& linearDelta)
     {
         coefficient(frameSeconds);
         coefficient(limits.mLinearDamping);
         coefficient(limits.mAngularDamping);
         coefficient(limits.mMaxLinearVelocity);
         coefficient(limits.mAngularLimit);
-        finite(input.mLinear);
-        finite(input.mAngular);
-        finite(linearDelta);
+        const auto validate = [](const std::array<float, 4>& values) {
+            for (float value : values)
+                if (!std::isfinite(value))
+                    throw std::invalid_argument("Nonfinite native packed motion velocity");
+        };
+        validate(input.mLinear);
+        validate(input.mAngular);
+        validate(linearDelta);
         auto result = input;
-        for (unsigned i = 0; i < 3; ++i)
+        for (unsigned i = 0; i < 4; ++i)
             result.mLinear[i] += linearDelta[i];
-        finite(result.mLinear);
-        multiply(result.mLinear, float(std::max(0.0, 1.0 - double(frameSeconds) * limits.mLinearDamping)));
-        multiply(result.mAngular, float(std::max(0.0, 1.0 - double(frameSeconds) * limits.mAngularDamping)));
-        const float linearSquared = squaredLength(result.mLinear);
+        validate(result.mLinear);
+        const auto scale = [&](std::array<float, 4>& values, float factor) {
+            for (float& value : values)
+                value *= factor;
+            validate(values);
+        };
+        scale(result.mLinear, float(std::max(0.0, 1.0 - double(frameSeconds) * limits.mLinearDamping)));
+        scale(result.mAngular, float(std::max(0.0, 1.0 - double(frameSeconds) * limits.mAngularDamping)));
+        const float linearSquared = squaredLength(
+            osg::Vec3f(result.mLinear[0], result.mLinear[1], result.mLinear[2]));
         if (linearSquared > double(limits.mMaxLinearVelocity) * limits.mMaxLinearVelocity)
-            multiply(result.mLinear, float(double(limits.mMaxLinearVelocity) / std::sqrt(double(linearSquared))));
+            scale(result.mLinear, float(double(limits.mMaxLinearVelocity) / std::sqrt(double(linearSquared))));
 
-        auto angularStep = result.mAngular;
+        // Reduction is spatial; packed stores scale all four lanes. The unused
+        // angular half-step W must not introduce an extra overflow condition.
+        osg::Vec3f angularStep(result.mAngular[0], result.mAngular[1], result.mAngular[2]);
         multiply(angularStep, float(double(frameSeconds) * .5));
-        // Original constants and stores. Angular admission is expressed in
-        // fractions of pi; its maximum step is the binary32 constant 0.9.
         const float angularSquared = float(double(squaredLength(angularStep)) * 0.40528470277786255f);
         if (!std::isfinite(angularSquared))
             throw std::invalid_argument("Native motion angular step overflow");
@@ -377,7 +389,19 @@ namespace NifBullet
             double(0.8999999761581421f));
         const float maximumSquared = float(maximum * maximum);
         if (angularSquared > maximumSquared)
-            multiply(result.mAngular, float(maximum / std::sqrt(double(angularSquared))));
+            scale(result.mAngular, float(maximum / std::sqrt(double(angularSquared))));
         return result;
+    }
+
+    RagdollNativeVelocities ragdollNativeVelocityStep(const RagdollNativeVelocities& input,
+        const RagdollMotionLimits& limits, float frameSeconds, const osg::Vec3f& linearDelta)
+    {
+        const ESM4::PhysicalWorldSceneVelocities packed{
+            {input.mLinear[0], input.mLinear[1], input.mLinear[2], 0.f},
+            {input.mAngular[0], input.mAngular[1], input.mAngular[2], 0.f}};
+        const auto result = ragdollNativePackedVelocityStep(packed, limits, frameSeconds,
+            {linearDelta[0], linearDelta[1], linearDelta[2], 0.f});
+        return {osg::Vec3f(result.mLinear[0], result.mLinear[1], result.mLinear[2]),
+            osg::Vec3f(result.mAngular[0], result.mAngular[1], result.mAngular[2])};
     }
 }

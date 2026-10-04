@@ -4,6 +4,7 @@
 #include <osg/Vec3f>
 #include <optional>
 #include <array>
+#include <components/esm4/physicalsceneworld.hpp>
 
 namespace NifBullet
 {
@@ -75,6 +76,13 @@ namespace NifBullet
     // unchanged into motion+B8. This is not the general motion factory policy.
     RagdollMotionLimits ragdollLoadedMotionLimits(float linearDamping, float angularDamping,
         float maxLinearVelocity, float maxAngularVelocity);
+
+    // Full packed velocity stores; squared reductions use XYZ, while delta,
+    // damping and selected cap stores affect all four lanes. Explicit native
+    // linear delta; World/transform/activation preparation remains caller-owned.
+    ESM4::PhysicalWorldSceneVelocities ragdollNativePackedVelocityStep(
+        const ESM4::PhysicalWorldSceneVelocities& input, const RagdollMotionLimits& limits,
+        float frameSeconds, const std::array<float, 4>& linearDelta);
 
     // Original sphere/box-motion velocity stores, in native units: the supplied
     // velocity delta precedes damping, linear speed and angular rotation caps.

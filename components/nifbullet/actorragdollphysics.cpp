@@ -2017,40 +2017,47 @@ namespace NifBullet
         target.applyImpulse(impulse, worldPoint - target.getCenterOfMassPosition());
     }
 
+    void ActorRagdollPhysics::applyNativePackedVelocityStep(float frameSeconds,
+        std::span<const std::array<float, 4>> nativeLinearDeltas)
+    {
+        require(nativeLinearDeltas.size() == mImpl->mBodies.size(), "velocity delta count");
+        require(std::isfinite(frameSeconds) && frameSeconds >= 0, "invalid frame duration");
+        const auto states = captureNativePackedVelocities();
+        struct Pending
+        {
+            Impl::Body* mOwned;
+            ESM4::PhysicalWorldSceneVelocities mNative;
+            std::pair<btVector3, btVector3> mWorld;
+        };
+        std::vector<Pending> pending;
+        pending.reserve(states.size());
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+            auto& owned = mImpl->mBodies[i];
+            // Sleeping islands and KEY bodies do not consume dynamic deltas.
+            if (owned.mMotion != RagdollNativeMotion::Dynamic || !owned.mBody->isActive())
+                continue;
+            const auto output = ragdollNativePackedVelocityStep(states[i].mVelocities,
+                owned.mLimits, frameSeconds, nativeLinearDeltas[i]);
+            pending.push_back({&owned, output, packedWorldVelocity(output, mImpl->mLengthScale)});
+        }
+        for (const auto& next : pending)
+        {
+            next.mOwned->mBody->setLinearVelocity(next.mWorld.first);
+            next.mOwned->mBody->setAngularVelocity(next.mWorld.second);
+            next.mOwned->mNativeLinearW = next.mNative.mLinear[3];
+            next.mOwned->mNativeAngularW = next.mNative.mAngular[3];
+        }
+    }
+
     void ActorRagdollPhysics::applyNativeVelocityStep(float frameSeconds,
         std::span<const osg::Vec3f> nativeLinearDeltas)
     {
-        require(nativeLinearDeltas.size() == mImpl->mBodies.size(), "velocity delta count");
-        auto states = capture();
-        for (std::size_t i = 0; i < states.size(); ++i)
-        {
-            RagdollNativeVelocities input;
-            for (unsigned axis = 0; axis < 3; ++axis)
-            {
-                input.mLinear[axis] = float(states[i].mLinearVelocity[axis] / mImpl->mLengthScale);
-                input.mAngular[axis] = float(states[i].mAngularVelocity[axis]);
-            }
-            const auto output = ragdollNativeVelocityStep(input, mImpl->mBodies[i].mLimits,
-                frameSeconds, nativeLinearDeltas[i]);
-            for (unsigned axis = 0; axis < 3; ++axis)
-            {
-                states[i].mLinearVelocity[axis] = btScalar(output.mLinear[axis]) * mImpl->mLengthScale;
-                states[i].mAngularVelocity[axis] = output.mAngular[axis];
-            }
-            require(finite(states[i].mLinearVelocity) && finite(states[i].mAngularVelocity),
-                "velocity exceeds world domain");
-        }
-        for (std::size_t i = 0; i < states.size(); ++i)
-        {
-            // Native sleeping islands do not enter motion integration. Do not
-            // accumulate gravity or wake a settled body without an impulse.
-            if (mImpl->mBodies[i].mMotion == RagdollNativeMotion::Dynamic
-                && mImpl->mBodies[i].mBody->isActive())
-            {
-                mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
-                mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
-            }
-        }
+        std::vector<std::array<float, 4>> packed;
+        packed.reserve(nativeLinearDeltas.size());
+        for (const auto& delta : nativeLinearDeltas)
+            packed.push_back({delta[0], delta[1], delta[2], 0.f});
+        applyNativePackedVelocityStep(frameSeconds, packed);
     }
 
     void ActorRagdollPhysics::stepNativeKeyframedMotion(float frameSeconds)
@@ -2183,32 +2190,35 @@ namespace NifBullet
     void ActorRagdollPhysics::applyNativeDamping(float frameSeconds)
     {
         require(std::isfinite(frameSeconds) && frameSeconds >= 0, "invalid frame duration");
-        auto states = capture();
+        auto states = captureNativePackedVelocities();
+        std::vector<std::pair<btVector3, btVector3>> pending(states.size());
         for (std::size_t i = 0; i < states.size(); ++i)
         {
-            if (mImpl->mBodies[i].mMotion != RagdollNativeMotion::Dynamic)
+            const auto& owned = mImpl->mBodies[i];
+            if (owned.mMotion != RagdollNativeMotion::Dynamic)
                 continue;
-            const auto damp = [&](btVector3& velocity, float coefficient, btScalar scale) {
-                const float factor = static_cast<float>(std::max(0.0, 1.0 - double(frameSeconds) * coefficient));
-                for (int axis = 0; axis < 3; ++axis)
+            const auto damp = [&](std::array<float, 4>& velocity, float coefficient) {
+                const float factor = float(std::max(0.0, 1.0 - double(frameSeconds) * coefficient));
+                for (float& value : velocity)
                 {
-                    const float native = static_cast<float>(velocity[axis] / scale);
-                    require(std::isfinite(native), "velocity exceeds native float domain");
-                    const float result = native * factor;
-                    velocity[axis] = btScalar(result) * scale;
+                    require(std::isfinite(value), "velocity exceeds native float domain");
+                    value *= factor;
                 }
             };
-            damp(states[i].mLinearVelocity, mImpl->mBodies[i].mLinearDamping, mImpl->mLengthScale);
-            // Angular velocity is radians/time, independent of length units.
-            damp(states[i].mAngularVelocity, mImpl->mBodies[i].mAngularDamping, btScalar(1));
+            damp(states[i].mVelocities.mLinear, owned.mLinearDamping);
+            damp(states[i].mVelocities.mAngular, owned.mAngularDamping);
+            pending[i] = packedWorldVelocity(states[i].mVelocities, mImpl->mLengthScale);
         }
-        // Damping changes velocity only; retain the live contact/activation state.
+        // Explicit damping also updates sleepers, without changing activation.
         for (std::size_t i = 0; i < states.size(); ++i)
         {
-            if (mImpl->mBodies[i].mMotion != RagdollNativeMotion::Dynamic)
+            auto& owned = mImpl->mBodies[i];
+            if (owned.mMotion != RagdollNativeMotion::Dynamic)
                 continue;
-            mImpl->mBodies[i].mBody->setLinearVelocity(states[i].mLinearVelocity);
-            mImpl->mBodies[i].mBody->setAngularVelocity(states[i].mAngularVelocity);
+            owned.mBody->setLinearVelocity(pending[i].first);
+            owned.mBody->setAngularVelocity(pending[i].second);
+            owned.mNativeLinearW = states[i].mVelocities.mLinear[3];
+            owned.mNativeAngularW = states[i].mVelocities.mAngular[3];
         }
     }
 }

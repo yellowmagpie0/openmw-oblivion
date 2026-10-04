@@ -3976,3 +3976,91 @@ namespace
         EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
     }
 }
+
+namespace
+{
+    TEST(RagdollNativePackedVelocityStep, MatchesOriginalDampingAndCapsAcrossAllLanes)
+    {
+        const ESM4::PhysicalWorldSceneVelocities input{{1000, -2000, 3000, 8}, {1000, -2000, 3000, 8}};
+        const NifBullet::RagdollMotionLimits limits{2, 2, 250, 31.4159f};
+        const auto result = NifBullet::ragdollNativePackedVelocityStep(
+            input, limits, .016f, {0, 0, -1.1772000789642334f, 8});
+        // Original sphere/box packed corpus case20122, captured independently.
+        EXPECT_EQ(result.mLinear[0], 66.83216857910156f);
+        EXPECT_EQ(result.mLinear[3], 1.06931471824646f);
+        EXPECT_EQ(result.mAngular[0], 26.377605438232422f);
+        EXPECT_EQ(result.mAngular[3], .2110208421945572f);
+    }
+
+    TEST(RagdollNativePackedVelocityStep, RejectsUsedInvalidPackedInputAndDelta)
+    {
+        ESM4::PhysicalWorldSceneVelocities input{};
+        const NifBullet::RagdollMotionLimits limits{2, 2, 250, 31.4159f};
+        input.mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollNativePackedVelocityStep(input, limits, .016f, {}), std::invalid_argument);
+        input.mAngular[3] = 0;
+        EXPECT_THROW(NifBullet::ragdollNativePackedVelocityStep(input, limits, .016f,
+            {0, 0, 0, std::numeric_limits<float>::infinity()}), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PackedDynamicStepStagesAllLanesAndSkipsInactiveDeltas)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        const std::array key{NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(key);
+        auto states = actor.captureNativePackedVelocities();
+        states[0].mVelocities = {{1, 2, 3, 4}, {5, 6, 7, 8}};
+        states[1].mVelocities = {{9, 10, 11, 12}, {13, 14, 15, 16}};
+        actor.restoreNativePackedVelocities(states);
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const std::array<std::array<float, 4>, 2> deltas{{{0, 0, 0, 8}, {nan, nan, nan, nan}}};
+        const auto pose = actor.capture()[0].mPose;
+        actor.applyNativePackedVelocityStep(.5f, deltas);
+        auto actual = actor.captureNativePackedVelocities();
+        EXPECT_EQ(actual[0].mVelocities.mLinear, (std::array<float, 4>{}));
+        EXPECT_EQ(actual[0].mVelocities.mAngular, (std::array<float, 4>{}));
+        EXPECT_EQ(actual[1].mVelocities.mLinear, states[1].mVelocities.mLinear);
+        EXPECT_EQ(actual[1].mVelocities.mAngular, states[1].mVelocities.mAngular);
+        EXPECT_EQ(actor.capture()[0].mPose, pose);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]); first->forceActivationState(ISLAND_SLEEPING);
+        const std::array<std::array<float, 4>, 2> unused{{{nan, nan, nan, nan}, {nan, nan, nan, nan}}};
+        EXPECT_NO_THROW(actor.applyNativePackedVelocityStep(.016f, unused));
+        EXPECT_EQ(first->getActivationState(), ISLAND_SLEEPING);
+        const std::array dynamic{NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Dynamic}};
+        actor.setNativeMotionModes(dynamic);
+        actor.restoreNativePackedVelocities(states); first->activate(true);
+        const std::array<std::array<float, 4>, 2> invalid{{{0, 0, 0, 8}, {0, 0, 0, nan}}};
+        EXPECT_THROW(actor.applyNativePackedVelocityStep(.016f, invalid), std::invalid_argument);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, states[0].mVelocities.mLinear);
+        EXPECT_THROW(actor.applyNativePackedVelocityStep(.016f, {}), std::invalid_argument);
+        const std::array<osg::Vec3f, 2> spatialDelta{};
+        actor.applyNativeVelocityStep(.5f, spatialDelta);
+        actual = actor.captureNativePackedVelocities();
+        EXPECT_EQ(actual[0].mVelocities.mLinear[3], 0.f);
+        EXPECT_EQ(actual[0].mVelocities.mAngular[3], 0.f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PackedStandaloneDampingRetainsModesPoseActivationAndSignedZero)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        const std::array key{NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(key);
+        auto states = actor.captureNativePackedVelocities();
+        states[0].mVelocities = {{1, 2, 3, -8}, {5, 6, 7, -8}};
+        states[1].mVelocities = {{9, 10, 11, 12}, {13, 14, 15, 16}};
+        actor.restoreNativePackedVelocities(states);
+        auto* first = btRigidBody::upcast(actor.collisionObjects()[0]); first->forceActivationState(ISLAND_SLEEPING);
+        const auto pose = actor.capture()[0].mPose;
+        actor.applyNativeDamping(.25f);
+        auto actual = actor.captureNativePackedVelocities();
+        EXPECT_EQ(actual[0].mVelocities.mLinear[3], -4.f); EXPECT_EQ(actual[0].mVelocities.mAngular[3], -4.f);
+        EXPECT_EQ(actual[1].mVelocities.mLinear, states[1].mVelocities.mLinear);
+        EXPECT_EQ(actual[1].mVelocities.mAngular, states[1].mVelocities.mAngular);
+        EXPECT_EQ(first->getActivationState(), ISLAND_SLEEPING); EXPECT_EQ(actor.capture()[0].mPose, pose);
+        actor.applyNativeDamping(.5f); actual = actor.captureNativePackedVelocities();
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[0].mVelocities.mLinear[3]), 0x80000000u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[0].mVelocities.mAngular[3]), 0x80000000u);
+    }
+}
