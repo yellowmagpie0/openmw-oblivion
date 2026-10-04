@@ -3657,3 +3657,46 @@ namespace
         EXPECT_EQ(restored[1].mGains.mVelocity, states[1].mGains.mVelocity);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, IndependentRequestedFrameSkipsConversionWhenStoredRequestMatches)
+    {
+        auto& definition = mGraph.mBodies[0]; definition.mNodeRecord = 8;
+        definition.mBlend = NifBullet::RagdollBlendDefinition{30, 8, 1.f, 1.f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto states = actor.captureNativeBlendStates(); states[0].mRequestedMotion = 6;
+        actor.restoreNativeBlendStates(states);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->setLinearVelocity({1, 2, 3}); body->setAngularVelocity({4, 5, 6});
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{{12, osg::Matrixf::translate(0, 0, 5), 1.f, 1.f, 8}}};
+        const auto result = actor.updateNativeBlends(updates, .016f, 0, 0.f);
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(result[0].mCollisionFlags, 8u);
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(1, 2, 3));
+        EXPECT_EQ(body->getAngularVelocity(), btVector3(4, 5, 6));
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 6u);
+        // Original89EAE0 selects8A3900 for actual Dynamic motion. With no
+        // native World/authority binding that setter preserves the body pose.
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), mPoses[0].getOrigin());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, IndependentRequestedFrameTransitionsMetadataEvenWhenActualModeMatches)
+    {
+        auto& definition = mGraph.mBodies[0]; definition.mNodeRecord = 8;
+        definition.mBlend = NifBullet::RagdollBlendDefinition{30, 0, 0.f, 0.f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]);
+        body->setLinearVelocity({1, 2, 3}); body->setAngularVelocity({4, 5, 6});
+        const std::array<NifBullet::RagdollNativeBlendUpdate, 1> updates{{{12, osg::Matrixf::identity(), 0.f, 0.f, 0}}};
+        const auto result = actor.updateNativeBlends(updates, .016f, 0, 0.f);
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0].mCollisionFlags, 8u);
+        EXPECT_EQ(body->getLinearVelocity(), btVector3(0, 0, 0));
+        EXPECT_EQ(body->getAngularVelocity(), btVector3(0, 0, 0));
+        const auto state = actor.captureNativeBlendStates()[0];
+        EXPECT_EQ(state.mRequestedMotion, 1u); EXPECT_EQ(state.mCollisionFlags, 8u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+    }
+}

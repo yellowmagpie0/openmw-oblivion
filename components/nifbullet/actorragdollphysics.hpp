@@ -277,8 +277,9 @@ namespace NifBullet
         // Normal selected-controller setup only. Duration is resolved by the
         // caller from the native body filter. Stage the complete request batch;
         // read attachment-node gains independently of controller target identity.
-        // Missing controllers are skipped. Motion/velocity effects, immediate
-        // setup, recursive traversal and shared frame clocks remain with caller.
+        // Synchronize stored requested motion before missing/disabled handling.
+        // Generated velocity setup, immediate branches, recursive traversal and
+        // shared frame clocks remain separate.
         std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownBlends(
             std::span<const RagdollNativeKnockdownBlendRequest> requests);
         // Atomic owned setup for already admitted body nodes and Down durations.

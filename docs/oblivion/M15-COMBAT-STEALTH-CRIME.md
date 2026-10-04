@@ -17218,3 +17218,76 @@ No stage closes. Next couple independent requested/actual modes in frame
 publication and reconcile legacy/manual metadata updates. Automatic World
 lifecycle, full physical/contact/controller persistence, configuration/morphology,
 recursive ordering, retained BodyT/floor failures and S5-S14 remain open.
+
+
+### Checkpoint216: independent collision request and actual mode in frame updates
+
+Checkpoint215 committed as `9d6aab88abd9795c9a912c2a3d9b75b68b20b5bc`,
+212 isolated commits; bundle193 SHA256
+`9aca235ab1bfb1be10c65f9d7aeb55bfc7734670beb00bb6d850709216cc5398`.
+Owned collision frame dispatch now compares the previous stored request with the
+new selected request, as88F484 does. Equal requests preserve an inconsistent
+actual mode. Changed requests zero velocities when the previous request is not6;
+previous request6 synchronizes before conversion. The original admitted Dynamic
+archive getter returns2, distinct from requested Dynamic1: its setter/flags and
+activation path can run without a Dynamic/KEY handoff. Actual KEY6 already equal
+to requested6 skips setter flags. This archive-type2 evidence does not establish
+arbitrary unmodeled native Dynamic subtypes or zero-mass admission.
+
+Manual updateNativeBlends now stages owned collision gains/flags/request metadata
+with physical candidates, including skipped selector inputs retaining requested
+motion. Scene hooks run before body and metadata publication. Owned controller
+frames retain their staged gain/clock/request publication and rollback. Bodies
+without owned blend targets retain the earlier explicit body-update contract;
+they do not acquire synthetic collision state. Updated the legacy normalDown
+header to describe215's synchronization and wrapped the staged damping argument.
+
+Independent original full88F3D0 oracle01:5,760 cases, eight prior scene inputs
+across both x87 words, independent actual Dynamic type2/KEY6 and stored
+0/1/6/8/FFFFFFFF, selectors/gains/flags. Source SHA256
+`d0641aad1b473222d1abd0af8ae9885fa3d7c9a06c55974604ab64358fbc9181`,
+corpus `9299b5fe15a614b8a5ebfba7d2a6d178d83b81faadcc8f59632fc3fe43dea24e`.
+Only Windows and native heap primitive boundaries; full original constructors,
+archive/restore and scene/velocity setter paths execute. Body's native World
+pointer is null.89EAE0 chooses8A3900 for actual Dynamic; that setter returns when
+World or World+2B0 authority is absent. This owner models that no-native-World
+boundary and preserves Dynamic pose, rather than applying the KEY direct pose
+setter. Actual KEY uses the direct setter before/after appropriate conversion.
+Live World-driven8A3900 behavior and flag20-without40 remain open. A Bullet World
+borrowed by the owner is not proof of a resolved original World authority.
+
+Canonical original/C++ comparison retains172's predeclared53-bit domain and
+unchanged tolerances: scene/position/velocity.001, quaternion1e-6. Baseline normal
+comparison fails2,016/2,880 cases. Two new unit tests fail baseline02; baseline01
+first failed compilation due to a nonexistent named unit-conversion constant.
+Initial implementation passes full normal/sanitized01 (2,371 components and899
+engine each), but its original comparison fails224 cases: old request6 with
+actual Dynamic incorrectly received a direct pose write. Original89EAE0/8A3900
+inspection establishes the distinct no-World return. Corrected production setter
+selection and the unit test's original incorrect pose expectation; retain all
+failed evidence. Final full normal/sanitized02 each pass2,371 components and899
+engine, exact inventories, no failure/skip. Fingerprint `7ae3f328451d27642ad23c84a7ebe183fdd761271a52382d8da6951af20bb031`. ASan leaks
+disabled; Python unchanged. Final comparisons each pass2,880 cases/25,920 exact
+checks; max scene/linear/angular errors0, position.000058675159, quaternion
+.000000028951562. Six original captured controls pass over all5,760 cases.
+
+S4 evidence: native-independent-requested-motion-frame-oracle-01;
+native-independent-frame-compare-normal-baseline, normal-01, normal/sanitized-02;
+independent-requested-frame-baseline-01/02, normal/sanitized-01/02;
+independent-requested-frame-controls-01. No relaxed thresholds or missing cases
+in the declared canonical domain. Emulator arithmetic is not game acceptance.
+
+Follow-up full original8A3900 World-bound probes:01 fails after24 cases because
+KEY conversion cleared body+91, enabling an unprepared activation traversal;
+02 sets activation suppression after conversion and passes72 cases, but its
+XYZW fixture inputs actually enter a WXYZ argument boundary.03 corrects the
+input labels/order and passes72 cases with explicit nonnull World+2B0 authority,
+Dynamic/KEY, frame0/.016/1/120, position and rotation. Source SHA256
+`36421399f3e9797b1220dbc7bdaad2a9907d81c13033af1ddd29ce43ebce1443`,
+corpus `a53b93194ff14b8c0fcb9e7e363f074edd2bf703f8224320116c000f0c1eb2fc`.
+No live World authority producer or contact step is proved; this is next-chunk
+input. Original executable hash remains the pinned1.2.0416 image.
+No stage closes. Next implement and independently compare the World-bound scene
+setter, then wire its actual owner/World authority. Automatic reaction lifetime,
+recursive ordering, full controller/contact persistence, morphology/configuration,
+retained BodyT/floor failures and S5-S14 remain open.

@@ -1218,9 +1218,11 @@ namespace NifBullet
             Impl::Body* mOwned;
             RagdollNativeMotion mMotion;
             bool mChanged;
+            bool mActivate;
             std::optional<btTransform> mPose;
             std::optional<std::pair<btVector3, btVector3>> mVelocities;
         };
+        auto collisionTargets = mImpl->mBlendTargets;
         std::vector<Pending> pending;
         std::vector<RagdollNativeBlendPublication> result;
         pending.reserve(updates.size());
@@ -1234,12 +1236,29 @@ namespace NifBullet
             require(found != mImpl->mBodies.end(), "unknown native blend body identity");
             const auto dispatch = ESM4::resolvePhysicalBlendDispatch(update.mHierarchyGain,
                 update.mVelocityGain, update.mCollisionFlags, rawUpdateSelector);
+            const auto collision = std::find_if(collisionTargets.begin(), collisionTargets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == update.mRecord; });
+            const bool hasCollision = collision != collisionTargets.end();
+            if (hasCollision)
+            {
+                collision->mState.mGains = {update.mHierarchyGain, update.mVelocityGain};
+                collision->mState.mCollisionFlags = update.mCollisionFlags;
+            }
             if (!dispatch)
                 continue;
-            const auto motion = dispatch->mMotion == ESM4::PhysicalBlendMotion::Keyframed
+            const auto selectedMotion = dispatch->mMotion == ESM4::PhysicalBlendMotion::Keyframed
                 ? RagdollNativeMotion::Keyframed : RagdollNativeMotion::Dynamic;
-            const bool changed = found->mMotion != motion;
-            Pending change{&*found, motion, changed, std::nullopt, std::nullopt};
+            // Original88F484 compares stored collision request, independently
+            // of the actual body mode. A matching request skips conversion even
+            // when an external body-mode change has made them disagree.
+            const auto previousRequest = hasCollision ? collision->mState.mRequestedMotion
+                : static_cast<std::uint32_t>(found->mMotion);
+            const bool requestChanged = previousRequest != static_cast<std::uint32_t>(selectedMotion);
+            const bool changed = requestChanged && found->mMotion != selectedMotion;
+            const auto motion = changed ? selectedMotion : found->mMotion;
+            Pending change{&*found, motion, changed,
+                hasCollision && requestChanged && selectedMotion == RagdollNativeMotion::Dynamic,
+                std::nullopt, std::nullopt};
             auto& body = *found->mBody;
             auto centerPose = body.getWorldTransform();
             auto shapePose = centerPose * found->mCenterFrame.inverse();
@@ -1252,8 +1271,14 @@ namespace NifBullet
 
             // Leaving keyframed motion synchronizes scene before restoring the
             // dynamic archive. Entering keyframed motion zeroes velocities first.
-            const bool sync = (changed && found->mMotion == RagdollNativeMotion::Keyframed)
-                || dispatch->mRoute == ESM4::PhysicalBlendRoute::SceneToPhysics;
+            // Before conversion89EAE0 chooses its setter using actual motion.
+            // After conversion, the SceneToPhysics route repeats that choice.
+            // Dynamic uses8A3900, whose no-native-World/authority case is a no-op;
+            // this owner currently admits that boundary, not its World drive.
+            const bool sync = (requestChanged && previousRequest == 6
+                    && found->mMotion == RagdollNativeMotion::Keyframed)
+                || (dispatch->mRoute == ESM4::PhysicalBlendRoute::SceneToPhysics
+                    && motion == RagdollNativeMotion::Keyframed);
             if (sync)
             {
                 // Flag0x20 without0x40 selects the distinct native World-driven
@@ -1270,15 +1295,31 @@ namespace NifBullet
             const auto scenePhysical = ragdollNativeSceneTargetFromBodyPose(physical, found->mSceneOffset);
             auto linear = body.getLinearVelocity();
             auto angular = body.getAngularVelocity();
-            if (changed && found->mMotion == RagdollNativeMotion::Dynamic)
+            if (requestChanged && previousRequest != 6)
             {
                 linear.setZero();
                 angular.setZero();
                 change.mVelocities = std::pair{linear, angular};
             }
             auto flags = update.mCollisionFlags;
-            if (changed)
+            if (hasCollision && requestChanged)
+            {
+                // Admitted native Dynamic archive type2 differs from requested
+                // Dynamic1, so89ED20 runs its setter/flag path even without an
+                // actual Dynamic/KEY handoff. A KEY6 getter already equal to6
+                // skips that setter and preserves the flags.
+                if (selectedMotion == RagdollNativeMotion::Dynamic)
+                    flags |= 0x8;
+                else if (found->mMotion == RagdollNativeMotion::Dynamic)
+                    flags &= ~0x8;
+            }
+            else if (!hasCollision && changed)
                 flags = motion == RagdollNativeMotion::Keyframed ? flags & ~0x8 : flags | 0x8;
+            if (hasCollision)
+            {
+                collision->mState.mRequestedMotion = static_cast<std::uint32_t>(selectedMotion);
+                collision->mState.mCollisionFlags = flags;
+            }
             RagdollNativeBlendPublication publication{update.mRecord, flags, std::nullopt};
             if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PhysicsToScene)
                 publication.mSceneTarget = ragdollBoneWorldFromNativePose(scenePhysical);
@@ -1339,9 +1380,10 @@ namespace NifBullet
                 body.setLinearVelocity(change.mVelocities->first);
                 body.setAngularVelocity(change.mVelocities->second);
             }
-            if (change.mChanged || change.mPose || change.mVelocities)
+            if (change.mActivate || change.mChanged || change.mPose || change.mVelocities)
                 mImpl->activateGroup(owned.mActivationGroup);
         }
+        mImpl->mBlendTargets.swap(collisionTargets);
         return result;
     }
 
@@ -1618,7 +1660,8 @@ namespace NifBullet
                 // this fourth lane. Preserve it in the owned controller vector.
                 source[3] = request.mDuration;
                 const auto velocity = ESM4::preparePhysicalVelocityController(std::nullopt, source,
-                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)), preparedMotion == RagdollNativeMotion::Keyframed ? 0.f : owned->mLinearDamping);
+                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)),
+                    preparedMotion == RagdollNativeMotion::Keyframed ? 0.f : owned->mLinearDamping);
                 velocities.push_back({request.mNodeRecord, request.mNodeRecord, velocity, true});
             }
             result.push_back(RagdollNativeKnockdownBlendDisposition::Started);
