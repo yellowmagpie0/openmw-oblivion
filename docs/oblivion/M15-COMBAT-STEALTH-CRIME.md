@@ -18011,3 +18011,64 @@ position and shared cache persistence are next. Renderer-global Ni ordering/cach
 raw COM/time/quaternion/cache, activation/contact continuation, automatic World
 reaction/getter/frame/save wiring, retained physical/restart failures and S5-S14
 acceptance remain required. Existing display information remains pending.
+
+
+### Checkpoint230: complete owned controller and physical restore transaction
+
+Added complete authored blend-controller and generated velocity-controller spans
+to the physical pose/packed/mode/blend restoration transaction. Both controller
+vectors are allocated/validated before the existing physical handoffs; successful
+publication only swaps their prepared buffers. Authored record count/uniqueness
+and winning attachment must match the existing owned controller set. Nullable
+cross-target nodes remain independent of attachment and record; complete input
+can be in another order and resolves back to the existing authored order.
+Raw uint16 flags, finite timing/clock sentinels, ordered duplicate-time keys,
+unclamped cached gains, cursor and opaque uint32 setup state are preserved. Raw
+finite reversed bounds remain restorable (e.g. a missing-target/inactive native
+controller); active clock admission remains separate. Empty/single-key cursors
+are retained; the supported multi-key cursor must be below key-count minus one.
+Generated restoration reuses the existing unchanged finite/vector/ordered-timing/
+owned-attachment validation; nullable target, per-node head/tail position and
+clock/delta are retained. An empty generated set clears it in a complete snapshot.
+Shared clock caches remain with the runtime authority, outside this owner API.
+Bullet-internal handoff allocation failure injection remains unexercised; complete
+owned validation/buffering occurs before any physical publication.
+
+All3 complete-controller-restore-baseline-01 tests execute and fail. Final tests
+preserve bit patterns, duplicate keys, sentinels/cursors/setup, reversed raw bounds,
+record/attachment/target independence and per-node list position; late incomplete/
+duplicate/unknown/mismatched authored identities, targets, timing/clock/cache/key/
+cursor and generated target/vector/clock/delta inputs reject before pose/mode,
+force/sleep, old controller or raw blend metadata changes.60 explicit physical
+controller phases compare fresh and uninterrupted owners, their retained cursor/
+clock progression, generated list state and all packed force output bits; the
+first phase explicitly checks elapsed2, previous12 and duplicate-time cursor2.
+Both owners share an unstepped Bullet world; this is not a World/contact test,
+serialized restart, renderer-global traversal/cache or original-game continuation.
+
+Actual native-complete-controller-restore-compare-normal/sanitized-01 each
+passes110,592 original196 full8AAD60 controller outputs through complete owned
+restoration,1,216,512 exact captured fields: target/cached gain pairs, key count,
+three clocks, cursor, flags and generated-controller presence. Original fixture
+keys are supplied unchanged or cleared using captured key count; their contents
+are inputs, not new post-return getters. Node/record mapping, logical Dynamic,
+zero packed velocity, setup0/2/FFFFFFFF and generated head/tail are declared
+software snapshot inputs, separately checked. Original shared-cache capture is
+not restored by this owner API. Original196 source/corpus SHA256
+`3ec989bec3eb2bd6bcb736a7dc6aa97ce9ee77d02c2b4dab09364145ea9e6713`,
+`2cb20ee115136cf16a269a1c7939d2fa0adb721d0b02992447f178ae5e6e6c71`;
+its full-clock/evaluator/reset/stop/list execution and declared Windows/interlocked
+boundary remain unchanged. No new original next-phase/save/World/contact claim.
+Comparator source/corpus/binary/archive and source fingerprint hashes are recorded.
+
+Full complete-controller-restore-normal/sanitized-01 each passes2,405 component
+tests, exact inventories, zero failures/skips and no new compiler warnings. ASan
+leaks disabled. No new engine caller/Python format yet; the controller codec and
+scheduler bridge will carry accumulated integration verification. Tested source
+fingerprint `d30e018ca9919ab1f3bd7c70e3e141053cd075332f41b4bafdd93066cd61a8a5`.
+
+No M15 gate closes. Versioned controller fields and shared physical clock-cache
+save boundaries, actual scheduler/World capture/restore, renderer-global Ni order/
+cache, raw COM/time/quaternion/cache, activation/contact continuation, automatic
+World reactions/getters/frame, retained physical/restart failures and S5-S14
+acceptance remain required. Existing display information remains pending.

@@ -4277,3 +4277,191 @@ namespace
         EXPECT_THROW(actor.restore(spatial, packed, motions, std::span<const NifBullet::RagdollNativeBlendState>{}), std::invalid_argument); check();
     }
 }
+
+
+namespace
+{
+    std::vector<std::uint32_t> savedBlendControllerWords(const NifBullet::RagdollNativeBlendControllerState& controller)
+    {
+        const auto& state = controller.mState; const auto& t = state.mTiming; const auto& c = state.mClock;
+        const auto bits = [](float value) { return std::bit_cast<std::uint32_t>(value); };
+        std::vector<std::uint32_t> result{controller.mRecord, controller.mTargetNode.has_value(),
+            controller.mTargetNode.value_or(0), controller.mAttachedNode, t.mFlags,
+            bits(t.mFrequency), bits(t.mPhase), bits(t.mStartKey), bits(t.mStopKey),
+            bits(c.mStartTime), bits(c.mPreviousTime), bits(c.mElapsed), state.mCursor,
+            bits(state.mCachedGains.mHierarchy), bits(state.mCachedGains.mVelocity), state.mSetupState,
+            static_cast<std::uint32_t>(state.mKeys.size())};
+        for (const auto& key : state.mKeys)
+            for (float value : {key.mTime, key.mGains.mHierarchy, key.mGains.mVelocity}) result.push_back(bits(value));
+        return result;
+    }
+
+    std::vector<std::uint32_t> savedVelocityControllerWords(const NifBullet::RagdollNativeVelocityControllerState& controller)
+    {
+        const auto& state = controller.mState; const auto& t = state.mTiming; const auto& c = state.mClock;
+        const auto bits = [](float value) { return std::bit_cast<std::uint32_t>(value); };
+        std::vector<std::uint32_t> result{controller.mAttachedNode, controller.mTargetNode.has_value(),
+            controller.mTargetNode.value_or(0), controller.mPrecedesBlend, t.mFlags,
+            bits(t.mFrequency), bits(t.mPhase), bits(t.mStartKey), bits(t.mStopKey),
+            bits(c.mStartTime), bits(c.mPreviousTime), bits(c.mElapsed), bits(state.mFrameDelta)};
+        for (float value : state.mForceVector) result.push_back(bits(value));
+        return result;
+    }
+
+    struct CompleteControllerRestoreTest : ActorRagdollPhysicsTest
+    {
+        CompleteControllerRestoreTest()
+        {
+            mGraph.mBodies[0].mNodeRecord = 8;
+            mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+            mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{
+                78, 8, 0xd, 1, 0, 0, 4, {}};
+            addHinge(); mGraph.mBodies[1].mNodeRecord = 20;
+            mGraph.mBodies[1].mBlend->mRecord = 31;
+            mGraph.mBodies[1].mBlendController->mRecord = 79;
+            mGraph.mBodies[1].mBlendController->mTargetRecord = 20;
+        }
+        std::vector<NifBullet::RagdollNativeBlendControllerState> savedBlendControllers(
+            const NifBullet::ActorRagdollPhysics& actor)
+        {
+            auto controllers = actor.captureNativeBlendControllers(); auto& state = controllers[0].mState;
+            state.mTiming = {0xd, 1, -0.f, 0, 4}; state.mClock = {10, 11, 1};
+            state.mKeys = {{0, {1, 0}}, {1, {.5f, .5f}}, {1, {.25f, .75f}}, {4, {0, 1}}};
+            state.mCursor = 1; state.mCachedGains = {-0.f, -2}; state.mSetupState = 0xffffffffu;
+            controllers[1].mTargetNode.reset(); controllers[1].mState.mCursor = 0xffffffffu;
+            // Finite reversed raw bounds on a missing-target controller are
+            // retained; no active clock is advanced for that unused target.
+            controllers[1].mState.mTiming = {0xffff, -1, -0.f, 1, -1};
+            return controllers;
+        }
+        std::vector<NifBullet::RagdollNativeVelocityControllerState> savedVelocityControllers()
+        {
+            ESM4::PhysicalVelocityControllerState state;
+            state.mTiming = {0xd, 1, -0.f, 0, 4}; state.mClock = {10, 11, 1};
+            state.mForceVector = {1, 2, 3, 8}; state.mFrameDelta = .016f;
+            auto missing = state; missing.mTiming.mFlags = 0; missing.mClock = {};
+            missing.mClock.mElapsed = -0.f; missing.mForceVector = {-0.f, 0, 0, -0.f}; missing.mFrameDelta = 0;
+            return {{8, 20, state, false}, {20, std::nullopt, missing, true}};
+        }
+    };
+
+    TEST_F(CompleteControllerRestoreTest, RestoresControllerFieldsAndPerNodeListPositionWithBodyState)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto spatial = actor.capture(); spatial[0].mPose.setOrigin({1, 2, 3});
+        auto packed = actor.captureNativePackedVelocities(); packed[0].mVelocities = {{1, 2, 3, 8}, {4, 5, 6, -0.f}};
+        auto modes = actor.captureNativeMotionModes(); modes[0].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+        const auto blends = actor.captureNativeBlendStates(); const auto controls = savedBlendControllers(actor);
+        const auto velocities = savedVelocityControllers();
+        auto reversed = controls; std::reverse(reversed.begin(), reversed.end());
+        actor.restore(spatial, packed, modes, blends, reversed, velocities);
+        const auto actual = actor.captureNativeBlendControllers(); ASSERT_EQ(actual.size(), controls.size());
+        for (std::size_t i = 0; i < controls.size(); ++i)
+            EXPECT_EQ(savedBlendControllerWords(actual[i]), savedBlendControllerWords(controls[i]));
+        const auto actualVelocity = actor.captureNativeVelocityControllers(); ASSERT_EQ(actualVelocity.size(), velocities.size());
+        for (std::size_t i = 0; i < velocities.size(); ++i)
+            EXPECT_EQ(savedVelocityControllerWords(actualVelocity[i]), savedVelocityControllerWords(velocities[i]));
+        const std::array<std::uint32_t, 2> nodes{8, 20};
+        const std::vector<NifBullet::RagdollNativeControllerReference> order{
+            {NifBullet::RagdollNativeControllerKind::Blend, 78}, {NifBullet::RagdollNativeControllerKind::Velocity, 8},
+            {NifBullet::RagdollNativeControllerKind::Velocity, 20}, {NifBullet::RagdollNativeControllerKind::Blend, 79}};
+        EXPECT_EQ(actor.captureNativeControllerOrder(nodes), order);
+        EXPECT_EQ(actor.captureNativeMotionModes(), modes); EXPECT_EQ(actor.capture()[0].mPose, spatial[0].mPose);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear[3], 8);
+    }
+
+    TEST_F(CompleteControllerRestoreTest, RejectsLateControllerDataBeforePhysicalOrMetadataPublication)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto original = actor.capture(); const auto originalModes = actor.captureNativeMotionModes();
+        const auto originalControls = actor.captureNativeBlendControllers(); const auto blends = actor.captureNativeBlendStates();
+        auto spatial = original; spatial[0].mPose.setOrigin({1, 2, 3});
+        auto packed = actor.captureNativePackedVelocities(); packed[0].mVelocities.mLinear[3] = 8;
+        auto modes = originalModes; modes[0].mMotion = NifBullet::RagdollNativeMotion::Keyframed;
+        const auto controls = savedBlendControllers(actor); const auto velocities = savedVelocityControllers();
+        auto* body = btRigidBody::upcast(actor.collisionObjects()[0]); body->applyCentralForce({1, 2, 3});
+        body->forceActivationState(ISLAND_SLEEPING);
+        const auto check = [&] {
+            EXPECT_EQ(actor.capture()[0].mPose, original[0].mPose); EXPECT_EQ(actor.captureNativeMotionModes(), originalModes);
+            EXPECT_EQ(body->getTotalForce(), btVector3(1, 2, 3)); EXPECT_EQ(body->getActivationState(), ISLAND_SLEEPING);
+            EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+            const auto actual = actor.captureNativeBlendControllers(); ASSERT_EQ(actual.size(), originalControls.size());
+            for (std::size_t i = 0; i < actual.size(); ++i)
+                EXPECT_EQ(savedBlendControllerWords(actual[i]), savedBlendControllerWords(originalControls[i]));
+            EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, blends[0].mRequestedMotion);
+        };
+        for (unsigned field = 0; field < 11; ++field)
+        {
+            auto invalid = controls; auto& late = invalid[1];
+            switch (field)
+            {
+                case 0: invalid.pop_back(); break;
+                case 1: late.mRecord = invalid[0].mRecord; break;
+                case 2: late.mRecord = 999; break;
+                case 3: late.mAttachedNode = 8; break;
+                case 4: late.mTargetNode = 999; break;
+                case 5: late.mState.mTiming.mFrequency = std::numeric_limits<float>::infinity(); break;
+                case 6: late.mState.mClock.mElapsed = std::numeric_limits<float>::quiet_NaN(); break;
+                case 7: late.mState.mCachedGains.mVelocity = std::numeric_limits<float>::quiet_NaN(); break;
+                case 8: late.mState.mKeys = {{2, {0, 0}}, {1, {0, 0}}}; late.mState.mCursor = 0; break;
+                case 9: late.mState.mKeys = {{1, {0, 0}}, {2, {0, std::numeric_limits<float>::infinity()}}}; late.mState.mCursor = 0; break;
+                case 10: late.mState.mKeys = {{1, {0, 0}}, {2, {0, 0}}}; late.mState.mCursor = 1; break;
+            }
+            SCOPED_TRACE(field); EXPECT_THROW(actor.restore(spatial, packed, modes, blends, invalid, velocities), std::invalid_argument); check();
+        }
+        for (unsigned field = 0; field < 5; ++field)
+        {
+            auto invalid = velocities;
+            switch (field)
+            {
+                case 0: invalid[1].mAttachedNode = 8; break;
+                case 1: invalid[1].mTargetNode = 999; break;
+                case 2: invalid[1].mState.mClock.mElapsed = std::numeric_limits<float>::quiet_NaN(); break;
+                case 3: invalid[1].mState.mForceVector[3] = std::numeric_limits<float>::infinity(); break;
+                case 4: invalid[1].mState.mFrameDelta = -1; break;
+            }
+            SCOPED_TRACE(field); EXPECT_THROW(actor.restore(spatial, packed, modes, blends, controls, invalid), std::invalid_argument); check();
+        }
+    }
+
+    TEST_F(CompleteControllerRestoreTest, FreshOwnerContinuesSavedControllerClocksCursorAndPackedForces)
+    {
+        NifBullet::ActorRagdollPhysics original(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto spatial = original.capture(); const auto packed = original.captureNativePackedVelocities();
+        const auto modes = original.captureNativeMotionModes(); const auto blends = original.captureNativeBlendStates();
+        const auto controls = savedBlendControllers(original); const auto velocities = savedVelocityControllers();
+        original.restore(spatial, packed, modes, blends, controls, velocities);
+        NifBullet::ActorRagdollPhysics resumed(mGraph, mWorld, 1, mPoses, 1, -1);
+        resumed.restore(spatial, packed, modes, blends, controls, velocities);
+        const std::array<std::uint32_t, 2> nodes{8, 20};
+        const auto order = original.captureNativeControllerOrder(nodes);
+        ESM4::PhysicalBlendTimeCache originalCache, resumedCache;
+        for (unsigned frame = 0; frame < 60; ++frame)
+        {
+            const float time = 12.f + float(frame) * .016f;
+            original.advanceNativePhysicalControllers(order, time, originalCache);
+            resumed.advanceNativePhysicalControllers(order, time, resumedCache);
+            const auto expected = original.captureNativeBlendControllers(); const auto actual = resumed.captureNativeBlendControllers();
+            ASSERT_EQ(actual.size(), expected.size());
+            for (std::size_t i = 0; i < actual.size(); ++i)
+                EXPECT_EQ(savedBlendControllerWords(actual[i]), savedBlendControllerWords(expected[i]));
+            const auto expectedVelocity = original.captureNativeVelocityControllers(); const auto actualVelocity = resumed.captureNativeVelocityControllers();
+            ASSERT_EQ(actualVelocity.size(), expectedVelocity.size());
+            for (std::size_t i = 0; i < actualVelocity.size(); ++i)
+                EXPECT_EQ(savedVelocityControllerWords(actualVelocity[i]), savedVelocityControllerWords(expectedVelocity[i]));
+            const auto expectedPacked = original.captureNativePackedVelocities(); const auto actualPacked = resumed.captureNativePackedVelocities();
+            for (std::size_t i = 0; i < actualPacked.size(); ++i)
+                for (unsigned lane = 0; lane < 4; ++lane)
+                {
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actualPacked[i].mVelocities.mLinear[lane]), std::bit_cast<std::uint32_t>(expectedPacked[i].mVelocities.mLinear[lane]));
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actualPacked[i].mVelocities.mAngular[lane]), std::bit_cast<std::uint32_t>(expectedPacked[i].mVelocities.mAngular[lane]));
+                }
+            if (frame == 0)
+            {
+                EXPECT_EQ(actual[0].mState.mClock.mElapsed, 2.f); EXPECT_EQ(actual[0].mState.mCursor, 2u);
+                EXPECT_EQ(actual[0].mState.mClock.mPreviousTime, 12.f);
+                EXPECT_EQ(actualVelocity.size(), 2u);
+            }
+        }
+    }
+}

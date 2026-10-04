@@ -294,6 +294,14 @@ namespace NifBullet
             std::span<const RagdollNativePackedVelocityState> packedVelocities,
             std::span<const RagdollNativeMotionRequest> motions,
             std::span<const RagdollNativeBlendState> blends);
+        // Complete physical and owned controller state; shared clock caches
+        // remain with the runtime authority that supplies each controller phase.
+        void restore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities,
+            std::span<const RagdollNativeMotionRequest> motions,
+            std::span<const RagdollNativeBlendState> blends,
+            std::span<const RagdollNativeBlendControllerState> blendControllers,
+            std::span<const RagdollNativeVelocityControllerState> velocityControllers);
         // Native units, including both packed fourth lanes. XYZ comes from the
         // current body; fourth lanes have separate owned binary32 storage.
         std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;
@@ -425,6 +433,10 @@ namespace NifBullet
     private:
         void validateRestore(std::span<const RagdollBodyState> states) const;
         void validateNativeBlendStates(std::span<const RagdollNativeBlendState> states) const;
+        std::vector<RagdollNativeBlendControllerState> prepareNativeBlendControllerRestore(
+            std::span<const RagdollNativeBlendControllerState> controllers) const;
+        std::vector<RagdollNativeVelocityControllerState> prepareNativeVelocityControllerRestore(
+            std::span<const RagdollNativeVelocityControllerState> controllers) const;
         void publishRestore(std::span<const RagdollBodyState> states);
         std::vector<RagdollBodyState> preparePackedRestore(std::span<const RagdollBodyState> states,
             std::span<const RagdollNativePackedVelocityState> packedVelocities) const;

@@ -1266,6 +1266,22 @@ namespace NifBullet
         mImpl->mBlendTargets.swap(targets);
     }
 
+    void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities,
+        std::span<const RagdollNativeMotionRequest> motions,
+        std::span<const RagdollNativeBlendState> blends,
+        std::span<const RagdollNativeBlendControllerState> blendControllers,
+        std::span<const RagdollNativeVelocityControllerState> velocityControllers)
+    {
+        auto authored = prepareNativeBlendControllerRestore(blendControllers);
+        auto generated = prepareNativeVelocityControllerRestore(velocityControllers);
+        // All controller storage and validation precede the physical handoffs.
+        // Successful publication only swaps these already prepared buffers.
+        restore(states, packedVelocities, motions, blends);
+        mImpl->mBlendControllers.swap(authored);
+        mImpl->mVelocityControllers.swap(generated);
+    }
+
     std::vector<std::uint32_t> ActorRagdollPhysics::synchronizeNativeWorldScenes(
         std::span<const RagdollNativeWorldSceneRequest> requests,
         const std::function<void(std::span<const std::uint32_t>)>& beforePublish)
@@ -1627,8 +1643,8 @@ namespace NifBullet
         return mImpl->mVelocityControllers;
     }
 
-    void ActorRagdollPhysics::restoreNativeVelocityControllers(
-        std::span<const RagdollNativeVelocityControllerState> controllers)
+    std::vector<RagdollNativeVelocityControllerState> ActorRagdollPhysics::prepareNativeVelocityControllerRestore(
+        std::span<const RagdollNativeVelocityControllerState> controllers) const
     {
         std::vector<RagdollNativeVelocityControllerState> next(controllers.begin(), controllers.end());
         std::unordered_set<std::uint32_t> nodes;
@@ -1655,7 +1671,58 @@ namespace NifBullet
                         [](float value) { return std::isfinite(value); }),
                 "invalid native velocity restore vector");
         }
+        return next;
+    }
+
+    void ActorRagdollPhysics::restoreNativeVelocityControllers(
+        std::span<const RagdollNativeVelocityControllerState> controllers)
+    {
+        auto next = prepareNativeVelocityControllerRestore(controllers);
         mImpl->mVelocityControllers.swap(next);
+    }
+
+    std::vector<RagdollNativeBlendControllerState> ActorRagdollPhysics::prepareNativeBlendControllerRestore(
+        std::span<const RagdollNativeBlendControllerState> controllers) const
+    {
+        require(controllers.size() == mImpl->mBlendControllers.size(), "incomplete native authored controller snapshot");
+        auto next = mImpl->mBlendControllers;
+        std::unordered_set<std::uint32_t> selected;
+        const auto validNode = [&](std::uint32_t node) {
+            return std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mNodeRecord == node; }) == 1;
+        };
+        for (const auto& controller : controllers)
+        {
+            require(selected.insert(controller.mRecord).second, "duplicate native authored controller record");
+            const auto target = std::find_if(next.begin(), next.end(),
+                [&](const auto& value) { return value.mRecord == controller.mRecord; });
+            require(target != next.end(), "unknown native authored controller record");
+            require(controller.mAttachedNode == target->mAttachedNode, "native authored controller attachment mismatch");
+            require(!controller.mTargetNode || validNode(*controller.mTargetNode),
+                "unknown or ambiguous native authored controller target");
+            const auto& state = controller.mState;
+            require(std::isfinite(state.mTiming.mFrequency) && std::isfinite(state.mTiming.mPhase)
+                    && std::isfinite(state.mTiming.mStartKey) && std::isfinite(state.mTiming.mStopKey),
+                "invalid native authored controller timing");
+            require(std::isfinite(state.mClock.mStartTime) && std::isfinite(state.mClock.mPreviousTime)
+                    && std::isfinite(state.mClock.mElapsed)
+                    && std::isfinite(state.mCachedGains.mHierarchy) && std::isfinite(state.mCachedGains.mVelocity),
+                "invalid native authored controller clock or cached gains");
+            require(state.mKeys.size() <= std::numeric_limits<std::uint32_t>::max()
+                    && (state.mKeys.size() < 2 || state.mCursor < state.mKeys.size() - 1),
+                "invalid native authored controller key count or cursor");
+            for (std::size_t i = 0; i < state.mKeys.size(); ++i)
+            {
+                const auto& key = state.mKeys[i];
+                require(std::isfinite(key.mTime) && std::isfinite(key.mGains.mHierarchy) && std::isfinite(key.mGains.mVelocity)
+                        && (i == 0 || state.mKeys[i - 1].mTime <= key.mTime),
+                    "invalid native authored controller key or order");
+            }
+            // Keep raw bounds/flags/cursor/setup; loading and inactive native
+            // states need not satisfy the admission for an active clock tick.
+            *target = controller;
+        }
+        return next;
     }
 
     std::vector<RagdollNativeControllerReference> ActorRagdollPhysics::captureNativeControllerOrder(
