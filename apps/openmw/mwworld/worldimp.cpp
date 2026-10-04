@@ -365,7 +365,11 @@ namespace MWWorld
     {
         if (mPhysics)
             throw std::logic_error("World physics is already initialized");
-        mPhysics = std::make_unique<MWPhysics::PhysicsSystem>(mResourceSystem, rootNode);
+        auto physics = std::make_unique<MWPhysics::PhysicsSystem>(mResourceSystem, rootNode);
+        if (mGameProfile == ESM::GameProfile::Oblivion && mOblivionRuntimeState
+            && mOblivionRuntimeState->mNativePhysicalBlendTimeCache)
+            physics->restoreNativeBlendTimeCache(*mOblivionRuntimeState->mNativePhysicalBlendTimeCache);
+        mPhysics = std::move(physics);
         return *mPhysics;
     }
 
@@ -2542,6 +2546,11 @@ namespace MWWorld
             const auto residents = mWorldModel.getResidentPtrs();
             mOblivionCombat->installRestoredActorState(std::move(*preparedCombat), residents, mPlayer.get());
         }
+        // Detached native/World validation and service restoration must accept
+        // the save before replacing this scheduler-owned clock. Legacy absence
+        // preserves the current clock, just like the physical group adapter.
+        if (mPhysics && state.mNativePhysicalBlendTimeCache)
+            mPhysics->restoreNativeBlendTimeCache(*state.mNativePhysicalBlendTimeCache);
     }
 
     void World::runOblivionScripts(double secondsPassed)

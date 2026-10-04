@@ -18621,3 +18621,45 @@ continuation. True unloaded-cell lifecycle joins, retained numerical failures,
 normal-input display acceptance and pending S5-S14 remain required. Next connect
 the saved physical cache/owner projections to World restore and lifecycle before
 claiming resumed simulation or gameplay acceptance.
+
+
+### Checkpoint240: import the saved physical clock at World initialization/apply
+
+World::initializePhysics now constructs its candidate subsystem locally, imports
+a present retained Oblivion T4ST physical time cache through the scheduler's
+validated barrier, and only then publishes mPhysics. The duplicate-initialization
+guard remains before construction/publication. Fresh or legacy absent cache
+leaves the candidate's initial clock intact. World::applyOblivionRuntimeState
+imports a present cache only after existing detached validation and World/script/
+AI/combat restoration have accepted the state. An absent legacy cache preserves
+the current scheduler-owned clock. Existing RuntimeState reading validates the
+saved cache, and the scheduler validates all four float fields before assigning
+the complete clock. These changes do not create or restore actor body graphs.
+
+world-physical-cache-restore-baseline-01 executes two engine tests, both looping
+worker0/1/2 without fixture exceptions, and fails on missing clock import at
+initialization and state apply. The existing empty-owner World save test now
+expects its retained T4ST clock to be imported before replacing that live clock.
+The new WorldApplyRestoresPhysicalCacheAfterValidationAndPreservesLegacyAbsence
+test restores a raw cycleFFFFFFFF/reversed-bounds/signed-zero clock, changes the
+live clock and applies the saved World state, checks the imported clock and its
+negative-zero bit and confirms World resave captures it. Applying version35 with
+no cache preserves the live clock. A finite but unsupported native Player integer
+modifier causes detached restore rejection before changing native values, World
+time or the physical clock, even when the incoming state asks for changed time
+and cache. Tests use actual World-owned PhysicsSystem without physical actors;
+they do not prove loaded body/controller/contact continuation.
+
+Full world-physical-cache-restore-normal-01 and sanitized-01 each pass932 engine
+cases with exact inventory, zero failures/skips and no compiler warnings.
+ASan leak checks disabled. Tested fingerprint `8c29b7e66ad98ca812ca32d1dde539861d72048dfd6bb33c5ae61bc8b0715006`. No lower component,
+native arithmetic or runtime codec changed, so unchanged component/Python and
+original-instruction comparisons remain at their prior evidence checkpoints.
+
+No M15 stage closes. World capture and global physical clock import are connected,
+but automatic reaction/admission/update/end/getup, body/controller restoration,
+true unloaded-cell lifecycle joins, renderer-global Ni traversal/cache, native
+raw pose/time/activation/contact continuation, retained numerical failures,
+normal-input runtime acceptance and all pending S5-S14 remain required. Next
+stage complete body/controller restore before World publication and validate
+physical owner lifetime across that staged boundary.

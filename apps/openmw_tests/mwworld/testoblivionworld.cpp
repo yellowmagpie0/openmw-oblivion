@@ -1712,6 +1712,85 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, WorldApplyRestoresPhysicalCacheAfterValidationAndPreservesLegacyAbsence)
+    {
+        struct RestoreThreads
+        {
+            int mPrevious = Settings::physics().mAsyncNumThreads;
+            ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+        } restoreThreads;
+        for (int threads : {0, 1, 2})
+        {
+            SCOPED_TRACE(threads);
+            Settings::physics().mAsyncNumThreads.set(threads);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            MWClass::Npc::registerSelf();
+            world.setupPlayer();
+            auto& store = world.getStore();
+            ESM::Race race{}; race.blank(); race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+            store.getWritable<ESM::Race>().insertStatic(race);
+            ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+            cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+            cell.mCellFlags = ESM4::CELL_Interior; cell.mEditorId = "NativeOwnerCaptureCell";
+            store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+            // setupPlayer's fallback uses a string race. Give this capture fixture
+            // a managed projected base with a native race key, as a real loaded
+            // Oblivion player has; save validation must remain enabled.
+            auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            playerBase.mId = ESM::RefId::stringRefId("NativeOwnerCapturePlayer");
+            playerBase.mRace = race.mId;
+            store.insertStatic(playerBase);
+            world.getPlayerPtr().get<ESM::NPC>()->mBase = store.get<ESM::NPC>().find(playerBase.mId);
+            auto& residentCell = world.getWorldModel().getCell(cell.mId);
+            world.getPlayer().setCell(&residentCell);
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{10, 0, 0, 0}};
+            for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+            const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
+            auto& combat = *world.getOblivionCombatService();
+            combat.publishPlayerValues(world.getPlayer(), values, settings);
+            ESM4::RuntimeActorLife life;
+            life.mActor = values.mActor; life.mBase = values.mBase;
+            combat.publishPlayerLife(world.getPlayer(), life);
+            auto saved = world.captureOblivionRuntimeState();
+            const ESM4::PhysicalBlendTimeCache expected{0xffffffffu, 1, -1, -0.f, -.25f};
+            saved.mNativePhysicalBlendTimeCache = expected;
+            readNativeSnapshot(fixture, saved);
+            auto& physics = world.initializePhysics(new osg::Group);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), expected);
+            const ESM4::PhysicalBlendTimeCache prior{2, 4, 0, 1, 3};
+            physics.restoreNativeBlendTimeCache(prior);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), expected);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(physics.captureNativeBlendTimeCache().mKeyTime), 0x80000000u);
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNativePhysicalBlendTimeCache,
+                saved.mNativePhysicalBlendTimeCache);
+            physics.restoreNativeBlendTimeCache(prior);
+            auto legacy = saved;
+            legacy.mVersion = 35;
+            legacy.mNativePhysicalBlendTimeCache.reset();
+            readNativeSnapshot(fixture, legacy);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), prior);
+            auto bad = saved;
+            bad.mClock.mHour = 9;
+            ASSERT_EQ(bad.mNativeActorValues.size(), 1u);
+            bad.mNativeActorValues[0].mValues[33].mModifiers[1] = 1e32f;
+            ASSERT_NO_THROW(bad.validate());
+            const auto previousClock = world.getTimeStamp();
+            const auto previousValues = *combat.findActorValues(ESM::FormKey::dynamic("player", 1));
+            readNativeSnapshot(fixture, bad);
+            EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), prior);
+            EXPECT_EQ(world.getTimeStamp(), previousClock);
+            EXPECT_EQ(*combat.findActorValues(ESM::FormKey::dynamic("player", 1)), previousValues);
+        }
+    }
+
     TEST(OblivionWorldTest, WorldSaveCapturesPhysicalCacheWithNoLoadedRagdolls)
     {
         struct RestoreThreads
@@ -1765,6 +1844,7 @@ namespace
             EXPECT_EQ(withoutPhysics.mNativePhysicalBlendTimeCache, retainedState.mNativePhysicalBlendTimeCache);
             auto* physics = &world.initializePhysics(new osg::Group);
             ASSERT_NE(physics, nullptr);
+            EXPECT_EQ(physics->captureNativeBlendTimeCache(), retainedCache);
             EXPECT_THROW(world.initializePhysics(new osg::Group), std::logic_error);
             EXPECT_EQ(world.getRayCasting(), physics);
             const ESM4::PhysicalBlendTimeCache saved{0xffffffffu, 1, -1, -0.f, -.25f};
