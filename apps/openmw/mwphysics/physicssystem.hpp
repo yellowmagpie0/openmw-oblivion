@@ -92,6 +92,21 @@ namespace ESM4
 
 namespace MWPhysics
 {
+    // Owns detached collision geometry and a prepared map node. Destruction
+    // before commit has no world effect and does not consume a projectile ID.
+    class PreparedProjectile
+    {
+        struct Data;
+        std::unique_ptr<Data> mData;
+        explicit PreparedProjectile(std::unique_ptr<Data> data);
+        friend class PhysicsSystem;
+
+    public:
+        ~PreparedProjectile();
+        PreparedProjectile(const PreparedProjectile&) = delete;
+        PreparedProjectile& operator=(const PreparedProjectile&) = delete;
+    };
+
     struct NativeRagdollSnapshotGroup;
     class PreparedNativeRagdollSnapshotRestore
     {
@@ -311,6 +326,13 @@ namespace MWPhysics
         void applyActorRagdollImpulse(const MWWorld::Ptr& ptr, std::size_t body,
             const btVector3& impulse, const btVector3& worldPoint);
 
+        std::unique_ptr<PreparedProjectile> prepareProjectile(
+            const MWWorld::Ptr& caster, const osg::Vec3f& position, float radius);
+        // Main-thread publication. Foreign/consumed tokens fail before writes;
+        // collision registration completes before publishing the prepared map
+        // node and consuming the next ID. Resource writers can prepare first.
+        int commitProjectile(PreparedProjectile& prepared);
+
         int addProjectile(
             const MWWorld::Ptr& caster, const osg::Vec3f& position, VFS::Path::NormalizedView mesh, bool computeRadius);
         void setCaster(int projectileId, const MWWorld::Ptr& caster);
@@ -487,6 +509,9 @@ namespace MWPhysics
 
         using ProjectileMap = std::map<int, std::shared_ptr<Projectile>>;
         ProjectileMap mProjectiles;
+        // Tokens retain identity without retaining or dereferencing the owner.
+        // A new PhysicsSystem at the same address must not accept old tokens.
+        std::shared_ptr<const char> mProjectilePreparationOwner = std::make_shared<const char>(0);
 
         using HeightFieldMap = std::map<std::pair<int, int>, std::unique_ptr<HeightField>>;
         HeightFieldMap mHeightFields;

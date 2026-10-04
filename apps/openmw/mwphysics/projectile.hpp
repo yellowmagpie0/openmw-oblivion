@@ -27,7 +27,7 @@ namespace MWPhysics
     {
     public:
         Projectile(const MWWorld::Ptr& caster, const osg::Vec3f& position, float radius,
-            PhysicsTaskScheduler* scheduler, PhysicsSystem* physicssystem);
+            PhysicsTaskScheduler* scheduler, PhysicsSystem* physicssystem, bool registerCollision = true);
         ~Projectile() override;
 
         btConvexShape* getConvexShape() const { return mConvexShape; }
@@ -54,6 +54,9 @@ namespace MWPhysics
         btVector3 getHitPosition() const { return mHitPosition; }
 
     private:
+        friend class PhysicsSystem;
+        void registerCollision();
+        bool mRegistered = false;
         std::unique_ptr<btCollisionShape> mShape;
         btConvexShape* mConvexShape;
 

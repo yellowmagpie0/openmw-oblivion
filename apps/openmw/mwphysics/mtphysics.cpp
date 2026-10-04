@@ -1300,8 +1300,20 @@ namespace MWPhysics
         btCollisionObject* collisionObject, int collisionFilterGroup, int collisionFilterMask)
     {
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
-        mCollisionObjects.insert(collisionObject);
-        mCollisionWorld->addCollisionObject(collisionObject, collisionFilterGroup, collisionFilterMask);
+        const auto [entry, inserted] = mCollisionObjects.insert(collisionObject);
+        try
+        {
+            mCollisionWorld->addCollisionObject(collisionObject, collisionFilterGroup, collisionFilterMask);
+        }
+        catch (...)
+        {
+            // Bullet may have published its array/proxy before a C++ exception.
+            // Roll back under the same world lock before exposing failure.
+            mCollisionWorld->removeCollisionObject(collisionObject);
+            if (inserted)
+                mCollisionObjects.erase(entry);
+            throw;
+        }
     }
 
     void PhysicsTaskScheduler::removeCollisionObject(btCollisionObject* collisionObject)

@@ -13,7 +13,7 @@
 namespace MWPhysics
 {
     Projectile::Projectile(const MWWorld::Ptr& caster, const osg::Vec3f& position, float radius,
-        PhysicsTaskScheduler* scheduler, PhysicsSystem* physicssystem)
+        PhysicsTaskScheduler* scheduler, PhysicsSystem* physicssystem, bool registerCollision)
         : PtrHolder(MWWorld::Ptr(), position)
         , mHitWater(false)
         , mActive(true)
@@ -36,18 +36,25 @@ namespace MWPhysics
         mSimulationPosition = position;
         setCaster(caster);
 
+        updateCollisionObjectPosition();
+        if (registerCollision)
+            this->registerCollision();
+    }
+
+    void Projectile::registerCollision()
+    {
         const int collisionMask = CollisionType_World | CollisionType_HeightMap | CollisionType_Actor
             | CollisionType_Door | CollisionType_Water | CollisionType_Projectile;
         mTaskScheduler->addCollisionObject(mCollisionObject.get(), CollisionType_Projectile, collisionMask);
-
-        updateCollisionObjectPosition();
+        mRegistered = true;
     }
 
     Projectile::~Projectile()
     {
         if (!mActive)
             mPhysics->reportCollision(mHitPosition, mHitNormal);
-        mTaskScheduler->removeCollisionObject(mCollisionObject.get());
+        if (mRegistered)
+            mTaskScheduler->removeCollisionObject(mCollisionObject.get());
     }
 
     void Projectile::updateCollisionObjectPosition()

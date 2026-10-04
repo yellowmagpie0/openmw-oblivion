@@ -20182,3 +20182,38 @@ This proves scene geometry selection/ownership and stock material loading,
 not graphics capture or normal-input first/third-person acceptance. Bow input,
 successful release resources, flight/impact/recovery/save, mastery and remaining
 M15 gameplay gates stay open. S5 remains in progress.
+
+
+### S5 prepared collision publication (checkpoint266)
+
+PhysicsSystem now prepares an opaque projectile token containing the actual
+detached Bullet collision object, its prepared ownership map node and an owner
+identity. Preparation validates finite position and positive finite radius,
+allocates without registering collision and consumes no projectile ID.
+Commit rejects foreign, consumed and expired-owner tokens before writes,
+registers collision, inserts the allocated map node and publishes the next ID.
+A replacement PhysicsSystem at the same address has a distinct identity and
+cannot accept the previous owner's token. Cancelling an uncommitted token
+remains safe after its owner has been destroyed.
+
+The existing addProjectile producer uses this preparation/commit path after
+its real shape lookup. Collision transforms are initialized before registration;
+the destructor only unregisters a registered object. Scheduler registration
+rolls back its world/set insertion if Bullet registration throws a C++ exception.
+This does not claim coverage of allocator abort/null failure modes.
+
+Four real PhysicsSystem tests check ray invisibility before commit and after
+cancellation, publication-order IDs, duplicate commit rejection, retained live
+collision after consumed-token destruction, ghost-free removal, invalid input,
+foreign owners, destruction before cancellation and same-address owner reuse.
+Initial normal/sanitized01 each pass974 full engine tests. Final02 each pass975
+with exact inventories and no failures/skips or emitted compiler warnings.
+ASan leak checking is disabled; components/Python sources are unchanged.
+
+Evidence: S5/prepared-projectile-{normal,sanitized}-02.
+Tested fingerprint: fcfc127e7c1bd842d55a4de756d9b50c6aae7545c2a5b592a5894acfe7a0798a
+
+This is collision preparation and ownership integration. Compound native bow
+release, resource debits, flight/impact/recovery/persistence and normal-input
+acceptance remain open. The explicit caller radius is not yet a verified native
+arrow collision rule. S5 and the full M15 goal remain in progress.

@@ -1,6 +1,9 @@
 #include "physicssystem.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <stdexcept>
 #include <memory>
 #include <vector>
 
@@ -1000,19 +1003,64 @@ namespace MWPhysics
         mTaskScheduler->applyActorRagdollImpulse(ptr, body, impulse, worldPoint);
     }
 
+    struct PreparedProjectile::Data
+    {
+        PhysicsSystem* mOwner;
+        std::shared_ptr<const char> mOwnerIdentity;
+        std::map<int, std::shared_ptr<Projectile>>::node_type mNode;
+    };
+
+    PreparedProjectile::PreparedProjectile(std::unique_ptr<Data> data)
+        : mData(std::move(data))
+    {
+    }
+
+    PreparedProjectile::~PreparedProjectile() = default;
+
+    std::unique_ptr<PreparedProjectile> PhysicsSystem::prepareProjectile(
+        const MWWorld::Ptr& caster, const osg::Vec3f& position, float radius)
+    {
+        if (!std::isfinite(radius) || radius <= 0
+            || !std::isfinite(position.x()) || !std::isfinite(position.y()) || !std::isfinite(position.z()))
+            throw std::invalid_argument("invalid projectile collision geometry");
+        auto projectile = std::make_shared<Projectile>(
+            caster, position, radius, mTaskScheduler.get(), this, false);
+        ProjectileMap staged;
+        staged.emplace(0, std::move(projectile));
+        auto data = std::make_unique<PreparedProjectile::Data>();
+        data->mOwner = this;
+        data->mOwnerIdentity = mProjectilePreparationOwner;
+        data->mNode = staged.extract(staged.begin());
+        return std::unique_ptr<PreparedProjectile>(new PreparedProjectile(std::move(data)));
+    }
+
+    int PhysicsSystem::commitProjectile(PreparedProjectile& prepared)
+    {
+        if (!prepared.mData || prepared.mData->mOwner != this
+            || prepared.mData->mOwnerIdentity != mProjectilePreparationOwner || prepared.mData->mNode.empty())
+            throw std::invalid_argument("foreign or consumed projectile preparation");
+        if (mProjectileId >= static_cast<unsigned>(std::numeric_limits<int>::max()))
+            throw std::overflow_error("projectile ID space exhausted");
+        const int id = static_cast<int>(mProjectileId + 1);
+        if (mProjectiles.contains(id))
+            throw std::logic_error("projectile ID already exists");
+        auto& node = prepared.mData->mNode;
+        node.mapped()->registerCollision();
+        node.key() = id;
+        mProjectiles.insert(std::move(node)); // Prepared node: no allocation.
+        mProjectileId = static_cast<unsigned>(id);
+        return id;
+    }
+
     int PhysicsSystem::addProjectile(
         const MWWorld::Ptr& caster, const osg::Vec3f& position, VFS::Path::NormalizedView mesh, bool computeRadius)
     {
         osg::ref_ptr<Resource::BulletShapeInstance> shapeInstance = mShapeManager->getInstance(mesh);
-        assert(shapeInstance);
-        float radius = computeRadius ? shapeInstance->mCollisionBox.mExtents.length() / 2.f : 1.f;
-
-        mProjectileId++;
-
-        auto projectile = std::make_shared<Projectile>(caster, position, radius, mTaskScheduler.get(), this);
-        mProjectiles.emplace(mProjectileId, std::move(projectile));
-
-        return mProjectileId;
+        if (!shapeInstance)
+            throw std::invalid_argument("projectile mesh has no collision shape");
+        const float radius = computeRadius ? shapeInstance->mCollisionBox.mExtents.length() / 2.f : 1.f;
+        auto prepared = prepareProjectile(caster, position, radius);
+        return commitProjectile(*prepared);
     }
 
     void PhysicsSystem::setCaster(int projectileId, const MWWorld::Ptr& caster)

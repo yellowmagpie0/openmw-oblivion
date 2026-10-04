@@ -13,6 +13,9 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <gtest/gtest.h>
 #include <array>
+#include <cstddef>
+#include <limits>
+#include <new>
 #include <thread>
 #include <osg/Group>
 
@@ -186,6 +189,93 @@ namespace
         EXPECT_EQ(other.getHitPosition(), btVector3(3, 0, 0));
         callback.commitHit();
         EXPECT_EQ(other.getHitPosition(), btVector3(3, 0, 0));
+    }
+
+    TEST_F(ProjectileSweepTest, PreparedProjectilesRemainAbsentUntilCommitAndCancellationConsumesNoId)
+    {
+        const auto ray = [&] {
+            return mPhysics.castRay(osg::Vec3f(0, 0, 0), osg::Vec3f(10, 0, 0),
+                {}, {}, MWPhysics::CollisionType_Projectile).mHit;
+        };
+        EXPECT_FALSE(ray());
+        auto cancelled = mPhysics.prepareProjectile({}, osg::Vec3f(3, 0, 0), .5f);
+        EXPECT_FALSE(ray());
+        EXPECT_EQ(mPhysics.getProjectile(1), nullptr);
+        cancelled.reset();
+        EXPECT_FALSE(ray());
+
+        auto first = mPhysics.prepareProjectile({}, osg::Vec3f(3, 0, 0), .5f);
+        auto second = mPhysics.prepareProjectile({}, osg::Vec3f(7, 0, 0), .5f);
+        EXPECT_FALSE(ray());
+        // Preparation order is not publication order and reserves no IDs.
+        const int secondId = mPhysics.commitProjectile(*second);
+        EXPECT_EQ(secondId, 1);
+        ASSERT_NE(mPhysics.getProjectile(secondId), nullptr);
+        EXPECT_EQ(mPhysics.getProjectile(secondId)->getPosition(), osg::Vec3d(7, 0, 0));
+        EXPECT_TRUE(ray());
+        EXPECT_THROW(mPhysics.commitProjectile(*second), std::invalid_argument);
+        second.reset();
+        EXPECT_TRUE(ray()); // Destroying a consumed token cannot remove its published owner.
+        const int firstId = mPhysics.commitProjectile(*first);
+        EXPECT_EQ(firstId, 2);
+        EXPECT_THROW(mPhysics.commitProjectile(*first), std::invalid_argument);
+        mPhysics.removeProjectile(secondId);
+        EXPECT_TRUE(ray());
+        mPhysics.removeProjectile(firstId);
+        EXPECT_FALSE(ray());
+        auto next = mPhysics.prepareProjectile({}, osg::Vec3f(5, 0, 0), .5f);
+        EXPECT_EQ(mPhysics.commitProjectile(*next), 3);
+        mPhysics.removeProjectile(3);
+        EXPECT_FALSE(ray());
+    }
+
+    TEST_F(ProjectileSweepTest, PreparedProjectileRejectsInvalidAndForeignOwnersWithoutPublication)
+    {
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const float inf = std::numeric_limits<float>::infinity();
+        for (float radius : {0.f, -1.f, nan, inf})
+            EXPECT_THROW(mPhysics.prepareProjectile({}, {}, radius), std::invalid_argument);
+        for (const auto position : {osg::Vec3f(nan, 0, 0), osg::Vec3f(0, inf, 0), osg::Vec3f(0, 0, -inf)})
+            EXPECT_THROW(mPhysics.prepareProjectile({}, position, 1.f), std::invalid_argument);
+        auto own = mPhysics.prepareProjectile({}, osg::Vec3f(3, 0, 0), .5f);
+        MWPhysics::PhysicsSystem foreign(&mResources, new osg::Group);
+        EXPECT_THROW(foreign.commitProjectile(*own), std::invalid_argument);
+        EXPECT_EQ(foreign.getProjectile(1), nullptr);
+        EXPECT_EQ(mPhysics.getProjectile(1), nullptr);
+        EXPECT_EQ(mPhysics.commitProjectile(*own), 1);
+        mPhysics.removeProjectile(1);
+        auto foreignOwn = foreign.prepareProjectile({}, {}, 1.f);
+        EXPECT_EQ(foreign.commitProjectile(*foreignOwn), 1);
+        foreign.removeProjectile(1);
+    }
+
+    TEST_F(ProjectileSweepTest, UncommittedProjectileCanBeDiscardedAfterItsPhysicsOwnerIsDestroyed)
+    {
+        std::unique_ptr<MWPhysics::PreparedProjectile> prepared;
+        {
+            MWPhysics::PhysicsSystem temporary(&mResources, new osg::Group);
+            prepared = temporary.prepareProjectile({}, osg::Vec3f(3, 0, 0), .5f);
+        }
+        prepared.reset(); // A detached object's destructor must not call its expired borrowed owner.
+        auto live = mPhysics.prepareProjectile({}, {}, 1.f);
+        EXPECT_EQ(mPhysics.commitProjectile(*live), 1);
+        mPhysics.removeProjectile(1);
+    }
+
+    TEST_F(ProjectileSweepTest, ReusedPhysicsAddressCannotAcceptAnExpiredOwnersProjectile)
+    {
+        alignas(MWPhysics::PhysicsSystem) std::array<std::byte, sizeof(MWPhysics::PhysicsSystem)> storage;
+        auto* old = new (storage.data()) MWPhysics::PhysicsSystem(&mResources, new osg::Group);
+        auto prepared = old->prepareProjectile({}, osg::Vec3f(3, 0, 0), .5f);
+        old->~PhysicsSystem();
+        auto* replacement = new (storage.data()) MWPhysics::PhysicsSystem(&mResources, new osg::Group);
+        EXPECT_THROW(replacement->commitProjectile(*prepared), std::invalid_argument);
+        EXPECT_EQ(replacement->getProjectile(1), nullptr);
+        auto own = replacement->prepareProjectile({}, {}, 1.f);
+        EXPECT_EQ(replacement->commitProjectile(*own), 1);
+        replacement->removeProjectile(1);
+        replacement->~PhysicsSystem();
+        prepared.reset();
     }
 
 }
