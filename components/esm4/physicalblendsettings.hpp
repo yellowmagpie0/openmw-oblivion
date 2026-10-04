@@ -282,6 +282,14 @@ namespace ESM4
         friend bool operator==(const PhysicalBlendControllerState&, const PhysicalBlendControllerState&) = default;
     };
 
+    // Original8AB040 selected-controller HIT setup. Resolve attachment/body
+    // filter/profile before calling. Setup states above1 retain all old state.
+    // Otherwise reset keys/cache and construct the three native keys, retaining
+    // elapsed time and restarting with compiled independent timing bounds.
+    // Current/configured gains are finite and unclamped; no node/body writes.
+    PhysicalBlendControllerState preparePhysicalHitBlendController(
+        const PhysicalBlendControllerState& previous, PhysicalBlendGains current, PhysicalBlendGains configured);
+
     struct PhysicalBlendControllerUpdate
     {
         PhysicalBlendControllerState mController;

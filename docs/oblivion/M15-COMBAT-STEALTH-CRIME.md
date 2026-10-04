@@ -19407,3 +19407,63 @@ No stage closes. No automatic World hit/admission call is claimed. Absent-body
 scene nodes, actor/bone selection, owned HIT blend setup, configuration discovery,
 native scene/time/contact continuation and normal-input gameplay/restart gates
 remain open. S5-S14 pending.
+
+### Checkpoint 252: original HIT blend setup and independent mismatch correction
+
+The selected-controller HIT helper now follows complete8AB040: unsigned setup
+states above1 preserve the old controller. Eligible states reset keys/cache,
+select setup1 and install three keys. Only the first key takes the minimum of
+configured/current gains. The middle key uses both configured gains, unclamped.
+Key times are0,0.15,0.5; inherited bounds are separately0/1, frequency1, phase0.
+Flags are oldFFF5|1CD. Start/previous clocks reset to negative float maximum;
+elapsed time remains unchanged. Cursor becomes0, cached gains become-1/-1.
+Used nonfinite gains/elapsed time reject before publishing a candidate.
+Stronger-state skip ignores unused gain inputs. This pure helper does not select
+nodes, change collision gains, synchronize requested motion or mutate bodies.
+
+native-hit-blend-setup-oracle-01 executes2592 full original leaf cases. Its
+initial scope string incorrectly describes cached-gain restoration; bounded
+8AA7F0 reinspection confirms reset only removes keys and invalidates cache/setup.
+oracle-02 corrects that scope and expands both HIT/QUADHIT table selections.
+oracle-03 additionally initializes the unselected table to contrasting values
+each case, preventing equal tables from concealing a wrong selection branch.
+Both expanded captures have5184 cases and identical output corpus SHA256
+170198d972a055809659da2a72518af9690ef65e660d2ef782a595f20bed7b19.
+Latest source SHA256
+1d2b30b5d164c7aa43165e687cfcd59dc5b8b10839f1fab50ac5ce1766b0e0c1.
+Every capture verifies original executable SHA256
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Actual collision/controller RTTI lookup, reset, key construction/insertion and
+Start execute. Boundaries are Windows locking/interlocked primitives and fresh
+key-buffer allocation/obsolete-buffer free. Synthetic retained leaf nodes and
+wrapper/body objects supply filter17. Cases cover two x87 controls, absent/
+present collision/controller, setup0/1/2, cached gains, four flags, three current
+and configured gain pairs, two unused caller times and both profile tables.
+Recursive children, actor/bone selection and World/gameplay remain excluded.
+
+Three tests execute and fail against the unimplemented baseline01. Initial
+normal/sanitized01 each pass2434 component tests, but independent normal
+comparison01 finds384 mismatches among1728 present-controller cases: middle-key
+hierarchy incorrectly used the minimum. Keep that failure and the original
+corpus/expected values unchanged. A fourth focused regression demonstrates
+case1732's distinction and executes/fails before the fix in baseline02.
+Correct the production middle key to both configured gains.
+
+Corrected native-hit-blend-setup-normal-02 and sanitized-02 each pass2435
+exact inventoried full component tests, zero failures/skips/warnings.
+Sanitizer01 repeated only unchanged inventory initializer warnings, byte-verified
+against251. ASan leaks disabled; UBSan halts. Tested fingerprint
+1876508056f46ba5e34c6988e0ff1a2a73a8bd688b4a372d7c30877f5627e132.
+
+Independent compare-normal-02 and compare-sanitized-02 each match1728
+present-controller original cases across34560 exact controller/key fields,
+zero mismatches and empty stderr. Missing-collision/controller captures remain
+outside this pure comparison. The5184 original output node-gain pairs are also
+independently checked unchanged. World ownership/profile selection, recursive
+traversal and actual gameplay remain separate integration gates.
+Engine/Python sources did not change; previous evidence remains applicable.
+
+No stage closes. Owned HIT blend setup, automatic physical admission/reactions,
+configuration discovery, initial morphology, native scene/time/contact
+continuation and required normal-input gameplay/restarts remain open.
+S5-S14 pending.

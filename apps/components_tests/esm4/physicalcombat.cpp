@@ -4631,3 +4631,84 @@ TEST(ESM4PhysicalCombat, HitVelocitySetupIgnoresUnusedBodyInputsAndRejectsLateOv
         std::invalid_argument);
     EXPECT_EQ(previous, before);
 }
+
+
+TEST(ESM4PhysicalCombat, HitBlendSetupUsesFixedThreeKeysAndIndependentTiming)
+{
+    ESM4::PhysicalBlendControllerState previous;
+    previous.mTiming = {0xd, .25f, -.125f, 0, .25f};
+    previous.mClock = {3, 4, 7}; previous.mCursor = 1;
+    previous.mKeys = {{.25f, {1, 1}}}; previous.mCachedGains = {.75f, .6f};
+    const auto result = ESM4::preparePhysicalHitBlendController(previous, {.9f, .8f}, {.2f, .9f});
+    // Original252 complete8AB040 oracle03 case1872 (same selected native setup).
+    ASSERT_EQ(result.mKeys.size(), 3u);
+    const std::array<std::uint32_t, 9> words{0u, 1045220557u, 1061997773u,
+        1041865114u, 1045220557u, 1063675494u, 1056964608u, 1065353216u, 1065353216u};
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mKeys[i].mTime), words[i * 3]);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mKeys[i].mGains.mHierarchy), words[i * 3 + 1]);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mKeys[i].mGains.mVelocity), words[i * 3 + 2]);
+    }
+    EXPECT_EQ(result.mTiming.mFlags, 0x1cdu);
+    EXPECT_EQ(result.mTiming.mFrequency, 1);
+    EXPECT_EQ(result.mTiming.mPhase, 0);
+    EXPECT_EQ(result.mTiming.mStartKey, 0);
+    EXPECT_EQ(result.mTiming.mStopKey, 1);
+    EXPECT_EQ(result.mClock.mStartTime, -std::numeric_limits<float>::max());
+    EXPECT_EQ(result.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+    EXPECT_EQ(result.mClock.mElapsed, 7);
+    EXPECT_EQ(result.mCursor, 0u);
+    EXPECT_EQ(result.mCachedGains, (ESM4::PhysicalBlendGains{-1, -1}));
+    EXPECT_EQ(result.mSetupState, 1u);
+    EXPECT_EQ(previous.mKeys.size(), 1u);
+    EXPECT_EQ(previous.mClock.mStartTime, 3);
+}
+
+TEST(ESM4PhysicalCombat, HitBlendSetupPreservesStrongerStateAndSkipsUnusedInputs)
+{
+    ESM4::PhysicalBlendControllerState previous;
+    previous.mSetupState = 2;
+    previous.mTiming = {0xffff, .25f, -.125f, 0, .25f};
+    previous.mClock = {3, 4, 7}; previous.mCursor = 1;
+    previous.mKeys = {{.25f, {1, 1}}}; previous.mCachedGains = {.75f, .6f};
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_EQ(ESM4::preparePhysicalHitBlendController(previous, {bad, bad}, {bad, bad}), previous);
+    previous.mSetupState = std::numeric_limits<std::uint32_t>::max();
+    EXPECT_EQ(ESM4::preparePhysicalHitBlendController(previous, {bad, bad}, {bad, bad}), previous);
+}
+
+TEST(ESM4PhysicalCombat, HitBlendSetupRetainsUnclampedGainsAndRejectsUsedNonfiniteInputs)
+{
+    ESM4::PhysicalBlendControllerState previous;
+    previous.mSetupState = 1;
+    previous.mTiming.mFlags = 0xffff;
+    const auto result = ESM4::preparePhysicalHitBlendController(previous, {-.5f, 1.5f}, {-1, 2});
+    EXPECT_EQ(result.mKeys[0].mGains, (ESM4::PhysicalBlendGains{-1, 1.5f}));
+    EXPECT_EQ(result.mKeys[1].mGains, (ESM4::PhysicalBlendGains{-1, 2}));
+    EXPECT_EQ(result.mTiming.mFlags, 0xfffdu);
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    const auto before = previous;
+    EXPECT_THROW(ESM4::preparePhysicalHitBlendController(previous, {bad, 1}, {1, 1}), std::invalid_argument);
+    EXPECT_THROW(ESM4::preparePhysicalHitBlendController(previous, {1, 1}, {1, bad}), std::invalid_argument);
+    previous.mClock.mElapsed = bad;
+    EXPECT_THROW(ESM4::preparePhysicalHitBlendController(previous, {1, 1}, {1, 1}), std::invalid_argument);
+    previous.mClock.mElapsed = before.mClock.mElapsed;
+    EXPECT_EQ(previous, before);
+}
+
+
+TEST(ESM4PhysicalCombat, HitBlendSetupUsesConfiguredGainsForMiddleKeyWithoutMinimum)
+{
+    ESM4::PhysicalBlendControllerState previous;
+    // Complete original252 oracle03 case1732: current.9/.8, configured1/1.
+    const auto result = ESM4::preparePhysicalHitBlendController(previous, {.9f, .8f}, {1, 1});
+    ASSERT_EQ(result.mKeys.size(), 3u);
+    EXPECT_EQ(result.mKeys[0].mGains, (ESM4::PhysicalBlendGains{.9f, .8f}));
+    EXPECT_EQ(result.mKeys[1].mGains, (ESM4::PhysicalBlendGains{1, 1}));
+    const auto negative = ESM4::preparePhysicalHitBlendController(previous, {-.5f, 1.5f}, {.2f, .9f});
+    EXPECT_EQ(negative.mKeys[0].mGains, (ESM4::PhysicalBlendGains{-.5f, .9f}));
+    EXPECT_EQ(negative.mKeys[1].mGains, (ESM4::PhysicalBlendGains{.2f, .9f}));
+    EXPECT_EQ(previous.mSetupState, 0u);
+    EXPECT_TRUE(previous.mKeys.empty());
+}

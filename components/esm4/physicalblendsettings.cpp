@@ -429,6 +429,33 @@ namespace ESM4
         return previous;
     }
 
+    PhysicalBlendControllerState preparePhysicalHitBlendController(
+        const PhysicalBlendControllerState& previous, PhysicalBlendGains current, PhysicalBlendGains configured)
+    {
+        if (previous.mSetupState > 1)
+            return previous;
+        validate(current.mHierarchy);
+        validate(current.mVelocity);
+        validate(configured.mHierarchy);
+        validate(configured.mVelocity);
+        validate(previous.mClock.mElapsed);
+        const float hierarchy = configured.mHierarchy > current.mHierarchy
+            ? current.mHierarchy : configured.mHierarchy;
+        const float velocity = configured.mVelocity > current.mVelocity
+            ? current.mVelocity : configured.mVelocity;
+        auto next = previous;
+        next.mKeys = {{0.f, {hierarchy, velocity}}, {.15f, configured}, {.5f, {1.f, 1.f}}};
+        next.mTiming = {static_cast<std::uint16_t>((previous.mTiming.mFlags & 0xfff5u) | 0x1cdu),
+            1.f, 0.f, 0.f, 1.f};
+        constexpr float sentinel = -std::numeric_limits<float>::max();
+        next.mClock.mStartTime = sentinel;
+        next.mClock.mPreviousTime = sentinel;
+        next.mCursor = 0;
+        next.mCachedGains = {-1.f, -1.f};
+        next.mSetupState = 1;
+        return next;
+    }
+
     PhysicalBlendControllerUpdate advancePhysicalBlendController(const PhysicalBlendControllerState& controller,
         const PhysicalBlendTimeCache& timeCache, bool hasTarget, std::optional<PhysicalBlendGains> targetGains,
         bool hasVelocityController, float inputTime)
