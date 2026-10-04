@@ -1,3 +1,4 @@
+#include <components/esm4/physicalsceneworld.hpp>
 #include <components/esm4/physicalvelocitycontroller.hpp>
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm4/physicalblendsettings.hpp>
@@ -4217,4 +4218,65 @@ TEST(ESM4PhysicalCombat, BlendCollisionLinkRejectsOnlySelectedNonfiniteGainsWith
     EXPECT_EQ(loaded.mGains.mHierarchy, .9f);
     EXPECT_EQ(loaded.mGains.mVelocity, .8f);
     EXPECT_EQ(loaded.mRequestedMotion, 6u);
+}
+
+namespace
+{
+    ESM4::PhysicalWorldSceneInput worldSceneInput()
+    {
+        return {true, true, {0, 0, 0}, {0, 0, 0, 1}, {0, 0, 0, 0},
+            {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 1}, .016f};
+    }
+
+    TEST(ESM4PhysicalWorldScene, NearTargetZerosBothPackedVelocitiesBeforeUnusedFrameAndCenter)
+    {
+        auto input = worldSceneInput(); input.mFrameSeconds = std::numeric_limits<float>::quiet_NaN();
+        input.mLocalCenter.fill(std::numeric_limits<float>::quiet_NaN());
+        input.mEndCenter.fill(std::numeric_limits<float>::quiet_NaN());
+        input.mTargetPosition[3] = std::numeric_limits<float>::quiet_NaN();
+        const auto result = ESM4::preparePhysicalWorldSceneVelocities(input); ASSERT_TRUE(result);
+        EXPECT_EQ(result->mLinear, (std::array<float, 4>{}));
+        EXPECT_EQ(result->mAngular, (std::array<float, 4>{}));
+    }
+
+    TEST(ESM4PhysicalWorldScene, MissingAuthorityAndFarZeroFrameIgnoreUnusedMotionFields)
+    {
+        auto input = worldSceneInput(); input.mHasWorld = false;
+        input.mCurrentRotation.fill(std::numeric_limits<float>::quiet_NaN());
+        EXPECT_FALSE(ESM4::preparePhysicalWorldSceneVelocities(input));
+        input.mHasWorld = true; input.mHasAuthority = false;
+        EXPECT_FALSE(ESM4::preparePhysicalWorldSceneVelocities(input));
+        input = worldSceneInput(); input.mFrameSeconds = 0; input.mTargetPosition[0] = 1000;
+        input.mLocalCenter.fill(std::numeric_limits<float>::quiet_NaN());
+        input.mEndCenter.fill(std::numeric_limits<float>::quiet_NaN());
+        EXPECT_FALSE(ESM4::preparePhysicalWorldSceneVelocities(input));
+    }
+
+    TEST(ESM4PhysicalWorldScene, UncappedWorldDriveRetainsFourthAngularLane)
+    {
+        auto input = worldSceneInput(); input.mTargetPosition = {142.87672424316406f, -285.7534484863281f, 71.43836212158203f, 0};
+        input.mTargetRotation = {0, 0, .70710677f, .70710677f};
+        const auto result = ESM4::preparePhysicalWorldSceneVelocities(input); ASSERT_TRUE(result);
+        // Original full8A3900 oracle03, frame.016, worldXYZ1000/-2000/500,
+        // WXYZ(.70710677,0,0,.70710677), identity getter rotation.
+        EXPECT_FLOAT_EQ(result->mLinear[0], 8929.794921875f);
+        EXPECT_FLOAT_EQ(result->mLinear[1], -17859.58984375f);
+        EXPECT_FLOAT_EQ(result->mLinear[2], 4464.8974609375f);
+        EXPECT_EQ(result->mLinear[3], 0.f);
+        EXPECT_NEAR(result->mAngular[2], 98.17475891113281f, .001f);
+        EXPECT_NEAR(result->mAngular[3], 98.17475891113281f, .001f);
+    }
+
+    TEST(ESM4PhysicalWorldScene, RejectsUsedInvalidStateAndOverflow)
+    {
+        auto input = worldSceneInput(); input.mTargetPosition[0] = 1;
+        input.mFrameSeconds = -1;
+        EXPECT_THROW(ESM4::preparePhysicalWorldSceneVelocities(input), std::invalid_argument);
+        input = worldSceneInput(); input.mTargetPosition[0] = 1;
+        input.mCurrentRotation = {0, 0, 0, 0};
+        EXPECT_THROW(ESM4::preparePhysicalWorldSceneVelocities(input), std::invalid_argument);
+        input = worldSceneInput(); input.mTargetPosition[0] = 1;
+        input.mEndCenter[3] = std::numeric_limits<float>::max();
+        EXPECT_THROW(ESM4::preparePhysicalWorldSceneVelocities(input), std::invalid_argument);
+    }
 }

@@ -10763,3 +10763,74 @@ No stage closes. Next implement and independently compare the World-bound scene
 setter, then wire its actual owner/World authority. Automatic reaction lifetime,
 recursive ordering, full controller/contact persistence, morphology/configuration,
 retained BodyT/floor failures and S5-S14 remain open.
+
+
+### Checkpoint217: independent World-scene packed velocity rule
+
+Added immutable `ESM4::preparePhysicalWorldSceneVelocities` for original8A3900,
+with explicitly resolved World/authority, native target position including its
+scratch fourth lane, XYZW rotations, current origin and actual getter fields.
+Absent World/authority returns before reading unused fields. Near-target checks
+use strict native thresholds and signed quaternion dot; near targets clear both
+four-lane velocities even at frame0. Far frame0 retains both vectors. Positive
+frames produce uncapped center-of-mass drive and angular drive, including the
+original nonzero fourth angular lane. Validation rejects used invalid inputs and
+nonfinite results before publication. Supported prepared frame domain is finite
+and nonnegative; this does not claim original8A3900 rejects negative frame time.
+Portable reciprocal-root estimation/Newton normalization and libm acos remain
+explicit limitations. No body pose, mode, activation or owner publication yet.
+
+Original8A2F10 reads motion+80,8A2FF0 reads+90,8A3030 reads+60; these differ from
+historical start/previous labels in older fixture files. Expanded original cases
+separate+50/+60 and+70/+80. Exact offsets are proved; packed center fourth-lane
+clock semantics are not. Original World argument quaternion is WXYZ; captured
+prepared input is XYZW. Target scratch W is captured at8A399D; zero in selected
+full-caller cases does not establish its general live producer.
+
+Original direct oracle05 passes1,728 cases; full88F3D0/89EAE0 World-driver oracle03
+passes256. Boundary oracle01 passes544 cases across both x87 control words,
+Dynamic/KEY, frame0/.016, adjacent binary32 distance/signed-dot/angular thresholds
+and positive/negative equivalent quaternions. Boundary cases all have a present
+World+2B0 marker; its inherited report description of absent-World fixtures
+refers to earlier expanded tests. Six captured controls pass, including both
+near/far outcomes, absent authority, angular fourth lane and distinct getters.
+All use the pinned original executable and only previously documented Windows/
+HK heap primitives; body+91 suppresses activation. World+2B0 is a presence
+fixture, not a live authority producer.
+
+Original source/corpus hashes:
+- direct05: a379f2176033c9170d8532ad23a5352060f6335e3c7fe74f54c9ee7e820d4d8a /
+  8f1d17b1a79811de2d73caba4b94bf2887369f85b716508172c9d2a51b5d8a35;
+- full-caller03: aee549863639c39bc6258d913ca09276b218fa0d2b079d8de23fee733e7de671 /
+  870e95e6bae1a751bf327b16154040a12d12f81e6f5b77275920d6e8cf8d9fa1;
+- boundaries01: c145ded86cd1a937b0368019e3488548465bd71c9f61c9cee571e02850e62bd6 /
+  c776aae5856a75869658664d3d6e4de31d7eec5ddf420ac6e8ad1d3068bb460f.
+
+Four unit tests cover unused fields/guard order, zero-frame behavior, uncapped
+packed output and used-invalid/overflow rejection. Stub baseline01 fails3/4.
+Full normal/sanitized world-scene-rule-01 each pass2,375 components, exact
+inventories, zero failure/skip, no build warning. ASan leak checking disabled;
+engine/Python unchanged since216. Tested source fingerprint
+`f9e641a938fccf24dd7fd9694fcaa041149a7d91ae3ed068110ef2a3e2129aab`.
+Actual production comparator normal/sanitized02 each pass992 canonical53-bit
+cases; expanded03 each pass1,264 cases and9520 exact checks. Declared write
+presence, linear four-lane bits and eight-lane no-write retention are exact;
+angular four-lane tolerance.001 remains unchanged from172. Maximum observed
+angular error0 in both builds; no claim of general bit-exact angular equivalence.
+Comparator01 compile failure (missing private-driver<cstdint>) is retained.
+
+Retained original full-World-frame01 fails after8 cases at8A9D71: KEY direct-pose
+World branch requires unprepared native broadphase state. The passing full-frame
+corpus selects flags20/28 without40, exercising8A3900 without claiming that direct
+pose branch, activation islands, contacts or actual game World acceptance.
+Expanded direct04/05 and full-frame02/03 are retained with their prepared-input
+provenance. S4 evidence uses native-world-bound-scene-sync-oracle-04/05,
+native-world-bound-full-frame-oracle-01/02/03,
+native-world-scene-boundaries-oracle-01,world-scene-captured-controls-01,
+world-scene-rule-baseline-01,normal/sanitized-01 and
+native-world-scene-rule-compare-normal-01/02/03,sanitized-02/03.
+
+No M15 stage closes. Next wire owned packed state and staged World-scene velocity
+publication, then resolve actual World authority/lifetime and complete the
+remaining automatic reaction, ordering, persistence/contact, gameplay and
+S5-S14 acceptance gates. Earlier retained BodyT/floor/runtime failures remain.
