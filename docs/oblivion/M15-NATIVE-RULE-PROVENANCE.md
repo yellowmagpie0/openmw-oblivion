@@ -11317,3 +11317,49 @@ No M15 stage closes. Requested motion/flags/gains/controllers/clocks, raw COM/ti
 quaternion/cache, native activation/contact persistence, automatic World getter/
 frame/reaction integration, retained physical/restart failures and S5-S14
 acceptance remain open.
+
+
+### Checkpoint227: atomic blend request/flags/gains with physical restoration
+
+Added a complete blend-target snapshot to the logical-mode/pose/packed restore
+transaction. Count, unique known body IDs and finite unclamped gains are validated,
+then a complete metadata buffer is allocated before physical staging/publication.
+The buffer swaps only after successful physical restoration. Raw uint16 flags
+and arbitrary uint32 requested motion remain independent of actual logical body
+modes. Standalone blend restoration shares the same validator and retains its
+complete-target semantics. Controller state and shared clocks remain separate.
+
+Both packed-blend-restore-baseline-01 tests fail. Final tests preserve signed-zero
+and unclamped gains, raw flags/FFFFFFFF requests, packed lanes and an inconsistent
+actual KEY/stored request1. Its next H0/V0 update retains KEY and saved fourth
+velocities, matching216's independent original rule: matching stored request skips
+conversion/reset. An un-restored constructor request8 would incorrectly hand off
+and clear velocities. Late nonfinite gain, unknown/duplicate target and incomplete
+blend snapshot reject before pose/mode/force/activation or metadata publication.
+
+Actual native-packed-blend-restore-compare-normal/sanitized-01 each passes5,760
+composed snapshot inputs,74,880 exact field checks: eight native velocity lanes,
+logical mode, raw flags/request and two gain bit patterns. Inputs use all216
+original full-caller final flags/requests/vtable mappings with its explicitly
+supplied fixture gains, paired cyclically with222's original velocity outputs.
+Gains are original fixture inputs, not newly captured post-return getter values.
+Checks include opposite initial mode handoff, scales1/7/native, shape/proxy/pose/
+interpolation, force clearing/wakeup and destruction cleanup. This composition
+verifies restoration of independently identified values; it is not one original
+save/restart/controller/World/contact experiment.216 original source SHA256
+`d0641aad1b473222d1abd0af8ae9885fa3d7c9a06c55974604ab64358fbc9181`,
+corpus `9299b5fe15a614b8a5ebfba7d2a6d178d83b81faadcc8f59632fc3fe43dea24e`;
+its previously declared Windows/heap boundary stubs and no-World scope remain.
+222 executable/velocity corpus identity is unchanged. No tolerance/input changes.
+
+Full packed-blend-restore-normal/sanitized-01 each passes2,400 component tests,
+exact inventory, zero failures/skips and no new compiler warnings. ASan leaks
+disabled. No new engine caller or Python change yet; versioned scheduler blend
+persistence will carry accumulated engine verification. Tested source fingerprint
+`810d6ddf98d21a1c71fd61d80619d820c456a3d228cf10f560a1384fb031224f`.
+
+No M15 stage closes. Blend metadata still needs a versioned save boundary;
+controller/order/global clock and raw COM/time/quaternion/cache, native activation/
+contacts, automatic World getter/frame/reaction integration, retained physical/
+restart failures and S5-S14 acceptance remain open. Existing-display information
+is pending while implementation continues.

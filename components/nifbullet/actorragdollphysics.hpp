@@ -288,6 +288,12 @@ namespace NifBullet
         void restore(std::span<const RagdollBodyState> states,
             std::span<const RagdollNativePackedVelocityState> packedVelocities,
             std::span<const RagdollNativeMotionRequest> motions);
+        // Include the complete blend-target snapshot, independent of actual
+        // modes. Stage raw flags/request/gains before any physical publication.
+        void restore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities,
+            std::span<const RagdollNativeMotionRequest> motions,
+            std::span<const RagdollNativeBlendState> blends);
         // Native units, including both packed fourth lanes. XYZ comes from the
         // current body; fourth lanes have separate owned binary32 storage.
         std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;
@@ -418,6 +424,7 @@ namespace NifBullet
 
     private:
         void validateRestore(std::span<const RagdollBodyState> states) const;
+        void validateNativeBlendStates(std::span<const RagdollNativeBlendState> states) const;
         void publishRestore(std::span<const RagdollBodyState> states);
         std::vector<RagdollBodyState> preparePackedRestore(std::span<const RagdollBodyState> states,
             std::span<const RagdollNativePackedVelocityState> packedVelocities) const;

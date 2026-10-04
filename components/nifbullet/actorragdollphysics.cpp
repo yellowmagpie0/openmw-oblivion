@@ -1247,6 +1247,25 @@ namespace NifBullet
         publishPackedRestore(pending, packedVelocities);
     }
 
+    void ActorRagdollPhysics::restore(std::span<const RagdollBodyState> states,
+        std::span<const RagdollNativePackedVelocityState> packedVelocities,
+        std::span<const RagdollNativeMotionRequest> motions,
+        std::span<const RagdollNativeBlendState> blends)
+    {
+        validateNativeBlendStates(blends);
+        auto targets = mImpl->mBlendTargets;
+        for (const auto& state : blends)
+        {
+            const auto target = std::find_if(targets.begin(), targets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == state.mBodyRecord; });
+            target->mState = state;
+        }
+        // Complete physical staging precedes its handoffs; the metadata buffer
+        // is already allocated and validated. Publish it only after body state.
+        restore(states, packedVelocities, motions);
+        mImpl->mBlendTargets.swap(targets);
+    }
+
     std::vector<std::uint32_t> ActorRagdollPhysics::synchronizeNativeWorldScenes(
         std::span<const RagdollNativeWorldSceneRequest> requests,
         const std::function<void(std::span<const std::uint32_t>)>& beforePublish)
@@ -1873,21 +1892,30 @@ namespace NifBullet
         return result;
     }
 
-    void ActorRagdollPhysics::restoreNativeBlendStates(std::span<const RagdollNativeBlendState> states)
+    void ActorRagdollPhysics::validateNativeBlendStates(std::span<const RagdollNativeBlendState> states) const
     {
         require(states.size() == mImpl->mBlendTargets.size(), "incomplete native blend collision snapshot");
-        auto targets = mImpl->mBlendTargets;
         std::unordered_set<std::uint32_t> selected;
         for (const auto& state : states)
         {
             require(selected.insert(state.mBodyRecord).second, "duplicate native blend collision body");
-            const auto target = std::find_if(targets.begin(), targets.end(),
+            const auto target = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
                 [&](const auto& value) { return value.mState.mBodyRecord == state.mBodyRecord; });
-            require(target != targets.end(), "unknown native blend collision body");
+            require(target != mImpl->mBlendTargets.end(), "unknown native blend collision body");
             require(std::isfinite(state.mGains.mHierarchy) && std::isfinite(state.mGains.mVelocity),
                 "nonfinite native blend collision gains");
-            // Preserve raw requested-motion values independently of actual body
-            // mode, as native load/link do. Controller/scene state is separate.
+        }
+    }
+
+    void ActorRagdollPhysics::restoreNativeBlendStates(std::span<const RagdollNativeBlendState> states)
+    {
+        validateNativeBlendStates(states);
+        auto targets = mImpl->mBlendTargets;
+        for (const auto& state : states)
+        {
+            const auto target = std::find_if(targets.begin(), targets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == state.mBodyRecord; });
+            // Raw request/flags/gains stay independent of actual body modes.
             target->mState = state;
         }
         mImpl->mBlendTargets.swap(targets);
