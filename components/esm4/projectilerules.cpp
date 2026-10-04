@@ -110,6 +110,34 @@ namespace ESM4
         return result;
     }
 
+    BowAnimationProgress advanceBowPlayback(const BowAnimationProgress& progress,
+        float animationClock, float duration, float sequenceStart,
+        const std::array<float, 5>& keyTimes, bool upperBodyPaused, float playbackRate)
+    {
+        nonnegative(duration);
+        if (!std::isfinite(sequenceStart))
+            throw std::invalid_argument("nonfinite native bow sequence start");
+        if (progress.mPhase > BowAnimationPhase::End
+            || !std::isfinite(progress.mSequenceOffset) || !std::isfinite(animationClock))
+            throw std::invalid_argument("invalid native paused bow progress");
+        for (float time : keyTimes)
+            if (!std::isfinite(time))
+                throw std::invalid_argument("nonfinite native bow phase coordinate");
+        auto result = progress;
+        const float relative = rounded(double(progress.mSequenceOffset) - sequenceStart);
+        float adjusted;
+        if (upperBodyPaused)
+            adjusted = rounded(double(relative) - duration);
+        else
+        {
+            if (!std::isfinite(playbackRate))
+                throw std::invalid_argument("nonfinite native bow playback rate");
+            adjusted = rounded(double(relative) + (double(playbackRate) * duration - duration));
+        }
+        result.mSequenceOffset = rounded(double(adjusted) + sequenceStart);
+        return upperBodyPaused ? result : advanceBowAnimation(result, animationClock, keyTimes);
+    }
+
     void validateArrowCleanupSettings(const ArrowCleanupSettings& settings)
     {
         if (settings.mMaximumReferences < 0)

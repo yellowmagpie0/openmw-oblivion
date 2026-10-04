@@ -495,3 +495,62 @@ TEST(ESM4ProjectileRules, BowPhaseRejectsInvalidStateAndStoredOverflow)
     keys[4] = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::advanceBowAnimation({}, 0, keys), std::invalid_argument);
 }
+
+TEST(ESM4ProjectileRules, BowPlaybackPauseSkipsPhaseAndOffsetsAdvancedClock)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    const ESM4::BowAnimationProgress held{Phase::Hold, -.25f};
+    const auto paused = ESM4::advanceBowPlayback(held, 1.75f, .25f, 0, keys, true);
+    EXPECT_EQ(paused.mPhase, Phase::Hold);
+    EXPECT_EQ(paused.mSequenceOffset, -.5f);
+    EXPECT_EQ(paused.mSequenceOffset + 1.75f, keys[2]);
+    const auto released = ESM4::advanceBowPlayback(paused, 2.25f, .5f, 0, keys, false);
+    EXPECT_EQ(released.mPhase, Phase::Release);
+    EXPECT_EQ(released.mSequenceOffset, -.5f);
+    EXPECT_EQ(held.mSequenceOffset, -.25f);
+    EXPECT_EQ(ESM4::advanceBowPlayback({}, 100, 0, 0, keys, true).mPhase, Phase::Start);
+}
+
+TEST(ESM4ProjectileRules, BowPlaybackPausePreservesNativeIntermediateFloatStores)
+{
+    const std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    // Relative conversion discards the unit at this magnitude; a single
+    // offset-minus-duration expression would incorrectly preserve it.
+    const auto result = ESM4::advanceBowPlayback({}, 0, 1, 0x1p25f, keys, true);
+    EXPECT_EQ(result.mSequenceOffset, 0);
+    const auto simple = ESM4::advanceBowPlayback({}, 0, 1, 0, keys, true);
+    EXPECT_EQ(simple.mSequenceOffset, -1);
+}
+
+TEST(ESM4ProjectileRules, BowPlaybackRejectsBadDurationAndPausedState)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    EXPECT_THROW(ESM4::advanceBowPlayback({}, 0, -1, 0, keys, true), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceBowPlayback({}, 0, 0, std::numeric_limits<float>::infinity(), keys, false),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceBowPlayback({static_cast<Phase>(5), 0}, 0, 0, 0, keys, true),
+        std::invalid_argument);
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::advanceBowPlayback({Phase::Hold, maximum}, 0, 0, -maximum, keys, true),
+        std::invalid_argument);
+}
+
+TEST(ESM4ProjectileRules, BowPlaybackAppliesNativeRateBeforeAdvancing)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    const std::array<float, 5> keys{0, .25f, 1.25f, 1.5f, 2};
+    const auto stopped = ESM4::advanceBowPlayback({}, .5f, .25f, 0, keys, false, 0);
+    EXPECT_EQ(stopped.mSequenceOffset, -.25f);
+    EXPECT_EQ(stopped.mPhase, Phase::Start);
+    const auto faster = ESM4::advanceBowPlayback({}, .25f, .25f, 0, keys, false, 1.5f);
+    EXPECT_EQ(faster.mSequenceOffset, .125f);
+    EXPECT_EQ(faster.mPhase, Phase::Attach);
+    const auto normalized = ESM4::advanceBowPlayback({}, 0, 1, 0x1p25f, keys, false, 1);
+    EXPECT_EQ(normalized.mSequenceOffset, 0);
+    EXPECT_THROW(ESM4::advanceBowPlayback({}, 0, 0, 0, keys, false,
+        std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+    EXPECT_NO_THROW(ESM4::advanceBowPlayback({}, 0, 0, 0, keys, true,
+        std::numeric_limits<float>::quiet_NaN()));
+}

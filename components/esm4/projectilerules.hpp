@@ -33,6 +33,16 @@ namespace ESM4
     BowAnimationProgress advanceBowAnimation(const BowAnimationProgress& progress,
         float animationClock, const std::array<float, 5>& keyTimes, bool upperBody = true);
 
+    // Per-slot running-sequence prefix, with the animation clock already
+    // advanced. A paused upper-body slot subtracts the frame duration from
+    // its offset through native float stores and skips phase advancement.
+    // Unpaused playback compensates for the supplied native speed through
+    // the original sequence-start-relative float stores before advancing.
+    // Caller selects pause/release policy and dispatches End/queued playback.
+    BowAnimationProgress advanceBowPlayback(const BowAnimationProgress& progress,
+        float animationClock, float duration, float sequenceStart,
+        const std::array<float, 5>& keyTimes, bool upperBodyPaused, float playbackRate = 1);
+
     struct ArrowCleanupSettings
     {
         std::int32_t mMaximumReferences;

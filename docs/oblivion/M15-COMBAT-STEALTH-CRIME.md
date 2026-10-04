@@ -19788,3 +19788,52 @@ remain applicable. This bounded helper excludes preceding slot-control/clock
 updates, End/queued animation dispatch, actor input/release routing and actual
 gameplay. Subsequent controller tracing is separate. S5 stays in progress;
 no M15 stage closes.
+
+
+### Checkpoint 260: bow pause and playback-speed offset compensation
+
+advanceBowPlayback prepares native upper-body running-sequence progress from
+an already-advanced clock, frame duration, sequence start, playback rate and
+caller-selected pause. Paused playback stores offset-minus-start, subtracts
+duration with another float store, adds start with a third store and skips
+phase advancement. Unpaused playback first stores the relative offset, adds
+rate-times-duration minus duration with a float store, restores start with
+another store, then applies259's five-phase transition. Paused playback never
+reads the unused rate. Negative finite rates survive; nonfinite selected inputs,
+negative duration, invalid phase and stored overflow reject before publication.
+
+Native-bow-playback-prefix-oracle-05 executes original476FA6 through4771DB
+or the per-slot skip4774BD for actual AttackBow19/slot3. Original51AA00 group
+identity and51AE20 key lookup execute. All4320 cases pass in both x87 modes
+across five phases, positive/negative offsets, four clocks, three durations,
+paused/unpaused selectors, two starts and explicit rates0/1/1.5.
+There are no phase/offset boundary stubs. Actor selector production, preceding
+clock increment, terminal/queued animation handling and gameplay are excluded.
+
+Retain setup attempts01 (nested loader split),02 (old clock hook stopping at
+entry),03 (missing per-slot skip stop). Attempt04 is1440 valid rate-zero
+observations, because its animation data was zero-initialized. The first
+implementation omitted unpaused speed/start compensation: both compare-01
+builds retain480 actual mismatches. Expand the native fixture with explicit
+rates, and implement the missing original compensation; do not alter04 outputs.
+Initial2453 full component tests passed but did not verify this missing branch.
+
+Four new component tests check sustained Hold/release, immutable input, pause
+skipping phase, intermediate float-store loss around sequence start2^25, selected
+rate branches, unused-rate skip and invalid-state/overflow rejection.
+Final bow-playback-prefix-normal-02 and sanitized-02 each pass2454 inventoried
+full component tests, zero failures/skips/compiler warnings. Both final native
+comparers pass4320 cases/8640 exact phase and binary32 offset checks, with zero
+mismatches and stable source/archive hashes. ASan leaks disabled; UBSan halts.
+Tested fingerprint:
+dd9777ec3944b72479635b1039039003124d601a267424d4c5ac4126d3965f84
+Original PE SHA256:
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+Oracle source SHA256:
+5f00398e5de76459c98746dc46a725cdf4a0656d10a64749b1718f63ea9031e7
+Corpus SHA256:
+9c6c62750133624371abf141b33ce26ecd4d0000383348841b3b782ea4acceab
+No engine writer or Python codec changed; unchanged958 engine evidence remains
+applicable. This is a playback prefix, not owned controller state, input routing,
+render attachment, release/ammo/fatigue transaction or projectile acceptance.
+S5 remains in progress and no stage closes.
