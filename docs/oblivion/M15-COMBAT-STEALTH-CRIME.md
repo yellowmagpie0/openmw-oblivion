@@ -19652,3 +19652,39 @@ and prior native arithmetic comparisons remain applicable. S5 remains in progres
 native bow release/ammo transaction, transforms/trajectory/impact/recovery,
 saved projectile ownership/continuation, mastery consequences and normal-input
 gameplay/restarts remain open. No stage closes.
+
+### Checkpoint 257: sample actual equipped native bow and actor authority
+
+The native ranged adapter validates actual Player/NPC binding before lazy shared
+inventory construction, reads the equipped bow/ammunition instances and their
+stable winning native identities, and resolves live condition against native
+bow health. It samples Marksman/Luck/Agility through float AV queries and explicit
+int32 truncation, current/base Fatigue through authority, and mastery Marksman/
+AttackBonus through the distinct integer queries. Those inputs feed255's immutable
+launch snapshot. Unsupported profile/actor, uninitialized authority, missing
+equipment, bad ownership/count, missing native identity/type/maximum, invalid
+condition or out-of-domain float AV conversion reject without publication.
+Release eligibility and zero-health/broken-bow controller policy remain separate.
+
+A real World integration test initializes Player/NPC authority and equips actual
+instances through the native staged inventory adapter. Deliberately wrong shared
+TES3 crossbow type, damage255 and health1 cannot influence native bow20/ammo5/
+health100/currentcondition50 sampling. Declared S2 GMST operands and Fatigue70/140
+produce half-draw Player damage3.5625 and full-draw NPC7.125. The NPC ignores the
+player NaN timer. Saved authority bytes, condition and three-arrow count remain
+unchanged. An actual NPC modifier split produces float Marksman25.5 and integer24:
+damage4.3125/gravity.25 use truncated25 while shot fatigue5 uses integer24.
+Missing/unactivated/wrong-type actor and empty equipment reject.
+These are actual authority/equipment queries, not normal-input shots or new
+original whole-actor launch verification.
+
+native-equipped-bow-sampling-normal-01 and sanitized-01 each pass958 exact
+inventoried full engine tests, zero failures/skips/compiler warnings. Both build
+openmw/openmw-tests/esmtool. ASan leaks disabled; UBSan halts.
+Tested fingerprint
+3b9b42865eaafc493119338b6b53b381560ad6d292361b495a98d90bd41af5b5.
+No component numeric rule or Python codec changes; prior component/native rule
+evidence remains applicable. No stage closes. S5 release controller, ammo/
+fatigue/wear transaction, stock bow/arrow attachment, launch transforms,
+native trajectory/impact/recovery, saved projectile ownership, mastery effects
+and normal-input gameplay/restarts remain required, alongside other open stages.

@@ -27,6 +27,8 @@
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/misc/osguservalues.hpp>
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
+#include "apps/openmw/mwmechanics/oblivionranged.hpp"
+#include <components/esm4/loadammo.hpp>
 #include <components/esm4/loadbsgn.hpp>
 #include "apps/openmw/mwworld/player.hpp"
 #include <gtest/gtest.h>
@@ -7954,4 +7956,113 @@ namespace
         EXPECT_TRUE(MWMechanics::updateOblivionStationaryMeleeAi(world, a, false));
         EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
     }
+    TEST(OblivionWorldTest, NativeBowLaunchSamplesEquippedInstancesAndActualAvAuthorityWithoutWrites)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); MWClass::Weapon::registerSelf(); world.setupPlayer();
+        const auto playerBase = ESM::FormKey::content("Oblivion.esm", 7);
+        ESM4::Npc nativePlayer{}; nativePlayer.mId = {7, 1}; nativePlayer.mFormKey = playerBase;
+        nativePlayer.mIsTES4 = true; nativePlayer.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(nativePlayer, playerBase);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr(), npc = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        auto& service = *world.getOblivionCombatService();
+        const auto bowKey = ESM::FormKey::content("headless.esm", 0x940);
+        const auto arrowKey = ESM::FormKey::content("headless.esm", 0x941);
+        ESM4::Weapon bow{}; bow.mId = {0x940, 0}; bow.mData.type = 5;
+        bow.mData.health = 100; bow.mData.damage = 20;
+        store.getWritable<ESM4::Weapon>().insertStatic(bow, bowKey);
+        ESM4::Ammunition arrow{}; arrow.mId = {0x941, 0};
+        arrow.mData.mDamage = 5; arrow.mData.mSpeed = 1;
+        store.getWritable<ESM4::Ammunition>().insertStatic(arrow, arrowKey);
+        for (unsigned id : {0x940u, 0x941u})
+        {
+            ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(ESM::FormId{id, 0});
+            shared.mData.mType = id == 0x940 ? ESM::Weapon::MarksmanCrossbow : ESM::Weapon::Arrow;
+            shared.mData.mHealth = 1;
+            shared.mData.mChop[0] = shared.mData.mChop[1] = 255; // Must not supply native damage.
+            store.insertStatic(shared);
+        }
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f},
+                 {"fDamageWeaponMult", .5f}, {"fDamageSkillMult", 1.5f},
+                 {"fDamageWeaponConditionBase", .5f}, {"fDamageWeaponConditionMult", .5f},
+                 {"fDamageStrengthBase", .75f}, {"fDamageStrengthMult", .5f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0};
+            setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting,
+                ESM::FormKey::content("headless.esm", id++));
+        }
+        const auto initial = captureNativeActorState(fixture, npc);
+        for (const auto actor : {player, npc})
+        {
+            ESM4::RuntimeInventoryItem weapon; weapon.mBase = bowKey;
+            weapon.mCount = 1; weapon.mCondition = 50; weapon.mEquippedSlots = ESM4::InventorySlotWeapon;
+            ESM4::RuntimeInventoryItem ammunition; ammunition.mBase = arrowKey;
+            ammunition.mCount = 3; ammunition.mEquippedSlots = ESM4::InventorySlotAmmunition;
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {weapon, ammunition});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            actor.getClass().getInventoryStore(actor).swapPreparedContents(*staged);
+            auto state = initial;
+            const auto key = actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            auto& values = *std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                [&](const auto& x) { return x.mActor == key; });
+            for (unsigned av : {3u, 7u, 28u})
+            {
+                values.mValues[av] = {};
+                values.mValues[av].mBase = 50;
+            }
+            values.mValues[10] = {}; values.mValues[10].mBase = 140;
+            values.mValues[10].mModifiers[2] = -70;
+            values.mValues[42] = {};
+            service.restore(state, store);
+            const auto before = captureNativeActorState(fixture, npc).serializeBinary();
+            const auto shot = MWMechanics::sampleOblivionEquippedArrowLaunch(world, actor,
+                actor == player ? .625f : std::numeric_limits<float>::quiet_NaN());
+            EXPECT_EQ(shot.mBow, bowKey);
+            EXPECT_EQ(shot.mAmmunition, arrowKey);
+            EXPECT_EQ(shot.mDrawFraction, actor == player ? .5f : 1.f);
+            EXPECT_NEAR(shot.mDamage, actor == player ? 3.5625f : 7.125f, .000001f);
+            EXPECT_EQ(shot.mSpeed, actor == player ? 757.5f : 1500.f);
+            EXPECT_EQ(shot.mShotFatigueDebit, 0);
+            EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before);
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            ASSERT_NE(equipped, inventory.end());
+            EXPECT_EQ(equipped->getCellRef().getNativeItemCondition(), 50);
+            const auto ammo = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+            ASSERT_NE(ammo, inventory.end()); EXPECT_EQ(ammo->getCellRef().getCount(), 3);
+            if (actor == npc)
+            {
+                values.mValues[28] = {};
+                values.mValues[28].mBase = 24;
+                values.mValues[28].mModifiers[0] = .75f;
+                values.mValues[28].mModifiers[1] = .75f;
+                service.restore(state, store);
+                ASSERT_EQ(service.getNonPlayerValue(npc, 28), 25.5f);
+                ASSERT_EQ(service.getNonPlayerIntegerValue(npc, 28), 24);
+                const auto beforeBoundary = captureNativeActorState(fixture, npc).serializeBinary();
+                const auto boundary = MWMechanics::sampleOblivionEquippedArrowLaunch(world, npc,
+                    std::numeric_limits<float>::quiet_NaN());
+                EXPECT_NEAR(boundary.mDamage, 4.3125f, .000001f);
+                EXPECT_NEAR(boundary.mGravityFactor, .25f, .000001f);
+                EXPECT_EQ(boundary.mShotFatigueDebit, 5);
+                EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), beforeBoundary);
+            }
+        }
+        EXPECT_THROW(MWMechanics::sampleOblivionEquippedArrowLaunch(world, {}, 0), std::invalid_argument);
+        const auto unavailable = addNativeNpc(fixture, 0x802);
+        EXPECT_THROW(MWMechanics::sampleOblivionEquippedArrowLaunch(world, unavailable, 0), std::invalid_argument);
+        const auto item = *npc.getClass().getInventoryStore(npc).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        EXPECT_THROW(MWMechanics::sampleOblivionEquippedArrowLaunch(world, item, 0), std::invalid_argument);
+        auto empty = MWWorld::OblivionProfileServices::stageActorInventory({});
+        npc.getClass().getInventoryStore(npc).swapPreparedContents(*empty);
+        EXPECT_THROW(MWMechanics::sampleOblivionEquippedArrowLaunch(world, npc, 0), std::invalid_argument);
+    }
+
 }
