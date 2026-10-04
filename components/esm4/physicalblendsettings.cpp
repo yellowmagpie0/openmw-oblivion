@@ -69,7 +69,8 @@ namespace ESM4
             return result;
         }
 
-        std::optional<float> parsePhysicalBlendDecimal(std::string_view text)
+        std::optional<float> parsePhysicalBlendDecimal(
+            std::string_view text, std::size_t* parsedLength = nullptr)
         {
             std::size_t position = 0;
             while (position < text.size()
@@ -126,6 +127,8 @@ namespace ESM4
                 }
                 exponent += direction * inputExponent;
             }
+            if (parsedLength)
+                *parsedLength = position;
             if (digits.empty())
                 return std::bit_cast<float>(sign);
             if (digits.size() > 24)
@@ -195,6 +198,23 @@ namespace ESM4
                     | (normal.convert_to<std::uint32_t>() - (1u << 23));
             return std::bit_cast<float>(sign | result);
         }
+        PhysicalBlendGains parsePhysicalHitBlendGains(std::string_view text)
+        {
+            text = text.substr(0, text.find('\0'));
+            PhysicalBlendGains result{1.f, 1.f};
+            std::size_t consumed = 0;
+            if (const auto first = parsePhysicalBlendDecimal(text, &consumed))
+            {
+                result.mHierarchy = *first;
+                // The native format is "%f, %f": a space before the literal
+                // comma prevents the second conversion; spaces after it don't.
+                if (consumed < text.size() && text[consumed] == ',')
+                    if (const auto second = parsePhysicalBlendDecimal(text.substr(consumed + 1)))
+                        result.mVelocity = *second;
+            }
+            return result;
+        }
+
     }
 
     PhysicalBlendFloatSettingResult readPhysicalBlendFloatSetting(
@@ -262,6 +282,45 @@ namespace ESM4
                 result.mKnockdown[i] = settings.mKnockdownTime;
         }
         return result;
+    }
+
+    PhysicalHitBlendProfileConfiguration loadPhysicalHitBlendProfile(
+        const PhysicalHitBlendProfile& previous, const PhysicalBlendGainTable& previousGains,
+        const PhysicalBlendDurationTables& previousDurations, std::uint32_t version,
+        const PhysicalHitBlendProfileValues& processedValues)
+    {
+        auto next = previous;
+        if (version >= 14)
+        {
+            for (std::size_t i = 0; i < next.mGains.size(); ++i)
+            {
+                const std::string_view text = processedValues.mGains[i].value_or(next.mGains[i]);
+                // Original4A8800 always stores the returned string, even when
+                // empty. Its unchanged false return does not reject that write.
+                next.mGains[i] = std::string(text.substr(0, std::min<std::size_t>(255, text.find('\0'))));
+            }
+            next.mDurations.mGetUpTime
+                = readPhysicalBlendFloatSetting(previous.mDurations.mGetUpTime, processedValues.mGetUpTime).mValue;
+            next.mDurations.mKnockdownTime
+                = readPhysicalBlendFloatSetting(previous.mDurations.mKnockdownTime, processedValues.mKnockdownTime).mValue;
+            next.mMinimumHierarchy
+                = readPhysicalBlendFloatSetting(previous.mMinimumHierarchy, processedValues.mMinimumHierarchy).mValue;
+            next.mMinimumVelocity
+                = readPhysicalBlendFloatSetting(previous.mMinimumVelocity, processedValues.mMinimumVelocity).mValue;
+        }
+
+        PhysicalHitBlendSettings settings;
+        const std::array<PhysicalBlendGains*, 10> gains{{
+            &settings.mRHand, &settings.mRForeArm, &settings.mRUpperArm,
+            &settings.mLHand, &settings.mLForeArm, &settings.mLUpperArm,
+            &settings.mSpine2, &settings.mSpine1, &settings.mBody, &settings.mHead}};
+        for (std::size_t i = 0; i < gains.size(); ++i)
+            *gains[i] = parsePhysicalHitBlendGains(next.mGains[i]);
+        settings.mMinimumHierarchy = next.mMinimumHierarchy;
+        settings.mMinimumVelocity = next.mMinimumVelocity;
+        auto hit = resolvePhysicalHitBlendConfiguration(previousGains, settings);
+        auto durations = resolvePhysicalBlendDurationTables(previousDurations, next.mDurations);
+        return {std::move(next), std::move(hit), std::move(durations)};
     }
 
     PhysicalKnockdownBlend preparePhysicalKnockdownBlend(PhysicalBlendGains current,

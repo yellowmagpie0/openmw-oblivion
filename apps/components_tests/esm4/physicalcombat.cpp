@@ -4396,3 +4396,92 @@ TEST(ESM4PhysicalCombat, FloatIniReaderRejectsInvalidTextAndOverflowWithoutPubli
     EXPECT_EQ(ESM4::readPhysicalBlendFloatSetting(.25f, embeddedNull).mValue, 1.f);
     EXPECT_EQ(ESM4::readPhysicalBlendFloatSetting(.25f, "\t\v\f\r\n.5").mValue, .5f);
 }
+
+TEST(ESM4PhysicalCombat, HitProfileImportsRawStringsAndAllFloatSettingsBeforeProducingTables)
+{
+    const ESM4::PhysicalHitBlendProfile previous;
+    ESM4::PhysicalHitBlendProfileValues values;
+    for (auto& gain : values.mGains)
+        gain = "-0, -2";
+    values.mGetUpTime = "2";
+    values.mKnockdownTime = ".75";
+    values.mMinimumHierarchy = ".5";
+    values.mMinimumVelocity = "-0";
+    auto oldDurations = ESM4::InitialPhysicalBlendDurationTables;
+    oldDurations.mGetUp[3] = -7.f;
+    const auto result = ESM4::loadPhysicalHitBlendProfile(previous,
+        ESM4::InitialPhysicalHitBlendGainTable, oldDurations, 14, values);
+    for (const auto id : {1u, 2u, 3u, 4u, 5u, 6u, 7u, 11u, 12u, 13u})
+    {
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mHit.mGains[id].mHierarchy), 0x80000000u);
+        EXPECT_EQ(result.mHit.mGains[id].mVelocity, -2.f);
+    }
+    EXPECT_EQ(result.mHit.mGains[22].mHierarchy, 1.f);
+    EXPECT_EQ(result.mHit.mGains[31].mVelocity, .9f);
+    EXPECT_EQ(result.mHit.mMinimumHierarchy, .5f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mHit.mMinimumVelocity), 0x80000000u);
+    for (std::size_t i = 0; i < 32; ++i)
+    {
+        EXPECT_EQ(result.mDurations.mGetUp[i], i == 3 ? -7.f : (i < 25 ? 2.f : -1.f));
+        EXPECT_EQ(result.mDurations.mKnockdown[i], i < 25 ? .75f : -1.f);
+    }
+    for (const auto& gain : result.mProfile.mGains)
+        EXPECT_EQ(gain, "-0, -2");
+    EXPECT_EQ(previous.mGains[9], "0.4, 0.6");
+    EXPECT_EQ(oldDurations.mKnockdown[0], .25f);
+}
+
+TEST(ESM4PhysicalCombat, HitProfileKeepsNativeVersionGateAndStringScanPartialResults)
+{
+    ESM4::PhysicalHitBlendProfile previous;
+    previous.mGains[0] = ".125, .375";
+    ESM4::PhysicalHitBlendProfileValues values;
+    values.mGains[0] = "";
+    values.mGains[1] = "0.5, junk";
+    values.mGains[2] = " .5 , -.25";
+    values.mGains[3] = "1e+,2";
+    values.mGains[4] = "1D2,3";
+    previous.mMinimumHierarchy = 1e-8f;
+    const auto admitted = ESM4::loadPhysicalHitBlendProfile(previous,
+        ESM4::InitialPhysicalHitBlendGainTable, ESM4::InitialPhysicalBlendDurationTables, 0xffffffffu, values);
+    EXPECT_TRUE(admitted.mProfile.mGains[0].empty());
+    EXPECT_EQ(admitted.mHit.mGains[13].mHierarchy, 1.f);
+    EXPECT_EQ(admitted.mHit.mGains[13].mVelocity, 1.f);
+    EXPECT_EQ(admitted.mHit.mGains[12].mHierarchy, .5f);
+    EXPECT_EQ(admitted.mHit.mGains[12].mVelocity, 1.f);
+    EXPECT_EQ(admitted.mHit.mGains[11].mHierarchy, .5f);
+    EXPECT_EQ(admitted.mHit.mGains[11].mVelocity, 1.f);
+    EXPECT_EQ(admitted.mHit.mGains[7].mVelocity, 2.f);
+    EXPECT_EQ(admitted.mHit.mGains[6].mVelocity, 1.f);
+    EXPECT_EQ(admitted.mHit.mMinimumHierarchy, 0.f);
+    // Below14 skips reads, including malformed/nonfinite processed overrides,
+    // but still runs the gain producer from the current raw setting strings.
+    values.mMinimumVelocity = "1e1000";
+    const auto skipped = ESM4::loadPhysicalHitBlendProfile(previous,
+        ESM4::InitialPhysicalHitBlendGainTable, ESM4::InitialPhysicalBlendDurationTables, 13, values);
+    EXPECT_EQ(skipped.mProfile.mGains[0], ".125, .375");
+    EXPECT_EQ(skipped.mHit.mGains[13].mHierarchy, .125f);
+    EXPECT_EQ(skipped.mHit.mGains[13].mVelocity, .375f);
+    EXPECT_EQ(skipped.mHit.mMinimumHierarchy, 1e-8f);
+}
+
+TEST(ESM4PhysicalCombat, HitProfileRejectsLateNonfiniteSettingsWithoutChangingAnyInput)
+{
+    const ESM4::PhysicalHitBlendProfile previous;
+    const auto oldGains = ESM4::InitialPhysicalHitBlendGainTable;
+    const auto oldDurations = ESM4::InitialPhysicalBlendDurationTables;
+    ESM4::PhysicalHitBlendProfileValues values;
+    values.mGains[0] = "0.25, 0.75";
+    values.mGetUpTime = "2";
+    values.mMinimumVelocity = "1e1000";
+    EXPECT_THROW(ESM4::loadPhysicalHitBlendProfile(previous, oldGains, oldDurations, 14, values),
+        std::invalid_argument);
+    values.mMinimumVelocity = ".5";
+    values.mGains[9] = "0.5, 1e1000";
+    EXPECT_THROW(ESM4::loadPhysicalHitBlendProfile(previous, oldGains, oldDurations, 14, values),
+        std::invalid_argument);
+    EXPECT_EQ(previous.mGains[0], "1.0, 1.0");
+    EXPECT_EQ(previous.mDurations.mGetUpTime, 1.f);
+    EXPECT_EQ(oldGains[1].mHierarchy, .3f);
+    EXPECT_EQ(oldDurations.mGetUp[0], 1.f);
+}

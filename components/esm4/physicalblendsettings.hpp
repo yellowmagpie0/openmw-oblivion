@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -124,6 +125,44 @@ namespace ESM4
     // Zero is a supported key interval, not a replacement duration.
     PhysicalBlendDurationTables resolvePhysicalBlendDurationTables(
         const PhysicalBlendDurationTables& previous, const PhysicalBlendDurationSettings& settings);
+
+    // Native HIT string settings remain strings until53A1B0 scans them.
+    // Index order follows RHand, RForeArm, RUpperArm, LHand, LForeArm,
+    // LUpperArm, Spine2, Spine1, Body, Head.
+    struct PhysicalHitBlendProfile
+    {
+        std::array<std::string, 10> mGains{
+            "1.0, 1.0", "1.0, 1.0", "0.2, 0.5", "1.0, 1.0", "1.0, 1.0",
+            "0.2, 0.5", "0.5, 0.7", "0.6, 0.8", "1.0, 1.0", "0.4, 0.6"};
+        PhysicalBlendDurationSettings mDurations;
+        float mMinimumHierarchy = .3f;
+        float mMinimumVelocity = .95f;
+    };
+
+    struct PhysicalHitBlendProfileValues
+    {
+        std::array<std::optional<std::string_view>, 10> mGains;
+        std::optional<std::string_view> mGetUpTime;
+        std::optional<std::string_view> mKnockdownTime;
+        std::optional<std::string_view> mMinimumHierarchy;
+        std::optional<std::string_view> mMinimumVelocity;
+    };
+
+    struct PhysicalHitBlendProfileConfiguration
+    {
+        PhysicalHitBlendProfile mProfile;
+        PhysicalHitBlendConfiguration mHit;
+        PhysicalBlendDurationTables mDurations;
+    };
+
+    // The caller resolves the bare VERSION query separately from processed
+    // text read from the prefixed collection path. Version<14 skips all profile
+    // reads but still runs the HIT producers. Return an owned candidate: no
+    // partial publication if any supported float input is nonfinite.
+    PhysicalHitBlendProfileConfiguration loadPhysicalHitBlendProfile(
+        const PhysicalHitBlendProfile& previous, const PhysicalBlendGainTable& previousGains,
+        const PhysicalBlendDurationTables& previousDurations, std::uint32_t version,
+        const PhysicalHitBlendProfileValues& processedValues);
 
     struct PhysicalKnockdownBlend
     {

@@ -19105,3 +19105,113 @@ separate file-query/collection locations. Automatic World physical admission/
 reaction/update/getup and restored-owner readmission, morphology, full Ni
 traversal/time/contact continuation, retained numeric failures, normal-input
 restart/gameplay and pending S5-S14 remain required.
+
+### Checkpoint247: import every HIT gain/duration producer input atomically
+
+Checkpoint246 committed as `8e001401864125a7117f16b7f5f50d1771127e55`,
+243 isolated commits, tree `9704ac09c3a13395065d18813e0ca3a7a2286c94`;
+bundle224 SHA256
+`aaeb61af94a2724cac45228b841c5c49946bde92568fb479cb4678853cff44e6`.
+
+PhysicalHitBlendProfile retains the ten raw gain strings and four float inputs
+consumed by53A1B0. This is that producer's complete input set, not every key in
+the broader HIT/DEFAULT/QUADHIT configuration sections. Strings follow native
+RHand/RForeArm/RUpperArm/LHand/LForeArm/LUpperArm/Spine2/Spine1/Body/Head order.
+Float names independently read from the original setting objects are
+fGetUpTime:HIT, fKnockDownTime:HIT, fMinHeirGain:HIT (native spelling) and
+fMinVelGain:HIT, with compiled1/.25/.3/.95 values.
+
+loadPhysicalHitBlendProfile accepts current owned raw profile state, previous
+gain/duration tables, an explicit unsigned VERSION query result and optional
+OS-processed text. Below14 skips all profile reads, including nonfinite text
+overrides, but still runs the configured producers. Version14 and UINT_MAX
+admit reads. Missing strings use their current raw default; supplied empty
+strings replace the old string. All admitted string results are capped255
+bytes/NUL. Floats use246's native reader, including missing-key fixed-six
+formatting, malformed-input preservation and explicit nonfinite rejection.
+The producer scans each gain from fresh1/1 temporaries, updates ten body IDs,
+preserves other gain IDs and disabled duration entries, and returns one owned
+profile/gain/minimum/duration candidate. No input or live runtime authority is
+mutated if a late value rejects.
+
+This distinction follows the actual4A8800 string branch: GetPrivateProfileStringA
+is followed unconditionally by4A7980, even for zero returned length. Actual
+4A7980 allocates/copies the returned value and changes its owned name prefix
+to uppercaseS. The reader's boolean remains false despite the write. Its
+boolean is not a transaction-success test for this import. Native53AC60 does
+not use the collection load's boolean to skip its subsequent producers.
+
+Shared decimal parsing now additionally reports consumed prefix length for the
+gain format "%f, %f". It must match a literal comma immediately after the first
+conversion: ".5 , -.25" retains second1, while "1e+,2" yields1/2. "1D2,3"
+retains1/1; D is not a supported exponent in this scanner. Partial/malformed
+second conversions preserve1, and successful trailing suffixes are ignored.
+Original numeric callback tokens were captured in a separate19-case diagnostic;
+expected values do not come from C++.
+
+native-hit-profile-string-oracle-01 executes complete original4A8800 selected
+string read/set then full53A1B0 in760 cases: ten strings,19 texts, both x87
+controls and both initially open/closed collection states. Source SHA256
+`0b02a0c847370109f2af4eefd7640c4887b5b805964d72918781e6cd2b6ce517`;
+corpus
+`a2876759852dea30d40b71e805eb70c08961d2b68daa153a545c124c98d0ee62`.
+String-oracle-02's19 cases capture callback token prefixes; source
+`198f3421a68707129eee8cc9879edac9ee285279a3570bab469747d7be830f11`,
+corpus
+`d90ce56bf1f9388ac0638b23eb92ebb5025b7c67c01f3fcb2f138ee134f437c2`.
+
+native-hit-profile-collection-oracle-03 executes fourteen complete setting
+reader calls followed by full53A1B0 in364 cases: each of fourteen inputs,
+13 text variants and both x87 control words. Each reader and producer requires
+an explicit return. It records all raw strings/floats,64 gain lanes, two minima
+and64 duration lanes. Original executable hash verified:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Source SHA256
+`4169e8f79532a7260d736af80404ded52a37cb6b71d48c754b43a5b525c96ff1`;
+corpus
+`7e0d4ffcf0483f9094279b1946260811da35f858633c6fb955cd059cfc5653c3`.
+Actual CRT initialization/scanf/numeric conversion, setting copy/name mutation
+and collection open/close execute. Explicit boundaries are processed Windows
+profile text, game allocator/free arena, initial C-locale thread, OS error state
+and initial CRT decoded pointers. Calls enumerate the fourteen known settings
+explicitly; original registered-list enumeration/order and actual filesystem
+lookup are not claimed.
+
+Three tests execute and fail against the unimplemented loader. Implementation
+tests cover all ten gain IDs and four float settings, owned raw strings,
+preserved unconfigured/disabled lanes, negative zero, partial scans, missing/
+empty values, UINT_MAX admission, below14 read suppression and late nonfinite
+float/string rejection. Full native-hit-profile-normal-01 and sanitized-01 each
+pass2422 exact inventoried tests, zero failures/skips. Normal has no compiler
+warnings; sanitizer recompilation repeats unchanged inventorymechanics.cpp
+missing-initializer warnings, byte-compared to246 in
+unchanged-warning-source.json. ASan leak checks disabled; UBSan halts.
+Tested fingerprint
+`0af801aac8c5f0646ba263a0f5b7900ca06f9ed17a6bcd4f6dfda99d88516469`.
+
+native-hit-profile-compare-normal-01 and sanitized-01 each compare364 original
+complete profiles with48,748 exact fields and zero mismatches. The28 native
+nonfinite-output cases instead require explicit production rejection. Stable
+source/archive/corpus/executable hashes are checked. Because the shared decimal
+parser gained consumed-length reporting, its full native-float-ini-reader-
+compare-normal-04 and sanitized-04 are also rerun:5058 cases,10,116 exact fields,
+716 explicit nonfinite rejections and zero mismatches each. Engine and Python
+sources did not change; their preceding coverage is not repeated.
+
+Read-only prefix census additionally finds separate valid-CRLF
+drive_c/windows/BlendSettings.ini and Documents/My Games/Oblivion/BlendSettings.ini
+in the historical isolated original-06 prefix. Hashes are respectively
+`db2774c2861e151e06e4bc00088cf5cb12c1e721b657d2e2408a496f57c7566a`
+and
+`164134706b3216f9fc7bf2df6b36e9240ce5aab29ea442ceb0be078f7cfca2a0`.
+The first contains VERSION14; the second contains the broader configuration
+sections. Existing registry files show IniFileMapping entries for win.ini,
+with no matched BlendSettings entry. These are historical prefix inputs with
+unaudited creation provenance, not a new actual winning-file/gameplay probe.
+No files in that prefix were changed.
+
+No stage closes. Actual configuration discovery/import into the runtime owner,
+remaining DEFAULT/QUADHIT and other HIT settings/reaction selectors, initial
+uniform morphology, automatic physical admission/update/getup/readmission,
+native scene traversal/time/contact continuation, retained numerical failures
+and normal-input restart/gameplay remain required. S5-S14 remain pending.
