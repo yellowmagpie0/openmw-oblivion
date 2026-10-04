@@ -12266,3 +12266,48 @@ reaction/update/end/getup or renderer pose publication. True unloaded-cell and
 fresh-process admission, original initial morphology/INI producers, full Ni
 traversal/cache, raw pose/time/activation/contact continuation, retained numerical
 failures, normal-input gameplay acceptance and pending S5-S14 remain required.
+
+
+### Checkpoint243: atomic multi-owner native physical projection retention
+
+Checkpoint242 committed as `adec77814922d1b92d52b9c779df89946c7b017c`,
+239 isolated commits, tree `8ce4250c120fd1b5e85e543438794a6544b50eb0`;
+bundle220 SHA256
+`8aad5b45eb04cd4349ef6d51d8e4196e34cee4e56e287607f5992fd6e181c3d5`.
+
+OblivionCombatService::syncActorRagdolls accepts an ordered group of expected/
+updated optional poses. It checks every expected live pose before validating
+updates, then validates every proposed pose and native value/life/base/asset/
+body identity using the same helper as single-owner publication. All candidate
+map copies, erasures and insertions finish before one nonthrowing map swap.
+Stale input returns false; invalid input throws without changing any owner.
+Unmentioned actors, native values/life, action IDs, events and RNG remain in the
+existing authority. Null updates release cached projections; null expected
+poses admit only absent owners. Empty groups succeed without allocating.
+The existing single-owner path retains its previous publication and performance
+contract; it does not copy the complete map.
+
+The new baseline test executes seven later-owner stale/invalid inputs against
+an intentionally sequential group wrapper. Each produces an earlier-owner
+mutation, demonstrating the missing atomic behavior rather than a setup fault.
+Implementation coverage includes expected absence/stale position; wrong base,
+asset hash, body record, quaternion and model; valid two-owner updates; an
+unmentioned third owner; empty groups; mixed release/admission; and binary
+restart. Each failure compares the whole service save bytes and verifies an
+allocated pending action remains pending, beyond merely checking body positions.
+
+Full native-physical-group-publication-normal-01 and sanitized-01 each pass943
+engine tests with exact inventory, zero failures/skips. Tested fingerprint
+`7be279a0f2ce765da557e48b38eab0083d5b5bfaac6543460ee821b07406560e`; ASan leak checks disabled and UBSan halts. Baseline broad recompilation
+retains the earlier CharacterController maybe-uninitialized and actor-stat test
+range-copy diagnostics; sanitizer broad recompilation retains the range-copy
+diagnostic. Warning source/header bytes are verified unchanged from242 in each
+final run's unchanged-warning-sources.json. No new-source warning is present.
+Lower component arithmetic, codecs and Python sources are unchanged and their
+passing comparisons are not repeated.
+
+This is the native authority transaction needed before retaining current
+physical state across scene teardown. It does not yet wire cell unload or object
+removal, recreate unloaded physical owners, drive reaction/controller/render
+updates, or pass original-game/normal-input/fresh-process gameplay gates.
+No M15 stage closes; pending S5-S14 and earlier retained failures remain open.

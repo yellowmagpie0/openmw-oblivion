@@ -310,6 +310,11 @@ namespace MWMechanics
         bool syncActorRagdoll(const ESM::FormKey& actor,
             const std::optional<ESM4::RuntimeActorRagdoll>& expected,
             const std::optional<ESM4::RuntimeActorRagdoll>& updated);
+        using PhysicalPoseUpdates = std::map<ESM::FormKey,
+            std::pair<std::optional<ESM4::RuntimeActorRagdoll>, std::optional<ESM4::RuntimeActorRagdoll>>>;
+        // All expected poses are checked before any publication. Unmentioned
+        // actors survive; stale input or invalid later updates leave all unchanged.
+        bool syncActorRagdolls(const PhysicalPoseUpdates& updates);
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
         // Preparation does not advance live state. The owned contact publishes
         // the checked transition with all resources/conditions and consumption.

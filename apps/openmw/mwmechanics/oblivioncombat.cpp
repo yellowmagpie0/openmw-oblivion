@@ -3182,6 +3182,29 @@ namespace MWMechanics
         return found == mActorRagdolls.end() ? std::nullopt : std::optional(found->second);
     }
 
+    namespace
+    {
+        void validatePhysicalPoseUpdate(const std::optional<ESM4::RuntimeActorRagdoll>& expected,
+            const std::optional<ESM4::RuntimeActorRagdoll>& updated,
+            const ESM4::RuntimeActorValues* values, const ESM4::RuntimeActorLife* life)
+        {
+            updated->validate();
+            if (!values || !life
+                || values->mBase != updated->mBase || life->mBase != updated->mBase)
+                throw std::invalid_argument("native physical pose requires a matching actor/base/lifecycle owner");
+            if (expected)
+            {
+                if (expected->mBase != updated->mBase || expected->mModel != updated->mModel
+                    || expected->mAssetHash != updated->mAssetHash || expected->mBodies.size() != updated->mBodies.size())
+                    throw std::invalid_argument("native physical pose cannot replace a bound asset");
+                for (std::size_t i = 0; i < expected->mBodies.size(); ++i)
+                    if (expected->mBodies[i].mRecord != updated->mBodies[i].mRecord
+                        || expected->mBodies[i].mNodeRecord != updated->mBodies[i].mNodeRecord)
+                        throw std::invalid_argument("native physical pose cannot replace a bound body identity");
+            }
+        }
+    }
+
     bool OblivionCombatService::syncActorRagdoll(const ESM::FormKey& actor,
         const std::optional<ESM4::RuntimeActorRagdoll>& expected,
         const std::optional<ESM4::RuntimeActorRagdoll>& updated)
@@ -3196,22 +3219,7 @@ namespace MWMechanics
                 mActorRagdolls.erase(found);
             return true;
         }
-        updated->validate();
-        const auto values = mActorValues.find(actor);
-        const auto life = mActorLife.find(actor);
-        if (values == mActorValues.end() || life == mActorLife.end()
-            || values->second.mBase != updated->mBase || life->second.mBase != updated->mBase)
-            throw std::invalid_argument("native physical pose requires a matching actor/base/lifecycle owner");
-        if (expected)
-        {
-            if (expected->mBase != updated->mBase || expected->mModel != updated->mModel
-                || expected->mAssetHash != updated->mAssetHash || expected->mBodies.size() != updated->mBodies.size())
-                throw std::invalid_argument("native physical pose cannot replace a bound asset");
-            for (std::size_t i = 0; i < expected->mBodies.size(); ++i)
-                if (expected->mBodies[i].mRecord != updated->mBodies[i].mRecord
-                    || expected->mBodies[i].mNodeRecord != updated->mBodies[i].mNodeRecord)
-                    throw std::invalid_argument("native physical pose cannot replace a bound body identity");
-        }
+        validatePhysicalPoseUpdate(expected, updated, findActorValues(actor), findActorLife(actor));
         auto candidate = *updated;
         if (found == mActorRagdolls.end())
             mActorRagdolls.emplace(actor, std::move(candidate));
@@ -3220,6 +3228,38 @@ namespace MWMechanics
             static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorRagdoll>);
             std::swap(found->second, candidate);
         }
+        return true;
+    }
+
+    bool OblivionCombatService::syncActorRagdolls(const PhysicalPoseUpdates& updates)
+    {
+        // Check the entire compare-and-swap input before validating updates or
+        // allocating a candidate. No stale later owner can publish an earlier one.
+        for (const auto& [actor, update] : updates)
+        {
+            const auto found = mActorRagdolls.find(actor);
+            if (update.first ? found == mActorRagdolls.end() || found->second != *update.first
+                             : found != mActorRagdolls.end())
+                return false;
+        }
+        for (const auto& [actor, update] : updates)
+            if (update.second)
+                validatePhysicalPoseUpdate(
+                    update.first, update.second, findActorValues(actor), findActorLife(actor));
+        if (updates.empty())
+            return true;
+        auto candidate = mActorRagdolls;
+        for (const auto& [actor, update] : updates)
+        {
+            if (update.second)
+                candidate.insert_or_assign(actor, *update.second);
+            else
+                candidate.erase(actor);
+        }
+        // All validation and allocations have finished. Unmentioned owners,
+        // actor values/life, action IDs, and events retain their live authority.
+        static_assert(noexcept(mActorRagdolls.swap(candidate)));
+        mActorRagdolls.swap(candidate);
         return true;
     }
 

@@ -756,3 +756,76 @@ TEST(OblivionCombatService, PhysicalDowngradeClearAndLegacyReplacementDoNotInven
     EXPECT_TRUE(current.mNativeActorRagdolls.empty());
     EXPECT_EQ(current.mNativeActorLife, state.mNativeActorLife);
 }
+
+TEST(OblivionCombatService, PhysicalGroupPublicationRejectsLateStaleAndInvalidUpdatesAtomically)
+{
+    auto state = combatMembershipState();
+    const auto first = state.mReferences.front().mKey;
+    const auto last = state.mReferences.back().mKey;
+    ASSERT_LT(first, last);
+    const auto middle = state.mReferences[1].mKey;
+    auto one = physicalSnapshot(state);
+    auto two = one;
+    two.mBase = state.mReferences.back().mBase;
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    ASSERT_TRUE(service.syncActorRagdoll(first, std::nullopt, one));
+    ASSERT_TRUE(service.syncActorRagdoll(last, std::nullopt, two));
+    auto untouched = one;
+    untouched.mBase = state.mReferences[1].mBase;
+    ASSERT_TRUE(service.syncActorRagdoll(middle, std::nullopt, untouched));
+    const auto action = service.allocateAction();
+    auto changed = one;
+    changed.mBodies[0].mPosition = {99, 88, 77};
+    auto changedTwo = two;
+    changedTwo.mBodies[0].mPosition = {66, 55, 44};
+    for (unsigned field = 0; field < 7; ++field)
+    {
+        MWMechanics::OblivionCombatService::PhysicalPoseUpdates updates{
+            {first, {one, changed}}, {last, {two, changedTwo}}};
+        if (field == 0) updates.at(last).first = std::nullopt;
+        if (field == 1) updates.at(last).first->mBodies[0].mPosition[0] = 123;
+        if (field == 2) updates.at(last).second->mBase = one.mBase;
+        if (field == 3) updates.at(last).second->mAssetHash[0] = 'a';
+        if (field == 4) updates.at(last).second->mBodies[0].mRecord = 16;
+        if (field == 5) updates.at(last).second->mBodies[0].mRotation[0] = 2;
+        if (field == 6) updates.at(last).second->mModel = "another.nif";
+        auto before = state;
+        service.capture(before);
+        if (field < 2)
+            EXPECT_FALSE(service.syncActorRagdolls(updates));
+        else
+            EXPECT_ANY_THROW(service.syncActorRagdolls(updates));
+        EXPECT_EQ(service.actorRagdoll(first), one);
+        EXPECT_EQ(service.actorRagdoll(last), two);
+        EXPECT_EQ(service.actorRagdoll(middle), untouched);
+        auto after = state;
+        service.capture(after);
+        EXPECT_EQ(after.serializeBinary(), before.serializeBinary());
+        EXPECT_TRUE(service.isActionPending(action));
+        // Reset only after checking both owners, to reach every bad-late case.
+        service.restore(state);
+        ASSERT_TRUE(service.syncActorRagdoll(middle, std::nullopt, untouched));
+        EXPECT_EQ(service.allocateAction(), action);
+        ASSERT_TRUE(service.syncActorRagdoll(first, std::nullopt, one));
+        ASSERT_TRUE(service.syncActorRagdoll(last, std::nullopt, two));
+    }
+    ASSERT_TRUE(service.syncActorRagdolls({{first, {one, changed}}, {last, {two, changedTwo}}}));
+    EXPECT_EQ(service.actorRagdoll(first), changed);
+    EXPECT_EQ(service.actorRagdoll(last), changedTwo);
+    EXPECT_TRUE(service.syncActorRagdolls({}));
+    ASSERT_TRUE(service.syncActorRagdolls({{first, {changed, std::nullopt}}}));
+    EXPECT_FALSE(service.actorRagdoll(first));
+    EXPECT_EQ(service.actorRagdoll(last), changedTwo);
+    ASSERT_TRUE(service.syncActorRagdolls({{first, {std::nullopt, one}}, {last, {changedTwo, std::nullopt}}}));
+    EXPECT_EQ(service.actorRagdoll(first), one);
+    EXPECT_FALSE(service.actorRagdoll(last));
+    auto captured = state;
+    service.capture(captured);
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(captured.serializeBinary()));
+    EXPECT_EQ(restored.actorRagdoll(first), one);
+    EXPECT_FALSE(restored.actorRagdoll(last));
+    EXPECT_EQ(restored.actorRagdoll(middle), untouched);
+    EXPECT_TRUE(restored.isActionPending(action));
+}
