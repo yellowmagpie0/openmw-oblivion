@@ -803,6 +803,76 @@ namespace
         scheduler.removeActorRagdoll(mPtr); EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
+    TEST_P(RagdollSchedulerTest, SavedSharedPhysicalCacheRestoresFreshSchedulerBeforeCrossOwnerHit)
+    {
+        const auto base = ESM::FormKey::content("actors.esm", 100); const std::string model = "characters/_male/skeleton.nif";
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, 4, {}};
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase); const MWWorld::Ptr consumer(&other);
+        ESM4::RuntimeState runtime;
+        runtime.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        runtime.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        runtime.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        runtime.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeActorRagdoll consumerStart;
+        const std::array order{NifBullet::RagdollNativeControllerReference{NifBullet::RagdollNativeControllerKind::Blend, 78}};
+        {
+            MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+            scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+            scheduler.addActorRagdoll(consumer, mGraph, 1, mPoses, 1, -1);
+            consumerStart = scheduler.captureActorRagdollSnapshot(consumer, base, model);
+            auto& curve = consumerStart.mNativeControllers->mBlends[0].mState;
+            curve.mTiming = {0xd, 1, 0, 0, 4}; curve.mClock = {10, 10, 0};
+            curve.mKeys = {{0, {1, 0}}, {4, {0, 1}}};
+            auto producer = consumerStart; producer.mNativeControllers->mBlends[0].mState.mTiming.mFlags = 0x1d;
+            scheduler.restoreActorRagdollSnapshot(mPtr, producer, base, model);
+            scheduler.advanceActorRagdollPhysicalControllers(mPtr, order, 11);
+            const auto cache = scheduler.captureNativeBlendTimeCache();
+            EXPECT_EQ(cache.mCycle, 2u); EXPECT_EQ(cache.mKeyTime, 1.f); EXPECT_EQ(cache.mResult, 3.f);
+            runtime.mNativePhysicalBlendTimeCache = cache;
+            scheduler.removeActorRagdoll(mPtr); scheduler.removeActorRagdoll(consumer);
+            EXPECT_EQ(scheduler.captureNativeBlendTimeCache(), cache); // cache outlives owners
+        }
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(runtime.serializeBinary());
+        ASSERT_TRUE(decoded.mNativePhysicalBlendTimeCache);
+        {
+            MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+            scheduler.addActorRagdoll(consumer, mGraph, 1, mPoses, 1, -1);
+            scheduler.restoreActorRagdollSnapshot(consumer, consumerStart, base, model);
+            EXPECT_EQ(scheduler.captureNativeBlendTimeCache().mCycle, 0xffffffffu);
+            osg::ref_ptr<osg::Stats> stats = new osg::Stats("shared physical cache save barrier");
+            std::vector<MWPhysics::Simulation> frame; float time = 1.f / 60.f;
+            scheduler.applyQueuedMovements(time, frame, osg::Timer::instance()->tick(), 0, *stats, MWPhysics::WorldFrameData(false, {}));
+            scheduler.restoreNativeBlendTimeCache(*decoded.mNativePhysicalBlendTimeCache);
+            ASSERT_EQ(scheduler.captureNativeBlendTimeCache(), *decoded.mNativePhysicalBlendTimeCache);
+            const auto before = scheduler.captureActorRagdollSnapshot(consumer, base, model);
+            for (unsigned field = 0; field < 4; ++field)
+            {
+                auto bad = *decoded.mNativePhysicalBlendTimeCache;
+                switch (field)
+                {
+                    case 0: bad.mStopKey = std::numeric_limits<float>::quiet_NaN(); break;
+                    case 1: bad.mStartKey = std::numeric_limits<float>::infinity(); break;
+                    case 2: bad.mKeyTime = -std::numeric_limits<float>::infinity(); break;
+                    case 3: bad.mResult = std::numeric_limits<float>::quiet_NaN(); break;
+                }
+                EXPECT_THROW(scheduler.restoreNativeBlendTimeCache(bad), std::invalid_argument);
+                EXPECT_EQ(scheduler.captureNativeBlendTimeCache(), *decoded.mNativePhysicalBlendTimeCache);
+                EXPECT_EQ(scheduler.captureActorRagdollSnapshot(consumer, base, model), before);
+            }
+            scheduler.advanceActorRagdollPhysicalControllers(consumer, order, 11);
+            const auto gains = scheduler.captureActorRagdollBlendStates(consumer)[0].mGains;
+            EXPECT_EQ(gains.mHierarchy, .25f); EXPECT_EQ(gains.mVelocity, .75f);
+            scheduler.removeActorRagdoll(consumer);
+            const ESM4::PhysicalBlendTimeCache raw{0xffffffffu, 1, -1, -0.f, -.25f};
+            scheduler.restoreNativeBlendTimeCache(raw);
+            EXPECT_EQ(scheduler.captureNativeBlendTimeCache(), raw);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(scheduler.captureNativeBlendTimeCache().mKeyTime), 0x80000000u);
+        }
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
 }

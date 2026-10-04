@@ -917,6 +917,11 @@ namespace MWPhysics
         return mTaskScheduler->captureActorRagdollBlendStates(ptr);
     }
 
+    void PhysicsSystem::restoreNativeBlendTimeCache(const ESM4::PhysicalBlendTimeCache& cache)
+    {
+        mTaskScheduler->restoreNativeBlendTimeCache(cache);
+    }
+
     ESM4::PhysicalBlendTimeCache PhysicsSystem::captureNativeBlendTimeCache()
     {
         return mTaskScheduler->captureNativeBlendTimeCache();

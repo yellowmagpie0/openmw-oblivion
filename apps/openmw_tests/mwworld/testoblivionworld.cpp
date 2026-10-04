@@ -361,6 +361,15 @@ namespace
             physics.updatePtr(updated, updated);
             ptr = updated;
             EXPECT_EQ(physics.actorRagdollDefinition(ptr).mSourceHash, graph.mSourceHash);
+            const auto initialCache = physics.captureNativeBlendTimeCache();
+            const ESM4::PhysicalBlendTimeCache savedCache{0xffffffffu, 1, -1, -0.f, -.25f};
+            physics.restoreNativeBlendTimeCache(savedCache);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), savedCache);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(physics.captureNativeBlendTimeCache().mKeyTime), 0x80000000u);
+            auto invalidCache = savedCache; invalidCache.mResult = std::numeric_limits<float>::quiet_NaN();
+            EXPECT_THROW(physics.restoreNativeBlendTimeCache(invalidCache), std::invalid_argument);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), savedCache);
+            physics.restoreNativeBlendTimeCache(initialCache);
             const auto base = ESM::FormKey::content("headless.esm", 0x800);
             const auto original = physics.captureActorRagdollSnapshot(ptr, base, path.value());
             ASSERT_TRUE(original.mBodies[0].mNativePackedVelocity);

@@ -261,6 +261,7 @@ namespace MWPhysics
         std::vector<NifBullet::RagdollNativeBlendControllerState> captureActorRagdollBlendControllers(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollNativeBlendState> captureActorRagdollBlendStates(const MWWorld::Ptr& ptr);
         ESM4::PhysicalBlendTimeCache captureNativeBlendTimeCache();
+        void restoreNativeBlendTimeCache(const ESM4::PhysicalBlendTimeCache& cache);
         std::vector<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlendControllers(
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeBlendControllerTarget> targets,
             float inputTime, float preparedFrameSeconds, std::uint32_t rawUpdateSelector);

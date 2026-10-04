@@ -1,6 +1,7 @@
 #include "mtphysics.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -980,6 +981,16 @@ namespace MWPhysics
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         return actorRagdoll(ptr).mPhysics.captureNativeBlendStates();
+    }
+
+    void PhysicsTaskScheduler::restoreNativeBlendTimeCache(const ESM4::PhysicalBlendTimeCache& cache)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        for (float value : {cache.mStopKey, cache.mStartKey, cache.mKeyTime, cache.mResult})
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite saved native physical clock cache");
+        *mNativeBlendTimeCache = cache;
     }
 
     ESM4::PhysicalBlendTimeCache PhysicsTaskScheduler::captureNativeBlendTimeCache()

@@ -11733,3 +11733,50 @@ verification. Automatic World lifecycle/reaction/update/getter/frame wiring,
 renderer-global traversal/cache, raw COM/time/quaternion/cache, activation/contact
 continuation, retained physical/restart failures and S5-S14/normal-input acceptance
 remain required.
+
+
+### Checkpoint234: publish saved shared physical cache through scheduler authority
+
+PhysicsTaskScheduler now exposes restoreNativeBlendTimeCache, forwarded by the
+actual PhysicsSystem. Restore waits for workers, holds the exclusive physics
+lock, checks all four cached float fields for finiteness before publication and
+then assigns the complete cache. Raw uint32 cycle, finite reversed cached bounds
+and scalar signed zeros retain version36's raw snapshot contract; no controller
+or body state is changed. Active clock admission remains the prior helper rule.
+The cache can be restored without any actor owners, and removing the last owner
+does not discard it. This operation publishes only global cache state; it is not
+a transaction covering the separate per-actor restore calls.
+
+physical-cache-scheduler-baseline-01 executes three worker-count cases0/1/2 and
+fails exactly at the fresh scheduler's unchanged default cache after no-op
+restore. The fixture first advances a reversed producer controller at time11
+with start/previous10, ordered keys0[1,0],4[0,1] and interval0/4. This produces a
+cache with cycle2, key1 and result3. It saves that cache in version36 with no
+ragdoll owners, destroys the scheduler, starts a new one, restores a distinct
+consumer's initial normal controller state, queues a movement frame and then
+restores the saved cache. The consumer at11 reuses result3 because native cache
+identity omits the reverse flag, yielding hierarchy/velocity gains.25/.75;
+a cold recomputation would yield.75/.25. Each late nonfinite cache field rejects
+without changing captured cache/body/controller state. No-owner restoration of
+FFFFFFFF cycle, reversed finite bounds and negative-zero key time also passes.
+Actual PhysicsSystem's existing fixture loops0/1/2 workers and exercises saved
+cache publication, signed-zero bits, nonfinite-result rollback and restoration
+of the prior cache before its remaining checks.
+
+Full physical-cache-scheduler-normal/sanitized-01 each passes914 engine cases,
+exact inventory and zero failures/skips. Tested fingerprint `ba0557e2a7dd5c788eb3b756e3aca7545c37597505f2ee5479c869e85fee1e52`. ASan leak
+checks remain disabled. The baseline's broader recompilation retains existing
+character.cpp maybe-uninitialized and actor-stats range-loop copy warnings;
+final run warning inspection is recorded in the evidence. No physics arithmetic
+rule or tolerance changes. Version36's unchanged2,409 component/255 Python and
+110,592 original-cache binary/JSON interoperability comparisons remain recorded
+at checkpoint233 and were not repeated solely for this forwarding integration.
+The original194/196 cache identity and instruction-boundary provenance remains
+unchanged; this explicit engine phase is not an original fresh-process restart
+or contact/world/gameplay acceptance course.
+
+No M15 gate closes. Consistent multiowner capture/publication and automatic World
+save/lifecycle/reaction/update/getter/frame wiring remain to implement. Renderer-
+global Ni traversal/cache, raw COM/time/quaternion/cache, activation/contact
+continuation, retained restart/physical failures, normal-input display acceptance
+and S5-S14 remain required.
