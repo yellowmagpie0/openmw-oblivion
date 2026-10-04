@@ -19913,3 +19913,97 @@ Corrected corpus SHA256:
 4913419c0cb93541e318142b270cd2570d4a90e79dbbc97e261061c7ec504d30
 No normal-input draw, controller restart, ammunition debit, native projectile
 or impact is claimed. S5 stays in progress; all other open gates remain.
+
+
+### S5 owned bow playback and release protocol (checkpoint262)
+
+Bow draw ownership now survives capture/restore independently of renderer
+handles. RuntimeBowState retains the action ID, stable bow/ammunition keys,
+group/rate, phase/offset, five key times, native logical action and release
+acknowledgment. Supported complete key sequences are finite, nonnegative and
+ordered with End after Start. Logical transitions are drawing4 at Start/Attach,
+nocked5 at Attach/Hold/Release, and committed followthrough3 at Release/End.
+This domain restriction is an engine admission contract, not a claim about
+every malformed native KF. Finite zero/negative playback rates remain representable.
+
+Begin prepares every map node/string before allocating an ID; it requires idle,
+awake, unparalyzed Active Alive authority and no owned melee/bow playback.
+Actual raw process binding gates progression and pending events. Clock,
+progress and the selected Player timer are prepared before publication.
+Attach and Release events must be acknowledged before another phase step,
+preventing large elapsed frames from skipping their ownership boundary.
+Attachment acknowledgment changes4 to5. Release acknowledgment retires the
+pending ID and changes5 to3 while retaining followthrough. It is a logical
+transaction boundary for a caller's prepared writes; it does not itself debit
+ammunition/fatigue/condition, attach geometry or spawn a projectile.
+Finish requires committed End. Cancellation clears only a matching raw
+process action, retains foreign posture, and consumes pending ownership once.
+Existing generic action consumption and incapacitation/death cancellation now
+clear bow state. Melee/block admission rejects owned bow playback, and the
+physical-contact writer rejects a bow draw ID before resource/RNG preparation.
+
+Schema38 appends a sorted actor collection after37's optional timer:
+U32 count; actor string, U64 ID, bow/ammo/group strings, F32 rate,
+U8 phase, F32 offset, five F32 keys, I16 logical action, U8 release marker.
+C++/Python reject malformed markers, incoherent action/phase, dangling or
+incapacitated owners, missing clocks, simultaneous melee, duplicate IDs,
+unowned pending draws, committed-pending replay, nonfinite values,
+truncation/trailing data and populated downgrades. Canonical identities and
+signed-zero floats survive. Older1..37 snapshots contain no draw. The Python
+save rewrite and acceptance mutator initialize an empty collection on promotion;
+a legacy snapshot carrying fabricated bow state rejects before overwriting output.
+
+Original event oracle01 executes actor readiness/dispatch5FCBB1 with actual
+5E0EE0/470750 queries. Stable declared process virtual2D0 and2D4 hooks provide
+action and sequence pointer; an observer asserts the returned action every case.
+Attach guard success stops at5FCF8C, Release at5FD11A, no-event/unready at
+5FD7DE/5FD8B3, before geometry/ammunition mutation. All336 raw cases return.
+The280 phase0..4 supported cases match exactly in both final normal and
+ASan/UBSan comparisons. Negative raw phase and unrelated action0/1/2/9/10
+dispatch paths remain excluded. Read-only native continuation at5FD0F6/5FD0F8
+sets action5 after nocking;5FD54C/5FD550 sets action3 after release.
+Those reads do not verify full setters, geometry or launch. Native Quiver
+lookup names Arrow:0 (A6EA84), not ArrowBone; renderer integration must respect
+the actual geometry/context rather than drawing the whole ammunition model.
+
+Three new component tests cover event dispatch, literal schema38 wire,
+legacy absence and invalid/replaying states. Four service tests cover
+draw/Hold save continuation, one release acknowledgment, retained committed
+followthrough, completion, stale IDs, invalid-frame/restore/downgrade atomicity,
+melee/block exclusion, cancellation/foreign posture, and the real contact API
+rejecting draw ownership without resource changes. Three Python tests cover
+independent literal bytes, invalid/corrupt input and legacy file rewriting.
+Final normal03 passes2461 full component,964 full engine and260 Python tests.
+Final sanitized03 passes2461 full component and964 full engine tests.
+Exact C++ inventories match; zero failures/skips. Both build openmw,
+openmw-tests and esmtool. ASan leak checks remain disabled; UBSan halts.
+
+Retain initial Python production-encoder failure (composite calls to a
+scalar-only Writer.pack), both full01 corruption-test failures, normal02's
+save-promoter failure, and the new migration fixture's unsorted-ID comparison.
+Correct the production scalar writer/promotion paths and make older corruption
+tests target the intended fields; the actor-clock test now asserts its exact
+actor/count location in every supported schema. Compare migration IDs with the
+decoded legacy namespace, which already has canonical sorted pending IDs.
+Native expectations are unchanged. Final03 incremental builds emit no new
+warnings;01/02 broad rebuilds retain existing inventory mOwner initializer,
+Character animation-queue GCC16 and actorstats range-loop copy warnings.
+Their unchanged source hashes versus261 are recorded, without a blanket
+false-positive claim.
+
+Final wire cross-language normal03/sanitized03 each pass eight exact binary and
+canonical-JSON roundtrips:37 absence,38 empty, all five coherent phases,
+and separately pending Release, including signed-zero offset/rate.
+Tested fingerprint:
+33c20ead5046be6da851d394d36183644ee382de963c7f259d2db92dc5e159ee
+Original PE SHA256:
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+Oracle source SHA256:
+de007cf3612555dbea2e2c846eff6722334afe49cdab3b745fd71e970900aee0
+Oracle corpus SHA256:
+2767857331f834a0c292c24d025d2234f62c625a7eeac79956e51279cfb5237e
+The next integration must connect actual controller input, equipped model
+bindings/held geometry, Player hold fatigue and the prepared successful-release
+transaction, then native in-flight/impact persistence. These backend tests
+do not establish normal-input bow gameplay. S5 remains in progress and no
+other open stage or runtime gate closes.

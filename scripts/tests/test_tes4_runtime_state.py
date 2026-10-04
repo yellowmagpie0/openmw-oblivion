@@ -151,6 +151,94 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+
+    def bow_state(self):
+        state = self.melee_state()
+        state["native_melee_states"] = []
+        state_io._upgrade_actor_draw(state)
+        state["schema_version"] = 38
+        actor = state["native_actor_values"][0]["actor"]
+        state["native_animation_clocks"] = [{"actor": actor, "clock": .5}]
+        state["native_bow_states"] = [{"actor": actor, "id": 2,
+            "bow_base": "content:oblivion.esm:025231", "ammo_base": "content:oblivion.esm:017829",
+            "animation_group": "bowattack", "playback_rate": 1.5, "phase": 1, "sequence_offset": -0.,
+            "key_times": [0., .25, 1., 1.5, 2.], "action": 4, "release_committed": False}]
+        return state
+
+    def test_bow38_independent_wire_legacy_and_committed_continuation(self):
+        state = self.bow_state()
+        old = copy.deepcopy(state); old["schema_version"] = 37; del old["native_bow_states"]
+        legacy = state_io.encode_payload(old); expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 38)
+        expected += struct.pack("<I", 1)
+        bow = state["native_bow_states"][0]
+        def text(value):
+            data = value.encode(); return struct.pack("<I", len(data)) + data
+        expected += text(bow["actor"]) + struct.pack("<Q", 2)
+        for field in ("bow_base", "ammo_base", "animation_group"): expected += text(bow[field])
+        expected += bytes.fromhex("0000c03f0100000080000000000000803e0000803f0000c03f00000040040000")
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, expected)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_bow_states"], state["native_bow_states"])
+        self.assertEqual(struct.pack("<f", decoded["native_bow_states"][0]["sequence_offset"]), bytes.fromhex("00000080"))
+        self.assertNotIn("native_bow_states", state_io.decode_payload(legacy))
+        bow.update(action=3, phase=3, release_committed=True)
+        state["physical_actions"]["pending"].remove(2)
+        state["physical_action_owners"] = [x for x in state["physical_action_owners"] if x["id"] != 2]
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_bow_states"], [bow])
+
+
+    def test_bow38_legacy_rewrite_has_no_invented_draw_or_identity(self):
+        state = self.bow_state(); state["schema_version"] = 37; del state["native_bow_states"]
+        payload = state_io.encode_payload(state)
+        body = struct.pack("<4sII", b"VERS", 4, 37) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        record = struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body
+        tail = struct.pack("<4sIII", b"TEST", 4, 0, 0) + b"keep"
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)/"source.omwsave"; target = Path(directory)/"target.omwsave"
+            source.write_bytes(record + tail)
+            state_io.write_save(source, target, state)
+            decoded = state_io.load_save(target)
+            self.assertEqual(decoded["schema_version"], 38)
+            self.assertEqual(decoded["native_bow_states"], [])
+            self.assertEqual(decoded["physical_actions"], state_io.decode_payload(payload)["physical_actions"])
+            self.assertEqual(decoded["physical_action_owners"], sorted(state["physical_action_owners"], key=lambda x:x["id"]))
+            self.assertTrue(target.read_bytes().endswith(tail))
+            invalid = self.bow_state(); invalid["schema_version"] = 37
+            before = target.read_bytes()
+            with self.assertRaises(state_io.RuntimeStateError): state_io.write_save(source, target, invalid)
+            self.assertEqual(target.read_bytes(), before)
+
+    def test_bow38_rejects_corruption_replay_and_incoherent_states(self):
+        state = self.bow_state()
+        def bow(s): return s["native_bow_states"][0]
+        changes = [
+            lambda s: s.update(schema_version=37),
+            lambda s: s["native_bow_states"].append(copy.deepcopy(bow(s))),
+            lambda s: s.update(native_animation_clocks=[]),
+            lambda s: s.update(native_actor_life=[]),
+            lambda s: s.update(physical_action_owners=[]),
+            lambda s: bow(s).update(actor="null"),
+            lambda s: bow(s).update(bow_base="Content:oblivion.esm:025231"),
+            lambda s: bow(s).update(ammo_base="null"),
+            lambda s: bow(s).update(animation_group=""),
+            lambda s: bow(s).update(id=True),
+            lambda s: bow(s).update(phase=2),
+            lambda s: bow(s).update(action=6),
+            lambda s: bow(s).update(release_committed=True),
+            lambda s: bow(s).update(playback_rate=float("inf")),
+            lambda s: bow(s).update(sequence_offset=float("nan")),
+            lambda s: bow(s).update(key_times=[0, .25, .125, 1.5, 2])]
+        for index, mutate in enumerate(changes):
+            bad = copy.deepcopy(state); mutate(bad)
+            with self.subTest(index=index), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        payload = state_io.encode_payload(state)
+        for cut in range(1, 41):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-cut])
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-1] + b"\x02")
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload + b"\x00")
+
     def test_player_bow_timer_v37_golden_and_legacy_absence(self):
         old = make_state(); old["schema_version"] = 36; old["ai_rng_state"] = 1
         legacy = state_io.encode_payload(old)

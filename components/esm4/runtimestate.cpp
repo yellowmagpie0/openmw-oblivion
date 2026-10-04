@@ -685,6 +685,26 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 native actor life state");
     }
 
+    void RuntimeBowState::validate() const
+    {
+        const auto phase = mProgress.mPhase;
+        if (!mActionId || mBowBase.isNull() || mAmmoBase.isNull()
+            || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
+            || mAnimationGroup.find('\0') != std::string::npos
+            || !std::isfinite(mPlaybackRate) || !std::isfinite(mProgress.mSequenceOffset)
+            || phase > BowAnimationPhase::End)
+            throw std::runtime_error("Invalid TES4 owned bow playback");
+        for (std::size_t i = 0; i < mKeyTimes.size(); ++i)
+            if (!std::isfinite(mKeyTimes[i]) || mKeyTimes[i] < 0
+                || (i && mKeyTimes[i] < mKeyTimes[i - 1]))
+                throw std::runtime_error("Invalid TES4 supported bow key sequence");
+        if (mKeyTimes.back() <= mKeyTimes.front()
+            || (mReleaseCommitted ? (mAction != 3 || phase < BowAnimationPhase::Release)
+                : (mAction == 4 ? phase > BowAnimationPhase::Attach
+                    : mAction != 5 || phase < BowAnimationPhase::Attach || phase > BowAnimationPhase::Release)))
+            throw std::runtime_error("Incoherent TES4 bow action and phase");
+    }
+
     void RuntimeMeleeInput::validate() const
     {
         if (!std::isfinite(mHeldSeconds) || mHeldSeconds < 0
@@ -774,6 +794,7 @@ namespace ESM4
         checkSize(mPhysicalActions.mPending.size(), "pending physical action list");
         checkSize(mPhysicalActionOwners.size(), "physical action owner list");
         checkSize(mNativeMeleeStates.size(), "native melee state list");
+        checkSize(mNativeBowStates.size(), "native bow state list");
         checkSize(mNativeAnimationClocks.size(), "native animation clock list");
         checkSize(mNativeActorValues.size(), "native actor-value list");
         checkSize(mNativeActorBases.size(), "native actor-base list");
@@ -998,6 +1019,23 @@ namespace ESM4
                         : !pending || owner == mPhysicalActionOwners.end() || owner->second != actor))
                     throw std::runtime_error("Invalid, duplicate or replaying TES4 melee action identity");
             }
+        }
+        if (mVersion < 38 && !mNativeBowStates.empty())
+            throw std::runtime_error("TES4 owned bow playback requires runtime-state version38");
+        for (const auto& [actor, bow] : mNativeBowStates)
+        {
+            bow.validate();
+            const auto life = lives.find(actor);
+            const auto melee = mNativeMeleeStates.find(actor);
+            const auto owner = mPhysicalActionOwners.find(bow.mActionId);
+            const bool pending = pendingActions.contains(bow.mActionId);
+            if (!nativeActors.contains(actor) || life == lives.end()
+                || life->second->mPhase != ActorLifePhase::Alive || !mNativeAnimationClocks.contains(actor)
+                || (melee != mNativeMeleeStates.end() && melee->second.mStrike)
+                || !meleeIds.insert(bow.mActionId).second || bow.mActionId >= mPhysicalActions.mNext
+                || (bow.mReleaseCommitted ? pending
+                    : !pending || owner == mPhysicalActionOwners.end() || owner->second != actor))
+                throw std::runtime_error("Dangling, duplicate or replaying TES4 bow ownership");
         }
         if (mVersion < 6 && !mPendingPackageDone.empty())
             throw std::runtime_error("TES4 runtime-state versions before 6 cannot contain pending package events");
@@ -1906,6 +1944,24 @@ namespace ESM4
             if (mNativePlayerBowTimer)
                 writer.floating(*mNativePlayerBowTimer);
         }
+        if (mVersion >= 38)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeBowStates.size()));
+            for (const auto& [actor, bow] : mNativeBowStates)
+            {
+                writer.string(actor.serialize());
+                writer.integer(bow.mActionId);
+                writer.string(bow.mBowBase.serialize());
+                writer.string(bow.mAmmoBase.serialize());
+                writer.string(bow.mAnimationGroup);
+                writer.floating(bow.mPlaybackRate);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(bow.mProgress.mPhase));
+                writer.floating(bow.mProgress.mSequenceOffset);
+                for (float time : bow.mKeyTimes) writer.floating(time);
+                writer.integer(bow.mAction);
+                writer.integer<std::uint8_t>(bow.mReleaseCommitted);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2710,6 +2766,36 @@ namespace ESM4
                 throw std::runtime_error("Invalid native Player bow timer presence marker");
             if (present)
                 result.mNativePlayerBowTimer = reader.float32();
+        }
+        if (result.mVersion >= 38)
+        {
+            const auto key = [&reader]() {
+                const auto text = reader.string();
+                const auto value = ESM::FormKey::deserialize(text);
+                if (value.isNull() || value.serialize() != text)
+                    throw std::runtime_error("Invalid TES4 canonical bow identity");
+                return value;
+            };
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto actor = key();
+                RuntimeBowState bow;
+                bow.mActionId = reader.integer<std::uint64_t>();
+                bow.mBowBase = key(); bow.mAmmoBase = key();
+                bow.mAnimationGroup = reader.string();
+                bow.mPlaybackRate = reader.float32();
+                bow.mProgress.mPhase = static_cast<BowAnimationPhase>(reader.integer<std::uint8_t>());
+                bow.mProgress.mSequenceOffset = reader.float32();
+                for (float& time : bow.mKeyTimes) time = reader.float32();
+                bow.mAction = reader.integer<std::int16_t>();
+                const auto committed = reader.integer<std::uint8_t>();
+                if (committed > 1)
+                    throw std::runtime_error("Invalid TES4 bow release marker");
+                bow.mReleaseCommitted = committed;
+                if (!result.mNativeBowStates.emplace(std::move(actor), std::move(bow)).second)
+                    throw std::runtime_error("Duplicate TES4 bow actor");
+            }
         }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
@@ -3537,6 +3623,35 @@ namespace ESM4
                 stream << "-0.0";
             else
                 stream << *mNativePlayerBowTimer;
+        }
+        if (mVersion >= 38)
+        {
+            const auto scalar = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << value;
+            };
+            const auto quote = [](std::string_view value) { return '"' + escapeJson(value) + '"'; };
+            stream << ",\"native_bow_states\":[";
+            bool first = true;
+            for (const auto& [actor, bow] : mNativeBowStates)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":" << quote(actor.serialize())
+                    << ",\"id\":" << bow.mActionId
+                    << ",\"bow_base\":" << quote(bow.mBowBase.serialize())
+                    << ",\"ammo_base\":" << quote(bow.mAmmoBase.serialize())
+                    << ",\"animation_group\":" << quote(bow.mAnimationGroup)
+                    << ",\"playback_rate\":"; scalar(bow.mPlaybackRate);
+                stream << ",\"phase\":" << static_cast<unsigned>(bow.mProgress.mPhase)
+                    << ",\"sequence_offset\":"; scalar(bow.mProgress.mSequenceOffset);
+                stream << ",\"key_times\":[";
+                for (std::size_t i = 0; i < bow.mKeyTimes.size(); ++i)
+                { if (i) stream << ','; scalar(bow.mKeyTimes[i]); }
+                stream << "],\"action\":" << bow.mAction
+                    << ",\"release_committed\":" << (bow.mReleaseCommitted ? "true" : "false") << '}';
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();

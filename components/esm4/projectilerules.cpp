@@ -151,6 +151,20 @@ namespace ESM4
         return rounded(double(current) + duration);
     }
 
+    BowActionEvent bowActionEvent(std::int32_t action, BowAnimationPhase phase,
+        bool present, bool running)
+    {
+        if (phase > BowAnimationPhase::End)
+            throw std::invalid_argument("invalid native bow event phase");
+        if (!present || !running)
+            return BowActionEvent::None;
+        if (action == 4 && phase == BowAnimationPhase::Attach)
+            return BowActionEvent::Attach;
+        if (action == 5 && phase == BowAnimationPhase::Release)
+            return BowActionEvent::Release;
+        return BowActionEvent::None;
+    }
+
     void validateArrowCleanupSettings(const ArrowCleanupSettings& settings)
     {
         if (settings.mMaximumReferences < 0)

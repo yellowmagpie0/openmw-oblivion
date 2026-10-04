@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 37
+CURRENT_VERSION = 38
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1241,6 +1241,42 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if (committed and identity in seen_actions) or (not committed and owner_map.get(identity) != actor):
             raise RuntimeStateError("Replaying or unowned TES4 melee action")
         melee_ids.add(identity)
+    bows = check_collection(state.get("native_bow_states", []), "native bow state list")
+    if version < 38 and bows:
+        raise RuntimeStateError("TES4 owned bow playback requires version38")
+    bow_actors = set()
+    strike_actors = {entry["actor"] for entry in melee_states if entry["strike"] is not None}
+    for bow in bows:
+        fields = {"actor", "id", "bow_base", "ammo_base", "animation_group",
+                  "playback_rate", "phase", "sequence_offset", "key_times", "action", "release_committed"}
+        if not isinstance(bow, dict) or set(bow) != fields:
+            raise RuntimeStateError("Invalid TES4 bow state")
+        actor, identity = bow["actor"], bow["id"]
+        for field in ("actor", "bow_base", "ammo_base"):
+            native_key(bow[field])
+        phase, action, committed = bow["phase"], bow["action"], bow["release_committed"]
+        if (actor in bow_actors or actor not in native_keys or phases.get(actor) != 0
+                or actor not in clock_actors or actor in strike_actors
+                or type(identity) is not int or not 0 < identity < next_action or identity in melee_ids
+                or type(phase) is not int or not 0 <= phase <= 4
+                or type(action) is not int or type(committed) is not bool):
+            raise RuntimeStateError("Invalid TES4 bow owner, identity or phase")
+        if (committed and (action != 3 or phase < 3 or identity in seen_actions)
+                or not committed and (owner_map.get(identity) != actor
+                    or (action == 4 and phase > 1)
+                    or (action != 4 and (action != 5 or not 1 <= phase <= 3)))):
+            raise RuntimeStateError("Incoherent or replaying TES4 bow action")
+        group = bow["animation_group"]
+        if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
+            raise RuntimeStateError("Invalid TES4 bow animation group")
+        native_float(bow["playback_rate"]); native_float(bow["sequence_offset"])
+        times = bow["key_times"]
+        if not isinstance(times, list) or len(times) != 5:
+            raise RuntimeStateError("Invalid TES4 bow key sequence")
+        times = [native_float(time) for time in times]
+        if times[0] < 0 or any(a > b for a, b in zip(times, times[1:])) or times[-1] <= times[0]:
+            raise RuntimeStateError("Invalid TES4 supported bow key order")
+        bow_actors.add(actor); melee_ids.add(identity)
     previous = 0
     for event in death_events:
         if not isinstance(event, dict):
@@ -1796,6 +1832,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             raise RuntimeStateError("Invalid TES4 Player bow timer presence marker")
         if present:
             result["native_player_bow_timer"] = reader.unpack("<f")
+    if version >= 38:
+        result["native_bow_states"] = []
+        for _ in range(reader.count()):
+            bow = {"actor": reader.string(), "id": reader.unpack("<Q"),
+                "bow_base": reader.string(), "ammo_base": reader.string(),
+                "animation_group": reader.string(), "playback_rate": reader.unpack("<f"),
+                "phase": reader.unpack("<B"), "sequence_offset": reader.unpack("<f"),
+                "key_times": [reader.unpack("<f") for _ in range(5)], "action": reader.unpack("<h")}
+            marker = reader.unpack("<B")
+            if marker not in (0, 1):
+                raise RuntimeStateError("Invalid TES4 bow release marker")
+            bow["release_committed"] = bool(marker)
+            result["native_bow_states"].append(bow)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -2191,6 +2240,16 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         writer.pack("<B", int("native_player_bow_timer" in state))
         if "native_player_bow_timer" in state:
             writer.pack("<f", state["native_player_bow_timer"])
+    if version >= 38:
+        bows = sorted(state.get("native_bow_states", []), key=lambda bow: bow["actor"])
+        writer.pack("<I", len(bows))
+        for bow in bows:
+            writer.string(bow["actor"]); writer.pack("<Q", bow["id"])
+            for field in ("bow_base", "ammo_base", "animation_group"): writer.string(bow[field])
+            writer.pack("<f", bow["playback_rate"]); writer.pack("<B", bow["phase"])
+            writer.pack("<f", bow["sequence_offset"])
+            for time in bow["key_times"]: writer.pack("<f", time)
+            writer.pack("<h", bow["action"]); writer.pack("<B", int(bow["release_committed"]))
     return writer.finish()
 
 
@@ -2253,6 +2312,12 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     state.setdefault("native_actor_ragdolls", [])
 
 
+def _upgrade_bow_states(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 38 and state.get("native_bow_states"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry owned bow playback")
+    state.setdefault("native_bow_states", [])
+
+
 def _upgrade_melee_ai(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 28:
         for entry in state.get("native_melee_states", []):
@@ -2285,6 +2350,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
     _upgrade_actor_knockback(state)
+    _upgrade_bow_states(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -2342,6 +2408,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)
     _upgrade_actor_knockback(result)
+    _upgrade_bow_states(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])

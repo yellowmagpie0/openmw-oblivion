@@ -1565,10 +1565,14 @@ namespace
             // Later schemas append empty ownership/melee/animation collections
             // and the combat seed. Locate the clock section, not payload end.
             const unsigned suffix = (version >= 20 ? 4 : 0) + (version >= 21 ? 4 : 0)
-                + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0);
+                + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0)
+                + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
+                + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
+            ASSERT_EQ(bytes[countOffset], 1);
+            ASSERT_EQ(std::string(bytes.begin() + countOffset + 8, bytes.begin() + clockEnd - 4), actor.serialize());
             auto invalid = bytes;
             invalid[countOffset] = 2;
             invalid.insert(invalid.begin() + clockEnd, bytes.begin() + countOffset + 4, bytes.begin() + clockEnd);
@@ -2779,7 +2783,7 @@ TEST(ESM4RuntimeState, PlayerBowTimerVersionThirtySevenGoldenAndLegacyAbsence)
 
 TEST(ESM4RuntimeState, PlayerBowTimerRejectsNonfiniteBadWireAndLossyDowngrade)
 {
-    auto state = makeState(); state.mNativePlayerBowTimer = .625f;
+    auto state = makeState(); state.mVersion = 37; state.mNativePlayerBowTimer = .625f;
     const auto bytes = state.serializeBinary();
     for (float bad : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
     {
@@ -2799,4 +2803,92 @@ TEST(ESM4RuntimeState, PlayerBowTimerRejectsNonfiniteBadWireAndLossyDowngrade)
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     state.mNativePlayerBowTimer.reset();
     EXPECT_NO_THROW(state.serializeBinary());
+}
+
+namespace
+{
+    ESM4::RuntimeState bowState()
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues values;
+        values.mActor = state.mPlayer.mReference;
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues = {values};
+        state.mNativeActorLife = {{values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}}};
+        state.mNativeAnimationClocks.emplace(values.mActor, .5f);
+        state.mPhysicalActions = {2, {1}};
+        state.mPhysicalActionOwners.emplace(1, values.mActor);
+        ESM4::RuntimeBowState bow;
+        bow.mActionId = 1;
+        bow.mBowBase = ESM::FormKey::content("oblivion.esm", 0x25231);
+        bow.mAmmoBase = ESM::FormKey::content("oblivion.esm", 0x17829);
+        bow.mAnimationGroup = "bowattack";
+        bow.mPlaybackRate = 1.5f;
+        bow.mProgress = {ESM4::BowAnimationPhase::Attach, -0.f};
+        bow.mKeyTimes = {0, .25f, 1, 1.5f, 2};
+        state.mNativeBowStates.emplace(values.mActor, bow);
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, BowThirtyEightIndependentGoldenWireAndLegacyAbsence)
+{
+    auto state = bowState();
+    auto old = state; old.mVersion = 37; old.mNativeBowStates.clear();
+    const auto legacy = old.serializeBinary();
+    auto expected = legacy;
+    expected[9] = 38; // OMW4STATE magic is nine bytes; LE schema follows.
+    const auto integer = [&](std::uint64_t value, unsigned bytes) {
+        for (unsigned i = 0; i < bytes; ++i) expected.push_back(static_cast<std::uint8_t>(value >> (8 * i)));
+    };
+    const auto text = [&](std::string_view value) {
+        integer(value.size(), 4); expected.insert(expected.end(), value.begin(), value.end());
+    };
+    integer(1, 4); text(state.mPlayer.mReference.serialize()); integer(1, 8);
+    text("content:oblivion.esm:025231"); text("content:oblivion.esm:017829"); text("bowattack");
+    integer(0x3fc00000, 4); integer(1, 1); integer(0x80000000, 4);
+    for (const auto bits : {0u, 0x3e800000u, 0x3f800000u, 0x3fc00000u, 0x40000000u}) integer(bits, 4);
+    integer(4, 2); integer(0, 1);
+    const auto bytes = state.serializeBinary();
+    EXPECT_EQ(bytes, expected);
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(loaded.mNativeBowStates, state.mNativeBowStates);
+    EXPECT_TRUE(std::signbit(loaded.mNativeBowStates.begin()->second.mProgress.mSequenceOffset));
+    EXPECT_NE(loaded.canonicalJson().find("\"sequence_offset\":-0.0"), std::string::npos);
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeBowStates.empty());
+    auto empty = old; empty.mVersion = 38; auto emptyExpected = legacy; emptyExpected[9] = 38;
+    emptyExpected.insert(emptyExpected.end(), 4, 0);
+    EXPECT_EQ(empty.serializeBinary(), emptyExpected);
+}
+
+TEST(ESM4RuntimeState, BowRejectsMalformedOwnershipReplayAndTruncatedWire)
+{
+    const auto state = bowState();
+    const auto rejects = [&](auto mutate) {
+        auto bad = state; mutate(bad); EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    };
+    rejects([](auto& s) { s.mVersion = 37; });
+    rejects([](auto& s) { s.mNativeActorLife.clear(); });
+    rejects([](auto& s) { s.mNativeAnimationClocks.clear(); });
+    rejects([](auto& s) { s.mPhysicalActionOwners.clear(); });
+    rejects([](auto& s) { s.mNativeActorLife[0].mPhase = ESM4::ActorLifePhase::Dead; });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mActionId = 2; });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mBowBase = {}; });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mAnimationGroup = ""; });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mProgress.mPhase = ESM4::BowAnimationPhase::Hold; });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mPlaybackRate = std::numeric_limits<float>::infinity(); });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mKeyTimes[2] = .125f; });
+    rejects([](auto& s) { s.mNativeBowStates.begin()->second.mReleaseCommitted = true; });
+    const auto bytes = state.serializeBinary();
+    for (std::size_t cut = bytes.size() - 40; cut < bytes.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({bytes.begin(), bytes.begin() + cut}), std::runtime_error);
+    auto bad = bytes; bad.back() = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    auto committed = state;
+    auto& bow = committed.mNativeBowStates.begin()->second;
+    bow.mAction = 3; bow.mProgress.mPhase = ESM4::BowAnimationPhase::Release; bow.mReleaseCommitted = true;
+    committed.mPhysicalActions.mPending.clear(); committed.mPhysicalActionOwners.clear();
+    EXPECT_NO_THROW(committed.serializeBinary());
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(committed.serializeBinary()).mNativeBowStates, committed.mNativeBowStates);
 }

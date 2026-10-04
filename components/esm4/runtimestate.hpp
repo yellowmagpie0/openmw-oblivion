@@ -20,6 +20,7 @@
 #include "actionledger.hpp"
 #include "actorvalues.hpp"
 #include "physicalcombat.hpp"
+#include "projectilerules.hpp"
 #include "physicalblendsettings.hpp"
 #include "physicalvelocitycontroller.hpp"
 #include "physicalsceneworld.hpp"
@@ -32,7 +33,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 37;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 38;
 
     struct RuntimeContentIdentity
     {
@@ -413,6 +414,22 @@ namespace ESM4
     enum class MeleeStrikeKind : std::uint8_t
     { Left, Right, StandingPower, ForwardPower, BackwardPower, LeftPower, RightPower };
     enum class MeleeQueuedStrike : std::uint8_t { None, Ordinary, Power };
+    // Owned draw/attachment/release protocol. No renderer handles or projectile
+    // pointers are serialized; release acknowledgment is distinct from spawning.
+    struct RuntimeBowState
+    {
+        std::uint64_t mActionId = 0;
+        ESM::FormKey mBowBase, mAmmoBase;
+        std::string mAnimationGroup;
+        float mPlaybackRate = 1;
+        BowAnimationProgress mProgress;
+        std::array<float, 5> mKeyTimes{};
+        std::int16_t mAction = 4;
+        bool mReleaseCommitted = false;
+        void validate() const;
+        friend bool operator==(const RuntimeBowState&, const RuntimeBowState&) = default;
+    };
+
     struct RuntimeMeleeInput
     {
         float mHeldSeconds = 0;
@@ -516,6 +533,8 @@ namespace ESM4
         // v37: original Player bow timer, independent of the animation clock.
         // Absence in an older snapshot starts at zero, without inferring a draw.
         std::optional<float> mNativePlayerBowTimer = std::nullopt;
+        // v38: owned bow playback, retained independently of loaded renderers.
+        std::map<ESM::FormKey, RuntimeBowState> mNativeBowStates;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

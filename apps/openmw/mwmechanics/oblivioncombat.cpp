@@ -638,6 +638,7 @@ namespace MWMechanics
         mMeleeStates.clear();
         mAnimationClocks.clear();
         mPlayerBowTimer.reset();
+        mBowStates.clear();
         mActorKnockback.clear();
         mActorRagdolls.clear();
         mActorValues.clear();
@@ -731,6 +732,164 @@ namespace MWMechanics
     {
         const auto found = mMeleeStates.find(actor);
         return found == mMeleeStates.end() ? nullptr : &found->second;
+    }
+
+    const ESM4::RuntimeBowState* OblivionCombatService::findBowState(const ESM::FormKey& actor) const
+    {
+        const auto found = mBowStates.find(actor);
+        return found == mBowStates.end() ? nullptr : &found->second;
+    }
+
+    std::uint64_t OblivionCombatService::beginBowDraw(const ESM::FormKey& actor,
+        ESM4::RuntimeBowState prepared)
+    {
+        prepared.mActionId = 1;
+        prepared.mAction = 4;
+        prepared.mReleaseCommitted = false;
+        prepared.mProgress.mPhase = ESM4::BowAnimationPhase::Start;
+        prepared.validate();
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        const auto* melee = findMeleeState(actor);
+        if (!values || !life || values->mBase != life->mBase
+            || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mProcessKnockedState != 0 || values->mProcessAction != -1
+            || mBowStates.contains(actor) || (melee && melee->mStrike) || getProcessParalysis(actor) != 0)
+            throw std::invalid_argument("native bow draw requires an idle, awake Active actor");
+        // Prepare map nodes and owned strings before allocating an action ID.
+        decltype(mBowStates) states;
+        states.emplace(actor, std::move(prepared));
+        auto stateNode = states.extract(states.begin());
+        decltype(mAnimationClocks) clocks;
+        clocks.emplace(actor, 0);
+        auto clockNode = clocks.extract(clocks.begin());
+        const auto id = allocateAction(actor);
+        stateNode.mapped().mActionId = id;
+        mBowStates.insert(std::move(stateNode));
+        if (!mAnimationClocks.contains(actor)) mAnimationClocks.insert(std::move(clockNode));
+        mActorValues.find(actor)->second.mProcessAction = 4;
+        if (values->mOwner == ESM4::ActorValueOwner::Player) mPlayerBowTimer = 0;
+        return id;
+    }
+
+    bool OblivionCombatService::bindBowPlayback(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto* bow = findBowState(actor);
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!bow || bow->mActionId != id || !values || !life
+            || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mProcessKnockedState != 0
+            || (values->mProcessAction != -1 && values->mProcessAction != bow->mAction)
+            || getProcessParalysis(actor) != 0)
+            return false;
+        mActorValues.find(actor)->second.mProcessAction = bow->mAction;
+        return true;
+    }
+
+    ESM4::BowActionEvent OblivionCombatService::pendingBowEvent(const ESM::FormKey& actor,
+        bool present, bool running) const
+    {
+        const auto* bow = findBowState(actor);
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!bow || bow->mReleaseCommitted || !isActionPending(bow->mActionId, actor)
+            || !values || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mProcessKnockedState != 0 || values->mProcessAction != bow->mAction
+            || getProcessParalysis(actor) != 0)
+            return ESM4::BowActionEvent::None;
+        return ESM4::bowActionEvent(bow->mAction, bow->mProgress.mPhase, present, running);
+    }
+
+    bool OblivionCombatService::advanceBowPlayback(std::uint64_t id, const ESM::FormKey& actor,
+        float duration, bool paused, bool running)
+    {
+        const auto found = mBowStates.find(actor);
+        if (found == mBowStates.end() || found->second.mActionId != id || !running)
+            return false;
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        auto& bow = found->second;
+        if (!values || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mProcessKnockedState != 0 || values->mProcessAction != bow.mAction
+            || getProcessParalysis(actor) != 0
+            || pendingBowEvent(actor, true, true) != ESM4::BowActionEvent::None
+            || bow.mProgress.mPhase == ESM4::BowAnimationPhase::End)
+            return false;
+        const auto clock = mAnimationClocks.find(actor);
+        if (clock == mAnimationClocks.end())
+            throw std::invalid_argument("native bow frame requires its owned clock");
+        const auto nextClock = ESM4::advanceMeleeAnimationClock(clock->second, duration);
+        auto candidate = bow;
+        candidate.mProgress = ESM4::advanceBowPlayback(bow.mProgress, nextClock, duration,
+            bow.mKeyTimes.front(), bow.mKeyTimes, paused, bow.mPlaybackRate);
+        candidate.validate();
+        std::optional<float> timer;
+        if (values->mOwner == ESM4::ActorValueOwner::Player)
+            timer = ESM4::advancePlayerBowTimer(playerBowTimer(), duration, bow.mAction, bow.mProgress.mPhase);
+        // No allocations or callbacks after preparing every selected result.
+        clock->second = nextClock;
+        bow.mProgress = candidate.mProgress;
+        if (timer) mPlayerBowTimer = *timer;
+        return true;
+    }
+
+    bool OblivionCombatService::confirmBowAttachment(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto found = mBowStates.find(actor);
+        if (found == mBowStates.end() || found->second.mActionId != id
+            || pendingBowEvent(actor, true, true) != ESM4::BowActionEvent::Attach)
+            return false;
+        found->second.mAction = 5;
+        mActorValues.find(actor)->second.mProcessAction = 5;
+        return true;
+    }
+
+    bool OblivionCombatService::commitBowRelease(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto found = mBowStates.find(actor);
+        if (found == mBowStates.end() || found->second.mActionId != id
+            || pendingBowEvent(actor, true, true) != ESM4::BowActionEvent::Release)
+            return false;
+        mActions.consume(id);
+        mActionOwners.erase(id);
+        found->second.mReleaseCommitted = true;
+        found->second.mAction = 3;
+        mActorValues.find(actor)->second.mProcessAction = 3;
+        return true;
+    }
+
+    void OblivionCombatService::clearBowPlaybackAction(const ESM::FormKey& actor) noexcept
+    {
+        const auto bow = mBowStates.find(actor);
+        const auto values = mActorValues.find(actor);
+        if (bow != mBowStates.end() && values != mActorValues.end()
+            && values->second.mProcess == ESM4::ActorValueProcess::Active
+            && values->second.mProcessAction == bow->second.mAction)
+            values->second.mProcessAction = -1;
+    }
+
+    bool OblivionCombatService::cancelBowDraw(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto found = mBowStates.find(actor);
+        if (found == mBowStates.end() || found->second.mActionId != id)
+            return false;
+        clearBowPlaybackAction(actor);
+        if (isActionPending(id, actor))
+        { mActions.consume(id); mActionOwners.erase(id); }
+        mBowStates.erase(found);
+        return true;
+    }
+
+    bool OblivionCombatService::finishBowPlayback(std::uint64_t id, const ESM::FormKey& actor)
+    {
+        const auto* bow = findBowState(actor);
+        return bow && bow->mActionId == id && bow->mReleaseCommitted
+            && bow->mProgress.mPhase == ESM4::BowAnimationPhase::End && cancelBowDraw(id, actor);
     }
 
     float OblivionCombatService::updatePlayerBowTimer(float duration,
@@ -850,6 +1009,8 @@ namespace MWMechanics
         ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
         const ESM::FormKey& weaponBase)
     {
+        if (mBowStates.contains(actor))
+            throw std::invalid_argument("native melee strike cannot replace owned bow playback");
         ESM4::RuntimeMeleeStrike strike{1, kind, weaponBase, std::string(animationGroup), playbackSpeed, 0, false};
         strike.validate();
         const auto found = mMeleeStates.find(actor);
@@ -1050,6 +1211,9 @@ namespace MWMechanics
             return false;
         mActions.consume(id);
         mActionOwners.erase(id);
+        const auto bow = mBowStates.find(actor);
+        if (bow != mBowStates.end() && bow->second.mActionId == id)
+        { clearBowPlaybackAction(actor); mBowStates.erase(bow); }
         const auto melee = mMeleeStates.find(actor);
         if (melee != mMeleeStates.end() && melee->second.mStrike && melee->second.mStrike->mActionId == id)
         {
@@ -1082,6 +1246,8 @@ namespace MWMechanics
         if (melee != mMeleeStates.end() && melee->second.mStrike)
             clearMeleePlaybackAction(actor);
         mMeleeStates.erase(actor);
+        clearBowPlaybackAction(actor);
+        mBowStates.erase(actor);
         return count;
     }
 
@@ -1138,6 +1304,10 @@ namespace MWMechanics
         };
         const auto attackerKey = actorKey(attacker);
         if (!isActionPending(id, attackerKey))
+            return false;
+        // A draw ID belongs to the release transaction, never a melee contact
+        // or an in-flight impact. Reject before resource/RNG preparation.
+        if (const auto* bow = findBowState(attackerKey); bow && bow->mActionId == id)
             return false;
         const auto validateActor = [&](const MWWorld::Ptr& ptr, const ESM::FormKey& key) {
             const auto* values = findActorValues(key);
@@ -2630,7 +2800,7 @@ namespace MWMechanics
             || !values->mProcessKnockedState || *values->mProcessKnockedState != 0
             || !values->mProcessAction || (*values->mProcessAction != -1 && *values->mProcessAction != 6)
             || !life || life->mPhase != ESM4::ActorLifePhase::Alive || (melee && melee->mStrike)
-            || getProcessParalysis(actor) != 0)
+            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0)
             return false;
         setProcessAction(actor, 6);
         clearMeleeInput(actor);
@@ -3288,6 +3458,8 @@ namespace MWMechanics
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
             throw std::invalid_argument("native physical poses require an Oblivion v31+ save");
+        if (state.mVersion < 38 && !mBowStates.empty())
+            throw std::invalid_argument("native owned bow playback requires an Oblivion v38+ save");
         if (state.mVersion < 37 && mPlayerBowTimer)
             throw std::invalid_argument("native Player bow timer requires an Oblivion v37+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
@@ -3358,6 +3530,7 @@ namespace MWMechanics
         auto actions = mActions.capture();
         auto actionOwners = mActionOwners;
         auto meleeStates = mMeleeStates;
+        auto bowStates = mBowStates;
         auto animationClocks = mAnimationClocks;
         auto knockback = mActorKnockback;
         auto ragdolls = mActorRagdolls;
@@ -3367,6 +3540,7 @@ namespace MWMechanics
         state.mPhysicalActions = std::move(actions);
         state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeMeleeStates.swap(meleeStates);
+        state.mNativeBowStates.swap(bowStates);
         state.mNativeAnimationClocks.swap(animationClocks);
         state.mNativePlayerBowTimer = mPlayerBowTimer;
         state.mNativeActorKnockback.swap(knockback);
@@ -3497,6 +3671,7 @@ namespace MWMechanics
         actions.restore(state.mPhysicalActions);
         auto actionOwners = state.mPhysicalActionOwners;
         auto meleeStates = state.mNativeMeleeStates;
+        auto bowStates = state.mNativeBowStates;
         auto animationClocks = state.mNativeAnimationClocks;
         auto knockback = state.mNativeActorKnockback;
         auto ragdolls = state.mNativeActorRagdolls;
@@ -3539,6 +3714,7 @@ namespace MWMechanics
         mCombatRngState = state.mCombatRngState;
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
+        mBowStates.swap(bowStates);
         mAnimationClocks.swap(animationClocks);
         mPlayerBowTimer = state.mNativePlayerBowTimer;
         mActorKnockback.swap(knockback);

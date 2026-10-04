@@ -580,3 +580,20 @@ TEST(ESM4ProjectileRules, PlayerBowTimerRejectsSelectedInvalidInputsAndSkipsRese
     EXPECT_EQ(ESM4::advancePlayerBowTimer(nan, nan, -1, Phase::Hold), 0);
     EXPECT_EQ(ESM4::advancePlayerBowTimer(nan, nan, 5, Phase::End), 0);
 }
+
+TEST(ESM4ProjectileRules, BowActionEventsRequireTheOriginalActionPhaseAndRunningSequence)
+{
+    using Phase = ESM4::BowAnimationPhase;
+    using Event = ESM4::BowActionEvent;
+    for (int action : {-1, 3, 4, 5, 6, 7, 8})
+        for (unsigned phase = 0; phase <= 4; ++phase)
+            for (bool present : {false, true})
+                for (bool running : {false, true})
+                {
+                    const auto expected = !present || !running ? Event::None
+                        : action == 4 && phase == 1 ? Event::Attach
+                        : action == 5 && phase == 3 ? Event::Release : Event::None;
+                    EXPECT_EQ(ESM4::bowActionEvent(action, static_cast<Phase>(phase), present, running), expected);
+                }
+    EXPECT_THROW(ESM4::bowActionEvent(4, static_cast<Phase>(5), true, true), std::invalid_argument);
+}

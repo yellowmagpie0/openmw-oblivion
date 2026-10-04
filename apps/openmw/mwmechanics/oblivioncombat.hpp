@@ -231,10 +231,12 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
         std::optional<float> mPlayerBowTimer;
+        std::map<ESM::FormKey, ESM4::RuntimeBowState> mBowStates;
         std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
         std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
+        void clearBowPlaybackAction(const ESM::FormKey& actor) noexcept;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> mActorValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorBaseOverride> mActorBases;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> mActorLife;
@@ -343,6 +345,19 @@ namespace MWMechanics
         bool clearMeleeAiIntent(const ESM::FormKey& actor) noexcept;
         // Caller supplies verified bow input/action/phase eligibility. Timer
         // authority survives save/load; this neither debits resources nor releases.
+        const ESM4::RuntimeBowState* findBowState(const ESM::FormKey& actor) const;
+        std::uint64_t beginBowDraw(const ESM::FormKey& actor, ESM4::RuntimeBowState prepared);
+        bool bindBowPlayback(std::uint64_t id, const ESM::FormKey& actor);
+        bool advanceBowPlayback(std::uint64_t id, const ESM::FormKey& actor,
+            float duration, bool paused, bool sequenceRunning);
+        ESM4::BowActionEvent pendingBowEvent(const ESM::FormKey& actor,
+            bool sequencePresent, bool sequenceRunning) const;
+        // Acknowledge only after renderer attachment / prepared release writes.
+        // These own logical transitions; they do not create geometry/projectiles.
+        bool confirmBowAttachment(std::uint64_t id, const ESM::FormKey& actor);
+        bool commitBowRelease(std::uint64_t id, const ESM::FormKey& actor);
+        bool finishBowPlayback(std::uint64_t id, const ESM::FormKey& actor);
+        bool cancelBowDraw(std::uint64_t id, const ESM::FormKey& actor);
         float playerBowTimer() const noexcept { return mPlayerBowTimer.value_or(0); }
         float updatePlayerBowTimer(float duration, std::int32_t processAction, ESM4::BowAnimationPhase phase);
         float animationClock(const ESM::FormKey& actor) const;

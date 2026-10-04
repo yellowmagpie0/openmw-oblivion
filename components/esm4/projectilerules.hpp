@@ -25,6 +25,7 @@ namespace ESM4
     {
         BowAnimationPhase mPhase = BowAnimationPhase::Start;
         float mSequenceOffset = 0;
+        friend bool operator==(const BowAnimationProgress&, const BowAnimationProgress&) = default;
     };
     // Original five-phase advancement prefix. The supplied animation clock
     // has already advanced. At most one phase advances, strictly past its key.
@@ -47,6 +48,11 @@ namespace ESM4
     // accumulate through phase Release; other actions or End reset the timer.
     float advancePlayerBowTimer(float current, float duration,
         std::int32_t processAction, BowAnimationPhase phase);
+
+    enum class BowActionEvent : std::uint8_t { None, Attach, Release };
+    // Actor action dispatch after a present, running sequence has been resolved.
+    BowActionEvent bowActionEvent(std::int32_t processAction, BowAnimationPhase phase,
+        bool sequencePresent, bool sequenceRunning);
 
     struct ArrowCleanupSettings
     {
