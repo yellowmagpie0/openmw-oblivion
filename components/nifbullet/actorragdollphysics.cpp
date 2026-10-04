@@ -1541,6 +1541,13 @@ namespace NifBullet
     {
         auto controllers = mImpl->mBlendControllers;
         auto velocities = mImpl->mVelocityControllers;
+        struct PendingMotion
+        {
+            Impl::Body* mOwned;
+            RagdollNativeMotion mMotion;
+        };
+        std::vector<PendingMotion> motionChanges;
+        motionChanges.reserve(requests.size());
         std::vector<RagdollNativeKnockdownBlendDisposition> result;
         result.reserve(requests.size());
         std::unordered_set<std::uint32_t> nodes;
@@ -1557,6 +1564,17 @@ namespace NifBullet
                 result.push_back(RagdollNativeKnockdownBlendDisposition::MissingBlend);
                 continue;
             }
+            const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& value) { return value.mNodeRecord == request.mNodeRecord; });
+            auto preparedMotion = owned->mMotion;
+            // Original88F040 synchronizes collision+1C before controller lookup
+            // and disabled duration handling, without changing flags/request.
+            if (blend->mState.mRequestedMotion == 6)
+                preparedMotion = RagdollNativeMotion::Keyframed;
+            else if (blend->mState.mRequestedMotion == 1)
+                preparedMotion = RagdollNativeMotion::Dynamic;
+            if (preparedMotion != owned->mMotion)
+                motionChanges.push_back({&*owned, preparedMotion});
             const auto controller = std::find_if(controllers.begin(), controllers.end(),
                 [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
             if (controller == controllers.end())
@@ -1583,8 +1601,6 @@ namespace NifBullet
             if (includeVelocity && std::none_of(velocities.begin(), velocities.end(),
                     [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; }))
             {
-                const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
-                    [&](const auto& value) { return value.mNodeRecord == request.mNodeRecord; });
                 require(std::isfinite(settings.mForce), "nonfinite native pass-out force");
                 require(std::isfinite(settings.mTime) && settings.mTime >= 0.f, "invalid native pass-out duration");
                 std::array<float, 4> source;
@@ -1602,11 +1618,18 @@ namespace NifBullet
                 // this fourth lane. Preserve it in the owned controller vector.
                 source[3] = request.mDuration;
                 const auto velocity = ESM4::preparePhysicalVelocityController(std::nullopt, source,
-                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)), owned->currentNativeLinearDamping());
+                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)), preparedMotion == RagdollNativeMotion::Keyframed ? 0.f : owned->mLinearDamping);
                 velocities.push_back({request.mNodeRecord, request.mNodeRecord, velocity, true});
             }
             result.push_back(RagdollNativeKnockdownBlendDisposition::Started);
         }
+        // All input validation and controller allocation precede physical mode
+        // publication. Native conversion preserves pose and stored velocities.
+        for (const auto& change : motionChanges)
+            mImpl->setMotion(*change.mOwned, change.mMotion);
+        for (const auto& change : motionChanges)
+            if (change.mMotion == RagdollNativeMotion::Dynamic)
+                mImpl->activateGroup(change.mOwned->mActivationGroup);
         mImpl->mBlendControllers.swap(controllers);
         if (includeVelocity)
             mImpl->mVelocityControllers.swap(velocities);
@@ -1625,6 +1648,26 @@ namespace NifBullet
         for (const auto& target : mImpl->mBlendTargets)
             result.push_back(target.mState);
         return result;
+    }
+
+    void ActorRagdollPhysics::restoreNativeBlendStates(std::span<const RagdollNativeBlendState> states)
+    {
+        require(states.size() == mImpl->mBlendTargets.size(), "incomplete native blend collision snapshot");
+        auto targets = mImpl->mBlendTargets;
+        std::unordered_set<std::uint32_t> selected;
+        for (const auto& state : states)
+        {
+            require(selected.insert(state.mBodyRecord).second, "duplicate native blend collision body");
+            const auto target = std::find_if(targets.begin(), targets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == state.mBodyRecord; });
+            require(target != targets.end(), "unknown native blend collision body");
+            require(std::isfinite(state.mGains.mHierarchy) && std::isfinite(state.mGains.mVelocity),
+                "nonfinite native blend collision gains");
+            // Preserve raw requested-motion values independently of actual body
+            // mode, as native load/link do. Controller/scene state is separate.
+            target->mState = state;
+        }
+        mImpl->mBlendTargets.swap(targets);
     }
 
     std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendControllers(

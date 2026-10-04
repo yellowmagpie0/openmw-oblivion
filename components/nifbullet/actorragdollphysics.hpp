@@ -311,6 +311,9 @@ namespace NifBullet
             RagdollNativePassOutSettings settings);
         std::vector<RagdollNativeBlendControllerState> captureNativeBlendControllers() const;
         std::vector<RagdollNativeBlendState> captureNativeBlendStates() const;
+        // Complete collision metadata snapshot; no body/controller conversion.
+        void restoreNativeBlendStates(std::span<const RagdollNativeBlendState> states);
+
         // Own authored controllers and current target gains. Resolve each
         // controller's target node, stage clocks/gains and the complete physical
         // batch, then commit together. The caller owns the shared clock cache

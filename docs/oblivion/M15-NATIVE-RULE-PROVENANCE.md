@@ -10603,3 +10603,90 @@ collision motion with actual conversion and pre-knockdown synchronization;
 automatic World lifecycle, recursive ordering, complete physical/controller/
 contact persistence and retained BodyT/floor failures remain open. S5-S14 remain
 pending; normal-input gameplay acceptance is not claimed.
+
+
+### Checkpoint215: stored requested-motion synchronization before normal Down
+
+Checkpoint214 committed as `dbd4a9334dc494f6b98770378c37260092034646`,
+211 isolated commits, bundle192 SHA256
+`a911b243f14c2ec5f12273dd2bd92643eb134fdd4b90b1af2eb2c3cd8ea0d188`.
+Original88F040 reads collision+1C: requested6 invokes wrapper conversion when
+actual native motion is not6; requested1 when actual native type is signed>=6;
+other stored values skip. Missing wrapper skips; missing body invokes setter
+which cannot create that body. Owned bodies admit Dynamic/KEY modes with positive
+archived Dynamic mass, so1/6 select Dynamic/KEY and only mismatched modes convert.
+This is actual pre-knockdown synchronization, distinct from the88F484 per-frame
+comparison of stored request with a newly selected request. That latter coupling
+remains open. Original Dynamic fixture type2 is mapped to logical Dynamic1;
+no actual native-type1 restoration is claimed.
+
+The common normalDown setup stages this conversion immediately after resolving
+the blend target, before controller lookup and finite/disabled duration handling.
+Missing controllers and negative durations still synchronize, but do not create
+controllers or consume unused source/settings. Stored request, collision flags,
+pose and velocities are preserved. New velocity preparation reads the staged
+current mode's damping before conversion publishes. All request validation and
+controller allocations precede body mode publication, so a late unknown node,
+invalid settings/vector or invalid duration leaves every body/controller intact.
+Dynamic conversion uses the existing owned-group activation boundary; native
+borrowed World/contact island effects remain excluded. Legacy blend-only normal
+setup now also synchronizes stored request, as the complete original entry does.
+Its old header comment predates this admitted motion effect and will be updated
+with the next frame integration change; it does not override runtime evidence.
+
+restoreNativeBlendStates restores complete raw collision metadata by body ID,
+requiring every owned target exactly once and finite gains. It preserves arbitrary
+uint32 requested values, unclamped finite/signed-zero gains and all flag bits.
+Cloned targets publish only after complete validation. Actual body modes, pose,
+velocities, controller attachment/clocks and scene remain separate. This is an
+owned metadata restore boundary, not automatic World save/load or full physical
+persistence. Three regressions cover request1/6 conversion before missing or
+disabled controllers, staged KEY coefficient/vector with late-batch rollback,
+and complete restore/duplicate/unknown/nonfinite/incomplete rejection. Baseline01
+fails all three against no-op restoration and absent synchronization. Final full
+normal/sanitized01 each pass2,369 component and899 engine tests, exact inventories,
+no failures/skips. Tested fingerprint `4daa14225c89c53f46d09d6c19fb11e25e4951cdcfdc82257d0c8e8695f6cca9`. ASan leaks disabled; unchanged
+Python not repeated.
+
+Full original normalDown oracle01 executes46,080 cases across both x87 words,
+actual Dynamic/KEY/restoredDynamic and independent requests0/1/6/8/FFFFFFFF,
+new or null/self/other-target existing velocity, disabled/zero/positive durations,
+blend flags, world vectors, inverse mass/damping and configured force/time.
+Actual88F040 -> wrapper8A3420 ->8A9AB0 ->8CD4E0 ->8CBC60 conversion executes,
+including archive restoration before vector generation. Body+8 World pointer is
+null; no contact/constraint-world publication is inferred. Source SHA256
+`e3ebd8be3d65d52b3cd94195b993c007b6bfd6abcff6f54f617dde54c60c0411`,
+corpus `ace9cc3b7f568864a4a56568c5208fa1ad12df9c6ca67b6be816ca25134c4575`.
+Additional full-entry missing-controller oracle01 executes240 cases with node
+controller-chain absent/present, confirming sync precedes lookup and duration.
+Source SHA256 `5b99d9486b39fbc1ba87f6098679867fa1d6541c386792b71f43a8a8b3920c1e`,
+corpus `566cd797d430331e20d96fd3b685e7a419d9b0ad04caeca397610942bb3a5efc`.
+Each checks original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Only Windows primitives, controller/key-buffer and HK allocation/free boundaries
+are supplied. Actual constructors, motion getters/setters, lookup/attachment,
+configured settings copy, native vector conversion, mass/damping, Start and
+security-cookie paths execute. No immediate/nonblend/children or World acceptance.
+
+Actual owned normal/sanitized comparisons each match46,080 cases/1,725,120 exact
+fields plus240 missing-controller cases/5,040 fields. Compare all existing
+blend/key/clock/vector/target/order fields plus final request, flags and mode,
+with archived mass, pose/velocity preservation and zero world objects after
+cleanup. Eight original capture controls check preserved request/flags,
+synchronization before disabled/missing-controller exits and unchanged existing
+velocity during conversion. Generated-owner allocation intent is compared, not
+native heap implementation. Evidence under S4: native-requested-motion-full-down-
+oracle-01; native-requested-motion-missing-controller-oracle-01; requested-motion-
+down-baseline/normal/sanitized-01; native-requested-motion-full-down/missing-
+controller-compare-normal/sanitized-01; requested-motion-down-controls-01.
+
+Follow-up original full collision frame probe01 already executes5,760 cases with
+stored request independent of current Dynamic type2/KEY6, eight prior scene
+inputs across both x87 words, selectors/gains/flags. This is evidence for the
+next chunk, not a passing production comparison. Source SHA256
+`d0641aad1b473222d1abd0af8ae9885fa3d7c9a06c55974604ab64358fbc9181`,
+corpus `9299b5fe15a614b8a5ebfba7d2a6d178d83b81faadcc8f59632fc3fe43dea24e`.
+No stage closes. Next couple independent requested/actual modes in frame
+publication and reconcile legacy/manual metadata updates. Automatic World
+lifecycle, full physical/contact/controller persistence, configuration/morphology,
+recursive ordering, retained BodyT/floor failures and S5-S14 remain open.

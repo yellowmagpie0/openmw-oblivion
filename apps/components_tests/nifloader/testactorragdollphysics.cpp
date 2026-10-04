@@ -3566,3 +3566,94 @@ namespace
         EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState.mTiming.mStopKey, 1.2f);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, RequestedMotionDownSynchronizesBeforeDisabledOrMissingController)
+    {
+        auto& body = mGraph.mBodies[0]; body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        for (bool controller : {false, true})
+        {
+            body.mBlendController.reset();
+            if (controller) body.mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, .25f, {}};
+            for (unsigned requested : {1u, 6u})
+            {
+                NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+                auto states = actor.captureNativeBlendStates(); states[0].mRequestedMotion = requested;
+                actor.restoreNativeBlendStates(states);
+                const auto desired = requested == 6 ? NifBullet::RagdollNativeMotion::Keyframed : NifBullet::RagdollNativeMotion::Dynamic;
+                const std::array<NifBullet::RagdollNativeMotionRequest, 1> opposite{{{12, requested == 6
+                    ? NifBullet::RagdollNativeMotion::Dynamic : NifBullet::RagdollNativeMotion::Keyframed}}};
+                actor.setNativeMotionModes(opposite);
+                const auto before = actor.capture()[0];
+                const auto bad = std::numeric_limits<float>::quiet_NaN();
+                const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> requests{{{8, {bad, bad, bad}, -1}}};
+                const auto result = actor.prepareNativeKnockdownControllerSetup(requests, {bad, bad});
+                ASSERT_EQ(result.size(), 1u);
+                EXPECT_EQ(result[0], controller ? NifBullet::RagdollNativeKnockdownBlendDisposition::Disabled
+                    : NifBullet::RagdollNativeKnockdownBlendDisposition::MissingController);
+                EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, desired);
+                EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, requested);
+                EXPECT_EQ(actor.captureNativeBlendStates()[0].mCollisionFlags, 8u);
+                EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+                EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+                EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+            }
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RequestedMotionDownStagesConversionAndCurrentDampingAtomically)
+    {
+        addHinge(); auto& body = mGraph.mBodies[0]; body.mNodeRecord = 8; body.mLinearDamping = .1f;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, .25f, {}};
+        mGraph.mBodies[1].mNodeRecord = 20;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        auto states = actor.captureNativeBlendStates(); states[0].mRequestedMotion = 6;
+        actor.restoreNativeBlendStates(states);
+        const auto before = actor.capture()[0]; const auto activation = actor.collisionObjects()[0]->getActivationState();
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 2> late{{{8, {1, -2, .5f}, .25f}, {999, {}, .25f}}};
+        EXPECT_THROW(actor.prepareNativeKnockdownControllerSetup(late, {-10.f, 1.2f}), std::invalid_argument);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(actor.collisionObjects()[0]->getActivationState(), activation);
+        EXPECT_TRUE(actor.captureNativeVelocityControllers().empty());
+        EXPECT_TRUE(actor.captureNativeBlendControllers()[0].mState.mKeys.empty());
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> valid{{late[0]}};
+        actor.prepareNativeKnockdownControllerSetup(valid, {-10.f, 1.2f});
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        const auto velocity = actor.captureNativeVelocityControllers(); ASSERT_EQ(velocity.size(), 1u);
+        // Original214 case592, and215 request6/current Dynamic full-entry captures.
+        const std::array<std::uint32_t, 4> expected{3224822233, 1085727193, 3216433625, 1056964608};
+        for (unsigned lane = 0; lane < 4; ++lane)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(velocity[0].mState.mForceVector[lane]), expected[lane]);
+        EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RequestedMotionMetadataRestoreIsCompleteAtomicAndIndependentOfBodies)
+    {
+        addHinge(); mGraph.mBodies[0].mNodeRecord = 8; mGraph.mBodies[1].mNodeRecord = 20;
+        for (auto& body : mGraph.mBodies) body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        auto states = actor.captureNativeBlendStates(); ASSERT_EQ(states.size(), 2u);
+        states[0].mRequestedMotion = 0xffffffff; states[0].mCollisionFlags = 0xffff;
+        states[0].mGains = {-0.f, 2.f}; states[1].mRequestedMotion = 6;
+        actor.restoreNativeBlendStates(states);
+        auto restored = actor.captureNativeBlendStates();
+        EXPECT_EQ(restored[0].mRequestedMotion, 0xffffffffu); EXPECT_EQ(restored[0].mCollisionFlags, 0xffffu);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(restored[0].mGains.mHierarchy), 0x80000000u);
+        EXPECT_EQ(restored[0].mGains.mVelocity, 2.f);
+        EXPECT_EQ(actor.captureNativeMotionModes()[1].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        auto invalid = states; invalid[1].mBodyRecord = states[0].mBodyRecord;
+        EXPECT_THROW(actor.restoreNativeBlendStates(invalid), std::invalid_argument);
+        invalid = states; invalid[1].mBodyRecord = 999;
+        EXPECT_THROW(actor.restoreNativeBlendStates(invalid), std::invalid_argument);
+        invalid = states; invalid[1].mGains.mVelocity = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(actor.restoreNativeBlendStates(invalid), std::invalid_argument);
+        EXPECT_THROW(actor.restoreNativeBlendStates(std::span<const NifBullet::RagdollNativeBlendState>(states).first(1)), std::invalid_argument);
+        restored = actor.captureNativeBlendStates();
+        EXPECT_EQ(restored[0].mRequestedMotion, states[0].mRequestedMotion);
+        EXPECT_EQ(restored[1].mRequestedMotion, states[1].mRequestedMotion);
+        EXPECT_EQ(restored[1].mGains.mVelocity, states[1].mGains.mVelocity);
+    }
+}
