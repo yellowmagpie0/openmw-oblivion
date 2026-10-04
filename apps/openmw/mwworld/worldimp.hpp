@@ -594,6 +594,9 @@ namespace MWWorld
         // restoration precedes optional scene attachment in saveLoaded.
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
+        // Retain current physical projections before scene ownership is released.
+        // Validation failure leaves native authority and physical owners intact.
+        void retainOblivionPhysicalState();
         void renderPlayer() override;
 
         /// open or close a non-teleport door (depending on current state)

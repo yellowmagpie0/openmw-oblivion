@@ -12311,3 +12311,66 @@ physical state across scene teardown. It does not yet wire cell unload or object
 removal, recreate unloaded physical owners, drive reaction/controller/render
 updates, or pass original-game/normal-input/fresh-process gameplay gates.
 No M15 stage closes; pending S5-S14 and earlier retained failures remain open.
+
+
+### Checkpoint244: retain physical projections before scene teardown
+
+Checkpoint243 committed as `2c37b41f43d4d1b7596e8d2b9b007ded3b89594f`,
+240 isolated commits, tree `a8a9a590197c4673ba0057c00841964adb3e86f0`;
+bundle221 SHA256
+`073cfde7d593cf713a82b2288efffd81fe598faf9b72dda556869841e39b0729`.
+
+World::retainOblivionPhysicalState captures the native combat authority into
+local storage, captures and validates all currently owned physical projections,
+then uses checkpoint243 to publish the complete loaded-owner group atomically.
+It resolves current bases/models/Player identity using the existing save join,
+checks all asset/body identities before mutation, and updates even numerically
+equal negative-zero lanes. Nonphysical retained poses remain in authority.
+No physical owner or actor value/life/action/event state is released by this
+operation. Missing physics or zero physical owners returns before requiring a
+Player; TES3 returns without entering the native authority. The global clock
+remains in the existing PhysicsSystem across cell teardown.
+
+Ordinary Scene::unloadCell invokes retention before the visitor clears renderer
+nodes or removes any body/capsule. Scene::removeObjectFromScene invokes it for
+physical actors before mechanics/Lua/navigation/render/physics removal.
+Scene::clear explicitly disables retention during whole-World reset: that path
+intentionally discards native state and must not be blocked by a stale old
+binding. Ordinary cell transitions keep the default retention behavior.
+This does not add admission to the new scene or migrate a physical graph across
+teleport/model/race/scale changes. Existing World callers may already have
+changed reference metadata before entering Scene removal; no transaction for
+those earlier caller operations is claimed.
+
+The actual World regression loops worker0/1/2 with native NPC/projected Player
+physical owners, authored and generated controller state, packed W lanes,
+blend metadata and the shared clock, plus a nonphysical retained actor.
+A valid-but-wrong hash on the scheduler's last binding rejects retention;
+native pose maps and the whole physical group remain unchanged. Corrected
+bindings retain the fresh complete snapshots for both owners. Actual
+PhysicsSystem::remove releases bodies and capsules; a later World save and
+binary decode retain those poses/controllers/cache with negative-zero angular W.
+The second test uses no Player and verifies no-physics/empty-physics retention
+does not invent native projections or change the current raw-cycle/negative-zero
+clock.
+
+world-physical-retention-baseline-01 retains a fixture compile failure caused by
+a snapshot variable conflicting with an existing Ptr. Renamed only the snapshot
+variable. Baseline-02 executes all three worker loops and fails on accepted bad
+binding retention, stale service projections and stale saves after body release.
+First implementation normal/sanitized-01 retains compile failures from incorrect
+new empty-test API names. Corrected only the test names to the existing
+captureNativeBlendTimeCache/restoreNativeBlendTimeCache methods. Final full
+world-physical-retention-normal-02 and sanitized-02 each pass945 cases with
+exact inventories, zero failures/skips and no compiler warnings. ASan leak
+checks disabled; UBSan halts. Tested fingerprint `f4b3a76e7f36c95de50dabd57de295967d8d74d93801d2c47c771804cc96362b`.
+Lower native component arithmetic, codecs and Python sources did not change;
+their previous passing comparisons are not repeated.
+
+The tests exercise the actual World retention operation and physical release,
+not a normal-input Scene cell transition, renderer/controller reattachment or
+fresh-process restored-owner admission. Cell unload/object removal call sites
+compile and await those runtime gates. Automatic reaction/admission/update/end/
+getup, morphology/configuration producers, full native scene traversal, contact/
+activation continuation, retained numeric failures and pending S5-S14 remain
+open. No M15 stage closes.

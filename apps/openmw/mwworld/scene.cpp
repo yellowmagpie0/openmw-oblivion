@@ -374,12 +374,17 @@ namespace MWWorld
         preloadCells(duration);
     }
 
-    void Scene::unloadCell(CellStore* cell, const DetourNavigator::UpdateGuard* navigatorUpdateGuard)
+    void Scene::unloadCell(CellStore* cell, const DetourNavigator::UpdateGuard* navigatorUpdateGuard,
+        bool retainPhysicalState)
     {
         if (mActiveCells.find(cell) == mActiveCells.end())
             return;
         Log(Debug::Info) << "Unloading cell " << cell->getCell()->getDescription();
 
+        // Retain before the visitor clears renderer nodes or any physical owner
+        // is removed. A rejected binding leaves the current scene intact.
+        if (retainPhysicalState)
+            mWorld.retainOblivionPhysicalState();
         ListAndResetObjectsVisitor visitor;
 
         cell->forEach(visitor, true); // Include objects being teleported by Lua
@@ -571,7 +576,8 @@ namespace MWWorld
         for (auto iter = mActiveCells.begin(); iter != mActiveCells.end();)
         {
             auto* cell = *iter++;
-            unloadCell(cell, navigatorUpdateGuard.get());
+            // Whole-World reset intentionally discards native projections.
+            unloadCell(cell, navigatorUpdateGuard.get(), false);
         }
         navigatorUpdateGuard.reset();
         assert(mActiveCells.empty());
@@ -1102,6 +1108,8 @@ namespace MWWorld
 
     void Scene::removeObjectFromScene(const Ptr& ptr, bool keepActive)
     {
+        if (mPhysics->hasActorRagdoll(ptr))
+            mWorld.retainOblivionPhysicalState();
         MWBase::Environment::get().getMechanicsManager()->remove(ptr, keepActive);
         // You'd expect the sounds attached to the object to be stopped here
         // because the object is nowhere to be heard, but in Morrowind, they're not.

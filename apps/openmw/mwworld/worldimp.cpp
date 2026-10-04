@@ -1069,6 +1069,36 @@ namespace MWWorld
         state.mNativePhysicalBlendTimeCache = physical.mTimeCache;
     }
 
+    void World::retainOblivionPhysicalState()
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics)
+            return;
+        const auto owners = mPhysics->actorRagdollOwners();
+        if (owners.empty())
+            return;
+        if (!mOblivionCombat)
+            throw std::logic_error("native physical retention requires combat authority");
+        ESM4::RuntimeState state;
+        mOblivionCombat->capture(state);
+        const auto previous = state.mNativeActorRagdolls;
+        const auto player = getPlayerPtr();
+        // Capture validates every current asset/body binding before replacing
+        // local projections. No authority or scene ownership changes on failure.
+        captureOblivionPhysicalState(state, player);
+        MWMechanics::OblivionCombatService::PhysicalPoseUpdates updates;
+        for (const auto& owner : owners)
+        {
+            const auto key = owner == player ? ESM::FormKey::dynamic("player", 1)
+                                             : owner.getCellRef().getFormKey();
+            updates.emplace(key, std::make_pair(
+                std::optional(previous.at(key)), std::optional(state.mNativeActorRagdolls.at(key))));
+        }
+        // Publish every loaded projection, including numerically equal signed
+        // zero lanes, before releasing any bodies. Other retained actors survive.
+        if (!mOblivionCombat->syncActorRagdolls(updates))
+            throw std::runtime_error("native physical authority changed during scene retention");
+    }
+
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
     {
         ESM4::RuntimeState state;
