@@ -37,7 +37,8 @@ namespace MWPhysics
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
         std::span<const NifBullet::RagdollBodyState> bodies,
         std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities,
-        std::span<const NifBullet::RagdollNativeMotionRequest> motions)
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions,
+        std::optional<std::span<const NifBullet::RagdollNativeBlendState>> blends)
     {
         validateGraph(definition);
         if (bodies.size() != definition.mBodies.size())
@@ -46,6 +47,8 @@ namespace MWPhysics
             throw std::invalid_argument("native packed snapshot body count does not match asset");
         if (!motions.empty() && (packedVelocities.empty() || motions.size() != bodies.size()))
             throw std::invalid_argument("native motion snapshot requires complete packed velocity state");
+        if (blends && (packedVelocities.empty() || motions.empty()))
+            throw std::invalid_argument("native blend snapshot requires complete packed velocity and motion state");
         ESM4::RuntimeActorRagdoll result;
         result.mBase = base;
         result.mModel = model;
@@ -96,7 +99,21 @@ namespace MWPhysics
         std::sort(result.mBodies.begin(), result.mBodies.end(), [](const auto& a, const auto& b) {
             return a.mRecord < b.mRecord;
         });
+        if (blends)
+        {
+            result.mNativeBlends.emplace();
+            result.mNativeBlends->reserve(blends->size());
+            for (const auto& blend : *blends)
+                result.mNativeBlends->push_back({blend.mBodyRecord, blend.mCollisionFlags,
+                    blend.mRequestedMotion, blend.mGains.mHierarchy, blend.mGains.mVelocity});
+            std::sort(result.mNativeBlends->begin(), result.mNativeBlends->end(), [](const auto& a, const auto& b) {
+                return a.mBodyRecord < b.mBodyRecord;
+            });
+        }
         result.validate();
+        // Resolve against the complete winning target set before returning a
+        // current snapshot. Empty is complete only for an asset with no targets.
+        (void)restoreNativeActorRagdollBlendStates(result, base, model, definition);
         return result;
     }
 
@@ -166,6 +183,36 @@ namespace MWPhysics
             const auto motion = *bodies.at(target.mRecord)->mNativeMotion;
             result.push_back({target.mRecord, motion == ESM4::RuntimeRagdollMotion::Dynamic
                 ? NifBullet::RagdollNativeMotion::Dynamic : NifBullet::RagdollNativeMotion::Keyframed});
+        }
+        return result;
+    }
+
+    std::optional<std::vector<NifBullet::RagdollNativeBlendState>> restoreNativeActorRagdollBlendStates(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        (void)restoreNativeActorRagdoll(snapshot, base, model, definition);
+        if (!snapshot.mNativeBlends)
+            return std::nullopt;
+        const auto expected = std::count_if(definition.mBodies.begin(), definition.mBodies.end(),
+            [](const auto& body) { return body.mBlend.has_value(); });
+        if (snapshot.mNativeBlends->size() != static_cast<std::size_t>(expected))
+            throw std::invalid_argument("native blend snapshot does not match the winning target count");
+        std::unordered_map<std::uint32_t, const ESM4::RuntimeRagdollBlendState*> blends;
+        for (const auto& blend : *snapshot.mNativeBlends)
+            blends.emplace(blend.mBodyRecord, &blend);
+        std::vector<NifBullet::RagdollNativeBlendState> result;
+        result.reserve(snapshot.mNativeBlends->size());
+        for (const auto& body : definition.mBodies)
+        {
+            if (!body.mBlend)
+                continue;
+            const auto found = blends.find(body.mRecord);
+            if (found == blends.end())
+                throw std::invalid_argument("native blend target does not match the winning body");
+            const auto& blend = *found->second;
+            result.push_back({blend.mBodyRecord, blend.mCollisionFlags,
+                {blend.mHierarchyGain, blend.mVelocityGain}, blend.mRequestedMotion});
         }
         return result;
     }

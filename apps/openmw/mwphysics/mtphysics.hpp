@@ -116,7 +116,7 @@ namespace MWPhysics
             const std::function<void(std::span<const std::uint32_t>)>& beforePublish = {});
         void restoreActorRagdoll(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBodyState> states);
         // Queries/publication share the worker barrier and owned record identity.
-        // These requested modes are not yet part of the physical save projection.
+        // Capture returns the actual logical modes saved by current snapshots.
         std::vector<NifBullet::RagdollNativeMotionRequest> captureActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr);
         void setActorRagdollNativeMotionModes(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeMotionRequest> requests);

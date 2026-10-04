@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <bit>
+#include <cmath>
 #include <osg/Stats>
 
 namespace
@@ -684,6 +685,65 @@ namespace
         EXPECT_EQ(second->getCollisionShape(), shape); EXPECT_EQ(scheduler.getUserPointer(second), owner);
         EXPECT_EQ(mWorld.getGravity(), btVector3(0, 0, -10));
         scheduler.removeActorRagdoll(mPtr); EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeBlendSnapshotRestoresFreshOwnerBeforeIndependentMotionDispatch)
+    {
+        const auto base = ESM::FormKey::content("actors.esm", 100);
+        const std::string model = "characters/_male/skeleton.nif";
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .2f, .8f};
+        auto other = mGraph.mBodies[0]; other.mRecord = 6; other.mNodeRecord = 16;
+        other.mBlend->mRecord = 31; mGraph.mBodies.push_back(other); mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(0, 0, 4));
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native blend save barrier");
+        std::vector<MWPhysics::Simulation> frame;
+        float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frame, osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        auto snapshot = scheduler.captureActorRagdollSnapshot(mPtr, base, model);
+        ASSERT_TRUE(snapshot.mNativeBlends); ASSERT_EQ(snapshot.mNativeBlends->size(), 2u);
+        EXPECT_EQ((*snapshot.mNativeBlends)[0].mBodyRecord, 6);
+        EXPECT_EQ((*snapshot.mNativeBlends)[1].mBodyRecord, 12);
+        snapshot.mBodies[1].mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed;
+        snapshot.mBodies[1].mNativePackedVelocity->mLinear = {1, 2, 3, 8};
+        snapshot.mBodies[1].mNativePackedVelocity->mAngular = {4, 5, 6, -0.f};
+        snapshot.mBodies[1].mLinearVelocity = {1, 2, 3}; snapshot.mBodies[1].mAngularVelocity = {4, 5, 6};
+        (*snapshot.mNativeBlends)[0] = {6, 0xf123, 0xffffffffu, -2.f, 3.f};
+        (*snapshot.mNativeBlends)[1] = {12, 8, 1, -0.f, 0.f};
+        scheduler.restoreActorRagdollSnapshot(mPtr, snapshot, base, model);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        scheduler.removeActorRagdoll(mPtr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.restoreActorRagdollSnapshot(mPtr, snapshot, base, model);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        const auto native = scheduler.captureActorRagdollBlendStates(mPtr);
+        ASSERT_EQ(native.size(), 2u); EXPECT_EQ(native[0].mBodyRecord, 12);
+        EXPECT_EQ(native[0].mRequestedMotion, 1u); EXPECT_TRUE(std::signbit(native[0].mGains.mHierarchy));
+        EXPECT_EQ(native[1].mRequestedMotion, 0xffffffffu); EXPECT_EQ(native[1].mCollisionFlags, 0xf123);
+        for (unsigned field = 0; field < 4; ++field)
+        {
+            auto invalid = snapshot; invalid.mBodies[1].mPosition = {10, 20, 30};
+            if (field == 0) (*invalid.mNativeBlends)[1].mVelocityGain = std::numeric_limits<float>::quiet_NaN();
+            if (field == 1) invalid.mNativeBlends->pop_back();
+            if (field == 2) (*invalid.mNativeBlends)[1].mBodyRecord = 99;
+            if (field == 3) (*invalid.mNativeBlends)[1].mBodyRecord = 6;
+            if (field == 1)
+                EXPECT_THROW(scheduler.restoreActorRagdollSnapshot(mPtr, invalid, base, model), std::invalid_argument);
+            else
+                EXPECT_THROW(scheduler.restoreActorRagdollSnapshot(mPtr, invalid, base, model), std::runtime_error);
+            EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        }
+        // Stored request1 matching the next selected request preserves actual
+        // KEY and packed velocities; constructor request8 would clear/handoff.
+        const std::array updates{NifBullet::RagdollNativeBlendUpdate{12, osg::Matrixf::identity(), 0, 0, 8}};
+        scheduler.updateActorRagdollBlends(mPtr, updates, .016f, 0);
+        EXPECT_EQ(scheduler.captureActorRagdollNativeMotionModes(mPtr)[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        EXPECT_EQ(scheduler.captureActorRagdollNativePackedVelocities(mPtr)[0].mVelocities.mLinear[3], 8);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(scheduler.captureActorRagdollNativePackedVelocities(mPtr)[0].mVelocities.mAngular[3]), 0x80000000u);
+        scheduler.removeActorRagdoll(mPtr);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));

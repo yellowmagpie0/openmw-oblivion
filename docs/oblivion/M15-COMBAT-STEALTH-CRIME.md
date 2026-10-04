@@ -17946,3 +17946,68 @@ fields; controller/order/shared clocks and raw COM/time/quaternion/cache,
 activation/contact continuation, automatic World/reaction wiring, retained
 physical/restart failures and S5-S14 acceptance remain open. Existing X11 display
 information is pending while implementation continues.
+
+
+### Checkpoint229: scheduler blend snapshots and winning-asset restoration
+
+The actual scheduler captures pose, native packed velocity, logical body modes
+and complete raw blend metadata under its existing worker barrier/shared lock.
+The capture adapter distinguishes omitted legacy metadata from explicitly present
+empty metadata. It sorts target entries by body identity and validates the entire
+winning blend-bearing body set. Restoration stages all four projections under the
+worker barrier/exclusive lock, resolving canonical saved IDs back into winning
+asset order before the existing atomic owned transaction. Absent metadata retains
+version31/32/33 legacy restoration branches; a present empty set is accepted only
+for assets with no blend targets. Count-complete sets also reject substituting a
+known body that has no blend collision target. No raw request is inferred from an
+actual logical mode. Updated the stale scheduler comment to describe actual saved
+logical modes.
+
+All three worker-count cases in blend-scheduler-save-baseline-01 execute and fail
+because old capture omits metadata. Final worker0/1/2 tests queue a real movement
+frame before capture, resolve reversed saved/asset order, restore into a newly
+created owner, preserveF123/FFFFFFFF/unclamped and signed-zero gains, reject late
+malformed/incomplete targets before pose/mode/metadata changes, then retain an
+actual KEY/stored request1 and both fourth lanes on the next dispatch. The actual
+PhysicsSystem fixture exercises complete snapshots and malformed metadata at
+worker0/1/2. A separate adapter/serialized two-world owner fixture preserves the
+same inconsistent mode/request across60 explicit subsequent dispatches; velocity
+bits match uninterrupted ownership each frame. Winning subset/complete-empty,
+known nonblend substitution, wrong asset and incomplete capture fields are tested.
+These are software owner/scheduler tests, not normal-input gameplay, automatic
+World stepping/contact or a fresh-process/original-game save acceptance.
+
+Both blend-scheduler-save-normal/sanitized-01 builds retain a test-only vector/
+array equality compilation failure; no engine test execution is claimed there.
+Corrected the assertion container type. Full normal/sanitized-02 each passes906
+engine tests, exact inventory and zero failures/skips. A new GCC optimization
+warning in the malformed fixture's copy/clear optional-vector path was eliminated
+by explicitly emplacing its intended complete empty list after terminal runs.
+Final normal/sanitized-03 each rebuilds the engine targets and passes all6 affected
+engine cases (including the public fixture's three internal worker courses), exact
+filtered inventories and no new compiler warnings. Broader earlier builds retain
+preexisting character.cpp maybe-uninitialized and actor-stats loop-copy warnings.
+ASan leaks disabled. Components/Python are unchanged since228's2,402 full component
+checks per build and251 Python tests; unchanged passing checks were not repeated.
+Full-suite source fingerprint `aef8090f41f546a8bac5de8ebdda5bf3c7567179814cae76784834be2d79f729`; final test-only cleanup fingerprint
+`b7a6b54dab8cb1886bcb851501927388f44b6750b6006deaabd6a7d4b8956879`.
+
+Actual native-blend-adapter-wire-compare-normal/sanitized-01 each passes5,760
+composed inputs and74,880 exact fields through real engine capture adapter,
+version34 C++ serialization/deserialization/reencoding, all winning-asset restore
+adapters and physical owned restoration. Opposite initial modes, scales1/7/native,
+shape/proxy/pose/interpolation, force clearing/wakeup and deregistration are checked.
+Inputs retain all216 original full-caller final request/flags/vtable mappings and
+its explicit fixture gains, cyclically paired with222 original velocity outputs.
+Fixture gains are not newly captured final getters; original216 declared Windows/
+heap/no-World scope and both corpora/executable identities remain unchanged. This
+is a composed software snapshot pipeline, not one original save/World/contact
+experiment. Comparers use the full-suite fingerprint; both actual component and
+engine archive hashes remain identical after the final test-only cleanup. Reports
+record source/corpus/archive/binary hashes and commands; no tolerance/input change.
+
+No M15 gate closes. Controller keys/cursors/cached gains/clocks/generated list
+position and shared cache persistence are next. Renderer-global Ni ordering/cache,
+raw COM/time/quaternion/cache, activation/contact continuation, automatic World
+reaction/getter/frame/save wiring, retained physical/restart failures and S5-S14
+acceptance remain required. Existing display information remains pending.

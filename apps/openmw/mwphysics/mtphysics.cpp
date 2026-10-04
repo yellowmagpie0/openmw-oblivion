@@ -739,7 +739,8 @@ namespace MWPhysics
         MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
         const auto& owned = actorRagdoll(ptr);
         return captureNativeActorRagdoll(base, model, owned.mDefinition, owned.mPhysics.capture(),
-            owned.mPhysics.captureNativePackedVelocities(), owned.mPhysics.captureNativeMotionModes());
+            owned.mPhysics.captureNativePackedVelocities(), owned.mPhysics.captureNativeMotionModes(),
+            owned.mPhysics.captureNativeBlendStates());
     }
 
     void PhysicsTaskScheduler::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
@@ -751,7 +752,14 @@ namespace MWPhysics
         const auto states = restoreNativeActorRagdoll(snapshot, base, model, owned.mDefinition);
         const auto packed = restoreNativeActorRagdollPackedVelocities(snapshot, base, model, owned.mDefinition);
         const auto motions = restoreNativeActorRagdollMotionModes(snapshot, base, model, owned.mDefinition);
-        if (motions)
+        const auto blends = restoreNativeActorRagdollBlendStates(snapshot, base, model, owned.mDefinition);
+        if (blends)
+        {
+            if (!packed || !motions)
+                throw std::invalid_argument("native blend restoration requires packed velocity and motion state");
+            owned.mPhysics.restore(states, *packed, *motions, *blends);
+        }
+        else if (motions)
         {
             if (!packed)
                 throw std::invalid_argument("native motion restoration requires packed velocities");

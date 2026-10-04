@@ -380,3 +380,96 @@ namespace
             std::span<const NifBullet::RagdollNativePackedVelocityState>{}, modes), std::invalid_argument);
     }
 }
+
+
+namespace
+{
+    TEST_F(NativeRagdollSnapshotTest, NativeBlendWireRestoresFreshOwnerBeforeNextDispatch)
+    {
+        struct World
+        {
+            btDefaultCollisionConfiguration mConfiguration;
+            btCollisionDispatcher mDispatcher{&mConfiguration};
+            btDbvtBroadphase mBroadphase;
+            btSequentialImpulseConstraintSolver mSolver;
+            btDiscreteDynamicsWorld mWorld{&mDispatcher, &mBroadphase, &mSolver, &mConfiguration};
+        } first, second;
+        for (auto& body : mGraph.mBodies)
+            body.mBlend = NifBullet::RagdollBlendDefinition{body.mRecord + 100, 8, .2f, .8f};
+        std::vector<btTransform> poses; for (const auto& body : mBodies) poses.push_back(body.mPose);
+        NifBullet::ActorRagdollPhysics uninterrupted(mGraph, first.mWorld, 1, poses, 1, -1);
+        auto spatial = uninterrupted.capture(); auto packed = uninterrupted.captureNativePackedVelocities();
+        packed[0].mVelocities = {{1, 2, 3, 8}, {4, 5, 6, -0.f}};
+        const std::array<NifBullet::RagdollNativeMotionRequest, 2> modes{{
+            {24, NifBullet::RagdollNativeMotion::Keyframed}, {12, NifBullet::RagdollNativeMotion::Dynamic}}};
+        auto blends = uninterrupted.captureNativeBlendStates();
+        blends[0].mCollisionFlags = 8; blends[0].mRequestedMotion = 1; blends[0].mGains = {-0.f, 0};
+        blends[1].mCollisionFlags = 0xf123; blends[1].mRequestedMotion = 0xffffffffu; blends[1].mGains = {-2, 3};
+        uninterrupted.restore(spatial, packed, modes, blends);
+        const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph,
+            uninterrupted.capture(), packed, modes, blends);
+        ASSERT_TRUE(snapshot.mNativeBlends); EXPECT_EQ((*snapshot.mNativeBlends)[0].mBodyRecord, 12);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(save(snapshot).serializeBinary());
+        const auto& loaded = decoded.mNativeActorRagdolls.begin()->second;
+        const auto restoredSpatial = MWPhysics::restoreNativeActorRagdoll(loaded, mBase, mModel, mGraph);
+        const auto restoredPacked = MWPhysics::restoreNativeActorRagdollPackedVelocities(loaded, mBase, mModel, mGraph);
+        const auto restoredModes = MWPhysics::restoreNativeActorRagdollMotionModes(loaded, mBase, mModel, mGraph);
+        const auto restoredBlends = MWPhysics::restoreNativeActorRagdollBlendStates(loaded, mBase, mModel, mGraph);
+        ASSERT_TRUE(restoredPacked); ASSERT_TRUE(restoredModes); ASSERT_TRUE(restoredBlends);
+        EXPECT_EQ((*restoredBlends)[0].mBodyRecord, 24); EXPECT_EQ((*restoredBlends)[1].mBodyRecord, 12);
+        NifBullet::ActorRagdollPhysics resumed(mGraph, second.mWorld, 1, poses, 1, -1);
+        resumed.restore(restoredSpatial, *restoredPacked, *restoredModes, *restoredBlends);
+        const std::array updates{NifBullet::RagdollNativeBlendUpdate{24, osg::Matrixf::identity(), -0.f, 0, 8}};
+        for (unsigned frame = 0; frame < 60; ++frame)
+        {
+            uninterrupted.updateNativeBlends(updates, .016f, 0, 0);
+            resumed.updateNativeBlends(updates, .016f, 0, 0);
+            EXPECT_EQ(resumed.captureNativeMotionModes(), std::vector(modes.begin(), modes.end()));
+            const auto actual = resumed.captureNativePackedVelocities(); const auto expected = uninterrupted.captureNativePackedVelocities();
+            for (std::size_t body = 0; body < actual.size(); ++body)
+                for (unsigned axis = 0; axis < 4; ++axis)
+                {
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mLinear[axis]), std::bit_cast<std::uint32_t>(expected[body].mVelocities.mLinear[axis]));
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mAngular[axis]), std::bit_cast<std::uint32_t>(expected[body].mVelocities.mAngular[axis]));
+                }
+            EXPECT_EQ(actual[0].mVelocities.mLinear[3], 8);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[0].mVelocities.mAngular[3]), 0x80000000u);
+        }
+        const auto actual = resumed.captureNativeBlendStates();
+        EXPECT_TRUE(std::signbit(actual[0].mGains.mHierarchy)); EXPECT_EQ(actual[0].mRequestedMotion, 1u);
+        EXPECT_EQ(actual[1].mRequestedMotion, 0xffffffffu); EXPECT_EQ(actual[1].mCollisionFlags, 0xf123);
+        EXPECT_EQ(actual[1].mGains.mHierarchy, -2); EXPECT_EQ(actual[1].mGains.mVelocity, 3);
+        auto legacy = loaded; legacy.mNativeBlends.reset();
+        EXPECT_FALSE(MWPhysics::restoreNativeActorRagdollBlendStates(legacy, mBase, mModel, mGraph));
+    }
+
+    TEST_F(NativeRagdollSnapshotTest, NativeBlendAdapterRequiresCompleteWinningTargetSet)
+    {
+        std::vector<NifBullet::RagdollNativePackedVelocityState> packed;
+        std::vector<NifBullet::RagdollNativeMotionRequest> modes;
+        for (const auto& body : mBodies)
+        {
+            packed.push_back({body.mRecord, {}}); modes.push_back({body.mRecord, NifBullet::RagdollNativeMotion::Dynamic});
+        }
+        const std::span<const NifBullet::RagdollNativeBlendState> empty;
+        const auto noBlend = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, empty);
+        ASSERT_TRUE(noBlend.mNativeBlends); EXPECT_TRUE(noBlend.mNativeBlends->empty());
+        const auto restoredEmpty = MWPhysics::restoreNativeActorRagdollBlendStates(noBlend, mBase, mModel, mGraph);
+        ASSERT_TRUE(restoredEmpty); EXPECT_TRUE(restoredEmpty->empty());
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, 0, 1};
+        const std::array blends{NifBullet::RagdollNativeBlendState{24, 0xffff, {-2, 3}, 0xffffffffu}};
+        const auto partial = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, blends);
+        ASSERT_TRUE(partial.mNativeBlends); EXPECT_EQ(partial.mNativeBlends->size(), 1u);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, empty), std::invalid_argument);
+        auto wrong = partial; wrong.mNativeBlends->front().mBodyRecord = 12; // known body with no blend
+        EXPECT_THROW(MWPhysics::restoreNativeActorRagdollBlendStates(wrong, mBase, mModel, mGraph), std::invalid_argument);
+        wrong = partial; wrong.mNativeBlends.emplace();
+        EXPECT_THROW(MWPhysics::restoreNativeActorRagdollBlendStates(wrong, mBase, mModel, mGraph), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed,
+            std::span<const NifBullet::RagdollNativeMotionRequest>{}, blends), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies,
+            std::span<const NifBullet::RagdollNativePackedVelocityState>{}, modes, blends), std::invalid_argument);
+        auto wrongAsset = mGraph; wrongAsset.mSourceHash[0] = 'x';
+        EXPECT_THROW(MWPhysics::restoreNativeActorRagdollBlendStates(partial, mBase, mModel, wrongAsset), std::invalid_argument);
+    }
+}

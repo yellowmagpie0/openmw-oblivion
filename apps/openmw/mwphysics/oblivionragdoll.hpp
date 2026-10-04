@@ -4,6 +4,7 @@
 #include <components/esm4/runtimestate.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 
+#include <optional>
 #include <span>
 #include <string_view>
 
@@ -15,7 +16,8 @@ namespace MWPhysics
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
         std::span<const NifBullet::RagdollBodyState> bodies,
         std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities = {},
-        std::span<const NifBullet::RagdollNativeMotionRequest> motions = {});
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions = {},
+        std::optional<std::span<const NifBullet::RagdollNativeBlendState>> blends = std::nullopt);
     std::vector<NifBullet::RagdollBodyState> restoreNativeActorRagdoll(
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
@@ -25,6 +27,10 @@ namespace MWPhysics
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
     std::optional<std::vector<NifBullet::RagdollNativeMotionRequest>> restoreNativeActorRagdollMotionModes(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
+    // Present entries must match every blend-bearing body in the winning asset.
+    std::optional<std::vector<NifBullet::RagdollNativeBlendState>> restoreNativeActorRagdollBlendStates(
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
 }
