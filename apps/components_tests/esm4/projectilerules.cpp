@@ -3,6 +3,7 @@
 #include <components/esm4/loadgmst.hpp>
 #include <gtest/gtest.h>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -662,4 +663,87 @@ TEST(ESM4ProjectileRules, PlayerBowTimerInputSelectsHeldAccumulationAndPressRese
         std::invalid_argument);
     EXPECT_THROW(ESM4::playerBowTimerAfterInput(0, 0, 5, static_cast<Phase>(5), false, false, false, false),
         std::invalid_argument);
+}
+
+namespace
+{
+    using VectorBits = std::array<std::uint32_t, 3>;
+    struct CoordinateCase
+    {
+        VectorBits mInput, mHavok, mWorld;
+    };
+    struct GravityCase
+    {
+        VectorBits mVelocity, mGravity;
+        std::uint32_t mFactor, mDuration;
+        VectorBits mResult;
+    };
+#include "projectile_vectors_expected.inc"
+
+    ESM4::ProjectileVector vectorFromBits(const VectorBits& value)
+    {
+        return {std::bit_cast<float>(value[0]), std::bit_cast<float>(value[1]), std::bit_cast<float>(value[2])};
+    }
+    VectorBits vectorBits(const ESM4::ProjectileVector& value)
+    {
+        return {std::bit_cast<std::uint32_t>(value[0]), std::bit_cast<std::uint32_t>(value[1]),
+            std::bit_cast<std::uint32_t>(value[2])};
+    }
+}
+
+TEST(ESM4ProjectileRules, CoordinateStoresMatchOriginalInstructionsAndPreserveAxesAndSignedZero)
+{
+    for (const auto& value : coordinateCases)
+    {
+        const auto input = vectorFromBits(value.mInput);
+        EXPECT_EQ(vectorBits(ESM4::projectileWorldToHavok(input)), value.mHavok);
+        EXPECT_EQ(vectorBits(ESM4::projectileHavokToWorld(input)), value.mWorld);
+    }
+    const auto radius = ESM4::projectileWorldToHavok({0.1f, 0, 0});
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(radius[0]), 1013585624u);
+    EXPECT_EQ(ESM4::arrowCollisionWorldRadius(), ESM4::projectileHavokToWorld(radius)[0]);
+    EXPECT_GT(ESM4::arrowCollisionWorldRadius(), 0);
+}
+
+TEST(ESM4ProjectileRules, GravityStoresMatchOriginalSseWithoutCollapsingProducts)
+{
+    for (const auto& value : gravityCases)
+        EXPECT_EQ(vectorBits(ESM4::projectileVelocityAfterGravity(vectorFromBits(value.mVelocity),
+            vectorFromBits(value.mGravity), std::bit_cast<float>(value.mFactor),
+            std::bit_cast<float>(value.mDuration))), value.mResult);
+}
+
+TEST(ESM4ProjectileRules, CoordinateAndGravityRejectInvalidVectorsAndOverflowWithoutChangingInputs)
+{
+    const float maximum = std::numeric_limits<float>::max();
+    for (float bad : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+        for (std::size_t axis = 0; axis < 3; ++axis)
+        {
+            ESM4::ProjectileVector vector{1, -2, 3};
+            vector[axis] = bad;
+            const auto before = vectorBits(vector);
+            EXPECT_THROW(ESM4::projectileWorldToHavok(vector), std::invalid_argument);
+            EXPECT_THROW(ESM4::projectileHavokToWorld(vector), std::invalid_argument);
+            EXPECT_THROW(ESM4::projectileVelocityAfterGravity(vector, {0, 0, -1}, 1, 1), std::invalid_argument);
+            EXPECT_THROW(ESM4::projectileVelocityAfterGravity({1, 2, 3}, vector, 1, 1), std::invalid_argument);
+            EXPECT_EQ(vectorBits(vector), before);
+        }
+    EXPECT_THROW(ESM4::projectileHavokToWorld({maximum, 0, 0}), std::invalid_argument);
+    EXPECT_THROW(ESM4::projectileVelocityAfterGravity({0, 0, 0}, {maximum, 0, 0}, 2, 1),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::projectileVelocityAfterGravity({0, 0, 0}, {maximum, 0, 0}, 1, 2),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::projectileVelocityAfterGravity({maximum, 0, 0}, {maximum, 0, 0}, 1, 1),
+        std::invalid_argument);
+    // Validate even operands whose contribution is suppressed by a zero multiplier.
+    EXPECT_THROW(ESM4::projectileVelocityAfterGravity({0, 0, 0}, {maximum, 0, 0}, 2, 0),
+        std::invalid_argument);
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::projectileVelocityAfterGravity({0, 0, 0}, {0, 0, -1}, bad, 0),
+            std::invalid_argument);
+        EXPECT_THROW(ESM4::projectileVelocityAfterGravity({0, 0, 0}, {0, 0, -1}, 1, bad),
+            std::invalid_argument);
+    }
 }

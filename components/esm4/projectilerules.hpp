@@ -8,6 +8,24 @@
 
 namespace ESM4
 {
+    using ProjectileVector = std::array<float, 3>;
+
+    // Native world/Havok conversion stores. The original double constants
+    // are distinct, not exact reciprocals; neither path permutes xyz.
+    ProjectileVector projectileWorldToHavok(const ProjectileVector& value);
+    ProjectileVector projectileHavokToWorld(const ProjectileVector& value);
+
+    // Native Arrow sphere constructor publishes a converted 0.1 world-unit
+    // radius. Return that stored Havok radius converted back to world units
+    // for collision engines operating in scene coordinates.
+    float arrowCollisionWorldRadius();
+
+    // State2 gravity tail only, after desired/support velocity resolution.
+    // Keep Havok velocity and gravity in Havok units. Each product and sum
+    // has a separate binary32 store; this does not advance position/contacts.
+    ProjectileVector projectileVelocityAfterGravity(const ProjectileVector& velocity,
+        const ProjectileVector& gravity, float gravityFactor, float duration);
+
     struct BowAnimationKeys
     {
         std::array<float, 5> mTimes{};

@@ -12875,3 +12875,43 @@ projectiles and normal-input acceptance remain open. Wear that would break
 the bow is rejected before publication until native break consequences are
 implemented. Coordinate/shape evidence does not establish trajectory or full
 Havok allocation. S5 and M15 remain in progress.
+
+
+### S5 checkpoint272: native projectile coordinate and gravity stores
+
+Typed projectile rules now preserve the original distinct world/Havok double
+conversion constants and each binary32 coordinate store. Collision radius
+uses the original converted sphere radius in scene units. The gravity tail
+keeps Havok velocity/gravity units and rounds factor*gravity, duration*product
+and velocity+increment separately. Nonfinite vectors, negative multipliers
+and arithmetic overflow fail before returning any changed value.
+
+Three new component tests compare exact bits against independently executed
+original coordinate outputs for64 vectors and gravity outputs for128 inputs,
+including signed zero and subnormal coordinates. They cover every axis,
+invalid unused operands and overflow at each gravity store. The original
+gravity oracle executes8CF9B3 through8CFA1B, including actual Arrow vtable
+A6FA64+58 getter8B9C80 and8AC0C0, with no game-function hooks. Both x87 modes
+agree in all256 cases. Evidence: S5/native-arrow-gravity-store-oracle-01.
+Oracle source SHA-256:
+5ca993a830d5f715e25bd1e123c9bc67b250129885ff5604b721a8e2819a4502
+
+Normal and ASan/UBSan each pass2468 full component tests, exact inventories
+and no failures/skips. Leak checks are disabled. Both builds emit20 existing
+inventory-test missing-initializer warnings; that source is byte-identical
+to checkpoint271, recorded in unchanged-warning-source.json. Engine/Python
+behavior is unchanged; no live caller invokes the new rules yet.
+Evidence: S5/projectile-vectors-{normal,sanitized}-01.
+Tested fingerprint: 03f536a27fbde0b7bf91c6ec5d1798533bb03279e9193c7a0932950360f9b37b
+
+Further isolated research executes the complete original State2 update,
+including91F430 resolution and890740 timer tail, in64 cases with declared
+fixture fields and no game-function hooks. Retain initial01's missing
+motion-state pointer failure; corrected02 initializes the actual8AC070
+pointer path. Evidence: S5/native-arrow-state2-oracle-02.
+Oracle source SHA-256:
+c973a644366aa9a337b803d1b1f3f27c9f297685a689b09c48aeb4cf08a3629a
+These fixtures do not establish actual Arrow controller field producers,
+per-frame support/collision inputs or trajectories. Full native flight,
+resource/projectile coupling, Character input, persistence/impact and
+normal-input acceptance remain open. This does not close S5 or M15.

@@ -28,6 +28,45 @@ namespace ESM4
         }
     }
 
+    ProjectileVector projectileWorldToHavok(const ProjectileVector& value)
+    {
+        ProjectileVector result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+            result[i] = rounded(double(value[i]) * 0.1428767293691635);
+        return result;
+    }
+
+    ProjectileVector projectileHavokToWorld(const ProjectileVector& value)
+    {
+        ProjectileVector result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+            result[i] = rounded(double(value[i]) * 6.999040126800537);
+        return result;
+    }
+
+    float arrowCollisionWorldRadius()
+    {
+        const auto radius = projectileWorldToHavok({0.1f, 0, 0});
+        return projectileHavokToWorld(radius)[0];
+    }
+
+    ProjectileVector projectileVelocityAfterGravity(const ProjectileVector& velocity,
+        const ProjectileVector& gravity, float gravityFactor, float duration)
+    {
+        nonnegative(gravityFactor);
+        nonnegative(duration);
+        ProjectileVector result;
+        for (std::size_t i = 0; i < result.size(); ++i)
+        {
+            if (!std::isfinite(velocity[i]) || !std::isfinite(gravity[i]))
+                throw std::invalid_argument("nonfinite native projectile vector");
+            const float acceleration = rounded(double(gravityFactor) * gravity[i]);
+            const float increment = rounded(double(acceleration) * duration);
+            result[i] = rounded(double(increment) + velocity[i]);
+        }
+        return result;
+    }
+
     BowAnimationKeys bowAnimationKeyTimes(std::span<const MeleeTextKey> textKeys)
     {
         for (const auto& key : textKeys)
