@@ -11107,3 +11107,42 @@ disabled. Python unchanged. Tested source fingerprint `a13eaae5180816a3e12325b36
 No M15 stage closes. Full packed/raw motion and controller persistence, actual
 World getter/clock/collision-frame ordering, automatic reactions, retained native
 activation/contact/save failures and all S5-S14 gameplay acceptance remain open.
+
+
+### Checkpoint223: atomic pose and packed-velocity restoration
+
+Added a complete ordered pose/packed-velocity restore overload. All packed
+records, used lanes and world projections are staged before the existing full
+pose validation and publication. Native velocities override the spatial velocity
+projection; restored interpolation receives those authoritative values. Fourth
+lanes publish without further allocation after the existing pose restore.
+Motion modes are retained. The original pose restore's force clearing, activation,
+inertia/interpolation and AABB refresh behavior is unchanged. The existing
+spatial-only API does not gain invented fourth values.
+
+Both new tests fail packed-pose-restore-baseline-01: packed velocity loss and
+late invalid input admitting partial pose changes. Final tests cover independent
+original case20122 velocities, signed-zero W/XYZ, KEY mode retention,
+interpolation/current agreement, and complete rollback for late nonfinite W,
+identity/count mismatches and invalid pose. Rollback also preserves existing
+force and sleeping state. These are supported-domain validation guarantees;
+Bullet internal allocation failure during publication is not exercised.
+
+Actual normal/sanitized native-packed-pose-restore-compare-01 each restores
+34,560 original222 captured velocity snapshots,276,480 exact bit-pattern checks,
+zero mismatches. Alternate Dynamic/KEY and scales1/7/native; deliberately
+conflicting spatial velocities verify native authority. Checks also require
+requested pose, retained mode/shape/proxy, interpolation agreement, force clearing,
+wakeup and collision-object removal. Both original sphere/box and raw-linear-limit1/
+250 outputs are snapshot inputs admitted by this velocity restoration boundary;
+this is not original save/restoration or full motion integration evidence.
+Original executable/corpus identity remains222's pinned dataset. No tolerance
+changes. Full packed-pose-restore-normal/sanitized-01 each passes2,392 component
+tests, exact inventories and zero failures/skips. ASan leaks disabled. This lower
+owner API has no new engine caller yet; engine and Python unchanged and not
+repeated. Tested source fingerprint `df03686b74c4730fbb509126486de094f74d70badb4dff203c1454b4d53b24a2`.
+
+No M15 stage closes. The versioned save schema and public scheduler snapshot
+must carry this data before packed save/restart can be claimed. Full raw modes,
+COM/time/cache/controller persistence, automatic World getter/frame/reaction
+integration, retained contact/restart failures and S5-S14 acceptance remain open.

@@ -4064,3 +4064,71 @@ namespace
         EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[0].mVelocities.mAngular[3]), 0x80000000u);
     }
 }
+
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, PackedPoseRestoreUsesNativeVelocitiesAndInterpolation)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        const std::array key{NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(key);
+        const auto modes = actor.captureNativeMotionModes();
+        auto spatial = actor.capture();
+        auto packed = actor.captureNativePackedVelocities();
+        spatial[0].mPose.setOrigin({1, 2, 3}); spatial[1].mPose.setOrigin({4, 5, 6});
+        for (auto& state : spatial)
+        {
+            state.mLinearVelocity = {0, 0, 0}; state.mAngularVelocity = {0, 0, 0};
+        }
+        // Independently captured original case20122 velocities, plus signed-zero
+        // and independent fourth lanes on the KEY body.
+        packed[0].mVelocities = {{66.83216857910156f, -133.66433715820312f, 200.41783142089844f, 1.06931471824646f},
+            {26.377605438232422f, -52.755210876464844f, 79.13282012939453f, .2110208421945572f}};
+        packed[1].mVelocities = {{-0.f, 2, 3, -8}, {4, 5, 6, -0.f}};
+        actor.restore(spatial, packed);
+        const auto actual = actor.captureNativePackedVelocities();
+        for (std::size_t body = 0; body < packed.size(); ++body)
+        {
+            for (unsigned axis = 0; axis < 4; ++axis)
+            {
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mLinear[axis]),
+                    std::bit_cast<std::uint32_t>(packed[body].mVelocities.mLinear[axis]));
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[body].mVelocities.mAngular[axis]),
+                    std::bit_cast<std::uint32_t>(packed[body].mVelocities.mAngular[axis]));
+            }
+            const auto* rigid = btRigidBody::upcast(actor.collisionObjects()[body]);
+            EXPECT_EQ(rigid->getInterpolationLinearVelocity(), rigid->getLinearVelocity());
+            EXPECT_EQ(rigid->getInterpolationAngularVelocity(), rigid->getAngularVelocity());
+            EXPECT_EQ(actor.capture()[body].mPose, spatial[body].mPose);
+        }
+        EXPECT_EQ(actor.captureNativeMotionModes(), modes);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PackedPoseRestoreRejectsEntireInvalidBatchBeforeMutation)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        auto before = actor.capture(); auto packed = actor.captureNativePackedVelocities();
+        packed[0].mVelocities = {{1, 2, 3, 4}, {5, 6, 7, 8}};
+        actor.restoreNativePackedVelocities(packed); before = actor.capture();
+        auto next = before; next[0].mPose.setOrigin({10, 20, 30});
+        auto invalid = packed; invalid[1].mVelocities.mAngular[3] = std::numeric_limits<float>::quiet_NaN();
+        auto* rigid = btRigidBody::upcast(actor.collisionObjects()[0]);
+        rigid->applyCentralForce({1, 2, 3}); rigid->forceActivationState(ISLAND_SLEEPING);
+        const auto check = [&] {
+            EXPECT_EQ(actor.capture()[0].mPose, before[0].mPose);
+            EXPECT_EQ(actor.capture()[0].mLinearVelocity, before[0].mLinearVelocity);
+            EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities.mLinear, packed[0].mVelocities.mLinear);
+            EXPECT_EQ(rigid->getTotalForce(), btVector3(1, 2, 3));
+            EXPECT_EQ(rigid->getActivationState(), ISLAND_SLEEPING);
+        };
+        EXPECT_THROW(actor.restore(next, invalid), std::invalid_argument); check();
+        invalid = packed; invalid[1].mRecord = 999;
+        EXPECT_THROW(actor.restore(next, invalid), std::invalid_argument); check();
+        EXPECT_THROW(actor.restore(next, std::span<const NifBullet::RagdollNativePackedVelocityState>{}), std::invalid_argument); check();
+        next[1].mPose.getBasis()[0][0] = 2;
+        EXPECT_THROW(actor.restore(next, packed), std::invalid_argument); check();
+    }
+}

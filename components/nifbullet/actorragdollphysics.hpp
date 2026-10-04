@@ -276,6 +276,12 @@ namespace NifBullet
         std::span<btCollisionObject* const> collisionObjects() const;
         std::vector<RagdollBodyState> capture() const;
         void restore(std::span<const RagdollBodyState> states);
+        // Complete ordered pose and native packed velocity snapshot. Native
+        // velocities are authoritative over the spatial projection. Validate
+        // both snapshots before mutation; retain restore's force/activation
+        // and interpolation behavior. Motion modes are not changed.
+        void restore(std::span<const RagdollBodyState> states,
+            std::span<const RagdollNativePackedVelocityState> packedVelocities);
         // Native units, including both packed fourth lanes. XYZ comes from the
         // current body; fourth lanes have separate owned binary32 storage.
         std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;
