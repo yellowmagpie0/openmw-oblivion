@@ -38,7 +38,8 @@ namespace MWPhysics
         std::span<const NifBullet::RagdollBodyState> bodies,
         std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities,
         std::span<const NifBullet::RagdollNativeMotionRequest> motions,
-        std::optional<std::span<const NifBullet::RagdollNativeBlendState>> blends)
+        std::optional<std::span<const NifBullet::RagdollNativeBlendState>> blends,
+        std::optional<NativeRagdollControllerSnapshot> controllers)
     {
         validateGraph(definition);
         if (bodies.size() != definition.mBodies.size())
@@ -49,6 +50,8 @@ namespace MWPhysics
             throw std::invalid_argument("native motion snapshot requires complete packed velocity state");
         if (blends && (packedVelocities.empty() || motions.empty()))
             throw std::invalid_argument("native blend snapshot requires complete packed velocity and motion state");
+        if (controllers && (!blends || packedVelocities.empty() || motions.empty()))
+            throw std::invalid_argument("native controller snapshot requires complete physical and blend state");
         ESM4::RuntimeActorRagdoll result;
         result.mBase = base;
         result.mModel = model;
@@ -110,10 +113,24 @@ namespace MWPhysics
                 return a.mBodyRecord < b.mBodyRecord;
             });
         }
+        if (controllers)
+        {
+            result.mNativeControllers.emplace();
+            auto& saved = *result.mNativeControllers;
+            saved.mBlends.reserve(controllers->mBlends.size());
+            for (const auto& controller : controllers->mBlends)
+                saved.mBlends.push_back({controller.mRecord, controller.mAttachedNode, controller.mTargetNode, controller.mState});
+            saved.mVelocities.reserve(controllers->mVelocities.size());
+            for (const auto& controller : controllers->mVelocities)
+                saved.mVelocities.push_back({controller.mAttachedNode, controller.mTargetNode, controller.mPrecedesBlend, controller.mState});
+            std::sort(saved.mBlends.begin(), saved.mBlends.end(), [](const auto& a, const auto& b) { return a.mRecord < b.mRecord; });
+            std::sort(saved.mVelocities.begin(), saved.mVelocities.end(), [](const auto& a, const auto& b) { return a.mAttachedNode < b.mAttachedNode; });
+        }
         result.validate();
         // Resolve against the complete winning target set before returning a
         // current snapshot. Empty is complete only for an asset with no targets.
         (void)restoreNativeActorRagdollBlendStates(result, base, model, definition);
+        (void)restoreNativeActorRagdollControllers(result, base, model, definition);
         return result;
     }
 
@@ -214,6 +231,39 @@ namespace MWPhysics
             result.push_back({blend.mBodyRecord, blend.mCollisionFlags,
                 {blend.mHierarchyGain, blend.mVelocityGain}, blend.mRequestedMotion});
         }
+        return result;
+    }
+
+    std::optional<RestoredNativeRagdollControllers> restoreNativeActorRagdollControllers(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        (void)restoreNativeActorRagdoll(snapshot, base, model, definition);
+        if (!snapshot.mNativeControllers)
+            return std::nullopt;
+        const auto& saved = *snapshot.mNativeControllers;
+        const auto expected = std::count_if(definition.mBodies.begin(), definition.mBodies.end(),
+            [](const auto& body) { return body.mBlendController.has_value(); });
+        if (saved.mBlends.size() != static_cast<std::size_t>(expected))
+            throw std::invalid_argument("native controller snapshot does not match the winning authored count");
+        std::unordered_map<std::uint32_t, const ESM4::RuntimeRagdollBlendController*> controllers;
+        for (const auto& controller : saved.mBlends)
+            controllers.emplace(controller.mRecord, &controller);
+        RestoredNativeRagdollControllers result;
+        result.mBlends.reserve(saved.mBlends.size());
+        for (const auto& body : definition.mBodies)
+        {
+            if (!body.mBlendController)
+                continue;
+            const auto found = controllers.find(body.mBlendController->mRecord);
+            if (found == controllers.end() || found->second->mAttachedNode != body.mNodeRecord)
+                throw std::invalid_argument("native controller snapshot does not match the winning record or attachment");
+            const auto& controller = *found->second;
+            result.mBlends.push_back({controller.mRecord, controller.mTargetNode, controller.mState, controller.mAttachedNode});
+        }
+        result.mVelocities.reserve(saved.mVelocities.size());
+        for (const auto& controller : saved.mVelocities)
+            result.mVelocities.push_back({controller.mAttachedNode, controller.mTargetNode, controller.mState, controller.mPrecedesBlend});
         return result;
     }
 }

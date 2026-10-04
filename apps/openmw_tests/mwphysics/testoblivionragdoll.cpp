@@ -473,3 +473,127 @@ namespace
         EXPECT_THROW(MWPhysics::restoreNativeActorRagdollBlendStates(partial, mBase, mModel, wrongAsset), std::invalid_argument);
     }
 }
+
+namespace
+{
+    TEST_F(NativeRagdollSnapshotTest, NativeControllerAdapterResolvesWinningAuthoredSetAndLegacyAbsence)
+    {
+        std::vector<NifBullet::RagdollNativePackedVelocityState> packed;
+        std::vector<NifBullet::RagdollNativeMotionRequest> modes;
+        for (const auto& body : mBodies)
+        {
+            packed.push_back({body.mRecord, {}});
+            modes.push_back({body.mRecord, NifBullet::RagdollNativeMotion::Dynamic});
+        }
+        const std::span<const NifBullet::RagdollNativeBlendState> empty;
+        const MWPhysics::NativeRagdollControllerSnapshot none{};
+        const auto noControllers = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, empty, none);
+        const auto restoredEmpty = MWPhysics::restoreNativeActorRagdollControllers(noControllers, mBase, mModel, mGraph);
+        ASSERT_TRUE(restoredEmpty); EXPECT_TRUE(restoredEmpty->mBlends.empty()); EXPECT_TRUE(restoredEmpty->mVelocities.empty());
+        auto legacy = noControllers; legacy.mNativeControllers.reset();
+        EXPECT_FALSE(MWPhysics::restoreNativeActorRagdollControllers(legacy, mBase, mModel, mGraph));
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, 0, 1};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 20, 0, 1, 0, 0, 0, {}};
+        const std::array blends{NifBullet::RagdollNativeBlendState{24, 8, {0, 1}, 1}};
+        const std::array controllers{NifBullet::RagdollNativeBlendControllerState{78, std::nullopt, {}, 20}};
+        const MWPhysics::NativeRagdollControllerSnapshot view{controllers, {}};
+        const auto partial = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, blends, view);
+        ASSERT_TRUE(partial.mNativeControllers); EXPECT_EQ(partial.mNativeControllers->mBlends.size(), 1u);
+        const auto restored = MWPhysics::restoreNativeActorRagdollControllers(partial, mBase, mModel, mGraph);
+        ASSERT_TRUE(restored); EXPECT_EQ(restored->mBlends[0].mAttachedNode, 20u); EXPECT_FALSE(restored->mBlends[0].mTargetNode);
+        for (unsigned field = 0; field < 3; ++field)
+        {
+            auto bad = partial;
+            if (field == 0) bad.mNativeControllers.emplace();
+            if (field == 1) bad.mNativeControllers->mBlends[0].mRecord = 99;
+            if (field == 2) bad.mNativeControllers->mBlends[0].mAttachedNode = 8; // known node, wrong authored attachment
+            EXPECT_THROW(MWPhysics::restoreNativeActorRagdollControllers(bad, mBase, mModel, mGraph), std::invalid_argument);
+        }
+        auto changed = mGraph; changed.mSourceHash[0] = 'x';
+        EXPECT_THROW(MWPhysics::restoreNativeActorRagdollControllers(partial, mBase, mModel, changed), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, blends, none), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, {}, modes, blends, view), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, {}, blends, view), std::invalid_argument);
+        EXPECT_THROW(MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies, packed, modes, std::nullopt, view), std::invalid_argument);
+    }
+
+    TEST_F(NativeRagdollSnapshotTest, NativeControllerWireRestoresFreshOwnerForSixtyExplicitPhases)
+    {
+        struct World
+        {
+            btDefaultCollisionConfiguration mConfiguration;
+            btCollisionDispatcher mDispatcher{&mConfiguration};
+            btDbvtBroadphase mBroadphase;
+            btSequentialImpulseConstraintSolver mSolver;
+            btDiscreteDynamicsWorld mWorld{&mDispatcher, &mBroadphase, &mSolver, &mConfiguration};
+        } first, second;
+        for (unsigned i = 0; i < mGraph.mBodies.size(); ++i)
+        {
+            auto& body = mGraph.mBodies[i];
+            body.mBlend = NifBullet::RagdollBlendDefinition{body.mRecord + 100, 8, .5f, .5f};
+            body.mBlendController = NifBullet::RagdollBlendControllerDefinition{90 - i * 12, body.mNodeRecord, 0xd, 1, 0, 0, 4, {}};
+        }
+        std::vector<btTransform> poses; for (const auto& body : mBodies) poses.push_back(body.mPose);
+        NifBullet::ActorRagdollPhysics uninterrupted(mGraph, first.mWorld, 1, poses, 1, -1);
+        auto authored = uninterrupted.captureNativeBlendControllers();
+        auto& curve = authored[0].mState;
+        curve.mTiming = {0xd, 1, -0.f, 0, 4}; curve.mClock = {10, 11, 1};
+        curve.mKeys = {{0, {1, 0}}, {1, {.5f, .5f}}, {1, {.25f, .75f}}, {4, {0, 1}}};
+        curve.mCursor = 1; curve.mCachedGains = {-0.f, -2}; curve.mSetupState = 0xffffffffu;
+        authored[1].mTargetNode.reset();
+        NifBullet::RagdollNativeVelocityControllerState velocity{20, 20, {}, false};
+        velocity.mState.mTiming = {0xd, 1, -0.f, 0, 4}; velocity.mState.mClock = {10, 11, 1};
+        velocity.mState.mForceVector = {1, 2, 3, 8};
+        const std::array generated{velocity};
+        const auto packed = uninterrupted.captureNativePackedVelocities();
+        const auto modes = uninterrupted.captureNativeMotionModes(); const auto blends = uninterrupted.captureNativeBlendStates();
+        uninterrupted.restore(uninterrupted.capture(), packed, modes, blends, authored, generated);
+        const MWPhysics::NativeRagdollControllerSnapshot view{authored, generated};
+        const auto snapshot = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, uninterrupted.capture(), packed, modes, blends, view);
+        EXPECT_EQ(snapshot.mNativeControllers->mBlends[0].mRecord, 78u);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(save(snapshot).serializeBinary());
+        const auto& loaded = decoded.mNativeActorRagdolls.begin()->second;
+        EXPECT_EQ(loaded, snapshot);
+        const auto restored = MWPhysics::restoreNativeActorRagdollControllers(loaded, mBase, mModel, mGraph);
+        ASSERT_TRUE(restored); EXPECT_EQ(restored->mBlends[0].mRecord, 90u);
+        NifBullet::ActorRagdollPhysics resumed(mGraph, second.mWorld, 1, poses, 1, -1);
+        resumed.restore(MWPhysics::restoreNativeActorRagdoll(loaded, mBase, mModel, mGraph),
+            *MWPhysics::restoreNativeActorRagdollPackedVelocities(loaded, mBase, mModel, mGraph),
+            *MWPhysics::restoreNativeActorRagdollMotionModes(loaded, mBase, mModel, mGraph),
+            *MWPhysics::restoreNativeActorRagdollBlendStates(loaded, mBase, mModel, mGraph), restored->mBlends, restored->mVelocities);
+        const std::array<std::uint32_t, 2> nodes{20, 8};
+        const auto order = uninterrupted.captureNativeControllerOrder(nodes);
+        EXPECT_EQ(resumed.captureNativeControllerOrder(nodes), order);
+        // Explicit identical cold cache inputs: this is per-owner continuation,
+        // not persistence of the scheduler's shared cache or a contact/world step.
+        ESM4::PhysicalBlendTimeCache firstCache{}, secondCache{};
+        for (unsigned frame = 0; frame < 60; ++frame)
+        {
+            const float time = 12.f + frame * .016f;
+            uninterrupted.advanceNativePhysicalControllers(order, time, firstCache);
+            resumed.advanceNativePhysicalControllers(order, time, secondCache);
+            const auto expectedAuthored = uninterrupted.captureNativeBlendControllers();
+            const auto actualAuthored = resumed.captureNativeBlendControllers();
+            for (unsigned i = 0; i < actualAuthored.size(); ++i) EXPECT_EQ(actualAuthored[i].mState, expectedAuthored[i].mState);
+            const auto expectedGenerated = uninterrupted.captureNativeVelocityControllers();
+            const auto actualGenerated = resumed.captureNativeVelocityControllers();
+            ASSERT_EQ(actualGenerated.size(), expectedGenerated.size());
+            for (unsigned i = 0; i < actualGenerated.size(); ++i) EXPECT_EQ(actualGenerated[i].mState, expectedGenerated[i].mState);
+            const auto actual = resumed.captureNativePackedVelocities(); const auto expected = uninterrupted.captureNativePackedVelocities();
+            for (unsigned i = 0; i < actual.size(); ++i)
+                for (unsigned axis = 0; axis < 4; ++axis)
+                {
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[i].mVelocities.mLinear[axis]), std::bit_cast<std::uint32_t>(expected[i].mVelocities.mLinear[axis]));
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[i].mVelocities.mAngular[axis]), std::bit_cast<std::uint32_t>(expected[i].mVelocities.mAngular[axis]));
+                }
+            if (frame == 0)
+            {
+                EXPECT_EQ(actualAuthored[0].mState.mCursor, 2u);
+                EXPECT_EQ(actualAuthored[0].mState.mClock.mElapsed, 2.f);
+                // ForceW8 *100 *delta(12-11) *inverseMass.5 =400.
+                EXPECT_EQ(actualGenerated[0].mState.mFrameDelta, 1.f);
+                EXPECT_EQ(actual[0].mVelocities.mLinear[3], 400.f);
+            }
+        }
+    }
+}

@@ -381,6 +381,29 @@ namespace
             (*keyModeSnapshot.mNativeBlends)[0] = {12, 0xf123, 0xffffffffu, -0.f, -2.f};
             physics.restoreActorRagdollSnapshot(ptr, keyModeSnapshot, base, path.value());
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), keyModeSnapshot);
+            ASSERT_TRUE(keyModeSnapshot.mNativeControllers);
+            ASSERT_EQ(keyModeSnapshot.mNativeControllers->mBlends.size(), 1u);
+            auto& controllerState = keyModeSnapshot.mNativeControllers->mBlends[0].mState;
+            controllerState.mClock = {10, 11, 1}; controllerState.mKeys.clear();
+            controllerState.mCursor = 0xffffffffu; controllerState.mSetupState = 0xffffffffu;
+            controllerState.mCachedGains = {-0.f, -2};
+            physics.restoreActorRagdollSnapshot(ptr, keyModeSnapshot, base, path.value());
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), keyModeSnapshot);
+            for (unsigned field = 0; field < 2; ++field)
+            {
+                auto badController = keyModeSnapshot; badController.mBodies[0].mPosition = {10, 20, 30};
+                if (field == 0)
+                {
+                    badController.mNativeControllers.emplace();
+                    EXPECT_THROW(physics.restoreActorRagdollSnapshot(ptr, badController, base, path.value()), std::invalid_argument);
+                }
+                else
+                {
+                    badController.mNativeControllers->mBlends[0].mState.mClock.mElapsed = std::numeric_limits<float>::quiet_NaN();
+                    EXPECT_THROW(physics.restoreActorRagdollSnapshot(ptr, badController, base, path.value()), std::runtime_error);
+                }
+                EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), keyModeSnapshot);
+            }
             const auto savedBlend = physics.captureActorRagdollBlendStates(ptr);
             EXPECT_EQ(savedBlend[0].mRequestedMotion, 0xffffffffu); EXPECT_EQ(savedBlend[0].mCollisionFlags, 0xf123);
             EXPECT_TRUE(std::signbit(savedBlend[0].mGains.mHierarchy)); EXPECT_EQ(savedBlend[0].mGains.mVelocity, -2.f);

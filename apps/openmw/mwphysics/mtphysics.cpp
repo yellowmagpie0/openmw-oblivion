@@ -738,9 +738,11 @@ namespace MWPhysics
         waitForWorkers();
         MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
         const auto& owned = actorRagdoll(ptr);
+        const auto authored = owned.mPhysics.captureNativeBlendControllers();
+        const auto generated = owned.mPhysics.captureNativeVelocityControllers();
         return captureNativeActorRagdoll(base, model, owned.mDefinition, owned.mPhysics.capture(),
             owned.mPhysics.captureNativePackedVelocities(), owned.mPhysics.captureNativeMotionModes(),
-            owned.mPhysics.captureNativeBlendStates());
+            owned.mPhysics.captureNativeBlendStates(), NativeRagdollControllerSnapshot{authored, generated});
     }
 
     void PhysicsTaskScheduler::restoreActorRagdollSnapshot(const MWWorld::Ptr& ptr,
@@ -753,7 +755,14 @@ namespace MWPhysics
         const auto packed = restoreNativeActorRagdollPackedVelocities(snapshot, base, model, owned.mDefinition);
         const auto motions = restoreNativeActorRagdollMotionModes(snapshot, base, model, owned.mDefinition);
         const auto blends = restoreNativeActorRagdollBlendStates(snapshot, base, model, owned.mDefinition);
-        if (blends)
+        const auto controllers = restoreNativeActorRagdollControllers(snapshot, base, model, owned.mDefinition);
+        if (controllers)
+        {
+            if (!packed || !motions || !blends)
+                throw std::invalid_argument("native controller restoration requires complete physical and blend state");
+            owned.mPhysics.restore(states, *packed, *motions, *blends, controllers->mBlends, controllers->mVelocities);
+        }
+        else if (blends)
         {
             if (!packed || !motions)
                 throw std::invalid_argument("native blend restoration requires packed velocity and motion state");

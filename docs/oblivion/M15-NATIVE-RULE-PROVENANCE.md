@@ -11610,3 +11610,73 @@ separate global shared physical cache persistence, automatic World save/reaction
 getters/frame, renderer-global Ni traversal/cache, raw COM/time/quaternion/cache,
 activation/contact continuation, retained physical/restart failures and S5-S14
 acceptance remain required. Existing display information remains pending.
+
+
+### Checkpoint232: actual scheduler controller snapshot capture and restore
+
+The physical snapshot adapter now accepts a borrowed complete authored/generated
+controller view, copies all typed state into version35 actor metadata and sorts
+by authored record/generated attachment. Present controllers require complete
+packed velocity, logical motion and blend projections. The winning-asset restore
+adapter checks the exact authored count, record and owning attachment node before
+returning owned vectors in asset body order; generated targets/attachments must
+resolve to known owned nodes. Mutable keys, timing, clocks, cursors, cached gains,
+setup, nullable targets, force lanes and generated head/tail order are preserved,
+not compared against initial authored values. Complete empty snapshots and legacy
+absence remain distinct. A partial authored set is complete only when it matches
+the winning asset's actual controller-bearing subset.
+
+Actual PhysicsTaskScheduler capture waits for workers and holds the shared lock
+while collecting all body/packed/mode/blend and both controller projections.
+Borrowed controller spans refer to live local vectors through the adapter call.
+Restore waits/holds the exclusive lock, resolves every projection and publishes
+with checkpoint230's six-span transaction. Legacy absence retains the prior
+four/three/two/one-span paths; no controller state is invented. PhysicsSystem's
+existing forwarding path exercises this actual ownership boundary.
+
+controller-scheduler-save-baseline-01 executes all three worker-count cases and
+fails because capture omits controllers. Full normal/sanitized-01 are retained
+build failures from a new adapter-test aggregate initializer in the wrong field
+order; neither suite executes. After correcting it, full normal/sanitized-02 each
+executes911 cases:907 pass, four new expectations fail. Those fixtures explicitly
+save previous velocity time11 and advance at12, so native delta is1 rather than
+the sentinel fallback.016; native force lane8 *100 *delta1 *inverseMass.5 is400.
+Corrected only test expectations and added an explicit delta1 assertion after
+both runs terminated. No production rules or tolerances changed.
+
+Final full controller-scheduler-save-normal/sanitized-03 each passes911 engine
+tests, exact inventory, zero failures/skips and no new compiler warnings. The
+broader sanitized-02 compilation retains the preexisting actor-stats range-loop
+copy warning. ASan leak checks remain disabled. Tested fingerprint `098937ca04e638c4b24d7a5a24301a5aa84ebeb5cdfbf839a0a4142e540e92fe`.
+Tests cover queued-worker barriers for0/1/2 workers, exact current capture and
+fresh-owner restore, signed-zero cache/opaque setup/cursor, duplicate-key cursor,
+generated list position, incorrect authored identity/count, unknown target and
+nonfinite late clock rollback before changed body poses publish. Actual
+PhysicsSystem tests loop0/1/2 workers and check complete controller state plus
+invalid restore rollback. Adapter fixtures cover complete-empty/no-authored,
+proper winning subsets, wrong known attachment, wrong asset, missing prerequisite
+projections and legacy absence. A serialized two-world fresh-owner fixture checks
+60 explicit physical-controller phases, restored authored/generated clocks/state
+and all eight velocity lane bits, with separately supplied identical cold shared
+caches. No Bullet world/contact step is implied by those explicit phases.
+
+Actual native-controller-adapter-wire-compare-normal/sanitized-01 each passes
+110,592 composed original196 controller outputs:1,216,512 exact captured fields
+through winning-asset capture adapter, C++ version35 encode/decode/reencode, every
+winning-asset restore adapter and the complete six-span owner restore. Full
+production engine/component archive hashes match the final successful builds;
+the two intervening corrections affect test construction/expectations only.
+Original fixture keys, owned node/record identities, setup0/2/FFFFFFFF, generated
+head/tail/state, logical Dynamic mode and zero packed velocities are declared
+software inputs, not new original post-return getters or save data. Original196
+hash/boundary scope is unchanged. Shared-cache/original next-phase/native-save/
+World/contact/gameplay evidence is excluded. Previous version35 independent
+Python binary/JSON interoperability remains unchanged and was not rerun.
+
+No M15 stage closes. Next is separate global shared physical-cache metadata and
+transactional multiowner restoration at the scheduler authority boundary, then
+automatic World save/reaction/update/getter/frame wiring. Renderer-global Ni
+traversal/cache, raw COM/time/quaternion/cache, activation/contact continuation,
+retained physical/restart failures, normal-input display acceptance and S5-S14
+remain required. Original checkout metadata is protected; this chunk is committed
+as exact matching source bytes in the existing writable progress repository.

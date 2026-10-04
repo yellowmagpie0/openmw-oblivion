@@ -746,6 +746,63 @@ namespace
         EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
     }
 
+    TEST_P(RagdollSchedulerTest, NativeControllerSnapshotsRestoreFreshOwnershipBeforeNextPhase)
+    {
+        const auto base = ESM::FormKey::content("actors.esm", 100); const std::string model = "characters/_male/skeleton.nif";
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1, 0, 0, 4, {}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native controller snapshot barrier");
+        std::vector<MWPhysics::Simulation> frame; float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frame, osg::Timer::instance()->tick(), 0, *stats, MWPhysics::WorldFrameData(false, {}));
+        auto snapshot = scheduler.captureActorRagdollSnapshot(mPtr, base, model);
+        ASSERT_TRUE(snapshot.mNativeControllers); ASSERT_EQ(snapshot.mNativeControllers->mBlends.size(), 1u);
+        auto& curve = snapshot.mNativeControllers->mBlends[0].mState;
+        curve.mTiming = {0xd, 1, -0.f, 0, 4}; curve.mClock = {10, 11, 1};
+        curve.mKeys = {{0, {1, 0}}, {1, {.5f, .5f}}, {1, {.25f, .75f}}, {4, {0, 1}}};
+        curve.mCursor = 1; curve.mCachedGains = {-0.f, -2}; curve.mSetupState = 0xffffffffu;
+        ESM4::RuntimeRagdollVelocityController generated; generated.mAttachedNode = 8; generated.mTargetNode = 8;
+        generated.mPrecedesBlend = false; generated.mState.mTiming = {0xd, 1, -0.f, 0, 4};
+        generated.mState.mClock = {10, 11, 1}; generated.mState.mForceVector = {1, 2, 3, 8};
+        snapshot.mNativeControllers->mVelocities.push_back(generated);
+        scheduler.restoreActorRagdollSnapshot(mPtr, snapshot, base, model);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        scheduler.removeActorRagdoll(mPtr); scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.restoreActorRagdollSnapshot(mPtr, snapshot, base, model);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        EXPECT_TRUE(std::signbit(scheduler.captureActorRagdollBlendControllers(mPtr)[0].mState.mCachedGains.mHierarchy));
+        const std::array<std::uint32_t, 1> nodes{8};
+        const std::vector<NifBullet::RagdollNativeControllerReference> expectedOrder{
+            {NifBullet::RagdollNativeControllerKind::Blend, 78}, {NifBullet::RagdollNativeControllerKind::Velocity, 8}};
+        EXPECT_EQ(scheduler.captureActorRagdollControllerOrder(mPtr, nodes), expectedOrder);
+        for (unsigned field = 0; field < 4; ++field)
+        {
+            auto invalid = snapshot; invalid.mBodies[0].mPosition = {10, 20, 30};
+            if (field == 0) invalid.mNativeControllers->mBlends.clear();
+            if (field == 1) invalid.mNativeControllers->mBlends[0].mRecord = 99;
+            if (field == 2) invalid.mNativeControllers->mBlends[0].mTargetNode = 99;
+            if (field == 3) invalid.mNativeControllers->mVelocities[0].mState.mClock.mElapsed = std::numeric_limits<float>::quiet_NaN();
+            if (field <= 1)
+                EXPECT_THROW(scheduler.restoreActorRagdollSnapshot(mPtr, invalid, base, model), std::invalid_argument);
+            else
+                EXPECT_THROW(scheduler.restoreActorRagdollSnapshot(mPtr, invalid, base, model), std::runtime_error);
+            EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        }
+        // This tests restored per-owner state with a cold shared physical cache;
+        // persistence of that shared cache is a separate authority boundary.
+        scheduler.advanceActorRagdollPhysicalControllers(mPtr, expectedOrder, 12);
+        const auto advanced = scheduler.captureActorRagdollSnapshot(mPtr, base, model);
+        EXPECT_EQ(advanced.mNativeControllers->mBlends[0].mState.mClock.mElapsed, 2);
+        EXPECT_EQ(advanced.mNativeControllers->mBlends[0].mState.mCursor, 2u);
+        EXPECT_EQ(advanced.mNativeControllers->mVelocities[0].mState.mClock.mPreviousTime, 12);
+        // Saved previous time11 and input12 select delta1, not sentinel fallback.
+        EXPECT_EQ(advanced.mNativeControllers->mVelocities[0].mState.mFrameDelta, 1.f);
+        EXPECT_EQ(advanced.mBodies[0].mNativePackedVelocity->mLinear[3], 400.f);
+        scheduler.removeActorRagdoll(mPtr); EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
 }
