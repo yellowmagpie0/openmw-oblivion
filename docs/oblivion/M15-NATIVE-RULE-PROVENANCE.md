@@ -10528,3 +10528,78 @@ stored-mode conversion/synchronization, recursive scene/controller/physical
 ordering and atomic publication, full physical/contact/controller save/restart,
 configuration and initial NPC morphology remain open. Retained BodyT/floor failures
 and S5-S14 remain open; normal-input physical acceptance is not claimed.
+
+
+### Checkpoint214: current-motion damping at generated-controller setup
+
+Checkpoint213 committed as `ff384797491c337c59dcbbe9e2c9b60f3f019928`,
+210 isolated commits. Bundle191 SHA256
+`5965197908928df57fb22f64cea0c3176afe49389422d0c5eed6013eb25ca1a2`.
+The original generic8B8590 reads current motion+C8 damping. Actual8CBC60
+Dynamic-type2 -> KEY6 construction zeros KEY+C0/C4/C8/CC; requested Dynamic1
+restores the archived actual type2 and its loaded coefficients. The owned generic
+and compound normalDown producers incorrectly supplied archived Dynamic damping
+while keyframed. Both now select current owned motion: zero for KEY, loaded
+coefficient for Dynamic. Dynamic archived mass remains the mass source for both
+modes. Explicit-input pure206 arithmetic remains unchanged and valid. This
+coefficient accessor models this owner's conversion lifecycle; it does not claim
+arbitrary external native KEY coefficient mutation or setter support.
+
+Two new regressions cover generic reuse through Dynamic/KEY/Dynamic with loaded
+linear damping.1, null target, elapsed7, delta99 and list position preserved;
+and configured normalDown while KEY, including four original captured vector
+lanes, independent velocity duration and existing-velocity skip. Setup preserves
+pose, velocity, activation and mode. An older KEY test expected archived damping;
+its expected vector is corrected to the actual converted-KEY producer result.
+Baseline01 runs both new tests and both fail. A quoting error in the private edit
+command prevented its mutation; full normal/sanitized01 therefore retain the
+unfixed producer and fail exactly the two new tests and corrected older test.
+After applying the correction, final full normal/sanitized02 each pass2,366
+component and899 engine tests, exact inventories, no failures/skips. Tested
+fingerprint `a863eedfb29636d19d2c3ab7a20e22d6ab35f3f8c723137a483f632fdfaab4a6`. ASan leak checks disabled; unchanged Python not repeated.
+
+Original keyframed coefficient oracle01 executes200 constructor/archive/restore
+cases, only native allocator/free primitives supplied. Source SHA256
+`e457f95ed8aee0214dd9eae165ef9970b47c28aebe5c13c410b554ed211e0b6e`,
+corpus `2e6dc79722b77cb0ddfdbc2ed80f1c8d06e0f4a5d23256b97e946c7fb604a8df`.
+The historical dynamic_inverse_mass_inertia_bits label includes damping C8/CC;
+derived Dynamic inertia occupies F0/F4/F8. It is not a new inertia finding.
+Original current-motion generic oracle03 executes1,728 complete conversion +
+8B8590 setup cases (both x87 words, new/existing null/self/other targets, source
+vectors, inverse mass, loaded damping, duration and flags). Source SHA256
+`5d32e3f2b60fa91bb13694ebe907efa7eb1ce768515e5002722a7b9beb3b9c5c`,
+corpus `68a740a9e21940390a4c8ff542f0a9ef7c405ed8ad14df69f81d44d2804cd59b`.
+Failed generic01/02 retain a harness stack-reset error after conversion;03
+resets ESP before each cdecl call. These failures establish no production rule.
+Original current-motion fullDown oracle01 executes9,216 actual conversion ->
+53AC14..53AC2C settings-copy -> complete normal8AB440 leaf cases. Source SHA256
+`b3739c83ba2b6375be02eec6e89681d8504f892a0e7ca42dd18402ecfa2eed42`,
+corpus `7401866dd7c0e6dd7c7a45ea24bead80f9dc72491c7640f26d616e05c6332ca4`.
+All probes verify original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Windows primitives, native HK allocation/free and Ni key/controller allocations
+are declared boundaries; actual constructors/lookup/attachment/Start/mass and
+damping instructions execute. Stored collision requested-motion0 explicitly
+skips88F040 conversion; preprepared current KEY is not full requested-mode sync.
+
+Actual owned normal/sanitized comparators each match1,728 generic cases/29,376
+exact fields and9,216 normalDown cases/317,376 exact fields. They check current
+mode conversion/restoration, archived mass, all controller clock/vector fields,
+null/self/other targets and ordering, untouched existingDown state, body
+pose/velocities/modes and destruction cleanup. Generated-owner count compares
+allocation intent, not native heap behavior. Eight independent captured-pair
+controls reject KEY archived damping, lost restored Dynamic damping, zero-current
+KEY mass substitution and existingDown refresh. The original normalDown probe
+still excludes stored requested-mode conversion, immediate/nonblend/child
+traversal, force update, activation/contact and World/game acceptance.
+
+Evidence under S4: native-keyframed-current-coefficients-oracle-01;
+native-current-motion-velocity-creation-oracle-01/02/03;
+native-current-motion-full-down-oracle-01; current-motion-damping-baseline-01;
+current-motion-damping-normal/sanitized-01/02;
+native-current-motion-velocity/full-down-compare-normal/sanitized-01;
+current-motion-damping-controls-01. No stage closes. Next: couple stored requested
+collision motion with actual conversion and pre-knockdown synchronization;
+automatic World lifecycle, recursive ordering, complete physical/controller/
+contact persistence and retained BodyT/floor failures remain open. S5-S14 remain
+pending; normal-input gameplay acceptance is not claimed.

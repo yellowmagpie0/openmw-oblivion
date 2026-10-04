@@ -240,6 +240,13 @@ namespace NifBullet
             btScalar mDynamicMass = 0;
             btVector3 mDynamicInertia{0, 0, 0};
             RagdollNativeMotion mMotion = RagdollNativeMotion::Dynamic;
+            float currentNativeLinearDamping() const
+            {
+                // Original8CBC60 creates KEY motion with zero current damping;
+                // Dynamic restoration reuses the archived loaded coefficient.
+                return mMotion == RagdollNativeMotion::Keyframed ? 0.f : mLinearDamping;
+            }
+
             // Owned snapshot: only transform flag, local translation/rotation
             // are used. Shape properties remain in their existing owners.
             RagdollBodyDefinition mSceneOffset{};
@@ -1366,7 +1373,7 @@ namespace NifBullet
             const auto previous = controller == controllers.end() ? std::nullopt
                 : std::optional<ESM4::PhysicalVelocityControllerState>{controller->mState};
             const auto state = ESM4::preparePhysicalVelocityController(previous, request.mSourceVector,
-                request.mDuration, true, ragdollNativeInverseMass(float(body->mDynamicMass)), body->mLinearDamping);
+                request.mDuration, true, ragdollNativeInverseMass(float(body->mDynamicMass)), body->currentNativeLinearDamping());
             if (controller == controllers.end())
                 controllers.push_back({request.mNodeRecord, request.mNodeRecord, state, true});
             else
@@ -1595,7 +1602,7 @@ namespace NifBullet
                 // this fourth lane. Preserve it in the owned controller vector.
                 source[3] = request.mDuration;
                 const auto velocity = ESM4::preparePhysicalVelocityController(std::nullopt, source,
-                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)), owned->mLinearDamping);
+                    settings.mTime, true, ragdollNativeInverseMass(float(owned->mDynamicMass)), owned->currentNativeLinearDamping());
                 velocities.push_back({request.mNodeRecord, request.mNodeRecord, velocity, true});
             }
             result.push_back(RagdollNativeKnockdownBlendDisposition::Started);

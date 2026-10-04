@@ -2952,7 +2952,7 @@ namespace
         EXPECT_EQ(controllers[0].mAttachedNode, 8u);
         EXPECT_EQ(controllers[0].mTargetNode, 8u);
         EXPECT_TRUE(controllers[0].mPrecedesBlend);
-        EXPECT_EQ(controllers[0].mState.mForceVector, (std::array<float, 4>{3.5f, -7.f, 1.75f, 14.f}));
+        EXPECT_EQ(controllers[0].mState.mForceVector, (std::array<float, 4>{2.f, -4.f, 1.f, 8.f}));
         EXPECT_EQ(controllers[0].mState.mFrameDelta, 0.f);
         EXPECT_EQ(actor.capture()[0].mPose, initial[0].mPose);
         EXPECT_EQ(actor.capture()[0].mLinearVelocity, initial[0].mLinearVelocity);
@@ -3499,5 +3499,70 @@ namespace
         actor.updateNativeBlendFrame(bones, order, 1.25f, cache, .016f, 0, NifBullet::RagdollNativeDefaultGravityZ);
         EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 1u);
         EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+    }
+}
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, CurrentMotionVelocitySetupUsesKeyframedDampingAndRestoresDynamicDamping)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8; body.mLinearDamping = .1f;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        ESM4::PhysicalVelocityControllerState old; old.mClock.mElapsed = 7.f; old.mFrameDelta = 99.f;
+        const std::array<NifBullet::RagdollNativeVelocityControllerState, 1> saved{{{8, std::nullopt, old, false}}};
+        actor.restoreNativeVelocityControllers(saved);
+        const std::array<NifBullet::RagdollNativeVelocitySetupRequest, 1> requests{{{8, {1, -2, .5f, 0}, .25f}}};
+        // Original full converter + generic setup oracle03 cases16/88/160.
+        const std::array<std::array<std::uint32_t, 4>, 3> expected{{
+            {1074056397, 3229928653, 1065667789, 0},
+            {1073741824, 3229614080, 1065353216, 0},
+            {1074056397, 3229928653, 1065667789, 0}}};
+        for (unsigned mode = 0; mode < 3; ++mode)
+        {
+            if (mode)
+            {
+                const std::array<NifBullet::RagdollNativeMotionRequest, 1> motion{{{12, mode == 1
+                    ? NifBullet::RagdollNativeMotion::Keyframed : NifBullet::RagdollNativeMotion::Dynamic}}};
+                actor.setNativeMotionModes(motion);
+            }
+            const auto before = actor.capture()[0];
+            const auto activation = actor.collisionObjects()[0]->getActivationState();
+            actor.prepareNativeVelocityControllers(requests);
+            const auto controllers = actor.captureNativeVelocityControllers(); ASSERT_EQ(controllers.size(), 1u);
+            const auto& controller = controllers[0];
+            for (unsigned lane = 0; lane < 4; ++lane)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(controller.mState.mForceVector[lane]), expected[mode][lane]);
+            EXPECT_FALSE(controller.mTargetNode); EXPECT_FALSE(controller.mPrecedesBlend);
+            EXPECT_EQ(controller.mState.mClock.mElapsed, 7.f); EXPECT_EQ(controller.mState.mFrameDelta, 99.f);
+            EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+            EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+            EXPECT_EQ(actor.collisionObjects()[0]->getActivationState(), activation);
+            EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, mode == 1
+                ? NifBullet::RagdollNativeMotion::Keyframed : NifBullet::RagdollNativeMotion::Dynamic);
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, CurrentMotionFullDownUsesKeyframedDampingWithoutChangingMode)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8; body.mLinearDamping = .1f;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> motion{{{12, NifBullet::RagdollNativeMotion::Keyframed}}};
+        actor.setNativeMotionModes(motion);
+        const auto before = actor.capture()[0];
+        const std::array<NifBullet::RagdollNativeKnockdownControllerSetupRequest, 1> requests{{{8, {1, -2, .5f}, .25f}}};
+        ASSERT_EQ(actor.prepareNativeKnockdownControllerSetup(requests, {-10.f, 1.2f}).size(), 1u);
+        const auto controllers = actor.captureNativeVelocityControllers(); ASSERT_EQ(controllers.size(), 1u);
+        // Original converter + configured settings copy + full normalDown oracle01 case592.
+        const std::array<std::uint32_t, 4> expected{3224822233, 1085727193, 3216433625, 1056964608};
+        for (unsigned lane = 0; lane < 4; ++lane)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(controllers[0].mState.mForceVector[lane]), expected[lane]);
+        EXPECT_EQ(controllers[0].mState.mTiming.mStopKey, 1.2f);
+        EXPECT_EQ(actor.capture()[0].mPose, before.mPose);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        actor.prepareNativeKnockdownControllerSetup(requests, {20000.f, .25f});
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState.mForceVector, controllers[0].mState.mForceVector);
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState.mTiming.mStopKey, 1.2f);
     }
 }
