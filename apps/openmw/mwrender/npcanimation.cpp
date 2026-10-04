@@ -1220,6 +1220,8 @@ namespace MWRender
 
         updateHolsteredWeapon(!mShowWeapons);
         updateQuiver();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            refreshAnimationBindings();
     }
 
     bool NpcAnimation::updateCarriedLeftVisible(const int weaptype) const
@@ -1374,8 +1376,11 @@ namespace MWRender
             static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
                 ->oblivionPlayerEquipmentChanged();
             mOblivionParts.clear();
+            mNodeMap.clear();
+            mNodeMapCreated = false;
             mOblivionFaceMorphs.clear();
             updateOblivionPlayerParts();
+            refreshAnimationBindings();
         }
     }
 

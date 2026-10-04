@@ -1329,6 +1329,66 @@ namespace MWRender
         return mNodeMap;
     }
 
+    void Animation::refreshAnimationBindings()
+    {
+        if (!mObjectRoot)
+            return;
+        NodeMap nodes;
+        if (mRequiresBoneMap)
+        {
+            SceneUtil::NodeMapVisitorBoneOnly visitor(nodes);
+            mObjectRoot->accept(visitor);
+        }
+        else
+        {
+            SceneUtil::NodeMapVisitor visitor(nodes);
+            mObjectRoot->accept(visitor);
+        }
+
+        // Missing targets remain in the immutable source and can become
+        // available after a later equipment attachment. Prepare all maps
+        // before replacing any currently selected bindings.
+        using Bindings = std::array<AnimSource::ControllerMap, sNumBlendMasks>;
+        std::vector<Bindings> prepared(mAnimSources.size());
+        for (std::size_t i = 0; i < mAnimSources.size(); ++i)
+        {
+            const auto& source = mAnimSources[i];
+            for (const auto& [name, controller] : source->mKeyframes->mKeyframeControllers)
+            {
+                const std::string bone = Misc::StringUtils::lowerCase(name);
+                const auto target = nodes.find(bone);
+                if (target == nodes.end())
+                    continue;
+                const std::size_t mask = detectBlendMask(target->second, controller->getName());
+                const auto existing = source->mControllerMap[mask].find(bone);
+                osg::ref_ptr<SceneUtil::KeyframeController> bound;
+                if (existing != source->mControllerMap[mask].end())
+                    bound = existing->second;
+                else
+                {
+                    bound = osg::clone(controller.get(), osg::CopyOp::SHALLOW_COPY);
+                    bound->setSource(mAnimationTimePtr[mask]);
+                }
+                prepared[i][mask].emplace(bone, std::move(bound));
+            }
+        }
+
+        mNodeMap.swap(nodes);
+        mNodeMapCreated = true;
+        for (std::size_t i = 0; i < mAnimSources.size(); ++i)
+            for (std::size_t mask = 0; mask < sNumBlendMasks; ++mask)
+                mAnimSources[i]->mControllerMap[mask].swap(prepared[i][mask]);
+
+        // Detached equipment must not stay alive in the smoothing caches.
+        const auto removed = [&](const auto& entry) {
+            return std::none_of(mNodeMap.begin(), mNodeMap.end(),
+                [&](const auto& node) { return node.second.get() == entry.first.get(); });
+        };
+        std::erase_if(mAnimBlendControllers, removed);
+        std::erase_if(mBoneAnimBlendControllers, removed);
+        resetActiveGroups();
+    }
+
     template <typename ControllerType>
     inline osg::Callback* Animation::handleBlendTransform(const osg::ref_ptr<osg::Node>& node,
         osg::ref_ptr<SceneUtil::KeyframeController> keyframeController,

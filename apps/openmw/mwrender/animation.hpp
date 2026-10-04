@@ -298,6 +298,9 @@ namespace MWRender
         bool mRequiresBoneMap;
 
         const NodeMap& getNodeMap() const;
+        // Rebind loaded KF tracks after equipment changes the model hierarchy.
+        // Preserve playback and controllers for unchanged node/mask bindings.
+        void refreshAnimationBindings();
         // Empty input prepares the native model palette without registering a sequence.
         void bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences);
 

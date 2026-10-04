@@ -18,6 +18,8 @@
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Stats>
+#include <osg/FrameStamp>
+#include <osgUtil/UpdateVisitor>
 #include <osgDB/WriteFile>
 #include "apps/openmw/mwphysics/actor.hpp"
 #include "apps/openmw/mwphysics/physicssystem.hpp"
@@ -8118,5 +8120,122 @@ namespace
         EXPECT_FALSE(world.toggleGodMode());
         service.setProcessAction(key, 3); service.advanceFrameClock(.125f);
         ASSERT_TRUE(world.updateOblivionFrameResources(ptr, 999.f, false)); EXPECT_EQ(service.getPlayerValue(10), 35);
+    }
+
+    TEST(OblivionWorldTest, EquipmentRefreshBindsLateBowTracksAndRemovesDetachedTargetsWithoutRestarting)
+    {
+        NativeWorldFixture fixture;
+        MWClass::Npc::registerSelf();
+        fixture.mWorld.setupPlayer();
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto string = [&](std::string_view value) {
+            return bytes(static_cast<std::uint32_t>(value.size())) + std::string(value);
+        };
+        // Editable, synthetic KF fixture: one Bow:0 target absent when loaded.
+        std::string data = "NetImmerse File Format, Version 4.0.0.2\n";
+        data += bytes(std::uint32_t{0x04000002}) + bytes(std::uint32_t{5});
+        data += string("NiSequenceStreamHelper") + string("SyntheticBow")
+            + bytes(std::int32_t{1}) + bytes(std::int32_t{3});
+        data += string("NiTextKeyExtraData") + bytes(std::int32_t{2}) + bytes(std::uint32_t{0});
+        data += bytes(std::uint32_t{2}) + bytes(0.f) + string("attackbow: start")
+            + bytes(2.f) + string("attackbow: stop");
+        data += string("NiStringExtraData") + bytes(std::int32_t{-1}) + bytes(std::uint32_t{0}) + string("Bow:0");
+        data += string("NiKeyframeController") + bytes(std::int32_t{-1}) + bytes(std::uint16_t{8})
+            + bytes(1.f) + bytes(0.f) + bytes(0.f) + bytes(2.f) + bytes(std::int32_t{-1}) + bytes(std::int32_t{4});
+        data += string("NiKeyframeData") + bytes(std::uint32_t{0}); // No rotation keys.
+        data += bytes(std::uint32_t{2}) + bytes(std::uint32_t{1}); // Linear translation.
+        for (float value : {0.f, 0.f, 0.f, 0.f, 2.f, 8.f, 0.f, 0.f})
+            data += bytes(value);
+        data += bytes(std::uint32_t{0}); // No scale keys.
+        data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0});
+        {
+            std::ofstream stream(fixture.mDirectory / "attackbow.kf", std::ios::binary);
+            stream.write(data.data(), data.size());
+            ASSERT_TRUE(stream);
+        }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        class EquippedAnimation : public MWRender::Animation
+        {
+        public:
+            using Animation::Animation;
+            using Animation::refreshAnimationBindings;
+            void load()
+            {
+                mObjectRoot = new osg::Group;
+                osg::ref_ptr<osg::MatrixTransform> arm = new osg::MatrixTransform;
+                arm->setName("Bip01 L Clavicle"); mObjectRoot->addChild(arm);
+                mArm = arm;
+                if (!addSingleAnimSource(VFS::Path::Normalized("attackbow.kf"), "synthetic", {}, false))
+                    throw std::runtime_error("bow source failed to load");
+            }
+            void attach(osg::Node* node) { mArm->addChild(node); }
+            void detach(osg::Node* node) { mArm->removeChild(node); }
+            std::size_t callbacks() const { return mActiveControllers.size(); }
+            void sample(unsigned frame)
+            {
+                osg::ref_ptr<osg::FrameStamp> stamp = new osg::FrameStamp;
+                stamp->setFrameNumber(frame);
+                stamp->setSimulationTime(frame);
+                osgUtil::UpdateVisitor visitor;
+                visitor.setFrameStamp(stamp);
+                mObjectRoot->accept(visitor);
+            }
+        private:
+            osg::ref_ptr<osg::Group> mArm;
+        };
+        osg::ref_ptr<EquippedAnimation> animation = new EquippedAnimation(
+            fixture.mWorld.getPlayerPtr(), new osg::Group, &fixture.mResources);
+        animation->load();
+        animation->play("attackbow", MWRender::AnimPriority(1), MWRender::BlendMask_All,
+            false, 1, "start", "stop", .25f, 0);
+        EXPECT_EQ(animation->callbacks(), 0u);
+        EXPECT_FLOAT_EQ(animation->getCurrentTime("attackbow"), .5f);
+        osg::ref_ptr<NifOsg::MatrixTransform> first = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        first->setName("Bow:0"); animation->attach(first);
+        animation->refreshAnimationBindings();
+        EXPECT_EQ(animation->getNode("bow:0"), first.get());
+        ASSERT_NE(first->getUpdateCallback(), nullptr);
+        EXPECT_EQ(animation->callbacks(), 1u);
+        EXPECT_FLOAT_EQ(animation->getCurrentTime("attackbow"), .5f);
+        animation->sample(1);
+        EXPECT_DOUBLE_EQ(first->getMatrix().getTrans().x(), 2);
+        const auto* same = first->getUpdateCallback();
+        animation->refreshAnimationBindings();
+        EXPECT_EQ(first->getUpdateCallback(), same);
+        EXPECT_EQ(animation->callbacks(), 1u);
+        animation->runAnimation(.125f);
+        const float time = animation->getCurrentTime("attackbow");
+        EXPECT_FLOAT_EQ(time, .625f);
+        animation->sample(2);
+        EXPECT_DOUBLE_EQ(first->getMatrix().getTrans().x(), 2.5);
+        animation->detach(first);
+        osg::ref_ptr<NifOsg::MatrixTransform> second = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        second->setName("Bow:0"); animation->attach(second);
+        animation->refreshAnimationBindings();
+        EXPECT_EQ(first->getUpdateCallback(), nullptr);
+        ASSERT_NE(second->getUpdateCallback(), nullptr);
+        EXPECT_EQ(animation->getNode("bow:0"), second.get());
+        EXPECT_EQ(animation->callbacks(), 1u);
+        EXPECT_FLOAT_EQ(animation->getCurrentTime("attackbow"), time);
+        animation->sample(3);
+        EXPECT_DOUBLE_EQ(second->getMatrix().getTrans().x(), 2.5);
+        EXPECT_DOUBLE_EQ(first->getMatrix().getTrans().x(), 2.5);
+        animation->detach(second);
+        animation->refreshAnimationBindings();
+        EXPECT_EQ(second->getUpdateCallback(), nullptr);
+        EXPECT_EQ(animation->callbacks(), 0u);
+        EXPECT_EQ(animation->getNode("bow:0"), nullptr);
+        EXPECT_TRUE(animation->isPlaying("attackbow"));
+        EXPECT_FLOAT_EQ(animation->getCurrentTime("attackbow"), time);
+        animation->attach(first);
+        animation->refreshAnimationBindings();
+        EXPECT_EQ(animation->callbacks(), 1u);
+        ASSERT_NE(first->getUpdateCallback(), nullptr);
+        animation->disable("attackbow");
+        EXPECT_EQ(first->getUpdateCallback(), nullptr);
+        EXPECT_EQ(animation->callbacks(), 0u);
     }
 }

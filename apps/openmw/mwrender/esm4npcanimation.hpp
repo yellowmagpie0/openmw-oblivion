@@ -32,6 +32,7 @@ namespace MWRender
             std::string_view model, std::string_view attachBone = {}, std::string_view texture = {},
             bool correctHeadPartOrientation = true, std::vector<PartHolderPtr>* parts = nullptr);
         void updateWeapon();
+        void updateWeaponParts();
         std::size_t applyRagdollPose();
 
         // Works for FO3/FONV/TES5

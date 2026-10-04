@@ -55,6 +55,7 @@ namespace MWRender
         if (mPtr.getCellRef().getRagdollPose() == nullptr)
             addAnimDirectory(VFS::Path::Normalized(skeleton).parent());
         updateParts();
+        refreshAnimationBindings();
         const std::size_t ragdollBones = applyRagdollPose();
         const ESM4::Race* race = MWClass::ESM4Npc::getRace(mPtr);
         Log(Debug::Info) << "M11 actor assembled: ref=" << mPtr.getCellRef().getRefId() << " race="
@@ -89,6 +90,8 @@ namespace MWRender
     void ESM4NpcAnimation::refreshEquipment()
     {
         mParts.clear();
+        mNodeMap.clear();
+        mNodeMapCreated = false;
         mFaceMorphs.clear();
         updateParts();
         updateWeapon();
@@ -103,6 +106,14 @@ namespace MWRender
     void ESM4NpcAnimation::updateWeapon()
     {
         mWeaponParts.clear();
+        mNodeMap.clear();
+        mNodeMapCreated = false;
+        updateWeaponParts();
+        refreshAnimationBindings();
+    }
+
+    void ESM4NpcAnimation::updateWeaponParts()
+    {
         const ESM4::Npc* traits = MWClass::ESM4Npc::getTraitsRecord(mPtr);
         if (!mShowWeapon || mObjectRoot == nullptr || traits == nullptr || !traits->mIsTES4)
             return;

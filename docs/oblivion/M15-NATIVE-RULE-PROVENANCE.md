@@ -12515,3 +12515,56 @@ Oracle corpus SHA256: df5bc294d770b6fc306bb7244fbe71a07a2b0dd173d7254b7b2162fe63
 Actual bow controller/renderer integration, release ammunition/shot fatigue/
 weapon wear, projectiles/impact/recovery/in-flight save and normal-input courses
 remain open. S5 remains in progress; no other M15 stage closes.
+
+
+### S5 equipment KF binding refresh in both actor renderers (checkpoint264)
+
+Loaded KF sources previously dropped tracks whose targets were absent from the
+cached skeleton map. Equipping a bow after loading its animation therefore left
+Bow:0/ArrowBone targets unbound; replacement could retain detached equipment
+through node/controller caches. Animation::refreshAnimationBindings now prepares
+a fresh hierarchy map and complete per-source/mask bindings from immutable
+loaded KF controllers before publication. Previously missing targets become
+eligible; unchanged controller bindings retain their clones. Detached target
+entries leave smoothing caches, and active callbacks rebuild without restarting
+selected groups, changing their time/speed/loop ownership, or reloading assets.
+
+TES4 NPC assembly refreshes after body construction and weapon attachment/
+removal. Equipment refresh clears stale node lookup before rebuilding parts.
+Repeated showWeapons(true) still replaces equipment even when visibility is
+unchanged. The distinct Player NpcAnimation path refreshes native bindings
+after weapon/quiver updates and native Player part replacement; TES3 call-site
+behavior remains selected by its existing profile. Native physical node
+metadata/admission and missing controller implementations are not claimed by
+this ordinary KF binding operation.
+
+The existing258 hash-identified stock asset audit records ArrowBone, Bow:0 and
+ArrowHelper01 tracks in both third- and first-person bowattack KFs; this is why
+late equipment targets matter. No new original gameplay or graphics capture is
+supplied here. One synthetic editable KF fixture loads the real NIF parser and
+Animation source, starts playback before Bow:0 exists, then attaches, refreshes,
+repeats, replaces, removes and reattaches it. It checks exact unchanged playback
+time, callback identity/count, old-target callback removal and final disable.
+Actual update traversal samples a linear keyed translation: x2 at time.5,
+x2.5 at time.625, and the replacement samples x2.5 at the retained time.
+This exercises controller output rather than only map membership.
+
+Initial01 normal/sanitized each pass968 tests before the numeric sampling
+extension. Retain normal02 SIGSEGV and sanitized02 invalid-downcast report:
+the new fixture used plain osg::MatrixTransform for a NIF controller whose
+contract requires NifOsg::MatrixTransform. Correct the test nodes to initialized
+NIF transforms, matching actual loader output; keyed expectations and production
+binding code do not change. Corrected03 normal/sanitized each pass968. Final04
+includes the Player call-site integration and each passes968 full engine tests,
+with exact inventories, zero failures/skips and no emitted compiler warnings.
+All final checks build openmw, openmw-tests and esmtool. Initial01's broad
+normal rebuild retains the old GCC16 Character animation-queue warning, with
+unchanged implementation/header hashes against263. ASan leak checks remain
+disabled; UBSan halts. Components/Python are unchanged from262.
+
+Tested fingerprint: aec8c17474debd2c3582c2f286921495d000700125028dab0f4fff42e07ac957
+
+Normal-input first/third-person bow rendering, held-arrow geometry, draw/release
+input, prepared ammunition/fatigue/wear publication, flight/impact/recovery/save
+and remaining mastery courses still require their own integration/acceptance.
+S5 stays in progress, and no other M15 stage or runtime gate closes.
