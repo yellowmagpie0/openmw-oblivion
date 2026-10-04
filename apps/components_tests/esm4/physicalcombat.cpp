@@ -4572,3 +4572,62 @@ TEST(ESM4PhysicalCombat, AllBlendProfilesRejectLateSectionFailureWithoutPublishi
     EXPECT_EQ(previous.mQuadHit[1].mHierarchy, .3f);
     EXPECT_EQ(previous.mProfiles.mDefault.mPassOutForce, -10.f);
 }
+
+
+TEST(ESM4PhysicalCombat, HitVelocitySetupAppliesMassBeforeDampingAndUsesCompiledDuration)
+{
+    // Complete original8B8410 oracle01 case1841, mass2/multiplier.5/damping2.
+    const auto result = ESM4::preparePhysicalHitVelocityController(
+        std::nullopt, {1, -2, .5, 0}, true, .5f, 2.f, .5f);
+    const std::array<std::uint32_t, 4> expected{1075838976u, 3231711232u, 1067450368u, 0u};
+    for (unsigned axis = 0; axis < 4; ++axis)
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mForceVector[axis]), expected[axis]);
+    EXPECT_EQ(result.mTiming.mFlags, 0xdu);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mTiming.mStopKey), 1045220557u);
+    EXPECT_EQ(result.mFrameDelta, 0.f);
+    EXPECT_EQ(result.mClock.mElapsed, 0.f);
+}
+
+TEST(ESM4PhysicalCombat, HitVelocitySetupReplacesExistingStateAndPreservesElapsedAndDelta)
+{
+    ESM4::PhysicalVelocityControllerState previous;
+    previous.mTiming = {0xffff, 8, 9, 10, 11};
+    previous.mClock = {3, 4, 7};
+    previous.mFrameDelta = 99;
+    previous.mForceVector = {8, 9, 10, 11};
+    const auto result = ESM4::preparePhysicalHitVelocityController(
+        previous, {1, -2, .5, -0.f}, true, .5f, 2.f, -.5f);
+    EXPECT_EQ(result.mForceVector, (std::array<float, 4>{-2.5f, 5.f, -1.25f, 0.f}));
+    EXPECT_FALSE(std::signbit(result.mForceVector[3]));
+    EXPECT_EQ(result.mTiming.mFlags, 0xfffdu);
+    EXPECT_EQ(result.mTiming.mFrequency, 1.f);
+    EXPECT_EQ(result.mTiming.mPhase, 0.f);
+    EXPECT_EQ(result.mTiming.mStartKey, 0.f);
+    EXPECT_EQ(result.mTiming.mStopKey, .2f);
+    EXPECT_EQ(result.mClock.mStartTime, -std::numeric_limits<float>::max());
+    EXPECT_EQ(result.mClock.mPreviousTime, -std::numeric_limits<float>::max());
+    EXPECT_EQ(result.mClock.mElapsed, 7.f);
+    EXPECT_EQ(result.mFrameDelta, 99.f);
+    EXPECT_EQ(previous.mForceVector, (std::array<float, 4>{8, 9, 10, 11}));
+    EXPECT_EQ(previous.mClock.mStartTime, 3.f);
+}
+
+TEST(ESM4PhysicalCombat, HitVelocitySetupIgnoresUnusedBodyInputsAndRejectsLateOverflowAtomically)
+{
+    const float bad = std::numeric_limits<float>::quiet_NaN();
+    const auto unbound = ESM4::preparePhysicalHitVelocityController(
+        std::nullopt, {1, -2, .5, -0.f}, false, bad, bad, bad);
+    EXPECT_EQ(unbound.mForceVector, (std::array<float, 4>{1, -2, .5, -0.f}));
+    EXPECT_TRUE(std::signbit(unbound.mForceVector[3]));
+    EXPECT_EQ(unbound.mTiming.mStopKey, .2f);
+    ESM4::PhysicalVelocityControllerState previous;
+    previous.mClock.mElapsed = 7;
+    previous.mForceVector = {2, 3, 4, 5};
+    const auto before = previous;
+    EXPECT_THROW(ESM4::preparePhysicalHitVelocityController(previous, {}, true, 1, 0, bad),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::preparePhysicalHitVelocityController(previous,
+        {0, 0, 0, std::numeric_limits<float>::max()}, true, .5, 0, 1),
+        std::invalid_argument);
+    EXPECT_EQ(previous, before);
+}

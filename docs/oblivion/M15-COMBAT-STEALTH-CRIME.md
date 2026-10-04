@@ -19320,3 +19320,47 @@ No stage closes. Automatic normal-input physical reactions, configuration file
 discovery, original initial morphology, native scene/time/contact continuation,
 retained numerical failures and full gameplay/restart gates remain open.
 S5-S14 remain pending.
+
+### Checkpoint 250: native HIT velocity setup replaces existing controllers
+
+The HIT setter now implements the independently verified8B8410 arithmetic and
+timing separately from Down. It always replaces the stored four-lane vector and
+restarts timing, including existing controllers, preserving elapsed time and
+frame delta. Its compiled duration is0.2. With a physical body it applies mass
+and the resolved multiplier before damping, retaining native intermediate float
+stores. Without a body it retains all four source lanes and ignores unused body
+coefficients. Nonfinite supported inputs and late overflow reject before any
+candidate is published. The caller resolves the multiplier; its initial native
+value1 does not establish runtime immutability.
+
+native-hit-velocity-setup-oracle-01 executes complete original8B8410 for20736
+cases; oracle-02 expands this to36864 cases including zero inverse mass and
+negative multipliers. Each verifies original executable SHA256
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Actual RTTI, lookup, allocation constructor, target attachment, body/mass
+resolution and controller Start run; boundary replacements are Windows locking/
+interlocked primitives and the fresh game allocation arena. Synthetic retained
+scene/body objects exercise both x87 control words, fresh/existing controllers,
+null/self/other targets, absent/present physical wrappers, dynamic/keyframed
+bodies, mass/damping/multiplier combinations, selected-node/root fallback,
+flags and signed-zero/extreme vectors. Expanded source SHA256
+6fa648e946cd0ec5fff04b18d87051f22c5599bfd87fa34434da95217ab15b61;
+corpus SHA256
+802c5646925d3476997031f1971ce02aa1a08d4a291fb205d51adaba4e1bf6a9.
+
+Three added tests execute and fail against the incomplete Down-based baseline.
+native-hit-velocity-setup-normal-01 and sanitized-01 each pass2428 exact
+inventoried component tests with zero failures/skips. Normal has no warnings;
+sanitizer repeats only unchanged inventory test initializer warnings,
+byte-verified against249. ASan leaks disabled; UBSan halts. Tested fingerprint
+95dd49533906b57d6897c52bb9b9cabb95817b73bc7f36dc226f9ebbe092968d.
+
+Independent compare-normal-01 and compare-sanitized-01 each match36864 original
+cases across479232 exact timing/vector fields, zero mismatches. The four captured
+attachment/target/allocation observations are excluded from this pure comparison;
+owned controller lifetime and World forces remain separate integration work.
+No engine/Python code changed; prior evidence remains applicable.
+
+No stage closes. Automatic reactions, owned HIT setup, whole actor selection,
+configuration discovery, initial morphology, scene/time/contact continuation
+and required normal-input gameplay/restart gates remain open. S5-S14 pending.

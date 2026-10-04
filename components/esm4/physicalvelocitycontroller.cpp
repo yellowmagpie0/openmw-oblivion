@@ -63,6 +63,42 @@ namespace ESM4
         return next;
     }
 
+    PhysicalVelocityControllerState preparePhysicalHitVelocityController(
+        const std::optional<PhysicalVelocityControllerState>& previous, const std::array<float, 4>& sourceVector,
+        bool hasPhysicalBody, float inverseMass, float linearDamping, float resolvedMassMultiplier)
+    {
+        // Constructor/timing/Start agree with Down, but HIT always uses its
+        // compiled interval and applies damping to the mass-scaled vector.
+        auto next = preparePhysicalVelocityController(previous, sourceVector, .2f, false, 0.f, 0.f);
+        if (!hasPhysicalBody)
+            return next;
+        const auto finite = [](float value) {
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite native HIT velocity setup input/result");
+        };
+        finite(inverseMass);
+        finite(linearDamping);
+        finite(resolvedMassMultiplier);
+        if (inverseMass < 0.f || linearDamping < 0.f)
+            throw std::invalid_argument("negative native HIT velocity mass/damping coefficient");
+        const float mass = inverseMass == 0.f ? 0.f : float(1.0 / double(inverseMass));
+        finite(mass);
+        const float scaledMass = float(double(mass) * double(resolvedMassMultiplier));
+        const float dampingWeight = float(double(linearDamping) * .75);
+        finite(scaledMass);
+        finite(dampingWeight);
+        for (std::size_t axis = 0; axis < sourceVector.size(); ++axis)
+        {
+            const float massProduct = float(double(scaledMass) * double(sourceVector[axis]));
+            const float dampingProduct = float(double(dampingWeight) * double(massProduct));
+            finite(massProduct);
+            finite(dampingProduct);
+            next.mForceVector[axis] = float(double(dampingProduct) + double(massProduct));
+            finite(next.mForceVector[axis]);
+        }
+        return next;
+    }
+
     PhysicalVelocityControllerUpdate advancePhysicalVelocityController(
         const PhysicalVelocityControllerState& controller, const PhysicalBlendTimeCache& timeCache,
         bool hasTarget, std::optional<float> hierarchyGain, bool hasPhysicalBody, float inputTime)
