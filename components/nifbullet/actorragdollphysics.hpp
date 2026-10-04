@@ -34,15 +34,18 @@ namespace NifBullet
         // Original motion+A0: twice the capped half-angle vector, followed
         // by sqrt(stored angular fraction squared) * native pi.
         std::array<float, 4> mAngularDelta;
+        float mLinearW = 0.f, mAngularW = 0.f;
     };
 
     // Original keyframed motion virtual+10 8EA4B0. Uses physical current COM,
     // rotation and raw local COM; no damping/gravity or scene/bodyT conversion.
     // Computes a new physical pose, not a World step or contact publication.
+    // Packed fourth velocity lanes use the same native XYZ-derived cap factors;
+    // they do not contribute to pose integration or squared-length reductions.
     RagdollNativeKeyframedStepResult ragdollNativeKeyframedMotionStep(const osg::Vec3f& currentCenterOfMass,
         const std::array<float, 4>& currentRotation, const osg::Vec3f& localCenterOfMass,
         const RagdollNativeVelocities& velocities, float frameSeconds,
-        float maximumLinearVelocity, float angularLimit);
+        float maximumLinearVelocity, float angularLimit, float linearW = 0.f, float angularW = 0.f);
 
     // Original bhk position adapters store binary32 after multiplying by
     // these separately stored constants. The reverse is not computed as 1/k.

@@ -679,7 +679,7 @@ namespace NifBullet
     RagdollNativeKeyframedStepResult ragdollNativeKeyframedMotionStep(const osg::Vec3f& currentCenterOfMass,
         const std::array<float, 4>& currentRotation, const osg::Vec3f& localCenterOfMass,
         const RagdollNativeVelocities& velocities, float frameSeconds,
-        float maximumLinearVelocity, float angularLimit)
+        float maximumLinearVelocity, float angularLimit, float linearW, float angularW)
     {
         const auto scalar = [](double value) {
             const float result = static_cast<float>(value);
@@ -703,19 +703,25 @@ namespace NifBullet
         };
         for (float value : {frameSeconds, maximumLinearVelocity, angularLimit})
             require(std::isfinite(value) && value >= 0.f, "invalid keyframed motion coefficient");
+        require(std::isfinite(linearW) && std::isfinite(angularW), "nonfinite keyframed packed velocity");
         vectorFinite(currentCenterOfMass);
         vectorFinite(localCenterOfMass);
         vectorFinite(velocities.mLinear);
         vectorFinite(velocities.mAngular);
         validateNativeOffsetRotation(currentRotation);
         RagdollNativeKeyframedStepResult result;
+        result.mLinearW = linearW;
+        result.mAngularW = angularW;
         result.mVelocities = velocities;
         // Keyframed motion has no gravity addition or damping multiplication.
         // Preserve untouched signed zeros, unlike the dynamic velocity step.
         const float linearSquared = squaredLength(result.mVelocities.mLinear);
         if (linearSquared > double(maximumLinearVelocity) * maximumLinearVelocity)
-            multiply(result.mVelocities.mLinear,
-                scalar(double(maximumLinearVelocity) / std::sqrt(double(linearSquared))));
+        {
+            const float factor = scalar(double(maximumLinearVelocity) / std::sqrt(double(linearSquared)));
+            multiply(result.mVelocities.mLinear, factor);
+            result.mLinearW = scalar(double(result.mLinearW) * factor);
+        }
         for (unsigned axis = 0; axis < 3; ++axis)
         {
             const float increment = scalar(double(result.mVelocities.mLinear[axis]) * frameSeconds);
@@ -730,6 +736,7 @@ namespace NifBullet
         {
             const float factor = scalar(maximum / std::sqrt(double(angularSquared)));
             multiply(result.mVelocities.mAngular, factor);
+            result.mAngularW = scalar(double(result.mAngularW) * factor);
             multiply(angularStep, factor);
             // Original8EA65E uses the stored cap square, not a recomputed
             // squared length of the rounded, capped half-angle vector.
@@ -2042,13 +2049,14 @@ namespace NifBullet
         coefficient(frameSeconds);
         struct Pending
         {
-            btRigidBody* mBody;
+            Impl::Body* mOwned;
             btTransform mPose;
             btVector3 mLinear, mAngular;
+            float mLinearW, mAngularW;
         };
         std::vector<Pending> pending;
         pending.reserve(mImpl->mBodies.size());
-        for (const auto& owned : mImpl->mBodies)
+        for (auto& owned : mImpl->mBodies)
         {
             const auto& body = *owned.mBody;
             if (owned.mMotion != RagdollNativeMotion::Keyframed || !body.isActive())
@@ -2068,7 +2076,8 @@ namespace NifBullet
                 velocity.mAngular[axis] = static_cast<float>(body.getAngularVelocity()[axis]);
             }
             const auto step = ragdollNativeKeyframedMotionStep(center, quaternion, local,
-                velocity, frameSeconds, owned.mLimits.mMaxLinearVelocity, owned.mLimits.mAngularLimit);
+                velocity, frameSeconds, owned.mLimits.mMaxLinearVelocity, owned.mLimits.mAngularLimit,
+                owned.mNativeLinearW, owned.mNativeAngularW);
             const auto matrix = ragdollBoneWorldFromNativeBlendPose(step.mBodyPose);
             btMatrix3x3 basis;
             for (unsigned row = 0; row < 3; ++row)
@@ -2082,16 +2091,20 @@ namespace NifBullet
             const auto linear = vector(step.mVelocities.mLinear) * mImpl->mLengthScale;
             const auto angular = vector(step.mVelocities.mAngular);
             require(finite(linear) && finite(angular), "keyframed velocity exceeds world domain");
-            pending.push_back({owned.mBody.get(), pose, linear, angular});
+            pending.push_back({&owned, pose, linear, angular, step.mLinearW, step.mAngularW});
         }
         for (const auto& change : pending)
         {
-            change.mBody->setLinearVelocity(change.mLinear);
-            change.mBody->setAngularVelocity(change.mAngular);
+            auto& owned = *change.mOwned;
+            auto& body = *owned.mBody;
+            body.setLinearVelocity(change.mLinear);
+            body.setAngularVelocity(change.mAngular);
+            owned.mNativeLinearW = change.mLinearW;
+            owned.mNativeAngularW = change.mAngularW;
             // For kinematic bodies Bullet retains the previous transform here
             // and copies our capped velocities into interpolation state.
-            change.mBody->setCenterOfMassTransform(change.mPose);
-            mImpl->mWorld.updateSingleAabb(change.mBody);
+            body.setCenterOfMassTransform(change.mPose);
+            mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 

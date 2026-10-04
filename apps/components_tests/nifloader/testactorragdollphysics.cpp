@@ -3822,3 +3822,52 @@ namespace
         EXPECT_EQ(state[0].mVelocities.mAngular, (std::array<float, 4>{}));
     }
 }
+
+namespace
+{
+    TEST(RagdollNativePackedKeyframedStep, CapsFourthLanesUsingOriginalXYZFactors)
+    {
+        const NifBullet::RagdollNativeVelocities velocity{{1, 2, 3}, {1000, 2000, -3000}};
+        const auto result = NifBullet::ragdollNativeKeyframedMotionStep(
+            {4, 5, 6}, {0, 0, 0, 1}, {1, 0, 0}, velocity, .2f, 1.f, 1.f, 8.f, 8.f);
+        // Original packed corpus case8468, captured before implementation.
+        EXPECT_EQ(result.mLinearW, 2.138089895248413f);
+        EXPECT_NEAR(result.mAngularW, .006717008072882891f, .001f);
+        EXPECT_EQ(result.mVelocities.mLinear.x(), .26726123690605164f);
+        EXPECT_NEAR(result.mVelocities.mAngular.z(), -2.5188779830932617f, .001f);
+    }
+
+    TEST(RagdollNativePackedKeyframedStep, PreservesUncappedSignedZeroAndRejectsUsedInvalidLanes)
+    {
+        const NifBullet::RagdollNativeVelocities velocity{};
+        const auto result = NifBullet::ragdollNativeKeyframedMotionStep(
+            {}, {0, 0, 0, 1}, {}, velocity, 0.f, 250.f, 31.4159f, -0.f, -8.f);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mLinearW), 0x80000000u);
+        EXPECT_EQ(result.mAngularW, -8.f);
+        EXPECT_THROW(NifBullet::ragdollNativeKeyframedMotionStep(
+            {}, {0, 0, 0, 1}, {}, velocity, 0.f, 250.f, 31.4159f,
+            std::numeric_limits<float>::quiet_NaN(), 0.f), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeKeyframedMotionStep(
+            {}, {0, 0, 0, 1}, {}, velocity, 0.f, 250.f, 31.4159f,
+            0.f, std::numeric_limits<float>::infinity()), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PackedKeyframedSubstepPublishesCappedLanesWithPose)
+    {
+        mGraph.mBodies[0].mMaxLinearVelocity = 1.f;
+        mGraph.mBodies[0].mMaxAngularVelocity = 1.f;
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 7.f, mPoses, 1, -1);
+        const std::array modes{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Keyframed}};
+        actor.setNativeMotionModes(modes);
+        auto states = actor.captureNativePackedVelocities();
+        states[0].mVelocities = {{1000, 2000, 3000, 8}, {1000, 2000, -3000, 8}};
+        actor.restoreNativePackedVelocities(states);
+        actor.stepNativeKeyframedMotion(.2f);
+        const auto actual = actor.captureNativePackedVelocities()[0].mVelocities;
+        // Loaded factory raises linear limit to250, angular limit remains1.
+        EXPECT_NEAR(actual.mLinear[3], .5345224738121033f, .001f);
+        EXPECT_NEAR(actual.mAngular[3], .006717008072882891f, .001f);
+        EXPECT_NEAR(actual.mAngular[2], -2.5188779830932617f, .001f);
+        EXPECT_NE(actor.capture()[0].mPose, mPoses[0]);
+    }
+}

@@ -10883,3 +10883,65 @@ getter producers, full packed motion/force/serialization and earlier acceptance
 gates remain open. Follow-up original packed-key-step-oracle-01 captures17,010
 complete8EA4B0 cases with both fourth velocity lanes -8/-0/+8; this is input to
 the next keyframed-integration chunk, not current218 implementation evidence.
+
+
+### Checkpoint219: packed keyframed caps and substep publication
+
+Extended the189 keyframed motion rule with explicit fourth linear/angular inputs
+and outputs. Both lanes preserve untouched signed zeros and use the same
+XYZ-derived native cap factors as their three spatial lanes. They do not enter
+length reductions, quaternion integration or COM position calculations. Used
+nonfinite lanes reject before publication. The owned keyframed substep passes
+its packed state through that rule and stages capped fourth lanes with the
+physical pose/XYZ result before writing. NativeDynamicsWorld's existing actual
+substep registration now reaches these stores; zero-duration World steps still
+have no actual substep. Center/time and raw quaternion persistence remain
+separate requirements; this is not a full native motion snapshot implementation.
+
+Original packed-key-step-oracle-01 passes17,010 complete8EA4B0 cases, no boundary
+stubs:21 physical fixtures, both x87 words, five frames, three cap pairs,
+independent linear/angular XYZ and shared fourth-lane -8/-0/+8 controls.
+Source SHA256 `f45cfecb8cd1d60380f03924ccf9b05ce36d44e74a81436857a700fb52d8e6db`;
+corpus `4e2b618f755504dbe4d7f5f6ca2e3e9132e94bb822c834af5c2a85d418b8ff2a`.
+Changing only fourth lanes leaves every other captured motion field bit-identical
+across5,670 three-way groups; packed-key-step-captured-controls-01 verifies this.
+The two W inputs are varied together in that corpus, not independently of each
+other. Existing independent XYZ velocity combinations remain covered.
+
+Three new tests fail baseline01 (pure caps, invalid/signed-zero admission,
+owned capped publication). Before the fix, actual pure comparison fails10,332
+fields across17,010 cases; actual World substep comparison fails2,016 fields
+across4,536 cases. All mismatches are fourth lanes; earlier output fields retain
+prior passing behavior. Full normal/sanitized packed-key-step-01 each passes
+2,382 components, exact inventories, zero failures/skips and no build warning.
+ASan leaks disabled. Engine/Python code unchanged;218 full engine checks remain
+the preceding integration evidence. Tested source fingerprint `278306bf8604868f8d74e36020a1c05e69b07d1538ab2a7d95ba0ff82491d372`.
+
+Final pure normal/sanitized01 each passes17,010 cases/527,310 fields, numerical
+errors0 and70,308 exact signed-zero checks. Final owned normal/sanitized01 each
+passes4,536 positive-duration actual substeps/104,328 fields,12,096 signed-zero
+checks. Original declared position/velocity tolerances.001 and basis1e-6 are
+unchanged, including the new packed lanes. Maximum fourth-lane errors0; owned
+position error.000060731079, COM about2.3e-13, XYZ velocity about2.9e-14 and basis
+about2.99e-7. Owned domain uses loaded linear cap250, angular0/1/31.4159, excludes
+1,134 frame0 cases and other pure-only linear caps. Baseline owned report copied
+old190's exclusion count/limit wording; final report corrects that description.
+Prior zero-duration World comparison failure is retained, not waived. S4 evidence:
+packed-key-step-baseline-01,normal/sanitized-01;
+native-packed-key-step-compare-normal-baseline,normal/sanitized-01;
+native-packed-key-owned-compare-normal-baseline,normal/sanitized-01.
+
+Follow-up World binding probe executes original889BB0 using constructor-identified
+wrapper vtableA95CF4, actual getter452A60 and full89D430 reference operations,
+then full8A3900:1,728 cases pass. World+2B0 is assigned the wrapper pointer during
+reference acquisition and cleared during release. It is an owner backreference,
+not a simulation-enable boolean. The count2 fixture avoids final destruction;
+the full World constructor and game-level lifetime producer remain unexecuted.
+Source SHA256 `7a4e5d9054025ee7e0dd0ee2acdf052e5a1397a077211579eab451e52085d119`;
+corpus `f8bde8a0bd8430ede67e8208a104f2a13dd14e7ffadef28b45b25439da07f9cb`.
+S4 native-world-wrapper-bound-scene-oracle-01 is input to the next public-owner
+integration, not proof that this scheduler already supplies that authority.
+
+No M15 stage closes. Continue public World-scene ownership/coupling, packed
+force/damping/persistence, automatic reaction lifetime, full ordering, retained
+physical/runtime failures and all remaining S5-S14 acceptance.
