@@ -2593,3 +2593,106 @@ TEST(ESM4RuntimeState, NativeBlendRagdollRejectsMalformedVersionPresenceAndPaylo
     std::reverse(pose.mNativeBlends->begin(), pose.mNativeBlends->end());
     EXPECT_THROW(state.validate(), std::runtime_error);
 }
+
+
+namespace
+{
+    ESM4::RuntimeState controllerRagdollState()
+    {
+        auto state = packedRagdollState(); state.mVersion = 35;
+        auto& pose = state.mNativeActorRagdolls.begin()->second;
+        pose.mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed;
+        pose.mNativeBlends.emplace(); pose.mNativeControllers.emplace();
+        ESM4::RuntimeRagdollBlendController blend;
+        blend.mRecord = 78; blend.mAttachedNode = 8;
+        blend.mState.mTiming = {0xffff, -1, -0.f, 1, -1};
+        blend.mState.mClock.mElapsed = -0.f; blend.mState.mCursor = 0xffffffffu;
+        blend.mState.mCachedGains = {-0.f, -2}; blend.mState.mSetupState = 0xffffffffu;
+        blend.mState.mKeys = {{0, {1, -0.f}}};
+        pose.mNativeControllers->mBlends.push_back(blend);
+        ESM4::RuntimeRagdollVelocityController velocity;
+        velocity.mAttachedNode = 8; velocity.mTargetNode = 8; velocity.mPrecedesBlend = false;
+        velocity.mState.mTiming = {0xd, 1, -0.f, 0, 4}; velocity.mState.mClock = {10, 11, 1};
+        velocity.mState.mForceVector = {1, 2, 3, -0.f}; velocity.mState.mFrameDelta = .016f;
+        pose.mNativeControllers->mVelocities.push_back(velocity);
+        return state;
+    }
+    std::vector<std::uint8_t> controllerRagdollGoldenSuffix()
+    {
+        std::vector<std::uint8_t> bytes;
+        const auto integer = [&](std::uint32_t value, unsigned size) {
+            for (unsigned i = 0; i < size; ++i) bytes.push_back(static_cast<std::uint8_t>(value >> (i * 8)));
+        };
+        const auto scalar = [&](float value) { integer(std::bit_cast<std::uint32_t>(value), 4); };
+        integer(1, 1); integer(1, 4); // present, authored count
+        integer(78, 4); integer(8, 4); integer(0, 1); integer(0xffff, 2);
+        for (float value : {-1.f, -0.f, 1.f, -1.f, -std::numeric_limits<float>::max(),
+                -std::numeric_limits<float>::max(), -0.f}) scalar(value);
+        integer(0xffffffffu, 4); scalar(-0.f); scalar(-2); integer(0xffffffffu, 4);
+        integer(1, 4); scalar(0); scalar(1); scalar(-0.f);
+        integer(1, 4); integer(8, 4); integer(1, 1); integer(8, 4); integer(0, 1); integer(0xd, 2);
+        for (float value : {1.f, -0.f, 0.f, 4.f, 10.f, 11.f, 1.f, 1.f, 2.f, 3.f, -0.f, .016f}) scalar(value);
+        return bytes;
+    }
+}
+
+TEST(ESM4RuntimeState, NativeControllersVersionThirtyFiveWireAndLegacyAbsence)
+{
+    auto state = controllerRagdollState(); const auto actor = state.mReferences.front().mKey;
+    auto old = state; old.mVersion = 34; old.mNativeActorRagdolls.at(actor).mNativeControllers.reset();
+    const auto legacy = old.serializeBinary(); auto prefix = legacy; prefix[std::string_view("OMW4STATE").size()] = 35;
+    auto expected = prefix; const auto suffix = controllerRagdollGoldenSuffix(); ASSERT_EQ(suffix.size(), 140u);
+    expected.insert(expected.end(), suffix.begin(), suffix.end()); EXPECT_EQ(state.serializeBinary(), expected);
+    const auto restored = ESM4::RuntimeState::deserializeBinary(expected);
+    EXPECT_EQ(restored.mNativeActorRagdolls, state.mNativeActorRagdolls); EXPECT_EQ(restored.serializeBinary(), expected);
+    const auto& controls = *restored.mNativeActorRagdolls.at(actor).mNativeControllers;
+    EXPECT_TRUE(std::signbit(controls.mBlends[0].mState.mCachedGains.mHierarchy));
+    EXPECT_TRUE(std::signbit(controls.mVelocities[0].mState.mForceVector[3]));
+    EXPECT_NE(restored.canonicalJson().find("\"native_controllers\":"), std::string::npos);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorRagdolls.at(actor).mNativeControllers);
+    state.mNativeActorRagdolls.at(actor).mNativeControllers.reset(); expected = prefix; expected.push_back(0);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.at(actor).mNativeControllers);
+    state.mNativeActorRagdolls.at(actor).mNativeControllers.emplace(); expected = prefix;
+    expected.insert(expected.end(), {1, 0,0,0,0, 0,0,0,0}); EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.at(actor).mNativeControllers->mBlends.empty());
+}
+
+TEST(ESM4RuntimeState, NativeControllersRejectMalformedVersionIdentityTimingAndWire)
+{
+    auto state = controllerRagdollState(); const auto actor = state.mReferences.front().mKey;
+    auto invalid = state; invalid.mVersion = 34; EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    for (unsigned field = 0; field < 14; ++field)
+    {
+        invalid = state; auto& pose = invalid.mNativeActorRagdolls.at(actor); auto& controls = *pose.mNativeControllers;
+        auto& blend = controls.mBlends[0]; auto& velocity = controls.mVelocities[0];
+        switch (field)
+        {
+            case 0: pose.mNativeBlends.reset(); break;
+            case 1: pose.mBodies[0].mNativeMotion.reset(); break;
+            case 2: blend.mAttachedNode = 99; break;
+            case 3: blend.mTargetNode = 99; break;
+            case 4: controls.mBlends.push_back(blend); break;
+            case 5: blend.mState.mTiming.mPhase = std::numeric_limits<float>::infinity(); break;
+            case 6: blend.mState.mClock.mElapsed = std::numeric_limits<float>::quiet_NaN(); break;
+            case 7: blend.mState.mCachedGains.mHierarchy = std::numeric_limits<float>::infinity(); break;
+            case 8: blend.mState.mKeys = {{2, {0, 0}}, {1, {0, 0}}}; blend.mState.mCursor = 0; break;
+            case 9: blend.mState.mKeys = {{0, {0, 0}}, {1, {0, 0}}}; blend.mState.mCursor = 1; break;
+            case 10: velocity.mTargetNode = 99; break;
+            case 11: velocity.mState.mTiming.mStartKey = 5; break;
+            case 12: velocity.mState.mFrameDelta = -1; break;
+            case 13: velocity.mState.mForceVector[3] = std::numeric_limits<float>::quiet_NaN(); break;
+        }
+        SCOPED_TRACE(field); EXPECT_THROW(invalid.validate(), std::runtime_error);
+    }
+    const auto payload = state.serializeBinary(); const auto suffix = controllerRagdollGoldenSuffix(); const auto offset = payload.size() - suffix.size();
+    for (std::size_t cut = offset; cut < payload.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({payload.begin(), payload.begin() + cut}), std::runtime_error);
+    for (std::size_t marker : {offset, offset + 13, offset + 84, offset + 89})
+    {
+        auto bad = payload; bad[marker] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    }
+    auto bad = payload; bad[offset + 1] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+}

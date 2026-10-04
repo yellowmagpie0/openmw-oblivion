@@ -619,6 +619,59 @@ namespace ESM4
                 previousBlend = blend.mBodyRecord;
             }
         }
+        if (mNativeControllers)
+        {
+            if (!mNativeBlends || !mBodies.front().mNativePackedVelocity || !mBodies.front().mNativeMotion
+                || mNativeControllers->mBlends.size() > mBodies.size()
+                || mNativeControllers->mVelocities.size() > mBodies.size())
+                throw std::runtime_error("Incomplete TES4 ragdoll controller snapshot");
+            const auto common = [](const PhysicalBlendTiming& timing, const PhysicalBlendClock& clock) {
+                for (float value : {timing.mFrequency, timing.mPhase, timing.mStartKey, timing.mStopKey,
+                        clock.mStartTime, clock.mPreviousTime, clock.mElapsed})
+                    if (!std::isfinite(value))
+                        throw std::runtime_error("Nonfinite TES4 ragdoll controller timing or clock");
+            };
+            std::optional<std::uint32_t> previousController;
+            std::set<std::uint32_t> attachments;
+            for (const auto& controller : mNativeControllers->mBlends)
+            {
+                if ((previousController && controller.mRecord <= *previousController)
+                    || controller.mRecord > std::numeric_limits<std::int32_t>::max()
+                    || !nodes.contains(controller.mAttachedNode) || !attachments.insert(controller.mAttachedNode).second
+                    || (controller.mTargetNode && !nodes.contains(*controller.mTargetNode)))
+                    throw std::runtime_error("Invalid TES4 authored controller identity or order");
+                previousController = controller.mRecord;
+                const auto& state = controller.mState;
+                common(state.mTiming, state.mClock);
+                if (!std::isfinite(state.mCachedGains.mHierarchy) || !std::isfinite(state.mCachedGains.mVelocity)
+                    || state.mKeys.size() > sMaximumCollectionSize
+                    || (state.mKeys.size() >= 2 && state.mCursor >= state.mKeys.size() - 1))
+                    throw std::runtime_error("Invalid TES4 authored controller cache or cursor");
+                for (std::size_t i = 0; i < state.mKeys.size(); ++i)
+                {
+                    const auto& key = state.mKeys[i];
+                    if (!std::isfinite(key.mTime) || !std::isfinite(key.mGains.mHierarchy)
+                        || !std::isfinite(key.mGains.mVelocity) || (i != 0 && state.mKeys[i - 1].mTime > key.mTime))
+                        throw std::runtime_error("Invalid TES4 authored controller key or order");
+                }
+            }
+            previousController.reset();
+            for (const auto& controller : mNativeControllers->mVelocities)
+            {
+                if ((previousController && controller.mAttachedNode <= *previousController)
+                    || !nodes.contains(controller.mAttachedNode)
+                    || (controller.mTargetNode && !nodes.contains(*controller.mTargetNode)))
+                    throw std::runtime_error("Invalid TES4 generated controller identity or order");
+                previousController = controller.mAttachedNode;
+                const auto& state = controller.mState;
+                common(state.mTiming, state.mClock);
+                if (state.mTiming.mStartKey > state.mTiming.mStopKey
+                    || !std::isfinite(state.mFrameDelta) || state.mFrameDelta < 0
+                    || std::any_of(state.mForceVector.begin(), state.mForceVector.end(),
+                        [](float value) { return !std::isfinite(value); }))
+                    throw std::runtime_error("Invalid TES4 generated controller timing, delta or force");
+            }
+        }
     }
 
     void RuntimeActorLife::validate() const
@@ -879,6 +932,8 @@ namespace ESM4
                 throw std::runtime_error("TES4 logical ragdoll motion requires runtime-state version33");
             if (mVersion < 34 && pose.mNativeBlends)
                 throw std::runtime_error("TES4 native blend snapshots require runtime-state version34");
+            if (mVersion < 35 && pose.mNativeControllers)
+                throw std::runtime_error("TES4 ragdoll controllers require runtime-state version35");
             const auto values = nativeActors.find(actor);
             if (values == nativeActors.end() || !lives.contains(actor) || values->second != pose.mBase)
                 throw std::runtime_error("Dangling or mismatched TES4 ragdoll owner");
@@ -1779,6 +1834,45 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 35)
+                {
+                    writer.integer<std::uint8_t>(pose.mNativeControllers.has_value());
+                    if (pose.mNativeControllers)
+                    {
+                        const auto target = [&](std::optional<std::uint32_t> node) {
+                            writer.integer<std::uint8_t>(node.has_value());
+                            if (node) writer.integer(*node);
+                        };
+                        const auto common = [&](const PhysicalBlendTiming& timing, const PhysicalBlendClock& clock) {
+                            writer.integer(timing.mFlags);
+                            for (float value : {timing.mFrequency, timing.mPhase, timing.mStartKey, timing.mStopKey,
+                                    clock.mStartTime, clock.mPreviousTime, clock.mElapsed}) writer.floating(value);
+                        };
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mNativeControllers->mBlends.size()));
+                        for (const auto& controller : pose.mNativeControllers->mBlends)
+                        {
+                            writer.integer(controller.mRecord); writer.integer(controller.mAttachedNode);
+                            target(controller.mTargetNode); const auto& state = controller.mState;
+                            common(state.mTiming, state.mClock); writer.integer(state.mCursor);
+                            writer.floating(state.mCachedGains.mHierarchy); writer.floating(state.mCachedGains.mVelocity);
+                            writer.integer(state.mSetupState);
+                            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(state.mKeys.size()));
+                            for (const auto& key : state.mKeys)
+                            {
+                                writer.floating(key.mTime); writer.floating(key.mGains.mHierarchy); writer.floating(key.mGains.mVelocity);
+                            }
+                        }
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mNativeControllers->mVelocities.size()));
+                        for (const auto& controller : pose.mNativeControllers->mVelocities)
+                        {
+                            writer.integer(controller.mAttachedNode); target(controller.mTargetNode);
+                            writer.integer<std::uint8_t>(controller.mPrecedesBlend); const auto& state = controller.mState;
+                            common(state.mTiming, state.mClock);
+                            for (float value : state.mForceVector) writer.floating(value);
+                            writer.floating(state.mFrameDelta);
+                        }
+                    }
+                }
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -2513,6 +2607,55 @@ namespace ESM4
                             blend.mHierarchyGain = reader.float32();
                             blend.mVelocityGain = reader.float32();
                             pose.mNativeBlends->push_back(blend);
+                        }
+                    }
+                }
+                if (result.mVersion >= 35)
+                {
+                    const auto boolean = [&]() {
+                        const auto value = reader.integer<std::uint8_t>();
+                        if (value > 1) throw std::runtime_error("Invalid TES4 ragdoll controller presence or boolean");
+                        return value != 0;
+                    };
+                    const auto target = [&]() -> std::optional<std::uint32_t> {
+                        if (!boolean()) return std::nullopt;
+                        return reader.integer<std::uint32_t>();
+                    };
+                    const auto common = [&](PhysicalBlendTiming& timing, PhysicalBlendClock& clock) {
+                        timing.mFlags = reader.integer<std::uint16_t>();
+                        for (auto* value : {&timing.mFrequency, &timing.mPhase, &timing.mStartKey, &timing.mStopKey,
+                                &clock.mStartTime, &clock.mPreviousTime, &clock.mElapsed}) *value = reader.float32();
+                    };
+                    if (boolean())
+                    {
+                        pose.mNativeControllers.emplace();
+                        const auto blendControllerCount = reader.count();
+                        if (blendControllerCount > pose.mBodies.size())
+                            throw std::runtime_error("Excessive TES4 authored controller count");
+                        for (std::uint32_t j = 0; j < blendControllerCount; ++j)
+                        {
+                            RuntimeRagdollBlendController controller;
+                            controller.mRecord = reader.integer<std::uint32_t>(); controller.mAttachedNode = reader.integer<std::uint32_t>();
+                            controller.mTargetNode = target(); auto& state = controller.mState;
+                            common(state.mTiming, state.mClock); state.mCursor = reader.integer<std::uint32_t>();
+                            state.mCachedGains = {reader.float32(), reader.float32()}; state.mSetupState = reader.integer<std::uint32_t>();
+                            const auto keyCount = reader.count();
+                            for (std::uint32_t k = 0; k < keyCount; ++k)
+                                state.mKeys.push_back({reader.float32(), {reader.float32(), reader.float32()}});
+                            pose.mNativeControllers->mBlends.push_back(std::move(controller));
+                        }
+                        const auto velocityControllerCount = reader.count();
+                        if (velocityControllerCount > pose.mBodies.size())
+                            throw std::runtime_error("Excessive TES4 generated controller count");
+                        for (std::uint32_t j = 0; j < velocityControllerCount; ++j)
+                        {
+                            RuntimeRagdollVelocityController controller;
+                            controller.mAttachedNode = reader.integer<std::uint32_t>(); controller.mTargetNode = target();
+                            controller.mPrecedesBlend = boolean(); auto& state = controller.mState;
+                            common(state.mTiming, state.mClock);
+                            for (float& value : state.mForceVector) value = reader.float32();
+                            state.mFrameDelta = reader.float32();
+                            pose.mNativeControllers->mVelocities.push_back(std::move(controller));
                         }
                     }
                 }
@@ -3273,6 +3416,54 @@ namespace ESM4
                         stream << '}';
                     }
                     stream << ']';
+                }
+                if (pose.mNativeControllers)
+                {
+                    const auto scalar = [&](float value) {
+                        if (value == 0 && std::signbit(value)) stream << "-0.0";
+                        else stream << std::setprecision(17) << value;
+                    };
+                    const auto target = [&](std::optional<std::uint32_t> node) {
+                        if (node) stream << *node; else stream << "null";
+                    };
+                    const auto common = [&](const PhysicalBlendTiming& timing, const PhysicalBlendClock& clock) {
+                        stream << "\"timing\":{\"flags\":" << timing.mFlags << ",\"frequency\":"; scalar(timing.mFrequency);
+                        stream << ",\"phase\":"; scalar(timing.mPhase); stream << ",\"start_key\":"; scalar(timing.mStartKey);
+                        stream << ",\"stop_key\":"; scalar(timing.mStopKey);
+                        stream << "},\"clock\":{\"start_time\":"; scalar(clock.mStartTime);
+                        stream << ",\"previous_time\":"; scalar(clock.mPreviousTime); stream << ",\"elapsed\":"; scalar(clock.mElapsed);
+                        stream << '}';
+                    };
+                    stream << ",\"native_controllers\":{\"blends\":[";
+                    for (std::size_t i = 0; i < pose.mNativeControllers->mBlends.size(); ++i)
+                    {
+                        if (i) stream << ',';
+                        const auto& controller = pose.mNativeControllers->mBlends[i]; const auto& state = controller.mState;
+                        stream << "{\"record\":" << controller.mRecord << ",\"attached_node\":" << controller.mAttachedNode << ",\"target_node\":";
+                        target(controller.mTargetNode); stream << ",\"state\":{"; common(state.mTiming, state.mClock);
+                        stream << ",\"keys\":[";
+                        for (std::size_t k = 0; k < state.mKeys.size(); ++k)
+                        {
+                            if (k) stream << ',';
+                            const auto& key = state.mKeys[k];
+                            stream << "{\"time\":"; scalar(key.mTime); stream << ",\"hierarchy_gain\":"; scalar(key.mGains.mHierarchy);
+                            stream << ",\"velocity_gain\":"; scalar(key.mGains.mVelocity); stream << '}';
+                        }
+                        stream << "],\"cursor\":" << state.mCursor << ",\"cached_gains\":{\"hierarchy\":"; scalar(state.mCachedGains.mHierarchy);
+                        stream << ",\"velocity\":"; scalar(state.mCachedGains.mVelocity);
+                        stream << "},\"setup_state\":" << state.mSetupState << "}}";
+                    }
+                    stream << "],\"velocities\":[";
+                    for (std::size_t i = 0; i < pose.mNativeControllers->mVelocities.size(); ++i)
+                    {
+                        if (i) stream << ',';
+                        const auto& controller = pose.mNativeControllers->mVelocities[i]; const auto& state = controller.mState;
+                        stream << "{\"attached_node\":" << controller.mAttachedNode << ",\"target_node\":"; target(controller.mTargetNode);
+                        stream << ",\"precedes_blend\":" << (controller.mPrecedesBlend ? "true" : "false") << ",\"state\":{";
+                        common(state.mTiming, state.mClock); stream << ",\"force_vector\":"; vector(state.mForceVector);
+                        stream << ",\"frame_delta\":"; scalar(state.mFrameDelta); stream << "}}";
+                    }
+                    stream << "]}";
                 }
                 stream << '}';
             }

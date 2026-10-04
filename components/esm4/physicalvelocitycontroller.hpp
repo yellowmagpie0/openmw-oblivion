@@ -14,6 +14,7 @@ namespace ESM4
         PhysicalBlendClock mClock;
         std::array<float, 4> mForceVector{};
         float mFrameDelta = 0.016f;
+        friend bool operator==(const PhysicalVelocityControllerState&, const PhysicalVelocityControllerState&) = default;
     };
 
     // Original8B8590 setup after the caller admits a nonnegative Down duration.

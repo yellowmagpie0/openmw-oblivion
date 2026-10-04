@@ -18072,3 +18072,69 @@ save boundaries, actual scheduler/World capture/restore, renderer-global Ni orde
 cache, raw COM/time/quaternion/cache, activation/contact continuation, automatic
 World reactions/getters/frame, retained physical/restart failures and S5-S14
 acceptance remain required. Existing display information remains pending.
+
+
+### Checkpoint231: version35 complete owned controller wire metadata
+
+Version35 adds an actor-level optional complete authored/generated controller
+snapshot after version34 blend metadata. Absent legacy data differs from present
+empty arrays. Authored entries carry record/attachment/nullable target, raw uint16
+flags, four binary32 timing fields, three clock fields, cursor, two cached gains,
+opaque setup uint32 and ordered time/gain keys. Generated entries carry attachment/
+nullable target, strict head/tail bool, timing/clocks, all four native force lanes
+and frame delta. Fixed authored entries are59 bytes without a target/63 with,
+plus12 per key; generated entries56/60 bytes. Counts/keys are bounded and presence/
+boolean markers strict. Versions1-34 retain their layouts/absence; populated data,
+including a complete empty snapshot, rejects downgrading. Present controllers
+require complete packed/mode/blend projections, with canonical authored record
+and generated attachment order, known unique attachments/nullable targets,
+finite state/keys/gains, ordered duplicate-time keys and supported multi-key
+cursor. Empty/single cursors are retained. Raw reversed finite authored bounds are
+preserved; generated timing remains ordered, with finite nonnegative delta and
+four finite force lanes. Exact winning authored records/attachments/counts will
+be resolved by the next engine adapter. No controller defaults are invented for
+legacy data. Shared caches remain outside per-actor metadata.
+
+Added value equality to the six existing timing/clock/gain/key/controller value
+types so nested snapshots can compare normally; no layout or rule change. Signed
+zero is tested by binary bit patterns/whole wire bytes, not ordinary float equality.
+Canonical JSON emits complete nested timing/clock/key/cache/setup and generated
+force/order fields only when present, preserving negative-zero values.
+
+controller-save-baseline-01 retains an incorrect golden-size assertion (136 vs
+actual140) alongside missing-code failures. Corrected golden count and nullable/
+order marker offsets after terminal run. Both controller-save-baseline-02 C++
+tests then execute and fail on missing version35 logic; both Python baseline
+cases execute and error. Independent manual wire fixtures append a140-byte
+controller suffix to an unchanged version34 prefix, including single-key opaque
+FFFFFFFF cursor/setup, missing target/reversed bounds, signed zero, sentinels and
+generated order/target. Separate tests cover legacy absence/current empty, every
+extension truncation, strict markers/excessive counts, downgrade, incomplete body
+metadata, dangling/duplicate identities, timing/clock/cache/key/cursor and force/
+delta admission. Python additionally rejects booleans/noninteger identity/flag/
+setup fields, invalid nested shapes and nonboolean list order.
+
+Full controller-save-normal/sanitized-01 each passes2,407 component tests; normal
+passes253 Python tests. Exact inventories, zero failures/skips; no new compiler
+warnings. Broader recompilation retains preexisting inventory-test missing mOwner
+initializer warnings. ASan leaks disabled. Tested fingerprint `283fcb42340bb2adb948d06ca0aa8418e0d0debddae711b6cbd4e3d8459880ee`.
+
+Actual native-controller-save-wire-compare-normal/sanitized-01 each passes110,592
+composed snapshots:1,216,512 exact original196 captured flag/clock/cache/gain/
+key-count/cursor/generated-presence fields. C++ encode/decode/reencoding and
+independent Python decode/reencoding preserve the entire payload byte-for-byte.
+C++ canonical JSON is independently parsed and encoded by Python to the exact
+same payload for every input, covering its actual nested JSON shapes and all
+supplied field bit patterns. Original fixture key contents, node/record mapping,
+setup0/2/FFFFFFFF, generated head/tail/state, logical Dynamic mode and zero packed
+velocity are explicit software inputs, not newly captured final original getters
+or original save data. Original196 executable/source/corpus identity and declared
+Windows/interlocked/full-instruction boundary are unchanged. Shared cache and
+original next-phase/save/World/contact/gameplay remain excluded. Reports identify
+source/corpus/binary/archive hashes and commands; no tolerance/input changes.
+
+No M15 gate closes. Actual controller capture/restore adapters and scheduler,
+separate global shared physical cache persistence, automatic World save/reaction/
+getters/frame, renderer-global Ni traversal/cache, raw COM/time/quaternion/cache,
+activation/contact continuation, retained physical/restart failures and S5-S14
+acceptance remain required. Existing display information remains pending.

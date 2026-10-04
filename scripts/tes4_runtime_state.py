@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 34
+CURRENT_VERSION = 35
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1000,7 +1000,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for entry in ragdolls:
         fields = {"actor", "base", "model", "asset_hash", "bodies"}
         if (not isinstance(entry, dict) or not fields <= set(entry)
-                or not set(entry) <= fields | {"native_blends"}):
+                or not set(entry) <= fields | {"native_blends", "native_controllers"}):
             raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
         actor, base = entry["actor"], entry["base"]
         native_key(actor)
@@ -1084,6 +1084,76 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 previous_blend = record
                 native_float(blend["hierarchy_gain"])
                 native_float(blend["velocity_gain"])
+        if "native_controllers" in entry:
+            controls = entry["native_controllers"]
+            if (version < 35 or "native_blends" not in entry or "native_motion" not in bodies[0]
+                    or "native_packed_velocity" not in bodies[0] or not isinstance(controls, dict)
+                    or set(controls) != {"blends", "velocities"}):
+                raise RuntimeStateError("Invalid TES4 controller version, shape or incomplete body snapshot")
+            def common_controller(controller, fields, state_fields):
+                if not isinstance(controller, dict) or set(controller) != fields:
+                    raise RuntimeStateError("Invalid TES4 controller fields")
+                attached, target = controller["attached_node"], controller["target_node"]
+                if (type(attached) is not int or attached not in nodes
+                        or (target is not None and (type(target) is not int or target not in nodes))):
+                    raise RuntimeStateError("Invalid TES4 controller attachment or target")
+                value = controller["state"]
+                if not isinstance(value, dict) or set(value) != state_fields:
+                    raise RuntimeStateError("Invalid TES4 controller state fields")
+                timing, clock = value["timing"], value["clock"]
+                if (not isinstance(timing, dict) or set(timing) != {"flags", "frequency", "phase", "start_key", "stop_key"}
+                        or type(timing["flags"]) is not int or not 0 <= timing["flags"] <= 0xffff
+                        or not isinstance(clock, dict) or set(clock) != {"start_time", "previous_time", "elapsed"}):
+                    raise RuntimeStateError("Invalid TES4 controller timing or clock fields")
+                for field in ("frequency", "phase", "start_key", "stop_key"): native_float(timing[field])
+                for field in ("start_time", "previous_time", "elapsed"): native_float(clock[field])
+                return value
+            authored = check_collection(controls["blends"], "native authored controllers")
+            generated = check_collection(controls["velocities"], "native generated controllers")
+            if len(authored) > len(bodies) or len(generated) > len(bodies):
+                raise RuntimeStateError("Excessive TES4 owned controller count")
+            previous_controller = -1
+            attachments = set()
+            for controller in authored:
+                value = common_controller(controller, {"record", "attached_node", "target_node", "state"},
+                    {"timing", "clock", "keys", "cursor", "cached_gains", "setup_state"})
+                record = controller["record"]
+                if (type(record) is not int or not previous_controller < record <= 0x7fffffff
+                        or controller["attached_node"] in attachments):
+                    raise RuntimeStateError("Invalid TES4 authored controller identity or order")
+                previous_controller = record; attachments.add(controller["attached_node"])
+                for field in ("cursor", "setup_state"):
+                    if type(value[field]) is not int or not 0 <= value[field] <= 0xffffffff:
+                        raise RuntimeStateError("Invalid TES4 authored controller cursor or setup")
+                cached = value["cached_gains"]
+                if not isinstance(cached, dict) or set(cached) != {"hierarchy", "velocity"}:
+                    raise RuntimeStateError("Invalid TES4 authored controller cached gains")
+                native_float(cached["hierarchy"]); native_float(cached["velocity"])
+                keys = check_collection(value["keys"], "native authored controller keys")
+                if len(keys) >= 2 and value["cursor"] >= len(keys) - 1:
+                    raise RuntimeStateError("Invalid TES4 authored controller cursor")
+                previous_key = None
+                for key in keys:
+                    if not isinstance(key, dict) or set(key) != {"time", "hierarchy_gain", "velocity_gain"}:
+                        raise RuntimeStateError("Invalid TES4 authored controller key fields")
+                    time = native_float(key["time"]); native_float(key["hierarchy_gain"]); native_float(key["velocity_gain"])
+                    if previous_key is not None and previous_key > time:
+                        raise RuntimeStateError("Invalid TES4 authored controller key order")
+                    previous_key = time
+            previous_controller = -1
+            for controller in generated:
+                value = common_controller(controller, {"attached_node", "target_node", "precedes_blend", "state"},
+                    {"timing", "clock", "force_vector", "frame_delta"})
+                if type(controller["precedes_blend"]) is not bool or controller["attached_node"] <= previous_controller:
+                    raise RuntimeStateError("Invalid TES4 generated controller order or position")
+                previous_controller = controller["attached_node"]
+                if (native_float(value["timing"]["start_key"]) > native_float(value["timing"]["stop_key"])
+                        or native_float(value["frame_delta"]) < 0):
+                    raise RuntimeStateError("Invalid TES4 generated controller timing or delta")
+                force = value["force_vector"]
+                if not isinstance(force, list) or len(force) != 4:
+                    raise RuntimeStateError("Invalid TES4 generated controller force lanes")
+                for component in force: native_float(component)
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -1667,6 +1737,38 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         "collision_flags": reader.unpack("<H"), "requested_motion": reader.unpack("<I"),
                         "hierarchy_gain": reader.unpack("<f"), "velocity_gain": reader.unpack("<f")}
                         for _ in range(count)]
+            if version >= 35:
+                def boolean():
+                    value = reader.unpack("<B")
+                    if value > 1: raise RuntimeStateError("Invalid TES4 controller presence or boolean")
+                    return bool(value)
+                def target_node():
+                    return reader.unpack("<I") if boolean() else None
+                def common_state():
+                    timing = {"flags": reader.unpack("<H")}
+                    timing.update({field: reader.unpack("<f") for field in ("frequency", "phase", "start_key", "stop_key")})
+                    return {"timing": timing, "clock": {field: reader.unpack("<f")
+                        for field in ("start_time", "previous_time", "elapsed")}}
+                if boolean():
+                    controls = {"blends": [], "velocities": []}; entry["native_controllers"] = controls
+                    count = reader.count()
+                    if count > len(entry["bodies"]): raise RuntimeStateError("Excessive TES4 authored controller count")
+                    for _ in range(count):
+                        controller = {"record": reader.unpack("<I"), "attached_node": reader.unpack("<I"), "target_node": target_node()}
+                        value = common_state(); controller["state"] = value
+                        value["cursor"] = reader.unpack("<I")
+                        value["cached_gains"] = {"hierarchy": reader.unpack("<f"), "velocity": reader.unpack("<f")}
+                        value["setup_state"] = reader.unpack("<I")
+                        value["keys"] = [{"time": reader.unpack("<f"), "hierarchy_gain": reader.unpack("<f"), "velocity_gain": reader.unpack("<f")}
+                            for _ in range(reader.count())]
+                        controls["blends"].append(controller)
+                    count = reader.count()
+                    if count > len(entry["bodies"]): raise RuntimeStateError("Excessive TES4 generated controller count")
+                    for _ in range(count):
+                        controller = {"attached_node": reader.unpack("<I"), "target_node": target_node(), "precedes_blend": boolean()}
+                        value = common_state(); controller["state"] = value
+                        value["force_vector"] = [reader.unpack("<f") for _ in range(4)]; value["frame_delta"] = reader.unpack("<f")
+                        controls["velocities"].append(controller)
             result["native_actor_ragdolls"].append(entry)
     _validate_basic_state(result)
     if reader.offset != len(payload):
@@ -2026,6 +2128,32 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         writer.pack("<I", blend["requested_motion"])
                         writer.pack("<f", blend["hierarchy_gain"])
                         writer.pack("<f", blend["velocity_gain"])
+            if version >= 35:
+                writer.pack("<B", int("native_controllers" in entry))
+                if "native_controllers" in entry:
+                    def target_node(node):
+                        writer.pack("<B", int(node is not None))
+                        if node is not None: writer.pack("<I", node)
+                    def common_state(value):
+                        writer.pack("<H", value["timing"]["flags"])
+                        for field in ("frequency", "phase", "start_key", "stop_key"): writer.pack("<f", value["timing"][field])
+                        for field in ("start_time", "previous_time", "elapsed"): writer.pack("<f", value["clock"][field])
+                    controls = entry["native_controllers"]
+                    writer.pack("<I", len(controls["blends"]))
+                    for controller in controls["blends"]:
+                        writer.pack("<I", controller["record"]); writer.pack("<I", controller["attached_node"])
+                        target_node(controller["target_node"]); value = controller["state"]; common_state(value)
+                        writer.pack("<I", value["cursor"])
+                        writer.pack("<f", value["cached_gains"]["hierarchy"]); writer.pack("<f", value["cached_gains"]["velocity"])
+                        writer.pack("<I", value["setup_state"]); writer.pack("<I", len(value["keys"]))
+                        for key in value["keys"]:
+                            for field in ("time", "hierarchy_gain", "velocity_gain"): writer.pack("<f", key[field])
+                    writer.pack("<I", len(controls["velocities"]))
+                    for controller in controls["velocities"]:
+                        writer.pack("<I", controller["attached_node"]); target_node(controller["target_node"])
+                        writer.pack("<B", int(controller["precedes_blend"])); value = controller["state"]; common_state(value)
+                        for component in value["force_vector"]: writer.pack("<f", component)
+                        writer.pack("<f", value["frame_delta"])
     return writer.finish()
 
 

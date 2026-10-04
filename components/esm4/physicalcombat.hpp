@@ -288,12 +288,14 @@ namespace ESM4
     {
         float mHierarchy;
         float mVelocity;
+        friend bool operator==(const PhysicalBlendGains&, const PhysicalBlendGains&) = default;
     };
 
     struct PhysicalBlendKey
     {
         float mTime;
         PhysicalBlendGains mGains;
+        friend bool operator==(const PhysicalBlendKey&, const PhysicalBlendKey&) = default;
     };
 
     // The native one-shot transition creates at most two keys. Empty keys
@@ -321,6 +323,7 @@ namespace ESM4
         float mStartTime = -3.40282346638528859812e+38F;
         float mPreviousTime = -3.40282346638528859812e+38F;
         float mElapsed = 0.f;
+        friend bool operator==(const PhysicalBlendClock&, const PhysicalBlendClock&) = default;
     };
 
     // Absolute, speed1, phase0, one-shot controller clock (flags0xc5).
@@ -332,6 +335,7 @@ namespace ESM4
     {
         std::uint16_t mFlags;
         float mFrequency, mPhase, mStartKey, mStopKey;
+        friend bool operator==(const PhysicalBlendTiming&, const PhysicalBlendTiming&) = default;
     };
 
     // Original7155A0 uses a shared last-result cache. Its identity includes

@@ -20,6 +20,8 @@
 #include "actionledger.hpp"
 #include "actorvalues.hpp"
 #include "physicalcombat.hpp"
+#include "physicalblendsettings.hpp"
+#include "physicalvelocitycontroller.hpp"
 #include "physicalsceneworld.hpp"
 
 namespace ESM
@@ -30,7 +32,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 34;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 35;
 
     struct RuntimeContentIdentity
     {
@@ -350,6 +352,32 @@ namespace ESM4
         friend bool operator==(const RuntimeRagdollBlendState&, const RuntimeRagdollBlendState&) = default;
     };
 
+    struct RuntimeRagdollBlendController
+    {
+        std::uint32_t mRecord = 0;
+        std::uint32_t mAttachedNode = 0;
+        std::optional<std::uint32_t> mTargetNode;
+        PhysicalBlendControllerState mState;
+        friend bool operator==(const RuntimeRagdollBlendController&, const RuntimeRagdollBlendController&) = default;
+    };
+
+    struct RuntimeRagdollVelocityController
+    {
+        std::uint32_t mAttachedNode = 0;
+        std::optional<std::uint32_t> mTargetNode;
+        bool mPrecedesBlend = true;
+        PhysicalVelocityControllerState mState;
+        friend bool operator==(const RuntimeRagdollVelocityController&, const RuntimeRagdollVelocityController&) = default;
+    };
+
+    struct RuntimeRagdollControllers
+    {
+        // Canonical increasing authored-record and generated-attachment order.
+        std::vector<RuntimeRagdollBlendController> mBlends;
+        std::vector<RuntimeRagdollVelocityController> mVelocities;
+        friend bool operator==(const RuntimeRagdollControllers&, const RuntimeRagdollControllers&) = default;
+    };
+
     struct RuntimeActorRagdoll
     {
         ESM::FormKey mBase;
@@ -362,6 +390,9 @@ namespace ESM4
         // Absent means a legacy snapshot; present empty means no blend targets.
         // Present entries are the complete target set in increasing body order.
         std::optional<std::vector<RuntimeRagdollBlendState>> mNativeBlends = std::nullopt;
+        // v35: absent legacy data differs from current complete empty lists.
+        // Shared clocks are runtime-authority state, not per-actor fields.
+        std::optional<RuntimeRagdollControllers> mNativeControllers = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeActorRagdoll&, const RuntimeActorRagdoll&) = default;
     };

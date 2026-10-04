@@ -1921,6 +1921,79 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         pose["native_blends"].reverse()
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
+    def controller_ragdoll_state(self):
+        state = self.blend_ragdoll_state(); state["schema_version"] = 35
+        pose = state["native_actor_ragdolls"][0]; pose["native_blends"] = []
+        sentinel = -struct.unpack("<f", bytes.fromhex("ffff7f7f"))[0]
+        pose["native_controllers"] = {"blends": [{"record": 78, "attached_node": 8, "target_node": None,
+            "state": {"timing": {"flags": 0xffff, "frequency": -1., "phase": -0., "start_key": 1., "stop_key": -1.},
+                "clock": {"start_time": sentinel, "previous_time": sentinel, "elapsed": -0.},
+                "keys": [{"time": 0., "hierarchy_gain": 1., "velocity_gain": -0.}], "cursor": 0xffffffff,
+                "cached_gains": {"hierarchy": -0., "velocity": -2.}, "setup_state": 0xffffffff}}],
+            "velocities": [{"attached_node": 8, "target_node": 8, "precedes_blend": False,
+                "state": {"timing": {"flags": 0xd, "frequency": 1., "phase": -0., "start_key": 0., "stop_key": 4.},
+                    "clock": {"start_time": 10., "previous_time": 11., "elapsed": 1.},
+                    "force_vector": [1., 2., 3., -0.], "frame_delta": struct.unpack("<f", struct.pack("<f", .016))[0]}}]}
+        return state
+
+    def test_ragdoll_v35_controller_wire_and_legacy_absence(self):
+        state = self.controller_ragdoll_state(); old = copy.deepcopy(state); old["schema_version"] = 34
+        del old["native_actor_ragdolls"][0]["native_controllers"]
+        legacy = state_io.encode_payload(old); prefix = bytearray(legacy)
+        struct.pack_into("<I", prefix, len(state_io.MAGIC), 35)
+        sentinel = -struct.unpack("<f", bytes.fromhex("ffff7f7f"))[0]
+        suffix = struct.pack("<BI", 1, 1) + struct.pack("<IIBH", 78, 8, 0, 0xffff)
+        suffix += struct.pack("<7f", -1., -0., 1., -1., sentinel, sentinel, -0.)
+        suffix += struct.pack("<I2fII3f", 0xffffffff, -0., -2., 0xffffffff, 1, 0., 1., -0.)
+        suffix += struct.pack("<IIBIBH12f", 1, 8, 1, 8, 0, 0xd, 1., -0., 0., 4., 10., 11., 1., 1., 2., 3., -0., .016)
+        self.assertEqual(len(suffix), 140)
+        payload = state_io.encode_payload(state); self.assertEqual(payload, prefix + suffix)
+        decoded = state_io.decode_payload(payload); self.assertEqual(decoded["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        controls = decoded["native_actor_ragdolls"][0]["native_controllers"]
+        for value in (controls["blends"][0]["state"]["cached_gains"]["hierarchy"], controls["velocities"][0]["state"]["force_vector"][3]):
+            self.assertEqual(struct.pack("<f", value), bytes.fromhex("00000080"))
+        self.assertNotIn("native_controllers", state_io.decode_payload(legacy)["native_actor_ragdolls"][0])
+        old["schema_version"] = 35; self.assertEqual(state_io.encode_payload(old), prefix + bytes([0]))
+        old["native_actor_ragdolls"][0]["native_controllers"] = {"blends": [], "velocities": []}
+        self.assertEqual(state_io.encode_payload(old), prefix + bytes([1,0,0,0,0,0,0,0,0]))
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(old))["native_actor_ragdolls"][0]["native_controllers"], {"blends": [], "velocities": []})
+
+    def test_ragdoll_v35_controller_rejects_version_identity_timing_and_payload(self):
+        state = self.controller_ragdoll_state(); payload = state_io.encode_payload(state); offset = len(payload) - 140
+        for cut in range(offset, len(payload)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:cut])
+        for marker in (offset, offset+13, offset+84, offset+89):
+            bad = bytearray(payload); bad[marker] = 2
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+        bad = bytearray(payload); bad[offset+1] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+        invalid = copy.deepcopy(state); invalid["schema_version"] = 34
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for field in ("native_blends",):
+            invalid = copy.deepcopy(state); del invalid["native_actor_ragdolls"][0][field]
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for field, value in (("record", True), ("record", 0x80000000), ("attached_node", 99), ("target_node", 99)):
+            invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"]["blends"][0][field] = value
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for field, value in (("cursor", True), ("cursor", -1), ("setup_state", 0x100000000), ("keys", None)):
+            invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"]["blends"][0]["state"][field] = value
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for group, values in (("timing", (("flags", True), ("flags", 65536), ("phase", math.nan))),
+                              ("clock", (("elapsed", math.inf),)), ("cached_gains", (("velocity", math.nan),))):
+            for field, value in values:
+                invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"]["blends"][0]["state"][group][field] = value
+                with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for field, value in (("precedes_blend", 1), ("target_node", 99), ("attached_node", True)):
+            invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"]["velocities"][0][field] = value
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for field, value in (("frame_delta", -1.), ("force_vector", [1,2,3]), ("force_vector", [1,2,3,math.nan])):
+            invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"]["velocities"][0]["state"][field] = value
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        for value in (None, [], {}, {"blends": [], "velocities": [], "unknown": 0}):
+            invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+
 
 if __name__ == "__main__":
     unittest.main()

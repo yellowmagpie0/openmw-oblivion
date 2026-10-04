@@ -103,6 +103,7 @@ namespace ESM4
         PhysicalBlendGains mCachedGains{-1.f, -1.f};
         // Original controller+0x60: reset0, selected knockdown setup2.
         std::uint32_t mSetupState = 0;
+        friend bool operator==(const PhysicalBlendControllerState&, const PhysicalBlendControllerState&) = default;
     };
 
     struct PhysicalBlendControllerUpdate
