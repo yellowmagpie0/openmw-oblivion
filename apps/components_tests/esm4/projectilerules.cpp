@@ -380,3 +380,67 @@ TEST(ESM4ProjectileRules, OriginalFirstArrowUsesFatigueAfterHold)
     input.mFatigueRatio = (119.58f - 5) / 140.f;
     EXPECT_GT(std::abs(500 - ESM4::arrowLaunchDamage(input, physical) - 486.26f), .2f);
 }
+
+TEST(ESM4ProjectileRules, BowKeysUseAllFiveStockPhasesAndIgnoreSoundDispatch)
+{
+    const std::array<ESM4::MeleeTextKey, 7> keys{{
+        {0, "start"}, {.03333330154418945f, "Sound: WPNBowDraw"},
+        {.2666666507720947f, "Attach"}, {1.3666667938232422f, "Hold"},
+        {1.433333396911621f, "Release"}, {1.4333434104919434f, "Sound: bowShoot"},
+        {1.9666666984558105f, "end"}}};
+    const auto result = ESM4::bowAnimationKeyTimes(keys);
+    EXPECT_EQ(result.mMatchedCount, 5);
+    EXPECT_EQ(result.mTimes, (std::array<float, 5>{0, .2666666507720947f,
+        1.3666667938232422f, 1.433333396911621f, 1.9666666984558105f}));
+}
+
+TEST(ESM4ProjectileRules, BowKeysKeepAuthoredOrderAndPrefixMatching)
+{
+    const std::array<ESM4::MeleeTextKey, 8> keys{{
+        {.1f, "Attach"}, {.2f, " START"}, {.3f, "STARTer"}, {.4f, "Start"},
+        {.5f, "aTtAcH"}, {.6f, "Hold"}, {.7f, "Release"}, {.8f, "End"}}};
+    const auto result = ESM4::bowAnimationKeyTimes(keys);
+    EXPECT_EQ(result.mMatchedCount, 5);
+    EXPECT_EQ(result.mTimes, (std::array<float, 5>{.3f, .5f, .6f, .7f, .8f}));
+}
+
+TEST(ESM4ProjectileRules, BowKeysFollowNativeLineAndNulBoundaries)
+{
+    const std::array<ESM4::MeleeTextKey, 1> lines{{
+        {.25f, "\r\nStart\r\nAttach\nHold\nRelease\r\nEnd"}}};
+    EXPECT_EQ(ESM4::bowAnimationKeyTimes(lines).mMatchedCount, 5);
+    const std::array<ESM4::MeleeTextKey, 1> bare{{
+        {.25f, "Start\rAttach\rHold\rRelease\rEnd"}}};
+    EXPECT_EQ(ESM4::bowAnimationKeyTimes(bare).mMatchedCount, 1);
+    const std::array<ESM4::MeleeTextKey, 1> nul{{
+        {.25f, std::string_view("Start\0\nAttach", 13)}}};
+    EXPECT_EQ(ESM4::bowAnimationKeyTimes(nul).mMatchedCount, 1);
+    EXPECT_EQ(ESM4::bowAnimationKeyTimes({}).mMatchedCount, 0);
+}
+
+TEST(ESM4ProjectileRules, BowKeysAdvanceUnstoredTimesAndPreserveSignedZero)
+{
+    const std::array<ESM4::MeleeTextKey, 5> keys{{
+        {-2, "Start"}, {-1, "Attach"}, {std::nextafter(-1.f, 0.f), "Hold"},
+        {-0.f, "Release"}, {std::numeric_limits<float>::denorm_min(), "End"}}};
+    const auto result = ESM4::bowAnimationKeyTimes(keys);
+    EXPECT_EQ(result.mMatchedCount, 5);
+    EXPECT_EQ(result.mTimes[0], 0);
+    EXPECT_EQ(result.mTimes[1], 0);
+    EXPECT_EQ(result.mTimes[2], keys[2].mTime);
+    EXPECT_TRUE(std::signbit(result.mTimes[3]));
+    EXPECT_EQ(result.mTimes[4], keys[4].mTime);
+}
+
+TEST(ESM4ProjectileRules, BowKeysRejectNonfiniteAndUnsupportedPostEndText)
+{
+    const std::array<ESM4::MeleeTextKey, 1> invalid{{
+        {std::numeric_limits<float>::infinity(), "unrelated"}}};
+    EXPECT_THROW(ESM4::bowAnimationKeyTimes(invalid), std::invalid_argument);
+    const std::array<ESM4::MeleeTextKey, 1> trailing{{
+        {0, "Start\nAttach\nHold\nRelease\nEnd\nEnd"}}};
+    EXPECT_THROW(ESM4::bowAnimationKeyTimes(trailing), std::invalid_argument);
+    const std::array<ESM4::MeleeTextKey, 1> sound{{
+        {0, "Start\nAttach\nHold\nRelease\nEnd\nSound: bowShoot"}}};
+    EXPECT_EQ(ESM4::bowAnimationKeyTimes(sound).mMatchedCount, 5);
+}

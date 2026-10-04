@@ -28,6 +28,67 @@ namespace ESM4
         }
     }
 
+    BowAnimationKeys bowAnimationKeyTimes(std::span<const MeleeTextKey> textKeys)
+    {
+        for (const auto& key : textKeys)
+            if (!std::isfinite(key.mTime))
+                throw std::invalid_argument("nonfinite native bow animation time");
+        constexpr std::array<std::string_view, 5> names{"start", "attach", "hold", "release", "end"};
+        const auto prefix = [](std::string_view text, std::string_view name) {
+            if (text.size() < name.size())
+                return false;
+            for (std::size_t i = 0; i < name.size(); ++i)
+            {
+                const auto c = text[i];
+                const auto lower = c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c;
+                if (lower != name[i])
+                    return false;
+            }
+            return true;
+        };
+        BowAnimationKeys result;
+        for (const auto& key : textKeys)
+        {
+            auto remaining = key.mText.substr(0, key.mText.find('\0'));
+            while (!remaining.empty())
+            {
+                // Original skips initial CR text to its first LF. Bare CR
+                // is not a line separator, and spaces are never trimmed.
+                if (remaining.front() == '\r')
+                {
+                    const auto lf = remaining.find('\n');
+                    if (lf == std::string_view::npos)
+                        break;
+                    remaining.remove_prefix(lf);
+                    while (!remaining.empty() && (remaining.front() == '\r' || remaining.front() == '\n'))
+                        remaining.remove_prefix(1);
+                    if (remaining.empty())
+                        break;
+                }
+                // Sound dispatch precedes phase lookup in the native loop.
+                const bool sound = prefix(remaining, "sound:");
+                if (!sound && result.mMatchedCount == names.size())
+                    throw std::invalid_argument("unsupported bow text after End");
+                if (!sound && result.mMatchedCount < names.size()
+                    && prefix(remaining, names[result.mMatchedCount]))
+                {
+                    // Matching advances the slot even when time <= -1 is
+                    // not stored by original51B92E. Preserve signed zero.
+                    if (key.mTime > -1)
+                        result.mTimes[result.mMatchedCount] = key.mTime;
+                    ++result.mMatchedCount;
+                }
+                const auto lf = remaining.find('\n');
+                if (lf == std::string_view::npos)
+                    break;
+                remaining.remove_prefix(lf);
+                while (!remaining.empty() && (remaining.front() == '\r' || remaining.front() == '\n'))
+                    remaining.remove_prefix(1);
+            }
+        }
+        return result;
+    }
+
     void validateArrowCleanupSettings(const ArrowCleanupSettings& settings)
     {
         if (settings.mMaximumReferences < 0)

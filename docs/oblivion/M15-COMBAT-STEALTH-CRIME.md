@@ -19688,3 +19688,58 @@ evidence remains applicable. No stage closes. S5 release controller, ammo/
 fatigue/wear transaction, stock bow/arrow attachment, launch transforms,
 native trajectory/impact/recovery, saved projectile ownership, mastery effects
 and normal-input gameplay/restarts remain required, alongside other open stages.
+
+
+### Checkpoint 258: native five-phase bow text-key timing
+
+Independent winning-record audit across all eleven official plugins resolves
+IronBow025231 and IronArrow017829 to Oblivion.esm and their actual mesh paths.
+The Meshes BSA SHA256 is
+d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b.
+Ignored native-bow-asset-audit-01 retains the record inventory, extracted two
+models and eight bow KFs. Normal and sanitizer standalone production NIF parsers
+accept all ten assets. These are parser observations, not independent whole-NIF
+byte comparisons or renderer acceptance.
+
+Both stock BowAttack sequences are AttackBow, with Start0, Attach.2666666508,
+Hold1.3666667938, Release1.4333333969 and End1.9666666985. Draw and shoot Sound
+keys occur separately. Hash-verified original table row19 names precisely those
+five phases; the ordinary four-slot melee table is insufficient.
+bowAnimationKeyTimes preserves authored-order ASCII prefix matching, CR/LF and
+NUL boundaries, missing zero-initialized slots, matched advancement for times
+at/below minus1, and exact stored float bits including signed zero/subnormals.
+Sound dispatch does not advance phases. Nonfinite times reject. Non-sound text
+after all five slots explicitly rejects as outside the supported domain.
+
+Original native-bow-key-loop-oracle-04 executes51B688 through51BA50, or empty
+exit51BDDB, with actual AttackBow table descriptors and preallocated group.
+All3096 cases pass across both x87 precision modes, including permutations,
+duplicate/missing phases, case/prefix/whitespace, multiline and time boundaries,
+and actual key strings/times for both stock perspectives. Boundaries are the
+diagnostic logger4A7A60 and sound lookup447490 returning unresolved/null with
+callee stack cleanup4; sound lookup/allocation/playback are excluded.
+Original executable SHA256
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6;
+oracle source SHA256
+9f4c744a0521f26a70eb15bfeb394962a3bfc431d9bbc852fc43a8258cfecef6;
+corpus SHA256
+94df808e6d00c548da0f43c3d16e58548694dd45b53f4591339913f6c95fdd0d.
+Retained attempt01 faults on a duplicate End after completion while interpreting
+the next descriptor; this isolated slice does not establish a whole-game crash.
+Attempt02 reaches unavailable live sound lookup. Attempt03 had an ineffective
+hook replacement and faults on empty terminal continuation. Attempt04 corrects
+the fixture hooks explicitly; no native descriptors/instructions are modified.
+
+Five new component tests cover stock coordinates, ordering, lexical boundaries,
+time storage and unsupported input. Full bow-animation-keys-normal-01 and
+sanitized-01 each pass2446 inventoried component tests, zero failures/skips/
+compiler warnings. Both native-bow-key-compare builds compare all3096 cases:
+18576 exact matched-count/float-bit checks each, zero mismatches. Source and
+component archives remain stable during comparison. ASan leaks disabled;
+UBSan halts. Tested source fingerprint
+2aef6f0bfefccc1f1ba907bfab04a9bbe1016796112a4abc8157174ae95e8486.
+No engine writer or Python codec changes; preceding958 engine evidence remains
+applicable to unchanged wiring. Allocation, terminal animation validation,
+phase playback, draw/hold/release controller, attachment, release transaction,
+projectile state/impact/restart and normal-input gameplay remain required.
+S5 stays in progress; no stage closes.

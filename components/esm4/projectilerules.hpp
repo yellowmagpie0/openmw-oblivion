@@ -8,6 +8,18 @@
 
 namespace ESM4
 {
+    struct BowAnimationKeys
+    {
+        std::array<float, 5> mTimes{};
+        std::uint8_t mMatchedCount = 0;
+    };
+
+    // Native AttackBow phases, in authored traversal order: Start, Attach,
+    // Hold, Release, End. Sound keys do not advance phases. This does not
+    // validate playback or collect sound events. Non-sound text after a
+    // completed five-slot sequence is explicitly outside the supported domain.
+    BowAnimationKeys bowAnimationKeyTimes(std::span<const MeleeTextKey> textKeys);
+
     struct ArrowCleanupSettings
     {
         std::int32_t mMaximumReferences;
