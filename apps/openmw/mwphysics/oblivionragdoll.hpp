@@ -14,13 +14,17 @@ namespace MWPhysics
     ESM4::RuntimeActorRagdoll captureNativeActorRagdoll(const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
         std::span<const NifBullet::RagdollBodyState> bodies,
-        std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities = {});
+        std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities = {},
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions = {});
     std::vector<NifBullet::RagdollBodyState> restoreNativeActorRagdoll(
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
     // Absent for legacy snapshots; complete in current asset body order when
     // present. Resolve both projections before calling the combined owner restore.
     std::optional<std::vector<NifBullet::RagdollNativePackedVelocityState>> restoreNativeActorRagdollPackedVelocities(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
+    std::optional<std::vector<NifBullet::RagdollNativeMotionRequest>> restoreNativeActorRagdollMotionModes(
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
 }

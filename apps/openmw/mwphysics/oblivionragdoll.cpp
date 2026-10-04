@@ -36,13 +36,16 @@ namespace MWPhysics
     ESM4::RuntimeActorRagdoll captureNativeActorRagdoll(const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
         std::span<const NifBullet::RagdollBodyState> bodies,
-        std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities)
+        std::span<const NifBullet::RagdollNativePackedVelocityState> packedVelocities,
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions)
     {
         validateGraph(definition);
         if (bodies.size() != definition.mBodies.size())
             throw std::invalid_argument("native physical snapshot body count does not match asset");
         if (!packedVelocities.empty() && packedVelocities.size() != bodies.size())
             throw std::invalid_argument("native packed snapshot body count does not match asset");
+        if (!motions.empty() && (packedVelocities.empty() || motions.size() != bodies.size()))
+            throw std::invalid_argument("native motion snapshot requires complete packed velocity state");
         ESM4::RuntimeActorRagdoll result;
         result.mBase = base;
         result.mModel = model;
@@ -73,6 +76,19 @@ namespace MWPhysics
                 if (packedVelocities[index].mRecord != input.mRecord)
                     throw std::invalid_argument("native packed snapshot body identity mismatch");
                 body.mNativePackedVelocity = packedVelocities[index].mVelocities;
+            }
+            if (!motions.empty())
+            {
+                if (motions[index].mRecord != input.mRecord)
+                    throw std::invalid_argument("native motion snapshot body identity mismatch");
+                switch (motions[index].mMotion)
+                {
+                    case NifBullet::RagdollNativeMotion::Dynamic:
+                        body.mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic; break;
+                    case NifBullet::RagdollNativeMotion::Keyframed:
+                        body.mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed; break;
+                    default: throw std::invalid_argument("unsupported native motion snapshot mode");
+                }
             }
             ++index;
             result.mBodies.push_back(body);
@@ -130,6 +146,27 @@ namespace MWPhysics
         result.reserve(definition.mBodies.size());
         for (const auto& target : definition.mBodies)
             result.push_back({target.mRecord, *bodies.at(target.mRecord)->mNativePackedVelocity});
+        return result;
+    }
+
+    std::optional<std::vector<NifBullet::RagdollNativeMotionRequest>> restoreNativeActorRagdollMotionModes(
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        (void)restoreNativeActorRagdoll(snapshot, base, model, definition);
+        if (!snapshot.mBodies.front().mNativeMotion)
+            return std::nullopt;
+        std::unordered_map<std::uint32_t, const ESM4::RuntimeRagdollBody*> bodies;
+        for (const auto& body : snapshot.mBodies)
+            bodies.emplace(body.mRecord, &body);
+        std::vector<NifBullet::RagdollNativeMotionRequest> result;
+        result.reserve(definition.mBodies.size());
+        for (const auto& target : definition.mBodies)
+        {
+            const auto motion = *bodies.at(target.mRecord)->mNativeMotion;
+            result.push_back({target.mRecord, motion == ESM4::RuntimeRagdollMotion::Dynamic
+                ? NifBullet::RagdollNativeMotion::Dynamic : NifBullet::RagdollNativeMotion::Keyframed});
+        }
         return result;
     }
 }

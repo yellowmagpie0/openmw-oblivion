@@ -11257,3 +11257,63 @@ No M15 stage closes. Versioned logical-mode persistence is still required before
 fresh owners restore KEY correctly. Raw COM/time/cache, controller clocks/flags,
 activation/contact persistence, automatic World getter/frame/reaction wiring,
 retained physical/restart failures and all S5-S14 acceptance remain open.
+
+
+### Checkpoint226: versioned logical motion modes and fresh-owner restoration
+
+Runtime-state version33 appends a strict optional logical-mode marker/value to
+each body after32's packed velocities. Values1/6 mean the owner's Dynamic/KEY
+mode, not original Havok motion class/getter tags. Unsupported0/2/255 reject.
+A populated mode requires packed velocities; all bodies in an actor must
+consistently carry or omit modes. Legacy versions1-32 retain their existing
+layout and mode absence. A populated mode cannot silently downgrade to32.
+Current JSON emits native_motion only when present. C++/Python validate the
+same typed fields, marker, count/identity, complete presence and version domain.
+
+The capture adapter optionally consumes complete ordered logical modes together
+with packed velocities. It maps enum values explicitly and stores canonical
+body-record order. The restoration adapter resolves modes back to asset order,
+or reports absence for legacy snapshots. Actual Scheduler/PhysicsSystem capture
+now includes modes under its worker wait/lock. Restore stages all three projections
+before225's complete mode/pose/packed restore, retaining legacy32 packed and31
+spatial branches. This restores logical KEY into a fresh Dynamic owner with
+zero current inverse mass and correct dynamic-phase exclusion. Raw original
+archive/class-kind, requested blend motion and activation/contact state remain
+separate and unpersisted.
+
+Both C++ motion-save-baseline-01 tests fail. Python motion-save-python-baseline-01
+executes both new tests and both error on the baseline codec's unknown field.
+Final manual v32/v33 wire tests cover Dynamic1/KEY6, absent mode and unchanged
+legacy prefix, exact bytes and JSON. Negative controls reject downgrade,
+mode without packed data, mixed per-actor presence, unknown enum/marker and
+every truncated byte of the extension; Python additionally rejects bool/string
+values. The engine serializes/loads a mixed-mode snapshot in a separate world,
+restores a fresh Dynamic owner to KEY, resolves12/24 wire order to24/12 asset
+order, checks inverse masses and compares60 packed velocity phases bit-for-bit.
+KEY deliberately receives unused NaN deltas while Dynamic consumes gravity.
+This is contact-free phase continuation, not an actual process/World-step or
+normal-input gameplay acceptance claim. Public0/1/2 worker fixtures restore
+KEY snapshots and reject malformed native getter2 without pose/mode changes.
+Capture also rejects wrong identities/counts/enums or modes without packed data.
+
+Actual native-motion-save-wire-compare-normal/sanitized-01 each passes34,560
+payloads:276,480 exact velocity lane checks,34,560 exact logical modes, and
+independent Python parsing/re-encoding of every complete C++ payload byte-for-byte.
+Original222 velocity corpus/executable identity is unchanged; logical modes
+alternate as explicitly supplied software snapshot inputs. No tolerance/input
+changes. Full motion-save-normal/sanitized-01 each passes2,398 components and
+901 engine tests, exact inventories, zero failures/skips. Normal additionally
+passes249 Python tests. ASan leak checks disabled. The wider rebuild retains
+previous inventory-test initializer, loop-copy and GCC animation-state warnings;
+none originates in the new mode format/adapter. Tested source fingerprint `5682837b95d51fe97d177dc7c91edd28c65bd5289b4a2ca7c780eac655a729f5`.
+
+Read-only existing-display query found DISPLAY=:0/Wayland wayland-0 but
+xdpyinfo cannot open :0 (exit1), recorded in motion-save-display-probe-01.
+No unchanged Xvfb retry or game launch was performed. Required normal-input
+runtime availability remains unresolved; requested existing-display information
+while continuing implementation. This is not a newly failed gameplay course.
+
+No M15 stage closes. Requested motion/flags/gains/controllers/clocks, raw COM/time/
+quaternion/cache, native activation/contact persistence, automatic World getter/
+frame/reaction integration, retained physical/restart failures and S5-S14
+acceptance remain open.

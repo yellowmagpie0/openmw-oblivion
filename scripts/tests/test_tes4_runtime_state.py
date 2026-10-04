@@ -1822,6 +1822,50 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         del extra["native_packed_velocity"]; state["native_actor_ragdolls"][0]["bodies"].append(extra)
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
+    def motion_ragdoll_state(self):
+        state = self.ragdoll_state(); state["schema_version"] = 33
+        body = state["native_actor_ragdolls"][0]["bodies"][0]
+        body["native_packed_velocity"] = {"linear": [1., 2., 3., -0.], "angular": [4., 5., 6., 8.]}
+        body["native_motion"] = 6
+        return state
+
+    def test_ragdoll_v33_motion_wire_and_legacy_absence(self):
+        state = self.motion_ragdoll_state()
+        old = copy.deepcopy(state); old["schema_version"] = 32
+        del old["native_actor_ragdolls"][0]["bodies"][0]["native_motion"]
+        legacy = state_io.encode_payload(old)
+        expected = bytearray(legacy); struct.pack_into("<I", expected, len(state_io.MAGIC), 33)
+        expected += b"\x01\x06"
+        self.assertEqual(state_io.encode_payload(state), expected)
+        self.assertEqual(state_io.decode_payload(expected)["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        self.assertNotIn("native_motion", state_io.decode_payload(legacy)["native_actor_ragdolls"][0]["bodies"][0])
+        old["schema_version"] = 33; expected.pop(); expected[-1] = 0
+        self.assertEqual(state_io.encode_payload(old), expected)
+        self.assertNotIn("native_motion", state_io.decode_payload(expected)["native_actor_ragdolls"][0]["bodies"][0])
+        state["native_actor_ragdolls"][0]["bodies"][0]["native_motion"] = 1
+        expected[-1] = 1; expected += b"\x01"
+        self.assertEqual(state_io.encode_payload(state), expected)
+
+    def test_ragdoll_v33_motion_rejects_version_presence_and_payload(self):
+        state = self.motion_ragdoll_state(); payload = state_io.encode_payload(state)
+        for cut in range(len(payload) - 2, len(payload)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:cut])
+        malformed = bytearray(payload); malformed[-2] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(malformed)
+        malformed = bytearray(payload); malformed[-1] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(malformed)
+        for value in (0, 2, 255, True, "6"):
+            invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["bodies"][0]["native_motion"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        invalid = copy.deepcopy(state); invalid["schema_version"] = 32
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        invalid = copy.deepcopy(state); del invalid["native_actor_ragdolls"][0]["bodies"][0]["native_packed_velocity"]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+        body = copy.deepcopy(state["native_actor_ragdolls"][0]["bodies"][0]); body["record"] = 13; body["node_record"] = 9
+        del body["native_motion"]; state["native_actor_ragdolls"][0]["bodies"].append(body)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
 
 if __name__ == "__main__":
     unittest.main()

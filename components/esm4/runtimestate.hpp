@@ -30,7 +30,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 32;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 33;
 
     struct RuntimeContentIdentity
     {
@@ -320,6 +320,9 @@ namespace ESM4
 
     // Shape-world transforms and velocities in game world units. Record IDs
     // belong to the identified NIF asset, not the content load order.
+    // Logical owned-body mode, not a raw Havok motion class/getter type.
+    enum class RuntimeRagdollMotion : std::uint8_t { Dynamic = 1, Keyframed = 6 };
+
     struct RuntimeRagdollBody
     {
         std::uint32_t mRecord = 0;
@@ -331,6 +334,8 @@ namespace ESM4
         // v32: exact native binary32 velocity lanes, separate from the world
         // spatial projection. Legacy snapshots leave this absent.
         std::optional<PhysicalWorldSceneVelocities> mNativePackedVelocity;
+        // v33: legacy snapshots do not invent an original motion mode.
+        std::optional<RuntimeRagdollMotion> mNativeMotion = std::nullopt;
         friend bool operator==(const RuntimeRagdollBody&, const RuntimeRagdollBody&) = default;
     };
 

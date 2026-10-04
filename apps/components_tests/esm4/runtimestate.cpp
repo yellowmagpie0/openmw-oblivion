@@ -2474,3 +2474,53 @@ TEST(ESM4RuntimeState, NativePackedRagdollRejectsMalformedVersionPresenceAndPayl
     payload[payload.size() - 33] = 2;
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(payload), std::runtime_error);
 }
+
+
+TEST(ESM4RuntimeState, NativeMotionRagdollVersionThirtyThreeWireAndLegacyAbsence)
+{
+    auto state = packedRagdollState(); const auto actor = state.mReferences.front().mKey;
+    const auto legacy = state.serializeBinary();
+    state.mVersion = 33;
+    state.mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed;
+    auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 33;
+    expected.push_back(1); expected.push_back(6);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto decoded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(decoded.mNativeActorRagdolls, state.mNativeActorRagdolls);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion);
+    EXPECT_NE(decoded.canonicalJson().find("\"native_motion\":6"), std::string::npos);
+    state.mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion.reset();
+    expected.pop_back(); expected.back() = 0;
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion);
+    state.mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+    expected.back() = 1; expected.push_back(1);
+    EXPECT_EQ(state.serializeBinary(), expected);
+}
+
+TEST(ESM4RuntimeState, NativeMotionRagdollRejectsMalformedVersionPresenceAndPayload)
+{
+    auto state = packedRagdollState(); state.mVersion = 33; const auto actor = state.mReferences.front().mKey;
+    state.mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed;
+    auto invalid = state; invalid.mVersion = 32;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    for (auto value : {0, 2, 255})
+    {
+        invalid = state; invalid.mNativeActorRagdolls.at(actor).mBodies[0].mNativeMotion = static_cast<ESM4::RuntimeRagdollMotion>(value);
+        EXPECT_THROW(invalid.validate(), std::runtime_error);
+    }
+    invalid = state; invalid.mNativeActorRagdolls.at(actor).mBodies[0].mNativePackedVelocity.reset();
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    invalid = state; auto extra = invalid.mNativeActorRagdolls.at(actor).mBodies[0];
+    extra.mRecord = 13; extra.mNodeRecord = 9; extra.mNativeMotion.reset();
+    invalid.mNativeActorRagdolls.at(actor).mBodies.push_back(extra);
+    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    const auto payload = state.serializeBinary();
+    ASSERT_GE(payload.size(), 2u);
+    for (std::size_t cut = payload.size() - 2; cut < payload.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({payload.begin(), payload.begin() + cut}), std::runtime_error);
+    invalid = state; auto bad = payload; bad[bad.size() - 2] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    bad = payload; bad.back() = 2; // Native getter2 is not logical Dynamic1.
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+}

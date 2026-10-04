@@ -562,6 +562,12 @@ namespace ESM4
         {
             if (body.mNativePackedVelocity.has_value() != mBodies.front().mNativePackedVelocity.has_value())
                 throw std::runtime_error("Incomplete TES4 packed ragdoll snapshot");
+            if (body.mNativeMotion.has_value() != mBodies.front().mNativeMotion.has_value())
+                throw std::runtime_error("Incomplete TES4 ragdoll motion snapshot");
+            if (body.mNativeMotion && (!body.mNativePackedVelocity
+                || (*body.mNativeMotion != RuntimeRagdollMotion::Dynamic
+                    && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed)))
+                throw std::runtime_error("Invalid TES4 logical ragdoll motion snapshot");
             if (body.mNativePackedVelocity)
                 for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
                     for (float value : vector)
@@ -852,6 +858,8 @@ namespace ESM4
             pose.validate();
             if (mVersion < 32 && pose.mBodies.front().mNativePackedVelocity)
                 throw std::runtime_error("TES4 packed ragdoll velocities require runtime-state version32");
+            if (mVersion < 33 && pose.mBodies.front().mNativeMotion)
+                throw std::runtime_error("TES4 logical ragdoll motion requires runtime-state version33");
             const auto values = nativeActors.find(actor);
             if (values == nativeActors.end() || !lives.contains(actor) || values->second != pose.mBase)
                 throw std::runtime_error("Dangling or mismatched TES4 ragdoll owner");
@@ -1729,6 +1737,12 @@ namespace ESM4
                                 for (float value : vector)
                                     writer.floating(value);
                     }
+                    if (mVersion >= 33)
+                    {
+                        writer.integer<std::uint8_t>(body.mNativeMotion.has_value());
+                        if (body.mNativeMotion)
+                            writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
+                    }
                 }
             }
         }
@@ -2433,6 +2447,14 @@ namespace ESM4
                                 for (float& value : *vector)
                                     value = reader.float32();
                         }
+                    }
+                    if (result.mVersion >= 33)
+                    {
+                        const auto present = reader.integer<std::uint8_t>();
+                        if (present > 1)
+                            throw std::runtime_error("Invalid TES4 ragdoll motion presence flag");
+                        if (present)
+                            body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
                     }
                     pose.mBodies.push_back(body);
                 }
@@ -3168,6 +3190,8 @@ namespace ESM4
                         vector(body.mNativePackedVelocity->mAngular);
                         stream << '}';
                     }
+                    if (body.mNativeMotion)
+                        stream << ",\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion);
                     stream << '}';
                 }
                 stream << "]}";
