@@ -43,6 +43,24 @@ namespace MWWorld
             const ESM::FormKey& script, std::string_view event, const Ptr& target, const Ptr& caster = {});
 
         void capture(ESM4::RuntimeState& state) const;
+        class PreparedRestore
+        {
+        public:
+            ~PreparedRestore();
+            PreparedRestore(PreparedRestore&&) noexcept;
+            PreparedRestore& operator=(PreparedRestore&&) noexcept;
+            bool commit() noexcept;
+
+        private:
+            friend class OblivionScriptManager;
+            struct Impl;
+            explicit PreparedRestore(std::unique_ptr<Impl> impl);
+            std::unique_ptr<Impl> mImpl;
+        };
+        // Synchronous preparation borrows this manager; discard cancels, and
+        // commit swaps persistent state once without callbacks; diagnostic
+        // logging is best effort and cannot reject the completed replacement.
+        PreparedRestore prepareRestore(const ESM4::RuntimeState& state);
         void restore(const ESM4::RuntimeState& state);
         void writeRuntimeReport() const;
 

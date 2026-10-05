@@ -11803,7 +11803,8 @@ namespace
     struct PopulatedMigrationFixture : NativeWorldFixture
     {
         MWWorld::Ptr mActor;
-        PopulatedMigrationFixture()
+        explicit PopulatedMigrationFixture(bool activationScript = false)
+            : NativeWorldFixture(false, false, activationScript)
         {
             MWClass::Npc::registerSelf();
             MWClass::Weapon::registerSelf();
@@ -11985,4 +11986,130 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedActorAuthorityFromEverySup
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
     }
+}
+
+TEST(OblivionWorldTest, NativeScriptRestorePreparationDiscardsMovesAndCommitsOnceWithoutDispatch)
+{
+    PopulatedMigrationFixture fixture(true);
+    auto& world = fixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    const auto before = world.captureOblivionRuntimeState();
+    ASSERT_EQ(before.mScriptInstances.size(), 1u);
+    auto changed = before;
+    changed.mScriptEventSequence += 7;
+    changed.mScriptInstances.front().mLocals.front() = std::int64_t{9};
+    changed.mScriptInstances.front().mOnLoadFired = true;
+    {
+        auto cancelled = scripts.prepareRestore(changed);
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_EQ(after.mScriptInstances, before.mScriptInstances);
+        EXPECT_EQ(after.mScriptEventSequence, before.mScriptEventSequence);
+    }
+    EXPECT_EQ(world.captureOblivionRuntimeState().mScriptInstances, before.mScriptInstances);
+    auto plan = scripts.prepareRestore(changed);
+    auto moved = std::move(plan);
+    EXPECT_FALSE(plan.commit());
+    EXPECT_TRUE(moved.commit());
+    EXPECT_FALSE(moved.commit());
+    const auto restored = world.captureOblivionRuntimeState();
+    EXPECT_EQ(restored.mScriptInstances, changed.mScriptInstances);
+    EXPECT_EQ(restored.mScriptEventSequence, changed.mScriptEventSequence);
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    EXPECT_EQ(std::get<std::int64_t>(world.captureOblivionRuntimeState().mScriptInstances.front().mLocals.front()), 10);
+    // Empty early-development locals retain the existing zero-initialization
+    // migration, but it is prepared before any state publication now.
+    changed.mScriptInstances.front().mLocals.clear();
+    ASSERT_NO_THROW(scripts.restore(changed));
+    EXPECT_EQ(std::get<std::int64_t>(world.captureOblivionRuntimeState().mScriptInstances.front().mLocals.front()), 0);
+}
+
+TEST(OblivionWorldTest, NativeScriptBindingsRejectBeforeInventoryClockIdentityAndScriptPublication)
+{
+    PopulatedMigrationFixture fixture(true);
+    auto& world = fixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    auto saved = world.captureOblivionRuntimeState();
+    ASSERT_EQ(saved.mScriptInstances.size(), 1u);
+    // Seed a real populated Player inventory so rejected loads cannot conceal
+    // a destructive replacement with the same empty snapshot.
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    item.mCount = 1;
+    item.mCondition = 43.125f;
+    item.mCharge = 7.25f;
+    saved.mPlayer.mInventory = {item};
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto before = world.captureOblivionRuntimeState();
+    const auto clock = world.getTimeStamp();
+    const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    for (int invalid : {0, 1, 2, 3, 4})
+    {
+        SCOPED_TRACE(invalid);
+        auto candidate = before;
+        candidate.mClock.mHour = 9;
+        candidate.mNextDynamicSerial += 10;
+        candidate.mPlayer.mInventory.clear();
+        candidate.mScriptEventSequence += 7;
+        if (invalid == 0) candidate.mScriptInstances.front().mUnit = "missing-program";
+        if (invalid == 1) candidate.mScriptInstances.front().mLocals.push_back(std::int64_t{1});
+        if (invalid == 4) candidate.mScriptInstances.front().mLocals.front() = std::string("not numeric");
+        if (invalid == 2 || invalid == 3)
+        {
+            ESM4::RuntimeQuestState quest;
+            quest.mQuest = ESM::FormKey::content("headless.esm", invalid == 2 ? 0xdead : 0x940);
+            quest.mStage = 100;
+            candidate.mQuests.push_back(quest);
+        }
+        ASSERT_NO_THROW(candidate.validate());
+        readNativeSnapshot(fixture, candidate);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+        EXPECT_EQ(world.getTimeStamp(), clock);
+        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), inventory);
+        ESM4::RuntimeState scriptsAfter;
+        scripts.capture(scriptsAfter);
+        EXPECT_EQ(scriptsAfter.mScriptInstances, before.mScriptInstances);
+        EXPECT_EQ(scriptsAfter.mScriptEventSequence, before.mScriptEventSequence);
+        EXPECT_EQ(scriptsAfter.mQuests, before.mQuests);
+        EXPECT_TRUE(pending->isValid());
+    }
+    readNativeSnapshot(fixture, before);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(pending->isValid());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+}
+
+TEST(OblivionWorldTest, NativeScriptRestoreOmittedQuestsUseWinningDefaultsWithoutReplayingCompletedStages)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Quest quest{};
+    quest.mId = {0xa20, 0};
+    quest.mFormKey = ESM::FormKey::content("headless.esm", 0xa20);
+    quest.mData.flags = ESM4::Quest::Flag_StartGameEnabled;
+    world.getStore().getWritable<ESM4::Quest>().insertStatic(quest, quest.mFormKey);
+    auto saved = world.captureOblivionRuntimeState();
+    ESM4::RuntimeQuestState completed;
+    completed.mQuest = quest.mFormKey;
+    completed.mStage = 100;
+    completed.mCompletedStages = {50, 100};
+    saved.mQuests = {completed};
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mQuests, saved.mQuests);
+    saved.mQuests.clear();
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto migrated = world.captureOblivionRuntimeState();
+    ASSERT_EQ(migrated.mQuests.size(), 1u);
+    EXPECT_EQ(migrated.mQuests.front().mQuest, quest.mFormKey);
+    EXPECT_EQ(migrated.mQuests.front().mStage, 0);
+    EXPECT_TRUE(migrated.mQuests.front().mCompletedStages.empty());
+    EXPECT_TRUE(migrated.mQuests.front().mRunning);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
 }

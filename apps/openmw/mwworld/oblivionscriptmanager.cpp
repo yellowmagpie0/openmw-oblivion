@@ -2447,35 +2447,107 @@ namespace MWWorld
             state.mQuests.push_back(quest);
     }
 
-    void OblivionScriptManager::restore(const ESM4::RuntimeState& state)
+    struct OblivionScriptManager::PreparedRestore::Impl
     {
-        mNativeSpeech.clear();
-        mDiagnosedVoiceTopics.clear();
-        mSequence = state.mScriptEventSequence;
-        mInstances.clear();
+        OblivionScriptManager* mTarget;
+        std::map<InstanceKey, Instance> mInstances;
+        std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
+        std::vector<std::string> mTrace;
+        std::string mMessage;
+        std::uint64_t mSequence;
+    };
+
+    OblivionScriptManager::PreparedRestore::PreparedRestore(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionScriptManager::PreparedRestore::~PreparedRestore() = default;
+    OblivionScriptManager::PreparedRestore::PreparedRestore(PreparedRestore&&) noexcept = default;
+    OblivionScriptManager::PreparedRestore&
+    OblivionScriptManager::PreparedRestore::operator=(PreparedRestore&&) noexcept = default;
+
+    bool OblivionScriptManager::PreparedRestore::commit() noexcept
+    {
+        if (!mImpl || !mImpl->mTarget)
+            return false;
+        auto& target = *mImpl->mTarget;
+        target.mInstances.swap(mImpl->mInstances);
+        target.mQuests.swap(mImpl->mQuests);
+        target.mTrace.swap(mImpl->mTrace);
+        target.mSequence = mImpl->mSequence;
+        target.mNativeSpeech.clear();
+        target.mDiagnosedVoiceTopics.clear();
+        mImpl->mTarget = nullptr;
+        // Logging cannot veto a completed state replacement.
+        try { Log(Debug::Info) << "M7 ObScript: " << mImpl->mMessage; }
+        catch (...) {}
+        return true;
+    }
+
+    OblivionScriptManager::PreparedRestore OblivionScriptManager::prepareRestore(const ESM4::RuntimeState& state)
+    {
+        auto plan = std::make_unique<PreparedRestore::Impl>();
+        plan->mTarget = this;
+        plan->mSequence = state.mScriptEventSequence;
+        // Omitted legacy quests restart from winning content defaults, never
+        // from the previous live world's completed stages.
+        for (const ESM4::Quest& record : mStore.get<ESM4::Quest>())
+        {
+            ESM4::RuntimeQuestState quest;
+            quest.mQuest = record.mFormKey;
+            quest.mRunning = (record.mData.flags & ESM4::Quest::Flag_StartGameEnabled) != 0;
+            plan->mQuests.emplace(quest.mQuest, std::move(quest));
+        }
         for (const ESM4::RuntimeScriptInstance& saved : state.mScriptInstances)
         {
+            const auto program = mProgramsByUnit.find(saved.mUnit);
+            if (program == mProgramsByUnit.end())
+                throw std::invalid_argument("TES4 restored script has no compiled winning unit: " + saved.mUnit);
+            if (saved.mContext.isNull())
+                throw std::invalid_argument("TES4 restored script has a null context: " + saved.mUnit);
+            if (!saved.mLocals.empty() && saved.mLocals.size() != program->second->mLocals.size())
+                throw std::invalid_argument("TES4 restored script local layout does not match Program: " + saved.mUnit);
             Instance instance;
             instance.mOnLoadFired = saved.mOnLoadFired;
-            const auto program = mProgramsByUnit.find(saved.mUnit);
+            instance.mLocals.reserve(program->second->mLocals.size());
             for (std::size_t i = 0; i < saved.mLocals.size(); ++i)
             {
                 ObScript::Value value = loadValue(saved.mLocals[i]);
-                // M7 development saves written before null references had a
-                // distinct wire representation encoded them as empty strings.
-                // Reapply the Program's declared local type both to migrate
-                // those saves and to keep restored values type-stable.
-                if (program != mProgramsByUnit.end() && i < program->second->mLocals.size()
-                    && program->second->mLocals[i].mType == ObScript::VariableType::Reference)
+                // M7 development saves represented null refs as empty strings.
+                if (program->second->mLocals[i].mType == ObScript::VariableType::Reference)
                     value = ObScript::convert(std::move(value), ObScript::ValueType::Reference);
+                else if (std::holds_alternative<std::string>(value)
+                    || std::holds_alternative<ObScript::ReferenceValue>(value)
+                    || (std::holds_alternative<double>(value) && !std::isfinite(std::get<double>(value))))
+                    throw std::invalid_argument("TES4 restored numeric script local has the wrong value type: "
+                        + saved.mUnit);
                 instance.mLocals.push_back(std::move(value));
             }
-            mInstances.emplace(InstanceKey{ saved.mUnit, saved.mContext }, std::move(instance));
+            if (saved.mLocals.empty())
+                instance.mLocals = ObScript::VirtualMachine::makeLocals(*program->second);
+            if (!plan->mInstances.emplace(InstanceKey{saved.mUnit, saved.mContext}, std::move(instance)).second)
+                throw std::invalid_argument("Duplicate TES4 restored script instance: " + saved.mUnit);
         }
+        std::set<ESM::FormKey> quests;
         for (const ESM4::RuntimeQuestState& quest : state.mQuests)
-            mQuests[quest.mQuest] = quest;
-        trace("restore sequence=" + std::to_string(mSequence) + " scripts=" + std::to_string(mInstances.size())
-            + " quests=" + std::to_string(state.mQuests.size()));
+        {
+            if (!plan->mQuests.contains(quest.mQuest))
+                throw std::invalid_argument("TES4 restored quest is not a winning QUST: " + quest.mQuest.serialize());
+            if (!quests.insert(quest.mQuest).second)
+                throw std::invalid_argument("Duplicate TES4 restored quest: " + quest.mQuest.serialize());
+            plan->mQuests.at(quest.mQuest) = quest;
+        }
+        plan->mMessage = "restore sequence=" + std::to_string(plan->mSequence)
+            + " scripts=" + std::to_string(plan->mInstances.size()) + " quests=" + std::to_string(state.mQuests.size());
+        plan->mTrace = mTrace;
+        plan->mTrace.push_back(plan->mMessage);
+        if (plan->mTrace.size() > 10000)
+            plan->mTrace.erase(plan->mTrace.begin(), plan->mTrace.begin() + 1000);
+        return PreparedRestore(std::move(plan));
+    }
+
+    void OblivionScriptManager::restore(const ESM4::RuntimeState& state)
+    {
+        auto plan = prepareRestore(state);
+        plan.commit();
     }
 
     void OblivionScriptManager::trace(std::string value)

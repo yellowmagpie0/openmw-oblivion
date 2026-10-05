@@ -2212,6 +2212,9 @@ namespace MWWorld
         else
             state.validate();
         MWBase::Environment::get().getLuaManager()->validateNativeState(state);
+        std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
+        if (mOblivionScriptManager)
+            preparedScripts.emplace(mOblivionScriptManager->prepareRestore(state));
         const bool nativePlayerValues = preparedCombat
             && preparedCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
         static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
@@ -2805,8 +2808,8 @@ namespace MWWorld
                          << state.mNextDynamicSerial << ", player fatigue=" << stats.getFatigue().getCurrent() << "/"
                          << stats.getFatigue().getBase() << " speed="
                          << stats.getAttribute(ESM::Attribute::Speed).getBase();
-        if (mOblivionScriptManager)
-            mOblivionScriptManager->restore(state);
+        if (preparedScripts)
+            preparedScripts->commit();
         if (mOblivionAi)
             mOblivionAi->restore(state);
         if (preparedActorState)

@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view restore, populated migration and restart evidence below | Complete load/cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script restore, populated migration and restart evidence below | Complete AI/reference and outer load/cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,65 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 prepared script restore checkpoint — 2026-10-05
+
+World now prepares ObScript instances, local conversion, quest state and trace
+storage before any inventory, clock or dynamic-identity publication. Saved
+script units must bind to compiled winning Programs; nonempty local arrays
+must match their declarations, and numeric locals cannot contain text or
+references. Saved quests must bind to winning QUST records. Empty development-
+era local arrays retain zero initialization, and old empty-string reference
+locals retain their existing conversion. No script commands or results run
+while preparing or committing a restore.
+
+The movable, cancellable handle swaps prepared persistent state once; best-
+effort diagnostic logging cannot reject the completed replacement. Omitted
+quests now use winning content defaults rather than retaining completed stages
+from the preceding live world. Three new world tests cover cancellation/move/
+single commit, five binding faults before inventory/clock/identity/script
+publication followed by corrected retry, and omitted-quest reconciliation with
+current-schema read/apply/recapture. Existing activation dispatch remains green.
+
+Verification binds parent `7966467a3d2a3524f5cafe7e3f375439fd4be394` and source
+fingerprint `f9330233233cad45e30f90976604e061b18a434a8c0d39982bad476f8889acde`.
+
+- `S3/script-preparation-focused-01`: four selected tests pass before the
+  additional wrong-numeric-local guard; final source is covered by full runs.
+- `S3/script-preparation-engine-01` and `script-preparation-sanitize-01`: all
+  **1,127** engine tests pass in each, with exact matching inventories and zero
+  failures/skips. Both build `openmw`, `openmw-tests` and `esmtool`. Instrumented
+  checks use ASan/UBSan, leak checking disabled and halting UBSan with stack traces.
+- `S3/script-preparation-runtime-01`: actual stock F5 save, clean quit, distinct
+  fresh-process load/F5 resave. Independent decoding preserves all **130** initial
+  script instances (including locals/OnLoad flags), all **390** quests, complete
+  Player/physical-action state, nine native actors and all **33,376** saved
+  reference inventories. Loading adds **1,148** cached references; none of the
+  initial script instances change and no new script instances are added.
+- `S3/script-preparation-sanitized-runtime-02`: instrumented stock load/F5
+  resave/clean quit preserves those same initial vectors, scripts, quests and
+  inventories without sanitizer diagnostics. It adds **1,298** cached references.
+  Attempt01 is retained: state applied and the engine quit cleanly, but the SDL
+  screenshot receipt deadline expired before resaving. Attempt02 waits for the
+  live read-only query and uses a longer input receipt deadline.
+- `S3/script-preparation-morrowind-01`: real TES3 idle F5 save/quit passes the
+  profile-isolation course. Independent inspection of all **102** save records
+  confirms no GPRO/T4VR/T4ST or OMW4STATE/native-state markers. This terrain-facing
+  capture does not establish broader Morrowind gameplay regression coverage.
+
+All three stock final captures were directly inspected: the same prison view
+and full resource bars. Audio is disabled and SDL offscreen courses are
+diagnostic idle runtime coverage. Morrowind's capture was also inspected.
+Aggregate evidence is `S3/script-preparation-report.json`; tested production/test
+hashes are recorded there. Documentation follows completed verification.
+
+**S3 remains active and in progress.** No processes remain from these checks.
+Next prepare AI/package-event/pathgrid restore before World publication, then
+address reference/cache reconciliation and StateManager's cleanup-before-read
+boundary. Remaining populated active-action, queued-event and passive-effect
+migrations, active-action restart and the final requirement-by-requirement S3
+acceptance audit are still required. Physical combat, crime and later gameplay
+stages are outside this S3 completion work.
 
 ## S3 populated migration checkpoint — 2026-10-05
 
