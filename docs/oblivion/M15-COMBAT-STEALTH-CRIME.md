@@ -18,7 +18,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
-| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication and loose-item save extras; checkpoints255–276 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
+| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras and cell staging; checkpoints255–277 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
 | S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
@@ -20654,3 +20654,46 @@ drop/pickup, compound shot publication, Character input, native flight/impact/
 recovery, and normal-input/in-flight restart acceptance remain open. Drawn
 ordinary NPC bow breaks continue rejecting before publication until their
 native drop path is implemented. S5 and M15 remain in progress.
+
+
+### S5 checkpoint277: detached native cell-reference publication
+
+CellStore can now prepare a new reference in a privately owned list node.
+Preparation requires a loaded target and an unassigned reference without
+registry, scene-node or local-script ownership. It leaves the cell's reference
+list, state and caches untouched. The borrowed detached node can participate
+in the existing prepared WorldModel registry replacement to reserve a RefNum
+without consuming the live generated-reference counter.
+
+After all compound preflights, the caller can commit the registry and immediately
+splice that same node into the cell without allocation or callbacks. The node's
+address, native FormKey, binary32 item extras and base identity survive this
+publication. Cancellation leaves cell and registry state unchanged. Foreign,
+moved-from, consumed and replaced-cell handles reject before publication;
+an independent lifetime tag prevents an old handle from matching a new cell
+constructed at the same address.
+
+Four engine integration tests cover actual native REFR/WEAP condition negative
+zero and charge7.25, cancelled identity reservations, registry/list publication
+with the same node address, foreign/moved/repeated handles, registered/assigned/
+scene-owned inputs, unloaded targets, owner address reuse and preserved projected
+inventory count/condition/charge. Normal and ASan/UBSan checks each pass1006 full
+engine tests, exact inventories and no failures/skips. ASan leak checks remain
+disabled. Components, Python and schema40 codecs are unchanged from checkpoint276.
+
+Incremental builds emit 2/11 warnings in unchanged actor-stat
+tests, Character code and standard-library regex instantiations from unchanged
+console code. Source equality against checkpoint276 is recorded in
+normal01/unchanged-warning-sources.json. The new insertion API and cases emit
+no warnings.
+
+Evidence: S5/prepared-native-cell-insertion-normal-01 and
+S5/prepared-native-cell-insertion-sanitized-01.
+Tested fingerprint: 86f8798fb56f2a83742b04e5f96e04b3629faa35e4af26c3ad15817afdce3cc7
+
+This is logical cell/registry staging, not a drop or pickup caller. It neither
+publishes scene/loose-body physics nor recreates dynamic references during save
+restore. The registry-then-cell interval must remain synchronous and callback
+free. Full drop consequences, compound shot publication, Character input,
+flight/impact/recovery and normal-input/restart acceptance remain open. S5 and
+M15 remain in progress.

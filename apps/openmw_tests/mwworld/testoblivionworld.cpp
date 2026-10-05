@@ -9442,3 +9442,190 @@ TEST(OblivionWorldTest, NativeLooseItemRestoreRejectsWinningCategoryBeforePublis
         EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), chargeBefore);
     }
 }
+
+#include <components/esm3/readerscache.hpp>
+#include <components/sceneutil/positionattitudetransform.hpp>
+
+namespace
+{
+    MWWorld::LiveCellRef<ESM4::Weapon> makeDetachedNativeLooseItem(const MWWorld::Ptr& item,
+        const ESM::FormKey& identity)
+    {
+        ESM4::Reference reference{};
+        reference.mFormKey = identity;
+        reference.mBaseObj = item.get<ESM4::Weapon>()->mBase->mId;
+        reference.mBaseKey = ESM::FormKey::content("headless.esm", 0x940);
+        reference.mParent = item.getCell()->getCell()->getId();
+        reference.mParentKey = ESM::FormKey::content("headless.esm", 1);
+        reference.mPos = item.getRefData().getPosition();
+        MWWorld::LiveCellRef<ESM4::Weapon> result(reference, item.get<ESM4::Weapon>()->mBase);
+        result.mRef.setNativeItemCondition(-0.f);
+        result.mRef.setEnchantmentCharge(7.25f);
+        return result;
+    }
+}
+
+TEST(OblivionWorldTest, PreparedCellInsertionKeepsNativeNodeDetachedUntilRegistryAndCellPublication)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    auto& model = world.getWorldModel();
+    auto& cell = *item.getCell();
+    const auto key = ESM::FormKey::dynamic("native-loose-item", 2);
+    auto source = makeDetachedNativeLooseItem(item, key);
+    const auto count = cell.count();
+    const auto changed = cell.hasState();
+    const auto revision = model.getPtrRegistryRevision();
+    const auto last = model.getLastGeneratedRefNum();
+    {
+        auto cancelled = cell.prepareInsertion(source);
+        ASSERT_NE(cancelled->get(), nullptr);
+        EXPECT_EQ(cell.count(), count);
+        EXPECT_EQ(cell.hasState(), changed);
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+        const std::array<MWWorld::Ptr, 1> inserted{MWWorld::Ptr(cancelled->get(), &cell)};
+        auto registry = model.preparePtrReplacement({}, inserted);
+        EXPECT_TRUE(inserted.front().getCellRef().getRefNum().isSet());
+        EXPECT_EQ(model.getLastGeneratedRefNum(), last);
+        EXPECT_TRUE(model.getPtr(inserted.front().getCellRef().getRefNum()).isEmpty());
+        EXPECT_EQ(cell.count(), count);
+    }
+    EXPECT_EQ(model.getLastGeneratedRefNum(), last);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+    EXPECT_EQ(cell.count(), count);
+    EXPECT_FALSE(source.mRef.getRefNum().isSet());
+    auto staged = cell.prepareInsertion(source);
+    auto* node = staged->get();
+    ASSERT_NE(node, nullptr);
+    const MWWorld::Ptr projected(node, &cell);
+    const std::array<MWWorld::Ptr, 1> inserted{projected};
+    auto registry = model.preparePtrReplacement({}, inserted);
+    const auto reserved = projected.getCellRef().getRefNum();
+    ASSERT_TRUE(cell.validatePreparedInsertion(*staged));
+    registry.commit();
+    ASSERT_EQ(cell.commitPreparedInsertion(*staged), node);
+    EXPECT_EQ(model.getPtr(reserved), projected);
+    EXPECT_EQ(cell.count(), count + 1);
+    EXPECT_TRUE(cell.hasState());
+    EXPECT_EQ(projected.getCellRef().getFormKey(), key);
+    ASSERT_TRUE(projected.getCellRef().getNativeItemCondition());
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*projected.getCellRef().getNativeItemCondition()),
+        std::bit_cast<std::uint32_t>(-0.f));
+    EXPECT_EQ(projected.getCellRef().getEnchantmentCharge(), 7.25f);
+    EXPECT_EQ(projected.get<ESM4::Weapon>()->mBase, source.mBase);
+    EXPECT_FALSE(staged->get());
+    EXPECT_FALSE(cell.validatePreparedInsertion(*staged));
+    EXPECT_EQ(cell.commitPreparedInsertion(*staged), nullptr);
+    EXPECT_EQ(cell.count(), count + 1);
+    EXPECT_FALSE(source.mRef.getRefNum().isSet());
+    EXPECT_EQ(item.getCellRef().getFormKey(), ESM::FormKey::content("headless.esm", 0x960));
+}
+
+TEST(OblivionWorldTest, PreparedCellInsertionRejectsForeignMovedAndSceneOwnedSources)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto& cell = *item.getCell();
+    auto& other = fixture.mWorld.getWorldModel().getDraftCell();
+    auto source = makeDetachedNativeLooseItem(item, ESM::FormKey::dynamic("native-loose-item", 3));
+    auto staged = cell.prepareInsertion(source);
+    auto* node = staged->get();
+    const auto count = cell.count();
+    const auto otherCount = other.count();
+    EXPECT_FALSE(other.validatePreparedInsertion(*staged));
+    EXPECT_EQ(other.commitPreparedInsertion(*staged), nullptr);
+    EXPECT_EQ(other.count(), otherCount);
+    using Token = MWWorld::CellStore::PreparedInsertion<ESM4::Weapon>;
+    static_assert(std::is_nothrow_move_constructible_v<Token>);
+    static_assert(std::is_nothrow_move_assignable_v<Token>);
+    static_assert(!std::is_copy_constructible_v<Token>);
+    Token moved(std::move(*staged));
+    EXPECT_FALSE(cell.validatePreparedInsertion(*staged));
+    EXPECT_EQ(cell.commitPreparedInsertion(*staged), nullptr);
+    EXPECT_TRUE(cell.validatePreparedInsertion(moved));
+    EXPECT_EQ(moved.get(), node);
+    EXPECT_EQ(cell.commitPreparedInsertion(moved), node);
+    EXPECT_EQ(cell.count(), count + 1);
+    EXPECT_THROW(cell.prepareInsertion(*item.get<ESM4::Weapon>()), std::invalid_argument);
+    source.mRef.setRefNum(ESM::RefNum{0x980, 0});
+    EXPECT_THROW(cell.prepareInsertion(source), std::invalid_argument);
+    source.mRef.setRefNum({});
+    source.mData.setBaseNode(new SceneUtil::PositionAttitudeTransform);
+    EXPECT_THROW(cell.prepareInsertion(source), std::invalid_argument);
+    EXPECT_EQ(cell.count(), count + 1);
+}
+
+TEST(OblivionWorldTest, PreparedCellInsertionLifetimeIdentityRejectsOwnerAddressReuse)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto source = makeDetachedNativeLooseItem(item, ESM::FormKey::dynamic("native-loose-item", 4));
+    ESM::Cell record{};
+    record.blank();
+    record.mId = ESM::RefId::stringRefId("PreparedCellLifetime");
+    ESM::ReadersCache readers;
+    alignas(MWWorld::CellStore) std::array<std::byte, sizeof(MWWorld::CellStore)> storage{};
+    auto* owner = std::construct_at(reinterpret_cast<MWWorld::CellStore*>(storage.data()),
+        MWWorld::Cell(record), fixture.mWorld.getStore(), readers);
+    owner->load();
+    ASSERT_EQ(owner->getState(), MWWorld::CellStore::State_Loaded);
+    EXPECT_FALSE(owner->hasState());
+    auto staged = owner->prepareInsertion(source);
+    EXPECT_FALSE(owner->hasState());
+    EXPECT_EQ(owner->count(), 0u);
+    std::destroy_at(owner);
+    owner = std::construct_at(reinterpret_cast<MWWorld::CellStore*>(storage.data()),
+        MWWorld::Cell(record), fixture.mWorld.getStore(), readers);
+    owner->load();
+    auto fresh = owner->prepareInsertion(source);
+    EXPECT_FALSE(owner->validatePreparedInsertion(*staged));
+    EXPECT_EQ(owner->commitPreparedInsertion(*staged), nullptr);
+    EXPECT_EQ(owner->count(), 0u);
+    EXPECT_FALSE(owner->hasState());
+    staged.reset();
+    EXPECT_TRUE(owner->validatePreparedInsertion(*fresh));
+    EXPECT_NE(owner->commitPreparedInsertion(*fresh), nullptr);
+    EXPECT_TRUE(owner->hasState());
+    EXPECT_EQ(owner->count(), 1u);
+    std::destroy_at(owner);
+    fresh.reset();
+}
+
+TEST(OblivionWorldTest, PreparedCellInsertionRejectsUnloadedTargetAndPreservesProjectedInventoryExtras)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto native = makeDetachedNativeLooseItem(item, ESM::FormKey::dynamic("native-loose-item", 5));
+    ESM::Cell record{};
+    record.blank();
+    record.mId = ESM::RefId::stringRefId("PreparedCellProjected");
+    ESM::ReadersCache readers;
+    MWWorld::CellStore owner(MWWorld::Cell(record), fixture.mWorld.getStore(), readers);
+    EXPECT_THROW(owner.prepareInsertion(native), std::invalid_argument);
+    EXPECT_EQ(owner.getState(), MWWorld::CellStore::State_Unloaded);
+    EXPECT_FALSE(owner.hasState());
+    owner.load();
+    MWClass::Weapon::registerSelf();
+    ESM::Weapon base{};
+    base.blank();
+    base.mId = ESM::RefId::stringRefId("PreparedLegacyWeapon");
+    base.mData.mHealth = 100;
+    fixture.mWorld.getStore().insertStatic(base);
+    MWWorld::ManualRef source(fixture.mWorld.getStore(), base.mId, 2);
+    source.getPtr().getCellRef().setNativeItemCondition(12.5f);
+    source.getPtr().getCellRef().setEnchantmentCharge(7.25f);
+    auto staged = owner.prepareInsertion(*source.getPtr().get<ESM::Weapon>());
+    auto* node = staged->get();
+    ASSERT_NE(node, nullptr);
+    EXPECT_FALSE(owner.hasState());
+    EXPECT_EQ(owner.count(), 0u);
+    EXPECT_EQ(owner.commitPreparedInsertion(*staged), node);
+    EXPECT_EQ(owner.count(), 1u);
+    EXPECT_EQ(node->mRef.getRefId(), base.mId);
+    EXPECT_EQ(node->mRef.getCount(), 2);
+    EXPECT_EQ(node->mRef.getNativeItemCondition(), std::optional<float>{12.5f});
+    EXPECT_EQ(node->mRef.getEnchantmentCharge(), 7.25f);
+    EXPECT_EQ(source.getPtr().getCellRef().getNativeItemCondition(), std::optional<float>{12.5f});
+    EXPECT_EQ(source.getPtr().getCellRef().getCount(), 2);
+}

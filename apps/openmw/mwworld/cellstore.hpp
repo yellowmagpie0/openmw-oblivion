@@ -150,6 +150,77 @@ namespace MWWorld
             return ret;
         }
 
+        // Detached list ownership for compound native drops/restoration.
+        // Preparation publishes neither the reference nor cell/cache state.
+        // Any registry/scene preparation must complete before the caller's
+        // synchronous no-callback publication interval.
+        template <typename T>
+        class PreparedInsertion
+        {
+            friend class CellStore;
+            CellStore* mOwner;
+            std::shared_ptr<const char> mIdentity;
+            typename CellRefList<T>::List mReferences;
+
+            PreparedInsertion(CellStore& owner, std::shared_ptr<const char> identity,
+                const LiveCellRef<T>& reference)
+                : mOwner(&owner), mIdentity(std::move(identity))
+            {
+                mReferences.push_back(reference);
+            }
+
+        public:
+            PreparedInsertion(const PreparedInsertion&) = delete;
+            PreparedInsertion& operator=(const PreparedInsertion&) = delete;
+            PreparedInsertion(PreparedInsertion&&) noexcept = default;
+            PreparedInsertion& operator=(PreparedInsertion&&) noexcept = default;
+
+            // A borrowed detached node. Identity reservation may change its
+            // RefNum. It survives token movement and the final list splice.
+            LiveCellRef<T>* get() noexcept
+            {
+                return mReferences.empty() ? nullptr : &mReferences.front();
+            }
+        };
+
+        template <typename T>
+        std::unique_ptr<PreparedInsertion<T>> prepareInsertion(const LiveCellRef<T>& reference)
+        {
+            static_assert(Misc::TupleHasType<CellRefList<T>, CellStoreTuple>::value);
+            if (mState != State_Loaded || reference.mWorldModel != nullptr
+                || reference.mRef.getRefNum().isSet() || reference.mData.getBaseNode() != nullptr || reference.mData.getLuaScripts() != nullptr)
+                throw std::invalid_argument("prepared cell insertion requires a loaded target and an unassigned detached reference");
+            if (!mPreparedInsertionIdentity)
+                mPreparedInsertionIdentity = std::make_shared<const char>();
+            return std::unique_ptr<PreparedInsertion<T>>(
+                new PreparedInsertion<T>(*this, mPreparedInsertionIdentity, reference));
+        }
+
+        template <typename T>
+        bool validatePreparedInsertion(const PreparedInsertion<T>& change) const noexcept
+        {
+            // Reject foreign, moved-from, consumed and replaced owners before
+            // looking at any borrowed cell/reference data.
+            return change.mOwner == this && change.mIdentity
+                && change.mIdentity == mPreparedInsertionIdentity
+                && change.mReferences.size() == 1 && mState == State_Loaded;
+        }
+
+        template <typename T>
+        LiveCellRef<T>* commitPreparedInsertion(PreparedInsertion<T>& change) noexcept
+        {
+            if (!validatePreparedInsertion(change))
+                return nullptr;
+            auto* reference = &change.mReferences.front();
+            auto& list = static_cast<CellRefList<T>&>(*mCellRefLists[getTypeIndex<T>()]).mList;
+            list.splice(list.end(), change.mReferences);
+            mHasState = true;
+            mRechargingItemsUpToDate = false;
+            mMergedRefsNeedsUpdate = true;
+            change.mOwner = nullptr;
+            return reference;
+        }
+
         /// @param readerList The readers to use for loading of the cell on-demand.
         CellStore(MWWorld::Cell&& cell, const MWWorld::ESMStore& store, ESM::ReadersCache& readers);
 
@@ -357,6 +428,7 @@ namespace MWWorld
         MWWorld::Cell mCellVariant;
         State mState;
         bool mHasState;
+        std::shared_ptr<const char> mPreparedInsertionIdentity;
         std::vector<ESM::RefId> mIds;
         float mWaterLevel;
 
