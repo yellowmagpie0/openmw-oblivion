@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 39
+CURRENT_VERSION = 40
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -659,6 +659,18 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         owner = reference.get("owner")
         if owner is not None and str(owner) == "null":
             raise RuntimeStateError("TES4 runtime-state reference has a null owner")
+
+        for name in ("item_condition", "item_charge"):
+            extra = reference.get(name)
+            if extra is not None:
+                if version < 40 or type(extra) not in (int, float):
+                    raise RuntimeStateError("Invalid TES4 loose item extra or runtime-state version")
+                try:
+                    value = struct.unpack("<f", struct.pack("<f", extra))[0]
+                except (OverflowError, struct.error) as error:
+                    raise RuntimeStateError("Invalid TES4 loose item extra") from error
+                if not math.isfinite(value) or value < 0:
+                    raise RuntimeStateError("Invalid TES4 loose item extra")
         _write_position(_Writer(), reference["position"])
         reference_inventory = reference.get("inventory")
         if not isinstance(reference_inventory, list):
@@ -919,6 +931,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             old = custom["obscript.dead"]
             if type(old) is not bool or old != (phase == 1):
                 raise RuntimeStateError("TES4 native actor life conflicts with legacy obscript.dead")
+
+    for reference in references:
+        if (any(reference.get(name) is not None for name in ("item_condition", "item_charge"))
+                and (reference.get("actor_draw_state") is not None or reference["key"] in native_keys
+                     or reference["key"] in life_keys or reference["key"] == player["reference"])):
+            raise RuntimeStateError("TES4 actor reference cannot own loose item extras")
     for reference in references:
         draw = reference.get("actor_draw_state")
         if draw is None:
@@ -1526,6 +1544,13 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if has_draw > 1:
                 raise RuntimeStateError("Invalid TES4 native actor draw state flag")
             reference["actor_draw_state"] = reader.unpack("<B") if has_draw else None
+
+        if version >= 40:
+            for name in ("item_condition", "item_charge"):
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 loose item extra flag")
+                reference[name] = reader.unpack("<f") if present else None
         references.append(reference)
     result["references"] = references
     _validate_inventory(result["player"]["inventory"], version, True)
@@ -1932,6 +1957,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<B", int(draw is not None))
             if draw is not None:
                 writer.pack("<B", draw)
+
+        if version >= 40:
+            for name in ("item_condition", "item_charge"):
+                extra = reference.get(name)
+                writer.pack("<B", int(extra is not None))
+                if extra is not None:
+                    writer.pack("<f", extra)
     if version >= 2:
         writer.pack("<Q", int(state.get("script_event_sequence", 0)))
         scripts = sorted(state.get("script_instances", []), key=lambda item: (item["unit"], item["context"]))
@@ -2307,6 +2339,15 @@ def load_save(path: Path) -> dict[str, Any]:
     return decode_payload(_find_runtime_record(path.read_bytes())[3])
 
 
+
+def _upgrade_reference_item_extras(state: dict[str, Any]) -> None:
+    for reference in state.get("references", []):
+        for name in ("item_condition", "item_charge"):
+            if state.get("schema_version", 1) < 40 and reference.get(name) is not None:
+                raise RuntimeStateError("Legacy TES4 save cannot carry loose item extras")
+            reference.setdefault(name, None)
+
+
 def _upgrade_actor_draw(state: dict[str, Any]) -> None:
     for reference in state.get("references", []):
         if state.get("schema_version", 1) < 29 and reference.get("actor_draw_state") is not None:
@@ -2365,6 +2406,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
+    _upgrade_reference_item_extras(state)
     _upgrade_actor_knockback(state)
     _upgrade_bow_states(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
@@ -2423,6 +2465,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)
+    _upgrade_reference_item_extras(result)
     _upgrade_actor_knockback(result)
     _upgrade_bow_states(result)
     result["schema_version"] = CURRENT_VERSION

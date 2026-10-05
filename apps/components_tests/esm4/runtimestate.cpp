@@ -2913,3 +2913,132 @@ TEST(ESM4RuntimeState, PlayerBowHoldLatchThirtyNineIndependentWireAndLegacyDefau
     legacy.mNativeBowStates.begin()->second.mPlayerHoldLatched = true;
     EXPECT_THROW(legacy.serializeBinary(), std::runtime_error);
 }
+
+TEST(ESM4RuntimeState, LooseItemExtras40HaveExactNullableWireAndRejectCorruption)
+{
+    ESM4::RuntimeState state;
+    state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+    state.mPlayer.mCell = ESM::FormKey::content("items.esm", 1);
+    state.mPlayer.mRace = ESM::FormKey::content("items.esm", 2);
+    state.mPlayer.mClass = ESM::FormKey::content("items.esm", 3);
+    ESM4::RuntimeReferenceState reference;
+    reference.mKey = ESM::FormKey::dynamic("dropped-item", 1);
+    reference.mBase = ESM::FormKey::content("items.esm", 4);
+    reference.mCell = state.mPlayer.mCell;
+    constexpr std::string_view marker = "loose-item-extras-wire-boundary";
+    reference.mCustomState.emplace("boundary", std::string(marker));
+    state.mReferences.push_back(reference);
+    state.mVersion = 39;
+    const auto legacy = state.serializeBinary();
+    const auto found = std::search(legacy.begin(), legacy.end(), marker.begin(), marker.end());
+    ASSERT_NE(found, legacy.end());
+    const auto boundary = std::distance(legacy.begin(), found) + marker.size() + 1; // absent draw flag
+    state.mVersion = 40;
+    const std::array<std::optional<float>, 9> values{std::nullopt, 0.f, -0.f, .1f, 49.8f,
+        std::numeric_limits<float>::denorm_min(), std::numeric_limits<float>::min(), 7.25f,
+        std::numeric_limits<float>::max()};
+    for (const auto condition : values)
+    for (const auto charge : values)
+    {
+        state.mReferences.front().mItemCondition = condition;
+        state.mReferences.front().mItemCharge = charge;
+        auto expected = legacy;
+        expected[std::string_view("OMW4STATE").size()] = 40;
+        std::vector<std::uint8_t> extraBytes;
+        for (const auto value : {condition, charge})
+        {
+            extraBytes.push_back(value.has_value() ? 1 : 0);
+            if (value)
+            {
+                const auto bits = std::bit_cast<std::uint32_t>(*value);
+                for (unsigned shift = 0; shift < 32; shift += 8)
+                    extraBytes.push_back(static_cast<std::uint8_t>(bits >> shift));
+            }
+        }
+        expected.insert(expected.begin() + boundary, extraBytes.begin(), extraBytes.end());
+        const auto binary = state.serializeBinary();
+        EXPECT_EQ(binary, expected);
+        const auto restored = ESM4::RuntimeState::deserializeBinary(binary);
+        EXPECT_EQ(restored, state);
+        for (const auto offset : {boundary, boundary + (condition ? 5 : 1)})
+        {
+            auto invalid = binary;
+            invalid[offset] = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        }
+        for (const auto end : {boundary, boundary + static_cast<std::ptrdiff_t>(extraBytes.size()) - 1})
+        {
+            std::vector<std::uint8_t> truncated(binary.begin(), binary.begin() + end);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+        }
+        if (condition)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*restored.mReferences.front().mItemCondition),
+                std::bit_cast<std::uint32_t>(*condition));
+        }
+        if (charge)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*restored.mReferences.front().mItemCharge),
+                std::bit_cast<std::uint32_t>(*charge));
+        }
+        EXPECT_NE(state.canonicalJson().find("\"item_condition\":"), std::string::npos);
+        EXPECT_NE(state.canonicalJson().find("\"item_charge\":"), std::string::npos);
+    }
+    for (const float invalid : {-1.f, std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::quiet_NaN()})
+    for (const bool charge : {false, true})
+    {
+        state.mReferences.front().mItemCondition = 1.f;
+        state.mReferences.front().mItemCharge = 2.f;
+        auto corruptWire = state.serializeBinary();
+        const auto offset = boundary + (charge ? 6 : 1);
+        const auto bits = std::bit_cast<std::uint32_t>(invalid);
+        for (unsigned shift = 0; shift < 32; shift += 8)
+            corruptWire[offset + shift / 8] = static_cast<std::uint8_t>(bits >> shift);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corruptWire), std::runtime_error);
+        (charge ? state.mReferences.front().mItemCharge : state.mReferences.front().mItemCondition) = invalid;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, LooseItemExtras40DoNotMigrateBrokenDefaultsOrAttachToActors)
+{
+    for (unsigned version = 1; version < 40; ++version)
+    {
+        SCOPED_TRACE(version);
+        ESM4::RuntimeState state;
+        state.mVersion = version;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        state.mPlayer.mCell = ESM::FormKey::content("items.esm", 1);
+        if (version >= 3)
+        {
+            state.mPlayer.mRace = ESM::FormKey::content("items.esm", 2);
+            state.mPlayer.mClass = ESM::FormKey::content("items.esm", 3);
+        }
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = ESM::FormKey::dynamic("dropped-item", 1);
+        reference.mBase = ESM::FormKey::content("items.esm", 4);
+        reference.mCell = state.mPlayer.mCell;
+        state.mReferences.push_back(reference);
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_FALSE(restored.mReferences.front().mItemCondition);
+        EXPECT_FALSE(restored.mReferences.front().mItemCharge);
+        EXPECT_EQ(restored.canonicalJson().find("item_condition"), std::string::npos);
+        for (const bool charge : {false, true})
+        {
+            auto invalid = state;
+            (charge ? invalid.mReferences.front().mItemCharge : invalid.mReferences.front().mItemCondition) = 0.f;
+            EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+        }
+    }
+    auto actor = ownedActionState();
+    actor.mVersion = 40;
+    for (const bool charge : {false, true})
+    {
+        auto invalid = actor;
+        (charge ? invalid.mReferences.front().mItemCharge : invalid.mReferences.front().mItemCondition) = 0.f;
+        EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(invalid.canonicalJson(), std::runtime_error);
+    }
+}

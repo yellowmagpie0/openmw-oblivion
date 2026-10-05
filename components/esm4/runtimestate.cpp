@@ -1133,6 +1133,13 @@ namespace ESM4
                 throw std::runtime_error("Duplicate TES4 runtime-state reference: " + reference.mKey.serialize());
             if (reference.mOwner && reference.mOwner->isNull())
                 throw std::runtime_error("TES4 runtime-state reference has a null owner");
+            for (const auto extra : {reference.mItemCondition, reference.mItemCharge})
+                if (extra && (mVersion < 40 || !std::isfinite(*extra) || *extra < 0))
+                    throw std::runtime_error("Invalid TES4 loose item extra or runtime-state version");
+            if ((reference.mItemCondition || reference.mItemCharge)
+                && (reference.mActorDrawState || nativeActors.contains(reference.mKey)
+                    || lives.contains(reference.mKey) || reference.mKey == mPlayer.mReference))
+                throw std::runtime_error("TES4 actor reference cannot own loose item extras");
             validatePosition(reference.mPosition);
             checkSize(reference.mInventory.size(), "reference inventory");
             checkSize(reference.mCustomState.size(), "reference custom state");
@@ -1432,6 +1439,12 @@ namespace ESM4
                 if (reference.mActorDrawState)
                     writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*reference.mActorDrawState));
             }
+            if (mVersion >= 40)
+                for (const auto extra : {reference.mItemCondition, reference.mItemCharge})
+                {
+                    writer.integer<std::uint8_t>(extra.has_value() ? 1 : 0);
+                    if (extra) writer.floating(*extra);
+                }
         }
 
         if (mVersion >= 2)
@@ -2069,6 +2082,15 @@ namespace ESM4
                 if (hasDrawState)
                     reference.mActorDrawState = static_cast<ActorDrawState>(reader.integer<std::uint8_t>());
             }
+
+            if (result.mVersion >= 40)
+                for (auto* extra : {&reference.mItemCondition, &reference.mItemCharge})
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 loose item extra flag");
+                    if (present) *extra = reader.float32();
+                }
             result.mReferences.push_back(std::move(reference));
         }
 
@@ -2957,6 +2979,24 @@ namespace ESM4
                     stream << static_cast<unsigned>(*reference.mActorDrawState);
                 else
                     stream << "null";
+            }
+
+            if (mVersion >= 40)
+            {
+                stream << ",\"item_condition\":";
+                if (reference.mItemCondition)
+                {
+                    if (*reference.mItemCondition == 0 && std::signbit(*reference.mItemCondition)) stream << "-0.0";
+                    else stream << std::setprecision(17) << *reference.mItemCondition;
+                }
+                else stream << "null";
+                stream << ",\"item_charge\":";
+                if (reference.mItemCharge)
+                {
+                    if (*reference.mItemCharge == 0 && std::signbit(*reference.mItemCharge)) stream << "-0.0";
+                    else stream << std::setprecision(17) << *reference.mItemCharge;
+                }
+                else stream << "null";
             }
             stream << '}';
         }

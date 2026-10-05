@@ -33,7 +33,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 39;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 40;
 
     struct RuntimeContentIdentity
     {
@@ -86,6 +86,10 @@ namespace ESM4
         // v29: absent in old saves, rather than inferred from combat or AI.
         // The native non-Player actor owns this view independently of input.
         std::optional<ActorDrawState> mActorDrawState = std::nullopt;
+        // v40: exact extras of a loose native item instance. Absent extras
+        // select the winning base defaults; zero remains broken/discharged.
+        std::optional<float> mItemCondition;
+        std::optional<float> mItemCharge;
 
         friend bool operator==(const RuntimeReferenceState&, const RuntimeReferenceState&) = default;
     };

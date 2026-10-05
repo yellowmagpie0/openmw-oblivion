@@ -1350,6 +1350,9 @@ namespace MWWorld
                     const bool actorReference = type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
                     if (!actorReference)
                     {
+                        reference.mItemCondition = ptr.getCellRef().getNativeItemCondition();
+                        const float charge = ptr.getCellRef().getEnchantmentCharge();
+                        if (charge >= 0.f) reference.mItemCharge = charge;
                         try
                         {
                             reference.mLockLevel = ptr.getCellRef().getLockLevel();
@@ -2323,6 +2326,7 @@ namespace MWWorld
             std::optional<bool> mLocked;
             std::optional<float> mScale;
             std::optional<ESM::AnimationState> mAnimation;
+            std::optional<CellRef> mItemCellRef;
         };
         std::vector<PreparedReferenceBinding> preparedReferences;
         preparedReferences.reserve(state.mReferences.size());
@@ -2342,6 +2346,24 @@ namespace MWWorld
                 throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
             if (reference.mActorDrawState)
                 oblivionSavedActorDrawState(found->second); // Class/winning-kind preflight, before publication.
+            std::optional<CellRef> itemCellRef;
+            const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge;
+            const auto& itemClass = found->second.getClass();
+            if (hasItemExtras && !itemClass.isItem(found->second))
+                throw std::invalid_argument("TES4 loose item extras require a native takeable reference");
+            if (itemClass.isItem(found->second))
+            {
+                const auto definition = OblivionProfileServices::itemDefinition(mStore, actualBaseId);
+                if (!definition || (reference.mItemCondition && definition->mMaxCondition < 0)
+                    || (reference.mItemCharge && definition->mMaxCharge < 0.f))
+                    throw std::invalid_argument("TES4 loose item extras disagree with the winning item category");
+                itemCellRef.emplace(found->second.getCellRef());
+                itemCellRef->resetNativeItemCondition();
+                if (reference.mItemCondition)
+                    itemCellRef->setNativeItemCondition(*reference.mItemCondition);
+                itemCellRef->setEnchantmentCharge(reference.mItemCharge.value_or(-1.f));
+            }
+
             std::optional<ESM::RefId> owner;
             if (reference.mOwner)
             {
@@ -2420,7 +2442,8 @@ namespace MWWorld
             }
             const auto cellId = resolver.toFormId(reference.mCell);
             preparedReferences.push_back({&reference, found->second,
-                &mWorldModel.getCell(ESM::RefId(*cellId)), owner, locked, scale, std::move(animationState)});
+                &mWorldModel.getCell(ESM::RefId(*cellId)), owner, locked, scale,
+                std::move(animationState), std::move(itemCellRef)});
         }
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -2670,6 +2693,11 @@ namespace MWWorld
             CellStore& targetCell = *binding.mCell;
             if (ptr.getCell() != &targetCell)
                 ptr = ptr.getCell()->moveTo(ptr, &targetCell);
+            if (binding.mItemCellRef)
+            {
+                static_assert(std::is_nothrow_swappable_v<CellRef>);
+                std::swap(ptr.getCellRef(), *binding.mItemCellRef);
+            }
             ptr.getRefData().setPosition(reference.mPosition);
             reference.mEnabled ? ptr.getRefData().enable() : ptr.getRefData().disable();
             ptr.getCellRef().setOwner(binding.mOwner.value_or(ESM::RefId()));

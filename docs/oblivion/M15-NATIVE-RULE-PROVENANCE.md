@@ -13052,3 +13052,53 @@ pickup remain open. Drawn ordinary NPC bow breaks still reject before resource
 publication; full native drop consequences, compound shot publication,
 Character input, flight/impact/recovery and normal-input/restart acceptance are
 not closed by this storage prerequisite. S5 and M15 remain in progress.
+
+
+### S5 checkpoint276: schema40 loose-item extras and World restoration
+
+The custom OpenMW TES4 runtime envelope now stores nullable binary32 loose-item
+condition and enchantment charge on native references. Absence selects the
+winning base defaults; zero retains a broken or discharged instance. C++ binary,
+canonical JSON and the independent Python codec preserve exact float bits,
+including negative zero, subnormal values and the maximum finite binary32.
+Readers reject malformed presence flags, nonfinite/negative values and extras
+on actor references. Older envelopes retain absence without inventing damage.
+This is not a claim about the original game's save format.
+
+Actual World capture reads native placed-item extras. Restore preflights the
+winning item category and prepares a complete CellRef candidate before any
+clock, actor, inventory or reference publication. The final no-throw swap
+retains the native FormKey and RefNum. Older saves clear previous item extras
+and restore default selection. A changed winning category rejects the entire
+restore before earlier resources change.
+
+Two component tests, two World integration tests and one Python method cover
+81 nullable condition/charge pairs, all39 legacy envelopes, malformed wire and
+value inputs, signed-zero preservation, actual World capture/apply/default
+migration, and rejection before resource publication. Normal checks pass2470
+full component,1002 full engine and262 Python tests. Sanitizer checks pass2470
+full component and1002 full engine tests. C++ selections match exact inventories
+with no failures/skips; ASan leak checks are disabled. The final incremental engine
+builds emit 0/0 warnings. Initial01 builds passed the same
+suites but exposed two new assertion-macro dangling-else warnings; explicit
+braces remove them in02. Initial01 also rebuilt unchanged inventory tests and
+Character/actor-stats sources, with baseline initializer/range-copy/compiler
+warnings. Byte equality against checkpoint275 is recorded in
+normal02/unchanged-warning-sources.json. Initial evidence remains retained.
+
+Separate normal and instrumented comparers each verify121 fixtures: all40
+envelopes and81 item-extra pairs. C++ files and canonical JSON independently
+round-trip through Python, and Python-written files round-trip through the
+production C++ decoder/encoder, byte for byte. These checks establish custom
+protocol agreement, not fresh-process game restart or normal-input acceptance.
+
+Evidence: S5/native-loose-item-state-normal-02,
+S5/native-loose-item-state-sanitized-02 and
+S5/loose-item-extras-wire-cross-language-{normal,sanitized}-02.
+Tested fingerprint: 1c3b0db4ae2715a0e280acd66c58b7b782fc69fb169f79df2287b404201a1186
+
+Unprojected dynamic references are still retained without recreation. Atomic
+drop/pickup, compound shot publication, Character input, native flight/impact/
+recovery, and normal-input/in-flight restart acceptance remain open. Drawn
+ordinary NPC bow breaks continue rejecting before publication until their
+native drop path is implemented. S5 and M15 remain in progress.

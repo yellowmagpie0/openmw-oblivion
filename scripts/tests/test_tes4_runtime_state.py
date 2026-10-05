@@ -151,6 +151,85 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def test_loose_item40_exact_nullable_wire_invalid_flags_values_and_legacy_absence(self):
+        old = make_state()
+        old["schema_version"] = 39
+        old["ai_rng_state"] = 1
+        old["player"]["inventory"] = []
+        old["script_instances"] = []; old["quests"] = []; old["script_event_sequence"] = 0
+        old["references"] = [{
+            "key": "dynamic:dropped-item:0000000000000001", "base": "content:oblivion.esm:000200",
+            "cell": old["player"]["cell"], "enabled": True, "deleted": False,
+            "position": [0.] * 6, "owner": None, "lock_level": 0, "inventory": [],
+            "custom_state": {}, "actor_draw_state": None}]
+        reference = old["references"][0]
+        marker = "loose-item-extras-wire-boundary"
+        reference["custom_state"] = {"boundary": marker}
+        payload = state_io.encode_payload(old)
+        boundary = payload.index(marker.encode()) + len(marker) + 1
+        values = (None, 0., -0., .1, 49.8,
+                  struct.unpack("<f", struct.pack("<I", 1))[0],
+                  struct.unpack("<f", struct.pack("<I", 0x00800000))[0],
+                  7.25, struct.unpack("<f", struct.pack("<I", 0x7f7fffff))[0])
+        for condition in values:
+            for charge in values:
+                state = copy.deepcopy(old)
+                state["schema_version"] = 40
+                state["references"][0].update(item_condition=condition, item_charge=charge)
+                extras = b"".join(b"\0" if value is None else b"\1" + struct.pack("<f", value)
+                                  for value in (condition, charge))
+                expected = bytearray(payload)
+                struct.pack_into("<I", expected, len(state_io.MAGIC), 40)
+                expected[boundary:boundary] = extras
+                binary = state_io.encode_payload(state)
+                self.assertEqual(binary, bytes(expected))
+                decoded = state_io.decode_payload(binary)
+                self.assertEqual(state_io.encode_payload(decoded), binary)
+                for offset in (boundary, boundary + (5 if condition is not None else 1)):
+                    invalid = bytearray(binary); invalid[offset] = 2
+                    with self.assertRaises(state_io.RuntimeStateError):
+                        state_io.decode_payload(bytes(invalid))
+                for offset in (boundary, boundary + len(extras) - 1):
+                    with self.assertRaises(state_io.RuntimeStateError):
+                        state_io.decode_payload(binary[:offset])
+                for name, value in (("item_condition", condition), ("item_charge", charge)):
+                    actual = decoded["references"][0][name]
+                    if value is None:
+                        self.assertIsNone(actual)
+                    else:
+                        self.assertEqual(struct.pack("<f", actual), struct.pack("<f", value))
+        for version in range(1, 40):
+            state = copy.deepcopy(old); state["schema_version"] = version
+            if version < 3:
+                for name in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    state["player"].pop(name, None)
+            for reference in state["references"]:
+                reference.pop("item_condition", None); reference.pop("item_charge", None)
+            decoded = state_io.decode_payload(state_io.encode_payload(state))
+            for reference in decoded["references"]:
+                self.assertNotIn("item_condition", reference)
+                self.assertNotIn("item_charge", reference)
+            for name in ("item_condition", "item_charge"):
+                invalid = copy.deepcopy(state)
+                invalid["references"][0][name] = 0.
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(invalid)
+        for name in ("item_condition", "item_charge"):
+            for bad in (-1., float("inf"), float("-inf"), float("nan"), True, "0", 1e100):
+                state = copy.deepcopy(old)
+                state["schema_version"] = 40
+                state["references"][0][name] = bad
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+        state = self.melee_state(); state["schema_version"] = 40
+        state["references"][0]["item_condition"] = 0.
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        upgraded = copy.deepcopy(old)
+        state_io._upgrade_reference_item_extras(upgraded)
+        self.assertIsNone(upgraded["references"][0]["item_condition"])
+        self.assertIsNone(upgraded["references"][0]["item_charge"])
+
 
     def bow_state(self):
         state = self.melee_state()

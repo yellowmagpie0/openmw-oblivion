@@ -9317,3 +9317,128 @@ TEST(OblivionWorldTest, ProjectedInventoryConditionStorageRetainsLegacyChargeRes
     live.resetNativeItemCondition();
     EXPECT_EQ(live.getItemCondition(50.f), 9.f);
 }
+
+namespace
+{
+    MWWorld::Ptr installNativeLooseItemCapture(NativeWorldFixture& fixture)
+    {
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf();
+        MWClass::ESM4Takeable<ESM4::Weapon>::registerSelf();
+        world.setupPlayer();
+        ESM::Race race{}; race.blank(); race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+        store.getWritable<ESM::Race>().insertStatic(race);
+        auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        playerBase.mId = ESM::RefId::stringRefId("LooseItemCapturePlayer");
+        playerBase.mRace = race.mId;
+        store.insertStatic(playerBase);
+        world.getPlayerPtr().get<ESM::NPC>()->mBase = store.get<ESM::NPC>().find(playerBase.mId);
+        ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+        cell.mCellFlags = ESM4::CELL_Interior; cell.mEditorId = "NativeLooseItemCaptureCell";
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        auto& residentCell = world.getWorldModel().getCell(cell.mId);
+        world.getPlayer().setCell(&residentCell);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{10, 0, 0, 0}};
+        for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+        auto& combat = *world.getOblivionCombatService();
+        combat.publishPlayerValues(world.getPlayer(), values,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+        ESM4::RuntimeActorLife life; life.mActor = values.mActor; life.mBase = values.mBase;
+        combat.publishPlayerLife(world.getPlayer(), life);
+        ESM4::Weapon native{};
+        native.mId = {0x940, 0}; const auto nativeKey = ESM::FormKey::content("headless.esm", 0x940);
+        native.mData.type = 5; native.mData.health = 100;
+        native.mEnchantment = {0x950, 0}; native.mEnchantmentPoints = 20;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, nativeKey);
+        ESM4::Reference placed{};
+        placed.mId = {0x960, 0}; placed.mFormKey = ESM::FormKey::content("headless.esm", 0x960);
+        placed.mBaseObj = native.mId; placed.mBaseKey = nativeKey;
+        placed.mParent = cell.mId; placed.mParentKey = cell.mFormKey;
+        store.getWritable<ESM4::Reference>().insertStatic(placed, placed.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Weapon> live(placed, store.search<ESM4::Weapon>(nativeKey));
+        const MWWorld::Ptr ptr(residentCell.insert(&live), &residentCell);
+        world.getWorldModel().registerPtr(ptr);
+        return ptr;
+    }
+}
+
+TEST(OblivionWorldTest, NativeLooseItemSaveCaptureAndApplyPreserveBrokenFractionalAndAbsentExtras)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    auto& ref = item.getCellRef();
+    for (const auto value : {std::optional<float>{}, std::optional<float>{0.f},
+            std::optional<float>{-0.f}, std::optional<float>{.1f}, std::optional<float>{49.8f},
+            std::optional<float>{std::numeric_limits<float>::denorm_min()}})
+    {
+        ref.resetNativeItemCondition();
+        if (value) ref.setNativeItemCondition(*value);
+        ref.setEnchantmentCharge(value.value_or(-1.f));
+        const auto saved = world.captureOblivionRuntimeState();
+        ASSERT_EQ(saved.mVersion, 40u);
+        ASSERT_EQ(saved.mReferences.size(), 1u);
+        EXPECT_EQ(saved.mReferences.front().mItemCondition, value);
+        EXPECT_EQ(saved.mReferences.front().mItemCharge, value);
+        const auto key = ref.getFormKey();
+        const auto number = ref.getRefNum();
+        ref.setNativeItemCondition(75.f); ref.setEnchantmentCharge(19.f);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(ref.getFormKey(), key); EXPECT_EQ(ref.getRefNum(), number);
+        EXPECT_EQ(ref.getNativeItemCondition(), value);
+        EXPECT_EQ(ref.getEnchantmentCharge(), value.value_or(-1.f));
+        if (value)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*ref.getNativeItemCondition()),
+                std::bit_cast<std::uint32_t>(*value));
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()),
+                std::bit_cast<std::uint32_t>(*value));
+        }
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+    }
+    ref.resetNativeItemCondition(); ref.setEnchantmentCharge(-1.f);
+    auto legacy = world.captureOblivionRuntimeState(); legacy.mVersion = 39;
+    ref.setNativeItemCondition(0.f); ref.setEnchantmentCharge(0.f);
+    readNativeSnapshot(fixture, legacy);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(ref.getNativeItemCondition());
+    EXPECT_EQ(ref.getItemCondition(100.f), 100.f);
+    EXPECT_EQ(ref.getEnchantmentCharge(), -1.f);
+}
+
+TEST(OblivionWorldTest, NativeLooseItemRestoreRejectsWinningCategoryBeforePublishingEarlierResources)
+{
+    for (const bool condition : {false, true})
+    {
+        NativeWorldFixture fixture;
+        const auto item = installNativeLooseItemCapture(fixture);
+        auto& world = fixture.mWorld;
+        item.getCellRef().setNativeItemCondition(.1f);
+        item.getCellRef().setEnchantmentCharge(7.25f);
+        auto saved = world.captureOblivionRuntimeState();
+        saved.mClock.mHour = 9;
+        saved.mReferences.front().mItemCondition = 50.f;
+        saved.mReferences.front().mItemCharge = 15.f;
+        auto base = *item.get<ESM4::Weapon>()->mBase;
+        if (condition) base.mData.health = 0;
+        else { base.mEnchantment = {}; base.mEnchantmentPoints = 0; }
+        world.getStore().getWritable<ESM4::Weapon>().insertStatic(base, ESM::FormKey::content("headless.esm", 0x940));
+        const auto before = world.getTimeStamp();
+        const auto position = item.getRefData().getPosition();
+        const auto conditionBefore = item.getCellRef().getNativeItemCondition();
+        const auto chargeBefore = item.getCellRef().getEnchantmentCharge();
+        readNativeSnapshot(fixture, saved);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+        EXPECT_EQ(world.getTimeStamp(), before);
+        EXPECT_EQ(item.getRefData().getPosition(), position);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), conditionBefore);
+        EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), chargeBefore);
+    }
+}
